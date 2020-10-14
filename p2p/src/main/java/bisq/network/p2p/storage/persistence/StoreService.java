@@ -17,15 +17,14 @@
 
 package bisq.network.p2p.storage.persistence;
 
+import bisq.common.file.FileUtil;
+import bisq.common.file.ResourceNotFoundException;
+import bisq.common.persistence.PersistenceManager;
 import bisq.common.proto.persistable.PersistableEnvelope;
-import bisq.common.storage.FileUtil;
-import bisq.common.storage.ResourceNotFoundException;
-import bisq.common.storage.Storage;
 
 import java.nio.file.Paths;
 
 import java.io.File;
-import java.io.IOException;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -43,7 +42,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public abstract class StoreService<T extends PersistableEnvelope> {
 
-    protected final Storage<T> storage;
+    protected final PersistenceManager<T> persistenceManager;
     protected final String absolutePathOfStorageDir;
 
     protected T store;
@@ -52,12 +51,9 @@ public abstract class StoreService<T extends PersistableEnvelope> {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public StoreService(File storageDir,
-                        Storage<T> storage) {
-        this.storage = storage;
+    public StoreService(File storageDir, PersistenceManager<T> persistenceManager) {
+        this.persistenceManager = persistenceManager;
         absolutePathOfStorageDir = storageDir.getAbsolutePath();
-
-        storage.setNumMaxBackupFiles(1);
     }
 
 
@@ -65,8 +61,8 @@ public abstract class StoreService<T extends PersistableEnvelope> {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    protected void persist() {
-        storage.queueUpForSave(store, 200);
+    protected void requestPersistence() {
+        persistenceManager.requestPersistence();
     }
 
     protected T getStore() {
@@ -81,33 +77,28 @@ public abstract class StoreService<T extends PersistableEnvelope> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     protected void readFromResources(String postFix) {
-        makeFileFromResourceFile(postFix);
+        String fileName = getFileName();
+        makeFileFromResourceFile(fileName, postFix);
         try {
             readStore();
         } catch (Throwable t) {
-            try {
-                String fileName = getFileName();
-                storage.removeAndBackupFile(fileName);
-            } catch (IOException e) {
-                log.error(e.toString());
-            }
-            makeFileFromResourceFile(postFix);
+            makeFileFromResourceFile(fileName, postFix);
             readStore();
         }
     }
 
-    protected void makeFileFromResourceFile(String postFix) {
-        final String fileName = getFileName();
+    protected boolean makeFileFromResourceFile(String fileName, String postFix) {
         String resourceFileName = fileName + postFix;
         File dbDir = new File(absolutePathOfStorageDir);
         if (!dbDir.exists() && !dbDir.mkdir())
             log.warn("make dir failed.\ndbDir=" + dbDir.getAbsolutePath());
 
-        final File destinationFile = new File(Paths.get(absolutePathOfStorageDir, fileName).toString());
+        File destinationFile = new File(Paths.get(absolutePathOfStorageDir, fileName).toString());
         if (!destinationFile.exists()) {
             try {
                 log.info("We copy resource to file: resourceFileName={}, destinationFile={}", resourceFileName, destinationFile);
                 FileUtil.resourceToFile(resourceFileName, destinationFile);
+                return true;
             } catch (ResourceNotFoundException e) {
                 log.info("Could not find resourceFile " + resourceFileName + ". That is expected if none is provided yet.");
             } catch (Throwable e) {
@@ -116,22 +107,34 @@ public abstract class StoreService<T extends PersistableEnvelope> {
                 e.printStackTrace();
             }
         } else {
-            log.debug(fileName + " file exists already.");
+            log.info("No resource file was copied. {} exists already.", fileName);
         }
+        return false;
     }
 
+    protected T getStore(String fileName) {
+        T store;
+        T persisted = persistenceManager.getPersisted(fileName);
+        if (persisted != null) {
+            store = persisted;
 
-    protected void readStore() {
-        final String fileName = getFileName();
-        store = storage.initAndGetPersistedWithFileName(fileName, 100);
-        if (store != null) {
-            log.info("{}: size of {}: {} MB", this.getClass().getSimpleName(),
-                    storage.getClass().getSimpleName(),
-                    store.toProtoMessage().toByteArray().length / 1_000_000D);
+            int length = store.toProtoMessage().toByteArray().length;
+            double size = length > 1_000_000D ? length / 1_000_000D : length / 1_000D;
+            String unit = length > 1_000_000D ? "MB" : "KB";
+            log.info("{}: size of {}: {} {}", this.getClass().getSimpleName(),
+                    persisted.getClass().getSimpleName(), size, unit);
         } else {
             store = createStore();
         }
+        return store;
     }
+
+    protected void readStore() {
+        store = getStore(getFileName());
+        initializePersistenceManager();
+    }
+
+    protected abstract void initializePersistenceManager();
 
     protected abstract T createStore();
 }

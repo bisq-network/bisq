@@ -18,74 +18,41 @@
 package bisq.core.app;
 
 import bisq.core.account.sign.SignedWitness;
-import bisq.core.account.sign.SignedWitnessService;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.alert.Alert;
 import bisq.core.alert.AlertManager;
-import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.alert.PrivateNotificationPayload;
-import bisq.core.btc.Balances;
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.nodes.LocalBitcoinNode;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletsManager;
-import bisq.core.dao.DaoSetup;
 import bisq.core.dao.governance.voteresult.VoteResultException;
-import bisq.core.dao.governance.voteresult.VoteResultService;
 import bisq.core.dao.state.unconfirmed.UnconfirmedBsqChangeOutputListService;
-import bisq.core.filter.FilterManager;
 import bisq.core.locale.Res;
-import bisq.core.notifications.MobileNotificationService;
-import bisq.core.notifications.alerts.DisputeMsgEvents;
-import bisq.core.notifications.alerts.MyOfferTakenEvents;
-import bisq.core.notifications.alerts.TradeEvents;
-import bisq.core.notifications.alerts.market.MarketAlerts;
-import bisq.core.notifications.alerts.price.PriceAlert;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.RevolutAccount;
-import bisq.core.payment.TradeLimits;
 import bisq.core.payment.payload.PaymentMethod;
-import bisq.core.provider.fee.FeeService;
-import bisq.core.provider.price.PriceFeedService;
-import bisq.core.support.dispute.arbitration.ArbitrationManager;
-import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
-import bisq.core.support.dispute.mediation.MediationManager;
-import bisq.core.support.dispute.mediation.mediator.MediatorManager;
-import bisq.core.support.dispute.refund.RefundManager;
-import bisq.core.support.dispute.refund.refundagent.RefundAgentManager;
-import bisq.core.support.traderchat.TraderChatManager;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.TradeTxException;
-import bisq.core.trade.statistics.TradeStatisticsManager;
-import bisq.core.trade.txproof.xmr.XmrTxProofService;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.CoinFormatter;
 
-import bisq.network.crypto.DecryptedDataTuple;
-import bisq.network.crypto.EncryptionService;
 import bisq.network.p2p.P2PService;
-import bisq.network.p2p.peers.keepalive.messages.Ping;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 
-import bisq.common.ClockWatcher;
 import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
 import bisq.common.app.Log;
 import bisq.common.config.Config;
-import bisq.common.crypto.CryptoException;
-import bisq.common.crypto.KeyRing;
-import bisq.common.crypto.SealedAndSigned;
-import bisq.common.proto.ProtobufferException;
 import bisq.common.util.InvalidVersionException;
 import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.RejectMessage;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -100,10 +67,9 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
 
-import javafx.collections.ListChangeListener;
 import javafx.collections.SetChangeListener;
 
-import org.spongycastle.crypto.params.KeyParameter;
+import org.bouncycastle.crypto.params.KeyParameter;
 
 import java.io.IOException;
 
@@ -114,7 +80,6 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 import ch.qos.logback.classic.Level;
 
@@ -130,15 +95,12 @@ public class BisqSetup {
 
     public interface BisqSetupListener {
         default void onInitP2pNetwork() {
-            log.info("onInitP2pNetwork");
         }
 
         default void onInitWallet() {
-            log.info("onInitWallet");
         }
 
         default void onRequestWalletPassword() {
-            log.info("onRequestWalletPassword");
         }
 
         void onSetupComplete();
@@ -146,57 +108,32 @@ public class BisqSetup {
 
     private static final long STARTUP_TIMEOUT_MINUTES = 4;
 
+    private final DomainInitialisation domainInitialisation;
     private final P2PNetworkSetup p2PNetworkSetup;
     private final WalletAppSetup walletAppSetup;
     private final WalletsManager walletsManager;
     private final WalletsSetup walletsSetup;
     private final BtcWalletService btcWalletService;
-    private final Balances balances;
-    private final PriceFeedService priceFeedService;
-    private final ArbitratorManager arbitratorManager;
-    private final MediatorManager mediatorManager;
-    private final RefundAgentManager refundAgentManager;
     private final P2PService p2PService;
     private final TradeManager tradeManager;
     private final OpenOfferManager openOfferManager;
-    private final ArbitrationManager arbitrationManager;
-    private final MediationManager mediationManager;
-    private final RefundManager refundManager;
-    private final TraderChatManager traderChatManager;
     private final Preferences preferences;
     private final User user;
     private final AlertManager alertManager;
-    private final PrivateNotificationManager privateNotificationManager;
-    private final FilterManager filterManager;
-    private final TradeStatisticsManager tradeStatisticsManager;
-    private final XmrTxProofService xmrTxProofService;
-    private final ClockWatcher clockWatcher;
-    private final FeeService feeService;
-    private final DaoSetup daoSetup;
     private final UnconfirmedBsqChangeOutputListService unconfirmedBsqChangeOutputListService;
-    private final EncryptionService encryptionService;
-    private final KeyRing keyRing;
     private final Config config;
     private final AccountAgeWitnessService accountAgeWitnessService;
-    private final SignedWitnessService signedWitnessService;
-    private final MobileNotificationService mobileNotificationService;
-    private final MyOfferTakenEvents myOfferTakenEvents;
-    private final TradeEvents tradeEvents;
-    private final DisputeMsgEvents disputeMsgEvents;
-    private final PriceAlert priceAlert;
-    private final MarketAlerts marketAlerts;
-    private final VoteResultService voteResultService;
     private final TorSetup torSetup;
-    private final TradeLimits tradeLimits;
     private final CoinFormatter formatter;
     private final LocalBitcoinNode localBitcoinNode;
+    private final AppStartupState appStartupState;
 
     @Setter
     @Nullable
     private Consumer<Runnable> displayTacHandler;
     @Setter
     @Nullable
-    private Consumer<String> cryptoSetupFailedHandler, chainFileLockedExceptionHandler,
+    private Consumer<String> chainFileLockedExceptionHandler,
             spvFileCorruptedHandler, lockedUpFundsHandler, daoErrorMessageHandler, daoWarnMessageHandler,
             filterWarningHandler, displaySecurityRecommendationHandler, displayLocalhostHandler,
             wrongOSArchitectureHandler, displaySignedByArbitratorHandler,
@@ -232,6 +169,9 @@ public class BisqSetup {
     @Setter
     @Nullable
     private Runnable osxKeyLoggerWarningHandler;
+    @Setter
+    @Nullable
+    private Runnable qubesOSInfoHandler;
 
     @Getter
     final BooleanProperty newVersionAvailableProperty = new SimpleBooleanProperty(false);
@@ -240,141 +180,48 @@ public class BisqSetup {
     private boolean allBasicServicesInitialized;
     @SuppressWarnings("FieldCanBeLocal")
     private MonadicBinding<Boolean> p2pNetworkAndWalletInitialized;
-    private List<BisqSetupListener> bisqSetupListeners = new ArrayList<>();
+    private final List<BisqSetupListener> bisqSetupListeners = new ArrayList<>();
 
     @Inject
-    public BisqSetup(P2PNetworkSetup p2PNetworkSetup,
+    public BisqSetup(DomainInitialisation domainInitialisation,
+                     P2PNetworkSetup p2PNetworkSetup,
                      WalletAppSetup walletAppSetup,
                      WalletsManager walletsManager,
                      WalletsSetup walletsSetup,
                      BtcWalletService btcWalletService,
-                     Balances balances,
-                     PriceFeedService priceFeedService,
-                     ArbitratorManager arbitratorManager,
-                     MediatorManager mediatorManager,
-                     RefundAgentManager refundAgentManager,
                      P2PService p2PService,
                      TradeManager tradeManager,
                      OpenOfferManager openOfferManager,
-                     ArbitrationManager arbitrationManager,
-                     MediationManager mediationManager,
-                     RefundManager refundManager,
-                     TraderChatManager traderChatManager,
                      Preferences preferences,
                      User user,
                      AlertManager alertManager,
-                     PrivateNotificationManager privateNotificationManager,
-                     FilterManager filterManager,
-                     TradeStatisticsManager tradeStatisticsManager,
-                     XmrTxProofService xmrTxProofService,
-                     ClockWatcher clockWatcher,
-                     FeeService feeService,
-                     DaoSetup daoSetup,
                      UnconfirmedBsqChangeOutputListService unconfirmedBsqChangeOutputListService,
-                     EncryptionService encryptionService,
-                     KeyRing keyRing,
                      Config config,
                      AccountAgeWitnessService accountAgeWitnessService,
-                     SignedWitnessService signedWitnessService,
-                     MobileNotificationService mobileNotificationService,
-                     MyOfferTakenEvents myOfferTakenEvents,
-                     TradeEvents tradeEvents,
-                     DisputeMsgEvents disputeMsgEvents,
-                     PriceAlert priceAlert,
-                     MarketAlerts marketAlerts,
-                     VoteResultService voteResultService,
                      TorSetup torSetup,
-                     TradeLimits tradeLimits,
                      @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter,
-                     LocalBitcoinNode localBitcoinNode) {
-
+                     LocalBitcoinNode localBitcoinNode,
+                     AppStartupState appStartupState) {
+        this.domainInitialisation = domainInitialisation;
         this.p2PNetworkSetup = p2PNetworkSetup;
         this.walletAppSetup = walletAppSetup;
-
         this.walletsManager = walletsManager;
         this.walletsSetup = walletsSetup;
         this.btcWalletService = btcWalletService;
-        this.balances = balances;
-        this.priceFeedService = priceFeedService;
-        this.arbitratorManager = arbitratorManager;
-        this.mediatorManager = mediatorManager;
-        this.refundAgentManager = refundAgentManager;
         this.p2PService = p2PService;
         this.tradeManager = tradeManager;
         this.openOfferManager = openOfferManager;
-        this.arbitrationManager = arbitrationManager;
-        this.mediationManager = mediationManager;
-        this.refundManager = refundManager;
-        this.traderChatManager = traderChatManager;
         this.preferences = preferences;
         this.user = user;
         this.alertManager = alertManager;
-        this.privateNotificationManager = privateNotificationManager;
-        this.filterManager = filterManager;
-        this.tradeStatisticsManager = tradeStatisticsManager;
-        this.xmrTxProofService = xmrTxProofService;
-        this.clockWatcher = clockWatcher;
-        this.feeService = feeService;
-        this.daoSetup = daoSetup;
         this.unconfirmedBsqChangeOutputListService = unconfirmedBsqChangeOutputListService;
-        this.encryptionService = encryptionService;
-        this.keyRing = keyRing;
         this.config = config;
         this.accountAgeWitnessService = accountAgeWitnessService;
-        this.signedWitnessService = signedWitnessService;
-        this.mobileNotificationService = mobileNotificationService;
-        this.myOfferTakenEvents = myOfferTakenEvents;
-        this.tradeEvents = tradeEvents;
-        this.disputeMsgEvents = disputeMsgEvents;
-        this.priceAlert = priceAlert;
-        this.marketAlerts = marketAlerts;
-        this.voteResultService = voteResultService;
         this.torSetup = torSetup;
-        this.tradeLimits = tradeLimits;
         this.formatter = formatter;
         this.localBitcoinNode = localBitcoinNode;
+        this.appStartupState = appStartupState;
     }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Setup
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public void addBisqSetupListener(BisqSetupListener listener) {
-        bisqSetupListeners.add(listener);
-    }
-
-    public void start() {
-        UserThread.runPeriodically(() -> {
-        }, 1);
-        maybeReSyncSPVChain();
-        maybeShowTac(this::step2);
-    }
-
-    private void step2() {
-        torSetup.cleanupTorFiles();
-        readMapsFromResources(this::step3);
-        checkCryptoSetup();
-        checkForCorrectOSArchitecture();
-        checkOSXVersion();
-    }
-
-    private void step3() {
-        startP2pNetworkAndWallet(this::step4);
-    }
-
-    private void step4() {
-        initDomainServices();
-
-        bisqSetupListeners.forEach(BisqSetupListener::onSetupComplete);
-
-        // We set that after calling the setupCompleteHandler to not trigger a popup from the dev dummy accounts
-        // in MainViewModel
-        maybeShowSecurityRecommendation();
-        maybeShowLocalhostRunningInfo();
-        maybeShowAccountSigningStateInfo();
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
@@ -400,58 +247,45 @@ public class BisqSetup {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Getters
+    // Main startup tasks
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    // Wallet
-    public StringProperty getBtcInfo() {
-        return walletAppSetup.getBtcInfo();
+    public void addBisqSetupListener(BisqSetupListener listener) {
+        bisqSetupListeners.add(listener);
     }
 
-    public DoubleProperty getBtcSyncProgress() {
-        return walletAppSetup.getBtcSyncProgress();
+    public void start() {
+        maybeReSyncSPVChain();
+        maybeShowTac(this::step2);
     }
 
-    public StringProperty getWalletServiceErrorMsg() {
-        return walletAppSetup.getWalletServiceErrorMsg();
+    private void step2() {
+        torSetup.cleanupTorFiles();
+        readMapsFromResources(this::step3);
+        checkForCorrectOSArchitecture();
+        checkOSXVersion();
+        checkIfRunningOnQubesOS();
     }
 
-    public StringProperty getBtcSplashSyncIconId() {
-        return walletAppSetup.getBtcSplashSyncIconId();
+    private void step3() {
+        startP2pNetworkAndWallet(this::step4);
     }
 
-    public BooleanProperty getUseTorForBTC() {
-        return walletAppSetup.getUseTorForBTC();
-    }
+    private void step4() {
+        initDomainServices();
 
-    // P2P
-    public StringProperty getP2PNetworkInfo() {
-        return p2PNetworkSetup.getP2PNetworkInfo();
-    }
+        bisqSetupListeners.forEach(BisqSetupListener::onSetupComplete);
 
-    public BooleanProperty getSplashP2PNetworkAnimationVisible() {
-        return p2PNetworkSetup.getSplashP2PNetworkAnimationVisible();
-    }
-
-    public StringProperty getP2pNetworkWarnMsg() {
-        return p2PNetworkSetup.getP2pNetworkWarnMsg();
-    }
-
-    public StringProperty getP2PNetworkIconId() {
-        return p2PNetworkSetup.getP2PNetworkIconId();
-    }
-
-    public BooleanProperty getUpdatedDataReceived() {
-        return p2PNetworkSetup.getUpdatedDataReceived();
-    }
-
-    public StringProperty getP2pNetworkLabelId() {
-        return p2PNetworkSetup.getP2pNetworkLabelId();
+        // We set that after calling the setupCompleteHandler to not trigger a popup from the dev dummy accounts
+        // in MainViewModel
+        maybeShowSecurityRecommendation();
+        maybeShowLocalhostRunningInfo();
+        maybeShowAccountSigningStateInfo();
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private
+    // Sub tasks
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void maybeReSyncSPVChain() {
@@ -490,36 +324,6 @@ public class BisqSetup {
         });
     }
 
-    private void checkCryptoSetup() {
-        // We want to test if the client is compiled with the correct crypto provider (BountyCastle)
-        // and if the unlimited Strength for cryptographic keys is set.
-        // If users compile themselves they might miss that step and then would get an exception in the trade.
-        // To avoid that we add a sample encryption and signing here at startup to see if it doesn't cause an exception.
-        // See: https://github.com/bisq-network/exchange/blob/master/doc/build.md#7-enable-unlimited-strength-for-cryptographic-keys
-        new Thread(() -> {
-            try {
-                // just use any simple dummy msg
-                Ping payload = new Ping(1, 1);
-                SealedAndSigned sealedAndSigned = EncryptionService.encryptHybridWithSignature(payload,
-                        keyRing.getSignatureKeyPair(), keyRing.getPubKeyRing().getEncryptionPubKey());
-                DecryptedDataTuple tuple = encryptionService.decryptHybridWithSignature(sealedAndSigned, keyRing.getEncryptionKeyPair().getPrivate());
-                if (tuple.getNetworkEnvelope() instanceof Ping &&
-                        ((Ping) tuple.getNetworkEnvelope()).getNonce() == payload.getNonce() &&
-                        ((Ping) tuple.getNetworkEnvelope()).getLastRoundTripTime() == payload.getLastRoundTripTime()) {
-                    log.debug("Crypto test succeeded");
-                } else {
-                    throw new CryptoException("Payload not correct after decryption");
-                }
-            } catch (CryptoException | ProtobufferException e) {
-                e.printStackTrace();
-                String msg = Res.get("popup.warning.cryptoTestFailed", e.getMessage());
-                log.error(msg);
-                if (cryptoSetupFailedHandler != null)
-                    cryptoSetupFailedHandler.accept(msg);
-            }
-        }, "checkCryptoThread").start();
-    }
-
     private void startP2pNetworkAndWallet(Runnable nextStep) {
         ChangeListener<Boolean> walletInitializedListener = (observable, oldValue, newValue) -> {
             // TODO that seems to be called too often if Tor takes longer to start up...
@@ -545,6 +349,7 @@ public class BisqSetup {
 
         }, STARTUP_TIMEOUT_MINUTES, TimeUnit.MINUTES);
 
+        log.info("Init P2P network");
         bisqSetupListeners.forEach(BisqSetupListener::onInitP2pNetwork);
         p2pNetworkReady = p2PNetworkSetup.init(this::initWallet, displayTorNetworkSettingsHandler);
 
@@ -573,6 +378,7 @@ public class BisqSetup {
     }
 
     private void initWallet() {
+        log.info("Init wallet");
         bisqSetupListeners.forEach(BisqSetupListener::onInitWallet);
         Runnable walletPasswordHandler = () -> {
             log.info("Wallet password required");
@@ -609,6 +415,35 @@ public class BisqSetup {
                 () -> walletInitialized.set(true));
     }
 
+    private void initDomainServices() {
+        log.info("initDomainServices");
+
+        domainInitialisation.initDomainServices(rejectedTxErrorMessageHandler,
+                displayPrivateNotificationHandler,
+                daoErrorMessageHandler,
+                daoWarnMessageHandler,
+                filterWarningHandler,
+                voteResultExceptionHandler,
+                revolutAccountsUpdateHandler);
+
+        if (walletsSetup.downloadPercentageProperty().get() == 1) {
+            checkForLockedUpFunds();
+            checkForInvalidMakerFeeTxs();
+        }
+
+        alertManager.alertMessageProperty().addListener((observable, oldValue, newValue) ->
+                displayAlertIfPresent(newValue, false));
+        displayAlertIfPresent(alertManager.alertMessageProperty().get(), false);
+
+        allBasicServicesInitialized = true;
+
+        appStartupState.onDomainServicesInitialized();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Utils
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void checkForLockedUpFunds() {
         // We check if there are locked up funds in failed or closed trades
@@ -678,189 +513,15 @@ public class BisqSetup {
         }
     }
 
-    private void initDomainServices() {
-        log.info("initDomainServices");
-
-        clockWatcher.start();
-
-        tradeLimits.onAllServicesInitialized();
-
-        arbitrationManager.onAllServicesInitialized();
-        mediationManager.onAllServicesInitialized();
-        refundManager.onAllServicesInitialized();
-        traderChatManager.onAllServicesInitialized();
-
-        tradeManager.onAllServicesInitialized();
-        xmrTxProofService.onAllServicesInitialized();
-
-        if (walletsSetup.downloadPercentageProperty().get() == 1) {
-            checkForLockedUpFunds();
-            checkForInvalidMakerFeeTxs();
+    /**
+     * If Bisq is running on an OS that is virtualized under Qubes, show info popup with
+     * link to the Setup Guide. The guide documents what other steps are needed, in
+     * addition to installing the Linux package (qube sizing, etc)
+     */
+    private void checkIfRunningOnQubesOS() {
+        if (Utilities.isQubesOS() && qubesOSInfoHandler != null) {
+            qubesOSInfoHandler.run();
         }
-
-        openOfferManager.onAllServicesInitialized();
-
-        balances.onAllServicesInitialized();
-
-        walletAppSetup.getRejectedTxException().addListener((observable, oldValue, newValue) -> {
-            if (newValue == null || newValue.getTxId() == null) {
-                return;
-            }
-
-            RejectMessage rejectMessage = newValue.getRejectMessage();
-            log.warn("We received reject message: {}", rejectMessage);
-
-            // TODO: Find out which reject messages are critical and which not.
-            // We got a report where a "tx already known" message caused a failed trade but the deposit tx was valid.
-            // To avoid such false positives we only handle reject messages which we consider clearly critical.
-
-            switch (rejectMessage.getReasonCode()) {
-                case OBSOLETE:
-                case DUPLICATE:
-                case NONSTANDARD:
-                case CHECKPOINT:
-                case OTHER:
-                    // We ignore those cases to avoid that not critical reject messages trigger a failed trade.
-                    log.warn("We ignore that reject message as it is likely not critical.");
-                    break;
-                case MALFORMED:
-                case INVALID:
-                case DUST:
-                case INSUFFICIENTFEE:
-                    // We delay as we might get the rejected tx error before we have completed the create offer protocol
-                    log.warn("We handle that reject message as it is likely critical.");
-                    UserThread.runAfter(() -> {
-                        String txId = newValue.getTxId();
-                        openOfferManager.getObservableList().stream()
-                                .filter(openOffer -> txId.equals(openOffer.getOffer().getOfferFeePaymentTxId()))
-                                .forEach(openOffer -> {
-                                    // We delay to avoid concurrent modification exceptions
-                                    UserThread.runAfter(() -> {
-                                        openOffer.getOffer().setErrorMessage(newValue.getMessage());
-                                        if (rejectedTxErrorMessageHandler != null) {
-                                            rejectedTxErrorMessageHandler.accept(Res.get("popup.warning.openOffer.makerFeeTxRejected", openOffer.getId(), txId));
-                                        }
-                                        openOfferManager.removeOpenOffer(openOffer, () -> {
-                                            log.warn("We removed an open offer because the maker fee was rejected by the Bitcoin " +
-                                                    "network. OfferId={}, txId={}", openOffer.getShortId(), txId);
-                                        }, log::warn);
-                                    }, 1);
-                                });
-
-                        tradeManager.getTradableList().stream()
-                                .filter(trade -> trade.getOffer() != null)
-                                .forEach(trade -> {
-                                    String details = null;
-                                    if (txId.equals(trade.getDepositTxId())) {
-                                        details = Res.get("popup.warning.trade.txRejected.deposit");
-                                    }
-                                    if (txId.equals(trade.getOffer().getOfferFeePaymentTxId()) || txId.equals(trade.getTakerFeeTxId())) {
-                                        details = Res.get("popup.warning.trade.txRejected.tradeFee");
-                                    }
-
-                                    if (details != null) {
-                                        // We delay to avoid concurrent modification exceptions
-                                        String finalDetails = details;
-                                        UserThread.runAfter(() -> {
-                                            trade.setErrorMessage(newValue.getMessage());
-                                            if (rejectedTxErrorMessageHandler != null) {
-                                                rejectedTxErrorMessageHandler.accept(Res.get("popup.warning.trade.txRejected",
-                                                        finalDetails, trade.getShortId(), txId));
-                                            }
-                                            tradeManager.addTradeToFailedTrades(trade);
-                                        }, 1);
-                                    }
-                                });
-                    }, 3);
-            }
-        });
-
-
-        arbitratorManager.onAllServicesInitialized();
-        mediatorManager.onAllServicesInitialized();
-        refundAgentManager.onAllServicesInitialized();
-
-        alertManager.alertMessageProperty().addListener((observable, oldValue, newValue) ->
-                displayAlertIfPresent(newValue, false));
-        displayAlertIfPresent(alertManager.alertMessageProperty().get(), false);
-
-        privateNotificationManager.privateNotificationProperty().addListener((observable, oldValue, newValue) -> {
-            if (displayPrivateNotificationHandler != null)
-                displayPrivateNotificationHandler.accept(newValue);
-        });
-
-        p2PService.onAllServicesInitialized();
-
-        feeService.onAllServicesInitialized();
-
-        if (DevEnv.isDaoActivated()) {
-            daoSetup.onAllServicesInitialized(errorMessage -> {
-                if (daoErrorMessageHandler != null)
-                    daoErrorMessageHandler.accept(errorMessage);
-            }, warningMessage -> {
-                if (daoWarnMessageHandler != null)
-                    daoWarnMessageHandler.accept(warningMessage);
-            });
-        }
-
-        tradeStatisticsManager.onAllServicesInitialized();
-
-        accountAgeWitnessService.onAllServicesInitialized();
-        signedWitnessService.onAllServicesInitialized();
-
-        priceFeedService.setCurrencyCodeOnInit();
-
-        filterManager.onAllServicesInitialized();
-        filterManager.addListener(filter -> {
-            if (filter != null && filterWarningHandler != null) {
-                if (filter.getSeedNodes() != null && !filter.getSeedNodes().isEmpty()) {
-                    log.info(Res.get("popup.warning.nodeBanned", Res.get("popup.warning.seed")));
-                    // Let's keep that more silent. Might be used in case a node is unstable and we don't want to confuse users.
-                    // filterWarningHandler.accept(Res.get("popup.warning.nodeBanned", Res.get("popup.warning.seed")));
-                }
-
-                if (filter.getPriceRelayNodes() != null && !filter.getPriceRelayNodes().isEmpty()) {
-                    log.info(Res.get("popup.warning.nodeBanned", Res.get("popup.warning.priceRelay")));
-                    // Let's keep that more silent. Might be used in case a node is unstable and we don't want to confuse users.
-                    // filterWarningHandler.accept(Res.get("popup.warning.nodeBanned", Res.get("popup.warning.priceRelay")));
-                }
-
-                if (filterManager.requireUpdateToNewVersionForTrading()) {
-                    filterWarningHandler.accept(Res.get("popup.warning.mandatoryUpdate.trading"));
-                }
-
-                if (filterManager.requireUpdateToNewVersionForDAO()) {
-                    filterWarningHandler.accept(Res.get("popup.warning.mandatoryUpdate.dao"));
-                }
-                if (filter.isDisableDao()) {
-                    filterWarningHandler.accept(Res.get("popup.warning.disable.dao"));
-                }
-            }
-        });
-
-        voteResultService.getVoteResultExceptions().addListener((ListChangeListener<VoteResultException>) c -> {
-            c.next();
-            if (c.wasAdded() && voteResultExceptionHandler != null) {
-                c.getAddedSubList().forEach(e -> voteResultExceptionHandler.accept(e));
-            }
-        });
-
-        mobileNotificationService.onAllServicesInitialized();
-        myOfferTakenEvents.onAllServicesInitialized();
-        tradeEvents.onAllServicesInitialized();
-        disputeMsgEvents.onAllServicesInitialized();
-        priceAlert.onAllServicesInitialized();
-        marketAlerts.onAllServicesInitialized();
-
-        if (revolutAccountsUpdateHandler != null) {
-            revolutAccountsUpdateHandler.accept(user.getPaymentAccountsAsObservable().stream()
-                    .filter(paymentAccount -> paymentAccount instanceof RevolutAccount)
-                    .map(paymentAccount -> (RevolutAccount) paymentAccount)
-                    .filter(RevolutAccount::userNameNotSet)
-                    .collect(Collectors.toList()));
-        }
-
-        allBasicServicesInitialized = true;
     }
 
     private void maybeShowSecurityRecommendation() {
@@ -931,4 +592,57 @@ public class BisqSetup {
             displayHandler.accept(key);
         }
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Getters
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    // Wallet
+    public StringProperty getBtcInfo() {
+        return walletAppSetup.getBtcInfo();
+    }
+
+    public DoubleProperty getBtcSyncProgress() {
+        return walletAppSetup.getBtcSyncProgress();
+    }
+
+    public StringProperty getWalletServiceErrorMsg() {
+        return walletAppSetup.getWalletServiceErrorMsg();
+    }
+
+    public StringProperty getBtcSplashSyncIconId() {
+        return walletAppSetup.getBtcSplashSyncIconId();
+    }
+
+    public BooleanProperty getUseTorForBTC() {
+        return walletAppSetup.getUseTorForBTC();
+    }
+
+    // P2P
+    public StringProperty getP2PNetworkInfo() {
+        return p2PNetworkSetup.getP2PNetworkInfo();
+    }
+
+    public BooleanProperty getSplashP2PNetworkAnimationVisible() {
+        return p2PNetworkSetup.getSplashP2PNetworkAnimationVisible();
+    }
+
+    public StringProperty getP2pNetworkWarnMsg() {
+        return p2PNetworkSetup.getP2pNetworkWarnMsg();
+    }
+
+    public StringProperty getP2PNetworkIconId() {
+        return p2PNetworkSetup.getP2PNetworkIconId();
+    }
+
+    public BooleanProperty getUpdatedDataReceived() {
+        return p2PNetworkSetup.getUpdatedDataReceived();
+    }
+
+    public StringProperty getP2pNetworkLabelId() {
+        return p2PNetworkSetup.getP2pNetworkLabelId();
+    }
+
+
 }

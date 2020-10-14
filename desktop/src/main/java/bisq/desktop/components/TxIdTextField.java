@@ -40,7 +40,10 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.AnchorPane;
 
+import lombok.Getter;
 import lombok.Setter;
+
+import javax.annotation.Nullable;
 
 public class TxIdTextField extends AnchorPane {
     private static Preferences preferences;
@@ -55,11 +58,11 @@ public class TxIdTextField extends AnchorPane {
         TxIdTextField.walletService = walletService;
     }
 
+    @Getter
     private final TextField textField;
     private final Tooltip progressIndicatorTooltip;
     private final TxConfidenceIndicator txConfidenceIndicator;
-    private final Label copyIcon;
-    private final Label blockExplorerIcon;
+    private final Label copyIcon, blockExplorerIcon, missingTxWarningIcon;
     private TxConfidenceListener txConfidenceListener;
     @Setter
     private boolean isBsq;
@@ -99,6 +102,16 @@ public class TxIdTextField extends AnchorPane {
         AnchorPane.setRightAnchor(blockExplorerIcon, 52.0);
         AnchorPane.setTopAnchor(blockExplorerIcon, 4.0);
 
+        missingTxWarningIcon = new Label();
+        missingTxWarningIcon.getStyleClass().addAll("icon", "error-icon");
+        AwesomeDude.setIcon(missingTxWarningIcon, AwesomeIcon.WARNING_SIGN);
+        missingTxWarningIcon.setTooltip(new Tooltip(Res.get("txIdTextField.missingTx.warning.tooltip")));
+        missingTxWarningIcon.setMinWidth(20);
+        AnchorPane.setRightAnchor(missingTxWarningIcon, 52.0);
+        AnchorPane.setTopAnchor(missingTxWarningIcon, 4.0);
+        missingTxWarningIcon.setVisible(false);
+        missingTxWarningIcon.setManaged(false);
+
         textField = new JFXTextField();
         textField.setId("address-text-field");
         textField.setEditable(false);
@@ -106,12 +119,25 @@ public class TxIdTextField extends AnchorPane {
         AnchorPane.setRightAnchor(textField, 80.0);
         AnchorPane.setLeftAnchor(textField, 0.0);
         textField.focusTraversableProperty().set(focusTraversableProperty().get());
-        getChildren().addAll(textField, copyIcon, blockExplorerIcon, txConfidenceIndicator);
+        getChildren().addAll(textField, missingTxWarningIcon, blockExplorerIcon, copyIcon, txConfidenceIndicator);
     }
 
-    public void setup(String txId) {
+    public void setup(@Nullable String txId) {
         if (txConfidenceListener != null)
             walletService.removeTxConfidenceListener(txConfidenceListener);
+
+        if (txId == null) {
+            textField.setText(Res.get("shared.na"));
+            textField.setId("address-text-field-error");
+            blockExplorerIcon.setVisible(false);
+            blockExplorerIcon.setManaged(false);
+            copyIcon.setVisible(false);
+            copyIcon.setManaged(false);
+            txConfidenceIndicator.setVisible(false);
+            missingTxWarningIcon.setVisible(true);
+            missingTxWarningIcon.setManaged(true);
+            return;
+        }
 
         txConfidenceListener = new TxConfidenceListener(txId) {
             @Override

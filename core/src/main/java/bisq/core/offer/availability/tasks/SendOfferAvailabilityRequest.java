@@ -30,7 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class SendOfferAvailabilityRequest extends Task<OfferAvailabilityModel> {
-    public SendOfferAvailabilityRequest(TaskRunner taskHandler, OfferAvailabilityModel model) {
+    public SendOfferAvailabilityRequest(TaskRunner<OfferAvailabilityModel> taskHandler, OfferAvailabilityModel model) {
         super(taskHandler, model);
     }
 

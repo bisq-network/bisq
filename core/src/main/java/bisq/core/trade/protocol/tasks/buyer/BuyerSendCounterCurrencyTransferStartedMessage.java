@@ -18,25 +18,106 @@
 package bisq.core.trade.protocol.tasks.buyer;
 
 import bisq.core.btc.model.AddressEntry;
-import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.network.MessageState;
 import bisq.core.trade.Trade;
 import bisq.core.trade.messages.CounterCurrencyTransferStartedMessage;
-import bisq.core.trade.protocol.tasks.TradeTask;
+import bisq.core.trade.messages.TradeMessage;
+import bisq.core.trade.protocol.tasks.SendMailboxMessageTask;
 
-import bisq.network.p2p.NodeAddress;
-import bisq.network.p2p.SendMailboxMessageListener;
-
+import bisq.common.Timer;
+import bisq.common.UserThread;
 import bisq.common.taskrunner.TaskRunner;
 
-import java.util.UUID;
+import javafx.beans.value.ChangeListener;
+
+import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * We send the seller the BuyerSendCounterCurrencyTransferStartedMessage.
+ * We wait to receive a ACK message back and resend the message
+ * in case that does not happen in 10 minutes or if the message was stored in mailbox or failed. We keep repeating that
+ * with doubling the interval each time and until the MAX_RESEND_ATTEMPTS is reached.
+ * If never successful we give up and complete. It might be a valid case that the peer was not online for an extended
+ * time but we can be very sure that our message was stored as mailbox message in the network and one the peer goes
+ * online he will process it.
+ */
 @Slf4j
-public class BuyerSendCounterCurrencyTransferStartedMessage extends TradeTask {
-    @SuppressWarnings({"unused"})
-    public BuyerSendCounterCurrencyTransferStartedMessage(TaskRunner taskHandler, Trade trade) {
+public class BuyerSendCounterCurrencyTransferStartedMessage extends SendMailboxMessageTask {
+    private static final int MAX_RESEND_ATTEMPTS = 10;
+    private int delayInMin = 15;
+    private int resendCounter = 0;
+    private CounterCurrencyTransferStartedMessage message;
+    private ChangeListener<MessageState> listener;
+    private Timer timer;
+
+    public BuyerSendCounterCurrencyTransferStartedMessage(TaskRunner<Trade> taskHandler, Trade trade) {
         super(taskHandler, trade);
+    }
+
+    @Override
+    protected TradeMessage getMessage(String tradeId) {
+        if (message == null) {
+            AddressEntry payoutAddressEntry = processModel.getBtcWalletService().getOrCreateAddressEntry(tradeId,
+                    AddressEntry.Context.TRADE_PAYOUT);
+
+            // We do not use a real unique ID here as we want to be able to re-send the exact same message in case the
+            // peer does not respond with an ACK msg in a certain time interval. To avoid that we get dangling mailbox
+            // messages where only the one which gets processed by the peer would be removed we use the same uid. All
+            // other data stays the same when we re-send the message at any time later.
+            String deterministicId = tradeId + processModel.getMyNodeAddress().getFullAddress();
+            message = new CounterCurrencyTransferStartedMessage(
+                    tradeId,
+                    payoutAddressEntry.getAddressString(),
+                    processModel.getMyNodeAddress(),
+                    processModel.getPayoutTxSignature(),
+                    trade.getCounterCurrencyTxId(),
+                    trade.getCounterCurrencyExtraData(),
+                    deterministicId
+            );
+        }
+        return message;
+    }
+
+    @Override
+    protected void setStateSent() {
+        trade.setStateIfValidTransitionTo(Trade.State.BUYER_SENT_FIAT_PAYMENT_INITIATED_MSG);
+    }
+
+    @Override
+    protected void setStateArrived() {
+        trade.setStateIfValidTransitionTo(Trade.State.BUYER_SAW_ARRIVED_FIAT_PAYMENT_INITIATED_MSG);
+        cleanup();
+        // Complete is called in base class
+    }
+
+    // We override the default behaviour for onStoredInMailbox and do not call complete
+    @Override
+    protected void onStoredInMailbox() {
+        setStateStoredInMailbox();
+    }
+
+    @Override
+    protected void setStateStoredInMailbox() {
+        trade.setStateIfValidTransitionTo(Trade.State.BUYER_STORED_IN_MAILBOX_FIAT_PAYMENT_INITIATED_MSG);
+        if (!trade.isPayoutPublished()) {
+            tryToSendAgainLater();
+        }
+    }
+
+    // We override the default behaviour for onFault and do not call appendToErrorMessage and failed
+    @Override
+    protected void onFault(String errorMessage, TradeMessage message) {
+        setStateFault();
+    }
+
+    @Override
+    protected void setStateFault() {
+        trade.setStateIfValidTransitionTo(Trade.State.BUYER_SEND_FAILED_FIAT_PAYMENT_INITIATED_MSG);
+        if (!trade.isPayoutPublished()) {
+            tryToSendAgainLater();
+        }
     }
 
     @Override
@@ -44,56 +125,56 @@ public class BuyerSendCounterCurrencyTransferStartedMessage extends TradeTask {
         try {
             runInterceptHook();
 
-            BtcWalletService walletService = processModel.getBtcWalletService();
-            final String id = processModel.getOfferId();
-            AddressEntry payoutAddressEntry = walletService.getOrCreateAddressEntry(id,
-                    AddressEntry.Context.TRADE_PAYOUT);
-            final CounterCurrencyTransferStartedMessage message = new CounterCurrencyTransferStartedMessage(
-                    id,
-                    payoutAddressEntry.getAddressString(),
-                    processModel.getMyNodeAddress(),
-                    processModel.getPayoutTxSignature(),
-                    trade.getCounterCurrencyTxId(),
-                    trade.getCounterCurrencyExtraData(),
-                    UUID.randomUUID().toString()
-            );
-            NodeAddress peersNodeAddress = trade.getTradingPeerNodeAddress();
-            log.info("Send {} to peer {}. tradeId={}, uid={}",
-                    message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
-            trade.setState(Trade.State.BUYER_SENT_FIAT_PAYMENT_INITIATED_MSG);
-            processModel.getP2PService().sendEncryptedMailboxMessage(
-                    peersNodeAddress,
-                    processModel.getTradingPeer().getPubKeyRing(),
-                    message,
-                    new SendMailboxMessageListener() {
-                        @Override
-                        public void onArrived() {
-                            log.info("{} arrived at peer {}. tradeId={}, uid={}",
-                                    message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
-                            trade.setState(Trade.State.BUYER_SAW_ARRIVED_FIAT_PAYMENT_INITIATED_MSG);
-                            complete();
-                        }
-
-                        @Override
-                        public void onStoredInMailbox() {
-                            log.info("{} stored in mailbox for peer {}. tradeId={}, uid={}",
-                                    message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
-                            trade.setState(Trade.State.BUYER_STORED_IN_MAILBOX_FIAT_PAYMENT_INITIATED_MSG);
-                            complete();
-                        }
-
-                        @Override
-                        public void onFault(String errorMessage) {
-                            log.error("{} failed: Peer {}. tradeId={}, uid={}, errorMessage={}",
-                                    message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid(), errorMessage);
-                            trade.setState(Trade.State.BUYER_SEND_FAILED_FIAT_PAYMENT_INITIATED_MSG);
-                            appendToErrorMessage("Sending message failed: message=" + message + "\nerrorMessage=" + errorMessage);
-                            failed(errorMessage);
-                        }
-                    }
-            );
+            super.run();
         } catch (Throwable t) {
             failed(t);
+        } finally {
+            cleanup();
+        }
+    }
+
+    private void cleanup() {
+        if (timer != null) {
+            timer.stop();
+        }
+        if (listener != null) {
+            processModel.getPaymentStartedMessageStateProperty().removeListener(listener);
+        }
+    }
+
+    private void tryToSendAgainLater() {
+        if (resendCounter >= MAX_RESEND_ATTEMPTS) {
+            cleanup();
+            log.warn("We never received an ACK message when sending the CounterCurrencyTransferStartedMessage to the peer. " +
+                    "We stop now and complete the protocol task.");
+            complete();
+            return;
+        }
+
+        log.info("We send the message again to the peer after a delay of {} min.", delayInMin);
+        if (timer != null) {
+            timer.stop();
+        }
+        timer = UserThread.runAfter(this::run, delayInMin, TimeUnit.MINUTES);
+
+        if (resendCounter == 0) {
+            // We want to register listener only once
+            listener = (observable, oldValue, newValue) -> onMessageStateChange(newValue);
+            processModel.getPaymentStartedMessageStateProperty().addListener(listener);
+            onMessageStateChange(processModel.getPaymentStartedMessageStateProperty().get());
+        }
+
+        delayInMin = delayInMin * 2;
+        resendCounter++;
+    }
+
+    private void onMessageStateChange(MessageState newValue) {
+        // Once we receive an ACK from our msg we know the peer has received the msg and we stop.
+        if (newValue == MessageState.ACKNOWLEDGED) {
+            // We treat a ACK like BUYER_SAW_ARRIVED_FIAT_PAYMENT_INITIATED_MSG
+            trade.setStateIfValidTransitionTo(Trade.State.BUYER_SAW_ARRIVED_FIAT_PAYMENT_INITIATED_MSG);
+            cleanup();
+            complete();
         }
     }
 }

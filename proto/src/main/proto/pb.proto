@@ -76,8 +76,8 @@ message NetworkEnvelope {
         DepositTxAndDelayedPayoutTxMessage deposit_tx_and_delayed_payout_tx_message = 48;
         PeerPublishedDelayedPayoutTxMessage peer_published_delayed_payout_tx_message = 49;
 
-        RefreshTradeStateRequest refresh_trade_state_request = 50;
-        TraderSignedWitnessMessage trader_signed_witness_message = 51;
+        RefreshTradeStateRequest refresh_trade_state_request = 50 [deprecated = true];
+        TraderSignedWitnessMessage trader_signed_witness_message = 51 [deprecated = true];
     }
 }
 
@@ -92,9 +92,10 @@ message BundleOfEnvelopes {
 // get data
 
 message PreliminaryGetDataRequest {
-    int32 nonce = 21;
+    int32 nonce = 21; // This was set to 21 instead of 1 in some old commit so we cannot change it.
     repeated bytes excluded_keys = 2;
     repeated int32 supported_capabilities = 3;
+    string version = 4;
 }
 
 message GetDataResponse {
@@ -109,6 +110,7 @@ message GetUpdatedDataRequest {
     NodeAddress sender_node_address = 1;
     int32 nonce = 2;
     repeated bytes excluded_keys = 3;
+    string version = 4;
 }
 
 // peers
@@ -309,6 +311,7 @@ message PayoutTxPublishedMessage {
     bytes payout_tx = 2;
     NodeAddress sender_node_address = 3;
     string uid = 4;
+    SignedWitness signed_witness = 5; // Added in v1.4.0
 }
 
 message MediatedPayoutTxPublishedMessage {
@@ -325,17 +328,19 @@ message MediatedPayoutTxSignatureMessage {
     NodeAddress sender_node_address = 4;
 }
 
+// Deprecated since 1.4.0
 message RefreshTradeStateRequest {
-    string uid = 1;
-    string trade_id = 2;
-    NodeAddress sender_node_address = 3;
+    string uid = 1 [deprecated = true];
+    string trade_id = 2 [deprecated = true];
+    NodeAddress sender_node_address = 3 [deprecated = true];
 }
 
+// Deprecated since 1.4.0
 message TraderSignedWitnessMessage {
-    string uid = 1;
-    string trade_id = 2;
-    NodeAddress sender_node_address = 3;
-    SignedWitness signed_witness = 4;
+    string uid = 1 [deprecated = true];
+    string trade_id = 2 [deprecated = true];
+    NodeAddress sender_node_address = 3 [deprecated = true];
+    SignedWitness signed_witness = 4 [deprecated = true];
 }
 
 // dispute
@@ -792,6 +797,7 @@ message Dispute {
     SupportType support_type = 24;
     string mediators_dispute_result = 25;
     string delayed_payout_tx_id = 26;
+    string donation_address_of_delayed_payout_tx = 27;
 }
 
 message Attachment {
@@ -1395,7 +1401,7 @@ message Trade {
     NodeAddress refund_agent_node_address = 33;
     PubKeyRing refund_agent_pub_key_ring = 34;
     RefundResultState refund_result_state = 35;
-    int64 last_refresh_request_date = 36;
+    int64 last_refresh_request_date = 36 [deprecated = true];
     string counter_currency_extra_data = 37;
     string asset_tx_proof_result = 38; // name of AssetTxProofResult enum
 }

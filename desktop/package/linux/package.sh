@@ -6,7 +6,7 @@
 #   - Update version below
 #   - Ensure JAVA_HOME below is pointing to OracleJDK 10 directory
 
-version=1.3.7
+version=1.3.9-SNAPSHOT
 version_base=$(echo $version | awk -F'[_-]' '{print $1}')
 if [ ! -f "$JAVA_HOME/bin/javapackager" ]; then
 	if [ -d "/usr/lib/jvm/jdk-10.0.2" ]; then
@@ -111,6 +111,7 @@ $JAVA_HOME/bin/javapackager \
     -BjvmOptions=-Xss1280k \
     -BjvmOptions=-XX:MaxRAM=4g \
     -BjvmOptions=-Djava.net.preferIPv4Stack=true \
+    -BjvmOptions=-Djdk.module.illegalAccess=deny \
     -outfile Bisq-$version \
     -v
 

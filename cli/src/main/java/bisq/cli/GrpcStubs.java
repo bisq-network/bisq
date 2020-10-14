@@ -17,9 +17,11 @@
 
 package bisq.cli;
 
+import bisq.proto.grpc.DisputeAgentsGrpc;
 import bisq.proto.grpc.GetVersionGrpc;
 import bisq.proto.grpc.OffersGrpc;
 import bisq.proto.grpc.PaymentAccountsGrpc;
+import bisq.proto.grpc.PriceGrpc;
 import bisq.proto.grpc.WalletsGrpc;
 
 import io.grpc.CallCredentials;
@@ -29,9 +31,11 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 
 public class GrpcStubs {
 
+    public final DisputeAgentsGrpc.DisputeAgentsBlockingStub disputeAgentsService;
     public final GetVersionGrpc.GetVersionBlockingStub versionService;
     public final OffersGrpc.OffersBlockingStub offersService;
     public final PaymentAccountsGrpc.PaymentAccountsBlockingStub paymentAccountsService;
+    public final PriceGrpc.PriceBlockingStub priceService;
     public final WalletsGrpc.WalletsBlockingStub walletsService;
 
     public GrpcStubs(String apiHost, int apiPort, String apiPassword) {
@@ -46,9 +50,11 @@ public class GrpcStubs {
             }
         }));
 
+        this.disputeAgentsService = DisputeAgentsGrpc.newBlockingStub(channel).withCallCredentials(credentials);
         this.versionService = GetVersionGrpc.newBlockingStub(channel).withCallCredentials(credentials);
         this.offersService = OffersGrpc.newBlockingStub(channel).withCallCredentials(credentials);
         this.paymentAccountsService = PaymentAccountsGrpc.newBlockingStub(channel).withCallCredentials(credentials);
+        this.priceService = PriceGrpc.newBlockingStub(channel).withCallCredentials(credentials);
         this.walletsService = WalletsGrpc.newBlockingStub(channel).withCallCredentials(credentials);
     }
 }

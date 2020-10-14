@@ -24,7 +24,6 @@ import bisq.core.app.TorSetup;
 import bisq.core.filter.FilterManager;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 
-import bisq.network.crypto.EncryptionService;
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.P2PServiceListener;
 import bisq.network.p2p.network.CloseConnectionReason;
@@ -32,7 +31,6 @@ import bisq.network.p2p.network.Connection;
 import bisq.network.p2p.network.ConnectionListener;
 
 import bisq.common.config.Config;
-import bisq.common.crypto.KeyRing;
 import bisq.common.proto.persistable.PersistedDataHost;
 
 import javax.inject.Inject;
@@ -56,16 +54,14 @@ public class AppSetupWithP2P extends AppSetup {
     protected ArrayList<PersistedDataHost> persistedDataHosts;
 
     @Inject
-    public AppSetupWithP2P(EncryptionService encryptionService,
-                           KeyRing keyRing,
-                           P2PService p2PService,
+    public AppSetupWithP2P(P2PService p2PService,
                            TradeStatisticsManager tradeStatisticsManager,
                            AccountAgeWitnessService accountAgeWitnessService,
                            SignedWitnessService signedWitnessService,
                            FilterManager filterManager,
                            TorSetup torSetup,
                            Config config) {
-        super(encryptionService, keyRing, config);
+        super(config);
         this.p2PService = p2PService;
         this.tradeStatisticsManager = tradeStatisticsManager;
         this.accountAgeWitnessService = accountAgeWitnessService;

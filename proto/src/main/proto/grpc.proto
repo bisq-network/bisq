@@ -24,19 +24,20 @@ option java_package = "bisq.proto.grpc";
 option java_multiple_files = true;
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-// Version
+// DisputeAgents
 ///////////////////////////////////////////////////////////////////////////////////////////
 
-service GetVersion {
-    rpc GetVersion (GetVersionRequest) returns (GetVersionReply) {
+service DisputeAgents {
+    rpc RegisterDisputeAgent (RegisterDisputeAgentRequest) returns (RegisterDisputeAgentReply) {
     }
 }
 
-message GetVersionRequest {
+message RegisterDisputeAgentRequest {
+    string disputeAgentType = 1;
+    string registrationKey = 2;
 }
 
-message GetVersionReply {
-    string version = 1;
+message RegisterDisputeAgentReply {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -52,7 +53,7 @@ service Offers {
 
 message GetOffersRequest {
     string direction = 1;
-    string fiatCurrencyCode = 2;
+    string currencyCode = 2;
 }
 
 message GetOffersReply {
@@ -60,9 +61,9 @@ message GetOffersReply {
 }
 
 message CreateOfferRequest {
-    string currencyCode = 1; // TODO switch order w/ direction field in next PR
+    string currencyCode = 1;
     string direction = 2;
-    uint64 price = 3;
+    string price = 3;
     bool useMarketBasedPrice = 4;
     double marketPriceMargin = 5;
     uint64 amount = 6;
@@ -72,7 +73,7 @@ message CreateOfferRequest {
 }
 
 message CreateOfferReply {
-    bool result = 1;
+    OfferInfo offer = 1;
 }
 
 message OfferInfo {
@@ -106,9 +107,11 @@ service PaymentAccounts {
 }
 
 message CreatePaymentAccountRequest {
-    string accountName = 1;
-    string accountNumber = 2;
-    string fiatCurrencyCode = 3;
+    string paymentMethodId = 1;
+    string accountName = 2;
+    string accountNumber = 3;
+    // TODO  Support all currencies. Maybe add a repeated and if only one is used its a singletonList.
+    string currencyCode = 4;
 }
 
 message CreatePaymentAccountReply {
@@ -122,7 +125,24 @@ message GetPaymentAccountsReply {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-// TradeStatistics
+// Price
+///////////////////////////////////////////////////////////////////////////////////////////
+
+service Price {
+    rpc GetMarketPrice (MarketPriceRequest) returns (MarketPriceReply) {
+    }
+}
+
+message MarketPriceRequest {
+    string currencyCode = 1;
+}
+
+message MarketPriceReply {
+    double price = 1;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+// GetTradeStatistics
 ///////////////////////////////////////////////////////////////////////////////////////////
 
 service GetTradeStatistics {
@@ -214,3 +234,20 @@ message AddressBalanceInfo {
     int64 balance = 2;
     int64 numConfirmations = 3;
 }
+
+///////////////////////////////////////////////////////////////////////////////////////////
+// Version
+///////////////////////////////////////////////////////////////////////////////////////////
+
+service GetVersion {
+    rpc GetVersion (GetVersionRequest) returns (GetVersionReply) {
+    }
+}
+
+message GetVersionRequest {
+}
+
+message GetVersionReply {
+    string version = 1;
+}
+

@@ -56,7 +56,6 @@ import bisq.core.presentation.SupportTicketsPresentation;
 import bisq.core.presentation.TradePresentation;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.PriceFeedService;
-import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
 import bisq.core.user.DontShowAgainLookup;
 import bisq.core.user.Preferences;
@@ -69,7 +68,7 @@ import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
 import bisq.common.config.Config;
-import bisq.common.storage.CorruptedDatabaseFilesHandler;
+import bisq.common.file.CorruptedStorageFileHandler;
 
 import com.google.inject.Inject;
 
@@ -86,7 +85,6 @@ import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
-import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 
 import java.util.ArrayList;
@@ -129,17 +127,17 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
     private final AccountAgeWitnessService accountAgeWitnessService;
     @Getter
     private final TorNetworkSettingsWindow torNetworkSettingsWindow;
-    private final CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler;
+    private final CorruptedStorageFileHandler corruptedStorageFileHandler;
 
     @Getter
-    private BooleanProperty showAppScreen = new SimpleBooleanProperty();
-    private DoubleProperty combinedSyncProgress = new SimpleDoubleProperty(-1);
+    private final BooleanProperty showAppScreen = new SimpleBooleanProperty();
+    private final DoubleProperty combinedSyncProgress = new SimpleDoubleProperty(-1);
     private final BooleanProperty isSplashScreenRemoved = new SimpleBooleanProperty();
     private Timer checkNumberOfBtcPeersTimer;
     private Timer checkNumberOfP2pNetworkPeersTimer;
     @SuppressWarnings("FieldCanBeLocal")
     private MonadicBinding<Boolean> tradesAndUIReady;
-    private Queue<Overlay<?>> popupQueue = new PriorityQueue<>(Comparator.comparing(Overlay::getDisplayOrderPriority));
+    private final Queue<Overlay<?>> popupQueue = new PriorityQueue<>(Comparator.comparing(Overlay::getDisplayOrderPriority));
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -171,7 +169,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
                          LocalBitcoinNode localBitcoinNode,
                          AccountAgeWitnessService accountAgeWitnessService,
                          TorNetworkSettingsWindow torNetworkSettingsWindow,
-                         CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler) {
+                         CorruptedStorageFileHandler corruptedStorageFileHandler) {
         this.bisqSetup = bisqSetup;
         this.walletsSetup = walletsSetup;
         this.user = user;
@@ -194,7 +192,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
         this.localBitcoinNode = localBitcoinNode;
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.torNetworkSettingsWindow = torNetworkSettingsWindow;
-        this.corruptedDatabaseFilesHandler = corruptedDatabaseFilesHandler;
+        this.corruptedStorageFileHandler = corruptedStorageFileHandler;
 
         TxIdTextField.setPreferences(preferences);
 
@@ -216,12 +214,13 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
     @Override
     public void onSetupComplete() {
         // We handle the trade period here as we display a global popup if we reached dispute time
-        tradesAndUIReady = EasyBind.combine(isSplashScreenRemoved, tradeManager.pendingTradesInitializedProperty(), (a, b) -> a && b);
+        tradesAndUIReady = EasyBind.combine(isSplashScreenRemoved, tradeManager.persistedTradesInitializedProperty(),
+                (a, b) -> a && b);
         tradesAndUIReady.subscribe((observable, oldValue, newValue) -> {
             if (newValue) {
                 tradeManager.applyTradePeriodState();
 
-                tradeManager.getTradableList().forEach(trade -> {
+                tradeManager.getObservableList().forEach(trade -> {
                     Date maxTradePeriodDate = trade.getMaxTradePeriodDate();
                     String key;
                     switch (trade.getTradePeriodState()) {
@@ -303,11 +302,6 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
             tacWindow.onAction(acceptedHandler::run).show();
         }, 1));
 
-        bisqSetup.setCryptoSetupFailedHandler(msg -> UserThread.execute(() ->
-                new Popup().warning(msg)
-                        .useShutDownButton()
-                        .useReportBugButton()
-                        .show()));
         bisqSetup.setDisplayTorNetworkSettingsHandler(show -> {
             if (show) {
                 torNetworkSettingsWindow.show();
@@ -397,8 +391,17 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
                         .show();
             }
         });
+        bisqSetup.setQubesOSInfoHandler(() -> {
+            String key = "qubesOSSetupInfo";
+            if (preferences.showAgain(key)) {
+                new Popup().information(Res.get("popup.info.qubesOSSetupInfo"))
+                        .closeButtonText(Res.get("shared.iUnderstand"))
+                        .dontShowAgainId(key)
+                        .show();
+            }
+        });
 
-        corruptedDatabaseFilesHandler.getCorruptedDatabaseFiles().ifPresent(files -> new Popup()
+        corruptedStorageFileHandler.getFiles().ifPresent(files -> new Popup()
                 .warning(Res.get("popup.warning.incompatibleDB", files.toString(), config.appDataDir))
                 .useShutDownButton()
                 .show());
@@ -406,20 +409,6 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
         tradeManager.setTakeOfferRequestErrorMessageHandler(errorMessage -> new Popup()
                 .warning(Res.get("popup.error.takeOfferRequestFailed", errorMessage))
                 .show());
-
-        tradeManager.getTradesWithoutDepositTx().addListener((ListChangeListener<Trade>) c -> {
-            c.next();
-            if (c.wasAdded()) {
-                c.getAddedSubList().forEach(trade ->
-                        new Popup().warning(Res.get("popup.warning.trade.depositTxNull", trade.getShortId()))
-                                .actionButtonText(Res.get("popup.warning.trade.depositTxNull.shutDown"))
-                                .onAction(() -> BisqApp.getShutDownHandler().run())
-                                .secondaryActionButtonText(Res.get("popup.warning.trade.depositTxNull.moveToFailedTrades"))
-                                .onSecondaryAction(() -> tradeManager.addTradeToFailedTrades(trade))
-                                .show()
-                );
-            }
-        });
 
         bisqSetup.getBtcSyncProgress().addListener((observable, oldValue, newValue) -> updateBtcSyncProgress());
         daoPresentation.getBsqSyncProgress().addListener((observable, oldValue, newValue) -> updateBtcSyncProgress());

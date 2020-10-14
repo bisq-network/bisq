@@ -52,12 +52,14 @@ import bisq.common.crypto.PubKeyRing;
 import bisq.common.proto.ProtobufferException;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.persistable.PersistedDataHost;
+import bisq.common.util.Tuple2;
 
 import com.google.inject.Inject;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 
 import org.fxmisc.easybind.EasyBind;
@@ -115,7 +117,8 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     private final Set<DecryptedDirectMessageListener> decryptedDirectMessageListeners = new CopyOnWriteArraySet<>();
     private final Set<DecryptedMailboxListener> decryptedMailboxListeners = new CopyOnWriteArraySet<>();
     private final Set<P2PServiceListener> p2pServiceListeners = new CopyOnWriteArraySet<>();
-    private final Map<String, ProtectedMailboxStorageEntry> mailboxMap = new HashMap<>();
+    @Getter
+    private final Map<String, Tuple2<ProtectedMailboxStorageEntry, DecryptedMessageWithPubKey>> mailboxMap = new HashMap<>();
     private final Set<Runnable> shutDownResultHandlers = new CopyOnWriteArraySet<>();
     private final BooleanProperty hiddenServicePublished = new SimpleBooleanProperty();
     private final BooleanProperty preliminaryDataReceived = new SimpleBooleanProperty();
@@ -501,7 +504,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                     throwable.printStackTrace();
                     sendDirectMessageListener.onFault(throwable.toString());
                 }
-            });
+            }, MoreExecutors.directExecutor());
         } catch (CryptoException e) {
             e.printStackTrace();
             log.error(message.toString());
@@ -530,7 +533,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                         NodeAddress senderNodeAddress = mailboxMessage.getSenderNodeAddress();
                         checkNotNull(senderNodeAddress, "senderAddress must not be null for mailbox network_messages");
 
-                        mailboxMap.put(mailboxMessage.getUid(), protectedMailboxStorageEntry);
+                        mailboxMap.put(mailboxMessage.getUid(), new Tuple2<>(protectedMailboxStorageEntry, decryptedMessageWithPubKey));
                         log.info("Received a {} mailbox message with messageUid {} and senderAddress {}", mailboxMessage.getClass().getSimpleName(), mailboxMessage.getUid(), senderNodeAddress);
                         decryptedMailboxListeners.forEach(
                                 e -> e.onMailboxMessageAdded(decryptedMessageWithPubKey, senderNodeAddress));
@@ -554,6 +557,11 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     public void sendEncryptedMailboxMessage(NodeAddress peersNodeAddress, PubKeyRing peersPubKeyRing,
                                             NetworkEnvelope message,
                                             SendMailboxMessageListener sendMailboxMessageListener) {
+        if (peersPubKeyRing == null) {
+            log.error("sendEncryptedMailboxMessage: peersPubKeyRing is null. We ignore the call.");
+            return;
+        }
+
         checkNotNull(peersNodeAddress,
                 "PeerAddress must not be null (sendEncryptedMailboxMessage)");
         checkNotNull(networkNode.getNodeAddress(),
@@ -604,7 +612,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                             receiverStoragePublicKey,
                             sendMailboxMessageListener);
                 }
-            });
+            }, MoreExecutors.directExecutor());
         } catch (CryptoException e) {
             log.error("sendEncryptedMessage failed");
             e.printStackTrace();
@@ -735,7 +743,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         MailboxMessage mailboxMessage = (MailboxMessage) decryptedMessageWithPubKey.getNetworkEnvelope();
         String uid = mailboxMessage.getUid();
         if (mailboxMap.containsKey(uid)) {
-            ProtectedMailboxStorageEntry mailboxData = mailboxMap.get(uid);
+            ProtectedMailboxStorageEntry mailboxData = mailboxMap.get(uid).first;
             if (mailboxData != null && mailboxData.getProtectedStoragePayload() instanceof MailboxStoragePayload) {
                 MailboxStoragePayload expirableMailboxStoragePayload = (MailboxStoragePayload) mailboxData.getProtectedStoragePayload();
                 PublicKey receiversPubKey = mailboxData.getReceiversPubKey();

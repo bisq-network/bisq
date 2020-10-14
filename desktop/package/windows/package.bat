@@ -11,7 +11,7 @@
 
 @echo off
 
-set version=1.3.7
+set version=1.3.9-SNAPSHOT
 if not exist "%JAVA_HOME%\bin\javapackager.exe" (
     if not exist "%ProgramFiles%\Java\jdk-10.0.2" (
         echo Javapackager not found. Update JAVA_HOME variable to point to OracleJDK.
@@ -111,6 +111,7 @@ call "%JAVA_HOME%\bin\javapackager.exe" -deploy ^
 -srcdir "%package_dir%" ^
 -srcfiles %jar_filename% ^
 -outfile Bisq ^
+-BjvmOptions=-Djdk.module.illegalAccess=deny ^
 -v
 
 if not exist "%package_dir%\windows\Bisq-%version%.exe" (

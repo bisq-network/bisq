@@ -29,6 +29,7 @@ import bisq.common.UserThread;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 
 import java.util.concurrent.TimeUnit;
@@ -42,7 +43,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 class GetPeersRequestHandler {
     // We want to keep timeout short here
-    private static final long TIMEOUT = 40;
+    private static final long TIMEOUT = 90;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -128,7 +129,7 @@ class GetPeersRequestHandler {
                     log.trace("We have stopped already. We ignore that networkNode.sendMessage.onFailure call.");
                 }
             }
-        });
+        }, MoreExecutors.directExecutor());
 
         peerManager.addToReportedPeers(getPeersRequest.getReportedPeers(), connection);
     }

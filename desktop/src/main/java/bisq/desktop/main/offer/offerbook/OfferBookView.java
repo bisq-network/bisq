@@ -68,6 +68,7 @@ import org.bitcoinj.core.Coin;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import de.jensd.fx.fontawesome.AwesomeIcon;
 import de.jensd.fx.glyphs.GlyphIcons;
 import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 
@@ -867,7 +868,11 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                     if (model.isOfferBanned(item.getOffer())) {
                                         setGraphic(new AutoTooltipLabel(model.getPaymentMethod(item)));
                                     } else {
-                                        field = new HyperlinkWithIcon(model.getPaymentMethod(item));
+                                        if (item.getOffer().isXmrAutoConf()) {
+                                            field = new HyperlinkWithIcon(model.getPaymentMethod(item), AwesomeIcon.ROCKET);
+                                        } else {
+                                            field = new HyperlinkWithIcon(model.getPaymentMethod(item));
+                                        }
                                         field.setOnAction(event -> offerDetailsWindow.show(item.getOffer()));
                                         field.setTooltip(new Tooltip(model.getPaymentMethodToolTip(item)));
                                         setGraphic(field);
@@ -937,6 +942,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                 setSortable(false);
             }
         };
+        column.getStyleClass().addAll("last-column", "avatar-column");
         column.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         column.setCellFactory(
                 new Callback<>() {

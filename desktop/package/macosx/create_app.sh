@@ -6,7 +6,7 @@ mkdir -p deploy
 
 set -e
 
-version="1.3.7"
+version="1.3.9-SNAPSHOT"
 
 cd ..
 ./gradlew :desktop:build -x test shadowJar
@@ -91,6 +91,7 @@ $JAVA_HOME/bin/javapackager \
     -srcfiles "Bisq-$version.jar" \
     -appclass bisq.desktop.app.BisqAppMain \
     -outfile Bisq \
+    -BjvmOptions=-Djdk.module.illegalAccess=deny \
     -v
 
 open deploy

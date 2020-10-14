@@ -41,21 +41,19 @@ import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.BlockChain;
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.InsufficientMoneyException;
+import org.bitcoinj.core.LegacyAddress;
 import org.bitcoinj.core.NetworkParameters;
-import org.bitcoinj.core.ScriptException;
+import org.bitcoinj.core.Sha256Hash;
+import org.bitcoinj.script.ScriptException;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionConfidence;
 import org.bitcoinj.core.TransactionInput;
 import org.bitcoinj.core.TransactionOutPoint;
 import org.bitcoinj.core.TransactionOutput;
-import org.bitcoinj.script.Script;
 import org.bitcoinj.wallet.CoinSelection;
 import org.bitcoinj.wallet.CoinSelector;
 import org.bitcoinj.wallet.SendRequest;
-import org.bitcoinj.wallet.Wallet;
-import org.bitcoinj.wallet.listeners.AbstractWalletEventListener;
 
 import javax.inject.Inject;
 
@@ -142,54 +140,41 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
             wallet = walletsSetup.getBsqWallet();
             if (wallet != null) {
                 wallet.setCoinSelector(bsqCoinSelector);
-                wallet.addEventListener(walletEventListener);
 
-                //noinspection deprecation
-                wallet.addEventListener(new AbstractWalletEventListener() {
-                    @Override
-                    public void onCoinsReceived(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
+                wallet.addCoinsReceivedEventListener(walletEventListener);
+                wallet.addCoinsSentEventListener(walletEventListener);
+                wallet.addReorganizeEventListener(walletEventListener);
+                wallet.addTransactionConfidenceEventListener(walletEventListener);
+
+                wallet.addCoinsReceivedEventListener((wallet, tx, prevBalance, newBalance) -> {
+                    updateBsqWalletTransactions();
+                });
+                wallet.addCoinsSentEventListener((wallet, tx, prevBalance, newBalance) -> {
+                    updateBsqWalletTransactions();
+                });
+                wallet.addReorganizeEventListener(wallet -> {
+                    log.warn("onReorganize ");
+                    updateBsqWalletTransactions();
+                    unconfirmedBsqChangeOutputListService.onReorganize();
+                });
+                wallet.addTransactionConfidenceEventListener((wallet, tx) -> {
+                    // We are only interested in updates from unconfirmed txs and confirmed txs at the
+                    // time when it gets into a block. Otherwise we would get called
+                    // updateBsqWalletTransactions for each tx as the block depth changes for all.
+                    if (tx != null && tx.getConfidence() != null && tx.getConfidence().getDepthInBlocks() <= 1 &&
+                            daoStateService.isParseBlockChainComplete()) {
                         updateBsqWalletTransactions();
                     }
-
-                    @Override
-                    public void onCoinsSent(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
-                        updateBsqWalletTransactions();
-                    }
-
-                    @Override
-                    public void onReorganize(Wallet wallet) {
-                        log.warn("onReorganize ");
-                        updateBsqWalletTransactions();
-                        unconfirmedBsqChangeOutputListService.onReorganize();
-                    }
-
-                    @Override
-                    public void onTransactionConfidenceChanged(Wallet wallet, Transaction tx) {
-                        // We are only interested in updates from unconfirmed txs and confirmed txs at the
-                        // time when it gets into a block. Otherwise we would get called
-                        // updateBsqWalletTransactions for each tx as the block depth changes for all.
-                        if (tx != null && tx.getConfidence() != null && tx.getConfidence().getDepthInBlocks() <= 1 &&
-                                daoStateService.isParseBlockChainComplete()) {
-                            updateBsqWalletTransactions();
-                        }
-                        unconfirmedBsqChangeOutputListService.onTransactionConfidenceChanged(tx);
-                    }
-
-                    @Override
-                    public void onKeysAdded(List<ECKey> keys) {
-                        updateBsqWalletTransactions();
-                    }
-
-                    @Override
-                    public void onScriptsChanged(Wallet wallet, List<Script> scripts, boolean isAddingScripts) {
-                        updateBsqWalletTransactions();
-                    }
-
-                    @Override
-                    public void onWalletChanged(Wallet wallet) {
-                        updateBsqWalletTransactions();
-                    }
-
+                    unconfirmedBsqChangeOutputListService.onTransactionConfidenceChanged(tx);
+                });
+                wallet.addKeyChainEventListener(keys -> {
+                    updateBsqWalletTransactions();
+                });
+                wallet.addScriptsChangeEventListener((wallet, scripts, isAddingScripts) -> {
+                    updateBsqWalletTransactions();
+                });
+                wallet.addChangeEventListener(wallet -> {
+                    updateBsqWalletTransactions();
                 });
             }
 
@@ -223,7 +208,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
 
     @Override
     String getWalletAsString(boolean includePrivKeys) {
-        return wallet.toString(includePrivKeys, true, true, walletsSetup.getChain()) + "\n\n" +
+        return wallet.toString(true, includePrivKeys, null, true, true, walletsSetup.getChain()) + "\n\n" +
                 "All pubKeys as hex:\n" +
                 wallet.printAllPubKeysAsHex();
     }
@@ -256,7 +241,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
                                             // TODO SQ
                                             if (parentTransaction != null/* &&
                                                     parentTransaction.getConfidence().getConfidenceType() == BUILDING*/) {
-                                                TxOutputKey key = new TxOutputKey(parentTransaction.getHashAsString(),
+                                                TxOutputKey key = new TxOutputKey(parentTransaction.getTxId().toString(),
                                                         connectedOutput.getIndex());
 
                                                 return (connectedOutput.isMine(wallet)
@@ -275,7 +260,8 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
 
         Set<String> confirmedTxIdSet = getTransactions(false).stream()
                 .filter(tx -> tx.getConfidence().getConfidenceType() == BUILDING)
-                .map(Transaction::getHashAsString)
+                .map(Transaction::getTxId)
+                .map(Sha256Hash::toString)
                 .collect(Collectors.toSet());
 
         lockedForVotingBalance = Coin.valueOf(daoStateService.getUnspentBlindVoteStakeTxOutputs().stream()
@@ -364,7 +350,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
     private Set<Transaction> getBsqWalletTransactions() {
         return getTransactions(false).stream()
                 .filter(transaction -> transaction.getConfidence().getConfidenceType() == PENDING ||
-                        daoStateService.containsTx(transaction.getHashAsString()))
+                        daoStateService.containsTx(transaction.getTxId().toString()))
                 .collect(Collectors.toSet());
     }
 
@@ -378,12 +364,12 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
             return new HashSet<>();
         } else {
             Map<String, Transaction> map = walletTxs.stream()
-                    .collect(Collectors.toMap(Transaction::getHashAsString, Function.identity()));
+                    .collect(Collectors.toMap(t -> t.getTxId().toString(), Function.identity()));
 
             Set<String> walletTxIds = walletTxs.stream()
-                    .map(Transaction::getHashAsString).collect(Collectors.toSet());
+                    .map(Transaction::getTxId).map(Sha256Hash::toString).collect(Collectors.toSet());
             Set<String> bsqTxIds = bsqWalletTransactions.stream()
-                    .map(Transaction::getHashAsString).collect(Collectors.toSet());
+                    .map(Transaction::getTxId).map(Sha256Hash::toString).collect(Collectors.toSet());
 
             walletTxIds.stream()
                     .filter(bsqTxIds::contains)
@@ -409,7 +395,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
                     if (isConfirmed) {
                         // We lookup if we have a BSQ tx matching the parent tx
                         // We cannot make that findTx call outside of the loop as the parent tx can change at each iteration
-                        Optional<Tx> txOptional = daoStateService.getTx(parentTransaction.getHash().toString());
+                        Optional<Tx> txOptional = daoStateService.getTx(parentTransaction.getTxId().toString());
                         if (txOptional.isPresent()) {
                             TxOutput txOutput = txOptional.get().getTxOutputs().get(connectedOutput.getIndex());
                             if (daoStateService.isBsqTxOutputType(txOutput)) {
@@ -438,7 +424,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
     @Override
     public Coin getValueSentToMeForTransaction(Transaction transaction) throws ScriptException {
         Coin result = Coin.ZERO;
-        final String txId = transaction.getHashAsString();
+        final String txId = transaction.getTxId().toString();
         // We check if we have a matching BSQ tx. We do that call here to avoid repeated calls in the loop.
         Optional<Tx> txOptional = daoStateService.getTx(txId);
         // We check all the outputs of our tx
@@ -475,7 +461,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
     }
 
     public Optional<Transaction> isWalletTransaction(String txId) {
-        return walletTransactions.stream().filter(e -> e.getHashAsString().equals(txId)).findAny();
+        return walletTransactions.stream().filter(e -> e.getTxId().toString().equals(txId)).findAny();
     }
 
 
@@ -545,7 +531,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
         Transaction tx = new Transaction(params);
         checkArgument(Restrictions.isAboveDust(receiverAmount),
                 "The amount is too low (dust limit).");
-        tx.addOutput(receiverAmount, Address.fromBase58(params, receiverAddress));
+        tx.addOutput(receiverAmount, LegacyAddress.fromBase58(params, receiverAddress));
 
         SendRequest sendRequest = SendRequest.forTx(tx);
         sendRequest.fee = Coin.ZERO;
@@ -786,7 +772,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
 
     protected Set<Address> getAllAddressesFromActiveKeys() {
         return wallet.getActiveKeyChain().getLeafKeys().stream().
-                map(key -> Address.fromP2SHHash(params, key.getPubKeyHash())).
+                map(key -> LegacyAddress.fromScriptHash(params, key.getPubKeyHash())).
                 collect(Collectors.toSet());
     }
 
@@ -802,7 +788,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
     }
 
     public String getUnusedBsqAddressAsString() {
-        return "B" + getUnusedAddress().toBase58();
+        return "B" + getUnusedAddress().toString();
     }
 
     // For BSQ we do not check for dust attack utxos as they are 5.46 BSQ and a considerable value.

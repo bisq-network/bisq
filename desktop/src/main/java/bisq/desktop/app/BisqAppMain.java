@@ -21,15 +21,12 @@ import bisq.desktop.common.UITimer;
 import bisq.desktop.common.view.guice.InjectorViewFactory;
 import bisq.desktop.setup.DesktopPersistedDataHost;
 
+import bisq.core.app.AvoidStandbyModeService;
 import bisq.core.app.BisqExecutable;
 
 import bisq.common.UserThread;
 import bisq.common.app.AppModule;
 import bisq.common.app.Version;
-import bisq.common.proto.persistable.PersistedDataHost;
-import bisq.common.setup.CommonSetup;
-
-import com.google.inject.Injector;
 
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -47,7 +44,7 @@ public class BisqAppMain extends BisqExecutable {
         super("Bisq Desktop", "bisq-desktop", DEFAULT_APP_NAME, Version.VERSION);
     }
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
         // For some reason the JavaFX launch process results in us losing the thread
         // context class loader: reset it. In order to work around a bug in JavaFX 8u25
         // and below, you must include the following code as the first line of your
@@ -76,9 +73,6 @@ public class BisqAppMain extends BisqExecutable {
     protected void launchApplication() {
         BisqApp.setAppLaunchedHandler(application -> {
             BisqAppMain.this.application = (BisqApp) application;
-
-            // Necessary to do the setup at this point to prevent Bouncy Castle errors
-            CommonSetup.setup(BisqAppMain.this.application);
             // Map to user thread!
             UserThread.execute(this::onApplicationLaunched);
         });
@@ -95,6 +89,12 @@ public class BisqAppMain extends BisqExecutable {
         super.onApplicationLaunched();
         application.setGracefulShutDownHandler(this);
     }
+
+    @Override
+    public void handleUncaughtException(Throwable throwable, boolean doShutDown) {
+        application.handleUncaughtException(throwable, doShutDown);
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // We continue with a series of synchronous execution tasks
@@ -114,9 +114,13 @@ public class BisqAppMain extends BisqExecutable {
     }
 
     @Override
-    protected void setupPersistedDataHosts(Injector injector) {
-        super.setupPersistedDataHosts(injector);
-        PersistedDataHost.apply(DesktopPersistedDataHost.getPersistedDataHosts(injector));
+    protected void readAllPersisted(Runnable completeHandler) {
+        super.readAllPersisted(DesktopPersistedDataHost.getPersistedDataHosts(injector), completeHandler);
+    }
+
+    @Override
+    protected void setupAvoidStandbyMode() {
+        injector.getInstance(AvoidStandbyModeService.class).init();
     }
 
     @Override

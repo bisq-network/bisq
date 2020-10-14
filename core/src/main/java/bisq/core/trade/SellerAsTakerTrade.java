@@ -20,20 +20,15 @@ package bisq.core.trade;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.offer.Offer;
 import bisq.core.proto.CoreProtoResolver;
-import bisq.core.trade.protocol.SellerAsTakerProtocol;
-import bisq.core.trade.protocol.TakerProtocol;
+import bisq.core.trade.protocol.ProcessModel;
 
 import bisq.network.p2p.NodeAddress;
-
-import bisq.common.storage.Storage;
 
 import org.bitcoinj.core.Coin;
 
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
-
-import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public final class SellerAsTakerTrade extends SellerTrade implements TakerTrade {
@@ -52,8 +47,8 @@ public final class SellerAsTakerTrade extends SellerTrade implements TakerTrade 
                               @Nullable NodeAddress arbitratorNodeAddress,
                               @Nullable NodeAddress mediatorNodeAddress,
                               @Nullable NodeAddress refundAgentNodeAddress,
-                              Storage<? extends TradableList> storage,
-                              BtcWalletService btcWalletService) {
+                              BtcWalletService btcWalletService,
+                              ProcessModel processModel) {
         super(offer,
                 tradeAmount,
                 txFee,
@@ -64,8 +59,8 @@ public final class SellerAsTakerTrade extends SellerTrade implements TakerTrade 
                 arbitratorNodeAddress,
                 mediatorNodeAddress,
                 refundAgentNodeAddress,
-                storage,
-                btcWalletService);
+                btcWalletService,
+                processModel);
     }
 
 
@@ -82,10 +77,10 @@ public final class SellerAsTakerTrade extends SellerTrade implements TakerTrade 
     }
 
     public static Tradable fromProto(protobuf.SellerAsTakerTrade sellerAsTakerTradeProto,
-                                     Storage<? extends TradableList> storage,
                                      BtcWalletService btcWalletService,
                                      CoreProtoResolver coreProtoResolver) {
         protobuf.Trade proto = sellerAsTakerTradeProto.getTrade();
+        ProcessModel processModel = ProcessModel.fromProto(proto.getProcessModel(), coreProtoResolver);
         return fromProto(new SellerAsTakerTrade(
                         Offer.fromProto(proto.getOffer()),
                         Coin.valueOf(proto.getTradeAmountAsLong()),
@@ -97,25 +92,9 @@ public final class SellerAsTakerTrade extends SellerTrade implements TakerTrade 
                         proto.hasArbitratorNodeAddress() ? NodeAddress.fromProto(proto.getArbitratorNodeAddress()) : null,
                         proto.hasMediatorNodeAddress() ? NodeAddress.fromProto(proto.getMediatorNodeAddress()) : null,
                         proto.hasRefundAgentNodeAddress() ? NodeAddress.fromProto(proto.getRefundAgentNodeAddress()) : null,
-                        storage,
-                        btcWalletService),
+                        btcWalletService,
+                        processModel),
                 proto,
                 coreProtoResolver);
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // API
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    protected void createTradeProtocol() {
-        tradeProtocol = new SellerAsTakerProtocol(this);
-    }
-
-    @Override
-    public void takeAvailableOffer() {
-        checkArgument(tradeProtocol instanceof TakerProtocol, "tradeProtocol NOT instanceof TakerProtocol");
-        ((TakerProtocol) tradeProtocol).takeAvailableOffer();
     }
 }

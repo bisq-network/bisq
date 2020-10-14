@@ -30,7 +30,7 @@ public abstract class TradeTask extends Task<Trade> {
     protected final ProcessModel processModel;
     protected final Trade trade;
 
-    protected TradeTask(TaskRunner taskHandler, Trade trade) {
+    protected TradeTask(TaskRunner<Trade> taskHandler, Trade trade) {
         super(taskHandler, trade);
 
         this.trade = trade;

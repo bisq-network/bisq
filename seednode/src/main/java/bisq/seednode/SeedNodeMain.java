@@ -27,13 +27,12 @@ import bisq.common.UserThread;
 import bisq.common.app.AppModule;
 import bisq.common.app.Capabilities;
 import bisq.common.app.Capability;
-import bisq.common.setup.CommonSetup;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class SeedNodeMain extends ExecutableForAppWithP2p {
-    private static final String VERSION = "1.3.7";
+    private static final String VERSION = "1.3.9";
     private SeedNode seedNode;
 
     public SeedNodeMain() {
@@ -50,7 +49,6 @@ public class SeedNodeMain extends ExecutableForAppWithP2p {
         super.doExecute();
 
         checkMemory(config, this);
-        CommonSetup.setup(this);
 
         keepRunning();
     }

@@ -62,7 +62,7 @@ class DesktopUtil {
         }
 
         if (os.isWindows()) {
-            if (runCommand("explorer", "%s", what)) return true;
+            return runCommand("explorer", "%s", what);
         }
 
         return false;
@@ -156,11 +156,10 @@ class DesktopUtil {
                 int value = p.exitValue();
                 if (value == 0) {
                     logErr("Process ended immediately.");
-                    return false;
                 } else {
                     logErr("Process crashed.");
-                    return false;
                 }
+                return false;
             } catch (IllegalThreadStateException e) {
                 logErr("Process is running.");
                 return true;

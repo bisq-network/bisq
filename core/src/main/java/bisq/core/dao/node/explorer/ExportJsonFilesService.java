@@ -27,8 +27,8 @@ import bisq.core.dao.state.model.blockchain.TxOutput;
 import bisq.core.dao.state.model.blockchain.TxType;
 
 import bisq.common.config.Config;
-import bisq.common.storage.FileUtil;
-import bisq.common.storage.JsonFileManager;
+import bisq.common.file.FileUtil;
+import bisq.common.file.JsonFileManager;
 import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Utils;
@@ -41,6 +41,7 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 
 import java.nio.file.Paths;
 
@@ -167,7 +168,7 @@ public class ExportJsonFilesService implements DaoSetupService {
                     log.error(throwable.toString());
                     throwable.printStackTrace();
                 }
-            });
+            }, MoreExecutors.directExecutor());
         }
     }
 

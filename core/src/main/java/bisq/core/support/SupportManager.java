@@ -94,7 +94,7 @@ public abstract class SupportManager {
 
     public abstract void addAndPersistChatMessage(ChatMessage message);
 
-    public abstract void persist();
+    public abstract void requestPersistence();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -174,7 +174,7 @@ public abstract class SupportManager {
                         else
                             msg.setAckError(ackMessage.getErrorMessage());
                     });
-            persist();
+            requestPersistence();
 
             if (decryptedMessageWithPubKey != null)
                 p2PService.removeEntryFromMailbox(decryptedMessageWithPubKey);
@@ -204,7 +204,7 @@ public abstract class SupportManager {
                             log.info("{} arrived at peer {}. tradeId={}, uid={}",
                                     message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
                             message.setArrived(true);
-                            persist();
+                            requestPersistence();
                         }
 
                         @Override
@@ -212,7 +212,7 @@ public abstract class SupportManager {
                             log.info("{} stored in mailbox for peer {}. tradeId={}, uid={}",
                                     message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
                             message.setStoredInMailbox(true);
-                            persist();
+                            requestPersistence();
                         }
 
                         @Override
@@ -220,7 +220,7 @@ public abstract class SupportManager {
                             log.error("{} failed: Peer {}. tradeId={}, uid={}, errorMessage={}",
                                     message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid(), errorMessage);
                             message.setSendMessageError(errorMessage);
-                            persist();
+                            requestPersistence();
                         }
                     }
             );

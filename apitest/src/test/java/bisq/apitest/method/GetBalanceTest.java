@@ -27,6 +27,9 @@ import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 
+import static bisq.apitest.Scaffold.BitcoinCoreApp.bitcoind;
+import static bisq.apitest.config.BisqAppConfig.alicedaemon;
+import static bisq.apitest.config.BisqAppConfig.seednode;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -40,7 +43,7 @@ public class GetBalanceTest extends MethodTest {
     @BeforeAll
     public static void setUp() {
         try {
-            setUpScaffold("bitcoind,seednode,alicedaemon");
+            setUpScaffold(bitcoind, seednode, alicedaemon);
 
             // Have to generate 1 regtest block for alice's wallet to show 10 BTC balance.
             bitcoinCli.generateBlocks(1);
@@ -57,7 +60,8 @@ public class GetBalanceTest extends MethodTest {
     public void testGetBalance() {
         // All tests depend on the DAO / regtest environment, and Alice's wallet is
         // initialized with 10 BTC during the scaffolding setup.
-        var balance = grpcStubs.walletsService.getBalance(GetBalanceRequest.newBuilder().build()).getBalance();
+        var balance = grpcStubs(alicedaemon).walletsService
+                .getBalance(GetBalanceRequest.newBuilder().build()).getBalance();
         assertEquals(1000000000, balance);
     }
 

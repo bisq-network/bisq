@@ -26,7 +26,7 @@ import bisq.network.p2p.P2PService;
 import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreService;
 
 import bisq.common.config.Config;
-import bisq.common.storage.JsonFileManager;
+import bisq.common.file.JsonFileManager;
 import bisq.common.util.Utilities;
 
 import com.google.inject.Inject;
@@ -79,7 +79,7 @@ public class TradeStatisticsManager {
                 addToSet((TradeStatistics2) payload);
         });
 
-        Set<TradeStatistics2> collect = tradeStatistics2StorageService.getMap().values().stream()
+        Set<TradeStatistics2> set = tradeStatistics2StorageService.getMapOfAllData().values().stream()
                 .filter(e -> e instanceof TradeStatistics2)
                 .map(e -> (TradeStatistics2) e)
                 .map(WrapperTradeStatistics2::new)
@@ -87,7 +87,7 @@ public class TradeStatisticsManager {
                 .map(WrapperTradeStatistics2::unwrap)
                 .filter(TradeStatistics2::isValid)
                 .collect(Collectors.toSet());
-        observableTradeStatisticsSet.addAll(collect);
+        observableTradeStatisticsSet.addAll(set);
 
         priceFeedService.applyLatestBisqMarketPrice(observableTradeStatisticsSet);
 
@@ -99,7 +99,6 @@ public class TradeStatisticsManager {
     }
 
     private void addToSet(TradeStatistics2 tradeStatistics) {
-
         if (!observableTradeStatisticsSet.contains(tradeStatistics)) {
             Optional<TradeStatistics2> duplicate = observableTradeStatisticsSet.stream().filter(
                     e -> e.getOfferId().equals(tradeStatistics.getOfferId())).findAny();
@@ -156,7 +155,7 @@ public class TradeStatisticsManager {
     }
 
     static class WrapperTradeStatistics2 {
-        private TradeStatistics2 tradeStatistics;
+        private final TradeStatistics2 tradeStatistics;
 
         public WrapperTradeStatistics2(TradeStatistics2 tradeStatistics) {
             this.tradeStatistics = tradeStatistics;

@@ -22,10 +22,10 @@ import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import bisq.network.p2p.storage.persistence.MapStoreService;
 
 import bisq.common.config.Config;
-import bisq.common.storage.Storage;
+import bisq.common.persistence.PersistenceManager;
 
-import javax.inject.Named;
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import java.io.File;
 
@@ -44,8 +44,8 @@ public class ProposalStorageService extends MapStoreService<ProposalStore, Persi
 
     @Inject
     public ProposalStorageService(@Named(Config.STORAGE_DIR) File storageDir,
-                                  Storage<ProposalStore> persistableNetworkPayloadMapStorage) {
-        super(storageDir, persistableNetworkPayloadMapStorage);
+                                  PersistenceManager<ProposalStore> persistenceManager) {
+        super(storageDir, persistenceManager);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -55,6 +55,11 @@ public class ProposalStorageService extends MapStoreService<ProposalStore, Persi
     @Override
     public String getFileName() {
         return FILE_NAME;
+    }
+
+    @Override
+    protected void initializePersistenceManager() {
+        persistenceManager.initialize(store, PersistenceManager.Source.NETWORK);
     }
 
     @Override

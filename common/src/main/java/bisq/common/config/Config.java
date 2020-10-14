@@ -154,7 +154,7 @@ public class Config {
     public final List<String> bannedPriceRelayNodes;
     public final List<String> bannedSeedNodes;
     public final BaseCurrencyNetwork baseCurrencyNetwork;
-    public final NetworkParameters baseCurrencyNetworkParameters;
+    public final NetworkParameters networkParameters;
     public final boolean ignoreLocalBtcNode;
     public final String bitcoinRegtestHost;
     public final boolean daoActivated;
@@ -702,7 +702,7 @@ public class Config {
             this.bannedPriceRelayNodes = options.valuesOf(bannedPriceRelayNodesOpt);
             this.bannedSeedNodes = options.valuesOf(bannedSeedNodesOpt);
             this.baseCurrencyNetwork = (BaseCurrencyNetwork) options.valueOf(baseCurrencyNetworkOpt);
-            this.baseCurrencyNetworkParameters = baseCurrencyNetwork.getParameters();
+            this.networkParameters = baseCurrencyNetwork.getParameters();
             this.ignoreLocalBtcNode = options.valueOf(ignoreLocalBtcNodeOpt);
             this.bitcoinRegtestHost = options.valueOf(bitcoinRegtestHostOpt);
             this.torrcFile = options.has(torrcFileOpt) ? options.valueOf(torrcFileOpt).toFile() : null;
@@ -722,7 +722,7 @@ public class Config {
             this.providers = options.valuesOf(providersOpt);
             this.seedNodes = options.valuesOf(seedNodesOpt);
             this.banList = options.valuesOf(banListOpt);
-            this.useLocalhostForP2P = this.baseCurrencyNetwork.isMainnet() ? false : options.valueOf(useLocalhostForP2POpt);
+            this.useLocalhostForP2P = !this.baseCurrencyNetwork.isMainnet() && options.valueOf(useLocalhostForP2POpt);
             this.maxConnections = options.valueOf(maxConnectionsOpt);
             this.socks5ProxyBtcAddress = options.valueOf(socks5ProxyBtcAddressOpt);
             this.socks5ProxyHttpAddress = options.valueOf(socks5ProxyHttpAddressOpt);
@@ -815,6 +815,7 @@ public class Config {
     private static String randomAppName() {
         try {
             File file = Files.createTempFile("Bisq", "Temp").toFile();
+            //noinspection ResultOfMethodCallIgnored
             file.delete();
             return file.toPath().getFileName().toString();
         } catch (IOException ex) {

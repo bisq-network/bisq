@@ -17,14 +17,14 @@
 
 package bisq.asset.coins;
 
-import bisq.asset.Base58BitcoinAddressValidator;
+import bisq.asset.Base58AddressValidator;
 import bisq.asset.Coin;
 import bisq.asset.NetworkParametersAdapter;
 
 public class Actinium extends Coin {
 
     public Actinium() {
-        super("Actinium", "ACM", new Base58BitcoinAddressValidator(new ActiniumParams()));
+        super("Actinium", "ACM", new Base58AddressValidator(new ActiniumParams()));
     }
 
 
@@ -33,7 +33,6 @@ public class Actinium extends Coin {
         public ActiniumParams() {
             addressHeader = 53;
             p2shHeader = 55;
-            acceptableAddressCodes = new int[]{addressHeader, p2shHeader};
         }
     }
 }

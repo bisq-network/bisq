@@ -52,8 +52,8 @@ import bisq.common.crypto.CryptoException;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ExceptionHandler;
 import bisq.common.handlers.ResultHandler;
+import bisq.common.persistence.PersistenceManager;
 import bisq.common.proto.persistable.PersistedDataHost;
-import bisq.common.storage.Storage;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Utilities;
 
@@ -99,7 +99,7 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
     private final DaoStateService daoStateService;
     private final PeriodService periodService;
     private final WalletsManager walletsManager;
-    private final Storage<MyBlindVoteList> storage;
+    private final PersistenceManager<MyBlindVoteList> persistenceManager;
     private final BsqWalletService bsqWalletService;
     private final BtcWalletService btcWalletService;
     private final BallotListService ballotListService;
@@ -119,7 +119,7 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
                                   DaoStateService daoStateService,
                                   PeriodService periodService,
                                   WalletsManager walletsManager,
-                                  Storage<MyBlindVoteList> storage,
+                                  PersistenceManager<MyBlindVoteList> persistenceManager,
                                   BsqWalletService bsqWalletService,
                                   BtcWalletService btcWalletService,
                                   BallotListService ballotListService,
@@ -129,12 +129,14 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
         this.daoStateService = daoStateService;
         this.periodService = periodService;
         this.walletsManager = walletsManager;
-        this.storage = storage;
+        this.persistenceManager = persistenceManager;
         this.bsqWalletService = bsqWalletService;
         this.btcWalletService = btcWalletService;
         this.ballotListService = ballotListService;
         this.myVoteListService = myVoteListService;
         this.myProposalListService = myProposalListService;
+
+        this.persistenceManager.initialize(myBlindVoteList, PersistenceManager.Source.PRIVATE);
 
         numConnectedPeersListener = (observable, oldValue, newValue) -> maybeRePublishMyBlindVote();
     }
@@ -162,10 +164,9 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
     @Override
     public void readPersisted() {
         if (DevEnv.isDaoActivated()) {
-            MyBlindVoteList persisted = storage.initAndGetPersisted(myBlindVoteList, 100);
+            MyBlindVoteList persisted = persistenceManager.getPersisted();
             if (persisted != null) {
-                myBlindVoteList.clear();
-                myBlindVoteList.addAll(persisted.getList());
+                myBlindVoteList.setAll(persisted.getList());
             }
         }
     }
@@ -203,7 +204,7 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
             byte[] opReturnData = getOpReturnData(encryptedVotes);
             Coin blindVoteFee = BlindVoteConsensus.getFee(daoStateService, daoStateService.getChainHeight());
             Transaction blindVoteTx = getBlindVoteTx(stake, blindVoteFee, opReturnData);
-            String blindVoteTxId = blindVoteTx.getHashAsString();
+            String blindVoteTxId = blindVoteTx.getTxId().toString();
 
             byte[] encryptedMeritList = getEncryptedMeritList(blindVoteTxId, secretKey);
 
@@ -337,7 +338,7 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
         walletsManager.publishAndCommitBsqTx(blindVoteTx, TxType.BLIND_VOTE, new TxBroadcaster.Callback() {
             @Override
             public void onSuccess(Transaction transaction) {
-                log.info("BlindVote tx published. txId={}", transaction.getHashAsString());
+                log.info("BlindVote tx published. txId={}", transaction.getTxId().toString());
                 resultHandler.handleResult();
             }
 
@@ -403,11 +404,11 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
     private void addBlindVoteToList(BlindVote blindVote) {
         if (!myBlindVoteList.getList().contains(blindVote)) {
             myBlindVoteList.add(blindVote);
-            persist();
+            requestPersistence();
         }
     }
 
-    private void persist() {
-        storage.queueUpForSave();
+    private void requestPersistence() {
+        persistenceManager.requestPersistence();
     }
 }

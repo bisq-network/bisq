@@ -30,6 +30,7 @@ import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeResult;
+import bisq.core.support.dispute.mediation.MediationResultState;
 import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
 import bisq.core.user.Preferences;
@@ -40,6 +41,9 @@ import bisq.network.p2p.BootstrapListener;
 import bisq.common.ClockWatcher;
 import bisq.common.UserThread;
 import bisq.common.util.Tuple3;
+
+import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.listeners.NewBestBlockListener;
 
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
@@ -62,6 +66,7 @@ import javafx.geometry.Insets;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.value.ChangeListener;
 
 import java.util.Optional;
@@ -97,6 +102,8 @@ public abstract class TradeStepView extends AnchorPane {
     private Popup acceptMediationResultPopup;
     private BootstrapListener bootstrapListener;
     private TradeSubView.ChatCallback chatCallback;
+    private final NewBestBlockListener newBestBlockListener;
+    private ChangeListener<Boolean> pendingTradesInitializedListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -158,6 +165,10 @@ public abstract class TradeStepView extends AnchorPane {
                 updateTimeLeft();
             }
         };
+
+        newBestBlockListener = block -> {
+            checkIfLockTimeIsOver();
+        };
     }
 
     public void activate() {
@@ -200,14 +211,34 @@ public abstract class TradeStepView extends AnchorPane {
         }
 
         tradePeriodStateSubscription = EasyBind.subscribe(trade.tradePeriodStateProperty(), newValue -> {
-            if (newValue != null)
+            if (newValue != null) {
                 updateTradePeriodState(newValue);
+            }
         });
 
         model.clockWatcher.addListener(clockListener);
 
-        if (infoLabel != null)
+        if (infoLabel != null) {
             infoLabel.setText(getInfoText());
+        }
+
+        BooleanProperty initialized = model.dataModel.tradeManager.getPersistedTradesInitialized();
+        if (initialized.get()) {
+            onPendingTradesInitialized();
+        } else {
+            pendingTradesInitializedListener = (observable, oldValue, newValue) -> {
+                if (newValue) {
+                    onPendingTradesInitialized();
+                    UserThread.execute(() -> initialized.removeListener(pendingTradesInitializedListener));
+                }
+            };
+            initialized.addListener(pendingTradesInitializedListener);
+        }
+    }
+
+    protected void onPendingTradesInitialized() {
+        model.dataModel.btcWalletService.addNewBestBlockListener(newBestBlockListener);
+        checkIfLockTimeIsOver();
     }
 
     private void registerSubscriptions() {
@@ -262,6 +293,15 @@ public abstract class TradeStepView extends AnchorPane {
 
         if (tradeStepInfo != null)
             tradeStepInfo.setOnAction(null);
+
+        if (newBestBlockListener != null) {
+            model.dataModel.btcWalletService.removeNewBestBlockListener(newBestBlockListener);
+        }
+
+        if (acceptMediationResultPopup != null) {
+            acceptMediationResultPopup.hide();
+            acceptMediationResultPopup = null;
+        }
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -390,7 +430,7 @@ public abstract class TradeStepView extends AnchorPane {
     protected void applyOnDisputeOpened() {
     }
 
-    private void updateDisputeState(Trade.DisputeState disputeState) {
+    protected void updateDisputeState(Trade.DisputeState disputeState) {
         Optional<Dispute> ownDispute;
         switch (disputeState) {
             case NO_DISPUTE:
@@ -445,6 +485,11 @@ public abstract class TradeStepView extends AnchorPane {
                         tradeStepInfo.setState(TradeStepInfo.State.IN_REFUND_REQUEST_SELF_REQUESTED);
                 });
 
+                if (acceptMediationResultPopup != null) {
+                    acceptMediationResultPopup.hide();
+                    acceptMediationResultPopup = null;
+                }
+
                 break;
             case REFUND_REQUEST_STARTED_BY_PEER:
                 if (tradeStepInfo != null) {
@@ -457,14 +502,17 @@ public abstract class TradeStepView extends AnchorPane {
                     if (tradeStepInfo != null)
                         tradeStepInfo.setState(TradeStepInfo.State.IN_REFUND_REQUEST_PEER_REQUESTED);
                 });
+
+                if (acceptMediationResultPopup != null) {
+                    acceptMediationResultPopup.hide();
+                    acceptMediationResultPopup = null;
+                }
                 break;
             case REFUND_REQUEST_CLOSED:
                 break;
             default:
                 break;
         }
-
-        updateConfirmButtonDisableState(isDisputed());
     }
 
     private void updateMediationResultState(boolean blockOpeningOfResultAcceptedPopup) {
@@ -538,7 +586,6 @@ public abstract class TradeStepView extends AnchorPane {
         if (trade.getDepositTx() == null) {
             log.error("trade.getDepositTx() was null at openMediationResultPopup. " +
                     "We add the trade to failed trades. TradeId={}", trade.getId());
-            model.dataModel.addTradeToFailedTrades();
             new Popup().warning(Res.get("portfolio.pending.mediationResult.error.depositTxNull")).show();
             return;
         } else if (trade.getDelayedPayoutTx() == null) {
@@ -563,16 +610,37 @@ public abstract class TradeStepView extends AnchorPane {
         String actionButtonText = hasSelfAccepted() ?
                 Res.get("portfolio.pending.mediationResult.popup.alreadyAccepted") : Res.get("shared.accept");
 
-        acceptMediationResultPopup = new Popup().width(900)
-                .headLine(headLine)
-                .instruction(Res.get("portfolio.pending.mediationResult.popup.info",
+        String message;
+        MediationResultState mediationResultState = checkNotNull(trade).getMediationResultState();
+        if (mediationResultState == null) {
+            return;
+        }
+
+        switch (mediationResultState) {
+            case MEDIATION_RESULT_ACCEPTED:
+            case SIG_MSG_SENT:
+            case SIG_MSG_ARRIVED:
+            case SIG_MSG_IN_MAILBOX:
+            case SIG_MSG_SEND_FAILED:
+                message = Res.get("portfolio.pending.mediationResult.popup.selfAccepted.lockTimeOver",
+                        FormattingUtils.getDateFromBlockHeight(remaining),
+                        lockTime);
+                break;
+            default:
+                message = Res.get("portfolio.pending.mediationResult.popup.info",
                         myPayoutAmount,
                         peersPayoutAmount,
                         FormattingUtils.getDateFromBlockHeight(remaining),
-                        lockTime))
+                        lockTime);
+                break;
+        }
+
+        acceptMediationResultPopup = new Popup().width(900)
+                .headLine(headLine)
+                .instruction(message)
                 .actionButtonText(actionButtonText)
                 .onAction(() -> {
-                    model.dataModel.mediationManager.acceptMediationResult(trade,
+                    model.dataModel.mediationManager.onAcceptMediationResult(trade,
                             () -> {
                                 log.info("onAcceptMediationResult completed");
                                 acceptMediationResultPopup = null;
@@ -602,10 +670,6 @@ public abstract class TradeStepView extends AnchorPane {
         }
 
         acceptMediationResultPopup.show();
-    }
-
-    protected void updateConfirmButtonDisableState(boolean isDisabled) {
-        // By default do nothing. Only overwritten in certain trade steps
     }
 
     protected String getCurrencyName(Trade trade) {
@@ -652,8 +716,18 @@ public abstract class TradeStepView extends AnchorPane {
         }
     }
 
-    protected boolean isDisputed() {
-        return trade.getDisputeState() != Trade.DisputeState.NO_DISPUTE;
+    private void checkIfLockTimeIsOver() {
+        if (trade.getDisputeState() == Trade.DisputeState.MEDIATION_CLOSED) {
+            Transaction delayedPayoutTx = trade.getDelayedPayoutTx();
+            if (delayedPayoutTx != null) {
+                long lockTime = delayedPayoutTx.getLockTime();
+                int bestChainHeight = model.dataModel.btcWalletService.getBestChainHeight();
+                long remaining = lockTime - bestChainHeight;
+                if (remaining <= 0) {
+                    openMediationResultPopup(Res.get("portfolio.pending.mediationResult.popup.headline", trade.getShortId()));
+                }
+            }
+        }
     }
 
 

@@ -31,6 +31,7 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 
 import javafx.beans.property.ObjectProperty;
@@ -100,9 +101,9 @@ public abstract class NetworkNode implements MessageListener {
 
     public SettableFuture<Connection> sendMessage(@NotNull NodeAddress peersNodeAddress,
                                                   NetworkEnvelope networkEnvelope) {
-        if (log.isDebugEnabled()) {
-            log.debug("sendMessage: peersNodeAddress=" + peersNodeAddress + "\n\tmessage=" + Utilities.toTruncatedString(networkEnvelope));
-        }
+        log.debug("Send {} to {}. Message details: {}",
+                networkEnvelope.getClass().getSimpleName(), peersNodeAddress, Utilities.toTruncatedString(networkEnvelope));
+
         checkNotNull(peersNodeAddress, "peerAddress must not be null");
 
         Connection connection = getOutboundConnection(peersNodeAddress);
@@ -127,9 +128,9 @@ public abstract class NetworkNode implements MessageListener {
                 try {
                     // can take a while when using tor
                     long startTs = System.currentTimeMillis();
-                    if (log.isDebugEnabled()) {
-                        log.debug("Start create socket to peersNodeAddress {}", peersNodeAddress.getFullAddress());
-                    }
+
+                    log.debug("Start create socket to peersNodeAddress {}", peersNodeAddress.getFullAddress());
+
                     Socket socket = createSocket(peersNodeAddress);
                     long duration = System.currentTimeMillis() - startTs;
                     log.info("Socket creation to peersNodeAddress {} took {} ms", peersNodeAddress.getFullAddress(),
@@ -145,14 +146,12 @@ public abstract class NetworkNode implements MessageListener {
                         existingConnection = getOutboundConnection(peersNodeAddress);
 
                     if (existingConnection != null) {
-                        if (log.isDebugEnabled()) {
-                            log.debug("We found in the meantime a connection for peersNodeAddress {}, " +
-                                            "so we use that for sending the message.\n" +
-                                            "That can happen if Tor needs long for creating a new outbound connection.\n" +
-                                            "We might have got a new inbound or outbound connection.",
-                                    peersNodeAddress.getFullAddress());
+                        log.debug("We found in the meantime a connection for peersNodeAddress {}, " +
+                                        "so we use that for sending the message.\n" +
+                                        "That can happen if Tor needs long for creating a new outbound connection.\n" +
+                                        "We might have got a new inbound or outbound connection.",
+                                peersNodeAddress.getFullAddress());
 
-                        }
                         try {
                             socket.close();
                         } catch (Throwable throwable) {
@@ -167,24 +166,23 @@ public abstract class NetworkNode implements MessageListener {
                                 if (!connection.isStopped()) {
                                     outBoundConnections.add((OutboundConnection) connection);
                                     printOutBoundConnections();
-                                    connectionListeners.stream().forEach(e -> e.onConnection(connection));
+                                    connectionListeners.forEach(e -> e.onConnection(connection));
                                 }
                             }
 
                             @Override
                             public void onDisconnect(CloseConnectionReason closeConnectionReason,
                                                      Connection connection) {
-                                log.trace("onDisconnect connectionListener\n\tconnection={}" + connection);
                                 //noinspection SuspiciousMethodCalls
                                 outBoundConnections.remove(connection);
                                 printOutBoundConnections();
-                                connectionListeners.stream().forEach(e -> e.onDisconnect(closeConnectionReason, connection));
+                                connectionListeners.forEach(e -> e.onDisconnect(closeConnectionReason, connection));
                             }
 
                             @Override
                             public void onError(Throwable throwable) {
                                 log.error("new OutboundConnection.ConnectionListener.onError " + throwable.getMessage());
-                                connectionListeners.stream().forEach(e -> e.onError(throwable));
+                                connectionListeners.forEach(e -> e.onError(throwable));
                             }
                         };
                         outboundConnection = new OutboundConnection(socket,
@@ -225,7 +223,7 @@ public abstract class NetworkNode implements MessageListener {
                     log.debug("onFailure at sendMessage: peersNodeAddress={}\n\tmessage={}\n\tthrowable={}", peersNodeAddress, networkEnvelope.getClass().getSimpleName(), throwable.toString());
                     UserThread.execute(() -> resultFuture.setException(throwable));
                 }
-            });
+            }, MoreExecutors.directExecutor());
 
             return resultFuture;
         }
@@ -290,7 +288,7 @@ public abstract class NetworkNode implements MessageListener {
             public void onFailure(@NotNull Throwable throwable) {
                 UserThread.execute(() -> resultFuture.setException(throwable));
             }
-        });
+        }, MoreExecutors.directExecutor());
         return resultFuture;
     }
 

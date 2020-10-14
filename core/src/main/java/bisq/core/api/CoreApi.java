@@ -22,7 +22,6 @@ import bisq.core.monetary.Price;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.payment.PaymentAccount;
-import bisq.core.trade.handlers.TransactionResultHandler;
 import bisq.core.trade.statistics.TradeStatistics2;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 
@@ -36,6 +35,7 @@ import javax.inject.Singleton;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -47,47 +47,62 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class CoreApi {
 
+    private final CoreDisputeAgentsService coreDisputeAgentsService;
     private final CoreOffersService coreOffersService;
     private final CorePaymentAccountsService paymentAccountsService;
+    private final CorePriceService corePriceService;
     private final CoreWalletsService walletsService;
     private final TradeStatisticsManager tradeStatisticsManager;
 
     @Inject
-    public CoreApi(CoreOffersService coreOffersService,
+    public CoreApi(CoreDisputeAgentsService coreDisputeAgentsService,
+                   CoreOffersService coreOffersService,
                    CorePaymentAccountsService paymentAccountsService,
+                   CorePriceService corePriceService,
                    CoreWalletsService walletsService,
                    TradeStatisticsManager tradeStatisticsManager) {
+        this.coreDisputeAgentsService = coreDisputeAgentsService;
         this.coreOffersService = coreOffersService;
+        this.corePriceService = corePriceService;
         this.paymentAccountsService = paymentAccountsService;
         this.walletsService = walletsService;
         this.tradeStatisticsManager = tradeStatisticsManager;
     }
 
+    @SuppressWarnings("SameReturnValue")
     public String getVersion() {
         return Version.VERSION;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Dispute Agents
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void registerDisputeAgent(String disputeAgentType, String registrationKey) {
+        coreDisputeAgentsService.registerDisputeAgent(disputeAgentType, registrationKey);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Offers
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public List<Offer> getOffers(String direction, String fiatCurrencyCode) {
-        return coreOffersService.getOffers(direction, fiatCurrencyCode);
+    public List<Offer> getOffers(String direction, String currencyCode) {
+        return coreOffersService.getOffers(direction, currencyCode);
     }
 
-    public void createOffer(String currencyCode,
-                            String directionAsString,
-                            long priceAsLong,
-                            boolean useMarketBasedPrice,
-                            double marketPriceMargin,
-                            long amountAsLong,
-                            long minAmountAsLong,
-                            double buyerSecurityDeposit,
-                            String paymentAccountId,
-                            TransactionResultHandler resultHandler) {
-        coreOffersService.createOffer(currencyCode,
+    public void createAnPlaceOffer(String currencyCode,
+                                   String directionAsString,
+                                   String priceAsString,
+                                   boolean useMarketBasedPrice,
+                                   double marketPriceMargin,
+                                   long amountAsLong,
+                                   long minAmountAsLong,
+                                   double buyerSecurityDeposit,
+                                   String paymentAccountId,
+                                   Consumer<Offer> resultHandler) {
+        coreOffersService.createAndPlaceOffer(currencyCode,
                 directionAsString,
-                priceAsLong,
+                priceAsString,
                 useMarketBasedPrice,
                 marketPriceMargin,
                 amountAsLong,
@@ -97,19 +112,17 @@ public class CoreApi {
                 resultHandler);
     }
 
-    public void createOffer(String offerId,
-                            String currencyCode,
-                            OfferPayload.Direction direction,
-                            Price price,
-                            boolean useMarketBasedPrice,
-                            double marketPriceMargin,
-                            Coin amount,
-                            Coin minAmount,
-                            double buyerSecurityDeposit,
-                            PaymentAccount paymentAccount,
-                            boolean useSavingsWallet,
-                            TransactionResultHandler resultHandler) {
-        coreOffersService.createOffer(offerId,
+    public Offer editOffer(String offerId,
+                           String currencyCode,
+                           OfferPayload.Direction direction,
+                           Price price,
+                           boolean useMarketBasedPrice,
+                           double marketPriceMargin,
+                           Coin amount,
+                           Coin minAmount,
+                           double buyerSecurityDeposit,
+                           PaymentAccount paymentAccount) {
+        return coreOffersService.editOffer(offerId,
                 currencyCode,
                 direction,
                 price,
@@ -118,21 +131,33 @@ public class CoreApi {
                 amount,
                 minAmount,
                 buyerSecurityDeposit,
-                paymentAccount,
-                useSavingsWallet,
-                resultHandler);
+                paymentAccount);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // PaymentAccounts
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void createPaymentAccount(String accountName, String accountNumber, String fiatCurrencyCode) {
-        paymentAccountsService.createPaymentAccount(accountName, accountNumber, fiatCurrencyCode);
+    public void createPaymentAccount(String paymentMethodId,
+                                     String accountName,
+                                     String accountNumber,
+                                     String currencyCode) {
+        paymentAccountsService.createPaymentAccount(paymentMethodId,
+                accountName,
+                accountNumber,
+                currencyCode);
     }
 
     public Set<PaymentAccount> getPaymentAccounts() {
         return paymentAccountsService.getPaymentAccounts();
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Prices
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public double getMarketPrice(String currencyCode) {
+        return corePriceService.getMarketPrice(currencyCode);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

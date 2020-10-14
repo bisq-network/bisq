@@ -43,6 +43,8 @@ import javafx.scene.input.KeyEvent;
 import java.net.URI;
 import java.net.URISyntaxException;
 
+import java.nio.file.Paths;
+
 import java.io.File;
 import java.io.IOException;
 
@@ -56,6 +58,7 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
@@ -77,7 +80,6 @@ import static java.awt.Desktop.isDesktopSupported;
 
 @Slf4j
 public class Utilities {
-    // TODO check out Jackson lib
     public static String objectToJson(Object object) {
         Gson gson = new GsonBuilder()
                 .setExclusionStrategies(new AnnotationExclusionStrategy())
@@ -88,12 +90,16 @@ public class Utilities {
         return gson.toJson(object);
     }
 
-    public static ListeningExecutorService getSingleThreadExecutor(String name) {
+    public static ExecutorService getSingleThreadExecutor(String name) {
         final ThreadFactory threadFactory = new ThreadFactoryBuilder()
                 .setNameFormat(name)
                 .setDaemon(true)
                 .build();
-        return MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor(threadFactory));
+        return Executors.newSingleThreadExecutor(threadFactory);
+    }
+
+    public static ListeningExecutorService getSingleThreadListeningExecutor(String name) {
+        return MoreExecutors.listeningDecorator(getSingleThreadExecutor(name));
     }
 
     public static ListeningExecutorService getListeningExecutorService(String name,
@@ -161,6 +167,19 @@ public class Utilities {
         return getOSName().contains("win");
     }
 
+    /**
+     * @return True, if Bisq is running on a virtualized OS within Qubes, false otherwise
+     */
+    public static boolean isQubesOS() {
+        // For Linux qubes, "os.version" looks like "4.19.132-1.pvops.qubes.x86_64"
+        // The presence of the "qubes" substring indicates this Linux is running as a qube
+        // This is the case for all 3 virtualization modes (PV, PVH, HVM)
+        // In addition, this works for both simple AppVMs, as well as for StandaloneVMs
+        // TODO This might not work for detecting Qubes virtualization for other OSes
+        // like Windows
+        return getOSVersion().contains("qubes");
+    }
+
     public static boolean isOSX() {
         return getOSName().contains("mac") || getOSName().contains("darwin");
     }
@@ -183,6 +202,20 @@ public class Utilities {
 
     public static String getOSVersion() {
         return System.getProperty("os.version").toLowerCase(Locale.US);
+    }
+
+    /**
+     * Returns the well-known "user data directory" for the current operating system.
+     */
+    public static File getUserDataDir() {
+        if (Utilities.isWindows())
+            return new File(System.getenv("APPDATA"));
+
+        if (Utilities.isOSX())
+            return Paths.get(System.getProperty("user.home"), "Library", "Application Support").toFile();
+
+        // *nix
+        return Paths.get(System.getProperty("user.home"), ".local", "share").toFile();
     }
 
     public static int getMinorVersion() throws InvalidVersionException {
@@ -412,13 +445,13 @@ public class Utilities {
         return toTruncatedString(message, maxLength, true);
     }
 
-    public static String toTruncatedString(Object message, int maxLength, boolean removeLinebreaks) {
+    public static String toTruncatedString(Object message, int maxLength, boolean removeLineBreaks) {
         if (message == null)
             return "null";
 
 
         String result = StringUtils.abbreviate(message.toString(), maxLength);
-        if (removeLinebreaks)
+        if (removeLineBreaks)
             return result.replace("\n", "");
 
         return result;

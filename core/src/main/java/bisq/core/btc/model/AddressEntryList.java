@@ -18,15 +18,17 @@
 package bisq.core.btc.model;
 
 import bisq.common.config.Config;
+import bisq.common.persistence.PersistenceManager;
+import bisq.common.proto.persistable.PersistableEnvelope;
 import bisq.common.proto.persistable.PersistedDataHost;
-import bisq.common.proto.persistable.UserThreadMappedPersistableEnvelope;
-import bisq.common.storage.Storage;
 
 import com.google.protobuf.Message;
 
 import org.bitcoinj.core.Address;
+import org.bitcoinj.core.LegacyAddress;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.crypto.DeterministicKey;
+import org.bitcoinj.script.Script;
 import org.bitcoinj.wallet.Wallet;
 
 import com.google.inject.Inject;
@@ -39,28 +41,28 @@ import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.stream.Collectors;
 
-import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 /**
  * The AddressEntries was previously stored as list, now as hashSet. We still keep the old name to reflect the
  * associated protobuf message.
  */
-@ToString
 @Slf4j
-public final class AddressEntryList implements UserThreadMappedPersistableEnvelope, PersistedDataHost {
-    transient private Storage<AddressEntryList> storage;
+public final class AddressEntryList implements PersistableEnvelope, PersistedDataHost {
+    transient private PersistenceManager<AddressEntryList> persistenceManager;
     transient private Wallet wallet;
     private final Set<AddressEntry> entrySet = new CopyOnWriteArraySet<>();
 
     @Inject
-    public AddressEntryList(Storage<AddressEntryList> storage) {
-        this.storage = storage;
+    public AddressEntryList(PersistenceManager<AddressEntryList> persistenceManager) {
+        this.persistenceManager = persistenceManager;
+
+        this.persistenceManager.initialize(this, PersistenceManager.Source.PRIVATE);
     }
 
     @Override
     public void readPersisted() {
-        AddressEntryList persisted = storage.initAndGetPersisted(this, 50);
+        AddressEntryList persisted = persistenceManager.getPersisted();
         if (persisted != null) {
             entrySet.clear();
             entrySet.addAll(persisted.entrySet);
@@ -105,9 +107,11 @@ public final class AddressEntryList implements UserThreadMappedPersistableEnvelo
         if (!entrySet.isEmpty()) {
             Set<AddressEntry> toBeRemoved = new HashSet<>();
             entrySet.forEach(addressEntry -> {
-                DeterministicKey keyFromPubHash = (DeterministicKey) wallet.findKeyFromPubHash(addressEntry.getPubKeyHash());
+                DeterministicKey keyFromPubHash = (DeterministicKey) wallet.findKeyFromPubKeyHash(
+                        addressEntry.getPubKeyHash(),
+                        Script.ScriptType.P2PKH);
                 if (keyFromPubHash != null) {
-                    Address addressFromKey = keyFromPubHash.toAddress(Config.baseCurrencyNetworkParameters());
+                    Address addressFromKey = LegacyAddress.fromKey(Config.baseCurrencyNetworkParameters(), keyFromPubHash);
                     // We want to ensure key and address matches in case we have address in entry available already
                     if (addressEntry.getAddress() == null || addressFromKey.equals(addressEntry.getAddress())) {
                         addressEntry.setDeterministicKey(keyFromPubHash);
@@ -140,7 +144,7 @@ public final class AddressEntryList implements UserThreadMappedPersistableEnvelo
                     .filter(this::isAddressNotInEntries)
                     .forEach(address -> {
                         log.info("Create AddressEntry for IssuedReceiveAddress. address={}", address.toString());
-                        DeterministicKey key = (DeterministicKey) wallet.findKeyFromPubHash(address.getHash160());
+                        DeterministicKey key = (DeterministicKey) wallet.findKeyFromAddress(address);
                         if (key != null) {
                             // Address will be derived from key in getAddress method
                             entrySet.add(new AddressEntry(key, AddressEntry.Context.AVAILABLE));
@@ -160,7 +164,7 @@ public final class AddressEntryList implements UserThreadMappedPersistableEnvelo
             maybeAddNewAddressEntry(tx);
         });
 
-        persist();
+        requestPersistence();
     }
 
     public ImmutableList<AddressEntry> getAddressEntriesAsListImmutable() {
@@ -168,16 +172,29 @@ public final class AddressEntryList implements UserThreadMappedPersistableEnvelo
     }
 
     public void addAddressEntry(AddressEntry addressEntry) {
+        boolean entryWithSameOfferIdAndContextAlreadyExist = entrySet.stream().anyMatch(e -> {
+            if (addressEntry.getOfferId() != null) {
+                return addressEntry.getOfferId().equals(e.getOfferId()) && addressEntry.getContext() == e.getContext();
+            }
+            return false;
+        });
+        if (entryWithSameOfferIdAndContextAlreadyExist) {
+            log.error("We have an address entry with the same offer ID and context. We do not add the new one. " +
+                    "addressEntry={}, entrySet={}", addressEntry, entrySet);
+            return;
+        }
+
         boolean setChangedByAdd = entrySet.add(addressEntry);
         if (setChangedByAdd)
-            persist();
+            requestPersistence();
     }
 
     public void swapToAvailable(AddressEntry addressEntry) {
         boolean setChangedByRemove = entrySet.remove(addressEntry);
-        boolean setChangedByAdd = entrySet.add(new AddressEntry(addressEntry.getKeyPair(), AddressEntry.Context.AVAILABLE));
+        boolean setChangedByAdd = entrySet.add(new AddressEntry(addressEntry.getKeyPair(),
+                AddressEntry.Context.AVAILABLE));
         if (setChangedByRemove || setChangedByAdd) {
-            persist();
+            requestPersistence();
         }
     }
 
@@ -188,13 +205,13 @@ public final class AddressEntryList implements UserThreadMappedPersistableEnvelo
         final AddressEntry newAddressEntry = new AddressEntry(addressEntry.getKeyPair(), context, offerId);
         boolean setChangedByAdd = entrySet.add(newAddressEntry);
         if (setChangedByRemove || setChangedByAdd)
-            persist();
+            requestPersistence();
 
         return newAddressEntry;
     }
 
-    public void persist() {
-        storage.queueUpForSave(50);
+    public void requestPersistence() {
+        persistenceManager.requestPersistence();
     }
 
 
@@ -205,10 +222,11 @@ public final class AddressEntryList implements UserThreadMappedPersistableEnvelo
     private void maybeAddNewAddressEntry(Transaction tx) {
         tx.getOutputs().stream()
                 .filter(output -> output.isMine(wallet))
-                .map(output -> output.getAddressFromP2PKHScript(wallet.getNetworkParameters()))
+                .map(output -> output.getScriptPubKey().getToAddress(wallet.getNetworkParameters()))
                 .filter(Objects::nonNull)
                 .filter(this::isAddressNotInEntries)
-                .map(address -> (DeterministicKey) wallet.findKeyFromPubHash(address.getHash160()))
+                .map(address -> (DeterministicKey) wallet.findKeyFromPubKeyHash(address.getHash(),
+                        Script.ScriptType.P2PKH))
                 .filter(Objects::nonNull)
                 .map(deterministicKey -> new AddressEntry(deterministicKey, AddressEntry.Context.AVAILABLE))
                 .forEach(this::addAddressEntry);
@@ -216,5 +234,12 @@ public final class AddressEntryList implements UserThreadMappedPersistableEnvelo
 
     private boolean isAddressNotInEntries(Address address) {
         return entrySet.stream().noneMatch(e -> address.equals(e.getAddress()));
+    }
+
+    @Override
+    public String toString() {
+        return "AddressEntryList{" +
+                ",\n     entrySet=" + entrySet +
+                "\n}";
     }
 }

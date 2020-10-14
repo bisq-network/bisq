@@ -32,6 +32,7 @@ import bisq.common.proto.network.NetworkEnvelope;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 
 import java.util.Random;
@@ -46,7 +47,7 @@ import javax.annotation.Nullable;
 @Slf4j
 class PeerExchangeHandler implements MessageListener {
     // We want to keep timeout short here
-    private static final long TIMEOUT = 40;
+    private static final long TIMEOUT = 90;
     private static final int DELAY_MS = 500;
 
 
@@ -144,7 +145,7 @@ class PeerExchangeHandler implements MessageListener {
                             log.trace("We have stopped that handler already. We ignore that sendGetPeersRequest.onFailure call.");
                         }
                     }
-                });
+                }, MoreExecutors.directExecutor());
             } else {
                 log.debug("My node address is still null at sendGetPeersRequest. We ignore that call.");
             }

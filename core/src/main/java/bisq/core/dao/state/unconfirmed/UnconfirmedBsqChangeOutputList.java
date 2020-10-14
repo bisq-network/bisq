@@ -17,7 +17,7 @@
 
 package bisq.core.dao.state.unconfirmed;
 
-import bisq.common.proto.persistable.UserThreadMappedPersistableList;
+import bisq.common.proto.persistable.PersistableList;
 
 import com.google.protobuf.Message;
 
@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
 import lombok.EqualsAndHashCode;
 
 @EqualsAndHashCode(callSuper = true)
-public class UnconfirmedBsqChangeOutputList extends UserThreadMappedPersistableList<UnconfirmedTxOutput> {
+public class UnconfirmedBsqChangeOutputList extends PersistableList<UnconfirmedTxOutput> {
 
     UnconfirmedBsqChangeOutputList() {
         super();

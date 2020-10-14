@@ -491,9 +491,6 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
 
                 showTransactionPublishedScreen.set(true);
                 updateSpinnerInfo();
-            } else {
-                final String msg = "trade.getDepositTx() must not be null.";
-                DevEnv.logErrorAndThrowIfDevMode(msg);
             }
         }
     }
@@ -505,8 +502,6 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                 && isOfferAvailable.get()
                 && !dataModel.wouldCreateDustForMaker();
         isNextButtonDisabled.set(!inputDataValid);
-        // boolean notSufficientFees = dataModel.isWalletFunded.get() && dataModel.isMainNet.get() && !dataModel.isFeeFromFundingTxSufficient.get();
-        // isTakeOfferButtonDisabled.set(takeOfferRequested || !inputDataValid || notSufficientFees);
         isTakeOfferButtonDisabled.set(takeOfferRequested || !inputDataValid || !dataModel.getIsBtcWalletFunded().get());
     }
 

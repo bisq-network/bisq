@@ -19,7 +19,7 @@ package bisq.core.payment;
 
 import bisq.core.proto.CoreProtoResolver;
 
-import bisq.common.proto.persistable.UserThreadMappedPersistableList;
+import bisq.common.proto.persistable.PersistableList;
 
 import com.google.protobuf.Message;
 
@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
 import lombok.EqualsAndHashCode;
 
 @EqualsAndHashCode(callSuper = true)
-public class PaymentAccountList extends UserThreadMappedPersistableList<PaymentAccount> {
+public class PaymentAccountList extends PersistableList<PaymentAccount> {
 
     public PaymentAccountList(List<PaymentAccount> list) {
         super(list);

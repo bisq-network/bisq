@@ -36,8 +36,10 @@ import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.InsufficientMoneyException;
+import org.bitcoinj.core.LegacyAddress;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.Sha256Hash;
+import org.bitcoinj.core.SignatureDecodeException;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionInput;
 import org.bitcoinj.core.TransactionOutPoint;
@@ -47,6 +49,7 @@ import org.bitcoinj.crypto.DeterministicKey;
 import org.bitcoinj.crypto.TransactionSignature;
 import org.bitcoinj.script.Script;
 import org.bitcoinj.script.ScriptBuilder;
+import org.bitcoinj.script.ScriptPattern;
 import org.bitcoinj.wallet.SendRequest;
 import org.bitcoinj.wallet.Wallet;
 
@@ -54,11 +57,10 @@ import javax.inject.Inject;
 
 import com.google.common.collect.ImmutableList;
 
-import org.spongycastle.crypto.params.KeyParameter;
+import org.bouncycastle.crypto.params.KeyParameter;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -151,7 +153,7 @@ public class TradeWalletService {
         Transaction tradingFeeTx = new Transaction(params);
         SendRequest sendRequest = null;
         try {
-            tradingFeeTx.addOutput(tradingFee, Address.fromBase58(params, feeReceiverAddress));
+            tradingFeeTx.addOutput(tradingFee, LegacyAddress.fromBase58(params, feeReceiverAddress));
             // the reserved amount we need for the trade we send to our trade reservedForTradeAddress
             tradingFeeTx.addOutput(reservedFundsForOffer, reservedForTradeAddress);
 
@@ -333,7 +335,7 @@ public class TradeWalletService {
         Transaction dummyTX = new Transaction(params);
         // The output is just used to get the right inputs and change outputs, so we use an anonymous ECKey, as it will never be used for anything.
         // We don't care about fee calculation differences between the real tx and that dummy tx as we use a static tx fee.
-        TransactionOutput dummyOutput = new TransactionOutput(params, dummyTX, dummyOutputAmount, new ECKey().toAddress(params));
+        TransactionOutput dummyOutput = new TransactionOutput(params, dummyTX, dummyOutputAmount, LegacyAddress.fromKey(params, new ECKey()));
         dummyTX.addOutput(dummyOutput);
 
         // Find the needed inputs to pay the output, optionally add 1 change output.
@@ -346,7 +348,6 @@ public class TradeWalletService {
                 "Reserve amount does not equal input amount");
         dummyTX.addInput(reservedForTradeOutput);
 
-        WalletService.removeSignatures(dummyTX);
         WalletService.verifyTransaction(dummyTX);
 
         //WalletService.printTx("dummyTX", dummyTX);
@@ -453,7 +454,7 @@ public class TradeWalletService {
         // First we construct a dummy TX to get the inputs and outputs we want to use for the real deposit tx.
         // Similar to the way we did in the createTakerDepositTxInputs method.
         Transaction dummyTx = new Transaction(params);
-        TransactionOutput dummyOutput = new TransactionOutput(params, dummyTx, makerInputAmount, new ECKey().toAddress(params));
+        TransactionOutput dummyOutput = new TransactionOutput(params, dummyTx, makerInputAmount, LegacyAddress.fromKey(params, new ECKey()));
         dummyTx.addOutput(dummyOutput);
         addAvailableInputsAndChangeOutputs(dummyTx, makerAddress, makerChangeAddress);
         // Normally we have only 1 input but we support multiple inputs if the user has paid in with several transactions.
@@ -515,7 +516,7 @@ public class TradeWalletService {
         TransactionOutput takerTransactionOutput = null;
         if (takerChangeOutputValue > 0 && takerChangeAddressString != null) {
             takerTransactionOutput = new TransactionOutput(params, preparedDepositTx, Coin.valueOf(takerChangeOutputValue),
-                    Address.fromBase58(params, takerChangeAddressString));
+                    LegacyAddress.fromBase58(params, takerChangeAddressString));
         }
 
         if (makerIsBuyer) {
@@ -685,7 +686,7 @@ public class TradeWalletService {
         delayedPayoutTx.addInput(p2SHMultiSigOutput);
         applyLockTime(lockTime, delayedPayoutTx);
         Coin outputAmount = p2SHMultiSigOutput.getValue().subtract(minerFee);
-        delayedPayoutTx.addOutput(outputAmount, Address.fromBase58(params, donationAddressString));
+        delayedPayoutTx.addOutput(outputAmount, LegacyAddress.fromBase58(params, donationAddressString));
         WalletService.printTx("Unsigned delayedPayoutTx ToDonationAddress", delayedPayoutTx);
         WalletService.verifyTransaction(delayedPayoutTx);
         return delayedPayoutTx;
@@ -715,7 +716,7 @@ public class TradeWalletService {
                                                byte[] sellerPubKey,
                                                byte[] buyerSignature,
                                                byte[] sellerSignature)
-            throws AddressFormatException, TransactionVerificationException, WalletException {
+            throws AddressFormatException, TransactionVerificationException, WalletException, SignatureDecodeException {
         Script redeemScript = get2of2MultiSigRedeemScript(buyerPubKey, sellerPubKey);
         ECKey.ECDSASignature buyerECDSASignature = ECKey.ECDSASignature.decodeFromDER(buyerSignature);
         ECKey.ECDSASignature sellerECDSASignature = ECKey.ECDSASignature.decodeFromDER(sellerSignature);
@@ -805,7 +806,7 @@ public class TradeWalletService {
                                                        DeterministicKey multiSigKeyPair,
                                                        byte[] buyerPubKey,
                                                        byte[] sellerPubKey)
-            throws AddressFormatException, TransactionVerificationException, WalletException {
+            throws AddressFormatException, TransactionVerificationException, WalletException, SignatureDecodeException {
         Transaction payoutTx = createPayoutTx(depositTx, buyerPayoutAmount, sellerPayoutAmount, buyerPayoutAddressString, sellerPayoutAddressString);
         // MS redeemScript
         Script redeemScript = get2of2MultiSigRedeemScript(buyerPubKey, sellerPubKey);
@@ -872,7 +873,7 @@ public class TradeWalletService {
                                                 DeterministicKey multiSigKeyPair,
                                                 byte[] buyerPubKey,
                                                 byte[] sellerPubKey)
-            throws AddressFormatException, TransactionVerificationException, WalletException {
+            throws AddressFormatException, TransactionVerificationException, WalletException, SignatureDecodeException {
         Transaction payoutTx = createPayoutTx(depositTx, buyerPayoutAmount, sellerPayoutAmount, buyerPayoutAddressString, sellerPayoutAddressString);
         // MS redeemScript
         Script redeemScript = get2of2MultiSigRedeemScript(buyerPubKey, sellerPubKey);
@@ -931,16 +932,16 @@ public class TradeWalletService {
                                                              byte[] buyerPubKey,
                                                              byte[] sellerPubKey,
                                                              byte[] arbitratorPubKey)
-            throws AddressFormatException, TransactionVerificationException, WalletException {
+            throws AddressFormatException, TransactionVerificationException, WalletException, SignatureDecodeException {
         Transaction depositTx = new Transaction(params, depositTxSerialized);
         TransactionOutput p2SHMultiSigOutput = depositTx.getOutput(0);
         Transaction payoutTx = new Transaction(params);
         payoutTx.addInput(p2SHMultiSigOutput);
         if (buyerPayoutAmount.isPositive()) {
-            payoutTx.addOutput(buyerPayoutAmount, Address.fromBase58(params, buyerAddressString));
+            payoutTx.addOutput(buyerPayoutAmount, LegacyAddress.fromBase58(params, buyerAddressString));
         }
         if (sellerPayoutAmount.isPositive()) {
-            payoutTx.addOutput(sellerPayoutAmount, Address.fromBase58(params, sellerAddressString));
+            payoutTx.addOutput(sellerPayoutAmount, LegacyAddress.fromBase58(params, sellerAddressString));
         }
 
         // take care of sorting!
@@ -1000,10 +1001,10 @@ public class TradeWalletService {
         payoutTx.addInput(new TransactionInput(params, depositTx, p2SHMultiSigOutputScript.getProgram(), new TransactionOutPoint(params, 0, spendTxHash), msOutput));
 
         if (buyerPayoutAmount.isPositive()) {
-            payoutTx.addOutput(buyerPayoutAmount, Address.fromBase58(params, buyerAddressString));
+            payoutTx.addOutput(buyerPayoutAmount, LegacyAddress.fromBase58(params, buyerAddressString));
         }
         if (sellerPayoutAmount.isPositive()) {
-            payoutTx.addOutput(sellerPayoutAmount, Address.fromBase58(params, sellerAddressString));
+            payoutTx.addOutput(sellerPayoutAmount, LegacyAddress.fromBase58(params, sellerAddressString));
         }
 
         // take care of sorting!
@@ -1145,10 +1146,10 @@ public class TradeWalletService {
         Transaction transaction = new Transaction(params);
         transaction.addInput(p2SHMultiSigOutput);
         if (buyerPayoutAmount.isPositive()) {
-            transaction.addOutput(buyerPayoutAmount, Address.fromBase58(params, buyerAddressString));
+            transaction.addOutput(buyerPayoutAmount, LegacyAddress.fromBase58(params, buyerAddressString));
         }
         if (sellerPayoutAmount.isPositive()) {
-            transaction.addOutput(sellerPayoutAmount, Address.fromBase58(params, sellerAddressString));
+            transaction.addOutput(sellerPayoutAmount, LegacyAddress.fromBase58(params, sellerAddressString));
         }
         checkArgument(transaction.getOutputs().size() >= 1, "We need at least one output.");
         return transaction;
@@ -1167,9 +1168,9 @@ public class TradeWalletService {
         Sha256Hash hash = transaction.hashForSignature(inputIndex, scriptPubKey, Transaction.SigHash.ALL, false);
         ECKey.ECDSASignature signature = sigKey.sign(hash, aesKey);
         TransactionSignature txSig = new TransactionSignature(signature, Transaction.SigHash.ALL, false);
-        if (scriptPubKey.isSentToRawPubKey()) {
+        if (ScriptPattern.isP2PK(scriptPubKey)) {
             input.setScriptSig(ScriptBuilder.createInputScript(txSig));
-        } else if (scriptPubKey.isSentToAddress()) {
+        } else if (ScriptPattern.isP2PKH(scriptPubKey)) {
             input.setScriptSig(ScriptBuilder.createInputScript(txSig, sigKey));
         } else {
             throw new SigningException("Don't know how to sign for this kind of scriptPubKey: " + scriptPubKey);

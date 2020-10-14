@@ -67,7 +67,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public final class TradeStatistics2 implements ProcessOncePersistableNetworkPayload, PersistableNetworkPayload,
         CapabilityRequiringPayload, Comparable<TradeStatistics2> {
 
+    @SuppressWarnings("SpellCheckingInspection")
     public static final String MEDIATOR_ADDRESS = "medAddr";
+    @SuppressWarnings("SpellCheckingInspection")
     public static final String REFUND_AGENT_ADDRESS = "refAddr";
 
     private final OfferPayload.Direction direction;

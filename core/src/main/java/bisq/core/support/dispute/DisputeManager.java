@@ -21,6 +21,7 @@ import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.Restrictions;
 import bisq.core.btc.wallet.TradeWalletService;
+import bisq.core.dao.DaoFacade;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.monetary.Altcoin;
@@ -36,6 +37,7 @@ import bisq.core.support.dispute.messages.PeerOpenedDisputeMessage;
 import bisq.core.support.messages.ChatMessage;
 import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
+import bisq.core.trade.TradeDataValidation;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.closed.ClosedTradableManager;
 
@@ -46,10 +48,11 @@ import bisq.network.p2p.SendMailboxMessageListener;
 
 import bisq.common.UserThread;
 import bisq.common.app.Version;
+import bisq.common.config.Config;
+import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.handlers.FaultHandler;
 import bisq.common.handlers.ResultHandler;
-import bisq.common.storage.Storage;
 import bisq.common.util.MathUtils;
 import bisq.common.util.Tuple2;
 
@@ -58,14 +61,19 @@ import org.bitcoinj.utils.Fiat;
 
 import javafx.beans.property.IntegerProperty;
 
+import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
+import java.security.KeyPair;
+
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
@@ -73,7 +81,7 @@ import javax.annotation.Nullable;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public abstract class DisputeManager<T extends DisputeList<? extends DisputeList>> extends SupportManager {
+public abstract class DisputeManager<T extends DisputeList<Dispute>> extends SupportManager {
     protected final TradeWalletService tradeWalletService;
     protected final BtcWalletService btcWalletService;
     protected final TradeManager tradeManager;
@@ -81,7 +89,15 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
     protected final OpenOfferManager openOfferManager;
     protected final PubKeyRing pubKeyRing;
     protected final DisputeListService<T> disputeListService;
+    private final Config config;
     private final PriceFeedService priceFeedService;
+    protected final DaoFacade daoFacade;
+
+    @Getter
+    protected final ObservableList<TradeDataValidation.ValidationException> validationExceptions =
+            FXCollections.observableArrayList();
+    @Getter
+    private final KeyPair signatureKeyPair;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -95,8 +111,10 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
                           TradeManager tradeManager,
                           ClosedTradableManager closedTradableManager,
                           OpenOfferManager openOfferManager,
-                          PubKeyRing pubKeyRing,
+                          DaoFacade daoFacade,
+                          KeyRing keyRing,
                           DisputeListService<T> disputeListService,
+                          Config config,
                           PriceFeedService priceFeedService) {
         super(p2PService, walletsSetup);
 
@@ -105,8 +123,11 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
         this.tradeManager = tradeManager;
         this.closedTradableManager = closedTradableManager;
         this.openOfferManager = openOfferManager;
-        this.pubKeyRing = pubKeyRing;
+        this.daoFacade = daoFacade;
+        this.pubKeyRing = keyRing.getPubKeyRing();
+        signatureKeyPair = keyRing.getSignatureKeyPair();
         this.disputeListService = disputeListService;
+        this.config = config;
         this.priceFeedService = priceFeedService;
     }
 
@@ -116,8 +137,8 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void persist() {
-        disputeListService.persist();
+    public void requestPersistence() {
+        disputeListService.requestPersistence();
     }
 
     @Override
@@ -160,6 +181,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
         findDispute(message).ifPresent(dispute -> {
             if (dispute.getChatMessages().stream().noneMatch(m -> m.getUid().equals(message.getUid()))) {
                 dispute.addAndPersistChatMessage(message);
+                requestPersistence();
             } else {
                 log.warn("We got a chatMessage that we have already stored. UId = {} TradeId = {}",
                         message.getUid(), message.getTradeId());
@@ -178,7 +200,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
     @Nullable
     public abstract NodeAddress getAgentNodeAddress(Dispute dispute);
 
-    protected abstract Trade.DisputeState getDisputeState_StartedByPeer();
+    protected abstract Trade.DisputeState getDisputeStateStartedByPeer();
 
     public abstract void cleanupDisputes();
 
@@ -197,19 +219,15 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
         return disputeListService.getNumOpenDisputes();
     }
 
-    public Storage<? extends DisputeList> getStorage() {
-        return disputeListService.getStorage();
-    }
-
     public ObservableList<Dispute> getDisputesAsObservableList() {
-        return disputeListService.getDisputesAsObservableList();
+        return disputeListService.getObservableList();
     }
 
     public String getNrOfDisputes(boolean isBuyer, Contract contract) {
         return disputeListService.getNrOfDisputes(isBuyer, contract);
     }
 
-    private T getDisputeList() {
+    protected T getDisputeList() {
         return disputeListService.getDisputeList();
     }
 
@@ -241,6 +259,24 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
 
         tryApplyMessages();
         cleanupDisputes();
+
+        List<Dispute> disputes = getDisputeList().getList();
+        disputes.forEach(dispute -> {
+            try {
+                TradeDataValidation.validateDonationAddress(dispute, dispute.getDonationAddressOfDelayedPayoutTx(), daoFacade);
+                TradeDataValidation.validateNodeAddress(dispute, dispute.getContract().getBuyerNodeAddress(), config);
+                TradeDataValidation.validateNodeAddress(dispute, dispute.getContract().getSellerNodeAddress(), config);
+            } catch (TradeDataValidation.AddressException | TradeDataValidation.NodeAddressException e) {
+                log.error(e.toString());
+                validationExceptions.add(e);
+            }
+        });
+
+        TradeDataValidation.testIfAnyDisputeTriedReplay(disputes,
+                disputeReplayException -> {
+                    log.error(disputeReplayException.toString());
+                    validationExceptions.add(disputeReplayException);
+                });
     }
 
     public boolean isTrader(Dispute dispute) {
@@ -257,6 +293,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
         return disputeList.stream().filter(e -> e.getTradeId().equals(tradeId)).findAny();
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Message handler
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -271,7 +308,6 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
 
         String errorMessage = null;
         Dispute dispute = openNewDisputeMessage.getDispute();
-        dispute.setStorage(disputeListService.getStorage());
         // Disputes from clients < 1.2.0 always have support type ARBITRATION in dispute as the field didn't exist before
         dispute.setSupportType(openNewDisputeMessage.getSupportType());
 
@@ -308,9 +344,22 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
         }
 
         addMediationResultMessage(dispute);
+
+        try {
+            TradeDataValidation.validateDonationAddress(dispute.getDonationAddressOfDelayedPayoutTx(), daoFacade);
+            TradeDataValidation.testIfDisputeTriesReplay(dispute, disputeList.getList());
+            TradeDataValidation.validateNodeAddress(dispute, dispute.getContract().getBuyerNodeAddress(), config);
+            TradeDataValidation.validateNodeAddress(dispute, dispute.getContract().getSellerNodeAddress(), config);
+        } catch (TradeDataValidation.AddressException |
+                TradeDataValidation.DisputeReplayException |
+                TradeDataValidation.NodeAddressException e) {
+            log.error(e.toString());
+            validationExceptions.add(e);
+        }
+        requestPersistence();
     }
 
-    // not dispute requester receives that from dispute agent
+    // Not-dispute-requester receives that msg from dispute agent
     protected void onPeerOpenedDisputeMessage(PeerOpenedDisputeMessage peerOpenedDisputeMessage) {
         T disputeList = getDisputeList();
         if (disputeList == null) {
@@ -320,14 +369,32 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
 
         String errorMessage = null;
         Dispute dispute = peerOpenedDisputeMessage.getDispute();
+
+        Optional<Trade> optionalTrade = tradeManager.getTradeById(dispute.getTradeId());
+        if (!optionalTrade.isPresent()) {
+            return;
+        }
+
+        Trade trade = optionalTrade.get();
+        try {
+            TradeDataValidation.validateDelayedPayoutTx(trade,
+                    trade.getDelayedPayoutTx(),
+                    dispute,
+                    daoFacade,
+                    btcWalletService);
+        } catch (TradeDataValidation.ValidationException e) {
+            // The peer sent us an invalid donation address. We do not return here as we don't want to break
+            // mediation/arbitration and log only the issue. The dispute agent will run validation as well and will get
+            // a popup displayed to react.
+            log.warn("Donation address is invalid. {}", e.toString());
+        }
+
         if (!isAgent(dispute)) {
             if (!disputeList.contains(dispute)) {
                 Optional<Dispute> storedDisputeOptional = findDispute(dispute);
                 if (!storedDisputeOptional.isPresent()) {
-                    dispute.setStorage(disputeListService.getStorage());
                     disputeList.add(dispute);
-                    Optional<Trade> tradeOptional = tradeManager.getTradeById(dispute.getTradeId());
-                    tradeOptional.ifPresent(trade -> trade.setDisputeState(getDisputeState_StartedByPeer()));
+                    trade.setDisputeState(getDisputeStateStartedByPeer());
                     errorMessage = null;
                 } else {
                     // valid case if both have opened a dispute and agent was not online.
@@ -351,6 +418,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
         }
 
         sendAckMessage(peerOpenedDisputeMessage, dispute.getAgentPubKeyRing(), errorMessage == null, errorMessage);
+        requestPersistence();
     }
 
 
@@ -429,7 +497,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
                             // We use the chatMessage wrapped inside the openNewDisputeMessage for
                             // the state, as that is displayed to the user and we only persist that msg
                             chatMessage.setArrived(true);
-                            disputeList.persist();
+                            requestPersistence();
                             resultHandler.handleResult();
                         }
 
@@ -444,7 +512,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
                             // We use the chatMessage wrapped inside the openNewDisputeMessage for
                             // the state, as that is displayed to the user and we only persist that msg
                             chatMessage.setStoredInMailbox(true);
-                            disputeList.persist();
+                            requestPersistence();
                             resultHandler.handleResult();
                         }
 
@@ -459,7 +527,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
                             // We use the chatMessage wrapped inside the openNewDisputeMessage for
                             // the state, as that is displayed to the user and we only persist that msg
                             chatMessage.setSendMessageError(errorMessage);
-                            disputeList.persist();
+                            requestPersistence();
                             faultHandler.handleFault("Sending dispute message failed: " +
                                     errorMessage, new DisputeMessageDeliveryFailedException());
                         }
@@ -471,6 +539,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
             log.warn(msg);
             faultHandler.handleFault(msg, new DisputeAlreadyOpenException());
         }
+        requestPersistence();
     }
 
     // Dispute agent sends that to trading peer when he received openDispute request
@@ -496,7 +565,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
             return;
         }
 
-        Dispute dispute = new Dispute(disputeListService.getStorage(),
+        Dispute dispute = new Dispute(new Date().getTime(),
                 disputeFromOpener.getTradeId(),
                 pubKeyRing.hashCode(),
                 !disputeFromOpener.isDisputeOpenerIsBuyer(),
@@ -516,13 +585,13 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
                 disputeFromOpener.isSupportTicket(),
                 disputeFromOpener.getSupportType());
         dispute.setDelayedPayoutTxId(disputeFromOpener.getDelayedPayoutTxId());
+        dispute.setDonationAddressOfDelayedPayoutTx(disputeFromOpener.getDonationAddressOfDelayedPayoutTx());
 
         Optional<Dispute> storedDisputeOptional = findDispute(dispute);
 
         // Valid case if both have opened a dispute and agent was not online.
         if (storedDisputeOptional.isPresent()) {
-            log.info("We got a dispute already open for that trade and trading peer. TradeId = {}",
-                    dispute.getTradeId());
+            log.info("We got a dispute already open for that trade and trading peer. TradeId = {}", dispute.getTradeId());
             return;
         }
 
@@ -574,7 +643,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
                         // We use the chatMessage wrapped inside the peerOpenedDisputeMessage for
                         // the state, as that is displayed to the user and we only persist that msg
                         chatMessage.setArrived(true);
-                        disputeList.persist();
+                        requestPersistence();
                     }
 
                     @Override
@@ -588,7 +657,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
                         // We use the chatMessage wrapped inside the peerOpenedDisputeMessage for
                         // the state, as that is displayed to the user and we only persist that msg
                         chatMessage.setStoredInMailbox(true);
-                        disputeList.persist();
+                        requestPersistence();
                     }
 
                     @Override
@@ -602,14 +671,15 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
                         // We use the chatMessage wrapped inside the peerOpenedDisputeMessage for
                         // the state, as that is displayed to the user and we only persist that msg
                         chatMessage.setSendMessageError(errorMessage);
-                        disputeList.persist();
+                        requestPersistence();
                     }
                 }
         );
+        requestPersistence();
     }
 
     // dispute agent send result to trader
-    public void sendDisputeResultMessage(DisputeResult disputeResult, Dispute dispute, String text) {
+    public void sendDisputeResultMessage(DisputeResult disputeResult, Dispute dispute, String summaryText) {
         T disputeList = getDisputeList();
         if (disputeList == null) {
             log.warn("disputes is null");
@@ -621,7 +691,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
                 dispute.getTradeId(),
                 dispute.getTraderPubKeyRing().hashCode(),
                 false,
-                text,
+                summaryText,
                 p2PService.getAddress());
 
         disputeResult.setChatMessage(chatMessage);
@@ -655,7 +725,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
                         // We use the chatMessage wrapped inside the disputeResultMessage for
                         // the state, as that is displayed to the user and we only persist that msg
                         chatMessage.setArrived(true);
-                        disputeList.persist();
+                        requestPersistence();
                     }
 
                     @Override
@@ -669,7 +739,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
                         // We use the chatMessage wrapped inside the disputeResultMessage for
                         // the state, as that is displayed to the user and we only persist that msg
                         chatMessage.setStoredInMailbox(true);
-                        disputeList.persist();
+                        requestPersistence();
                     }
 
                     @Override
@@ -683,10 +753,11 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
                         // We use the chatMessage wrapped inside the disputeResultMessage for
                         // the state, as that is displayed to the user and we only persist that msg
                         chatMessage.setSendMessageError(errorMessage);
-                        disputeList.persist();
+                        requestPersistence();
                     }
                 }
         );
+        requestPersistence();
     }
 
 
@@ -766,6 +837,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
                     p2PService.getAddress());
             mediatorsDisputeResultMessage.setSystemMessage(true);
             dispute.addAndPersistChatMessage(mediatorsDisputeResultMessage);
+            requestPersistence();
         }
     }
 
@@ -838,6 +910,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
                 p2PService.getAddress());
         priceInfoMessage.setSystemMessage(true);
         dispute.addAndPersistChatMessage(priceInfoMessage);
+        requestPersistence();
     }
 
     @Nullable
