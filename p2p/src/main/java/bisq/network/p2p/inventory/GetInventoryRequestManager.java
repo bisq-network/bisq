@@ -20,6 +20,8 @@ package bisq.network.p2p.inventory;
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.network.NetworkNode;
 
+import bisq.common.handlers.ErrorMessageHandler;
+
 import javax.inject.Inject;
 
 import java.util.HashMap;
@@ -38,9 +40,11 @@ public class GetInventoryRequestManager {
         this.networkNode = networkNode;
     }
 
-    public void request(NodeAddress nodeAddress, Consumer<Map<String, Integer>> resultHandler) {
+    public void request(NodeAddress nodeAddress,
+                        Consumer<Map<String, Integer>> resultHandler,
+                        ErrorMessageHandler errorMessageHandler) {
         if (requesterMap.containsKey(nodeAddress)) {
-            log.warn("There is already an open request pending");
+            log.warn("There is still an open request pending for {}", nodeAddress.getFullAddress());
             return;
         }
 
@@ -49,6 +53,10 @@ public class GetInventoryRequestManager {
                 resultMap -> {
                     requesterMap.remove(nodeAddress);
                     resultHandler.accept(resultMap);
+                },
+                errorMessage -> {
+                    requesterMap.remove(nodeAddress);
+                    errorMessageHandler.handleErrorMessage(errorMessage);
                 });
         requesterMap.put(nodeAddress, getInventoryRequester);
         getInventoryRequester.request();

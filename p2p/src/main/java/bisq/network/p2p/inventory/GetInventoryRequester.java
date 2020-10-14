@@ -24,7 +24,10 @@ import bisq.network.p2p.network.Connection;
 import bisq.network.p2p.network.MessageListener;
 import bisq.network.p2p.network.NetworkNode;
 
+import bisq.common.Timer;
+import bisq.common.UserThread;
 import bisq.common.app.Version;
+import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.proto.network.NetworkEnvelope;
 
 import java.util.Map;
@@ -34,33 +37,53 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class GetInventoryRequester implements MessageListener {
+    private final static int TIMEOUT_SEC = 90;
+
     private final NetworkNode networkNode;
     private final NodeAddress nodeAddress;
     private final Consumer<Map<String, Integer>> resultHandler;
+    private final ErrorMessageHandler errorMessageHandler;
+    private Timer timer;
 
     public GetInventoryRequester(NetworkNode networkNode,
                                  NodeAddress nodeAddress,
-                                 Consumer<Map<String, Integer>> resultHandler) {
+                                 Consumer<Map<String, Integer>> resultHandler,
+                                 ErrorMessageHandler errorMessageHandler) {
         this.networkNode = networkNode;
         this.nodeAddress = nodeAddress;
         this.resultHandler = resultHandler;
-        networkNode.addMessageListener(this);
+        this.errorMessageHandler = errorMessageHandler;
     }
 
     public void request() {
+        networkNode.addMessageListener(this);
+        timer = UserThread.runAfter(this::onTimeOut, TIMEOUT_SEC);
         networkNode.sendMessage(nodeAddress, new GetInventoryRequest(Version.VERSION));
+    }
+
+    private void onTimeOut() {
+        errorMessageHandler.handleErrorMessage("Timeout got triggered (" + TIMEOUT_SEC + " sec)");
+        shutDown();
     }
 
     @Override
     public void onMessage(NetworkEnvelope networkEnvelope, Connection connection) {
         if (networkEnvelope instanceof GetInventoryResponse) {
-            GetInventoryResponse getInventoryResponse = (GetInventoryResponse) networkEnvelope;
-            resultHandler.accept(getInventoryResponse.getNumPayloadsMap());
-            shutDown();
+            connection.getPeersNodeAddressOptional().ifPresent(peer -> {
+                if (peer.equals(nodeAddress)) {
+                    GetInventoryResponse getInventoryResponse = (GetInventoryResponse) networkEnvelope;
+                    resultHandler.accept(getInventoryResponse.getNumPayloadsMap());
+                    shutDown();
+                }
+            });
         }
     }
 
     public void shutDown() {
+        if (timer != null) {
+            timer.stop();
+            timer = null;
+        }
         networkNode.removeMessageListener(this);
     }
 }
