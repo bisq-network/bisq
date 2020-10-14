@@ -20,7 +20,6 @@ package bisq.desktop.main.dao.economy.dashboard;
 import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.TextFieldWithIcon;
-import bisq.desktop.util.FormBuilder;
 
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.state.DaoStateListener;
@@ -291,8 +290,8 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
 
         Map<LocalDate, List<TradeStatistics3>> bsqPriceByDate = tradeStatisticsManager.getObservableTradeStatisticsSet().stream()
                 .filter(e -> e.getCurrency().equals("BSQ"))
-                .sorted(Comparator.comparing(TradeStatistics3::getDate))
-                .collect(Collectors.groupingBy(item -> new java.sql.Date(item.getDate()).toLocalDate()
+                .sorted(Comparator.comparing(TradeStatistics3::getDateAsLong))
+                .collect(Collectors.groupingBy(item -> new java.sql.Date(item.getDateAsLong()).toLocalDate()
                         .with(ADJUSTERS.get(DAY))));
 
         List<XYChart.Data<Number, Number>> updatedBSQPrice = bsqPriceByDate.keySet().stream()
@@ -372,11 +371,11 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
         Date pastXDays = getPastDate(days);
         List<TradeStatistics3> bsqTradePastXDays = tradeStatisticsManager.getObservableTradeStatisticsSet().stream()
                 .filter(e -> e.getCurrency().equals("BSQ"))
-                .filter(e -> e.getTradeDate().after(pastXDays))
+                .filter(e -> e.getDate().after(pastXDays))
                 .collect(Collectors.toList());
         List<TradeStatistics3> usdTradePastXDays = tradeStatisticsManager.getObservableTradeStatisticsSet().stream()
                 .filter(e -> e.getCurrency().equals("USD"))
-                .filter(e -> e.getTradeDate().after(pastXDays))
+                .filter(e -> e.getDate().after(pastXDays))
                 .collect(Collectors.toList());
         long average = isUSDField ? getUSDAverage(bsqTradePastXDays, usdTradePastXDays) :
                 getBTCAverage(bsqTradePastXDays);
@@ -410,13 +409,13 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
         // Use next USD/BTC print as price to calculate BSQ/USD rate
         // Store each trade as amount of USD and amount of BSQ traded
         List<Tuple2<Double, Double>> usdBsqList = new ArrayList<>(bsqList.size());
-        usdList.sort(Comparator.comparing(TradeStatistics3::getDate));
+        usdList.sort(Comparator.comparing(TradeStatistics3::getDateAsLong));
         var usdBTCPrice = 10000d; // Default to 10000 USD per BTC if there is no USD feed at all
 
         for (TradeStatistics3 item : bsqList) {
             // Find usdprice for trade item
             usdBTCPrice = usdList.stream()
-                    .filter(usd -> usd.getDate() > item.getDate())
+                    .filter(usd -> usd.getDateAsLong() > item.getDateAsLong())
                     .map(usd -> MathUtils.scaleDownByPowerOf10((double) usd.getTradePrice().getValue(),
                             Fiat.SMALLEST_UNIT_EXPONENT))
                     .findFirst()

@@ -63,7 +63,7 @@ public class DisputeAgentSelection {
                                                                        boolean isMediator) {
         // We take last 100 entries from trade statistics
         List<TradeStatistics3> list = new ArrayList<>(tradeStatisticsManager.getObservableTradeStatisticsSet());
-        list.sort(Comparator.comparing(TradeStatistics3::getDate));
+        list.sort(Comparator.comparing(TradeStatistics3::getDateAsLong));
         Collections.reverse(list);
         if (!list.isEmpty()) {
             int max = Math.min(list.size(), LOOK_BACK_RANGE);

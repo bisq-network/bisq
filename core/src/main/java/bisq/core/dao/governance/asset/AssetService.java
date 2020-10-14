@@ -157,7 +157,7 @@ public class AssetService implements DaoSetupService, DaoStateListener {
                 .filter(e -> CurrencyUtil.isCryptoCurrency(e.getCurrency()))
                 .forEach(e -> {
                     lookupMap.putIfAbsent(e.getCurrency(), new ArrayList<>());
-                    lookupMap.get(e.getCurrency()).add(new TradeAmountDateTuple(e.getAmount(), e.getDate()));
+                    lookupMap.get(e.getCurrency()).add(new TradeAmountDateTuple(e.getAmount(), e.getDateAsLong()));
                 });
 
         getStatefulAssets().stream()

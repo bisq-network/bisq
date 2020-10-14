@@ -24,6 +24,7 @@ import bisq.core.monetary.Volume;
 import bisq.core.offer.OfferUtil;
 
 import bisq.network.p2p.storage.payload.CapabilityRequiringPayload;
+import bisq.network.p2p.storage.payload.DateSortedTruncatablePayload;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import bisq.network.p2p.storage.payload.ProcessOncePersistableNetworkPayload;
 
@@ -62,9 +63,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Data size is about 50 bytes in average
  */
 @Slf4j
-@Getter
 public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayload, PersistableNetworkPayload,
-        CapabilityRequiringPayload {
+        CapabilityRequiringPayload, DateSortedTruncatablePayload {
 
     // This enum must not change the order as we use the ordinal for storage to reduce data size.
     // The payment method string can be quite long and would consume 15% more space.
@@ -105,8 +105,11 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
         BLOCK_CHAINS_INSTANT
     }
 
+    @Getter
     private final String currency;
+    @Getter
     private final long price;
+    @Getter
     private final long amount;
     private final String paymentMethod;
     // As only seller is publishing it is the sellers trade date
@@ -115,9 +118,11 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
     // Old converted trade stat objects might not have it set
     @Nullable
     @JsonExclude
+    @Getter
     private String mediator;
     @Nullable
     @JsonExclude
+    @Getter
     private String refundAgent;
 
     // todo should we add referrerId as well? get added to extra map atm but not used so far
@@ -130,6 +135,7 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
     // field in a class would break that hash and therefore break the storage mechanism.
     @Nullable
     @JsonExclude
+    @Getter
     private final Map<String, String> extraDataMap;
 
     public TradeStatistics3(String currency,
@@ -267,6 +273,20 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
         return new Capabilities(Capability.TRADE_STATISTICS_3);
     }
 
+    @Override
+    public Date getDate() {
+        return new Date(date);
+    }
+
+    public long getDateAsLong() {
+        return date;
+    }
+
+    @Override
+    public int maxItems() {
+        return 3000;
+    }
+
     public void pruneOptionalData() {
         mediator = null;
         refundAgent = null;
@@ -278,10 +298,6 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
         } catch (Throwable ignore) {
             return paymentMethod;
         }
-    }
-
-    public Date getTradeDate() {
-        return new Date(date);
     }
 
     public Price getTradePrice() {

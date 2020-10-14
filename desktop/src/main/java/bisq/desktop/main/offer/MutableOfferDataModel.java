@@ -345,8 +345,8 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
             var startDate = new Date(System.currentTimeMillis() - blocksRange * 10 * 60000);
             var sortedRangeData = tradeStatisticsManager.getObservableTradeStatisticsSet().stream()
                     .filter(e -> e.getCurrency().equals(getTradeCurrency().getCode()))
-                    .filter(e -> e.getTradeDate().compareTo(startDate) >= 0)
-                    .sorted(Comparator.comparing(TradeStatistics3::getTradeDate))
+                    .filter(e -> e.getDate().compareTo(startDate) >= 0)
+                    .sorted(Comparator.comparing(TradeStatistics3::getDate))
                     .collect(Collectors.toList());
             var movingAverage = new MathUtils.MovingAverage(10, 0.2);
             double[] extremes = {Double.MAX_VALUE, Double.MIN_VALUE};

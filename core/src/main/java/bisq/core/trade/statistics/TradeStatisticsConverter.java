@@ -143,7 +143,7 @@ public class TradeStatisticsConverter {
 
         // We prune mediator and refundAgent data from all objects but the last 100 as we only use the
         // last 100 entries (DisputeAgentSelection.LOOK_BACK_RANGE).
-        list.sort(Comparator.comparing(TradeStatistics3::getDate));
+        list.sort(Comparator.comparing(TradeStatistics3::getDateAsLong));
         if (size > DisputeAgentSelection.LOOK_BACK_RANGE) {
             int start = size - DisputeAgentSelection.LOOK_BACK_RANGE;
             for (int i = start; i < size; i++) {
