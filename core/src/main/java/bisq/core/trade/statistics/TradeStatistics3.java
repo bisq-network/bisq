@@ -24,6 +24,7 @@ import bisq.core.monetary.Volume;
 import bisq.core.offer.OfferUtil;
 
 import bisq.network.p2p.storage.payload.CapabilityRequiringPayload;
+import bisq.network.p2p.storage.payload.DateSortedTruncatablePayload;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import bisq.network.p2p.storage.payload.ProcessOncePersistableNetworkPayload;
 
@@ -64,7 +65,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Slf4j
 @Getter
 public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayload, PersistableNetworkPayload,
-        CapabilityRequiringPayload {
+        CapabilityRequiringPayload, DateSortedTruncatablePayload {
 
     // This enum must not change the order as we use the ordinal for storage to reduce data size.
     // The payment method string can be quite long and would consume 15% more space.
@@ -265,6 +266,16 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
     @Override
     public Capabilities getRequiredCapabilities() {
         return new Capabilities(Capability.TRADE_STATISTICS_3);
+    }
+
+    @Override
+    public Date getDate() {
+        return getTradeDate();
+    }
+
+    @Override
+    public int maxItems() {
+        return 3000;
     }
 
     public void pruneOptionalData() {
