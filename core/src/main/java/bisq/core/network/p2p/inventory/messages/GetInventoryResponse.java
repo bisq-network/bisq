@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p.inventory.messages;
+package bisq.core.network.p2p.inventory.messages;
 
 import bisq.common.app.Version;
 import bisq.common.proto.network.NetworkEnvelope;
@@ -26,31 +26,31 @@ import lombok.Value;
 
 @Value
 public class GetInventoryResponse extends NetworkEnvelope {
-    private final Map<String, Integer> numPayloadsMap;
+    private final Map<String, String> inventory;
 
-    public GetInventoryResponse(Map<String, Integer> numPayloadsMap) {
-        this(numPayloadsMap, Version.getP2PMessageVersion());
+    public GetInventoryResponse(Map<String, String> inventory) {
+        this(inventory, Version.getP2PMessageVersion());
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private GetInventoryResponse(Map<String, Integer> numPayloadsMap, int messageVersion) {
+    private GetInventoryResponse(Map<String, String> inventory, int messageVersion) {
         super(messageVersion);
 
-        this.numPayloadsMap = numPayloadsMap;
+        this.inventory = inventory;
     }
 
     @Override
     public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
         return getNetworkEnvelopeBuilder()
                 .setGetInventoryResponse(protobuf.GetInventoryResponse.newBuilder()
-                        .putAllNumPayloadsMap(numPayloadsMap))
+                        .putAllInventory(inventory))
                 .build();
     }
 
     public static GetInventoryResponse fromProto(protobuf.GetInventoryResponse proto, int messageVersion) {
-        return new GetInventoryResponse(proto.getNumPayloadsMapMap(), messageVersion);
+        return new GetInventoryResponse(proto.getInventoryMap(), messageVersion);
     }
 }

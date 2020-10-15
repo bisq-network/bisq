@@ -19,8 +19,6 @@ package bisq.network.p2p;
 
 import bisq.network.Socks5ProxyProvider;
 import bisq.network.crypto.EncryptionService;
-import bisq.network.p2p.inventory.GetInventoryRequestHandler;
-import bisq.network.p2p.inventory.GetInventoryRequestManager;
 import bisq.network.p2p.messaging.DecryptedMailboxListener;
 import bisq.network.p2p.network.CloseConnectionReason;
 import bisq.network.p2p.network.Connection;
@@ -113,8 +111,6 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     private final SeedNodeRepository seedNodeRepository;
     private final EncryptionService encryptionService;
     private final KeyRing keyRing;
-    private final GetInventoryRequestHandler getInventoryRequestHandler;
-    private final GetInventoryRequestManager getInventoryRequestManager;
 
     private final NetworkNode networkNode;
     private final PeerManager peerManager;
@@ -161,9 +157,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                       SeedNodeRepository seedNodeRepository,
                       Socks5ProxyProvider socks5ProxyProvider,
                       EncryptionService encryptionService,
-                      KeyRing keyRing,
-                      GetInventoryRequestHandler getInventoryRequestHandler,
-                      GetInventoryRequestManager getInventoryRequestManager) {
+                      KeyRing keyRing) {
         this.networkNode = networkNode;
         this.peerManager = peerManager;
         this.p2PDataStorage = p2PDataStorage;
@@ -175,8 +169,6 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         this.socks5ProxyProvider = socks5ProxyProvider;
         this.encryptionService = encryptionService;
         this.keyRing = keyRing;
-        this.getInventoryRequestHandler = getInventoryRequestHandler;
-        this.getInventoryRequestManager = getInventoryRequestManager;
 
         this.networkNode.addConnectionListener(this);
         this.networkNode.addMessageListener(this);
@@ -267,9 +259,6 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         } else {
             shutDownResultHandlers.forEach(Runnable::run);
         }
-
-        getInventoryRequestHandler.shutDown();
-        getInventoryRequestManager.shutDown();
     }
 
 

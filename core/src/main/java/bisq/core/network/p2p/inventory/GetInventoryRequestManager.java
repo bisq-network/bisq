@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p.inventory;
+package bisq.core.network.p2p.inventory;
 
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.network.NetworkNode;
@@ -41,7 +41,7 @@ public class GetInventoryRequestManager {
     }
 
     public void request(NodeAddress nodeAddress,
-                        Consumer<Map<String, Integer>> resultHandler,
+                        Consumer<Map<String, String>> resultHandler,
                         ErrorMessageHandler errorMessageHandler) {
         if (requesterMap.containsKey(nodeAddress)) {
             log.warn("There is still an open request pending for {}", nodeAddress.getFullAddress());

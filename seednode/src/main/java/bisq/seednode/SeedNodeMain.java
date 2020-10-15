@@ -27,6 +27,7 @@ import bisq.common.UserThread;
 import bisq.common.app.AppModule;
 import bisq.common.app.Capabilities;
 import bisq.common.app.Capability;
+import bisq.common.handlers.ResultHandler;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -39,7 +40,7 @@ public class SeedNodeMain extends ExecutableForAppWithP2p {
         super("Bisq Seednode", "bisq-seednode", "bisq_seednode", VERSION);
     }
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
         log.info("SeedNode.VERSION: " + VERSION);
         new SeedNodeMain().execute(args);
     }
@@ -137,5 +138,11 @@ public class SeedNodeMain extends ExecutableForAppWithP2p {
                 // Do nothing
             }
         });
+    }
+
+    @Override
+    public void gracefulShutDown(ResultHandler resultHandler) {
+        seedNode.shutDown();
+        super.gracefulShutDown(resultHandler);
     }
 }
