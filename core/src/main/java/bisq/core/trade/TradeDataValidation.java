@@ -193,8 +193,10 @@ public class TradeDataValidation {
                                 "Trade ID: " + disputeToTestTradeId);
             }
 
-        } catch (IllegalArgumentException | NullPointerException e) {
+        } catch (IllegalArgumentException e) {
             throw new DisputeReplayException(disputeToTest, e.getMessage());
+        } catch (NullPointerException e) {
+            throw new DisputeReplayException(disputeToTest, e.toString());
         }
     }
 
