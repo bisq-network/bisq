@@ -19,6 +19,7 @@ package bisq.seednode;
 
 import bisq.core.app.misc.AppSetup;
 import bisq.core.app.misc.AppSetupWithP2PAndDAO;
+import bisq.core.network.p2p.inventory.GetInventoryRequestHandler;
 
 import com.google.inject.Injector;
 
@@ -30,6 +31,7 @@ public class SeedNode {
     @Setter
     private Injector injector;
     private AppSetup appSetup;
+    private GetInventoryRequestHandler getInventoryRequestHandler;
 
     public SeedNode() {
     }
@@ -37,5 +39,11 @@ public class SeedNode {
     public void startApplication() {
         appSetup = injector.getInstance(AppSetupWithP2PAndDAO.class);
         appSetup.start();
+
+        getInventoryRequestHandler = injector.getInstance(GetInventoryRequestHandler.class);
+    }
+
+    public void shutDown() {
+        getInventoryRequestHandler.shutDown();
     }
 }

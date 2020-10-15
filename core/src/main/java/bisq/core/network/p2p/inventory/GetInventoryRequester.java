@@ -15,11 +15,12 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p.inventory;
+package bisq.core.network.p2p.inventory;
+
+import bisq.core.network.p2p.inventory.messages.GetInventoryRequest;
+import bisq.core.network.p2p.inventory.messages.GetInventoryResponse;
 
 import bisq.network.p2p.NodeAddress;
-import bisq.network.p2p.inventory.messages.GetInventoryRequest;
-import bisq.network.p2p.inventory.messages.GetInventoryResponse;
 import bisq.network.p2p.network.Connection;
 import bisq.network.p2p.network.MessageListener;
 import bisq.network.p2p.network.NetworkNode;
@@ -41,13 +42,13 @@ public class GetInventoryRequester implements MessageListener {
 
     private final NetworkNode networkNode;
     private final NodeAddress nodeAddress;
-    private final Consumer<Map<String, Integer>> resultHandler;
+    private final Consumer<Map<String, String>> resultHandler;
     private final ErrorMessageHandler errorMessageHandler;
     private Timer timer;
 
     public GetInventoryRequester(NetworkNode networkNode,
                                  NodeAddress nodeAddress,
-                                 Consumer<Map<String, Integer>> resultHandler,
+                                 Consumer<Map<String, String>> resultHandler,
                                  ErrorMessageHandler errorMessageHandler) {
         this.networkNode = networkNode;
         this.nodeAddress = nodeAddress;
@@ -72,7 +73,7 @@ public class GetInventoryRequester implements MessageListener {
             connection.getPeersNodeAddressOptional().ifPresent(peer -> {
                 if (peer.equals(nodeAddress)) {
                     GetInventoryResponse getInventoryResponse = (GetInventoryResponse) networkEnvelope;
-                    resultHandler.accept(getInventoryResponse.getNumPayloadsMap());
+                    resultHandler.accept(getInventoryResponse.getInventory());
                     shutDown();
                 }
             });

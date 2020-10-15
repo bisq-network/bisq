@@ -18,12 +18,12 @@
 package bisq.inventory;
 
 
+import bisq.core.network.p2p.inventory.GetInventoryRequestManager;
 import bisq.core.network.p2p.seed.DefaultSeedNodeRepository;
 import bisq.core.proto.network.CoreNetworkProtoResolver;
 
 import bisq.network.p2p.NetworkNodeProvider;
 import bisq.network.p2p.NodeAddress;
-import bisq.network.p2p.inventory.GetInventoryRequestManager;
 import bisq.network.p2p.network.NetworkNode;
 import bisq.network.p2p.network.SetupListener;
 
@@ -150,7 +150,7 @@ public class InventoryMonitor {
                             log.info("nodeAddress={}, result={}", nodeAddress, result.toString());
                             long responseTime = System.currentTimeMillis();
                             requestInfo.setResponseTime(responseTime);
-                            requestInfo.setResult(result);
+                            requestInfo.setInventory(result);
                             String json = Utilities.objectToJson(requestInfo);
                             jsonFileManagerByNodeAddress.get(nodeAddress).writeToDisc(json, String.valueOf(responseTime));
                         },
@@ -175,7 +175,7 @@ public class InventoryMonitor {
         @Setter
         private long responseTime;
         @Setter
-        private Map<String, Integer> result;
+        private Map<String, String> inventory;
         @Setter
         private String errorMessage;
 

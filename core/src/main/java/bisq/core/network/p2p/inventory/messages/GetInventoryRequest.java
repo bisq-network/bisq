@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p.inventory.messages;
+package bisq.core.network.p2p.inventory.messages;
 
 
 import bisq.common.app.Version;
