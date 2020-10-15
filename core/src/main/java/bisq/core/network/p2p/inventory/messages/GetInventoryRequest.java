@@ -21,35 +21,58 @@ package bisq.core.network.p2p.inventory.messages;
 import bisq.common.app.Version;
 import bisq.common.proto.network.NetworkEnvelope;
 
+import com.google.protobuf.ByteString;
+
 import lombok.Value;
 
 @Value
 public class GetInventoryRequest extends NetworkEnvelope {
     private final String version;
+    private final byte[] nonce;
+    private final byte[] signature;
+    // The Sig key (DSA)
+    private final byte[] pubKey;
 
-    public GetInventoryRequest(String version) {
-        this(version, Version.getP2PMessageVersion());
+    public GetInventoryRequest(String version,
+                               byte[] nonce,
+                               byte[] signature,
+                               byte[] pubKey) {
+        this(version, nonce, signature, pubKey, Version.getP2PMessageVersion());
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private GetInventoryRequest(String version, int messageVersion) {
+    private GetInventoryRequest(String version,
+                                byte[] nonce,
+                                byte[] signature,
+                                byte[] pubKey,
+                                int messageVersion) {
         super(messageVersion);
 
         this.version = version;
+        this.nonce = nonce;
+        this.signature = signature;
+        this.pubKey = pubKey;
     }
 
     @Override
     public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
         return getNetworkEnvelopeBuilder()
                 .setGetInventoryRequest(protobuf.GetInventoryRequest.newBuilder()
-                        .setVersion(version))
+                        .setVersion(version)
+                        .setNonce(ByteString.copyFrom(nonce))
+                        .setSignature(ByteString.copyFrom(signature))
+                        .setPubKey(ByteString.copyFrom(pubKey)))
                 .build();
     }
 
     public static GetInventoryRequest fromProto(protobuf.GetInventoryRequest proto, int messageVersion) {
-        return new GetInventoryRequest(proto.getVersion(), messageVersion);
+        return new GetInventoryRequest(proto.getVersion(),
+                proto.getNonce().toByteArray(),
+                proto.getSignature().toByteArray(),
+                proto.getPubKey().toByteArray(),
+                messageVersion);
     }
 }

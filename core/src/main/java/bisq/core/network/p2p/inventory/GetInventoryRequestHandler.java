@@ -40,12 +40,18 @@ import bisq.common.util.MathUtils;
 import bisq.common.util.Profiler;
 import bisq.common.util.Utilities;
 
+import org.bitcoinj.core.ECKey;
+import org.bitcoinj.core.Sha256Hash;
+import org.bitcoinj.core.SignatureDecodeException;
+
 import javax.inject.Inject;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
@@ -61,6 +67,7 @@ public class GetInventoryRequestHandler implements MessageListener {
     private final DaoStateMonitoringService daoStateMonitoringService;
     private final ProposalStateMonitoringService proposalStateMonitoringService;
     private final BlindVoteStateMonitoringService blindVoteStateMonitoringService;
+    private final Set<String> permittedRequestersPubKey = new HashSet<>();
 
     @Inject
     public GetInventoryRequestHandler(NetworkNode networkNode,
@@ -84,93 +91,121 @@ public class GetInventoryRequestHandler implements MessageListener {
     @Override
     public void onMessage(NetworkEnvelope networkEnvelope, Connection connection) {
         if (networkEnvelope instanceof GetInventoryRequest) {
+            if (permittedRequestersPubKey.isEmpty()) {
+                return;
+            }
+
             GetInventoryRequest getInventoryRequest = (GetInventoryRequest) networkEnvelope;
+            if (isPermitted(getInventoryRequest)) {
+                Map<String, Integer> dataObjects = new HashMap<>();
+                p2PDataStorage.getMapForDataResponse(getInventoryRequest.getVersion()).values().stream()
+                        .map(e -> e.getClass().getSimpleName())
+                        .forEach(className -> {
+                            dataObjects.putIfAbsent(className, 0);
+                            int prev = dataObjects.get(className);
+                            dataObjects.put(className, prev + 1);
+                        });
+                p2PDataStorage.getMap().values().stream()
+                        .map(ProtectedStorageEntry::getProtectedStoragePayload)
+                        .filter(Objects::nonNull)
+                        .map(e -> e.getClass().getSimpleName())
+                        .forEach(className -> {
+                            dataObjects.putIfAbsent(className, 0);
+                            int prev = dataObjects.get(className);
+                            dataObjects.put(className, prev + 1);
+                        });
+                Map<String, String> inventory = new HashMap<>();
+                dataObjects.forEach((key, value) -> inventory.put(key, String.valueOf(value)));
 
-            Map<String, Integer> dataObjects = new HashMap<>();
-            p2PDataStorage.getMapForDataResponse(getInventoryRequest.getVersion()).values().stream()
-                    .map(e -> e.getClass().getSimpleName())
-                    .forEach(className -> {
-                        dataObjects.putIfAbsent(className, 0);
-                        int prev = dataObjects.get(className);
-                        dataObjects.put(className, prev + 1);
-                    });
-            p2PDataStorage.getMap().values().stream()
-                    .map(ProtectedStorageEntry::getProtectedStoragePayload)
-                    .filter(Objects::nonNull)
-                    .map(e -> e.getClass().getSimpleName())
-                    .forEach(className -> {
-                        dataObjects.putIfAbsent(className, 0);
-                        int prev = dataObjects.get(className);
-                        dataObjects.put(className, prev + 1);
-                    });
-            Map<String, String> inventory = new HashMap<>();
-            dataObjects.forEach((key, value) -> inventory.put(key, String.valueOf(value)));
+                // DAO data
+                int numBsqBlocks = daoStateService.getBlocks().size();
+                inventory.put("numBsqBlocks", String.valueOf(numBsqBlocks));
 
-            // DAO data
-            int numBsqBlocks = daoStateService.getBlocks().size();
-            inventory.put("numBsqBlocks", String.valueOf(numBsqBlocks));
+                int daoStateChainHeight = daoStateService.getChainHeight();
+                inventory.put("daoStateChainHeight", String.valueOf(daoStateChainHeight));
 
-            int daoStateChainHeight = daoStateService.getChainHeight();
-            inventory.put("daoStateChainHeight", String.valueOf(daoStateChainHeight));
+                int walletChainHeight = btcWalletService.getBestChainHeight();
+                inventory.put("walletChainHeight", String.valueOf(walletChainHeight));
 
-            int walletChainHeight = btcWalletService.getBestChainHeight();
-            inventory.put("walletChainHeight", String.valueOf(walletChainHeight));
+                LinkedList<DaoStateBlock> daoStateBlockChain = daoStateMonitoringService.getDaoStateBlockChain();
+                if (!daoStateBlockChain.isEmpty()) {
+                    String daoStateHash = Utilities.bytesAsHexString(daoStateBlockChain.getLast().getMyStateHash().getHash());
+                    inventory.put("daoStateHash", daoStateHash);
+                } else {
+                    inventory.put("daoStateHash", "n/a");
+                }
 
-            LinkedList<DaoStateBlock> daoStateBlockChain = daoStateMonitoringService.getDaoStateBlockChain();
-            if (!daoStateBlockChain.isEmpty()) {
-                String daoStateHash = Utilities.bytesAsHexString(daoStateBlockChain.getLast().getMyStateHash().getHash());
-                inventory.put("daoStateHash", daoStateHash);
-            } else {
-                inventory.put("daoStateHash", "n/a");
+                LinkedList<ProposalStateBlock> proposalStateBlockChain = proposalStateMonitoringService.getProposalStateBlockChain();
+                if (!proposalStateBlockChain.isEmpty()) {
+                    String proposalHash = Utilities.bytesAsHexString(proposalStateBlockChain.getLast().getMyStateHash().getHash());
+                    inventory.put("proposalHash", proposalHash);
+                } else {
+                    inventory.put("proposalHash", "n/a");
+                }
+
+                LinkedList<BlindVoteStateBlock> blindVoteStateBlockChain = blindVoteStateMonitoringService.getBlindVoteStateBlockChain();
+                if (!blindVoteStateBlockChain.isEmpty()) {
+                    String blindVoteHash = Utilities.bytesAsHexString(blindVoteStateBlockChain.getLast().getMyStateHash().getHash());
+                    inventory.put("blindVoteHash", blindVoteHash);
+                } else {
+                    inventory.put("blindVoteHash", "n/a");
+                }
+
+                // P2P network data
+                int numConnections = networkNode.getAllConnections().size();
+                inventory.put("numConnections", String.valueOf(numConnections));
+
+                long sentBytes = Statistic.totalSentBytesProperty().get();
+                inventory.put("sentBytes", String.valueOf(sentBytes));
+
+                long receivedBytes = Statistic.totalReceivedBytesProperty().get();
+                inventory.put("receivedBytes", String.valueOf(receivedBytes));
+
+                double receivedMessagesPerSec = MathUtils.roundDouble(Statistic.numTotalReceivedMessagesPerSecProperty().get(), 2);
+                inventory.put("receivedMessagesPerSec", String.valueOf(receivedMessagesPerSec));
+
+                double sentMessagesPerSec = MathUtils.roundDouble(Statistic.numTotalSentMessagesPerSecProperty().get(), 2);
+                inventory.put("sentMessagesPerSec", String.valueOf(sentMessagesPerSec));
+
+                // JVM info
+                long usedMemory = Profiler.getUsedMemoryInMB();
+                inventory.put("usedMemory", String.valueOf(usedMemory));
+
+                RuntimeMXBean runtimeBean = ManagementFactory.getRuntimeMXBean();
+                long startTime = runtimeBean.getStartTime();
+                inventory.put("jvmStartTime", String.valueOf(startTime));
+
+                log.info("Send inventory {} to {}", inventory, connection.getPeersNodeAddressOptional());
+                GetInventoryResponse getInventoryResponse = new GetInventoryResponse(inventory);
+                networkNode.sendMessage(connection, getInventoryResponse);
             }
+        }
+    }
 
-            LinkedList<ProposalStateBlock> proposalStateBlockChain = proposalStateMonitoringService.getProposalStateBlockChain();
-            if (!proposalStateBlockChain.isEmpty()) {
-                String proposalHash = Utilities.bytesAsHexString(proposalStateBlockChain.getLast().getMyStateHash().getHash());
-                inventory.put("proposalHash", proposalHash);
-            } else {
-                inventory.put("proposalHash", "n/a");
-            }
-
-            LinkedList<BlindVoteStateBlock> blindVoteStateBlockChain = blindVoteStateMonitoringService.getBlindVoteStateBlockChain();
-            if (!blindVoteStateBlockChain.isEmpty()) {
-                String blindVoteHash = Utilities.bytesAsHexString(blindVoteStateBlockChain.getLast().getMyStateHash().getHash());
-                inventory.put("blindVoteHash", blindVoteHash);
-            } else {
-                inventory.put("blindVoteHash", "n/a");
-            }
-
-            // P2P network data
-            int numConnections = networkNode.getAllConnections().size();
-            inventory.put("numConnections", String.valueOf(numConnections));
-
-            long sentBytes = Statistic.totalSentBytesProperty().get();
-            inventory.put("sentBytes", String.valueOf(sentBytes));
-
-            long receivedBytes = Statistic.totalReceivedBytesProperty().get();
-            inventory.put("receivedBytes", String.valueOf(receivedBytes));
-
-            double receivedMessagesPerSec = MathUtils.roundDouble(Statistic.numTotalReceivedMessagesPerSecProperty().get(), 2);
-            inventory.put("receivedMessagesPerSec", String.valueOf(receivedMessagesPerSec));
-
-            double sentMessagesPerSec = MathUtils.roundDouble(Statistic.numTotalSentMessagesPerSecProperty().get(), 2);
-            inventory.put("sentMessagesPerSec", String.valueOf(sentMessagesPerSec));
-
-            // JVM info
-            long usedMemory = Profiler.getUsedMemoryInMB();
-            inventory.put("usedMemory", String.valueOf(usedMemory));
-
-            RuntimeMXBean runtimeBean = ManagementFactory.getRuntimeMXBean();
-            long startTime = runtimeBean.getStartTime();
-            inventory.put("jvmStartTime", String.valueOf(startTime));
-
-            log.info("Send inventory {} to {}", inventory, connection.getPeersNodeAddressOptional());
-            GetInventoryResponse getInventoryResponse = new GetInventoryResponse(inventory);
-            networkNode.sendMessage(connection, getInventoryResponse);
+    private boolean isPermitted(GetInventoryRequest getInventoryRequest) {
+        ECKey pubKey = ECKey.fromPublicOnly(getInventoryRequest.getPubKey());
+        String pubKeyAsHex = pubKey.getPublicKeyAsHex();
+        if (!permittedRequestersPubKey.contains(pubKeyAsHex)) {
+            return false;
+        }
+        byte[] nonce = getInventoryRequest.getNonce();
+        byte[] signature = getInventoryRequest.getSignature();
+        try {
+            ECKey.ECDSASignature ecdsaSignature = ECKey.ECDSASignature.decodeFromDER(signature).toCanonicalised();
+            Sha256Hash hash = Sha256Hash.of(nonce);
+            return pubKey.verify(hash, ecdsaSignature);
+        } catch (SignatureDecodeException e) {
+            e.printStackTrace();
+            log.error(e.toString());
+            return false;
         }
     }
 
     public void shutDown() {
         networkNode.removeMessageListener(this);
+    }
+
+    public void addPermittedRequestersPubKey(String pubKey) {
+        permittedRequestersPubKey.add(pubKey);
     }
 }
