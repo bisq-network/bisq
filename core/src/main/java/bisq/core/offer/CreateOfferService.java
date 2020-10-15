@@ -63,7 +63,6 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 public class CreateOfferService {
     private final TxFeeEstimationService txFeeEstimationService;
-    private final MakerFeeProvider makerFeeProvider;
     private final BsqWalletService bsqWalletService;
     private final Preferences preferences;
     private final PriceFeedService priceFeedService;
@@ -74,6 +73,7 @@ public class CreateOfferService {
     private final PubKeyRing pubKeyRing;
     private final User user;
     private final BtcWalletService btcWalletService;
+    private final OfferUtil offerUtil;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -82,7 +82,6 @@ public class CreateOfferService {
 
     @Inject
     public CreateOfferService(TxFeeEstimationService txFeeEstimationService,
-                              MakerFeeProvider makerFeeProvider,
                               BsqWalletService bsqWalletService,
                               Preferences preferences,
                               PriceFeedService priceFeedService,
@@ -92,9 +91,9 @@ public class CreateOfferService {
                               P2PService p2PService,
                               PubKeyRing pubKeyRing,
                               User user,
-                              BtcWalletService btcWalletService) {
+                              BtcWalletService btcWalletService,
+                              OfferUtil offerUtil) {
         this.txFeeEstimationService = txFeeEstimationService;
-        this.makerFeeProvider = makerFeeProvider;
         this.bsqWalletService = bsqWalletService;
         this.preferences = preferences;
         this.priceFeedService = priceFeedService;
@@ -105,6 +104,7 @@ public class CreateOfferService {
         this.pubKeyRing = pubKeyRing;
         this.user = user;
         this.btcWalletService = btcWalletService;
+        this.offerUtil = offerUtil;
     }
 
 
@@ -186,7 +186,7 @@ public class CreateOfferService {
         Coin txFeeFromFeeService = getEstimatedFeeAndTxSize(amount, direction, buyerSecurityDepositAsDouble, sellerSecurityDeposit).first;
         Coin txFeeToUse = txFee.isPositive() ? txFee : txFeeFromFeeService;
         Coin makerFeeAsCoin = getMakerFee(amount);
-        boolean isCurrencyForMakerFeeBtc = OfferUtil.isCurrencyForMakerFeeBtc(preferences, bsqWalletService, amount);
+        boolean isCurrencyForMakerFeeBtc = offerUtil.isCurrencyForMakerFeeBtc(amount);
         Coin buyerSecurityDepositAsCoin = getBuyerSecurityDeposit(amount, buyerSecurityDepositAsDouble);
         Coin sellerSecurityDepositAsCoin = getSellerSecurityDeposit(amount, sellerSecurityDeposit);
         long maxTradeLimit = getMaxTradeLimit(paymentAccount, currencyCode, direction);
@@ -200,16 +200,12 @@ public class CreateOfferService {
         long lowerClosePrice = 0;
         long upperClosePrice = 0;
         String hashOfChallenge = null;
-        Map<String, String> extraDataMap = OfferUtil.getExtraDataMap(accountAgeWitnessService,
-                referralIdService,
+        Map<String, String> extraDataMap = offerUtil.getExtraDataMap(
                 paymentAccount,
                 currencyCode,
-                preferences,
                 direction);
 
-        OfferUtil.validateOfferData(filterManager,
-                p2PService,
-                buyerSecurityDepositAsDouble,
+        offerUtil.validateOfferData(buyerSecurityDepositAsDouble,
                 paymentAccount,
                 currencyCode,
                 makerFeeAsCoin);
@@ -295,7 +291,7 @@ public class CreateOfferService {
     }
 
     public Coin getMakerFee(Coin amount) {
-        return makerFeeProvider.getMakerFee(bsqWalletService, preferences, amount);
+        return offerUtil.getMakerFee(amount);
     }
 
     public long getMaxTradeLimit(PaymentAccount paymentAccount,
@@ -309,7 +305,7 @@ public class CreateOfferService {
     }
 
     public boolean isBuyOffer(OfferPayload.Direction direction) {
-        return OfferUtil.isBuyOffer(direction);
+        return offerUtil.isBuyOffer(direction);
     }
 
 

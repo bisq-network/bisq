@@ -43,6 +43,7 @@ import bisq.core.locale.TradeCurrency;
 import bisq.core.monetary.Altcoin;
 import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
+import bisq.core.util.VolumeUtil;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.offer.OfferRestrictions;
@@ -56,6 +57,7 @@ import bisq.core.util.FormattingUtils;
 import bisq.core.util.ParsingUtils;
 import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.coin.CoinFormatter;
+import bisq.core.util.coin.CoinUtil;
 import bisq.core.util.validation.InputValidator;
 
 import bisq.common.Timer;
@@ -101,6 +103,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
     private final Preferences preferences;
     protected final CoinFormatter btcFormatter;
     private final BsqFormatter bsqFormatter;
+    protected final OfferUtil offerUtil;
     private final FiatVolumeValidator fiatVolumeValidator;
     private final FiatPriceValidator fiatPriceValidator;
     private final AltcoinValidator altcoinValidator;
@@ -197,6 +200,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
                                  BsqValidator bsqValidator,
                                  SecurityDepositValidator securityDepositValidator,
                                  PriceFeedService priceFeedService,
+                                 OfferUtil offerUtil,
                                  AccountAgeWitnessService accountAgeWitnessService,
                                  Navigation navigation,
                                  Preferences preferences,
@@ -211,6 +215,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
         this.bsqValidator = bsqValidator;
         this.securityDepositValidator = securityDepositValidator;
         this.priceFeedService = priceFeedService;
+        this.offerUtil = offerUtil;
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.navigation = navigation;
         this.preferences = preferences;
@@ -498,8 +503,8 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
             tradeFee.set(getFormatterForMakerFee().formatCoin(makerFeeAsCoin));
 
             Coin makerFeeInBtc = dataModel.getMakerFeeInBtc();
-            Optional<Volume> optionalBtcFeeInFiat = OfferUtil.getFeeInUserFiatCurrency(makerFeeInBtc,
-                    true, preferences, priceFeedService, bsqFormatter);
+            Optional<Volume> optionalBtcFeeInFiat = offerUtil.getFeeInUserFiatCurrency(makerFeeInBtc,
+                    true, bsqFormatter);
             String btcFeeWithFiatAmount = DisplayUtils.getFeeWithFiatAmount(makerFeeInBtc, optionalBtcFeeInFiat, btcFormatter);
             if (DevEnv.isDaoActivated()) {
                 tradeFeeInBtcWithFiat.set(btcFeeWithFiatAmount);
@@ -508,8 +513,8 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
             }
 
             Coin makerFeeInBsq = dataModel.getMakerFeeInBsq();
-            Optional<Volume> optionalBsqFeeInFiat = OfferUtil.getFeeInUserFiatCurrency(makerFeeInBsq,
-                    false, preferences, priceFeedService, bsqFormatter);
+            Optional<Volume> optionalBsqFeeInFiat = offerUtil.getFeeInUserFiatCurrency(makerFeeInBsq,
+                    false, bsqFormatter);
             String bsqFeeWithFiatAmount = DisplayUtils.getFeeWithFiatAmount(makerFeeInBsq, optionalBsqFeeInFiat, bsqFormatter);
             if (DevEnv.isDaoActivated()) {
                 tradeFeeInBsqWithFiat.set(bsqFeeWithFiatAmount);
@@ -850,9 +855,9 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
                 if (volume != null) {
                     // For HalCash we want multiple of 10 EUR
                     if (dataModel.isHalCashAccount())
-                        volume = OfferUtil.getAdjustedVolumeForHalCash(volume);
+                        volume = VolumeUtil.getAdjustedVolumeForHalCash(volume);
                     else if (CurrencyUtil.isFiatCurrency(tradeCurrencyCode.get()))
-                        volume = OfferUtil.getRoundedFiatVolume(volume);
+                        volume = VolumeUtil.getRoundedFiatVolume(volume);
 
                     this.volume.set(DisplayUtils.formatVolume(volume));
                 }
@@ -1087,9 +1092,9 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
             Price price = dataModel.getPrice().get();
             if (price != null) {
                 if (dataModel.isHalCashAccount())
-                    amount = OfferUtil.getAdjustedAmountForHalCash(amount, price, maxTradeLimit);
+                    amount = CoinUtil.getAdjustedAmountForHalCash(amount, price, maxTradeLimit);
                 else if (CurrencyUtil.isFiatCurrency(tradeCurrencyCode.get()))
-                    amount = OfferUtil.getRoundedFiatAmount(amount, price, maxTradeLimit);
+                    amount = CoinUtil.getRoundedFiatAmount(amount, price, maxTradeLimit);
             }
             dataModel.setAmount(amount);
             if (syncMinAmountWithAmount ||
@@ -1111,9 +1116,9 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
             long maxTradeLimit = dataModel.getMaxTradeLimit();
             if (price != null) {
                 if (dataModel.isHalCashAccount())
-                    minAmount = OfferUtil.getAdjustedAmountForHalCash(minAmount, price, maxTradeLimit);
+                    minAmount = CoinUtil.getAdjustedAmountForHalCash(minAmount, price, maxTradeLimit);
                 else if (CurrencyUtil.isFiatCurrency(tradeCurrencyCode.get()))
-                    minAmount = OfferUtil.getRoundedFiatAmount(minAmount, price, maxTradeLimit);
+                    minAmount = CoinUtil.getRoundedFiatAmount(minAmount, price, maxTradeLimit);
             }
 
             dataModel.setMinAmount(minAmount);

@@ -33,6 +33,7 @@ import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
+import bisq.core.util.VolumeUtil;
 import bisq.core.offer.CreateOfferService;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
@@ -102,8 +103,8 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     final String shortOfferId;
     private final AccountAgeWitnessService accountAgeWitnessService;
     private final FeeService feeService;
+    protected final OfferUtil offerUtil;
     private final CoinFormatter btcFormatter;
-    private final MakerFeeProvider makerFeeProvider;
     private final Navigation navigation;
     private final String offerId;
     private final BalanceListener btcBalanceListener;
@@ -149,8 +150,8 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
                                  PriceFeedService priceFeedService,
                                  AccountAgeWitnessService accountAgeWitnessService,
                                  FeeService feeService,
+                                 OfferUtil offerUtil,
                                  @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
-                                 MakerFeeProvider makerFeeProvider,
                                  TradeStatisticsManager tradeStatisticsManager,
                                  Navigation navigation) {
         super(btcWalletService);
@@ -164,8 +165,8 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
         this.priceFeedService = priceFeedService;
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.feeService = feeService;
+        this.offerUtil = offerUtil;
         this.btcFormatter = btcFormatter;
-        this.makerFeeProvider = makerFeeProvider;
         this.navigation = navigation;
         this.tradeStatisticsManager = tradeStatisticsManager;
 
@@ -560,9 +561,9 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
 
         // For HalCash we want multiple of 10 EUR
         if (isHalCashAccount())
-            volumeByAmount = OfferUtil.getAdjustedVolumeForHalCash(volumeByAmount);
+            volumeByAmount = VolumeUtil.getAdjustedVolumeForHalCash(volumeByAmount);
         else if (CurrencyUtil.isFiatCurrency(tradeCurrencyCode.get()))
-            volumeByAmount = OfferUtil.getRoundedFiatVolume(volumeByAmount);
+            volumeByAmount = VolumeUtil.getRoundedFiatVolume(volumeByAmount);
         return volumeByAmount;
     }
 
@@ -575,9 +576,9 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
             try {
                 Coin value = DisplayUtils.reduceTo4Decimals(price.get().getAmountByVolume(volume.get()), btcFormatter);
                 if (isHalCashAccount())
-                    value = OfferUtil.getAdjustedAmountForHalCash(value, price.get(), getMaxTradeLimit());
+                    value = CoinUtil.getAdjustedAmountForHalCash(value, price.get(), getMaxTradeLimit());
                 else if (CurrencyUtil.isFiatCurrency(tradeCurrencyCode.get()))
-                    value = OfferUtil.getRoundedFiatAmount(value, price.get(), getMaxTradeLimit());
+                    value = CoinUtil.getRoundedFiatAmount(value, price.get(), getMaxTradeLimit());
 
                 calculateVolume();
 
@@ -609,7 +610,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     }
 
     public boolean isBuyOffer() {
-        return OfferUtil.isBuyOffer(getDirection());
+        return offerUtil.isBuyOffer(getDirection());
     }
 
     public Coin getTxFee() {
@@ -734,23 +735,23 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     }
 
     public Coin getMakerFee(boolean isCurrencyForMakerFeeBtc) {
-        return OfferUtil.getMakerFee(isCurrencyForMakerFeeBtc, amount.get());
+        return CoinUtil.getMakerFee(isCurrencyForMakerFeeBtc, amount.get());
     }
 
     public Coin getMakerFee() {
-        return makerFeeProvider.getMakerFee(bsqWalletService, preferences, amount.get());
+        return offerUtil.getMakerFee(amount.get());
     }
 
     public Coin getMakerFeeInBtc() {
-        return OfferUtil.getMakerFee(true, amount.get());
+        return CoinUtil.getMakerFee(true, amount.get());
     }
 
     public Coin getMakerFeeInBsq() {
-        return OfferUtil.getMakerFee(false, amount.get());
+        return CoinUtil.getMakerFee(false, amount.get());
     }
 
     public boolean isCurrencyForMakerFeeBtc() {
-        return OfferUtil.isCurrencyForMakerFeeBtc(preferences, bsqWalletService, amount.get());
+        return offerUtil.isCurrencyForMakerFeeBtc(amount.get());
     }
 
     boolean isPreferredFeeCurrencyBtc() {
@@ -758,7 +759,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     }
 
     boolean isBsqForFeeAvailable() {
-        return OfferUtil.isBsqForMakerFeeAvailable(bsqWalletService, amount.get());
+        return offerUtil.isBsqForMakerFeeAvailable(amount.get());
     }
 
     public boolean isHalCashAccount() {

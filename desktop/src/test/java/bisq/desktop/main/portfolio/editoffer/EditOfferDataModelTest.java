@@ -1,6 +1,5 @@
 package bisq.desktop.main.portfolio.editoffer;
 
-import bisq.desktop.main.offer.MakerFeeProvider;
 import bisq.desktop.util.validation.SecurityDepositValidator;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
@@ -13,6 +12,7 @@ import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.Res;
 import bisq.core.offer.CreateOfferService;
 import bisq.core.offer.OfferPayload;
+import bisq.core.offer.OfferUtil;
 import bisq.core.offer.OpenOffer;
 import bisq.core.payment.CryptoCurrencyAccount;
 import bisq.core.payment.PaymentAccount;
@@ -40,6 +40,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import static bisq.desktop.maker.OfferMaker.Offer;
 import static bisq.desktop.maker.OfferMaker.btcBCHCOffer;
 import static bisq.desktop.maker.PreferenceMakers.empty;
 import static com.natpryce.makeiteasy.MakeItEasy.make;
@@ -77,6 +78,7 @@ public class EditOfferDataModelTest {
         SecurityDepositValidator securityDepositValidator = mock(SecurityDepositValidator.class);
         AccountAgeWitnessService accountAgeWitnessService = mock(AccountAgeWitnessService.class);
         CreateOfferService createOfferService = mock(CreateOfferService.class);
+        OfferUtil offerUtil = mock(OfferUtil.class);
 
         when(btcWalletService.getOrCreateAddressEntry(anyString(), any())).thenReturn(addressEntry);
         when(btcWalletService.getBalanceForAddress(any())).thenReturn(Coin.valueOf(1000L));
@@ -95,8 +97,8 @@ public class EditOfferDataModelTest {
         model = new EditOfferDataModel(createOfferService, null,
                 btcWalletService, bsqWalletService, empty, user,
                 null, priceFeedService,
-                accountAgeWitnessService, feeService, null, null,
-                mock(MakerFeeProvider.class), mock(TradeStatisticsManager.class), null);
+                accountAgeWitnessService, feeService, offerUtil,null, null,
+                mock(TradeStatisticsManager.class), null);
     }
 
     @Test

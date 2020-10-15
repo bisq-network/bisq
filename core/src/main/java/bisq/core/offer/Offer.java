@@ -22,6 +22,7 @@ import bisq.core.locale.CurrencyUtil;
 import bisq.core.monetary.Altcoin;
 import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
+import bisq.core.util.VolumeUtil;
 import bisq.core.offer.availability.OfferAvailabilityModel;
 import bisq.core.offer.availability.OfferAvailabilityProtocol;
 import bisq.core.payment.payload.PaymentMethod;
@@ -231,9 +232,9 @@ public class Offer implements NetworkPayload, PersistablePayload {
         if (price != null && amount != null) {
             Volume volumeByAmount = price.getVolumeByAmount(amount);
             if (offerPayload.getPaymentMethodId().equals(PaymentMethod.HAL_CASH_ID))
-                volumeByAmount = OfferUtil.getAdjustedVolumeForHalCash(volumeByAmount);
+                volumeByAmount = VolumeUtil.getAdjustedVolumeForHalCash(volumeByAmount);
             else if (CurrencyUtil.isFiatCurrency(offerPayload.getCurrencyCode()))
-                volumeByAmount = OfferUtil.getRoundedFiatVolume(volumeByAmount);
+                volumeByAmount = VolumeUtil.getRoundedFiatVolume(volumeByAmount);
 
             return volumeByAmount;
         } else {

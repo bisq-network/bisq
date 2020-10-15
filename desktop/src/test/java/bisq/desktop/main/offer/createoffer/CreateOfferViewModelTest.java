@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.offer.createoffer;
 
-import bisq.desktop.main.offer.MakerFeeProvider;
 import bisq.desktop.util.validation.AltcoinValidator;
 import bisq.desktop.util.validation.BtcValidator;
 import bisq.desktop.util.validation.FiatPriceValidator;
@@ -33,6 +32,7 @@ import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.Res;
 import bisq.core.offer.CreateOfferService;
 import bisq.core.offer.OfferPayload;
+import bisq.core.offer.OfferUtil;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.provider.fee.FeeService;
@@ -97,6 +97,7 @@ public class CreateOfferViewModelTest {
         SecurityDepositValidator securityDepositValidator = mock(SecurityDepositValidator.class);
         AccountAgeWitnessService accountAgeWitnessService = mock(AccountAgeWitnessService.class);
         CreateOfferService createOfferService = mock(CreateOfferService.class);
+        OfferUtil offerUtil = mock(OfferUtil.class);
         var tradeStats = mock(TradeStatisticsManager.class);
 
         when(btcWalletService.getOrCreateAddressEntry(anyString(), any())).thenReturn(addressEntry);
@@ -117,13 +118,13 @@ public class CreateOfferViewModelTest {
 
         CreateOfferDataModel dataModel = new CreateOfferDataModel(createOfferService, null, btcWalletService,
                 bsqWalletService, empty, user, null, priceFeedService,
-                accountAgeWitnessService, feeService,
-                coinFormatter, mock(MakerFeeProvider.class), tradeStats, null);
+                accountAgeWitnessService, feeService, offerUtil,
+                coinFormatter, tradeStats, null);
         dataModel.initWithData(OfferPayload.Direction.BUY, new CryptoCurrency("BTC", "bitcoin"));
         dataModel.activate();
 
         model = new CreateOfferViewModel(dataModel, null, fiatPriceValidator, altcoinValidator,
-                btcValidator, null, securityDepositValidator, priceFeedService, null, null,
+                btcValidator, null, securityDepositValidator, priceFeedService, offerUtil,null, null,
                 preferences, coinFormatter, bsqFormatter);
         model.activate();
     }

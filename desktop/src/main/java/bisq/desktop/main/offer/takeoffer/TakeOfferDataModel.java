@@ -35,6 +35,7 @@ import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
+import bisq.core.util.VolumeUtil;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.offer.OfferUtil;
@@ -83,6 +84,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 class TakeOfferDataModel extends OfferDataModel {
     private final TradeManager tradeManager;
     private final OfferBook offerBook;
+    private final OfferUtil offerUtil;
     private final BsqWalletService bsqWalletService;
     private final User user;
     private final FeeService feeService;
@@ -123,6 +125,7 @@ class TakeOfferDataModel extends OfferDataModel {
     @Inject
     TakeOfferDataModel(TradeManager tradeManager,
                        OfferBook offerBook,
+                       OfferUtil offerUtil,
                        BtcWalletService btcWalletService,
                        BsqWalletService bsqWalletService,
                        User user, FeeService feeService,
@@ -138,6 +141,7 @@ class TakeOfferDataModel extends OfferDataModel {
 
         this.tradeManager = tradeManager;
         this.offerBook = offerBook;
+        this.offerUtil = offerUtil;
         this.bsqWalletService = bsqWalletService;
         this.user = user;
         this.feeService = feeService;
@@ -461,9 +465,9 @@ class TakeOfferDataModel extends OfferDataModel {
                 !amount.get().isZero()) {
             Volume volumeByAmount = tradePrice.getVolumeByAmount(amount.get());
             if (offer.getPaymentMethod().getId().equals(PaymentMethod.HAL_CASH_ID))
-                volumeByAmount = OfferUtil.getAdjustedVolumeForHalCash(volumeByAmount);
+                volumeByAmount = VolumeUtil.getAdjustedVolumeForHalCash(volumeByAmount);
             else if (CurrencyUtil.isFiatCurrency(getCurrencyCode()))
-                volumeByAmount = OfferUtil.getRoundedFiatVolume(volumeByAmount);
+                volumeByAmount = VolumeUtil.getRoundedFiatVolume(volumeByAmount);
 
             volume.set(volumeByAmount);
 
@@ -645,7 +649,7 @@ class TakeOfferDataModel extends OfferDataModel {
     }
 
     public boolean isCurrencyForTakerFeeBtc() {
-        return OfferUtil.isCurrencyForTakerFeeBtc(preferences, bsqWalletService, amount.get());
+        return offerUtil.isCurrencyForTakerFeeBtc(amount.get());
     }
 
     public void setPreferredCurrencyForTakerFeeBtc(boolean isCurrencyForTakerFeeBtc) {
@@ -657,18 +661,18 @@ class TakeOfferDataModel extends OfferDataModel {
     }
 
     public Coin getTakerFeeInBtc() {
-        return OfferUtil.getTakerFee(true, amount.get());
+        return offerUtil.getTakerFee(true, amount.get());
     }
 
     public Coin getTakerFeeInBsq() {
-        return OfferUtil.getTakerFee(false, amount.get());
+        return offerUtil.getTakerFee(false, amount.get());
     }
 
     boolean isTakerFeeValid() {
-        return preferences.getPayFeeInBtc() || OfferUtil.isBsqForTakerFeeAvailable(bsqWalletService, amount.get());
+        return preferences.getPayFeeInBtc() || offerUtil.isBsqForTakerFeeAvailable(amount.get());
     }
 
     public boolean isBsqForFeeAvailable() {
-        return OfferUtil.isBsqForTakerFeeAvailable(bsqWalletService, amount.get());
+        return offerUtil.isBsqForTakerFeeAvailable(amount.get());
     }
 }

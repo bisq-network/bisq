@@ -1,7 +1,5 @@
 package bisq.desktop.main.offer.createoffer;
 
-import bisq.desktop.main.offer.MakerFeeProvider;
-
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.locale.CryptoCurrency;
@@ -10,6 +8,7 @@ import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.Res;
 import bisq.core.offer.CreateOfferService;
 import bisq.core.offer.OfferPayload;
+import bisq.core.offer.OfferUtil;
 import bisq.core.payment.ClearXchangeAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.RevolutAccount;
@@ -40,7 +39,7 @@ public class CreateOfferDataModelTest {
     private CreateOfferDataModel model;
     private User user;
     private Preferences preferences;
-    private MakerFeeProvider makerFeeProvider;
+    private OfferUtil offerUtil;
 
     @Before
     public void setUp() {
@@ -54,6 +53,7 @@ public class CreateOfferDataModelTest {
         FeeService feeService = mock(FeeService.class);
         CreateOfferService createOfferService = mock(CreateOfferService.class);
         preferences = mock(Preferences.class);
+        offerUtil = mock(OfferUtil.class);
         user = mock(User.class);
         var tradeStats = mock(TradeStatisticsManager.class);
 
@@ -63,11 +63,10 @@ public class CreateOfferDataModelTest {
         when(createOfferService.getRandomOfferId()).thenReturn(UUID.randomUUID().toString());
         when(tradeStats.getObservableTradeStatisticsSet()).thenReturn(FXCollections.observableSet());
 
-        makerFeeProvider = mock(MakerFeeProvider.class);
         model = new CreateOfferDataModel(createOfferService, null, btcWalletService,
                 null, preferences, user, null,
                 priceFeedService, null,
-                feeService, null, makerFeeProvider, tradeStats, null);
+                feeService, offerUtil,null, tradeStats, null);
     }
 
     @Test
@@ -84,7 +83,7 @@ public class CreateOfferDataModelTest {
 
         when(user.getPaymentAccounts()).thenReturn(paymentAccounts);
         when(preferences.getSelectedPaymentAccountForCreateOffer()).thenReturn(revolutAccount);
-        when(makerFeeProvider.getMakerFee(any(), any(), any())).thenReturn(Coin.ZERO);
+        when(offerUtil.getMakerFee(any())).thenReturn(Coin.ZERO);
 
         model.initWithData(OfferPayload.Direction.BUY, new FiatCurrency("USD"));
         assertEquals("USD", model.getTradeCurrencyCode().get());
@@ -104,7 +103,7 @@ public class CreateOfferDataModelTest {
         when(user.getPaymentAccounts()).thenReturn(paymentAccounts);
         when(user.findFirstPaymentAccountWithCurrency(new FiatCurrency("USD"))).thenReturn(zelleAccount);
         when(preferences.getSelectedPaymentAccountForCreateOffer()).thenReturn(revolutAccount);
-        when(makerFeeProvider.getMakerFee(any(), any(), any())).thenReturn(Coin.ZERO);
+        when(offerUtil.getMakerFee(any())).thenReturn(Coin.ZERO);
 
         model.initWithData(OfferPayload.Direction.BUY, new FiatCurrency("USD"));
         assertEquals("USD", model.getTradeCurrencyCode().get());

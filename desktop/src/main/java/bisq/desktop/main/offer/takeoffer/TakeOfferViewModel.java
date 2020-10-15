@@ -47,6 +47,7 @@ import bisq.core.user.Preferences;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.coin.CoinFormatter;
+import bisq.core.util.coin.CoinUtil;
 import bisq.core.util.validation.InputValidator;
 
 import bisq.network.p2p.P2PService;
@@ -94,6 +95,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     private final Navigation navigation;
     private final CoinFormatter btcFormatter;
     private final BsqFormatter bsqFormatter;
+    private final OfferUtil offerUtil;
 
     private String amountRange;
     private String paymentLabel;
@@ -153,7 +155,8 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                               AccountAgeWitnessService accountAgeWitnessService,
                               Navigation navigation,
                               @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
-                              BsqFormatter bsqFormatter) {
+                              BsqFormatter bsqFormatter,
+                              OfferUtil offerUtil) {
         super(dataModel);
         this.dataModel = dataModel;
 
@@ -165,6 +168,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         this.navigation = navigation;
         this.btcFormatter = btcFormatter;
         this.bsqFormatter = bsqFormatter;
+        this.offerUtil = offerUtil;
         createListeners();
     }
 
@@ -296,8 +300,8 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
             tradeFee.set(getFormatterForTakerFee().formatCoin(takerFeeAsCoin));
 
             Coin makerFeeInBtc = dataModel.getTakerFeeInBtc();
-            Optional<Volume> optionalBtcFeeInFiat = OfferUtil.getFeeInUserFiatCurrency(makerFeeInBtc,
-                    true, preferences, priceFeedService, bsqFormatter);
+            Optional<Volume> optionalBtcFeeInFiat = offerUtil.getFeeInUserFiatCurrency(makerFeeInBtc,
+                    true, bsqFormatter);
             String btcFeeWithFiatAmount = DisplayUtils.getFeeWithFiatAmount(makerFeeInBtc, optionalBtcFeeInFiat, btcFormatter);
             if (DevEnv.isDaoActivated()) {
                 tradeFeeInBtcWithFiat.set(btcFeeWithFiatAmount);
@@ -306,8 +310,8 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
             }
 
             Coin makerFeeInBsq = dataModel.getTakerFeeInBsq();
-            Optional<Volume> optionalBsqFeeInFiat = OfferUtil.getFeeInUserFiatCurrency(makerFeeInBsq,
-                    false, preferences, priceFeedService, bsqFormatter);
+            Optional<Volume> optionalBsqFeeInFiat = offerUtil.getFeeInUserFiatCurrency(makerFeeInBsq,
+                    false, bsqFormatter);
             String bsqFeeWithFiatAmount = DisplayUtils.getFeeWithFiatAmount(makerFeeInBsq, optionalBsqFeeInFiat, bsqFormatter);
             if (DevEnv.isDaoActivated()) {
                 tradeFeeInBsqWithFiat.set(bsqFeeWithFiatAmount);
@@ -355,7 +359,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                 Price tradePrice = dataModel.tradePrice;
                 long maxTradeLimit = dataModel.getMaxTradeLimit();
                 if (dataModel.getPaymentMethod().getId().equals(PaymentMethod.HAL_CASH_ID)) {
-                    Coin adjustedAmountForHalCash = OfferUtil.getAdjustedAmountForHalCash(dataModel.getAmount().get(),
+                    Coin adjustedAmountForHalCash = CoinUtil.getAdjustedAmountForHalCash(dataModel.getAmount().get(),
                             tradePrice,
                             maxTradeLimit);
                     dataModel.applyAmount(adjustedAmountForHalCash);
@@ -364,7 +368,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                     if (!isAmountEqualMinAmount(dataModel.getAmount().get()) && (!isAmountEqualMaxAmount(dataModel.getAmount().get()))) {
                         // We only apply the rounding if the amount is variable (minAmount is lower as amount).
                         // Otherwise we could get an amount lower then the minAmount set by rounding
-                        Coin roundedAmount = OfferUtil.getRoundedFiatAmount(dataModel.getAmount().get(), tradePrice,
+                        Coin roundedAmount = CoinUtil.getRoundedFiatAmount(dataModel.getAmount().get(), tradePrice,
                                 maxTradeLimit);
                         dataModel.applyAmount(roundedAmount);
                     }
@@ -638,12 +642,12 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
             Price price = dataModel.tradePrice;
             if (price != null) {
                 if (dataModel.isHalCashAccount()) {
-                    amount = OfferUtil.getAdjustedAmountForHalCash(amount, price, maxTradeLimit);
+                    amount = CoinUtil.getAdjustedAmountForHalCash(amount, price, maxTradeLimit);
                 } else if (CurrencyUtil.isFiatCurrency(dataModel.getCurrencyCode())
                         && !isAmountEqualMinAmount(amount) && !isAmountEqualMaxAmount(amount)) {
                     // We only apply the rounding if the amount is variable (minAmount is lower as amount).
                     // Otherwise we could get an amount lower then the minAmount set by rounding
-                    amount = OfferUtil.getRoundedFiatAmount(amount, price, maxTradeLimit);
+                    amount = CoinUtil.getRoundedFiatAmount(amount, price, maxTradeLimit);
                 }
             }
             dataModel.applyAmount(amount);

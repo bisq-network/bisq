@@ -22,13 +22,13 @@ see <http://www.gnu.org/licenses/>.
 package bisq.desktop.main.offer.createoffer;
 
 import bisq.desktop.Navigation;
-import bisq.desktop.main.offer.MakerFeeProvider;
 import bisq.desktop.main.offer.MutableOfferDataModel;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.offer.CreateOfferService;
+import bisq.core.offer.OfferUtil;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.PriceFeedService;
@@ -62,8 +62,8 @@ class CreateOfferDataModel extends MutableOfferDataModel {
                                 PriceFeedService priceFeedService,
                                 AccountAgeWitnessService accountAgeWitnessService,
                                 FeeService feeService,
+                                OfferUtil offerUtil,
                                 @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
-                                MakerFeeProvider makerFeeProvider,
                                 TradeStatisticsManager tradeStatisticsManager,
                                 Navigation navigation) {
         super(createOfferService,
@@ -76,8 +76,8 @@ class CreateOfferDataModel extends MutableOfferDataModel {
                 priceFeedService,
                 accountAgeWitnessService,
                 feeService,
+                offerUtil,
                 btcFormatter,
-                makerFeeProvider,
                 tradeStatisticsManager,
                 navigation);
     }
