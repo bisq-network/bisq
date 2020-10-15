@@ -601,6 +601,7 @@ configure(project(':inventory')) {
     dependencies {
         compile project(':core')
         compile "com.google.guava:guava:$guavaVersion"
+        compile "com.sparkjava:spark-core:$sparkVersion"
 
         compileOnly "org.projectlombok:lombok:$lombokVersion"
         annotationProcessor "org.projectlombok:lombok:$lombokVersion"
