@@ -632,9 +632,14 @@ public abstract class WalletService {
      * @return true when queue is full
      */
     public boolean isUnconfirmedTransactionsLimitHit() {
-        return 20 < getTransactions(false).stream()
+        // For published delayed payout transactions we do not receive the tx confidence
+        // so we cannot check if it is confirmed so we ignore it for that check. The check is any arbitrarily
+        // using a limit of 20, so we don't need to be exact here. Should just reduce the likelihood of issues with
+        // the too long chains of unconfirmed transactions.
+        return getTransactions(false).stream()
+                .filter(tx -> tx.getLockTime() == 0)
                 .filter(Transaction::isPending)
-                .count();
+                .count() > 20;
     }
 
     public Set<Transaction> getTransactions(boolean includeDead) {
