@@ -20,7 +20,6 @@ package bisq.apitest.method.offer;
 import bisq.core.btc.wallet.Restrictions;
 
 import bisq.proto.grpc.CreateOfferRequest;
-import bisq.proto.grpc.OfferInfo;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -66,17 +65,17 @@ public class CreateOfferUsingFixedPriceTest extends AbstractCreateOfferTest {
         assertEquals("BTC", newOffer.getBaseCurrencyCode());
         assertEquals("AUD", newOffer.getCounterCurrencyCode());
 
-        OfferInfo offer = getMostRecentOffer("buy", "aud");
-        assertEquals(newOfferId, offer.getId());
-        assertEquals("BUY", offer.getDirection());
-        assertFalse(offer.getUseMarketBasedPrice());
-        assertEquals(160000000, offer.getPrice());
-        assertEquals(10000000, offer.getAmount());
-        assertEquals(10000000, offer.getMinAmount());
-        assertEquals(1500000, offer.getBuyerSecurityDeposit());
-        assertEquals(paymentAccount.getId(), offer.getPaymentAccountId());
-        assertEquals("BTC", offer.getBaseCurrencyCode());
-        assertEquals("AUD", offer.getCounterCurrencyCode());
+        newOffer = getOffer(newOfferId);
+        assertEquals(newOfferId, newOffer.getId());
+        assertEquals("BUY", newOffer.getDirection());
+        assertFalse(newOffer.getUseMarketBasedPrice());
+        assertEquals(160000000, newOffer.getPrice());
+        assertEquals(10000000, newOffer.getAmount());
+        assertEquals(10000000, newOffer.getMinAmount());
+        assertEquals(1500000, newOffer.getBuyerSecurityDeposit());
+        assertEquals(paymentAccount.getId(), newOffer.getPaymentAccountId());
+        assertEquals("BTC", newOffer.getBaseCurrencyCode());
+        assertEquals("AUD", newOffer.getCounterCurrencyCode());
     }
 
     @Test
@@ -107,17 +106,17 @@ public class CreateOfferUsingFixedPriceTest extends AbstractCreateOfferTest {
         assertEquals("BTC", newOffer.getBaseCurrencyCode());
         assertEquals("USD", newOffer.getCounterCurrencyCode());
 
-        OfferInfo offer = getMostRecentOffer("buy", "usd");
-        assertEquals(newOfferId, offer.getId());
-        assertEquals("BUY", offer.getDirection());
-        assertFalse(offer.getUseMarketBasedPrice());
-        assertEquals(100001234, offer.getPrice());
-        assertEquals(10000000, offer.getAmount());
-        assertEquals(10000000, offer.getMinAmount());
-        assertEquals(1500000, offer.getBuyerSecurityDeposit());
-        assertEquals(paymentAccount.getId(), offer.getPaymentAccountId());
-        assertEquals("BTC", offer.getBaseCurrencyCode());
-        assertEquals("USD", offer.getCounterCurrencyCode());
+        newOffer = getOffer(newOfferId);
+        assertEquals(newOfferId, newOffer.getId());
+        assertEquals("BUY", newOffer.getDirection());
+        assertFalse(newOffer.getUseMarketBasedPrice());
+        assertEquals(100001234, newOffer.getPrice());
+        assertEquals(10000000, newOffer.getAmount());
+        assertEquals(10000000, newOffer.getMinAmount());
+        assertEquals(1500000, newOffer.getBuyerSecurityDeposit());
+        assertEquals(paymentAccount.getId(), newOffer.getPaymentAccountId());
+        assertEquals("BTC", newOffer.getBaseCurrencyCode());
+        assertEquals("USD", newOffer.getCounterCurrencyCode());
     }
 
     @Test
@@ -148,16 +147,16 @@ public class CreateOfferUsingFixedPriceTest extends AbstractCreateOfferTest {
         assertEquals("BTC", newOffer.getBaseCurrencyCode());
         assertEquals("EUR", newOffer.getCounterCurrencyCode());
 
-        OfferInfo offer = getMostRecentOffer("sell", "eur");
-        assertEquals(newOfferId, offer.getId());
-        assertEquals("SELL", offer.getDirection());
-        assertFalse(offer.getUseMarketBasedPrice());
-        assertEquals(95001234, offer.getPrice());
-        assertEquals(10000000, offer.getAmount());
-        assertEquals(10000000, offer.getMinAmount());
-        assertEquals(1500000, offer.getBuyerSecurityDeposit());
-        assertEquals(paymentAccount.getId(), offer.getPaymentAccountId());
-        assertEquals("BTC", offer.getBaseCurrencyCode());
-        assertEquals("EUR", offer.getCounterCurrencyCode());
+        newOffer = getOffer(newOfferId);
+        assertEquals(newOfferId, newOffer.getId());
+        assertEquals("SELL", newOffer.getDirection());
+        assertFalse(newOffer.getUseMarketBasedPrice());
+        assertEquals(95001234, newOffer.getPrice());
+        assertEquals(10000000, newOffer.getAmount());
+        assertEquals(10000000, newOffer.getMinAmount());
+        assertEquals(1500000, newOffer.getBuyerSecurityDeposit());
+        assertEquals(paymentAccount.getId(), newOffer.getPaymentAccountId());
+        assertEquals("BTC", newOffer.getBaseCurrencyCode());
+        assertEquals("EUR", newOffer.getCounterCurrencyCode());
     }
 }
