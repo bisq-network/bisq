@@ -267,14 +267,16 @@ class TakeOfferDataModel extends OfferDataModel {
             priceFeedService.setCurrencyCode(offer.getCurrencyCode());
     }
 
-    public void onClose() {
+    public void onClose(boolean removeOffer) {
         // We do not wait until the offer got removed by a network remove message but remove it
         // directly from the offer book. The broadcast gets now bundled and has 2 sec. delay so the
         // removal from the network is a bit slower as it has been before. To avoid that the taker gets
         // confused to see the same offer still in the offerbook we remove it manually. This removal has
         // only local effect. Other trader might see the offer for a few seconds
         // still (but cannot take it).
-        offerBook.removeOffer(checkNotNull(offer), tradeManager);
+        if (removeOffer) {
+            offerBook.removeOffer(checkNotNull(offer), tradeManager);
+        }
 
         btcWalletService.resetAddressEntriesForOpenOffer(offer.getId());
     }
