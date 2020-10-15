@@ -388,7 +388,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
         if (offer.getPrice() == null)
             new Popup().warning(Res.get("takeOffer.noPriceFeedAvailable"))
-                    .onClose(this::close)
+                    .onClose(() -> close(false))
                     .show();
     }
 
@@ -595,7 +595,11 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void close() {
-        model.dataModel.onClose();
+        close(true);
+    }
+
+    private void close(boolean removeOffer) {
+        model.dataModel.onClose(removeOffer);
         if (closeHandler != null)
             closeHandler.close();
     }
@@ -893,7 +897,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         cancelButton1.setDefaultButton(false);
         cancelButton1.setOnAction(e -> {
             model.dataModel.swapTradeToSavings();
-            close();
+            close(false);
         });
     }
 
@@ -1040,7 +1044,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                         })
                         .show();
             } else {
-                close();
+                close(false);
                 model.dataModel.swapTradeToSavings();
             }
         });
