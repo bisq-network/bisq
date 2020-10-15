@@ -365,58 +365,70 @@ public class AccountAgeWitnessService {
                                AccountAge accountAgeCategory,
                                OfferPayload.Direction direction,
                                PaymentMethod paymentMethod) {
-        if (CurrencyUtil.isFiatCurrency(currencyCode)) {
-            double factor;
-            boolean isRisky = PaymentMethod.hasChargebackRisk(paymentMethod, currencyCode);
-            if (!isRisky || direction == OfferPayload.Direction.SELL) {
-                // Get age of witness rather than time since signing for non risky payment methods and for selling
-                accountAgeCategory = getAccountAgeCategory(getAccountAge(accountAgeWitness, new Date()));
-            }
-            long limit = OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT.value;
-            if (direction == OfferPayload.Direction.BUY && isRisky) {
-                // Used only for bying of BTC with risky payment methods
-                switch (accountAgeCategory) {
-                    case TWO_MONTHS_OR_MORE:
-                        factor = 1;
-                        break;
-                    case ONE_TO_TWO_MONTHS:
-                        factor = 0.5;
-                        break;
-                    case LESS_ONE_MONTH:
-                    case UNVERIFIED:
-                    default:
-                        factor = 0;
-                }
-            } else {
-                // Used by non risky payment methods and for selling BTC with risky methods
-                switch (accountAgeCategory) {
-                    case TWO_MONTHS_OR_MORE:
-                        factor = 1;
-                        break;
-                    case ONE_TO_TWO_MONTHS:
-                        factor = 0.5;
-                        break;
-                    case LESS_ONE_MONTH:
-                    case UNVERIFIED:
-                        factor = 0.25;
-                        break;
-                    default:
-                        factor = 0;
-                }
-            }
-            if (factor > 0) {
-                limit = MathUtils.roundDoubleToLong((double) maxTradeLimit.value * factor);
-            }
-
-            log.debug("accountAgeCategory={}, limit={}, factor={}, accountAgeWitnessHash={}",
-                    accountAgeCategory,
-                    Coin.valueOf(limit).toFriendlyString(),
-                    factor,
-                    Utilities.bytesAsHexString(accountAgeWitness.getHash()));
-            return limit;
-        } else {
+        if (!CurrencyUtil.isFiatCurrency(currencyCode)) {
             return maxTradeLimit.value;
         }
+
+        double factor;
+        boolean isRisky = PaymentMethod.hasChargebackRisk(paymentMethod, currencyCode);
+        if (!isRisky || direction == OfferPayload.Direction.SELL) {
+            // Get age of witness rather than time since signing for non risky payment methods and for selling
+            accountAgeCategory = getAccountAgeCategory(getAccountAge(accountAgeWitness, new Date()));
+        }
+        long limit = OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT.value;
+        if (direction == OfferPayload.Direction.BUY && isRisky) {
+            // Used only for bying of BTC with risky payment methods
+            factor = getFactorRisky(accountAgeCategory);
+        } else {
+            // Used by non risky payment methods and for selling BTC with risky methods
+            factor = getFactorNormal(accountAgeCategory);
+        }
+        if (factor > 0) {
+            limit = MathUtils.roundDoubleToLong((double) maxTradeLimit.value * factor);
+        }
+
+        log.debug("accountAgeCategory={}, limit={}, factor={}, accountAgeWitnessHash={}",
+                accountAgeCategory,
+                Coin.valueOf(limit).toFriendlyString(),
+                factor,
+                Utilities.bytesAsHexString(accountAgeWitness.getHash()));
+        return limit;
+    }
+
+    private double getFactorRisky(AccountAge accountAgeCategory) {
+        double factor;
+        switch (accountAgeCategory) {
+            case TWO_MONTHS_OR_MORE:
+                factor = 1;
+                break;
+            case ONE_TO_TWO_MONTHS:
+                factor = 0.5;
+                break;
+            case LESS_ONE_MONTH:
+            case UNVERIFIED:
+            default:
+                factor = 0;
+        }
+        return factor;
+    }
+
+    private double getFactorNormal(AccountAge accountAgeCategory) {
+        double factor;
+        switch (accountAgeCategory) {
+            case TWO_MONTHS_OR_MORE:
+                factor = 1;
+                break;
+            case ONE_TO_TWO_MONTHS:
+                factor = 0.5;
+                break;
+            case LESS_ONE_MONTH:
+            case UNVERIFIED:
+                factor = 0.25;
+                break;
+            default:
+                factor = 0;
+        }
+        return factor;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
