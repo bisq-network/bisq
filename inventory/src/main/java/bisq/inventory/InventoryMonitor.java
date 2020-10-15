@@ -34,20 +34,14 @@ import bisq.common.config.BaseCurrencyNetwork;
 import bisq.common.file.JsonFileManager;
 import bisq.common.util.Utilities;
 
-import org.bitcoinj.core.ECKey;
-
 import java.time.Clock;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -56,9 +50,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class InventoryMonitor {
 
-    private final NetworkNode networkNode;
-    private final GetInventoryRequestManager getInventoryRequestManager;
-    private final List<NodeAddress> seedNodes = new ArrayList<>();
     private final Map<NodeAddress, JsonFileManager> jsonFileManagerByNodeAddress = new HashMap<>();
     private final boolean useLocalhostForP2P;
     private final int intervalSec;
@@ -66,9 +57,70 @@ public class InventoryMonitor {
     public InventoryMonitor(File appDir,
                             boolean useLocalhostForP2P,
                             BaseCurrencyNetwork network,
-                            int intervalSec) {
+                            int intervalSec,
+                            int port) {
         this.useLocalhostForP2P = useLocalhostForP2P;
         this.intervalSec = intervalSec;
+
+        setupCapabilities();
+
+        DefaultSeedNodeRepository.readSeedNodePropertyFile(network)
+                .ifPresent(seedNodeFile -> {
+                    List<NodeAddress> seedNodes = new ArrayList<>(DefaultSeedNodeRepository.getSeedNodeAddressesFromPropertyFile(network));
+                    File jsonDir = new File(appDir, "json");
+                    if (!jsonDir.exists() && !jsonDir.mkdir()) {
+                        log.warn("make jsonDir failed");
+                    }
+                    seedNodes.forEach(nodeAddress -> {
+                        JsonFileManager jsonFileManager = new JsonFileManager(new File(jsonDir, getShortAddress(nodeAddress, useLocalhostForP2P)));
+                        jsonFileManagerByNodeAddress.put(nodeAddress, jsonFileManager);
+                    });
+
+                    NetworkNode networkNode = getNetworkNode(appDir);
+
+                    GetInventoryRequestManager getInventoryRequestManager = new GetInventoryRequestManager(networkNode);
+
+                    InventoryWebServer inventoryWebServer = new InventoryWebServer(port, seedNodes, seedNodeFile);
+
+                    networkNode.start(new SetupListener() {
+                        @Override
+                        public void onTorNodeReady() {
+                            startRequests(inventoryWebServer, getInventoryRequestManager, seedNodes);
+                        }
+
+                        @Override
+                        public void onHiddenServicePublished() {
+                        }
+
+                        @Override
+                        public void onSetupFailed(Throwable throwable) {
+                        }
+
+                        @Override
+                        public void onRequestCustomBridges() {
+                        }
+                    });
+                });
+    }
+
+    private NetworkNode getNetworkNode(File appDir) {
+        File torDir = new File(appDir, "tor");
+        CoreNetworkProtoResolver networkProtoResolver = new CoreNetworkProtoResolver(Clock.systemDefaultZone());
+        return new NetworkNodeProvider(networkProtoResolver,
+                ArrayList::new,
+                useLocalhostForP2P,
+                9999,
+                torDir,
+                null,
+                "",
+                -1,
+                "",
+                null,
+                false,
+                false).get();
+    }
+
+    protected void setupCapabilities() {
         Capabilities.app.addAll(
                 Capability.TRADE_STATISTICS,
                 Capability.TRADE_STATISTICS_2,
@@ -86,87 +138,6 @@ public class InventoryMonitor {
                 Capability.TRADE_STATISTICS_3,
                 Capability.RECEIVE_BSQ_BLOCK
         );
-
-        File torDir = new File(appDir, "tor");
-        CoreNetworkProtoResolver networkProtoResolver = new CoreNetworkProtoResolver(Clock.systemDefaultZone());
-        networkNode = new NetworkNodeProvider(networkProtoResolver,
-                ArrayList::new,
-                useLocalhostForP2P,
-                9999,
-                torDir,
-                null,
-                "",
-                -1,
-                "",
-                null,
-                false,
-                false).get();
-
-        File keyFile = new File(appDir, "sigKey");
-        ECKey ecKey = getPersistedSigKey(keyFile).orElseGet(() -> {
-            ECKey key = new ECKey();
-            log.info("No persisted key found. We create a new EC key");
-            persistSigKey(keyFile, key);
-            return key;
-        });
-        log.info("EC key: " + ecKey.getPublicKeyAsHex());
-
-        getInventoryRequestManager = new GetInventoryRequestManager(networkNode, ecKey);
-
-        seedNodes.addAll(DefaultSeedNodeRepository.getSeedNodeAddressesFromPropertyFile(network));
-
-        File jsonDir = new File(appDir, "json");
-        if (!jsonDir.exists() && !jsonDir.mkdir()) {
-            log.warn("make jsonDir failed");
-        }
-        seedNodes.forEach(nodeAddress -> {
-            JsonFileManager jsonFileManager = new JsonFileManager(new File(jsonDir, getShortAddress(nodeAddress, useLocalhostForP2P)));
-            jsonFileManagerByNodeAddress.put(nodeAddress, jsonFileManager);
-        });
-
-        networkNode.start(new SetupListener() {
-            @Override
-            public void onTorNodeReady() {
-                startRequests();
-            }
-
-            @Override
-            public void onHiddenServicePublished() {
-            }
-
-            @Override
-            public void onSetupFailed(Throwable throwable) {
-            }
-
-            @Override
-            public void onRequestCustomBridges() {
-            }
-        });
-    }
-
-    private void persistSigKey(File keyFile, ECKey ecKey) {
-        try (FileOutputStream fileOutputStream = new FileOutputStream(keyFile.getAbsolutePath())) {
-            fileOutputStream.write(ecKey.getPrivKeyBytes());
-        } catch (IOException e) {
-            e.printStackTrace();
-            log.error(e.toString());
-        }
-    }
-
-    private Optional<ECKey> getPersistedSigKey(File keyFile) {
-        if (!keyFile.exists()) {
-            return Optional.empty();
-        }
-
-        try (FileInputStream fis = new FileInputStream(keyFile.getAbsolutePath())) {
-            byte[] keyBytes = new byte[(int) keyFile.length()];
-            fis.read(keyBytes);
-            return Optional.of(ECKey.fromPrivate(keyBytes));
-        } catch (IOException e) {
-            e.printStackTrace();
-            log.error(e.toString());
-            return Optional.empty();
-        }
     }
 
     private String getShortAddress(NodeAddress nodeAddress, boolean useLocalhostForP2P) {
@@ -175,12 +146,19 @@ public class InventoryMonitor {
                 nodeAddress.getFullAddress().substring(0, 10);
     }
 
-    private void startRequests() {
-        UserThread.runPeriodically(this::requestAllSeeds, intervalSec);
-        requestAllSeeds();
+    private void startRequests(InventoryWebServer inventoryWebServer,
+                               GetInventoryRequestManager getInventoryRequestManager,
+                               List<NodeAddress> seedNodes) {
+        UserThread.runPeriodically(() ->
+                        requestAllSeeds(inventoryWebServer, getInventoryRequestManager, seedNodes),
+                intervalSec);
+
+        requestAllSeeds(inventoryWebServer, getInventoryRequestManager, seedNodes);
     }
 
-    private void requestAllSeeds() {
+    private void requestAllSeeds(InventoryWebServer inventoryWebServer,
+                                 GetInventoryRequestManager getInventoryRequestManager,
+                                 List<NodeAddress> seedNodes) {
         seedNodes.forEach(nodeAddress -> {
             RequestInfo requestInfo = new RequestInfo(System.currentTimeMillis());
             new Thread(() -> {
@@ -191,6 +169,9 @@ public class InventoryMonitor {
                             long responseTime = System.currentTimeMillis();
                             requestInfo.setResponseTime(responseTime);
                             requestInfo.setInventory(result);
+
+                            inventoryWebServer.onNewRequestInfo(requestInfo, nodeAddress);
+
                             String json = Utilities.objectToJson(requestInfo);
                             jsonFileManagerByNodeAddress.get(nodeAddress).writeToDisc(json, String.valueOf(responseTime));
                         },

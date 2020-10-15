@@ -144,9 +144,6 @@ message Pong {
 
 message GetInventoryRequest {
     string version = 1;
-    bytes nonce = 2;
-    bytes signature = 3;
-    bytes pub_key = 4;
 }
 
 message GetInventoryResponse {

@@ -52,6 +52,7 @@ public class InventoryMonitorMain {
         int intervalSec = 600;
         boolean useLocalhostForP2P = false;
         BaseCurrencyNetwork network = BaseCurrencyNetwork.BTC_MAINNET;
+        int port = 80;
 
         if (args.length > 0) {
             intervalSec = Integer.parseInt(args[0]);
@@ -62,6 +63,9 @@ public class InventoryMonitorMain {
         if (args.length > 2) {
             network = BaseCurrencyNetwork.valueOf(args[2]);
         }
+        if (args.length > 3) {
+            port = Integer.parseInt(args[3]);
+        }
 
         String appName = "bisq-InventoryMonitor-" + network;
 
@@ -71,7 +75,7 @@ public class InventoryMonitorMain {
         Log.setLevel(Level.INFO);
         Version.setBaseCryptoNetworkId(network.ordinal());
 
-        inventoryMonitor = new InventoryMonitor(appDir, useLocalhostForP2P, network, intervalSec);
+        inventoryMonitor = new InventoryMonitor(appDir, useLocalhostForP2P, network, intervalSec, port);
 
         ThreadFactory threadFactory = new ThreadFactoryBuilder()
                 .setNameFormat(inventoryMonitor.getClass().getSimpleName())
