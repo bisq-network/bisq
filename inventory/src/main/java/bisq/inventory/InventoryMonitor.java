@@ -34,20 +34,24 @@ import bisq.common.config.BaseCurrencyNetwork;
 import bisq.common.file.JsonFileManager;
 import bisq.common.util.Utilities;
 
+import org.bitcoinj.core.ECKey;
+
 import java.time.Clock;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-
-import org.jetbrains.annotations.NotNull;
 
 @Slf4j
 public class InventoryMonitor {
@@ -83,11 +87,13 @@ public class InventoryMonitor {
                 Capability.RECEIVE_BSQ_BLOCK
         );
 
-        networkNode = new NetworkNodeProvider(new CoreNetworkProtoResolver(Clock.systemDefaultZone()),
+        File torDir = new File(appDir, "tor");
+        CoreNetworkProtoResolver networkProtoResolver = new CoreNetworkProtoResolver(Clock.systemDefaultZone());
+        networkNode = new NetworkNodeProvider(networkProtoResolver,
                 ArrayList::new,
                 useLocalhostForP2P,
                 9999,
-                new File(appDir, "tor"),
+                torDir,
                 null,
                 "",
                 -1,
@@ -95,7 +101,17 @@ public class InventoryMonitor {
                 null,
                 false,
                 false).get();
-        getInventoryRequestManager = new GetInventoryRequestManager(networkNode);
+
+        File keyFile = new File(appDir, "sigKey");
+        ECKey ecKey = getPersistedSigKey(keyFile).orElseGet(() -> {
+            ECKey key = new ECKey();
+            log.info("No persisted key found. We create a new EC key");
+            persistSigKey(keyFile, key);
+            return key;
+        });
+        log.info("EC key: " + ecKey.getPublicKeyAsHex());
+
+        getInventoryRequestManager = new GetInventoryRequestManager(networkNode, ecKey);
 
         seedNodes.addAll(DefaultSeedNodeRepository.getSeedNodeAddressesFromPropertyFile(network));
 
@@ -128,7 +144,31 @@ public class InventoryMonitor {
         });
     }
 
-    @NotNull
+    private void persistSigKey(File keyFile, ECKey ecKey) {
+        try (FileOutputStream fileOutputStream = new FileOutputStream(keyFile.getAbsolutePath())) {
+            fileOutputStream.write(ecKey.getPrivKeyBytes());
+        } catch (IOException e) {
+            e.printStackTrace();
+            log.error(e.toString());
+        }
+    }
+
+    private Optional<ECKey> getPersistedSigKey(File keyFile) {
+        if (!keyFile.exists()) {
+            return Optional.empty();
+        }
+
+        try (FileInputStream fis = new FileInputStream(keyFile.getAbsolutePath())) {
+            byte[] keyBytes = new byte[(int) keyFile.length()];
+            fis.read(keyBytes);
+            return Optional.of(ECKey.fromPrivate(keyBytes));
+        } catch (IOException e) {
+            e.printStackTrace();
+            log.error(e.toString());
+            return Optional.empty();
+        }
+    }
+
     private String getShortAddress(NodeAddress nodeAddress, boolean useLocalhostForP2P) {
         return useLocalhostForP2P ?
                 nodeAddress.getFullAddress().replace(":", "_") :

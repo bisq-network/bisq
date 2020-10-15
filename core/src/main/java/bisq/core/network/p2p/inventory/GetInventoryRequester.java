@@ -28,8 +28,12 @@ import bisq.network.p2p.network.NetworkNode;
 import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.app.Version;
+import bisq.common.crypto.CryptoUtils;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.proto.network.NetworkEnvelope;
+
+import org.bitcoinj.core.ECKey;
+import org.bitcoinj.core.Sha256Hash;
 
 import java.util.Map;
 import java.util.function.Consumer;
@@ -42,16 +46,19 @@ public class GetInventoryRequester implements MessageListener {
 
     private final NetworkNode networkNode;
     private final NodeAddress nodeAddress;
+    private final ECKey sigKey;
     private final Consumer<Map<String, String>> resultHandler;
     private final ErrorMessageHandler errorMessageHandler;
     private Timer timer;
 
     public GetInventoryRequester(NetworkNode networkNode,
                                  NodeAddress nodeAddress,
+                                 ECKey sigKey,
                                  Consumer<Map<String, String>> resultHandler,
                                  ErrorMessageHandler errorMessageHandler) {
         this.networkNode = networkNode;
         this.nodeAddress = nodeAddress;
+        this.sigKey = sigKey;
         this.resultHandler = resultHandler;
         this.errorMessageHandler = errorMessageHandler;
     }
@@ -59,7 +66,11 @@ public class GetInventoryRequester implements MessageListener {
     public void request() {
         networkNode.addMessageListener(this);
         timer = UserThread.runAfter(this::onTimeOut, TIMEOUT_SEC);
-        networkNode.sendMessage(nodeAddress, new GetInventoryRequest(Version.VERSION));
+        byte[] nonce = CryptoUtils.getRandomBytes(32);
+        byte[] signature = sigKey.sign(Sha256Hash.of(nonce)).encodeToDER();
+        byte[] pubKey = sigKey.getPubKey();
+        GetInventoryRequest getInventoryRequest = new GetInventoryRequest(Version.VERSION, nonce, signature, pubKey);
+        networkNode.sendMessage(nodeAddress, getInventoryRequest);
     }
 
     private void onTimeOut() {

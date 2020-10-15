@@ -22,6 +22,8 @@ import bisq.network.p2p.network.NetworkNode;
 
 import bisq.common.handlers.ErrorMessageHandler;
 
+import org.bitcoinj.core.ECKey;
+
 import javax.inject.Inject;
 
 import java.util.HashMap;
@@ -33,11 +35,13 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class GetInventoryRequestManager {
     private final NetworkNode networkNode;
+    private final ECKey sigKey;
     private final Map<NodeAddress, GetInventoryRequester> requesterMap = new HashMap<>();
 
     @Inject
-    public GetInventoryRequestManager(NetworkNode networkNode) {
+    public GetInventoryRequestManager(NetworkNode networkNode, ECKey sigKey) {
         this.networkNode = networkNode;
+        this.sigKey = sigKey;
     }
 
     public void request(NodeAddress nodeAddress,
@@ -50,6 +54,7 @@ public class GetInventoryRequestManager {
 
         GetInventoryRequester getInventoryRequester = new GetInventoryRequester(networkNode,
                 nodeAddress,
+                sigKey,
                 resultMap -> {
                     requesterMap.remove(nodeAddress);
                     resultHandler.accept(resultMap);
