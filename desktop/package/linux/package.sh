@@ -111,7 +111,6 @@ $JAVA_HOME/bin/javapackager \
     -BjvmOptions=-Xss1280k \
     -BjvmOptions=-XX:MaxRAM=4g \
     -BjvmOptions=-Djava.net.preferIPv4Stack=true \
-    -BjvmOptions=-Djdk.module.illegalAccess=deny \
     -outfile Bisq-$version \
     -v
 

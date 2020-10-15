@@ -91,7 +91,6 @@ $JAVA_HOME/bin/javapackager \
     -srcfiles "Bisq-$version.jar" \
     -appclass bisq.desktop.app.BisqAppMain \
     -outfile Bisq \
-    -BjvmOptions=-Djdk.module.illegalAccess=deny \
     -v
 
 open deploy

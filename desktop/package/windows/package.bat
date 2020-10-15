@@ -111,7 +111,6 @@ call "%JAVA_HOME%\bin\javapackager.exe" -deploy ^
 -srcdir "%package_dir%" ^
 -srcfiles %jar_filename% ^
 -outfile Bisq ^
--BjvmOptions=-Djdk.module.illegalAccess=deny ^
 -v
 
 if not exist "%package_dir%\windows\Bisq-%version%.exe" (
