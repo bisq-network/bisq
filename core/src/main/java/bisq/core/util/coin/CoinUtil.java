@@ -160,20 +160,21 @@ public class CoinUtil {
         );
         smallestUnitForAmount = Coin.valueOf(Math.max(minTradeAmount, smallestUnitForAmount.value));
         // We don't allow smaller amount values than smallestUnitForAmount
-        if (amount.compareTo(smallestUnitForAmount) < 0)
-            amount = smallestUnitForAmount;
+        boolean useSmallestUnitForAmount = amount.compareTo(smallestUnitForAmount) < 0;
 
         // We get the adjusted volume from our amount
-        Volume volume = getAdjustedFiatVolume(price.getVolumeByAmount(amount), factor);
+        Volume volume = useSmallestUnitForAmount
+                ? getAdjustedFiatVolume(price.getVolumeByAmount(smallestUnitForAmount), factor)
+                : getAdjustedFiatVolume(price.getVolumeByAmount(amount), factor);
         if (volume.getValue() <= 0)
             return Coin.ZERO;
 
         // From that adjusted volume we calculate back the amount. It might be a bit different as
         // the amount used as input before due rounding.
-        amount = price.getAmountByVolume(volume);
+        Coin amountByVolume = price.getAmountByVolume(volume);
 
         // For the amount we allow only 4 decimal places
-        long adjustedAmount = Math.round((double) amount.value / 10000d) * 10000;
+        long adjustedAmount = Math.round((double) amountByVolume.value / 10000d) * 10000;
 
         // If we are above our trade limit we reduce the amount by the smallestUnitForAmount
         while (adjustedAmount > maxTradeLimit) {
