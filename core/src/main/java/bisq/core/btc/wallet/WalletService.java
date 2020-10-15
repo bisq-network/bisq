@@ -62,12 +62,9 @@ import org.bitcoinj.utils.Threading;
 import org.bitcoinj.wallet.DecryptingKeyBag;
 import org.bitcoinj.wallet.DeterministicSeed;
 import org.bitcoinj.wallet.KeyBag;
-import org.bitcoinj.wallet.KeyChain;
 import org.bitcoinj.wallet.RedeemData;
 import org.bitcoinj.wallet.SendRequest;
 import org.bitcoinj.wallet.Wallet;
-import org.bitcoinj.wallet.listeners.KeyChainEventListener;
-import org.bitcoinj.wallet.listeners.ScriptsChangeEventListener;
 import org.bitcoinj.wallet.listeners.WalletChangeEventListener;
 import org.bitcoinj.wallet.listeners.WalletCoinsReceivedEventListener;
 import org.bitcoinj.wallet.listeners.WalletCoinsSentEventListener;
@@ -635,7 +632,14 @@ public abstract class WalletService {
      * @return true when queue is full
      */
     public boolean isUnconfirmedTransactionsLimitHit() {
-        return 20 < getTransactions(true).stream().filter(transaction -> transaction.isPending()).count();
+        // For published delayed payout transactions we do not receive the tx confidence
+        // so we cannot check if it is confirmed so we ignore it for that check. The check is any arbitrarily
+        // using a limit of 20, so we don't need to be exact here. Should just reduce the likelihood of issues with
+        // the too long chains of unconfirmed transactions.
+        return getTransactions(false).stream()
+                .filter(tx -> tx.getLockTime() == 0)
+                .filter(Transaction::isPending)
+                .count() > 20;
     }
 
     public Set<Transaction> getTransactions(boolean includeDead) {
