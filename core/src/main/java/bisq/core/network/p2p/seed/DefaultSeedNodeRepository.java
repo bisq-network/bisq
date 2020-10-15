@@ -34,6 +34,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -84,24 +85,30 @@ public class DefaultSeedNodeRepository implements SeedNodeRepository {
         }
     }
 
-    public static List<NodeAddress> getSeedNodeAddressesFromPropertyFile(BaseCurrencyNetwork baseCurrencyNetwork) {
-        List<NodeAddress> list = new ArrayList<>();
+    public static Optional<BufferedReader> readSeedNodePropertyFile(BaseCurrencyNetwork baseCurrencyNetwork) {
         InputStream fileInputStream = DefaultSeedNodeRepository.class.getClassLoader().getResourceAsStream(
                 baseCurrencyNetwork.name().toLowerCase() + ENDING);
         if (fileInputStream == null) {
-            return new ArrayList<>();
+            return Optional.empty();
         }
-        BufferedReader seedNodeFile = new BufferedReader(new InputStreamReader(fileInputStream));
+        return Optional.of(new BufferedReader(new InputStreamReader(fileInputStream)));
+    }
 
+    public static List<NodeAddress> getSeedNodeAddressesFromPropertyFile(BaseCurrencyNetwork baseCurrencyNetwork) {
+        List<NodeAddress> list = new ArrayList<>();
+        readSeedNodePropertyFile(baseCurrencyNetwork).ifPresent(seedNodeFile -> {
+            seedNodeFile.lines().forEach(line -> {
+                Matcher matcher = pattern.matcher(line);
+                if (matcher.find())
+                    list.add(new NodeAddress(matcher.group(1)));
 
-        seedNodeFile.lines().forEach(line -> {
-            Matcher matcher = pattern.matcher(line);
-            if (matcher.find())
-                list.add(new NodeAddress(matcher.group(1)));
-
-            // Maybe better include in regex...
-            if (line.startsWith("localhost"))
-                list.add(new NodeAddress(line));
+                // Maybe better include in regex...
+                if (line.startsWith("localhost")) {
+                    String[] strings = line.split(" \\(@");
+                    String node = strings[0];
+                    list.add(new NodeAddress(node));
+                }
+            });
         });
         return list;
     }
