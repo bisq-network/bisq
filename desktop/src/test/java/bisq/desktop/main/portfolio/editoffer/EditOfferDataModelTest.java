@@ -40,7 +40,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import static bisq.desktop.maker.OfferMaker.Offer;
 import static bisq.desktop.maker.OfferMaker.btcBCHCOffer;
 import static bisq.desktop.maker.PreferenceMakers.empty;
 import static com.natpryce.makeiteasy.MakeItEasy.make;
@@ -83,7 +82,11 @@ public class EditOfferDataModelTest {
         when(btcWalletService.getOrCreateAddressEntry(anyString(), any())).thenReturn(addressEntry);
         when(btcWalletService.getBalanceForAddress(any())).thenReturn(Coin.valueOf(1000L));
         when(priceFeedService.updateCounterProperty()).thenReturn(new SimpleIntegerProperty());
-        when(priceFeedService.getMarketPrice(anyString())).thenReturn(new MarketPrice("USD", 12684.0450, Instant.now().getEpochSecond(), true));
+        when(priceFeedService.getMarketPrice(anyString())).thenReturn(
+                new MarketPrice("USD",
+                        12684.0450,
+                        Instant.now().getEpochSecond(),
+                        true));
         when(feeService.getTxFee(anyInt())).thenReturn(Coin.valueOf(1000L));
         when(user.findFirstPaymentAccountWithCurrency(any())).thenReturn(paymentAccount);
         when(user.getPaymentAccountsAsObservable()).thenReturn(FXCollections.observableSet());
@@ -94,11 +97,21 @@ public class EditOfferDataModelTest {
         when(bsqWalletService.getAvailableConfirmedBalance()).thenReturn(Coin.ZERO);
         when(createOfferService.getRandomOfferId()).thenReturn(UUID.randomUUID().toString());
 
-        model = new EditOfferDataModel(createOfferService, null,
-                btcWalletService, bsqWalletService, empty, user,
-                null, priceFeedService,
-                accountAgeWitnessService, feeService, offerUtil,null, null,
-                mock(TradeStatisticsManager.class), null);
+        model = new EditOfferDataModel(createOfferService,
+                null,
+                btcWalletService,
+                bsqWalletService,
+                empty,
+                user,
+                null,
+                priceFeedService,
+                accountAgeWitnessService,
+                feeService,
+                offerUtil,
+                null,
+                null,
+                mock(TradeStatisticsManager.class),
+                null);
     }
 
     @Test
