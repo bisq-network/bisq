@@ -41,9 +41,7 @@ import bisq.core.offer.OfferUtil;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.provider.fee.FeeService;
-import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.Trade;
-import bisq.core.user.Preferences;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.coin.CoinFormatter;
@@ -89,9 +87,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     final TakeOfferDataModel dataModel;
     private final BtcValidator btcValidator;
     private final P2PService p2PService;
-    private final Preferences preferences;
-    private final PriceFeedService priceFeedService;
-    private AccountAgeWitnessService accountAgeWitnessService;
+    private final AccountAgeWitnessService accountAgeWitnessService;
     private final Navigation navigation;
     private final CoinFormatter btcFormatter;
     private final BsqFormatter bsqFormatter;
@@ -138,7 +134,6 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     private ChangeListener<Offer.State> offerStateListener;
     private ChangeListener<String> offerErrorListener;
     private ConnectionListener connectionListener;
-    //  private Subscription isFeeSufficientSubscription;
     private Runnable takeOfferSucceededHandler;
     String marketPriceMargin;
 
@@ -150,8 +145,6 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     public TakeOfferViewModel(TakeOfferDataModel dataModel,
                               BtcValidator btcValidator,
                               P2PService p2PService,
-                              Preferences preferences,
-                              PriceFeedService priceFeedService,
                               AccountAgeWitnessService accountAgeWitnessService,
                               Navigation navigation,
                               @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
@@ -162,8 +155,6 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
 
         this.btcValidator = btcValidator;
         this.p2PService = p2PService;
-        this.preferences = preferences;
-        this.priceFeedService = priceFeedService;
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.navigation = navigation;
         this.btcFormatter = btcFormatter;

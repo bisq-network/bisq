@@ -19,10 +19,8 @@ package bisq.core.offer;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.btc.TxFeeEstimationService;
-import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.Restrictions;
-import bisq.core.filter.FilterManager;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.monetary.Price;
@@ -31,7 +29,6 @@ import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.PaymentAccountUtil;
 import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
-import bisq.core.trade.statistics.ReferralIdService;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
 import bisq.core.util.coin.CoinUtil;
@@ -63,12 +60,8 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 public class CreateOfferService {
     private final TxFeeEstimationService txFeeEstimationService;
-    private final BsqWalletService bsqWalletService;
-    private final Preferences preferences;
     private final PriceFeedService priceFeedService;
     private final AccountAgeWitnessService accountAgeWitnessService;
-    private final ReferralIdService referralIdService;
-    private final FilterManager filterManager;
     private final P2PService p2PService;
     private final PubKeyRing pubKeyRing;
     private final User user;
@@ -82,24 +75,16 @@ public class CreateOfferService {
 
     @Inject
     public CreateOfferService(TxFeeEstimationService txFeeEstimationService,
-                              BsqWalletService bsqWalletService,
-                              Preferences preferences,
                               PriceFeedService priceFeedService,
                               AccountAgeWitnessService accountAgeWitnessService,
-                              ReferralIdService referralIdService,
-                              FilterManager filterManager,
                               P2PService p2PService,
                               PubKeyRing pubKeyRing,
                               User user,
                               BtcWalletService btcWalletService,
                               OfferUtil offerUtil) {
         this.txFeeEstimationService = txFeeEstimationService;
-        this.bsqWalletService = bsqWalletService;
-        this.preferences = preferences;
         this.priceFeedService = priceFeedService;
         this.accountAgeWitnessService = accountAgeWitnessService;
-        this.referralIdService = referralIdService;
-        this.filterManager = filterManager;
         this.p2PService = p2PService;
         this.pubKeyRing = pubKeyRing;
         this.user = user;
