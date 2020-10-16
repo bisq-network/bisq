@@ -198,16 +198,17 @@ public class DepositView extends ActivatableView<VBox, Void> {
         addressTextField.setManaged(false);
         amountTextField.setManaged(false);
 
-        generateNewAddressSegwitCheckbox = addCheckBox(gridPane, ++gridRow,
-                Res.get("funds.deposit.generateAddressSegwit"), -20);
+        generateNewAddressButton = addButton(gridPane, ++gridRow, Res.get("funds.deposit.generateAddress"), -20);
+        GridPane.setColumnIndex(generateNewAddressButton, 0);
+        GridPane.setHalignment(generateNewAddressButton, HPos.LEFT);
+
+        generateNewAddressSegwitCheckbox = addCheckBox(gridPane, gridRow,
+                Res.get("funds.deposit.generateAddressSegwit"), 0);
         generateNewAddressSegwitCheckbox.setAllowIndeterminate(false);
         generateNewAddressSegwitCheckbox.setSelected(true);
         GridPane.setColumnIndex(generateNewAddressSegwitCheckbox, 0);
         GridPane.setHalignment(generateNewAddressSegwitCheckbox, HPos.LEFT);
-
-        generateNewAddressButton = addButton(gridPane, ++gridRow, Res.get("funds.deposit.generateAddress"), -20);
-        GridPane.setColumnIndex(generateNewAddressButton, 0);
-        GridPane.setHalignment(generateNewAddressButton, HPos.LEFT);
+        GridPane.setMargin(generateNewAddressSegwitCheckbox, new Insets(15, 0, 0, 250));
 
         generateNewAddressButton.setOnAction(event -> {
             boolean segwit = generateNewAddressSegwitCheckbox.isSelected();
