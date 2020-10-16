@@ -21,8 +21,11 @@ import bisq.core.locale.CurrencyTuple;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.provider.price.PriceFeedService;
+import bisq.core.trade.BuyerTrade;
+import bisq.core.trade.Trade;
 
 import bisq.network.p2p.P2PService;
+import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreService;
 
 import bisq.common.config.Config;
@@ -45,6 +48,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
+
+import javax.annotation.Nullable;
 
 @Singleton
 @Slf4j
@@ -139,5 +144,49 @@ public class TradeStatisticsManager {
         TradeStatisticsForJson[] array = new TradeStatisticsForJson[list.size()];
         list.toArray(array);
         jsonFileManager.writeToDiscThreaded(Utilities.objectToJson(array), "trade_statistics");
+    }
+
+    public void maybeRepublishTradeStatistics(Set<Trade> trades,
+                                              @Nullable String referralId,
+                                              boolean isTorNetworkNode) {
+        long ts = System.currentTimeMillis();
+        Set<P2PDataStorage.ByteArray> hashes = tradeStatistics3StorageService.getMapOfAllData().keySet();
+        trades.forEach(trade -> {
+            if (trade instanceof BuyerTrade) {
+                log.debug("Trade: {} is a buyer trade, we only republish we have been seller.",
+                        trade.getShortId());
+                return;
+            }
+
+            TradeStatistics3 tradeStatistics3 = TradeStatistics3.from(trade, referralId, isTorNetworkNode);
+            boolean hasTradeStatistics3 = hashes.contains(new P2PDataStorage.ByteArray(tradeStatistics3.getHash()));
+            if (hasTradeStatistics3) {
+                log.debug("Trade: {}. We have already a tradeStatistics matching the hash of tradeStatistics3.",
+                        trade.getShortId());
+                return;
+            }
+
+            // If we did not find a TradeStatistics3 we look up if we find a TradeStatistics3 converted from
+            // TradeStatistics2 where we used the original hash, which is not the native hash of the
+            // TradeStatistics3 but of TradeStatistics2.
+            TradeStatistics2 tradeStatistics2 = TradeStatistics2.from(trade, referralId, isTorNetworkNode);
+            boolean hasTradeStatistics2 = hashes.contains(new P2PDataStorage.ByteArray(tradeStatistics2.getHash()));
+            if (hasTradeStatistics2) {
+                log.debug("Trade: {}. We have already a tradeStatistics matching the hash of tradeStatistics2. ",
+                        trade.getShortId());
+                return;
+            }
+
+            if (!tradeStatistics3.isValid()) {
+                log.warn("Trade: {}. Trade statistics is invalid. We do not publish it.", tradeStatistics3);
+                return;
+            }
+
+            log.info("Trade: {}. We republish tradeStatistics3 as we did not find it in the existing trade statistics. ",
+                    trade.getShortId());
+            p2PService.addPersistableNetworkPayload(tradeStatistics3, true);
+        });
+        log.info("maybeRepublishTradeStatistics took {} ms. Number of tradeStatistics: {}. Number of own trades: {}",
+                System.currentTimeMillis() - ts, hashes.size(), trades.size());
     }
 }
