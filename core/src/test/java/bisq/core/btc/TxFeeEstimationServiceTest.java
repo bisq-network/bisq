@@ -45,14 +45,14 @@ public class TxFeeEstimationServiceTest {
         int realTxSize;
         Coin txFee;
 
-        initialEstimatedTxSize = 260;
+        initialEstimatedTxSize = 175;
         txFeePerByte = Coin.valueOf(10);
-        realTxSize = 260;
+        realTxSize = 175;
 
         txFee = txFeePerByte.multiply(initialEstimatedTxSize);
         when(btcWalletService.getEstimatedFeeTxSize(outputValues, txFee)).thenReturn(realTxSize);
         result = TxFeeEstimationService.getEstimatedTxSize(outputValues, initialEstimatedTxSize, txFeePerByte, btcWalletService);
-        assertEquals(260, result);
+        assertEquals(175, result);
     }
 
     // FIXME @Bernard could you have a look?
@@ -67,16 +67,16 @@ public class TxFeeEstimationServiceTest {
         int realTxSize;
         Coin txFee;
 
-        initialEstimatedTxSize = 260;
+        initialEstimatedTxSize = 175;
         txFeePerByte = Coin.valueOf(10);
-        realTxSize = 2600;
+        realTxSize = 1750;
 
         txFee = txFeePerByte.multiply(initialEstimatedTxSize);
         when(btcWalletService.getEstimatedFeeTxSize(outputValues, txFee)).thenReturn(realTxSize);
 
         // repeated calls to getEstimatedFeeTxSize do not work (returns 0 at second call in loop which cause test to fail)
         result = TxFeeEstimationService.getEstimatedTxSize(outputValues, initialEstimatedTxSize, txFeePerByte, btcWalletService);
-        assertEquals(2600, result);
+        assertEquals(1750, result);
     }
 
     // FIXME @Bernard could you have a look?
@@ -91,14 +91,14 @@ public class TxFeeEstimationServiceTest {
         int realTxSize;
         Coin txFee;
 
-        initialEstimatedTxSize = 2600;
+        initialEstimatedTxSize = 1750;
         txFeePerByte = Coin.valueOf(10);
-        realTxSize = 260;
+        realTxSize = 175;
 
         txFee = txFeePerByte.multiply(initialEstimatedTxSize);
         when(btcWalletService.getEstimatedFeeTxSize(outputValues, txFee)).thenReturn(realTxSize);
         result = TxFeeEstimationService.getEstimatedTxSize(outputValues, initialEstimatedTxSize, txFeePerByte, btcWalletService);
-        assertEquals(260, result);
+        assertEquals(175, result);
     }
 
     @Test

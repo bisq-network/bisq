@@ -41,9 +41,24 @@ import static com.google.common.base.Preconditions.checkArgument;
  */
 @Slf4j
 public class TxFeeEstimationService {
-    public static int TYPICAL_TX_WITH_1_INPUT_SIZE = 260;
-    private static int DEPOSIT_TX_SIZE = 320;
-    private static int PAYOUT_TX_SIZE = 380;
+
+//  Size/vsize of typical trade txs
+//  Real txs size/vsize may vary in 1 or 2 bytes from the estimated values.
+//  Values calculated with https://gist.github.com/oscarguindzberg/3d1349cb65d9fd9af9de0feaa3fd27ac
+//  legacy fee tx with 1 input, maker/taker fee paid in btc size/vsize = 258
+//  legacy deposit tx without change size/vsize = 381
+//  legacy deposit tx with change size/vsize = 414
+//  legacy payout tx size/vsize = 337
+//  legacy delayed payout tx size/vsize = 302
+//  segwit fee tx with 1 input, maker/taker fee paid in btc vsize = 173
+//  segwit deposit tx without change vsize = 232
+//  segwit deposit tx with change vsize = 263
+//  segwit payout tx vsize = 169
+//  segwit delayed payout tx vsize = 139
+    public static int TYPICAL_TX_WITH_1_INPUT_SIZE = 175;
+    private static int DEPOSIT_TX_SIZE = 233;
+    private static int PAYOUT_TX_SIZE = 169;
+
     private static int BSQ_INPUT_INCREASE = 150;
     private static int MAX_ITERATIONS = 10;
 
@@ -87,14 +102,14 @@ public class TxFeeEstimationService {
                                                            BtcWalletService btcWalletService,
                                                            Preferences preferences) {
         Coin txFeePerByte = feeService.getTxFeePerByte();
-        // We start with min taker fee size of 260
+        // We start with min taker fee size of 175
         int estimatedTxSize = TYPICAL_TX_WITH_1_INPUT_SIZE;
         try {
             estimatedTxSize = getEstimatedTxSize(List.of(tradeFee, amount), estimatedTxSize, txFeePerByte, btcWalletService);
         } catch (InsufficientMoneyException e) {
             if (isTaker) {
-                // if we cannot do the estimation we use the payout tx size
-                estimatedTxSize = PAYOUT_TX_SIZE;
+                // if we cannot do the estimation we use the deposit tx size
+                estimatedTxSize = DEPOSIT_TX_SIZE;
             }
             log.info("We cannot do the fee estimation because there are not enough funds in the wallet. This is expected " +
                     "if the user pays from an external wallet. In that case we use an estimated tx size of {} bytes.", estimatedTxSize);
@@ -109,13 +124,13 @@ public class TxFeeEstimationService {
         Coin txFee;
         int size;
         if (isTaker) {
-            int averageSize = (estimatedTxSize + DEPOSIT_TX_SIZE) / 2;  // deposit tx has about 320 bytes
-            // We use at least the size of the payout tx to not underpay at payout.
-            size = Math.max(PAYOUT_TX_SIZE, averageSize);
+            int averageSize = (estimatedTxSize + DEPOSIT_TX_SIZE) / 2;  // deposit tx has about 233 bytes
+            // We use at least the size of the deposit tx to not underpay it.
+            size = Math.max(DEPOSIT_TX_SIZE, averageSize);
             txFee = txFeePerByte.multiply(size);
             log.info("Fee estimation resulted in a tx size of {} bytes.\n" +
-                    "We use an average between the taker fee tx and the deposit tx (320 bytes) which results in {} bytes.\n" +
-                    "The payout tx has 380 bytes, we use that as our min value. Size for fee calculation is {} bytes.\n" +
+                    "We use an average between the taker fee tx and the deposit tx (233 bytes) which results in {} bytes.\n" +
+                    "The deposit tx has 233 bytes, we use that as our min value. Size for fee calculation is {} bytes.\n" +
                     "The tx fee of {} Sat", estimatedTxSize, averageSize, size, txFee.value);
         } else {
             size = estimatedTxSize;
@@ -130,7 +145,7 @@ public class TxFeeEstimationService {
                                                           FeeService feeService,
                                                           BtcWalletService btcWalletService) {
         Coin txFeePerByte = feeService.getTxFeePerByte();
-        // We start with min taker fee size of 260
+        // We start with min taker fee size of 175
         int estimatedTxSize = TYPICAL_TX_WITH_1_INPUT_SIZE;
         try {
             estimatedTxSize = getEstimatedTxSize(List.of(amount), estimatedTxSize, txFeePerByte, btcWalletService);
@@ -145,7 +160,7 @@ public class TxFeeEstimationService {
         return new Tuple2<>(txFee, estimatedTxSize);
     }
 
-    // We start with the initialEstimatedTxSize for a tx with 1 input (260) bytes and get from BitcoinJ a tx back which
+    // We start with the initialEstimatedTxSize for a tx with 1 input (175) bytes and get from BitcoinJ a tx back which
     // contains the required inputs to fund that tx (outputs + miner fee). The miner fee in that case is based on
     // the assumption that we only need 1 input. Once we receive back the real tx size from the tx BitcoinJ has created
     // with the required inputs we compare if the size is not more then 20% different to our assumed tx size. If we are inside
