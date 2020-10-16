@@ -195,7 +195,7 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
         Coin blindVoteFee = BlindVoteConsensus.getFee(daoStateService, daoStateService.getChainHeight());
         Transaction dummyTx = getBlindVoteTx(stake, blindVoteFee, new byte[22]);
         Coin miningFee = dummyTx.getFee();
-        int txSize = dummyTx.bitcoinSerialize().length;
+        int txSize = dummyTx.getVsize();
         return new Tuple2<>(miningFee, txSize);
     }
 

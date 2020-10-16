@@ -356,7 +356,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                 }
 
                 if (areInputsValid()) {
-                    int txSize = feeEstimationTransaction.bitcoinSerialize().length;
+                    int txSize = feeEstimationTransaction.getVsize();
                     log.info("Fee for tx with size {}: {} " + Res.getBaseCurrencyCode() + "", txSize, fee.toPlainString());
 
                     if (receiverAmount.isPositive()) {

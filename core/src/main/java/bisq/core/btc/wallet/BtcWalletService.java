@@ -263,7 +263,7 @@ public class BtcWalletService extends WalletService {
             resultTx.addOutput(new TransactionOutput(params, resultTx, Coin.ZERO, ScriptBuilder.createOpReturnScript(opReturnData).getProgram()));
 
             numInputs = resultTx.getInputs().size();
-            txSizeWithUnsignedInputs = resultTx.bitcoinSerialize().length;
+            txSizeWithUnsignedInputs = resultTx.getVsize();
             long estimatedFeeAsLong = txFeePerByte.multiply(txSizeWithUnsignedInputs + sigSizePerInput * numInputs).value;
             // calculated fee must be inside of a tolerance range with tx fee
             isFeeOutsideTolerance = Math.abs(resultTx.getFee().value - estimatedFeeAsLong) > 1000;
@@ -373,7 +373,7 @@ public class BtcWalletService extends WalletService {
             resultTx.addOutput(new TransactionOutput(params, resultTx, Coin.ZERO, ScriptBuilder.createOpReturnScript(opReturnData).getProgram()));
 
             numInputs = resultTx.getInputs().size();
-            txSizeWithUnsignedInputs = resultTx.bitcoinSerialize().length;
+            txSizeWithUnsignedInputs = resultTx.getVsize();
             final long estimatedFeeAsLong = txFeePerByte.multiply(txSizeWithUnsignedInputs + sigSizePerInput * numInputs).value;
             // calculated fee must be inside of a tolerance range with tx fee
             isFeeOutsideTolerance = Math.abs(resultTx.getFee().value - estimatedFeeAsLong) > 1000;
@@ -529,14 +529,14 @@ public class BtcWalletService extends WalletService {
                 resultTx.addOutput(new TransactionOutput(params, resultTx, Coin.ZERO, ScriptBuilder.createOpReturnScript(opReturnData).getProgram()));
 
             numInputs = resultTx.getInputs().size();
-            txSizeWithUnsignedInputs = resultTx.bitcoinSerialize().length;
+            txSizeWithUnsignedInputs = resultTx.getVsize();
             final long estimatedFeeAsLong = txFeePerByte.multiply(txSizeWithUnsignedInputs + sigSizePerInput * numInputs).value;
             // calculated fee must be inside of a tolerance range with tx fee
             isFeeOutsideTolerance = Math.abs(resultTx.getFee().value - estimatedFeeAsLong) > 1000;
         }
         while (opReturnIsOnlyOutput ||
                 isFeeOutsideTolerance ||
-                resultTx.getFee().value < txFeePerByte.multiply(resultTx.bitcoinSerialize().length).value);
+                resultTx.getFee().value < txFeePerByte.multiply(resultTx.getVsize()).value);
 
         // Sign all BTC inputs
         signAllBtcInputs(preparedBsqTxInputs.size(), resultTx);
@@ -809,7 +809,7 @@ public class BtcWalletService extends WalletService {
                 );
 
                 log.info("newTransaction no. of inputs " + newTransaction.getInputs().size());
-                log.info("newTransaction size in kB " + newTransaction.bitcoinSerialize().length / 1024);
+                log.info("newTransaction size in kB " + newTransaction.getVsize() / 1024);
 
                 if (!newTransaction.getInputs().isEmpty()) {
                     Coin amount = Coin.valueOf(newTransaction.getInputs().stream()
@@ -839,7 +839,7 @@ public class BtcWalletService extends WalletService {
                             sendRequest.changeAddress = toAddress;
                             wallet.completeTx(sendRequest);
                             tx = sendRequest.tx;
-                            txSize = tx.bitcoinSerialize().length;
+                            txSize = tx.getVsize();
                             printTx("FeeEstimationTransaction", tx);
                             sendRequest.tx.getOutputs().forEach(o -> log.debug("Output value " + o.getValue().toFriendlyString()));
                         }
@@ -947,7 +947,7 @@ public class BtcWalletService extends WalletService {
                 SendRequest sendRequest = getSendRequest(fromAddress, toAddress, amount, fee, aesKey, context);
                 wallet.completeTx(sendRequest);
                 tx = sendRequest.tx;
-                txSize = tx.bitcoinSerialize().length;
+                txSize = tx.getVsize();
                 printTx("FeeEstimationTransaction", tx);
             }
             while (feeEstimationNotSatisfied(counter, tx));
@@ -996,7 +996,7 @@ public class BtcWalletService extends WalletService {
                 SendRequest sendRequest = getSendRequestForMultipleAddresses(fromAddresses, dummyReceiver, amount, fee, null, aesKey);
                 wallet.completeTx(sendRequest);
                 tx = sendRequest.tx;
-                txSize = tx.bitcoinSerialize().length;
+                txSize = tx.getVsize();
                 printTx("FeeEstimationTransactionForMultipleAddresses", tx);
             }
             while (feeEstimationNotSatisfied(counter, tx));
@@ -1012,7 +1012,7 @@ public class BtcWalletService extends WalletService {
     }
 
     private boolean feeEstimationNotSatisfied(int counter, Transaction tx) {
-        long targetFee = getTxFeeForWithdrawalPerByte().multiply(tx.bitcoinSerialize().length).value;
+        long targetFee = getTxFeeForWithdrawalPerByte().multiply(tx.getVsize()).value;
         return counter < 10 &&
                 (tx.getFee().value < targetFee ||
                         tx.getFee().value - targetFee > 1000);
@@ -1034,7 +1034,7 @@ public class BtcWalletService extends WalletService {
         sendRequest.ensureMinRequiredFee = false;
         sendRequest.changeAddress = dummyAddress;
         wallet.completeTx(sendRequest);
-        return transaction.bitcoinSerialize().length;
+        return transaction.getVsize();
     }
 
 

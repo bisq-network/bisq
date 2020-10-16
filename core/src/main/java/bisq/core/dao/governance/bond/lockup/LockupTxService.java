@@ -95,7 +95,7 @@ public class LockupTxService {
             throws InsufficientMoneyException, WalletException, TransactionVerificationException, IOException {
         Transaction tx = getLockupTx(lockupAmount, lockTime, lockupReason, hash);
         Coin miningFee = tx.getFee();
-        int txSize = tx.bitcoinSerialize().length;
+        int txSize = tx.getVsize();
         return new Tuple2<>(miningFee, txSize);
     }
 
