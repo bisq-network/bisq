@@ -785,11 +785,9 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                         return;
                     }
 
-                    if (networkEnvelope instanceof SupportedCapabilitiesMessage) {
-                        boolean causedShutDown = handleSupportedCapabilitiesMessage(networkEnvelope);
-                        if (causedShutDown) {
-                            return;
-                        }
+                    boolean causedShutDown = maybeHandleSupportedCapabilitiesMessage(networkEnvelope);
+                    if (causedShutDown) {
+                        return;
                     }
 
                     if (networkEnvelope instanceof CloseConnectionMessage) {
@@ -865,7 +863,11 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
         }
     }
 
-    protected boolean handleSupportedCapabilitiesMessage(NetworkEnvelope networkEnvelope) {
+    public boolean maybeHandleSupportedCapabilitiesMessage(NetworkEnvelope networkEnvelope) {
+        if (!(networkEnvelope instanceof SupportedCapabilitiesMessage)) {
+            return false;
+        }
+
         Capabilities supportedCapabilities = ((SupportedCapabilitiesMessage) networkEnvelope).getSupportedCapabilities();
         if (supportedCapabilities == null || supportedCapabilities.isEmpty()) {
             return false;

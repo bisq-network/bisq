@@ -419,6 +419,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
             connection.setPeerType(Connection.PeerType.DIRECT_MSG_PEER);
             try {
                 DecryptedMessageWithPubKey decryptedMsg = encryptionService.decryptAndVerify(sealedMsg.getSealedAndSigned());
+                connection.maybeHandleSupportedCapabilitiesMessage(decryptedMsg.getNetworkEnvelope());
                 connection.getPeersNodeAddressOptional().ifPresentOrElse(nodeAddress ->
                                 decryptedDirectMessageListeners.forEach(e -> e.onDirectMessage(decryptedMsg, nodeAddress)),
                         () -> {
