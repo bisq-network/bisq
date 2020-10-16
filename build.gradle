@@ -596,6 +596,8 @@ configure(project(':daemon')) {
 }
 
 configure(project(':inventory')) {
+    apply plugin: 'com.github.johnrengelman.shadow'
+
     mainClassName = 'bisq.inventory.InventoryMonitorMain'
 
     dependencies {
