@@ -305,7 +305,7 @@ public class PersistenceManager<T extends PersistableEnvelope> {
 
             tempFile = usedTempFilePath != null
                     ? FileUtil.createNewFile(usedTempFilePath)
-                    : File.createTempFile("temp", null, dir);
+                    : File.createTempFile("temp_" + fileName, null, dir);
             // Don't use a new temp file path each time, as that causes the delete-on-exit hook to leak memory:
             tempFile.deleteOnExit();
 

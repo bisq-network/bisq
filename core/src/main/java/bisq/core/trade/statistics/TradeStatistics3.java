@@ -21,8 +21,12 @@ import bisq.core.monetary.Altcoin;
 import bisq.core.monetary.AltcoinExchangeRate;
 import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
+import bisq.core.offer.Offer;
+import bisq.core.offer.OfferPayload;
 import bisq.core.offer.OfferUtil;
+import bisq.core.trade.Trade;
 
+import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.storage.payload.CapabilityRequiringPayload;
 import bisq.network.p2p.storage.payload.DateSortedTruncatablePayload;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
@@ -48,6 +52,7 @@ import com.google.common.base.Charsets;
 
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -65,6 +70,43 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Slf4j
 public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayload, PersistableNetworkPayload,
         CapabilityRequiringPayload, DateSortedTruncatablePayload {
+
+
+    public static TradeStatistics3 from(Trade trade,
+                                        @Nullable String referralId,
+                                        boolean isTorNetworkNode) {
+        Map<String, String> extraDataMap = new HashMap<>();
+        if (referralId != null) {
+            extraDataMap.put(OfferPayload.REFERRAL_ID, referralId);
+        }
+
+        NodeAddress mediatorNodeAddress = checkNotNull(trade.getMediatorNodeAddress());
+        // The first 4 chars are sufficient to identify a mediator.
+        // For testing with regtest/localhost we use the full address as its localhost and would result in
+        // same values for multiple mediators.
+        String truncatedMediatorNodeAddress = isTorNetworkNode ?
+                mediatorNodeAddress.getFullAddress().substring(0, 4) :
+                mediatorNodeAddress.getFullAddress();
+
+        // RefundAgentNodeAddress can be null if converted from old version.
+        String truncatedRefundAgentNodeAddress = null;
+        NodeAddress refundAgentNodeAddress = trade.getRefundAgentNodeAddress();
+        if (refundAgentNodeAddress != null) {
+            truncatedRefundAgentNodeAddress = isTorNetworkNode ?
+                    refundAgentNodeAddress.getFullAddress().substring(0, 4) :
+                    refundAgentNodeAddress.getFullAddress();
+        }
+
+        Offer offer = checkNotNull(trade.getOffer());
+        return new TradeStatistics3(offer.getCurrencyCode(),
+                trade.getTradePrice().getValue(),
+                trade.getTradeAmountAsLong(),
+                offer.getPaymentMethod().getId(),
+                trade.getTakeOfferDate().getTime(),
+                truncatedMediatorNodeAddress,
+                truncatedRefundAgentNodeAddress,
+                extraDataMap);
+    }
 
     // This enum must not change the order as we use the ordinal for storage to reduce data size.
     // The payment method string can be quite long and would consume 15% more space.
