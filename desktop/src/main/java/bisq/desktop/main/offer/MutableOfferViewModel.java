@@ -854,7 +854,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
                 Volume volume = dataModel.getVolume().get();
                 if (volume != null) {
                     // For HalCash we want multiple of 10 EUR
-                    if (dataModel.isHalCashAccount())
+                    if (dataModel.paymentAccount.isHalCashAccount())
                         volume = VolumeUtil.getAdjustedVolumeForHalCash(volume);
                     else if (CurrencyUtil.isFiatCurrency(tradeCurrencyCode.get()))
                         volume = VolumeUtil.getRoundedFiatVolume(volume);
@@ -1091,7 +1091,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
             long maxTradeLimit = dataModel.getMaxTradeLimit();
             Price price = dataModel.getPrice().get();
             if (price != null) {
-                if (dataModel.isHalCashAccount())
+                if (dataModel.paymentAccount.isHalCashAccount())
                     amount = CoinUtil.getAdjustedAmountForHalCash(amount, price, maxTradeLimit);
                 else if (CurrencyUtil.isFiatCurrency(tradeCurrencyCode.get()))
                     amount = CoinUtil.getRoundedFiatAmount(amount, price, maxTradeLimit);
@@ -1115,7 +1115,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
             Price price = dataModel.getPrice().get();
             long maxTradeLimit = dataModel.getMaxTradeLimit();
             if (price != null) {
-                if (dataModel.isHalCashAccount())
+                if (dataModel.paymentAccount.isHalCashAccount())
                     minAmount = CoinUtil.getAdjustedAmountForHalCash(minAmount, price, maxTradeLimit);
                 else if (CurrencyUtil.isFiatCurrency(tradeCurrencyCode.get()))
                     minAmount = CoinUtil.getRoundedFiatAmount(minAmount, price, maxTradeLimit);

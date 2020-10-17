@@ -33,13 +33,11 @@ import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
-import bisq.core.util.VolumeUtil;
 import bisq.core.offer.CreateOfferService;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.offer.OfferUtil;
 import bisq.core.offer.OpenOfferManager;
-import bisq.core.payment.HalCashAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.PriceFeedService;
@@ -49,6 +47,7 @@ import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
 import bisq.core.util.FormattingUtils;
+import bisq.core.util.VolumeUtil;
 import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.coin.CoinUtil;
 
@@ -64,6 +63,8 @@ import org.bitcoinj.core.Transaction;
 import com.google.inject.Inject;
 
 import javax.inject.Named;
+
+import com.google.common.base.Predicate;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
@@ -103,7 +104,6 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     final String shortOfferId;
     private final AccountAgeWitnessService accountAgeWitnessService;
     private final FeeService feeService;
-    protected final OfferUtil offerUtil;
     private final CoinFormatter btcFormatter;
     private final Navigation navigation;
     private final String offerId;
@@ -134,6 +134,9 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     protected boolean allowAmountUpdate = true;
     private final TradeStatisticsManager tradeStatisticsManager;
 
+    private final Predicate<ObjectProperty<Coin>> isPositiveAmount = (c) -> c.get() != null && !c.get().isZero();
+    private final Predicate<ObjectProperty<Price>> isPositivePrice = (p) -> p.get() != null && !p.get().isZero();
+    private final Predicate<ObjectProperty<Volume>> isPositiveVolume = (v) -> v.get() != null && !v.get().isZero();
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -154,7 +157,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
                                  @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
                                  TradeStatisticsManager tradeStatisticsManager,
                                  Navigation navigation) {
-        super(btcWalletService);
+        super(btcWalletService, offerUtil);
 
         this.createOfferService = createOfferService;
         this.openOfferManager = openOfferManager;
@@ -165,7 +168,6 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
         this.priceFeedService = priceFeedService;
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.feeService = feeService;
-        this.offerUtil = offerUtil;
         this.btcFormatter = btcFormatter;
         this.navigation = navigation;
         this.tradeStatisticsManager = tradeStatisticsManager;
@@ -244,7 +246,6 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
             Optional<PaymentAccount> paymentAccountOptional = paymentAccounts.stream().findAny();
             if (paymentAccountOptional.isPresent()) {
                 this.paymentAccount = paymentAccountOptional.get();
-
             } else {
                 log.warn("PaymentAccount not available. Should never get called as in offer view you should not be able to open a create offer view");
                 return false;
@@ -374,16 +375,9 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
         }
     }
 
-
     private void setTradeCurrencyFromPaymentAccount(PaymentAccount paymentAccount) {
-        if (!paymentAccount.getTradeCurrencies().contains(tradeCurrency)) {
-            if (paymentAccount.getSelectedTradeCurrency() != null)
-                tradeCurrency = paymentAccount.getSelectedTradeCurrency();
-            else if (paymentAccount.getSingleTradeCurrency() != null)
-                tradeCurrency = paymentAccount.getSingleTradeCurrency();
-            else if (!paymentAccount.getTradeCurrencies().isEmpty())
-                tradeCurrency = paymentAccount.getTradeCurrencies().get(0);
-        }
+        if (!paymentAccount.getTradeCurrencies().contains(tradeCurrency))
+            tradeCurrency = paymentAccount.getTradeCurrency().orElse(tradeCurrency);
 
         checkNotNull(tradeCurrency, "tradeCurrency must not be null");
         tradeCurrencyCode.set(tradeCurrency.getCode());
@@ -513,43 +507,30 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     double calculateMarketPriceManual(double marketPrice, double volumeAsDouble, double amountAsDouble) {
-        double manualPriceAsDouble = volumeAsDouble / amountAsDouble;
-        double percentage = MathUtils.roundDouble(manualPriceAsDouble / marketPrice, 4);
-
+        double manualPriceAsDouble = offerUtil.calculateManualPrice(volumeAsDouble, amountAsDouble);
+        double percentage = offerUtil.calculateMarketPriceMargin(manualPriceAsDouble, marketPrice);
         setMarketPriceMargin(percentage);
-
         return manualPriceAsDouble;
     }
 
     void calculateVolume() {
-        if (price.get() != null &&
-                amount.get() != null &&
-                !amount.get().isZero() &&
-                !price.get().isZero()) {
+        if (isPositivePrice.test(price) && isPositiveAmount.test(amount)) {
             try {
                 Volume volumeByAmount = calculateVolumeForAmount(amount);
-
                 volume.set(volumeByAmount);
-
                 calculateMinVolume();
             } catch (Throwable t) {
                 log.error(t.toString());
             }
         }
-
         updateBalance();
     }
 
     void calculateMinVolume() {
-        if (price.get() != null &&
-                minAmount.get() != null &&
-                !minAmount.get().isZero() &&
-                !price.get().isZero()) {
+        if (isPositivePrice.test(price) && isPositiveAmount.test(amount)) {
             try {
                 Volume volumeByAmount = calculateVolumeForAmount(minAmount);
-
                 minVolume.set(volumeByAmount);
-
             } catch (Throwable t) {
                 log.error(t.toString());
             }
@@ -560,22 +541,19 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
         Volume volumeByAmount = price.get().getVolumeByAmount(minAmount.get());
 
         // For HalCash we want multiple of 10 EUR
-        if (isHalCashAccount())
+        if (paymentAccount.isHalCashAccount())
             volumeByAmount = VolumeUtil.getAdjustedVolumeForHalCash(volumeByAmount);
         else if (CurrencyUtil.isFiatCurrency(tradeCurrencyCode.get()))
             volumeByAmount = VolumeUtil.getRoundedFiatVolume(volumeByAmount);
+
         return volumeByAmount;
     }
 
     void calculateAmount() {
-        if (volume.get() != null &&
-                price.get() != null &&
-                !volume.get().isZero() &&
-                !price.get().isZero() &&
-                allowAmountUpdate) {
+        if (isPositivePrice.test(price) && isPositiveVolume.test(volume) && allowAmountUpdate) {
             try {
                 Coin value = DisplayUtils.reduceTo4Decimals(price.get().getAmountByVolume(volume.get()), btcFormatter);
-                if (isHalCashAccount())
+                if (paymentAccount.isHalCashAccount())
                     value = CoinUtil.getAdjustedAmountForHalCash(value, price.get(), getMaxTradeLimit());
                 else if (CurrencyUtil.isFiatCurrency(tradeCurrencyCode.get()))
                     value = CoinUtil.getRoundedFiatAmount(value, price.get(), getMaxTradeLimit());
@@ -599,6 +577,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
             Coin feeAndSecDeposit = getTxFee().add(getSecurityDeposit());
             if (isCurrencyForMakerFeeBtc())
                 feeAndSecDeposit = feeAndSecDeposit.add(makerFee);
+
             Coin total = isBuyOffer() ? feeAndSecDeposit : feeAndSecDeposit.add(amount.get());
             totalToPayAsCoin.set(total);
             updateBalance();
@@ -646,7 +625,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     }
 
     protected boolean isUseMarketBasedPriceValue() {
-        return marketPriceAvailable && useMarketBasedPrice.get() && !isHalCashAccount();
+        return marketPriceAvailable && useMarketBasedPrice.get() && !paymentAccount.isHalCashAccount();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -721,13 +700,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     }
 
     Coin getUsableBsqBalance() {
-        // we have to keep a minimum amount of BSQ == bitcoin dust limit
-        // otherwise there would be dust violations for change UTXOs
-        // essentially means the minimum usable balance of BSQ is 5.46
-        Coin usableBsqBalance = bsqWalletService.getAvailableConfirmedBalance().subtract(Restrictions.getMinNonDustOutput());
-        if (usableBsqBalance.isNegative())
-            usableBsqBalance = Coin.ZERO;
-        return usableBsqBalance;
+        return offerUtil.getUsableBsqBalance();
     }
 
     public void setMarketPriceAvailable(boolean marketPriceAvailable) {
@@ -760,10 +733,6 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
 
     boolean isBsqForFeeAvailable() {
         return offerUtil.isBsqForMakerFeeAvailable(amount.get());
-    }
-
-    public boolean isHalCashAccount() {
-        return paymentAccount instanceof HalCashAccount;
     }
 
     boolean canPlaceOffer() {

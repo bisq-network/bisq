@@ -20,7 +20,6 @@ package bisq.desktop.main.offer.offerbook;
 import bisq.core.filter.FilterManager;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferBookService;
-import bisq.core.trade.TradeManager;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -58,7 +57,7 @@ public class OfferBook {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    OfferBook(OfferBookService offerBookService, TradeManager tradeManager, FilterManager filterManager) {
+    OfferBook(OfferBookService offerBookService, FilterManager filterManager) {
         this.offerBookService = offerBookService;
         this.filterManager = filterManager;
 
@@ -98,12 +97,12 @@ public class OfferBook {
 
             @Override
             public void onRemoved(Offer offer) {
-                removeOffer(offer, tradeManager);
+                removeOffer(offer);
             }
         });
     }
 
-    public void removeOffer(Offer offer, TradeManager tradeManager) {
+    public void removeOffer(Offer offer) {
         // Update state in case that that offer is used in the take offer screen, so it gets updated correctly
         offer.setState(Offer.State.REMOVED);
 

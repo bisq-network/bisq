@@ -137,7 +137,7 @@ class TakeOfferDataModel extends OfferDataModel {
                        Navigation navigation,
                        P2PService p2PService
     ) {
-        super(btcWalletService);
+        super(btcWalletService, offerUtil);
 
         this.tradeManager = tradeManager;
         this.offerBook = offerBook;
@@ -278,7 +278,7 @@ class TakeOfferDataModel extends OfferDataModel {
         // confused to see the same offer still in the offerbook we remove it manually. This removal has
         // only local effect. Other trader might see the offer for a few seconds
         // still (but cannot take it).
-        offerBook.removeOffer(checkNotNull(offer), tradeManager);
+        offerBook.removeOffer(checkNotNull(offer));
 
         btcWalletService.resetAddressEntriesForOpenOffer(offer.getId());
     }

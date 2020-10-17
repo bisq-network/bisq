@@ -22,6 +22,7 @@ import bisq.core.monetary.Price;
 import bisq.core.offer.CreateOfferService;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferBookService;
+import bisq.core.offer.OfferUtil;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.user.User;
@@ -52,16 +53,19 @@ import static java.lang.String.format;
 @Slf4j
 class CoreOffersService {
 
+    private final OfferUtil offerUtil;
     private final CreateOfferService createOfferService;
     private final OfferBookService offerBookService;
     private final OpenOfferManager openOfferManager;
     private final User user;
 
     @Inject
-    public CoreOffersService(CreateOfferService createOfferService,
+    public CoreOffersService(OfferUtil offerUtil,
+                             CreateOfferService createOfferService,
                              OfferBookService offerBookService,
                              OpenOfferManager openOfferManager,
                              User user) {
+        this.offerUtil = offerUtil;
         this.createOfferService = createOfferService;
         this.offerBookService = offerBookService;
         this.openOfferManager = openOfferManager;

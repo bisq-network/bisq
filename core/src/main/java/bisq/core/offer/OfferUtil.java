@@ -19,10 +19,10 @@ package bisq.core.offer;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.btc.wallet.BsqWalletService;
-import bisq.core.btc.wallet.Restrictions;
 import bisq.core.filter.FilterManager;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
+import bisq.core.locale.TradeCurrency;
 import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.payment.F2FAccount;
@@ -33,12 +33,14 @@ import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.statistics.ReferralIdService;
 import bisq.core.user.AutoConfirmSettings;
 import bisq.core.user.Preferences;
+import bisq.core.user.User;
 import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.coin.CoinUtil;
 
 import bisq.network.p2p.P2PService;
 
 import bisq.common.app.Capabilities;
+import bisq.common.util.MathUtils;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;
@@ -56,12 +58,16 @@ import javax.annotation.Nullable;
 
 import static bisq.common.util.MathUtils.roundDoubleToLong;
 import static bisq.common.util.MathUtils.scaleUpByPowerOf10;
+import static bisq.core.btc.wallet.Restrictions.getMaxBuyerSecurityDepositAsPercent;
+import static bisq.core.btc.wallet.Restrictions.getMinBuyerSecurityDepositAsPercent;
+import static bisq.core.btc.wallet.Restrictions.getMinNonDustOutput;
+import static bisq.core.btc.wallet.Restrictions.isDust;
 import static bisq.core.offer.OfferPayload.*;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
- * This class holds utility methods for creating and taking an Offer.
+ * This class holds utility methods for creating, editing and taking an Offer.
  */
 @Slf4j
 @Singleton
@@ -74,6 +80,7 @@ public class OfferUtil {
     private final PriceFeedService priceFeedService;
     private final P2PService p2PService;
     private final ReferralIdService referralIdService;
+    private final User user;
 
     @Inject
     public OfferUtil(AccountAgeWitnessService accountAgeWitnessService,
@@ -82,7 +89,8 @@ public class OfferUtil {
                      Preferences preferences,
                      PriceFeedService priceFeedService,
                      P2PService p2PService,
-                     ReferralIdService referralIdService) {
+                     ReferralIdService referralIdService,
+                     User user) {
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.bsqWalletService = bsqWalletService;
         this.filterManager = filterManager;
@@ -90,6 +98,7 @@ public class OfferUtil {
         this.priceFeedService = priceFeedService;
         this.p2PService = p2PService;
         this.referralIdService = referralIdService;
+        this.user = user;
     }
 
     /**
@@ -101,6 +110,56 @@ public class OfferUtil {
      */
     public boolean isBuyOffer(Direction direction) {
         return direction == Direction.BUY;
+    }
+
+
+    /**
+     * Return true if a balance can cover a cost.
+     *
+     * @param cost the cost of a trade
+     * @param balance a wallet balance
+     * @return true if balance >= cost
+     */
+    public boolean isBalanceSufficient(Coin cost, Coin balance) {
+        return cost != null && balance.compareTo(cost) >= 0;
+    }
+
+    /**
+     * Return the wallet balance shortage for a given trade cost, or zero if there is
+     * no shortage.
+     *
+     * @param cost the cost of a trade
+     * @param balance a wallet balance
+     * @return the wallet balance shortage for the given cost, else zero.
+     */
+    public Coin getBalanceShortage(Coin cost, Coin balance) {
+        if (cost != null) {
+            Coin shortage = cost.subtract(balance);
+            return shortage.isNegative() ? Coin.ZERO : shortage;
+        } else {
+            return Coin.ZERO;
+        }
+    }
+
+    /**
+     * Returns the usable BSQ balance.
+     *
+     * @return Coin the usable BSQ balance
+     */
+    public Coin getUsableBsqBalance() {
+        // We have to keep a minimum amount of BSQ == bitcoin dust limit, otherwise there
+        // would be dust violations for change UTXOs; essentially means the minimum usable
+        // balance of BSQ is 5.46.
+        Coin usableBsqBalance = bsqWalletService.getAvailableConfirmedBalance().subtract(getMinNonDustOutput());
+        return usableBsqBalance.isNegative() ? Coin.ZERO : usableBsqBalance;
+    }
+
+    public double calculateManualPrice(double volumeAsDouble, double amountAsDouble) {
+        return volumeAsDouble / amountAsDouble;
+    }
+
+    public double calculateMarketPriceMargin(double manualPrice, double marketPrice) {
+        return MathUtils.roundDouble(manualPrice / marketPrice, 4);
     }
 
     /**
@@ -147,7 +206,7 @@ public class OfferUtil {
             return true;
 
         Coin surplusFunds = availableBalance.subtract(makerFee);
-        if (Restrictions.isDust(surplusFunds)) {
+        if (isDust(surplusFunds)) {
             return false; // we can't be left with dust
         }
         return !availableBalance.subtract(makerFee).isNegative();
@@ -181,7 +240,7 @@ public class OfferUtil {
             return true;
 
         Coin surplusFunds = availableBalance.subtract(takerFee);
-        if (Restrictions.isDust(surplusFunds)) {
+        if (isDust(surplusFunds)) {
             return false; // we can't be left with dust
         }
         return !availableBalance.subtract(takerFee).isNegative();
@@ -196,37 +255,6 @@ public class OfferUtil {
                 isCurrencyForMakerFeeBtc,
                 userCurrencyCode,
                 bsqFormatter);
-    }
-
-    private Optional<Volume> getFeeInUserFiatCurrency(Coin makerFee,
-                                                      boolean isCurrencyForMakerFeeBtc,
-                                                      String userCurrencyCode,
-                                                      CoinFormatter bsqFormatter) {
-        // We use the users currency derived from his selected country.  We don't use the
-        // preferredTradeCurrency from preferences as that can be also set to an altcoin.
-        MarketPrice marketPrice = priceFeedService.getMarketPrice(userCurrencyCode);
-        if (marketPrice != null && makerFee != null) {
-            long marketPriceAsLong = roundDoubleToLong(
-                    scaleUpByPowerOf10(marketPrice.getPrice(), Fiat.SMALLEST_UNIT_EXPONENT));
-            Price userCurrencyPrice = Price.valueOf(userCurrencyCode, marketPriceAsLong);
-
-            if (isCurrencyForMakerFeeBtc) {
-                return Optional.of(userCurrencyPrice.getVolumeByAmount(makerFee));
-            } else {
-                Optional<Price> optionalBsqPrice = priceFeedService.getBsqPrice();
-                if (optionalBsqPrice.isPresent()) {
-                    Price bsqPrice = optionalBsqPrice.get();
-                    String inputValue = bsqFormatter.formatCoin(makerFee);
-                    Volume makerFeeAsVolume = Volume.parse(inputValue, "BSQ");
-                    Coin requiredBtc = bsqPrice.getAmountByVolume(makerFeeAsVolume);
-                    return Optional.of(userCurrencyPrice.getVolumeByAmount(requiredBtc));
-                } else {
-                    return Optional.empty();
-                }
-            }
-        } else {
-            return Optional.empty();
-        }
     }
 
     public Map<String, String> getExtraDataMap(PaymentAccount paymentAccount,
@@ -266,15 +294,46 @@ public class OfferUtil {
                                   Coin makerFeeAsCoin) {
         checkNotNull(makerFeeAsCoin, "makerFee must not be null");
         checkNotNull(p2PService.getAddress(), "Address must not be null");
-        checkArgument(buyerSecurityDeposit <= Restrictions.getMaxBuyerSecurityDepositAsPercent(),
+        checkArgument(buyerSecurityDeposit <= getMaxBuyerSecurityDepositAsPercent(),
                 "securityDeposit must not exceed " +
-                        Restrictions.getMaxBuyerSecurityDepositAsPercent());
-        checkArgument(buyerSecurityDeposit >= Restrictions.getMinBuyerSecurityDepositAsPercent(),
+                        getMaxBuyerSecurityDepositAsPercent());
+        checkArgument(buyerSecurityDeposit >= getMinBuyerSecurityDepositAsPercent(),
                 "securityDeposit must not be less than " +
-                        Restrictions.getMinBuyerSecurityDepositAsPercent());
+                        getMinBuyerSecurityDepositAsPercent());
         checkArgument(!filterManager.isCurrencyBanned(currencyCode),
                 Res.get("offerbook.warning.currencyBanned"));
         checkArgument(!filterManager.isPaymentMethodBanned(paymentAccount.getPaymentMethod()),
                 Res.get("offerbook.warning.paymentMethodBanned"));
+    }
+
+    private Optional<Volume> getFeeInUserFiatCurrency(Coin makerFee,
+                                                      boolean isCurrencyForMakerFeeBtc,
+                                                      String userCurrencyCode,
+                                                      CoinFormatter bsqFormatter) {
+        // We use the users currency derived from his selected country.  We don't use the
+        // preferredTradeCurrency from preferences as that can be also set to an altcoin.
+        MarketPrice marketPrice = priceFeedService.getMarketPrice(userCurrencyCode);
+        if (marketPrice != null && makerFee != null) {
+            long marketPriceAsLong = roundDoubleToLong(
+                    scaleUpByPowerOf10(marketPrice.getPrice(), Fiat.SMALLEST_UNIT_EXPONENT));
+            Price userCurrencyPrice = Price.valueOf(userCurrencyCode, marketPriceAsLong);
+
+            if (isCurrencyForMakerFeeBtc) {
+                return Optional.of(userCurrencyPrice.getVolumeByAmount(makerFee));
+            } else {
+                Optional<Price> optionalBsqPrice = priceFeedService.getBsqPrice();
+                if (optionalBsqPrice.isPresent()) {
+                    Price bsqPrice = optionalBsqPrice.get();
+                    String inputValue = bsqFormatter.formatCoin(makerFee);
+                    Volume makerFeeAsVolume = Volume.parse(inputValue, "BSQ");
+                    Coin requiredBtc = bsqPrice.getAmountByVolume(makerFeeAsVolume);
+                    return Optional.of(userCurrencyPrice.getVolumeByAmount(requiredBtc));
+                } else {
+                    return Optional.empty();
+                }
+            }
+        } else {
+            return Optional.empty();
+        }
     }
 }
