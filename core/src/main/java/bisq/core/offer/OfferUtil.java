@@ -22,7 +22,6 @@ import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.filter.FilterManager;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
-import bisq.core.locale.TradeCurrency;
 import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.payment.F2FAccount;
@@ -33,7 +32,6 @@ import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.statistics.ReferralIdService;
 import bisq.core.user.AutoConfirmSettings;
 import bisq.core.user.Preferences;
-import bisq.core.user.User;
 import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.coin.CoinUtil;
 
@@ -80,7 +78,6 @@ public class OfferUtil {
     private final PriceFeedService priceFeedService;
     private final P2PService p2PService;
     private final ReferralIdService referralIdService;
-    private final User user;
 
     @Inject
     public OfferUtil(AccountAgeWitnessService accountAgeWitnessService,
@@ -89,8 +86,7 @@ public class OfferUtil {
                      Preferences preferences,
                      PriceFeedService priceFeedService,
                      P2PService p2PService,
-                     ReferralIdService referralIdService,
-                     User user) {
+                     ReferralIdService referralIdService) {
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.bsqWalletService = bsqWalletService;
         this.filterManager = filterManager;
@@ -98,7 +94,6 @@ public class OfferUtil {
         this.priceFeedService = priceFeedService;
         this.p2PService = p2PService;
         this.referralIdService = referralIdService;
-        this.user = user;
     }
 
     /**
