@@ -30,6 +30,7 @@ import bisq.proto.grpc.LockWalletRequest;
 import bisq.proto.grpc.RegisterDisputeAgentRequest;
 import bisq.proto.grpc.RemoveWalletPasswordRequest;
 import bisq.proto.grpc.SetWalletPasswordRequest;
+import bisq.proto.grpc.TakeOfferRequest;
 import bisq.proto.grpc.UnlockWalletRequest;
 
 import io.grpc.StatusRuntimeException;
@@ -70,6 +71,7 @@ public class CliMain {
         createoffer,
         getoffer,
         getoffers,
+        takeoffer,
         createpaymentacct,
         getpaymentaccts,
         getversion,
@@ -154,9 +156,10 @@ public class CliMain {
 
         GrpcStubs grpcStubs = new GrpcStubs(host, port, password);
         var disputeAgentsService = grpcStubs.disputeAgentsService;
-        var versionService = grpcStubs.versionService;
         var offersService = grpcStubs.offersService;
         var paymentAccountsService = grpcStubs.paymentAccountsService;
+        var tradesService = grpcStubs.tradesService;
+        var versionService = grpcStubs.versionService;
         var walletsService = grpcStubs.walletsService;
 
         try {
@@ -252,6 +255,20 @@ public class CliMain {
                             .build();
                     var reply = offersService.getOffers(request);
                     out.println(formatOfferTable(reply.getOffersList(), currencyCode));
+                    return;
+                }
+                case takeoffer: {
+                    if (nonOptionArgs.size() < 3)
+                        throw new IllegalArgumentException("incorrect parameter count, expecting offer id, payment acct id");
+
+                    var offerId = nonOptionArgs.get(1);
+                    var paymentAccountId = nonOptionArgs.get(2);
+                    var request = TakeOfferRequest.newBuilder()
+                            .setOfferId(offerId)
+                            .setPaymentAccountId(paymentAccountId)
+                            .build();
+                    var reply = tradesService.takeOffer(request);
+                    out.printf("trade %s successfully taken", reply.getTrade().getShortId());
                     return;
                 }
                 case createpaymentacct: {
@@ -381,6 +398,7 @@ public class CliMain {
             stream.format(rowFormat, "", "security deposit (%)", "");
             stream.format(rowFormat, "getoffer", "offer id", "Get current offer with id");
             stream.format(rowFormat, "getoffers", "buy | sell, currency code", "Get current offers");
+            stream.format(rowFormat, "takeoffer", "offer id", "Take offer with id");
             stream.format(rowFormat, "createpaymentacct", "account name, account number, currency code", "Create PerfectMoney dummy account");
             stream.format(rowFormat, "getpaymentaccts", "", "Get user payment accounts");
             stream.format(rowFormat, "lockwallet", "", "Remove wallet password from memory, locking the wallet");

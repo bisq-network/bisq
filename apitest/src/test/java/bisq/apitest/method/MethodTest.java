@@ -22,12 +22,15 @@ import bisq.proto.grpc.GetBalanceRequest;
 import bisq.proto.grpc.GetFundingAddressesRequest;
 import bisq.proto.grpc.GetOfferRequest;
 import bisq.proto.grpc.GetPaymentAccountsRequest;
+import bisq.proto.grpc.GetTradeRequest;
 import bisq.proto.grpc.LockWalletRequest;
 import bisq.proto.grpc.MarketPriceRequest;
 import bisq.proto.grpc.OfferInfo;
 import bisq.proto.grpc.RegisterDisputeAgentRequest;
 import bisq.proto.grpc.RemoveWalletPasswordRequest;
 import bisq.proto.grpc.SetWalletPasswordRequest;
+import bisq.proto.grpc.TakeOfferRequest;
+import bisq.proto.grpc.TradeInfo;
 import bisq.proto.grpc.UnlockWalletRequest;
 
 import protobuf.PaymentAccount;
@@ -86,6 +89,14 @@ public class MethodTest extends ApiTestCase {
 
     protected final GetOfferRequest createGetOfferRequest(String offerId) {
         return GetOfferRequest.newBuilder().setId(offerId).build();
+    }
+
+    protected final TakeOfferRequest createTakeOfferRequest(String offerId, String paymentAccountId) {
+        return TakeOfferRequest.newBuilder().setOfferId(offerId).setPaymentAccountId(paymentAccountId).build();
+    }
+
+    protected final GetTradeRequest createGetTradeRequest(String tradeId) {
+        return GetTradeRequest.newBuilder().setTradeId(tradeId).build();
     }
 
     // Convenience methods for calling frequently used & thoroughly tested gRPC services.
@@ -147,6 +158,11 @@ public class MethodTest extends ApiTestCase {
     protected final OfferInfo getOffer(BisqAppConfig bisqAppConfig, String offerId) {
         var req = createGetOfferRequest(offerId);
         return grpcStubs(bisqAppConfig).offersService.getOffer(req).getOffer();
+    }
+
+    protected final TradeInfo getTrade(BisqAppConfig bisqAppConfig, String tradeId) {
+        var req = createGetTradeRequest(tradeId);
+        return grpcStubs(bisqAppConfig).tradesService.getTrade(req).getTrade();
     }
 
     // Static conveniences for test methods and test case fixture setups.

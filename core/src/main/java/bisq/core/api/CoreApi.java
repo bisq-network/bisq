@@ -22,6 +22,7 @@ import bisq.core.monetary.Price;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.payment.PaymentAccount;
+import bisq.core.trade.Trade;
 import bisq.core.trade.statistics.TradeStatistics2;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 
@@ -51,6 +52,7 @@ public class CoreApi {
     private final CoreOffersService coreOffersService;
     private final CorePaymentAccountsService paymentAccountsService;
     private final CorePriceService corePriceService;
+    private final CoreTradesService coreTradesService;
     private final CoreWalletsService walletsService;
     private final TradeStatisticsManager tradeStatisticsManager;
 
@@ -59,12 +61,14 @@ public class CoreApi {
                    CoreOffersService coreOffersService,
                    CorePaymentAccountsService paymentAccountsService,
                    CorePriceService corePriceService,
+                   CoreTradesService coreTradesService,
                    CoreWalletsService walletsService,
                    TradeStatisticsManager tradeStatisticsManager) {
         this.coreDisputeAgentsService = coreDisputeAgentsService;
         this.coreOffersService = coreOffersService;
-        this.corePriceService = corePriceService;
         this.paymentAccountsService = paymentAccountsService;
+        this.coreTradesService = coreTradesService;
+        this.corePriceService = corePriceService;
         this.walletsService = walletsService;
         this.tradeStatisticsManager = tradeStatisticsManager;
     }
@@ -162,6 +166,23 @@ public class CoreApi {
 
     public double getMarketPrice(String currencyCode) {
         return corePriceService.getMarketPrice(currencyCode);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Trades
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void takeOffer(String offerId,
+                          String paymentAccountId,
+                          Consumer<Trade> resultHandler) {
+        Offer offer = coreOffersService.getOffer(offerId);
+        coreTradesService.takeOffer(offer,
+                paymentAccountId,
+                resultHandler);
+    }
+
+    public Trade getTrade(String tradeId) {
+        return coreTradesService.getTrade(tradeId);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

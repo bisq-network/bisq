@@ -170,6 +170,19 @@ public class OfferUtil {
         return CoinUtil.getMakerFee(isCurrencyForMakerFeeBtc, amount);
     }
 
+    public Coin getTxFeeBySize(Coin txFeePerByteFromFeeService, int sizeInBytes) {
+        return txFeePerByteFromFeeService.multiply(getAverageTakerFeeTxSize(sizeInBytes));
+    }
+
+    // We use the sum of the size of the trade fee and the deposit tx to get an average.
+    // Miners will take the trade fee tx if the total fee of both dependent txs are good
+    // enough.  With that we avoid that we overpay in case that the trade fee has many
+    // inputs and we would apply that fee for the other 2 txs as well. We still might
+    // overpay a bit for the payout tx.
+    public int getAverageTakerFeeTxSize(int txSize) {
+        return (txSize + 320) / 2;
+    }
+
     /**
      * Checks if the maker fee should be paid in BTC, this can be the case due to user
      * preference or because the user doesn't have enough BSQ.
