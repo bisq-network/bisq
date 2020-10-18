@@ -191,7 +191,7 @@ public class InventoryMonitor {
     }
 
     @Getter
-    static class RequestInfo {
+    public static class RequestInfo {
         private final long requestStartTime;
         @Setter
         private long responseTime;
