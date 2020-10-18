@@ -159,9 +159,6 @@ public class OfferInfo implements Payload {
         private long date;
         private String state;
 
-        public OfferInfoBuilder() {
-        }
-
         public OfferInfoBuilder withId(String id) {
             this.id = id;
             return this;

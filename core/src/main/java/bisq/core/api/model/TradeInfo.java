@@ -24,7 +24,7 @@ import bisq.common.Payload;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
-import static bisq.core.api.model.OfferInfo.*;
+import static bisq.core.api.model.OfferInfo.toOfferInfo;
 
 @EqualsAndHashCode
 @Getter
@@ -125,9 +125,6 @@ public class TradeInfo implements Payload {
         private boolean isFiatReceived;
         private boolean isPayoutPublished;
         private boolean isWithdrawn;
-
-        public TradeInfoBuilder() {
-        }
 
         public TradeInfoBuilder withOffer(OfferInfo offer) {
             this.offer = offer;
