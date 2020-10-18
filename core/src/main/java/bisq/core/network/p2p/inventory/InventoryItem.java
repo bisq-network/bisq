@@ -42,11 +42,14 @@ public enum InventoryItem {
 
     maxConnections("maxConnections", Integer.class),
     numConnections("numConnections", Integer.class),
-    sentData("sentData", String.class), // todo should be long
-    receivedData("receivedData", String.class),// todo  should be long
-    receivedMessagesPerSec("receivedMessagesPerSec", Double.class),
-    sentMessagesPerSec("sentMessagesPerSec", Double.class),
+    sentBytes("sentBytes", Long.class, 0, 5, 0, 4),
+    sentBytesPerSec("sentBytesPerSec", Double.class, 0, 3, 0, 2),
+    receivedBytes("receivedBytes", Long.class, 0, 5, 0, 4),
+    receivedBytesPerSec("receivedBytesPerSec", Double.class, 0, 3, 0, 2),
+    receivedMessagesPerSec("receivedMessagesPerSec", Double.class, 0, 3, 0, 2),
+    sentMessagesPerSec("sentMessagesPerSec", Double.class, 0, 3, 0, 2),
 
+    version("version", String.class),
     usedMemory("usedMemory", Long.class, 0, 3, 0, 2),
     jvmStartTime("jvmStartTime", Long.class);
 

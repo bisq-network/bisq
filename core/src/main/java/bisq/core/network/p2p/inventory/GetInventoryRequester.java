@@ -21,7 +21,9 @@ import bisq.core.network.p2p.inventory.messages.GetInventoryRequest;
 import bisq.core.network.p2p.inventory.messages.GetInventoryResponse;
 
 import bisq.network.p2p.NodeAddress;
+import bisq.network.p2p.network.CloseConnectionReason;
 import bisq.network.p2p.network.Connection;
+import bisq.network.p2p.network.ConnectionListener;
 import bisq.network.p2p.network.MessageListener;
 import bisq.network.p2p.network.NetworkNode;
 
@@ -37,7 +39,7 @@ import java.util.function.Consumer;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class GetInventoryRequester implements MessageListener {
+public class GetInventoryRequester implements MessageListener, ConnectionListener {
     private final static int TIMEOUT_SEC = 90;
 
     private final NetworkNode networkNode;
@@ -58,7 +60,10 @@ public class GetInventoryRequester implements MessageListener {
 
     public void request() {
         networkNode.addMessageListener(this);
+        networkNode.addConnectionListener(this);
+
         timer = UserThread.runAfter(this::onTimeOut, TIMEOUT_SEC);
+
         GetInventoryRequest getInventoryRequest = new GetInventoryRequest(Version.VERSION);
         networkNode.sendMessage(nodeAddress, getInventoryRequest);
     }
@@ -87,5 +92,25 @@ public class GetInventoryRequester implements MessageListener {
             timer = null;
         }
         networkNode.removeMessageListener(this);
+        networkNode.removeConnectionListener(this);
+    }
+
+    @Override
+    public void onConnection(Connection connection) {
+    }
+
+    @Override
+    public void onDisconnect(CloseConnectionReason closeConnectionReason,
+                             Connection connection) {
+        connection.getPeersNodeAddressOptional().ifPresent(address -> {
+            if (address.equals(nodeAddress)) {
+                errorMessageHandler.handleErrorMessage("Connected closed because of " + closeConnectionReason.name());
+                shutDown();
+            }
+        });
+    }
+
+    @Override
+    public void onError(Throwable throwable) {
     }
 }
