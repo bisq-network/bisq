@@ -18,7 +18,6 @@
 package bisq.core.api;
 
 import bisq.core.offer.Offer;
-import bisq.core.offer.OfferBookService;
 import bisq.core.offer.takeoffer.TakeOfferModel;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
@@ -36,16 +35,14 @@ import static java.lang.String.format;
 @Slf4j
 class CoreTradesService {
 
-    private final OfferBookService offerBookService;
     private final TakeOfferModel takeOfferModel;
     private final TradeManager tradeManager;
     private final User user;
 
     @Inject
-    public CoreTradesService(OfferBookService offerBookService,
-                             TakeOfferModel takeOfferModel, TradeManager tradeManager,
+    public CoreTradesService(TakeOfferModel takeOfferModel,
+                             TradeManager tradeManager,
                              User user) {
-        this.offerBookService = offerBookService;
         this.takeOfferModel = takeOfferModel;
         this.tradeManager = tradeManager;
         this.user = user;
