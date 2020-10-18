@@ -19,6 +19,7 @@ package bisq.inventory;
 
 
 import bisq.core.network.p2p.inventory.GetInventoryRequestManager;
+import bisq.core.network.p2p.inventory.InventoryItem;
 import bisq.core.network.p2p.seed.DefaultSeedNodeRepository;
 import bisq.core.proto.network.CoreNetworkProtoResolver;
 
@@ -39,18 +40,22 @@ import java.time.Clock;
 import java.io.File;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
-import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class InventoryMonitor {
 
     private final Map<NodeAddress, JsonFileManager> jsonFileManagerByNodeAddress = new HashMap<>();
+    private final Map<NodeAddress, List<RequestInfo>> requestInfoListByNode = new HashMap<>();
     private final boolean useLocalhostForP2P;
     private final int intervalSec;
 
@@ -64,9 +69,14 @@ public class InventoryMonitor {
 
         setupCapabilities();
 
-        DefaultSeedNodeRepository.readSeedNodePropertyFile(network)
+        //TODO until we use all seeds we use our custom seed node file which includes only those which have updated to our branch
+        // Once all seeds are updated we can remove that resource file and prefix
+        //String fileName = network.name().toLowerCase();
+        String networkName = network.name().toLowerCase();
+        String fileName = network.isMainnet() ? "inv_" + networkName : networkName;
+        DefaultSeedNodeRepository.readSeedNodePropertyFile(fileName)
                 .ifPresent(seedNodeFile -> {
-                    List<NodeAddress> seedNodes = new ArrayList<>(DefaultSeedNodeRepository.getSeedNodeAddressesFromPropertyFile(network));
+                    List<NodeAddress> seedNodes = new ArrayList<>(DefaultSeedNodeRepository.getSeedNodeAddressesFromPropertyFile(fileName));
                     File jsonDir = new File(appDir, "json");
                     if (!jsonDir.exists() && !jsonDir.mkdir()) {
                         log.warn("make jsonDir failed");
@@ -101,6 +111,10 @@ public class InventoryMonitor {
                         }
                     });
                 });
+    }
+
+    public void shutDown() {
+        jsonFileManagerByNodeAddress.values().forEach(JsonFileManager::shutDown);
     }
 
     private NetworkNode getNetworkNode(File appDir) {
@@ -170,7 +184,19 @@ public class InventoryMonitor {
                             requestInfo.setResponseTime(responseTime);
                             requestInfo.setInventory(result);
 
-                            inventoryWebServer.onNewRequestInfo(requestInfo, nodeAddress);
+                            requestInfoListByNode.putIfAbsent(nodeAddress, new ArrayList<>());
+                            List<RequestInfo> requestInfoList = requestInfoListByNode.get(nodeAddress);
+                            requestInfoList.add(requestInfo);
+
+                            // We create average of all nodes latest results. It might be that the nodes last result is
+                            // from a previous request as the response has not arrived yet.
+                            Set<RequestInfo> requestInfoSetOfOtherNodes = requestInfoListByNode.values().stream()
+                                    .filter(list -> !list.isEmpty())
+                                    .map(list -> list.get(list.size() - 1))
+                                    .collect(Collectors.toSet());
+                            Map<InventoryItem, Double> averageValues = getAverageValues(requestInfoSetOfOtherNodes);
+
+                            inventoryWebServer.onNewRequestInfo(requestInfoListByNode, averageValues);
 
                             String json = Utilities.objectToJson(requestInfo);
                             jsonFileManagerByNodeAddress.get(nodeAddress).writeToDisc(json, String.valueOf(responseTime));
@@ -182,26 +208,53 @@ public class InventoryMonitor {
             }).start();
 
         });
-
-
     }
 
-    public void shutDown() {
-        jsonFileManagerByNodeAddress.values().forEach(JsonFileManager::shutDown);
+    private Map<InventoryItem, Double> getAverageValues(Set<RequestInfo> requestInfoSetOfOtherNodes) {
+        Map<InventoryItem, Double> averageValuesPerItem = new HashMap<>();
+        Arrays.asList(InventoryItem.values()).forEach(inventoryItem -> {
+            if (inventoryItem.getType().equals(Integer.class)) {
+                averageValuesPerItem.put(inventoryItem, getAverageFromIntegerValues(requestInfoSetOfOtherNodes, inventoryItem));
+            } else if (inventoryItem.getType().equals(Long.class)) {
+                averageValuesPerItem.put(inventoryItem, getAverageFromLongValues(requestInfoSetOfOtherNodes, inventoryItem));
+            } else if (inventoryItem.getType().equals(Double.class)) {
+                averageValuesPerItem.put(inventoryItem, getAverageFromDoubleValues(requestInfoSetOfOtherNodes, inventoryItem));
+            }
+            // If type of value is String we ignore it
+        });
+        return averageValuesPerItem;
     }
 
-    @Getter
-    public static class RequestInfo {
-        private final long requestStartTime;
-        @Setter
-        private long responseTime;
-        @Setter
-        private Map<String, String> inventory;
-        @Setter
-        private String errorMessage;
+    private double getAverageFromIntegerValues(Set<RequestInfo> requestInfoSetOfOtherNodes,
+                                               InventoryItem inventoryItem) {
+        checkArgument(inventoryItem.getType().equals(Integer.class));
+        return requestInfoSetOfOtherNodes.stream()
+                .map(RequestInfo::getInventory)
+                .filter(inventory -> inventory.containsKey(inventoryItem))
+                .mapToInt(inventory -> Integer.parseInt(inventory.get(inventoryItem)))
+                .average()
+                .orElse(0d);
+    }
 
-        public RequestInfo(long requestStartTime) {
-            this.requestStartTime = requestStartTime;
-        }
+    private double getAverageFromLongValues(Set<RequestInfo> requestInfoSetOfOtherNodes,
+                                            InventoryItem inventoryItem) {
+        checkArgument(inventoryItem.getType().equals(Long.class));
+        return requestInfoSetOfOtherNodes.stream()
+                .map(RequestInfo::getInventory)
+                .filter(inventory -> inventory.containsKey(inventoryItem))
+                .mapToLong(inventory -> Long.parseLong(inventory.get(inventoryItem)))
+                .average()
+                .orElse(0d);
+    }
+
+    private double getAverageFromDoubleValues(Set<RequestInfo> requestInfoSetOfOtherNodes,
+                                              InventoryItem inventoryItem) {
+        checkArgument(inventoryItem.getType().equals(Double.class));
+        return requestInfoSetOfOtherNodes.stream()
+                .map(RequestInfo::getInventory)
+                .filter(inventory -> inventory.containsKey(inventoryItem))
+                .mapToDouble(inventory -> Double.parseDouble((inventory.get(inventoryItem))))
+                .average()
+                .orElse(0d);
     }
 }

@@ -42,13 +42,13 @@ public class GetInventoryRequester implements MessageListener {
 
     private final NetworkNode networkNode;
     private final NodeAddress nodeAddress;
-    private final Consumer<Map<String, String>> resultHandler;
+    private final Consumer<Map<InventoryItem, String>> resultHandler;
     private final ErrorMessageHandler errorMessageHandler;
     private Timer timer;
 
     public GetInventoryRequester(NetworkNode networkNode,
                                  NodeAddress nodeAddress,
-                                 Consumer<Map<String, String>> resultHandler,
+                                 Consumer<Map<InventoryItem, String>> resultHandler,
                                  ErrorMessageHandler errorMessageHandler) {
         this.networkNode = networkNode;
         this.nodeAddress = nodeAddress;
