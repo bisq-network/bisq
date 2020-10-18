@@ -34,12 +34,17 @@ import bisq.network.p2p.network.Statistic;
 import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 
+import bisq.common.config.Config;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.util.MathUtils;
 import bisq.common.util.Profiler;
 import bisq.common.util.Utilities;
 
 import javax.inject.Inject;
+import javax.inject.Named;
+
+import com.google.common.base.Enums;
+import com.google.common.base.Optional;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -61,6 +66,7 @@ public class GetInventoryRequestHandler implements MessageListener {
     private final DaoStateMonitoringService daoStateMonitoringService;
     private final ProposalStateMonitoringService proposalStateMonitoringService;
     private final BlindVoteStateMonitoringService blindVoteStateMonitoringService;
+    private final int maxConnections;
     private final Set<String> permittedRequestersPubKey = new HashSet<>();
 
     @Inject
@@ -69,13 +75,15 @@ public class GetInventoryRequestHandler implements MessageListener {
                                       DaoStateService daoStateService,
                                       DaoStateMonitoringService daoStateMonitoringService,
                                       ProposalStateMonitoringService proposalStateMonitoringService,
-                                      BlindVoteStateMonitoringService blindVoteStateMonitoringService) {
+                                      BlindVoteStateMonitoringService blindVoteStateMonitoringService,
+                                      @Named(Config.MAX_CONNECTIONS) int maxConnections) {
         this.networkNode = networkNode;
         this.p2PDataStorage = p2PDataStorage;
         this.daoStateService = daoStateService;
         this.daoStateMonitoringService = daoStateMonitoringService;
         this.proposalStateMonitoringService = proposalStateMonitoringService;
         this.blindVoteStateMonitoringService = blindVoteStateMonitoringService;
+        this.maxConnections = maxConnections;
 
         this.networkNode.addMessageListener(this);
     }
@@ -88,80 +96,84 @@ public class GetInventoryRequestHandler implements MessageListener {
             }
 
             GetInventoryRequest getInventoryRequest = (GetInventoryRequest) networkEnvelope;
-            Map<String, Integer> dataObjects = new HashMap<>();
+            Map<InventoryItem, Integer> dataObjects = new HashMap<>();
             p2PDataStorage.getMapForDataResponse(getInventoryRequest.getVersion()).values().stream()
                     .map(e -> e.getClass().getSimpleName())
                     .forEach(className -> {
-                        dataObjects.putIfAbsent(className, 0);
-                        int prev = dataObjects.get(className);
-                        dataObjects.put(className, prev + 1);
+                        Optional<InventoryItem> optionalEnum = Enums.getIfPresent(InventoryItem.class, className);
+                        if (optionalEnum.isPresent()) {
+                            InventoryItem key = optionalEnum.get();
+                            dataObjects.putIfAbsent(key, 0);
+                            int prev = dataObjects.get(key);
+                            dataObjects.put(key, prev + 1);
+                        }
                     });
             p2PDataStorage.getMap().values().stream()
                     .map(ProtectedStorageEntry::getProtectedStoragePayload)
                     .filter(Objects::nonNull)
                     .map(e -> e.getClass().getSimpleName())
                     .forEach(className -> {
-                        dataObjects.putIfAbsent(className, 0);
-                        int prev = dataObjects.get(className);
-                        dataObjects.put(className, prev + 1);
+                        Optional<InventoryItem> optionalEnum = Enums.getIfPresent(InventoryItem.class, className);
+                        if (optionalEnum.isPresent()) {
+                            InventoryItem key = optionalEnum.get();
+                            dataObjects.putIfAbsent(key, 0);
+                            int prev = dataObjects.get(key);
+                            dataObjects.put(key, prev + 1);
+                        }
                     });
-            Map<String, String> inventory = new HashMap<>();
+            Map<InventoryItem, String> inventory = new HashMap<>();
             dataObjects.forEach((key, value) -> inventory.put(key, String.valueOf(value)));
 
             // DAO data
             int numBsqBlocks = daoStateService.getBlocks().size();
-            inventory.put("numBsqBlocks", String.valueOf(numBsqBlocks));
+            inventory.put(InventoryItem.numBsqBlocks, String.valueOf(numBsqBlocks));
 
             int daoStateChainHeight = daoStateService.getChainHeight();
-            inventory.put("daoStateChainHeight", String.valueOf(daoStateChainHeight));
+            inventory.put(InventoryItem.daoStateChainHeight, String.valueOf(daoStateChainHeight));
 
             LinkedList<DaoStateBlock> daoStateBlockChain = daoStateMonitoringService.getDaoStateBlockChain();
             if (!daoStateBlockChain.isEmpty()) {
                 String daoStateHash = Utilities.bytesAsHexString(daoStateBlockChain.getLast().getMyStateHash().getHash());
-                inventory.put("daoStateHash", daoStateHash);
-            } else {
-                inventory.put("daoStateHash", "n/a");
+                inventory.put(InventoryItem.daoStateHash, daoStateHash);
             }
 
             LinkedList<ProposalStateBlock> proposalStateBlockChain = proposalStateMonitoringService.getProposalStateBlockChain();
             if (!proposalStateBlockChain.isEmpty()) {
                 String proposalHash = Utilities.bytesAsHexString(proposalStateBlockChain.getLast().getMyStateHash().getHash());
-                inventory.put("proposalHash", proposalHash);
-            } else {
-                inventory.put("proposalHash", "n/a");
+                inventory.put(InventoryItem.proposalHash, proposalHash);
             }
 
             LinkedList<BlindVoteStateBlock> blindVoteStateBlockChain = blindVoteStateMonitoringService.getBlindVoteStateBlockChain();
             if (!blindVoteStateBlockChain.isEmpty()) {
                 String blindVoteHash = Utilities.bytesAsHexString(blindVoteStateBlockChain.getLast().getMyStateHash().getHash());
-                inventory.put("blindVoteHash", blindVoteHash);
-            } else {
-                inventory.put("blindVoteHash", "n/a");
+                inventory.put(InventoryItem.blindVoteHash, blindVoteHash);
             }
 
             // P2P network data
+            inventory.put(InventoryItem.maxConnections, String.valueOf(maxConnections));
+
             int numConnections = networkNode.getAllConnections().size();
-            inventory.put("numConnections", String.valueOf(numConnections));
+            inventory.put(InventoryItem.numConnections, String.valueOf(numConnections));
 
             long sentBytes = Statistic.totalSentBytesProperty().get();
-            inventory.put("sentData", Utilities.readableFileSize(sentBytes));
+            inventory.put(InventoryItem.sentData, String.valueOf(sentBytes));
 
             long receivedBytes = Statistic.totalReceivedBytesProperty().get();
-            inventory.put("receivedData", Utilities.readableFileSize(receivedBytes));
+            inventory.put(InventoryItem.receivedData, String.valueOf(receivedBytes));
 
             double receivedMessagesPerSec = MathUtils.roundDouble(Statistic.numTotalReceivedMessagesPerSecProperty().get(), 2);
-            inventory.put("receivedMessagesPerSec", String.valueOf(receivedMessagesPerSec));
+            inventory.put(InventoryItem.receivedMessagesPerSec, String.valueOf(receivedMessagesPerSec));
 
             double sentMessagesPerSec = MathUtils.roundDouble(Statistic.numTotalSentMessagesPerSecProperty().get(), 2);
-            inventory.put("sentMessagesPerSec", String.valueOf(sentMessagesPerSec));
+            inventory.put(InventoryItem.sentMessagesPerSec, String.valueOf(sentMessagesPerSec));
 
             // JVM info
             long usedMemory = Profiler.getUsedMemoryInMB();
-            inventory.put("usedMemory", String.valueOf(usedMemory));
+            inventory.put(InventoryItem.usedMemory, String.valueOf(usedMemory));
 
             RuntimeMXBean runtimeBean = ManagementFactory.getRuntimeMXBean();
             long startTime = runtimeBean.getStartTime();
-            inventory.put("jvmStartTime", String.valueOf(startTime));
+            inventory.put(InventoryItem.jvmStartTime, String.valueOf(startTime));
 
             log.info("Send inventory {} to {}", inventory, connection.getPeersNodeAddressOptional());
             GetInventoryResponse getInventoryResponse = new GetInventoryResponse(inventory);

@@ -17,18 +17,24 @@
 
 package bisq.core.network.p2p.inventory.messages;
 
+import bisq.core.network.p2p.inventory.InventoryItem;
+
 import bisq.common.app.Version;
 import bisq.common.proto.network.NetworkEnvelope;
 
+import com.google.common.base.Enums;
+import com.google.common.base.Optional;
+
+import java.util.HashMap;
 import java.util.Map;
 
 import lombok.Value;
 
 @Value
 public class GetInventoryResponse extends NetworkEnvelope {
-    private final Map<String, String> inventory;
+    private final Map<InventoryItem, String> inventory;
 
-    public GetInventoryResponse(Map<String, String> inventory) {
+    public GetInventoryResponse(Map<InventoryItem, String> inventory) {
         this(inventory, Version.getP2PMessageVersion());
     }
 
@@ -36,7 +42,7 @@ public class GetInventoryResponse extends NetworkEnvelope {
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private GetInventoryResponse(Map<String, String> inventory, int messageVersion) {
+    private GetInventoryResponse(Map<InventoryItem, String> inventory, int messageVersion) {
         super(messageVersion);
 
         this.inventory = inventory;
@@ -44,13 +50,25 @@ public class GetInventoryResponse extends NetworkEnvelope {
 
     @Override
     public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
+        // For protobuf we use a map with a string key
+        Map<String, String> map = new HashMap<>();
+        inventory.forEach((key, value) -> map.put(key.getKey(), value));
         return getNetworkEnvelopeBuilder()
                 .setGetInventoryResponse(protobuf.GetInventoryResponse.newBuilder()
-                        .putAllInventory(inventory))
+                        .putAllInventory(map))
                 .build();
     }
 
     public static GetInventoryResponse fromProto(protobuf.GetInventoryResponse proto, int messageVersion) {
-        return new GetInventoryResponse(proto.getInventoryMap(), messageVersion);
+        // For protobuf we use a map with a string key
+        Map<String, String> map = proto.getInventoryMap();
+        Map<InventoryItem, String> inventory = new HashMap<>();
+        map.forEach((key, value) -> {
+            Optional<InventoryItem> optional = Enums.getIfPresent(InventoryItem.class, key);
+            if (optional.isPresent()) {
+                inventory.put(optional.get(), value);
+            }
+        });
+        return new GetInventoryResponse(inventory, messageVersion);
     }
 }

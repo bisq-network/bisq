@@ -20,7 +20,6 @@ package bisq.core.network.p2p.seed;
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.seed.SeedNodeRepository;
 
-import bisq.common.config.BaseCurrencyNetwork;
 import bisq.common.config.Config;
 
 import javax.inject.Inject;
@@ -67,7 +66,7 @@ public class DefaultSeedNodeRepository implements SeedNodeRepository {
             }
 
             cache.clear();
-            List<NodeAddress> result = getSeedNodeAddressesFromPropertyFile(config.baseCurrencyNetwork);
+            List<NodeAddress> result = getSeedNodeAddressesFromPropertyFile(config.baseCurrencyNetwork.name().toLowerCase());
             cache.addAll(result);
 
             // filter
@@ -85,18 +84,18 @@ public class DefaultSeedNodeRepository implements SeedNodeRepository {
         }
     }
 
-    public static Optional<BufferedReader> readSeedNodePropertyFile(BaseCurrencyNetwork baseCurrencyNetwork) {
+    public static Optional<BufferedReader> readSeedNodePropertyFile(String fileName) {
         InputStream fileInputStream = DefaultSeedNodeRepository.class.getClassLoader().getResourceAsStream(
-                baseCurrencyNetwork.name().toLowerCase() + ENDING);
+                fileName + ENDING);
         if (fileInputStream == null) {
             return Optional.empty();
         }
         return Optional.of(new BufferedReader(new InputStreamReader(fileInputStream)));
     }
 
-    public static List<NodeAddress> getSeedNodeAddressesFromPropertyFile(BaseCurrencyNetwork baseCurrencyNetwork) {
+    public static List<NodeAddress> getSeedNodeAddressesFromPropertyFile(String fileName) {
         List<NodeAddress> list = new ArrayList<>();
-        readSeedNodePropertyFile(baseCurrencyNetwork).ifPresent(seedNodeFile -> {
+        readSeedNodePropertyFile(fileName).ifPresent(seedNodeFile -> {
             seedNodeFile.lines().forEach(line -> {
                 Matcher matcher = pattern.matcher(line);
                 if (matcher.find())

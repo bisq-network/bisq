@@ -41,7 +41,7 @@ public class GetInventoryRequestManager {
     }
 
     public void request(NodeAddress nodeAddress,
-                        Consumer<Map<String, String>> resultHandler,
+                        Consumer<Map<InventoryItem, String>> resultHandler,
                         ErrorMessageHandler errorMessageHandler) {
         if (requesterMap.containsKey(nodeAddress)) {
             log.warn("There is still an open request pending for {}", nodeAddress.getFullAddress());
