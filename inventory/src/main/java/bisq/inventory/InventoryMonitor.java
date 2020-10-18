@@ -58,6 +58,7 @@ public class InventoryMonitor {
     private final Map<NodeAddress, List<RequestInfo>> requestInfoListByNode = new HashMap<>();
     private final boolean useLocalhostForP2P;
     private final int intervalSec;
+    private int requestCounter = 0;
 
     public InventoryMonitor(File appDir,
                             boolean useLocalhostForP2P,
@@ -173,6 +174,7 @@ public class InventoryMonitor {
     private void requestAllSeeds(InventoryWebServer inventoryWebServer,
                                  GetInventoryRequestManager getInventoryRequestManager,
                                  List<NodeAddress> seedNodes) {
+        requestCounter++;
         seedNodes.forEach(nodeAddress -> {
             RequestInfo requestInfo = new RequestInfo(System.currentTimeMillis());
             new Thread(() -> {
@@ -196,7 +198,7 @@ public class InventoryMonitor {
                                     .collect(Collectors.toSet());
                             Map<InventoryItem, Double> averageValues = getAverageValues(requestInfoSetOfOtherNodes);
 
-                            inventoryWebServer.onNewRequestInfo(requestInfoListByNode, averageValues);
+                            inventoryWebServer.onNewRequestInfo(requestInfoListByNode, averageValues, requestCounter);
 
                             String json = Utilities.objectToJson(requestInfo);
                             jsonFileManagerByNodeAddress.get(nodeAddress).writeToDisc(json, String.valueOf(responseTime));

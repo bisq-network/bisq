@@ -34,9 +34,9 @@ import bisq.network.p2p.network.Statistic;
 import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 
+import bisq.common.app.Version;
 import bisq.common.config.Config;
 import bisq.common.proto.network.NetworkEnvelope;
-import bisq.common.util.MathUtils;
 import bisq.common.util.Profiler;
 import bisq.common.util.Utilities;
 
@@ -54,7 +54,6 @@ import java.util.Objects;
 import java.util.Set;
 
 import java.lang.management.ManagementFactory;
-import java.lang.management.RuntimeMXBean;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -95,6 +94,7 @@ public class GetInventoryRequestHandler implements MessageListener {
                 return;
             }
 
+            // Data
             GetInventoryRequest getInventoryRequest = (GetInventoryRequest) networkEnvelope;
             Map<InventoryItem, Integer> dataObjects = new HashMap<>();
             p2PDataStorage.getMapForDataResponse(getInventoryRequest.getVersion()).values().stream()
@@ -124,7 +124,7 @@ public class GetInventoryRequestHandler implements MessageListener {
             Map<InventoryItem, String> inventory = new HashMap<>();
             dataObjects.forEach((key, value) -> inventory.put(key, String.valueOf(value)));
 
-            // DAO data
+            // DAO
             int numBsqBlocks = daoStateService.getBlocks().size();
             inventory.put(InventoryItem.numBsqBlocks, String.valueOf(numBsqBlocks));
 
@@ -149,31 +149,20 @@ public class GetInventoryRequestHandler implements MessageListener {
                 inventory.put(InventoryItem.blindVoteHash, blindVoteHash);
             }
 
-            // P2P network data
+            // network
             inventory.put(InventoryItem.maxConnections, String.valueOf(maxConnections));
+            inventory.put(InventoryItem.numConnections, String.valueOf(networkNode.getAllConnections().size()));
+            inventory.put(InventoryItem.sentBytes, String.valueOf(Statistic.totalSentBytesProperty().get()));
+            inventory.put(InventoryItem.sentBytesPerSec, String.valueOf(Statistic.totalSentBytesPerSecProperty().get()));
+            inventory.put(InventoryItem.receivedBytes, String.valueOf(Statistic.totalReceivedBytesProperty().get()));
+            inventory.put(InventoryItem.receivedBytesPerSec, String.valueOf(Statistic.totalReceivedBytesPerSecProperty().get()));
+            inventory.put(InventoryItem.receivedMessagesPerSec, String.valueOf(Statistic.numTotalReceivedMessagesPerSecProperty().get()));
+            inventory.put(InventoryItem.sentMessagesPerSec, String.valueOf(Statistic.numTotalSentMessagesPerSecProperty().get()));
 
-            int numConnections = networkNode.getAllConnections().size();
-            inventory.put(InventoryItem.numConnections, String.valueOf(numConnections));
-
-            long sentBytes = Statistic.totalSentBytesProperty().get();
-            inventory.put(InventoryItem.sentData, String.valueOf(sentBytes));
-
-            long receivedBytes = Statistic.totalReceivedBytesProperty().get();
-            inventory.put(InventoryItem.receivedData, String.valueOf(receivedBytes));
-
-            double receivedMessagesPerSec = MathUtils.roundDouble(Statistic.numTotalReceivedMessagesPerSecProperty().get(), 2);
-            inventory.put(InventoryItem.receivedMessagesPerSec, String.valueOf(receivedMessagesPerSec));
-
-            double sentMessagesPerSec = MathUtils.roundDouble(Statistic.numTotalSentMessagesPerSecProperty().get(), 2);
-            inventory.put(InventoryItem.sentMessagesPerSec, String.valueOf(sentMessagesPerSec));
-
-            // JVM info
-            long usedMemory = Profiler.getUsedMemoryInMB();
-            inventory.put(InventoryItem.usedMemory, String.valueOf(usedMemory));
-
-            RuntimeMXBean runtimeBean = ManagementFactory.getRuntimeMXBean();
-            long startTime = runtimeBean.getStartTime();
-            inventory.put(InventoryItem.jvmStartTime, String.valueOf(startTime));
+            // node
+            inventory.put(InventoryItem.version, Version.VERSION);
+            inventory.put(InventoryItem.usedMemory, String.valueOf(Profiler.getUsedMemoryInBytes()));
+            inventory.put(InventoryItem.jvmStartTime, String.valueOf(ManagementFactory.getRuntimeMXBean().getStartTime()));
 
             log.info("Send inventory {} to {}", inventory, connection.getPeersNodeAddressOptional());
             GetInventoryResponse getInventoryResponse = new GetInventoryResponse(inventory);

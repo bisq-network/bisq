@@ -44,8 +44,9 @@ public class GetInventoryRequestManager {
                         Consumer<Map<InventoryItem, String>> resultHandler,
                         ErrorMessageHandler errorMessageHandler) {
         if (requesterMap.containsKey(nodeAddress)) {
-            log.warn("There is still an open request pending for {}", nodeAddress.getFullAddress());
-            return;
+            log.warn("There was still a pending request for {}. We shut it down and make a new request",
+                    nodeAddress.getFullAddress());
+            requesterMap.get(nodeAddress).shutDown();
         }
 
         GetInventoryRequester getInventoryRequester = new GetInventoryRequester(networkNode,

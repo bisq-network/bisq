@@ -18,6 +18,8 @@
 package bisq.inventory;
 
 
+import bisq.core.locale.Res;
+
 import bisq.common.UserThread;
 import bisq.common.app.Log;
 import bisq.common.app.Version;
@@ -74,6 +76,7 @@ public class InventoryMonitorMain {
         Log.setup(logPath);
         Log.setLevel(Level.INFO);
         Version.setBaseCryptoNetworkId(network.ordinal());
+        Res.setup();
 
         inventoryMonitor = new InventoryMonitor(appDir, useLocalhostForP2P, network, intervalSec, port);
 
