@@ -72,6 +72,7 @@ import javax.annotation.Nullable;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static java.lang.String.format;
 
 public class TradeWalletService {
     private static final Logger log = LoggerFactory.getLogger(TradeWalletService.class);
@@ -345,7 +346,9 @@ public class TradeWalletService {
         // We created the take offer fee tx in the structure that the second output is for the funds for the deposit tx.
         TransactionOutput reservedForTradeOutput = takeOfferFeeTx.getOutputs().get(1);
         checkArgument(reservedForTradeOutput.getValue().equals(inputAmount),
-                "Reserve amount does not equal input amount");
+                format("Reserve amount (%s) != input amount (%s)",
+                        reservedForTradeOutput.getValue().toFriendlyString(),
+                        inputAmount.toFriendlyString()));
         dummyTX.addInput(reservedForTradeOutput);
 
         WalletService.verifyTransaction(dummyTX);

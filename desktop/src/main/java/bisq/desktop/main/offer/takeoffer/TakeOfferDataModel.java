@@ -645,7 +645,7 @@ class TakeOfferDataModel extends OfferDataModel {
     }
 
     public boolean isHalCashAccount() {
-        return paymentAccount instanceof HalCashAccount;
+        return paymentAccount.isHalCashAccount();
     }
 
     public boolean isCurrencyForTakerFeeBtc() {

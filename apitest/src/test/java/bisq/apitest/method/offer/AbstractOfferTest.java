@@ -120,23 +120,23 @@ public abstract class AbstractOfferTest extends MethodTest {
         return aliceStubs.offersService.getOffer(createGetOfferRequest(offerId)).getOffer();
     }
 
-    protected final OfferInfo getMostRecentOffer(String direction, String currencyCode) {
-        List<OfferInfo> offerInfoList = getOffersSortedByDate(direction, currencyCode);
+    protected final OfferInfo getMostRecentOffer(GrpcStubs grpcStubs, String direction, String currencyCode) {
+        List<OfferInfo> offerInfoList = getOffersSortedByDate(grpcStubs, direction, currencyCode);
         if (offerInfoList.isEmpty())
             fail(format("No %s offers found for currency %s", direction, currencyCode));
 
         return offerInfoList.get(offerInfoList.size() - 1);
     }
 
-    protected final int getOpenOffersCount(String direction, String currencyCode) {
-        return getOffersSortedByDate(direction, currencyCode).size();
+    protected final int getOpenOffersCount(GrpcStubs grpcStubs, String direction, String currencyCode) {
+        return getOffersSortedByDate(grpcStubs, direction, currencyCode).size();
     }
 
-    protected final List<OfferInfo> getOffersSortedByDate(String direction, String currencyCode) {
+    protected final List<OfferInfo> getOffersSortedByDate(GrpcStubs grpcStubs, String direction, String currencyCode) {
         var req = GetOffersRequest.newBuilder()
                 .setDirection(direction)
                 .setCurrencyCode(currencyCode).build();
-        var reply = aliceStubs.offersService.getOffers(req);
+        var reply = grpcStubs.offersService.getOffers(req);
         return sortOffersByDate(reply.getOffersList());
     }
 

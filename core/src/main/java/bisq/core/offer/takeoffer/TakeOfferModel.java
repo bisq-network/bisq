@@ -33,6 +33,8 @@ import static bisq.core.util.VolumeUtil.getRoundedFiatVolume;
 import static bisq.core.util.coin.CoinUtil.minCoin;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static org.bitcoinj.core.Coin.ZERO;
+import static org.bitcoinj.core.Coin.valueOf;
 
 @Slf4j
 public class TakeOfferModel implements Model {
@@ -67,7 +69,7 @@ public class TakeOfferModel implements Model {
     @Getter
     private Coin totalToPayAsCoin;
     @Getter
-    private Coin missingCoin = Coin.ZERO;
+    private Coin missingCoin = ZERO;
     @Getter
     private Coin totalAvailableBalance;
     @Getter
@@ -100,7 +102,7 @@ public class TakeOfferModel implements Model {
         validateModelInputs();
 
         this.useSavingsWallet = useSavingsWallet;
-        this.amount = Coin.valueOf(Math.min(offer.getAmount().value, getMaxTradeLimit()));
+        this.amount = valueOf(Math.min(offer.getAmount().value, getMaxTradeLimit()));
         this.securityDeposit = offer.getDirection() == SELL
                 ? offer.getBuyerSecurityDeposit()
                 : offer.getSellerSecurityDeposit();
@@ -210,25 +212,28 @@ public class TakeOfferModel implements Model {
 
     @NotNull
     public Coin getFundsNeededForTrade() {
+        // If taking a buy offer, taker needs to reserve the offer.amt too.
         return securityDeposit
                 .add(getTxFeeForDepositTx())
-                .add(getTxFeeForPayoutTx()
-                        .add(amount));
+                .add(getTxFeeForPayoutTx())
+                .add(offer.isBuyOffer() ? amount : ZERO);
     }
 
     private Coin getTxFeeForDepositTx() {
         // TODO fix with new trade protocol!
-        // Unfortunately we cannot change that to the correct fees as it would break backward compatibility
-        // We still might find a way with offer version or app version checks so lets keep that commented out
-        // code as that shows how it should be.
+        // Unfortunately we cannot change that to the correct fees as it would break
+        // backward compatibility.  We still might find a way with offer version or app
+        // version checks so lets keep that commented out code as that shows how it
+        // should be.
         return txFeeFromFeeService;
     }
 
     private Coin getTxFeeForPayoutTx() {
         // TODO fix with new trade protocol!
-        // Unfortunately we cannot change that to the correct fees as it would break backward compatibility
-        // We still might find a way with offer version or app version checks so lets keep that commented out
-        // code as that shows how it should be.
+        // Unfortunately we cannot change that to the correct fees as it would break
+        // backward compatibility.  We still might find a way with offer version or app
+        // version checks so lets keep that commented out code as that shows how it
+        // should be.
         return txFeeFromFeeService;
     }
 
@@ -247,7 +252,7 @@ public class TakeOfferModel implements Model {
         this.balance = null;
         this.isBtcWalletFunded = false;
         this.isCurrencyForTakerFeeBtc = false;
-        this.missingCoin = Coin.ZERO;
+        this.missingCoin = ZERO;
         this.offer = null;
         this.paymentAccount = null;
         this.securityDeposit = null;

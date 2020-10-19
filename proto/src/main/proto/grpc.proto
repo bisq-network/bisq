@@ -179,6 +179,8 @@ service Trades {
     }
     rpc ConfirmPaymentStarted (ConfirmPaymentStartedRequest) returns (ConfirmPaymentStartedReply) {
     }
+    rpc ConfirmPaymentReceived (ConfirmPaymentReceivedRequest) returns (ConfirmPaymentReceivedReply) {
+    }
 }
 
 message TakeOfferRequest {
@@ -195,6 +197,13 @@ message ConfirmPaymentStartedRequest {
 }
 
 message ConfirmPaymentStartedReply {
+}
+
+message ConfirmPaymentReceivedRequest {
+    string tradeId = 1;
+}
+
+message ConfirmPaymentReceivedReply {
 }
 
 message GetTradeRequest {

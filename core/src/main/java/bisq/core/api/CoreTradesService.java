@@ -21,7 +21,10 @@ import bisq.core.offer.Offer;
 import bisq.core.offer.takeoffer.TakeOfferModel;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
+import bisq.core.trade.protocol.BuyerAsMakerProtocol;
+import bisq.core.trade.protocol.BuyerAsTakerProtocol;
 import bisq.core.trade.protocol.BuyerProtocol;
+import bisq.core.trade.protocol.SellerProtocol;
 import bisq.core.user.User;
 
 import javax.inject.Inject;
@@ -51,14 +54,15 @@ class CoreTradesService {
     void takeOffer(Offer offer,
                    String paymentAccountId,
                    Consumer<Trade> resultHandler) {
-        log.info("Get offer with id {}", offer.getId());
         var paymentAccount = user.getPaymentAccount(paymentAccountId);
         if (paymentAccount == null)
             throw new IllegalArgumentException(format("payment account with id '%s' not found", paymentAccountId));
 
         var useSavingsWallet = true;
         takeOfferModel.initModel(offer, paymentAccount, useSavingsWallet);
-        log.info(takeOfferModel.toString());
+        log.info("Initiating take {} offer, {}",
+                offer.isBuyOffer() ? "buy" : "sell",
+                takeOfferModel);
         //noinspection ConstantConditions
         tradeManager.onTakeOffer(offer.getAmount(),
                 takeOfferModel.getTxFeeFromFeeService(),
@@ -81,8 +85,8 @@ class CoreTradesService {
 
     void confirmPaymentStarted(String tradeId) {
         var trade = getTradeWithId(tradeId);
-        var tradeProtocol = tradeManager.getTradeProtocol(trade);
-        if (trade.getOffer().isBuyOffer()) {
+        if (isUsingBuyerProtocol(trade)) {
+            var tradeProtocol = tradeManager.getTradeProtocol(trade);
             ((BuyerProtocol) tradeProtocol).onPaymentStarted(
                     () -> {
                     },
@@ -91,7 +95,23 @@ class CoreTradesService {
                     }
             );
         } else {
-            throw new IllegalStateException("you are not the buyer and should not try to send payment");
+            throw new IllegalStateException("you are the seller and not sending payment");
+        }
+    }
+
+    void confirmPaymentReceived(String tradeId) {
+        var trade = getTradeWithId(tradeId);
+        if (isUsingBuyerProtocol(trade)) {
+            throw new IllegalStateException("you are the buyer, and not receiving payment");
+        } else {
+            var tradeProtocol = tradeManager.getTradeProtocol(trade);
+            ((SellerProtocol) tradeProtocol).onPaymentReceived(
+                    () -> {
+                    },
+                    errorMessage -> {
+                        throw new IllegalStateException(errorMessage);
+                    }
+            );
         }
     }
 
@@ -102,5 +122,11 @@ class CoreTradesService {
     private Trade getTradeWithId(String tradeId) {
         return tradeManager.getTradeById(tradeId).orElseThrow(() ->
                 new IllegalArgumentException(format("trade with id '%s' not found", tradeId)));
+    }
+
+    private boolean isUsingBuyerProtocol(Trade trade) {
+        var tradeProtocol = tradeManager.getTradeProtocol(trade);
+        return tradeProtocol instanceof BuyerAsMakerProtocol
+                || tradeProtocol instanceof BuyerAsTakerProtocol;
     }
 }

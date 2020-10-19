@@ -35,9 +35,9 @@ import static bisq.core.trade.Trade.Phase.DEPOSIT_CONFIRMED;
 import static bisq.core.trade.Trade.Phase.DEPOSIT_PUBLISHED;
 import static bisq.core.trade.Trade.Phase.FIAT_SENT;
 import static bisq.core.trade.Trade.Phase.PAYOUT_PUBLISHED;
+import static bisq.core.trade.Trade.State.BUYER_RECEIVED_DEPOSIT_TX_PUBLISHED_MSG;
 import static bisq.core.trade.Trade.State.BUYER_SAW_ARRIVED_FIAT_PAYMENT_INITIATED_MSG;
 import static bisq.core.trade.Trade.State.DEPOSIT_CONFIRMED_IN_BLOCK_CHAIN;
-import static bisq.core.trade.Trade.State.SELLER_PUBLISHED_DEPOSIT_TX;
 import static bisq.core.trade.Trade.State.SELLER_SAW_ARRIVED_PAYOUT_TX_PUBLISHED_MSG;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -47,9 +47,9 @@ import static protobuf.OpenOffer.State.AVAILABLE;
 
 @Slf4j
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class TakeBuyBTCOfferTest extends AbstractTradeTest {
+public class TakeSellBTCOfferTest extends AbstractTradeTest {
 
-    // Alice is buyer, Bob is seller.
+    // Alice is seller, Bob is buyer.
 
     private static String tradeId;
 
@@ -64,15 +64,16 @@ public class TakeBuyBTCOfferTest extends AbstractTradeTest {
 
     @Test
     @Order(1)
-    public void testTakeAlicesBuyOffer() {
+    public void testTakeAlicesSellOffer() {
         try {
-            var alicesOffer = createAliceOffer(alicesAccount, "buy", "usd", 12500000);
+            var alicesOffer = createAliceOffer(alicesAccount, "sell", "usd", 12500000);
             var offerId = alicesOffer.getId();
 
             // Wait for Alice's AddToOfferBook task.
-            // Wait times vary;  my logs show >= 2 second delay.
+            // Wait times vary;  my logs show >= 2 second delay, but taking sell offers
+            // seems to require more time to prepare.
             sleep(3000);
-            assertEquals(1, getOpenOffersCount(aliceStubs, "buy", "usd"));
+            assertEquals(1, getOpenOffersCount(bobStubs, "sell", "usd"));
 
             var trade = takeAlicesOffer(offerId, bobsAccount.getId());
             assertNotNull(trade);
@@ -80,15 +81,16 @@ public class TakeBuyBTCOfferTest extends AbstractTradeTest {
             // Cache the trade id for the other tests.
             tradeId = trade.getTradeId();
 
-            genBtcBlocksThenWait(1, 2250);
-            assertEquals(0, getOpenOffersCount(aliceStubs, "buy", "usd"));
+            genBtcBlocksThenWait(1, 4000);
+            assertEquals(0, getOpenOffersCount(bobStubs, "sell", "usd"));
 
             trade = getTrade(bobdaemon, trade.getTradeId());
-            verifyExpectedTradeStateAndPhase(trade, SELLER_PUBLISHED_DEPOSIT_TX, DEPOSIT_PUBLISHED);
+            verifyExpectedTradeStateAndPhase(trade, BUYER_RECEIVED_DEPOSIT_TX_PUBLISHED_MSG, DEPOSIT_PUBLISHED);
 
             genBtcBlocksThenWait(1, 2250);
             trade = getTrade(bobdaemon, trade.getTradeId());
             verifyExpectedTradeStateAndPhase(trade, DEPOSIT_CONFIRMED_IN_BLOCK_CHAIN, DEPOSIT_CONFIRMED);
+
         } catch (StatusRuntimeException e) {
             fail(e);
         }
@@ -96,16 +98,17 @@ public class TakeBuyBTCOfferTest extends AbstractTradeTest {
 
     @Test
     @Order(2)
-    public void testAlicesConfirmPaymentStarted() {
+    public void testBobsConfirmPaymentStarted() {
         try {
-            var trade = getTrade(alicedaemon, tradeId);
+            var trade = getTrade(bobdaemon, tradeId);
             assertNotNull(trade);
 
-            confirmPaymentStarted(alicedaemon, trade.getTradeId());
+            confirmPaymentStarted(bobdaemon, trade.getTradeId());
             sleep(3000);
 
-            trade = getTrade(alicedaemon, tradeId);
-            assertEquals(OFFER_FEE_PAID.name(), trade.getOffer().getState());
+            trade = getTrade(bobdaemon, tradeId);
+            // TODO is this a bug?  Why is offer.state == available?
+            assertEquals(AVAILABLE.name(), trade.getOffer().getState());
             verifyExpectedTradeStateAndPhase(trade, BUYER_SAW_ARRIVED_FIAT_PAYMENT_INITIATED_MSG, FIAT_SENT);
         } catch (StatusRuntimeException e) {
             fail(e);
@@ -114,16 +117,15 @@ public class TakeBuyBTCOfferTest extends AbstractTradeTest {
 
     @Test
     @Order(3)
-    public void testBobsConfirmPaymentReceived() {
-        var trade = getTrade(bobdaemon, tradeId);
+    public void testAlicesConfirmPaymentReceived() {
+        var trade = getTrade(alicedaemon, tradeId);
         assertNotNull(trade);
 
-        confirmPaymentReceived(bobdaemon, trade.getTradeId());
+        confirmPaymentReceived(alicedaemon, trade.getTradeId());
         sleep(3000);
 
-        trade = getTrade(bobdaemon, tradeId);
-        // TODO is this a bug?  Why is offer.state == available?
-        assertEquals(AVAILABLE.name(), trade.getOffer().getState());
+        trade = getTrade(alicedaemon, tradeId);
+        assertEquals(OFFER_FEE_PAID.name(), trade.getOffer().getState());
         verifyExpectedTradeStateAndPhase(trade, SELLER_SAW_ARRIVED_PAYOUT_TX_PUBLISHED_MSG, PAYOUT_PUBLISHED);
     }
 }
