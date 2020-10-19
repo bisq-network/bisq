@@ -597,6 +597,10 @@ public class DaoStateService implements DaoSetupService {
         daoState.getIssuanceMap().put(issuance.getTxId(), issuance);
     }
 
+    public TreeMap<String, Issuance> getIssuanceMap() {
+        return daoState.getIssuanceMap();
+    }
+
     public Set<Issuance> getIssuanceSet(IssuanceType issuanceType) {
         return daoState.getIssuanceMap().values().stream()
                 .filter(issuance -> issuance.getIssuanceType() == issuanceType)
@@ -896,6 +900,10 @@ public class DaoStateService implements DaoSetupService {
                 orElse(false);
     }
 
+    public List<String> getConfiscatedLockupTxList() {
+        return daoState.getConfiscatedLockupTxList();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Param
@@ -966,6 +974,10 @@ public class DaoStateService implements DaoSetupService {
 
     public Optional<SpentInfo> getSpentInfo(TxOutput txOutput) {
         return Optional.ofNullable(daoState.getSpentInfoMap().getOrDefault(txOutput.getKey(), null));
+    }
+
+    public TreeMap<TxOutputKey, SpentInfo> getSpentInfoMap() {
+        return daoState.getSpentInfoMap();
     }
 
 
