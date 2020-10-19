@@ -177,6 +177,8 @@ service Trades {
     }
     rpc TakeOffer (TakeOfferRequest) returns (TakeOfferReply) {
     }
+    rpc ConfirmPaymentStarted (ConfirmPaymentStartedRequest) returns (ConfirmPaymentStartedReply) {
+    }
 }
 
 message TakeOfferRequest {
@@ -186,6 +188,13 @@ message TakeOfferRequest {
 
 message TakeOfferReply {
     TradeInfo trade = 1;
+}
+
+message ConfirmPaymentStartedRequest {
+    string tradeId = 1;
+}
+
+message ConfirmPaymentStartedReply {
 }
 
 message GetTradeRequest {

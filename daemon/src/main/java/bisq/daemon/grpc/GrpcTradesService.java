@@ -21,6 +21,8 @@ import bisq.core.api.CoreApi;
 import bisq.core.api.model.TradeInfo;
 import bisq.core.trade.Trade;
 
+import bisq.proto.grpc.ConfirmPaymentStartedReply;
+import bisq.proto.grpc.ConfirmPaymentStartedRequest;
 import bisq.proto.grpc.GetTradeReply;
 import bisq.proto.grpc.GetTradeRequest;
 import bisq.proto.grpc.TakeOfferReply;
@@ -78,6 +80,21 @@ class GrpcTradesService extends TradesGrpc.TradesImplBase {
                         responseObserver.onNext(reply);
                         responseObserver.onCompleted();
                     });
+        } catch (IllegalStateException | IllegalArgumentException cause) {
+            var ex = new StatusRuntimeException(Status.UNKNOWN.withDescription(cause.getMessage()));
+            responseObserver.onError(ex);
+            throw ex;
+        }
+    }
+
+    @Override
+    public void confirmPaymentStarted(ConfirmPaymentStartedRequest req,
+                                      StreamObserver<ConfirmPaymentStartedReply> responseObserver) {
+        try {
+            coreApi.confirmPaymentStarted(req.getTradeId());
+            var reply = ConfirmPaymentStartedReply.newBuilder().build();
+            responseObserver.onNext(reply);
+            responseObserver.onCompleted();
         } catch (IllegalStateException | IllegalArgumentException cause) {
             var ex = new StatusRuntimeException(Status.UNKNOWN.withDescription(cause.getMessage()));
             responseObserver.onError(ex);

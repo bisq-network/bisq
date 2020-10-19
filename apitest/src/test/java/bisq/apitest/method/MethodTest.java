@@ -17,6 +17,7 @@
 
 package bisq.apitest.method;
 
+import bisq.proto.grpc.ConfirmPaymentStartedRequest;
 import bisq.proto.grpc.CreatePaymentAccountRequest;
 import bisq.proto.grpc.GetBalanceRequest;
 import bisq.proto.grpc.GetFundingAddressesRequest;
@@ -99,6 +100,10 @@ public class MethodTest extends ApiTestCase {
         return GetTradeRequest.newBuilder().setTradeId(tradeId).build();
     }
 
+    protected final ConfirmPaymentStartedRequest createConfirmPaymentStartedRequest(String tradeId) {
+        return ConfirmPaymentStartedRequest.newBuilder().setTradeId(tradeId).build();
+    }
+
     // Convenience methods for calling frequently used & thoroughly tested gRPC services.
 
     protected final long getBalance(BisqAppConfig bisqAppConfig) {
@@ -163,6 +168,11 @@ public class MethodTest extends ApiTestCase {
     protected final TradeInfo getTrade(BisqAppConfig bisqAppConfig, String tradeId) {
         var req = createGetTradeRequest(tradeId);
         return grpcStubs(bisqAppConfig).tradesService.getTrade(req).getTrade();
+    }
+
+    protected final void confirmPaymentStarted(BisqAppConfig bisqAppConfig, String tradeId) {
+        var req = createConfirmPaymentStartedRequest(tradeId);
+        grpcStubs(bisqAppConfig).tradesService.confirmPaymentStarted(req);
     }
 
     // Static conveniences for test methods and test case fixture setups.

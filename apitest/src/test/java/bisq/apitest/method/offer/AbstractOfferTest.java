@@ -22,7 +22,6 @@ import bisq.core.monetary.Altcoin;
 import bisq.proto.grpc.CreateOfferRequest;
 import bisq.proto.grpc.GetOffersRequest;
 import bisq.proto.grpc.OfferInfo;
-import bisq.proto.grpc.TradeInfo;
 
 import protobuf.PaymentAccount;
 
@@ -50,7 +49,6 @@ import static bisq.core.locale.CurrencyUtil.isCryptoCurrency;
 import static java.lang.String.format;
 import static java.math.RoundingMode.HALF_UP;
 import static java.util.Comparator.comparing;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.junit.jupiter.api.Assertions.fail;
 
 
@@ -59,7 +57,7 @@ import bisq.apitest.method.MethodTest;
 import bisq.cli.GrpcStubs;
 
 @Slf4j
-abstract class AbstractOfferTest extends MethodTest {
+public abstract class AbstractOfferTest extends MethodTest {
 
     protected static GrpcStubs aliceStubs;
     protected static GrpcStubs bobStubs;
@@ -79,8 +77,7 @@ abstract class AbstractOfferTest extends MethodTest {
 
             // Generate 1 regtest block for alice's wallet to show 10 BTC balance,
             // and give alicedaemon time to parse the new block.
-            bitcoinCli.generateBlocks(1);
-            MILLISECONDS.sleep(1500);
+            genBtcBlocksThenWait(1, 1500);
         } catch (Exception ex) {
             fail(ex);
         }
@@ -131,6 +128,10 @@ abstract class AbstractOfferTest extends MethodTest {
         return offerInfoList.get(offerInfoList.size() - 1);
     }
 
+    protected final int getOpenOffersCount(String direction, String currencyCode) {
+        return getOffersSortedByDate(direction, currencyCode).size();
+    }
+
     protected final List<OfferInfo> getOffersSortedByDate(String direction, String currencyCode) {
         var req = GetOffersRequest.newBuilder()
                 .setDirection(direction)
@@ -143,14 +144,6 @@ abstract class AbstractOfferTest extends MethodTest {
         return offerInfoList.stream()
                 .sorted(comparing(OfferInfo::getDate))
                 .collect(Collectors.toList());
-    }
-
-    protected final TradeInfo takeAlicesOffer(String offerId, String paymentAccountId) {
-        return bobStubs.tradesService.takeOffer(createTakeOfferRequest(offerId, paymentAccountId)).getTrade();
-    }
-
-    protected final TradeInfo takeBobsOffer(String offerId, String paymentAccountId) {
-        return aliceStubs.tradesService.takeOffer(createTakeOfferRequest(offerId, paymentAccountId)).getTrade();
     }
 
     protected double getScaledOfferPrice(double offerPrice, String currencyCode) {
