@@ -57,16 +57,6 @@ public class InventoryWebServer {
         this.seedNodes = seedNodes;
         setupOperatorMap(seedNodeFile);
 
-        setupServer(port);
-    }
-
-    public void onNewRequestInfo(Map<NodeAddress, List<RequestInfo>> requestInfoListByNode,
-                                 Map<InventoryItem, Double> averageValues, int requestCounter) {
-        this.requestCounter = requestCounter;
-        html = getHtml(requestInfoListByNode, averageValues);
-    }
-
-    private void setupServer(int port) {
         Spark.port(port);
         Spark.get("/", (req, res) -> {
             log.info("Incoming request from: {}", req.userAgent());
@@ -74,19 +64,19 @@ public class InventoryWebServer {
         });
     }
 
-    private void setupOperatorMap(BufferedReader seedNodeFile) {
-        seedNodeFile.lines().forEach(line -> {
-            if (!line.startsWith("#")) {
-                String[] strings = line.split(" \\(@");
-                String node = strings.length > 0 ? strings[0] : "n/a";
-                String operator = strings.length > 1 ? strings[1].replace(")", "") : "n/a";
-                operatorByNodeAddress.put(node, operator);
-            }
-        });
+    public void onNewRequestInfo(Map<NodeAddress, List<RequestInfo>> requestInfoListByNode,
+                                 Map<InventoryItem, Double> averageValues,
+                                 int requestCounter) {
+        this.requestCounter = requestCounter;
+        html = generateHtml(requestInfoListByNode, averageValues);
     }
 
-    private String getHtml(Map<NodeAddress, List<RequestInfo>> map,
-                           Map<InventoryItem, Double> averageValues) {
+    public void shutDown() {
+        Spark.stop();
+    }
+
+    private String generateHtml(Map<NodeAddress, List<RequestInfo>> map,
+                                Map<InventoryItem, Double> averageValues) {
         StringBuilder html = new StringBuilder();
         html.append("<html>" +
                 "<head><style>table, th, td {border: 1px solid black;}</style></head>" +
@@ -110,7 +100,7 @@ public class InventoryWebServer {
                         .append("<td>").append(getSeedNodeInfo(seedNode, requestInfo, averageValues)).append("</td>")
                         .append("<td>").append(getRequestInfo(requestInfo, numRequests)).append("</td>")
                         .append("<td>").append(getDataInfo(requestInfo, averageValues)).append("</td>")
-                        .append("<td>").append(getDaoInfo(requestInfo, averageValues)).append("</td>")
+                        .append("<td>").append(getDaoInfo(requestInfo, averageValues, map)).append("</td>")
                         .append("<td>").append(getNetworkInfo(requestInfo, averageValues)).append("</td>");
                 html.append("</tr>");
             } else {
@@ -128,7 +118,6 @@ public class InventoryWebServer {
         return html.toString();
     }
 
-
     private String getSeedNodeInfo(NodeAddress nodeAddress,
                                    @Nullable RequestInfo requestInfo,
                                    Map<InventoryItem, Double> averageValues) {
@@ -144,32 +133,32 @@ public class InventoryWebServer {
             addInventoryItem("Version: ", requestInfo, sb, InventoryItem.version);
             addInventoryItem("Memory used: ", requestInfo, averageValues, sb, InventoryItem.usedMemory,
                     value -> Utilities.readableFileSize(Long.parseLong(value)));
-            addInventoryItem("Node started at: ",
+            String jvmStartTimeString = addInventoryItem("Node started at: ",
                     requestInfo,
                     null,
                     sb,
                     InventoryItem.jvmStartTime,
                     value -> new Date(Long.parseLong(value)).toString());
 
-            long jvmStartTime = Long.parseLong(requestInfo.getInventory().get(InventoryItem.jvmStartTime));
-            String duration = FormattingUtils.formatDurationAsWords(System.currentTimeMillis() - jvmStartTime, true, true);
+            String duration = FormattingUtils.formatDurationAsWords(
+                    System.currentTimeMillis() - Long.parseLong(jvmStartTimeString),
+                    true, true);
             sb.append("Run duration: ").append(duration).append("<br/>");
-
         }
 
         return sb.toString();
     }
 
-    private String getRequestInfo(RequestInfo last, int numRequests) {
+    private String getRequestInfo(RequestInfo requestInfo, int numRequests) {
         StringBuilder sb = new StringBuilder();
 
-        Date requestStartTime = new Date(last.getRequestStartTime());
+        Date requestStartTime = new Date(requestInfo.getRequestStartTime());
         sb.append("Requested at: ").append(requestStartTime).append("<br/>");
 
-        Date responseTime = new Date(last.getResponseTime());
+        Date responseTime = new Date(requestInfo.getResponseTime());
         sb.append("Response received at: ").append(responseTime).append("<br/>");
 
-        long rrt = last.getResponseTime() - last.getRequestStartTime();
+        long rrt = requestInfo.getResponseTime() - requestInfo.getRequestStartTime();
         DeviationSeverity rrtDeviationSeverity = DeviationSeverity.OK;
         if (rrt > 20_000) {
             rrtDeviationSeverity = DeviationSeverity.ALERT;
@@ -184,7 +173,7 @@ public class InventoryWebServer {
         sb.append("Number of requests: ").append(getColorTagByDeviationSeverity(DeviationSeverity.OK))
                 .append(numRequests).append(CLOSE_TAG);
 
-        String errorMessage = last.getErrorMessage();
+        String errorMessage = requestInfo.getErrorMessage();
         rrtDeviationSeverity = errorMessage == null || errorMessage.isEmpty() ?
                 DeviationSeverity.OK :
                 DeviationSeverity.WARN;
@@ -194,99 +183,141 @@ public class InventoryWebServer {
         return sb.toString();
     }
 
-
-    private String getDataInfo(RequestInfo last,
+    private String getDataInfo(RequestInfo requestInfo,
                                Map<InventoryItem, Double> averageValues) {
         StringBuilder sb = new StringBuilder();
-        addInventoryItem(last, averageValues, sb, InventoryItem.OfferPayload);
-        addInventoryItem(last, averageValues, sb, InventoryItem.MailboxStoragePayload);
-        addInventoryItem(last, averageValues, sb, InventoryItem.TradeStatistics3);
-        addInventoryItem(last, averageValues, sb, InventoryItem.Alert);
-        addInventoryItem(last, averageValues, sb, InventoryItem.Filter);
-        addInventoryItem(last, averageValues, sb, InventoryItem.Mediator);
-        addInventoryItem(last, averageValues, sb, InventoryItem.RefundAgent);
-        addInventoryItem(last, averageValues, sb, InventoryItem.AccountAgeWitness);
-        addInventoryItem(last, averageValues, sb, InventoryItem.SignedWitness);
+        addInventoryItem(requestInfo, averageValues, sb, InventoryItem.OfferPayload);
+        addInventoryItem(requestInfo, averageValues, sb, InventoryItem.MailboxStoragePayload);
+        addInventoryItem(requestInfo, averageValues, sb, InventoryItem.TradeStatistics3);
+        addInventoryItem(requestInfo, averageValues, sb, InventoryItem.Alert);
+        addInventoryItem(requestInfo, averageValues, sb, InventoryItem.Filter);
+        addInventoryItem(requestInfo, averageValues, sb, InventoryItem.Mediator);
+        addInventoryItem(requestInfo, averageValues, sb, InventoryItem.RefundAgent);
+        addInventoryItem(requestInfo, averageValues, sb, InventoryItem.AccountAgeWitness);
+        addInventoryItem(requestInfo, averageValues, sb, InventoryItem.SignedWitness);
         return sb.toString();
     }
 
-    private String getDaoInfo(RequestInfo last,
-                              Map<InventoryItem, Double> averageValues) {
+    private String getDaoInfo(RequestInfo requestInfo,
+                              Map<InventoryItem, Double> averageValues,
+                              Map<NodeAddress, List<RequestInfo>> map) {
         StringBuilder sb = new StringBuilder();
-        addInventoryItem("Number of BSQ blocks: ", last, averageValues, sb, InventoryItem.numBsqBlocks);
-        addInventoryItem(last, averageValues, sb, InventoryItem.TempProposalPayload);
-        addInventoryItem(last, averageValues, sb, InventoryItem.ProposalPayload);
-        addInventoryItem(last, averageValues, sb, InventoryItem.BlindVotePayload);
-        addInventoryItem("DAO state block height: ", last, averageValues, sb, InventoryItem.daoStateChainHeight);
-        addInventoryItem("DAO state hash: ", last, sb, InventoryItem.daoStateHash);
-        addInventoryItem("Proposal state hash: ", last, sb, InventoryItem.proposalHash);
-        addInventoryItem("Blind vote state hash: ", last, sb, InventoryItem.blindVoteHash);
+        addInventoryItem("Number of BSQ blocks: ", requestInfo, averageValues, sb, InventoryItem.numBsqBlocks);
+        addInventoryItem(requestInfo, averageValues, sb, InventoryItem.TempProposalPayload);
+        addInventoryItem(requestInfo, averageValues, sb, InventoryItem.ProposalPayload);
+        addInventoryItem(requestInfo, averageValues, sb, InventoryItem.BlindVotePayload);
+        String daoStateChainHeightAsString = addInventoryItem("DAO state block height: ", requestInfo,
+                averageValues, sb, InventoryItem.daoStateChainHeight);
+
+        DeviationSeverity daoStateHashDeviationSeverity = InventoryUtil.getDeviationSeverityForHash(map,
+                daoStateChainHeightAsString,
+                requestInfo,
+                InventoryItem.daoStateHash);
+        addInventoryItem("DAO state hash: ", requestInfo, null, sb,
+                InventoryItem.daoStateHash, null, daoStateHashDeviationSeverity);
+
+        // The hash for proposal changes only at first block of blind vote phase but as we do not want to initialize the
+        // dao domain we cannot check that. But we also don't need that as we can just compare that all hashes at all
+        // blocks from all seeds are the same. Same for blindVoteHash.
+
+        DeviationSeverity proposalHashDeviationSeverity = InventoryUtil.getDeviationSeverityForHash(map,
+                daoStateChainHeightAsString,
+                requestInfo,
+                InventoryItem.proposalHash);
+        addInventoryItem("Proposal state hash: ", requestInfo, null, sb,
+                InventoryItem.proposalHash, null, proposalHashDeviationSeverity);
+
+        DeviationSeverity blindVoteHashDeviationSeverity = InventoryUtil.getDeviationSeverityForHash(map,
+                daoStateChainHeightAsString,
+                requestInfo,
+                InventoryItem.blindVoteHash);
+        addInventoryItem("Blind vote state hash: ", requestInfo, null, sb,
+                InventoryItem.blindVoteHash, null, blindVoteHashDeviationSeverity);
+
         return sb.toString();
     }
 
-    private String getNetworkInfo(RequestInfo last,
+    private String getNetworkInfo(RequestInfo requestInfo,
                                   Map<InventoryItem, Double> averageValues) {
         StringBuilder sb = new StringBuilder();
-        addInventoryItem("Max. connections: ", last, averageValues, sb, InventoryItem.maxConnections);
-        addInventoryItem("Number of connections: ", last, averageValues, sb, InventoryItem.numConnections);
+        addInventoryItem("Max. connections: ", requestInfo, averageValues, sb, InventoryItem.maxConnections);
+        addInventoryItem("Number of connections: ", requestInfo, averageValues, sb, InventoryItem.numConnections);
 
-        addInventoryItem("Sent messages/sec: ", last, averageValues, sb, InventoryItem.sentMessagesPerSec,
+        addInventoryItem("Sent messages/sec: ", requestInfo, averageValues, sb, InventoryItem.sentMessagesPerSec,
                 value -> String.valueOf(MathUtils.roundDouble(Double.parseDouble(value), 2)));
-        addInventoryItem("Received messages/sec: ", last, averageValues, sb, InventoryItem.receivedMessagesPerSec,
+        addInventoryItem("Received messages/sec: ", requestInfo, averageValues, sb, InventoryItem.receivedMessagesPerSec,
                 value -> String.valueOf(MathUtils.roundDouble(Double.parseDouble(value), 2)));
-        addInventoryItem("Sent bytes/sec: ", last, averageValues, sb, InventoryItem.sentBytesPerSec,
+        addInventoryItem("Sent bytes/sec: ", requestInfo, averageValues, sb, InventoryItem.sentBytesPerSec,
                 value -> String.valueOf(MathUtils.roundDouble(Double.parseDouble(value), 2)));
-        addInventoryItem("Received bytes/sec: ", last, averageValues, sb, InventoryItem.receivedBytesPerSec,
+        addInventoryItem("Received bytes/sec: ", requestInfo, averageValues, sb, InventoryItem.receivedBytesPerSec,
                 value -> String.valueOf(MathUtils.roundDouble(Double.parseDouble(value), 2)));
-        addInventoryItem("Sent data: ", last, averageValues, sb, InventoryItem.sentBytes,
+        addInventoryItem("Sent data: ", requestInfo, averageValues, sb, InventoryItem.sentBytes,
                 value -> Utilities.readableFileSize(Long.parseLong(value)));
-        addInventoryItem("Received data: ", last, averageValues, sb, InventoryItem.receivedBytes,
+        addInventoryItem("Received data: ", requestInfo, averageValues, sb, InventoryItem.receivedBytes,
                 value -> Utilities.readableFileSize(Long.parseLong(value)));
         return sb.toString();
     }
 
-    private void addInventoryItem(RequestInfo requestInfo,
-                                  Map<InventoryItem, Double> averageValues,
-                                  StringBuilder sb,
-                                  InventoryItem inventoryItem) {
-        addInventoryItem("Number of " + inventoryItem.getKey() + ": ",
+    private String addInventoryItem(RequestInfo requestInfo,
+                                    Map<InventoryItem, Double> averageValues,
+                                    StringBuilder sb,
+                                    InventoryItem inventoryItem) {
+        return addInventoryItem("Number of " + inventoryItem.getKey() + ": ",
                 requestInfo,
                 averageValues,
                 sb,
                 inventoryItem);
     }
 
-    private void addInventoryItem(String title,
-                                  RequestInfo requestInfo,
-                                  StringBuilder sb,
-                                  InventoryItem inventoryItem) {
-        addInventoryItem(title,
+    private String addInventoryItem(String title,
+                                    RequestInfo requestInfo,
+                                    StringBuilder sb,
+                                    InventoryItem inventoryItem) {
+        return addInventoryItem(title,
                 requestInfo,
                 null,
                 sb,
                 inventoryItem);
     }
 
-    private void addInventoryItem(String title,
-                                  RequestInfo requestInfo,
-                                  @Nullable Map<InventoryItem, Double> averageValues,
-                                  StringBuilder sb,
-                                  InventoryItem inventoryItem) {
-        addInventoryItem(title,
+    private String addInventoryItem(String title,
+                                    RequestInfo requestInfo,
+                                    @Nullable Map<InventoryItem, Double> averageValues,
+                                    StringBuilder sb,
+                                    InventoryItem inventoryItem) {
+        return addInventoryItem(title,
                 requestInfo,
                 averageValues,
                 sb,
                 inventoryItem,
+                null,
                 null);
     }
 
-    private void addInventoryItem(String title,
-                                  RequestInfo requestInfo,
-                                  @Nullable Map<InventoryItem, Double> averageValues,
-                                  StringBuilder sb,
-                                  InventoryItem inventoryItem,
-                                  @Nullable Function<String, String> formatter) {
-        String valueAsString;
+    private String addInventoryItem(String title,
+                                    RequestInfo requestInfo,
+                                    @Nullable Map<InventoryItem, Double> averageValues,
+                                    StringBuilder sb,
+                                    InventoryItem inventoryItem,
+                                    @Nullable Function<String, String> formatter) {
+        return addInventoryItem(title,
+                requestInfo,
+                averageValues,
+                sb,
+                inventoryItem,
+                formatter,
+                null);
+    }
+
+    private String addInventoryItem(String title,
+                                    RequestInfo requestInfo,
+                                    @Nullable Map<InventoryItem, Double> averageValues,
+                                    StringBuilder sb,
+                                    InventoryItem inventoryItem,
+                                    @Nullable Function<String, String> formatter,
+                                    @Nullable DeviationSeverity deviationSeverity) {
+        String valueAsString = null;
+        String displayString = "n/a";
         String deviationAsString = "";
         String colorTag = getColorTagByDeviationSeverity(DeviationSeverity.OK);
         if (requestInfo.getInventory().containsKey(inventoryItem)) {
@@ -311,15 +342,20 @@ public class InventoryWebServer {
                 }
             }
 
+            if (deviationSeverity != null) {
+                colorTag = getColorTagByDeviationSeverity(deviationSeverity);
+            }
+
             // We only do formatting if we have any value
             if (formatter != null) {
-                valueAsString = formatter.apply(valueAsString);
+                displayString = formatter.apply(valueAsString);
+            } else {
+                displayString = valueAsString;
             }
-        } else {
-            valueAsString = "n/a";
         }
 
-        sb.append(title).append(colorTag).append(valueAsString).append(deviationAsString).append(CLOSE_TAG);
+        sb.append(title).append(colorTag).append(displayString).append(deviationAsString).append(CLOSE_TAG);
+        return valueAsString;
     }
 
     private String getColorTagByDeviationSeverity(DeviationSeverity deviationSeverity) {
@@ -332,5 +368,16 @@ public class InventoryWebServer {
             default:
                 return "<font color=\"black\">";
         }
+    }
+
+    private void setupOperatorMap(BufferedReader seedNodeFile) {
+        seedNodeFile.lines().forEach(line -> {
+            if (!line.startsWith("#")) {
+                String[] strings = line.split(" \\(@");
+                String node = strings.length > 0 ? strings[0] : "n/a";
+                String operator = strings.length > 1 ? strings[1].replace(")", "") : "n/a";
+                operatorByNodeAddress.put(node, operator);
+            }
+        });
     }
 }

@@ -81,6 +81,9 @@ public class GetInventoryRequester implements MessageListener, ConnectionListene
                     GetInventoryResponse getInventoryResponse = (GetInventoryResponse) networkEnvelope;
                     resultHandler.accept(getInventoryResponse.getInventory());
                     shutDown();
+
+                    // We shut down our connection after work as our node is not helpful for the network.
+                    connection.shutDown(CloseConnectionReason.CLOSE_REQUESTED_BY_PEER);
                 }
             });
         }
