@@ -104,7 +104,8 @@ public class InventoryMonitor implements SetupListener {
     public void onRequestCustomBridges() {
     }
 
-    public void shutDown() {
+    public void shutDown(Runnable shutDownCompleteHandler) {
+        networkNode.shutDown(shutDownCompleteHandler);
         jsonFileManagerByNodeAddress.values().forEach(JsonFileManager::shutDown);
         inventoryWebServer.shutDown();
     }

@@ -110,9 +110,10 @@ public class InventoryMonitorMain {
     }
 
     private static void shutDown() {
-        inventoryMonitor.shutDown();
         stopped = true;
-        System.exit(0);
+        inventoryMonitor.shutDown(() -> {
+            System.exit(0);
+        });
     }
 
     private static void keepRunning() {
