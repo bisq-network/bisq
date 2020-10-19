@@ -92,7 +92,7 @@ public class ArbitratorView extends DisputeAgentView {
         long protocolVersion = dispute.getContract().getOfferPayload().getProtocolVersion();
         // Only cases with protocolVersion 1 are candidates for legacy arbitration.
         // This code path is not tested and it is not assumed that it is still be used as old arbitrators would use
-        // their old Bisq version if sill cases are pending.
+        // their old Bisq version if still cases are pending.
         if (protocolVersion == 1) {
             disputeSummaryWindow.onFinalizeDispute(() -> chatView.removeInputBox()).show(dispute);
         } else {
