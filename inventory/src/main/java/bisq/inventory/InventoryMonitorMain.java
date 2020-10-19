@@ -21,6 +21,7 @@ package bisq.inventory;
 import bisq.core.locale.Res;
 
 import bisq.common.UserThread;
+import bisq.common.app.AsciiLogo;
 import bisq.common.app.Log;
 import bisq.common.app.Version;
 import bisq.common.config.BaseCurrencyNetwork;
@@ -51,7 +52,8 @@ public class InventoryMonitorMain {
 
     // prog args for regtest: 10 1 BTC_REGTEST
     public static void main(String[] args) {
-        int intervalSec = 600;
+        // Default values
+        int intervalSec = 300;
         boolean useLocalhostForP2P = false;
         BaseCurrencyNetwork network = BaseCurrencyNetwork.BTC_MAINNET;
         int port = 80;
@@ -69,16 +71,27 @@ public class InventoryMonitorMain {
             port = Integer.parseInt(args[3]);
         }
 
-        String appName = "bisq-InventoryMonitor-" + network;
-
+        String appName = "bisq-InventoryMonitor-" + network + "-" + intervalSec;
         File appDir = new File(Utilities.getUserDataDir(), appName);
+        if (!appDir.exists() && !appDir.mkdir()) {
+            log.warn("make appDir failed");
+        }
+        inventoryMonitor = new InventoryMonitor(appDir, useLocalhostForP2P, network, intervalSec, port);
+
+        setup(network, appDir);
+    }
+
+    private static void setup(BaseCurrencyNetwork network, File appDir) {
+        AsciiLogo.showAsciiLogo();
         String logPath = Paths.get(appDir.getPath(), "bisq").toString();
         Log.setup(logPath);
         Log.setLevel(Level.INFO);
         Version.setBaseCryptoNetworkId(network.ordinal());
-        Res.setup();
 
-        inventoryMonitor = new InventoryMonitor(appDir, useLocalhostForP2P, network, intervalSec, port);
+        Res.setup(); // Used for some formatting in the webserver
+
+        // We do not set any capabilities as we don't want to receive any network data beside our response.
+        // We also do not use capabilities for the request/response messages as we only connect to seeds nodes and
 
         ThreadFactory threadFactory = new ThreadFactoryBuilder()
                 .setNameFormat(inventoryMonitor.getClass().getSimpleName())
