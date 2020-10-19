@@ -152,11 +152,8 @@ public class InventoryWebServer {
     private String getRequestInfo(RequestInfo requestInfo, int numRequests) {
         StringBuilder sb = new StringBuilder();
 
-        Date requestStartTime = new Date(requestInfo.getRequestStartTime());
-        sb.append("Requested at: ").append(requestStartTime).append("<br/>");
-
-        Date responseTime = new Date(requestInfo.getResponseTime());
-        sb.append("Response received at: ").append(responseTime).append("<br/>");
+        sb.append("Number of responses: ").append(getColorTagByDeviationSeverity(DeviationSeverity.OK))
+                .append(numRequests).append(CLOSE_TAG);
 
         long rrt = requestInfo.getResponseTime() - requestInfo.getRequestStartTime();
         DeviationSeverity rrtDeviationSeverity = DeviationSeverity.OK;
@@ -165,21 +162,21 @@ public class InventoryWebServer {
         } else if (rrt > 10_000) {
             rrtDeviationSeverity = DeviationSeverity.WARN;
         }
-
         String rrtString = MathUtils.roundDouble(rrt / 1000d, 3) + " sec";
         sb.append("Round trip time: ").append(getColorTagByDeviationSeverity(rrtDeviationSeverity))
                 .append(rrtString).append(CLOSE_TAG);
 
-        sb.append("Number of requests: ").append(getColorTagByDeviationSeverity(DeviationSeverity.OK))
-                .append(numRequests).append(CLOSE_TAG);
+        Date requestStartTime = new Date(requestInfo.getRequestStartTime());
+        sb.append("Requested at: ").append(requestStartTime).append("<br/>");
+
+        Date responseTime = new Date(requestInfo.getResponseTime());
+        sb.append("Response received at: ").append(responseTime).append("<br/>");
 
         String errorMessage = requestInfo.getErrorMessage();
-        rrtDeviationSeverity = errorMessage == null || errorMessage.isEmpty() ?
-                DeviationSeverity.OK :
-                DeviationSeverity.WARN;
-        sb.append("Error message: ").append(getColorTagByDeviationSeverity(rrtDeviationSeverity))
-                .append(errorMessage).append(CLOSE_TAG);
-
+        if (errorMessage != null && !errorMessage.isEmpty()) {
+            sb.append("Error message: ").append(getColorTagByDeviationSeverity(DeviationSeverity.WARN))
+                    .append(errorMessage).append(CLOSE_TAG);
+        }
         return sb.toString();
     }
 
@@ -247,10 +244,10 @@ public class InventoryWebServer {
                 value -> String.valueOf(MathUtils.roundDouble(Double.parseDouble(value), 2)));
         addInventoryItem("Received messages/sec: ", requestInfo, averageValues, sb, InventoryItem.receivedMessagesPerSec,
                 value -> String.valueOf(MathUtils.roundDouble(Double.parseDouble(value), 2)));
-        addInventoryItem("Sent bytes/sec: ", requestInfo, averageValues, sb, InventoryItem.sentBytesPerSec,
-                value -> String.valueOf(MathUtils.roundDouble(Double.parseDouble(value), 2)));
-        addInventoryItem("Received bytes/sec: ", requestInfo, averageValues, sb, InventoryItem.receivedBytesPerSec,
-                value -> String.valueOf(MathUtils.roundDouble(Double.parseDouble(value), 2)));
+        addInventoryItem("Sent kB/sec: ", requestInfo, averageValues, sb, InventoryItem.sentBytesPerSec,
+                value -> String.valueOf(MathUtils.roundDouble(Double.parseDouble(value) / 1024, 2)));
+        addInventoryItem("Received kB/sec: ", requestInfo, averageValues, sb, InventoryItem.receivedBytesPerSec,
+                value -> String.valueOf(MathUtils.roundDouble(Double.parseDouble(value) / 1024, 2)));
         addInventoryItem("Sent data: ", requestInfo, averageValues, sb, InventoryItem.sentBytes,
                 value -> Utilities.readableFileSize(Long.parseLong(value)));
         addInventoryItem("Received data: ", requestInfo, averageValues, sb, InventoryItem.receivedBytes,
