@@ -20,7 +20,9 @@ package bisq.core.dao.node.explorer;
 import bisq.core.dao.DaoSetupService;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.Block;
+import bisq.core.util.FormattingUtils;
 
+import bisq.common.UserThread;
 import bisq.common.config.Config;
 import bisq.common.file.JsonFileManager;
 import bisq.common.util.Utilities;
@@ -129,31 +131,35 @@ public class ExportJsonFilesService implements DaoSetupService {
             return;
         }
 
+        if (!daoStateService.isParseBlockChainComplete()) {
+            // While we are syncing we ignore new blocks. We will check from missing blocks after batch processing
+            // to pickup potentially newly arrived blocks.
+            return;
+        }
+
         // We do write the block on the main thread as the overhead to create a thread and risk for inconsistency is not
         // worth the potential performance gain.
         processBlock(block, false);
     }
 
     private void processBlock(Block block, boolean isBatchProcess) {
-        int lastPersistedBlock = getLastPersistedBlock();
-        if (block.getHeight() <= lastPersistedBlock) {
-            return;
+        if (!isBatchProcess) {
+            // When batch processing we do not do that check
+            int lastPersistedBlock = getLastPersistedBlock();
+            if (block.getHeight() <= lastPersistedBlock) {
+                return;
+            }
         }
-
         long ts = System.currentTimeMillis();
         blockFileManager.writeToDisc(Utilities.objectToJson(block), String.valueOf(block.getHeight()));
-
         block.getTxs().forEach(tx -> {
-            String id = tx.getId();
-            txFileManager.writeToDisc(Utilities.objectToJson(tx), id);
-
+            txFileManager.writeToDisc(Utilities.objectToJson(tx), tx.getId());
             tx.getTxOutputs().forEach(txOutput ->
                     txOutputFileManager.writeToDisc(Utilities.objectToJson(txOutput), txOutput.getKey().toString()));
         });
 
-        log.info("Write json data for block {} took {} ms", block.getHeight(), System.currentTimeMillis() - ts);
-
         if (!isBatchProcess) {
+            log.info("Write json data for block {} took {} ms", block.getHeight(), System.currentTimeMillis() - ts);
             writeMutableData();
         }
     }
@@ -163,22 +169,43 @@ public class ExportJsonFilesService implements DaoSetupService {
             return;
         }
 
+        long ts = System.currentTimeMillis();
         int lastPersistedBlock = getLastPersistedBlock();
-        List<Block> blocks = daoStateService.getBlocksFromBlockHeight(lastPersistedBlock + 1, Integer.MAX_VALUE);
+        int chainHeight = daoStateService.getChainHeight();
+        if (lastPersistedBlock < chainHeight) {
+            int startFrom = lastPersistedBlock + 1;
+            List<Block> blocks = daoStateService.getBlocksFromBlockHeight(startFrom, Integer.MAX_VALUE);
+            // We use a thread here to write all past blocks to avoid that the main thread gets blocked for too long.
+            // Blocks are immutable so threading cannot cause any issue here.
+            new Thread(() -> {
+                Thread.currentThread().setName("Write-blocks-to-json");
+                blocks.forEach(e -> processBlock(e, true));
+                log.info("Batch processing {} blocks from block {} on took {}",
+                        blocks.size(),
+                        startFrom,
+                        FormattingUtils.formatDurationAsWords(System.currentTimeMillis() - ts,
+                                true, true));
 
-        // We use a thread here to write all past blocks to avoid that the main thread gets blocked for too long.
-        new Thread(() -> {
-            Thread.currentThread().setName("Write all blocks to json");
-            blocks.forEach(e -> processBlock(e, true));
-            writeMutableData();
-        }).start();
+                UserThread.execute(() -> {
+                    // As its mutable data we do it on the UserThread
+                    writeMutableData();
+
+                    // Once done we have to repeat our call as it might be that during batch processing
+                    // we have received new blocks. As we request daoStateService data we also do it on the UserThread.
+                    onParseBlockChainComplete();
+                });
+            }).start();
+        }
     }
 
     private void writeMutableData() {
+        long ts = System.currentTimeMillis();
+        log.error("write writeMutableData {}", daoStateService.getChainHeight());
         spentInfoMapFileManager.writeToDisc(Utilities.objectToJson(daoStateService.getSpentInfoMap()), "spentInfoMap");
         unspentTxOutputMapFileManager.writeToDisc(Utilities.objectToJson(daoStateService.getUnspentTxOutputMap()), "unspentTxOutputMap");
         issuanceMapFileManager.writeToDisc(Utilities.objectToJson(daoStateService.getIssuanceMap()), "issuanceMap");
         confiscatedLockupTxListFileManager.writeToDisc(Utilities.objectToJson(daoStateService.getConfiscatedLockupTxList()), "confiscatedLockupTxList");
+        log.info("Write mutableData took {}", System.currentTimeMillis() - ts);
     }
 
     private int getLastPersistedBlock() {
