@@ -21,6 +21,7 @@ import bisq.core.offer.Offer;
 import bisq.core.offer.takeoffer.TakeOfferModel;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
+import bisq.core.trade.protocol.BuyerProtocol;
 import bisq.core.user.User;
 
 import javax.inject.Inject;
@@ -79,6 +80,21 @@ class CoreTradesService {
         );
     }
 
+    void confirmPaymentStarted(String tradeId) {
+        var trade = getTradeWithId(tradeId);
+        if (isFollowingBuyerProtocol(trade)) {
+            var tradeProtocol = tradeManager.getTradeProtocol(trade);
+            ((BuyerProtocol) tradeProtocol).onPaymentStarted(
+                    () -> {
+                    },
+                    errorMessage -> {
+                        throw new IllegalStateException(errorMessage);
+                    }
+            );
+        } else {
+            throw new IllegalStateException("you are the seller and not sending payment");
+        }
+    }
 
     Trade getTrade(String tradeId) {
         return getTradeWithId(tradeId);
@@ -87,5 +103,9 @@ class CoreTradesService {
     private Trade getTradeWithId(String tradeId) {
         return tradeManager.getTradeById(tradeId).orElseThrow(() ->
                 new IllegalArgumentException(format("trade with id '%s' not found", tradeId)));
+    }
+
+    private boolean isFollowingBuyerProtocol(Trade trade) {
+        return tradeManager.getTradeProtocol(trade) instanceof BuyerProtocol;
     }
 }

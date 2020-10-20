@@ -181,6 +181,10 @@ public class CoreApi {
                 resultHandler);
     }
 
+    public void confirmPaymentStarted(String tradeId) {
+        coreTradesService.confirmPaymentStarted(tradeId);
+    }
+
     public Trade getTrade(String tradeId) {
         return coreTradesService.getTrade(tradeId);
     }

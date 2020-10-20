@@ -95,7 +95,6 @@ public class TakeBuyBTCOfferTest extends AbstractTradeTest {
         }
     }
 
-    @Disabled
     @Test
     @Order(2)
     public void testAlicesConfirmPaymentStarted() {
