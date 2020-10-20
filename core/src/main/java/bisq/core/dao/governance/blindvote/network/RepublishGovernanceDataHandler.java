@@ -170,7 +170,7 @@ public final class RepublishGovernanceDataHandler {
     private void connectToAnyFullNode() {
         Capabilities required = new Capabilities(Capability.DAO_FULL_NODE);
 
-        List<Peer> list = peerManager.getLivePeers(null).stream()
+        List<Peer> list = peerManager.getLivePeers().stream()
                 .filter(peer -> peer.getCapabilities().containsAll(required))
                 .collect(Collectors.toList());
 

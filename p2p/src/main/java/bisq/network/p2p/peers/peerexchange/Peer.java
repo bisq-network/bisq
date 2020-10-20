@@ -27,7 +27,6 @@ import bisq.common.proto.persistable.PersistablePayload;
 
 import java.util.Date;
 
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -35,17 +34,15 @@ import lombok.extern.slf4j.Slf4j;
 import javax.annotation.Nullable;
 
 @Getter
-@EqualsAndHashCode(exclude = {"date"}) // failedConnectionAttempts is transient and therefore excluded anyway
 @Slf4j
 public final class Peer implements HasCapabilities, NetworkPayload, PersistablePayload, SupportedCapabilitiesListener {
     private static final int MAX_FAILED_CONNECTION_ATTEMPTS = 5;
 
     private final NodeAddress nodeAddress;
     private final long date;
-    // Added in v. 0.7.1
-
     @Setter
     transient private int failedConnectionAttempts = 0;
+    @Setter
     private Capabilities capabilities = new Capabilities();
 
     public Peer(NodeAddress nodeAddress, @Nullable Capabilities supportedCapabilities) {
@@ -83,8 +80,12 @@ public final class Peer implements HasCapabilities, NetworkPayload, PersistableP
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void increaseFailedConnectionAttempts() {
+    public void onDisconnect() {
         this.failedConnectionAttempts++;
+    }
+
+    public void onConnection() {
+        this.failedConnectionAttempts--;
     }
 
     public boolean tooManyFailedConnectionAttempts() {
@@ -95,6 +96,10 @@ public final class Peer implements HasCapabilities, NetworkPayload, PersistableP
         return new Date(date);
     }
 
+    public long getDateAsLong() {
+        return date;
+    }
+
     @Override
     public void onChanged(Capabilities supportedCapabilities) {
         if (!supportedCapabilities.isEmpty()) {
@@ -102,14 +107,29 @@ public final class Peer implements HasCapabilities, NetworkPayload, PersistableP
         }
     }
 
+    // We use only node address for equals and hashcode
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Peer)) return false;
+
+        Peer peer = (Peer) o;
+
+        return nodeAddress != null ? nodeAddress.equals(peer.nodeAddress) : peer.nodeAddress == null;
+    }
+
+    @Override
+    public int hashCode() {
+        return nodeAddress != null ? nodeAddress.hashCode() : 0;
+    }
 
     @Override
     public String toString() {
         return "Peer{" +
                 "\n     nodeAddress=" + nodeAddress +
-                ",\n     supportedCapabilities=" + capabilities +
-                ",\n     failedConnectionAttempts=" + failedConnectionAttempts +
                 ",\n     date=" + date +
+                ",\n     failedConnectionAttempts=" + failedConnectionAttempts +
+                ",\n     capabilities=" + capabilities +
                 "\n}";
     }
 }

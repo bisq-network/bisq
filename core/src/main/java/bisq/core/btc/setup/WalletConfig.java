@@ -22,11 +22,13 @@ import bisq.core.btc.nodes.ProxySocketFactory;
 import bisq.core.btc.wallet.BisqRiskAnalysis;
 
 import bisq.common.config.Config;
+import bisq.common.file.FileUtil;
 
 import com.google.common.io.Closeables;
 import com.google.common.util.concurrent.*;
 import org.bitcoinj.core.listeners.*;
 import org.bitcoinj.core.*;
+import org.bitcoinj.crypto.KeyCrypter;
 import org.bitcoinj.net.BlockingClientManager;
 import org.bitcoinj.net.discovery.*;
 import org.bitcoinj.script.Script;
@@ -34,6 +36,11 @@ import org.bitcoinj.store.*;
 import org.bitcoinj.wallet.*;
 
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
+
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+
+import org.bouncycastle.crypto.params.KeyParameter;
 
 import org.slf4j.*;
 
@@ -103,6 +110,8 @@ public class WalletConfig extends AbstractIdleService {
     @Getter
     @Setter
     private int minBroadcastConnections;
+    @Getter
+    private BooleanProperty migratedWalletToSegwit = new SimpleBooleanProperty(false);
 
     /**
      * Creates a new WalletConfig, with a newly created {@link Context}. Files will be stored in the given directory.
@@ -293,23 +302,36 @@ public class WalletConfig extends AbstractIdleService {
             vPeerGroup.addWallet(vBsqWallet);
             onSetupCompleted();
 
-            Futures.addCallback((ListenableFuture<?>) vPeerGroup.startAsync(), new FutureCallback<Object>() {
-                @Override
-                public void onSuccess(@Nullable Object result) {
-                    //completeExtensionInitiations(vPeerGroup);
-                    DownloadProgressTracker tracker = downloadListener == null ? new DownloadProgressTracker() : downloadListener;
-                    vPeerGroup.startBlockChainDownload(tracker);
-                }
+            if (migratedWalletToSegwit.get()) {
+                startPeerGroup();
+            } else {
+                migratedWalletToSegwit.addListener((observable, oldValue, newValue) -> {
+                    if (newValue) {
+                        startPeerGroup();
+                    }
+                });
+            }
 
-                @Override
-                public void onFailure(Throwable t) {
-                    throw new RuntimeException(t);
-
-                }
-            }, MoreExecutors.directExecutor());
         } catch (BlockStoreException e) {
             throw new IOException(e);
         }
+    }
+
+    private void startPeerGroup() {
+        Futures.addCallback((ListenableFuture<?>) vPeerGroup.startAsync(), new FutureCallback<Object>() {
+            @Override
+            public void onSuccess(@Nullable Object result) {
+                //completeExtensionInitiations(vPeerGroup);
+                DownloadProgressTracker tracker = downloadListener == null ? new DownloadProgressTracker() : downloadListener;
+                vPeerGroup.startBlockChainDownload(tracker);
+            }
+
+            @Override
+            public void onFailure(Throwable t) {
+                throw new RuntimeException(t);
+
+            }
+        }, MoreExecutors.directExecutor());
     }
 
     private Wallet createOrLoadWallet(boolean shouldReplayWallet, File walletFile, boolean isBsqWallet) throws Exception {
@@ -321,7 +343,7 @@ public class WalletConfig extends AbstractIdleService {
             wallet = loadWallet(shouldReplayWallet, walletFile, isBsqWallet);
         } else {
             wallet = createWallet(isBsqWallet);
-            wallet.freshReceiveKey();
+            //wallet.freshReceiveKey();
 
             // Currently the only way we can be sure that an extension is aware of its containing wallet is by
             // deserializing the extension (see WalletExtension#deserializeWalletExtension(Wallet, byte[]))
@@ -341,8 +363,7 @@ public class WalletConfig extends AbstractIdleService {
 
     private Wallet loadWallet(boolean shouldReplayWallet, File walletFile, boolean isBsqWallet) throws Exception {
         Wallet wallet;
-        FileInputStream walletStream = new FileInputStream(walletFile);
-        try {
+        try (FileInputStream walletStream = new FileInputStream(walletFile)) {
             WalletExtension[] extArray = new WalletExtension[]{};
             Protos.Wallet proto = WalletProtobufSerializer.parseToProto(walletStream);
             final WalletProtobufSerializer serializer;
@@ -352,16 +373,15 @@ public class WalletConfig extends AbstractIdleService {
             wallet = serializer.readWallet(params, extArray, proto);
             if (shouldReplayWallet)
                 wallet.reset();
-        } finally {
-            walletStream.close();
+            if (!isBsqWallet) {
+                maybeAddSegwitKeychain(wallet, null);
+            }
         }
         return wallet;
     }
 
     protected Wallet createWallet(boolean isBsqWallet) {
-        // Change preferredOutputScriptType of btc wallet to P2WPKH to start using segwit
-        // Script.ScriptType preferredOutputScriptType = isBsqWallet ? Script.ScriptType.P2PKH : Script.ScriptType.P2WPKH;
-        Script.ScriptType preferredOutputScriptType = Script.ScriptType.P2PKH;
+        Script.ScriptType preferredOutputScriptType = isBsqWallet ? Script.ScriptType.P2PKH : Script.ScriptType.P2WPKH;
         KeyChainGroupStructure structure = new BisqKeyChainGroupStructure(isBsqWallet);
         KeyChainGroup.Builder kcgBuilder = KeyChainGroup.builder(params, structure);
         if (restoreFromSeed != null) {
@@ -448,9 +468,13 @@ public class WalletConfig extends AbstractIdleService {
 
             // vPeerGroup.stop has no timeout and can take very long (10 sec. in my test). So we call it at the end.
             // We might get likely interrupted by the parent call timeout.
-            vPeerGroup.stop();
+            if (vPeerGroup.isRunning()) {
+                vPeerGroup.stop();
+                log.info("PeerGroup stopped");
+            } else {
+                log.info("PeerGroup not stopped because it was not running");
+            }
             vPeerGroup = null;
-            log.info("PeerGroup stopped");
         } catch (BlockStoreException e) {
             throw new IOException(e);
         }
@@ -487,5 +511,39 @@ public class WalletConfig extends AbstractIdleService {
 
     public File directory() {
         return directory;
+    }
+
+    public void maybeAddSegwitKeychain(Wallet wallet, KeyParameter aesKey) {
+        if (BisqKeyChainGroupStructure.BIP44_BTC_NON_SEGWIT_ACCOUNT_PATH.equals(wallet.getActiveKeyChain().getAccountPath())) {
+            if (wallet.isEncrypted() && aesKey == null) {
+                // wait for the aesKey to be set and this method to be invoked again.
+                return;
+            }
+            // Do a backup of the wallet
+            File backup = new File(directory, WalletsSetup.PRE_SEGWIT_WALLET_BACKUP);
+            try {
+                FileUtil.copyFile(new File(directory, "bisq_BTC.wallet"), backup);
+            } catch (IOException e) {
+                log.error(e.toString(), e);
+            }
+
+            // Btc wallet does not have a native segwit keychain, we should add one.
+            DeterministicSeed seed = wallet.getKeyChainSeed();
+            if (aesKey != null) {
+                // If wallet is encrypted, decrypt the seed.
+                KeyCrypter keyCrypter = wallet.getKeyCrypter();
+                seed = seed.decrypt(keyCrypter, DeterministicKeyChain.DEFAULT_PASSPHRASE_FOR_MNEMONIC, aesKey);
+            }
+            DeterministicKeyChain nativeSegwitKeyChain = DeterministicKeyChain.builder().seed(seed)
+                    .outputScriptType(Script.ScriptType.P2WPKH)
+                    .accountPath(new BisqKeyChainGroupStructure(false).accountPathFor(Script.ScriptType.P2WPKH)).build();
+            if (aesKey != null) {
+                // If wallet is encrypted, encrypt the new keychain.
+                KeyCrypter keyCrypter = wallet.getKeyCrypter();
+                nativeSegwitKeyChain = nativeSegwitKeyChain.toEncrypted(keyCrypter, aesKey);
+            }
+            wallet.addAndActivateHDChain(nativeSegwitKeyChain);
+        }
+        migratedWalletToSegwit.set(true);
     }
 }

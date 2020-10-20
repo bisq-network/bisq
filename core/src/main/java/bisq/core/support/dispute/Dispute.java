@@ -103,7 +103,7 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
     @Nullable
     private String delayedPayoutTxId;
 
-    // Added at v1.3.9
+    // Added at v1.4.0
     @Setter
     @Nullable
     private String donationAddressOfDelayedPayoutTx;

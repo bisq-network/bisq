@@ -43,7 +43,7 @@ import bisq.core.payment.PaymentAccount;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.handlers.TransactionResultHandler;
-import bisq.core.trade.statistics.TradeStatistics2;
+import bisq.core.trade.statistics.TradeStatistics3;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
@@ -344,9 +344,9 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
             var blocksRange = Restrictions.getLockTime(paymentAccount.getPaymentMethod().isAsset());
             var startDate = new Date(System.currentTimeMillis() - blocksRange * 10 * 60000);
             var sortedRangeData = tradeStatisticsManager.getObservableTradeStatisticsSet().stream()
-                    .filter(e -> e.getCurrencyCode().equals(getTradeCurrency().getCode()))
-                    .filter(e -> e.getTradeDate().compareTo(startDate) >= 0)
-                    .sorted(Comparator.comparing(TradeStatistics2::getTradeDate))
+                    .filter(e -> e.getCurrency().equals(getTradeCurrency().getCode()))
+                    .filter(e -> e.getDate().compareTo(startDate) >= 0)
+                    .sorted(Comparator.comparing(TradeStatistics3::getDate))
                     .collect(Collectors.toList());
             var movingAverage = new MathUtils.MovingAverage(10, 0.2);
             double[] extremes = {Double.MAX_VALUE, Double.MIN_VALUE};

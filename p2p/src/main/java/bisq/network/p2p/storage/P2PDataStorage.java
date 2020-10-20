@@ -37,6 +37,7 @@ import bisq.network.p2p.storage.messages.RefreshOfferMessage;
 import bisq.network.p2p.storage.messages.RemoveDataMessage;
 import bisq.network.p2p.storage.messages.RemoveMailboxDataMessage;
 import bisq.network.p2p.storage.payload.CapabilityRequiringPayload;
+import bisq.network.p2p.storage.payload.DateSortedTruncatablePayload;
 import bisq.network.p2p.storage.payload.DateTolerantPayload;
 import bisq.network.p2p.storage.payload.MailboxStoragePayload;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
@@ -96,7 +97,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -294,7 +294,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         return map;
     }
 
-    private Map<ByteArray, PersistableNetworkPayload> getMapForDataResponse(String requestersVersion) {
+    public Map<ByteArray, PersistableNetworkPayload> getMapForDataResponse(String requestersVersion) {
         Map<ByteArray, PersistableNetworkPayload> map = new HashMap<>();
         appendOnlyDataStoreService.getServices()
                 .forEach(service -> {
@@ -317,29 +317,57 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
      * by a given set of keys and peer capabilities.
      */
     static private <T extends NetworkPayload> Set<T> filterKnownHashes(
-            Map<ByteArray, T> mapToFilter,
-            Function<T, ? extends NetworkPayload> objToPayloadFunction,
+            Map<ByteArray, T> toFilter,
+            Function<T, ? extends NetworkPayload> objToPayload,
             Set<ByteArray> knownHashes,
             Capabilities peerCapabilities,
             int maxEntries,
-            AtomicBoolean wasTruncated) {
+            AtomicBoolean outTruncated) {
 
-        AtomicInteger limit = new AtomicInteger(maxEntries);
+        log.info("Num knownHashes {}", knownHashes.size());
 
-        Set<T> filteredResults = mapToFilter.entrySet().stream()
-                .filter(e -> !knownHashes.contains(e.getKey()))
-                .filter(e -> limit.decrementAndGet() >= 0)
+        Set<Map.Entry<ByteArray, T>> entries = toFilter.entrySet();
+        List<T> dateSortedTruncatablePayloads = entries.stream()
+                .filter(entry -> entry.getValue() instanceof DateSortedTruncatablePayload)
+                .filter(entry -> !knownHashes.contains(entry.getKey()))
                 .map(Map.Entry::getValue)
-                .filter(networkPayload -> shouldTransmitPayloadToPeer(peerCapabilities,
-                        objToPayloadFunction.apply(networkPayload)))
-                .collect(Collectors.toSet());
-
-        if (limit.get() < 0) {
-            wasTruncated.set(true);
+                .filter(payload -> shouldTransmitPayloadToPeer(peerCapabilities, objToPayload.apply(payload)))
+                .sorted(Comparator.comparing(payload -> ((DateSortedTruncatablePayload) payload).getDate()))
+                .collect(Collectors.toList());
+        log.info("Num filtered dateSortedTruncatablePayloads {}", dateSortedTruncatablePayloads.size());
+        if (!dateSortedTruncatablePayloads.isEmpty()) {
+            int maxItems = ((DateSortedTruncatablePayload) dateSortedTruncatablePayloads.get(0)).maxItems();
+            if (dateSortedTruncatablePayloads.size() > maxItems) {
+                int fromIndex = dateSortedTruncatablePayloads.size() - maxItems;
+                int toIndex = dateSortedTruncatablePayloads.size();
+                dateSortedTruncatablePayloads = dateSortedTruncatablePayloads.subList(fromIndex, toIndex);
+                log.info("Num truncated dateSortedTruncatablePayloads {}", dateSortedTruncatablePayloads.size());
+            }
         }
 
-        return filteredResults;
+        List<T> filteredResults = entries.stream()
+                .filter(entry -> !(entry.getValue() instanceof DateSortedTruncatablePayload))
+                .filter(entry -> !knownHashes.contains(entry.getKey()))
+                .map(Map.Entry::getValue)
+                .filter(payload -> shouldTransmitPayloadToPeer(peerCapabilities, objToPayload.apply(payload)))
+                .collect(Collectors.toList());
+        log.info("Num filtered non-dateSortedTruncatablePayloads {}", filteredResults.size());
+
+        // The non-dateSortedTruncatablePayloads have higher prio, so we added dateSortedTruncatablePayloads
+        // after those so in case we need to truncate we first truncate the dateSortedTruncatablePayloads.
+        filteredResults.addAll(dateSortedTruncatablePayloads);
+
+        if (filteredResults.size() > maxEntries) {
+            filteredResults = filteredResults.subList(0, maxEntries);
+            outTruncated.set(true);
+            log.info("Num truncated filteredResults {}", filteredResults.size());
+        } else {
+            log.info("Num filteredResults {}", filteredResults.size());
+        }
+
+        return new HashSet<>(filteredResults);
     }
+
 
     private Set<byte[]> getKeysAsByteSet(Map<ByteArray, ? extends PersistablePayload> map) {
         return map.keySet().stream()
@@ -637,12 +665,8 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         // To avoid that expired data get stored and broadcast we check early for expire date.
         if (protectedStorageEntry.isExpired(clock)) {
             String peer = sender != null ? sender.getFullAddress() : "sender is null";
-            log.warn("We received an expired protectedStorageEntry from peer {}. ProtectedStoragePayload={}",
+            log.debug("We received an expired protectedStorageEntry from peer {}. ProtectedStoragePayload={}",
                     peer, protectedStorageEntry.getProtectedStoragePayload().getClass().getSimpleName());
-            log.debug("Expired protectedStorageEntry from peer {}. getCreationTimeStamp={}, protectedStorageEntry={}",
-                    peer,
-                    new Date(protectedStorageEntry.getCreationTimeStamp()),
-                    protectedStorageEntry);
             return false;
         }
 

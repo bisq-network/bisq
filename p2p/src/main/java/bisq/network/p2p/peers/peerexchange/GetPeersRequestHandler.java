@@ -32,6 +32,7 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 
+import java.util.HashSet;
 import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
@@ -83,11 +84,11 @@ class GetPeersRequestHandler {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void handle(GetPeersRequest getPeersRequest, final Connection connection) {
+    public void handle(GetPeersRequest getPeersRequest, Connection connection) {
         checkArgument(connection.getPeersNodeAddressOptional().isPresent(),
                 "The peers address must have been already set at the moment");
         GetPeersResponse getPeersResponse = new GetPeersResponse(getPeersRequest.getNonce(),
-                peerManager.getLivePeers(connection.getPeersNodeAddressOptional().get()));
+                new HashSet<>(peerManager.getLivePeers(connection.getPeersNodeAddressOptional().get())));
 
         checkArgument(timeoutTimer == null, "onGetPeersRequest must not be called twice.");
         timeoutTimer = UserThread.runAfter(() -> {  // setup before sending to avoid race conditions
@@ -130,8 +131,9 @@ class GetPeersRequestHandler {
                 }
             }
         }, MoreExecutors.directExecutor());
-
-        peerManager.addToReportedPeers(getPeersRequest.getReportedPeers(), connection);
+        peerManager.addToReportedPeers(getPeersRequest.getReportedPeers(),
+                connection,
+                getPeersRequest.getSupportedCapabilities());
     }
 
 

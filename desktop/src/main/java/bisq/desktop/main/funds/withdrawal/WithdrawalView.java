@@ -366,17 +366,17 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                         double kb = txSize / 1000d;
 
                         String messageText = Res.get("shared.sendFundsDetailsWithFee",
-                            formatter.formatCoinWithCode(sendersAmount),
-                            withdrawFromTextField.getText(),
-                            withdrawToTextField.getText(),
-                            formatter.formatCoinWithCode(fee),
-                            feePerByte,
-                            kb,
-                            formatter.formatCoinWithCode(receiverAmount));
+                                formatter.formatCoinWithCode(sendersAmount),
+                                withdrawFromTextField.getText(),
+                                withdrawToTextField.getText(),
+                                formatter.formatCoinWithCode(fee),
+                                feePerByte,
+                                kb,
+                                formatter.formatCoinWithCode(receiverAmount));
                         if (dust.isPositive()) {
                             messageText = Res.get("shared.sendFundsDetailsDust",
-                                dust.value, dust.value > 1 ? "s" : "")
-                                + messageText;
+                                    dust.value, dust.value > 1 ? "s" : "")
+                                    + messageText;
                         }
 
                         new Popup().headLine(Res.get("funds.withdrawal.confirmWithdrawalRequest"))
@@ -386,7 +386,6 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                                     @Override
                                     public void onSuccess(@javax.annotation.Nullable Transaction transaction) {
                                         if (transaction != null) {
-                                            transaction.setMemo(withdrawMemoTextField.getText());
                                             log.debug("onWithdraw onSuccess tx ID:{}", transaction.getTxId().toString());
                                         } else {
                                             log.error("onWithdraw transaction is null");
@@ -498,7 +497,14 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
 
     private void sendFunds(Coin amount, Coin fee, KeyParameter aesKey, FutureCallback<Transaction> callback) {
         try {
-            btcWalletService.sendFundsForMultipleAddresses(fromAddresses, withdrawToTextField.getText(), amount, fee, null, aesKey, callback);
+            Transaction transaction = btcWalletService.sendFundsForMultipleAddresses(fromAddresses,
+                    withdrawToTextField.getText(),
+                    amount,
+                    fee,
+                    null,
+                    aesKey,
+                    callback);
+            transaction.setMemo(withdrawMemoTextField.getText());
             reset();
             updateList();
         } catch (AddressFormatException e) {
@@ -672,7 +678,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     // returns the 'dust amount' to indicate if any dust was detected.
     private Coin getDust(Transaction transaction) {
         Coin dust = Coin.ZERO;
-        for (TransactionOutput transactionOutput: transaction.getOutputs()) {
+        for (TransactionOutput transactionOutput : transaction.getOutputs()) {
             if (transactionOutput.getValue().isLessThan(Restrictions.getMinNonDustOutput())) {
                 dust = dust.add(transactionOutput.getValue());
                 log.info("dust TXO = {}", transactionOutput.toString());

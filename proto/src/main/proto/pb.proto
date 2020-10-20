@@ -78,6 +78,9 @@ message NetworkEnvelope {
 
         RefreshTradeStateRequest refresh_trade_state_request = 50 [deprecated = true];
         TraderSignedWitnessMessage trader_signed_witness_message = 51 [deprecated = true];
+
+        GetInventoryRequest get_inventory_request = 52;
+        GetInventoryResponse get_inventory_response = 53;
     }
 }
 
@@ -135,6 +138,16 @@ message Ping {
 
 message Pong {
     int32 request_nonce = 1;
+}
+
+// Inventory
+
+message GetInventoryRequest {
+    string version = 1;
+}
+
+message GetInventoryResponse {
+    map<string, uint32> num_payloads_map = 1;
 }
 
 // offer
@@ -510,9 +523,7 @@ message StoragePayload {
         Mediator mediator = 3;
         Filter filter = 4;
 
-        // not used anymore from v0.6 on. But leave it for receiving TradeStatistics objects from older
-        // versions and convert it to TradeStatistics2 objects.
-        TradeStatistics trade_statistics = 5 [deprecated = true];
+        // TradeStatistics trade_statistics = 5 [deprecated = true]; Removed in v.1.4.0
 
         MailboxStoragePayload mailbox_storage_payload = 6;
         OfferPayload offer_payload = 7;
@@ -524,10 +535,11 @@ message StoragePayload {
 message PersistableNetworkPayload {
     oneof message {
         AccountAgeWitness account_age_witness = 1;
-        TradeStatistics2 trade_statistics2 = 2;
+        TradeStatistics2 trade_statistics2 = 2 [deprecated = true];
         ProposalPayload proposal_payload = 3;
         BlindVotePayload blind_vote_payload = 4;
         SignedWitness signed_witness = 5;
+        TradeStatistics3 trade_statistics3 = 6;
     }
 }
 
@@ -650,44 +662,36 @@ message Filter {
     bool disable_auto_conf = 24;
 }
 
-// not used anymore from v0.6 on. But leave it for receiving TradeStatistics objects from older
-// versions and convert it to TradeStatistics2 objects.
-message TradeStatistics {
-    string base_currency = 1;
-    string counter_currency = 2;
-    OfferPayload.Direction direction = 3;
-    int64 trade_price = 4;
-    int64 trade_amount = 5;
-    int64 trade_date = 6;
-    string payment_method_id = 7;
-    int64 offer_date = 8;
-    bool offer_use_market_based_price = 9;
-    double offer_market_price_margin = 10;
-    int64 offer_amount = 11;
-    int64 offer_min_amount = 12;
-    string offer_id = 13;
-    string deposit_tx_id = 14;
-    bytes signature_pub_key_bytes = 15;
-    map<string, string> extra_data = 16;
+// Deprecated
+message TradeStatistics2 {
+    string base_currency = 1 [deprecated = true];
+    string counter_currency = 2 [deprecated = true];
+    OfferPayload.Direction direction = 3 [deprecated = true];
+    int64 trade_price = 4 [deprecated = true];
+    int64 trade_amount = 5 [deprecated = true];
+    int64 trade_date = 6 [deprecated = true];
+    string payment_method_id = 7 [deprecated = true];
+    int64 offer_date = 8 [deprecated = true];
+    bool offer_use_market_based_price = 9 [deprecated = true];
+    double offer_market_price_margin = 10 [deprecated = true];
+    int64 offer_amount = 11 [deprecated = true];
+    int64 offer_min_amount = 12 [deprecated = true];
+    string offer_id = 13 [deprecated = true];
+    string deposit_tx_id = 14 [deprecated = true];
+    bytes hash = 15 [deprecated = true];
+    map<string, string> extra_data = 16 [deprecated = true];
 }
 
-message TradeStatistics2 {
-    string base_currency = 1;
-    string counter_currency = 2;
-    OfferPayload.Direction direction = 3;
-    int64 trade_price = 4;
-    int64 trade_amount = 5;
-    int64 trade_date = 6;
-    string payment_method_id = 7;
-    int64 offer_date = 8;
-    bool offer_use_market_based_price = 9;
-    double offer_market_price_margin = 10;
-    int64 offer_amount = 11;
-    int64 offer_min_amount = 12;
-    string offer_id = 13;
-    string deposit_tx_id = 14;
-    bytes hash = 15;
-    map<string, string> extra_data = 16;
+message TradeStatistics3 {
+    string currency = 1;
+    int64 price = 2;
+    int64 amount = 3;
+    string payment_method = 4;
+    int64 date = 5;
+    string mediator = 6;
+    string refund_agent = 7;
+    bytes hash = 8;
+    map<string, string> extra_data = 9;
 }
 
 message MailboxStoragePayload {
@@ -1152,7 +1156,7 @@ message PersistableEnvelope {
         // BsqState bsq_state = 12; // not used but as other non-dao data have a higher index number we leave it to make clear that we cannot change following indexes
 
         AccountAgeWitnessStore account_age_witness_store = 13;
-        TradeStatistics2Store trade_statistics2_store = 14;
+        TradeStatistics2Store trade_statistics2_store = 14 [deprecated = true];
 
         // PersistableNetworkPayloadList persistable_network_payload_list = 15; // long deprecated & migration away from it is already done
 
@@ -1171,6 +1175,7 @@ message PersistableEnvelope {
         SignedWitnessStore signed_witness_store = 28;
         MediationDisputeList mediation_dispute_list = 29;
         RefundDisputeList refund_dispute_list = 30;
+        TradeStatistics3Store trade_statistics3_store = 31;
     }
 }
 
@@ -1211,8 +1216,13 @@ message SignedWitnessStore {
 }
 
 // We use a list not a hash map to save disc space. The hash can be calculated from the payload anyway
+// Deprecated
 message TradeStatistics2Store {
-    repeated TradeStatistics2 items = 1;
+    repeated TradeStatistics2 items = 1 [deprecated = true];
+}
+
+message TradeStatistics3Store {
+    repeated TradeStatistics3 items = 1;
 }
 
 message PeerList {
@@ -1239,6 +1249,7 @@ message AddressEntry {
     bytes pub_key = 9;
     bytes pub_key_hash = 10;
     int64 coin_locked_in_multi_sig = 11;
+    bool segwit = 12;
 }
 
 message NavigationPath {

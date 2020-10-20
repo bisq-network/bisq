@@ -60,7 +60,7 @@ public class MockNode {
         networkNode = mock(NetworkNode.class);
         File storageDir = Files.createTempDirectory("storage").toFile();
         PersistenceManager<PeerList> persistenceManager = new PersistenceManager<>(storageDir, mock(PersistenceProtoResolver.class), mock(CorruptedStorageFileHandler.class));
-        peerManager = new PeerManager(networkNode, mock(SeedNodeRepository.class), new ClockWatcher(), maxConnections, persistenceManager);
+        peerManager = new PeerManager(networkNode, mock(SeedNodeRepository.class), new ClockWatcher(), persistenceManager, maxConnections);
         connections = new HashSet<>();
         when(networkNode.getAllConnections()).thenReturn(connections);
     }

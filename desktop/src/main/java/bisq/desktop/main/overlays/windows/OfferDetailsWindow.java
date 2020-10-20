@@ -165,7 +165,8 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         if (isF2F)
             rows += 2;
 
-        if (offer.isXmr()) {
+        boolean showXmrAutoConf = offer.isXmr() && offer.getDirection() == OfferPayload.Direction.SELL;
+        if (showXmrAutoConf) {
             rows++;
         }
 
@@ -262,7 +263,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
             }
         }
 
-        if (offer.isXmr()) {
+        if (showXmrAutoConf) {
             String isAutoConf = offer.isXmrAutoConf() ?
                     Res.get("shared.yes") :
                     Res.get("shared.no");

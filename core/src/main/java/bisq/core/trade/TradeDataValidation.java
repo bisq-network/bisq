@@ -20,6 +20,7 @@ package bisq.core.trade;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.dao.DaoFacade;
 import bisq.core.offer.Offer;
+import bisq.core.support.SupportType;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.util.validation.RegexValidatorFactory;
 
@@ -136,14 +137,18 @@ public class TradeDataValidation {
             set.add(uid);
 
             String delayedPayoutTxId = dispute.getDelayedPayoutTxId();
-            disputesPerDelayedPayoutTxId.putIfAbsent(delayedPayoutTxId, new HashSet<>());
-            set = disputesPerDelayedPayoutTxId.get(delayedPayoutTxId);
-            set.add(uid);
+            if (delayedPayoutTxId != null) {
+                disputesPerDelayedPayoutTxId.putIfAbsent(delayedPayoutTxId, new HashSet<>());
+                set = disputesPerDelayedPayoutTxId.get(delayedPayoutTxId);
+                set.add(uid);
+            }
 
             String depositTxId = dispute.getDepositTxId();
-            disputesPerDepositTxId.putIfAbsent(depositTxId, new HashSet<>());
-            set = disputesPerDepositTxId.get(depositTxId);
-            set.add(uid);
+            if (depositTxId != null) {
+                disputesPerDepositTxId.putIfAbsent(depositTxId, new HashSet<>());
+                set = disputesPerDepositTxId.get(depositTxId);
+                set.add(uid);
+            }
         });
 
         return new Tuple3<>(disputesPerTradeId, disputesPerDelayedPayoutTxId, disputesPerDepositTxId);
@@ -161,8 +166,14 @@ public class TradeDataValidation {
             String disputeToTestDepositTxId = disputeToTest.getDepositTxId();
             String disputeToTestUid = disputeToTest.getUid();
 
-            checkNotNull(disputeToTestDelayedPayoutTxId,
-                    "delayedPayoutTxId must not be null. Trade ID: " + disputeToTestTradeId);
+            // For pre v1.4.0 we do not get the delayed payout tx sent in mediation cases but in refund agent case we do.
+            // So until all users have updated to 1.4.0 we only check in refund agent case. With 1.4.0 we send the
+            // delayed payout tx also in mediation cases and that if check can be removed.
+            if (disputeToTest.getSupportType() == SupportType.REFUND) {
+                checkNotNull(disputeToTestDelayedPayoutTxId,
+                        "Delayed payout transaction ID is null. " +
+                                "Trade ID: " + disputeToTestTradeId);
+            }
             checkNotNull(disputeToTestDepositTxId,
                     "depositTxId must not be null. Trade ID: " + disputeToTestTradeId);
             checkNotNull(disputeToTestUid,
@@ -171,15 +182,21 @@ public class TradeDataValidation {
             checkArgument(disputesPerTradeId.get(disputeToTestTradeId).size() <= 2,
                     "We found more then 2 disputes with the same trade ID. " +
                             "Trade ID: " + disputeToTestTradeId);
-            checkArgument(disputesPerDelayedPayoutTxId.get(disputeToTestDelayedPayoutTxId).size() <= 2,
-                    "We found more then 2 disputes with the same delayedPayoutTxId. " +
-                            "Trade ID: " + disputeToTestTradeId);
-            checkArgument(disputesPerDepositTxId.get(disputeToTestDepositTxId).size() <= 2,
-                    "We found more then 2 disputes with the same depositTxId. " +
-                            "Trade ID: " + disputeToTestTradeId);
+            if (!disputesPerDelayedPayoutTxId.isEmpty()) {
+                checkArgument(disputesPerDelayedPayoutTxId.get(disputeToTestDelayedPayoutTxId).size() <= 2,
+                        "We found more then 2 disputes with the same delayedPayoutTxId. " +
+                                "Trade ID: " + disputeToTestTradeId);
+            }
+            if (!disputesPerDepositTxId.isEmpty()) {
+                checkArgument(disputesPerDepositTxId.get(disputeToTestDepositTxId).size() <= 2,
+                        "We found more then 2 disputes with the same depositTxId. " +
+                                "Trade ID: " + disputeToTestTradeId);
+            }
 
-        } catch (IllegalArgumentException | NullPointerException e) {
+        } catch (IllegalArgumentException e) {
             throw new DisputeReplayException(disputeToTest, e.getMessage());
+        } catch (NullPointerException e) {
+            throw new DisputeReplayException(disputeToTest, e.toString());
         }
     }
 

@@ -58,7 +58,6 @@ public class TorStartupTime extends Metric {
             try {
                 torOverrides = new Torrc(overrides);
             } catch (IOException e) {
-                // TODO Auto-generated catch block
                 e.printStackTrace();
             }
         }
@@ -79,7 +78,6 @@ public class TorStartupTime extends Metric {
             // stop the timer and set its timestamp
             reporter.report(System.currentTimeMillis() - start, getName());
         } catch (TorCtlException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         } finally {
             // cleanup

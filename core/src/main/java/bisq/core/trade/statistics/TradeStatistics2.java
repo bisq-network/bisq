@@ -21,9 +21,12 @@ import bisq.core.monetary.Altcoin;
 import bisq.core.monetary.AltcoinExchangeRate;
 import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
+import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.offer.OfferUtil;
+import bisq.core.trade.Trade;
 
+import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.storage.payload.CapabilityRequiringPayload;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import bisq.network.p2p.storage.payload.ProcessOncePersistableNetworkPayload;
@@ -46,6 +49,7 @@ import org.bitcoinj.utils.Fiat;
 import com.google.common.base.Charsets;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -61,11 +65,41 @@ import static com.google.common.base.Preconditions.checkNotNull;
 /**
  * Serialized size is about 180-210 byte. Nov 2017 we have 5500 objects
  */
-
+@Deprecated
 @Slf4j
 @Value
 public final class TradeStatistics2 implements ProcessOncePersistableNetworkPayload, PersistableNetworkPayload,
         CapabilityRequiringPayload, Comparable<TradeStatistics2> {
+
+    public static TradeStatistics2 from(Trade trade,
+                                        @Nullable String referralId,
+                                        boolean isTorNetworkNode) {
+        Map<String, String> extraDataMap = new HashMap<>();
+        if (referralId != null) {
+            extraDataMap.put(OfferPayload.REFERRAL_ID, referralId);
+        }
+
+        NodeAddress mediatorNodeAddress = trade.getMediatorNodeAddress();
+        if (mediatorNodeAddress != null) {
+            // The first 4 chars are sufficient to identify a mediator.
+            // For testing with regtest/localhost we use the full address as its localhost and would result in
+            // same values for multiple mediators.
+            String address = isTorNetworkNode ?
+                    mediatorNodeAddress.getFullAddress().substring(0, 4) :
+                    mediatorNodeAddress.getFullAddress();
+            extraDataMap.put(TradeStatistics2.MEDIATOR_ADDRESS, address);
+        }
+
+        Offer offer = trade.getOffer();
+        checkNotNull(offer, "offer must not ne null");
+        checkNotNull(trade.getTradeAmount(), "trade.getTradeAmount() must not ne null");
+        return new TradeStatistics2(offer.getOfferPayload(),
+                trade.getTradePrice(),
+                trade.getTradeAmount(),
+                trade.getDate(),
+                trade.getDepositTxId(),
+                extraDataMap);
+    }
 
     @SuppressWarnings("SpellCheckingInspection")
     public static final String MEDIATOR_ADDRESS = "medAddr";
@@ -87,6 +121,7 @@ public final class TradeStatistics2 implements ProcessOncePersistableNetworkPayl
     // tradeDate is different for both peers so we ignore it for hash
     @JsonExclude
     private final long tradeDate;
+    @JsonExclude
     @Nullable
     private final String depositTxId;
 

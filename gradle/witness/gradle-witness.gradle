@@ -20,7 +20,7 @@ dependencyVerification {
         'com.fasterxml.jackson.core:jackson-core:39a74610521d7fb9eb3f437bb8739bbf47f6435be12d17bf954c731a0c6352bb',
         'com.fasterxml.jackson.core:jackson-databind:fcf3c2b0c332f5f54604f7e27fa7ee502378a2cc5df6a944bbfae391872c32ff',
         'com.github.JesusMcCloud:jtorctl:389d61b1b5a85eb2f23c582c3913ede49f80c9f2b553e4762382c836270e57e5',
-        'com.github.bisq-network:bitcoinj:85d609e9bbaa93de0a9ca1ab436f578c14f7cfa1876b50878046d9f624b48a6b',
+        'com.github.bisq-network:bitcoinj:b8b6e4b8010f2b8d4aac7141c0809dea6d102c3ff3c06ceba78c2626d531b0af',
         'com.github.cd2357.netlayer:tor.external:7c70846d36465279c2664f147a0f2d47202c5d67c6a2075225194779c3fbe122',
         'com.github.cd2357.netlayer:tor.native:84b449191d535a3c2187f7f7f3bb9bcb7d1097f07c6bf8c4f2b3331c20107d9a',
         'com.github.cd2357.netlayer:tor:ff92e4a7b59d1b480e0427fcfcf3f82a6fd69be68eec91c6360774d599e3c2e0',

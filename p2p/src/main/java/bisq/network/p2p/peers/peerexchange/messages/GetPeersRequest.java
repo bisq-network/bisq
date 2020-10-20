@@ -47,8 +47,14 @@ public final class GetPeersRequest extends NetworkEnvelope implements PeerExchan
     @Nullable
     private final Capabilities supportedCapabilities;
 
-    public GetPeersRequest(NodeAddress senderNodeAddress, int nonce, Set<Peer> reportedPeers) {
-        this(senderNodeAddress, nonce, reportedPeers, Capabilities.app, Version.getP2PMessageVersion());
+    public GetPeersRequest(NodeAddress senderNodeAddress,
+                           int nonce,
+                           Set<Peer> reportedPeers) {
+        this(senderNodeAddress,
+                nonce,
+                reportedPeers,
+                Capabilities.app,
+                Version.getP2PMessageVersion());
     }
 
 

@@ -40,6 +40,7 @@ import bisq.core.trade.protocol.ProcessModelServiceProvider;
 import bisq.core.trade.protocol.TakerProtocol;
 import bisq.core.trade.protocol.TradeProtocol;
 import bisq.core.trade.protocol.TradeProtocolFactory;
+import bisq.core.trade.statistics.ReferralIdService;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.User;
 import bisq.core.util.Validator;
@@ -49,6 +50,7 @@ import bisq.network.p2p.DecryptedDirectMessageListener;
 import bisq.network.p2p.DecryptedMessageWithPubKey;
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
+import bisq.network.p2p.network.TorNetworkNode;
 
 import bisq.common.ClockWatcher;
 import bisq.common.config.Config;
@@ -83,6 +85,7 @@ import org.bouncycastle.crypto.params.KeyParameter;
 
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -133,6 +136,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
     private ErrorMessageHandler takeOfferRequestErrorMessageHandler;
     @Getter
     private final LongProperty numPendingTrades = new SimpleLongProperty();
+    private final ReferralIdService referralIdService;
     private final DumpDelayedPayoutTx dumpDelayedPayoutTx;
     @Getter
     private final boolean allowFaultyDelayedTxs;
@@ -158,6 +162,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                         ProcessModelServiceProvider processModelServiceProvider,
                         ClockWatcher clockWatcher,
                         PersistenceManager<TradableList<Trade>> persistenceManager,
+                        ReferralIdService referralIdService,
                         DumpDelayedPayoutTx dumpDelayedPayoutTx,
                         @Named(Config.ALLOW_FAULTY_DELAYED_TXS) boolean allowFaultyDelayedTxs) {
         this.user = user;
@@ -174,6 +179,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         this.mediatorManager = mediatorManager;
         this.processModelServiceProvider = processModelServiceProvider;
         this.clockWatcher = clockWatcher;
+        this.referralIdService = referralIdService;
         this.dumpDelayedPayoutTx = dumpDelayedPayoutTx;
         this.allowFaultyDelayedTxs = allowFaultyDelayedTxs;
         this.persistenceManager = persistenceManager;
@@ -324,6 +330,13 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
     private void initPersistedTrades() {
         tradableList.forEach(this::initPersistedTrade);
         persistedTradesInitialized.set(true);
+
+        // We do not include failed trades as they should not be counted anyway in the trade statistics
+        Set<Trade> allTrades = new HashSet<>(closedTradableManager.getClosedTrades());
+        allTrades.addAll(tradableList.getList());
+        String referralId = referralIdService.getOptionalReferralId().orElse(null);
+        boolean isTorNetworkNode = p2PService.getNetworkNode() instanceof TorNetworkNode;
+        tradeStatisticsManager.maybeRepublishTradeStatistics(allTrades, referralId, isTorNetworkNode);
     }
 
     private void initPersistedTrade(Trade trade) {

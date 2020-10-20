@@ -163,7 +163,7 @@ message GetTradeStatisticsRequest {
 }
 
 message GetTradeStatisticsReply {
-    repeated TradeStatistics2 TradeStatistics = 1;
+    repeated TradeStatistics3 TradeStatistics = 1;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////

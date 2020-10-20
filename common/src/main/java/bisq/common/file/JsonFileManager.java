@@ -24,13 +24,26 @@ import java.nio.file.Paths;
 import java.io.File;
 import java.io.PrintWriter;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ThreadPoolExecutor;
 
 import lombok.extern.slf4j.Slf4j;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 @Slf4j
 public class JsonFileManager {
-    private final ThreadPoolExecutor executor = Utilities.getThreadPoolExecutor("JsonFileManagerExecutor", 5, 50, 60);
+    private final static List<JsonFileManager> INSTANCES = new ArrayList<>();
+
+    public static void shutDownAllInstances() {
+        INSTANCES.forEach(JsonFileManager::shutDown);
+    }
+
+
+    @Nullable
+    private ThreadPoolExecutor executor;
     private final File dir;
 
 
@@ -41,52 +54,62 @@ public class JsonFileManager {
     public JsonFileManager(File dir) {
         this.dir = dir;
 
-        if (!dir.exists())
-            if (!dir.mkdir())
-                log.warn("make dir failed");
+        if (!dir.exists() && !dir.mkdir()) {
+            log.warn("make dir failed");
+        }
 
-        Runtime.getRuntime().addShutdownHook(new Thread(JsonFileManager.this::shutDown,
-                "JsonFileManager.ShutDownHook"));
+        INSTANCES.add(this);
+    }
+
+    @NotNull
+    protected ThreadPoolExecutor getExecutor() {
+        if (executor == null) {
+            executor = Utilities.getThreadPoolExecutor("JsonFileManagerExecutor", 5, 50, 60);
+        }
+        return executor;
     }
 
     public void shutDown() {
-        executor.shutdown();
+        if (executor != null) {
+            executor.shutdown();
+        }
+    }
+
+    public void writeToDiscThreaded(String json, String fileName) {
+        getExecutor().execute(() -> writeToDisc(json, fileName));
     }
 
     public void writeToDisc(String json, String fileName) {
-        executor.execute(() -> {
-            File jsonFile = new File(Paths.get(dir.getAbsolutePath(), fileName + ".json").toString());
-            File tempFile = null;
-            PrintWriter printWriter = null;
-            try {
-                tempFile = File.createTempFile("temp", null, dir);
-                if (!executor.isShutdown() && !executor.isTerminated() && !executor.isTerminating())
-                    tempFile.deleteOnExit();
+        File jsonFile = new File(Paths.get(dir.getAbsolutePath(), fileName + ".json").toString());
+        File tempFile = null;
+        PrintWriter printWriter = null;
+        try {
+            tempFile = File.createTempFile("temp", null, dir);
+            tempFile.deleteOnExit();
 
-                printWriter = new PrintWriter(tempFile);
-                printWriter.println(json);
+            printWriter = new PrintWriter(tempFile);
+            printWriter.println(json);
 
-                // This close call and comment is borrowed from FileManager. Not 100% sure it that is really needed but
-                // seems that had fixed in the past and we got reported issues on Windows so that fix might be still
-                // required.
-                // Close resources before replacing file with temp file because otherwise it causes problems on windows
-                // when rename temp file
-                printWriter.close();
+            // This close call and comment is borrowed from FileManager. Not 100% sure it that is really needed but
+            // seems that had fixed in the past and we got reported issues on Windows so that fix might be still
+            // required.
+            // Close resources before replacing file with temp file because otherwise it causes problems on windows
+            // when rename temp file
+            printWriter.close();
 
-                FileUtil.renameFile(tempFile, jsonFile);
-            } catch (Throwable t) {
-                log.error("storageFile " + jsonFile.toString());
-                t.printStackTrace();
-            } finally {
-                if (tempFile != null && tempFile.exists()) {
-                    log.warn("Temp file still exists after failed save. We will delete it now. storageFile=" + fileName);
-                    if (!tempFile.delete())
-                        log.error("Cannot delete temp file.");
-                }
-
-                if (printWriter != null)
-                    printWriter.close();
+            FileUtil.renameFile(tempFile, jsonFile);
+        } catch (Throwable t) {
+            log.error("storageFile " + jsonFile.toString());
+            t.printStackTrace();
+        } finally {
+            if (tempFile != null && tempFile.exists()) {
+                log.warn("Temp file still exists after failed save. We will delete it now. storageFile=" + fileName);
+                if (!tempFile.delete())
+                    log.error("Cannot delete temp file.");
             }
-        });
+
+            if (printWriter != null)
+                printWriter.close();
+        }
     }
 }

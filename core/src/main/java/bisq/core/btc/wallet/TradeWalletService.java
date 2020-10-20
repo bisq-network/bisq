@@ -44,6 +44,7 @@ import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionInput;
 import org.bitcoinj.core.TransactionOutPoint;
 import org.bitcoinj.core.TransactionOutput;
+import org.bitcoinj.core.TransactionWitness;
 import org.bitcoinj.core.Utils;
 import org.bitcoinj.crypto.DeterministicKey;
 import org.bitcoinj.crypto.TransactionSignature;
@@ -153,7 +154,7 @@ public class TradeWalletService {
         Transaction tradingFeeTx = new Transaction(params);
         SendRequest sendRequest = null;
         try {
-            tradingFeeTx.addOutput(tradingFee, LegacyAddress.fromBase58(params, feeReceiverAddress));
+            tradingFeeTx.addOutput(tradingFee, Address.fromString(params, feeReceiverAddress));
             // the reserved amount we need for the trade we send to our trade reservedForTradeAddress
             tradingFeeTx.addOutput(reservedFundsForOffer, reservedForTradeAddress);
 
@@ -516,7 +517,7 @@ public class TradeWalletService {
         TransactionOutput takerTransactionOutput = null;
         if (takerChangeOutputValue > 0 && takerChangeAddressString != null) {
             takerTransactionOutput = new TransactionOutput(params, preparedDepositTx, Coin.valueOf(takerChangeOutputValue),
-                    LegacyAddress.fromBase58(params, takerChangeAddressString));
+                    Address.fromString(params, takerChangeAddressString));
         }
 
         if (makerIsBuyer) {
@@ -599,8 +600,13 @@ public class TradeWalletService {
             // Add buyer inputs and apply signature
             // We grab the signature from the makersDepositTx and apply it to the new tx input
             for (int i = 0; i < buyerInputs.size(); i++) {
-                TransactionInput transactionInput = makersDepositTx.getInputs().get(i);
-                depositTx.addInput(getTransactionInput(depositTx, getMakersScriptSigProgram(transactionInput), buyerInputs.get(i)));
+                TransactionInput makersInput = makersDepositTx.getInputs().get(i);
+                byte[] makersScriptSigProgram = getMakersScriptSigProgram(makersInput);
+                TransactionInput input = getTransactionInput(depositTx, makersScriptSigProgram, buyerInputs.get(i));
+                if (!TransactionWitness.EMPTY.equals(makersInput.getWitness())) {
+                    input.setWitness(makersInput.getWitness());
+                }
+                depositTx.addInput(input);
             }
 
             // Add seller inputs
@@ -662,9 +668,14 @@ public class TradeWalletService {
 
         // We add takers signature from his inputs and add it to out tx which was already signed earlier.
         for (int i = 0; i < numTakersInputs; i++) {
-            TransactionInput input = takersDepositTx.getInput(i);
-            Script scriptSig = input.getScriptSig();
-            myDepositTx.getInput(i).setScriptSig(scriptSig);
+            TransactionInput takersInput = takersDepositTx.getInput(i);
+            Script takersScriptSig = takersInput.getScriptSig();
+            TransactionInput txInput = myDepositTx.getInput(i);
+            txInput.setScriptSig(takersScriptSig);
+            TransactionWitness witness = takersInput.getWitness();
+            if (!TransactionWitness.EMPTY.equals(witness)) {
+                txInput.setWitness(witness);
+            }
         }
 
         WalletService.printTx("sellerAsMakerFinalizesDepositTx", myDepositTx);
@@ -686,7 +697,7 @@ public class TradeWalletService {
         delayedPayoutTx.addInput(p2SHMultiSigOutput);
         applyLockTime(lockTime, delayedPayoutTx);
         Coin outputAmount = p2SHMultiSigOutput.getValue().subtract(minerFee);
-        delayedPayoutTx.addOutput(outputAmount, LegacyAddress.fromBase58(params, donationAddressString));
+        delayedPayoutTx.addOutput(outputAmount, Address.fromString(params, donationAddressString));
         WalletService.printTx("Unsigned delayedPayoutTx ToDonationAddress", delayedPayoutTx);
         WalletService.verifyTransaction(delayedPayoutTx);
         return delayedPayoutTx;
@@ -938,10 +949,10 @@ public class TradeWalletService {
         Transaction payoutTx = new Transaction(params);
         payoutTx.addInput(p2SHMultiSigOutput);
         if (buyerPayoutAmount.isPositive()) {
-            payoutTx.addOutput(buyerPayoutAmount, LegacyAddress.fromBase58(params, buyerAddressString));
+            payoutTx.addOutput(buyerPayoutAmount, Address.fromString(params, buyerAddressString));
         }
         if (sellerPayoutAmount.isPositive()) {
-            payoutTx.addOutput(sellerPayoutAmount, LegacyAddress.fromBase58(params, sellerAddressString));
+            payoutTx.addOutput(sellerPayoutAmount, Address.fromString(params, sellerAddressString));
         }
 
         // take care of sorting!
@@ -1001,10 +1012,10 @@ public class TradeWalletService {
         payoutTx.addInput(new TransactionInput(params, depositTx, p2SHMultiSigOutputScript.getProgram(), new TransactionOutPoint(params, 0, spendTxHash), msOutput));
 
         if (buyerPayoutAmount.isPositive()) {
-            payoutTx.addOutput(buyerPayoutAmount, LegacyAddress.fromBase58(params, buyerAddressString));
+            payoutTx.addOutput(buyerPayoutAmount, Address.fromString(params, buyerAddressString));
         }
         if (sellerPayoutAmount.isPositive()) {
-            payoutTx.addOutput(sellerPayoutAmount, LegacyAddress.fromBase58(params, sellerAddressString));
+            payoutTx.addOutput(sellerPayoutAmount, Address.fromString(params, sellerAddressString));
         }
 
         // take care of sorting!
@@ -1082,7 +1093,7 @@ public class TradeWalletService {
         checkNotNull(input.getValue(), "input.getValue() must not be null");
 
         return new RawTransactionInput(input.getOutpoint().getIndex(),
-                input.getConnectedOutput().getParentTransaction().bitcoinSerialize(),
+                input.getConnectedOutput().getParentTransaction().bitcoinSerialize(false),
                 input.getValue().value);
     }
 
@@ -1146,10 +1157,10 @@ public class TradeWalletService {
         Transaction transaction = new Transaction(params);
         transaction.addInput(p2SHMultiSigOutput);
         if (buyerPayoutAmount.isPositive()) {
-            transaction.addOutput(buyerPayoutAmount, LegacyAddress.fromBase58(params, buyerAddressString));
+            transaction.addOutput(buyerPayoutAmount, Address.fromString(params, buyerAddressString));
         }
         if (sellerPayoutAmount.isPositive()) {
-            transaction.addOutput(sellerPayoutAmount, LegacyAddress.fromBase58(params, sellerAddressString));
+            transaction.addOutput(sellerPayoutAmount, Address.fromString(params, sellerAddressString));
         }
         checkArgument(transaction.getOutputs().size() >= 1, "We need at least one output.");
         return transaction;
@@ -1165,13 +1176,27 @@ public class TradeWalletService {
         if (sigKey.isEncrypted()) {
             checkNotNull(aesKey);
         }
-        Sha256Hash hash = transaction.hashForSignature(inputIndex, scriptPubKey, Transaction.SigHash.ALL, false);
-        ECKey.ECDSASignature signature = sigKey.sign(hash, aesKey);
-        TransactionSignature txSig = new TransactionSignature(signature, Transaction.SigHash.ALL, false);
-        if (ScriptPattern.isP2PK(scriptPubKey)) {
-            input.setScriptSig(ScriptBuilder.createInputScript(txSig));
-        } else if (ScriptPattern.isP2PKH(scriptPubKey)) {
-            input.setScriptSig(ScriptBuilder.createInputScript(txSig, sigKey));
+
+        if (ScriptPattern.isP2PK(scriptPubKey) || ScriptPattern.isP2PKH(scriptPubKey)) {
+            Sha256Hash hash = transaction.hashForSignature(inputIndex, scriptPubKey, Transaction.SigHash.ALL, false);
+            ECKey.ECDSASignature signature = sigKey.sign(hash, aesKey);
+            TransactionSignature txSig = new TransactionSignature(signature, Transaction.SigHash.ALL, false);
+            if (ScriptPattern.isP2PK(scriptPubKey)) {
+                input.setScriptSig(ScriptBuilder.createInputScript(txSig));
+            } else if (ScriptPattern.isP2PKH(scriptPubKey)) {
+                input.setScriptSig(ScriptBuilder.createInputScript(txSig, sigKey));
+            }
+        } else if (ScriptPattern.isP2WPKH(scriptPubKey)) {
+            // TODO: Consider using this alternative way to build the scriptCode (taken from bitcoinj master)
+            // Script scriptCode = ScriptBuilder.createP2PKHOutputScript(sigKey)
+            Script scriptCode = new ScriptBuilder().data(
+                    ScriptBuilder.createOutputScript(LegacyAddress.fromKey(transaction.getParams(), sigKey)).getProgram())
+                    .build();
+            Coin value = input.getValue();
+            TransactionSignature txSig = transaction.calculateWitnessSignature(inputIndex, sigKey, scriptCode, value,
+                    Transaction.SigHash.ALL, false);
+            input.setScriptSig(ScriptBuilder.createEmpty());
+            input.setWitness(TransactionWitness.redeemP2WPKH(txSig, sigKey));
         } else {
             throw new SigningException("Don't know how to sign for this kind of scriptPubKey: " + scriptPubKey);
         }

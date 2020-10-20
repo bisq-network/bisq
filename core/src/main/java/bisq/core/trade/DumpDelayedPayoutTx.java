@@ -58,7 +58,7 @@ public class DumpDelayedPayoutTx {
                 .map(trade -> new DelayedPayoutHash(trade.getId(),
                         Utilities.bytesAsHexString(((Trade) trade).getDelayedPayoutTxBytes())))
                 .collect(Collectors.toList());
-        jsonFileManager.writeToDisc(Utilities.objectToJson(delayedPayoutHashes), fileName);
+        jsonFileManager.writeToDiscThreaded(Utilities.objectToJson(delayedPayoutHashes), fileName);
     }
 
 }

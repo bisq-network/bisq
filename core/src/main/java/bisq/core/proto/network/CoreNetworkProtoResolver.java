@@ -59,12 +59,13 @@ import bisq.core.trade.messages.PayoutTxPublishedMessage;
 import bisq.core.trade.messages.PeerPublishedDelayedPayoutTxMessage;
 import bisq.core.trade.messages.RefreshTradeStateRequest;
 import bisq.core.trade.messages.TraderSignedWitnessMessage;
-import bisq.core.trade.statistics.TradeStatistics;
 
 import bisq.network.p2p.AckMessage;
 import bisq.network.p2p.BundleOfEnvelopes;
 import bisq.network.p2p.CloseConnectionMessage;
 import bisq.network.p2p.PrefixedSealedAndSignedMessage;
+import bisq.network.p2p.inventory.messages.GetInventoryRequest;
+import bisq.network.p2p.inventory.messages.GetInventoryResponse;
 import bisq.network.p2p.peers.getdata.messages.GetDataResponse;
 import bisq.network.p2p.peers.getdata.messages.GetUpdatedDataRequest;
 import bisq.network.p2p.peers.getdata.messages.PreliminaryGetDataRequest;
@@ -225,6 +226,11 @@ public class CoreNetworkProtoResolver extends CoreProtoResolver implements Netwo
                 case BUNDLE_OF_ENVELOPES:
                     return BundleOfEnvelopes.fromProto(proto.getBundleOfEnvelopes(), this, messageVersion);
 
+                case GET_INVENTORY_REQUEST:
+                    return GetInventoryRequest.fromProto(proto.getGetInventoryRequest(), messageVersion);
+                case GET_INVENTORY_RESPONSE:
+                    return GetInventoryResponse.fromProto(proto.getGetInventoryResponse(), messageVersion);
+
                 default:
                     throw new ProtobufferException("Unknown proto message case (PB.NetworkEnvelope). messageCase=" +
                             proto.getMessageCase() + "; proto raw data=" + proto.toString());
@@ -265,9 +271,6 @@ public class CoreNetworkProtoResolver extends CoreProtoResolver implements Netwo
                     return RefundAgent.fromProto(proto.getRefundAgent());
                 case FILTER:
                     return Filter.fromProto(proto.getFilter());
-                case TRADE_STATISTICS:
-                    // Still used to convert TradeStatistics data from pre v0.6 versions
-                    return TradeStatistics.fromProto(proto.getTradeStatistics());
                 case MAILBOX_STORAGE_PAYLOAD:
                     return MailboxStoragePayload.fromProto(proto.getMailboxStoragePayload());
                 case OFFER_PAYLOAD:

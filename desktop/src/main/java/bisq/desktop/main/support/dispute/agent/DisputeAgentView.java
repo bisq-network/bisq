@@ -62,6 +62,8 @@ import javafx.collections.ListChangeListener;
 
 import java.util.List;
 
+import org.jetbrains.annotations.NotNull;
+
 import static bisq.core.trade.TradeDataValidation.ValidationException;
 import static bisq.desktop.util.FormBuilder.getIconForLabel;
 
@@ -134,19 +136,36 @@ public abstract class DisputeAgentView extends DisputeView implements MultipleHo
         exceptions.stream()
                 .filter(ex -> ex.getDispute() != null)
                 .filter(ex -> !ex.getDispute().isClosed()) // we show warnings only for open cases
-                .forEach(ex -> {
-                    Dispute dispute = ex.getDispute();
-                    if (ex instanceof TradeDataValidation.AddressException) {
-                        new Popup().width(900).warning(Res.get("support.warning.disputesWithInvalidDonationAddress",
-                                dispute.getDonationAddressOfDelayedPayoutTx(),
-                                daoFacade.getAllDonationAddresses(),
-                                dispute.getTradeId(),
-                                ""))
-                                .show();
-                    } else {
-                        new Popup().width(900).warning(ex.getMessage()).show();
-                    }
-                });
+                .filter(ex -> DontShowAgainLookup.showAgain(getKey(ex)))
+                .forEach(ex -> new Popup().width(900).warning(getValidationExceptionMessage(ex)).dontShowAgainId(getKey(ex)).show());
+    }
+
+    private String getKey(ValidationException exception) {
+        Dispute dispute = exception.getDispute();
+        if (dispute != null) {
+            return "ValExcPopup-" + dispute.getTradeId() + "-" + dispute.getTraderId();
+        }
+        return "ValExcPopup-" + exception.toString();
+    }
+
+    private String getValidationExceptionMessage(ValidationException exception) {
+        Dispute dispute = exception.getDispute();
+        if (dispute != null && exception instanceof TradeDataValidation.AddressException) {
+            return getAddressExceptionMessage(dispute);
+        } else if (exception.getMessage() != null && !exception.getMessage().isEmpty()) {
+            return exception.getMessage();
+        } else {
+            return exception.toString();
+        }
+    }
+
+    @NotNull
+    private String getAddressExceptionMessage(Dispute dispute) {
+        return Res.get("support.warning.disputesWithInvalidDonationAddress",
+                dispute.getDonationAddressOfDelayedPayoutTx(),
+                daoFacade.getAllDonationAddresses(),
+                dispute.getTradeId(),
+                "");
     }
 
     @Override

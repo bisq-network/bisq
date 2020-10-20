@@ -23,13 +23,13 @@ import bisq.core.trade.messages.CounterCurrencyTransferStartedMessage;
 import bisq.core.trade.messages.DelayedPayoutTxSignatureResponse;
 import bisq.core.trade.messages.TradeMessage;
 import bisq.core.trade.protocol.tasks.ApplyFilter;
-import bisq.core.trade.protocol.tasks.PublishTradeStatistics;
 import bisq.core.trade.protocol.tasks.TradeTask;
 import bisq.core.trade.protocol.tasks.seller.SellerBroadcastPayoutTx;
 import bisq.core.trade.protocol.tasks.seller.SellerFinalizesDelayedPayoutTx;
 import bisq.core.trade.protocol.tasks.seller.SellerProcessCounterCurrencyTransferStartedMessage;
 import bisq.core.trade.protocol.tasks.seller.SellerProcessDelayedPayoutTxSignatureResponse;
 import bisq.core.trade.protocol.tasks.seller.SellerPublishesDepositTx;
+import bisq.core.trade.protocol.tasks.seller.SellerPublishesTradeStatistics;
 import bisq.core.trade.protocol.tasks.seller.SellerSendPayoutTxPublishedMessage;
 import bisq.core.trade.protocol.tasks.seller.SellerSendsDepositTxAndDelayedPayoutTxMessage;
 import bisq.core.trade.protocol.tasks.seller.SellerSignAndFinalizePayoutTx;
@@ -45,6 +45,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public abstract class SellerProtocol extends DisputeProtocol {
     enum SellerEvent implements FluentProtocol.Event {
+        STARTUP,
         PAYMENT_RECEIVED
     }
 
@@ -66,6 +67,7 @@ public abstract class SellerProtocol extends DisputeProtocol {
         }
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Incoming messages
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -79,7 +81,7 @@ public abstract class SellerProtocol extends DisputeProtocol {
                         SellerFinalizesDelayedPayoutTx.class,
                         SellerSendsDepositTxAndDelayedPayoutTxMessage.class,
                         SellerPublishesDepositTx.class,
-                        PublishTradeStatistics.class))
+                        SellerPublishesTradeStatistics.class))
                 .run(() -> {
                     // We stop timeout here and don't start a new one as the
                     // SellerSendsDepositTxAndDelayedPayoutTxMessage repeats the send the message and has it's own

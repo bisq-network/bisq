@@ -37,12 +37,14 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Context;
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.InsufficientMoneyException;
+import org.bitcoinj.core.LegacyAddress;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionConfidence;
 import org.bitcoinj.core.TransactionInput;
 import org.bitcoinj.core.TransactionOutput;
+import org.bitcoinj.core.TransactionWitness;
 import org.bitcoinj.core.VerificationException;
 import org.bitcoinj.core.listeners.NewBestBlockListener;
 import org.bitcoinj.core.listeners.TransactionConfidenceEventListener;
@@ -51,6 +53,7 @@ import org.bitcoinj.crypto.KeyCrypter;
 import org.bitcoinj.crypto.KeyCrypterScrypt;
 import org.bitcoinj.crypto.TransactionSignature;
 import org.bitcoinj.script.Script;
+import org.bitcoinj.script.ScriptBuilder;
 import org.bitcoinj.script.ScriptChunk;
 import org.bitcoinj.script.ScriptException;
 import org.bitcoinj.script.ScriptPattern;
@@ -59,12 +62,9 @@ import org.bitcoinj.utils.Threading;
 import org.bitcoinj.wallet.DecryptingKeyBag;
 import org.bitcoinj.wallet.DeterministicSeed;
 import org.bitcoinj.wallet.KeyBag;
-import org.bitcoinj.wallet.KeyChain;
 import org.bitcoinj.wallet.RedeemData;
 import org.bitcoinj.wallet.SendRequest;
 import org.bitcoinj.wallet.Wallet;
-import org.bitcoinj.wallet.listeners.KeyChainEventListener;
-import org.bitcoinj.wallet.listeners.ScriptsChangeEventListener;
 import org.bitcoinj.wallet.listeners.WalletChangeEventListener;
 import org.bitcoinj.wallet.listeners.WalletCoinsReceivedEventListener;
 import org.bitcoinj.wallet.listeners.WalletCoinsSentEventListener;
@@ -241,7 +241,7 @@ public abstract class WalletService {
                                       int inputIndex) throws TransactionVerificationException {
         try {
             checkNotNull(input.getConnectedOutput(), "input.getConnectedOutput() must not be null");
-            input.getScriptSig().correctlySpends(transaction, inputIndex, input.getConnectedOutput().getScriptPubKey(), Script.ALL_VERIFY_FLAGS);
+            input.getScriptSig().correctlySpends(transaction, inputIndex, input.getWitness(), input.getValue(), input.getConnectedOutput().getScriptPubKey(), Script.ALL_VERIFY_FLAGS);
         } catch (Throwable t) {
             t.printStackTrace();
             log.error(t.getMessage());
@@ -265,7 +265,7 @@ public abstract class WalletService {
                 // We assume if it's already signed, it's hopefully got a SIGHASH type that will not invalidate when
                 // we sign missing pieces (to check this would require either assuming any signatures are signing
                 // standard output types or a way to get processed signatures out of script execution)
-                txIn.getScriptSig().correctlySpends(tx, index, txIn.getConnectedOutput().getScriptPubKey(), Script.ALL_VERIFY_FLAGS);
+                txIn.getScriptSig().correctlySpends(tx, index, txIn.getWitness(), txIn.getValue(), txIn.getConnectedOutput().getScriptPubKey(), Script.ALL_VERIFY_FLAGS);
                 log.warn("Input {} already correctly spends output, assuming SIGHASH type used will be safe and skipping signing.", index);
                 return;
             } catch (ScriptException e) {
@@ -288,7 +288,7 @@ public abstract class WalletService {
                         // We assume if it's already signed, it's hopefully got a SIGHASH type that will not invalidate when
                         // we sign missing pieces (to check this would require either assuming any signatures are signing
                         // standard output types or a way to get processed signatures out of script execution)
-                        txIn.getScriptSig().correctlySpends(tx, index, txIn.getConnectedOutput().getScriptPubKey(), Script.ALL_VERIFY_FLAGS);
+                        txIn.getScriptSig().correctlySpends(tx, index, txIn.getWitness(), txIn.getValue(), txIn.getConnectedOutput().getScriptPubKey(), Script.ALL_VERIFY_FLAGS);
                         log.warn("Input {} already correctly spends output, assuming SIGHASH type used will be safe and skipping signing.", index);
                         return;
                     } catch (ScriptException e) {
@@ -312,14 +312,37 @@ public abstract class WalletService {
 
                 Script inputScript = txIn.getScriptSig();
                 byte[] script = redeemData.redeemScript.getProgram();
-                try {
-                    TransactionSignature signature = partialTx.calculateSignature(index, key, script, Transaction.SigHash.ALL, false);
-                    inputScript = scriptPubKey.getScriptSigWithSignature(inputScript, signature.encodeToBitcoin(), 0);
-                    txIn.setScriptSig(inputScript);
-                } catch (ECKey.KeyIsEncryptedException e1) {
-                    throw e1;
-                } catch (ECKey.MissingPrivateKeyException e1) {
-                    log.warn("No private key in keypair for input {}", index);
+
+                if (ScriptPattern.isP2PK(scriptPubKey) || ScriptPattern.isP2PKH(scriptPubKey)) {
+                    try {
+                        TransactionSignature signature = partialTx.calculateSignature(index, key, script, Transaction.SigHash.ALL, false);
+                        inputScript = scriptPubKey.getScriptSigWithSignature(inputScript, signature.encodeToBitcoin(), 0);
+                        txIn.setScriptSig(inputScript);
+                    } catch (ECKey.KeyIsEncryptedException e1) {
+                        throw e1;
+                    } catch (ECKey.MissingPrivateKeyException e1) {
+                        log.warn("No private key in keypair for input {}", index);
+                    }
+                } else if (ScriptPattern.isP2WPKH(scriptPubKey)) {
+                    try {
+                        // TODO: Consider using this alternative way to build the scriptCode (taken from bitcoinj master)
+                        // Script scriptCode = ScriptBuilder.createP2PKHOutputScript(key);
+                        Script scriptCode = new ScriptBuilder().data(
+                                ScriptBuilder.createOutputScript(LegacyAddress.fromKey(tx.getParams(), key)).getProgram())
+                                .build();
+                        Coin value = txIn.getValue();
+                        TransactionSignature txSig = tx.calculateWitnessSignature(index, key, scriptCode, value,
+                                Transaction.SigHash.ALL, false);
+                        txIn.setScriptSig(ScriptBuilder.createEmpty());
+                        txIn.setWitness(TransactionWitness.redeemP2WPKH(txSig, key));
+                    } catch (ECKey.KeyIsEncryptedException e1) {
+                        throw e1;
+                    } catch (ECKey.MissingPrivateKeyException e1) {
+                        log.warn("No private key in keypair for input {}", index);
+                    }
+                } else {
+                    // log.error("Unexpected script type.");
+                    throw new RuntimeException("Unexpected script type.");
                 }
             } else {
                 log.warn("Missing connected output, assuming input {} is already signed.", index);
@@ -586,13 +609,8 @@ public abstract class WalletService {
     }
 
     @Nullable
-    public DeterministicKey findKeyFromPubKeyHash(byte[] pubKeyHash) {
-        return wallet.getActiveKeyChain().findKeyFromPubHash(pubKeyHash);
-    }
-
-    @Nullable
     public DeterministicKey findKeyFromPubKey(byte[] pubKey) {
-        return wallet.getActiveKeyChain().findKeyFromPubKey(pubKey);
+        return (DeterministicKey) wallet.findKeyFromPubKey(pubKey);
     }
 
     public boolean isEncrypted() {
@@ -614,7 +632,14 @@ public abstract class WalletService {
      * @return true when queue is full
      */
     public boolean isUnconfirmedTransactionsLimitHit() {
-        return 20 < getTransactions(true).stream().filter(transaction -> transaction.isPending()).count();
+        // For published delayed payout transactions we do not receive the tx confidence
+        // so we cannot check if it is confirmed so we ignore it for that check. The check is any arbitrarily
+        // using a limit of 20, so we don't need to be exact here. Should just reduce the likelihood of issues with
+        // the too long chains of unconfirmed transactions.
+        return getTransactions(false).stream()
+                .filter(tx -> tx.getLockTime() == 0)
+                .filter(Transaction::isPending)
+                .count() > 20;
     }
 
     public Set<Transaction> getTransactions(boolean includeDead) {
