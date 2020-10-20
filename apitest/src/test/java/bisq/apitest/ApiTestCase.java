@@ -105,7 +105,12 @@ public class ApiTestCase {
         }
     }
 
-    protected void sleep(long ms) {
+    protected static void genBtcBlocksThenWait(int numBlocks, long wait) {
+        bitcoinCli.generateBlocks(numBlocks);
+        sleep(wait);
+    }
+
+    protected static void sleep(long ms) {
         try {
             MILLISECONDS.sleep(ms);
         } catch (InterruptedException ignored) {

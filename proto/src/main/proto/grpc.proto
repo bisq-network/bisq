@@ -96,12 +96,13 @@ message OfferInfo {
     uint64 volume = 8;
     uint64 minVolume = 9;
     uint64 buyerSecurityDeposit = 10;
-    string paymentAccountId = 11; // only used when creating offer
+    string paymentAccountId = 11;
     string paymentMethodId = 12;
     string paymentMethodShortName = 13;
     string baseCurrencyCode = 14;
     string counterCurrencyCode = 15;
     uint64 date = 16;
+    string state = 17;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -164,6 +165,67 @@ message GetTradeStatisticsRequest {
 
 message GetTradeStatisticsReply {
     repeated TradeStatistics3 TradeStatistics = 1;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+// Trades
+///////////////////////////////////////////////////////////////////////////////////////////
+
+service Trades {
+    rpc GetTrade (GetTradeRequest) returns (GetTradeReply) {
+    }
+    rpc TakeOffer (TakeOfferRequest) returns (TakeOfferReply) {
+    }
+    rpc ConfirmPaymentStarted (ConfirmPaymentStartedRequest) returns (ConfirmPaymentStartedReply) {
+    }
+    rpc ConfirmPaymentReceived (ConfirmPaymentReceivedRequest) returns (ConfirmPaymentReceivedReply) {
+    }
+}
+
+message TakeOfferRequest {
+    string offerId = 1;
+    string paymentAccountId = 2;
+}
+
+message TakeOfferReply {
+    TradeInfo trade = 1;
+}
+
+message ConfirmPaymentStartedRequest {
+    string tradeId = 1;
+}
+
+message ConfirmPaymentStartedReply {
+}
+
+message ConfirmPaymentReceivedRequest {
+    string tradeId = 1;
+}
+
+message ConfirmPaymentReceivedReply {
+}
+
+message GetTradeRequest {
+    string tradeId = 1;
+}
+
+message GetTradeReply {
+    TradeInfo trade = 1;
+}
+
+message TradeInfo {
+    OfferInfo offer = 1;
+    string tradeId = 2;
+    string shortId = 3;
+    string state = 4;
+    string phase = 5;
+    string tradePeriodState = 6;
+    bool isDepositPublished = 7;
+    bool isDepositConfirmed = 8;
+    bool isFiatSent = 9;
+    bool isFiatReceived = 10;
+    bool isPayoutPublished = 11;
+    bool isWithdrawn = 12;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////

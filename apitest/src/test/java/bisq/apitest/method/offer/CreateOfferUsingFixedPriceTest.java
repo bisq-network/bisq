@@ -35,7 +35,7 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 @Slf4j
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class CreateOfferUsingFixedPriceTest extends AbstractCreateOfferTest {
+public class CreateOfferUsingFixedPriceTest extends AbstractOfferTest {
 
     @Test
     @Order(1)

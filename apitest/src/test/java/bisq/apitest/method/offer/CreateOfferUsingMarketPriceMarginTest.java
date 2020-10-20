@@ -43,7 +43,7 @@ import static protobuf.OfferPayload.Direction.BUY;
 
 @Slf4j
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class CreateOfferUsingMarketPriceMarginTest extends AbstractCreateOfferTest {
+public class CreateOfferUsingMarketPriceMarginTest extends AbstractOfferTest {
 
     private static final DecimalFormat PCT_FORMAT = new DecimalFormat("##0.00");
     private static final double MKT_PRICE_MARGIN_ERROR_TOLERANCE = 0.0050;      // 0.50%

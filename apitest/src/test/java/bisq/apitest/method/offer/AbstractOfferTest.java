@@ -19,8 +19,11 @@ package bisq.apitest.method.offer;
 
 import bisq.core.monetary.Altcoin;
 
+import bisq.proto.grpc.CreateOfferRequest;
 import bisq.proto.grpc.GetOffersRequest;
 import bisq.proto.grpc.OfferInfo;
+
+import protobuf.PaymentAccount;
 
 import org.bitcoinj.utils.Fiat;
 
@@ -36,14 +39,16 @@ import org.junit.jupiter.api.BeforeAll;
 
 import static bisq.apitest.Scaffold.BitcoinCoreApp.bitcoind;
 import static bisq.apitest.config.BisqAppConfig.alicedaemon;
+import static bisq.apitest.config.BisqAppConfig.arbdaemon;
+import static bisq.apitest.config.BisqAppConfig.bobdaemon;
 import static bisq.apitest.config.BisqAppConfig.seednode;
 import static bisq.common.util.MathUtils.roundDouble;
 import static bisq.common.util.MathUtils.scaleDownByPowerOf10;
+import static bisq.core.btc.wallet.Restrictions.getDefaultBuyerSecurityDepositAsPercent;
 import static bisq.core.locale.CurrencyUtil.isCryptoCurrency;
 import static java.lang.String.format;
 import static java.math.RoundingMode.HALF_UP;
 import static java.util.Comparator.comparing;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.junit.jupiter.api.Assertions.fail;
 
 
@@ -51,11 +56,11 @@ import static org.junit.jupiter.api.Assertions.fail;
 import bisq.apitest.method.MethodTest;
 import bisq.cli.GrpcStubs;
 
-
 @Slf4j
-abstract class AbstractCreateOfferTest extends MethodTest {
+public abstract class AbstractOfferTest extends MethodTest {
 
     protected static GrpcStubs aliceStubs;
+    protected static GrpcStubs bobStubs;
 
     @BeforeAll
     public static void setUp() {
@@ -64,36 +69,74 @@ abstract class AbstractCreateOfferTest extends MethodTest {
 
     static void startSupportingApps() {
         try {
-            // setUpScaffold(new String[]{"--supportingApps", "bitcoind,seednode,alicedaemon", "--enableBisqDebugging", "true"});
-            setUpScaffold(bitcoind, seednode, alicedaemon);
+            // setUpScaffold(new String[]{"--supportingApps", "bitcoind,seednode,arbdaemon,alicedaemon,bobdaemon", "--enableBisqDebugging", "true"});
+            setUpScaffold(bitcoind, seednode, arbdaemon, alicedaemon, bobdaemon);
+            registerDisputeAgents(arbdaemon);
             aliceStubs = grpcStubs(alicedaemon);
+            bobStubs = grpcStubs(bobdaemon);
 
             // Generate 1 regtest block for alice's wallet to show 10 BTC balance,
             // and give alicedaemon time to parse the new block.
-            bitcoinCli.generateBlocks(1);
-            MILLISECONDS.sleep(1500);
+            genBtcBlocksThenWait(1, 1500);
         } catch (Exception ex) {
             fail(ex);
         }
+    }
+
+    protected final OfferInfo createAliceOffer(PaymentAccount paymentAccount,
+                                               String direction,
+                                               String currencyCode,
+                                               long amount) {
+        return createMarketBasedPricedOffer(aliceStubs, paymentAccount, direction, currencyCode, amount);
+    }
+
+    protected final OfferInfo createBobOffer(PaymentAccount paymentAccount,
+                                             String direction,
+                                             String currencyCode,
+                                             long amount) {
+        return createMarketBasedPricedOffer(bobStubs, paymentAccount, direction, currencyCode, amount);
+    }
+
+    protected final OfferInfo createMarketBasedPricedOffer(GrpcStubs grpcStubs,
+                                                           PaymentAccount paymentAccount,
+                                                           String direction,
+                                                           String currencyCode,
+                                                           long amount) {
+        var req = CreateOfferRequest.newBuilder()
+                .setPaymentAccountId(paymentAccount.getId())
+                .setDirection(direction)
+                .setCurrencyCode(currencyCode)
+                .setAmount(amount)
+                .setMinAmount(amount)
+                .setUseMarketBasedPrice(true)
+                .setMarketPriceMargin(0.00)
+                .setPrice("0")
+                .setBuyerSecurityDeposit(getDefaultBuyerSecurityDepositAsPercent())
+                .build();
+        return grpcStubs.offersService.createOffer(req).getOffer();
     }
 
     protected final OfferInfo getOffer(String offerId) {
         return aliceStubs.offersService.getOffer(createGetOfferRequest(offerId)).getOffer();
     }
 
-    protected final OfferInfo getMostRecentOffer(String direction, String currencyCode) {
-        List<OfferInfo> offerInfoList = getOffersSortedByDate(direction, currencyCode);
+    protected final OfferInfo getMostRecentOffer(GrpcStubs grpcStubs, String direction, String currencyCode) {
+        List<OfferInfo> offerInfoList = getOffersSortedByDate(grpcStubs, direction, currencyCode);
         if (offerInfoList.isEmpty())
             fail(format("No %s offers found for currency %s", direction, currencyCode));
 
         return offerInfoList.get(offerInfoList.size() - 1);
     }
 
-    protected final List<OfferInfo> getOffersSortedByDate(String direction, String currencyCode) {
+    protected final int getOpenOffersCount(GrpcStubs grpcStubs, String direction, String currencyCode) {
+        return getOffersSortedByDate(grpcStubs, direction, currencyCode).size();
+    }
+
+    protected final List<OfferInfo> getOffersSortedByDate(GrpcStubs grpcStubs, String direction, String currencyCode) {
         var req = GetOffersRequest.newBuilder()
                 .setDirection(direction)
                 .setCurrencyCode(currencyCode).build();
-        var reply = aliceStubs.offersService.getOffers(req);
+        var reply = grpcStubs.offersService.getOffers(req);
         return sortOffersByDate(reply.getOffersList());
     }
 
