@@ -21,8 +21,6 @@ import bisq.core.offer.Offer;
 import bisq.core.offer.takeoffer.TakeOfferModel;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
-import bisq.core.trade.protocol.BuyerAsMakerProtocol;
-import bisq.core.trade.protocol.BuyerAsTakerProtocol;
 import bisq.core.trade.protocol.BuyerProtocol;
 import bisq.core.trade.protocol.SellerProtocol;
 import bisq.core.user.User;
@@ -85,7 +83,7 @@ class CoreTradesService {
 
     void confirmPaymentStarted(String tradeId) {
         var trade = getTradeWithId(tradeId);
-        if (isUsingBuyerProtocol(trade)) {
+        if (isFollowingBuyerProtocol(trade)) {
             var tradeProtocol = tradeManager.getTradeProtocol(trade);
             ((BuyerProtocol) tradeProtocol).onPaymentStarted(
                     () -> {
@@ -101,7 +99,7 @@ class CoreTradesService {
 
     void confirmPaymentReceived(String tradeId) {
         var trade = getTradeWithId(tradeId);
-        if (isUsingBuyerProtocol(trade)) {
+        if (isFollowingBuyerProtocol(trade)) {
             throw new IllegalStateException("you are the buyer, and not receiving payment");
         } else {
             var tradeProtocol = tradeManager.getTradeProtocol(trade);
@@ -124,9 +122,7 @@ class CoreTradesService {
                 new IllegalArgumentException(format("trade with id '%s' not found", tradeId)));
     }
 
-    private boolean isUsingBuyerProtocol(Trade trade) {
-        var tradeProtocol = tradeManager.getTradeProtocol(trade);
-        return tradeProtocol instanceof BuyerAsMakerProtocol
-                || tradeProtocol instanceof BuyerAsTakerProtocol;
+    private boolean isFollowingBuyerProtocol(Trade trade) {
+        return tradeManager.getTradeProtocol(trade) instanceof BuyerProtocol;
     }
 }
