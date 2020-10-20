@@ -17,6 +17,7 @@
 
 package bisq.cli;
 
+import bisq.proto.grpc.ConfirmPaymentReceivedRequest;
 import bisq.proto.grpc.ConfirmPaymentStartedRequest;
 import bisq.proto.grpc.CreateOfferRequest;
 import bisq.proto.grpc.CreatePaymentAccountRequest;
@@ -74,6 +75,7 @@ public class CliMain {
         getoffers,
         takeoffer,
         confirmpaymentstarted,
+        confirmpaymentreceived,
         createpaymentacct,
         getpaymentaccts,
         getversion,
@@ -285,6 +287,18 @@ public class CliMain {
                     out.printf("trade '%s' payment started message sent", tradeId);
                     return;
                 }
+                case confirmpaymentreceived: {
+                    if (nonOptionArgs.size() < 2)
+                        throw new IllegalArgumentException("incorrect parameter count, expecting trade id");
+
+                    var tradeId = nonOptionArgs.get(1);
+                    var request = ConfirmPaymentReceivedRequest.newBuilder()
+                            .setTradeId(tradeId)
+                            .build();
+                    tradesService.confirmPaymentReceived(request);
+                    out.printf("trade '%s' payment received message sent", tradeId);
+                    return;
+                }
                 case createpaymentacct: {
                     if (nonOptionArgs.size() < 5)
                         throw new IllegalArgumentException(
@@ -414,6 +428,7 @@ public class CliMain {
             stream.format(rowFormat, "getoffers", "buy | sell, currency code", "Get current offers");
             stream.format(rowFormat, "takeoffer", "offer id", "Take offer with id");
             stream.format(rowFormat, "confirmpaymentstarted", "trade id", "Confirm payment started");
+            stream.format(rowFormat, "confirmpaymentreceived", "trade id", "Confirm payment received");
             stream.format(rowFormat, "createpaymentacct", "account name, account number, currency code", "Create PerfectMoney dummy account");
             stream.format(rowFormat, "getpaymentaccts", "", "Get user payment accounts");
             stream.format(rowFormat, "lockwallet", "", "Remove wallet password from memory, locking the wallet");

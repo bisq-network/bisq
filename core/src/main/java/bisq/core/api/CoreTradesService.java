@@ -22,6 +22,7 @@ import bisq.core.offer.takeoffer.TakeOfferModel;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.protocol.BuyerProtocol;
+import bisq.core.trade.protocol.SellerProtocol;
 import bisq.core.user.User;
 
 import javax.inject.Inject;
@@ -93,6 +94,22 @@ class CoreTradesService {
             );
         } else {
             throw new IllegalStateException("you are the seller and not sending payment");
+        }
+    }
+
+    void confirmPaymentReceived(String tradeId) {
+        var trade = getTradeWithId(tradeId);
+        if (isFollowingBuyerProtocol(trade)) {
+            throw new IllegalStateException("you are the buyer, and not receiving payment");
+        } else {
+            var tradeProtocol = tradeManager.getTradeProtocol(trade);
+            ((SellerProtocol) tradeProtocol).onPaymentReceived(
+                    () -> {
+                    },
+                    errorMessage -> {
+                        throw new IllegalStateException(errorMessage);
+                    }
+            );
         }
     }
 
