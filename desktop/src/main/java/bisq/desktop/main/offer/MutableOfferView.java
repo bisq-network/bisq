@@ -874,7 +874,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
         int marketPriceAvailableValue = model.marketPriceAvailableProperty.get();
         if (marketPriceAvailableValue > -1) {
             boolean showPriceToggle = marketPriceAvailableValue == 1 &&
-                    !model.getDataModel().isHalCashAccount();
+                    !model.getDataModel().paymentAccount.isHalCashAccount();
             percentagePriceBox.setVisible(showPriceToggle);
             priceTypeToggleButton.setVisible(showPriceToggle);
             boolean fixedPriceSelected = !model.getDataModel().getUseMarketBasedPrice().get() || !showPriceToggle;

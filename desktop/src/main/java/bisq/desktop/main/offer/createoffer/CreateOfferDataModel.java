@@ -22,13 +22,13 @@ see <http://www.gnu.org/licenses/>.
 package bisq.desktop.main.offer.createoffer;
 
 import bisq.desktop.Navigation;
-import bisq.desktop.main.offer.MakerFeeProvider;
 import bisq.desktop.main.offer.MutableOfferDataModel;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.offer.CreateOfferService;
+import bisq.core.offer.OfferUtil;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.PriceFeedService;
@@ -54,6 +54,7 @@ class CreateOfferDataModel extends MutableOfferDataModel {
     @Inject
     public CreateOfferDataModel(CreateOfferService createOfferService,
                                 OpenOfferManager openOfferManager,
+                                OfferUtil offerUtil,
                                 BtcWalletService btcWalletService,
                                 BsqWalletService bsqWalletService,
                                 Preferences preferences,
@@ -63,11 +64,11 @@ class CreateOfferDataModel extends MutableOfferDataModel {
                                 AccountAgeWitnessService accountAgeWitnessService,
                                 FeeService feeService,
                                 @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
-                                MakerFeeProvider makerFeeProvider,
                                 TradeStatisticsManager tradeStatisticsManager,
                                 Navigation navigation) {
         super(createOfferService,
                 openOfferManager,
+                offerUtil,
                 btcWalletService,
                 bsqWalletService,
                 preferences,
@@ -77,7 +78,6 @@ class CreateOfferDataModel extends MutableOfferDataModel {
                 accountAgeWitnessService,
                 feeService,
                 btcFormatter,
-                makerFeeProvider,
                 tradeStatisticsManager,
                 navigation);
     }
