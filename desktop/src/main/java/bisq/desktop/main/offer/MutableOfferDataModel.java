@@ -133,9 +133,9 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     protected boolean allowAmountUpdate = true;
     private final TradeStatisticsManager tradeStatisticsManager;
 
-    private final Predicate<ObjectProperty<Coin>> isPositiveAmount = (c) -> c.get() != null && !c.get().isZero();
-    private final Predicate<ObjectProperty<Price>> isPositivePrice = (p) -> p.get() != null && !p.get().isZero();
-    private final Predicate<ObjectProperty<Volume>> isPositiveVolume = (v) -> v.get() != null && !v.get().isZero();
+    private final Predicate<ObjectProperty<Coin>> isNonZeroAmount = (c) -> c.get() != null && !c.get().isZero();
+    private final Predicate<ObjectProperty<Price>> isNonZeroPrice = (p) -> p.get() != null && !p.get().isZero();
+    private final Predicate<ObjectProperty<Volume>> isNonZeroVolume = (v) -> v.get() != null && !v.get().isZero();
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -517,7 +517,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     }
 
     void calculateVolume() {
-        if (isPositivePrice.test(price) && isPositiveAmount.test(amount)) {
+        if (isNonZeroPrice.test(price) && isNonZeroAmount.test(amount)) {
             try {
                 Volume volumeByAmount = calculateVolumeForAmount(amount);
 
@@ -533,7 +533,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     }
 
     void calculateMinVolume() {
-        if (isPositivePrice.test(price) && isPositiveAmount.test(minAmount)) {
+        if (isNonZeroPrice.test(price) && isNonZeroAmount.test(minAmount)) {
             try {
                 Volume volumeByAmount = calculateVolumeForAmount(minAmount);
 
@@ -557,7 +557,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     }
 
     void calculateAmount() {
-        if (isPositivePrice.test(price) && isPositiveVolume.test(volume) && allowAmountUpdate) {
+        if (isNonZeroPrice.test(price) && isNonZeroVolume.test(volume) && allowAmountUpdate) {
             try {
                 Coin value = DisplayUtils.reduceTo4Decimals(price.get().getAmountByVolume(volume.get()), btcFormatter);
                 if (paymentAccount.isHalCashAccount())
