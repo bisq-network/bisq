@@ -31,6 +31,7 @@ import bisq.network.p2p.network.Connection;
 import bisq.network.p2p.network.MessageListener;
 import bisq.network.p2p.network.NetworkNode;
 import bisq.network.p2p.network.Statistic;
+import bisq.network.p2p.peers.PeerManager;
 import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 
@@ -60,6 +61,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class GetInventoryRequestHandler implements MessageListener {
     private final NetworkNode networkNode;
+    private final PeerManager peerManager;
     private final P2PDataStorage p2PDataStorage;
     private final DaoStateService daoStateService;
     private final DaoStateMonitoringService daoStateMonitoringService;
@@ -70,6 +72,7 @@ public class GetInventoryRequestHandler implements MessageListener {
 
     @Inject
     public GetInventoryRequestHandler(NetworkNode networkNode,
+                                      PeerManager peerManager,
                                       P2PDataStorage p2PDataStorage,
                                       DaoStateService daoStateService,
                                       DaoStateMonitoringService daoStateMonitoringService,
@@ -77,6 +80,7 @@ public class GetInventoryRequestHandler implements MessageListener {
                                       BlindVoteStateMonitoringService blindVoteStateMonitoringService,
                                       @Named(Config.MAX_CONNECTIONS) int maxConnections) {
         this.networkNode = networkNode;
+        this.peerManager = peerManager;
         this.p2PDataStorage = p2PDataStorage;
         this.daoStateService = daoStateService;
         this.daoStateMonitoringService = daoStateMonitoringService;
@@ -152,6 +156,7 @@ public class GetInventoryRequestHandler implements MessageListener {
             // network
             inventory.put(InventoryItem.maxConnections, String.valueOf(maxConnections));
             inventory.put(InventoryItem.numConnections, String.valueOf(networkNode.getAllConnections().size()));
+            inventory.put(InventoryItem.peakNumConnections, String.valueOf(peerManager.getPeakNumConnections()));
             inventory.put(InventoryItem.sentBytes, String.valueOf(Statistic.totalSentBytesProperty().get()));
             inventory.put(InventoryItem.sentBytesPerSec, String.valueOf(Statistic.totalSentBytesPerSecProperty().get()));
             inventory.put(InventoryItem.receivedBytes, String.valueOf(Statistic.totalReceivedBytesProperty().get()));

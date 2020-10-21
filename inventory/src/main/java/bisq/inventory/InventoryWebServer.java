@@ -287,6 +287,7 @@ public class InventoryWebServer {
         StringBuilder sb = new StringBuilder();
         addInventoryItem("Max. connections: ", requestInfo, averageValues, sb, InventoryItem.maxConnections);
         addInventoryItem("Number of connections: ", requestInfo, averageValues, sb, InventoryItem.numConnections);
+        addInventoryItem("Peak number of connections: ", requestInfo, averageValues, sb, InventoryItem.peakNumConnections);
 
         addInventoryItem("Sent messages/sec: ", requestInfo, averageValues, sb, InventoryItem.sentMessagesPerSec,
                 value -> String.valueOf(MathUtils.roundDouble(Double.parseDouble(value), 2)));

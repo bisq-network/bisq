@@ -126,6 +126,8 @@ public final class PeerManager implements ConnectionListener, PersistedDataHost 
     private int maxConnectionsPeer;
     private int maxConnectionsNonDirect;
     private int maxConnectionsAbsolute;
+    @Getter
+    private int peakNumConnections;
     @Setter
     private boolean allowDisconnectSeedNodes;
 
@@ -442,6 +444,10 @@ public final class PeerManager implements ConnectionListener, PersistedDataHost 
             checkMaxConnectionsTimer = UserThread.runAfter(() -> {
                 stopCheckMaxConnectionsTimer();
                 if (!stopped) {
+                    Set<Connection> allConnections = new HashSet<>(networkNode.getAllConnections());
+                    int size = allConnections.size();
+                    peakNumConnections = Math.max(peakNumConnections, size);
+
                     removeAnonymousPeers();
                     removeSuperfluousSeedNodes();
                     removeTooOldReportedPeers();
@@ -458,6 +464,7 @@ public final class PeerManager implements ConnectionListener, PersistedDataHost 
     boolean checkMaxConnections() {
         Set<Connection> allConnections = new HashSet<>(networkNode.getAllConnections());
         int size = allConnections.size();
+        peakNumConnections = Math.max(peakNumConnections, size);
         log.info("We have {} connections open. Our limit is {}", size, maxConnections);
 
         if (size <= maxConnections) {
