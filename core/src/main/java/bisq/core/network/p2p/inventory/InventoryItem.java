@@ -40,8 +40,8 @@ public enum InventoryItem {
     proposalHash("proposalHash", String.class),
     blindVoteHash("blindVoteHash", String.class),
 
-    maxConnections("maxConnections", Integer.class),
-    numConnections("numConnections", Integer.class),
+    maxConnections("maxConnections", Integer.class, 0.33, 3, 0.4, 2.5),
+    numConnections("numConnections", Integer.class, 0.33, 3, 0.4, 2.5),
     sentBytes("sentBytes", Long.class, 0, 5, 0, 4),
     sentBytesPerSec("sentBytesPerSec", Double.class, 0, 3, 0, 2),
     receivedBytes("receivedBytes", Long.class, 0, 5, 0, 4),
