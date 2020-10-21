@@ -130,6 +130,8 @@ public final class PeerManager implements ConnectionListener, PersistedDataHost 
     private int peakNumConnections;
     @Setter
     private boolean allowDisconnectSeedNodes;
+    @Getter
+    private int numAllConnectionsLostEvents;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -208,6 +210,9 @@ public final class PeerManager implements ConnectionListener, PersistedDataHost 
         if (lostAllConnections) {
             lostAllConnections = false;
             stopped = false;
+            log.info("\n------------------------------------------------------------\n" +
+                    "Established a new connection from/to {} after all connections lost.\n" +
+                    "------------------------------------------------------------", connection.getPeersNodeAddressOptional());
             listeners.forEach(Listener::onNewConnectionAfterAllConnectionsLost);
         }
         connection.getPeersNodeAddressOptional()
@@ -220,13 +225,22 @@ public final class PeerManager implements ConnectionListener, PersistedDataHost 
         log.info("onDisconnect called: nodeAddress={}, closeConnectionReason={}",
                 connection.getPeersNodeAddressOptional(), closeConnectionReason);
         handleConnectionFault(connection);
+
+        boolean previousLostAllConnections = lostAllConnections;
         lostAllConnections = networkNode.getAllConnections().isEmpty();
+
+        // If we enter to 'All connections lost' we count the event.
+        if (!previousLostAllConnections && lostAllConnections) {
+            numAllConnectionsLostEvents++;
+        }
+
         if (lostAllConnections) {
             stopped = true;
             log.warn("\n------------------------------------------------------------\n" +
                     "All connections lost\n" +
                     "------------------------------------------------------------");
             listeners.forEach(Listener::onAllConnectionsLost);
+
         }
         maybeRemoveBannedPeer(closeConnectionReason, connection);
     }

@@ -43,6 +43,7 @@ public enum InventoryItem {
     maxConnections("maxConnections", Integer.class, 0.33, 3, 0.4, 2.5),
     numConnections("numConnections", Integer.class, 0.33, 3, 0.4, 2.5),
     peakNumConnections("peakNumConnections", Integer.class, 0.33, 3, 0.4, 2.5),
+    numAllConnectionsLostEvents("numAllConnectionsLostEvents", Integer.class, 0.9, 1.1, 0.95, 1.05),
     sentBytes("sentBytes", Long.class, 0, 5, 0, 4),
     sentBytesPerSec("sentBytesPerSec", Double.class, 0, 3, 0, 2),
     receivedBytes("receivedBytes", Long.class, 0, 5, 0, 4),
