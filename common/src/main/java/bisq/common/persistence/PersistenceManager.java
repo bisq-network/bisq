@@ -239,7 +239,7 @@ public class PersistenceManager<T extends PersistableEnvelope> {
             } else {
                 orElse.run();
             }
-        }, "BisqExecutable-read-" + fileName).start();
+        }, "PersistenceManager-read-" + fileName).start();
     }
 
     // API for synchronous reading of data. Not recommended to be used in application code.
