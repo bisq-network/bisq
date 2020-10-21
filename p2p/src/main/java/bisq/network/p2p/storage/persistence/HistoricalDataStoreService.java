@@ -154,7 +154,7 @@ public abstract class HistoricalDataStoreService<T extends PersistableNetworkPay
         ImmutableMap.Builder<P2PDataStorage.ByteArray, PersistableNetworkPayload> allHistoricalPayloadsBuilder = ImmutableMap.builder();
         ImmutableMap.Builder<String, PersistableNetworkPayloadStore<? extends PersistableNetworkPayload>> storesByVersionBuilder = ImmutableMap.builder();
 
-        Version.HISTORY.forEach(version -> readHistoricalStoreFromResources(version, postFix, allHistoricalPayloadsBuilder, storesByVersionBuilder));
+        Version.HISTORICAL_RESOURCE_FILE_VERSION_TAGS.forEach(version -> readHistoricalStoreFromResources(version, postFix, allHistoricalPayloadsBuilder, storesByVersionBuilder));
 
         allHistoricalPayloads = allHistoricalPayloadsBuilder.build();
         storesByVersion = storesByVersionBuilder.build();
