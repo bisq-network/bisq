@@ -33,9 +33,11 @@ public class Version {
     public static final String VERSION = "1.4.1";
 
     /**
-     * Holds a list of the versions of tagged resource files for optimizing the getData requests.
+     * Holds a list of the tagged resource files for optimizing the getData requests.
+     * This must not contain each version but only those where we add new version-tagged resource files for
+     * historical data stores.
      */
-    public static final List<String> HISTORY = Arrays.asList("1.4.0");
+    public static final List<String> HISTORICAL_RESOURCE_FILE_VERSION_TAGS = Arrays.asList("1.4.0");
 
     public static int getMajorVersion(String version) {
         return getSubVersion(version, 0);
