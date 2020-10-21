@@ -28,6 +28,7 @@ import bisq.core.provider.fee.FeeService;
 import bisq.core.user.Preferences;
 
 import bisq.common.handlers.ErrorMessageHandler;
+import bisq.common.util.Tuple2;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
@@ -44,6 +45,7 @@ import org.bitcoinj.crypto.DeterministicKey;
 import org.bitcoinj.crypto.KeyCrypterScrypt;
 import org.bitcoinj.script.Script;
 import org.bitcoinj.script.ScriptBuilder;
+import org.bitcoinj.script.ScriptPattern;
 import org.bitcoinj.wallet.SendRequest;
 import org.bitcoinj.wallet.Wallet;
 
@@ -228,7 +230,9 @@ public class BtcWalletService extends WalletService {
                 preferences.getIgnoreDustThreshold());
         List<TransactionInput> preparedBsqTxInputs = preparedTx.getInputs();
         List<TransactionOutput> preparedBsqTxOutputs = preparedTx.getOutputs();
-        int numInputs = preparedBsqTxInputs.size();
+        Tuple2<Integer, Integer> numInputs = getNumInputs(preparedTx);
+        int numLegacyInputs = numInputs.first;
+        int numSegwitInputs = numInputs.second;
         Transaction resultTx = null;
         boolean isFeeOutsideTolerance;
         do {
@@ -249,7 +253,10 @@ public class BtcWalletService extends WalletService {
             // signInputs needs to be false as it would try to sign all inputs (BSQ inputs are not in this wallet)
             sendRequest.signInputs = false;
 
-            sendRequest.fee = txFeePerByte.multiply(txSizeWithUnsignedInputs + sigSizePerInput * numInputs);
+            sendRequest.fee = txFeePerByte.multiply(txSizeWithUnsignedInputs +
+                                                    sigSizePerInput * numLegacyInputs +
+                                                    sigSizePerInput * numSegwitInputs / 4);
+
             sendRequest.feePerKb = Coin.ZERO;
             sendRequest.ensureMinRequiredFee = false;
 
@@ -262,9 +269,14 @@ public class BtcWalletService extends WalletService {
             // add OP_RETURN output
             resultTx.addOutput(new TransactionOutput(params, resultTx, Coin.ZERO, ScriptBuilder.createOpReturnScript(opReturnData).getProgram()));
 
-            numInputs = resultTx.getInputs().size();
+            numInputs = getNumInputs(resultTx);
+            numLegacyInputs = numInputs.first;
+            numSegwitInputs = numInputs.second;
             txSizeWithUnsignedInputs = resultTx.getVsize();
-            long estimatedFeeAsLong = txFeePerByte.multiply(txSizeWithUnsignedInputs + sigSizePerInput * numInputs).value;
+            long estimatedFeeAsLong = txFeePerByte.multiply(txSizeWithUnsignedInputs +
+                                                            sigSizePerInput * numLegacyInputs +
+                                                            sigSizePerInput * numSegwitInputs / 4).value;
+
             // calculated fee must be inside of a tolerance range with tx fee
             isFeeOutsideTolerance = Math.abs(resultTx.getFee().value - estimatedFeeAsLong) > 1000;
         }
@@ -338,7 +350,9 @@ public class BtcWalletService extends WalletService {
                 preferences.getIgnoreDustThreshold());
         List<TransactionInput> preparedBsqTxInputs = preparedTx.getInputs();
         List<TransactionOutput> preparedBsqTxOutputs = preparedTx.getOutputs();
-        int numInputs = preparedBsqTxInputs.size();
+        Tuple2<Integer, Integer> numInputs = getNumInputs(preparedTx);
+        int numLegacyInputs = numInputs.first;
+        int numSegwitInputs = numInputs.second;
         Transaction resultTx = null;
         boolean isFeeOutsideTolerance;
         do {
@@ -359,7 +373,9 @@ public class BtcWalletService extends WalletService {
             // signInputs needs to be false as it would try to sign all inputs (BSQ inputs are not in this wallet)
             sendRequest.signInputs = false;
 
-            sendRequest.fee = txFeePerByte.multiply(txSizeWithUnsignedInputs + sigSizePerInput * numInputs);
+            sendRequest.fee = txFeePerByte.multiply(txSizeWithUnsignedInputs +
+                                                    sigSizePerInput * numLegacyInputs +
+                                                    sigSizePerInput * numSegwitInputs / 4);
             sendRequest.feePerKb = Coin.ZERO;
             sendRequest.ensureMinRequiredFee = false;
 
@@ -372,9 +388,13 @@ public class BtcWalletService extends WalletService {
             // add OP_RETURN output
             resultTx.addOutput(new TransactionOutput(params, resultTx, Coin.ZERO, ScriptBuilder.createOpReturnScript(opReturnData).getProgram()));
 
-            numInputs = resultTx.getInputs().size();
+            numInputs = getNumInputs(resultTx);
+            numLegacyInputs = numInputs.first;
+            numSegwitInputs = numInputs.second;
             txSizeWithUnsignedInputs = resultTx.getVsize();
-            final long estimatedFeeAsLong = txFeePerByte.multiply(txSizeWithUnsignedInputs + sigSizePerInput * numInputs).value;
+            final long estimatedFeeAsLong = txFeePerByte.multiply(txSizeWithUnsignedInputs +
+                                                                  sigSizePerInput * numLegacyInputs +
+                                                                  sigSizePerInput * numSegwitInputs / 4).value;
             // calculated fee must be inside of a tolerance range with tx fee
             isFeeOutsideTolerance = Math.abs(resultTx.getFee().value - estimatedFeeAsLong) > 1000;
         }
@@ -479,7 +499,10 @@ public class BtcWalletService extends WalletService {
                 preferences.getIgnoreDustThreshold());
         List<TransactionInput> preparedBsqTxInputs = preparedBsqTx.getInputs();
         List<TransactionOutput> preparedBsqTxOutputs = preparedBsqTx.getOutputs();
-        int numInputs = preparedBsqTxInputs.size() + 1; // We add 1 for the BTC fee input
+        // We don't know at this point what type the btc input would be (segwit/legacy).
+        // We use legacy to be on the safe side.
+        int numLegacyInputs = preparedBsqTxInputs.size() + 1; // We add 1 for the BTC fee input
+        int numSegwitInputs = 0;
         Transaction resultTx = null;
         boolean isFeeOutsideTolerance;
         boolean opReturnIsOnlyOutput;
@@ -508,7 +531,9 @@ public class BtcWalletService extends WalletService {
             // signInputs needs to be false as it would try to sign all inputs (BSQ inputs are not in this wallet)
             sendRequest.signInputs = false;
 
-            sendRequest.fee = txFeePerByte.multiply(txSizeWithUnsignedInputs + sigSizePerInput * numInputs);
+            sendRequest.fee = txFeePerByte.multiply(txSizeWithUnsignedInputs +
+                                                    sigSizePerInput * numLegacyInputs +
+                                                    sigSizePerInput * numSegwitInputs / 4);
             sendRequest.feePerKb = Coin.ZERO;
             sendRequest.ensureMinRequiredFee = false;
 
@@ -528,9 +553,13 @@ public class BtcWalletService extends WalletService {
             if (opReturnData != null)
                 resultTx.addOutput(new TransactionOutput(params, resultTx, Coin.ZERO, ScriptBuilder.createOpReturnScript(opReturnData).getProgram()));
 
-            numInputs = resultTx.getInputs().size();
+            Tuple2<Integer, Integer> numInputs = getNumInputs(resultTx);
+            numLegacyInputs = numInputs.first;
+            numSegwitInputs = numInputs.second;
             txSizeWithUnsignedInputs = resultTx.getVsize();
-            final long estimatedFeeAsLong = txFeePerByte.multiply(txSizeWithUnsignedInputs + sigSizePerInput * numInputs).value;
+            final long estimatedFeeAsLong = txFeePerByte.multiply(txSizeWithUnsignedInputs +
+                                                                  sigSizePerInput * numLegacyInputs +
+                                                                  sigSizePerInput * numSegwitInputs / 4).value;
             // calculated fee must be inside of a tolerance range with tx fee
             isFeeOutsideTolerance = Math.abs(resultTx.getFee().value - estimatedFeeAsLong) > 1000;
         }
@@ -546,6 +575,23 @@ public class BtcWalletService extends WalletService {
 
         printTx("BTC wallet: Signed tx", resultTx);
         return resultTx;
+    }
+
+    private Tuple2<Integer, Integer> getNumInputs(Transaction tx) {
+        int numLegacyInputs = 0;
+        int numSegwitInputs = 0;
+        for (TransactionInput input : tx.getInputs()) {
+            TransactionOutput connectedOutput = input.getConnectedOutput();
+            if (connectedOutput == null || ScriptPattern.isP2PKH(connectedOutput.getScriptPubKey()) ||
+                ScriptPattern.isP2PK(connectedOutput.getScriptPubKey())) {
+                numLegacyInputs++;
+            } else if (ScriptPattern.isP2WPKH(connectedOutput.getScriptPubKey())) {
+                numSegwitInputs++;
+            } else {
+                throw new IllegalArgumentException("Inputs should spend a P2PKH, P2PK or P2WPKH ouput");
+            }
+        }
+        return new Tuple2(numLegacyInputs, numSegwitInputs);
     }
 
 
