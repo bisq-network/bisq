@@ -99,7 +99,7 @@ public class InventoryWebServer {
                 html.append("<tr valign=\"top\">")
                         .append("<td>").append(getSeedNodeInfo(seedNode, requestInfo, averageValues)).append("</td>")
                         .append("<td>").append(getRequestInfo(requestInfo, numRequests)).append("</td>")
-                        .append("<td>").append(getDataInfo(requestInfo, averageValues)).append("</td>")
+                        .append("<td>").append(getDataInfo(requestInfo, averageValues, map)).append("</td>")
                         .append("<td>").append(getDaoInfo(requestInfo, averageValues, map)).append("</td>")
                         .append("<td>").append(getNetworkInfo(requestInfo, averageValues)).append("</td>");
                 html.append("</tr>");
@@ -152,7 +152,12 @@ public class InventoryWebServer {
     private String getRequestInfo(RequestInfo requestInfo, int numRequests) {
         StringBuilder sb = new StringBuilder();
 
-        sb.append("Number of responses: ").append(getColorTagByDeviationSeverity(DeviationSeverity.OK))
+        DeviationSeverity deviationSeverity = numRequests == requestCounter ?
+                DeviationSeverity.OK :
+                requestCounter - numRequests > 4 ?
+                        DeviationSeverity.ALERT :
+                        DeviationSeverity.WARN;
+        sb.append("Number of responses: ").append(getColorTagByDeviationSeverity(deviationSeverity))
                 .append(numRequests).append(CLOSE_TAG);
 
         long rrt = requestInfo.getResponseTime() - requestInfo.getRequestStartTime();
@@ -181,15 +186,34 @@ public class InventoryWebServer {
     }
 
     private String getDataInfo(RequestInfo requestInfo,
-                               Map<InventoryItem, Double> averageValues) {
+                               Map<InventoryItem, Double> averageValues,
+                               Map<NodeAddress, List<RequestInfo>> map) {
         StringBuilder sb = new StringBuilder();
         addInventoryItem(requestInfo, averageValues, sb, InventoryItem.OfferPayload);
         addInventoryItem(requestInfo, averageValues, sb, InventoryItem.MailboxStoragePayload);
         addInventoryItem(requestInfo, averageValues, sb, InventoryItem.TradeStatistics3);
-        addInventoryItem(requestInfo, averageValues, sb, InventoryItem.Alert);
-        addInventoryItem(requestInfo, averageValues, sb, InventoryItem.Filter);
-        addInventoryItem(requestInfo, averageValues, sb, InventoryItem.Mediator);
-        addInventoryItem(requestInfo, averageValues, sb, InventoryItem.RefundAgent);
+
+        DeviationSeverity deviationSeverity = InventoryUtil.getDeviationSeverityByIntegerDistance(map,
+                requestInfo, InventoryItem.Alert, 1, 1);
+        addInventoryItem(getTitle(InventoryItem.Alert), requestInfo, averageValues, sb, InventoryItem.Alert,
+                null, deviationSeverity);
+
+        deviationSeverity = InventoryUtil.getDeviationSeverityByIntegerDistance(map,
+                requestInfo, InventoryItem.Filter, 1, 1);
+        addInventoryItem(getTitle(InventoryItem.Filter), requestInfo, averageValues, sb, InventoryItem.Filter,
+                null, deviationSeverity);
+
+
+        deviationSeverity = InventoryUtil.getDeviationSeverityByIntegerDistance(map,
+                requestInfo, InventoryItem.Mediator, 1, 1);
+        addInventoryItem(getTitle(InventoryItem.Mediator), requestInfo, averageValues, sb, InventoryItem.Mediator,
+                null, deviationSeverity);
+
+        deviationSeverity = InventoryUtil.getDeviationSeverityByIntegerDistance(map,
+                requestInfo, InventoryItem.RefundAgent, 1, 1);
+        addInventoryItem(getTitle(InventoryItem.RefundAgent), requestInfo, averageValues, sb, InventoryItem.RefundAgent,
+                null, deviationSeverity);
+
         addInventoryItem(requestInfo, averageValues, sb, InventoryItem.AccountAgeWitness);
         addInventoryItem(requestInfo, averageValues, sb, InventoryItem.SignedWitness);
         return sb.toString();
@@ -199,12 +223,30 @@ public class InventoryWebServer {
                               Map<InventoryItem, Double> averageValues,
                               Map<NodeAddress, List<RequestInfo>> map) {
         StringBuilder sb = new StringBuilder();
-        addInventoryItem("Number of BSQ blocks: ", requestInfo, averageValues, sb, InventoryItem.numBsqBlocks);
-        addInventoryItem(requestInfo, averageValues, sb, InventoryItem.TempProposalPayload);
-        addInventoryItem(requestInfo, averageValues, sb, InventoryItem.ProposalPayload);
-        addInventoryItem(requestInfo, averageValues, sb, InventoryItem.BlindVotePayload);
+        DeviationSeverity deviationSeverity = InventoryUtil.getDeviationSeverityByIntegerDistance(map,
+                requestInfo, InventoryItem.numBsqBlocks, 1, 3);
+        addInventoryItem("Number of BSQ blocks: ", requestInfo, averageValues, sb, InventoryItem.numBsqBlocks,
+                null, deviationSeverity);
+
+        deviationSeverity = InventoryUtil.getDeviationSeverityByIntegerDistance(map,
+                requestInfo, InventoryItem.TempProposalPayload, 3, 5);
+        addInventoryItem(getTitle(InventoryItem.TempProposalPayload), requestInfo, averageValues, sb, InventoryItem.TempProposalPayload,
+                null, deviationSeverity);
+
+        deviationSeverity = InventoryUtil.getDeviationSeverityByIntegerDistance(map,
+                requestInfo, InventoryItem.ProposalPayload, 1, 2);
+        addInventoryItem(getTitle(InventoryItem.ProposalPayload), requestInfo, averageValues, sb, InventoryItem.ProposalPayload,
+                null, deviationSeverity);
+
+        deviationSeverity = InventoryUtil.getDeviationSeverityByIntegerDistance(map,
+                requestInfo, InventoryItem.BlindVotePayload, 1, 2);
+        addInventoryItem(getTitle(InventoryItem.BlindVotePayload), requestInfo, averageValues, sb, InventoryItem.BlindVotePayload,
+                null, deviationSeverity);
+
+        deviationSeverity = InventoryUtil.getDeviationSeverityByIntegerDistance(map,
+                requestInfo, InventoryItem.daoStateChainHeight, 1, 3);
         String daoStateChainHeightAsString = addInventoryItem("DAO state block height: ", requestInfo,
-                averageValues, sb, InventoryItem.daoStateChainHeight);
+                averageValues, sb, InventoryItem.daoStateChainHeight, null, deviationSeverity);
 
         DeviationSeverity daoStateHashDeviationSeverity = InventoryUtil.getDeviationSeverityForHash(map,
                 daoStateChainHeightAsString,
@@ -259,7 +301,7 @@ public class InventoryWebServer {
                                     Map<InventoryItem, Double> averageValues,
                                     StringBuilder sb,
                                     InventoryItem inventoryItem) {
-        return addInventoryItem("Number of " + inventoryItem.getKey() + ": ",
+        return addInventoryItem(getTitle(inventoryItem),
                 requestInfo,
                 averageValues,
                 sb,
@@ -376,5 +418,9 @@ public class InventoryWebServer {
                 operatorByNodeAddress.put(node, operator);
             }
         });
+    }
+
+    private String getTitle(InventoryItem inventoryItem) {
+        return "Number of " + inventoryItem.getKey() + ": ";
     }
 }
