@@ -22,6 +22,8 @@ import bisq.common.file.ResourceNotFoundException;
 import bisq.common.persistence.PersistenceManager;
 import bisq.common.proto.persistable.PersistableEnvelope;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import java.nio.file.Paths;
 
 import java.io.File;
@@ -89,6 +91,19 @@ public abstract class StoreService<T extends PersistableEnvelope> {
         }
     }
 
+    // Uses synchronous execution on the userThread. Only used by tests. The async methods should be used by app code.
+    @VisibleForTesting
+    protected void readFromResourcesSync(String postFix) {
+        String fileName = getFileName();
+        makeFileFromResourceFile(fileName, postFix);
+        try {
+            readStoreSync();
+        } catch (Throwable t) {
+            makeFileFromResourceFile(fileName, postFix);
+            readStoreSync();
+        }
+    }
+
     protected boolean makeFileFromResourceFile(String fileName, String postFix) {
         String resourceFileName = fileName + postFix;
         File dbDir = new File(absolutePathOfStorageDir);
@@ -127,6 +142,23 @@ public abstract class StoreService<T extends PersistableEnvelope> {
                     initializePersistenceManager();
                     consumer.accept(persisted);
                 });
+    }
+
+    // Uses synchronous execution on the userThread. Only used by tests. The async methods should be used by app code.
+    @VisibleForTesting
+    protected T getStoreSync(String fileName) {
+        T store = persistenceManager.getPersisted(fileName);
+        if (store == null) {
+            store = createStore();
+        }
+        return store;
+    }
+
+    // Uses synchronous execution on the userThread. Only used by tests. The async methods should be used by app code.
+    @VisibleForTesting
+    protected void readStoreSync() {
+        store = getStoreSync(getFileName());
+        initializePersistenceManager();
     }
 
     protected abstract void initializePersistenceManager();

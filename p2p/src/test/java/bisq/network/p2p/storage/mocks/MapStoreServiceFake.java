@@ -64,7 +64,7 @@ public class MapStoreServiceFake extends MapStoreService {
         return true;
     }
 
-    protected void readFromResources(String postFix, Runnable completeHandler) {
+    protected void readFromResourcesSync(String postFix) {
         // do nothing. This Fake only supports in-memory storage.
     }
 

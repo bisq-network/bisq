@@ -20,9 +20,9 @@ package bisq.network.p2p.storage.persistence;
 import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 
-import bisq.common.UserThread;
-
 import javax.inject.Inject;
+
+import com.google.common.annotations.VisibleForTesting;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -59,11 +59,18 @@ public class AppendOnlyDataStoreService {
         services.forEach(service -> {
             service.readFromResources(postFix, () -> {
                 if (remaining.decrementAndGet() == 0) {
-                    UserThread.execute(completeHandler);
+                    completeHandler.run();
                 }
             });
         });
     }
+
+    // Uses synchronous execution on the userThread. Only used by tests. The async methods should be used by app code.
+    @VisibleForTesting
+    public void readFromResourcesSync(String postFix) {
+        services.forEach(service -> service.readFromResourcesSync(postFix));
+    }
+
 
     public Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> getMap() {
         return services.stream()

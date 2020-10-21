@@ -189,6 +189,15 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                 completeHandler);
     }
 
+    // Uses synchronous execution on the userThread. Only used by tests. The async methods should be used by app code.
+    @VisibleForTesting
+    public void readPersistedSync() {
+        SequenceNumberMap persisted = persistenceManager.getPersisted();
+        if (persisted != null) {
+            sequenceNumberMap.setMap(getPurgedSequenceNumberMap(persisted.getMap()));
+        }
+    }
+
     // Threading is done on the persistenceManager level
     public void readFromResources(String postFix, Runnable completeHandler) {
         BooleanProperty appendOnlyDataStoreServiceReady = new SimpleBooleanProperty();
@@ -212,6 +221,17 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
             }
         });
     }
+
+    // Uses synchronous execution on the userThread. Only used by tests. The async methods should be used by app code.
+    @VisibleForTesting
+    public void readFromResourcesSync(String postFix) {
+        appendOnlyDataStoreService.readFromResourcesSync(postFix);
+        protectedDataStoreService.readFromResourcesSync(postFix);
+        resourceDataStoreService.readFromResourcesSync(postFix);
+
+        map.putAll(protectedDataStoreService.getMap());
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // RequestData API

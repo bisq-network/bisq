@@ -20,10 +20,11 @@ package bisq.network.p2p.storage.persistence;
 import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 
-import bisq.common.UserThread;
 import bisq.common.proto.persistable.PersistableEnvelope;
 
 import javax.inject.Inject;
+
+import com.google.common.annotations.VisibleForTesting;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -59,10 +60,16 @@ public class ProtectedDataStoreService {
         services.forEach(service -> {
             service.readFromResources(postFix, () -> {
                 if (remaining.decrementAndGet() == 0) {
-                    UserThread.execute(completeHandler);
+                    completeHandler.run();
                 }
             });
         });
+    }
+
+    // Uses synchronous execution on the userThread. Only used by tests. The async methods should be used by app code.
+    @VisibleForTesting
+    public void readFromResourcesSync(String postFix) {
+        services.forEach(service -> service.readFromResourcesSync(postFix));
     }
 
     public Map<P2PDataStorage.ByteArray, ProtectedStorageEntry> getMap() {
