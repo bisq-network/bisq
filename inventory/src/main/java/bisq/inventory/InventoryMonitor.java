@@ -46,6 +46,8 @@ import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
+import org.jetbrains.annotations.Nullable;
+
 @Slf4j
 public class InventoryMonitor implements SetupListener {
 
@@ -72,9 +74,8 @@ public class InventoryMonitor implements SetupListener {
         networkNode = getNetworkNode(appDir);
         getInventoryRequestManager = new GetInventoryRequestManager(networkNode);
 
-        //TODO until we use all seeds we use our custom seed node file which includes only those which have updated to our branch
-        // Once all seeds are updated we can remove that resource file and prefix
-        //String fileName = network.name().toLowerCase();
+        // We maintain our own list as we want to monitor also old v2 nodes which are not part of the normal seed
+        // node list anymore.
         String networkName = network.name().toLowerCase();
         String fileName = network.isMainnet() ? "inv_" + networkName : networkName;
         DefaultSeedNodeRepository.readSeedNodePropertyFile(fileName)
@@ -117,36 +118,45 @@ public class InventoryMonitor implements SetupListener {
             new Thread(() -> {
                 Thread.currentThread().setName("request @ " + getShortAddress(nodeAddress, useLocalhostForP2P));
                 getInventoryRequestManager.request(nodeAddress,
-                        result -> {
-                            log.info("nodeAddress={}, result={}", nodeAddress, result.toString());
-                            long responseTime = System.currentTimeMillis();
-                            requestInfo.setResponseTime(responseTime);
-                            requestInfo.setInventory(result);
-
-                            requestInfoListByNode.putIfAbsent(nodeAddress, new ArrayList<>());
-                            List<RequestInfo> requestInfoList = requestInfoListByNode.get(nodeAddress);
-                            requestInfoList.add(requestInfo);
-
-                            // We create average of all nodes latest results. It might be that the nodes last result is
-                            // from a previous request as the response has not arrived yet.
-                            Set<RequestInfo> requestInfoSetOfOtherNodes = requestInfoListByNode.values().stream()
-                                    .filter(list -> !list.isEmpty())
-                                    .map(list -> list.get(list.size() - 1))
-                                    .collect(Collectors.toSet());
-                            Map<InventoryItem, Double> averageValues = InventoryUtil.getAverageValues(requestInfoSetOfOtherNodes);
-
-                            inventoryWebServer.onNewRequestInfo(requestInfoListByNode, averageValues, requestCounter);
-
-                            String json = Utilities.objectToJson(requestInfo);
-                            jsonFileManagerByNodeAddress.get(nodeAddress).writeToDisc(json, String.valueOf(responseTime));
-                        },
-                        errorMessage -> {
-                            log.warn(errorMessage);
-                            requestInfo.setErrorMessage(errorMessage);
-                        });
+                        result -> processResponse(nodeAddress, requestInfo, result, null),
+                        errorMessage -> processResponse(nodeAddress, requestInfo, null, errorMessage));
             }).start();
 
         });
+    }
+
+    private void processResponse(NodeAddress nodeAddress,
+                                 RequestInfo requestInfo,
+                                 @Nullable Map<InventoryItem, String> result,
+                                 @Nullable String errorMessage) {
+        if (errorMessage != null) {
+            log.warn("Error at connection to peer {}: {}", nodeAddress, errorMessage);
+            requestInfo.setErrorMessage(errorMessage);
+        }
+
+        if (result != null) {
+            log.info("nodeAddress={}, result={}", nodeAddress, result.toString());
+            requestInfo.setInventory(result);
+            long responseTime = System.currentTimeMillis();
+            requestInfo.setResponseTime(responseTime);
+        }
+
+        requestInfoListByNode.putIfAbsent(nodeAddress, new ArrayList<>());
+        List<RequestInfo> requestInfoList = requestInfoListByNode.get(nodeAddress);
+        requestInfoList.add(requestInfo);
+
+        // We create average of all nodes latest results. It might be that the nodes last result is
+        // from a previous request as the response has not arrived yet.
+        Set<RequestInfo> requestInfoSetOfOtherNodes = requestInfoListByNode.values().stream()
+                .filter(list -> !list.isEmpty())
+                .map(list -> list.get(list.size() - 1))
+                .collect(Collectors.toSet());
+        Map<InventoryItem, Double> averageValues = InventoryUtil.getAverageValues(requestInfoSetOfOtherNodes);
+
+        inventoryWebServer.onNewRequestInfo(requestInfoListByNode, averageValues, requestCounter);
+
+        String json = Utilities.objectToJson(requestInfo);
+        jsonFileManagerByNodeAddress.get(nodeAddress).writeToDisc(json, String.valueOf(requestInfo.getRequestStartTime()));
     }
 
     private void addJsonFileManagers(List<NodeAddress> seedNodes) {

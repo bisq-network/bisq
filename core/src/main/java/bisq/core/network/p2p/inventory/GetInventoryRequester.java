@@ -83,7 +83,7 @@ public class GetInventoryRequester implements MessageListener, ConnectionListene
                     shutDown();
 
                     // We shut down our connection after work as our node is not helpful for the network.
-                    connection.shutDown(CloseConnectionReason.CLOSE_REQUESTED_BY_PEER);
+                    UserThread.runAfter(() -> connection.shutDown(CloseConnectionReason.CLOSE_REQUESTED_BY_PEER), 1);
                 }
             });
         }
@@ -107,7 +107,9 @@ public class GetInventoryRequester implements MessageListener, ConnectionListene
                              Connection connection) {
         connection.getPeersNodeAddressOptional().ifPresent(address -> {
             if (address.equals(nodeAddress)) {
-                errorMessageHandler.handleErrorMessage("Connected closed because of " + closeConnectionReason.name());
+                if (!closeConnectionReason.isIntended) {
+                    errorMessageHandler.handleErrorMessage("Connected closed because of " + closeConnectionReason.name());
+                }
                 shutDown();
             }
         });

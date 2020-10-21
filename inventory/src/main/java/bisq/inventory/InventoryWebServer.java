@@ -92,26 +92,24 @@ public class InventoryWebServer {
                 .append("<th align=\"left\">Network info</th>").append("</tr>");
 
         seedNodes.forEach(seedNode -> {
+            html.append("<tr valign=\"top\">");
             if (map.containsKey(seedNode) && !map.get(seedNode).isEmpty()) {
                 List<RequestInfo> list = map.get(seedNode);
-                int numRequests = list.size();
-                RequestInfo requestInfo = list.get(numRequests - 1);
-                html.append("<tr valign=\"top\">")
-                        .append("<td>").append(getSeedNodeInfo(seedNode, requestInfo, averageValues)).append("</td>")
-                        .append("<td>").append(getRequestInfo(requestInfo, numRequests)).append("</td>")
+                int numResponses = list.size();
+                RequestInfo requestInfo = list.get(numResponses - 1);
+                html.append("<td>").append(getSeedNodeInfo(seedNode, requestInfo, averageValues)).append("</td>")
+                        .append("<td>").append(getRequestInfo(requestInfo, numResponses)).append("</td>")
                         .append("<td>").append(getDataInfo(requestInfo, averageValues, map)).append("</td>")
                         .append("<td>").append(getDaoInfo(requestInfo, averageValues, map)).append("</td>")
                         .append("<td>").append(getNetworkInfo(requestInfo, averageValues)).append("</td>");
-                html.append("</tr>");
             } else {
-                html.append("<tr valign=\"top\">")
-                        .append("<td>").append(getSeedNodeInfo(seedNode, null, averageValues)).append("</td>")
+                html.append("<td>").append(getSeedNodeInfo(seedNode, null, averageValues)).append("</td>")
                         .append("<td>").append("n/a").append("</td>")
                         .append("<td>").append("n/a").append("</td>")
                         .append("<td>").append("n/a").append("</td>")
                         .append("<td>").append("n/a").append("</td>");
-                html.append("</tr>");
             }
+            html.append("</tr>");
         });
 
         html.append("</table></body></html>");
@@ -140,41 +138,49 @@ public class InventoryWebServer {
                     InventoryItem.jvmStartTime,
                     value -> new Date(Long.parseLong(value)).toString());
 
-            String duration = FormattingUtils.formatDurationAsWords(
-                    System.currentTimeMillis() - Long.parseLong(jvmStartTimeString),
-                    true, true);
+            String duration = jvmStartTimeString != null ?
+                    FormattingUtils.formatDurationAsWords(
+                            System.currentTimeMillis() - Long.parseLong(jvmStartTimeString),
+                            true, true) :
+                    "n/a";
             sb.append("Run duration: ").append(duration).append("<br/>");
         }
 
         return sb.toString();
     }
 
-    private String getRequestInfo(RequestInfo requestInfo, int numRequests) {
+    private String getRequestInfo(RequestInfo requestInfo, int numResponses) {
         StringBuilder sb = new StringBuilder();
 
-        DeviationSeverity deviationSeverity = numRequests == requestCounter ?
+        DeviationSeverity deviationSeverity = numResponses == requestCounter ?
                 DeviationSeverity.OK :
-                requestCounter - numRequests > 4 ?
+                requestCounter - numResponses > 4 ?
                         DeviationSeverity.ALERT :
                         DeviationSeverity.WARN;
         sb.append("Number of responses: ").append(getColorTagByDeviationSeverity(deviationSeverity))
-                .append(numRequests).append(CLOSE_TAG);
+                .append(numResponses).append(CLOSE_TAG);
 
-        long rrt = requestInfo.getResponseTime() - requestInfo.getRequestStartTime();
-        DeviationSeverity rrtDeviationSeverity = DeviationSeverity.OK;
-        if (rrt > 20_000) {
-            rrtDeviationSeverity = DeviationSeverity.ALERT;
-        } else if (rrt > 10_000) {
-            rrtDeviationSeverity = DeviationSeverity.WARN;
+        if (requestInfo.getResponseTime() > 0) {
+            long rrt = requestInfo.getResponseTime() - requestInfo.getRequestStartTime();
+            DeviationSeverity rrtDeviationSeverity = DeviationSeverity.OK;
+            if (rrt > 20_000) {
+                rrtDeviationSeverity = DeviationSeverity.ALERT;
+            } else if (rrt > 10_000) {
+                rrtDeviationSeverity = DeviationSeverity.WARN;
+            }
+            String rrtString = MathUtils.roundDouble(rrt / 1000d, 3) + " sec";
+            sb.append("Round trip time: ").append(getColorTagByDeviationSeverity(rrtDeviationSeverity))
+                    .append(rrtString).append(CLOSE_TAG);
+        } else {
+            sb.append("Round trip time: ").append("n/a").append(CLOSE_TAG);
         }
-        String rrtString = MathUtils.roundDouble(rrt / 1000d, 3) + " sec";
-        sb.append("Round trip time: ").append(getColorTagByDeviationSeverity(rrtDeviationSeverity))
-                .append(rrtString).append(CLOSE_TAG);
 
         Date requestStartTime = new Date(requestInfo.getRequestStartTime());
         sb.append("Requested at: ").append(requestStartTime).append("<br/>");
 
-        Date responseTime = new Date(requestInfo.getResponseTime());
+        String responseTime = requestInfo.getResponseTime() > 0 ?
+                new Date(requestInfo.getResponseTime()).toString() :
+                "n/a";
         sb.append("Response received at: ").append(responseTime).append("<br/>");
 
         String errorMessage = requestInfo.getErrorMessage();
@@ -359,8 +365,9 @@ public class InventoryWebServer {
         String displayString = "n/a";
         String deviationAsString = "";
         String colorTag = getColorTagByDeviationSeverity(DeviationSeverity.OK);
-        if (requestInfo.getInventory().containsKey(inventoryItem)) {
-            valueAsString = requestInfo.getInventory().get(inventoryItem);
+        Map<InventoryItem, String> inventory = requestInfo.getInventory();
+        if (inventory != null && inventory.containsKey(inventoryItem)) {
+            valueAsString = inventory.get(inventoryItem);
             if (averageValues != null && averageValues.containsKey(inventoryItem)) {
                 double average = averageValues.get(inventoryItem);
                 double deviation = 0;
