@@ -226,6 +226,7 @@ public class PersistenceManager<T extends PersistableEnvelope> {
 
     /**
      * Read persisted file in a thread.
+     * We map result handler calls to UserThread, so clients don't need to worry about threading
      *
      * @param fileName          File name of our persisted data.
      * @param resultHandler     Consumer of persisted data once it was read from disk.
@@ -235,9 +236,9 @@ public class PersistenceManager<T extends PersistableEnvelope> {
         new Thread(() -> {
             T persisted = getPersisted(fileName);
             if (persisted != null) {
-                resultHandler.accept(persisted);
+                UserThread.execute(() -> resultHandler.accept(persisted));
             } else {
-                orElse.run();
+                UserThread.execute(orElse);
             }
         }, "PersistenceManager-read-" + fileName).start();
     }
