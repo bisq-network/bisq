@@ -23,8 +23,8 @@ import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
-import bisq.core.offer.OfferUtil;
 import bisq.core.trade.Trade;
+import bisq.core.util.VolumeUtil;
 
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.storage.payload.CapabilityRequiringPayload;
@@ -355,7 +355,7 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
             return new Volume(new AltcoinExchangeRate((Altcoin) getTradePrice().getMonetary()).coinToAltcoin(getTradeAmount()));
         } else {
             Volume volume = new Volume(new ExchangeRate((Fiat) getTradePrice().getMonetary()).coinToFiat(getTradeAmount()));
-            return OfferUtil.getRoundedFiatVolume(volume);
+            return VolumeUtil.getRoundedFiatVolume(volume);
         }
     }
 

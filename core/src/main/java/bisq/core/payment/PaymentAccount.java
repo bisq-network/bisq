@@ -126,8 +126,7 @@ public abstract class PaymentAccount implements PersistablePayload {
     }
 
     public void removeCurrency(TradeCurrency tradeCurrency) {
-        if (tradeCurrencies.contains(tradeCurrency))
-            tradeCurrencies.remove(tradeCurrency);
+        tradeCurrencies.remove(tradeCurrency);
     }
 
     public boolean hasMultipleCurrencies() {
@@ -172,6 +171,30 @@ public abstract class PaymentAccount implements PersistablePayload {
 
     public String getOwnerId() {
         return paymentAccountPayload.getOwnerId();
+    }
+
+    public boolean isHalCashAccount() {
+        return this instanceof HalCashAccount;
+    }
+
+    /**
+     * Return an Optional of the trade currency for this payment account, or
+     * Optional.empty() if none is found.  If this payment account has a selected
+     * trade currency, that is returned, else its single trade currency is returned,
+     * else the first trade currency in the this payment account's tradeCurrencies
+     * list is returned.
+     *
+     * @return Optional of the trade currency for the given payment account
+     */
+    public Optional<TradeCurrency> getTradeCurrency() {
+        if (this.getSelectedTradeCurrency() != null)
+            return Optional.of(this.getSelectedTradeCurrency());
+        else if (this.getSingleTradeCurrency() != null)
+            return Optional.of(this.getSingleTradeCurrency());
+        else if (!this.getTradeCurrencies().isEmpty())
+            return Optional.of(this.getTradeCurrencies().get(0));
+        else
+            return Optional.empty();
     }
 
     public void onAddToUser() {
