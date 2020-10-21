@@ -31,6 +31,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -57,6 +58,7 @@ public class InventoryUtil {
         checkArgument(inventoryItem.getType().equals(Integer.class));
         return requestInfoSetOfOtherNodes.stream()
                 .map(RequestInfo::getInventory)
+                .filter(Objects::nonNull)
                 .filter(inventory -> inventory.containsKey(inventoryItem))
                 .mapToInt(inventory -> Integer.parseInt(inventory.get(inventoryItem)))
                 .average()
@@ -68,6 +70,7 @@ public class InventoryUtil {
         checkArgument(inventoryItem.getType().equals(Long.class));
         return requestInfoSetOfOtherNodes.stream()
                 .map(RequestInfo::getInventory)
+                .filter(Objects::nonNull)
                 .filter(inventory -> inventory.containsKey(inventoryItem))
                 .mapToLong(inventory -> Long.parseLong(inventory.get(inventoryItem)))
                 .average()
@@ -79,6 +82,7 @@ public class InventoryUtil {
         checkArgument(inventoryItem.getType().equals(Double.class));
         return requestInfoSetOfOtherNodes.stream()
                 .map(RequestInfo::getInventory)
+                .filter(Objects::nonNull)
                 .filter(inventory -> inventory.containsKey(inventoryItem))
                 .mapToDouble(inventory -> Double.parseDouble((inventory.get(inventoryItem))))
                 .average()
@@ -97,6 +101,7 @@ public class InventoryUtil {
                 .filter(list -> !list.isEmpty())
                 .map(list -> list.get(list.size() - 1)) // We use last item only
                 .map(RequestInfo::getInventory)
+                .filter(Objects::nonNull)
                 .map(e -> e.get(inventoryItem))
                 .forEach(e -> {
                     sameItemsByValue.putIfAbsent(e, 0);
@@ -109,17 +114,20 @@ public class InventoryUtil {
             sameItems.sort(Comparator.comparing(o -> o.second));
             Collections.reverse(sameItems);
             String majority = sameItems.get(0).first;
-            String candidate = requestInfo.getInventory().get(inventoryItem);
-            if (!majority.equals(candidate)) {
-                int majorityAsInt = Integer.parseInt(majority);
-                int candidateAsInt = Integer.parseInt(candidate);
-                int diff = Math.abs(majorityAsInt - candidateAsInt);
-                if (diff >= alertTrigger) {
-                    deviationSeverity = DeviationSeverity.ALERT;
-                } else if (diff >= warnTrigger) {
-                    deviationSeverity = DeviationSeverity.WARN;
-                } else {
-                    deviationSeverity = DeviationSeverity.OK;
+            Map<InventoryItem, String> inventory = requestInfo.getInventory();
+            if (inventory != null) {
+                String candidate = inventory.get(inventoryItem);
+                if (!majority.equals(candidate)) {
+                    int majorityAsInt = Integer.parseInt(majority);
+                    int candidateAsInt = Integer.parseInt(candidate);
+                    int diff = Math.abs(majorityAsInt - candidateAsInt);
+                    if (diff >= alertTrigger) {
+                        deviationSeverity = DeviationSeverity.ALERT;
+                    } else if (diff >= warnTrigger) {
+                        deviationSeverity = DeviationSeverity.WARN;
+                    } else {
+                        deviationSeverity = DeviationSeverity.OK;
+                    }
                 }
             }
         }
@@ -136,8 +144,9 @@ public class InventoryUtil {
                 .filter(list -> !list.isEmpty())
                 .map(list -> list.get(list.size() - 1)) // We use last item only
                 .map(RequestInfo::getInventory)
-                .filter(inventoryMap -> inventoryMap.get(InventoryItem.daoStateChainHeight).equals(daoStateChainHeightAsString))
-                .map(inventoryMap -> inventoryMap.get(inventoryItem))
+                .filter(Objects::nonNull)
+                .filter(inventory -> inventory.get(InventoryItem.daoStateChainHeight).equals(daoStateChainHeightAsString))
+                .map(inventory -> inventory.get(inventoryItem))
                 .forEach(value -> {
                     sameHashesPerHashListByHash.putIfAbsent(value, 0);
                     int prev = sameHashesPerHashListByHash.get(value);
@@ -151,13 +160,16 @@ public class InventoryUtil {
 
             // It could be that first and any following list entry has same number of hashes, but we ignore that as
             // it is reason enough to alert the operators in case not all hashes are the same.
-            if (sameHashesPerHashList.get(0).first.equals(requestInfo.getInventory().get(inventoryItem))) {
-                // We are in the majority group.
-                // We also set a warning to make sure the operators act quickly and to check if there are
-                // more severe issues.
-                deviationSeverity = DeviationSeverity.WARN;
-            } else {
-                deviationSeverity = DeviationSeverity.ALERT;
+            Map<InventoryItem, String> inventory = requestInfo.getInventory();
+            if (inventory != null) {
+                if (sameHashesPerHashList.get(0).first.equals(inventory.get(inventoryItem))) {
+                    // We are in the majority group.
+                    // We also set a warning to make sure the operators act quickly and to check if there are
+                    // more severe issues.
+                    deviationSeverity = DeviationSeverity.WARN;
+                } else {
+                    deviationSeverity = DeviationSeverity.ALERT;
+                }
             }
         }
         return deviationSeverity;

@@ -24,13 +24,17 @@ import java.util.Map;
 import lombok.Getter;
 import lombok.Setter;
 
+import org.jetbrains.annotations.Nullable;
+
 @Getter
 public class RequestInfo {
     private final long requestStartTime;
     @Setter
     private long responseTime;
+    @Nullable
     @Setter
     private Map<InventoryItem, String> inventory;
+    @Nullable
     @Setter
     private String errorMessage;
 
