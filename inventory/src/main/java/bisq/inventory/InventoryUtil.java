@@ -85,32 +85,73 @@ public class InventoryUtil {
                 .orElse(0d);
     }
 
-    public static DeviationSeverity getDeviationSeverityForHash(Map<NodeAddress, List<RequestInfo>> map,
-                                                                String daoStateChainHeightAsString,
-                                                                RequestInfo requestInfo,
-                                                                InventoryItem daoStateHash) {
+
+    public static DeviationSeverity getDeviationSeverityByIntegerDistance(Map<NodeAddress, List<RequestInfo>> map,
+                                                                          RequestInfo requestInfo,
+                                                                          InventoryItem inventoryItem,
+                                                                          int warnTrigger,
+                                                                          int alertTrigger) {
         DeviationSeverity deviationSeverity = DeviationSeverity.OK;
-        Map<String, Integer> sameHashesPerHash = new HashMap<>();
+        Map<String, Integer> sameItemsByValue = new HashMap<>();
         map.values().stream()
                 .filter(list -> !list.isEmpty())
                 .map(list -> list.get(list.size() - 1)) // We use last item only
                 .map(RequestInfo::getInventory)
-                .filter(e -> e.get(InventoryItem.daoStateChainHeight).equals(daoStateChainHeightAsString))
-                .map(e -> e.get(daoStateHash))
+                .map(e -> e.get(inventoryItem))
                 .forEach(e -> {
-                    sameHashesPerHash.putIfAbsent(e, 0);
-                    int prev = sameHashesPerHash.get(e);
-                    sameHashesPerHash.put(e, prev + 1);
+                    sameItemsByValue.putIfAbsent(e, 0);
+                    int prev = sameItemsByValue.get(e);
+                    sameItemsByValue.put(e, prev + 1);
                 });
-        if (sameHashesPerHash.size() > 1) {
+        if (sameItemsByValue.size() > 1) {
+            List<Tuple2<String, Integer>> sameItems = new ArrayList<>();
+            sameItemsByValue.forEach((key, value) -> sameItems.add(new Tuple2<>(key, value)));
+            sameItems.sort(Comparator.comparing(o -> o.second));
+            Collections.reverse(sameItems);
+            String majority = sameItems.get(0).first;
+            String candidate = requestInfo.getInventory().get(inventoryItem);
+            if (!majority.equals(candidate)) {
+                int majorityAsInt = Integer.parseInt(majority);
+                int candidateAsInt = Integer.parseInt(candidate);
+                int diff = Math.abs(majorityAsInt - candidateAsInt);
+                if (diff >= alertTrigger) {
+                    deviationSeverity = DeviationSeverity.ALERT;
+                } else if (diff >= warnTrigger) {
+                    deviationSeverity = DeviationSeverity.WARN;
+                } else {
+                    deviationSeverity = DeviationSeverity.OK;
+                }
+            }
+        }
+        return deviationSeverity;
+    }
+
+    public static DeviationSeverity getDeviationSeverityForHash(Map<NodeAddress, List<RequestInfo>> map,
+                                                                String daoStateChainHeightAsString,
+                                                                RequestInfo requestInfo,
+                                                                InventoryItem inventoryItem) {
+        DeviationSeverity deviationSeverity = DeviationSeverity.OK;
+        Map<String, Integer> sameHashesPerHashListByHash = new HashMap<>();
+        map.values().stream()
+                .filter(list -> !list.isEmpty())
+                .map(list -> list.get(list.size() - 1)) // We use last item only
+                .map(RequestInfo::getInventory)
+                .filter(inventoryMap -> inventoryMap.get(InventoryItem.daoStateChainHeight).equals(daoStateChainHeightAsString))
+                .map(inventoryMap -> inventoryMap.get(inventoryItem))
+                .forEach(value -> {
+                    sameHashesPerHashListByHash.putIfAbsent(value, 0);
+                    int prev = sameHashesPerHashListByHash.get(value);
+                    sameHashesPerHashListByHash.put(value, prev + 1);
+                });
+        if (sameHashesPerHashListByHash.size() > 1) {
             List<Tuple2<String, Integer>> sameHashesPerHashList = new ArrayList<>();
-            sameHashesPerHash.forEach((key, value) -> sameHashesPerHashList.add(new Tuple2<>(key, value)));
+            sameHashesPerHashListByHash.forEach((key, value) -> sameHashesPerHashList.add(new Tuple2<>(key, value)));
             sameHashesPerHashList.sort(Comparator.comparing(o -> o.second));
             Collections.reverse(sameHashesPerHashList);
 
             // It could be that first and any following list entry has same number of hashes, but we ignore that as
             // it is reason enough to alert the operators in case not all hashes are the same.
-            if (sameHashesPerHashList.get(0).first.equals(requestInfo.getInventory().get(daoStateHash))) {
+            if (sameHashesPerHashList.get(0).first.equals(requestInfo.getInventory().get(inventoryItem))) {
                 // We are in the majority group.
                 // We also set a warning to make sure the operators act quickly and to check if there are
                 // more severe issues.

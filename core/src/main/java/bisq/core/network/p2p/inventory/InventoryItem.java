@@ -21,14 +21,14 @@ import lombok.Getter;
 
 public enum InventoryItem {
     OfferPayload("OfferPayload", Integer.class),
-    MailboxStoragePayload("MailboxStoragePayload", Integer.class),
-    TradeStatistics3("TradeStatistics3", Integer.class),
+    MailboxStoragePayload("MailboxStoragePayload", Integer.class, 0.9, 1.1, 0.95, 1.05),
+    TradeStatistics3("TradeStatistics3", Integer.class, 0.9, 1.1, 0.95, 1.05),
     Alert("Alert", Integer.class),
     Filter("Filter", Integer.class),
     Mediator("Mediator", Integer.class),
     RefundAgent("RefundAgent", Integer.class),
-    AccountAgeWitness("AccountAgeWitness", Integer.class),
-    SignedWitness("SignedWitness", Integer.class),
+    AccountAgeWitness("AccountAgeWitness", Integer.class, 0.9, 1.1, 0.95, 1.05),
+    SignedWitness("SignedWitness", Integer.class, 0.9, 1.1, 0.95, 1.05),
 
     TempProposalPayload("TempProposalPayload", Integer.class),
     ProposalPayload("ProposalPayload", Integer.class),
