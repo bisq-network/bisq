@@ -22,6 +22,7 @@ import bisq.core.btc.exceptions.RejectedTxException;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.locale.Res;
+import bisq.core.provider.fee.FeeService;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.trade.TradeManager;
 import bisq.core.user.Preferences;
@@ -64,6 +65,7 @@ public class WalletAppSetup {
 
     private final WalletsManager walletsManager;
     private final WalletsSetup walletsSetup;
+    private final FeeService feeService;
     private final Config config;
     private final Preferences preferences;
 
@@ -88,10 +90,12 @@ public class WalletAppSetup {
     @Inject
     public WalletAppSetup(WalletsManager walletsManager,
                           WalletsSetup walletsSetup,
+                          FeeService feeService,
                           Config config,
                           Preferences preferences) {
         this.walletsManager = walletsManager;
         this.walletsSetup = walletsSetup;
+        this.feeService = feeService;
         this.config = config;
         this.preferences = preferences;
         this.useTorForBTC.set(preferences.getUseTorForBitcoinJ());
@@ -110,18 +114,20 @@ public class WalletAppSetup {
         ObjectProperty<Throwable> walletServiceException = new SimpleObjectProperty<>();
         btcInfoBinding = EasyBind.combine(walletsSetup.downloadPercentageProperty(),
                 walletsSetup.numPeersProperty(),
+                feeService.feeUpdateCounterProperty(),
                 walletServiceException,
-                (downloadPercentage, numPeers, exception) -> {
+                (downloadPercentage, numPeers, feeUpdate, exception) -> {
                     String result;
                     if (exception == null) {
                         double percentage = (double) downloadPercentage;
                         int peers = (int) numPeers;
+                        long fees = feeService.getTxFeePerByte().longValue();
                         btcSyncProgress.set(percentage);
                         if (percentage == 1) {
                             result = Res.get("mainView.footer.btcInfo",
                                     peers,
                                     Res.get("mainView.footer.btcInfo.synchronizedWith"),
-                                    getBtcNetworkAsString());
+                                    getBtcNetworkAsString() + " (" + fees + " sat/vB)");
                             getBtcSplashSyncIconId().set("image-connection-synced");
 
                             downloadCompleteHandler.run();
