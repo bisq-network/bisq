@@ -27,7 +27,7 @@ import bisq.monitor.ThreadGate;
 import bisq.core.account.witness.AccountAgeWitnessStore;
 import bisq.core.proto.network.CoreNetworkProtoResolver;
 import bisq.core.proto.persistable.CorePersistenceProtoResolver;
-import bisq.core.trade.statistics.TradeStatistics2Store;
+import bisq.core.trade.statistics.TradeStatistics3Store;
 
 import bisq.network.p2p.CloseConnectionMessage;
 import bisq.network.p2p.NodeAddress;
@@ -38,9 +38,8 @@ import bisq.network.p2p.network.TorNetworkNode;
 
 import bisq.common.app.Version;
 import bisq.common.config.BaseCurrencyNetwork;
+import bisq.common.persistence.PersistenceManager;
 import bisq.common.proto.network.NetworkEnvelope;
-import bisq.common.proto.persistable.PersistableEnvelope;
-import bisq.common.storage.Storage;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -90,7 +89,7 @@ public abstract class P2PSeedNodeSnapshotBase extends Metric implements MessageL
      *
      * @param <T> the value type of the statistics implementation
      */
-    protected abstract class Statistics<T> {
+    protected abstract static class Statistics<T> {
         protected final Map<String, T> buckets = new HashMap<>();
 
         abstract void log(Object message);
@@ -116,12 +115,29 @@ public abstract class P2PSeedNodeSnapshotBase extends Metric implements MessageL
             File dir = new File(configuration.getProperty(DATABASE_DIR));
             String networkPostfix = "_" + BaseCurrencyNetwork.values()[Version.getBaseCurrencyNetwork()].toString();
             try {
-                Storage<PersistableEnvelope> storage = new Storage<>(dir, new CorePersistenceProtoResolver(null, null, null, null), null);
-                TradeStatistics2Store tradeStatistics2Store = (TradeStatistics2Store) storage.initAndGetPersistedWithFileName(TradeStatistics2Store.class.getSimpleName() + networkPostfix, 0);
-                hashes.addAll(tradeStatistics2Store.getMap().keySet().stream().map(byteArray -> byteArray.bytes).collect(Collectors.toList()));
+                CorePersistenceProtoResolver persistenceProtoResolver = new CorePersistenceProtoResolver(null, null);
 
-                AccountAgeWitnessStore accountAgeWitnessStore = (AccountAgeWitnessStore) storage.initAndGetPersistedWithFileName(AccountAgeWitnessStore.class.getSimpleName() + networkPostfix, 0);
-                hashes.addAll(accountAgeWitnessStore.getMap().keySet().stream().map(byteArray -> byteArray.bytes).collect(Collectors.toList()));
+                TradeStatistics3Store tradeStatistics3Store = new TradeStatistics3Store();
+                PersistenceManager<TradeStatistics3Store> tradeStatistics3PersistenceManager = new PersistenceManager<>(dir,
+                        persistenceProtoResolver, null);
+                tradeStatistics3PersistenceManager.initialize(tradeStatistics3Store, PersistenceManager.Source.NETWORK);
+                TradeStatistics3Store persistedTradeStatistics3Store = tradeStatistics3PersistenceManager.getPersisted();
+                if (persistedTradeStatistics3Store != null) {
+                    tradeStatistics3Store.getMap().putAll(persistedTradeStatistics3Store.getMap());
+                }
+                hashes.addAll(tradeStatistics3Store.getMap().keySet().stream()
+                        .map(byteArray -> byteArray.bytes).collect(Collectors.toSet()));
+
+                AccountAgeWitnessStore accountAgeWitnessStore = new AccountAgeWitnessStore();
+                PersistenceManager<AccountAgeWitnessStore> accountAgeWitnessPersistenceManager = new PersistenceManager<>(dir,
+                        persistenceProtoResolver, null);
+                accountAgeWitnessPersistenceManager.initialize(accountAgeWitnessStore, PersistenceManager.Source.NETWORK);
+                AccountAgeWitnessStore persistedAccountAgeWitnessStore = accountAgeWitnessPersistenceManager.getPersisted();
+                if (persistedAccountAgeWitnessStore != null) {
+                    accountAgeWitnessStore.getMap().putAll(persistedAccountAgeWitnessStore.getMap());
+                }
+                hashes.addAll(accountAgeWitnessStore.getMap().keySet().stream()
+                        .map(byteArray -> byteArray.bytes).collect(Collectors.toSet()));
             } catch (NullPointerException e) {
                 // in case there is no store file
                 log.error("There is no storage file where there should be one: {}", dir.getAbsolutePath());
@@ -156,32 +172,32 @@ public abstract class P2PSeedNodeSnapshotBase extends Metric implements MessageL
         for (String current : configuration.getProperty(HOSTS, "").split(",")) {
             threadList.add(new Thread(() -> {
 
-            try {
-                // parse Url
-                NodeAddress target = OnionParser.getNodeAddress(current);
+                try {
+                    // parse Url
+                    NodeAddress target = OnionParser.getNodeAddress(current);
 
-                // do the data request
-                aboutToSend(message);
-                SettableFuture<Connection> future = networkNode.sendMessage(target, message);
+                    // do the data request
+                    aboutToSend(message);
+                    SettableFuture<Connection> future = networkNode.sendMessage(target, message);
 
-                Futures.addCallback(future, new FutureCallback<>() {
-                    @Override
-                    public void onSuccess(Connection connection) {
-                        connection.addMessageListener(P2PSeedNodeSnapshotBase.this);
-                    }
+                    Futures.addCallback(future, new FutureCallback<>() {
+                        @Override
+                        public void onSuccess(Connection connection) {
+                            connection.addMessageListener(P2PSeedNodeSnapshotBase.this);
+                        }
 
-                    @Override
-                    public void onFailure(@NotNull Throwable throwable) {
-                        gate.proceed();
-                        log.error(
-                                "Sending {} failed. That is expected if the peer is offline.\n\tException={}", message.getClass().getSimpleName(), throwable.getMessage());
-                    }
-                }, MoreExecutors.directExecutor());
+                        @Override
+                        public void onFailure(@NotNull Throwable throwable) {
+                            gate.proceed();
+                            log.error(
+                                    "Sending {} failed. That is expected if the peer is offline.\n\tException={}", message.getClass().getSimpleName(), throwable.getMessage());
+                        }
+                    }, MoreExecutors.directExecutor());
 
-            } catch (Exception e) {
-                gate.proceed(); // release the gate on error
-                e.printStackTrace();
-            }
+                } catch (Exception e) {
+                    gate.proceed(); // release the gate on error
+                    e.printStackTrace();
+                }
             }, current));
         }
 
@@ -195,7 +211,8 @@ public abstract class P2PSeedNodeSnapshotBase extends Metric implements MessageL
         gate.await();
     }
 
-    protected void aboutToSend(NetworkEnvelope message) { };
+    protected void aboutToSend(NetworkEnvelope message) {
+    }
 
     /**
      * Report all the stuff. Uses the configured reporter directly.
