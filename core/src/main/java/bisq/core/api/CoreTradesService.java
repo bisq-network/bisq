@@ -71,9 +71,7 @@ class CoreTradesService {
                 offer,
                 paymentAccountId,
                 useSavingsWallet,
-                trade -> {
-                    resultHandler.accept(trade);
-                },
+                resultHandler::accept,
                 errorMessage -> {
                     log.error(errorMessage);
                     throw new IllegalStateException(errorMessage);
