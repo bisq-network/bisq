@@ -123,26 +123,25 @@ public class TakeOfferModel implements Model {
     }
 
     private void calculateTxFees() {
-        // Taker pays 3 times the tx fee (taker fee, deposit, payout) because the mining fee might be different when maker created the offer
-        // and reserved his funds. Taker creates at least taker fee and deposit tx at nearly the same moment. Just the payout will
-        // be later and still could lead to issues if the required fee changed a lot in the meantime. using RBF and/or
-        // multiple batch-signed payout tx with different fees might be an option but RBF is not supported yet in BitcoinJ
-        // and batched txs would add more complexity to the trade protocol.
+        // Taker pays 3 times the tx fee (taker fee, deposit, payout) because the mining
+        // fee might be different when maker created the offer and reserved his funds.
+        // Taker creates at least taker fee and deposit tx at nearly the same moment.
+        // Just the payout will be later and still could lead to issues if the required
+        // fee changed a lot in the meantime. using RBF and/or multiple batch-signed
+        // payout tx with different fees might be an option but RBF is not supported yet
+        // in BitcoinJ and batched txs would add more complexity to the trade protocol.
 
-        // A typical trade fee tx has about 260 bytes (if one input). The trade txs has about 336-414 bytes.
-        // We use 320 as a average value.
+        // A typical trade fee tx has about 260 bytes (if one input). The trade txs has
+        // about 336-414 bytes.  We use 320 as a average value.
 
-        // trade fee tx: 260 bytes (1 input)
-        // deposit tx: 336 bytes (1 MS output+ OP_RETURN) - 414 bytes (1 MS output + OP_RETURN + change in case of smaller trade amount)
-        // payout tx: 371 bytes
-        // disputed payout tx: 408 bytes
+        // Fee calculations:
+        // Trade fee tx: 260 bytes (1 input)
+        // Deposit tx: 336 bytes (1 MS output+ OP_RETURN) - 414 bytes
+        //     (1 MS output + OP_RETURN + change in case of smaller trade amount)
+        // Payout tx: 371 bytes
+        // Disputed payout tx: 408 bytes
 
-        // Set the default values (in rare cases if the fee request was not done yet we get the hard coded default values)
-        // But the "take offer" happens usually after that so we should have already the value from the estimation service.
-        txFeePerByteFromFeeService = feeService.getTxFeePerByte();
-        txFeeFromFeeService = offerUtil.getTxFeeBySize(txFeePerByteFromFeeService, feeTxSize);
-
-        // We request to get the actual estimated fee
+        // Request actual fees:
         log.info("Start requestTxFee: txFeeFromFeeService={}", txFeeFromFeeService);
         feeService.requestFees(() -> {
             txFeePerByteFromFeeService = feeService.getTxFeePerByte();
