@@ -112,7 +112,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     private ToggleGroup tradeAmountToggleGroup, reasonToggleGroup;
     private DisputeResult disputeResult;
     private RadioButton buyerGetsTradeAmountRadioButton, sellerGetsTradeAmountRadioButton,
-            buyerGetsAllRadioButton, sellerGetsAllRadioButton, customRadioButton;
+            buyerGetsCompensatedRadioButton, sellerGetsCompensatedRadioButton, customRadioButton;
     private RadioButton reasonWasBugRadioButton, reasonWasUsabilityIssueRadioButton,
             reasonProtocolViolationRadioButton, reasonNoReplyRadioButton, reasonWasScamRadioButton,
             reasonWasOtherRadioButton, reasonWasBankRadioButton, reasonWasOptionTradeRadioButton,
@@ -248,9 +248,9 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
             disputeResult.setSummaryNotes(peersDisputeResult.summaryNotesProperty().get());
 
             buyerGetsTradeAmountRadioButton.setDisable(true);
-            buyerGetsAllRadioButton.setDisable(true);
+            buyerGetsCompensatedRadioButton.setDisable(true);
             sellerGetsTradeAmountRadioButton.setDisable(true);
-            sellerGetsAllRadioButton.setDisable(true);
+            sellerGetsCompensatedRadioButton.setDisable(true);
             customRadioButton.setDisable(true);
 
             buyerPayoutAmountInputTextField.setDisable(true);
@@ -323,27 +323,27 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     private void addTradeAmountPayoutControls() {
         buyerGetsTradeAmountRadioButton = new AutoTooltipRadioButton(Res.get("disputeSummaryWindow.payout.getsTradeAmount",
                 Res.get("shared.buyer")));
-        buyerGetsAllRadioButton = new AutoTooltipRadioButton(Res.get("disputeSummaryWindow.payout.getsAll",
+        buyerGetsCompensatedRadioButton = new AutoTooltipRadioButton(Res.get("disputeSummaryWindow.payout.getsCompensated",
                 Res.get("shared.buyer")));
         sellerGetsTradeAmountRadioButton = new AutoTooltipRadioButton(Res.get("disputeSummaryWindow.payout.getsTradeAmount",
                 Res.get("shared.seller")));
-        sellerGetsAllRadioButton = new AutoTooltipRadioButton(Res.get("disputeSummaryWindow.payout.getsAll",
+        sellerGetsCompensatedRadioButton = new AutoTooltipRadioButton(Res.get("disputeSummaryWindow.payout.getsCompensated",
                 Res.get("shared.seller")));
         customRadioButton = new AutoTooltipRadioButton(Res.get("disputeSummaryWindow.payout.custom"));
 
         VBox radioButtonPane = new VBox();
         radioButtonPane.setSpacing(10);
-        radioButtonPane.getChildren().addAll(buyerGetsTradeAmountRadioButton, buyerGetsAllRadioButton,
-                sellerGetsTradeAmountRadioButton, sellerGetsAllRadioButton,
+        radioButtonPane.getChildren().addAll(buyerGetsTradeAmountRadioButton, buyerGetsCompensatedRadioButton,
+                sellerGetsTradeAmountRadioButton, sellerGetsCompensatedRadioButton,
                 customRadioButton);
 
         addTopLabelWithVBox(gridPane, ++rowIndex, Res.get("disputeSummaryWindow.payout"), radioButtonPane, 0);
 
         tradeAmountToggleGroup = new ToggleGroup();
         buyerGetsTradeAmountRadioButton.setToggleGroup(tradeAmountToggleGroup);
-        buyerGetsAllRadioButton.setToggleGroup(tradeAmountToggleGroup);
+        buyerGetsCompensatedRadioButton.setToggleGroup(tradeAmountToggleGroup);
         sellerGetsTradeAmountRadioButton.setToggleGroup(tradeAmountToggleGroup);
-        sellerGetsAllRadioButton.setToggleGroup(tradeAmountToggleGroup);
+        sellerGetsCompensatedRadioButton.setToggleGroup(tradeAmountToggleGroup);
         customRadioButton.setToggleGroup(tradeAmountToggleGroup);
 
         tradeAmountToggleGroupListener = (observable, oldValue, newValue) -> applyPayoutAmounts(newValue);
@@ -916,7 +916,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
             disputeResult.setBuyerPayoutAmount(tradeAmount.add(buyerSecurityDeposit));
             disputeResult.setSellerPayoutAmount(sellerSecurityDeposit);
             disputeResult.setWinner(DisputeResult.Winner.BUYER);
-        } else if (selectedTradeAmountToggle == buyerGetsAllRadioButton) {
+        } else if (selectedTradeAmountToggle == buyerGetsCompensatedRadioButton) {
             disputeResult.setBuyerPayoutAmount(maxPayoutAmount);
             disputeResult.setSellerPayoutAmount(minRefundAtDispute);
             disputeResult.setWinner(DisputeResult.Winner.BUYER);
@@ -924,7 +924,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
             disputeResult.setBuyerPayoutAmount(buyerSecurityDeposit);
             disputeResult.setSellerPayoutAmount(tradeAmount.add(sellerSecurityDeposit));
             disputeResult.setWinner(DisputeResult.Winner.SELLER);
-        } else if (selectedTradeAmountToggle == sellerGetsAllRadioButton) {
+        } else if (selectedTradeAmountToggle == sellerGetsCompensatedRadioButton) {
             disputeResult.setBuyerPayoutAmount(minRefundAtDispute);
             disputeResult.setSellerPayoutAmount(maxPayoutAmount);
             disputeResult.setWinner(DisputeResult.Winner.SELLER);
@@ -961,13 +961,13 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
             buyerGetsTradeAmountRadioButton.setSelected(true);
         } else if (buyerPayoutAmount.equals(maxPayoutAmount) &&
                 sellerPayoutAmount.equals(minRefundAtDispute)) {
-            buyerGetsAllRadioButton.setSelected(true);
+            buyerGetsCompensatedRadioButton.setSelected(true);
         } else if (sellerPayoutAmount.equals(tradeAmount.add(sellerSecurityDeposit))
                 && buyerPayoutAmount.equals(buyerSecurityDeposit)) {
             sellerGetsTradeAmountRadioButton.setSelected(true);
         } else if (sellerPayoutAmount.equals(maxPayoutAmount)
                 && buyerPayoutAmount.equals(minRefundAtDispute)) {
-            sellerGetsAllRadioButton.setSelected(true);
+            sellerGetsCompensatedRadioButton.setSelected(true);
         } else {
             customRadioButton.setSelected(true);
         }
