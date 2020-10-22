@@ -82,7 +82,7 @@ class CoreTradesService {
     }
 
     void confirmPaymentStarted(String tradeId) {
-        var trade = getTradeWithId(tradeId);
+        var trade = getTrade(tradeId);
         if (isFollowingBuyerProtocol(trade)) {
             var tradeProtocol = tradeManager.getTradeProtocol(trade);
             ((BuyerProtocol) tradeProtocol).onPaymentStarted(
@@ -98,7 +98,7 @@ class CoreTradesService {
     }
 
     void confirmPaymentReceived(String tradeId) {
-        var trade = getTradeWithId(tradeId);
+        var trade = getTrade(tradeId);
         if (isFollowingBuyerProtocol(trade)) {
             throw new IllegalStateException("you are the buyer, and not receiving payment");
         } else {
@@ -114,10 +114,6 @@ class CoreTradesService {
     }
 
     Trade getTrade(String tradeId) {
-        return getTradeWithId(tradeId);
-    }
-
-    private Trade getTradeWithId(String tradeId) {
         return tradeManager.getTradeById(tradeId).orElseThrow(() ->
                 new IllegalArgumentException(format("trade with id '%s' not found", tradeId)));
     }
