@@ -45,6 +45,7 @@ public class GrpcServer {
                       GrpcPriceService priceService,
                       GrpcVersionService versionService,
                       GrpcGetTradeStatisticsService tradeStatisticsService,
+                      GrpcTradesService tradesService,
                       GrpcWalletsService walletsService) {
         this.server = ServerBuilder.forPort(config.apiPort)
                 .addService(disputeAgentsService)
@@ -52,6 +53,7 @@ public class GrpcServer {
                 .addService(paymentAccountsService)
                 .addService(priceService)
                 .addService(tradeStatisticsService)
+                .addService(tradesService)
                 .addService(versionService)
                 .addService(walletsService)
                 .intercept(passwordAuthInterceptor)

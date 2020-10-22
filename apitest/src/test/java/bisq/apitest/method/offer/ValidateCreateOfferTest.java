@@ -36,7 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @Slf4j
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class ValidateCreateOfferTest extends AbstractCreateOfferTest {
+public class ValidateCreateOfferTest extends AbstractOfferTest {
 
     @Test
     @Order(1)
