@@ -81,6 +81,7 @@ public final class PeerManager implements ConnectionListener, PersistedDataHost 
     // Age of what we consider connected peers still as live peers
     private static final long MAX_AGE_LIVE_PEERS = TimeUnit.MINUTES.toMillis(30);
     private static final boolean PRINT_REPORTED_PEERS_DETAILS = true;
+    private boolean shutDownRequested;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -176,6 +177,7 @@ public final class PeerManager implements ConnectionListener, PersistedDataHost 
     }
 
     public void shutDown() {
+        shutDownRequested = true;
         networkNode.removeConnectionListener(this);
         clockWatcher.removeListener(clockWatcherListener);
         stopCheckMaxConnectionsTimer();
@@ -229,18 +231,21 @@ public final class PeerManager implements ConnectionListener, PersistedDataHost 
         boolean previousLostAllConnections = lostAllConnections;
         lostAllConnections = networkNode.getAllConnections().isEmpty();
 
-        // If we enter to 'All connections lost' we count the event.
-        if (!previousLostAllConnections && lostAllConnections) {
-            numAllConnectionsLostEvents++;
-        }
-
         if (lostAllConnections) {
             stopped = true;
-            log.warn("\n------------------------------------------------------------\n" +
-                    "All connections lost\n" +
-                    "------------------------------------------------------------");
-            listeners.forEach(Listener::onAllConnectionsLost);
 
+            if (!shutDownRequested) {
+                if (!previousLostAllConnections) {
+                    // If we enter to 'All connections lost' we count the event.
+                    numAllConnectionsLostEvents++;
+                }
+
+                log.warn("\n------------------------------------------------------------\n" +
+                        "All connections lost\n" +
+                        "------------------------------------------------------------");
+
+                listeners.forEach(Listener::onAllConnectionsLost);
+            }
         }
         maybeRemoveBannedPeer(closeConnectionReason, connection);
     }
