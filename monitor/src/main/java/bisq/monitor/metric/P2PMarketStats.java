@@ -34,6 +34,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -223,7 +224,9 @@ public class P2PMarketStats extends P2PSeedNodeSnapshotBase {
 
         // do version statistics
         report.clear();
-        versionBucketsPerHost.values().stream().findAny().get().values().forEach((version, numberOfOccurrences) -> report.put(version, String.valueOf(numberOfOccurrences.value())));
+        Optional<Statistics<Aggregator>> optionalStatistics = versionBucketsPerHost.values().stream().findAny();
+        optionalStatistics.ifPresent(aggregatorStatistics -> aggregatorStatistics.values()
+                .forEach((version, numberOfOccurrences) -> report.put(version, String.valueOf(numberOfOccurrences.value()))));
         reporter.report(report, "versions");
     }
 
