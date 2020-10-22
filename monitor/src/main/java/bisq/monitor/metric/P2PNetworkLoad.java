@@ -156,7 +156,7 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
         // report
         Map<String, String> report = new HashMap<>();
 
-        if(lastRun != 0 && System.currentTimeMillis() - lastRun != 0) {
+        if (lastRun != 0 && System.currentTimeMillis() - lastRun != 0) {
             // - normalize to data/minute
             double perMinuteFactor = 60000.0 / (System.currentTimeMillis() - lastRun);
 
@@ -219,7 +219,7 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
     public void onMessage(NetworkEnvelope networkEnvelope, Connection connection) {
         if (networkEnvelope instanceof BroadcastMessage) {
             try {
-                if(history.get(networkEnvelope.hashCode()) == null) {
+                if (history.get(networkEnvelope.hashCode()) == null) {
                     history.put(networkEnvelope.hashCode(), null);
                     buckets.get(networkEnvelope.getClass().getSimpleName()).increment();
                 }
