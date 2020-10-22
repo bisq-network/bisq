@@ -25,7 +25,6 @@ import org.berndpruenster.netlayer.tor.TorCtlException;
 
 import java.io.File;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 

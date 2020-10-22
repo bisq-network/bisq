@@ -19,9 +19,8 @@ package bisq.monitor.reporter;
 
 import bisq.monitor.Reporter;
 
-import bisq.common.config.BaseCurrencyNetwork;
-
 import bisq.common.app.Version;
+import bisq.common.config.BaseCurrencyNetwork;
 
 import java.util.HashMap;
 import java.util.Map;
