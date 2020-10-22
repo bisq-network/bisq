@@ -146,7 +146,6 @@ public class TakeOfferModel implements Model {
         feeService.requestFees(() -> {
             txFeePerByteFromFeeService = feeService.getTxFeePerByte();
             txFeeFromFeeService = offerUtil.getTxFeeBySize(txFeePerByteFromFeeService, feeTxSize);
-            calculateTotalToPay();
         });
     }
 
