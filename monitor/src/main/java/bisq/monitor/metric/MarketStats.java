@@ -28,8 +28,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -44,6 +42,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class MarketStats extends Metric {
+    private static final String MARKETS_BISQ_NETWORK = "https://markets.bisq.network";
 
     // poor mans JSON parser
     private final Pattern marketPattern = Pattern.compile("\"market\" ?: ?\"([a-z_]+)\"");
@@ -51,7 +50,6 @@ public class MarketStats extends Metric {
     private final Pattern volumePattern = Pattern.compile("\"volume\" ?: ?\"([\\d\\.]+)\"");
     private final Pattern timestampPattern = Pattern.compile("\"trade_date\" ?: ?([\\d]+)");
 
-    private final String marketApi = "https://markets.bisq.network";
     private Long lastRun = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(15));
 
     public MarketStats(Reporter reporter) {
@@ -61,16 +59,13 @@ public class MarketStats extends Metric {
     @Override
     protected void execute() {
         try {
-            // for each configured host
-            Map<String, String> result = new HashMap<>();
-
             // assemble query
-            Long now = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis());
+            long now = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis());
             String query = "/api/trades?format=json&market=all&timestamp_from=" + lastRun + "&timestamp_to=" + now;
             lastRun = now; // thought about adding 1 second but what if a trade is done exactly in this one second?
 
             // connect
-            URLConnection connection = new URL(marketApi + query).openConnection();
+            URLConnection connection = new URL(MARKETS_BISQ_NETWORK + query).openConnection();
 
             // prepare to receive data
             BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));

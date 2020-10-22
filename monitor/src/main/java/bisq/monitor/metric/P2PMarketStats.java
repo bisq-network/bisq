@@ -59,7 +59,7 @@ public class P2PMarketStats extends P2PSeedNodeSnapshotBase {
     /**
      * Efficient way to aggregate numbers.
      */
-    private class Aggregator {
+    private static class Aggregator {
         private long value = 0;
 
         synchronized long value() {
@@ -175,10 +175,10 @@ public class P2PMarketStats extends P2PSeedNodeSnapshotBase {
 
         // - create histogram
         input.stream().collect(
-                Collectors.groupingBy(aLong -> aLong == max ? (int) numberOfBins - 1 : (int) Math.floor(aLong / (max / numberOfBins)), Collectors.counting())).
+                Collectors.groupingBy(aLong -> aLong == max ? numberOfBins - 1 : (int) Math.floor(aLong / (max / numberOfBins)), Collectors.counting())).
                 forEach((integer, integer2) -> report.put(market + ".bin_" + integer, String.valueOf(integer2)));
 
-        report.put(market + ".number_of_bins", String.valueOf((int) numberOfBins));
+        report.put(market + ".number_of_bins", String.valueOf(numberOfBins));
         report.put(market + ".max", String.valueOf((int) max));
     }
 

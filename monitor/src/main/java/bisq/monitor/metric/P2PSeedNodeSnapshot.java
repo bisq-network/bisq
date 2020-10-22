@@ -49,7 +49,6 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -141,8 +140,8 @@ public class P2PSeedNodeSnapshot extends P2PSeedNodeSnapshotBase {
                         try {
                             report.put(OnionParser.prettyPrint(host) + ".relativeNumberOfMessages." + messageType,
                                     String.valueOf(set.size() - referenceValues.get(messageType).size()));
-                        } catch (MalformedURLException | NullPointerException ignore) {
-                            log.error("we should never have gotten here", ignore);
+                        } catch (MalformedURLException | NullPointerException e) {
+                            log.error("we should never have gotten here", e);
                         }
                     });
                     try {
@@ -199,10 +198,9 @@ public class P2PSeedNodeSnapshot extends P2PSeedNodeSnapshotBase {
                     hitcount.put(hash, 1);
             });
 
-            List<ByteBuffer> states = hitcount.entrySet().stream().sorted((o1, o2) -> o2.getValue().compareTo(o1.getValue())).map(byteBufferIntegerEntry -> byteBufferIntegerEntry.getKey()).collect(Collectors.toList());
             hitcount.clear();
 
-            nodeAddressTupleMap.forEach((nodeAddress, tuple) -> daoreport.put(type + "." + OnionParser.prettyPrint(nodeAddress) + ".hash", Integer.toString(Arrays.asList(states.toArray()).indexOf(ByteBuffer.wrap(tuple.hash)))));
+            nodeAddressTupleMap.forEach((nodeAddress, tuple) -> daoreport.put(type + "." + OnionParser.prettyPrint(nodeAddress) + ".hash", Integer.toString(Arrays.asList(hitcount.entrySet().stream().sorted((o1, o2) -> o2.getValue().compareTo(o1.getValue())).map(Map.Entry::getKey).toArray()).indexOf(ByteBuffer.wrap(tuple.hash)))));
 
             //   - report reference head
             daoreport.put(type + ".referenceHead", Integer.toString(head));
@@ -214,7 +212,7 @@ public class P2PSeedNodeSnapshot extends P2PSeedNodeSnapshotBase {
         reporter.report(daoreport, "DaoStateSnapshot");
     }
 
-    private class Tuple {
+    private static class Tuple {
         @Getter
         private final long height;
         private final byte[] hash;
@@ -239,7 +237,7 @@ public class P2PSeedNodeSnapshot extends P2PSeedNodeSnapshotBase {
         }
     }
 
-    private Map<NodeAddress, Statistics<Tuple>> daoData = new ConcurrentHashMap<>();
+    private final Map<NodeAddress, Statistics<Tuple>> daoData = new ConcurrentHashMap<>();
 
     protected boolean treatMessage(NetworkEnvelope networkEnvelope, Connection connection) {
         checkNotNull(connection.getPeersNodeAddressProperty(),
