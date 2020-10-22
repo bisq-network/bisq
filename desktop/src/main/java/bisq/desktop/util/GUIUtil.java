@@ -603,6 +603,10 @@ public class GUIUtil {
         openWebPage(target, useReferrer, null);
     }
 
+    public static void openWebPageNoPopup(String target) {
+        doOpenWebPage(target);
+    }
+
     public static void openWebPage(String target, boolean useReferrer, Runnable closeHandler) {
 
         if (useReferrer && target.contains("bisq.network")) {

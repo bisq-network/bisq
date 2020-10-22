@@ -22,6 +22,7 @@ import bisq.proto.grpc.CreatePaymentAccountRequest;
 import bisq.proto.grpc.GetAddressBalanceRequest;
 import bisq.proto.grpc.GetBalanceRequest;
 import bisq.proto.grpc.GetFundingAddressesRequest;
+import bisq.proto.grpc.GetOfferRequest;
 import bisq.proto.grpc.GetOffersRequest;
 import bisq.proto.grpc.GetPaymentAccountsRequest;
 import bisq.proto.grpc.GetVersionRequest;
@@ -67,6 +68,7 @@ public class CliMain {
 
     private enum Method {
         createoffer,
+        getoffer,
         getoffers,
         createpaymentacct,
         getpaymentaccts,
@@ -223,6 +225,19 @@ public class CliMain {
                     out.println(formatOfferTable(singletonList(reply.getOffer()), currencyCode));
                     return;
                 }
+                case getoffer: {
+                    if (nonOptionArgs.size() < 2)
+                        throw new IllegalArgumentException("incorrect parameter count, expecting offer id");
+
+                    var offerId = nonOptionArgs.get(1);
+                    var request = GetOfferRequest.newBuilder()
+                            .setId(offerId)
+                            .build();
+                    var reply = offersService.getOffer(request);
+                    out.println(formatOfferTable(singletonList(reply.getOffer()),
+                            reply.getOffer().getCounterCurrencyCode()));
+                    return;
+                }
                 case getoffers: {
                     if (nonOptionArgs.size() < 3)
                         throw new IllegalArgumentException("incorrect parameter count,"
@@ -364,6 +379,7 @@ public class CliMain {
             stream.format(rowFormat, "", "amount (btc), min amount, use mkt based price, \\", "");
             stream.format(rowFormat, "", "fixed price (btc) | mkt price margin (%), \\", "");
             stream.format(rowFormat, "", "security deposit (%)", "");
+            stream.format(rowFormat, "getoffer", "offer id", "Get current offer with id");
             stream.format(rowFormat, "getoffers", "buy | sell, currency code", "Get current offers");
             stream.format(rowFormat, "createpaymentacct", "account name, account number, currency code", "Create PerfectMoney dummy account");
             stream.format(rowFormat, "getpaymentaccts", "", "Get user payment accounts");

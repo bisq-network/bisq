@@ -41,12 +41,11 @@ import bisq.core.offer.OfferUtil;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.provider.fee.FeeService;
-import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.Trade;
-import bisq.core.user.Preferences;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.coin.CoinFormatter;
+import bisq.core.util.coin.CoinUtil;
 import bisq.core.util.validation.InputValidator;
 
 import bisq.network.p2p.P2PService;
@@ -86,11 +85,10 @@ import static javafx.beans.binding.Bindings.createStringBinding;
 
 class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> implements ViewModel {
     final TakeOfferDataModel dataModel;
+    private final OfferUtil offerUtil;
     private final BtcValidator btcValidator;
     private final P2PService p2PService;
-    private final Preferences preferences;
-    private final PriceFeedService priceFeedService;
-    private AccountAgeWitnessService accountAgeWitnessService;
+    private final AccountAgeWitnessService accountAgeWitnessService;
     private final Navigation navigation;
     private final CoinFormatter btcFormatter;
     private final BsqFormatter bsqFormatter;
@@ -101,7 +99,6 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     private Trade trade;
     private Offer offer;
     private String price;
-    private String directionLabel;
     private String amountDescription;
 
     final StringProperty amount = new SimpleStringProperty();
@@ -146,21 +143,18 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
 
     @Inject
     public TakeOfferViewModel(TakeOfferDataModel dataModel,
+                              OfferUtil offerUtil,
                               BtcValidator btcValidator,
                               P2PService p2PService,
-                              Preferences preferences,
-                              PriceFeedService priceFeedService,
                               AccountAgeWitnessService accountAgeWitnessService,
                               Navigation navigation,
                               @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
                               BsqFormatter bsqFormatter) {
         super(dataModel);
         this.dataModel = dataModel;
-
+        this.offerUtil = offerUtil;
         this.btcValidator = btcValidator;
         this.p2PService = p2PService;
-        this.preferences = preferences;
-        this.priceFeedService = priceFeedService;
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.navigation = navigation;
         this.btcFormatter = btcFormatter;
@@ -207,13 +201,9 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         dataModel.initWithData(offer);
         this.offer = offer;
 
-        if (offer.isBuyOffer()) {
-            directionLabel = Res.get("shared.sellBitcoin");
-            amountDescription = Res.get("takeOffer.amountPriceBox.buy.amountDescription");
-        } else {
-            directionLabel = Res.get("shared.buyBitcoin");
-            amountDescription = Res.get("takeOffer.amountPriceBox.sell.amountDescription");
-        }
+        amountDescription = offer.isBuyOffer()
+                ? Res.get("takeOffer.amountPriceBox.buy.amountDescription")
+                : Res.get("takeOffer.amountPriceBox.sell.amountDescription");
 
         amountRange = btcFormatter.formatCoin(offer.getMinAmount()) + " - " + btcFormatter.formatCoin(offer.getAmount());
         price = FormattingUtils.formatPrice(dataModel.tradePrice);
@@ -296,8 +286,9 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
             tradeFee.set(getFormatterForTakerFee().formatCoin(takerFeeAsCoin));
 
             Coin makerFeeInBtc = dataModel.getTakerFeeInBtc();
-            Optional<Volume> optionalBtcFeeInFiat = OfferUtil.getFeeInUserFiatCurrency(makerFeeInBtc,
-                    true, preferences, priceFeedService, bsqFormatter);
+            Optional<Volume> optionalBtcFeeInFiat = offerUtil.getFeeInUserFiatCurrency(makerFeeInBtc,
+                    true,
+                    bsqFormatter);
             String btcFeeWithFiatAmount = DisplayUtils.getFeeWithFiatAmount(makerFeeInBtc, optionalBtcFeeInFiat, btcFormatter);
             if (DevEnv.isDaoActivated()) {
                 tradeFeeInBtcWithFiat.set(btcFeeWithFiatAmount);
@@ -306,8 +297,9 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
             }
 
             Coin makerFeeInBsq = dataModel.getTakerFeeInBsq();
-            Optional<Volume> optionalBsqFeeInFiat = OfferUtil.getFeeInUserFiatCurrency(makerFeeInBsq,
-                    false, preferences, priceFeedService, bsqFormatter);
+            Optional<Volume> optionalBsqFeeInFiat = offerUtil.getFeeInUserFiatCurrency(makerFeeInBsq,
+                    false,
+                    bsqFormatter);
             String bsqFeeWithFiatAmount = DisplayUtils.getFeeWithFiatAmount(makerFeeInBsq, optionalBsqFeeInFiat, bsqFormatter);
             if (DevEnv.isDaoActivated()) {
                 tradeFeeInBsqWithFiat.set(bsqFeeWithFiatAmount);
@@ -355,7 +347,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                 Price tradePrice = dataModel.tradePrice;
                 long maxTradeLimit = dataModel.getMaxTradeLimit();
                 if (dataModel.getPaymentMethod().getId().equals(PaymentMethod.HAL_CASH_ID)) {
-                    Coin adjustedAmountForHalCash = OfferUtil.getAdjustedAmountForHalCash(dataModel.getAmount().get(),
+                    Coin adjustedAmountForHalCash = CoinUtil.getAdjustedAmountForHalCash(dataModel.getAmount().get(),
                             tradePrice,
                             maxTradeLimit);
                     dataModel.applyAmount(adjustedAmountForHalCash);
@@ -364,7 +356,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                     if (!isAmountEqualMinAmount(dataModel.getAmount().get()) && (!isAmountEqualMaxAmount(dataModel.getAmount().get()))) {
                         // We only apply the rounding if the amount is variable (minAmount is lower as amount).
                         // Otherwise we could get an amount lower then the minAmount set by rounding
-                        Coin roundedAmount = OfferUtil.getRoundedFiatAmount(dataModel.getAmount().get(), tradePrice,
+                        Coin roundedAmount = CoinUtil.getRoundedFiatAmount(dataModel.getAmount().get(), tradePrice,
                                 maxTradeLimit);
                         dataModel.applyAmount(roundedAmount);
                     }
@@ -638,12 +630,12 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
             Price price = dataModel.tradePrice;
             if (price != null) {
                 if (dataModel.isHalCashAccount()) {
-                    amount = OfferUtil.getAdjustedAmountForHalCash(amount, price, maxTradeLimit);
+                    amount = CoinUtil.getAdjustedAmountForHalCash(amount, price, maxTradeLimit);
                 } else if (CurrencyUtil.isFiatCurrency(dataModel.getCurrencyCode())
                         && !isAmountEqualMinAmount(amount) && !isAmountEqualMaxAmount(amount)) {
                     // We only apply the rounding if the amount is variable (minAmount is lower as amount).
                     // Otherwise we could get an amount lower then the minAmount set by rounding
-                    amount = OfferUtil.getRoundedFiatAmount(amount, price, maxTradeLimit);
+                    amount = CoinUtil.getRoundedFiatAmount(amount, price, maxTradeLimit);
                 }
             }
             dataModel.applyAmount(amount);
@@ -692,10 +684,6 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
 
     public String getPrice() {
         return price;
-    }
-
-    public String getDirectionLabel() {
-        return directionLabel;
     }
 
     public String getAmountDescription() {
@@ -757,10 +745,6 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         return GUIUtil.getPercentage(txFeeAsCoin, dataModel.getAmount().get());
     }
 
-    public PaymentMethod getPaymentMethod() {
-        return dataModel.getPaymentMethod();
-    }
-
     ObservableList<PaymentAccount> getPossiblePaymentAccounts() {
         return dataModel.getPossiblePaymentAccounts();
     }
@@ -779,14 +763,6 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
 
     public void resetErrorMessage() {
         offer.setErrorMessage(null);
-    }
-
-    public String getBuyerSecurityDeposit() {
-        return btcFormatter.formatCoin(dataModel.getBuyerSecurityDeposit());
-    }
-
-    public String getSellerSecurityDeposit() {
-        return btcFormatter.formatCoin(dataModel.getSellerSecurityDeposit());
     }
 
     private CoinFormatter getFormatterForTakerFee() {

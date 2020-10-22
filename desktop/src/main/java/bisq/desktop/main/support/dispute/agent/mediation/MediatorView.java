@@ -112,7 +112,6 @@ public class MediatorView extends DisputeAgentView {
 
     @Override
     protected void onCloseDispute(Dispute dispute) {
-        disputeSummaryWindow.onFinalizeDispute(() -> chatView.removeInputBox())
-                .show(dispute);
+        disputeSummaryWindow.onFinalizeDispute(() -> chatView.removeInputBox()).show(dispute);
     }
 }

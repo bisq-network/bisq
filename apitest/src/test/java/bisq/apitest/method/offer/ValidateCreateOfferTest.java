@@ -53,6 +53,7 @@ public class ValidateCreateOfferTest extends AbstractCreateOfferTest {
                 .setPrice("10000.0000")
                 .setBuyerSecurityDeposit(Restrictions.getDefaultBuyerSecurityDepositAsPercent())
                 .build();
+        @SuppressWarnings("ResultOfMethodCallIgnored")
         Throwable exception = assertThrows(StatusRuntimeException.class, () ->
                 aliceStubs.offersService.createOffer(req).getOffer());
         assertEquals("UNKNOWN: An error occurred at task: ValidateOffer",

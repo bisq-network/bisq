@@ -774,12 +774,6 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
     // Addresses
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    protected Set<Address> getAllAddressesFromActiveKeys() {
-        return wallet.getActiveKeyChain().getLeafKeys().stream().
-                map(key -> LegacyAddress.fromScriptHash(params, key.getPubKeyHash())).
-                collect(Collectors.toSet());
-    }
-
     private Address getChangeAddress() {
         return getUnusedAddress();
     }

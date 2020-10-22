@@ -23,6 +23,8 @@ import bisq.core.offer.Offer;
 
 import bisq.proto.grpc.CreateOfferReply;
 import bisq.proto.grpc.CreateOfferRequest;
+import bisq.proto.grpc.GetOfferReply;
+import bisq.proto.grpc.GetOfferRequest;
 import bisq.proto.grpc.GetOffersReply;
 import bisq.proto.grpc.GetOffersRequest;
 import bisq.proto.grpc.OffersGrpc;
@@ -47,6 +49,23 @@ class GrpcOffersService extends OffersGrpc.OffersImplBase {
     @Inject
     public GrpcOffersService(CoreApi coreApi) {
         this.coreApi = coreApi;
+    }
+
+    @Override
+    public void getOffer(GetOfferRequest req,
+                         StreamObserver<GetOfferReply> responseObserver) {
+        try {
+            Offer offer = coreApi.getOffer(req.getId());
+            var reply = GetOfferReply.newBuilder()
+                    .setOffer(toOfferInfo(offer).toProtoMessage())
+                    .build();
+            responseObserver.onNext(reply);
+            responseObserver.onCompleted();
+        } catch (IllegalStateException | IllegalArgumentException cause) {
+            var ex = new StatusRuntimeException(Status.UNKNOWN.withDescription(cause.getMessage()));
+            responseObserver.onError(ex);
+            throw ex;
+        }
     }
 
     @Override

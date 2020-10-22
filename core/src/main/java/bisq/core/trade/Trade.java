@@ -22,7 +22,6 @@ import bisq.core.locale.CurrencyUtil;
 import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
-import bisq.core.offer.OfferUtil;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.proto.CoreProtoResolver;
 import bisq.core.support.dispute.arbitration.arbitrator.Arbitrator;
@@ -32,6 +31,7 @@ import bisq.core.support.messages.ChatMessage;
 import bisq.core.trade.protocol.ProcessModel;
 import bisq.core.trade.protocol.ProcessModelServiceProvider;
 import bisq.core.trade.txproof.AssetTxProofResult;
+import bisq.core.util.VolumeUtil;
 
 import bisq.network.p2p.NodeAddress;
 
@@ -623,13 +623,11 @@ public abstract class Trade implements Tradable, Model {
             arbitratorPubKeyRing = arbitrator.getPubKeyRing();
         });
 
-        serviceProvider.getMediatorManager().getDisputeAgentByNodeAddress(mediatorNodeAddress).ifPresent(mediator -> {
-            mediatorPubKeyRing = mediator.getPubKeyRing();
-        });
+        serviceProvider.getMediatorManager().getDisputeAgentByNodeAddress(mediatorNodeAddress)
+                .ifPresent(mediator -> mediatorPubKeyRing = mediator.getPubKeyRing());
 
-        serviceProvider.getRefundAgentManager().getDisputeAgentByNodeAddress(refundAgentNodeAddress).ifPresent(refundAgent -> {
-            refundAgentPubKeyRing = refundAgent.getPubKeyRing();
-        });
+        serviceProvider.getRefundAgentManager().getDisputeAgentByNodeAddress(refundAgentNodeAddress)
+                .ifPresent(refundAgent -> refundAgentPubKeyRing = refundAgent.getPubKeyRing());
 
         isInitialized = true;
     }
@@ -831,9 +829,9 @@ public abstract class Trade implements Tradable, Model {
                 Volume volumeByAmount = getTradePrice().getVolumeByAmount(getTradeAmount());
                 if (offer != null) {
                     if (offer.getPaymentMethod().getId().equals(PaymentMethod.HAL_CASH_ID))
-                        volumeByAmount = OfferUtil.getAdjustedVolumeForHalCash(volumeByAmount);
+                        volumeByAmount = VolumeUtil.getAdjustedVolumeForHalCash(volumeByAmount);
                     else if (CurrencyUtil.isFiatCurrency(offer.getCurrencyCode()))
-                        volumeByAmount = OfferUtil.getRoundedFiatVolume(volumeByAmount);
+                        volumeByAmount = VolumeUtil.getRoundedFiatVolume(volumeByAmount);
                 }
                 return volumeByAmount;
             } else {
@@ -864,15 +862,15 @@ public abstract class Trade implements Tradable, Model {
             if (depositTx.getConfidence().getDepthInBlocks() > 0) {
                 final long tradeTime = getTakeOfferDate().getTime();
                 // Use tx.getIncludedInBestChainAt() when available, otherwise use tx.getUpdateTime()
-                long blockTime = depositTx.getIncludedInBestChainAt() != null ? depositTx.getIncludedInBestChainAt().getTime() : depositTx.getUpdateTime().getTime();
+                long blockTime = depositTx.getIncludedInBestChainAt() != null
+                        ? depositTx.getIncludedInBestChainAt().getTime()
+                        : depositTx.getUpdateTime().getTime();
                 // If block date is in future (Date in Bitcoin blocks can be off by +/- 2 hours) we use our current date.
                 // If block date is earlier than our trade date we use our trade date.
                 if (blockTime > now)
                     startTime = now;
-                else if (blockTime < tradeTime)
-                    startTime = tradeTime;
                 else
-                    startTime = blockTime;
+                    startTime = Math.max(blockTime, tradeTime);
 
                 log.debug("We set the start for the trade period to {}. Trade started at: {}. Block got mined at: {}",
                         new Date(startTime), new Date(tradeTime), new Date(blockTime));
@@ -929,13 +927,9 @@ public abstract class Trade implements Tradable, Model {
 
         // In refund agent case the funds are spent anyway with the time locked payout. We do not consider that as
         // locked in funds.
-        if (disputeState == DisputeState.REFUND_REQUESTED ||
-                disputeState == DisputeState.REFUND_REQUEST_STARTED_BY_PEER ||
-                disputeState == DisputeState.REFUND_REQUEST_CLOSED) {
-            return false;
-        }
-
-        return true;
+        return disputeState != DisputeState.REFUND_REQUESTED &&
+                disputeState != DisputeState.REFUND_REQUEST_STARTED_BY_PEER &&
+                disputeState != DisputeState.REFUND_REQUEST_CLOSED;
     }
 
     public boolean isDepositConfirmed() {

@@ -19,7 +19,6 @@ package bisq.desktop.main.portfolio.editoffer;
 
 
 import bisq.desktop.Navigation;
-import bisq.desktop.main.offer.MakerFeeProvider;
 import bisq.desktop.main.offer.MutableOfferDataModel;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
@@ -31,6 +30,7 @@ import bisq.core.locale.TradeCurrency;
 import bisq.core.offer.CreateOfferService;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
+import bisq.core.offer.OfferUtil;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.payment.PaymentAccount;
@@ -64,6 +64,7 @@ class EditOfferDataModel extends MutableOfferDataModel {
     @Inject
     EditOfferDataModel(CreateOfferService createOfferService,
                        OpenOfferManager openOfferManager,
+                       OfferUtil offerUtil,
                        BtcWalletService btcWalletService,
                        BsqWalletService bsqWalletService,
                        Preferences preferences,
@@ -74,11 +75,12 @@ class EditOfferDataModel extends MutableOfferDataModel {
                        FeeService feeService,
                        @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
                        CorePersistenceProtoResolver corePersistenceProtoResolver,
-                       MakerFeeProvider makerFeeProvider,
                        TradeStatisticsManager tradeStatisticsManager,
                        Navigation navigation) {
+
         super(createOfferService,
                 openOfferManager,
+                offerUtil,
                 btcWalletService,
                 bsqWalletService,
                 preferences,
@@ -88,7 +90,6 @@ class EditOfferDataModel extends MutableOfferDataModel {
                 accountAgeWitnessService,
                 feeService,
                 btcFormatter,
-                makerFeeProvider,
                 tradeStatisticsManager,
                 navigation);
         this.corePersistenceProtoResolver = corePersistenceProtoResolver;

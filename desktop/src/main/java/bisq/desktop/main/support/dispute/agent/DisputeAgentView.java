@@ -234,6 +234,8 @@ public abstract class DisputeAgentView extends DisputeView implements MultipleHo
         tableView.getColumns().add(getAlertColumn());
     }
 
+    protected abstract void onCloseDispute(Dispute dispute);
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
