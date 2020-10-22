@@ -41,7 +41,7 @@ public class ThreadGate {
 
     /**
      * Make everyone wait until the gate is open again.
-     * 
+     *
      * @param numberOfLocks how often the gate has to be unlocked until the gate
      *                      opens.
      */

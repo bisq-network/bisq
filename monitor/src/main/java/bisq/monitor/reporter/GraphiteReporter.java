@@ -20,11 +20,10 @@ package bisq.monitor.reporter;
 import bisq.monitor.OnionParser;
 import bisq.monitor.Reporter;
 
-import bisq.common.config.BaseCurrencyNetwork;
-
 import bisq.network.p2p.NodeAddress;
 
 import bisq.common.app.Version;
+import bisq.common.config.BaseCurrencyNetwork;
 
 import org.berndpruenster.netlayer.tor.TorSocket;
 
@@ -81,7 +80,7 @@ public class GraphiteReporter extends Reporter {
         String report = "bisq" + (Version.getBaseCurrencyNetwork() != 0 ? "-" + BaseCurrencyNetwork.values()[Version.getBaseCurrencyNetwork()].getNetwork() : "")
                 + (prefix.isEmpty() ? "" : "." + prefix)
                 + (key.isEmpty() ? "" : "." + key)
-                + " " + value + " " + Long.valueOf(timeInMilliseconds)/1000 + "\n";
+                + " " + value + " " + Long.valueOf(timeInMilliseconds) / 1000 + "\n";
 
         try {
             NodeAddress nodeAddress = OnionParser.getNodeAddress(configuration.getProperty("serviceUrl"));

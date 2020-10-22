@@ -58,7 +58,7 @@ public class MonitorInfrastructureTests {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = { "empty", "no interval", "typo" })
+    @ValueSource(strings = {"empty", "no interval", "typo"})
     public void basicConfigurationError(String configuration) {
         HashMap<String, Properties> lut = new HashMap<>();
         lut.put("empty", new Properties());

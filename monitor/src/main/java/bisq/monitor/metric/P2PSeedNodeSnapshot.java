@@ -20,34 +20,24 @@ package bisq.monitor.metric;
 import bisq.monitor.OnionParser;
 import bisq.monitor.Reporter;
 
-import bisq.core.account.witness.AccountAgeWitnessStore;
-import bisq.common.config.BaseCurrencyNetwork;
 import bisq.core.dao.monitoring.model.StateHash;
 import bisq.core.dao.monitoring.network.messages.GetBlindVoteStateHashesRequest;
 import bisq.core.dao.monitoring.network.messages.GetDaoStateHashesRequest;
 import bisq.core.dao.monitoring.network.messages.GetProposalStateHashesRequest;
 import bisq.core.dao.monitoring.network.messages.GetStateHashesResponse;
-import bisq.core.proto.persistable.CorePersistenceProtoResolver;
-import bisq.core.trade.statistics.TradeStatistics2Store;
 
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.network.Connection;
 import bisq.network.p2p.peers.getdata.messages.GetDataResponse;
 import bisq.network.p2p.peers.getdata.messages.PreliminaryGetDataRequest;
-import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 
-import bisq.common.app.Version;
 import bisq.common.proto.network.NetworkEnvelope;
-import bisq.common.proto.persistable.PersistableEnvelope;
-import bisq.common.storage.Storage;
 
 import java.net.MalformedURLException;
 
 import java.nio.ByteBuffer;
-
-import java.io.File;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -56,10 +46,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Random;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -148,21 +136,21 @@ public class P2PSeedNodeSnapshot extends P2PSeedNodeSnapshotBase {
 
         //   - calculate diffs
         messagesPerHost.forEach(
-            (host, statistics) -> {
-                statistics.values().forEach((messageType, set) -> {
+                (host, statistics) -> {
+                    statistics.values().forEach((messageType, set) -> {
+                        try {
+                            report.put(OnionParser.prettyPrint(host) + ".relativeNumberOfMessages." + messageType,
+                                    String.valueOf(set.size() - referenceValues.get(messageType).size()));
+                        } catch (MalformedURLException | NullPointerException ignore) {
+                            log.error("we should never have gotten here", ignore);
+                        }
+                    });
                     try {
-                        report.put(OnionParser.prettyPrint(host) + ".relativeNumberOfMessages." + messageType,
-                                String.valueOf(set.size() - referenceValues.get(messageType).size()));
-                    } catch (MalformedURLException | NullPointerException ignore) {
-                        log.error("we should never have gotten here", ignore);
+                        report.put(OnionParser.prettyPrint(host) + ".referenceHost", referenceHost);
+                    } catch (MalformedURLException ignore) {
+                        log.error("we should never got here");
                     }
                 });
-                try {
-                    report.put(OnionParser.prettyPrint(host) + ".referenceHost", referenceHost);
-                } catch (MalformedURLException ignore) {
-                    log.error("we should never got here");
-                }
-            });
 
         // cleanup for next run
         bucketsPerHost.forEach((host, statistics) -> statistics.reset());
@@ -191,9 +179,9 @@ public class P2PSeedNodeSnapshot extends P2PSeedNodeSnapshotBase {
             int oldest = (int) nodeAddressTupleMap.values().stream().min(Comparator.comparingLong(Tuple::getHeight)).get().height;
 
             //   - update queried height
-            if(type.contains("DaoState"))
+            if (type.contains("DaoState"))
                 daostateheight = oldest - 20;
-            else if(type.contains("Proposal"))
+            else if (type.contains("Proposal"))
                 proposalheight = oldest - 20;
             else
                 blindvoteheight = oldest - 20;

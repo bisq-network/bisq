@@ -122,11 +122,11 @@ public abstract class Metric extends Configurable implements Runnable {
 
             // execute all the things
             synchronized (this) {
-                    log.info("{} started", getName());
-                    execute();
-                    log.info("{} done", getName());
+                log.info("{} started", getName());
+                execute();
+                log.info("{} done", getName());
             }
-        } catch(Throwable e) {
+        } catch (Throwable e) {
             log.error("A metric misbehaved!", e);
         }
     }
