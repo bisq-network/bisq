@@ -215,6 +215,10 @@ task packageInstallers {
         )
 
         if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+            // TODO Found no benefit in using --resource-dir "..package/windows", it has the same outcome as opts below
+            // Actually using the --resource-dir option caused issues with uninstalling the newly installed Bisq
+            // Therefore, not using --resource-dir for windows, for now
+
             String windowsOpts = (
                 " --icon ${project(':desktop').projectDir}/package/windows/Bisq.ico" +
                 " --win-per-user-install" +
