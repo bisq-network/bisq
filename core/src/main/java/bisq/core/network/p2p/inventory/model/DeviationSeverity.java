@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.network.p2p.inventory;
+package bisq.core.network.p2p.inventory.model;
 
 public enum DeviationSeverity {
     OK,

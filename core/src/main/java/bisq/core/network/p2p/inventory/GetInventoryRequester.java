@@ -19,6 +19,7 @@ package bisq.core.network.p2p.inventory;
 
 import bisq.core.network.p2p.inventory.messages.GetInventoryRequest;
 import bisq.core.network.p2p.inventory.messages.GetInventoryResponse;
+import bisq.core.network.p2p.inventory.model.InventoryItem;
 
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.network.CloseConnectionReason;

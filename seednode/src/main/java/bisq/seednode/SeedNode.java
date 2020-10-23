@@ -41,9 +41,6 @@ public class SeedNode {
         appSetup.start();
 
         getInventoryRequestHandler = injector.getInstance(GetInventoryRequestHandler.class);
-
-        // TODO dev test key
-        getInventoryRequestHandler.addPermittedRequestersPubKey("035243719433b154a86329fd23a8389bee6369698be809f7e27f003f5b5aa9eb42");
     }
 
     public void shutDown() {

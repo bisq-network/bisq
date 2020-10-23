@@ -19,7 +19,9 @@ package bisq.inventory;
 
 
 import bisq.core.network.p2p.inventory.GetInventoryRequestManager;
-import bisq.core.network.p2p.inventory.InventoryItem;
+import bisq.core.network.p2p.inventory.model.Average;
+import bisq.core.network.p2p.inventory.model.InventoryItem;
+import bisq.core.network.p2p.inventory.model.RequestInfo;
 import bisq.core.network.p2p.seed.DefaultSeedNodeRepository;
 import bisq.core.proto.network.CoreNetworkProtoResolver;
 
@@ -50,7 +52,6 @@ import org.jetbrains.annotations.Nullable;
 
 @Slf4j
 public class InventoryMonitor implements SetupListener {
-
     private final Map<NodeAddress, JsonFileManager> jsonFileManagerByNodeAddress = new HashMap<>();
     private final Map<NodeAddress, List<RequestInfo>> requestInfoListByNode = new HashMap<>();
     private final File appDir;
@@ -58,9 +59,15 @@ public class InventoryMonitor implements SetupListener {
     private final int intervalSec;
     private final NetworkNode networkNode;
     private final GetInventoryRequestManager getInventoryRequestManager;
+
     private ArrayList<NodeAddress> seedNodes;
     private InventoryWebServer inventoryWebServer;
     private int requestCounter = 0;
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Constructor
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public InventoryMonitor(File appDir,
                             boolean useLocalhostForP2P,
@@ -87,10 +94,26 @@ public class InventoryMonitor implements SetupListener {
                 });
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void shutDown(Runnable shutDownCompleteHandler) {
+        networkNode.shutDown(shutDownCompleteHandler);
+        jsonFileManagerByNodeAddress.values().forEach(JsonFileManager::shutDown);
+        inventoryWebServer.shutDown();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // SetupListener
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     @Override
     public void onTorNodeReady() {
-        UserThread.runPeriodically(this::requestAllSeeds, intervalSec);
-        requestAllSeeds();
+        UserThread.runPeriodically(this::requestFromAllSeeds, intervalSec);
+        requestFromAllSeeds();
     }
 
     @Override
@@ -105,13 +128,12 @@ public class InventoryMonitor implements SetupListener {
     public void onRequestCustomBridges() {
     }
 
-    public void shutDown(Runnable shutDownCompleteHandler) {
-        networkNode.shutDown(shutDownCompleteHandler);
-        jsonFileManagerByNodeAddress.values().forEach(JsonFileManager::shutDown);
-        inventoryWebServer.shutDown();
-    }
 
-    private void requestAllSeeds() {
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void requestFromAllSeeds() {
         requestCounter++;
         seedNodes.forEach(nodeAddress -> {
             RequestInfo requestInfo = new RequestInfo(System.currentTimeMillis());
@@ -121,7 +143,6 @@ public class InventoryMonitor implements SetupListener {
                         result -> processResponse(nodeAddress, requestInfo, result, null),
                         errorMessage -> processResponse(nodeAddress, requestInfo, null, errorMessage));
             }).start();
-
         });
     }
 
@@ -147,11 +168,11 @@ public class InventoryMonitor implements SetupListener {
 
         // We create average of all nodes latest results. It might be that the nodes last result is
         // from a previous request as the response has not arrived yet.
-        Set<RequestInfo> requestInfoSetOfOtherNodes = requestInfoListByNode.values().stream()
+        Set<RequestInfo> requestInfoSet = requestInfoListByNode.values().stream()
                 .filter(list -> !list.isEmpty())
                 .map(list -> list.get(list.size() - 1))
                 .collect(Collectors.toSet());
-        Map<InventoryItem, Double> averageValues = InventoryUtil.getAverageValues(requestInfoSetOfOtherNodes);
+        Map<InventoryItem, Double> averageValues = Average.of(requestInfoSet);
 
         inventoryWebServer.onNewRequestInfo(requestInfoListByNode, averageValues, requestCounter);
 

@@ -17,7 +17,7 @@
 
 package bisq.core.network.p2p.inventory.messages;
 
-import bisq.core.network.p2p.inventory.InventoryItem;
+import bisq.core.network.p2p.inventory.model.InventoryItem;
 
 import bisq.common.app.Version;
 import bisq.common.proto.network.NetworkEnvelope;

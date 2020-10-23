@@ -26,6 +26,7 @@ import bisq.core.dao.monitoring.model.ProposalStateBlock;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.network.p2p.inventory.messages.GetInventoryRequest;
 import bisq.core.network.p2p.inventory.messages.GetInventoryResponse;
+import bisq.core.network.p2p.inventory.model.InventoryItem;
 
 import bisq.network.p2p.network.Connection;
 import bisq.network.p2p.network.MessageListener;
@@ -48,11 +49,9 @@ import com.google.common.base.Enums;
 import com.google.common.base.Optional;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 
 import java.lang.management.ManagementFactory;
 
@@ -68,7 +67,6 @@ public class GetInventoryRequestHandler implements MessageListener {
     private final ProposalStateMonitoringService proposalStateMonitoringService;
     private final BlindVoteStateMonitoringService blindVoteStateMonitoringService;
     private final int maxConnections;
-    private final Set<String> permittedRequestersPubKey = new HashSet<>();
 
     @Inject
     public GetInventoryRequestHandler(NetworkNode networkNode,
@@ -94,10 +92,6 @@ public class GetInventoryRequestHandler implements MessageListener {
     @Override
     public void onMessage(NetworkEnvelope networkEnvelope, Connection connection) {
         if (networkEnvelope instanceof GetInventoryRequest) {
-            if (permittedRequestersPubKey.isEmpty()) {
-                return;
-            }
-
             // Data
             GetInventoryRequest getInventoryRequest = (GetInventoryRequest) networkEnvelope;
             Map<InventoryItem, Integer> dataObjects = new HashMap<>();
@@ -178,9 +172,5 @@ public class GetInventoryRequestHandler implements MessageListener {
 
     public void shutDown() {
         networkNode.removeMessageListener(this);
-    }
-
-    public void addPermittedRequestersPubKey(String pubKey) {
-        permittedRequestersPubKey.add(pubKey);
     }
 }
