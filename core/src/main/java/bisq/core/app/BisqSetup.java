@@ -260,7 +260,6 @@ public class BisqSetup {
     }
 
     private void step2() {
-        torSetup.cleanupTorFiles();
         readMapsFromResources(this::step3);
         checkForCorrectOSArchitecture();
         checkOSXVersion();
