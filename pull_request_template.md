@@ -11,21 +11,38 @@
 Fixes #replaceWithIssueNr, fixes #replaceWithIssueNr
 
 Name: RuxCrypto
+
 Ticker: RXC
+
 Algorithm: X11
+
 Block number: 7885
+
 Money supply: 21.000.000
+
 Minimum commission:1
+
 Block time: 60 seconds
+
 Dev language: C/C++
+
 Type: POW (Dash v14 fork)
 
+
 Mainwebsite: https://crypto.ba
+
 Maincoinsite: https://rxc.crypto.ba
+
 Pool: https://rxcpool.crypto.ba
+
 Crypto payment procesor: https://pay.crypto.ba
+
 Github: https://github.com/Ruxiol/ruxcryptoRXC
+
 Block explorer: http://explorer.crypto.ba:3001
+
 Bitcointalk: https://bitcointalk.org/index.php?topic=5278812.msg55280904#msg55280904
+
 Twiter: @uffcrypto
+
 Discord: https://discord.gg/BXCA6Q4
