@@ -83,8 +83,6 @@ public class WalletAppSetup {
     @Getter
     private final ObjectProperty<RejectedTxException> rejectedTxException = new SimpleObjectProperty<>();
     @Getter
-    private int numBtcPeers = 0;
-    @Getter
     private final BooleanProperty useTorForBTC = new SimpleBooleanProperty();
 
     @Inject
@@ -113,38 +111,33 @@ public class WalletAppSetup {
 
         ObjectProperty<Throwable> walletServiceException = new SimpleObjectProperty<>();
         btcInfoBinding = EasyBind.combine(walletsSetup.downloadPercentageProperty(),
-                walletsSetup.numPeersProperty(),
                 feeService.feeUpdateCounterProperty(),
                 walletServiceException,
-                (downloadPercentage, numPeers, feeUpdate, exception) -> {
+                (downloadPercentage, feeUpdate, exception) -> {
                     String result;
                     if (exception == null) {
                         double percentage = (double) downloadPercentage;
-                        int peers = (int) numPeers;
                         long fees = feeService.getTxFeePerByte().longValue();
                         btcSyncProgress.set(percentage);
                         if (percentage == 1) {
+                            String feeRate = Res.get("mainView.footer.btcFeeRate", fees);
                             result = Res.get("mainView.footer.btcInfo",
-                                    peers,
                                     Res.get("mainView.footer.btcInfo.synchronizedWith"),
-                                    getBtcNetworkAsString() + " (" + fees + " sat/vB)");
+                                    getBtcNetworkAsString() + " / " + feeRate);
                             getBtcSplashSyncIconId().set("image-connection-synced");
 
                             downloadCompleteHandler.run();
                         } else if (percentage > 0.0) {
                             result = Res.get("mainView.footer.btcInfo",
-                                    peers,
                                     Res.get("mainView.footer.btcInfo.synchronizingWith"),
                                     getBtcNetworkAsString() + ": " + FormattingUtils.formatToPercentWithSymbol(percentage));
                         } else {
                             result = Res.get("mainView.footer.btcInfo",
-                                    peers,
                                     Res.get("mainView.footer.btcInfo.connectingTo"),
                                     getBtcNetworkAsString());
                         }
                     } else {
                         result = Res.get("mainView.footer.btcInfo",
-                                getNumBtcPeers(),
                                 Res.get("mainView.footer.btcInfo.connectionFailed"),
                                 getBtcNetworkAsString());
                         log.error(exception.toString());
@@ -170,8 +163,6 @@ public class WalletAppSetup {
 
         walletsSetup.initialize(null,
                 () -> {
-                    numBtcPeers = walletsSetup.numPeersProperty().get();
-
                     // We only check one wallet as we apply encryption to all or none
                     if (walletsManager.areWalletsEncrypted()) {
                         walletPasswordHandler.run();

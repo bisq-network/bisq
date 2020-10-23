@@ -17,6 +17,7 @@
 
 package bisq.core.app;
 
+import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.locale.Res;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.user.Preferences;
@@ -50,6 +51,7 @@ import javax.annotation.Nullable;
 public class P2PNetworkSetup {
     private final PriceFeedService priceFeedService;
     private final P2PService p2PService;
+    private final WalletsSetup walletsSetup;
     private final Preferences preferences;
 
     @SuppressWarnings("FieldCanBeLocal")
@@ -73,10 +75,12 @@ public class P2PNetworkSetup {
     @Inject
     public P2PNetworkSetup(PriceFeedService priceFeedService,
                            P2PService p2PService,
+                           WalletsSetup walletsSetup,
                            Preferences preferences) {
 
         this.priceFeedService = priceFeedService;
         this.p2PService = p2PService;
+        this.walletsSetup = walletsSetup;
         this.preferences = preferences;
     }
 
@@ -86,18 +90,19 @@ public class P2PNetworkSetup {
         BooleanProperty hiddenServicePublished = new SimpleBooleanProperty();
         BooleanProperty initialP2PNetworkDataReceived = new SimpleBooleanProperty();
 
-        p2PNetworkInfoBinding = EasyBind.combine(bootstrapState, bootstrapWarning, p2PService.getNumConnectedPeers(), hiddenServicePublished, initialP2PNetworkDataReceived,
-                (state, warning, numPeers, hiddenService, dataReceived) -> {
+        p2PNetworkInfoBinding = EasyBind.combine(bootstrapState, bootstrapWarning, p2PService.getNumConnectedPeers(),
+                walletsSetup.numPeersProperty(), hiddenServicePublished, initialP2PNetworkDataReceived,
+                (state, warning, numP2pPeers, numBtcPeers, hiddenService, dataReceived) -> {
                     String result;
                     String daoFullNode = preferences.isDaoFullNode() ? Res.get("mainView.footer.daoFullNode") + " / " : "";
-                    int peers = (int) numPeers;
-                    if (warning != null && peers == 0) {
+                    int p2pPeers = (int) numP2pPeers;
+                    if (warning != null && p2pPeers == 0) {
                         result = warning;
                     } else {
-                        String p2pInfo = Res.get("mainView.footer.p2pInfo", numPeers);
+                        String p2pInfo = Res.get("mainView.footer.p2pInfo", numBtcPeers, numP2pPeers);
                         if (dataReceived && hiddenService) {
                             result = p2pInfo;
-                        } else if (peers == 0)
+                        } else if (p2pPeers == 0)
                             result = state;
                         else
                             result = state + " / " + p2pInfo;

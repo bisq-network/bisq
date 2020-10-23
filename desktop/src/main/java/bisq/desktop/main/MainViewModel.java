@@ -67,6 +67,7 @@ import bisq.network.p2p.P2PService;
 import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
+import bisq.common.app.Version;
 import bisq.common.config.Config;
 import bisq.common.file.CorruptedStorageFileHandler;
 
@@ -133,6 +134,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
     private final BooleanProperty showAppScreen = new SimpleBooleanProperty();
     private final DoubleProperty combinedSyncProgress = new SimpleDoubleProperty(-1);
     private final BooleanProperty isSplashScreenRemoved = new SimpleBooleanProperty();
+    private final StringProperty footerVersionInfo = new SimpleStringProperty();
     private Timer checkNumberOfBtcPeersTimer;
     private Timer checkNumberOfP2pNetworkPeersTimer;
     @SuppressWarnings("FieldCanBeLocal")
@@ -414,6 +416,15 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
         daoPresentation.getBsqSyncProgress().addListener((observable, oldValue, newValue) -> updateBtcSyncProgress());
 
         bisqSetup.setFilterWarningHandler(warning -> new Popup().warning(warning).show());
+
+        this.footerVersionInfo.setValue("v" + Version.VERSION);
+        this.getNewVersionAvailableProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue) {
+                this.footerVersionInfo.setValue("v" + Version.VERSION + " " + Res.get("mainView.version.update"));
+            } else {
+                this.footerVersionInfo.setValue("v" + Version.VERSION);
+            }
+        });
     }
 
     private void showRevolutAccountUpdateWindow(List<RevolutAccount> revolutAccountList) {
@@ -596,7 +607,13 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
     // Wallet
     StringProperty getBtcInfo() {
         final StringProperty combinedInfo = new SimpleStringProperty();
-        combinedInfo.bind(Bindings.concat(bisqSetup.getBtcInfo(), " ", daoPresentation.getBsqInfo()));
+        combinedInfo.bind(bisqSetup.getBtcInfo());
+        return combinedInfo;
+    }
+
+    StringProperty getCombinedFooterInfo() {
+        final StringProperty combinedInfo = new SimpleStringProperty();
+        combinedInfo.bind(Bindings.concat(this.footerVersionInfo, " ", daoPresentation.getBsqInfo()));
         return combinedInfo;
     }
 
