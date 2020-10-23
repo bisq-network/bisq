@@ -23,7 +23,6 @@ import bisq.network.p2p.Utils;
 import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.proto.network.NetworkProtoResolver;
-import bisq.common.util.Utilities;
 
 import org.berndpruenster.netlayer.tor.HiddenServiceSocket;
 import org.berndpruenster.netlayer.tor.Tor;
@@ -82,13 +81,14 @@ public class TorNetworkNode extends NetworkNode {
     private boolean streamIsolation;
 
     private Socks5Proxy socksProxy;
+    private ListenableFuture<Void> torStartupFuture;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public TorNetworkNode(int servicePort, NetworkProtoResolver networkProtoResolver, boolean useStreamIsolation,
-            TorMode torMode) {
+                          TorMode torMode) {
         super(servicePort, networkProtoResolver);
         this.torMode = torMode;
         this.streamIsolation = useStreamIsolation;
@@ -153,72 +153,60 @@ public class TorNetworkNode extends NetworkNode {
         // this one is committed as a thread to the executor
         BooleanProperty torNetworkNodeShutDown = torNetworkNodeShutDown();
         BooleanProperty shutDownTimerTriggered = shutDownTimerTriggered();
-
         // Need to store allShutDown to not get garbage collected
-        allShutDown = EasyBind.combine(torNetworkNodeShutDown, networkNodeShutDown, shutDownTimerTriggered, (a, b, c) -> (a && b) || c);
+        allShutDown = EasyBind.combine(torNetworkNodeShutDown, networkNodeShutDown, shutDownTimerTriggered,
+                (a, b, c) -> (a && b) || c);
         allShutDown.subscribe((observable, oldValue, newValue) -> {
             if (newValue) {
                 shutDownTimeoutTimer.stop();
                 long ts = System.currentTimeMillis();
-                log.debug("Shutdown executorService");
                 try {
                     MoreExecutors.shutdownAndAwaitTermination(executorService, 500, TimeUnit.MILLISECONDS);
-                    log.debug("Shutdown executorService done after " + (System.currentTimeMillis() - ts) + " ms.");
-                    log.debug("Shutdown completed");
+                    log.debug("Shutdown executorService done after {} ms.", System.currentTimeMillis() - ts);
                 } catch (Throwable t) {
-                    log.error("Shutdown executorService failed with exception: " + t.getMessage());
+                    log.error("Shutdown executorService failed with exception: {}", t.getMessage());
                     t.printStackTrace();
                 } finally {
-                    try {
-                        if (shutDownCompleteHandler != null)
-                            shutDownCompleteHandler.run();
-                    } catch (Throwable ignore) {
-                    }
+                    if (shutDownCompleteHandler != null)
+                        shutDownCompleteHandler.run();
                 }
             }
         });
     }
 
     private BooleanProperty torNetworkNodeShutDown() {
-        final BooleanProperty done = new SimpleBooleanProperty();
-        if (executorService != null) {
-            executorService.submit(() -> {
-                Utilities.setThreadName("torNetworkNodeShutDown");
-                long ts = System.currentTimeMillis();
-                log.debug("Shutdown torNetworkNode");
-                try {
-                    /**
-                     * make sure we get tor.
-                     * - there have been situations where <code>tor</code> isn't set yet, which would leave tor running
-                     * - downside is that if tor is not already started, we start it here just to shut it down. However,
-                     *   that can only be the case if Bisq gets shutdown even before it reaches step 2/4 at startup.
-                     * The risk seems worth it compared to the risk of not shutting down tor.
-                     */
-                    tor = Tor.getDefault();
-                    if (tor != null)
-                        tor.shutdown();
-                    log.debug("Shutdown torNetworkNode done after " + (System.currentTimeMillis() - ts) + " ms.");
-                } catch (Throwable e) {
-                    log.error("Shutdown torNetworkNode failed with exception: " + e.getMessage());
-                    e.printStackTrace();
-                } finally {
-                    UserThread.execute(() -> done.set(true));
-                }
-            });
-        } else {
-            done.set(true);
+        BooleanProperty done = new SimpleBooleanProperty();
+        try {
+            tor = Tor.getDefault();
+            if (tor != null) {
+                log.info("Tor has been created already so we can shut it down.");
+                tor.shutdown();
+                log.info("Tor shut down completed");
+            } else {
+                log.info("Tor has not been created yet. We cancel the torStartupFuture.");
+                torStartupFuture.cancel(true);
+                log.info("torStartupFuture cancelled");
+            }
+        } catch (Throwable e) {
+            log.error("Shutdown torNetworkNode failed with exception: {}", e.getMessage());
+            e.printStackTrace();
+
+        } finally {
+            // We need to delay as otherwise our listener would not get called if shutdown completes in synchronous manner
+            UserThread.execute(() -> done.set(true));
         }
         return done;
     }
 
     private BooleanProperty networkNodeShutDown() {
-        final BooleanProperty done = new SimpleBooleanProperty();
-        super.shutDown(() -> done.set(true));
+        BooleanProperty done = new SimpleBooleanProperty();
+        // We need to delay as otherwise our listener would not get called if shutdown completes in synchronous manner
+        UserThread.execute(() -> super.shutDown(() -> done.set(true)));
         return done;
     }
 
     private BooleanProperty shutDownTimerTriggered() {
-        final BooleanProperty done = new SimpleBooleanProperty();
+        BooleanProperty done = new SimpleBooleanProperty();
         shutDownTimeoutTimer = UserThread.runAfter(() -> {
             log.error("A timeout occurred at shutDown");
             done.set(true);
@@ -255,7 +243,7 @@ public class TorNetworkNode extends NetworkNode {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void createTorAndHiddenService(int localPort, int servicePort) {
-        ListenableFuture<Void> future = executorService.submit(() -> {
+        torStartupFuture = executorService.submit(() -> {
             try {
                 // get tor
                 Tor.setDefault(torMode.getTor());
@@ -313,7 +301,7 @@ public class TorNetworkNode extends NetworkNode {
 
             return null;
         });
-        Futures.addCallback(future, new FutureCallback<Void>() {
+        Futures.addCallback(torStartupFuture, new FutureCallback<Void>() {
             public void onSuccess(Void ignore) {
             }
 
