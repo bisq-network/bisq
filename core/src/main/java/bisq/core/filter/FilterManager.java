@@ -216,13 +216,13 @@ public class FilterManager {
         addListener(filter -> {
             if (filter != null && filterWarningHandler != null) {
                 if (filter.getSeedNodes() != null && !filter.getSeedNodes().isEmpty()) {
-                    log.info(Res.get("popup.warning.nodeBanned", Res.get("popup.warning.seed")));
+                    log.info("One of the seed nodes got banned. {}", filter.getSeedNodes());
                     // Let's keep that more silent. Might be used in case a node is unstable and we don't want to confuse users.
                     // filterWarningHandler.accept(Res.get("popup.warning.nodeBanned", Res.get("popup.warning.seed")));
                 }
 
                 if (filter.getPriceRelayNodes() != null && !filter.getPriceRelayNodes().isEmpty()) {
-                    log.info(Res.get("popup.warning.nodeBanned", Res.get("popup.warning.priceRelay")));
+                    log.info("One of the price relay nodes got banned. {}", filter.getPriceRelayNodes());
                     // Let's keep that more silent. Might be used in case a node is unstable and we don't want to confuse users.
                     // filterWarningHandler.accept(Res.get("popup.warning.nodeBanned", Res.get("popup.warning.priceRelay")));
                 }

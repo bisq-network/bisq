@@ -102,13 +102,13 @@ public class CommonSetup {
 
     protected static void setupSigIntHandlers(GracefulShutDownHandler gracefulShutDownHandler) {
         Signal.handle(new Signal("INT"), signal -> {
-            gracefulShutDownHandler.gracefulShutDown(() -> {
-            });
+            UserThread.execute(() -> gracefulShutDownHandler.gracefulShutDown(() -> {
+            }));
         });
 
         Signal.handle(new Signal("TERM"), signal -> {
-            gracefulShutDownHandler.gracefulShutDown(() -> {
-            });
+            UserThread.execute(() -> gracefulShutDownHandler.gracefulShutDown(() -> {
+            }));
         });
     }
 

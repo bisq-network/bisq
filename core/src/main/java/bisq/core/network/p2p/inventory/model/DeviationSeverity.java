@@ -15,13 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p.network;
+package bisq.core.network.p2p.inventory.model;
 
-public interface ConnectionListener {
-    void onConnection(Connection connection);
-
-    void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection);
-
-    //TODO is never called, can be removed
-    void onError(Throwable throwable);
+public enum DeviationSeverity {
+    OK,
+    WARN,
+    ALERT
 }

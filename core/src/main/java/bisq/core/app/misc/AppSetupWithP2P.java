@@ -73,7 +73,6 @@ public class AppSetupWithP2P extends AppSetup {
 
     @Override
     public void initPersistedDataHosts() {
-        torSetup.cleanupTorFiles();
         persistedDataHosts.add(p2PService);
 
         // we apply at startup the reading of persisted data but don't want to get it triggered in the constructor

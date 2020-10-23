@@ -147,7 +147,7 @@ message GetInventoryRequest {
 }
 
 message GetInventoryResponse {
-    map<string, uint32> num_payloads_map = 1;
+    map<string, string> inventory = 1;
 }
 
 // offer

@@ -47,7 +47,9 @@ public class Statistic {
 
     private final static long startTime = System.currentTimeMillis();
     private final static LongProperty totalSentBytes = new SimpleLongProperty(0);
+    private final static DoubleProperty totalSentBytesPerSec = new SimpleDoubleProperty(0);
     private final static LongProperty totalReceivedBytes = new SimpleLongProperty(0);
+    private final static DoubleProperty totalReceivedBytesPerSec = new SimpleDoubleProperty(0);
     private final static Map<String, Integer> totalReceivedMessages = new ConcurrentHashMap<>();
     private final static Map<String, Integer> totalSentMessages = new ConcurrentHashMap<>();
     private final static LongProperty numTotalSentMessages = new SimpleLongProperty(0);
@@ -63,6 +65,9 @@ public class Statistic {
             long passed = (System.currentTimeMillis() - startTime) / 1000;
             numTotalSentMessagesPerSec.set(((double) numTotalSentMessages.get()) / passed);
             numTotalReceivedMessagesPerSec.set(((double) numTotalReceivedMessages.get()) / passed);
+
+            totalSentBytesPerSec.set(((double) totalSentBytes.get()) / passed);
+            totalReceivedBytesPerSec.set(((double) totalReceivedBytes.get()) / passed);
         }, 1);
 
         // We log statistics every minute
@@ -87,8 +92,16 @@ public class Statistic {
         return totalSentBytes;
     }
 
+    public static DoubleProperty totalSentBytesPerSecProperty() {
+        return totalSentBytesPerSec;
+    }
+
     public static LongProperty totalReceivedBytesProperty() {
         return totalReceivedBytes;
+    }
+
+    public static DoubleProperty totalReceivedBytesPerSecProperty() {
+        return totalReceivedBytesPerSec;
     }
 
     public static LongProperty numTotalSentMessagesProperty() {

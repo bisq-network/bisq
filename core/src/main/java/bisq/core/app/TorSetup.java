@@ -46,15 +46,7 @@ public class TorSetup {
         this.torDir = checkDir(torDir);
     }
 
-    public void cleanupTorFiles() {
-        cleanupTorFiles(null, null);
-    }
-
-    // We get sometimes Tor startup problems which is related to some tor files in the tor directory. It happens
-    // more often if the application got killed (not graceful shutdown).
-    // Creating all tor files newly takes about 3-4 sec. longer and it does not benefit from cache files.
-    // TODO: We should fix those startup problems in the netlayer library, once fixed there we can remove that call at the
-    // Bisq startup again.
+    // Should only be called if needed. Slows down Tor startup from about 5 sec. to 30 sec. if it gets deleted.
     public void cleanupTorFiles(@Nullable Runnable resultHandler, @Nullable ErrorMessageHandler errorMessageHandler) {
         File hiddenservice = new File(Paths.get(torDir.getAbsolutePath(), "hiddenservice").toString());
         try {

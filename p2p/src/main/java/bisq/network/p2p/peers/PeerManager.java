@@ -81,6 +81,7 @@ public final class PeerManager implements ConnectionListener, PersistedDataHost 
     // Age of what we consider connected peers still as live peers
     private static final long MAX_AGE_LIVE_PEERS = TimeUnit.MINUTES.toMillis(30);
     private static final boolean PRINT_REPORTED_PEERS_DETAILS = true;
+    private boolean shutDownRequested;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -126,8 +127,12 @@ public final class PeerManager implements ConnectionListener, PersistedDataHost 
     private int maxConnectionsPeer;
     private int maxConnectionsNonDirect;
     private int maxConnectionsAbsolute;
+    @Getter
+    private int peakNumConnections;
     @Setter
     private boolean allowDisconnectSeedNodes;
+    @Getter
+    private int numAllConnectionsLostEvents;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -172,6 +177,7 @@ public final class PeerManager implements ConnectionListener, PersistedDataHost 
     }
 
     public void shutDown() {
+        shutDownRequested = true;
         networkNode.removeConnectionListener(this);
         clockWatcher.removeListener(clockWatcherListener);
         stopCheckMaxConnectionsTimer();
@@ -206,6 +212,9 @@ public final class PeerManager implements ConnectionListener, PersistedDataHost 
         if (lostAllConnections) {
             lostAllConnections = false;
             stopped = false;
+            log.info("\n------------------------------------------------------------\n" +
+                    "Established a new connection from/to {} after all connections lost.\n" +
+                    "------------------------------------------------------------", connection.getPeersNodeAddressOptional());
             listeners.forEach(Listener::onNewConnectionAfterAllConnectionsLost);
         }
         connection.getPeersNodeAddressOptional()
@@ -218,13 +227,25 @@ public final class PeerManager implements ConnectionListener, PersistedDataHost 
         log.info("onDisconnect called: nodeAddress={}, closeConnectionReason={}",
                 connection.getPeersNodeAddressOptional(), closeConnectionReason);
         handleConnectionFault(connection);
+
+        boolean previousLostAllConnections = lostAllConnections;
         lostAllConnections = networkNode.getAllConnections().isEmpty();
+
         if (lostAllConnections) {
             stopped = true;
-            log.warn("\n------------------------------------------------------------\n" +
-                    "All connections lost\n" +
-                    "------------------------------------------------------------");
-            listeners.forEach(Listener::onAllConnectionsLost);
+
+            if (!shutDownRequested) {
+                if (!previousLostAllConnections) {
+                    // If we enter to 'All connections lost' we count the event.
+                    numAllConnectionsLostEvents++;
+                }
+
+                log.warn("\n------------------------------------------------------------\n" +
+                        "All connections lost\n" +
+                        "------------------------------------------------------------");
+
+                listeners.forEach(Listener::onAllConnectionsLost);
+            }
         }
         maybeRemoveBannedPeer(closeConnectionReason, connection);
     }
@@ -442,6 +463,10 @@ public final class PeerManager implements ConnectionListener, PersistedDataHost 
             checkMaxConnectionsTimer = UserThread.runAfter(() -> {
                 stopCheckMaxConnectionsTimer();
                 if (!stopped) {
+                    Set<Connection> allConnections = new HashSet<>(networkNode.getAllConnections());
+                    int size = allConnections.size();
+                    peakNumConnections = Math.max(peakNumConnections, size);
+
                     removeAnonymousPeers();
                     removeSuperfluousSeedNodes();
                     removeTooOldReportedPeers();
@@ -458,6 +483,7 @@ public final class PeerManager implements ConnectionListener, PersistedDataHost 
     boolean checkMaxConnections() {
         Set<Connection> allConnections = new HashSet<>(networkNode.getAllConnections());
         int size = allConnections.size();
+        peakNumConnections = Math.max(peakNumConnections, size);
         log.info("We have {} connections open. Our limit is {}", size, maxConnections);
 
         if (size <= maxConnections) {
