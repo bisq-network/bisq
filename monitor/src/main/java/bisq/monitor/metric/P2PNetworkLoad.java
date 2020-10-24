@@ -91,7 +91,7 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
      * History implementation using a {@link LinkedHashMap} and its
      * {@link LinkedHashMap#removeEldestEntry(Map.Entry)} option.
      */
-    private class FixedSizeHistoryTracker<K, V> extends LinkedHashMap<K, V> {
+    private static class FixedSizeHistoryTracker<K, V> extends LinkedHashMap<K, V> {
         final int historySize;
 
         FixedSizeHistoryTracker(int historySize) {
@@ -123,7 +123,6 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
             hsReady.await();
 
             // boot up P2P node
-            File storageDir = torHiddenServiceDir;
             try {
                 Config config = new Config();
                 CorruptedStorageFileHandler corruptedStorageFileHandler = new CorruptedStorageFileHandler();
@@ -133,7 +132,7 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
                         networkProtoResolver);
                 DefaultSeedNodeRepository seedNodeRepository = new DefaultSeedNodeRepository(config);
                 PeerManager peerManager = new PeerManager(networkNode, seedNodeRepository, new ClockWatcher(),
-                        new PersistenceManager<>(storageDir, persistenceProtoResolver, corruptedStorageFileHandler), maxConnections);
+                        new PersistenceManager<>(torHiddenServiceDir, persistenceProtoResolver, corruptedStorageFileHandler), maxConnections);
 
                 // init file storage
                 peerManager.readPersisted();
@@ -194,7 +193,7 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
     /**
      * Efficient way to count message occurrences.
      */
-    private class Counter {
+    private static class Counter {
         private int value = 1;
 
         /**

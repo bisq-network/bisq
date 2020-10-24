@@ -80,7 +80,7 @@ public class GraphiteReporter extends Reporter {
         String report = "bisq" + (Version.getBaseCurrencyNetwork() != 0 ? "-" + BaseCurrencyNetwork.values()[Version.getBaseCurrencyNetwork()].getNetwork() : "")
                 + (prefix.isEmpty() ? "" : "." + prefix)
                 + (key.isEmpty() ? "" : "." + key)
-                + " " + value + " " + Long.valueOf(timeInMilliseconds) / 1000 + "\n";
+                + " " + value + " " + Long.parseLong(timeInMilliseconds) / 1000 + "\n";
 
         try {
             NodeAddress nodeAddress = OnionParser.getNodeAddress(configuration.getProperty("serviceUrl"));
