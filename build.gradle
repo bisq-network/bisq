@@ -67,7 +67,7 @@ configure(subprojects) {
         logbackVersion = '1.1.11'
         loggingVersion = '1.2'
         lombokVersion = '1.18.12'
-        mockitoVersion = '3.3.0'
+        mockitoVersion = '3.5.15'
         netlayerVersion = 'cc80787'
         protobufVersion = '3.10.0'
         protocVersion = protobufVersion
