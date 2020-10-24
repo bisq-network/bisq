@@ -20,6 +20,7 @@ package bisq.inventory;
 
 import bisq.core.network.p2p.inventory.GetInventoryRequestManager;
 import bisq.core.network.p2p.inventory.model.Average;
+import bisq.core.network.p2p.inventory.model.DeviationSeverity;
 import bisq.core.network.p2p.inventory.model.InventoryItem;
 import bisq.core.network.p2p.inventory.model.RequestInfo;
 import bisq.core.network.p2p.seed.DefaultSeedNodeRepository;
@@ -174,7 +175,23 @@ public class InventoryMonitor implements SetupListener {
                 .collect(Collectors.toSet());
         Map<InventoryItem, Double> averageValues = Average.of(requestInfoSet);
 
-        inventoryWebServer.onNewRequestInfo(requestInfoListByNode, averageValues, requestCounter);
+        String daoStateChainHeight = null;
+        if (requestInfo.getInventory() != null && requestInfo.getInventory().containsKey(InventoryItem.daoStateChainHeight)) {
+            daoStateChainHeight = requestInfo.getInventory().get(InventoryItem.daoStateChainHeight);
+        }
+        String finalDaoStateChainHeight = daoStateChainHeight;
+        List.of(InventoryItem.values()).forEach(inventoryItem -> {
+            String value = requestInfo.getValue(inventoryItem);
+            Double deviation = inventoryItem.getDeviation(averageValues, value);
+            requestInfo.getDeviationMap().put(inventoryItem, deviation);
+            DeviationSeverity deviationSeverity = inventoryItem.getDeviationSeverity(deviation,
+                    requestInfoListByNode.values(),
+                    value,
+                    finalDaoStateChainHeight);
+            requestInfo.getDeviationSeverityMap().put(inventoryItem, deviationSeverity);
+        });
+
+        inventoryWebServer.onNewRequestInfo(requestInfoListByNode, requestCounter);
 
         String json = Utilities.objectToJson(requestInfo);
         jsonFileManagerByNodeAddress.get(nodeAddress).writeToDisc(json, String.valueOf(requestInfo.getRequestStartTime()));

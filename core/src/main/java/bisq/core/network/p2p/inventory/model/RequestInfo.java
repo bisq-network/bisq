@@ -17,6 +17,7 @@
 
 package bisq.core.network.p2p.inventory.model;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import lombok.Getter;
@@ -35,6 +36,9 @@ public class RequestInfo {
     @Nullable
     @Setter
     private String errorMessage;
+
+    private final Map<InventoryItem, Double> deviationMap = new HashMap<>();
+    private final Map<InventoryItem, DeviationSeverity> deviationSeverityMap = new HashMap<>();
 
     public RequestInfo(long requestStartTime) {
         this.requestStartTime = requestStartTime;

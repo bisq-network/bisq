@@ -100,11 +100,11 @@ public class InventoryMonitorMain {
         UserThread.setExecutor(Executors.newSingleThreadExecutor(threadFactory));
 
         Signal.handle(new Signal("INT"), signal -> {
-            shutDown();
+            UserThread.execute(InventoryMonitorMain::shutDown);
         });
 
         Signal.handle(new Signal("TERM"), signal -> {
-            shutDown();
+            UserThread.execute(InventoryMonitorMain::shutDown);
         });
         keepRunning();
     }
