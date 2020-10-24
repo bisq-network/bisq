@@ -125,13 +125,9 @@ public class OfferInfo implements Payload {
                 .build();
     }
 
+    @SuppressWarnings({"unused", "SameReturnValue"})
     public static OfferInfo fromProto(bisq.proto.grpc.OfferInfo proto) {
-        /*
-        TODO?
-        return new OfferInfo(proto.getOfferPayload().getId(),
-                proto.getOfferPayload().getDate());
-        */
-        return null;
+        return null; // TODO
     }
 
     /*
