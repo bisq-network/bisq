@@ -17,14 +17,14 @@
 
 package bisq.asset.coins;
 
-import bisq.asset.Base58BitcoinAddressValidator;
+import bisq.asset.Base58AddressValidator;
 import bisq.asset.Coin;
 import bisq.asset.NetworkParametersAdapter;
 
 public class BitcoinRhodium extends Coin {
 
     public BitcoinRhodium() {
-        super("Bitcoin Rhodium", "XRC", new Base58BitcoinAddressValidator(new BitcoinRhodiumParams()));
+        super("Bitcoin Rhodium", "XRC", new Base58AddressValidator(new BitcoinRhodiumParams()));
     }
 
     public static class BitcoinRhodiumParams extends NetworkParametersAdapter {
@@ -32,7 +32,6 @@ public class BitcoinRhodium extends Coin {
         public BitcoinRhodiumParams() {
             addressHeader = 61;
             p2shHeader = 123;
-            acceptableAddressCodes = new int[]{addressHeader, p2shHeader};
         }
     }
 }

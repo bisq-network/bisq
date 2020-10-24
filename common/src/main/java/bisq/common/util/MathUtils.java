@@ -72,7 +72,7 @@ public class MathUtils {
     }
 
     public static long doubleToLong(double value) {
-        return new Double(value).longValue();
+        return Double.valueOf(value).longValue();
     }
 
     public static double scaleUpByPowerOf10(double value, int exponent) {
@@ -115,10 +115,10 @@ public class MathUtils {
     }
 
     public static class MovingAverage {
-        Deque<Long> window;
-        private int size;
+        final Deque<Long> window;
+        private final int size;
         private long sum;
-        private double outlier;
+        private final double outlier;
 
         // Outlier as ratio
         public MovingAverage(int size, double outlier) {

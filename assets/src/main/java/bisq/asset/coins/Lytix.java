@@ -17,15 +17,14 @@
 
 package bisq.asset.coins;
 
-import bisq.asset.AddressValidationResult;
-import bisq.asset.Base58BitcoinAddressValidator;
+import bisq.asset.Base58AddressValidator;
 import bisq.asset.Coin;
 import bisq.asset.NetworkParametersAdapter;
 
 public class Lytix extends Coin {
 
     public Lytix() {
-        super("Lytix", "LYTX", new Base58BitcoinAddressValidator(new LytixParams()));
+        super("Lytix", "LYTX", new Base58AddressValidator(new LytixParams()));
     }
 
     public static class LytixParams extends NetworkParametersAdapter {
@@ -33,7 +32,6 @@ public class Lytix extends Coin {
         public LytixParams() {
             addressHeader = 19;
             p2shHeader = 11;
-            acceptableAddressCodes = new int[]{addressHeader, p2shHeader};
         }
     }
 }

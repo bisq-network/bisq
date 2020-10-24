@@ -19,7 +19,6 @@ package bisq.core.trade.protocol.tasks.maker;
 
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.trade.Trade;
 import bisq.core.trade.messages.InputsForDepositTxResponse;
 import bisq.core.trade.protocol.tasks.TradeTask;
@@ -29,6 +28,8 @@ import bisq.network.p2p.SendDirectMessageListener;
 
 import bisq.common.crypto.Sig;
 import bisq.common.taskrunner.TaskRunner;
+
+import java.security.PrivateKey;
 
 import java.util.Arrays;
 import java.util.Date;
@@ -42,8 +43,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public abstract class MakerSendsInputsForDepositTxResponse extends TradeTask {
-    @SuppressWarnings({"unused"})
-    public MakerSendsInputsForDepositTxResponse(TaskRunner taskHandler, Trade trade) {
+    public MakerSendsInputsForDepositTxResponse(TaskRunner<Trade> taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -56,26 +56,25 @@ public abstract class MakerSendsInputsForDepositTxResponse extends TradeTask {
             BtcWalletService walletService = processModel.getBtcWalletService();
             String id = processModel.getOffer().getId();
 
-            Optional<AddressEntry> addressEntryOptional = walletService.getAddressEntry(id, AddressEntry.Context.MULTI_SIG);
-            checkArgument(addressEntryOptional.isPresent(), "addressEntry must be set here.");
+            Optional<AddressEntry> optionalMultiSigAddressEntry = walletService.getAddressEntry(id, AddressEntry.Context.MULTI_SIG);
+            checkArgument(optionalMultiSigAddressEntry.isPresent(), "addressEntry must be set here.");
             AddressEntry makerPayoutAddressEntry = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.TRADE_PAYOUT);
             byte[] makerMultiSigPubKey = processModel.getMyMultiSigPubKey();
             checkArgument(Arrays.equals(makerMultiSigPubKey,
-                    addressEntryOptional.get().getPubKey()),
+                    optionalMultiSigAddressEntry.get().getPubKey()),
                     "makerMultiSigPubKey from AddressEntry must match the one from the trade data. trade id =" + id);
 
             byte[] preparedDepositTx = getPreparedDepositTx();
 
             // Maker has to use preparedDepositTx as nonce.
-            // He cannot manipulate the preparedDepositTx - so we avoid to have a challenge protocol for passing the nonce we want to get signed.
-            PaymentAccountPayload paymentAccountPayload = checkNotNull(processModel.getPaymentAccountPayload(trade),
-                    "processModel.getPaymentAccountPayload(trade) must not be null");
-
-            byte[] sig = Sig.sign(processModel.getKeyRing().getSignatureKeyPair().getPrivate(), preparedDepositTx);
-
+            // He cannot manipulate the preparedDepositTx - so we avoid to have a challenge protocol for passing the
+            // nonce we want to get signed.
+            // This is used for verifying the peers account age witness
+            PrivateKey privateKey = processModel.getKeyRing().getSignatureKeyPair().getPrivate();
+            byte[] signatureOfNonce = Sig.sign(privateKey, preparedDepositTx);
             InputsForDepositTxResponse message = new InputsForDepositTxResponse(
                     processModel.getOfferId(),
-                    paymentAccountPayload,
+                    checkNotNull(processModel.getPaymentAccountPayload(trade)),
                     processModel.getAccountId(),
                     makerMultiSigPubKey,
                     trade.getContractAsJson(),
@@ -85,7 +84,7 @@ public abstract class MakerSendsInputsForDepositTxResponse extends TradeTask {
                     processModel.getRawTransactionInputs(),
                     processModel.getMyNodeAddress(),
                     UUID.randomUUID().toString(),
-                    sig,
+                    signatureOfNonce,
                     new Date().getTime(),
                     trade.getLockTime());
 

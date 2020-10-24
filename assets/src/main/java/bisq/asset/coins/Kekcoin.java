@@ -17,14 +17,14 @@
 
 package bisq.asset.coins;
 
-import bisq.asset.Base58BitcoinAddressValidator;
+import bisq.asset.Base58AddressValidator;
 import bisq.asset.Coin;
 import bisq.asset.NetworkParametersAdapter;
 
 public class Kekcoin extends Coin {
 
     public Kekcoin() {
-        super("Kekcoin", "KEK", new Base58BitcoinAddressValidator(new KekcoinParams()));
+        super("Kekcoin", "KEK", new Base58AddressValidator(new KekcoinParams()));
     }
 
 
@@ -34,7 +34,6 @@ public class Kekcoin extends Coin {
             super();
             addressHeader = 45;
             p2shHeader = 88;
-            acceptableAddressCodes = new int[]{addressHeader, p2shHeader};
         }
     }
 }

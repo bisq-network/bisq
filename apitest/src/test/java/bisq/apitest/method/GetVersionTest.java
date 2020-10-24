@@ -41,7 +41,7 @@ public class GetVersionTest extends MethodTest {
     @BeforeAll
     public static void setUp() {
         try {
-            setUpScaffold(alicedaemon.name());
+            setUpScaffold(alicedaemon);
         } catch (Exception ex) {
             fail(ex);
         }

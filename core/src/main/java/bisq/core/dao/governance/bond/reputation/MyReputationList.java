@@ -17,7 +17,7 @@
 
 package bisq.core.dao.governance.bond.reputation;
 
-import bisq.common.proto.persistable.UserThreadMappedPersistableList;
+import bisq.common.proto.persistable.PersistableList;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,7 +29,7 @@ import lombok.EqualsAndHashCode;
  * PersistableEnvelope wrapper for list of MyReputations.
  */
 @EqualsAndHashCode(callSuper = true)
-public class MyReputationList extends UserThreadMappedPersistableList<MyReputation> {
+public class MyReputationList extends PersistableList<MyReputation> {
 
     private MyReputationList(List<MyReputation> list) {
         super(list);

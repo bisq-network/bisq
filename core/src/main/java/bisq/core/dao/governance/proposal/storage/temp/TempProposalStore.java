@@ -21,7 +21,7 @@ import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 
 import bisq.common.proto.network.NetworkProtoResolver;
-import bisq.common.proto.persistable.ThreadedPersistableEnvelope;
+import bisq.common.proto.persistable.PersistableEnvelope;
 
 import com.google.protobuf.Message;
 
@@ -42,9 +42,9 @@ import lombok.extern.slf4j.Slf4j;
  * definition and provide a hashMap for the domain access.
  */
 @Slf4j
-public class TempProposalStore implements ThreadedPersistableEnvelope {
+public class TempProposalStore implements PersistableEnvelope {
     @Getter
-    private Map<P2PDataStorage.ByteArray, ProtectedStorageEntry> map = new ConcurrentHashMap<>();
+    private final Map<P2PDataStorage.ByteArray, ProtectedStorageEntry> map = new ConcurrentHashMap<>();
 
     @Inject
     TempProposalStore() {

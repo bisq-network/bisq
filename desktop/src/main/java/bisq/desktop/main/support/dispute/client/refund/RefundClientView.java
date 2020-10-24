@@ -25,11 +25,14 @@ import bisq.desktop.main.support.dispute.client.DisputeClientView;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.alert.PrivateNotificationManager;
+import bisq.core.dao.DaoFacade;
 import bisq.core.support.SupportType;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeSession;
+import bisq.core.support.dispute.mediation.mediator.MediatorManager;
 import bisq.core.support.dispute.refund.RefundManager;
 import bisq.core.support.dispute.refund.RefundSession;
+import bisq.core.support.dispute.refund.refundagent.RefundAgentManager;
 import bisq.core.trade.TradeManager;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.CoinFormatter;
@@ -37,9 +40,8 @@ import bisq.core.util.coin.CoinFormatter;
 import bisq.common.config.Config;
 import bisq.common.crypto.KeyRing;
 
-import javax.inject.Named;
-
 import javax.inject.Inject;
+import javax.inject.Named;
 
 @FxmlView
 public class RefundClientView extends DisputeClientView {
@@ -53,10 +55,13 @@ public class RefundClientView extends DisputeClientView {
                             ContractWindow contractWindow,
                             TradeDetailsWindow tradeDetailsWindow,
                             AccountAgeWitnessService accountAgeWitnessService,
+                            MediatorManager mediatorManager,
+                            RefundAgentManager refundAgentManager,
+                            DaoFacade daoFacade,
                             @Named(Config.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         super(refundManager, keyRing, tradeManager, formatter, disputeSummaryWindow,
                 privateNotificationManager, contractWindow, tradeDetailsWindow, accountAgeWitnessService,
-                useDevPrivilegeKeys);
+                mediatorManager, refundAgentManager, daoFacade, useDevPrivilegeKeys);
     }
 
     @Override

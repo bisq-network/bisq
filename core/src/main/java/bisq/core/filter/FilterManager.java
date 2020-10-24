@@ -18,6 +18,7 @@
 package bisq.core.filter;
 
 import bisq.core.btc.nodes.BtcNodes;
+import bisq.core.locale.Res;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.provider.ProvidersRepository;
@@ -45,7 +46,7 @@ import javax.inject.Named;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 
-import org.spongycastle.util.encoders.Base64;
+import org.bouncycastle.util.encoders.Base64;
 
 import java.security.PublicKey;
 
@@ -55,8 +56,12 @@ import java.math.BigInteger;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.Consumer;
 
 import java.lang.reflect.Method;
 
@@ -96,6 +101,7 @@ public class FilterManager {
     private final List<Listener> listeners = new CopyOnWriteArrayList<>();
     private final List<String> publicKeys;
     private ECKey filterSigningKey;
+    private final Set<Filter> invalidFilters = new HashSet<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -206,6 +212,35 @@ public class FilterManager {
         });
     }
 
+    public void setFilterWarningHandler(Consumer<String> filterWarningHandler) {
+        addListener(filter -> {
+            if (filter != null && filterWarningHandler != null) {
+                if (filter.getSeedNodes() != null && !filter.getSeedNodes().isEmpty()) {
+                    log.info(Res.get("popup.warning.nodeBanned", Res.get("popup.warning.seed")));
+                    // Let's keep that more silent. Might be used in case a node is unstable and we don't want to confuse users.
+                    // filterWarningHandler.accept(Res.get("popup.warning.nodeBanned", Res.get("popup.warning.seed")));
+                }
+
+                if (filter.getPriceRelayNodes() != null && !filter.getPriceRelayNodes().isEmpty()) {
+                    log.info(Res.get("popup.warning.nodeBanned", Res.get("popup.warning.priceRelay")));
+                    // Let's keep that more silent. Might be used in case a node is unstable and we don't want to confuse users.
+                    // filterWarningHandler.accept(Res.get("popup.warning.nodeBanned", Res.get("popup.warning.priceRelay")));
+                }
+
+                if (requireUpdateToNewVersionForTrading()) {
+                    filterWarningHandler.accept(Res.get("popup.warning.mandatoryUpdate.trading"));
+                }
+
+                if (requireUpdateToNewVersionForDAO()) {
+                    filterWarningHandler.accept(Res.get("popup.warning.mandatoryUpdate.dao"));
+                }
+                if (filter.isDisableDao()) {
+                    filterWarningHandler.accept(Res.get("popup.warning.disable.dao"));
+                }
+            }
+        });
+    }
+
     public boolean isPrivilegedDevPubKeyBanned(String pubKeyAsHex) {
         Filter filter = getFilter();
         if (filter == null) {
@@ -245,6 +280,26 @@ public class FilterManager {
         user.setDevelopersFilter(filterWithSig);
 
         p2PService.addProtectedStorageEntry(filterWithSig);
+
+        // Cleanup potential old filters created in the past with same priv key
+        invalidFilters.forEach(filter -> {
+            removeInvalidFilters(filter, privKeyString);
+        });
+    }
+
+    public void addToInvalidFilters(Filter filter) {
+        invalidFilters.add(filter);
+    }
+
+    public void removeInvalidFilters(Filter filter, String privKeyString) {
+        log.info("Remove invalid filter {}", filter);
+        setFilterSigningKey(privKeyString);
+        String signatureAsBase64 = getSignature(Filter.cloneWithoutSig(filter));
+        Filter filterWithSig = Filter.cloneWithSig(filter, signatureAsBase64);
+        boolean result = p2PService.removeData(filterWithSig);
+        if (!result) {
+            log.warn("Could not remove filter {}", filter);
+        }
     }
 
     public boolean canRemoveDevFilter(String privKeyString) {
@@ -420,7 +475,16 @@ public class FilterManager {
                                 "New filer={}\n" +
                                 "Old filter={}",
                         newFilter, filterProperty.get());
+
+                addToInvalidFilters(newFilter);
                 return;
+            } else {
+                log.warn("We received a new filter from the network and the creation date is newer than the " +
+                                "filter we have already. We ignore the old filter.\n" +
+                                "New filer={}\n" +
+                                "Old filter={}",
+                        newFilter, filterProperty.get());
+                addToInvalidFilters(currentFilter);
             }
 
             if (isPrivilegedDevPubKeyBanned(newFilter.getSignerPubKeyAsHex())) {
@@ -523,7 +587,11 @@ public class FilterManager {
     private boolean isFilterPublicKeyInList(Filter filter) {
         String signerPubKeyAsHex = filter.getSignerPubKeyAsHex();
         if (!isPublicKeyInList(signerPubKeyAsHex)) {
-            log.warn("signerPubKeyAsHex from filter is not part of our pub key list. filter={}, publicKeys={}", filter, publicKeys);
+            log.warn("Invalid filter (expected case for pre v1.3.9 filter as we still keep that in the network " +
+                            "but the new version does not recognize it as valid filter): " +
+                            "signerPubKeyAsHex from filter is not part of our pub key list. " +
+                            "signerPubKeyAsHex={}, publicKeys={}, filterCreationDate={}",
+                    signerPubKeyAsHex, publicKeys, new Date(filter.getCreationDate()));
             return false;
         }
         return true;

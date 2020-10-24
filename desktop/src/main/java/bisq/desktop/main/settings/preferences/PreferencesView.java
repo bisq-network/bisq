@@ -30,7 +30,6 @@ import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.ImageUtil;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.BtcValidator;
-import bisq.desktop.util.validation.RegexValidator;
 
 import bisq.core.btc.wallet.Restrictions;
 import bisq.core.dao.DaoFacade;
@@ -52,6 +51,8 @@ import bisq.core.util.FormattingUtils;
 import bisq.core.util.ParsingUtils;
 import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.validation.IntegerValidator;
+import bisq.core.util.validation.RegexValidator;
+import bisq.core.util.validation.RegexValidatorFactory;
 
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
@@ -94,8 +95,8 @@ import javafx.util.StringConverter;
 
 import java.io.File;
 
-import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -341,7 +342,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         // ignoreTraders
         ignoreTradersListInputTextField = addInputTextField(root, ++gridRow,
                 Res.get("setting.preferences.ignorePeers"));
-        RegexValidator regexValidator = GUIUtil.addressRegexValidator();
+        RegexValidator regexValidator = RegexValidatorFactory.addressRegexValidator();
         ignoreTradersListInputTextField.setValidator(regexValidator);
         ignoreTradersListInputTextField.setErrorMessage(Res.get("validation.invalidAddressList"));
         ignoreTradersListListener = (observable, oldValue, newValue) -> {
@@ -674,9 +675,9 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         autoConfServiceAddressListener = (observable, oldValue, newValue) -> {
             if (!newValue.equals(oldValue)) {
 
-                RegexValidator onionRegex = GUIUtil.onionAddressRegexValidator();
-                RegexValidator localhostRegex = GUIUtil.localhostAddressRegexValidator();
-                RegexValidator localnetRegex = GUIUtil.localnetAddressRegexValidator();
+                RegexValidator onionRegex = RegexValidatorFactory.onionAddressRegexValidator();
+                RegexValidator localhostRegex = RegexValidatorFactory.localhostAddressRegexValidator();
+                RegexValidator localnetRegex = RegexValidatorFactory.localnetAddressRegexValidator();
 
                 List<String> serviceAddressesRaw = Arrays.asList(StringUtils.deleteWhitespace(newValue).split(","));
 

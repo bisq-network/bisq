@@ -1,6 +1,5 @@
 package bisq.desktop.main.portfolio.editoffer;
 
-import bisq.desktop.main.offer.MakerFeeProvider;
 import bisq.desktop.util.validation.SecurityDepositValidator;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
@@ -13,6 +12,7 @@ import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.Res;
 import bisq.core.offer.CreateOfferService;
 import bisq.core.offer.OfferPayload;
+import bisq.core.offer.OfferUtil;
 import bisq.core.offer.OpenOffer;
 import bisq.core.payment.CryptoCurrencyAccount;
 import bisq.core.payment.PaymentAccount;
@@ -77,11 +77,16 @@ public class EditOfferDataModelTest {
         SecurityDepositValidator securityDepositValidator = mock(SecurityDepositValidator.class);
         AccountAgeWitnessService accountAgeWitnessService = mock(AccountAgeWitnessService.class);
         CreateOfferService createOfferService = mock(CreateOfferService.class);
+        OfferUtil offerUtil = mock(OfferUtil.class);
 
         when(btcWalletService.getOrCreateAddressEntry(anyString(), any())).thenReturn(addressEntry);
         when(btcWalletService.getBalanceForAddress(any())).thenReturn(Coin.valueOf(1000L));
         when(priceFeedService.updateCounterProperty()).thenReturn(new SimpleIntegerProperty());
-        when(priceFeedService.getMarketPrice(anyString())).thenReturn(new MarketPrice("USD", 12684.0450, Instant.now().getEpochSecond(), true));
+        when(priceFeedService.getMarketPrice(anyString())).thenReturn(
+                new MarketPrice("USD",
+                        12684.0450,
+                        Instant.now().getEpochSecond(),
+                        true));
         when(feeService.getTxFee(anyInt())).thenReturn(Coin.valueOf(1000L));
         when(user.findFirstPaymentAccountWithCurrency(any())).thenReturn(paymentAccount);
         when(user.getPaymentAccountsAsObservable()).thenReturn(FXCollections.observableSet());
@@ -92,11 +97,21 @@ public class EditOfferDataModelTest {
         when(bsqWalletService.getAvailableConfirmedBalance()).thenReturn(Coin.ZERO);
         when(createOfferService.getRandomOfferId()).thenReturn(UUID.randomUUID().toString());
 
-        model = new EditOfferDataModel(createOfferService, null,
-                btcWalletService, bsqWalletService, empty, user,
-                null, priceFeedService,
-                accountAgeWitnessService, feeService, null, null,
-                mock(MakerFeeProvider.class), mock(TradeStatisticsManager.class), null);
+        model = new EditOfferDataModel(createOfferService,
+                null,
+                offerUtil,
+                btcWalletService,
+                bsqWalletService,
+                empty,
+                user,
+                null,
+                priceFeedService,
+                accountAgeWitnessService,
+                feeService,
+                null,
+                null,
+                mock(TradeStatisticsManager.class),
+                null);
     }
 
     @Test
@@ -107,7 +122,7 @@ public class EditOfferDataModelTest {
 
         when(user.getPaymentAccount(anyString())).thenReturn(bitcoinClashicAccount);
 
-        model.applyOpenOffer(new OpenOffer(make(btcBCHCOffer), null));
+        model.applyOpenOffer(new OpenOffer(make(btcBCHCOffer)));
         assertNull(model.getPreselectedPaymentAccount());
     }
 

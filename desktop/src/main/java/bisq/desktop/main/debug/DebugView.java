@@ -27,31 +27,51 @@ import bisq.core.offer.placeoffer.tasks.AddToOfferBook;
 import bisq.core.offer.placeoffer.tasks.CreateMakerFeeTx;
 import bisq.core.offer.placeoffer.tasks.ValidateOffer;
 import bisq.core.trade.protocol.tasks.ApplyFilter;
-import bisq.core.trade.protocol.tasks.PublishTradeStatistics;
+import bisq.core.trade.protocol.tasks.VerifyPeersAccountAgeWitness;
+import bisq.core.trade.protocol.tasks.buyer.BuyerProcessDelayedPayoutTxSignatureRequest;
+import bisq.core.trade.protocol.tasks.buyer.BuyerProcessDepositTxAndDelayedPayoutTxMessage;
+import bisq.core.trade.protocol.tasks.buyer.BuyerProcessPayoutTxPublishedMessage;
 import bisq.core.trade.protocol.tasks.buyer.BuyerSendCounterCurrencyTransferStartedMessage;
+import bisq.core.trade.protocol.tasks.buyer.BuyerSendsDelayedPayoutTxSignatureResponse;
 import bisq.core.trade.protocol.tasks.buyer.BuyerSetupDepositTxListener;
 import bisq.core.trade.protocol.tasks.buyer.BuyerSetupPayoutTxListener;
 import bisq.core.trade.protocol.tasks.buyer.BuyerSignPayoutTx;
+import bisq.core.trade.protocol.tasks.buyer.BuyerSignsDelayedPayoutTx;
+import bisq.core.trade.protocol.tasks.buyer.BuyerVerifiesFinalDelayedPayoutTx;
+import bisq.core.trade.protocol.tasks.buyer.BuyerVerifiesPreparedDelayedPayoutTx;
 import bisq.core.trade.protocol.tasks.buyer_as_maker.BuyerAsMakerCreatesAndSignsDepositTx;
+import bisq.core.trade.protocol.tasks.buyer_as_maker.BuyerAsMakerSendsInputsForDepositTxResponse;
 import bisq.core.trade.protocol.tasks.buyer_as_taker.BuyerAsTakerCreatesDepositTxInputs;
+import bisq.core.trade.protocol.tasks.buyer_as_taker.BuyerAsTakerSendsDepositTxMessage;
 import bisq.core.trade.protocol.tasks.buyer_as_taker.BuyerAsTakerSignsDepositTx;
 import bisq.core.trade.protocol.tasks.maker.MakerCreateAndSignContract;
 import bisq.core.trade.protocol.tasks.maker.MakerProcessesInputsForDepositTxRequest;
-import bisq.core.trade.protocol.tasks.maker.MakerVerifyTakerAccount;
+import bisq.core.trade.protocol.tasks.maker.MakerRemovesOpenOffer;
+import bisq.core.trade.protocol.tasks.maker.MakerSetsLockTime;
 import bisq.core.trade.protocol.tasks.maker.MakerVerifyTakerFeePayment;
 import bisq.core.trade.protocol.tasks.seller.SellerBroadcastPayoutTx;
+import bisq.core.trade.protocol.tasks.seller.SellerCreatesDelayedPayoutTx;
+import bisq.core.trade.protocol.tasks.seller.SellerFinalizesDelayedPayoutTx;
 import bisq.core.trade.protocol.tasks.seller.SellerProcessCounterCurrencyTransferStartedMessage;
+import bisq.core.trade.protocol.tasks.seller.SellerProcessDelayedPayoutTxSignatureResponse;
+import bisq.core.trade.protocol.tasks.seller.SellerPublishesDepositTx;
+import bisq.core.trade.protocol.tasks.seller.SellerPublishesTradeStatistics;
+import bisq.core.trade.protocol.tasks.seller.SellerSendDelayedPayoutTxSignatureRequest;
 import bisq.core.trade.protocol.tasks.seller.SellerSendPayoutTxPublishedMessage;
 import bisq.core.trade.protocol.tasks.seller.SellerSendsDepositTxAndDelayedPayoutTxMessage;
 import bisq.core.trade.protocol.tasks.seller.SellerSignAndFinalizePayoutTx;
+import bisq.core.trade.protocol.tasks.seller.SellerSignsDelayedPayoutTx;
 import bisq.core.trade.protocol.tasks.seller_as_maker.SellerAsMakerCreatesUnsignedDepositTx;
+import bisq.core.trade.protocol.tasks.seller_as_maker.SellerAsMakerFinalizesDepositTx;
+import bisq.core.trade.protocol.tasks.seller_as_maker.SellerAsMakerProcessDepositTxMessage;
+import bisq.core.trade.protocol.tasks.seller_as_maker.SellerAsMakerSendsInputsForDepositTxResponse;
 import bisq.core.trade.protocol.tasks.seller_as_taker.SellerAsTakerCreatesDepositTxInputs;
 import bisq.core.trade.protocol.tasks.seller_as_taker.SellerAsTakerSignsDepositTx;
 import bisq.core.trade.protocol.tasks.taker.CreateTakerFeeTx;
 import bisq.core.trade.protocol.tasks.taker.TakerProcessesInputsForDepositTxResponse;
+import bisq.core.trade.protocol.tasks.taker.TakerPublishFeeTx;
 import bisq.core.trade.protocol.tasks.taker.TakerSendInputsForDepositTxRequest;
 import bisq.core.trade.protocol.tasks.taker.TakerVerifyAndSignContract;
-import bisq.core.trade.protocol.tasks.taker.TakerVerifyMakerAccount;
 import bisq.core.trade.protocol.tasks.taker.TakerVerifyMakerFeePayment;
 
 import bisq.common.taskrunner.Task;
@@ -102,30 +122,10 @@ public class DebugView extends InitializableView<GridPane, Void> {
                         AddToOfferBook.class)
                 ));
 
-        addGroup("BuyerAsMakerProtocol",
-                FXCollections.observableArrayList(Arrays.asList(
-                        MakerProcessesInputsForDepositTxRequest.class,
-                        ApplyFilter.class,
-                        MakerVerifyTakerAccount.class,
-                        MakerVerifyTakerFeePayment.class,
-                        MakerCreateAndSignContract.class,
-                        BuyerAsMakerCreatesAndSignsDepositTx.class,
-                        BuyerSetupDepositTxListener.class,
 
-                        MakerVerifyTakerAccount.class,
-                        MakerVerifyTakerFeePayment.class,
-                        PublishTradeStatistics.class,
-
-                        ApplyFilter.class,
-                        MakerVerifyTakerAccount.class,
-                        MakerVerifyTakerFeePayment.class,
-                        BuyerSignPayoutTx.class,
-                        BuyerSendCounterCurrencyTransferStartedMessage.class,
-                        BuyerSetupPayoutTxListener.class)
-                ));
         addGroup("SellerAsTakerProtocol",
                 FXCollections.observableArrayList(Arrays.asList(
-                        TakerVerifyMakerAccount.class,
+                        ApplyFilter.class,
                         TakerVerifyMakerFeePayment.class,
                         CreateTakerFeeTx.class,
                         SellerAsTakerCreatesDepositTxInputs.class,
@@ -133,26 +133,67 @@ public class DebugView extends InitializableView<GridPane, Void> {
 
                         TakerProcessesInputsForDepositTxResponse.class,
                         ApplyFilter.class,
-                        TakerVerifyMakerAccount.class,
-                        TakerVerifyMakerFeePayment.class,
+                        VerifyPeersAccountAgeWitness.class,
                         TakerVerifyAndSignContract.class,
+                        TakerPublishFeeTx.class,
                         SellerAsTakerSignsDepositTx.class,
+                        SellerCreatesDelayedPayoutTx.class,
+                        SellerSendDelayedPayoutTxSignatureRequest.class,
+
+                        SellerProcessDelayedPayoutTxSignatureResponse.class,
+                        SellerSignsDelayedPayoutTx.class,
+                        SellerFinalizesDelayedPayoutTx.class,
                         SellerSendsDepositTxAndDelayedPayoutTxMessage.class,
+                        SellerPublishesDepositTx.class,
+                        SellerPublishesTradeStatistics.class,
 
                         SellerProcessCounterCurrencyTransferStartedMessage.class,
-                        TakerVerifyMakerAccount.class,
+                        ApplyFilter.class,
                         TakerVerifyMakerFeePayment.class,
 
                         ApplyFilter.class,
-                        TakerVerifyMakerAccount.class,
                         TakerVerifyMakerFeePayment.class,
                         SellerSignAndFinalizePayoutTx.class,
                         SellerBroadcastPayoutTx.class,
-                        SellerSendPayoutTxPublishedMessage.class)
+                        SellerSendPayoutTxPublishedMessage.class
+
+                        )
                 ));
+        addGroup("BuyerAsMakerProtocol",
+                FXCollections.observableArrayList(Arrays.asList(
+                        MakerProcessesInputsForDepositTxRequest.class,
+                        ApplyFilter.class,
+                        VerifyPeersAccountAgeWitness.class,
+                        MakerVerifyTakerFeePayment.class,
+                        MakerSetsLockTime.class,
+                        MakerCreateAndSignContract.class,
+                        BuyerAsMakerCreatesAndSignsDepositTx.class,
+                        BuyerSetupDepositTxListener.class,
+                        BuyerAsMakerSendsInputsForDepositTxResponse.class,
+
+                        BuyerProcessDelayedPayoutTxSignatureRequest.class,
+                        MakerRemovesOpenOffer.class,
+                        BuyerVerifiesPreparedDelayedPayoutTx.class,
+                        BuyerSignsDelayedPayoutTx.class,
+                        BuyerSendsDelayedPayoutTxSignatureResponse.class,
+
+                        BuyerProcessDepositTxAndDelayedPayoutTxMessage.class,
+                        BuyerVerifiesFinalDelayedPayoutTx.class,
+
+                        ApplyFilter.class,
+                        MakerVerifyTakerFeePayment.class,
+                        BuyerSignPayoutTx.class,
+                        BuyerSetupPayoutTxListener.class,
+                        BuyerSendCounterCurrencyTransferStartedMessage.class,
+
+                        BuyerProcessPayoutTxPublishedMessage.class
+                        )
+                ));
+
+
         addGroup("BuyerAsTakerProtocol",
                 FXCollections.observableArrayList(Arrays.asList(
-                        TakerVerifyMakerAccount.class,
+                        ApplyFilter.class,
                         TakerVerifyMakerFeePayment.class,
                         CreateTakerFeeTx.class,
                         BuyerAsTakerCreatesDepositTxInputs.class,
@@ -160,43 +201,63 @@ public class DebugView extends InitializableView<GridPane, Void> {
 
                         TakerProcessesInputsForDepositTxResponse.class,
                         ApplyFilter.class,
-                        TakerVerifyMakerAccount.class,
-                        TakerVerifyMakerFeePayment.class,
+                        VerifyPeersAccountAgeWitness.class,
                         TakerVerifyAndSignContract.class,
+                        TakerPublishFeeTx.class,
                         BuyerAsTakerSignsDepositTx.class,
-                        SellerSendsDepositTxAndDelayedPayoutTxMessage.class,
+                        BuyerSetupDepositTxListener.class,
+                        BuyerAsTakerSendsDepositTxMessage.class,
+
+                        BuyerProcessDelayedPayoutTxSignatureRequest.class,
+                        BuyerVerifiesPreparedDelayedPayoutTx.class,
+                        BuyerSignsDelayedPayoutTx.class,
+                        BuyerSendsDelayedPayoutTxSignatureResponse.class,
+
+                        BuyerProcessDepositTxAndDelayedPayoutTxMessage.class,
+                        BuyerVerifiesFinalDelayedPayoutTx.class,
 
                         ApplyFilter.class,
-                        TakerVerifyMakerAccount.class,
                         TakerVerifyMakerFeePayment.class,
                         BuyerSignPayoutTx.class,
+                        BuyerSetupPayoutTxListener.class,
                         BuyerSendCounterCurrencyTransferStartedMessage.class,
-                        BuyerSetupPayoutTxListener.class)
+
+                        BuyerProcessPayoutTxPublishedMessage.class)
                 ));
         addGroup("SellerAsMakerProtocol",
                 FXCollections.observableArrayList(Arrays.asList(
                         MakerProcessesInputsForDepositTxRequest.class,
                         ApplyFilter.class,
-                        MakerVerifyTakerAccount.class,
+                        VerifyPeersAccountAgeWitness.class,
                         MakerVerifyTakerFeePayment.class,
+                        MakerSetsLockTime.class,
                         MakerCreateAndSignContract.class,
                         SellerAsMakerCreatesUnsignedDepositTx.class,
-                        BuyerSetupDepositTxListener.class,
+                        SellerAsMakerSendsInputsForDepositTxResponse.class,
 
-                        PublishTradeStatistics.class,
-                        MakerVerifyTakerAccount.class,
-                        MakerVerifyTakerFeePayment.class,
+                        SellerAsMakerProcessDepositTxMessage.class,
+                        MakerRemovesOpenOffer.class,
+                        SellerAsMakerFinalizesDepositTx.class,
+                        SellerCreatesDelayedPayoutTx.class,
+                        SellerSendDelayedPayoutTxSignatureRequest.class,
+
+                        SellerProcessDelayedPayoutTxSignatureResponse.class,
+                        SellerSignsDelayedPayoutTx.class,
+                        SellerFinalizesDelayedPayoutTx.class,
+                        SellerSendsDepositTxAndDelayedPayoutTxMessage.class,
+                        SellerPublishesDepositTx.class,
+                        SellerPublishesTradeStatistics.class,
 
                         SellerProcessCounterCurrencyTransferStartedMessage.class,
-                        MakerVerifyTakerAccount.class,
+                        ApplyFilter.class,
                         MakerVerifyTakerFeePayment.class,
 
                         ApplyFilter.class,
-                        MakerVerifyTakerAccount.class,
                         MakerVerifyTakerFeePayment.class,
                         SellerSignAndFinalizePayoutTx.class,
                         SellerBroadcastPayoutTx.class,
-                        SellerSendPayoutTxPublishedMessage.class)
+                        SellerSendPayoutTxPublishedMessage.class
+                        )
                 ));
     }
 

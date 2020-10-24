@@ -6,7 +6,7 @@ import bisq.core.dao.governance.proposal.ProposalService;
 import bisq.core.dao.governance.proposal.ProposalValidatorProvider;
 import bisq.core.dao.governance.proposal.storage.appendonly.ProposalPayload;
 
-import bisq.common.storage.Storage;
+import bisq.common.persistence.PersistenceManager;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -30,7 +30,7 @@ public class BallotListServiceTest {
         when(proposalService.getProposalPayloads()).thenReturn(payloads);
 
         BallotListService service = new BallotListService(proposalService, mock(PeriodService.class),
-                mock(ProposalValidatorProvider.class), mock(Storage.class));
+                mock(ProposalValidatorProvider.class), mock(PersistenceManager.class));
 
         BallotListChangeListener listener = mock(BallotListChangeListener.class);
         service.addListener(listener);

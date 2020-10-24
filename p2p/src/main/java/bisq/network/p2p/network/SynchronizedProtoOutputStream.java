@@ -50,11 +50,11 @@ class SynchronizedProtoOutputStream extends ProtoOutputStream {
         } catch (InterruptedException e) {
             Thread currentThread = Thread.currentThread();
             currentThread.interrupt();
-            final String msg = "Thread " + currentThread + " was interrupted. InterruptedException=" + e;
+            String msg = "Thread " + currentThread + " was interrupted. InterruptedException=" + e;
             log.error(msg);
             throw new BisqRuntimeException(msg, e);
         } catch (ExecutionException e) {
-            final String msg = "Failed to write envelope. ExecutionException " + e;
+            String msg = "Failed to write envelope. ExecutionException " + e;
             log.error(msg);
             throw new BisqRuntimeException(msg, e);
         }
@@ -65,7 +65,7 @@ class SynchronizedProtoOutputStream extends ProtoOutputStream {
             executorService.shutdownNow();
             super.onConnectionShutdown();
         } catch (Throwable t) {
-            log.error("Failed to handle connection shutdown. Throwable={}", t);
+            log.error("Failed to handle connection shutdown. Throwable={}", t.toString());
         }
     }
 }

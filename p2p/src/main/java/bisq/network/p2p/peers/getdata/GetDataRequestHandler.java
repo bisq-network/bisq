@@ -29,6 +29,7 @@ import bisq.common.UserThread;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 
 import java.util.concurrent.TimeUnit;
@@ -87,22 +88,22 @@ public class GetDataRequestHandler {
                 .map(e -> "node address " + e.getFullAddress())
                 .orElseGet(() -> "connection UID " + connection.getUid());
 
-        AtomicBoolean outPersistableNetworkPayloadOutputTruncated = new AtomicBoolean(false);
-        AtomicBoolean outProtectedStoragePayloadOutputTruncated = new AtomicBoolean(false);
+        AtomicBoolean wasPersistableNetworkPayloadsTruncated = new AtomicBoolean(false);
+        AtomicBoolean wasProtectedStorageEntriesTruncated = new AtomicBoolean(false);
         GetDataResponse getDataResponse = dataStorage.buildGetDataResponse(
                 getDataRequest,
                 MAX_ENTRIES,
-                outPersistableNetworkPayloadOutputTruncated,
-                outProtectedStoragePayloadOutputTruncated,
+                wasPersistableNetworkPayloadsTruncated,
+                wasProtectedStorageEntriesTruncated,
                 connection.getCapabilities());
 
-        if (outPersistableNetworkPayloadOutputTruncated.get()) {
+        if (wasPersistableNetworkPayloadsTruncated.get()) {
             log.warn("The getData request from peer with {} caused too much PersistableNetworkPayload " +
                             "entries to get delivered. We limited the entries for the response to {} entries",
                     connectionInfo, MAX_ENTRIES);
         }
 
-        if (outProtectedStoragePayloadOutputTruncated.get()) {
+        if (wasProtectedStorageEntriesTruncated.get()) {
             log.warn("The getData request from peer with {} caused too much ProtectedStorageEntry " +
                             "entries to get delivered. We limited the entries for the response to {} entries",
                     connectionInfo, MAX_ENTRIES);
@@ -147,7 +148,7 @@ public class GetDataRequestHandler {
                     log.trace("We have stopped already. We ignore that networkNode.sendMessage.onFailure call.");
                 }
             }
-        });
+        }, MoreExecutors.directExecutor());
         log.info("handle GetDataRequest took {} ms", System.currentTimeMillis() - ts);
     }
 

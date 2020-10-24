@@ -5,7 +5,7 @@ import com.google.inject.Provider;
 
 public class PubKeyRingProvider implements Provider<PubKeyRing> {
 
-    private PubKeyRing pubKeyRing;
+    private final PubKeyRing pubKeyRing;
 
     @Inject
     public PubKeyRingProvider(KeyRing keyRing) {

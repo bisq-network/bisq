@@ -18,7 +18,7 @@
 package bisq.asset.coins;
 
 import bisq.asset.AddressValidationResult;
-import bisq.asset.Base58BitcoinAddressValidator;
+import bisq.asset.Base58AddressValidator;
 import bisq.asset.Coin;
 import bisq.asset.NetworkParametersAdapter;
 
@@ -29,7 +29,7 @@ public class Credits extends Coin {
     }
 
 
-    public static class CreditsAddressValidator extends Base58BitcoinAddressValidator {
+    public static class CreditsAddressValidator extends Base58AddressValidator {
 
         public CreditsAddressValidator() {
             super(new CreditsParams());
@@ -50,7 +50,6 @@ public class Credits extends Coin {
         public CreditsParams() {
             addressHeader = 28;
             p2shHeader = 5;
-            acceptableAddressCodes = new int[]{addressHeader, p2shHeader};
         }
     }
 }

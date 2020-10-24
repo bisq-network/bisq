@@ -17,20 +17,19 @@
 
 package bisq.asset.coins;
 
-import bisq.asset.Base58BitcoinAddressValidator;
+import bisq.asset.Base58AddressValidator;
 import bisq.asset.Coin;
 import bisq.asset.NetworkParametersAdapter;
 
 public class Animecoin extends Coin {
     public Animecoin() {
-        super("Animecoin", "ANI", new Base58BitcoinAddressValidator(new AnimecoinMainNetParams()));
+        super("Animecoin", "ANI", new Base58AddressValidator(new AnimecoinMainNetParams()));
     }
 
     public static class AnimecoinMainNetParams extends NetworkParametersAdapter {
         public AnimecoinMainNetParams() {
             this.addressHeader = 23;
             this.p2shHeader = 9;
-            this.acceptableAddressCodes = new int[]{this.addressHeader, this.p2shHeader};
         }
     }
 }

@@ -144,7 +144,7 @@ public class AccountAgeWitnessUtils {
         boolean isSignWitnessTrade = accountAgeWitnessService.accountIsSigner(witness) &&
                 !accountAgeWitnessService.peerHasSignedWitness(trade) &&
                 accountAgeWitnessService.tradeAmountIsSufficient(trade.getTradeAmount());
-        log.info("AccountSigning: " +
+        log.info("AccountSigning debug log: " +
                         "\ntradeId: {}" +
                         "\nis buyer: {}" +
                         "\nbuyer account age witness info: {}" +

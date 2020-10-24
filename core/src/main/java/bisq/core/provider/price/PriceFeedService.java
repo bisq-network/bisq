@@ -23,7 +23,7 @@ import bisq.core.monetary.Altcoin;
 import bisq.core.monetary.Price;
 import bisq.core.provider.PriceNodeHttpClient;
 import bisq.core.provider.ProvidersRepository;
-import bisq.core.trade.statistics.TradeStatistics2;
+import bisq.core.trade.statistics.TradeStatistics3;
 import bisq.core.user.Preferences;
 
 import bisq.network.http.HttpClient;
@@ -38,6 +38,7 @@ import com.google.inject.Inject;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 
 import javafx.beans.property.IntegerProperty;
@@ -49,6 +50,7 @@ import javafx.beans.property.StringProperty;
 import java.time.Instant;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -287,12 +289,12 @@ public class PriceFeedService {
         return new Date(epochInMillisAtLastRequest);
     }
 
-    public void applyLatestBisqMarketPrice(Set<TradeStatistics2> tradeStatisticsSet) {
+    public void applyLatestBisqMarketPrice(Set<TradeStatistics3> tradeStatisticsSet) {
         // takes about 10 ms for 5000 items
-        Map<String, List<TradeStatistics2>> mapByCurrencyCode = new HashMap<>();
+        Map<String, List<TradeStatistics3>> mapByCurrencyCode = new HashMap<>();
         tradeStatisticsSet.forEach(e -> {
-            final List<TradeStatistics2> list;
-            final String currencyCode = e.getCurrencyCode();
+            List<TradeStatistics3> list;
+            String currencyCode = e.getCurrency();
             if (mapByCurrencyCode.containsKey(currencyCode)) {
                 list = mapByCurrencyCode.get(currencyCode);
             } else {
@@ -305,9 +307,9 @@ public class PriceFeedService {
         mapByCurrencyCode.values().stream()
                 .filter(list -> !list.isEmpty())
                 .forEach(list -> {
-                    list.sort((o1, o2) -> o1.getTradeDate().compareTo(o2.getTradeDate()));
-                    TradeStatistics2 tradeStatistics = list.get(list.size() - 1);
-                    setBisqMarketPrice(tradeStatistics.getCurrencyCode(), tradeStatistics.getTradePrice());
+                    list.sort(Comparator.comparing(TradeStatistics3::getDate));
+                    TradeStatistics3 tradeStatistics = list.get(list.size() - 1);
+                    setBisqMarketPrice(tradeStatistics.getCurrency(), tradeStatistics.getTradePrice());
                 });
     }
 
@@ -403,6 +405,6 @@ public class PriceFeedService {
             public void onFailure(@NotNull Throwable throwable) {
                 UserThread.execute(() -> faultHandler.handleFault("Could not load marketPrices", throwable));
             }
-        });
+        }, MoreExecutors.directExecutor());
     }
 }

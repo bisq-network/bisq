@@ -17,20 +17,19 @@
 
 package bisq.asset.coins;
 
-import bisq.asset.Base58BitcoinAddressValidator;
+import bisq.asset.Base58AddressValidator;
 import bisq.asset.Coin;
 import bisq.asset.NetworkParametersAdapter;
 
 public class Fujicoin extends Coin {
     public Fujicoin() {
-        super("Fujicoin", "FJC", new Base58BitcoinAddressValidator(new FujicoinParams()));
+        super("Fujicoin", "FJC", new Base58AddressValidator(new FujicoinParams()));
     }
 	   public static class FujicoinParams extends NetworkParametersAdapter {
 
         public FujicoinParams() {
             addressHeader = 36;
             p2shHeader = 16;
-            acceptableAddressCodes = new int[]{addressHeader, p2shHeader};
         }
     }
 }

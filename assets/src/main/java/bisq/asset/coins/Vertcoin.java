@@ -17,20 +17,19 @@
 
 package bisq.asset.coins;
 
-import bisq.asset.Base58BitcoinAddressValidator;
+import bisq.asset.Base58AddressValidator;
 import bisq.asset.Coin;
 import bisq.asset.NetworkParametersAdapter;
 
 public class Vertcoin extends Coin {
     public Vertcoin() {
-        super("Vertcoin", "VTC", new Base58BitcoinAddressValidator(new VertcoinMainNetParams()));
+        super("Vertcoin", "VTC", new Base58AddressValidator(new VertcoinMainNetParams()));
     }
 
     public static class VertcoinMainNetParams extends NetworkParametersAdapter {
         public VertcoinMainNetParams() {
             this.addressHeader = 71;
             this.p2shHeader = 5;
-            this.acceptableAddressCodes = new int[]{this.addressHeader, this.p2shHeader};
         }
     }
 }

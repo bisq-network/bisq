@@ -25,7 +25,7 @@ import bisq.core.payment.PaymentAccount;
 import bisq.core.proto.CoreProtoResolver;
 
 import bisq.common.proto.ProtoUtil;
-import bisq.common.proto.persistable.UserThreadMappedPersistableEnvelope;
+import bisq.common.proto.persistable.PersistableEnvelope;
 
 import com.google.protobuf.Message;
 
@@ -49,7 +49,7 @@ import static bisq.core.btc.wallet.Restrictions.getDefaultBuyerSecurityDepositAs
 @Slf4j
 @Data
 @AllArgsConstructor
-public final class PreferencesPayload implements UserThreadMappedPersistableEnvelope {
+public final class PreferencesPayload implements PersistableEnvelope {
     private String userLanguage;
     private Country userCountry;
     private List<FiatCurrency> fiatCurrencies = new ArrayList<>();

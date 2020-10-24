@@ -18,6 +18,7 @@
 package bisq.desktop.main.support.dispute.agent.refund;
 
 import bisq.desktop.common.view.FxmlView;
+import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.ContractWindow;
 import bisq.desktop.main.overlays.windows.DisputeSummaryWindow;
 import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
@@ -25,11 +26,15 @@ import bisq.desktop.main.support.dispute.agent.DisputeAgentView;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.alert.PrivateNotificationManager;
+import bisq.core.dao.DaoFacade;
+import bisq.core.locale.Res;
 import bisq.core.support.SupportType;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeSession;
+import bisq.core.support.dispute.mediation.mediator.MediatorManager;
 import bisq.core.support.dispute.refund.RefundManager;
 import bisq.core.support.dispute.refund.RefundSession;
+import bisq.core.support.dispute.refund.refundagent.RefundAgentManager;
 import bisq.core.trade.TradeManager;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.CoinFormatter;
@@ -37,9 +42,8 @@ import bisq.core.util.coin.CoinFormatter;
 import bisq.common.config.Config;
 import bisq.common.crypto.KeyRing;
 
-import javax.inject.Named;
-
 import javax.inject.Inject;
+import javax.inject.Named;
 
 @FxmlView
 public class RefundAgentView extends DisputeAgentView {
@@ -54,6 +58,9 @@ public class RefundAgentView extends DisputeAgentView {
                            ContractWindow contractWindow,
                            TradeDetailsWindow tradeDetailsWindow,
                            AccountAgeWitnessService accountAgeWitnessService,
+                           DaoFacade daoFacade,
+                           MediatorManager mediatorManager,
+                           RefundAgentManager refundAgentManager,
                            @Named(Config.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         super(refundManager,
                 keyRing,
@@ -64,6 +71,9 @@ public class RefundAgentView extends DisputeAgentView {
                 contractWindow,
                 tradeDetailsWindow,
                 accountAgeWitnessService,
+                daoFacade,
+                mediatorManager,
+                refundAgentManager,
                 useDevPrivilegeKeys);
     }
 
@@ -75,5 +85,16 @@ public class RefundAgentView extends DisputeAgentView {
     @Override
     protected DisputeSession getConcreteDisputeChatSession(Dispute dispute) {
         return new RefundSession(dispute, disputeManager.isTrader(dispute));
+    }
+
+    @Override
+    protected void onCloseDispute(Dispute dispute) {
+        long protocolVersion = dispute.getContract().getOfferPayload().getProtocolVersion();
+        // Refund agent was introduced with protocolVersion version 2. We do not support old trade protocol cases.
+        if (protocolVersion >= 2) {
+            disputeSummaryWindow.onFinalizeDispute(() -> chatView.removeInputBox()).show(dispute);
+        } else {
+            new Popup().warning(Res.get("support.wrongVersion", protocolVersion)).show();
+        }
     }
 }

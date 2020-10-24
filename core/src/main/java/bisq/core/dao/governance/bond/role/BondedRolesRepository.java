@@ -27,6 +27,7 @@ import bisq.core.dao.state.model.governance.Proposal;
 import bisq.core.dao.state.model.governance.Role;
 import bisq.core.dao.state.model.governance.RoleProposal;
 
+import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
@@ -62,7 +63,8 @@ public class BondedRolesRepository extends BondRepository<BondedRole, Role> {
 
     public boolean isMyRole(Role role) {
         Set<String> myWalletTransactionIds = bsqWalletService.getClonedWalletTransactions().stream()
-                .map(Transaction::getHashAsString)
+                .map(Transaction::getTxId)
+                .map(Sha256Hash::toString)
                 .collect(Collectors.toSet());
         return getAcceptedBondedRoleProposalStream()
                 .filter(roleProposal -> roleProposal.getRole().equals(role))

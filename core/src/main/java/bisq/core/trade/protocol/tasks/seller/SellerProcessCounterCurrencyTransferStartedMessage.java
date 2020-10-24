@@ -30,8 +30,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class SellerProcessCounterCurrencyTransferStartedMessage extends TradeTask {
-    @SuppressWarnings({"unused"})
-    public SellerProcessCounterCurrencyTransferStartedMessage(TaskRunner taskHandler, Trade trade) {
+    public SellerProcessCounterCurrencyTransferStartedMessage(TaskRunner<Trade> taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -59,8 +58,6 @@ public class SellerProcessCounterCurrencyTransferStartedMessage extends TradeTas
             if (counterCurrencyExtraData != null && counterCurrencyExtraData.length() < 100) {
                 trade.setCounterCurrencyExtraData(counterCurrencyExtraData);
             }
-
-            processModel.removeMailboxMessageAfterProcessing(trade);
 
             trade.setState(Trade.State.SELLER_RECEIVED_FIAT_PAYMENT_INITIATED_MSG);
 

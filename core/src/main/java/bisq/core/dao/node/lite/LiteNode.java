@@ -28,6 +28,7 @@ import bisq.core.dao.node.parser.BlockParser;
 import bisq.core.dao.node.parser.exceptions.RequiredReorgFromSnapshotException;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.DaoStateSnapshotService;
+import bisq.core.dao.state.model.blockchain.Block;
 
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.network.Connection;
@@ -39,6 +40,7 @@ import com.google.inject.Inject;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -227,19 +229,18 @@ public class LiteNode extends BsqNode {
     }
 
     // We received a new block
-    private void onNewBlockReceived(RawBlock block) {
-        int blockHeight = block.getHeight();
-        log.debug("onNewBlockReceived: block at height {}, hash={}", blockHeight, block.getHash());
+    private void onNewBlockReceived(RawBlock rawBlock) {
+        int blockHeight = rawBlock.getHeight();
+        log.debug("onNewBlockReceived: block at height {}, hash={}", blockHeight, rawBlock.getHash());
 
         // We only update chainTipHeight if we get a newer block
         if (blockHeight > chainTipHeight)
             chainTipHeight = blockHeight;
 
         try {
-            doParseBlock(block);
+            Optional<Block> optionalBlock = doParseBlock(rawBlock);
+            optionalBlock.ifPresent(this::maybeExportNewBlockToJson);
         } catch (RequiredReorgFromSnapshotException ignore) {
         }
-
-        maybeExportToJson();
     }
 }

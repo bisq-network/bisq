@@ -22,18 +22,16 @@ import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import bisq.network.p2p.storage.persistence.MapStoreService;
 
 import bisq.common.config.Config;
-import bisq.common.storage.Storage;
+import bisq.common.persistence.PersistenceManager;
 
-import javax.inject.Named;
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import java.io.File;
 
 import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
-
-import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class SignedWitnessStorageService extends MapStoreService<SignedWitnessStore, PersistableNetworkPayload> {
@@ -46,13 +44,18 @@ public class SignedWitnessStorageService extends MapStoreService<SignedWitnessSt
 
     @Inject
     public SignedWitnessStorageService(@Named(Config.STORAGE_DIR) File storageDir,
-                                       Storage<SignedWitnessStore> persistableNetworkPayloadMapStorage) {
-        super(storageDir, persistableNetworkPayloadMapStorage);
+                                       PersistenceManager<SignedWitnessStore> persistenceManager) {
+        super(storageDir, persistenceManager);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    protected void initializePersistenceManager() {
+        persistenceManager.initialize(store, PersistenceManager.Source.NETWORK);
+    }
 
     @Override
     public String getFileName() {
@@ -77,13 +80,5 @@ public class SignedWitnessStorageService extends MapStoreService<SignedWitnessSt
     @Override
     protected SignedWitnessStore createStore() {
         return new SignedWitnessStore();
-    }
-
-    @Override
-    protected void readStore() {
-        super.readStore();
-        checkArgument(store instanceof SignedWitnessStore,
-                "Store is not instance of SignedWitnessStore. That can happen if the ProtoBuffer " +
-                        "file got changed. We cleared the data store and recreated it again.");
     }
 }

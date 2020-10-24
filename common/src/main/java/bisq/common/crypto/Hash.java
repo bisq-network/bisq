@@ -21,7 +21,7 @@ import org.bitcoinj.core.Utils;
 
 import com.google.common.base.Charsets;
 
-import org.spongycastle.crypto.digests.RIPEMD160Digest;
+import org.bouncycastle.crypto.digests.RIPEMD160Digest;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;

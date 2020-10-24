@@ -34,8 +34,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Slf4j
 public class SellerCreatesDelayedPayoutTx extends TradeTask {
 
-    @SuppressWarnings({"unused"})
-    public SellerCreatesDelayedPayoutTx(TaskRunner taskHandler, Trade trade) {
+    public SellerCreatesDelayedPayoutTx(TaskRunner<Trade> taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -47,7 +46,7 @@ public class SellerCreatesDelayedPayoutTx extends TradeTask {
             String donationAddressString = processModel.getDaoFacade().getParamValue(Param.RECIPIENT_BTC_ADDRESS);
             Coin minerFee = trade.getTxFee();
             TradeWalletService tradeWalletService = processModel.getTradeWalletService();
-            Transaction depositTx = checkNotNull(trade.getDepositTx());
+            Transaction depositTx = checkNotNull(processModel.getDepositTx());
 
             long lockTime = trade.getLockTime();
             Transaction preparedDelayedPayoutTx = tradeWalletService.createDelayedUnsignedPayoutTx(depositTx,

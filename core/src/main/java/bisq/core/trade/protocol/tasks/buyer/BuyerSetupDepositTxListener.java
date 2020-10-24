@@ -44,8 +44,7 @@ public class BuyerSetupDepositTxListener extends TradeTask {
     private Subscription tradeStateSubscription;
     private AddressConfidenceListener confidenceListener;
 
-    @SuppressWarnings({"unused"})
-    public BuyerSetupDepositTxListener(TaskRunner taskHandler, Trade trade) {
+    public BuyerSetupDepositTxListener(TaskRunner<Trade> taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -56,19 +55,20 @@ public class BuyerSetupDepositTxListener extends TradeTask {
 
             if (trade.getDepositTx() == null && processModel.getPreparedDepositTx() != null) {
                 BtcWalletService walletService = processModel.getBtcWalletService();
-                final NetworkParameters params = walletService.getParams();
+                NetworkParameters params = walletService.getParams();
                 Transaction preparedDepositTx = new Transaction(params, processModel.getPreparedDepositTx());
                 checkArgument(!preparedDepositTx.getOutputs().isEmpty(), "preparedDepositTx.getOutputs() must not be empty");
-                Address depositTxAddress = preparedDepositTx.getOutput(0).getAddressFromP2SH(params);
-                final TransactionConfidence confidence = walletService.getConfidenceForAddress(depositTxAddress);
-                if (isInNetwork(confidence)) {
+                Address depositTxAddress = preparedDepositTx.getOutput(0).getScriptPubKey().getToAddress(params);
+                TransactionConfidence confidence = walletService.getConfidenceForAddress(depositTxAddress);
+                if (isVisibleInNetwork(confidence)) {
                     applyConfidence(confidence);
                 } else {
                     confidenceListener = new AddressConfidenceListener(depositTxAddress) {
                         @Override
                         public void onTransactionConfidenceChanged(TransactionConfidence confidence) {
-                            if (isInNetwork(confidence))
+                            if (isVisibleInNetwork(confidence)) {
                                 applyConfidence(confidence);
+                            }
                         }
                     };
                     walletService.addAddressConfidenceListener(confidenceListener);
@@ -78,7 +78,7 @@ public class BuyerSetupDepositTxListener extends TradeTask {
                             swapReservedForTradeEntry();
 
                             // hack to remove tradeStateSubscription at callback
-                            UserThread.execute(this::unSubscribe);
+                            UserThread.execute(this::unSubscribeAndRemoveListener);
                         }
                     });
                 }
@@ -96,33 +96,37 @@ public class BuyerSetupDepositTxListener extends TradeTask {
             Transaction walletTx = processModel.getTradeWalletService().getWalletTx(confidence.getTransactionHash());
             trade.applyDepositTx(walletTx);
             BtcWalletService.printTx("depositTx received from network", walletTx);
+
+            // We don't want to trigger the tradeStateSubscription when setting the state, so we unsubscribe before
+            unSubscribeAndRemoveListener();
             trade.setState(Trade.State.BUYER_SAW_DEPOSIT_TX_IN_NETWORK);
         } else {
-            log.info("We got the deposit tx already set from MakerProcessDepositTxPublishedMessage.  tradeId={}, state={}", trade.getId(), trade.getState());
+            unSubscribeAndRemoveListener();
         }
 
         swapReservedForTradeEntry();
-
-        // need delay as it can be called inside the listener handler before listener and tradeStateSubscription are actually set.
-        UserThread.execute(this::unSubscribe);
     }
 
-    private boolean isInNetwork(TransactionConfidence confidence) {
+    private boolean isVisibleInNetwork(TransactionConfidence confidence) {
         return confidence != null &&
                 (confidence.getConfidenceType().equals(TransactionConfidence.ConfidenceType.BUILDING) ||
                         confidence.getConfidenceType().equals(TransactionConfidence.ConfidenceType.PENDING));
     }
 
     private void swapReservedForTradeEntry() {
-        log.info("swapReservedForTradeEntry");
-        processModel.getBtcWalletService().swapTradeEntryToAvailableEntry(trade.getId(), AddressEntry.Context.RESERVED_FOR_TRADE);
+        processModel.getBtcWalletService().swapTradeEntryToAvailableEntry(trade.getId(),
+                AddressEntry.Context.RESERVED_FOR_TRADE);
     }
 
-    private void unSubscribe() {
-        if (tradeStateSubscription != null)
+    private void unSubscribeAndRemoveListener() {
+        if (tradeStateSubscription != null) {
             tradeStateSubscription.unsubscribe();
+            tradeStateSubscription = null;
+        }
 
-        if (confidenceListener != null)
+        if (confidenceListener != null) {
             processModel.getBtcWalletService().removeAddressConfidenceListener(confidenceListener);
+            confidenceListener = null;
+        }
     }
 }

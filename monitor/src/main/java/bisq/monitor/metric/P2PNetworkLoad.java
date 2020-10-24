@@ -35,15 +35,14 @@ import bisq.network.p2p.network.TorNetworkNode;
 import bisq.network.p2p.peers.PeerManager;
 import bisq.network.p2p.peers.keepalive.KeepAliveManager;
 import bisq.network.p2p.peers.peerexchange.PeerExchangeManager;
-import bisq.network.p2p.peers.peerexchange.PeerList;
 import bisq.network.p2p.storage.messages.BroadcastMessage;
 
 import bisq.common.ClockWatcher;
 import bisq.common.config.Config;
+import bisq.common.file.CorruptedStorageFileHandler;
+import bisq.common.persistence.PersistenceManager;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.network.NetworkProtoResolver;
-import bisq.common.storage.CorruptedDatabaseFilesHandler;
-import bisq.common.storage.Storage;
 
 import java.time.Clock;
 
@@ -127,14 +126,14 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
             File storageDir = torHiddenServiceDir;
             try {
                 Config config = new Config();
-                CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler = new CorruptedDatabaseFilesHandler();
+                CorruptedStorageFileHandler corruptedStorageFileHandler = new CorruptedStorageFileHandler();
                 int maxConnections = Integer.parseInt(configuration.getProperty(MAX_CONNECTIONS, "12"));
                 NetworkProtoResolver networkProtoResolver = new CoreNetworkProtoResolver(Clock.systemDefaultZone());
                 CorePersistenceProtoResolver persistenceProtoResolver = new CorePersistenceProtoResolver(null,
-                        networkProtoResolver, storageDir, corruptedDatabaseFilesHandler);
+                        networkProtoResolver);
                 DefaultSeedNodeRepository seedNodeRepository = new DefaultSeedNodeRepository(config);
                 PeerManager peerManager = new PeerManager(networkNode, seedNodeRepository, new ClockWatcher(),
-                        maxConnections, new Storage<PeerList>(storageDir, persistenceProtoResolver, corruptedDatabaseFilesHandler));
+                        new PersistenceManager<>(storageDir, persistenceProtoResolver, corruptedStorageFileHandler), maxConnections);
 
                 // init file storage
                 peerManager.readPersisted();

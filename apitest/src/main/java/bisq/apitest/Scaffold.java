@@ -41,6 +41,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
+import static bisq.apitest.Scaffold.BitcoinCoreApp.bitcoind;
 import static bisq.apitest.config.BisqAppConfig.*;
 import static java.lang.String.format;
 import static java.lang.System.exit;
@@ -63,6 +64,10 @@ public class Scaffold {
 
     public static final int EXIT_SUCCESS = 0;
     public static final int EXIT_FAILURE = 1;
+
+    public enum BitcoinCoreApp {
+        bitcoind
+    }
 
     public final ApiTestConfig config;
 
@@ -295,7 +300,7 @@ public class Scaffold {
 
         log.info("Starting supporting apps {}", config.supportingApps.toString());
 
-        if (config.hasSupportingApp("bitcoind")) {
+        if (config.hasSupportingApp(bitcoind.name())) {
             BitcoinDaemon bitcoinDaemon = new BitcoinDaemon(config);
             bitcoinDaemon.verifyBitcoinPathsExist(true);
             bitcoindTask = new SetupTask(bitcoinDaemon, countdownLatch);

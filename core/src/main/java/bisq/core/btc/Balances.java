@@ -80,7 +80,7 @@ public class Balances {
 
     public void onAllServicesInitialized() {
         openOfferManager.getObservableList().addListener((ListChangeListener<OpenOffer>) c -> updateBalance());
-        tradeManager.getTradableList().addListener((ListChangeListener<Trade>) change -> updateBalance());
+        tradeManager.getObservableList().addListener((ListChangeListener<Trade>) change -> updateBalance());
         refundManager.getDisputesAsObservableList().addListener((ListChangeListener<Dispute>) c -> updateBalance());
         btcWalletService.addBalanceListener(new BalanceListener() {
             @Override
@@ -102,7 +102,7 @@ public class Balances {
     }
 
     private void updateAvailableBalance() {
-        long sum = tradeManager.getAddressEntriesForAvailableBalanceStream()
+        long sum = btcWalletService.getAddressEntriesForAvailableBalanceStream()
                 .mapToLong(addressEntry -> btcWalletService.getBalanceForAddress(addressEntry.getAddress()).value)
                 .sum();
         availableBalance.set(Coin.valueOf(sum));

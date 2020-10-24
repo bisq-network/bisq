@@ -45,15 +45,24 @@ message RegisterDisputeAgentReply {
 ///////////////////////////////////////////////////////////////////////////////////////////
 
 service Offers {
+    rpc GetOffer (GetOfferRequest) returns (GetOfferReply) {
+    }
     rpc GetOffers (GetOffersRequest) returns (GetOffersReply) {
     }
     rpc CreateOffer (CreateOfferRequest) returns (CreateOfferReply) {
     }
 }
 
+message GetOfferRequest {
+    string id = 1;
+}
+
+message GetOfferReply {
+    OfferInfo offer = 1;
+}
 message GetOffersRequest {
     string direction = 1;
-    string fiatCurrencyCode = 2;
+    string currencyCode = 2;
 }
 
 message GetOffersReply {
@@ -61,9 +70,9 @@ message GetOffersReply {
 }
 
 message CreateOfferRequest {
-    string currencyCode = 1; // TODO switch order w/ direction field in next PR
+    string currencyCode = 1;
     string direction = 2;
-    uint64 price = 3;
+    string price = 3;
     bool useMarketBasedPrice = 4;
     double marketPriceMargin = 5;
     uint64 amount = 6;
@@ -73,7 +82,7 @@ message CreateOfferRequest {
 }
 
 message CreateOfferReply {
-    bool result = 1;
+    OfferInfo offer = 1;
 }
 
 message OfferInfo {
@@ -107,9 +116,11 @@ service PaymentAccounts {
 }
 
 message CreatePaymentAccountRequest {
-    string accountName = 1;
-    string accountNumber = 2;
-    string fiatCurrencyCode = 3;
+    string paymentMethodId = 1;
+    string accountName = 2;
+    string accountNumber = 3;
+    // TODO  Support all currencies. Maybe add a repeated and if only one is used its a singletonList.
+    string currencyCode = 4;
 }
 
 message CreatePaymentAccountReply {
@@ -123,7 +134,24 @@ message GetPaymentAccountsReply {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-// TradeStatistics
+// Price
+///////////////////////////////////////////////////////////////////////////////////////////
+
+service Price {
+    rpc GetMarketPrice (MarketPriceRequest) returns (MarketPriceReply) {
+    }
+}
+
+message MarketPriceRequest {
+    string currencyCode = 1;
+}
+
+message MarketPriceReply {
+    double price = 1;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+// GetTradeStatistics
 ///////////////////////////////////////////////////////////////////////////////////////////
 
 service GetTradeStatistics {
@@ -135,7 +163,7 @@ message GetTradeStatisticsRequest {
 }
 
 message GetTradeStatisticsReply {
-    repeated TradeStatistics2 TradeStatistics = 1;
+    repeated TradeStatistics3 TradeStatistics = 1;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////

@@ -17,19 +17,13 @@
 
 package bisq.core.trade.statistics;
 
-import bisq.network.p2p.storage.P2PDataStorage;
-import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
-
-import bisq.common.proto.persistable.ThreadedPersistableEnvelope;
+import bisq.network.p2p.storage.persistence.PersistableNetworkPayloadStore;
 
 import com.google.protobuf.Message;
 
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -38,9 +32,7 @@ import lombok.extern.slf4j.Slf4j;
  * definition and provide a hashMap for the domain access.
  */
 @Slf4j
-public class TradeStatistics2Store implements ThreadedPersistableEnvelope {
-    @Getter
-    private Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> map = new ConcurrentHashMap<>();
+public class TradeStatistics2Store extends PersistableNetworkPayloadStore<TradeStatistics2> {
 
     TradeStatistics2Store() {
     }
@@ -51,7 +43,7 @@ public class TradeStatistics2Store implements ThreadedPersistableEnvelope {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private TradeStatistics2Store(List<TradeStatistics2> list) {
-        list.forEach(item -> map.put(new P2PDataStorage.ByteArray(item.getHash()), item));
+        super(list);
     }
 
     public Message toProtoMessage() {
@@ -72,9 +64,5 @@ public class TradeStatistics2Store implements ThreadedPersistableEnvelope {
         List<TradeStatistics2> list = proto.getItemsList().stream()
                 .map(TradeStatistics2::fromProto).collect(Collectors.toList());
         return new TradeStatistics2Store(list);
-    }
-
-    public boolean containsKey(P2PDataStorage.ByteArray hash) {
-        return map.containsKey(hash);
     }
 }

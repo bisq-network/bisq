@@ -32,7 +32,6 @@ import bisq.desktop.main.overlays.windows.ShowWalletDataWindow;
 import bisq.desktop.util.CssTheme;
 import bisq.desktop.util.ImageUtil;
 
-import bisq.core.app.AvoidStandbyModeService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.dao.governance.voteresult.MissingDataRequestService;
@@ -41,13 +40,11 @@ import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.user.Preferences;
 
-import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
 import bisq.common.app.Log;
 import bisq.common.config.Config;
 import bisq.common.setup.GracefulShutDownHandler;
 import bisq.common.setup.UncaughtExceptionHandler;
-import bisq.common.util.Profiler;
 import bisq.common.util.Utilities;
 
 import com.google.inject.Injector;
@@ -74,7 +71,6 @@ import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 import org.slf4j.LoggerFactory;
@@ -93,7 +89,6 @@ import static bisq.desktop.util.Layout.MIN_WINDOW_WIDTH;
 
 @Slf4j
 public class BisqApp extends Application implements UncaughtExceptionHandler {
-    private static final long LOG_MEMORY_PERIOD_MIN = 10;
     @Setter
     private static Consumer<Application> appLaunchedHandler;
     @Getter
@@ -129,16 +124,12 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
         appLaunchedHandler.accept(this);
     }
 
-    public void startApplication(Runnable onUiReadyHandler) {
+    public void startApplication(Runnable onApplicationStartedHandler) {
         try {
             MainView mainView = loadMainView(injector);
-            mainView.setOnUiReadyHandler(onUiReadyHandler);
+            mainView.setOnApplicationStartedHandler(onApplicationStartedHandler);
             scene = createAndConfigScene(mainView, injector);
             setupStage(scene);
-
-            injector.getInstance(AvoidStandbyModeService.class).init();
-
-            UserThread.runPeriodically(() -> Profiler.printSystemLoad(log), LOG_MEMORY_PERIOD_MIN, TimeUnit.MINUTES);
         } catch (Throwable throwable) {
             log.error("Error during app init", throwable);
             handleUncaughtException(throwable, false);

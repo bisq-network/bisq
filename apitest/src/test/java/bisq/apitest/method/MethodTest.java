@@ -17,15 +17,27 @@
 
 package bisq.apitest.method;
 
+import bisq.proto.grpc.CreatePaymentAccountRequest;
 import bisq.proto.grpc.GetBalanceRequest;
 import bisq.proto.grpc.GetFundingAddressesRequest;
+import bisq.proto.grpc.GetOfferRequest;
+import bisq.proto.grpc.GetPaymentAccountsRequest;
 import bisq.proto.grpc.LockWalletRequest;
+import bisq.proto.grpc.MarketPriceRequest;
+import bisq.proto.grpc.OfferInfo;
 import bisq.proto.grpc.RegisterDisputeAgentRequest;
 import bisq.proto.grpc.RemoveWalletPasswordRequest;
 import bisq.proto.grpc.SetWalletPasswordRequest;
 import bisq.proto.grpc.UnlockWalletRequest;
 
+import protobuf.PaymentAccount;
+
+import java.util.stream.Collectors;
+
 import static bisq.common.app.DevEnv.DEV_PRIVILEGE_PRIV_KEY;
+import static bisq.core.payment.payload.PaymentMethod.PERFECT_MONEY;
+import static java.util.Comparator.comparing;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 
 
@@ -33,6 +45,10 @@ import bisq.apitest.ApiTestCase;
 import bisq.apitest.config.BisqAppConfig;
 
 public class MethodTest extends ApiTestCase {
+
+    protected static final String ARBITRATOR = "arbitrator";
+    protected static final String MEDIATOR = "mediator";
+    protected static final String REFUND_AGENT = "refundagent";
 
     // Convenience methods for building gRPC request objects
 
@@ -64,10 +80,12 @@ public class MethodTest extends ApiTestCase {
         return GetFundingAddressesRequest.newBuilder().build();
     }
 
-    protected final RegisterDisputeAgentRequest createRegisterDisputeAgentRequest(String disputeAgentType) {
-        return RegisterDisputeAgentRequest.newBuilder()
-                .setDisputeAgentType(disputeAgentType)
-                .setRegistrationKey(DEV_PRIVILEGE_PRIV_KEY).build();
+    protected final MarketPriceRequest createMarketPriceRequest(String currencyCode) {
+        return MarketPriceRequest.newBuilder().setCurrencyCode(currencyCode).build();
+    }
+
+    protected final GetOfferRequest createGetOfferRequest(String offerId) {
+        return GetOfferRequest.newBuilder().setId(offerId).build();
     }
 
     // Convenience methods for calling frequently used & thoroughly tested gRPC services.
@@ -95,5 +113,54 @@ public class MethodTest extends ApiTestCase {
                 .findFirst()
                 .get()
                 .getAddress();
+    }
+
+    protected final CreatePaymentAccountRequest createCreatePerfectMoneyPaymentAccountRequest(
+            String accountName,
+            String accountNumber,
+            String currencyCode) {
+        return CreatePaymentAccountRequest.newBuilder()
+                .setPaymentMethodId(PERFECT_MONEY.getId())
+                .setAccountName(accountName)
+                .setAccountNumber(accountNumber)
+                .setCurrencyCode(currencyCode)
+                .build();
+    }
+
+    protected final PaymentAccount getDefaultPerfectDummyPaymentAccount(BisqAppConfig bisqAppConfig) {
+        var req = GetPaymentAccountsRequest.newBuilder().build();
+        var paymentAccountsService = grpcStubs(bisqAppConfig).paymentAccountsService;
+        PaymentAccount paymentAccount = paymentAccountsService.getPaymentAccounts(req)
+                .getPaymentAccountsList()
+                .stream()
+                .sorted(comparing(PaymentAccount::getCreationDate))
+                .collect(Collectors.toList()).get(0);
+        assertEquals("PerfectMoney dummy", paymentAccount.getAccountName());
+        return paymentAccount;
+    }
+
+    protected final double getMarketPrice(BisqAppConfig bisqAppConfig, String currencyCode) {
+        var req = createMarketPriceRequest(currencyCode);
+        return grpcStubs(bisqAppConfig).priceService.getMarketPrice(req).getPrice();
+    }
+
+    protected final OfferInfo getOffer(BisqAppConfig bisqAppConfig, String offerId) {
+        var req = createGetOfferRequest(offerId);
+        return grpcStubs(bisqAppConfig).offersService.getOffer(req).getOffer();
+    }
+
+    // Static conveniences for test methods and test case fixture setups.
+
+    protected static RegisterDisputeAgentRequest createRegisterDisputeAgentRequest(String disputeAgentType) {
+        return RegisterDisputeAgentRequest.newBuilder()
+                .setDisputeAgentType(disputeAgentType.toLowerCase())
+                .setRegistrationKey(DEV_PRIVILEGE_PRIV_KEY).build();
+    }
+
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    protected static void registerDisputeAgents(BisqAppConfig bisqAppConfig) {
+        var disputeAgentsService = grpcStubs(bisqAppConfig).disputeAgentsService;
+        disputeAgentsService.registerDisputeAgent(createRegisterDisputeAgentRequest(MEDIATOR));
+        disputeAgentsService.registerDisputeAgent(createRegisterDisputeAgentRequest(REFUND_AGENT));
     }
 }

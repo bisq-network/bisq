@@ -32,8 +32,8 @@ import bisq.core.trade.TradeManager;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
 
+import bisq.common.file.CorruptedStorageFileHandler;
 import bisq.common.proto.persistable.PersistenceProtoResolver;
-import bisq.common.storage.CorruptedDatabaseFilesHandler;
 
 import com.google.inject.Inject;
 
@@ -59,7 +59,7 @@ class FiatAccountsDataModel extends ActivatableDataModel {
     private final SetChangeListener<PaymentAccount> setChangeListener;
     private final String accountsFileName = "FiatPaymentAccounts";
     private final PersistenceProtoResolver persistenceProtoResolver;
-    private final CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler;
+    private final CorruptedStorageFileHandler corruptedStorageFileHandler;
 
     @Inject
     public FiatAccountsDataModel(User user,
@@ -68,14 +68,14 @@ class FiatAccountsDataModel extends ActivatableDataModel {
                                  TradeManager tradeManager,
                                  AccountAgeWitnessService accountAgeWitnessService,
                                  PersistenceProtoResolver persistenceProtoResolver,
-                                 CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler) {
+                                 CorruptedStorageFileHandler corruptedStorageFileHandler) {
         this.user = user;
         this.preferences = preferences;
         this.openOfferManager = openOfferManager;
         this.tradeManager = tradeManager;
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.persistenceProtoResolver = persistenceProtoResolver;
-        this.corruptedDatabaseFilesHandler = corruptedDatabaseFilesHandler;
+        this.corruptedStorageFileHandler = corruptedStorageFileHandler;
         setChangeListener = change -> fillAndSortPaymentAccounts();
     }
 
@@ -130,13 +130,13 @@ class FiatAccountsDataModel extends ActivatableDataModel {
         user.addPaymentAccount(paymentAccount);
 
         accountAgeWitnessService.publishMyAccountAgeWitness(paymentAccount.getPaymentAccountPayload());
-        accountAgeWitnessService.signSameNameAccounts();
+        accountAgeWitnessService.signAndPublishSameNameAccounts();
     }
 
     public boolean onDeleteAccount(PaymentAccount paymentAccount) {
         boolean isPaymentAccountUsed = openOfferManager.getObservableList().stream()
                 .anyMatch(o -> o.getOffer().getMakerPaymentAccountId().equals(paymentAccount.getId()));
-        isPaymentAccountUsed = isPaymentAccountUsed || tradeManager.getTradableList().stream()
+        isPaymentAccountUsed = isPaymentAccountUsed || tradeManager.getObservableList().stream()
                 .anyMatch(t -> t.getOffer().getMakerPaymentAccountId().equals(paymentAccount.getId()) ||
                         paymentAccount.getId().equals(t.getTakerPaymentAccountId()));
         if (!isPaymentAccountUsed)
@@ -153,11 +153,11 @@ class FiatAccountsDataModel extends ActivatableDataModel {
             ArrayList<PaymentAccount> accounts = new ArrayList<>(user.getPaymentAccounts().stream()
                     .filter(paymentAccount -> !(paymentAccount instanceof AssetAccount))
                     .collect(Collectors.toList()));
-            GUIUtil.exportAccounts(accounts, accountsFileName, preferences, stage, persistenceProtoResolver, corruptedDatabaseFilesHandler);
+            GUIUtil.exportAccounts(accounts, accountsFileName, preferences, stage, persistenceProtoResolver, corruptedStorageFileHandler);
         }
     }
 
     public void importAccounts(Stage stage) {
-        GUIUtil.importAccounts(user, accountsFileName, preferences, stage, persistenceProtoResolver, corruptedDatabaseFilesHandler);
+        GUIUtil.importAccounts(user, accountsFileName, preferences, stage, persistenceProtoResolver, corruptedStorageFileHandler);
     }
 }

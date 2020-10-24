@@ -41,8 +41,12 @@ import bisq.core.util.coin.CoinFormatter;
 
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
+import bisq.common.config.Config;
 
+import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.NetworkParameters;
+import org.bitcoinj.core.SegwitAddress;
 import org.bitcoinj.core.Transaction;
 
 import net.glxn.qrgen.QRCode;
@@ -54,6 +58,7 @@ import javax.inject.Named;
 import javafx.fxml.FXML;
 
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -85,10 +90,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.jetbrains.annotations.NotNull;
 
-import static bisq.desktop.util.FormBuilder.addAddressTextField;
-import static bisq.desktop.util.FormBuilder.addButton;
-import static bisq.desktop.util.FormBuilder.addInputTextField;
-import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
+import static bisq.desktop.util.FormBuilder.*;
 
 @FxmlView
 public class DepositView extends ActivatableView<VBox, Void> {
@@ -102,6 +104,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
     private ImageView qrCodeImageView;
     private AddressTextField addressTextField;
     private Button generateNewAddressButton;
+    private CheckBox generateNewAddressSegwitCheckbox;
     private TitledGroupBg titledGroupBg;
     private InputTextField amountTextField;
 
@@ -199,12 +202,23 @@ public class DepositView extends ActivatableView<VBox, Void> {
         GridPane.setColumnIndex(generateNewAddressButton, 0);
         GridPane.setHalignment(generateNewAddressButton, HPos.LEFT);
 
+        generateNewAddressSegwitCheckbox = addCheckBox(gridPane, gridRow,
+                Res.get("funds.deposit.generateAddressSegwit"), 0);
+        generateNewAddressSegwitCheckbox.setAllowIndeterminate(false);
+        generateNewAddressSegwitCheckbox.setSelected(true);
+        GridPane.setColumnIndex(generateNewAddressSegwitCheckbox, 0);
+        GridPane.setHalignment(generateNewAddressSegwitCheckbox, HPos.LEFT);
+        GridPane.setMargin(generateNewAddressSegwitCheckbox, new Insets(15, 0, 0, 250));
+
         generateNewAddressButton.setOnAction(event -> {
-            boolean hasUnUsedAddress = observableList.stream().anyMatch(e -> e.getNumTxOutputs() == 0);
+            boolean segwit = generateNewAddressSegwitCheckbox.isSelected();
+            NetworkParameters params = Config.baseCurrencyNetworkParameters();
+            boolean hasUnUsedAddress = observableList.stream().anyMatch(e -> e.getNumTxOutputs() == 0
+                            && (Address.fromString(params, e.getAddressString()) instanceof SegwitAddress)  == segwit);
             if (hasUnUsedAddress) {
                 new Popup().warning(Res.get("funds.deposit.selectUnused")).show();
             } else {
-                AddressEntry newSavingsAddressEntry = walletService.getFreshAddressEntry();
+                AddressEntry newSavingsAddressEntry = walletService.getFreshAddressEntry(segwit);
                 updateList();
                 observableList.stream()
                         .filter(depositListItem -> depositListItem.getAddressString().equals(newSavingsAddressEntry.getAddressString()))

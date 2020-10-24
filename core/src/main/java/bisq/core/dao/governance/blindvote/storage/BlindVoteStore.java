@@ -17,19 +17,13 @@
 
 package bisq.core.dao.governance.blindvote.storage;
 
-import bisq.network.p2p.storage.P2PDataStorage;
-import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
-
-import bisq.common.proto.persistable.ThreadedPersistableEnvelope;
+import bisq.network.p2p.storage.persistence.PersistableNetworkPayloadStore;
 
 import com.google.protobuf.Message;
 
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 
@@ -39,10 +33,7 @@ import lombok.extern.slf4j.Slf4j;
  * definition and provide a hashMap for the domain access.
  */
 @Slf4j
-public class BlindVoteStore implements ThreadedPersistableEnvelope {
-    @Getter
-    private Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> map = new ConcurrentHashMap<>();
-
+public class BlindVoteStore extends PersistableNetworkPayloadStore<BlindVotePayload> {
     BlindVoteStore() {
     }
 
@@ -52,7 +43,7 @@ public class BlindVoteStore implements ThreadedPersistableEnvelope {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private BlindVoteStore(List<BlindVotePayload> list) {
-        list.forEach(item -> map.put(new P2PDataStorage.ByteArray(item.getHash()), item));
+        super(list);
     }
 
     public Message toProtoMessage() {
@@ -73,9 +64,5 @@ public class BlindVoteStore implements ThreadedPersistableEnvelope {
         List<BlindVotePayload> list = proto.getItemsList().stream()
                 .map(BlindVotePayload::fromProto).collect(Collectors.toList());
         return new BlindVoteStore(list);
-    }
-
-    public boolean containsKey(P2PDataStorage.ByteArray hash) {
-        return map.containsKey(hash);
     }
 }

@@ -60,8 +60,7 @@ public class XmrTxProofModel implements AssetTxProofModel {
         this.serviceAddress = serviceAddress;
         this.autoConfirmSettings = autoConfirmSettings;
 
-        Coin tradeAmount = trade.getTradeAmount();
-        Volume volume = checkNotNull(trade.getOffer()).getVolumeByAmount(tradeAmount);
+        Volume volume = trade.getTradeVolume();
         amount = DevEnv.isDevMode() ?
                 XmrTxProofModel.DEV_AMOUNT : // For dev testing we need to add the matching address to the dev tx key and dev view key
                 volume != null ? volume.getValue() * 10000L : 0L; // XMR satoshis have 12 decimal places vs. bitcoin's 8

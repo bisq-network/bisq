@@ -32,9 +32,9 @@ configure(subprojects) {
     sourceCompatibility = 1.10
 
     ext { // in alphabetical order
-        bcVersion = '1.56'
-        bitcoinjVersion = 'a88d36d'
-        btcdCli4jVersion = '975ff5d4'
+        bcVersion = '1.63'
+        bitcoinjVersion = 'a733034'
+        btcdCli4jVersion = '27b94333'
         codecVersion = '1.13'
         easybindVersion = '1.0.3'
         easyVersion = '4.0.1'
@@ -45,7 +45,7 @@ configure(subprojects) {
         fontawesomefxMaterialdesignfontVersion = '2.0.26-9.1.2'
         grpcVersion = '1.25.0'
         gsonVersion = '2.8.5'
-        guavaVersion = '20.0'
+        guavaVersion = '28.2-jre'
         guiceVersion = '4.2.2'
         hamcrestVersion = '1.3'
         httpclientVersion = '4.5.12'
@@ -68,13 +68,13 @@ configure(subprojects) {
         loggingVersion = '1.2'
         lombokVersion = '1.18.12'
         mockitoVersion = '3.3.0'
-        netlayerVersion = '0.6.8'
+        netlayerVersion = 'cc80787'
         protobufVersion = '3.10.0'
         protocVersion = protobufVersion
         pushyVersion = '0.13.2'
         qrgenVersion = '1.3'
         sarxosVersion = '0.3.12'
-        slf4jVersion = '1.7.25'
+        slf4jVersion = '1.7.30'
         sparkVersion = '2.5.2'
         springBootVersion = '1.5.10.RELEASE'
 
@@ -216,11 +216,14 @@ configure(project(':proto')) {
 
 configure(project(':assets')) {
     dependencies {
-        compile("com.github.bisq-network.bitcoinj:bitcoinj-core:$bitcoinjVersion") {
+        compile("com.github.bisq-network:bitcoinj:$bitcoinjVersion") {
             exclude(module: 'jsr305')
             exclude(module: 'slf4j-api')
             exclude(module: 'guava')
             exclude(module: 'protobuf-java')
+            exclude(module: 'bcprov-jdk15on')
+            exclude(module: 'okhttp')
+            exclude(module: 'okio')
         }
         compile "com.google.guava:guava:$guavaVersion"
         compile "org.slf4j:slf4j-api:$slf4jVersion"
@@ -246,11 +249,14 @@ configure(project(':common')) {
         compile("com.google.inject:guice:$guiceVersion") {
             exclude(module: 'guava')
         }
-        compile("com.github.bisq-network.bitcoinj:bitcoinj-core:$bitcoinjVersion") {
+        compile("com.github.bisq-network:bitcoinj:$bitcoinjVersion") {
             exclude(module: 'jsr305')
             exclude(module: 'slf4j-api')
             exclude(module: 'guava')
             exclude(module: 'protobuf-java')
+            exclude(module: 'bcprov-jdk15on')
+            exclude(module: 'okhttp')
+            exclude(module: 'okio')
         }
         runtimeOnly("io.grpc:grpc-netty-shaded:$grpcVersion") {
             exclude(module: 'guava')
@@ -270,10 +276,10 @@ configure(project(':common')) {
 configure(project(':p2p')) {
     dependencies {
         compile project(':common')
-        compile("com.github.JesusMcCloud.netlayer:tor.native:$netlayerVersion") {
+        compile("com.github.cd2357.netlayer:tor.native:$netlayerVersion") {
             exclude(module: 'slf4j-api')
         }
-        compile("com.github.JesusMcCloud.netlayer:tor.external:$netlayerVersion") {
+        compile("com.github.cd2357.netlayer:tor.external:$netlayerVersion") {
             exclude(module: 'slf4j-api')
         }
         implementation("org.apache.httpcomponents:httpclient:$httpclientVersion") {
@@ -311,7 +317,9 @@ configure(project(':core')) {
         implementation("org.apache.httpcomponents:httpclient:$httpclientVersion") {
             exclude(module: 'commons-codec')
         }
+        compile "com.google.guava:guava:$guavaVersion"
         compile("network.bisq.btcd-cli4j:btcd-cli4j-core:$btcdCli4jVersion") {
+            exclude(module: 'guava')
             exclude(module: 'slf4j-api')
             exclude(module: 'httpclient')
             exclude(module: 'commons-lang3')
@@ -320,6 +328,7 @@ configure(project(':core')) {
             exclude(module: 'jackson-databind')
         }
         compile("network.bisq.btcd-cli4j:btcd-cli4j-daemon:$btcdCli4jVersion") {
+            exclude(module: 'guava')
             exclude(module: 'slf4j-api')
             exclude(module: 'httpclient')
             exclude(module: 'commons-lang3')
@@ -382,7 +391,7 @@ configure(project(':desktop')) {
     apply from: '../gradle/witness/gradle-witness.gradle'
     apply from: 'package/package.gradle'
 
-    version = '1.3.9-SNAPSHOT'
+    version = '1.4.2-SNAPSHOT'
 
     jar.manifest.attributes(
         "Implementation-Title": project.name,

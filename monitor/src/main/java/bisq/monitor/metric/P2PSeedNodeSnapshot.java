@@ -21,27 +21,26 @@ import bisq.monitor.OnionParser;
 import bisq.monitor.Reporter;
 
 import bisq.core.account.witness.AccountAgeWitnessStore;
-import bisq.common.config.BaseCurrencyNetwork;
 import bisq.core.dao.monitoring.model.StateHash;
 import bisq.core.dao.monitoring.network.messages.GetBlindVoteStateHashesRequest;
 import bisq.core.dao.monitoring.network.messages.GetDaoStateHashesRequest;
 import bisq.core.dao.monitoring.network.messages.GetProposalStateHashesRequest;
 import bisq.core.dao.monitoring.network.messages.GetStateHashesResponse;
 import bisq.core.proto.persistable.CorePersistenceProtoResolver;
-import bisq.core.trade.statistics.TradeStatistics2Store;
+import bisq.core.trade.statistics.TradeStatistics3Store;
 
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.network.Connection;
 import bisq.network.p2p.peers.getdata.messages.GetDataResponse;
 import bisq.network.p2p.peers.getdata.messages.PreliminaryGetDataRequest;
-import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 
 import bisq.common.app.Version;
+import bisq.common.config.BaseCurrencyNetwork;
+import bisq.common.persistence.PersistenceManager;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.persistable.PersistableEnvelope;
-import bisq.common.storage.Storage;
 
 import java.net.MalformedURLException;
 
@@ -137,11 +136,11 @@ public class P2PSeedNodeSnapshot extends P2PSeedNodeSnapshotBase {
             File dir = new File(configuration.getProperty(DATABASE_DIR));
             String networkPostfix = "_" + BaseCurrencyNetwork.values()[Version.getBaseCurrencyNetwork()].toString();
             try {
-                Storage<PersistableEnvelope> storage = new Storage<>(dir, new CorePersistenceProtoResolver(null, null, null, null), null);
-                TradeStatistics2Store tradeStatistics2Store = (TradeStatistics2Store) storage.initAndGetPersistedWithFileName(TradeStatistics2Store.class.getSimpleName() + networkPostfix, 0);
-                hashes.addAll(tradeStatistics2Store.getMap().keySet().stream().map(byteArray -> byteArray.bytes).collect(Collectors.toList()));
+                PersistenceManager<PersistableEnvelope> persistenceManager = new PersistenceManager<>(dir, new CorePersistenceProtoResolver(null, null), null);
+                TradeStatistics3Store tradeStatistics3Store = (TradeStatistics3Store) persistenceManager.getPersisted(TradeStatistics3Store.class.getSimpleName() + networkPostfix);
+                hashes.addAll(tradeStatistics3Store.getMap().keySet().stream().map(byteArray -> byteArray.bytes).collect(Collectors.toList()));
 
-                AccountAgeWitnessStore accountAgeWitnessStore = (AccountAgeWitnessStore) storage.initAndGetPersistedWithFileName(AccountAgeWitnessStore.class.getSimpleName() + networkPostfix, 0);
+                AccountAgeWitnessStore accountAgeWitnessStore = (AccountAgeWitnessStore) persistenceManager.getPersisted(AccountAgeWitnessStore.class.getSimpleName() + networkPostfix);
                 hashes.addAll(accountAgeWitnessStore.getMap().keySet().stream().map(byteArray -> byteArray.bytes).collect(Collectors.toList()));
             } catch (NullPointerException e) {
                 // in case there is no store file
@@ -191,21 +190,21 @@ public class P2PSeedNodeSnapshot extends P2PSeedNodeSnapshotBase {
 
         //   - calculate diffs
         messagesPerHost.forEach(
-            (host, statistics) -> {
-                statistics.values().forEach((messageType, set) -> {
+                (host, statistics) -> {
+                    statistics.values().forEach((messageType, set) -> {
+                        try {
+                            report.put(OnionParser.prettyPrint(host) + ".relativeNumberOfMessages." + messageType,
+                                    String.valueOf(set.size() - referenceValues.get(messageType).size()));
+                        } catch (MalformedURLException | NullPointerException ignore) {
+                            log.error("we should never have gotten here", ignore);
+                        }
+                    });
                     try {
-                        report.put(OnionParser.prettyPrint(host) + ".relativeNumberOfMessages." + messageType,
-                                String.valueOf(set.size() - referenceValues.get(messageType).size()));
-                    } catch (MalformedURLException | NullPointerException ignore) {
-                        log.error("we should never have gotten here", ignore);
+                        report.put(OnionParser.prettyPrint(host) + ".referenceHost", referenceHost);
+                    } catch (MalformedURLException ignore) {
+                        log.error("we should never got here");
                     }
                 });
-                try {
-                    report.put(OnionParser.prettyPrint(host) + ".referenceHost", referenceHost);
-                } catch (MalformedURLException ignore) {
-                    log.error("we should never got here");
-                }
-            });
 
         // cleanup for next run
         bucketsPerHost.forEach((host, statistics) -> statistics.reset());
@@ -234,9 +233,9 @@ public class P2PSeedNodeSnapshot extends P2PSeedNodeSnapshotBase {
             int oldest = (int) nodeAddressTupleMap.values().stream().min(Comparator.comparingLong(Tuple::getHeight)).get().height;
 
             //   - update queried height
-            if(type.contains("DaoState"))
+            if (type.contains("DaoState"))
                 daostateheight = oldest - 20;
-            else if(type.contains("Proposal"))
+            else if (type.contains("Proposal"))
                 proposalheight = oldest - 20;
             else
                 blindvoteheight = oldest - 20;
@@ -256,7 +255,6 @@ public class P2PSeedNodeSnapshot extends P2PSeedNodeSnapshotBase {
 
             List<ByteBuffer> states = hitcount.entrySet().stream().sorted((o1, o2) -> o2.getValue().compareTo(o1.getValue())).map(byteBufferIntegerEntry -> byteBufferIntegerEntry.getKey()).collect(Collectors.toList());
             hitcount.clear();
-
             nodeAddressTupleMap.forEach((nodeAddress, tuple) -> daoreport.put(type + "." + OnionParser.prettyPrint(nodeAddress) + ".hash", Integer.toString(Arrays.asList(states.toArray()).indexOf(ByteBuffer.wrap(tuple.hash)))));
 
             //   - report reference head

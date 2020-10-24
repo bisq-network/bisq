@@ -24,6 +24,7 @@ import java.util.Collection;
 public interface HashMapChangedListener {
     void onAdded(Collection<ProtectedStorageEntry> protectedStorageEntries);
 
-    @SuppressWarnings("UnusedParameters")
-    void onRemoved(Collection<ProtectedStorageEntry> protectedStorageEntries);
+    default void onRemoved(Collection<ProtectedStorageEntry> protectedStorageEntries) {
+        // Often we are only interested in added data as there is no use case for remove
+    }
 }

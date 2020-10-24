@@ -56,10 +56,10 @@ import bisq.common.config.Config;
 import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.KeyStorage;
 import bisq.common.crypto.PubKeyRing;
+import bisq.common.file.CorruptedStorageFileHandler;
+import bisq.common.persistence.PersistenceManager;
 import bisq.common.proto.network.NetworkProtoResolver;
 import bisq.common.proto.persistable.PersistenceProtoResolver;
-import bisq.common.storage.CorruptedDatabaseFilesHandler;
-import bisq.common.storage.Storage;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -118,7 +118,7 @@ public class GuiceSetupTest {
         assertSingleton(ClockWatcher.class);
         assertSingleton(Preferences.class);
         assertSingleton(BridgeAddressProvider.class);
-        assertSingleton(CorruptedDatabaseFilesHandler.class);
+        assertSingleton(CorruptedStorageFileHandler.class);
         assertSingleton(AvoidStandbyModeService.class);
         assertSingleton(DefaultSeedNodeRepository.class);
         assertSingleton(SeedNodeRepository.class);
@@ -148,7 +148,7 @@ public class GuiceSetupTest {
         assertSingleton(MediationDisputeListService.class);
         assertSingleton(TraderChatManager.class);
 
-        assertNotSingleton(Storage.class);
+        assertNotSingleton(PersistenceManager.class);
     }
 
     private void assertSingleton(Class<?> type) {

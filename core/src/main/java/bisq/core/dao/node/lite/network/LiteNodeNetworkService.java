@@ -180,7 +180,7 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
     public void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection) {
         closeHandler(connection);
 
-        if (peerManager.isNodeBanned(closeConnectionReason, connection)) {
+        if (peerManager.isPeerBanned(closeConnectionReason, connection)) {
             connection.getPeersNodeAddressOptional().ifPresent(nodeAddress -> {
                 seedNodeAddresses.remove(nodeAddress);
                 removeFromRequestBlocksHandlerMap(nodeAddress);
@@ -336,7 +336,6 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
             retryCounter++;
             if (retryCounter <= MAX_RETRY) {
                 retryTimer = UserThread.runAfter(() -> {
-                            log.trace("retryTimer called");
                             stopped = false;
 
                             stopRetryTimer();

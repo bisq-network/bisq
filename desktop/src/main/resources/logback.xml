@@ -11,7 +11,6 @@
     </root>
 
     <logger name="com.neemre.btcdcli4j" level="WARN"/>
-    <!-- <logger name="bisq.core.provider" level="WARN"/>
-     <logger name="bisq.network" level="WARN"/>-->
+    <logger name="com.neemre.btcdcli4j.core.client.ClientConfigurator" level="ERROR"/>
 
 </configuration>

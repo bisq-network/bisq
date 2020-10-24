@@ -32,8 +32,10 @@ import bisq.common.proto.network.NetworkEnvelope;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 
+import java.util.HashSet;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
@@ -103,7 +105,9 @@ class PeerExchangeHandler implements MessageListener {
         log.debug("sendGetPeersRequest to nodeAddress={}", nodeAddress);
         if (!stopped) {
             if (networkNode.getNodeAddress() != null) {
-                GetPeersRequest getPeersRequest = new GetPeersRequest(networkNode.getNodeAddress(), nonce, peerManager.getLivePeers(nodeAddress));
+                GetPeersRequest getPeersRequest = new GetPeersRequest(networkNode.getNodeAddress(),
+                        nonce,
+                        new HashSet<>(peerManager.getLivePeers(nodeAddress)));
                 if (timeoutTimer == null) {
                     timeoutTimer = UserThread.runAfter(() -> {  // setup before sending to avoid race conditions
                                 if (!stopped) {
@@ -144,7 +148,7 @@ class PeerExchangeHandler implements MessageListener {
                             log.trace("We have stopped that handler already. We ignore that sendGetPeersRequest.onFailure call.");
                         }
                     }
-                });
+                }, MoreExecutors.directExecutor());
             } else {
                 log.debug("My node address is still null at sendGetPeersRequest. We ignore that call.");
             }
@@ -167,7 +171,9 @@ class PeerExchangeHandler implements MessageListener {
 
                 // Check if the response is for our request
                 if (getPeersResponse.getRequestNonce() == nonce) {
-                    peerManager.addToReportedPeers(getPeersResponse.getReportedPeers(), connection);
+                    peerManager.addToReportedPeers(getPeersResponse.getReportedPeers(),
+                            connection,
+                            getPeersResponse.getSupportedCapabilities());
                     cleanup();
                     listener.onComplete();
                 } else {

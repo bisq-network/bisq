@@ -17,20 +17,19 @@
 
 package bisq.asset.coins;
 
-import bisq.asset.Base58BitcoinAddressValidator;
+import bisq.asset.Base58AddressValidator;
 import bisq.asset.Coin;
 import bisq.asset.NetworkParametersAdapter;
 
 public class CTSCoin extends Coin {
     public CTSCoin() {
-        super("CTSCoin", "CTSC", new Base58BitcoinAddressValidator(new CtscMainNetParams()));
+        super("CTSCoin", "CTSC", new Base58AddressValidator(new CtscMainNetParams()));
     }
 
     public static class CtscMainNetParams extends NetworkParametersAdapter {
         public CtscMainNetParams() {
             this.addressHeader = 66;
             this.p2shHeader = 16;
-            this.acceptableAddressCodes = new int[]{this.addressHeader, this.p2shHeader};
         }
     }
 }

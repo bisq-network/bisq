@@ -28,6 +28,7 @@ import bisq.common.UserThread;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 
 import java.util.ArrayList;
@@ -265,7 +266,7 @@ public class BroadcastHandler implements PeerManager.Listener {
                 maybeNotifyListeners(broadcastRequestsForConnection);
                 checkForCompletion();
             }
-        });
+        }, MoreExecutors.directExecutor());
     }
 
     private BroadcastMessage getMessage(List<Broadcaster.BroadcastRequest> broadcastRequests) {

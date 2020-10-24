@@ -210,8 +210,8 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
     public void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection) {
         closeHandler(connection);
 
-        if (peerManager.isNodeBanned(closeConnectionReason, connection) && connection.getPeersNodeAddressOptional().isPresent()) {
-            final NodeAddress nodeAddress = connection.getPeersNodeAddressOptional().get();
+        if (peerManager.isPeerBanned(closeConnectionReason, connection) && connection.getPeersNodeAddressOptional().isPresent()) {
+            NodeAddress nodeAddress = connection.getPeersNodeAddressOptional().get();
             seedNodeAddresses.remove(nodeAddress);
             handlerMap.remove(nodeAddress);
         }

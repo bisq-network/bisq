@@ -37,6 +37,7 @@
             <TableColumn fx:id="volumeColumn" minWidth="130"/>
             <TableColumn fx:id="directionColumn" minWidth="80"/>
             <TableColumn fx:id="stateColumn" minWidth="80"/>
+            <TableColumn fx:id="removeTradeColumn" minWidth="40" maxWidth="40"/>
         </columns>
     </TableView>
 </VBox>

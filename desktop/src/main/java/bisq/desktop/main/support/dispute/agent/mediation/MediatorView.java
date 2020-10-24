@@ -25,11 +25,14 @@ import bisq.desktop.main.support.dispute.agent.DisputeAgentView;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.alert.PrivateNotificationManager;
+import bisq.core.dao.DaoFacade;
 import bisq.core.support.SupportType;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeSession;
 import bisq.core.support.dispute.mediation.MediationManager;
 import bisq.core.support.dispute.mediation.MediationSession;
+import bisq.core.support.dispute.mediation.mediator.MediatorManager;
+import bisq.core.support.dispute.refund.refundagent.RefundAgentManager;
 import bisq.core.trade.TradeManager;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.CoinFormatter;
@@ -53,6 +56,9 @@ public class MediatorView extends DisputeAgentView {
                         ContractWindow contractWindow,
                         TradeDetailsWindow tradeDetailsWindow,
                         AccountAgeWitnessService accountAgeWitnessService,
+                        DaoFacade daoFacade,
+                        MediatorManager mediatorManager,
+                        RefundAgentManager refundAgentManager,
                         @Named(Config.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         super(mediationManager,
                 keyRing,
@@ -63,6 +69,9 @@ public class MediatorView extends DisputeAgentView {
                 contractWindow,
                 tradeDetailsWindow,
                 accountAgeWitnessService,
+                daoFacade,
+                mediatorManager,
+                refundAgentManager,
                 useDevPrivilegeKeys);
     }
 
@@ -103,7 +112,6 @@ public class MediatorView extends DisputeAgentView {
 
     @Override
     protected void onCloseDispute(Dispute dispute) {
-        disputeSummaryWindow.onFinalizeDispute(() -> chatView.removeInputBox())
-                .show(dispute);
+        disputeSummaryWindow.onFinalizeDispute(() -> chatView.removeInputBox()).show(dispute);
     }
 }

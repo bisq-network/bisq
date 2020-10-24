@@ -21,6 +21,7 @@ import bisq.desktop.common.model.ActivatableDataModel;
 
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.offer.OfferUtil;
 
 import org.bitcoinj.core.Coin;
 
@@ -31,13 +32,17 @@ import javafx.beans.property.SimpleObjectProperty;
 
 import lombok.Getter;
 
+import static bisq.core.util.coin.CoinUtil.minCoin;
+
 /**
  * Domain for that UI element.
- * Note that the create offer domain has a deeper scope in the application domain (TradeManager).
- * That model is just responsible for the domain specific parts displayed needed in that UI element.
+ * Note that the create offer domain has a deeper scope in the application domain
+ * (TradeManager).  That model is just responsible for the domain specific parts displayed
+ * needed in that UI element.
  */
 public abstract class OfferDataModel extends ActivatableDataModel {
     protected final BtcWalletService btcWalletService;
+    protected final OfferUtil offerUtil;
 
     @Getter
     protected final BooleanProperty isBtcWalletFunded = new SimpleBooleanProperty();
@@ -54,8 +59,9 @@ public abstract class OfferDataModel extends ActivatableDataModel {
     protected AddressEntry addressEntry;
     protected boolean useSavingsWallet;
 
-    public OfferDataModel(BtcWalletService btcWalletService) {
+    public OfferDataModel(BtcWalletService btcWalletService, OfferUtil offerUtil) {
         this.btcWalletService = btcWalletService;
+        this.offerUtil = offerUtil;
     }
 
     protected void updateBalance() {
@@ -64,28 +70,15 @@ public abstract class OfferDataModel extends ActivatableDataModel {
             Coin savingWalletBalance = btcWalletService.getSavingWalletBalance();
             totalAvailableBalance = savingWalletBalance.add(tradeWalletBalance);
             if (totalToPayAsCoin.get() != null) {
-                if (totalAvailableBalance.compareTo(totalToPayAsCoin.get()) > 0)
-                    balance.set(totalToPayAsCoin.get());
-                else
-                    balance.set(totalAvailableBalance);
+                balance.set(minCoin(totalToPayAsCoin.get(), totalAvailableBalance));
             }
         } else {
             balance.set(tradeWalletBalance);
         }
-        if (totalToPayAsCoin.get() != null) {
-            Coin missing = totalToPayAsCoin.get().subtract(balance.get());
-            if (missing.isNegative())
-                missing = Coin.ZERO;
-            missingCoin.set(missing);
-        }
-
-        isBtcWalletFunded.set(isBalanceSufficient(balance.get()));
+        missingCoin.set(offerUtil.getBalanceShortage(totalToPayAsCoin.get(), balance.get()));
+        isBtcWalletFunded.set(offerUtil.isBalanceSufficient(totalToPayAsCoin.get(), balance.get()));
         if (totalToPayAsCoin.get() != null && isBtcWalletFunded.get() && !showWalletFundedNotification.get()) {
             showWalletFundedNotification.set(true);
         }
-    }
-
-    private boolean isBalanceSufficient(Coin balance) {
-        return totalToPayAsCoin.get() != null && balance.compareTo(totalToPayAsCoin.get()) >= 0;
     }
 }

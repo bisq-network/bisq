@@ -41,13 +41,14 @@ import bisq.network.p2p.P2PService;
 
 import bisq.common.util.Utilities;
 
-import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.ECKey;
-import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionConfidence;
-import org.bitcoinj.script.Script;
-import org.bitcoinj.wallet.Wallet;
-import org.bitcoinj.wallet.listeners.WalletEventListener;
+import org.bitcoinj.core.listeners.TransactionConfidenceEventListener;
+import org.bitcoinj.wallet.listeners.KeyChainEventListener;
+import org.bitcoinj.wallet.listeners.ScriptsChangeEventListener;
+import org.bitcoinj.wallet.listeners.WalletChangeEventListener;
+import org.bitcoinj.wallet.listeners.WalletCoinsReceivedEventListener;
+import org.bitcoinj.wallet.listeners.WalletCoinsSentEventListener;
+import org.bitcoinj.wallet.listeners.WalletReorganizeEventListener;
 
 import com.googlecode.jcsv.writer.CSVEntryConverter;
 
@@ -79,7 +80,6 @@ import javafx.collections.transformation.SortedList;
 import javafx.util.Callback;
 
 import java.util.Comparator;
-import java.util.List;
 
 import javax.annotation.Nullable;
 
@@ -102,8 +102,9 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
     private final Preferences preferences;
     private final TradeDetailsWindow tradeDetailsWindow;
     private final OfferDetailsWindow offerDetailsWindow;
-    @SuppressWarnings("deprecation")
-    private WalletEventListener walletEventListener;
+
+    private WalletChangeEventListener walletChangeEventListener;
+
     private EventHandler<KeyEvent> keyEventEventHandler;
     private Scene scene;
 
@@ -166,41 +167,8 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
         dateColumn.setSortType(TableColumn.SortType.DESCENDING);
         tableView.getSortOrder().add(dateColumn);
 
-        //noinspection deprecation
-        walletEventListener = new WalletEventListener() {
-            @Override
-            public void onCoinsReceived(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
-                displayedTransactions.update();
-            }
-
-            @Override
-            public void onCoinsSent(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
-                displayedTransactions.update();
-            }
-
-            @Override
-            public void onReorganize(Wallet wallet) {
-                displayedTransactions.update();
-            }
-
-            @Override
-            public void onTransactionConfidenceChanged(Wallet wallet, Transaction tx) {
-            }
-
-            @Override
-            public void onWalletChanged(Wallet wallet) {
-                displayedTransactions.update();
-            }
-
-            @Override
-            public void onScriptsChanged(Wallet wallet, List<Script> scripts, boolean isAddingScripts) {
-                displayedTransactions.update();
-            }
-
-            @Override
-            public void onKeysAdded(List<ECKey> keys) {
-                displayedTransactions.update();
-            }
+        walletChangeEventListener = wallet -> {
+            displayedTransactions.update();
         };
 
         keyEventEventHandler = event -> {
@@ -224,7 +192,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
         tableView.setItems(sortedDisplayedTransactions);
         displayedTransactions.update();
 
-        btcWalletService.addEventListener(walletEventListener);
+        btcWalletService.addChangeEventListener(walletChangeEventListener);
 
         scene = root.getScene();
         if (scene != null)
@@ -260,7 +228,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
     protected void deactivate() {
         sortedDisplayedTransactions.comparatorProperty().unbind();
         displayedTransactions.forEach(TransactionsListItem::cleanup);
-        btcWalletService.removeEventListener(walletEventListener);
+        btcWalletService.removeChangeEventListener(walletChangeEventListener);
 
         if (scene != null)
             scene.removeEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);

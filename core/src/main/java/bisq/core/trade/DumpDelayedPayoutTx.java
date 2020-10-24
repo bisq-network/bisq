@@ -18,7 +18,7 @@
 package bisq.core.trade;
 
 import bisq.common.config.Config;
-import bisq.common.storage.JsonFileManager;
+import bisq.common.file.JsonFileManager;
 import bisq.common.util.Utilities;
 
 import javax.inject.Inject;
@@ -40,8 +40,8 @@ public class DumpDelayedPayoutTx {
     }
 
     static class DelayedPayoutHash {
-        String tradeId;
-        String delayedPayoutTx;
+        final String tradeId;
+        final String delayedPayoutTx;
 
         DelayedPayoutHash(String tradeId, String delayedPayoutTx) {
             this.tradeId = tradeId;
@@ -58,7 +58,7 @@ public class DumpDelayedPayoutTx {
                 .map(trade -> new DelayedPayoutHash(trade.getId(),
                         Utilities.bytesAsHexString(((Trade) trade).getDelayedPayoutTxBytes())))
                 .collect(Collectors.toList());
-        jsonFileManager.writeToDisc(Utilities.objectToJson(delayedPayoutHashes), fileName);
+        jsonFileManager.writeToDiscThreaded(Utilities.objectToJson(delayedPayoutHashes), fileName);
     }
 
 }

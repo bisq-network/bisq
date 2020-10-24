@@ -102,10 +102,6 @@ public class OfferAvailabilityModel implements Model {
     }
 
     @Override
-    public void persist() {
-    }
-
-    @Override
     public void onComplete() {
     }
 }

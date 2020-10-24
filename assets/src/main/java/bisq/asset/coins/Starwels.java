@@ -17,12 +17,12 @@
 
 package bisq.asset.coins;
 
-import bisq.asset.Base58BitcoinAddressValidator;
+import bisq.asset.Base58AddressValidator;
 import bisq.asset.Coin;
 
 public class Starwels extends Coin {
 
     public Starwels() {
-        super("Starwels", "USDH", new Base58BitcoinAddressValidator());
+        super("Starwels", "USDH", new Base58AddressValidator());
     }
 }

@@ -218,6 +218,10 @@ public class FilterWindow extends Overlay<FilterWindow> {
                         disableAutoConfCheckBox.isSelected()
                 );
 
+                // We remove first the old filter
+                if (filterManager.canRemoveDevFilter(privKeyString)) {
+                    filterManager.removeDevFilter(privKeyString);
+                }
                 filterManager.addDevFilter(newFilter, privKeyString);
                 removeFilterMessageButton.setDisable(filterManager.getDevFilter() == null);
                 hide();

@@ -17,6 +17,7 @@
 
 package bisq.core.api;
 
+import bisq.core.support.SupportType;
 import bisq.core.support.dispute.mediation.mediator.Mediator;
 import bisq.core.support.dispute.mediation.mediator.MediatorManager;
 import bisq.core.support.dispute.refund.refundagent.RefundAgent;
@@ -32,15 +33,21 @@ import org.bitcoinj.core.ECKey;
 
 import javax.inject.Inject;
 
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
 
 import static bisq.common.app.DevEnv.DEV_PRIVILEGE_PRIV_KEY;
+import static bisq.core.support.SupportType.ARBITRATION;
+import static bisq.core.support.SupportType.MEDIATION;
+import static bisq.core.support.SupportType.REFUND;
+import static bisq.core.support.SupportType.TRADE;
+import static java.lang.String.format;
 import static java.net.InetAddress.getLoopbackAddress;
+import static java.util.Arrays.asList;
 
 @Slf4j
 class CoreDisputeAgentsService {
@@ -65,10 +72,10 @@ class CoreDisputeAgentsService {
         this.refundAgentManager = refundAgentManager;
         this.p2PService = p2PService;
         this.nodeAddress = new NodeAddress(getLoopbackAddress().getHostAddress(), config.nodePort);
-        this.languageCodes = Arrays.asList("de", "en", "es", "fr");
+        this.languageCodes = asList("de", "en", "es", "fr");
     }
 
-    public void registerDisputeAgent(String disputeAgentType, String registrationKey) {
+    void registerDisputeAgent(String disputeAgentType, String registrationKey) {
         if (!p2PService.isBootstrapped())
             throw new IllegalStateException("p2p service is not bootstrapped yet");
 
@@ -80,23 +87,28 @@ class CoreDisputeAgentsService {
         if (!registrationKey.equals(DEV_PRIVILEGE_PRIV_KEY))
             throw new IllegalArgumentException("invalid registration key");
 
-        ECKey ecKey;
-        String signature;
-        switch (disputeAgentType) {
-            case "arbitrator":
-                throw new IllegalArgumentException("arbitrators must be registered in a Bisq UI");
-            case "mediator":
-                ecKey = mediatorManager.getRegistrationKey(registrationKey);
-                signature = mediatorManager.signStorageSignaturePubKey(Objects.requireNonNull(ecKey));
-                registerMediator(nodeAddress, languageCodes, ecKey, signature);
-                return;
-            case "refundagent":
-                ecKey = refundAgentManager.getRegistrationKey(registrationKey);
-                signature = refundAgentManager.signStorageSignaturePubKey(Objects.requireNonNull(ecKey));
-                registerRefundAgent(nodeAddress, languageCodes, ecKey, signature);
-                return;
-            default:
-                throw new IllegalArgumentException("unknown dispute agent type " + disputeAgentType);
+        Optional<SupportType> supportType = getSupportType(disputeAgentType);
+        if (supportType.isPresent()) {
+            ECKey ecKey;
+            String signature;
+            switch (supportType.get()) {
+                case ARBITRATION:
+                    throw new IllegalArgumentException("arbitrators must be registered in a Bisq UI");
+                case MEDIATION:
+                    ecKey = mediatorManager.getRegistrationKey(registrationKey);
+                    signature = mediatorManager.signStorageSignaturePubKey(Objects.requireNonNull(ecKey));
+                    registerMediator(nodeAddress, languageCodes, ecKey, signature);
+                    return;
+                case REFUND:
+                    ecKey = refundAgentManager.getRegistrationKey(registrationKey);
+                    signature = refundAgentManager.signStorageSignaturePubKey(Objects.requireNonNull(ecKey));
+                    registerRefundAgent(nodeAddress, languageCodes, ecKey, signature);
+                    return;
+                case TRADE:
+                    throw new IllegalArgumentException("trade agent registration not supported");
+            }
+        } else {
+            throw new IllegalArgumentException(format("unknown dispute agent type '%s'", disputeAgentType));
         }
     }
 
@@ -140,5 +152,22 @@ class CoreDisputeAgentsService {
         });
         refundAgentManager.getDisputeAgentByNodeAddress(nodeAddress).orElseThrow(() ->
                 new IllegalStateException("could not register refund agent"));
+    }
+
+    private Optional<SupportType> getSupportType(String disputeAgentType) {
+        switch (disputeAgentType.toLowerCase()) {
+            case "arbitrator":
+                return Optional.of(ARBITRATION);
+            case "mediator":
+                return Optional.of(MEDIATION);
+            case "refundagent":
+            case "refund_agent":
+                return Optional.of(REFUND);
+            case "tradeagent":
+            case "trade_agent":
+                return Optional.of(TRADE);
+            default:
+                return Optional.empty();
+        }
     }
 }

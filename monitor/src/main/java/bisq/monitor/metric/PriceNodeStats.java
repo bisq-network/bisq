@@ -54,7 +54,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 /**
  * Fetches fee and price data from the configured price nodes.
  * Based on the work of HarryMcFinned.
- * 
+ *
  * @author Florian Reimair
  * @author HarryMcFinned
  *
@@ -159,7 +159,6 @@ public class PriceNodeStats extends Metric {
                 }
             }
         } catch (TorCtlException | IOException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
     }

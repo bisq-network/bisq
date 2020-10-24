@@ -34,7 +34,7 @@ import org.bitcoinj.wallet.Wallet;
 
 import com.google.inject.Inject;
 
-import org.spongycastle.crypto.params.KeyParameter;
+import org.bouncycastle.crypto.params.KeyParameter;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -154,9 +154,11 @@ public class WalletsManager {
         // We need to create another instance, otherwise the tx would trigger an invalid state exception
         // if it gets committed 2 times
         // We clone before commit to avoid unwanted side effects
-        final Transaction clonedTx = btcWalletService.getClonedTransaction(tx);
+        Transaction clonedTx = btcWalletService.getClonedTransaction(tx);
         btcWalletService.commitTx(clonedTx);
         bsqWalletService.commitTx(tx, txType);
-        bsqWalletService.broadcastTx(tx, callback);
+
+        // We use a short timeout as there are issues with BSQ txs. See comment in TxBroadcaster
+        bsqWalletService.broadcastTx(tx, callback, 1);
     }
 }

@@ -23,11 +23,10 @@ import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeList;
 
 import bisq.common.proto.ProtoUtil;
-import bisq.common.storage.Storage;
 
 import com.google.protobuf.Message;
 
-import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -44,19 +43,10 @@ import static com.google.common.base.Preconditions.checkArgument;
  * Calls to the List are delegated because this class intercepts the add/remove calls so changes
  * can be saved to disc.
  */
-public final class ArbitrationDisputeList extends DisputeList<ArbitrationDisputeList> {
+public final class ArbitrationDisputeList extends DisputeList<Dispute> {
 
-    ArbitrationDisputeList(Storage<ArbitrationDisputeList> storage) {
-        super(storage);
-    }
-
-    @Override
-    public void readPersisted() {
-        // We need to use DisputeList as file name to not lose existing disputes which are stored in the DisputeList file
-        ArbitrationDisputeList persisted = storage.initAndGetPersisted(this, "DisputeList", 50);
-        if (persisted != null) {
-            list.addAll(persisted.getList());
-        }
+    ArbitrationDisputeList() {
+        super();
     }
 
 
@@ -64,30 +54,26 @@ public final class ArbitrationDisputeList extends DisputeList<ArbitrationDispute
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private ArbitrationDisputeList(Storage<ArbitrationDisputeList> storage, List<Dispute> list) {
-        super(storage, list);
+    protected ArbitrationDisputeList(Collection<Dispute> collection) {
+        super(collection);
     }
 
     @Override
     public Message toProtoMessage() {
 
-        list.forEach(dispute -> checkArgument(dispute.getSupportType().equals(SupportType.ARBITRATION), "Support type has to be ARBITRATION"));
+        forEach(dispute -> checkArgument(dispute.getSupportType().equals(SupportType.ARBITRATION), "Support type has to be ARBITRATION"));
 
         return protobuf.PersistableEnvelope.newBuilder().setArbitrationDisputeList(protobuf.ArbitrationDisputeList.newBuilder()
-                .addAllDispute(ProtoUtil.collectionToProto(new ArrayList<>(list), protobuf.Dispute.class))).build();
+                .addAllDispute(ProtoUtil.collectionToProto(getList(), protobuf.Dispute.class))).build();
     }
 
     public static ArbitrationDisputeList fromProto(protobuf.ArbitrationDisputeList proto,
-                                                   CoreProtoResolver coreProtoResolver,
-                                                   Storage<ArbitrationDisputeList> storage) {
+                                                   CoreProtoResolver coreProtoResolver) {
         List<Dispute> list = proto.getDisputeList().stream()
                 .map(disputeProto -> Dispute.fromProto(disputeProto, coreProtoResolver))
+                .filter(e -> e.getSupportType().equals(SupportType.ARBITRATION))
                 .collect(Collectors.toList());
 
-        list.forEach(e -> {
-            checkArgument(e.getSupportType().equals(SupportType.ARBITRATION), "Support type has to be ARBITRATION");
-            e.setStorage(storage);
-        });
-        return new ArbitrationDisputeList(storage, list);
+        return new ArbitrationDisputeList(list);
     }
 }

@@ -35,6 +35,7 @@ import javax.inject.Inject;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 
 import java.util.ArrayList;
@@ -135,7 +136,7 @@ public final class RepublishGovernanceDataHandler {
                             "Might be caused by an previous timeout.");
                 }
             }
-        });
+        }, MoreExecutors.directExecutor());
     }
 
     private void connectToNextNode() {
@@ -169,7 +170,7 @@ public final class RepublishGovernanceDataHandler {
     private void connectToAnyFullNode() {
         Capabilities required = new Capabilities(Capability.DAO_FULL_NODE);
 
-        List<Peer> list = peerManager.getLivePeers(null).stream()
+        List<Peer> list = peerManager.getLivePeers().stream()
                 .filter(peer -> peer.getCapabilities().containsAll(required))
                 .collect(Collectors.toList());
 

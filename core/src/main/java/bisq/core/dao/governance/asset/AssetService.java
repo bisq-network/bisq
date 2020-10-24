@@ -154,10 +154,10 @@ public class AssetService implements DaoSetupService, DaoStateListener {
         // TradeAmountDateTuple object holding only the data we need.
         Map<String, List<TradeAmountDateTuple>> lookupMap = new HashMap<>();
         tradeStatisticsManager.getObservableTradeStatisticsSet().stream()
-                .filter(e -> CurrencyUtil.isCryptoCurrency(e.getBaseCurrency()))
+                .filter(e -> CurrencyUtil.isCryptoCurrency(e.getCurrency()))
                 .forEach(e -> {
-                    lookupMap.putIfAbsent(e.getBaseCurrency(), new ArrayList<>());
-                    lookupMap.get(e.getBaseCurrency()).add(new TradeAmountDateTuple(e.getTradeAmount().getValue(), e.getTradeDate().getTime()));
+                    lookupMap.putIfAbsent(e.getCurrency(), new ArrayList<>());
+                    lookupMap.get(e.getCurrency()).add(new TradeAmountDateTuple(e.getAmount(), e.getDateAsLong()));
                 });
 
         getStatefulAssets().stream()
@@ -222,7 +222,7 @@ public class AssetService implements DaoSetupService, DaoStateListener {
         walletsManager.publishAndCommitBsqTx(transaction, TxType.ASSET_LISTING_FEE, new TxBroadcaster.Callback() {
             @Override
             public void onSuccess(Transaction transaction) {
-                log.info("Asset listing fee tx has been published. TxId={}", transaction.getHashAsString());
+                log.info("Asset listing fee tx has been published. TxId={}", transaction.getTxId().toString());
                 resultHandler.handleResult();
             }
 

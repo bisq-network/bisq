@@ -76,7 +76,7 @@ public class LockupTxService {
             walletsManager.publishAndCommitBsqTx(lockupTx, TxType.LOCKUP, new TxBroadcaster.Callback() {
                 @Override
                 public void onSuccess(Transaction transaction) {
-                    resultHandler.accept(transaction.getHashAsString());
+                    resultHandler.accept(transaction.getTxId().toString());
                 }
 
                 @Override

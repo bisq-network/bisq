@@ -32,8 +32,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Slf4j
 public class BuyerAsTakerCreatesDepositTxInputs extends TradeTask {
 
-    @SuppressWarnings({"unused"})
-    public BuyerAsTakerCreatesDepositTxInputs(TaskRunner taskHandler, Trade trade) {
+    public BuyerAsTakerCreatesDepositTxInputs(TaskRunner<Trade> taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -45,7 +44,7 @@ public class BuyerAsTakerCreatesDepositTxInputs extends TradeTask {
             Coin txFee = trade.getTxFee();
             Coin takerInputAmount = checkNotNull(trade.getOffer()).getBuyerSecurityDeposit()
                     .add(txFee)
-                    .add(txFee);
+                    .add(txFee); // 2 times the fee as we need it for payout tx as well
             InputsAndChangeOutput result = processModel.getTradeWalletService().takerCreatesDepositTxInputs(
                     processModel.getTakeOfferFeeTx(),
                     takerInputAmount,

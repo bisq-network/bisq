@@ -25,7 +25,7 @@ import org.bitcoinj.params.TestNet3Params;
 
 
 import bisq.asset.AddressValidationResult;
-import bisq.asset.Base58BitcoinAddressValidator;
+import bisq.asset.Base58AddressValidator;
 import bisq.asset.Coin;
 
 public class MockTestnetCoin extends Coin {
@@ -55,7 +55,7 @@ public class MockTestnetCoin extends Coin {
         }
     }
 
-    public static class BSQAddressValidator extends Base58BitcoinAddressValidator {
+    public static class BSQAddressValidator extends Base58AddressValidator {
 
         public BSQAddressValidator(NetworkParameters networkParameters) {
             super(networkParameters);

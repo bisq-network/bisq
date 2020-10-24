@@ -18,8 +18,8 @@
 package bisq.core.app;
 
 import bisq.common.config.Config;
+import bisq.common.file.FileUtil;
 import bisq.common.handlers.ErrorMessageHandler;
-import bisq.common.storage.FileUtil;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -39,7 +39,7 @@ import static bisq.common.util.Preconditions.checkDir;
 @Slf4j
 @Singleton
 public class TorSetup {
-    private File torDir;
+    private final File torDir;
 
     @Inject
     public TorSetup(@Named(Config.TOR_DIR) File torDir) {

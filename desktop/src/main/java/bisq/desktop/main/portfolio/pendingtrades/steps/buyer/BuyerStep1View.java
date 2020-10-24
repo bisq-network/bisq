@@ -22,7 +22,7 @@ import bisq.desktop.main.portfolio.pendingtrades.PendingTradesViewModel;
 import bisq.desktop.main.portfolio.pendingtrades.steps.TradeStepView;
 
 import bisq.core.locale.Res;
-import bisq.core.trade.DelayedPayoutTxValidation;
+import bisq.core.trade.TradeDataValidation;
 
 public class BuyerStep1View extends TradeStepView {
 
@@ -35,25 +35,9 @@ public class BuyerStep1View extends TradeStepView {
     }
 
     @Override
-    public void activate() {
-        super.activate();
-
-        try {
-            DelayedPayoutTxValidation.validatePayoutTx(trade,
-                    trade.getDelayedPayoutTx(),
-                    model.dataModel.daoFacade,
-                    model.dataModel.btcWalletService);
-        } catch (DelayedPayoutTxValidation.DonationAddressException |
-                DelayedPayoutTxValidation.InvalidTxException |
-                DelayedPayoutTxValidation.AmountMismatchException |
-                DelayedPayoutTxValidation.InvalidLockTimeException e) {
-            if (!model.dataModel.tradeManager.isAllowFaultyDelayedTxs()) {
-                new Popup().warning(Res.get("portfolio.pending.invalidDelayedPayoutTx", e.getMessage())).show();
-            }
-        } catch (DelayedPayoutTxValidation.MissingDelayedPayoutTxException ignore) {
-            // We don't react on those errors as a failed trade might get listed initially but getting removed from the
-            // trade manager after initPendingTrades which happens after activate might be called.
-        }
+    protected void onPendingTradesInitialized() {
+        super.onPendingTradesInitialized();
+        validatePayoutTx();
     }
 
 
@@ -88,6 +72,28 @@ public class BuyerStep1View extends TradeStepView {
     protected String getPeriodOverWarnText() {
         return Res.get("portfolio.pending.step1.openForDispute");
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void validatePayoutTx() {
+        try {
+            TradeDataValidation.validateDelayedPayoutTx(trade,
+                    trade.getDelayedPayoutTx(),
+                    model.dataModel.daoFacade,
+                    model.dataModel.btcWalletService);
+        } catch (TradeDataValidation.MissingTxException ignore) {
+            // We don't react on those errors as a failed trade might get listed initially but getting removed from the
+            // trade manager after initPendingTrades which happens after activate might be called.
+        } catch (TradeDataValidation.ValidationException e) {
+            if (!model.dataModel.tradeManager.isAllowFaultyDelayedTxs()) {
+                new Popup().warning(Res.get("portfolio.pending.invalidDelayedPayoutTx", e.getMessage())).show();
+            }
+        }
+    }
+
 }
 
 

@@ -37,6 +37,7 @@ import bisq.common.proto.network.NetworkPayload;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 
 import java.util.HashMap;
@@ -148,7 +149,7 @@ class RequestDataHandler implements MessageListener {
                 @Override
                 public void onSuccess(Connection connection) {
                     if (!stopped) {
-                        log.trace("Send " + getDataRequest + " to " + nodeAddress + " succeeded.");
+                        log.trace("Send {} to {} succeeded.", getDataRequest, nodeAddress);
                     } else {
                         log.trace("We have stopped already. We ignore that networkNode.sendMessage.onSuccess call." +
                                 "Might be caused by an previous timeout.");
@@ -168,7 +169,7 @@ class RequestDataHandler implements MessageListener {
                                 "Might be caused by an previous timeout.");
                     }
                 }
-            });
+            }, MoreExecutors.directExecutor());
         } else {
             log.warn("We have stopped already. We ignore that requestData call.");
         }
@@ -259,15 +260,16 @@ class RequestDataHandler implements MessageListener {
 
         // Log different data types
         StringBuilder sb = new StringBuilder();
-        sb.append("\n#################################################################\n");
-        sb.append("Connected to node: " + peersNodeAddress.getFullAddress() + "\n");
+        String sep = System.lineSeparator();
+        sb.append(sep).append("#################################################################").append(sep);
+        sb.append("Connected to node: ").append(peersNodeAddress.getFullAddress()).append(sep);
         int items = dataSet.size() + persistableNetworkPayloadSet.size();
         sb.append("Received ").append(items).append(" instances from a ")
-                .append(getDataRequestType).append("\n");
+                .append(getDataRequestType).append(sep);
         payloadByClassName.forEach((key, value) -> sb.append(key)
                 .append(": ")
                 .append(value.size())
-                .append("\n"));
+                .append(sep));
         sb.append("#################################################################");
         log.info(sb.toString());
     }

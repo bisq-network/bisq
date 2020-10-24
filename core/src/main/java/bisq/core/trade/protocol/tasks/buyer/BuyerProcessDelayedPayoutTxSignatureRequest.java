@@ -32,8 +32,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class BuyerProcessDelayedPayoutTxSignatureRequest extends TradeTask {
-    @SuppressWarnings({"unused"})
-    public BuyerProcessDelayedPayoutTxSignatureRequest(TaskRunner taskHandler, Trade trade) {
+    public BuyerProcessDelayedPayoutTxSignatureRequest(TaskRunner<Trade> taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -41,14 +40,18 @@ public class BuyerProcessDelayedPayoutTxSignatureRequest extends TradeTask {
     protected void run() {
         try {
             runInterceptHook();
-            DelayedPayoutTxSignatureRequest message = (DelayedPayoutTxSignatureRequest) processModel.getTradeMessage();
-            checkNotNull(message);
-            Validator.checkTradeId(processModel.getOfferId(), message);
-            byte[] delayedPayoutTxAsBytes = checkNotNull(message.getDelayedPayoutTx());
+            DelayedPayoutTxSignatureRequest request = (DelayedPayoutTxSignatureRequest) processModel.getTradeMessage();
+            checkNotNull(request);
+            Validator.checkTradeId(processModel.getOfferId(), request);
+            byte[] delayedPayoutTxAsBytes = checkNotNull(request.getDelayedPayoutTx());
             Transaction preparedDelayedPayoutTx = processModel.getBtcWalletService().getTxFromSerializedTx(delayedPayoutTxAsBytes);
             processModel.setPreparedDelayedPayoutTx(preparedDelayedPayoutTx);
 
-            // update to the latest peer address of our peer if the message is correct
+            // When we receive that message the taker has published the taker fee, so we apply it to the trade.
+            // The takerFeeTx was sent in the first message. It should be part of DelayedPayoutTxSignatureRequest
+            // but that cannot be changed due backward compatibility issues. It is a left over from the old trade protocol.
+            trade.setTakerFeeTxId(processModel.getTakeOfferFeeTxId());
+
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
 
             complete();

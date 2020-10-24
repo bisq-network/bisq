@@ -22,14 +22,14 @@ import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import bisq.network.p2p.storage.persistence.MapStoreService;
 
 import bisq.common.config.Config;
-import bisq.common.storage.Storage;
-
-import javax.inject.Named;
+import bisq.common.persistence.PersistenceManager;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import java.io.File;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
@@ -45,8 +45,8 @@ public class TradeStatistics2StorageService extends MapStoreService<TradeStatist
 
     @Inject
     public TradeStatistics2StorageService(@Named(Config.STORAGE_DIR) File storageDir,
-                                          Storage<TradeStatistics2Store> persistableNetworkPayloadMapStorage) {
-        super(storageDir, persistableNetworkPayloadMapStorage);
+                                          PersistenceManager<TradeStatistics2Store> persistenceManager) {
+        super(storageDir, persistenceManager);
     }
 
 
@@ -55,12 +55,39 @@ public class TradeStatistics2StorageService extends MapStoreService<TradeStatist
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
+    protected void initializePersistenceManager() {
+        persistenceManager.initialize(store, PersistenceManager.Source.NETWORK);
+    }
+
+    @Override
     public String getFileName() {
         return FILE_NAME;
     }
 
     @Override
     public Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> getMap() {
+        // As it is used for data request and response and we do not want to send any old trade stat data anymore.
+        return new HashMap<>();
+    }
+
+    // We overwrite that method to receive old trade stats from the network. As we deactivated getMap to not deliver
+    // hashes we needed to use the getMapOfAllData method to actually store the data.
+    // That's a bit of a hack but it's just for transition and can be removed after a few months anyway.
+    // Alternatively we could create a new interface to handle it differently on the other client classes but that
+    // seems to be not justified as it is needed only temporarily.
+    @Override
+    protected PersistableNetworkPayload putIfAbsent(P2PDataStorage.ByteArray hash, PersistableNetworkPayload payload) {
+        PersistableNetworkPayload previous = getMapOfAllData().putIfAbsent(hash, payload);
+        return previous;
+    }
+
+    @Override
+    protected void readFromResources(String postFix) {
+        // We do not attempt to read from resources as that file is not provided anymore
+        readStore();
+    }
+
+    public Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> getMapOfAllData() {
         return store.getMap();
     }
 
@@ -77,10 +104,5 @@ public class TradeStatistics2StorageService extends MapStoreService<TradeStatist
     @Override
     protected TradeStatistics2Store createStore() {
         return new TradeStatistics2Store();
-    }
-
-    @Override
-    protected void readStore() {
-        super.readStore();
     }
 }

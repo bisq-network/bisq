@@ -17,18 +17,18 @@
 
 package bisq.network.p2p.network;
 
-import java.io.File;
-import java.io.IOException;
+import bisq.common.file.FileUtil;
 
 import org.berndpruenster.netlayer.tor.Tor;
 import org.berndpruenster.netlayer.tor.TorCtlException;
 
-import bisq.common.storage.FileUtil;
+import java.io.File;
+import java.io.IOException;
 
 /**
  * Holds information on how tor should be created and delivers a respective
  * {@link Tor} object when asked.
- * 
+ *
  * @author Florian Reimair
  *
  */
@@ -45,11 +45,6 @@ public abstract class TorMode {
     /**
      * @param torDir           points to the place, where we will persist private
      *                         key and address data
-     * @param hiddenServiceDir The directory where the <code>private_key</code> file
-     *                         sits in. Note that, due to the inner workings of the
-     *                         <code>Netlayer</code> dependency, it does not
-     *                         necessarily equal
-     *                         {@link TorMode#getHiddenServiceDirectory()}.
      */
     public TorMode(File torDir) {
         this.torDir = torDir;
@@ -57,7 +52,7 @@ public abstract class TorMode {
 
     /**
      * Returns a fresh {@link Tor} object.
-     * 
+     *
      * @return a fresh instance of {@link Tor}
      * @throws IOException
      * @throws TorCtlException
@@ -72,7 +67,7 @@ public abstract class TorMode {
      * service path literally. Hence, we set <code>"torDir/hiddenservice"</code> as
      * the hidden service directory. By doing so, we use the same
      * <code>private_key</code> file as in {@link NewTor} mode.
-     * 
+     *
      * @return <code>""</code> in {@link NewTor} Mode,
      *         <code>"torDir/externalTorHiddenService"</code> in {@link RunningTor}
      *         mode

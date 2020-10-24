@@ -31,7 +31,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class ResourceDataStoreService {
-    private List<StoreService<? extends PersistableEnvelope>> services;
+    private final List<StoreService<? extends PersistableEnvelope>> services;
 
     @Inject
     public ResourceDataStoreService() {

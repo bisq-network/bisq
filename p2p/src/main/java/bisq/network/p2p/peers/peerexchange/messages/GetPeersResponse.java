@@ -43,8 +43,12 @@ public final class GetPeersResponse extends NetworkEnvelope implements PeerExcha
     @Nullable
     private final Capabilities supportedCapabilities;
 
-    public GetPeersResponse(int requestNonce, Set<Peer> reportedPeers) {
-        this(requestNonce, reportedPeers, Capabilities.app, Version.getP2PMessageVersion());
+    public GetPeersResponse(int requestNonce,
+                            Set<Peer> reportedPeers) {
+        this(requestNonce,
+                reportedPeers,
+                Capabilities.app,
+                Version.getP2PMessageVersion());
     }
 
 

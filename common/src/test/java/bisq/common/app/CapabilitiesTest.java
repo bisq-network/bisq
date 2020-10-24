@@ -23,6 +23,7 @@ import java.util.HashSet;
 
 import org.junit.Test;
 
+import static bisq.common.app.Capability.DAO_FULL_NODE;
 import static bisq.common.app.Capability.SEED_NODE;
 import static bisq.common.app.Capability.TRADE_STATISTICS;
 import static bisq.common.app.Capability.TRADE_STATISTICS_2;
@@ -38,6 +39,47 @@ public class CapabilitiesTest {
 
         assertTrue(DUT.containsAll(new HashSet<>()));
         assertFalse(DUT.containsAll(new Capabilities(SEED_NODE)));
+    }
+
+    @Test
+    public void testHasLess() {
+        assertTrue(new Capabilities().hasLess(new Capabilities(SEED_NODE)));
+        assertFalse(new Capabilities().hasLess(new Capabilities()));
+        assertFalse(new Capabilities(SEED_NODE).hasLess(new Capabilities()));
+        assertTrue(new Capabilities(SEED_NODE).hasLess(new Capabilities(DAO_FULL_NODE)));
+        assertFalse(new Capabilities(DAO_FULL_NODE).hasLess(new Capabilities(SEED_NODE)));
+
+        Capabilities all = new Capabilities(
+                TRADE_STATISTICS,
+                TRADE_STATISTICS_2,
+                Capability.ACCOUNT_AGE_WITNESS,
+                Capability.ACK_MSG,
+                Capability.PROPOSAL,
+                Capability.BLIND_VOTE,
+                Capability.DAO_STATE,
+                Capability.BUNDLE_OF_ENVELOPES,
+                Capability.MEDIATION,
+                Capability.SIGNED_ACCOUNT_AGE_WITNESS,
+                Capability.REFUND_AGENT,
+                Capability.TRADE_STATISTICS_HASH_UPDATE
+        );
+        Capabilities other = new Capabilities(
+                TRADE_STATISTICS,
+                TRADE_STATISTICS_2,
+                Capability.ACCOUNT_AGE_WITNESS,
+                Capability.ACK_MSG,
+                Capability.PROPOSAL,
+                Capability.BLIND_VOTE,
+                Capability.DAO_STATE,
+                Capability.BUNDLE_OF_ENVELOPES,
+                Capability.MEDIATION,
+                Capability.SIGNED_ACCOUNT_AGE_WITNESS,
+                Capability.REFUND_AGENT,
+                Capability.TRADE_STATISTICS_HASH_UPDATE,
+                Capability.NO_ADDRESS_PRE_FIX
+        );
+
+        assertTrue(all.hasLess(other));
     }
 
     @Test

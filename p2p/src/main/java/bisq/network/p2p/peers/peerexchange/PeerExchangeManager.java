@@ -147,8 +147,9 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener,
             }, RETRY_DELAY_SEC);
         }
 
-        if (peerManager.isNodeBanned(closeConnectionReason, connection))
-            seedNodeAddresses.remove(connection.getPeersNodeAddressOptional().get());
+        if (peerManager.isPeerBanned(closeConnectionReason, connection)) {
+            connection.getPeersNodeAddressOptional().ifPresent(seedNodeAddresses::remove);
+        }
     }
 
     @Override
@@ -224,7 +225,8 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener,
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void requestReportedPeers(NodeAddress nodeAddress, List<NodeAddress> remainingNodeAddresses) {
-        log.debug("requestReportedPeers nodeAddress={}; remainingNodeAddresses.size={}", nodeAddress, remainingNodeAddresses.size());
+        log.debug("requestReportedPeers nodeAddress={}; remainingNodeAddresses.size={}",
+                nodeAddress, remainingNodeAddresses.size());
         if (!stopped) {
             if (!handlerMap.containsKey(nodeAddress)) {
                 PeerExchangeHandler peerExchangeHandler = new PeerExchangeHandler(networkNode,
@@ -276,7 +278,7 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener,
                 peerExchangeHandler.sendGetPeersRequestAfterRandomDelay(nodeAddress);
             } else {
                 log.trace("We have started already a peerExchangeHandler. " +
-                        "We ignore that call. nodeAddress=" + nodeAddress);
+                        "We ignore that call. nodeAddress={}", nodeAddress);
             }
         } else {
             log.trace("We have stopped already. We ignore that requestReportedPeers call.");

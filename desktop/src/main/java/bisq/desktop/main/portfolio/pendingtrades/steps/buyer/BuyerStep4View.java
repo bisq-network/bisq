@@ -63,7 +63,7 @@ import javafx.scene.layout.Priority;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 
-import org.spongycastle.crypto.params.KeyParameter;
+import org.bouncycastle.crypto.params.KeyParameter;
 
 import java.util.concurrent.TimeUnit;
 
@@ -151,7 +151,7 @@ public class BuyerStep4View extends TradeStepView {
 
         useSavingsWalletButton.setOnAction(e -> {
             handleTradeCompleted();
-            model.dataModel.tradeManager.addTradeToClosedTrades(trade);
+            model.dataModel.tradeManager.onTradeCompleted(trade);
         });
         withdrawToExternalWalletButton.setOnAction(e -> {
             onWithdrawal();
@@ -199,7 +199,7 @@ public class BuyerStep4View extends TradeStepView {
                 Coin receiverAmount = amount.subtract(fee);
                 if (balance.isZero()) {
                     new Popup().warning(Res.get("portfolio.pending.step5_buyer.alreadyWithdrawn")).show();
-                    model.dataModel.tradeManager.addTradeToClosedTrades(trade);
+                    model.dataModel.tradeManager.onTradeCompleted(trade);
                 } else {
                     if (toAddresses.isEmpty()) {
                         validateWithdrawAddress();

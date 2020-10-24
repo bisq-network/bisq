@@ -29,4 +29,8 @@ public interface PersistableEnvelope extends Envelope {
     default Message toPersistableMessage() {
         return toProtoMessage();
     }
+
+    default String getDefaultStorageFileName() {
+        return this.getClass().getSimpleName();
+    }
 }

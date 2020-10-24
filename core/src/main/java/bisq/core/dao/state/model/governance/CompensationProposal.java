@@ -30,6 +30,7 @@ import bisq.common.util.CollectionUtils;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.LegacyAddress;
 
 import java.util.Date;
 import java.util.Map;
@@ -117,10 +118,10 @@ public final class CompensationProposal extends Proposal implements IssuanceProp
         return Coin.valueOf(requestedBsq);
     }
 
-    public Address getAddress() throws AddressFormatException {
+    public LegacyAddress getAddress() throws AddressFormatException {
         // Remove leading 'B'
         String underlyingBtcAddress = bsqAddress.substring(1, bsqAddress.length());
-        return Address.fromBase58(Config.baseCurrencyNetworkParameters(), underlyingBtcAddress);
+        return LegacyAddress.fromBase58(Config.baseCurrencyNetworkParameters(), underlyingBtcAddress);
     }
 
 
