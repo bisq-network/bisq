@@ -71,10 +71,10 @@ public enum InventoryItem {
     // Should be very close values
     daoStateChainHeight("daoStateChainHeight",
             true,
-            new DeviationByIntegerDiff(1, 3)),
+            new DeviationByIntegerDiff(2, 4)),
     numBsqBlocks("numBsqBlocks",
             true,
-            new DeviationByIntegerDiff(1, 3)),
+            new DeviationByIntegerDiff(2, 4)),
 
     // Has to be same values at same block
     daoStateHash("daoStateHash",
@@ -93,7 +93,7 @@ public enum InventoryItem {
             new DeviationByPercentage(0.33, 3, 0.4, 2.5)),
     numConnections("numConnections",
             true,
-            new DeviationByPercentage(0.33, 3, 0.4, 2.5)),
+            new DeviationByPercentage(0, Double.MAX_VALUE, 0.4, 2.5)),
     peakNumConnections("peakNumConnections",
             true,
             new DeviationByPercentage(0.33, 3, 0.4, 2.5)),
@@ -102,16 +102,16 @@ public enum InventoryItem {
             new DeviationByIntegerDiff(1, 2)),
     sentBytesPerSec("sentBytesPerSec",
             true,
-            new DeviationByPercentage(0.33, 3, 0.4, 2.5)),
+            new DeviationByPercentage()),
     receivedBytesPerSec("receivedBytesPerSec",
             true,
-            new DeviationByPercentage(0.33, 3, 0.4, 2.5)),
+            new DeviationByPercentage()),
     receivedMessagesPerSec("receivedMessagesPerSec",
             true,
-            new DeviationByPercentage(0.33, 3, 0.4, 2.5)),
+            new DeviationByPercentage()),
     sentMessagesPerSec("sentMessagesPerSec",
             true,
-            new DeviationByPercentage(0.33, 3, 0.4, 2.5)),
+            new DeviationByPercentage()),
 
     // No deviation check
     sentBytes("sentBytes", true),

@@ -370,7 +370,7 @@ public class InventoryWebServer {
             }
 
             if (!warningsAtRequestNumber.isEmpty()) {
-                historicalWarnings = "Warnings  at requests " + Joiner.on(" ").join(warningsAtRequestNumber);
+                historicalWarnings = "Warnings  at requests " + Joiner.on(", ").join(warningsAtRequestNumber);
             }
             if (!alertsAtRequestNumber.isEmpty()) {
                 historicalAlerts = "Alerts at requests: " + Joiner.on(", ").join(alertsAtRequestNumber);
