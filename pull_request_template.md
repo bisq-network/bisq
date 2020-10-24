@@ -41,7 +41,7 @@ This is my Bitcointalk account that will prove im not some shady character.
 
 I have made positive posts about BISQ when it was called bitsquare back in 2017
 proof
-https://crypto.ba/t/bitsquare-decentralizovana-mjenjacnica/209
+<https://crypto.ba/t/bitsquare-decentralizovana-mjenjacnica/209>
 
 Me and my Community would like to get listed on real decentralized exchange so that we can learn real peer2peer decentralization.
 
