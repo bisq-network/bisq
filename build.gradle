@@ -272,10 +272,10 @@ configure(project(':common')) {
 configure(project(':p2p')) {
     dependencies {
         compile project(':common')
-        compile("com.github.cd2357.netlayer:tor.native:$netlayerVersion") {
+        compile("com.github.bisq-network.netlayer:tor.native:$netlayerVersion") {
             exclude(module: 'slf4j-api')
         }
-        compile("com.github.cd2357.netlayer:tor.external:$netlayerVersion") {
+        compile("com.github.bisq-network.netlayer:tor.external:$netlayerVersion") {
             exclude(module: 'slf4j-api')
         }
         implementation("org.apache.httpcomponents:httpclient:$httpclientVersion") {
