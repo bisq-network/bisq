@@ -21,6 +21,8 @@ import bisq.core.trade.Trade;
 
 import bisq.common.Payload;
 
+import java.util.Objects;
+
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
@@ -37,6 +39,16 @@ public class TradeInfo implements Payload {
     private final OfferInfo offer;
     private final String tradeId;
     private final String shortId;
+    private final long date;
+    private final boolean isCurrencyForTakerFeeBtc;
+    private final long txFeeAsLong;
+    private final long takerFeeAsLong;
+    private final String takerFeeTxId;
+    private final String depositTxId;
+    private final String payoutTxId;
+    private final long tradeAmountAsLong;
+    private final long tradePrice;
+    private final String tradingPeerNodeAddress;
     private final String state;
     private final String phase;
     private final String tradePeriodState;
@@ -46,11 +58,22 @@ public class TradeInfo implements Payload {
     private final boolean isFiatReceived;
     private final boolean isPayoutPublished;
     private final boolean isWithdrawn;
+    private final String contractAsJson;
 
     public TradeInfo(TradeInfoBuilder builder) {
         this.offer = builder.offer;
         this.tradeId = builder.tradeId;
         this.shortId = builder.shortId;
+        this.date = builder.date;
+        this.isCurrencyForTakerFeeBtc = builder.isCurrencyForTakerFeeBtc;
+        this.txFeeAsLong = builder.txFeeAsLong;
+        this.takerFeeAsLong = builder.takerFeeAsLong;
+        this.takerFeeTxId = builder.takerFeeTxId;
+        this.depositTxId = builder.depositTxId;
+        this.payoutTxId = builder.payoutTxId;
+        this.tradeAmountAsLong = builder.tradeAmountAsLong;
+        this.tradePrice = builder.tradePrice;
+        this.tradingPeerNodeAddress = builder.tradingPeerNodeAddress;
         this.state = builder.state;
         this.phase = builder.phase;
         this.tradePeriodState = builder.tradePeriodState;
@@ -60,6 +83,7 @@ public class TradeInfo implements Payload {
         this.isFiatReceived = builder.isFiatReceived;
         this.isPayoutPublished = builder.isPayoutPublished;
         this.isWithdrawn = builder.isWithdrawn;
+        this.contractAsJson = builder.contractAsJson;
     }
 
     public static TradeInfo toTradeInfo(Trade trade) {
@@ -67,6 +91,18 @@ public class TradeInfo implements Payload {
                 .withOffer(toOfferInfo(trade.getOffer()))
                 .withTradeId(trade.getId())
                 .withShortId(trade.getShortId())
+                .withDate(trade.getDate().getTime())
+                .withIsCurrencyForTakerFeeBtc(trade.isCurrencyForTakerFeeBtc())
+                .withTxFeeAsLong(trade.getTxFeeAsLong())
+                .withTakerFeeAsLong(trade.getTakerFeeAsLong())
+                .withTakerFeeAsLong(trade.getTakerFeeAsLong())
+                .withTakerFeeTxId(trade.getTakerFeeTxId())
+                .withDepositTxId(trade.getDepositTxId())
+                .withPayoutTxId(trade.getPayoutTxId())
+                .withTradeAmountAsLong(trade.getTradeAmountAsLong())
+                .withTradePrice(trade.getTradePrice().getValue())
+                .withTradingPeerNodeAddress(Objects.requireNonNull(
+                        trade.getTradingPeerNodeAddress()).getHostNameWithoutPostFix())
                 .withState(trade.getState().name())
                 .withPhase(trade.getPhase().name())
                 .withTradePeriodState(trade.getTradePeriodState().name())
@@ -76,6 +112,7 @@ public class TradeInfo implements Payload {
                 .withIsFiatReceived(trade.isFiatReceived())
                 .withIsPayoutPublished(trade.isPayoutPublished())
                 .withIsWithdrawn(trade.isWithdrawn())
+                .withContractAsJson(trade.getContractAsJson())
                 .build();
     }
 
@@ -89,6 +126,16 @@ public class TradeInfo implements Payload {
                 .setOffer(offer.toProtoMessage())
                 .setTradeId(tradeId)
                 .setShortId(shortId)
+                .setDate(date)
+                .setIsCurrencyForTakerFeeBtc(isCurrencyForTakerFeeBtc)
+                .setTxFeeAsLong(txFeeAsLong)
+                .setTakerFeeAsLong(takerFeeAsLong)
+                .setTakerFeeTxId(takerFeeTxId == null ? "" : takerFeeTxId)
+                .setDepositTxId(depositTxId == null ? "" : depositTxId)
+                .setPayoutTxId(payoutTxId == null ? "" : payoutTxId)
+                .setTradeAmountAsLong(tradeAmountAsLong)
+                .setTradePrice(tradePrice)
+                .setTradingPeerNodeAddress(tradingPeerNodeAddress)
                 .setState(state)
                 .setPhase(phase)
                 .setTradePeriodState(tradePeriodState)
@@ -98,12 +145,13 @@ public class TradeInfo implements Payload {
                 .setIsFiatReceived(isFiatReceived)
                 .setIsPayoutPublished(isPayoutPublished)
                 .setIsWithdrawn(isWithdrawn)
+                .setContractAsJson(contractAsJson == null ? "" : contractAsJson)
                 .build();
     }
 
+    @SuppressWarnings({"unused", "SameReturnValue"})
     public static TradeInfo fromProto(bisq.proto.grpc.TradeInfo proto) {
-        // TODO
-        return null;
+        return null;  // TODO
     }
 
     /*
@@ -116,6 +164,16 @@ public class TradeInfo implements Payload {
         private OfferInfo offer;
         private String tradeId;
         private String shortId;
+        private long date;
+        private boolean isCurrencyForTakerFeeBtc;
+        private long txFeeAsLong;
+        private long takerFeeAsLong;
+        private String takerFeeTxId;
+        private String depositTxId;
+        private String payoutTxId;
+        private long tradeAmountAsLong;
+        private long tradePrice;
+        private String tradingPeerNodeAddress;
         private String state;
         private String phase;
         private String tradePeriodState;
@@ -125,6 +183,7 @@ public class TradeInfo implements Payload {
         private boolean isFiatReceived;
         private boolean isPayoutPublished;
         private boolean isWithdrawn;
+        private String contractAsJson;
 
         public TradeInfoBuilder withOffer(OfferInfo offer) {
             this.offer = offer;
@@ -141,6 +200,56 @@ public class TradeInfo implements Payload {
             return this;
         }
 
+        public TradeInfoBuilder withDate(long date) {
+            this.date = date;
+            return this;
+        }
+
+        public TradeInfoBuilder withIsCurrencyForTakerFeeBtc(boolean isCurrencyForTakerFeeBtc) {
+            this.isCurrencyForTakerFeeBtc = isCurrencyForTakerFeeBtc;
+            return this;
+        }
+
+        public TradeInfoBuilder withTxFeeAsLong(long txFeeAsLong) {
+            this.txFeeAsLong = txFeeAsLong;
+            return this;
+        }
+
+        public TradeInfoBuilder withTakerFeeAsLong(long takerFeeAsLong) {
+            this.takerFeeAsLong = takerFeeAsLong;
+            return this;
+        }
+
+        public TradeInfoBuilder withTakerFeeTxId(String takerFeeTxId) {
+            this.takerFeeTxId = takerFeeTxId;
+            return this;
+        }
+
+        public TradeInfoBuilder withDepositTxId(String depositTxId) {
+            this.depositTxId = depositTxId;
+            return this;
+        }
+
+        public TradeInfoBuilder withPayoutTxId(String payoutTxId) {
+            this.payoutTxId = payoutTxId;
+            return this;
+        }
+
+        public TradeInfoBuilder withTradeAmountAsLong(long tradeAmountAsLong) {
+            this.tradeAmountAsLong = tradeAmountAsLong;
+            return this;
+        }
+
+        public TradeInfoBuilder withTradePrice(long tradePrice) {
+            this.tradePrice = tradePrice;
+            return this;
+        }
+
+        public TradeInfoBuilder withTradePeriodState(String tradePeriodState) {
+            this.tradePeriodState = tradePeriodState;
+            return this;
+        }
+
         public TradeInfoBuilder withState(String state) {
             this.state = state;
             return this;
@@ -151,8 +260,8 @@ public class TradeInfo implements Payload {
             return this;
         }
 
-        public TradeInfoBuilder withTradePeriodState(String tradePeriodState) {
-            this.tradePeriodState = tradePeriodState;
+        public TradeInfoBuilder withTradingPeerNodeAddress(String tradingPeerNodeAddress) {
+            this.tradingPeerNodeAddress = tradingPeerNodeAddress;
             return this;
         }
 
@@ -186,6 +295,11 @@ public class TradeInfo implements Payload {
             return this;
         }
 
+        public TradeInfoBuilder withContractAsJson(String contractAsJson) {
+            this.contractAsJson = contractAsJson;
+            return this;
+        }
+
         public TradeInfo build() {
             return new TradeInfo(this);
         }
@@ -196,6 +310,16 @@ public class TradeInfo implements Payload {
         return "TradeInfo{" +
                 "  tradeId='" + tradeId + '\'' + "\n" +
                 ", shortId='" + shortId + '\'' + "\n" +
+                ", date='" + date + '\'' + "\n" +
+                ", isCurrencyForTakerFeeBtc='" + isCurrencyForTakerFeeBtc + '\'' + "\n" +
+                ", txFeeAsLong='" + txFeeAsLong + '\'' + "\n" +
+                ", takerFeeAsLong='" + takerFeeAsLong + '\'' + "\n" +
+                ", takerFeeTxId='" + takerFeeTxId + '\'' + "\n" +
+                ", depositTxId='" + depositTxId + '\'' + "\n" +
+                ", payoutTxId='" + payoutTxId + '\'' + "\n" +
+                ", tradeAmountAsLong='" + tradeAmountAsLong + '\'' + "\n" +
+                ", tradePrice='" + tradePrice + '\'' + "\n" +
+                ", tradingPeerNodeAddress='" + tradingPeerNodeAddress + '\'' + "\n" +
                 ", state='" + state + '\'' + "\n" +
                 ", phase='" + phase + '\'' + "\n" +
                 ", tradePeriodState='" + tradePeriodState + '\'' + "\n" +
@@ -206,6 +330,7 @@ public class TradeInfo implements Payload {
                 ", isPayoutPublished=" + isPayoutPublished + "\n" +
                 ", isWithdrawn=" + isWithdrawn + "\n" +
                 ", offer=" + offer + "\n" +
+                ", contractAsJson=" + contractAsJson + "\n" +
                 '}';
     }
 }
