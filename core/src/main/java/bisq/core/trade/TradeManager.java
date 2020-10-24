@@ -120,6 +120,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
     private final P2PService p2PService;
     private final PriceFeedService priceFeedService;
     private final TradeStatisticsManager tradeStatisticsManager;
+    private final TradeUtil tradeUtil;
     @Getter
     private final ArbitratorManager arbitratorManager;
     private final MediatorManager mediatorManager;
@@ -157,6 +158,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                         P2PService p2PService,
                         PriceFeedService priceFeedService,
                         TradeStatisticsManager tradeStatisticsManager,
+                        TradeUtil tradeUtil,
                         ArbitratorManager arbitratorManager,
                         MediatorManager mediatorManager,
                         ProcessModelServiceProvider processModelServiceProvider,
@@ -175,6 +177,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         this.p2PService = p2PService;
         this.priceFeedService = priceFeedService;
         this.tradeStatisticsManager = tradeStatisticsManager;
+        this.tradeUtil = tradeUtil;
         this.arbitratorManager = arbitratorManager;
         this.mediatorManager = mediatorManager;
         this.processModelServiceProvider = processModelServiceProvider;
@@ -634,7 +637,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
     // the relevant entries are changed, otherwise it's not added and no address entries are changed
     private boolean recoverAddresses(Trade trade) {
         // Find addresses associated with this trade.
-        var entries = TradeUtils.getAvailableAddresses(trade, btcWalletService, keyRing);
+        var entries = tradeUtil.getAvailableAddresses(trade);
         if (entries == null)
             return false;
 
