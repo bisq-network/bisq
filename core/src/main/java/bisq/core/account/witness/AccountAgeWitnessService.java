@@ -358,7 +358,12 @@ public class AccountAgeWitnessService {
         }
     }
 
-    // Checks trade limit based on time since signing of AccountAgeWitness
+    // Get trade limit based on a time schedule
+    // Buying of BTC with a payment method that has chargeback risk will use a low trade limit schedule
+    // All selling and all other fiat payment methods use the normal trade limit schedule
+    // Non fiat always has max limit
+    // Account types that can get signed will use time since signing, other methods use time since account age creation
+    // when measuring account age
     private long getTradeLimit(Coin maxTradeLimit,
                                String currencyCode,
                                AccountAgeWitness accountAgeWitness,
@@ -369,66 +374,51 @@ public class AccountAgeWitnessService {
             return maxTradeLimit.value;
         }
 
-        double factor;
-        boolean isRisky = PaymentMethod.hasChargebackRisk(paymentMethod, currencyCode);
-        if (!isRisky || direction == OfferPayload.Direction.SELL) {
-            // Get age of witness rather than time since signing for non risky payment methods and for selling
-            accountAgeCategory = getAccountAgeCategory(getAccountAge(accountAgeWitness, new Date()));
-        }
         long limit = OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT.value;
-        if (direction == OfferPayload.Direction.BUY && isRisky) {
-            // Used only for bying of BTC with risky payment methods
-            factor = getFactorRisky(accountAgeCategory);
-        } else {
-            // Used by non risky payment methods and for selling BTC with risky methods
-            factor = getFactorNormal(accountAgeCategory);
-        }
+        var factor = PaymentMethod.hasChargebackRisk(paymentMethod, currencyCode) ?
+                signedTypeFactor(accountAgeCategory, direction) : normalFactor(accountAgeCategory);
         if (factor > 0) {
             limit = MathUtils.roundDoubleToLong((double) maxTradeLimit.value * factor);
         }
 
-        log.debug("accountAgeCategory={}, limit={}, factor={}, accountAgeWitnessHash={}",
-                accountAgeCategory,
+        log.debug("limit={}, factor={}, accountAgeWitnessHash={}",
                 Coin.valueOf(limit).toFriendlyString(),
                 factor,
                 Utilities.bytesAsHexString(accountAgeWitness.getHash()));
         return limit;
     }
 
-    private double getFactorRisky(AccountAge accountAgeCategory) {
-        double factor;
-        switch (accountAgeCategory) {
-            case TWO_MONTHS_OR_MORE:
-                factor = 1;
-                break;
-            case ONE_TO_TWO_MONTHS:
-                factor = 0.5;
-                break;
-            case LESS_ONE_MONTH:
-            case UNVERIFIED:
-            default:
-                factor = 0;
-        }
-        return factor;
+    private double signedTypeFactor(AccountAge accountAgeCategory,
+                                    OfferPayload.Direction direction) {
+        return direction == OfferPayload.Direction.BUY ? signedBuyFactor(accountAgeCategory) :
+                normalFactor(accountAgeCategory);
     }
 
-    private double getFactorNormal(AccountAge accountAgeCategory) {
-        double factor;
+    private double signedBuyFactor(AccountAge accountAgeCategory) {
         switch (accountAgeCategory) {
             case TWO_MONTHS_OR_MORE:
-                factor = 1;
-                break;
+                return 1;
             case ONE_TO_TWO_MONTHS:
-                factor = 0.5;
-                break;
+                return 0.5;
             case LESS_ONE_MONTH:
             case UNVERIFIED:
-                factor = 0.25;
-                break;
             default:
-                factor = 0;
         }
-        return factor;
+        return 0;
+    }
+
+    private double normalFactor(AccountAge accountAgeCategory) {
+        switch (accountAgeCategory) {
+            case TWO_MONTHS_OR_MORE:
+                return 1;
+            case ONE_TO_TWO_MONTHS:
+                return 0.5;
+            case LESS_ONE_MONTH:
+            case UNVERIFIED:
+                return 0.25;
+            default:
+        }
+        return 0;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
