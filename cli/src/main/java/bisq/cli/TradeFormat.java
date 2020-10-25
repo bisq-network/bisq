@@ -77,8 +77,7 @@ public class TradeFormat {
                 + "  %-" + COL_HEADER_TRADE_FIAT_SENT.length() + "s" // left justify
                 + "  %-" + COL_HEADER_TRADE_FIAT_RECEIVED.length() + "s" // left justify
                 + "  %-" + COL_HEADER_TRADE_PAYOUT_PUBLISHED.length() + "s" // left justify
-                + "  %-" + COL_HEADER_TRADE_WITHDRAWN.length() + "s" // left justify
-                ;
+                + "  %-" + COL_HEADER_TRADE_WITHDRAWN.length() + "s"; // left justify
 
         return headerLine +
                 (isTaker
