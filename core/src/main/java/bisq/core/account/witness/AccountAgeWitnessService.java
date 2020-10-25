@@ -408,17 +408,7 @@ public class AccountAgeWitnessService {
     }
 
     private double normalFactor(AccountAge accountAgeCategory) {
-        switch (accountAgeCategory) {
-            case TWO_MONTHS_OR_MORE:
-                return 1;
-            case ONE_TO_TWO_MONTHS:
-                return 0.5;
-            case LESS_ONE_MONTH:
-            case UNVERIFIED:
-                return 0.25;
-            default:
-        }
-        return 0;
+        return 1;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
