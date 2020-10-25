@@ -152,7 +152,8 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
     private SingleSelectionModel<Tab> tabPaneSelectionModel;
 
     private TableColumn<TradeStatistics3ListItem, TradeStatistics3ListItem> priceColumn, volumeColumn, marketColumn;
-    private SortedList<TradeStatistics3ListItem> sortedList;
+    private final ObservableList<TradeStatistics3ListItem> listItems = FXCollections.observableArrayList();
+    private final SortedList<TradeStatistics3ListItem> sortedList = new SortedList<>(listItems);
 
     private ChangeListener<Toggle> timeUnitChangeListener;
     private ChangeListener<Number> priceAxisYWidthListener;
@@ -289,8 +290,10 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
             if (currencyComboBox.getEditor().getText().isEmpty())
                 currencyComboBox.getSelectionModel().select(SHOW_ALL);
             CurrencyListItem selectedItem = currencyComboBox.getSelectionModel().getSelectedItem();
-            if (selectedItem != null)
+            if (selectedItem != null) {
                 model.onSetTradeCurrency(selectedItem.tradeCurrency);
+                fillList();
+            }
         });
 
         toggleGroup.getToggles().get(model.tickUnit.ordinal()).setSelected(true);
@@ -299,8 +302,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         toggleGroup.selectedToggleProperty().addListener(timeUnitChangeListener);
         priceAxisY.widthProperty().addListener(priceAxisYWidthListener);
         volumeAxisY.widthProperty().addListener(volumeAxisYWidthListener);
-        ObservableList<TradeStatistics3> tradeStatisticsByCurrencyList = model.tradeStatisticsByCurrency;
-        tradeStatisticsByCurrencyList.addListener(tradeStatisticsByCurrencyListener);
+        model.tradeStatisticsByCurrency.addListener(tradeStatisticsByCurrencyListener);
 
         priceAxisY.labelProperty().bind(priceColumnLabel);
         priceColumnLabel.addListener(priceColumnLabelListener);
@@ -308,12 +310,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         currencySelectionSubscriber = currencySelectionBinding.subscribe((observable, oldValue, newValue) -> {
         });
 
-        ObservableList<TradeStatistics3ListItem> tradeStatistics3ListItems = FXCollections.observableList(tradeStatisticsByCurrencyList.stream()
-                .map(tradeStatistics3 -> new TradeStatistics3ListItem(tradeStatistics3,
-                        coinFormatter,
-                        model.showAllTradeCurrenciesProperty.get()))
-                .collect(Collectors.toList()));
-        sortedList = new SortedList<>(tradeStatistics3ListItems);
+
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
         tableView.setItems(sortedList);
 
@@ -322,7 +319,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         priceAxisX.setTickLabelFormatter(getTimeAxisStringConverter());
         volumeAxisX.setTickLabelFormatter(getTimeAxisStringConverter());
 
-        nrOfTradeStatisticsLabel.setText(Res.get("market.trades.nrOfTrades", tradeStatisticsByCurrencyList.size()));
+        nrOfTradeStatisticsLabel.setText(Res.get("market.trades.nrOfTrades", model.tradeStatisticsByCurrency.size()));
 
         exportLink.setOnAction(e -> exportToCsv());
 
@@ -333,6 +330,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
             rootParent.heightProperty().addListener(parentHeightListener);
         }
 
+        fillList();
         layout();
     }
 
@@ -362,10 +360,21 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         }
     }
 
+    private void fillList() {
+        ObservableList<TradeStatistics3ListItem> tradeStatistics3ListItems = FXCollections.observableList(model.tradeStatisticsByCurrency.stream()
+                .map(tradeStatistics3 -> new TradeStatistics3ListItem(tradeStatistics3,
+                        coinFormatter,
+                        model.showAllTradeCurrenciesProperty.get()))
+                .collect(Collectors.toList()));
+        listItems.clear();
+        listItems.addAll(tradeStatistics3ListItems);
+    }
+
     private void exportToCsv() {
         ObservableList<TableColumn<TradeStatistics3ListItem, ?>> tableColumns = tableView.getColumns();
         int reportColumns = tableColumns.size() + 1;
 
+        boolean showAllTradeCurrencies = model.showAllTradeCurrenciesProperty.get();
         CSVEntryConverter<TradeStatistics3ListItem> headerConverter = transactionsListItem -> {
             String[] columns = new String[reportColumns];
             columns[0] = "Epoch time in ms";
@@ -376,7 +385,6 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         };
 
         CSVEntryConverter<TradeStatistics3ListItem> contentConverter;
-        boolean showAllTradeCurrencies = model.showAllTradeCurrenciesProperty.get();
         if (showAllTradeCurrencies) {
             contentConverter = item -> {
                 String[] columns = new String[reportColumns];
