@@ -343,7 +343,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
                 .collect(Collectors.toSet())
                 .size();
     }
-    
+
     @Nullable
     private Date getMaxTradePeriodDate() {
         return dataModel.getTrade() != null
