@@ -40,6 +40,7 @@ public class TradeInfo implements Payload {
     private final String tradeId;
     private final String shortId;
     private final long date;
+    private final String role;
     private final boolean isCurrencyForTakerFeeBtc;
     private final long txFeeAsLong;
     private final long takerFeeAsLong;
@@ -65,6 +66,7 @@ public class TradeInfo implements Payload {
         this.tradeId = builder.tradeId;
         this.shortId = builder.shortId;
         this.date = builder.date;
+        this.role = builder.role;
         this.isCurrencyForTakerFeeBtc = builder.isCurrencyForTakerFeeBtc;
         this.txFeeAsLong = builder.txFeeAsLong;
         this.takerFeeAsLong = builder.takerFeeAsLong;
@@ -87,11 +89,16 @@ public class TradeInfo implements Payload {
     }
 
     public static TradeInfo toTradeInfo(Trade trade) {
+        return toTradeInfo(trade, null);
+    }
+
+    public static TradeInfo toTradeInfo(Trade trade, String role) {
         return new TradeInfo.TradeInfoBuilder()
                 .withOffer(toOfferInfo(trade.getOffer()))
                 .withTradeId(trade.getId())
                 .withShortId(trade.getShortId())
                 .withDate(trade.getDate().getTime())
+                .withRole(role == null ? "" : role)
                 .withIsCurrencyForTakerFeeBtc(trade.isCurrencyForTakerFeeBtc())
                 .withTxFeeAsLong(trade.getTxFeeAsLong())
                 .withTakerFeeAsLong(trade.getTakerFeeAsLong())
@@ -127,6 +134,7 @@ public class TradeInfo implements Payload {
                 .setTradeId(tradeId)
                 .setShortId(shortId)
                 .setDate(date)
+                .setRole(role)
                 .setIsCurrencyForTakerFeeBtc(isCurrencyForTakerFeeBtc)
                 .setTxFeeAsLong(txFeeAsLong)
                 .setTakerFeeAsLong(takerFeeAsLong)
@@ -165,6 +173,7 @@ public class TradeInfo implements Payload {
         private String tradeId;
         private String shortId;
         private long date;
+        private String role;
         private boolean isCurrencyForTakerFeeBtc;
         private long txFeeAsLong;
         private long takerFeeAsLong;
@@ -202,6 +211,11 @@ public class TradeInfo implements Payload {
 
         public TradeInfoBuilder withDate(long date) {
             this.date = date;
+            return this;
+        }
+
+        public TradeInfoBuilder withRole(String role) {
+            this.role = role;
             return this;
         }
 
@@ -311,6 +325,7 @@ public class TradeInfo implements Payload {
                 "  tradeId='" + tradeId + '\'' + "\n" +
                 ", shortId='" + shortId + '\'' + "\n" +
                 ", date='" + date + '\'' + "\n" +
+                ", role='" + role + '\'' + "\n" +
                 ", isCurrencyForTakerFeeBtc='" + isCurrencyForTakerFeeBtc + '\'' + "\n" +
                 ", txFeeAsLong='" + txFeeAsLong + '\'' + "\n" +
                 ", takerFeeAsLong='" + takerFeeAsLong + '\'' + "\n" +

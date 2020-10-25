@@ -218,25 +218,26 @@ message TradeInfo {
     string tradeId = 2;
     string shortId = 3;
     uint64 date = 4;
-    bool isCurrencyForTakerFeeBtc = 5;
-    uint64 txFeeAsLong = 6;
-    uint64 takerFeeAsLong = 7;
-    string takerFeeTxId = 8;
-    string depositTxId = 9;
-    string payoutTxId = 10;
-    uint64 tradeAmountAsLong = 11;
-    uint64 tradePrice = 12;
-    string tradingPeerNodeAddress = 13;
-    string state = 14;
-    string phase = 15;
-    string tradePeriodState = 16;
-    bool isDepositPublished = 17;
-    bool isDepositConfirmed = 18;
-    bool isFiatSent = 19;
-    bool isFiatReceived = 20;
-    bool isPayoutPublished = 21;
-    bool isWithdrawn = 22;
-    string contractAsJson = 23;
+    string role = 5;
+    bool isCurrencyForTakerFeeBtc = 6;
+    uint64 txFeeAsLong = 7;
+    uint64 takerFeeAsLong = 8;
+    string takerFeeTxId = 9;
+    string depositTxId = 10;
+    string payoutTxId = 11;
+    uint64 tradeAmountAsLong = 12;
+    uint64 tradePrice = 13;
+    string tradingPeerNodeAddress = 14;
+    string state = 15;
+    string phase = 16;
+    string tradePeriodState = 17;
+    bool isDepositPublished = 18;
+    bool isDepositConfirmed = 19;
+    bool isFiatSent = 20;
+    bool isFiatReceived = 21;
+    bool isPayoutPublished = 22;
+    bool isWithdrawn = 23;
+    string contractAsJson = 24;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
