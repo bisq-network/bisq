@@ -27,6 +27,7 @@ import bisq.proto.grpc.GetFundingAddressesRequest;
 import bisq.proto.grpc.GetOfferRequest;
 import bisq.proto.grpc.GetOffersRequest;
 import bisq.proto.grpc.GetPaymentAccountsRequest;
+import bisq.proto.grpc.GetTradeRequest;
 import bisq.proto.grpc.GetVersionRequest;
 import bisq.proto.grpc.LockWalletRequest;
 import bisq.proto.grpc.RegisterDisputeAgentRequest;
@@ -74,6 +75,7 @@ public class CliMain {
         getoffer,
         getoffers,
         takeoffer,
+        gettrade,
         confirmpaymentstarted,
         confirmpaymentreceived,
         createpaymentacct,
@@ -275,6 +277,18 @@ public class CliMain {
                     out.printf("trade '%s' successfully taken", reply.getTrade().getShortId());
                     return;
                 }
+                case gettrade: {
+                    if (nonOptionArgs.size() < 2)
+                        throw new IllegalArgumentException("incorrect parameter count, expecting trade id");
+
+                    var tradeId = nonOptionArgs.get(1);
+                    var request = GetTradeRequest.newBuilder()
+                            .setTradeId(tradeId)
+                            .build();
+                    var reply = tradesService.getTrade(request);
+                    out.println(TradeFormat.format(reply.getTrade()));
+                    return;
+                }
                 case confirmpaymentstarted: {
                     if (nonOptionArgs.size() < 2)
                         throw new IllegalArgumentException("incorrect parameter count, expecting trade id");
@@ -427,6 +441,7 @@ public class CliMain {
             stream.format(rowFormat, "getoffer", "offer id", "Get current offer with id");
             stream.format(rowFormat, "getoffers", "buy | sell, currency code", "Get current offers");
             stream.format(rowFormat, "takeoffer", "offer id", "Take offer with id");
+            stream.format(rowFormat, "gettrade", "trade id", "Get trade details and protocol status");
             stream.format(rowFormat, "confirmpaymentstarted", "trade id", "Confirm payment started");
             stream.format(rowFormat, "confirmpaymentreceived", "trade id", "Confirm payment received");
             stream.format(rowFormat, "createpaymentacct", "account name, account number, currency code", "Create PerfectMoney dummy account");
