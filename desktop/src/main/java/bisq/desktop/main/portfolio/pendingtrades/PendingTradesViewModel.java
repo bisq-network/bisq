@@ -24,13 +24,13 @@ import bisq.desktop.util.GUIUtil;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.btc.wallet.Restrictions;
-import bisq.core.locale.CurrencyUtil;
-import bisq.core.locale.Res;
 import bisq.core.network.MessageState;
 import bisq.core.offer.Offer;
+import bisq.core.offer.OfferUtil;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
+import bisq.core.trade.TradeUtil;
 import bisq.core.trade.closed.ClosedTradableManager;
 import bisq.core.user.User;
 import bisq.core.util.FormattingUtils;
@@ -97,6 +97,8 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     final AccountAgeWitnessService accountAgeWitnessService;
     public final P2PService p2PService;
     private final ClosedTradableManager closedTradableManager;
+    private final OfferUtil offerUtil;
+    private final TradeUtil tradeUtil;
     public final ClockWatcher clockWatcher;
     @Getter
     private final User user;
@@ -120,6 +122,8 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
                                   BtcAddressValidator btcAddressValidator,
                                   P2PService p2PService,
                                   ClosedTradableManager closedTradableManager,
+                                  OfferUtil offerUtil,
+                                  TradeUtil tradeUtil,
                                   AccountAgeWitnessService accountAgeWitnessService,
                                   ClockWatcher clockWatcher,
                                   User user) {
@@ -130,6 +134,8 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         this.btcAddressValidator = btcAddressValidator;
         this.p2PService = p2PService;
         this.closedTradableManager = closedTradableManager;
+        this.offerUtil = offerUtil;
+        this.tradeUtil = tradeUtil;
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.clockWatcher = clockWatcher;
         this.user = user;
@@ -199,55 +205,30 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     }
 
     public String getPayoutAmount() {
-        return dataModel.getTrade() != null ? btcFormatter.formatCoinWithCode(dataModel.getTrade().getPayoutAmount()) : "";
+        return dataModel.getTrade() != null
+                ? btcFormatter.formatCoinWithCode(dataModel.getTrade().getPayoutAmount())
+                : "";
     }
 
     String getMarketLabel(PendingTradesListItem item) {
-        if ((item == null))
-            return "";
-
-        checkNotNull(item.getTrade().getOffer());
-        checkNotNull(item.getTrade().getOffer().getCurrencyCode());
-        return CurrencyUtil.getCurrencyPair(item.getTrade().getOffer().getCurrencyCode());
-    }
-
-    private long getMaxTradePeriod() {
-        return dataModel.getOffer() != null ? dataModel.getOffer().getPaymentMethod().getMaxTradePeriod() : 0;
-    }
-
-    @Nullable
-    private Date getMaxTradePeriodDate() {
-        return dataModel.getTrade() != null ? dataModel.getTrade().getMaxTradePeriodDate() : null;
-    }
-
-    @Nullable
-    private Date getHalfTradePeriodDate() {
-        return dataModel.getTrade() != null ? dataModel.getTrade().getHalfTradePeriodDate() : null;
-    }
-
-    private long getRemainingTradeDuration() {
-        return getMaxTradePeriodDate() != null ? getMaxTradePeriodDate().getTime() - new Date().getTime() : getMaxTradePeriod();
+        return item == null ? "" : tradeUtil.getMarketDescription(item.getTrade());
     }
 
     public String getRemainingTradeDurationAsWords() {
-        return FormattingUtils.formatDurationAsWords(Math.max(0, getRemainingTradeDuration()));
+        return tradeUtil.getRemainingTradeDurationAsWords(dataModel.getTrade());
     }
 
     public double getRemainingTradeDurationAsPercentage() {
-        long maxPeriod = getMaxTradePeriod();
-        long remaining = getRemainingTradeDuration();
-        if (maxPeriod != 0) {
-            return 1 - (double) remaining / (double) maxPeriod;
-        } else
-            return 0;
+        return tradeUtil.getRemainingTradeDurationAsPercentage(dataModel.getTrade());
     }
 
     public String getDateForOpenDispute() {
-        return DisplayUtils.formatDateTime(new Date(new Date().getTime() + getRemainingTradeDuration()));
+        return DisplayUtils.formatDateTime(tradeUtil.getDateForOpenDispute(dataModel.getTrade()));
     }
 
     public boolean showWarning() {
-        return getHalfTradePeriodDate() != null && new Date().after(getHalfTradePeriodDate());
+        Date halfTradePeriodDate = tradeUtil.getHalfTradePeriodDate(dataModel.getTrade());
+        return halfTradePeriodDate != null && new Date().after(halfTradePeriodDate);
     }
 
     public boolean showDispute() {
@@ -263,36 +244,36 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
             Offer offer = trade.getOffer();
             checkNotNull(offer);
             checkNotNull(offer.getCurrencyCode());
-            return getRole(contract.isBuyerMakerAndSellerTaker(), dataModel.isMaker(offer), offer.getCurrencyCode());
+            return tradeUtil.getRole(contract.isBuyerMakerAndSellerTaker(),
+                    dataModel.isMaker(offer),
+                    offer.getCurrencyCode());
         } else {
             return "";
         }
     }
 
     String getPaymentMethod(PendingTradesListItem item) {
-        String result = "";
-        if (item != null) {
-            Offer offer = item.getTrade().getOffer();
-            checkNotNull(offer);
-            checkNotNull(offer.getPaymentMethod());
-            result = offer.getPaymentMethodNameWithCountryCode();
-        }
-        return result;
+        return item == null ? "" : tradeUtil.getPaymentMethodNameWithCountryCode(item.getTrade());
     }
 
     // summary
     public String getTradeVolume() {
-        return dataModel.getTrade() != null ? btcFormatter.formatCoinWithCode(dataModel.getTrade().getTradeAmount()) : "";
+        return dataModel.getTrade() != null
+                ? btcFormatter.formatCoinWithCode(dataModel.getTrade().getTradeAmount())
+                : "";
     }
 
     public String getFiatVolume() {
-        return dataModel.getTrade() != null ? DisplayUtils.formatVolumeWithCode(dataModel.getTrade().getTradeVolume()) : "";
+        return dataModel.getTrade() != null
+                ? DisplayUtils.formatVolumeWithCode(dataModel.getTrade().getTradeVolume())
+                : "";
     }
 
     public String getTxFee() {
         if (trade != null && trade.getTradeAmount() != null) {
             Coin txFee = dataModel.getTxFee();
-            String percentage = GUIUtil.getPercentageOfTradeAmount(txFee, trade.getTradeAmount(),
+            String percentage = GUIUtil.getPercentageOfTradeAmount(txFee,
+                    trade.getTradeAmount(),
                     Coin.ZERO);
             return btcFormatter.formatCoinWithCode(txFee) + percentage;
         } else {
@@ -344,7 +325,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     }
 
     public boolean isBlockChainMethod() {
-        return dataModel.getOffer() != null && dataModel.getOffer().getPaymentMethod().isAsset();
+        return offerUtil.isBlockChainPaymentMethod(dataModel.getOffer());
     }
 
     public int getNumPastTrades(Trade trade) {
@@ -362,7 +343,13 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
                 .collect(Collectors.toSet())
                 .size();
     }
-
+    
+    @Nullable
+    private Date getMaxTradePeriodDate() {
+        return dataModel.getTrade() != null
+                ? dataModel.getTrade().getMaxTradePeriodDate()
+                : null;
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // States
@@ -479,29 +466,4 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
                 break;
         }
     }
-
-    private static String getRole(boolean isBuyerMakerAndSellerTaker, boolean isMaker, String currencyCode) {
-        if (CurrencyUtil.isFiatCurrency(currencyCode)) {
-            String baseCurrencyCode = Res.getBaseCurrencyCode();
-            if (isBuyerMakerAndSellerTaker)
-                return isMaker ?
-                        Res.get("formatter.asMaker", baseCurrencyCode, Res.get("shared.buyer")) :
-                        Res.get("formatter.asTaker", baseCurrencyCode, Res.get("shared.seller"));
-            else
-                return isMaker ?
-                        Res.get("formatter.asMaker", baseCurrencyCode, Res.get("shared.seller")) :
-                        Res.get("formatter.asTaker", baseCurrencyCode, Res.get("shared.buyer"));
-        } else {
-            if (isBuyerMakerAndSellerTaker)
-                return isMaker ?
-                        Res.get("formatter.asMaker", currencyCode, Res.get("shared.seller")) :
-                        Res.get("formatter.asTaker", currencyCode, Res.get("shared.buyer"));
-            else
-                return isMaker ?
-                        Res.get("formatter.asMaker", currencyCode, Res.get("shared.buyer")) :
-                        Res.get("formatter.asTaker", currencyCode, Res.get("shared.seller"));
-        }
-
-    }
-
 }
