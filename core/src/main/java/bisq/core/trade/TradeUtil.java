@@ -25,6 +25,8 @@ import bisq.common.crypto.KeyRing;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Utilities;
 
+import org.bitcoinj.core.Coin;
+
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
