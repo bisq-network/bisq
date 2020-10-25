@@ -28,5 +28,4 @@ public class AbstractTradeTest extends AbstractOfferTest {
         assertEquals(expectedState.name(), trade.getState());
         assertEquals(expectedPhase.name(), trade.getPhase());
     }
-
 }
