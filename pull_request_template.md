@@ -27,7 +27,7 @@ Maincoinsite: <https://rxc.crypto.ba>
 Pool: <https://rxccpool.crypto.ba>
 Crypto payment procesor: <https://pay.crypto.ba>
 Github: <https://github.com/Ruxiol/ruxcryptoRXC>
-Block explorer: <https://explorer.crypto.ba:3001>
+Block explorer: <http://explorer.crypto.ba:3001>
 Bitcointalk: <https://bitcointalk.org/index.php?topic=5278812.msg55280904#msg55280904>
 Twiter: <https://twitter.com/UFFcrypto>
 Discord: <https://discord.gg/BXCA6Q4>
