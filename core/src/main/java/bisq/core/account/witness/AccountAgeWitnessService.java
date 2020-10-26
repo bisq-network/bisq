@@ -207,10 +207,11 @@ public class AccountAgeWitnessService {
             user.getPaymentAccounts().stream()
                     .filter(e -> !(e instanceof AssetAccount))
                     .forEach(e -> {
-                        // We delay with a random interval of 20-60 sec to ensure to be better connected and don't stress the
-                        // P2P network with publishing all at once at startup time.
+                        // We delay with a random interval of 20-60 sec to ensure to be better connected and don't
+                        // stress the P2P network with publishing all at once at startup time.
                         final int delayInSec = 20 + new Random().nextInt(40);
-                        UserThread.runAfter(() -> p2PService.addPersistableNetworkPayload(getMyWitness(e.getPaymentAccountPayload()), true), delayInSec);
+                        UserThread.runAfter(() -> p2PService.addPersistableNetworkPayload(getMyWitness(
+                                e.getPaymentAccountPayload()), true), delayInSec);
                     });
     }
 
@@ -237,7 +238,8 @@ public class AccountAgeWitnessService {
     }
 
     byte[] getAccountInputDataWithSalt(PaymentAccountPayload paymentAccountPayload) {
-        return Utilities.concatenateByteArrays(paymentAccountPayload.getAgeWitnessInputData(), paymentAccountPayload.getSalt());
+        return Utilities.concatenateByteArrays(paymentAccountPayload.getAgeWitnessInputData(),
+                paymentAccountPayload.getSalt());
     }
 
     @VisibleForTesting
@@ -280,7 +282,8 @@ public class AccountAgeWitnessService {
         if (!containsKey)
             log.debug("hash not found in accountAgeWitnessMap");
 
-        return accountAgeWitnessMap.containsKey(hashAsByteArray) ? Optional.of(accountAgeWitnessMap.get(hashAsByteArray)) : Optional.empty();
+        return accountAgeWitnessMap.containsKey(hashAsByteArray) ?
+                Optional.of(accountAgeWitnessMap.get(hashAsByteArray)) : Optional.empty();
     }
 
     private Optional<AccountAgeWitness> getWitnessByHashAsHex(String hashAsHex) {
@@ -435,7 +438,8 @@ public class AccountAgeWitnessService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public AccountAgeWitness getMyWitness(PaymentAccountPayload paymentAccountPayload) {
-        final Optional<AccountAgeWitness> accountAgeWitnessOptional = findWitness(paymentAccountPayload, keyRing.getPubKeyRing());
+        final Optional<AccountAgeWitness> accountAgeWitnessOptional =
+                findWitness(paymentAccountPayload, keyRing.getPubKeyRing());
         return accountAgeWitnessOptional.orElseGet(() -> getNewWitness(paymentAccountPayload, keyRing.getPubKeyRing()));
     }
 
@@ -451,8 +455,7 @@ public class AccountAgeWitnessService {
         return getAccountAge(getMyWitness(paymentAccountPayload), new Date());
     }
 
-    public long getMyTradeLimit(PaymentAccount paymentAccount, String currencyCode, OfferPayload.Direction
-            direction) {
+    public long getMyTradeLimit(PaymentAccount paymentAccount, String currencyCode, OfferPayload.Direction direction) {
         if (paymentAccount == null)
             return 0;
 
@@ -483,7 +486,8 @@ public class AccountAgeWitnessService {
                                            byte[] nonce,
                                            byte[] signature,
                                            ErrorMessageHandler errorMessageHandler) {
-        final Optional<AccountAgeWitness> accountAgeWitnessOptional = findWitness(peersPaymentAccountPayload, peersPubKeyRing);
+        final Optional<AccountAgeWitness> accountAgeWitnessOptional =
+                findWitness(peersPaymentAccountPayload, peersPubKeyRing);
         // If we don't find a stored witness data we create a new dummy object which makes is easier to reuse the
         // below validation methods. This peersWitness object is not used beside for validation. Some of the
         // validation calls are pointless in the case we create a new Witness ourselves but the verifyPeersTradeLimit
@@ -504,8 +508,10 @@ public class AccountAgeWitnessService {
         if (!verifyPeersCurrentDate(peersCurrentDate, errorMessageHandler))
             return false;
 
-        final byte[] peersAccountInputDataWithSalt = Utilities.concatenateByteArrays(peersPaymentAccountPayload.getAgeWitnessInputData(), peersPaymentAccountPayload.getSalt());
-        byte[] hash = Hash.getSha256Ripemd160hash(Utilities.concatenateByteArrays(peersAccountInputDataWithSalt, peersPubKeyRing.getSignaturePubKeyBytes()));
+        final byte[] peersAccountInputDataWithSalt = Utilities.concatenateByteArrays(
+                peersPaymentAccountPayload.getAgeWitnessInputData(), peersPaymentAccountPayload.getSalt());
+        byte[] hash = Hash.getSha256Ripemd160hash(Utilities.concatenateByteArrays(peersAccountInputDataWithSalt,
+                peersPubKeyRing.getSignaturePubKeyBytes()));
 
         // Check if the hash in the witness data matches the hash derived from the data provided by the peer
         final byte[] peersWitnessHash = peersWitness.getHash();
@@ -582,7 +588,8 @@ public class AccountAgeWitnessService {
                                           ErrorMessageHandler errorMessageHandler) {
         checkNotNull(offer);
         final String currencyCode = offer.getCurrencyCode();
-        final Coin defaultMaxTradeLimit = PaymentMethod.getPaymentMethodById(offer.getOfferPayload().getPaymentMethodId()).getMaxTradeLimitAsCoin(currencyCode);
+        final Coin defaultMaxTradeLimit = PaymentMethod.getPaymentMethodById(
+                offer.getOfferPayload().getPaymentMethodId()).getMaxTradeLimitAsCoin(currencyCode);
         long peersCurrentTradeLimit = defaultMaxTradeLimit.value;
         if (!hasTradeLimitException(peersWitness)) {
             final long accountSignAge = getWitnessSignAge(peersWitness, peersCurrentDate);
@@ -645,8 +652,8 @@ public class AccountAgeWitnessService {
                 .findAny()
                 .orElse(null);
         checkNotNull(signedWitness);
-        return signedWitnessService.signAndPublishAccountAgeWitness(accountAgeWitness, key, signedWitness.getWitnessOwnerPubKey(),
-                time);
+        return signedWitnessService.signAndPublishAccountAgeWitness(accountAgeWitness, key,
+                signedWitness.getWitnessOwnerPubKey(), time);
     }
 
     public String arbitratorSignOrphanPubKey(ECKey key,
@@ -667,7 +674,8 @@ public class AccountAgeWitnessService {
         Coin tradeAmount = trade.getTradeAmount();
         checkNotNull(trade.getProcessModel().getTradingPeer().getPubKeyRing(), "Peer must have a keyring");
         PublicKey peersPubKey = trade.getProcessModel().getTradingPeer().getPubKeyRing().getSignaturePubKey();
-        checkNotNull(peersWitness, "Not able to find peers witness, unable to sign for trade {}", trade.toString());
+        checkNotNull(peersWitness, "Not able to find peers witness, unable to sign for trade {}",
+                trade.toString());
         checkNotNull(tradeAmount, "Trade amount must not be null");
         checkNotNull(peersPubKey, "Peers pub key must not be null");
 
@@ -708,7 +716,8 @@ public class AccountAgeWitnessService {
                 filterManager.isPaymentMethodBanned(
                         PaymentMethod.getPaymentMethodById(dispute.getContract().getPaymentMethodId())) ||
                 filterManager.arePeersPaymentAccountDataBanned(dispute.getContract().getBuyerPaymentAccountPayload()) ||
-                filterManager.arePeersPaymentAccountDataBanned(dispute.getContract().getSellerPaymentAccountPayload()) ||
+                filterManager.arePeersPaymentAccountDataBanned(
+                        dispute.getContract().getSellerPaymentAccountPayload()) ||
                 filterManager.isWitnessSignerPubKeyBanned(
                         Utils.HEX.encode(dispute.getContract().getBuyerPubKeyRing().getSignaturePubKeyBytes())) ||
                 filterManager.isWitnessSignerPubKeyBanned(
