@@ -180,6 +180,10 @@ service Trades {
     }
     rpc ConfirmPaymentReceived (ConfirmPaymentReceivedRequest) returns (ConfirmPaymentReceivedReply) {
     }
+    rpc KeepFunds (KeepFundsRequest) returns (KeepFundsReply) {
+    }
+    rpc WithdrawFunds (WithdrawFundsRequest) returns (WithdrawFundsReply) {
+    }
 }
 
 message TakeOfferRequest {
@@ -211,6 +215,21 @@ message GetTradeRequest {
 
 message GetTradeReply {
     TradeInfo trade = 1;
+}
+
+message KeepFundsRequest {
+    string tradeId = 1;
+}
+
+message KeepFundsReply {
+}
+
+message WithdrawFundsRequest {
+    string tradeId = 1;
+    string address = 2;
+}
+
+message WithdrawFundsReply {
 }
 
 message TradeInfo {

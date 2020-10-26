@@ -27,9 +27,13 @@ import bisq.proto.grpc.ConfirmPaymentStartedReply;
 import bisq.proto.grpc.ConfirmPaymentStartedRequest;
 import bisq.proto.grpc.GetTradeReply;
 import bisq.proto.grpc.GetTradeRequest;
+import bisq.proto.grpc.KeepFundsReply;
+import bisq.proto.grpc.KeepFundsRequest;
 import bisq.proto.grpc.TakeOfferReply;
 import bisq.proto.grpc.TakeOfferRequest;
 import bisq.proto.grpc.TradesGrpc;
+import bisq.proto.grpc.WithdrawFundsReply;
+import bisq.proto.grpc.WithdrawFundsRequest;
 
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
@@ -111,6 +115,36 @@ class GrpcTradesService extends TradesGrpc.TradesImplBase {
         try {
             coreApi.confirmPaymentReceived(req.getTradeId());
             var reply = ConfirmPaymentReceivedReply.newBuilder().build();
+            responseObserver.onNext(reply);
+            responseObserver.onCompleted();
+        } catch (IllegalStateException | IllegalArgumentException cause) {
+            var ex = new StatusRuntimeException(Status.UNKNOWN.withDescription(cause.getMessage()));
+            responseObserver.onError(ex);
+            throw ex;
+        }
+    }
+
+    @Override
+    public void keepFunds(KeepFundsRequest req,
+                          StreamObserver<KeepFundsReply> responseObserver) {
+        try {
+            coreApi.keepFunds(req.getTradeId());
+            var reply = KeepFundsReply.newBuilder().build();
+            responseObserver.onNext(reply);
+            responseObserver.onCompleted();
+        } catch (IllegalStateException | IllegalArgumentException cause) {
+            var ex = new StatusRuntimeException(Status.UNKNOWN.withDescription(cause.getMessage()));
+            responseObserver.onError(ex);
+            throw ex;
+        }
+    }
+
+    @Override
+    public void withdrawFunds(WithdrawFundsRequest req,
+                              StreamObserver<WithdrawFundsReply> responseObserver) {
+        try {
+            coreApi.withdrawFunds(req.getTradeId(), req.getAddress());
+            var reply = WithdrawFundsReply.newBuilder().build();
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
         } catch (IllegalStateException | IllegalArgumentException cause) {
