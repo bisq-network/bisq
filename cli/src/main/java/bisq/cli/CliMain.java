@@ -260,7 +260,7 @@ public class CliMain {
                     var request = GetOfferRequest.newBuilder()
                             .setId(offerId)
                             .build();
-                    var reply =offersService.getOffer(request);
+                    var reply = offersService.getOffer(request);
                     out.println(formatOfferTable(singletonList(reply.getOffer()),
                             reply.getOffer().getCounterCurrencyCode()));
                     return;
