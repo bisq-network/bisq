@@ -44,10 +44,10 @@ public class DeviationOfHashes implements DeviationType {
         collection.stream()
                 .filter(list -> !list.isEmpty())
                 .map(list -> list.get(list.size() - 1)) // We use last item only
-                .map(RequestInfo::getInventory)
+                .map(RequestInfo::getDataMap)
+                .filter(map -> currentBlockHeight.equals(map.get(InventoryItem.daoStateChainHeight).getValue()))
+                .map(map -> map.get(inventoryItem).getValue())
                 .filter(Objects::nonNull)
-                .filter(inventory -> inventory.get(InventoryItem.daoStateChainHeight).equals(currentBlockHeight))
-                .map(inventory -> inventory.get(inventoryItem))
                 .forEach(v -> {
                     sameHashesPerHashListByHash.putIfAbsent(v, 0);
                     int prev = sameHashesPerHashListByHash.get(v);

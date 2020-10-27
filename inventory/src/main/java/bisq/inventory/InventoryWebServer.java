@@ -17,7 +17,6 @@
 
 package bisq.inventory;
 
-import bisq.core.network.p2p.inventory.model.DeviationInfo;
 import bisq.core.network.p2p.inventory.model.DeviationSeverity;
 import bisq.core.network.p2p.inventory.model.InventoryItem;
 import bisq.core.network.p2p.inventory.model.RequestInfo;
@@ -102,8 +101,8 @@ public class InventoryWebServer {
                 "   a {" +
                 "      text-decoration:none; color: black;" +
                 "   }" +
-                " #blue { color: blue; } " +
-                " #red { color: red; } " +
+                " #warn { color: #ff7700; } " +
+                " #alert { color: #ff0000; } " +
                 "table, th, td {border: 1px solid black;}" +
                 "</style></head>" +
                 "<body><h3>")
@@ -338,11 +337,10 @@ public class InventoryWebServer {
 
         String deviationAsPercentString = "";
         DeviationSeverity deviationSeverity = DeviationSeverity.OK;
-        if (requestInfo.getDeviationInfoMap().containsKey(inventoryItem)) {
-            DeviationInfo deviationInfo = requestInfo.getDeviationInfoMap().get(inventoryItem);
-            deviationAsPercentString = getDeviationAsPercentString(deviationInfo.getDeviation());
-
-            deviationSeverity = deviationInfo.getDeviationSeverity();
+        if (requestInfo.getDataMap().containsKey(inventoryItem)) {
+            RequestInfo.Data data = requestInfo.getDataMap().get(inventoryItem);
+            deviationAsPercentString = getDeviationAsPercentString(data.getDeviation());
+            deviationSeverity = data.getDeviationSeverity();
         }
 
         List<RequestInfo> requestInfoList = map.get(seedNode);
@@ -353,33 +351,30 @@ public class InventoryWebServer {
         if (requestInfoList != null) {
             for (int i = 0; i < requestInfoList.size(); i++) {
                 RequestInfo reqInfo = requestInfoList.get(i);
-                Map<InventoryItem, DeviationInfo> deviationInfoMap = reqInfo.getDeviationInfoMap();
-                Map<InventoryItem, String> inventory = reqInfo.getInventory();
-                if (inventory != null &&
-                        inventory.containsKey(inventoryItem) &&
-                        deviationInfoMap.containsKey(inventoryItem) &&
-                        deviationInfoMap.get(inventoryItem).getDeviationSeverity() != DeviationSeverity.OK) {
-                    DeviationSeverity devSeverity = deviationInfoMap.get(inventoryItem).getDeviationSeverity();
-                    if (devSeverity == DeviationSeverity.WARN) {
+                Map<InventoryItem, RequestInfo.Data> deviationInfoMap = reqInfo.getDataMap();
+                if (deviationInfoMap.containsKey(inventoryItem)) {
+                    if (deviationInfoMap.get(inventoryItem).isPersistentWarning()) {
                         warningsAtRequestNumber.add(i + 1);
-                    } else if (devSeverity == DeviationSeverity.ALERT) {
+                    } else if (deviationInfoMap.get(inventoryItem).isPersistentAlert()) {
                         alertsAtRequestNumber.add(i + 1);
                     }
                 }
             }
 
             if (!warningsAtRequestNumber.isEmpty()) {
-                historicalWarnings = "Warnings  at requests " + Joiner.on(", ").join(warningsAtRequestNumber);
+                historicalWarnings = inventoryItem.getDeviationTolerance() + " repeated warning(s) at request(s) " + Joiner.on(", ").join(warningsAtRequestNumber);
             }
             if (!alertsAtRequestNumber.isEmpty()) {
-                historicalAlerts = "Alerts at requests: " + Joiner.on(", ").join(alertsAtRequestNumber);
+                historicalAlerts = inventoryItem.getDeviationTolerance() + " repeated alert(s) at request(s): " + Joiner.on(", ").join(alertsAtRequestNumber);
             }
         }
-
+        String warningIcon = "&#9888; ";
         String historicalWarningsHtml = warningsAtRequestNumber.isEmpty() ? "" :
-                ", <a id=\"blue\" href=\"#\" title=\"" + historicalWarnings + "\">" + warningsAtRequestNumber.size() + "</a>";
+                ", <b><a id=\"warn\" href=\"#\" title=\"" + historicalWarnings + "\">" + warningIcon + warningsAtRequestNumber.size() + "</a></b>";
+        String errorIcon = "&#9760; "; // &#9889;  &#9889;
         String historicalAlertsHtml = alertsAtRequestNumber.isEmpty() ? "" :
-                ", <a id=\"red\" href=\"#\" title=\"" + historicalAlerts + "\">" + alertsAtRequestNumber.size() + "</a>";
+                ", <b><a id=\"alert\" href=\"#\" title=\"" + historicalAlerts + "\">" + errorIcon + alertsAtRequestNumber.size() + "</a></b>";
+
         return title +
                 getColorTagByDeviationSeverity(deviationSeverity) +
                 displayValue +
@@ -404,9 +399,9 @@ public class InventoryWebServer {
 
         switch (deviationSeverity) {
             case WARN:
-                return "<font color=\"blue\">";
+                return "<font color=\"#0000cc\">";
             case ALERT:
-                return "<font color=\"red\">";
+                return "<font color=\"#cc0000\">";
             case OK:
             default:
                 return "<font color=\"black\">";

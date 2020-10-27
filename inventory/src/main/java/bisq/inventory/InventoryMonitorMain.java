@@ -53,7 +53,7 @@ public class InventoryMonitorMain {
     // prog args for regtest: 10 1 BTC_REGTEST
     public static void main(String[] args) {
         // Default values
-        int intervalSec = 300;
+        int intervalSec = 120;
         boolean useLocalhostForP2P = false;
         BaseCurrencyNetwork network = BaseCurrencyNetwork.BTC_MAINNET;
         int port = 80;
@@ -71,7 +71,7 @@ public class InventoryMonitorMain {
             port = Integer.parseInt(args[3]);
         }
 
-        String appName = "bisq-InventoryMonitor-" + network + "-" + intervalSec;
+        String appName = "bisq-inventory-monitor-" + network;
         File appDir = new File(Utilities.getUserDataDir(), appName);
         if (!appDir.exists() && !appDir.mkdir()) {
             log.warn("make appDir failed");

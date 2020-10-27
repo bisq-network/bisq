@@ -17,6 +17,8 @@
 
 package bisq.core.network.p2p.inventory.model;
 
+import bisq.common.util.Tuple2;
+
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -29,13 +31,13 @@ public enum InventoryItem {
     // Percentage deviation
     OfferPayload("OfferPayload",
             true,
-            new DeviationByPercentage(0.9, 1.1, 0.95, 1.05)),
+            new DeviationByPercentage(0.9, 1.1, 0.95, 1.05), 5),
     MailboxStoragePayload("MailboxStoragePayload",
             true,
-            new DeviationByPercentage(0.9, 1.1, 0.95, 1.05)),
+            new DeviationByPercentage(0.9, 1.1, 0.95, 1.05), 2),
     TradeStatistics3("TradeStatistics3",
             true,
-            new DeviationByPercentage(0.9, 1.1, 0.95, 1.05)),
+            new DeviationByPercentage(0.9, 1.1, 0.95, 1.05), 1),
     AccountAgeWitness("AccountAgeWitness",
             true,
             new DeviationByPercentage(0.9, 1.1, 0.95, 1.05)),
@@ -60,21 +62,21 @@ public enum InventoryItem {
     // Should be very close values
     TempProposalPayload("TempProposalPayload",
             true,
-            new DeviationByIntegerDiff(3, 5)),
+            new DeviationByIntegerDiff(3, 5), 2),
     ProposalPayload("ProposalPayload",
             true,
-            new DeviationByIntegerDiff(1, 2)),
+            new DeviationByIntegerDiff(1, 2), 2),
     BlindVotePayload("BlindVotePayload",
             true,
-            new DeviationByIntegerDiff(1, 2)),
+            new DeviationByIntegerDiff(1, 2), 2),
 
     // Should be very close values
     daoStateChainHeight("daoStateChainHeight",
             true,
-            new DeviationByIntegerDiff(2, 4)),
+            new DeviationByIntegerDiff(2, 4), 3),
     numBsqBlocks("numBsqBlocks",
             true,
-            new DeviationByIntegerDiff(2, 4)),
+            new DeviationByIntegerDiff(2, 4), 3),
 
     // Has to be same values at same block
     daoStateHash("daoStateHash",
@@ -99,7 +101,7 @@ public enum InventoryItem {
             new DeviationByPercentage(0.33, 3, 0.4, 2.5)),
     numAllConnectionsLostEvents("numAllConnectionsLostEvents",
             true,
-            new DeviationByIntegerDiff(1, 2)),
+            new DeviationByIntegerDiff(1, 2), 3),
     sentBytesPerSec("sentBytesPerSec",
             true,
             new DeviationByPercentage()),
@@ -130,21 +132,40 @@ public enum InventoryItem {
     @Nullable
     private DeviationType deviationType;
 
+    // The number of past requests we check to see if there have been repeated alerts or warnings. The higher the
+    // number the more repeated alert need to have happened to cause a notification alert.
+    @Getter
+    private int deviationTolerance = 1;
+
     InventoryItem(String key, boolean isNumberValue) {
         this.key = key;
         this.isNumberValue = isNumberValue;
     }
+
+    InventoryItem(String key, boolean isNumberValue, int deviationTolerance) {
+        this.key = key;
+        this.isNumberValue = isNumberValue;
+        this.deviationTolerance = deviationTolerance;
+    }
+
 
     InventoryItem(String key, boolean isNumberValue, DeviationType deviationType) {
         this(key, isNumberValue);
         this.deviationType = deviationType;
     }
 
+    InventoryItem(String key, boolean isNumberValue, DeviationType deviationType, int deviationTolerance) {
+        this(key, isNumberValue);
+        this.deviationType = deviationType;
+        this.deviationTolerance = deviationTolerance;
+    }
+
     @Nullable
-    public Double getDeviation(Map<InventoryItem, Double> averageValues, @Nullable String value) {
+    public Tuple2<Double, Double> getDeviationAndAverage(Map<InventoryItem, Double> averageValues,
+                                                         @Nullable String value) {
         if (averageValues.containsKey(this) && value != null) {
             double averageValue = averageValues.get(this);
-            return getDeviation(value, averageValue);
+            return new Tuple2<>(getDeviation(value, averageValue), averageValue);
         }
         return null;
     }

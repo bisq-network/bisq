@@ -20,7 +20,6 @@ package bisq.inventory;
 
 import bisq.core.network.p2p.inventory.GetInventoryRequestManager;
 import bisq.core.network.p2p.inventory.model.Average;
-import bisq.core.network.p2p.inventory.model.DeviationInfo;
 import bisq.core.network.p2p.inventory.model.DeviationSeverity;
 import bisq.core.network.p2p.inventory.model.InventoryItem;
 import bisq.core.network.p2p.inventory.model.RequestInfo;
@@ -35,6 +34,7 @@ import bisq.network.p2p.network.SetupListener;
 import bisq.common.UserThread;
 import bisq.common.config.BaseCurrencyNetwork;
 import bisq.common.file.JsonFileManager;
+import bisq.common.util.Tuple2;
 import bisq.common.util.Utilities;
 
 import java.time.Clock;
@@ -42,6 +42,7 @@ import java.time.Clock;
 import java.io.File;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -159,37 +160,59 @@ public class InventoryMonitor implements SetupListener {
 
         if (result != null) {
             log.info("nodeAddress={}, result={}", nodeAddress, result.toString());
-            requestInfo.setInventory(result);
             long responseTime = System.currentTimeMillis();
             requestInfo.setResponseTime(responseTime);
         }
 
         requestInfoListByNode.putIfAbsent(nodeAddress, new ArrayList<>());
         List<RequestInfo> requestInfoList = requestInfoListByNode.get(nodeAddress);
-        requestInfoList.add(requestInfo);
+
 
         // We create average of all nodes latest results. It might be that the nodes last result is
         // from a previous request as the response has not arrived yet.
-        Set<RequestInfo> requestInfoSet = requestInfoListByNode.values().stream()
+        //TODO might be not a good idea to use the last result if its not a recent one. a faulty node would distort
+        // the average calculation.
+        // As we add at the end our own result the average is excluding our own value
+        Collection<List<RequestInfo>> requestInfoListByNodeValues = requestInfoListByNode.values();
+        Set<RequestInfo> requestInfoSet = requestInfoListByNodeValues.stream()
                 .filter(list -> !list.isEmpty())
                 .map(list -> list.get(list.size() - 1))
                 .collect(Collectors.toSet());
         Map<InventoryItem, Double> averageValues = Average.of(requestInfoSet);
 
-        String daoStateChainHeight = null;
-        if (requestInfo.getInventory() != null && requestInfo.getInventory().containsKey(InventoryItem.daoStateChainHeight)) {
-            daoStateChainHeight = requestInfo.getInventory().get(InventoryItem.daoStateChainHeight);
-        }
-        String finalDaoStateChainHeight = daoStateChainHeight;
+        String daoStateChainHeight = result != null &&
+                result.containsKey(InventoryItem.daoStateChainHeight) ?
+                result.get(InventoryItem.daoStateChainHeight) :
+                null;
         List.of(InventoryItem.values()).forEach(inventoryItem -> {
-            String value = requestInfo.getValue(inventoryItem);
-            Double deviation = inventoryItem.getDeviation(averageValues, value);
+            String value = result != null ? result.get(inventoryItem) : null;
+            Tuple2<Double, Double> tuple = inventoryItem.getDeviationAndAverage(averageValues, value);
+            Double deviation = tuple != null ? tuple.first : null;
+            Double average = tuple != null ? tuple.second : null;
             DeviationSeverity deviationSeverity = inventoryItem.getDeviationSeverity(deviation,
-                    requestInfoListByNode.values(),
+                    requestInfoListByNodeValues,
                     value,
-                    finalDaoStateChainHeight);
-            requestInfo.getDeviationInfoMap().put(inventoryItem, new DeviationInfo(deviation, deviationSeverity));
+                    daoStateChainHeight);
+            int endIndex = Math.max(0, requestInfoList.size() - 1);
+            int deviationTolerance = inventoryItem.getDeviationTolerance();
+            int fromIndex = Math.max(0, endIndex - deviationTolerance);
+            List<DeviationSeverity> lastDeviationSeverityEntries = requestInfoList.subList(fromIndex, endIndex).stream()
+                    .filter(e -> e.getDataMap().containsKey(inventoryItem))
+                    .map(e -> e.getDataMap().get(inventoryItem).getDeviationSeverity())
+                    .collect(Collectors.toList());
+            long numWarnings = lastDeviationSeverityEntries.stream()
+                    .filter(e -> e == DeviationSeverity.WARN)
+                    .count();
+            long numAlerts = lastDeviationSeverityEntries.stream()
+                    .filter(e -> e == DeviationSeverity.ALERT)
+                    .count();
+            boolean persistentWarning = numWarnings == deviationTolerance;
+            boolean persistentAlert = numAlerts == deviationTolerance;
+            RequestInfo.Data data = new RequestInfo.Data(value, average, deviation, deviationSeverity, persistentWarning, persistentAlert);
+            requestInfo.getDataMap().put(inventoryItem, data);
         });
+
+        requestInfoList.add(requestInfo);
 
         inventoryWebServer.onNewRequestInfo(requestInfoListByNode, requestCounter);
 
