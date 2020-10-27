@@ -29,20 +29,25 @@ import org.junit.jupiter.api.TestMethodOrder;
 import static bisq.apitest.Scaffold.BitcoinCoreApp.bitcoind;
 import static bisq.apitest.config.BisqAppConfig.alicedaemon;
 import static bisq.apitest.config.BisqAppConfig.seednode;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 
+
+
+import bisq.apitest.method.WalletProtectionTest;
+
 @Slf4j
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class FundWalletScenarioTest extends ScenarioTest {
+public class WalletTest extends ScenarioTest {
+
+    // All tests depend on the DAO / regtest environment, and Alice's wallet is
+    // initialized with 10 BTC during the scaffolding setup.
 
     @BeforeAll
     public static void setUp() {
         try {
             setUpScaffold(bitcoind, seednode, alicedaemon);
-            bitcoinCli.generateBlocks(1);
-            MILLISECONDS.sleep(1500);
+            genBtcBlocksThenWait(1, 1500);
         } catch (Exception ex) {
             fail(ex);
         }
@@ -51,7 +56,7 @@ public class FundWalletScenarioTest extends ScenarioTest {
     @Test
     @Order(1)
     public void testFundWallet() {
-        // bisq wallet was initialized with 10 btc
+        // The regtest Bisq wallet was initialized with 10 BTC.
         long balance = getBalance(alicedaemon);
         assertEquals(1000000000, balance);
 
@@ -63,6 +68,27 @@ public class FundWalletScenarioTest extends ScenarioTest {
 
         balance = getBalance(alicedaemon);
         assertEquals(1250000000L, balance); // new balance is 12.5 btc
+    }
+
+    @Test
+    @Order(2)
+    public void testWalletProtection() {
+        // Batching all wallet tests in this test case reduces scaffold setup
+        // time.  Here, we create a method WalletProtectionTest instance and run each
+        // test in declared order.
+
+        WalletProtectionTest walletProtectionTest = new WalletProtectionTest();
+
+        walletProtectionTest.testSetWalletPassword();
+        walletProtectionTest.testGetBalanceOnEncryptedWalletShouldThrowException();
+        walletProtectionTest.testUnlockWalletFor4Seconds();
+        walletProtectionTest.testGetBalanceAfterUnlockTimeExpiryShouldThrowException();
+        walletProtectionTest.testLockWalletBeforeUnlockTimeoutExpiry();
+        walletProtectionTest.testLockWalletWhenWalletAlreadyLockedShouldThrowException();
+        walletProtectionTest.testUnlockWalletTimeoutOverride();
+        walletProtectionTest.testSetNewWalletPassword();
+        walletProtectionTest.testSetNewWalletPasswordWithIncorrectNewPasswordShouldThrowException();
+        walletProtectionTest.testRemoveNewWalletPassword();
     }
 
     @AfterAll
