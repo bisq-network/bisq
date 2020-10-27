@@ -121,7 +121,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     @FXML
     TableColumn<WithdrawalListItem, WithdrawalListItem> addressColumn, balanceColumn, selectColumn;
 
-    private RadioButton useAllInputsRadioButton, useCustomInputsRadioButton, feeExcludedRadioButton;
+    private RadioButton useAllInputsRadioButton, useCustomInputsRadioButton, feeExcludedRadioButton, feeIncludedRadioButton;
     private Label amountLabel;
     private TextField amountTextField, withdrawFromTextField, withdrawToTextField, withdrawMemoTextField;
 
@@ -209,18 +209,16 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
         amountTextField = feeTuple3.second;
         amountTextField.setMinWidth(180);
         feeExcludedRadioButton = feeTuple3.third;
-        RadioButton feeIncludedRadioButton = feeTuple3.fourth;
+        feeIncludedRadioButton = feeTuple3.fourth;
 
         withdrawFromTextField = addTopLabelTextField(gridPane, ++rowIndex,
                 Res.get("funds.withdrawal.fromLabel", Res.getBaseCurrencyCode())).second;
 
         withdrawToTextField = addTopLabelInputTextField(gridPane, ++rowIndex,
                 Res.get("funds.withdrawal.toLabel", Res.getBaseCurrencyCode())).second;
-        withdrawToTextField.setMaxWidth(380);
 
         withdrawMemoTextField = addTopLabelInputTextField(gridPane, ++rowIndex,
                 Res.get("funds.withdrawal.memoLabel", Res.getBaseCurrencyCode())).second;
-        withdrawMemoTextField.setMaxWidth(380);
 
         final Button withdrawButton = addButton(gridPane, ++rowIndex, Res.get("funds.withdrawal.withdrawButton"), 15);
 
@@ -300,7 +298,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
         inputsToggleGroup.selectedToggleProperty().addListener(inputsToggleGroupListener);
 
         if (feeToggleGroup.getSelectedToggle() == null)
-            feeToggleGroup.selectToggle(feeExcludedRadioButton);
+            feeToggleGroup.selectToggle(feeIncludedRadioButton);
 
         if (inputsToggleGroup.getSelectedToggle() == null)
             inputsToggleGroup.selectToggle(useAllInputsRadioButton);
