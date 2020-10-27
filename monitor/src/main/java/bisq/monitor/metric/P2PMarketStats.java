@@ -34,6 +34,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -59,7 +60,7 @@ public class P2PMarketStats extends P2PSeedNodeSnapshotBase {
     /**
      * Efficient way to aggregate numbers.
      */
-    private class Aggregator {
+    private static class Aggregator {
         private long value = 0;
 
         synchronized long value() {
@@ -75,7 +76,7 @@ public class P2PMarketStats extends P2PSeedNodeSnapshotBase {
         }
     }
 
-    private abstract class OfferStatistics<T> extends Statistics<T> {
+    private abstract static class OfferStatistics<T> extends Statistics<T> {
         @Override
         public synchronized void log(Object message) {
             if (message instanceof OfferPayload) {
@@ -171,14 +172,14 @@ public class P2PMarketStats extends P2PSeedNodeSnapshotBase {
         int numberOfBins = 5;
 
         // - get biggest offer
-        double max = input.stream().max(Long::compareTo).get() * 1.01;
+        double max = input.stream().max(Long::compareTo).map(value -> value * 1.01).orElse(0.0);
 
         // - create histogram
         input.stream().collect(
-                Collectors.groupingBy(aLong -> aLong == max ? (int) numberOfBins - 1 : (int) Math.floor(aLong / (max / numberOfBins)), Collectors.counting())).
+                Collectors.groupingBy(aLong -> aLong == max ? numberOfBins - 1 : (int) Math.floor(aLong / (max / numberOfBins)), Collectors.counting())).
                 forEach((integer, integer2) -> report.put(market + ".bin_" + integer, String.valueOf(integer2)));
 
-        report.put(market + ".number_of_bins", String.valueOf((int) numberOfBins));
+        report.put(market + ".number_of_bins", String.valueOf(numberOfBins));
         report.put(market + ".max", String.valueOf((int) max));
     }
 
@@ -223,7 +224,9 @@ public class P2PMarketStats extends P2PSeedNodeSnapshotBase {
 
         // do version statistics
         report.clear();
-        versionBucketsPerHost.values().stream().findAny().get().values().forEach((version, numberOfOccurrences) -> report.put(version, String.valueOf(numberOfOccurrences.value())));
+        Optional<Statistics<Aggregator>> optionalStatistics = versionBucketsPerHost.values().stream().findAny();
+        optionalStatistics.ifPresent(aggregatorStatistics -> aggregatorStatistics.values()
+                .forEach((version, numberOfOccurrences) -> report.put(version, String.valueOf(numberOfOccurrences.value()))));
         reporter.report(report, "versions");
     }
 

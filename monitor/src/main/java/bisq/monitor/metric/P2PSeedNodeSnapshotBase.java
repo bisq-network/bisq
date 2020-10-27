@@ -117,10 +117,13 @@ public abstract class P2PSeedNodeSnapshotBase extends Metric implements MessageL
             try {
                 CorePersistenceProtoResolver persistenceProtoResolver = new CorePersistenceProtoResolver(null, null);
 
+                //TODO will not work with historical data... should be refactored to re-use code for reading resource files
                 TradeStatistics3Store tradeStatistics3Store = new TradeStatistics3Store();
                 PersistenceManager<TradeStatistics3Store> tradeStatistics3PersistenceManager = new PersistenceManager<>(dir,
                         persistenceProtoResolver, null);
-                tradeStatistics3PersistenceManager.initialize(tradeStatistics3Store, PersistenceManager.Source.NETWORK);
+                tradeStatistics3PersistenceManager.initialize(tradeStatistics3Store,
+                        tradeStatistics3Store.getDefaultStorageFileName() + networkPostfix,
+                        PersistenceManager.Source.NETWORK);
                 TradeStatistics3Store persistedTradeStatistics3Store = tradeStatistics3PersistenceManager.getPersisted();
                 if (persistedTradeStatistics3Store != null) {
                     tradeStatistics3Store.getMap().putAll(persistedTradeStatistics3Store.getMap());
@@ -131,7 +134,9 @@ public abstract class P2PSeedNodeSnapshotBase extends Metric implements MessageL
                 AccountAgeWitnessStore accountAgeWitnessStore = new AccountAgeWitnessStore();
                 PersistenceManager<AccountAgeWitnessStore> accountAgeWitnessPersistenceManager = new PersistenceManager<>(dir,
                         persistenceProtoResolver, null);
-                accountAgeWitnessPersistenceManager.initialize(accountAgeWitnessStore, PersistenceManager.Source.NETWORK);
+                accountAgeWitnessPersistenceManager.initialize(accountAgeWitnessStore,
+                        accountAgeWitnessStore.getDefaultStorageFileName() + networkPostfix,
+                        PersistenceManager.Source.NETWORK);
                 AccountAgeWitnessStore persistedAccountAgeWitnessStore = accountAgeWitnessPersistenceManager.getPersisted();
                 if (persistedAccountAgeWitnessStore != null) {
                     accountAgeWitnessStore.getMap().putAll(persistedAccountAgeWitnessStore.getMap());
