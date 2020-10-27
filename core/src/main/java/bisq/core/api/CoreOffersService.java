@@ -161,7 +161,13 @@ class CoreOffersService {
     }
 
     void cancelOffer(String id) {
-        log.info("TODO");
+        Offer offer = getOffer(id);
+        openOfferManager.removeOffer(offer,
+                () -> {
+                },
+                errorMessage -> {
+                    throw new IllegalStateException(errorMessage);
+                });
     }
 
     private void placeOffer(Offer offer,
