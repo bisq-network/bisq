@@ -123,6 +123,11 @@ public abstract class AbstractOfferTest extends MethodTest {
         return aliceStubs.offersService.getOffer(createGetOfferRequest(offerId)).getOffer();
     }
 
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    protected final void cancelOffer(GrpcStubs grpcStubs, String offerId) {
+        grpcStubs.offersService.cancelOffer(createCancelOfferRequest(offerId));
+    }
+
     protected final OfferInfo getMostRecentOffer(GrpcStubs grpcStubs, String direction, String currencyCode) {
         List<OfferInfo> offerInfoList = getOffersSortedByDate(grpcStubs, direction, currencyCode);
         if (offerInfoList.isEmpty())
