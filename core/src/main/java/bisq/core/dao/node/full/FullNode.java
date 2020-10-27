@@ -168,7 +168,7 @@ public class FullNode extends BsqNode {
     }
 
     private void onNewBlock(Block block) {
-        maybeExportNewBlockToJson(block);
+        maybeExportToJson();
 
         if (p2pNetworkReady && parseBlockchainComplete)
             fullNodeNetworkService.publishNewBlock(block);
