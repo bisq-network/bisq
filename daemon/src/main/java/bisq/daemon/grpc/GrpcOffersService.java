@@ -21,6 +21,8 @@ import bisq.core.api.CoreApi;
 import bisq.core.api.model.OfferInfo;
 import bisq.core.offer.Offer;
 
+import bisq.proto.grpc.CancelOfferReply;
+import bisq.proto.grpc.CancelOfferRequest;
 import bisq.proto.grpc.CreateOfferReply;
 import bisq.proto.grpc.CreateOfferRequest;
 import bisq.proto.grpc.GetOfferReply;
@@ -108,6 +110,21 @@ class GrpcOffersService extends OffersGrpc.OffersImplBase {
                         responseObserver.onNext(reply);
                         responseObserver.onCompleted();
                     });
+        } catch (IllegalStateException | IllegalArgumentException cause) {
+            var ex = new StatusRuntimeException(Status.UNKNOWN.withDescription(cause.getMessage()));
+            responseObserver.onError(ex);
+            throw ex;
+        }
+    }
+
+    @Override
+    public void cancelOffer(CancelOfferRequest req,
+                            StreamObserver<CancelOfferReply> responseObserver) {
+        try {
+            coreApi.cancelOffer(req.getId());
+            var reply = CancelOfferReply.newBuilder().build();
+            responseObserver.onNext(reply);
+            responseObserver.onCompleted();
         } catch (IllegalStateException | IllegalArgumentException cause) {
             var ex = new StatusRuntimeException(Status.UNKNOWN.withDescription(cause.getMessage()));
             responseObserver.onError(ex);
