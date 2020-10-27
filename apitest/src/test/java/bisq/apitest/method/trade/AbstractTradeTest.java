@@ -7,6 +7,7 @@ import bisq.proto.grpc.TradeInfo;
 import org.slf4j.Logger;
 
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestInfo;
 
 import static bisq.cli.TradeFormat.format;
@@ -29,6 +30,12 @@ public class AbstractTradeTest extends AbstractOfferTest {
     @BeforeAll
     public static void clearExpectedPaymentStatusFlags() {
         EXPECTED_PROTOCOL_STATUS.init();
+    }
+
+    @BeforeEach
+    public void initDummyPaymentAccounts() {
+        super.initAlicesDummyPaymentAccount();
+        super.initBobsDummyPaymentAccount();
     }
 
     protected final TradeInfo takeAlicesOffer(String offerId, String paymentAccountId) {

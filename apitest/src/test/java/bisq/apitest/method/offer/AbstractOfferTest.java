@@ -36,6 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 
 import static bisq.apitest.Scaffold.BitcoinCoreApp.bitcoind;
 import static bisq.apitest.config.BisqAppConfig.alicedaemon;
@@ -62,6 +63,11 @@ public abstract class AbstractOfferTest extends MethodTest {
     @BeforeAll
     public static void setUp() {
         startSupportingApps();
+    }
+
+    @BeforeEach
+    public void initDummyPaymentAccount() {
+        super.initAlicesDummyPaymentAccount();
     }
 
     static void startSupportingApps() {

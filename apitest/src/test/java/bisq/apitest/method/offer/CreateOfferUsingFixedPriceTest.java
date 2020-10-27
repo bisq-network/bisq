@@ -28,7 +28,6 @@ import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 
-import static bisq.apitest.config.BisqAppConfig.alicedaemon;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -37,12 +36,12 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class CreateOfferUsingFixedPriceTest extends AbstractOfferTest {
 
+
     @Test
     @Order(1)
     public void testCreateAUDBTCBuyOfferUsingFixedPrice16000() {
-        var paymentAccount = getDefaultPerfectDummyPaymentAccount(alicedaemon);
         var req = CreateOfferRequest.newBuilder()
-                .setPaymentAccountId(paymentAccount.getId())
+                .setPaymentAccountId(alicesDummyAcct.getId())
                 .setDirection("buy")
                 .setCurrencyCode("aud")
                 .setAmount(10000000)
@@ -61,7 +60,7 @@ public class CreateOfferUsingFixedPriceTest extends AbstractOfferTest {
         assertEquals(10000000, newOffer.getAmount());
         assertEquals(10000000, newOffer.getMinAmount());
         assertEquals(1500000, newOffer.getBuyerSecurityDeposit());
-        assertEquals(paymentAccount.getId(), newOffer.getPaymentAccountId());
+        assertEquals(alicesDummyAcct.getId(), newOffer.getPaymentAccountId());
         assertEquals("BTC", newOffer.getBaseCurrencyCode());
         assertEquals("AUD", newOffer.getCounterCurrencyCode());
 
@@ -73,7 +72,7 @@ public class CreateOfferUsingFixedPriceTest extends AbstractOfferTest {
         assertEquals(10000000, newOffer.getAmount());
         assertEquals(10000000, newOffer.getMinAmount());
         assertEquals(1500000, newOffer.getBuyerSecurityDeposit());
-        assertEquals(paymentAccount.getId(), newOffer.getPaymentAccountId());
+        assertEquals(alicesDummyAcct.getId(), newOffer.getPaymentAccountId());
         assertEquals("BTC", newOffer.getBaseCurrencyCode());
         assertEquals("AUD", newOffer.getCounterCurrencyCode());
     }
@@ -81,9 +80,8 @@ public class CreateOfferUsingFixedPriceTest extends AbstractOfferTest {
     @Test
     @Order(2)
     public void testCreateUSDBTCBuyOfferUsingFixedPrice100001234() {
-        var paymentAccount = getDefaultPerfectDummyPaymentAccount(alicedaemon);
         var req = CreateOfferRequest.newBuilder()
-                .setPaymentAccountId(paymentAccount.getId())
+                .setPaymentAccountId(alicesDummyAcct.getId())
                 .setDirection("buy")
                 .setCurrencyCode("usd")
                 .setAmount(10000000)
@@ -102,7 +100,7 @@ public class CreateOfferUsingFixedPriceTest extends AbstractOfferTest {
         assertEquals(10000000, newOffer.getAmount());
         assertEquals(10000000, newOffer.getMinAmount());
         assertEquals(1500000, newOffer.getBuyerSecurityDeposit());
-        assertEquals(paymentAccount.getId(), newOffer.getPaymentAccountId());
+        assertEquals(alicesDummyAcct.getId(), newOffer.getPaymentAccountId());
         assertEquals("BTC", newOffer.getBaseCurrencyCode());
         assertEquals("USD", newOffer.getCounterCurrencyCode());
 
@@ -114,7 +112,7 @@ public class CreateOfferUsingFixedPriceTest extends AbstractOfferTest {
         assertEquals(10000000, newOffer.getAmount());
         assertEquals(10000000, newOffer.getMinAmount());
         assertEquals(1500000, newOffer.getBuyerSecurityDeposit());
-        assertEquals(paymentAccount.getId(), newOffer.getPaymentAccountId());
+        assertEquals(alicesDummyAcct.getId(), newOffer.getPaymentAccountId());
         assertEquals("BTC", newOffer.getBaseCurrencyCode());
         assertEquals("USD", newOffer.getCounterCurrencyCode());
     }
@@ -122,9 +120,8 @@ public class CreateOfferUsingFixedPriceTest extends AbstractOfferTest {
     @Test
     @Order(3)
     public void testCreateEURBTCSellOfferUsingFixedPrice95001234() {
-        var paymentAccount = getDefaultPerfectDummyPaymentAccount(alicedaemon);
         var req = CreateOfferRequest.newBuilder()
-                .setPaymentAccountId(paymentAccount.getId())
+                .setPaymentAccountId(alicesDummyAcct.getId())
                 .setDirection("sell")
                 .setCurrencyCode("eur")
                 .setAmount(10000000)
@@ -143,7 +140,7 @@ public class CreateOfferUsingFixedPriceTest extends AbstractOfferTest {
         assertEquals(10000000, newOffer.getAmount());
         assertEquals(10000000, newOffer.getMinAmount());
         assertEquals(1500000, newOffer.getBuyerSecurityDeposit());
-        assertEquals(paymentAccount.getId(), newOffer.getPaymentAccountId());
+        assertEquals(alicesDummyAcct.getId(), newOffer.getPaymentAccountId());
         assertEquals("BTC", newOffer.getBaseCurrencyCode());
         assertEquals("EUR", newOffer.getCounterCurrencyCode());
 
@@ -155,7 +152,7 @@ public class CreateOfferUsingFixedPriceTest extends AbstractOfferTest {
         assertEquals(10000000, newOffer.getAmount());
         assertEquals(10000000, newOffer.getMinAmount());
         assertEquals(1500000, newOffer.getBuyerSecurityDeposit());
-        assertEquals(paymentAccount.getId(), newOffer.getPaymentAccountId());
+        assertEquals(alicesDummyAcct.getId(), newOffer.getPaymentAccountId());
         assertEquals("BTC", newOffer.getBaseCurrencyCode());
         assertEquals("EUR", newOffer.getCounterCurrencyCode());
     }

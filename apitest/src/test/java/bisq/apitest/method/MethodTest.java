@@ -41,8 +41,6 @@ import protobuf.PaymentAccount;
 
 import java.util.stream.Collectors;
 
-import org.junit.jupiter.api.BeforeEach;
-
 import static bisq.apitest.config.BisqAppConfig.alicedaemon;
 import static bisq.apitest.config.BisqAppConfig.bobdaemon;
 import static bisq.common.app.DevEnv.DEV_PRIVILEGE_PRIV_KEY;
@@ -68,9 +66,11 @@ public class MethodTest extends ApiTestCase {
     protected PaymentAccount alicesDummyAcct;
     protected PaymentAccount bobsDummyAcct;
 
-    @BeforeEach
-    public void initDummyPaymentAccounts() {
+    protected final void initAlicesDummyPaymentAccount() {
         alicesDummyAcct = getDefaultPerfectDummyPaymentAccount(alicedaemon);
+    }
+
+    protected final void initBobsDummyPaymentAccount() {
         bobsDummyAcct = getDefaultPerfectDummyPaymentAccount(bobdaemon);
     }
 
