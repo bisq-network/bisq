@@ -70,10 +70,8 @@ abstract class AbstractLinuxProcess implements LinuxProcess {
 
     @Override
     public void logExceptions(List<Throwable> exceptions, org.slf4j.Logger log) {
-        StringBuilder errorBuilder = new StringBuilder();
         for (Throwable t : exceptions) {
             log.error("", t);
-            errorBuilder.append(t.getMessage()).append("\n");
         }
     }
 
