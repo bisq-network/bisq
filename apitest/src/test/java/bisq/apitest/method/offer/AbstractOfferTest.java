@@ -59,9 +59,6 @@ import bisq.cli.GrpcStubs;
 @Slf4j
 public abstract class AbstractOfferTest extends MethodTest {
 
-    protected static GrpcStubs aliceStubs;
-    protected static GrpcStubs bobStubs;
-
     @BeforeAll
     public static void setUp() {
         startSupportingApps();
