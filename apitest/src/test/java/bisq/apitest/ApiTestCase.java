@@ -26,6 +26,8 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
+import org.junit.jupiter.api.TestInfo;
+
 import static java.util.Arrays.stream;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
@@ -116,5 +118,11 @@ public class ApiTestCase {
         } catch (InterruptedException ignored) {
             // empty
         }
+    }
+
+    protected final String testName(TestInfo testInfo) {
+        return testInfo.getTestMethod().isPresent()
+                ? testInfo.getTestMethod().get().getName()
+                : "unknown test name";
     }
 }
