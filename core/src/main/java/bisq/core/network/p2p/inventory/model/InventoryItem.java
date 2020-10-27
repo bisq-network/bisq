@@ -25,6 +25,7 @@ import java.util.Map;
 
 import lombok.Getter;
 
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public enum InventoryItem {
@@ -37,27 +38,27 @@ public enum InventoryItem {
             new DeviationByPercentage(0.9, 1.1, 0.95, 1.05), 2),
     TradeStatistics3("TradeStatistics3",
             true,
-            new DeviationByPercentage(0.9, 1.1, 0.95, 1.05), 1),
+            new DeviationByPercentage(0.9, 1.1, 0.95, 1.05), 2),
     AccountAgeWitness("AccountAgeWitness",
             true,
-            new DeviationByPercentage(0.9, 1.1, 0.95, 1.05)),
+            new DeviationByPercentage(0.9, 1.1, 0.95, 1.05), 2),
     SignedWitness("SignedWitness",
             true,
-            new DeviationByPercentage(0.9, 1.1, 0.95, 1.05)),
+            new DeviationByPercentage(0.9, 1.1, 0.95, 1.05), 2),
 
     // Should be same value
     Alert("Alert",
             true,
-            new DeviationByIntegerDiff(1, 1)),
+            new DeviationByIntegerDiff(1, 1), 2),
     Filter("Filter",
             true,
-            new DeviationByIntegerDiff(1, 1)),
+            new DeviationByIntegerDiff(1, 1), 2),
     Mediator("Mediator",
             true,
-            new DeviationByIntegerDiff(1, 1)),
+            new DeviationByIntegerDiff(1, 1), 2),
     RefundAgent("RefundAgent",
             true,
-            new DeviationByIntegerDiff(1, 1)),
+            new DeviationByIntegerDiff(1, 1), 2),
 
     // Should be very close values
     TempProposalPayload("TempProposalPayload",
@@ -81,39 +82,39 @@ public enum InventoryItem {
     // Has to be same values at same block
     daoStateHash("daoStateHash",
             false,
-            new DeviationOfHashes()),
+            new DeviationOfHashes(), 1),
     proposalHash("proposalHash",
             false,
-            new DeviationOfHashes()),
+            new DeviationOfHashes(), 1),
     blindVoteHash("blindVoteHash",
             false,
-            new DeviationOfHashes()),
+            new DeviationOfHashes(), 1),
 
     // Percentage deviation
     maxConnections("maxConnections",
             true,
-            new DeviationByPercentage(0.33, 3, 0.4, 2.5)),
+            new DeviationByPercentage(0.33, 3, 0.4, 2.5), 2),
     numConnections("numConnections",
             true,
-            new DeviationByPercentage(0, Double.MAX_VALUE, 0.4, 2.5)),
+            new DeviationByPercentage(0, 3, 0, 2.5), 2),
     peakNumConnections("peakNumConnections",
             true,
-            new DeviationByPercentage(0.33, 3, 0.4, 2.5)),
+            new DeviationByPercentage(0, 3, 0, 2.5), 2),
     numAllConnectionsLostEvents("numAllConnectionsLostEvents",
             true,
             new DeviationByIntegerDiff(1, 2), 3),
     sentBytesPerSec("sentBytesPerSec",
             true,
-            new DeviationByPercentage()),
+            new DeviationByPercentage(), 5),
     receivedBytesPerSec("receivedBytesPerSec",
             true,
-            new DeviationByPercentage()),
+            new DeviationByPercentage(), 5),
     receivedMessagesPerSec("receivedMessagesPerSec",
             true,
-            new DeviationByPercentage()),
+            new DeviationByPercentage(), 5),
     sentMessagesPerSec("sentMessagesPerSec",
             true,
-            new DeviationByPercentage()),
+            new DeviationByPercentage(), 5),
 
     // No deviation check
     sentBytes("sentBytes", true),
@@ -142,19 +143,7 @@ public enum InventoryItem {
         this.isNumberValue = isNumberValue;
     }
 
-    InventoryItem(String key, boolean isNumberValue, int deviationTolerance) {
-        this.key = key;
-        this.isNumberValue = isNumberValue;
-        this.deviationTolerance = deviationTolerance;
-    }
-
-
-    InventoryItem(String key, boolean isNumberValue, DeviationType deviationType) {
-        this(key, isNumberValue);
-        this.deviationType = deviationType;
-    }
-
-    InventoryItem(String key, boolean isNumberValue, DeviationType deviationType, int deviationTolerance) {
+    InventoryItem(String key, boolean isNumberValue, @NotNull DeviationType deviationType, int deviationTolerance) {
         this(key, isNumberValue);
         this.deviationType = deviationType;
         this.deviationTolerance = deviationTolerance;
