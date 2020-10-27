@@ -51,7 +51,6 @@ import com.google.common.base.Optional;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
-import java.util.Objects;
 
 import java.lang.management.ManagementFactory;
 
@@ -97,28 +96,11 @@ public class GetInventoryRequestHandler implements MessageListener {
             Map<InventoryItem, Integer> dataObjects = new HashMap<>();
             p2PDataStorage.getMapForDataResponse(getInventoryRequest.getVersion()).values().stream()
                     .map(e -> e.getClass().getSimpleName())
-                    .forEach(className -> {
-                        Optional<InventoryItem> optionalEnum = Enums.getIfPresent(InventoryItem.class, className);
-                        if (optionalEnum.isPresent()) {
-                            InventoryItem key = optionalEnum.get();
-                            dataObjects.putIfAbsent(key, 0);
-                            int prev = dataObjects.get(key);
-                            dataObjects.put(key, prev + 1);
-                        }
-                    });
+                    .forEach(className -> addClassNameToMap(dataObjects, className));
             p2PDataStorage.getMap().values().stream()
                     .map(ProtectedStorageEntry::getProtectedStoragePayload)
-                    .filter(Objects::nonNull)
                     .map(e -> e.getClass().getSimpleName())
-                    .forEach(className -> {
-                        Optional<InventoryItem> optionalEnum = Enums.getIfPresent(InventoryItem.class, className);
-                        if (optionalEnum.isPresent()) {
-                            InventoryItem key = optionalEnum.get();
-                            dataObjects.putIfAbsent(key, 0);
-                            int prev = dataObjects.get(key);
-                            dataObjects.put(key, prev + 1);
-                        }
-                    });
+                    .forEach(className -> addClassNameToMap(dataObjects, className));
             Map<InventoryItem, String> inventory = new HashMap<>();
             dataObjects.forEach((key, value) -> inventory.put(key, String.valueOf(value)));
 
@@ -172,5 +154,15 @@ public class GetInventoryRequestHandler implements MessageListener {
 
     public void shutDown() {
         networkNode.removeMessageListener(this);
+    }
+
+    private void addClassNameToMap(Map<InventoryItem, Integer> dataObjects, String className) {
+        Optional<InventoryItem> optionalEnum = Enums.getIfPresent(InventoryItem.class, className);
+        if (optionalEnum.isPresent()) {
+            InventoryItem key = optionalEnum.get();
+            dataObjects.putIfAbsent(key, 0);
+            int prev = dataObjects.get(key);
+            dataObjects.put(key, prev + 1);
+        }
     }
 }
