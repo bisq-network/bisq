@@ -17,6 +17,7 @@
 
 package bisq.inventory;
 
+import bisq.core.network.p2p.inventory.model.DeviationInfo;
 import bisq.core.network.p2p.inventory.model.DeviationSeverity;
 import bisq.core.network.p2p.inventory.model.InventoryItem;
 import bisq.core.network.p2p.inventory.model.RequestInfo;
@@ -336,14 +337,12 @@ public class InventoryWebServer {
         }
 
         String deviationAsPercentString = "";
-        if (requestInfo.getDeviationMap().containsKey(inventoryItem)) {
-            Double deviation = requestInfo.getDeviationMap().get(inventoryItem);
-            deviationAsPercentString = getDeviationAsPercentString(deviation);
-        }
-
         DeviationSeverity deviationSeverity = DeviationSeverity.OK;
-        if (requestInfo.getDeviationSeverityMap().containsKey(inventoryItem)) {
-            deviationSeverity = requestInfo.getDeviationSeverityMap().get(inventoryItem);
+        if (requestInfo.getDeviationInfoMap().containsKey(inventoryItem)) {
+            DeviationInfo deviationInfo = requestInfo.getDeviationInfoMap().get(inventoryItem);
+            deviationAsPercentString = getDeviationAsPercentString(deviationInfo.getDeviation());
+
+            deviationSeverity = deviationInfo.getDeviationSeverity();
         }
 
         List<RequestInfo> requestInfoList = map.get(seedNode);
@@ -354,13 +353,13 @@ public class InventoryWebServer {
         if (requestInfoList != null) {
             for (int i = 0; i < requestInfoList.size(); i++) {
                 RequestInfo reqInfo = requestInfoList.get(i);
-                Map<InventoryItem, DeviationSeverity> deviationSeverityMap = reqInfo.getDeviationSeverityMap();
+                Map<InventoryItem, DeviationInfo> deviationInfoMap = reqInfo.getDeviationInfoMap();
                 Map<InventoryItem, String> inventory = reqInfo.getInventory();
                 if (inventory != null &&
                         inventory.containsKey(inventoryItem) &&
-                        deviationSeverityMap.containsKey(inventoryItem) &&
-                        deviationSeverityMap.get(inventoryItem) != DeviationSeverity.OK) {
-                    DeviationSeverity devSeverity = reqInfo.getDeviationSeverityMap().get(inventoryItem);
+                        deviationInfoMap.containsKey(inventoryItem) &&
+                        deviationInfoMap.get(inventoryItem).getDeviationSeverity() != DeviationSeverity.OK) {
+                    DeviationSeverity devSeverity = deviationInfoMap.get(inventoryItem).getDeviationSeverity();
                     if (devSeverity == DeviationSeverity.WARN) {
                         warningsAtRequestNumber.add(i + 1);
                     } else if (devSeverity == DeviationSeverity.ALERT) {

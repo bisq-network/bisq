@@ -20,6 +20,7 @@ package bisq.inventory;
 
 import bisq.core.network.p2p.inventory.GetInventoryRequestManager;
 import bisq.core.network.p2p.inventory.model.Average;
+import bisq.core.network.p2p.inventory.model.DeviationInfo;
 import bisq.core.network.p2p.inventory.model.DeviationSeverity;
 import bisq.core.network.p2p.inventory.model.InventoryItem;
 import bisq.core.network.p2p.inventory.model.RequestInfo;
@@ -183,12 +184,11 @@ public class InventoryMonitor implements SetupListener {
         List.of(InventoryItem.values()).forEach(inventoryItem -> {
             String value = requestInfo.getValue(inventoryItem);
             Double deviation = inventoryItem.getDeviation(averageValues, value);
-            requestInfo.getDeviationMap().put(inventoryItem, deviation);
             DeviationSeverity deviationSeverity = inventoryItem.getDeviationSeverity(deviation,
                     requestInfoListByNode.values(),
                     value,
                     finalDaoStateChainHeight);
-            requestInfo.getDeviationSeverityMap().put(inventoryItem, deviationSeverity);
+            requestInfo.getDeviationInfoMap().put(inventoryItem, new DeviationInfo(deviation, deviationSeverity));
         });
 
         inventoryWebServer.onNewRequestInfo(requestInfoListByNode, requestCounter);

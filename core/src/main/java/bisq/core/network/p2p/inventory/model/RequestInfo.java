@@ -37,8 +37,7 @@ public class RequestInfo {
     @Setter
     private String errorMessage;
 
-    private final Map<InventoryItem, Double> deviationMap = new HashMap<>();
-    private final Map<InventoryItem, DeviationSeverity> deviationSeverityMap = new HashMap<>();
+    private final Map<InventoryItem, DeviationInfo> deviationInfoMap = new HashMap<>();
 
     public RequestInfo(long requestStartTime) {
         this.requestStartTime = requestStartTime;
