@@ -107,7 +107,7 @@ public class TxFeeEstimationService {
             estimatedTxSize = getEstimatedTxSize(List.of(tradeFee, amount), estimatedTxSize, txFeePerByte, btcWalletService);
         } catch (InsufficientMoneyException e) {
             if (isTaker) {
-                // if we cannot do the estimation we use the deposit tx size
+                // If we cannot do the estimation, we use the size o the largest of our txs which is the deposit tx.
                 estimatedTxSize = DEPOSIT_TX_SIZE;
             }
             log.info("We cannot do the fee estimation because there are not enough funds in the wallet. This is expected " +
