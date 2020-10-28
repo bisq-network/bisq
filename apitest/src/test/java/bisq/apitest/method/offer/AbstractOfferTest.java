@@ -62,28 +62,18 @@ public abstract class AbstractOfferTest extends MethodTest {
 
     @BeforeAll
     public static void setUp() {
-        startSupportingApps();
+        startSupportingApps(true,
+                true,
+                bitcoind,
+                seednode,
+                arbdaemon,
+                alicedaemon,
+                bobdaemon);
     }
 
     @BeforeEach
     public void initDummyPaymentAccount() {
         super.initAlicesDummyPaymentAccount();
-    }
-
-    static void startSupportingApps() {
-        try {
-            // setUpScaffold(new String[]{"--supportingApps", "bitcoind,seednode,arbdaemon,alicedaemon,bobdaemon", "--enableBisqDebugging", "true"});
-            setUpScaffold(bitcoind, seednode, arbdaemon, alicedaemon, bobdaemon);
-            registerDisputeAgents(arbdaemon);
-            aliceStubs = grpcStubs(alicedaemon);
-            bobStubs = grpcStubs(bobdaemon);
-
-            // Generate 1 regtest block for alice's wallet to show 10 BTC balance,
-            // and give alicedaemon time to parse the new block.
-            genBtcBlocksThenWait(1, 1500);
-        } catch (Exception ex) {
-            fail(ex);
-        }
     }
 
     protected final OfferInfo createAliceOffer(PaymentAccount paymentAccount,

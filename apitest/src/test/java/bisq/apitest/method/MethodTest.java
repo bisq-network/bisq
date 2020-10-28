@@ -43,11 +43,14 @@ import protobuf.PaymentAccount;
 import java.util.stream.Collectors;
 
 import static bisq.apitest.config.BisqAppConfig.alicedaemon;
+import static bisq.apitest.config.BisqAppConfig.arbdaemon;
 import static bisq.apitest.config.BisqAppConfig.bobdaemon;
 import static bisq.common.app.DevEnv.DEV_PRIVILEGE_PRIV_KEY;
 import static bisq.core.payment.payload.PaymentMethod.PERFECT_MONEY;
+import static java.util.Arrays.stream;
 import static java.util.Comparator.comparing;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 
 
@@ -66,6 +69,33 @@ public class MethodTest extends ApiTestCase {
 
     protected PaymentAccount alicesDummyAcct;
     protected PaymentAccount bobsDummyAcct;
+
+    public static void startSupportingApps(boolean registerDisputeAgents,
+                                           boolean generateBtcBlock,
+                                           Enum<?>... supportingApps) {
+        try {
+            // To run Bisq apps in debug mode, use the other setUpScaffold method:
+            // setUpScaffold(new String[]{"--supportingApps", "bitcoind,seednode,arbdaemon,alicedaemon,bobdaemon",
+            //                            "--enableBisqDebugging", "true"});
+            setUpScaffold(supportingApps);
+            if (registerDisputeAgents) {
+                registerDisputeAgents(arbdaemon);
+            }
+
+            if (stream(supportingApps).map(Enum::name).anyMatch(name -> name.equals(alicedaemon.name())))
+                aliceStubs = grpcStubs(alicedaemon);
+
+            if (stream(supportingApps).map(Enum::name).anyMatch(name -> name.equals(bobdaemon.name())))
+                bobStubs = grpcStubs(bobdaemon);
+
+            // Generate 1 regtest block for alice's and/or bob's wallet to
+            // show 10 BTC balance, and allow time for daemons parse the new block.
+            if (generateBtcBlock)
+                genBtcBlocksThenWait(1, 1500);
+        } catch (Exception ex) {
+            fail(ex);
+        }
+    }
 
     protected final void initAlicesDummyPaymentAccount() {
         alicesDummyAcct = getDefaultPerfectDummyPaymentAccount(alicedaemon);
