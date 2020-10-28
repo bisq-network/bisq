@@ -584,6 +584,8 @@ public class BtcWalletService extends WalletService {
             TransactionOutput connectedOutput = input.getConnectedOutput();
             if (connectedOutput == null || ScriptPattern.isP2PKH(connectedOutput.getScriptPubKey()) ||
                 ScriptPattern.isP2PK(connectedOutput.getScriptPubKey())) {
+                // If connectedOutput is null, we don't know here the input type. To avoid underpaying fees,
+                // we treat it as a legacy input which will result in a higher fee estimation.
                 numLegacyInputs++;
             } else if (ScriptPattern.isP2WPKH(connectedOutput.getScriptPubKey())) {
                 numSegwitInputs++;
