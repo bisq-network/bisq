@@ -33,9 +33,13 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 
+
+
+import bisq.apitest.method.MethodTest;
+
 @Slf4j
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class FundWalletScenarioTest extends ScenarioTest {
+public class FundWalletScenarioTest extends MethodTest {
 
     @BeforeAll
     public static void setUp() {
