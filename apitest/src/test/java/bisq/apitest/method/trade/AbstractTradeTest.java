@@ -1,13 +1,10 @@
 package bisq.apitest.method.trade;
 
-import bisq.core.trade.Trade;
-
 import bisq.proto.grpc.TradeInfo;
 
 import org.slf4j.Logger;
 
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestInfo;
 
 import static bisq.cli.TradeFormat.format;
@@ -20,22 +17,14 @@ import bisq.apitest.method.offer.AbstractOfferTest;
 
 public class AbstractTradeTest extends AbstractOfferTest {
 
-    // A test fixture encapsulating expected trade protocol status.
-    // ExpectedProtocolStatus.init should be called before any @Test begins.
-    protected static final ExpectedProtocolStatus EXPECTED_PROTOCOL_STATUS = new ExpectedProtocolStatus();
+    public static final ExpectedProtocolStatus EXPECTED_PROTOCOL_STATUS = new ExpectedProtocolStatus();
 
     // A Trade ID cache for use in @Test sequences.
     protected static String tradeId;
 
     @BeforeAll
-    public static void clearExpectedPaymentStatusFlags() {
+    public static void initStaticFixtures() {
         EXPECTED_PROTOCOL_STATUS.init();
-    }
-
-    @BeforeEach
-    public void initDummyPaymentAccounts() {
-        super.initAlicesDummyPaymentAccount();
-        super.initBobsDummyPaymentAccount();
     }
 
     protected final TradeInfo takeAlicesOffer(String offerId, String paymentAccountId) {
@@ -67,69 +56,5 @@ public class AbstractTradeTest extends AbstractOfferTest {
                 testName(testInfo),
                 description.toUpperCase(),
                 format(trade)));
-    }
-
-    @SuppressWarnings("UnusedReturnValue")
-    static class ExpectedProtocolStatus {
-        Trade.State state;
-        Trade.Phase phase;
-        boolean isDepositPublished;
-        boolean isDepositConfirmed;
-        boolean isFiatSent;
-        boolean isFiatReceived;
-        boolean isPayoutPublished;
-        boolean isWithdrawn;
-
-        ExpectedProtocolStatus setState(Trade.State state) {
-            this.state = state;
-            return this;
-        }
-
-        ExpectedProtocolStatus setPhase(Trade.Phase phase) {
-            this.phase = phase;
-            return this;
-        }
-
-        ExpectedProtocolStatus setDepositPublished(boolean depositPublished) {
-            isDepositPublished = depositPublished;
-            return this;
-        }
-
-        ExpectedProtocolStatus setDepositConfirmed(boolean depositConfirmed) {
-            isDepositConfirmed = depositConfirmed;
-            return this;
-        }
-
-        ExpectedProtocolStatus setFiatSent(boolean fiatSent) {
-            isFiatSent = fiatSent;
-            return this;
-        }
-
-        ExpectedProtocolStatus setFiatReceived(boolean fiatReceived) {
-            isFiatReceived = fiatReceived;
-            return this;
-        }
-
-        ExpectedProtocolStatus setPayoutPublished(boolean payoutPublished) {
-            isPayoutPublished = payoutPublished;
-            return this;
-        }
-
-        ExpectedProtocolStatus setWithdrawn(boolean withdrawn) {
-            isWithdrawn = withdrawn;
-            return this;
-        }
-
-        @SuppressWarnings("unused")
-        void init() {
-            state = null;
-            phase = null;
-            isDepositPublished = false;
-            isDepositConfirmed = false;
-            isFiatSent = false;
-            isFiatReceived = false;
-            isPayoutPublished = false;
-            isWithdrawn = false;
-        }
     }
 }
