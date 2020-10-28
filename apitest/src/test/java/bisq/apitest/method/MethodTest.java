@@ -96,7 +96,6 @@ public class MethodTest extends ApiTestCase {
             // show 10 BTC balance, and allow time for daemons parse the new block.
             if (generateBtcBlock)
                 genBtcBlocksThenWait(1, 1500);
-
         } catch (Exception ex) {
             fail(ex);
         }
