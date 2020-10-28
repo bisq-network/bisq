@@ -57,7 +57,6 @@ public class TxFeeEstimationService {
 //  segwit delayed payout tx vsize = 139
     public static int TYPICAL_TX_WITH_1_INPUT_SIZE = 175;
     private static int DEPOSIT_TX_SIZE = 233;
-    private static int PAYOUT_TX_SIZE = 169;
 
     private static int BSQ_INPUT_INCREASE = 150;
     private static int MAX_ITERATIONS = 10;
