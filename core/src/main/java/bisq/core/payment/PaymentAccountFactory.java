@@ -76,6 +76,8 @@ public class PaymentAccountFactory {
                 return new PromptPayAccount();
             case PaymentMethod.ADVANCED_CASH_ID:
                 return new AdvancedCashAccount();
+            case PaymentMethod.TRANSFERWISE_ID:
+                return new TransferwiseAccount();
             case PaymentMethod.BLOCK_CHAINS_INSTANT_ID:
                 return new InstantCryptoCurrencyAccount();
 

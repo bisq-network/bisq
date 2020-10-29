@@ -48,6 +48,7 @@ import bisq.core.payment.payload.SepaAccountPayload;
 import bisq.core.payment.payload.SepaInstantAccountPayload;
 import bisq.core.payment.payload.SpecificBanksAccountPayload;
 import bisq.core.payment.payload.SwishAccountPayload;
+import bisq.core.payment.payload.TransferwiseAccountPayload;
 import bisq.core.payment.payload.USPostalMoneyOrderAccountPayload;
 import bisq.core.payment.payload.UpholdAccountPayload;
 import bisq.core.payment.payload.VenmoAccountPayload;
@@ -145,6 +146,8 @@ public class CoreProtoResolver implements ProtoResolver {
                     return PromptPayAccountPayload.fromProto(proto);
                 case ADVANCED_CASH_ACCOUNT_PAYLOAD:
                     return AdvancedCashAccountPayload.fromProto(proto);
+                case TRANSFERWISE_ACCOUNT_PAYLOAD:
+                    return TransferwiseAccountPayload.fromProto(proto);
                 case INSTANT_CRYPTO_CURRENCY_ACCOUNT_PAYLOAD:
                     return InstantCryptoCurrencyPayload.fromProto(proto);
 

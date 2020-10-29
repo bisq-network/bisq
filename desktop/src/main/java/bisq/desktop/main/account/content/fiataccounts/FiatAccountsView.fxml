@@ -31,6 +31,6 @@
         <Insets bottom="15.0" left="15.0" right="15.0" top="15.0"/>
     </padding>
     <columnConstraints>
-        <ColumnConstraints hgrow="NEVER" minWidth="300.0"/>
+        <ColumnConstraints hgrow="ALWAYS" minWidth="300.0"/>
     </columnConstraints>
 </GridPane>
