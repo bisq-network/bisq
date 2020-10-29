@@ -24,7 +24,7 @@ import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.DumpDelayedPayoutTx;
 import bisq.core.trade.TradableList;
 import bisq.core.trade.Trade;
-import bisq.core.trade.TradeUtils;
+import bisq.core.trade.TradeUtil;
 
 import bisq.common.crypto.KeyRing;
 import bisq.common.persistence.PersistenceManager;
@@ -50,6 +50,7 @@ public class FailedTradesManager implements PersistedDataHost {
     private final PriceFeedService priceFeedService;
     private final BtcWalletService btcWalletService;
     private final PersistenceManager<TradableList<Trade>> persistenceManager;
+    private final TradeUtil tradeUtil;
     private final DumpDelayedPayoutTx dumpDelayedPayoutTx;
     @Setter
     private Function<Trade, Boolean> unFailTradeCallback;
@@ -59,12 +60,14 @@ public class FailedTradesManager implements PersistedDataHost {
                                PriceFeedService priceFeedService,
                                BtcWalletService btcWalletService,
                                PersistenceManager<TradableList<Trade>> persistenceManager,
+                               TradeUtil tradeUtil,
                                DumpDelayedPayoutTx dumpDelayedPayoutTx) {
         this.keyRing = keyRing;
         this.priceFeedService = priceFeedService;
         this.btcWalletService = btcWalletService;
         this.dumpDelayedPayoutTx = dumpDelayedPayoutTx;
         this.persistenceManager = persistenceManager;
+        this.tradeUtil = tradeUtil;
 
         this.persistenceManager.initialize(failedTrades, "FailedTrades", PersistenceManager.Source.PRIVATE);
     }
@@ -127,7 +130,7 @@ public class FailedTradesManager implements PersistedDataHost {
     }
 
     public String checkUnFail(Trade trade) {
-        var addresses = TradeUtils.getTradeAddresses(trade, btcWalletService, keyRing);
+        var addresses = tradeUtil.getTradeAddresses(trade);
         if (addresses == null) {
             return "Addresses not found";
         }

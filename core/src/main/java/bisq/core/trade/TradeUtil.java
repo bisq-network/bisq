@@ -23,20 +23,44 @@ import bisq.common.crypto.KeyRing;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Utilities;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
 import java.util.Objects;
 
-public class TradeUtils {
+import lombok.extern.slf4j.Slf4j;
 
-    // Returns <MULTI_SIG, TRADE_PAYOUT> if both are AVAILABLE, otherwise null
-    static Tuple2<String, String> getAvailableAddresses(Trade trade, BtcWalletService btcWalletService,
-                                                        KeyRing keyRing) {
-        var addresses = getTradeAddresses(trade, btcWalletService, keyRing);
+/**
+ * This class contains trade utility methods.
+ */
+@Slf4j
+@Singleton
+public class TradeUtil {
+
+    private final BtcWalletService btcWalletService;
+    private final KeyRing keyRing;
+
+    @Inject
+    public TradeUtil(BtcWalletService btcWalletService, KeyRing keyRing) {
+        this.btcWalletService = btcWalletService;
+        this.keyRing = keyRing;
+    }
+
+    /**
+     * Returns <MULTI_SIG, TRADE_PAYOUT> if and only if both are AVAILABLE,
+     * otherwise null.
+     * @param trade the trade being queried for MULTI_SIG, TRADE_PAYOUT addresses
+     * @return Tuple2 tuple containing MULTI_SIG, TRADE_PAYOUT addresses for trade
+     */
+    public Tuple2<String, String> getAvailableAddresses(Trade trade) {
+        var addresses = getTradeAddresses(trade);
         if (addresses == null)
             return null;
 
         if (btcWalletService.getAvailableAddressEntries().stream()
                 .noneMatch(e -> Objects.equals(e.getAddressString(), addresses.first)))
             return null;
+
         if (btcWalletService.getAvailableAddressEntries().stream()
                 .noneMatch(e -> Objects.equals(e.getAddressString(), addresses.second)))
             return null;
@@ -44,18 +68,25 @@ public class TradeUtils {
         return new Tuple2<>(addresses.first, addresses.second);
     }
 
-    // Returns <MULTI_SIG, TRADE_PAYOUT> addresses as strings if they're known by the wallet
-    public static Tuple2<String, String> getTradeAddresses(Trade trade, BtcWalletService btcWalletService,
-                                                           KeyRing keyRing) {
+    /**
+     * Returns <MULTI_SIG, TRADE_PAYOUT> addresses as strings if they're known by the
+     * wallet.
+     * @param trade the trade being queried for MULTI_SIG, TRADE_PAYOUT addresses
+     * @return Tuple2 tuple containing MULTI_SIG, TRADE_PAYOUT addresses for trade
+     */
+    public Tuple2<String, String> getTradeAddresses(Trade trade) {
         var contract = trade.getContract();
         if (contract == null)
             return null;
 
         // Get multisig address
         var isMyRoleBuyer = contract.isMyRoleBuyer(keyRing.getPubKeyRing());
-        var multiSigPubKey = isMyRoleBuyer ? contract.getBuyerMultiSigPubKey() : contract.getSellerMultiSigPubKey();
+        var multiSigPubKey = isMyRoleBuyer
+                ? contract.getBuyerMultiSigPubKey()
+                : contract.getSellerMultiSigPubKey();
         if (multiSigPubKey == null)
             return null;
+
         var multiSigPubKeyString = Utilities.bytesAsHexString(multiSigPubKey);
         var multiSigAddress = btcWalletService.getAddressEntryListAsImmutableList().stream()
                 .filter(e -> e.getKeyPair().getPublicKeyAsHex().equals(multiSigPubKeyString))
@@ -65,8 +96,9 @@ public class TradeUtils {
             return null;
 
         // Get payout address
-        var payoutAddress = isMyRoleBuyer ?
-                contract.getBuyerPayoutAddressString() : contract.getSellerPayoutAddressString();
+        var payoutAddress = isMyRoleBuyer
+                ? contract.getBuyerPayoutAddressString()
+                : contract.getSellerPayoutAddressString();
         var payoutAddressEntry = btcWalletService.getAddressEntryListAsImmutableList().stream()
                 .filter(e -> Objects.equals(e.getAddressString(), payoutAddress))
                 .findAny()
