@@ -65,8 +65,7 @@ public final class TransferwiseAccountPayload extends PaymentAccountPayload {
     @Override
     public Message toProtoMessage() {
         return getPaymentAccountPayloadBuilder()
-                .setTransferwiseAccountPayload(protobuf.TransferwiseAccountPayload.newBuilder()
-                        .setEmail(email))
+                .setTransferwiseAccountPayload(protobuf.TransferwiseAccountPayload.newBuilder().setEmail(email))
                 .build();
     }
 
