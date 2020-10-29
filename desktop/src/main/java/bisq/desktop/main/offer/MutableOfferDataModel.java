@@ -286,7 +286,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     // UI actions
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    Offer createAndGetOffer() {
+    protected Offer createAndGetOffer() {
         return createOfferService.createAndGetOffer(offerId,
                 direction,
                 tradeCurrencyCode.get(),

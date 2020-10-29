@@ -179,28 +179,32 @@ class EditOfferDataModel extends MutableOfferDataModel {
     }
 
     public void onPublishOffer(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+        // editedPayload is a merge of the original offerPayload and newOfferPayload
+        // fields which are editable are merged in from newOfferPayload (such as payment account details)
+        // fields which cannot change (most importantly BTC amount) are sourced from the original offerPayload
         final OfferPayload offerPayload = openOffer.getOffer().getOfferPayload();
+        final OfferPayload newOfferPayload = createAndGetOffer().getOfferPayload();
         final OfferPayload editedPayload = new OfferPayload(offerPayload.getId(),
                 offerPayload.getDate(),
                 offerPayload.getOwnerNodeAddress(),
                 offerPayload.getPubKeyRing(),
                 offerPayload.getDirection(),
-                getPrice().get().getValue(),
-                getMarketPriceMargin(),
-                isUseMarketBasedPriceValue(),
-                getAmount().get().getValue(),
-                getMinAmount().get().getValue(),
-                offerPayload.getBaseCurrencyCode(),
-                offerPayload.getCounterCurrencyCode(),
+                newOfferPayload.getPrice(),
+                newOfferPayload.getMarketPriceMargin(),
+                newOfferPayload.isUseMarketBasedPrice(),
+                offerPayload.getAmount(),
+                offerPayload.getMinAmount(),
+                newOfferPayload.getBaseCurrencyCode(),
+                newOfferPayload.getCounterCurrencyCode(),
                 offerPayload.getArbitratorNodeAddresses(),
                 offerPayload.getMediatorNodeAddresses(),
-                offerPayload.getPaymentMethodId(),
-                offerPayload.getMakerPaymentAccountId(),
+                newOfferPayload.getPaymentMethodId(),
+                newOfferPayload.getMakerPaymentAccountId(),
                 offerPayload.getOfferFeePaymentTxId(),
-                offerPayload.getCountryCode(),
-                offerPayload.getAcceptedCountryCodes(),
-                offerPayload.getBankId(),
-                offerPayload.getAcceptedBankIds(),
+                newOfferPayload.getCountryCode(),
+                newOfferPayload.getAcceptedCountryCodes(),
+                newOfferPayload.getBankId(),
+                newOfferPayload.getAcceptedBankIds(),
                 offerPayload.getVersionNr(),
                 offerPayload.getBlockHeightAtOfferCreation(),
                 offerPayload.getTxFee(),
