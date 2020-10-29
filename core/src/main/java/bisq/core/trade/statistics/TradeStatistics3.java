@@ -144,7 +144,8 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
         BLOCK_CHAINS,
         PROMPT_PAY,
         ADVANCED_CASH,
-        BLOCK_CHAINS_INSTANT
+        BLOCK_CHAINS_INSTANT,
+        TRANSFERWISE
     }
 
     @Getter
