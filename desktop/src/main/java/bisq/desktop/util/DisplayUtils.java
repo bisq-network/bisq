@@ -68,18 +68,9 @@ public class DisplayUtils {
         }
     }
 
-    public static String formatTimeAxis(Date date) {
+    public static String formatDateAxis(Date date, String format) {
         if (date != null) {
-            SimpleDateFormat timeFormatter = new SimpleDateFormat(" HH:mm \n d/MMM ", GlobalSettings.getLocale());
-            return timeFormatter.format(date);
-        } else {
-            return "";
-        }
-    }
-
-    public static String formatDateAxis(Date date) {
-        if (date != null) {
-            SimpleDateFormat dateFormatter = new SimpleDateFormat("dd/MMM\nyyyy", GlobalSettings.getLocale());
+            SimpleDateFormat dateFormatter = new SimpleDateFormat(format, GlobalSettings.getLocale());
             return dateFormatter.format(date);
         } else {
             return "";

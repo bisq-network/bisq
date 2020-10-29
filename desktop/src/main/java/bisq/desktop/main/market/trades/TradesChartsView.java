@@ -479,11 +479,27 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
             @Override
             public String toString(Number object) {
                 long index = MathUtils.doubleToLong((double) object);
+                // The last tick is on the chart edge, it is not well spaced with
+                // the previous tick and interferes with its label.
+                if (model.maxTicks + 1 == index) return "";
+
                 long time = model.getTimeFromTickIndex(index);
-                if (model.tickUnit.ordinal() <= TradesChartsViewModel.TickUnit.DAY.ordinal())
-                    return index % 4 == 0 ? DisplayUtils.formatDateAxis(new Date(time)) : "";
-                else
-                    return index % 3 == 0 ? DisplayUtils.formatTimeAxis(new Date(time)) : "";
+                String fmt = "";
+                switch (model.tickUnit) {
+                case YEAR  : fmt = "yyyy";
+                    break;
+                case MONTH : fmt = "MMMyy";
+                    break;
+                case WEEK  :
+                case DAY   : fmt = "dd/MMM\nyyyy";
+                    break;
+                case HOUR  :
+                case MINUTE_10: fmt = "HH:mm\ndd/MMM";
+                    break;
+                default:        // nothing here
+                }
+
+                return DisplayUtils.formatDateAxis(new Date(time), fmt);
             }
 
             @Override
