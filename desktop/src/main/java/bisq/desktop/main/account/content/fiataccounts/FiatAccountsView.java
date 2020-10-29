@@ -304,14 +304,7 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
                                     .actionButtonText(Res.get("shared.iUnderstand"))
                                     .onAction(() -> doSaveNewAccount(paymentAccount))
                                     .show();
-                        }/* else if (paymentAccount instanceof TransferwiseAccount) {
-                            new Popup().information(Res.get("payment.transferwiseAccount.info"))
-                                    .width(700)
-                                    .closeButtonText(Res.get("shared.cancel"))
-                                    .actionButtonText(Res.get("shared.iUnderstand"))
-                                    .onAction(() -> doSaveNewAccount(paymentAccount))
-                                    .show();
-                        } */ else {
+                        } else {
                             doSaveNewAccount(paymentAccount);
                         }
                     })

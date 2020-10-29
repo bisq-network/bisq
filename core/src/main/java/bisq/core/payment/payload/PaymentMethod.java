@@ -353,7 +353,6 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
                 .noneMatch(c -> c.getCode().equals(currencyCode)))
             return false;
 
-        //todo add transferwise?
         return id.equals(PaymentMethod.SEPA_ID) ||
                 id.equals(PaymentMethod.SEPA_INSTANT_ID) ||
                 id.equals(PaymentMethod.INTERAC_E_TRANSFER_ID) ||
