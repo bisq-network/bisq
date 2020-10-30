@@ -261,6 +261,10 @@ public class OfferUtil {
         return !availableBalance.subtract(takerFee).isNegative();
     }
 
+    public boolean isBlockChainPaymentMethod(Offer offer) {
+        return offer != null && offer.getPaymentMethod().isAsset();
+    }
+
     public Optional<Volume> getFeeInUserFiatCurrency(Coin makerFee,
                                                      boolean isCurrencyForMakerFeeBtc,
                                                      CoinFormatter bsqFormatter) {

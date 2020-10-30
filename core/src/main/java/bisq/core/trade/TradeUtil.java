@@ -18,6 +18,8 @@
 package bisq.core.trade;
 
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.locale.Res;
+import bisq.core.offer.Offer;
 
 import bisq.common.crypto.KeyRing;
 import bisq.common.util.Tuple2;
@@ -26,9 +28,17 @@ import bisq.common.util.Utilities;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import java.util.Date;
 import java.util.Objects;
 
 import lombok.extern.slf4j.Slf4j;
+
+import javax.annotation.Nullable;
+
+import static bisq.core.locale.CurrencyUtil.getCurrencyPair;
+import static bisq.core.locale.CurrencyUtil.isFiatCurrency;
+import static bisq.core.util.FormattingUtils.formatDurationAsWords;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * This class contains trade utility methods.
@@ -107,5 +117,91 @@ public class TradeUtil {
             return null;
 
         return new Tuple2<>(multiSigAddress.getAddressString(), payoutAddress);
+    }
+
+    public long getRemainingTradeDuration(Trade trade) {
+        return trade.getMaxTradePeriodDate() != null
+                ? trade.getMaxTradePeriodDate().getTime() - new Date().getTime()
+                : getMaxTradePeriod(trade);
+    }
+
+    public long getMaxTradePeriod(Trade trade) {
+        return trade.getOffer() != null
+                ? trade.getOffer().getPaymentMethod().getMaxTradePeriod()
+                : 0;
+    }
+
+    public double getRemainingTradeDurationAsPercentage(Trade trade) {
+        long maxPeriod = getMaxTradePeriod(trade);
+        long remaining = getRemainingTradeDuration(trade);
+        if (maxPeriod != 0) {
+            return 1 - (double) remaining / (double) maxPeriod;
+        } else
+            return 0;
+    }
+
+    public String getRemainingTradeDurationAsWords(Trade trade) {
+        return formatDurationAsWords(Math.max(0, getRemainingTradeDuration(trade)));
+    }
+
+    @Nullable
+    public Date getHalfTradePeriodDate(Trade trade) {
+        return trade != null ? trade.getHalfTradePeriodDate() : null;
+    }
+
+    public Date getDateForOpenDispute(Trade trade) {
+        return new Date(new Date().getTime() + getRemainingTradeDuration(trade));
+    }
+
+    public String getMarketDescription(Trade trade) {
+        if (trade == null)
+            return "";
+
+        checkNotNull(trade.getOffer());
+        checkNotNull(trade.getOffer().getCurrencyCode());
+        return getCurrencyPair(trade.getOffer().getCurrencyCode());
+    }
+
+    public String getPaymentMethodNameWithCountryCode(Trade trade) {
+        String paymentMethodDescription = "";
+        if (trade != null) {
+            Offer offer = trade.getOffer();
+            checkNotNull(offer);
+            checkNotNull(offer.getPaymentMethod());
+            paymentMethodDescription = offer.getPaymentMethodNameWithCountryCode();
+        }
+        return paymentMethodDescription;
+    }
+
+    /**
+     * Returns a string describing a trader's role.
+     *
+     * @param isBuyerMakerAndSellerTaker boolean
+     * @param isMaker boolean
+     * @param currencyCode String
+     * @return String describing a trader's role
+     */
+    public String getRole(boolean isBuyerMakerAndSellerTaker, boolean isMaker, String currencyCode) {
+        if (isFiatCurrency(currencyCode)) {
+            String baseCurrencyCode = Res.getBaseCurrencyCode();
+            if (isBuyerMakerAndSellerTaker)
+                return isMaker
+                        ? Res.get("formatter.asMaker", baseCurrencyCode, Res.get("shared.buyer"))
+                        : Res.get("formatter.asTaker", baseCurrencyCode, Res.get("shared.seller"));
+            else
+                return isMaker
+                        ? Res.get("formatter.asMaker", baseCurrencyCode, Res.get("shared.seller"))
+                        : Res.get("formatter.asTaker", baseCurrencyCode, Res.get("shared.buyer"));
+        } else {
+            if (isBuyerMakerAndSellerTaker)
+                return isMaker
+                        ? Res.get("formatter.asMaker", currencyCode, Res.get("shared.seller"))
+                        : Res.get("formatter.asTaker", currencyCode, Res.get("shared.buyer"));
+            else
+                return isMaker
+                        ? Res.get("formatter.asMaker", currencyCode, Res.get("shared.buyer"))
+                        : Res.get("formatter.asTaker", currencyCode, Res.get("shared.seller"));
+        }
+
     }
 }
