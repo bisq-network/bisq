@@ -39,6 +39,7 @@ import static bisq.core.locale.CurrencyUtil.getCurrencyPair;
 import static bisq.core.locale.CurrencyUtil.isFiatCurrency;
 import static bisq.core.util.FormattingUtils.formatDurationAsWords;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static java.lang.String.format;
 
 /**
  * This class contains trade utility methods.
@@ -174,6 +175,27 @@ public class TradeUtil {
     }
 
     /**
+     * Returns a string describing a trader's role for a given trade.
+     * @param trade Trade
+     * @return String describing a trader's role for a given trade
+     */
+    public String getRole(Trade trade) {
+        Contract contract = trade.getContract();
+        if (contract == null)
+            throw new IllegalStateException(format("could not get role because no contract was found for trade '%s'",
+                    trade.getShortId()));
+
+        Offer offer = trade.getOffer();
+        if (offer == null)
+            throw new IllegalStateException(format("could not get role because no offer was found for trade '%s'",
+                    trade.getShortId()));
+
+        return getRole(contract.isBuyerMakerAndSellerTaker(),
+                offer.isMyOffer(keyRing),
+                offer.getCurrencyCode());
+    }
+
+    /**
      * Returns a string describing a trader's role.
      *
      * @param isBuyerMakerAndSellerTaker boolean
@@ -202,6 +224,5 @@ public class TradeUtil {
                         ? Res.get("formatter.asMaker", currencyCode, Res.get("shared.buyer"))
                         : Res.get("formatter.asTaker", currencyCode, Res.get("shared.seller"));
         }
-
     }
 }

@@ -21,6 +21,7 @@ import bisq.core.offer.Offer;
 import bisq.core.offer.takeoffer.TakeOfferModel;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
+import bisq.core.trade.TradeUtil;
 import bisq.core.trade.protocol.BuyerProtocol;
 import bisq.core.trade.protocol.SellerProtocol;
 import bisq.core.user.User;
@@ -38,14 +39,17 @@ class CoreTradesService {
 
     private final TakeOfferModel takeOfferModel;
     private final TradeManager tradeManager;
+    private final TradeUtil tradeUtil;
     private final User user;
 
     @Inject
     public CoreTradesService(TakeOfferModel takeOfferModel,
                              TradeManager tradeManager,
+                             TradeUtil tradeUtil,
                              User user) {
         this.takeOfferModel = takeOfferModel;
         this.tradeManager = tradeManager;
+        this.tradeUtil = tradeUtil;
         this.user = user;
     }
 
@@ -57,6 +61,7 @@ class CoreTradesService {
             throw new IllegalArgumentException(format("payment account with id '%s' not found", paymentAccountId));
 
         var useSavingsWallet = true;
+        //noinspection ConstantConditions
         takeOfferModel.initModel(offer, paymentAccount, useSavingsWallet);
         log.info("Initiating take {} offer, {}",
                 offer.isBuyOffer() ? "buy" : "sell",
@@ -109,6 +114,10 @@ class CoreTradesService {
                     }
             );
         }
+    }
+
+    String getTradeRole(String tradeId) {
+        return tradeUtil.getRole(getTrade(tradeId));
     }
 
     Trade getTrade(String tradeId) {
