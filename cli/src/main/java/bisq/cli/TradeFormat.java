@@ -33,7 +33,7 @@ public class TradeFormat {
 
     @VisibleForTesting
     public static String format(TradeInfo tradeInfo) {
-        // Some column values might be longer than header, so we need to calculated them.
+        // Some column values might be longer than header, so we need to calculate them.
         int shortIdColWidth = Math.max(COL_HEADER_TRADE_SHORT_ID.length(), tradeInfo.getShortId().length());
         int roleColWidth = Math.max(COL_HEADER_TRADE_ROLE.length(), tradeInfo.getRole().length());
 
