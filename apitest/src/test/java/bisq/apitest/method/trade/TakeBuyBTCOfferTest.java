@@ -31,6 +31,7 @@ import org.junit.jupiter.api.TestMethodOrder;
 
 import static bisq.apitest.config.BisqAppConfig.alicedaemon;
 import static bisq.apitest.config.BisqAppConfig.bobdaemon;
+import static bisq.cli.TradeFormat.format;
 import static bisq.core.trade.Trade.Phase.DEPOSIT_CONFIRMED;
 import static bisq.core.trade.Trade.Phase.DEPOSIT_PUBLISHED;
 import static bisq.core.trade.Trade.Phase.FIAT_SENT;
@@ -39,6 +40,7 @@ import static bisq.core.trade.Trade.State.BUYER_SAW_ARRIVED_FIAT_PAYMENT_INITIAT
 import static bisq.core.trade.Trade.State.DEPOSIT_CONFIRMED_IN_BLOCK_CHAIN;
 import static bisq.core.trade.Trade.State.SELLER_PUBLISHED_DEPOSIT_TX;
 import static bisq.core.trade.Trade.State.SELLER_SAW_ARRIVED_PAYOUT_TX_PUBLISHED_MSG;
+import static java.lang.System.out;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -85,10 +87,12 @@ public class TakeBuyBTCOfferTest extends AbstractTradeTest {
 
             trade = getTrade(bobdaemon, trade.getTradeId());
             verifyExpectedTradeStateAndPhase(trade, SELLER_PUBLISHED_DEPOSIT_TX, DEPOSIT_PUBLISHED);
+            out.println(format(trade));
 
             genBtcBlocksThenWait(1, 2250);
             trade = getTrade(bobdaemon, trade.getTradeId());
             verifyExpectedTradeStateAndPhase(trade, DEPOSIT_CONFIRMED_IN_BLOCK_CHAIN, DEPOSIT_CONFIRMED);
+            out.println(format(trade));
         } catch (StatusRuntimeException e) {
             fail(e);
         }
@@ -107,6 +111,7 @@ public class TakeBuyBTCOfferTest extends AbstractTradeTest {
             trade = getTrade(alicedaemon, tradeId);
             assertEquals(OFFER_FEE_PAID.name(), trade.getOffer().getState());
             verifyExpectedTradeStateAndPhase(trade, BUYER_SAW_ARRIVED_FIAT_PAYMENT_INITIATED_MSG, FIAT_SENT);
+            out.println(format(trade));
         } catch (StatusRuntimeException e) {
             fail(e);
         }
@@ -125,5 +130,6 @@ public class TakeBuyBTCOfferTest extends AbstractTradeTest {
         // TODO is this a bug?  Why is offer.state == available?
         assertEquals(AVAILABLE.name(), trade.getOffer().getState());
         verifyExpectedTradeStateAndPhase(trade, SELLER_SAW_ARRIVED_PAYOUT_TX_PUBLISHED_MSG, PAYOUT_PUBLISHED);
+        out.println(format(trade));
     }
 }
