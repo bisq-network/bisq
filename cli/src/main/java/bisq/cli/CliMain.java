@@ -279,14 +279,21 @@ public class CliMain {
                 }
                 case gettrade: {
                     if (nonOptionArgs.size() < 2)
-                        throw new IllegalArgumentException("incorrect parameter count, expecting trade id");
+                        throw new IllegalArgumentException("incorrect parameter count, expecting trade id, [,showcontract = true|false]");
 
                     var tradeId = nonOptionArgs.get(1);
+                    var showContract = false;
+                    if (nonOptionArgs.size() == 3)
+                        showContract = Boolean.getBoolean(nonOptionArgs.get(2));
+
                     var request = GetTradeRequest.newBuilder()
                             .setTradeId(tradeId)
                             .build();
                     var reply = tradesService.getTrade(request);
-                    out.println(TradeFormat.format(reply.getTrade()));
+                    if (showContract)
+                        out.println(reply.getTrade().getContractAsJson());
+                    else
+                        out.println(TradeFormat.format(reply.getTrade()));
                     return;
                 }
                 case confirmpaymentstarted: {
@@ -441,7 +448,7 @@ public class CliMain {
             stream.format(rowFormat, "getoffer", "offer id", "Get current offer with id");
             stream.format(rowFormat, "getoffers", "buy | sell, currency code", "Get current offers");
             stream.format(rowFormat, "takeoffer", "offer id", "Take offer with id");
-            stream.format(rowFormat, "gettrade", "trade id", "Get trade details and protocol status");
+            stream.format(rowFormat, "gettrade", "trade id [,showcontract]", "Get trade summary or full contract");
             stream.format(rowFormat, "confirmpaymentstarted", "trade id", "Confirm payment started");
             stream.format(rowFormat, "confirmpaymentreceived", "trade id", "Confirm payment received");
             stream.format(rowFormat, "createpaymentacct", "account name, account number, currency code", "Create PerfectMoney dummy account");
