@@ -29,12 +29,14 @@ import bisq.proto.grpc.GetOffersRequest;
 import bisq.proto.grpc.GetPaymentAccountsRequest;
 import bisq.proto.grpc.GetTradeRequest;
 import bisq.proto.grpc.GetVersionRequest;
+import bisq.proto.grpc.KeepFundsRequest;
 import bisq.proto.grpc.LockWalletRequest;
 import bisq.proto.grpc.RegisterDisputeAgentRequest;
 import bisq.proto.grpc.RemoveWalletPasswordRequest;
 import bisq.proto.grpc.SetWalletPasswordRequest;
 import bisq.proto.grpc.TakeOfferRequest;
 import bisq.proto.grpc.UnlockWalletRequest;
+import bisq.proto.grpc.WithdrawFundsRequest;
 
 import io.grpc.StatusRuntimeException;
 
@@ -78,6 +80,8 @@ public class CliMain {
         gettrade,
         confirmpaymentstarted,
         confirmpaymentreceived,
+        keepfunds,
+        withdrawfunds,
         createpaymentacct,
         getpaymentaccts,
         getversion,
@@ -320,6 +324,32 @@ public class CliMain {
                     out.printf("trade '%s' payment received message sent", tradeId);
                     return;
                 }
+                case keepfunds: {
+                    if (nonOptionArgs.size() < 2)
+                        throw new IllegalArgumentException("incorrect parameter count, expecting trade id");
+
+                    var tradeId = nonOptionArgs.get(1);
+                    var request = KeepFundsRequest.newBuilder()
+                            .setTradeId(tradeId)
+                            .build();
+                    tradesService.keepFunds(request);
+                    out.printf("funds from trade '%s' saved in bisq wallet", tradeId);
+                    return;
+                }
+                case withdrawfunds: {
+                    if (nonOptionArgs.size() < 3)
+                        throw new IllegalArgumentException("incorrect parameter count, expecting trade id, bitcoin wallet address");
+
+                    var tradeId = nonOptionArgs.get(1);
+                    var address = nonOptionArgs.get(2);
+                    var request = WithdrawFundsRequest.newBuilder()
+                            .setTradeId(tradeId)
+                            .setAddress(address)
+                            .build();
+                    tradesService.withdrawFunds(request);
+                    out.printf("funds from trade '%s' sent to btc address '%s'", tradeId, address);
+                    return;
+                }
                 case createpaymentacct: {
                     if (nonOptionArgs.size() < 5)
                         throw new IllegalArgumentException(
@@ -451,6 +481,8 @@ public class CliMain {
             stream.format(rowFormat, "gettrade", "trade id [,showcontract]", "Get trade summary or full contract");
             stream.format(rowFormat, "confirmpaymentstarted", "trade id", "Confirm payment started");
             stream.format(rowFormat, "confirmpaymentreceived", "trade id", "Confirm payment received");
+            stream.format(rowFormat, "keepfunds", "trade id", "Keep received funds in Bisq wallet");
+            stream.format(rowFormat, "withdrawfunds", "trade id, bitcoin wallet address", "Withdraw received funds to external wallet address");
             stream.format(rowFormat, "createpaymentacct", "account name, account number, currency code", "Create PerfectMoney dummy account");
             stream.format(rowFormat, "getpaymentaccts", "", "Get user payment accounts");
             stream.format(rowFormat, "lockwallet", "", "Remove wallet password from memory, locking the wallet");

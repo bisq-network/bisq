@@ -189,6 +189,14 @@ public class CoreApi {
         coreTradesService.confirmPaymentReceived(tradeId);
     }
 
+    public void keepFunds(String tradeId) {
+        coreTradesService.keepFunds(tradeId);
+    }
+
+    public void withdrawFunds(String tradeId, String address) {
+        coreTradesService.withdrawFunds(tradeId, address);
+    }
+
     public Trade getTrade(String tradeId) {
         return coreTradesService.getTrade(tradeId);
     }

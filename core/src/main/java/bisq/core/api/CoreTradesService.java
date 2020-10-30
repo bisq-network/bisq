@@ -116,6 +116,16 @@ class CoreTradesService {
         }
     }
 
+    @SuppressWarnings("unused")
+    void keepFunds(String tradeId) {
+        log.info("TODO");
+    }
+
+    @SuppressWarnings("unused")
+    void withdrawFunds(String tradeId, String address) {
+        log.info("TODO");
+    }
+
     String getTradeRole(String tradeId) {
         return tradeUtil.getRole(getTrade(tradeId));
     }
