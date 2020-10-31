@@ -338,6 +338,31 @@ public class FormBuilder {
         return new Tuple3<>(topLabelWithVBox.first, textField, topLabelWithVBox.second);
     }
 
+    public static Tuple2<TextField, Button> addTextFieldWithEditButton(GridPane gridPane, int rowIndex, String title) {
+        TextField textField = new BisqTextField();
+        textField.setPromptText(title);
+        textField.setEditable(false);
+        textField.setFocusTraversable(false);
+        textField.setPrefWidth(Layout.INITIAL_WINDOW_WIDTH);
+
+        Button button = new AutoTooltipButton("...");
+        button.setStyle("-fx-min-width: 35px; -fx-pref-height: 20; -fx-padding: 3 3 3 3; -fx-border-insets: 5px;");
+        button.managedProperty().bind(button.visibleProperty());
+        VBox vBoxButton = new VBox(button);
+        vBoxButton.setAlignment(Pos.CENTER);
+        HBox hBox2 = new HBox(textField, vBoxButton);
+
+        Label label = getTopLabel(title);
+        VBox textFieldVbox = getTopLabelVBox(0);
+        textFieldVbox.getChildren().addAll(label, hBox2);
+
+        gridPane.getChildren().add(textFieldVbox);
+        GridPane.setRowIndex(textFieldVbox, rowIndex);
+        GridPane.setMargin(textFieldVbox, new Insets(Layout.FLOATING_LABEL_DISTANCE, 0, 0, 0));
+
+        return new Tuple2<>(textField, button);
+    }
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Confirmation Fields
     ///////////////////////////////////////////////////////////////////////////////////////////

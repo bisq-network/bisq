@@ -26,6 +26,7 @@ import bisq.desktop.components.InputTextField;
 import bisq.desktop.components.PasswordTextField;
 import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.main.overlays.windows.EditCustomExplorerWindow;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.ImageUtil;
 import bisq.desktop.util.Layout;
@@ -45,7 +46,6 @@ import bisq.core.locale.LanguageUtil;
 import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.provider.fee.FeeService;
-import bisq.core.user.BlockChainExplorer;
 import bisq.core.user.Preferences;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.ParsingUtils;
@@ -57,6 +57,7 @@ import bisq.core.util.validation.RegexValidatorFactory;
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
 import bisq.common.config.Config;
+import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple3;
 import bisq.common.util.Utilities;
 
@@ -73,6 +74,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.Separator;
+import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
@@ -107,8 +109,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @FxmlView
 public class PreferencesView extends ActivatableViewAndModel<GridPane, PreferencesViewModel> {
     private final CoinFormatter formatter;
-    private ComboBox<BlockChainExplorer> blockChainExplorerComboBox;
-    private ComboBox<BlockChainExplorer> bsqBlockChainExplorerComboBox;
+    private TextField btcExplorerTextField, bsqExplorerTextField;
     private ComboBox<String> userLanguageComboBox;
     private ComboBox<Country> userCountryComboBox;
     private ComboBox<TradeCurrency> preferredTradeCurrencyComboBox;
@@ -138,9 +139,8 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     private ComboBox<FiatCurrency> fiatCurrenciesComboBox;
     private ListView<CryptoCurrency> cryptoCurrenciesListView;
     private ComboBox<CryptoCurrency> cryptoCurrenciesComboBox;
-    private Button resetDontShowAgainButton, resyncDaoFromGenesisButton, resyncDaoFromResourcesButton;
-    private ObservableList<BlockChainExplorer> blockExplorers;
-    private ObservableList<BlockChainExplorer> bsqBlockChainExplorers;
+    private Button resetDontShowAgainButton, resyncDaoFromGenesisButton, resyncDaoFromResourcesButton,
+            editCustomBtcExplorer, editCustomBsqExplorer;
     private ObservableList<String> languageCodes;
     private ObservableList<Country> countries;
     private ObservableList<FiatCurrency> fiatCurrencies;
@@ -194,8 +194,6 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
 
     @Override
     public void initialize() {
-        blockExplorers = FXCollections.observableArrayList(preferences.getBlockChainExplorers());
-        bsqBlockChainExplorers = FXCollections.observableArrayList(preferences.getBsqBlockChainExplorers());
         languageCodes = FXCollections.observableArrayList(LanguageUtil.getUserLanguageCodes());
         countries = FXCollections.observableArrayList(CountryUtil.getAllCountries());
         fiatCurrencies = preferences.getFiatCurrenciesAsObservable();
@@ -255,15 +253,13 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         userCountryComboBox.setButtonCell(GUIUtil.getComboBoxButtonCell(Res.get("shared.country"), userCountryComboBox,
                 false));
 
-        blockChainExplorerComboBox = addComboBox(root, ++gridRow,
-                Res.get("setting.preferences.explorer"));
-        blockChainExplorerComboBox.setButtonCell(GUIUtil.getComboBoxButtonCell(Res.get("setting.preferences.explorer"),
-                blockChainExplorerComboBox, false));
+        Tuple2<TextField, Button> btcExp = addTextFieldWithEditButton(root, ++gridRow, Res.get("setting.preferences.explorer"));
+        btcExplorerTextField = btcExp.first;
+        editCustomBtcExplorer = btcExp.second;
 
-        bsqBlockChainExplorerComboBox = addComboBox(root, ++gridRow,
-                Res.get("setting.preferences.explorer.bsq"));
-        bsqBlockChainExplorerComboBox.setButtonCell(GUIUtil.getComboBoxButtonCell(Res.get("setting.preferences.explorer.bsq"),
-                bsqBlockChainExplorerComboBox, false));
+        Tuple2<TextField, Button> bsqExp = addTextFieldWithEditButton(root, ++gridRow, Res.get("setting.preferences.explorer.bsq"));
+        bsqExplorerTextField = bsqExp.first;
+        editCustomBsqExplorer = bsqExp.second;
 
         Tuple3<Label, InputTextField, ToggleButton> tuple = addTopLabelInputTextFieldSlideToggleButton(root, ++gridRow,
                 Res.get("setting.preferences.txFee"), Res.get("setting.preferences.useCustomValue"));
@@ -831,35 +827,8 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
             }
         });
 
-        blockChainExplorerComboBox.setItems(blockExplorers);
-        blockChainExplorerComboBox.getSelectionModel().select(preferences.getBlockChainExplorer());
-        blockChainExplorerComboBox.setConverter(new StringConverter<>() {
-            @Override
-            public String toString(BlockChainExplorer blockChainExplorer) {
-                return blockChainExplorer.name;
-            }
-
-            @Override
-            public BlockChainExplorer fromString(String string) {
-                return null;
-            }
-        });
-        blockChainExplorerComboBox.setOnAction(e -> preferences.setBlockChainExplorer(blockChainExplorerComboBox.getSelectionModel().getSelectedItem()));
-
-        bsqBlockChainExplorerComboBox.setItems(bsqBlockChainExplorers);
-        bsqBlockChainExplorerComboBox.getSelectionModel().select(preferences.getBsqBlockChainExplorer());
-        bsqBlockChainExplorerComboBox.setConverter(new StringConverter<>() {
-            @Override
-            public String toString(BlockChainExplorer bsqBlockChainExplorer) {
-                return bsqBlockChainExplorer.name;
-            }
-
-            @Override
-            public BlockChainExplorer fromString(String string) {
-                return null;
-            }
-        });
-        bsqBlockChainExplorerComboBox.setOnAction(e -> preferences.setBsqBlockChainExplorer(bsqBlockChainExplorerComboBox.getSelectionModel().getSelectedItem()));
+        btcExplorerTextField.setText(preferences.getBlockChainExplorer().name);
+        bsqExplorerTextField.setText(preferences.getBsqBlockChainExplorer().name);
 
         deviationInputTextField.setText(FormattingUtils.formatPercentagePrice(preferences.getMaxPriceDistanceInPercent()));
         deviationInputTextField.textProperty().addListener(deviationListener);
@@ -936,6 +905,34 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         sortMarketCurrenciesNumerically.setOnAction(e -> preferences.setSortMarketCurrenciesNumerically(sortMarketCurrenciesNumerically.isSelected()));
 
         resetDontShowAgainButton.setOnAction(e -> preferences.resetDontShowAgain());
+
+        editCustomBtcExplorer.setOnAction(e -> {
+            EditCustomExplorerWindow urlWindow = new EditCustomExplorerWindow("BTC",
+                    preferences.getBlockChainExplorer(), preferences.getBlockChainExplorers());
+            urlWindow
+                    .actionButtonText(Res.get("shared.save"))
+                    .onAction(() -> {
+                        preferences.setBlockChainExplorer(urlWindow.getEditedBlockChainExplorer());
+                        btcExplorerTextField.setText(preferences.getBlockChainExplorer().name);
+                    })
+                    .closeButtonText(Res.get("shared.cancel"))
+                    .onClose(urlWindow::hide)
+                    .show();
+        });
+
+        editCustomBsqExplorer.setOnAction(e -> {
+            EditCustomExplorerWindow urlWindow = new EditCustomExplorerWindow("BSQ",
+                    preferences.getBsqBlockChainExplorer(), preferences.getBsqBlockChainExplorers());
+            urlWindow
+                    .actionButtonText(Res.get("shared.save"))
+                    .onAction(() -> {
+                        preferences.setBsqBlockChainExplorer(urlWindow.getEditedBlockChainExplorer());
+                        bsqExplorerTextField.setText(preferences.getBsqBlockChainExplorer().name);
+                    })
+                    .closeButtonText(Res.get("shared.cancel"))
+                    .onClose(urlWindow::hide)
+                    .show();
+        });
 
         // We use opposite property (useStandbyMode) in preferences to have the default value (false) set as we want it,
         // so users who update gets set avoidStandbyMode=true (useStandbyMode=false)
@@ -1059,8 +1056,8 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         //selectBaseCurrencyNetworkComboBox.setOnAction(null);
         userLanguageComboBox.setOnAction(null);
         userCountryComboBox.setOnAction(null);
-        blockChainExplorerComboBox.setOnAction(null);
-        bsqBlockChainExplorerComboBox.setOnAction(null);
+        editCustomBtcExplorer.setOnAction(null);
+        editCustomBsqExplorer.setOnAction(null);
         deviationInputTextField.textProperty().removeListener(deviationListener);
         deviationInputTextField.focusedProperty().removeListener(deviationFocusedListener);
         transactionFeeInputTextField.focusedProperty().removeListener(transactionFeeFocusedListener);
