@@ -71,6 +71,12 @@ class CoreWalletsService {
         this.btcWalletService = btcWalletService;
     }
 
+    @Nullable
+    KeyParameter getKey() {
+        verifyEncryptedWalletIsUnlocked();
+        return tempAesKey;
+    }
+
     long getAvailableBalance() {
         verifyWalletsAreAvailable();
         verifyEncryptedWalletIsUnlocked();
