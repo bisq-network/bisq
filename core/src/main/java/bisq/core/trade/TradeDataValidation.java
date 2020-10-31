@@ -194,9 +194,17 @@ public class TradeDataValidation {
             }
 
         } catch (IllegalArgumentException e) {
+            log.error("IllegalArgumentException at testIfDisputeTriesReplay: " +
+                            "disputeToTest={}, disputesPerTradeId={}, disputesPerDelayedPayoutTxId={}, " +
+                            "disputesPerDepositTxId={}",
+                    disputeToTest, disputesPerTradeId, disputesPerDelayedPayoutTxId, disputesPerDepositTxId);
             throw new DisputeReplayException(disputeToTest, e.getMessage());
         } catch (NullPointerException e) {
-            throw new DisputeReplayException(disputeToTest, e.toString());
+            log.error("NullPointerException at testIfDisputeTriesReplay: " +
+                            "disputeToTest={}, disputesPerTradeId={}, disputesPerDelayedPayoutTxId={}, " +
+                            "disputesPerDepositTxId={}",
+                    disputeToTest, disputesPerTradeId, disputesPerDelayedPayoutTxId, disputesPerDepositTxId);
+            throw new DisputeReplayException(disputeToTest, e.toString() + " at dispute " + disputeToTest.toString());
         }
     }
 
