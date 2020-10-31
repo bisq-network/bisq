@@ -931,6 +931,7 @@ message PaymentAccountPayload {
         AdvancedCashAccountPayload advanced_cash_account_payload = 26;
         InstantCryptoCurrencyAccountPayload instant_crypto_currency_account_payload = 27;
         JapanBankAccountPayload japan_bank_account_payload = 28;
+        TransferwiseAccountPayload Transferwise_account_payload = 29;
     }
     map<string, string> exclude_from_json_data = 15;
 }
@@ -1129,6 +1130,10 @@ message PromptPayAccountPayload {
 
 message AdvancedCashAccountPayload {
     string account_nr = 1;
+}
+
+message TransferwiseAccountPayload {
+    string email = 1;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
