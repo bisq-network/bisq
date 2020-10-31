@@ -154,7 +154,14 @@ public class InventoryWebServer {
         sb.append("Operator: ").append(operator).append("<br/>");
 
         String address = nodeAddress.getFullAddress();
-        sb.append("Node address: ").append(address).append("<br/>");
+
+        String filteredSeeds = requestInfo != null ? requestInfo.getValue(InventoryItem.filteredSeeds) : null;
+        if (filteredSeeds != null && filteredSeeds.contains(address)) {
+            sb.append(getColorTagByDeviationSeverity(DeviationSeverity.ALERT)).append("Node address: ")
+                    .append(address).append(" (is filtered!)").append(CLOSE_TAG);
+        } else {
+            sb.append("Node address: ").append(address).append("<br/>");
+        }
 
         if (requestInfo != null) {
             sb.append("Version: ").append(requestInfo.getDisplayValue(InventoryItem.version)).append("<br/>");
