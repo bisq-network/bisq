@@ -119,7 +119,6 @@ public class EditOfferView extends MutableOfferView<EditOfferViewModel> {
 
         // To force re-validation of payment account validation
         onPaymentAccountsComboBoxSelected();
-        hidePaymentGroup();
     }
 
     @Override
