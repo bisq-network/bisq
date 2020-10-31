@@ -179,25 +179,23 @@ public class TradeDataValidation {
             checkNotNull(disputeToTestUid,
                     "agentsUid must not be null. Trade ID: " + disputeToTestTradeId);
 
-            checkArgument(disputesPerTradeId.get(disputeToTestTradeId).size() <= 2,
+            Set<String> disputesPerTradeIdItems = disputesPerTradeId.get(disputeToTestTradeId);
+            checkArgument(disputesPerTradeIdItems != null && disputesPerTradeIdItems.size() <= 2,
                     "We found more then 2 disputes with the same trade ID. " +
                             "Trade ID: " + disputeToTestTradeId);
             if (!disputesPerDelayedPayoutTxId.isEmpty()) {
-                checkArgument(disputesPerDelayedPayoutTxId.get(disputeToTestDelayedPayoutTxId).size() <= 2,
+                Set<String> disputesPerDelayedPayoutTxIdItems = disputesPerDelayedPayoutTxId.get(disputeToTestDelayedPayoutTxId);
+                checkArgument(disputesPerDelayedPayoutTxIdItems != null && disputesPerDelayedPayoutTxIdItems.size() <= 2,
                         "We found more then 2 disputes with the same delayedPayoutTxId. " +
                                 "Trade ID: " + disputeToTestTradeId);
             }
             if (!disputesPerDepositTxId.isEmpty()) {
-                checkArgument(disputesPerDepositTxId.get(disputeToTestDepositTxId).size() <= 2,
+                Set<String> disputesPerDepositTxIdItems = disputesPerDepositTxId.get(disputeToTestDepositTxId);
+                checkArgument(disputesPerDepositTxIdItems != null && disputesPerDepositTxIdItems.size() <= 2,
                         "We found more then 2 disputes with the same depositTxId. " +
                                 "Trade ID: " + disputeToTestTradeId);
             }
-
         } catch (IllegalArgumentException e) {
-            log.error("IllegalArgumentException at testIfDisputeTriesReplay: " +
-                            "disputeToTest={}, disputesPerTradeId={}, disputesPerDelayedPayoutTxId={}, " +
-                            "disputesPerDepositTxId={}",
-                    disputeToTest, disputesPerTradeId, disputesPerDelayedPayoutTxId, disputesPerDepositTxId);
             throw new DisputeReplayException(disputeToTest, e.getMessage());
         } catch (NullPointerException e) {
             log.error("NullPointerException at testIfDisputeTriesReplay: " +
