@@ -124,7 +124,8 @@ public enum InventoryItem {
     version("version", false),
     commitHash("commitHash", false),
     usedMemory("usedMemory", true),
-    jvmStartTime("jvmStartTime", true);
+    jvmStartTime("jvmStartTime", true),
+    filteredSeeds("filteredSeeds", false);
 
     @Getter
     private final String key;

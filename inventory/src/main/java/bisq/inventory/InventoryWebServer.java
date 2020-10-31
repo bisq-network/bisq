@@ -176,6 +176,8 @@ public class InventoryWebServer {
                             true, true) :
                     "n/a";
             sb.append("Run duration: ").append(duration).append("<br/>");
+
+            sb.append("Filtered seed nodes: ").append(requestInfo.getDisplayValue(InventoryItem.filteredSeeds)).append("<br/>");
         }
 
         return sb.toString();

@@ -24,6 +24,8 @@ import bisq.core.dao.monitoring.model.BlindVoteStateBlock;
 import bisq.core.dao.monitoring.model.DaoStateBlock;
 import bisq.core.dao.monitoring.model.ProposalStateBlock;
 import bisq.core.dao.state.DaoStateService;
+import bisq.core.filter.Filter;
+import bisq.core.filter.FilterManager;
 import bisq.core.network.p2p.inventory.messages.GetInventoryRequest;
 import bisq.core.network.p2p.inventory.messages.GetInventoryResponse;
 import bisq.core.network.p2p.inventory.model.InventoryItem;
@@ -47,6 +49,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import com.google.common.base.Enums;
+import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 
 import java.util.HashMap;
@@ -66,6 +69,7 @@ public class GetInventoryRequestHandler implements MessageListener {
     private final DaoStateMonitoringService daoStateMonitoringService;
     private final ProposalStateMonitoringService proposalStateMonitoringService;
     private final BlindVoteStateMonitoringService blindVoteStateMonitoringService;
+    private final FilterManager filterManager;
     private final int maxConnections;
 
     @Inject
@@ -76,6 +80,7 @@ public class GetInventoryRequestHandler implements MessageListener {
                                       DaoStateMonitoringService daoStateMonitoringService,
                                       ProposalStateMonitoringService proposalStateMonitoringService,
                                       BlindVoteStateMonitoringService blindVoteStateMonitoringService,
+                                      FilterManager filterManager,
                                       @Named(Config.MAX_CONNECTIONS) int maxConnections) {
         this.networkNode = networkNode;
         this.peerManager = peerManager;
@@ -84,6 +89,7 @@ public class GetInventoryRequestHandler implements MessageListener {
         this.daoStateMonitoringService = daoStateMonitoringService;
         this.proposalStateMonitoringService = proposalStateMonitoringService;
         this.blindVoteStateMonitoringService = blindVoteStateMonitoringService;
+        this.filterManager = filterManager;
         this.maxConnections = maxConnections;
 
         this.networkNode.addMessageListener(this);
@@ -148,6 +154,11 @@ public class GetInventoryRequestHandler implements MessageListener {
             inventory.put(InventoryItem.commitHash, RequestInfo.COMMIT_HASH);
             inventory.put(InventoryItem.usedMemory, String.valueOf(Profiler.getUsedMemoryInBytes()));
             inventory.put(InventoryItem.jvmStartTime, String.valueOf(ManagementFactory.getRuntimeMXBean().getStartTime()));
+
+            Filter filter = filterManager.getFilter();
+            if (filter != null) {
+                inventory.put(InventoryItem.filteredSeeds, Joiner.on(", ").join(filter.getSeedNodes()));
+            }
 
             log.info("Send inventory {} to {}", inventory, connection.getPeersNodeAddressOptional());
             GetInventoryResponse getInventoryResponse = new GetInventoryResponse(inventory);
