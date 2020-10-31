@@ -91,7 +91,7 @@ public class AxisInlierUtils {
     /* Finds the minimum and maximum inlier values. The returned values may be NaN.
      * See `computeInlierThreshold` for the definition of inlier.
      */
-    private static Tuple2<Double, Double> findInlierRange(
+    public static Tuple2<Double, Double> findInlierRange(
             List<Double> yValues,
             double percentToTrim,
             double howManyStdDevsConstituteOutlier

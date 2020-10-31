@@ -148,11 +148,11 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     private ObservableList<CryptoCurrency> cryptoCurrencies;
     private ObservableList<CryptoCurrency> allCryptoCurrencies;
     private ObservableList<TradeCurrency> tradeCurrencies;
-    private InputTextField deviationInputTextField;
-    private ChangeListener<String> deviationListener, ignoreTradersListListener, ignoreDustThresholdListener,
+    private InputTextField deviationInputTextField, bsqAverageTrimThresholdTextField;
+    private ChangeListener<String> deviationListener, bsqAverageTrimThresholdListener, ignoreTradersListListener, ignoreDustThresholdListener,
             rpcUserListener, rpcPwListener, blockNotifyPortListener,
             autoConfTradeLimitListener, autoConfServiceAddressListener;
-    private ChangeListener<Boolean> deviationFocusedListener;
+    private ChangeListener<Boolean> deviationFocusedListener, bsqAverageTrimThresholdFocusedListener;
     private ChangeListener<Boolean> useCustomFeeCheckboxListener;
     private ChangeListener<Number> transactionFeeChangeListener;
     private final boolean daoOptionsSet;
@@ -318,7 +318,6 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         // deviation
         deviationInputTextField = addInputTextField(root, ++gridRow,
                 Res.get("setting.preferences.deviation"));
-
         deviationListener = (observable, oldValue, newValue) -> {
             try {
                 double value = ParsingUtils.parsePercentStringToDouble(newValue);
@@ -327,16 +326,16 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
                     preferences.setMaxPriceDistanceInPercent(value);
                 } else {
                     new Popup().warning(Res.get("setting.preferences.deviationToLarge", maxDeviation * 100)).show();
-                    UserThread.runAfter(() -> deviationInputTextField.setText(FormattingUtils.formatPercentagePrice(preferences.getMaxPriceDistanceInPercent())), 100, TimeUnit.MILLISECONDS);
+                    UserThread.runAfter(() -> deviationInputTextField.setText(FormattingUtils.formatToPercentWithSymbol(preferences.getMaxPriceDistanceInPercent())), 100, TimeUnit.MILLISECONDS);
                 }
             } catch (NumberFormatException t) {
                 log.error("Exception at parseDouble deviation: " + t.toString());
-                UserThread.runAfter(() -> deviationInputTextField.setText(FormattingUtils.formatPercentagePrice(preferences.getMaxPriceDistanceInPercent())), 100, TimeUnit.MILLISECONDS);
+                UserThread.runAfter(() -> deviationInputTextField.setText(FormattingUtils.formatToPercentWithSymbol(preferences.getMaxPriceDistanceInPercent())), 100, TimeUnit.MILLISECONDS);
             }
         };
         deviationFocusedListener = (observable1, oldValue1, newValue1) -> {
             if (oldValue1 && !newValue1)
-                UserThread.runAfter(() -> deviationInputTextField.setText(FormattingUtils.formatPercentagePrice(preferences.getMaxPriceDistanceInPercent())), 100, TimeUnit.MILLISECONDS);
+                UserThread.runAfter(() -> deviationInputTextField.setText(FormattingUtils.formatToPercentWithSymbol(preferences.getMaxPriceDistanceInPercent())), 100, TimeUnit.MILLISECONDS);
         };
 
         // ignoreTraders
@@ -617,7 +616,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     }
 
     private void initializeDaoOptions() {
-        daoOptionsTitledGroupBg = addTitledGroupBg(root, ++gridRow, 3, Res.get("setting.preferences.daoOptions"), Layout.GROUP_DISTANCE);
+        daoOptionsTitledGroupBg = addTitledGroupBg(root, ++gridRow, 4, Res.get("setting.preferences.daoOptions"), Layout.GROUP_DISTANCE);
         resyncDaoFromResourcesButton = addButton(root, gridRow, Res.get("setting.preferences.dao.resyncFromResources.label"), Layout.TWICE_FIRST_ROW_AND_GROUP_DISTANCE);
         resyncDaoFromResourcesButton.setMaxWidth(Double.MAX_VALUE);
         GridPane.setHgrow(resyncDaoFromResourcesButton, Priority.ALWAYS);
@@ -625,6 +624,36 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         resyncDaoFromGenesisButton = addButton(root, ++gridRow, Res.get("setting.preferences.dao.resyncFromGenesis.label"));
         resyncDaoFromGenesisButton.setMaxWidth(Double.MAX_VALUE);
         GridPane.setHgrow(resyncDaoFromGenesisButton, Priority.ALWAYS);
+
+        bsqAverageTrimThresholdTextField = addInputTextField(root, ++gridRow,
+                Res.get("setting.preferences.bsqAverageTrimThreshold"));
+        bsqAverageTrimThresholdTextField.setText(FormattingUtils.formatToPercentWithSymbol(preferences.getBsqAverageTrimThreshold()));
+
+        bsqAverageTrimThresholdListener = (observable, oldValue, newValue) -> {
+            try {
+                double value = ParsingUtils.parsePercentStringToDouble(newValue);
+                double maxValue = 0.49;
+                checkArgument(value >= 0, "Input must be positive");
+                if (value <= maxValue) {
+                    preferences.setBsqAverageTrimThreshold(value);
+                } else {
+                    new Popup().warning(Res.get("setting.preferences.deviationToLarge",
+                            maxValue * 100)).show();
+                    UserThread.runAfter(() -> bsqAverageTrimThresholdTextField.setText(FormattingUtils.formatToPercentWithSymbol(
+                            preferences.getBsqAverageTrimThreshold())), 100, TimeUnit.MILLISECONDS);
+                }
+            } catch (NumberFormatException t) {
+                log.error("Exception: " + t.toString());
+                UserThread.runAfter(() -> bsqAverageTrimThresholdTextField.setText(FormattingUtils.formatToPercentWithSymbol(
+                        preferences.getBsqAverageTrimThreshold())), 100, TimeUnit.MILLISECONDS);
+            }
+        };
+        bsqAverageTrimThresholdFocusedListener = (observable1, oldValue1, newValue1) -> {
+            if (oldValue1 && !newValue1)
+                UserThread.runAfter(() -> bsqAverageTrimThresholdTextField.setText(FormattingUtils.formatToPercentWithSymbol(
+                        preferences.getBsqAverageTrimThreshold())), 100, TimeUnit.MILLISECONDS);
+        };
+
 
         isDaoFullNodeToggleButton = addSlideToggleButton(root, ++gridRow, Res.get("setting.preferences.dao.isDaoFullNode"));
         rpcUserTextField = addInputTextField(root, ++gridRow, Res.get("setting.preferences.dao.rpcUser"));
@@ -861,7 +890,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         });
         bsqBlockChainExplorerComboBox.setOnAction(e -> preferences.setBsqBlockChainExplorer(bsqBlockChainExplorerComboBox.getSelectionModel().getSelectedItem()));
 
-        deviationInputTextField.setText(FormattingUtils.formatPercentagePrice(preferences.getMaxPriceDistanceInPercent()));
+        deviationInputTextField.setText(FormattingUtils.formatToPercentWithSymbol(preferences.getMaxPriceDistanceInPercent()));
         deviationInputTextField.textProperty().addListener(deviationListener);
         deviationInputTextField.focusedProperty().addListener(deviationFocusedListener);
 
@@ -950,6 +979,10 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     private void activateDaoPreferences() {
         boolean daoFullNode = preferences.isDaoFullNode();
         isDaoFullNodeToggleButton.setSelected(daoFullNode);
+
+        bsqAverageTrimThresholdTextField.textProperty().addListener(bsqAverageTrimThresholdListener);
+        bsqAverageTrimThresholdTextField.focusedProperty().addListener(bsqAverageTrimThresholdFocusedListener);
+
         String rpcUser = preferences.getRpcUser();
         String rpcPw = preferences.getRpcPw();
         int blockNotifyPort = preferences.getBlockNotifyPort();
@@ -1091,6 +1124,8 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     private void deactivateDaoPreferences() {
         resyncDaoFromResourcesButton.setOnAction(null);
         resyncDaoFromGenesisButton.setOnAction(null);
+        bsqAverageTrimThresholdTextField.textProperty().removeListener(bsqAverageTrimThresholdListener);
+        bsqAverageTrimThresholdTextField.focusedProperty().removeListener(bsqAverageTrimThresholdFocusedListener);
         isDaoFullNodeToggleButton.setOnAction(null);
         rpcUserTextField.textProperty().removeListener(rpcUserListener);
         rpcPwTextField.textProperty().removeListener(rpcPwListener);

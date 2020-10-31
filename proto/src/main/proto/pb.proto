@@ -1581,6 +1581,7 @@ message PreferencesPayload {
     int32 css_theme = 54;
     bool tac_accepted_v120 = 55;
     repeated AutoConfirmSettings auto_confirm_settings = 56;
+    double bsq_average_trim_threshold = 57;
 }
 
 message AutoConfirmSettings {

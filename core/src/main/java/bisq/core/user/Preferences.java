@@ -416,6 +416,11 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         requestPersistence();
     }
 
+    public void setBsqAverageTrimThreshold(double bsqAverageTrimThreshold) {
+        prefPayload.setBsqAverageTrimThreshold(bsqAverageTrimThreshold);
+        requestPersistence();
+    }
+
     public Optional<AutoConfirmSettings> findAutoConfirmSettings(String currencyCode) {
         return prefPayload.getAutoConfirmSettingsList().stream()
                 .filter(e -> e.getCurrencyCode().equals(currencyCode))
@@ -1033,6 +1038,8 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         int getBlockNotifyPort();
 
         void setTacAcceptedV120(boolean tacAccepted);
+
+        void setBsqAverageTrimThreshold(double bsqAverageTrimThreshold);
 
         void setAutoConfirmSettings(AutoConfirmSettings autoConfirmSettings);
     }
