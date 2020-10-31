@@ -29,7 +29,7 @@ import org.jetbrains.annotations.Nullable;
 @Getter
 public class RequestInfo {
     // Carries latest commit hash of feature changes (not latest commit as that is then the commit for editing that field)
-    public static final String COMMIT_HASH = "b0f8b968";
+    public static final String COMMIT_HASH = "764d0fa4";
 
     private final long requestStartTime;
     @Setter
