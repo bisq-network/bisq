@@ -486,15 +486,19 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                 long time = model.getTimeFromTickIndex(index);
                 String fmt = "";
                 switch (model.tickUnit) {
-                case YEAR  : fmt = "yyyy";
+                case YEAR:
+                    fmt = "yyyy";
                     break;
-                case MONTH : fmt = "MMMyy";
+                case MONTH:
+                    fmt = "MMMyy";
                     break;
-                case WEEK  :
-                case DAY   : fmt = "dd/MMM\nyyyy";
+                case WEEK:
+                case DAY:
+                    fmt = "dd/MMM\nyyyy";
                     break;
-                case HOUR  :
-                case MINUTE_10: fmt = "HH:mm\ndd/MMM";
+                case HOUR :
+                case MINUTE_10:
+                    fmt = "HH:mm\ndd/MMM";
                     break;
                 default:        // nothing here
                 }
