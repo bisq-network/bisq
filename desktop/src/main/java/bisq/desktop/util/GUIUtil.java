@@ -276,7 +276,6 @@ public class GUIUtil {
     public static <T> void exportCSV(String fileName, CSVEntryConverter<T> headerConverter,
                                      CSVEntryConverter<T> contentConverter, T emptyItem,
                                      List<T> list, Stage stage) {
-
         FileChooser fileChooser = new FileChooser();
         fileChooser.setInitialFileName(fileName);
         File file = fileChooser.showSaveDialog(stage);
@@ -296,7 +295,7 @@ public class GUIUtil {
             } catch (RuntimeException | IOException e) {
                 e.printStackTrace();
                 log.error(e.getMessage());
-                new Popup().error(Res.get("guiUtil.accountExport.exportFailed", e.getMessage()));
+                new Popup().error(Res.get("guiUtil.accountExport.exportFailed", e.getMessage())).show();
             }
         }
     }
