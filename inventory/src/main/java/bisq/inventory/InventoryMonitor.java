@@ -47,6 +47,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
@@ -158,10 +159,24 @@ public class InventoryMonitor implements SetupListener {
             requestInfo.setErrorMessage(errorMessage);
         }
 
+        boolean ignoreDeviationAtStartup;
         if (result != null) {
             log.info("nodeAddress={}, result={}", nodeAddress, result.toString());
             long responseTime = System.currentTimeMillis();
             requestInfo.setResponseTime(responseTime);
+
+            // If seed just started up we ignore the deviation as it can be expected that seed is still syncing
+            // DAO state/blocks. P2P data should be ready but as we received it from other seeds it is not that
+            // valuable information either, so we apply the ignore to all data.
+            if (result.containsKey(InventoryItem.jvmStartTime)) {
+                String jvmStartTimeString = result.get(InventoryItem.jvmStartTime);
+                long jvmStartTime = Long.parseLong(jvmStartTimeString);
+                ignoreDeviationAtStartup = jvmStartTime < TimeUnit.MINUTES.toMillis(2);
+            } else {
+                ignoreDeviationAtStartup = false;
+            }
+        } else {
+            ignoreDeviationAtStartup = false;
         }
 
         requestInfoListByNode.putIfAbsent(nodeAddress, new ArrayList<>());
@@ -189,10 +204,11 @@ public class InventoryMonitor implements SetupListener {
             Tuple2<Double, Double> tuple = inventoryItem.getDeviationAndAverage(averageValues, value);
             Double deviation = tuple != null ? tuple.first : null;
             Double average = tuple != null ? tuple.second : null;
-            DeviationSeverity deviationSeverity = inventoryItem.getDeviationSeverity(deviation,
-                    requestInfoListByNodeValues,
-                    value,
-                    daoStateChainHeight);
+            DeviationSeverity deviationSeverity = ignoreDeviationAtStartup ? DeviationSeverity.IGNORED :
+                    inventoryItem.getDeviationSeverity(deviation,
+                            requestInfoListByNodeValues,
+                            value,
+                            daoStateChainHeight);
             int endIndex = Math.max(0, requestInfoList.size() - 1);
             int deviationTolerance = inventoryItem.getDeviationTolerance();
             int fromIndex = Math.max(0, endIndex - deviationTolerance);

@@ -18,6 +18,7 @@
 package bisq.core.network.p2p.inventory.model;
 
 public enum DeviationSeverity {
+    IGNORED,
     OK,
     WARN,
     ALERT

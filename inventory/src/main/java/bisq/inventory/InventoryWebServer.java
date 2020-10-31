@@ -402,6 +402,8 @@ public class InventoryWebServer {
                 return "<font color=\"#0000cc\">";
             case ALERT:
                 return "<font color=\"#cc0000\">";
+            case IGNORED:
+                return "<font color=\"#333333\">";
             case OK:
             default:
                 return "<font color=\"black\">";
