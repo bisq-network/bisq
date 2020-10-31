@@ -158,6 +158,7 @@ public class InventoryWebServer {
 
         if (requestInfo != null) {
             sb.append("Version: ").append(requestInfo.getDisplayValue(InventoryItem.version)).append("<br/>");
+            sb.append("Commit hash: ").append(requestInfo.getDisplayValue(InventoryItem.commitHash)).append("<br/>");
             String memory = requestInfo.getValue(InventoryItem.usedMemory);
             String memoryString = memory != null ? Utilities.readableFileSize(Long.parseLong(memory)) : "n/a";
             sb.append("Memory used: ")

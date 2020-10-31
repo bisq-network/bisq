@@ -122,6 +122,7 @@ public enum InventoryItem {
 
     // No deviation check
     version("version", false),
+    commitHash("commitHash", false),
     usedMemory("usedMemory", true),
     jvmStartTime("jvmStartTime", true);
 
