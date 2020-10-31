@@ -186,7 +186,9 @@ public class InventoryWebServer {
                     "n/a";
             sb.append("Run duration: ").append(duration).append("<br/>");
 
-            sb.append("Filtered seed nodes: ").append(requestInfo.getDisplayValue(InventoryItem.filteredSeeds)).append("<br/>");
+            sb.append("Filtered seed nodes: ")
+                    .append(requestInfo.getDisplayValue(InventoryItem.filteredSeeds).replace(System.getProperty("line.separator"), "<br/>"))
+                    .append("<br/>");
         }
 
         return sb.toString();
