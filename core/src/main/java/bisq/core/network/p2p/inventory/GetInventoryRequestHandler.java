@@ -157,7 +157,7 @@ public class GetInventoryRequestHandler implements MessageListener {
 
             Filter filter = filterManager.getFilter();
             if (filter != null) {
-                inventory.put(InventoryItem.filteredSeeds, Joiner.on(",\n").join(filter.getSeedNodes()));
+                inventory.put(InventoryItem.filteredSeeds, Joiner.on("," + System.getProperty("line.separator")).join(filter.getSeedNodes()));
             }
 
             log.info("Send inventory {} to {}", inventory, connection.getPeersNodeAddressOptional());
