@@ -24,6 +24,7 @@ import bisq.core.util.FormattingUtils;
 
 import bisq.network.p2p.NodeAddress;
 
+import bisq.common.app.Version;
 import bisq.common.util.MathUtils;
 import bisq.common.util.Utilities;
 
@@ -108,6 +109,7 @@ public class InventoryWebServer {
                 "<body><h3>")
                 .append("Current time: ").append(new Date().toString()).append("<br/>")
                 .append("Request cycle: ").append(requestCounter).append("<br/>")
+                .append("Version/commit: ").append(Version.VERSION).append(" / ").append(RequestInfo.COMMIT_HASH).append("<br/>")
                 .append("<table style=\"width:100%\">")
                 .append("<tr>")
                 .append("<th align=\"left\">Seed node info</th>")
