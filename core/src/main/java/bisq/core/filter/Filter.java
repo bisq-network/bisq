@@ -48,6 +48,7 @@ import javax.annotation.Nullable;
 public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
     private final List<String> bannedOfferIds;
     private final List<String> bannedNodeAddress;
+    private final List<String> bannedAutoConfExplorers;
     private final List<PaymentAccountFilter> bannedPaymentAccounts;
     private final List<String> bannedCurrencies;
     private final List<String> bannedPaymentMethods;
@@ -115,7 +116,8 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                 signatureAsBase64,
                 filter.getSignerPubKeyAsHex(),
                 filter.getBannedPrivilegedDevPubKeys(),
-                filter.isDisableAutoConf());
+                filter.isDisableAutoConf(),
+                filter.getBannedAutoConfExplorers());
     }
 
     // Used for signature verification as we created the sig without the signatureAsBase64 field we set it to null again
@@ -143,7 +145,8 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                 null,
                 filter.getSignerPubKeyAsHex(),
                 filter.getBannedPrivilegedDevPubKeys(),
-                filter.isDisableAutoConf());
+                filter.isDisableAutoConf(),
+                filter.getBannedAutoConfExplorers());
     }
 
     public Filter(List<String> bannedOfferIds,
@@ -166,7 +169,8 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                   PublicKey ownerPubKey,
                   String signerPubKeyAsHex,
                   List<String> bannedPrivilegedDevPubKeys,
-                  boolean disableAutoConf) {
+                  boolean disableAutoConf,
+                  List<String> bannedAutoConfExplorers) {
         this(bannedOfferIds,
                 bannedNodeAddress,
                 bannedPaymentAccounts,
@@ -190,7 +194,8 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                 null,
                 signerPubKeyAsHex,
                 bannedPrivilegedDevPubKeys,
-                disableAutoConf);
+                disableAutoConf,
+                bannedAutoConfExplorers);
     }
 
 
@@ -222,7 +227,8 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                   @Nullable String signatureAsBase64,
                   String signerPubKeyAsHex,
                   List<String> bannedPrivilegedDevPubKeys,
-                  boolean disableAutoConf) {
+                  boolean disableAutoConf,
+                  List<String> bannedAutoConfExplorers) {
         this.bannedOfferIds = bannedOfferIds;
         this.bannedNodeAddress = bannedNodeAddress;
         this.bannedPaymentAccounts = bannedPaymentAccounts;
@@ -247,6 +253,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
         this.signerPubKeyAsHex = signerPubKeyAsHex;
         this.bannedPrivilegedDevPubKeys = bannedPrivilegedDevPubKeys;
         this.disableAutoConf = disableAutoConf;
+        this.bannedAutoConfExplorers = bannedAutoConfExplorers;
 
         // ownerPubKeyBytes can be null when called from tests
         if (ownerPubKeyBytes != null) {
@@ -283,7 +290,8 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                 .setSignerPubKeyAsHex(signerPubKeyAsHex)
                 .setCreationDate(creationDate)
                 .addAllBannedPrivilegedDevPubKeys(bannedPrivilegedDevPubKeys)
-                .setDisableAutoConf(disableAutoConf);
+                .setDisableAutoConf(disableAutoConf)
+                .addAllBannedAutoConfExplorers(bannedAutoConfExplorers);
 
         Optional.ofNullable(signatureAsBase64).ifPresent(builder::setSignatureAsBase64);
         Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraData);
@@ -320,7 +328,8 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                 proto.getSignatureAsBase64(),
                 proto.getSignerPubKeyAsHex(),
                 ProtoUtil.protocolStringListToList(proto.getBannedPrivilegedDevPubKeysList()),
-                proto.getDisableAutoConf()
+                proto.getDisableAutoConf(),
+                ProtoUtil.protocolStringListToList(proto.getBannedAutoConfExplorersList())
         );
     }
 
@@ -361,6 +370,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                 ",\n     creationDate=" + creationDate +
                 ",\n     extraDataMap=" + extraDataMap +
                 ",\n     disableAutoConf=" + disableAutoConf +
+                ",\n     bannedAutoConfExplorers=" + bannedAutoConfExplorers +
                 "\n}";
     }
 }

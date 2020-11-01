@@ -161,6 +161,8 @@ public class FilterWindow extends Overlay<FilterWindow> {
                 Res.get("filterWindow.disableTradeBelowVersion"));
         InputTextField bannedPrivilegedDevPubKeysTF = addTopLabelInputTextField(gridPane, ++rowIndex,
                 Res.get("filterWindow.bannedPrivilegedDevPubKeys")).second;
+        InputTextField autoConfExplorersTF = addTopLabelInputTextField(gridPane, ++rowIndex,
+                Res.get("filterWindow.autoConfExplorers")).second;
 
         Filter filter = filterManager.getDevFilter();
         if (filter != null) {
@@ -178,6 +180,7 @@ public class FilterWindow extends Overlay<FilterWindow> {
             setupFieldFromList(priceRelayNodesTF, filter.getPriceRelayNodes());
             setupFieldFromList(btcNodesTF, filter.getBtcNodes());
             setupFieldFromList(bannedPrivilegedDevPubKeysTF, filter.getBannedPrivilegedDevPubKeys());
+            setupFieldFromList(autoConfExplorersTF, filter.getBannedAutoConfExplorers());
 
             preventPublicBtcNetworkCheckBox.setSelected(filter.isPreventPublicBtcNetwork());
             disableDaoCheckBox.setSelected(filter.isDisableDao());
@@ -215,7 +218,8 @@ public class FilterWindow extends Overlay<FilterWindow> {
                         filterManager.getOwnerPubKey(),
                         signerPubKeyAsHex,
                         readAsList(bannedPrivilegedDevPubKeysTF),
-                        disableAutoConfCheckBox.isSelected()
+                        disableAutoConfCheckBox.isSelected(),
+                        readAsList(autoConfExplorersTF)
                 );
 
                 // We remove first the old filter

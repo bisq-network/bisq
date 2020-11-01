@@ -398,6 +398,12 @@ public class FilterManager {
                         .anyMatch(e -> e.equals(nodeAddress.getFullAddress()));
     }
 
+    public boolean isAutoConfExplorerBanned(String address) {
+        return getFilter() != null &&
+                getFilter().getBannedAutoConfExplorers().stream()
+                        .anyMatch(e -> e.equals(address));
+    }
+
     public boolean requireUpdateToNewVersionForTrading() {
         if (getFilter() == null) {
             return false;
