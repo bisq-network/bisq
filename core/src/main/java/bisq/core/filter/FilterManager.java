@@ -466,7 +466,7 @@ public class FilterManager {
         Filter currentFilter = getFilter();
 
         if (!isFilterPublicKeyInList(newFilter)) {
-            log.warn("isFilterPublicKeyInList failed. Filter={}", newFilter);
+            log.warn("isFilterPublicKeyInList failed. Filter.getSignerPubKeyAsHex={}", newFilter.getSignerPubKeyAsHex());
             return;
         }
         if (!isSignatureValid(newFilter)) {

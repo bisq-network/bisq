@@ -108,7 +108,7 @@ public class BallotListService implements PersistedDataHost, DaoSetupService {
     private void registerProposalAsBallot(Proposal proposal) {
         Ballot ballot = new Ballot(proposal); // vote is null
         if (log.isInfoEnabled()) {
-            log.info("We create a new ballot with a proposal and add it to our list. " +
+            log.debug("We create a new ballot with a proposal and add it to our list. " +
                     "Vote is null at that moment. proposalTxId={}", proposal.getTxId());
         }
         if (ballotList.contains(ballot)) {
