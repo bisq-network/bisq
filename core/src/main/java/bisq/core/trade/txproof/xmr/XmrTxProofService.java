@@ -257,6 +257,7 @@ public class XmrTxProofService implements AssetTxProofService {
                 trade,
                 autoConfirmSettings,
                 mediationManager,
+                filterManager,
                 refundManager);
         servicesByTradeId.put(trade.getId(), service);
         service.requestFromAllServices(

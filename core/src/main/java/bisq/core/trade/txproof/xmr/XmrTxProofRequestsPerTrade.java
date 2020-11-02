@@ -17,6 +17,7 @@
 
 package bisq.core.trade.txproof.xmr;
 
+import bisq.core.filter.FilterManager;
 import bisq.core.locale.Res;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.mediation.MediationManager;
@@ -54,6 +55,7 @@ class XmrTxProofRequestsPerTrade implements AssetTxProofRequestsPerTrade {
     private final Trade trade;
     private final AutoConfirmSettings autoConfirmSettings;
     private final MediationManager mediationManager;
+    private final FilterManager filterManager;
     private final RefundManager refundManager;
     private final Socks5ProxyProvider socks5ProxyProvider;
 
@@ -74,11 +76,13 @@ class XmrTxProofRequestsPerTrade implements AssetTxProofRequestsPerTrade {
                                Trade trade,
                                AutoConfirmSettings autoConfirmSettings,
                                MediationManager mediationManager,
+                               FilterManager filterManager,
                                RefundManager refundManager) {
         this.socks5ProxyProvider = socks5ProxyProvider;
         this.trade = trade;
         this.autoConfirmSettings = autoConfirmSettings;
         this.mediationManager = mediationManager;
+        this.filterManager = filterManager;
         this.refundManager = refundManager;
     }
 
@@ -140,6 +144,10 @@ class XmrTxProofRequestsPerTrade implements AssetTxProofRequestsPerTrade {
         numRequiredSuccessResults = serviceAddresses.size();
 
         for (String serviceAddress : serviceAddresses) {
+            if (filterManager.isAutoConfExplorerBanned(serviceAddress)) {
+                log.warn("Filtered out auto-confirmation address: {}", serviceAddress);
+                continue;  // #4683: filter for auto-confirm explorers
+            }
             XmrTxProofModel model = new XmrTxProofModel(trade, serviceAddress, autoConfirmSettings);
             XmrTxProofRequest request = new XmrTxProofRequest(socks5ProxyProvider, model);
 
