@@ -17,6 +17,7 @@
 
 package bisq.cli;
 
+import bisq.proto.grpc.CancelOfferRequest;
 import bisq.proto.grpc.ConfirmPaymentReceivedRequest;
 import bisq.proto.grpc.ConfirmPaymentStartedRequest;
 import bisq.proto.grpc.CreateOfferRequest;
@@ -74,6 +75,7 @@ public class CliMain {
 
     private enum Method {
         createoffer,
+        canceloffer,
         getoffer,
         getoffers,
         takeoffer,
@@ -236,6 +238,18 @@ public class CliMain {
                             .build();
                     var reply = offersService.createOffer(request);
                     out.println(formatOfferTable(singletonList(reply.getOffer()), currencyCode));
+                    return;
+                }
+                case canceloffer: {
+                    if (nonOptionArgs.size() < 2)
+                        throw new IllegalArgumentException("incorrect parameter count, expecting offer id");
+
+                    var offerId = nonOptionArgs.get(1);
+                    var request = CancelOfferRequest.newBuilder()
+                            .setId(offerId)
+                            .build();
+                    offersService.cancelOffer(request);
+                    out.println("offer canceled and removed from offer book");
                     return;
                 }
                 case getoffer: {
@@ -475,6 +489,7 @@ public class CliMain {
             stream.format(rowFormat, "", "amount (btc), min amount, use mkt based price, \\", "");
             stream.format(rowFormat, "", "fixed price (btc) | mkt price margin (%), \\", "");
             stream.format(rowFormat, "", "security deposit (%)", "");
+            stream.format(rowFormat, "canceloffer", "offer id", "Cancel offer with id");
             stream.format(rowFormat, "getoffer", "offer id", "Get current offer with id");
             stream.format(rowFormat, "getoffers", "buy | sell, currency code", "Get current offers");
             stream.format(rowFormat, "takeoffer", "offer id", "Take offer with id");

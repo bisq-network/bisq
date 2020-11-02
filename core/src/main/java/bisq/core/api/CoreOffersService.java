@@ -160,6 +160,10 @@ class CoreOffersService {
                 paymentAccount);
     }
 
+    void cancelOffer(String id) {
+        log.info("TODO");
+    }
+
     private void placeOffer(Offer offer,
                             double buyerSecurityDeposit,
                             boolean useSavingsWallet,

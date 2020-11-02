@@ -51,6 +51,8 @@ service Offers {
     }
     rpc CreateOffer (CreateOfferRequest) returns (CreateOfferReply) {
     }
+    rpc CancelOffer (CancelOfferRequest) returns (CancelOfferReply) {
+    }
 }
 
 message GetOfferRequest {
@@ -83,6 +85,13 @@ message CreateOfferRequest {
 
 message CreateOfferReply {
     OfferInfo offer = 1;
+}
+
+message CancelOfferRequest {
+    string id = 1;
+}
+
+message CancelOfferReply {
 }
 
 message OfferInfo {
