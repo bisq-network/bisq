@@ -49,7 +49,7 @@ import javax.annotation.Nullable;
 //TODO merge with vote result ProposalListItem
 public class ProposalsListItem {
 
-    enum IconButtonTypes {
+    enum IconButtonType {
         REMOVE_PROPOSAL(Res.get("dao.proposal.table.icon.tooltip.removeProposal")),
         ACCEPT(Res.get("dao.proposal.display.myVote.accepted")),
         REJECT(Res.get("dao.proposal.display.myVote.rejected")),
@@ -57,7 +57,7 @@ public class ProposalsListItem {
         @Getter
         private String title;
 
-        IconButtonTypes(String title) {
+        IconButtonType(String title) {
             this.title = title;
         }
     }
@@ -128,7 +128,7 @@ public class ProposalsListItem {
             iconButton = new JFXButton("", icon);
             boolean isMyProposal = daoFacade.isMyProposal(proposal);
             if (isMyProposal) {
-                iconButton.setUserData(IconButtonTypes.REMOVE_PROPOSAL);
+                iconButton.setUserData(IconButtonType.REMOVE_PROPOSAL);
             }
             iconButton.setVisible(isMyProposal);
             iconButton.setManaged(isMyProposal);
@@ -148,36 +148,36 @@ public class ProposalsListItem {
                     icon = FormBuilder.getIcon(AwesomeIcon.THUMBS_UP);
                     icon.getStyleClass().addAll("icon", "dao-accepted-icon");
                     iconButton = new JFXButton("", icon);
-                    iconButton.setUserData(IconButtonTypes.ACCEPT);
+                    iconButton.setUserData(IconButtonType.ACCEPT);
                 } else {
                     icon = FormBuilder.getIcon(AwesomeIcon.THUMBS_DOWN);
                     icon.getStyleClass().addAll("icon", "dao-rejected-icon");
                     iconButton = new JFXButton("", icon);
-                    iconButton.setUserData(IconButtonTypes.REJECT);
+                    iconButton.setUserData(IconButtonType.REJECT);
                 }
             } else {
                 icon = FormBuilder.getIcon(AwesomeIcon.MINUS);
                 icon.getStyleClass().addAll("icon", "dao-ignored-icon");
                 iconButton = new JFXButton("", icon);
-                iconButton.setUserData(IconButtonTypes.IGNORE);
+                iconButton.setUserData(IconButtonType.IGNORE);
             }
             iconButton.setTooltip(new Tooltip(Res.get("dao.proposal.table.icon.tooltip.changeVote",
-                    ((IconButtonTypes) iconButton.getUserData()).getTitle(),
-                    getNext(((IconButtonTypes) iconButton.getUserData()))
+                    ((IconButtonType) iconButton.getUserData()).getTitle(),
+                    getNext(((IconButtonType) iconButton.getUserData()))
             )));
             iconButton.getStyleClass().add("hidden-icon-button");
             iconButton.layout();
         }
     }
 
-    private String getNext(IconButtonTypes iconButtonTypes) {
-        switch (iconButtonTypes) {
+    private String getNext(IconButtonType iconButtonType) {
+        switch (iconButtonType) {
             case ACCEPT:
-                return IconButtonTypes.REJECT.getTitle();
+                return IconButtonType.REJECT.getTitle();
             case REJECT:
-                return IconButtonTypes.IGNORE.getTitle();
+                return IconButtonType.IGNORE.getTitle();
             default:
-                return IconButtonTypes.ACCEPT.getTitle();
+                return IconButtonType.ACCEPT.getTitle();
         }
     }
 }

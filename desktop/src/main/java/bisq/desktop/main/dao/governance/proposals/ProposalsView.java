@@ -845,23 +845,23 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
                             item.onPhaseChanged(currentPhase);
                             JFXButton iconButton = item.getIconButton();
                             if (iconButton != null) {
-                                ProposalsListItem.IconButtonTypes iconButtonType = (ProposalsListItem.IconButtonTypes) iconButton.getUserData();
+                                ProposalsListItem.IconButtonType iconButtonType = (ProposalsListItem.IconButtonType) iconButton.getUserData();
                                 iconButton.setOnAction(e -> {
                                     selectedItem = item;
                                     if (areVoteButtonsVisible) {
-                                        if (iconButtonType == ProposalsListItem.IconButtonTypes.ACCEPT)
+                                        if (iconButtonType == ProposalsListItem.IconButtonType.ACCEPT)
                                             onReject();
-                                        else if (iconButtonType == ProposalsListItem.IconButtonTypes.REJECT)
+                                        else if (iconButtonType == ProposalsListItem.IconButtonType.REJECT)
                                             onIgnore();
-                                        else if (iconButtonType == ProposalsListItem.IconButtonTypes.IGNORE)
+                                        else if (iconButtonType == ProposalsListItem.IconButtonType.IGNORE)
                                             onAccept();
                                     } else {
-                                        if (iconButtonType == ProposalsListItem.IconButtonTypes.REMOVE_PROPOSAL)
+                                        if (iconButtonType == ProposalsListItem.IconButtonType.REMOVE_PROPOSAL)
                                             onRemoveProposal();
                                     }
                                 });
 
-                                if (!areVoteButtonsVisible && iconButtonType != ProposalsListItem.IconButtonTypes.REMOVE_PROPOSAL) {
+                                if (!areVoteButtonsVisible && iconButtonType != ProposalsListItem.IconButtonType.REMOVE_PROPOSAL) {
                                     iconButton.setMouseTransparent(true);
                                     iconButton.setStyle("-fx-cursor: default;");
                                 }
@@ -871,7 +871,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
                                 // it is better to not show the remove button as it confused users and a removed proposal will reappear with a
                                 // high probability at the vote phase. The following lines can be removed once the bug is fixed.
                                 boolean showIcon = iconButtonType != null &&
-                                        iconButtonType != ProposalsListItem.IconButtonTypes.REMOVE_PROPOSAL;
+                                        iconButtonType != ProposalsListItem.IconButtonType.REMOVE_PROPOSAL;
                                 iconButton.setVisible(showIcon);
                                 iconButton.setManaged(showIcon);
 
