@@ -17,30 +17,21 @@
 
 package bisq.apitest.method.trade;
 
-import protobuf.PaymentAccount;
-
 import io.grpc.StatusRuntimeException;
 
 import lombok.extern.slf4j.Slf4j;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.TestMethodOrder;
 
 import static bisq.apitest.config.BisqAppConfig.alicedaemon;
 import static bisq.apitest.config.BisqAppConfig.bobdaemon;
-import static bisq.cli.TradeFormat.format;
-import static bisq.core.trade.Trade.Phase.DEPOSIT_CONFIRMED;
-import static bisq.core.trade.Trade.Phase.DEPOSIT_PUBLISHED;
-import static bisq.core.trade.Trade.Phase.FIAT_SENT;
-import static bisq.core.trade.Trade.Phase.PAYOUT_PUBLISHED;
-import static bisq.core.trade.Trade.State.BUYER_RECEIVED_DEPOSIT_TX_PUBLISHED_MSG;
-import static bisq.core.trade.Trade.State.BUYER_SAW_ARRIVED_FIAT_PAYMENT_INITIATED_MSG;
-import static bisq.core.trade.Trade.State.DEPOSIT_CONFIRMED_IN_BLOCK_CHAIN;
-import static bisq.core.trade.Trade.State.SELLER_SAW_ARRIVED_PAYOUT_TX_PUBLISHED_MSG;
-import static java.lang.System.out;
+import static bisq.cli.CurrencyFormat.formatSatoshis;
+import static bisq.core.trade.Trade.Phase.*;
+import static bisq.core.trade.Trade.State.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -53,22 +44,14 @@ public class TakeSellBTCOfferTest extends AbstractTradeTest {
 
     // Alice is seller, Bob is buyer.
 
-    private static String tradeId;
-
-    private PaymentAccount alicesAccount;
-    private PaymentAccount bobsAccount;
-
-    @BeforeEach
-    public void init() {
-        alicesAccount = getDefaultPerfectDummyPaymentAccount(alicedaemon);
-        bobsAccount = getDefaultPerfectDummyPaymentAccount(bobdaemon);
-    }
-
     @Test
     @Order(1)
-    public void testTakeAlicesSellOffer() {
+    public void testTakeAlicesSellOffer(final TestInfo testInfo) {
         try {
-            var alicesOffer = createAliceOffer(alicesAccount, "sell", "usd", 12500000);
+            var alicesOffer = createAliceOffer(alicesDummyAcct,
+                    "sell",
+                    "usd",
+                    12500000);
             var offerId = alicesOffer.getId();
 
             // Wait for Alice's AddToOfferBook task.
@@ -77,7 +60,7 @@ public class TakeSellBTCOfferTest extends AbstractTradeTest {
             sleep(3000);
             assertEquals(1, getOpenOffersCount(bobStubs, "sell", "usd"));
 
-            var trade = takeAlicesOffer(offerId, bobsAccount.getId());
+            var trade = takeAlicesOffer(offerId, bobsDummyAcct.getId());
             assertNotNull(trade);
             assertEquals(offerId, trade.getTradeId());
             // Cache the trade id for the other tests.
@@ -87,14 +70,20 @@ public class TakeSellBTCOfferTest extends AbstractTradeTest {
             assertEquals(0, getOpenOffersCount(bobStubs, "sell", "usd"));
 
             trade = getTrade(bobdaemon, trade.getTradeId());
-            verifyExpectedTradeStateAndPhase(trade, BUYER_RECEIVED_DEPOSIT_TX_PUBLISHED_MSG, DEPOSIT_PUBLISHED);
-            out.println(format(trade));
+            EXPECTED_PROTOCOL_STATUS.setState(BUYER_RECEIVED_DEPOSIT_TX_PUBLISHED_MSG)
+                    .setPhase(DEPOSIT_PUBLISHED)
+                    .setDepositPublished(true);
+            verifyExpectedProtocolStatus(trade);
+
+            logTrade(log, testInfo, "Bob's view after taking offer and sending deposit", trade);
 
             genBtcBlocksThenWait(1, 2250);
             trade = getTrade(bobdaemon, trade.getTradeId());
-            verifyExpectedTradeStateAndPhase(trade, DEPOSIT_CONFIRMED_IN_BLOCK_CHAIN, DEPOSIT_CONFIRMED);
-            out.println(format(trade));
-
+            EXPECTED_PROTOCOL_STATUS.setState(DEPOSIT_CONFIRMED_IN_BLOCK_CHAIN)
+                    .setPhase(DEPOSIT_CONFIRMED)
+                    .setDepositConfirmed(true);
+            verifyExpectedProtocolStatus(trade);
+            logTrade(log, testInfo, "Bob's view after deposit is confirmed", trade);
         } catch (StatusRuntimeException e) {
             fail(e);
         }
@@ -102,20 +91,20 @@ public class TakeSellBTCOfferTest extends AbstractTradeTest {
 
     @Test
     @Order(2)
-    public void testBobsConfirmPaymentStarted() {
+    public void testBobsConfirmPaymentStarted(final TestInfo testInfo) {
         try {
             var trade = getTrade(bobdaemon, tradeId);
-            assertNotNull(trade);
-
             confirmPaymentStarted(bobdaemon, trade.getTradeId());
             sleep(3000);
 
             trade = getTrade(bobdaemon, tradeId);
-            // TODO is this a bug?  Why is offer.state == available?
+            // Note: offer.state == available
             assertEquals(AVAILABLE.name(), trade.getOffer().getState());
-            verifyExpectedTradeStateAndPhase(trade, BUYER_SAW_ARRIVED_FIAT_PAYMENT_INITIATED_MSG, FIAT_SENT);
-
-            out.println(format(trade));
+            EXPECTED_PROTOCOL_STATUS.setState(BUYER_SAW_ARRIVED_FIAT_PAYMENT_INITIATED_MSG)
+                    .setPhase(FIAT_SENT)
+                    .setFiatSent(true);
+            verifyExpectedProtocolStatus(trade);
+            logTrade(log, testInfo, "Bob's view after confirming fiat payment sent", trade);
         } catch (StatusRuntimeException e) {
             fail(e);
         }
@@ -123,16 +112,42 @@ public class TakeSellBTCOfferTest extends AbstractTradeTest {
 
     @Test
     @Order(3)
-    public void testAlicesConfirmPaymentReceived() {
+    public void testAlicesConfirmPaymentReceived(final TestInfo testInfo) {
         var trade = getTrade(alicedaemon, tradeId);
-        assertNotNull(trade);
-
         confirmPaymentReceived(alicedaemon, trade.getTradeId());
         sleep(3000);
 
         trade = getTrade(alicedaemon, tradeId);
         assertEquals(OFFER_FEE_PAID.name(), trade.getOffer().getState());
-        verifyExpectedTradeStateAndPhase(trade, SELLER_SAW_ARRIVED_PAYOUT_TX_PUBLISHED_MSG, PAYOUT_PUBLISHED);
-        out.println(format(trade));
+        EXPECTED_PROTOCOL_STATUS.setState(SELLER_SAW_ARRIVED_PAYOUT_TX_PUBLISHED_MSG)
+                .setPhase(PAYOUT_PUBLISHED)
+                .setPayoutPublished(true)
+                .setFiatReceived(true);
+        verifyExpectedProtocolStatus(trade);
+        logTrade(log, testInfo, "Alice's view after confirming fiat payment received", trade);
+    }
+
+    @Test
+    @Order(4)
+    public void testBobsBtcWithdrawalToExternalAddress(final TestInfo testInfo) {
+        genBtcBlocksThenWait(1, 2250);
+
+        var trade = getTrade(bobdaemon, tradeId);
+        logTrade(log, testInfo, "Bob's view before withdrawing funds to external wallet", trade);
+
+        String toAddress = bitcoinCli.getNewBtcAddress();
+        withdrawFunds(bobdaemon, tradeId, toAddress);
+
+        genBtcBlocksThenWait(1, 2250);
+
+        trade = getTrade(bobdaemon, tradeId);
+        EXPECTED_PROTOCOL_STATUS.setState(WITHDRAW_COMPLETED)
+                .setPhase(WITHDRAWN)
+                .setWithdrawn(true);
+        verifyExpectedProtocolStatus(trade);
+        logTrade(log, testInfo, "Bob's view after withdrawing funds to external wallet", trade);
+        log.info("{} Bob's current available balance: {} BTC",
+                testName(testInfo),
+                formatSatoshis(getBalance(bobdaemon)));
     }
 }

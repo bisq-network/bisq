@@ -25,6 +25,7 @@ import bisq.proto.grpc.GetFundingAddressesRequest;
 import bisq.proto.grpc.GetOfferRequest;
 import bisq.proto.grpc.GetPaymentAccountsRequest;
 import bisq.proto.grpc.GetTradeRequest;
+import bisq.proto.grpc.KeepFundsRequest;
 import bisq.proto.grpc.LockWalletRequest;
 import bisq.proto.grpc.MarketPriceRequest;
 import bisq.proto.grpc.OfferInfo;
@@ -34,11 +35,14 @@ import bisq.proto.grpc.SetWalletPasswordRequest;
 import bisq.proto.grpc.TakeOfferRequest;
 import bisq.proto.grpc.TradeInfo;
 import bisq.proto.grpc.UnlockWalletRequest;
+import bisq.proto.grpc.WithdrawFundsRequest;
 
 import protobuf.PaymentAccount;
 
 import java.util.stream.Collectors;
 
+import static bisq.apitest.config.BisqAppConfig.alicedaemon;
+import static bisq.apitest.config.BisqAppConfig.bobdaemon;
 import static bisq.common.app.DevEnv.DEV_PRIVILEGE_PRIV_KEY;
 import static bisq.core.payment.payload.PaymentMethod.PERFECT_MONEY;
 import static java.util.Comparator.comparing;
@@ -48,12 +52,27 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import bisq.apitest.ApiTestCase;
 import bisq.apitest.config.BisqAppConfig;
+import bisq.cli.GrpcStubs;
 
 public class MethodTest extends ApiTestCase {
 
     protected static final String ARBITRATOR = "arbitrator";
     protected static final String MEDIATOR = "mediator";
     protected static final String REFUND_AGENT = "refundagent";
+
+    protected static GrpcStubs aliceStubs;
+    protected static GrpcStubs bobStubs;
+
+    protected PaymentAccount alicesDummyAcct;
+    protected PaymentAccount bobsDummyAcct;
+
+    protected final void initAlicesDummyPaymentAccount() {
+        alicesDummyAcct = getDefaultPerfectDummyPaymentAccount(alicedaemon);
+    }
+
+    protected final void initBobsDummyPaymentAccount() {
+        bobsDummyAcct = getDefaultPerfectDummyPaymentAccount(bobdaemon);
+    }
 
     // Convenience methods for building gRPC request objects
 
@@ -107,6 +126,19 @@ public class MethodTest extends ApiTestCase {
 
     protected final ConfirmPaymentReceivedRequest createConfirmPaymentReceivedRequest(String tradeId) {
         return ConfirmPaymentReceivedRequest.newBuilder().setTradeId(tradeId).build();
+    }
+
+    protected final KeepFundsRequest createKeepFundsRequest(String tradeId) {
+        return KeepFundsRequest.newBuilder()
+                .setTradeId(tradeId)
+                .build();
+    }
+
+    protected final WithdrawFundsRequest createWithdrawFundsRequest(String tradeId, String address) {
+        return WithdrawFundsRequest.newBuilder()
+                .setTradeId(tradeId)
+                .setAddress(address)
+                .build();
     }
 
     // Convenience methods for calling frequently used & thoroughly tested gRPC services.
@@ -175,16 +207,29 @@ public class MethodTest extends ApiTestCase {
         return grpcStubs(bisqAppConfig).tradesService.getTrade(req).getTrade();
     }
 
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     protected final void confirmPaymentStarted(BisqAppConfig bisqAppConfig, String tradeId) {
         var req = createConfirmPaymentStartedRequest(tradeId);
         grpcStubs(bisqAppConfig).tradesService.confirmPaymentStarted(req);
     }
 
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     protected final void confirmPaymentReceived(BisqAppConfig bisqAppConfig, String tradeId) {
         var req = createConfirmPaymentReceivedRequest(tradeId);
         grpcStubs(bisqAppConfig).tradesService.confirmPaymentReceived(req);
     }
 
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    protected final void keepFunds(BisqAppConfig bisqAppConfig, String tradeId) {
+        var req = createKeepFundsRequest(tradeId);
+        grpcStubs(bisqAppConfig).tradesService.keepFunds(req);
+    }
+
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    protected final void withdrawFunds(BisqAppConfig bisqAppConfig, String tradeId, String address) {
+        var req = createWithdrawFundsRequest(tradeId, address);
+        grpcStubs(bisqAppConfig).tradesService.withdrawFunds(req);
+    }
     // Static conveniences for test methods and test case fixture setups.
 
     protected static RegisterDisputeAgentRequest createRegisterDisputeAgentRequest(String disputeAgentType) {

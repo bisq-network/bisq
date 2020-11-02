@@ -30,7 +30,6 @@ import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 
-import static bisq.apitest.config.BisqAppConfig.alicedaemon;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -41,9 +40,8 @@ public class ValidateCreateOfferTest extends AbstractOfferTest {
     @Test
     @Order(1)
     public void testAmtTooLargeShouldThrowException() {
-        var paymentAccount = getDefaultPerfectDummyPaymentAccount(alicedaemon);
         var req = CreateOfferRequest.newBuilder()
-                .setPaymentAccountId(paymentAccount.getId())
+                .setPaymentAccountId(alicesDummyAcct.getId())
                 .setDirection("buy")
                 .setCurrencyCode("usd")
                 .setAmount(100000000000L)

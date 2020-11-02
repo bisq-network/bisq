@@ -36,6 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 
 import static bisq.apitest.Scaffold.BitcoinCoreApp.bitcoind;
 import static bisq.apitest.config.BisqAppConfig.alicedaemon;
@@ -59,12 +60,14 @@ import bisq.cli.GrpcStubs;
 @Slf4j
 public abstract class AbstractOfferTest extends MethodTest {
 
-    protected static GrpcStubs aliceStubs;
-    protected static GrpcStubs bobStubs;
-
     @BeforeAll
     public static void setUp() {
         startSupportingApps();
+    }
+
+    @BeforeEach
+    public void initDummyPaymentAccount() {
+        super.initAlicesDummyPaymentAccount();
     }
 
     static void startSupportingApps() {
