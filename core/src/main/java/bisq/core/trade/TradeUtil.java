@@ -164,14 +164,13 @@ public class TradeUtil {
     }
 
     public String getPaymentMethodNameWithCountryCode(Trade trade) {
-        String paymentMethodDescription = "";
-        if (trade != null) {
-            Offer offer = trade.getOffer();
-            checkNotNull(offer);
-            checkNotNull(offer.getPaymentMethod());
-            paymentMethodDescription = offer.getPaymentMethodNameWithCountryCode();
-        }
-        return paymentMethodDescription;
+        if (trade == null)
+            return "";
+
+        Offer offer = trade.getOffer();
+        checkNotNull(offer);
+        checkNotNull(offer.getPaymentMethod());
+        return offer.getPaymentMethodNameWithCountryCode();
     }
 
     /**

@@ -21,6 +21,7 @@ import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.offer.Offer;
 import bisq.core.offer.takeoffer.TakeOfferModel;
+import bisq.core.trade.Tradable;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.TradeUtil;
@@ -199,7 +200,8 @@ class CoreTradesService {
     }
 
     private Optional<Trade> getClosedTrade(String tradeId) {
-        return closedTradableManager.getTradableById(tradeId).map(value -> (Trade) value);
+        Optional<Tradable> tradable = closedTradableManager.getTradableById(tradeId);
+        return tradable.filter((t) -> t instanceof Trade).map(value -> (Trade) value);
     }
 
     private boolean isFollowingBuyerProtocol(Trade trade) {

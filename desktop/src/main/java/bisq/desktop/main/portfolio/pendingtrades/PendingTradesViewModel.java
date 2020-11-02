@@ -215,18 +215,22 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     }
 
     public String getRemainingTradeDurationAsWords() {
+        checkNotNull(dataModel.getTrade(), "model's trade must not be null");
         return tradeUtil.getRemainingTradeDurationAsWords(dataModel.getTrade());
     }
 
     public double getRemainingTradeDurationAsPercentage() {
+        checkNotNull(dataModel.getTrade(), "model's trade must not be null");
         return tradeUtil.getRemainingTradeDurationAsPercentage(dataModel.getTrade());
     }
 
     public String getDateForOpenDispute() {
+        checkNotNull(dataModel.getTrade(), "model's trade must not be null");
         return DisplayUtils.formatDateTime(tradeUtil.getDateForOpenDispute(dataModel.getTrade()));
     }
 
     public boolean showWarning() {
+        checkNotNull(dataModel.getTrade(), "model's trade must not be null");
         Date halfTradePeriodDate = tradeUtil.getHalfTradePeriodDate(dataModel.getTrade());
         return halfTradePeriodDate != null && new Date().after(halfTradePeriodDate);
     }

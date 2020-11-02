@@ -63,7 +63,7 @@ class TableFormat {
 
     static String formatOfferTable(List<OfferInfo> offerInfo, String fiatCurrency) {
 
-        // Some column values might be longer than header, so we need to calculated them.
+        // Some column values might be longer than header, so we need to calculate them.
         int paymentMethodColWidth = getLengthOfLongestColumn(
                 COL_HEADER_PAYMENT_METHOD.length(),
                 offerInfo.stream()
@@ -100,7 +100,7 @@ class TableFormat {
     }
 
     static String formatPaymentAcctTbl(List<PaymentAccount> paymentAccounts) {
-        // Some column values might be longer than header, so we need to calculated them.
+        // Some column values might be longer than header, so we need to calculate them.
         int nameColWidth = getLengthOfLongestColumn(
                 COL_HEADER_NAME.length(),
                 paymentAccounts.stream().map(PaymentAccount::getAccountName)
