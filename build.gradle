@@ -643,8 +643,31 @@ configure(project(':apitest')) {
 
     test {
         useJUnitPlatform()
+        outputs.upToDateWhen { false }          // Don't use previously cached test outputs.
         testLogging {
-            events "passed", "skipped", "failed"
+            showStackTraces = true              // Show full stack traces in the console.
+            exceptionFormat = "full"
+            // Show passed & failed tests, and anything printed to stderr by the tests in the console.
+            // Do not show skipped tests in the console;  they are shown in the html report.
+            events "passed", "failed", "standardError"
+        }
+
+        afterSuite { desc, result ->
+            if (!desc.parent) {
+                println("${result.resultType} " +
+                    "[${result.testCount} tests, " +
+                    "${result.successfulTestCount} passed, " +
+                    "${result.failedTestCount} failed, " +
+                    "${result.skippedTestCount} skipped]  html report contains skipped test info")
+
+                // Show report link if all tests passed in case you want to see more detail, stdout, skipped, etc.
+                if(result.resultType == TestResult.ResultType.SUCCESS) {
+                    DirectoryReport htmlReport = getReports().getHtml()
+                    String reportUrl = new org.gradle.internal.logging.ConsoleRenderer()
+                        .asClickableFileUrl(htmlReport.getEntryPoint())
+                    println("REPORT  " + reportUrl)
+                }
+            }
         }
     }
 
