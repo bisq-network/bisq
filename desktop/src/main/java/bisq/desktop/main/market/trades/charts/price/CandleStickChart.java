@@ -130,7 +130,7 @@ public class CandleStickChart extends XYChart<Number, Number> {
                     double candleWidth = -1;
                     if (getXAxis() instanceof NumberAxis) {
                         NumberAxis xa = (NumberAxis) getXAxis();
-                        candleWidth = xa.getDisplayPosition(xa.getTickUnit()) * 0.60; // use 90% width between ticks
+                        candleWidth = xa.getDisplayPosition(1) * 0.60; // use 60% width between units
                     }
                     // update candle
                     candle.update(close - y, high - y, low - y, candleWidth);

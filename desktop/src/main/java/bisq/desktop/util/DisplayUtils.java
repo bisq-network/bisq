@@ -21,6 +21,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 
 import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -61,6 +62,15 @@ public class DisplayUtils {
     public static String formatDate(Date date) {
         if (date != null) {
             DateFormat dateFormatter = DateFormat.getDateInstance(DateFormat.DEFAULT, GlobalSettings.getLocale());
+            return dateFormatter.format(date);
+        } else {
+            return "";
+        }
+    }
+
+    public static String formatDateAxis(Date date, String format) {
+        if (date != null) {
+            SimpleDateFormat dateFormatter = new SimpleDateFormat(format, GlobalSettings.getLocale());
             return dateFormatter.format(date);
         } else {
             return "";

@@ -425,8 +425,9 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         priceSeries = new XYChart.Series<>();
 
         priceAxisX = new NumberAxis(0, model.maxTicks + 1, 1);
-        priceAxisX.setTickUnit(1);
-        priceAxisX.setMinorTickCount(0);
+        priceAxisX.setTickUnit(4);
+        priceAxisX.setMinorTickCount(4);
+        priceAxisX.setMinorTickVisible(true);
         priceAxisX.setForceZeroInRange(false);
         priceAxisX.setTickLabelFormatter(getTimeAxisStringConverter());
 
@@ -469,8 +470,8 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
             }
         });
         priceChart.setId("price-chart");
-        priceChart.setMinHeight(178);
-        priceChart.setPrefHeight(178);
+        priceChart.setMinHeight(188);
+        priceChart.setPrefHeight(188);
         priceChart.setMaxHeight(300);
         priceChart.setLegendVisible(false);
         priceChart.setPadding(new Insets(0));
@@ -489,8 +490,9 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         volumeSeries = new XYChart.Series<>();
 
         volumeAxisX = new NumberAxis(0, model.maxTicks + 1, 1);
-        volumeAxisX.setTickUnit(1);
-        volumeAxisX.setMinorTickCount(0);
+        volumeAxisX.setTickUnit(4);
+        volumeAxisX.setMinorTickCount(4);
+        volumeAxisX.setMinorTickVisible(true);
         volumeAxisX.setForceZeroInRange(false);
         volumeAxisX.setTickLabelFormatter(getTimeAxisStringConverter());
 
@@ -523,8 +525,8 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         });
         volumeChart.setId("volume-chart");
         volumeChart.setData(FXCollections.observableArrayList(List.of(volumeSeries)));
-        volumeChart.setMinHeight(128);
-        volumeChart.setPrefHeight(128);
+        volumeChart.setMinHeight(138);
+        volumeChart.setPrefHeight(138);
         volumeChart.setMaxHeight(200);
         volumeChart.setLegendVisible(false);
         volumeChart.setPadding(new Insets(0));
@@ -570,11 +572,31 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
             @Override
             public String toString(Number object) {
                 long index = MathUtils.doubleToLong((double) object);
+                // The last tick is on the chart edge, it is not well spaced with
+                // the previous tick and interferes with its label.
+                if (model.maxTicks + 1 == index) return "";
+
                 long time = model.getTimeFromTickIndex(index);
-                if (model.tickUnit.ordinal() <= TradesChartsViewModel.TickUnit.DAY.ordinal())
-                    return index % 4 == 0 ? DisplayUtils.formatDate(new Date(time)) : "";
-                else
-                    return index % 3 == 0 ? DisplayUtils.formatTime(new Date(time)) : "";
+                String fmt = "";
+                switch (model.tickUnit) {
+                case YEAR:
+                    fmt = "yyyy";
+                    break;
+                case MONTH:
+                    fmt = "MMMyy";
+                    break;
+                case WEEK:
+                case DAY:
+                    fmt = "dd/MMM\nyyyy";
+                    break;
+                case HOUR :
+                case MINUTE_10:
+                    fmt = "HH:mm\ndd/MMM";
+                    break;
+                default:        // nothing here
+                }
+
+                return DisplayUtils.formatDateAxis(new Date(time), fmt);
             }
 
             @Override
