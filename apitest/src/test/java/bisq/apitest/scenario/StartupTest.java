@@ -15,42 +15,39 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.apitest.method;
-
-import bisq.proto.grpc.GetBalanceRequest;
+package bisq.apitest.scenario;
 
 import lombok.extern.slf4j.Slf4j;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 
 import static bisq.apitest.Scaffold.BitcoinCoreApp.bitcoind;
 import static bisq.apitest.config.BisqAppConfig.alicedaemon;
+import static bisq.apitest.config.BisqAppConfig.arbdaemon;
 import static bisq.apitest.config.BisqAppConfig.seednode;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
-import static org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 
-@Disabled
+
+
+import bisq.apitest.method.CreatePaymentAccountTest;
+import bisq.apitest.method.GetVersionTest;
+import bisq.apitest.method.MethodTest;
+import bisq.apitest.method.RegisterDisputeAgentsTest;
+
+
 @Slf4j
-@TestMethodOrder(OrderAnnotation.class)
-public class GetBalanceTest extends MethodTest {
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+public class StartupTest extends MethodTest {
 
     @BeforeAll
     public static void setUp() {
         try {
-            setUpScaffold(bitcoind, seednode, alicedaemon);
-
-            // Have to generate 1 regtest block for alice's wallet to show 10 BTC balance.
-            bitcoinCli.generateBlocks(1);
-
-            // Give the alicedaemon time to parse the new block.
-            MILLISECONDS.sleep(1500);
+            setUpScaffold(bitcoind, seednode, arbdaemon, alicedaemon);
         } catch (Exception ex) {
             fail(ex);
         }
@@ -58,12 +55,27 @@ public class GetBalanceTest extends MethodTest {
 
     @Test
     @Order(1)
-    public void testGetBalance() {
-        // All tests depend on the DAO / regtest environment, and Alice's wallet is
-        // initialized with 10 BTC during the scaffolding setup.
-        var balance = grpcStubs(alicedaemon).walletsService
-                .getBalance(GetBalanceRequest.newBuilder().build()).getBalance();
-        assertEquals(1000000000, balance);
+    public void testGetVersion() {
+        GetVersionTest test = new GetVersionTest();
+        test.testGetVersion();
+    }
+
+    @Test
+    @Order(2)
+    public void testRegisterDisputeAgents() {
+        RegisterDisputeAgentsTest test = new RegisterDisputeAgentsTest();
+        test.testRegisterArbitratorShouldThrowException();
+        test.testInvalidDisputeAgentTypeArgShouldThrowException();
+        test.testInvalidRegistrationKeyArgShouldThrowException();
+        test.testRegisterMediator();
+        test.testRegisterRefundAgent();
+    }
+
+    @Test
+    @Order(3)
+    public void testCreatePaymentAccount() {
+        CreatePaymentAccountTest test = new CreatePaymentAccountTest();
+        test.testCreatePerfectMoneyUSDPaymentAccount();
     }
 
     @AfterAll
