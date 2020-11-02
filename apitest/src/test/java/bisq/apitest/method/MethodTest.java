@@ -17,6 +17,7 @@
 
 package bisq.apitest.method;
 
+import bisq.proto.grpc.CancelOfferRequest;
 import bisq.proto.grpc.ConfirmPaymentReceivedRequest;
 import bisq.proto.grpc.ConfirmPaymentStartedRequest;
 import bisq.proto.grpc.CreatePaymentAccountRequest;
@@ -112,6 +113,10 @@ public class MethodTest extends ApiTestCase {
         return GetOfferRequest.newBuilder().setId(offerId).build();
     }
 
+    protected final CancelOfferRequest createCancelOfferRequest(String offerId) {
+        return CancelOfferRequest.newBuilder().setId(offerId).build();
+    }
+
     protected final TakeOfferRequest createTakeOfferRequest(String offerId, String paymentAccountId) {
         return TakeOfferRequest.newBuilder().setOfferId(offerId).setPaymentAccountId(paymentAccountId).build();
     }
@@ -200,6 +205,12 @@ public class MethodTest extends ApiTestCase {
     protected final OfferInfo getOffer(BisqAppConfig bisqAppConfig, String offerId) {
         var req = createGetOfferRequest(offerId);
         return grpcStubs(bisqAppConfig).offersService.getOffer(req).getOffer();
+    }
+
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    protected final void cancelOffer(BisqAppConfig bisqAppConfig, String offerId) {
+        var req = createCancelOfferRequest(offerId);
+        grpcStubs(bisqAppConfig).offersService.cancelOffer(req);
     }
 
     protected final TradeInfo getTrade(BisqAppConfig bisqAppConfig, String tradeId) {
