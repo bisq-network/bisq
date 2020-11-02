@@ -36,7 +36,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 
 import static bisq.apitest.Scaffold.BitcoinCoreApp.bitcoind;
 import static bisq.apitest.config.BisqAppConfig.alicedaemon;
@@ -62,28 +61,13 @@ public abstract class AbstractOfferTest extends MethodTest {
 
     @BeforeAll
     public static void setUp() {
-        startSupportingApps();
-    }
-
-    @BeforeEach
-    public void initDummyPaymentAccount() {
-        super.initAlicesDummyPaymentAccount();
-    }
-
-    static void startSupportingApps() {
-        try {
-            // setUpScaffold(new String[]{"--supportingApps", "bitcoind,seednode,arbdaemon,alicedaemon,bobdaemon", "--enableBisqDebugging", "true"});
-            setUpScaffold(bitcoind, seednode, arbdaemon, alicedaemon, bobdaemon);
-            registerDisputeAgents(arbdaemon);
-            aliceStubs = grpcStubs(alicedaemon);
-            bobStubs = grpcStubs(bobdaemon);
-
-            // Generate 1 regtest block for alice's wallet to show 10 BTC balance,
-            // and give alicedaemon time to parse the new block.
-            genBtcBlocksThenWait(1, 1500);
-        } catch (Exception ex) {
-            fail(ex);
-        }
+        startSupportingApps(true,
+                true,
+                bitcoind,
+                seednode,
+                arbdaemon,
+                alicedaemon,
+                bobdaemon);
     }
 
     protected final OfferInfo createAliceOffer(PaymentAccount paymentAccount,
