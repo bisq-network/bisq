@@ -291,12 +291,12 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
         // if no valid Bitcoin block explorer is set, select the 1st valid Bitcoin block explorer
         ArrayList<BlockChainExplorer> btcExplorers = getBlockChainExplorers();
-        if (!blockExplorerExists(btcExplorers, getBlockChainExplorer()))
+        if (getBlockChainExplorer() == null || getBlockChainExplorer().name.length() == 0)
             setBlockChainExplorer(btcExplorers.get(0));
 
         // if no valid BSQ block explorer is set, randomly select a valid BSQ block explorer
         ArrayList<BlockChainExplorer> bsqExplorers = getBsqBlockChainExplorers();
-        if (!blockExplorerExists(bsqExplorers, getBsqBlockChainExplorer()))
+        if (getBsqBlockChainExplorer() == null || getBsqBlockChainExplorer().name.length() == 0)
             setBsqBlockChainExplorer(bsqExplorers.get((new Random()).nextInt(bsqExplorers.size())));
 
         tradeCurrenciesAsObservable.addAll(prefPayload.getFiatCurrencies());
@@ -917,15 +917,6 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
             tradeCurrenciesAsObservable.remove(change.getRemoved().get(0));
 
         requestPersistence();
-    }
-
-    private boolean blockExplorerExists(ArrayList<BlockChainExplorer> explorers,
-                                        BlockChainExplorer explorer) {
-        if (explorer != null && explorers != null && explorers.size() > 0)
-            for (int i = 0; i < explorers.size(); i++)
-                if (explorers.get(i).name.equals(explorer.name))
-                    return true;
-        return false;
     }
 
     private interface ExcludesDelegateMethods {
