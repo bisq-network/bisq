@@ -127,8 +127,9 @@ public class ProposalsListItem {
             icon.getStyleClass().addAll("icon", "dao-remove-proposal-icon");
             iconButton = new JFXButton("", icon);
             boolean isMyProposal = daoFacade.isMyProposal(proposal);
-            if (isMyProposal)
+            if (isMyProposal) {
                 iconButton.setUserData(IconButtonTypes.REMOVE_PROPOSAL);
+            }
             iconButton.setVisible(isMyProposal);
             iconButton.setManaged(isMyProposal);
             iconButton.getStyleClass().add("hidden-icon-button");
