@@ -137,8 +137,8 @@ public class TestState {
                 sequenceNrMapPersistenceManager, clock, MAX_SEQUENCE_NUMBER_MAP_SIZE_BEFORE_PURGE);
 
         // Currently TestState only supports reading ProtectedStorageEntries off disk.
-        p2PDataStorage.readFromResources("unused");
-        p2PDataStorage.readPersisted();
+        p2PDataStorage.readFromResourcesSync("unused");
+        p2PDataStorage.readPersistedSync();
 
         p2PDataStorage.addHashMapChangedListener(hashMapChangedListener);
         p2PDataStorage.addAppendOnlyDataStoreListener(appendOnlyDataStoreListener);

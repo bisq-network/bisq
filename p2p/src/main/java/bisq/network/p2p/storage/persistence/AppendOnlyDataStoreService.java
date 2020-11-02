@@ -22,9 +22,12 @@ import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 
 import javax.inject.Inject;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import lombok.Getter;
@@ -51,9 +54,23 @@ public class AppendOnlyDataStoreService {
         services.add(service);
     }
 
-    public void readFromResources(String postFix) {
-        services.forEach(service -> service.readFromResources(postFix));
+    public void readFromResources(String postFix, Runnable completeHandler) {
+        AtomicInteger remaining = new AtomicInteger(services.size());
+        services.forEach(service -> {
+            service.readFromResources(postFix, () -> {
+                if (remaining.decrementAndGet() == 0) {
+                    completeHandler.run();
+                }
+            });
+        });
     }
+
+    // Uses synchronous execution on the userThread. Only used by tests. The async methods should be used by app code.
+    @VisibleForTesting
+    public void readFromResourcesSync(String postFix) {
+        services.forEach(service -> service.readFromResourcesSync(postFix));
+    }
+
 
     public Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> getMap() {
         return services.stream()

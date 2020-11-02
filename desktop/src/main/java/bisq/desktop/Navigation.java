@@ -79,24 +79,26 @@ public final class Navigation implements PersistedDataHost {
     }
 
     @Override
-    public void readPersisted() {
-        NavigationPath persisted = persistenceManager.getPersisted();
-        if (persisted != null) {
-            List<Class<? extends View>> viewClasses = persisted.getPath().stream()
-                    .map(className -> {
-                        try {
-                            return (Class<? extends View>) Class.forName(className).asSubclass(View.class);
-                        } catch (ClassNotFoundException e) {
-                            log.warn("Could not find the viewPath class {}; exception: {}", className, e);
-                        }
-                        return null;
-                    })
-                    .filter(Objects::nonNull)
-                    .collect(Collectors.toList());
+    public void readPersisted(Runnable completeHandler) {
+        persistenceManager.readPersisted(persisted -> {
+                    List<Class<? extends View>> viewClasses = persisted.getPath().stream()
+                            .map(className -> {
+                                try {
+                                    return (Class<? extends View>) Class.forName(className).asSubclass(View.class);
+                                } catch (ClassNotFoundException e) {
+                                    log.warn("Could not find the viewPath class {}; exception: {}", className, e);
+                                }
+                                return null;
+                            })
+                            .filter(Objects::nonNull)
+                            .collect(Collectors.toList());
 
-            if (!viewClasses.isEmpty())
-                previousPath = new ViewPath(viewClasses);
-        }
+                    if (!viewClasses.isEmpty()) {
+                        previousPath = new ViewPath(viewClasses);
+                    }
+                    completeHandler.run();
+                },
+                completeHandler);
     }
 
     @SafeVarargs

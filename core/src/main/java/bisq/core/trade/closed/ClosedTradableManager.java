@@ -60,15 +60,16 @@ public class ClosedTradableManager implements PersistedDataHost {
     }
 
     @Override
-    public void readPersisted() {
-        TradableList<Tradable> persisted = persistenceManager.getPersisted();
-        if (persisted != null) {
-            closedTradables.setAll(persisted.getList());
-        }
-
-        closedTradables.forEach(tradable -> tradable.getOffer().setPriceFeedService(priceFeedService));
-
-        dumpDelayedPayoutTx.maybeDumpDelayedPayoutTxs(closedTradables, "delayed_payout_txs_closed");
+    public void readPersisted(Runnable completeHandler) {
+        persistenceManager.readPersisted(persisted -> {
+                    closedTradables.setAll(persisted.getList());
+                    closedTradables.stream()
+                            .filter(tradable -> tradable.getOffer() != null)
+                            .forEach(tradable -> tradable.getOffer().setPriceFeedService(priceFeedService));
+                    dumpDelayedPayoutTx.maybeDumpDelayedPayoutTxs(closedTradables, "delayed_payout_txs_closed");
+                    completeHandler.run();
+                },
+                completeHandler);
     }
 
     public void add(Tradable tradable) {

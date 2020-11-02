@@ -73,19 +73,16 @@ public class FailedTradesManager implements PersistedDataHost {
     }
 
     @Override
-    public void readPersisted() {
-        TradableList<Trade> persisted = persistenceManager.getPersisted();
-        if (persisted != null) {
-            failedTrades.setAll(persisted.getList());
-        }
-
-        failedTrades.forEach(trade -> {
-            if (trade.getOffer() != null) {
-                trade.getOffer().setPriceFeedService(priceFeedService);
-            }
-        });
-
-        dumpDelayedPayoutTx.maybeDumpDelayedPayoutTxs(failedTrades, "delayed_payout_txs_failed");
+    public void readPersisted(Runnable completeHandler) {
+        persistenceManager.readPersisted(persisted -> {
+                    failedTrades.setAll(persisted.getList());
+                    failedTrades.stream()
+                            .filter(trade -> trade.getOffer() != null)
+                            .forEach(trade -> trade.getOffer().setPriceFeedService(priceFeedService));
+                    dumpDelayedPayoutTx.maybeDumpDelayedPayoutTxs(failedTrades, "delayed_payout_txs_failed");
+                    completeHandler.run();
+                },
+                completeHandler);
     }
 
     public void add(Trade trade) {

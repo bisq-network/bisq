@@ -55,12 +55,15 @@ public class UnconfirmedBsqChangeOutputListService implements PersistedDataHost 
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void readPersisted() {
+    public void readPersisted(Runnable completeHandler) {
         if (DevEnv.isDaoActivated()) {
-            UnconfirmedBsqChangeOutputList persisted = persistenceManager.getPersisted();
-            if (persisted != null) {
-                unconfirmedBsqChangeOutputList.setAll(persisted.getList());
-            }
+            persistenceManager.readPersisted(persisted -> {
+                        unconfirmedBsqChangeOutputList.setAll(persisted.getList());
+                        completeHandler.run();
+                    },
+                    completeHandler);
+        } else {
+            completeHandler.run();
         }
     }
 

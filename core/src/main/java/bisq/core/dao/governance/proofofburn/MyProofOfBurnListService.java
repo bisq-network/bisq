@@ -55,12 +55,15 @@ public class MyProofOfBurnListService implements PersistedDataHost, DaoSetupServ
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void readPersisted() {
+    public void readPersisted(Runnable completeHandler) {
         if (DevEnv.isDaoActivated()) {
-            MyProofOfBurnList persisted = persistenceManager.getPersisted();
-            if (persisted != null) {
-                myProofOfBurnList.setAll(persisted.getList());
-            }
+            persistenceManager.readPersisted(persisted -> {
+                        myProofOfBurnList.setAll(persisted.getList());
+                        completeHandler.run();
+                    },
+                    completeHandler);
+        } else {
+            completeHandler.run();
         }
     }
 

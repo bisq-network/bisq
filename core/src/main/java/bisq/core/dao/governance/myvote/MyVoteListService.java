@@ -69,12 +69,15 @@ public class MyVoteListService implements PersistedDataHost {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void readPersisted() {
+    public void readPersisted(Runnable completeHandler) {
         if (DevEnv.isDaoActivated()) {
-            MyVoteList persisted = persistenceManager.getPersisted();
-            if (persisted != null) {
-                this.myVoteList.setAll(persisted.getList());
-            }
+            persistenceManager.readPersisted(persisted -> {
+                        myVoteList.setAll(persisted.getList());
+                        completeHandler.run();
+                    },
+                    completeHandler);
+        } else {
+            completeHandler.run();
         }
     }
 
@@ -97,7 +100,8 @@ public class MyVoteListService implements PersistedDataHost {
         requestPersistence();
     }
 
-    public Tuple2<Long, Long> getMeritAndStakeForProposal(String proposalTxId, MyBlindVoteListService myBlindVoteListService) {
+    public Tuple2<Long, Long> getMeritAndStakeForProposal(String proposalTxId,
+                                                          MyBlindVoteListService myBlindVoteListService) {
         long merit = 0;
         long stake = 0;
         List<MyVote> list = new ArrayList<>(myVoteList.getList());

@@ -89,13 +89,21 @@ public class User implements PersistedDataHost {
     }
 
     @Override
-    public void readPersisted() {
-        UserPayload persisted = checkNotNull(persistenceManager).getPersisted("UserPayload");
-        if (persisted != null) {
-            userPayload = persisted;
-        }
+    public void readPersisted(Runnable completeHandler) {
+        checkNotNull(persistenceManager).readPersisted("UserPayload",
+                persisted -> {
+                    userPayload = persisted;
+                    init();
+                    completeHandler.run();
+                },
+                () -> {
+                    init();
+                    completeHandler.run();
+                });
+    }
 
-        persistenceManager.initialize(userPayload, PersistenceManager.Source.PRIVATE);
+    private void init() {
+        checkNotNull(persistenceManager).initialize(userPayload, PersistenceManager.Source.PRIVATE);
 
         checkNotNull(userPayload.getPaymentAccounts(), "userPayload.getPaymentAccounts() must not be null");
         checkNotNull(userPayload.getAcceptedLanguageLocaleCodes(), "userPayload.getAcceptedLanguageLocaleCodes() must not be null");

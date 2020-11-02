@@ -200,19 +200,16 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void readPersisted() {
-        TradableList<Trade> persisted = persistenceManager.getPersisted();
-        if (persisted != null) {
-            tradableList.setAll(persisted.getList());
-        }
-
-        tradableList.forEach(trade -> {
-            Offer offer = trade.getOffer();
-            if (offer != null)
-                offer.setPriceFeedService(priceFeedService);
-        });
-
-        dumpDelayedPayoutTx.maybeDumpDelayedPayoutTxs(tradableList, "delayed_payout_txs_pending");
+    public void readPersisted(Runnable completeHandler) {
+        persistenceManager.readPersisted(persisted -> {
+                    tradableList.setAll(persisted.getList());
+                    tradableList.stream()
+                            .filter(trade -> trade.getOffer() != null)
+                            .forEach(trade -> trade.getOffer().setPriceFeedService(priceFeedService));
+                    dumpDelayedPayoutTx.maybeDumpDelayedPayoutTxs(tradableList, "delayed_payout_txs_pending");
+                    completeHandler.run();
+                },
+                completeHandler);
     }
 
 
