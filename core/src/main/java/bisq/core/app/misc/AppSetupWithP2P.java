@@ -19,7 +19,6 @@ package bisq.core.app.misc;
 
 import bisq.core.account.sign.SignedWitnessService;
 import bisq.core.account.witness.AccountAgeWitnessService;
-import bisq.core.app.TorSetup;
 import bisq.core.filter.FilterManager;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 
@@ -28,6 +27,8 @@ import bisq.network.p2p.P2PServiceListener;
 import bisq.network.p2p.network.CloseConnectionReason;
 import bisq.network.p2p.network.Connection;
 import bisq.network.p2p.network.ConnectionListener;
+import bisq.network.p2p.peers.PeerManager;
+import bisq.network.p2p.storage.P2PDataStorage;
 
 import bisq.common.config.Config;
 import bisq.common.proto.persistable.PersistedDataHost;
@@ -47,32 +48,36 @@ public class AppSetupWithP2P extends AppSetup {
     protected final AccountAgeWitnessService accountAgeWitnessService;
     private final SignedWitnessService signedWitnessService;
     protected final FilterManager filterManager;
-    private final TorSetup torSetup;
-    protected BooleanProperty p2pNetWorkReady;
+    private final P2PDataStorage p2PDataStorage;
+    private final PeerManager peerManager;
     protected final TradeStatisticsManager tradeStatisticsManager;
     protected ArrayList<PersistedDataHost> persistedDataHosts;
+    protected BooleanProperty p2pNetWorkReady;
 
     @Inject
     public AppSetupWithP2P(P2PService p2PService,
+                           P2PDataStorage p2PDataStorage,
+                           PeerManager peerManager,
                            TradeStatisticsManager tradeStatisticsManager,
                            AccountAgeWitnessService accountAgeWitnessService,
                            SignedWitnessService signedWitnessService,
                            FilterManager filterManager,
-                           TorSetup torSetup,
                            Config config) {
         super(config);
         this.p2PService = p2PService;
+        this.p2PDataStorage = p2PDataStorage;
+        this.peerManager = peerManager;
         this.tradeStatisticsManager = tradeStatisticsManager;
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.signedWitnessService = signedWitnessService;
         this.filterManager = filterManager;
-        this.torSetup = torSetup;
         this.persistedDataHosts = new ArrayList<>();
     }
 
     @Override
     public void initPersistedDataHosts() {
-        persistedDataHosts.add(p2PService);
+        persistedDataHosts.add(p2PDataStorage);
+        persistedDataHosts.add(peerManager);
 
         // we apply at startup the reading of persisted data but don't want to get it triggered in the constructor
         persistedDataHosts.forEach(e -> {
@@ -88,7 +93,7 @@ public class AppSetupWithP2P extends AppSetup {
     @Override
     protected void initBasicServices() {
         String postFix = "_" + config.baseCurrencyNetwork.name();
-        p2PService.getP2PDataStorage().readFromResources(postFix, this::startInitP2PNetwork);
+        p2PDataStorage.readFromResources(postFix, this::startInitP2PNetwork);
     }
 
     private void startInitP2PNetwork() {

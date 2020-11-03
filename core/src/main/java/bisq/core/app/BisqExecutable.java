@@ -168,8 +168,8 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
         }
 
         AtomicInteger remaining = new AtomicInteger(hosts.size());
-        hosts.forEach(e -> {
-            e.readPersisted(() -> {
+        hosts.forEach(host -> {
+            host.readPersisted(() -> {
                 if (remaining.decrementAndGet() == 0) {
                     UserThread.execute(completeHandler);
                 }

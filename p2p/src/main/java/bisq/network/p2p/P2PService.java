@@ -52,7 +52,6 @@ import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.proto.ProtobufferException;
 import bisq.common.proto.network.NetworkEnvelope;
-import bisq.common.proto.persistable.PersistedDataHost;
 import bisq.common.util.Utilities;
 
 import com.google.inject.Inject;
@@ -105,7 +104,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class P2PService implements SetupListener, MessageListener, ConnectionListener, RequestDataManager.Listener,
-        HashMapChangedListener, PersistedDataHost {
+        HashMapChangedListener {
     private static final Logger log = LoggerFactory.getLogger(P2PService.class);
 
     private final SeedNodeRepository seedNodeRepository;
@@ -182,12 +181,6 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
             if (newValue)
                 onNetworkReady();
         });
-    }
-
-    @Override
-    public void readPersisted(Runnable completeHandler) {
-        p2PDataStorage.readPersisted(completeHandler);
-        peerManager.readPersisted(completeHandler);
     }
 
 
