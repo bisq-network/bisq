@@ -29,6 +29,7 @@ import java.io.File;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -154,14 +155,18 @@ public abstract class HistoricalDataStoreService<T extends PersistableNetworkPay
             ImmutableMap.Builder<P2PDataStorage.ByteArray, PersistableNetworkPayload> allHistoricalPayloadsBuilder = ImmutableMap.builder();
             ImmutableMap.Builder<String, PersistableNetworkPayloadStore<? extends PersistableNetworkPayload>> storesByVersionBuilder = ImmutableMap.builder();
 
+            AtomicInteger numFiles = new AtomicInteger(Version.HISTORICAL_RESOURCE_FILE_VERSION_TAGS.size());
             Version.HISTORICAL_RESOURCE_FILE_VERSION_TAGS.forEach(version -> readHistoricalStoreFromResources(version,
                     postFix,
                     allHistoricalPayloadsBuilder,
-                    storesByVersionBuilder));
-
-            allHistoricalPayloads = allHistoricalPayloadsBuilder.build();
-            storesByVersion = storesByVersionBuilder.build();
-            completeHandler.run();
+                    storesByVersionBuilder,
+                    () -> {
+                        if (numFiles.decrementAndGet() == 0) {
+                            allHistoricalPayloads = allHistoricalPayloadsBuilder.build();
+                            storesByVersion = storesByVersionBuilder.build();
+                            completeHandler.run();
+                        }
+                    }));
         });
     }
 
@@ -173,21 +178,24 @@ public abstract class HistoricalDataStoreService<T extends PersistableNetworkPay
     private void readHistoricalStoreFromResources(String version,
                                                   String postFix,
                                                   ImmutableMap.Builder<P2PDataStorage.ByteArray, PersistableNetworkPayload> allHistoricalDataBuilder,
-                                                  ImmutableMap.Builder<String, PersistableNetworkPayloadStore<? extends PersistableNetworkPayload>> storesByVersionBuilder) {
+                                                  ImmutableMap.Builder<String, PersistableNetworkPayloadStore<? extends PersistableNetworkPayload>> storesByVersionBuilder,
+                                                  Runnable completeHandler) {
         String fileName = getFileName() + "_" + version;
         boolean wasCreatedFromResources = makeFileFromResourceFile(fileName, postFix);
 
         // If resource file does not exist we do not create a new store as it would never get filled.
-        persistenceManager.readPersisted(getFileName(), persisted -> {
+        persistenceManager.readPersisted(fileName, persisted -> {
                     storesByVersionBuilder.put(version, persisted);
                     allHistoricalDataBuilder.putAll(persisted.getMap());
-
+                    log.info("We have read from {} {} historical items.", fileName, persisted.getMap().size());
                     if (wasCreatedFromResources) {
                         pruneStore(persisted, version);
                     }
+                    completeHandler.run();
                 },
                 () -> {
                     log.warn("Resource file with file name {} does not exits.", fileName);
+                    completeHandler.run();
                 });
     }
 
