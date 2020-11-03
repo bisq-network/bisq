@@ -72,6 +72,8 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.scene.Node;
+import javafx.scene.text.Text;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -430,6 +432,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         priceAxisX.setMinorTickVisible(true);
         priceAxisX.setForceZeroInRange(false);
         priceAxisX.setTickLabelFormatter(getTimeAxisStringConverter());
+        addTickMarkLabelCssClass(priceAxisX, "axis-tick-mark-text-node");
 
         priceAxisY = new NumberAxis();
         priceAxisY.setForceZeroInRange(false);
@@ -495,6 +498,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         volumeAxisX.setMinorTickVisible(true);
         volumeAxisX.setForceZeroInRange(false);
         volumeAxisX.setTickLabelFormatter(getTimeAxisStringConverter());
+        addTickMarkLabelCssClass(volumeAxisX, "axis-tick-mark-text-node");
 
         volumeAxisY = new NumberAxis();
         volumeAxisY.setForceZeroInRange(true);
@@ -606,6 +610,20 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         };
     }
 
+    private void addTickMarkLabelCssClass(NumberAxis axis, String cssClass) {
+        // grab the axis tick mark label (text object) and add a CSS class.
+        axis.getChildrenUnmodifiable().addListener((ListChangeListener<Node>) c -> {
+                while (c.next()) {
+                    if (c.wasAdded()) {
+                        for (Node mark : c.getAddedSubList()) {
+                            if (mark instanceof Text) {
+                                mark.getStyleClass().add(cssClass);
+                            }
+                        }
+                    }
+                }
+            });
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // CurrencyComboBox
