@@ -23,6 +23,7 @@ import bisq.core.dao.governance.blindvote.storage.BlindVotePayload;
 import bisq.core.dao.governance.proposal.storage.appendonly.ProposalPayload;
 import bisq.core.payment.payload.AdvancedCashAccountPayload;
 import bisq.core.payment.payload.AliPayAccountPayload;
+import bisq.core.payment.payload.AustraliaPayidPayload;
 import bisq.core.payment.payload.CashAppAccountPayload;
 import bisq.core.payment.payload.CashDepositAccountPayload;
 import bisq.core.payment.payload.ChaseQuickPayAccountPayload;
@@ -124,6 +125,8 @@ public class CoreProtoResolver implements ProtoResolver {
                     return InteracETransferAccountPayload.fromProto(proto);
                 case JAPAN_BANK_ACCOUNT_PAYLOAD:
                     return JapanBankAccountPayload.fromProto(proto);
+                case AUSTRALIA_PAYID_PAYLOAD:
+                    return AustraliaPayidPayload.fromProto(proto);
                 case UPHOLD_ACCOUNT_PAYLOAD:
                     return UpholdAccountPayload.fromProto(proto);
                 case MONEY_BEAM_ACCOUNT_PAYLOAD:

@@ -933,6 +933,7 @@ message PaymentAccountPayload {
         InstantCryptoCurrencyAccountPayload instant_crypto_currency_account_payload = 27;
         JapanBankAccountPayload japan_bank_account_payload = 28;
         TransferwiseAccountPayload Transferwise_account_payload = 29;
+        AustraliaPayidPayload australia_payid_payload = 30;
     }
     map<string, string> exclude_from_json_data = 15;
 }
@@ -998,6 +999,11 @@ message JapanBankAccountPayload {
     string bank_account_type = 5;
     string bank_account_name = 6;
     string bank_account_number = 7;
+}
+
+message AustraliaPayidPayload {
+    string bank_account_name = 1;
+    string payid = 2;
 }
 
 message SpecificBanksAccountPayload {
