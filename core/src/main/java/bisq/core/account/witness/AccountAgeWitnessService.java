@@ -379,7 +379,7 @@ public class AccountAgeWitnessService {
 
         long limit = OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT.value;
         var factor = PaymentMethod.hasChargebackRisk(paymentMethod, currencyCode) ?
-                signedTypeFactor(accountAgeCategory, direction) : normalFactor(accountAgeCategory);
+                signedTypeFactor(accountAgeCategory, direction) : normalFactor();
         if (factor > 0) {
             limit = MathUtils.roundDoubleToLong((double) maxTradeLimit.value * factor);
         }
@@ -394,7 +394,7 @@ public class AccountAgeWitnessService {
     private double signedTypeFactor(AccountAge accountAgeCategory,
                                     OfferPayload.Direction direction) {
         return direction == OfferPayload.Direction.BUY ? signedBuyFactor(accountAgeCategory) :
-                normalFactor(accountAgeCategory);
+                normalFactor();
     }
 
     private double signedBuyFactor(AccountAge accountAgeCategory) {
@@ -410,7 +410,7 @@ public class AccountAgeWitnessService {
         return 0;
     }
 
-    private double normalFactor(AccountAge accountAgeCategory) {
+    private double normalFactor() {
         return 1;
     }
 
