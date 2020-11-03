@@ -24,9 +24,12 @@ import bisq.core.dao.monitoring.model.BlindVoteStateBlock;
 import bisq.core.dao.monitoring.model.DaoStateBlock;
 import bisq.core.dao.monitoring.model.ProposalStateBlock;
 import bisq.core.dao.state.DaoStateService;
+import bisq.core.filter.Filter;
+import bisq.core.filter.FilterManager;
 import bisq.core.network.p2p.inventory.messages.GetInventoryRequest;
 import bisq.core.network.p2p.inventory.messages.GetInventoryResponse;
 import bisq.core.network.p2p.inventory.model.InventoryItem;
+import bisq.core.network.p2p.inventory.model.RequestInfo;
 
 import bisq.network.p2p.network.Connection;
 import bisq.network.p2p.network.MessageListener;
@@ -46,12 +49,12 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import com.google.common.base.Enums;
+import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
-import java.util.Objects;
 
 import java.lang.management.ManagementFactory;
 
@@ -66,6 +69,7 @@ public class GetInventoryRequestHandler implements MessageListener {
     private final DaoStateMonitoringService daoStateMonitoringService;
     private final ProposalStateMonitoringService proposalStateMonitoringService;
     private final BlindVoteStateMonitoringService blindVoteStateMonitoringService;
+    private final FilterManager filterManager;
     private final int maxConnections;
 
     @Inject
@@ -76,6 +80,7 @@ public class GetInventoryRequestHandler implements MessageListener {
                                       DaoStateMonitoringService daoStateMonitoringService,
                                       ProposalStateMonitoringService proposalStateMonitoringService,
                                       BlindVoteStateMonitoringService blindVoteStateMonitoringService,
+                                      FilterManager filterManager,
                                       @Named(Config.MAX_CONNECTIONS) int maxConnections) {
         this.networkNode = networkNode;
         this.peerManager = peerManager;
@@ -84,6 +89,7 @@ public class GetInventoryRequestHandler implements MessageListener {
         this.daoStateMonitoringService = daoStateMonitoringService;
         this.proposalStateMonitoringService = proposalStateMonitoringService;
         this.blindVoteStateMonitoringService = blindVoteStateMonitoringService;
+        this.filterManager = filterManager;
         this.maxConnections = maxConnections;
 
         this.networkNode.addMessageListener(this);
@@ -97,28 +103,11 @@ public class GetInventoryRequestHandler implements MessageListener {
             Map<InventoryItem, Integer> dataObjects = new HashMap<>();
             p2PDataStorage.getMapForDataResponse(getInventoryRequest.getVersion()).values().stream()
                     .map(e -> e.getClass().getSimpleName())
-                    .forEach(className -> {
-                        Optional<InventoryItem> optionalEnum = Enums.getIfPresent(InventoryItem.class, className);
-                        if (optionalEnum.isPresent()) {
-                            InventoryItem key = optionalEnum.get();
-                            dataObjects.putIfAbsent(key, 0);
-                            int prev = dataObjects.get(key);
-                            dataObjects.put(key, prev + 1);
-                        }
-                    });
+                    .forEach(className -> addClassNameToMap(dataObjects, className));
             p2PDataStorage.getMap().values().stream()
                     .map(ProtectedStorageEntry::getProtectedStoragePayload)
-                    .filter(Objects::nonNull)
                     .map(e -> e.getClass().getSimpleName())
-                    .forEach(className -> {
-                        Optional<InventoryItem> optionalEnum = Enums.getIfPresent(InventoryItem.class, className);
-                        if (optionalEnum.isPresent()) {
-                            InventoryItem key = optionalEnum.get();
-                            dataObjects.putIfAbsent(key, 0);
-                            int prev = dataObjects.get(key);
-                            dataObjects.put(key, prev + 1);
-                        }
-                    });
+                    .forEach(className -> addClassNameToMap(dataObjects, className));
             Map<InventoryItem, String> inventory = new HashMap<>();
             dataObjects.forEach((key, value) -> inventory.put(key, String.valueOf(value)));
 
@@ -152,6 +141,7 @@ public class GetInventoryRequestHandler implements MessageListener {
             inventory.put(InventoryItem.numConnections, String.valueOf(networkNode.getAllConnections().size()));
             inventory.put(InventoryItem.peakNumConnections, String.valueOf(peerManager.getPeakNumConnections()));
             inventory.put(InventoryItem.numAllConnectionsLostEvents, String.valueOf(peerManager.getNumAllConnectionsLostEvents()));
+            peerManager.resetNumAllConnectionsLostEvents();
             inventory.put(InventoryItem.sentBytes, String.valueOf(Statistic.totalSentBytesProperty().get()));
             inventory.put(InventoryItem.sentBytesPerSec, String.valueOf(Statistic.totalSentBytesPerSecProperty().get()));
             inventory.put(InventoryItem.receivedBytes, String.valueOf(Statistic.totalReceivedBytesProperty().get()));
@@ -161,8 +151,14 @@ public class GetInventoryRequestHandler implements MessageListener {
 
             // node
             inventory.put(InventoryItem.version, Version.VERSION);
+            inventory.put(InventoryItem.commitHash, RequestInfo.COMMIT_HASH);
             inventory.put(InventoryItem.usedMemory, String.valueOf(Profiler.getUsedMemoryInBytes()));
             inventory.put(InventoryItem.jvmStartTime, String.valueOf(ManagementFactory.getRuntimeMXBean().getStartTime()));
+
+            Filter filter = filterManager.getFilter();
+            if (filter != null) {
+                inventory.put(InventoryItem.filteredSeeds, Joiner.on("," + System.getProperty("line.separator")).join(filter.getSeedNodes()));
+            }
 
             log.info("Send inventory {} to {}", inventory, connection.getPeersNodeAddressOptional());
             GetInventoryResponse getInventoryResponse = new GetInventoryResponse(inventory);
@@ -172,5 +168,15 @@ public class GetInventoryRequestHandler implements MessageListener {
 
     public void shutDown() {
         networkNode.removeMessageListener(this);
+    }
+
+    private void addClassNameToMap(Map<InventoryItem, Integer> dataObjects, String className) {
+        Optional<InventoryItem> optionalEnum = Enums.getIfPresent(InventoryItem.class, className);
+        if (optionalEnum.isPresent()) {
+            InventoryItem key = optionalEnum.get();
+            dataObjects.putIfAbsent(key, 0);
+            int prev = dataObjects.get(key);
+            dataObjects.put(key, prev + 1);
+        }
     }
 }

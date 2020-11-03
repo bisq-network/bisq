@@ -23,6 +23,11 @@ public class DeviationByPercentage implements DeviationType {
     private final double lowerWarnTrigger;
     private final double upperWarnTrigger;
 
+    // In case want to see the % deviation but not trigger any warnings or alerts
+    public DeviationByPercentage() {
+        this(0, Double.MAX_VALUE, 0, Double.MAX_VALUE);
+    }
+
     public DeviationByPercentage(double lowerAlertTrigger,
                                  double upperAlertTrigger,
                                  double lowerWarnTrigger,

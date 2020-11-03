@@ -51,9 +51,9 @@ public class DeviationByIntegerDiff implements DeviationType {
         collection.stream()
                 .filter(list -> !list.isEmpty())
                 .map(list -> list.get(list.size() - 1)) // We use last item only
-                .map(RequestInfo::getInventory)
+                .map(RequestInfo::getDataMap)
+                .map(e -> e.get(inventoryItem).getValue())
                 .filter(Objects::nonNull)
-                .map(e -> e.get(inventoryItem))
                 .forEach(e -> {
                     sameItemsByValue.putIfAbsent(e, 0);
                     int prev = sameItemsByValue.get(e);

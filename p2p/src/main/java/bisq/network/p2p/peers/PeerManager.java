@@ -326,6 +326,10 @@ public final class PeerManager implements ConnectionListener, PersistedDataHost 
         }
     }
 
+    public void resetNumAllConnectionsLostEvents() {
+        numAllConnectionsLostEvents = 0;
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Peer

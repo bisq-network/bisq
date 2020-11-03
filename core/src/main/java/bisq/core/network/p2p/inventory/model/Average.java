@@ -36,10 +36,11 @@ public class Average {
 
     public static double getAverage(Set<RequestInfo> requestInfoSet, InventoryItem inventoryItem) {
         return requestInfoSet.stream()
-                .map(RequestInfo::getInventory)
+                .map(RequestInfo::getDataMap)
+                .filter(map -> map.containsKey(inventoryItem))
+                .map(map -> map.get(inventoryItem).getValue())
                 .filter(Objects::nonNull)
-                .filter(inventory -> inventory.containsKey(inventoryItem))
-                .mapToDouble(inventory -> Double.parseDouble((inventory.get(inventoryItem))))
+                .mapToDouble(Double::parseDouble)
                 .average()
                 .orElse(0d);
     }

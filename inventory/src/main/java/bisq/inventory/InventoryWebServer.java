@@ -24,12 +24,15 @@ import bisq.core.util.FormattingUtils;
 
 import bisq.network.p2p.NodeAddress;
 
+import bisq.common.app.Version;
 import bisq.common.util.MathUtils;
 import bisq.common.util.Utilities;
 
+import com.google.common.base.Joiner;
+
 import java.io.BufferedReader;
 
-import java.util.Collection;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -77,11 +80,9 @@ public class InventoryWebServer {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void onNewRequestInfo(Map<NodeAddress, List<RequestInfo>> requestInfoListByNode,
-                                 Map<InventoryItem, Double> averageValues,
-                                 int requestCounter) {
+    public void onNewRequestInfo(Map<NodeAddress, List<RequestInfo>> requestInfoListByNode, int requestCounter) {
         this.requestCounter = requestCounter;
-        html = generateHtml(requestInfoListByNode, averageValues);
+        html = generateHtml(requestInfoListByNode);
     }
 
     public void shutDown() {
@@ -93,14 +94,22 @@ public class InventoryWebServer {
     // HTML
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private String generateHtml(Map<NodeAddress, List<RequestInfo>> map,
-                                Map<InventoryItem, Double> averageValues) {
+    private String generateHtml(Map<NodeAddress, List<RequestInfo>> map) {
         StringBuilder html = new StringBuilder();
         html.append("<html>" +
-                "<head><style>table, th, td {border: 1px solid black;}</style></head>" +
+                "<head>" +
+                "<style type=\"text/css\">" +
+                "   a {" +
+                "      text-decoration:none; color: black;" +
+                "   }" +
+                " #warn { color: #ff7700; } " +
+                " #alert { color: #ff0000; } " +
+                "table, th, td {border: 1px solid black;}" +
+                "</style></head>" +
                 "<body><h3>")
                 .append("Current time: ").append(new Date().toString()).append("<br/>")
                 .append("Request cycle: ").append(requestCounter).append("<br/>")
+                .append("Version/commit: ").append(Version.VERSION).append(" / ").append(RequestInfo.COMMIT_HASH).append("<br/>")
                 .append("<table style=\"width:100%\">")
                 .append("<tr>")
                 .append("<th align=\"left\">Seed node info</th>")
@@ -117,9 +126,9 @@ public class InventoryWebServer {
                 RequestInfo requestInfo = list.get(numResponses - 1);
                 html.append("<td>").append(getSeedNodeInfo(seedNode, requestInfo)).append("</td>")
                         .append("<td>").append(getRequestInfo(requestInfo, numResponses)).append("</td>")
-                        .append("<td>").append(getDataInfo(requestInfo, averageValues, map)).append("</td>")
-                        .append("<td>").append(getDaoInfo(requestInfo, averageValues, map)).append("</td>")
-                        .append("<td>").append(getNetworkInfo(requestInfo, averageValues, map)).append("</td>");
+                        .append("<td>").append(getDataInfo(seedNode, requestInfo, map)).append("</td>")
+                        .append("<td>").append(getDaoInfo(seedNode, requestInfo, map)).append("</td>")
+                        .append("<td>").append(getNetworkInfo(seedNode, requestInfo, map)).append("</td>");
             } else {
                 html.append("<td>").append(getSeedNodeInfo(seedNode, null)).append("</td>")
                         .append("<td>").append("n/a").append("</td>")
@@ -147,10 +156,18 @@ public class InventoryWebServer {
         sb.append("Operator: ").append(operator).append("<br/>");
 
         String address = nodeAddress.getFullAddress();
-        sb.append("Node address: ").append(address).append("<br/>");
+
+        String filteredSeeds = requestInfo != null ? requestInfo.getValue(InventoryItem.filteredSeeds) : null;
+        if (filteredSeeds != null && filteredSeeds.contains(address)) {
+            sb.append(getColorTagByDeviationSeverity(DeviationSeverity.ALERT)).append("Node address: ")
+                    .append(address).append(" (is filtered!)").append(CLOSE_TAG);
+        } else {
+            sb.append("Node address: ").append(address).append("<br/>");
+        }
 
         if (requestInfo != null) {
             sb.append("Version: ").append(requestInfo.getDisplayValue(InventoryItem.version)).append("<br/>");
+            sb.append("Commit hash: ").append(requestInfo.getDisplayValue(InventoryItem.commitHash)).append("<br/>");
             String memory = requestInfo.getValue(InventoryItem.usedMemory);
             String memoryString = memory != null ? Utilities.readableFileSize(Long.parseLong(memory)) : "n/a";
             sb.append("Memory used: ")
@@ -168,6 +185,10 @@ public class InventoryWebServer {
                             true, true) :
                     "n/a";
             sb.append("Run duration: ").append(duration).append("<br/>");
+
+            sb.append("Filtered seed nodes: ")
+                    .append(requestInfo.getDisplayValue(InventoryItem.filteredSeeds).replace(System.getProperty("line.separator"), "<br/>"))
+                    .append("<br/>");
         }
 
         return sb.toString();
@@ -215,74 +236,75 @@ public class InventoryWebServer {
         return sb.toString();
     }
 
-    private String getDataInfo(RequestInfo requestInfo,
-                               Map<InventoryItem, Double> averageValues,
+    private String getDataInfo(NodeAddress seedNode,
+                               RequestInfo requestInfo,
                                Map<NodeAddress, List<RequestInfo>> map) {
         StringBuilder sb = new StringBuilder();
 
-        sb.append(getLine(InventoryItem.OfferPayload, requestInfo, averageValues, map.values()));
-        sb.append(getLine(InventoryItem.MailboxStoragePayload, requestInfo, averageValues, map.values()));
-        sb.append(getLine(InventoryItem.TradeStatistics3, requestInfo, averageValues, map.values()));
-        sb.append(getLine(InventoryItem.AccountAgeWitness, requestInfo, averageValues, map.values()));
-        sb.append(getLine(InventoryItem.SignedWitness, requestInfo, averageValues, map.values()));
+        sb.append(getLine(InventoryItem.OfferPayload, seedNode, requestInfo, map));
+        sb.append(getLine(InventoryItem.MailboxStoragePayload, seedNode, requestInfo, map));
+        sb.append(getLine(InventoryItem.TradeStatistics3, seedNode, requestInfo, map));
+        sb.append(getLine(InventoryItem.AccountAgeWitness, seedNode, requestInfo, map));
+        sb.append(getLine(InventoryItem.SignedWitness, seedNode, requestInfo, map));
 
-        sb.append(getLine(InventoryItem.Alert, requestInfo, averageValues, map.values()));
-        sb.append(getLine(InventoryItem.Filter, requestInfo, averageValues, map.values()));
-        sb.append(getLine(InventoryItem.Mediator, requestInfo, averageValues, map.values()));
-        sb.append(getLine(InventoryItem.RefundAgent, requestInfo, averageValues, map.values()));
+        sb.append(getLine(InventoryItem.Alert, seedNode, requestInfo, map));
+        sb.append(getLine(InventoryItem.Filter, seedNode, requestInfo, map));
+        sb.append(getLine(InventoryItem.Mediator, seedNode, requestInfo, map));
+        sb.append(getLine(InventoryItem.RefundAgent, seedNode, requestInfo, map));
 
         return sb.toString();
     }
 
-    private String getDaoInfo(RequestInfo requestInfo,
-                              Map<InventoryItem, Double> averageValues,
+    private String getDaoInfo(NodeAddress seedNode,
+                              RequestInfo requestInfo,
                               Map<NodeAddress, List<RequestInfo>> map) {
         StringBuilder sb = new StringBuilder();
 
-        sb.append(getLine("Number of BSQ blocks: ", InventoryItem.numBsqBlocks, requestInfo, averageValues, map.values()));
-        sb.append(getLine(InventoryItem.TempProposalPayload, requestInfo, averageValues, map.values()));
-        sb.append(getLine(InventoryItem.ProposalPayload, requestInfo, averageValues, map.values()));
-        sb.append(getLine(InventoryItem.BlindVotePayload, requestInfo, averageValues, map.values()));
-        sb.append(getLine("DAO state block height: ", InventoryItem.daoStateChainHeight, requestInfo, averageValues, map.values()));
+        sb.append(getLine("Number of BSQ blocks: ", InventoryItem.numBsqBlocks, seedNode, requestInfo, map));
+        sb.append(getLine(InventoryItem.TempProposalPayload, seedNode, requestInfo, map));
+        sb.append(getLine(InventoryItem.ProposalPayload, seedNode, requestInfo, map));
+        sb.append(getLine(InventoryItem.BlindVotePayload, seedNode, requestInfo, map));
+        sb.append(getLine("DAO state block height: ", InventoryItem.daoStateChainHeight, seedNode, requestInfo, map));
 
-        String daoStateChainHeight = null;
-        if (requestInfo.getInventory() != null && requestInfo.getInventory().containsKey(InventoryItem.daoStateChainHeight)) {
-            daoStateChainHeight = requestInfo.getInventory().get(InventoryItem.daoStateChainHeight);
-        }
-
-        sb.append(getLine("DAO state hash: ", InventoryItem.daoStateHash, requestInfo, averageValues, map.values(), daoStateChainHeight));
+        sb.append(getLine("DAO state hash: ", InventoryItem.daoStateHash, seedNode, requestInfo, map));
 
         // The hash for proposal changes only at first block of blind vote phase but as we do not want to initialize the
         // dao domain we cannot check that. But we also don't need that as we can just compare that all hashes at all
         // blocks from all seeds are the same. Same for blindVoteHash.
-        sb.append(getLine("Proposal state hash: ", InventoryItem.proposalHash, requestInfo, averageValues, map.values(), daoStateChainHeight));
-        sb.append(getLine("Blind vote state hash: ", InventoryItem.blindVoteHash, requestInfo, averageValues, map.values(), daoStateChainHeight));
+        sb.append(getLine("Proposal state hash: ", InventoryItem.proposalHash, seedNode, requestInfo, map));
+        sb.append(getLine("Blind vote state hash: ", InventoryItem.blindVoteHash, seedNode, requestInfo, map));
 
         return sb.toString();
     }
 
-    private String getNetworkInfo(RequestInfo requestInfo,
-                                  Map<InventoryItem, Double> averageValues,
+    private String getNetworkInfo(NodeAddress seedNode,
+                                  RequestInfo requestInfo,
                                   Map<NodeAddress, List<RequestInfo>> map) {
         StringBuilder sb = new StringBuilder();
 
-        sb.append(getLine("Max. connections: ", InventoryItem.maxConnections, requestInfo, averageValues, map.values()));
-        sb.append(getLine("Number of connections: ", InventoryItem.numConnections, requestInfo, averageValues, map.values()));
-        sb.append(getLine("Peak number of connections: ", InventoryItem.peakNumConnections, requestInfo, averageValues, map.values()));
-        sb.append(getLine("Number of 'All connections lost' events: ", InventoryItem.numAllConnectionsLostEvents, requestInfo, averageValues, map.values()));
+        sb.append(getLine("Max. connections: ",
+                InventoryItem.maxConnections, seedNode, requestInfo, map));
+        sb.append(getLine("Number of connections: ",
+                InventoryItem.numConnections, seedNode, requestInfo, map));
+        sb.append(getLine("Peak number of connections: ",
+                InventoryItem.peakNumConnections, seedNode, requestInfo, map));
+        sb.append(getLine("Number of 'All connections lost' events: ",
+                InventoryItem.numAllConnectionsLostEvents, seedNode, requestInfo, map));
 
-        sb.append(getLine("Sent messages/sec: ", InventoryItem.sentMessagesPerSec, requestInfo,
-                averageValues, map.values(), null, this::getRounded));
-        sb.append(getLine("Received messages/sec: ", InventoryItem.receivedMessagesPerSec, requestInfo,
-                averageValues, map.values(), null, this::getRounded));
-        sb.append(getLine("Sent kB/sec: ", InventoryItem.sentBytesPerSec, requestInfo,
-                averageValues, map.values(), null, this::getRounded));
-        sb.append(getLine("Received kB/sec: ", InventoryItem.receivedBytesPerSec, requestInfo,
-                averageValues, map.values(), null, this::getRounded));
-        sb.append(getLine("Sent data: ", InventoryItem.sentBytes, requestInfo,
-                averageValues, map.values(), null, value -> Utilities.readableFileSize(Long.parseLong(value))));
-        sb.append(getLine("Received data: ", InventoryItem.receivedBytes, requestInfo,
-                averageValues, map.values(), null, value -> Utilities.readableFileSize(Long.parseLong(value))));
+        sb.append(getLine("Sent messages/sec: ",
+                InventoryItem.sentMessagesPerSec, seedNode, requestInfo, map, this::getRounded));
+        sb.append(getLine("Received messages/sec: ",
+                InventoryItem.receivedMessagesPerSec, seedNode, requestInfo, map, this::getRounded));
+        sb.append(getLine("Sent kB/sec: ",
+                InventoryItem.sentBytesPerSec, seedNode, requestInfo, map, this::getRounded));
+        sb.append(getLine("Received kB/sec: ",
+                InventoryItem.receivedBytesPerSec, seedNode, requestInfo, map, this::getRounded));
+        sb.append(getLine("Sent data: ",
+                InventoryItem.sentBytes, seedNode, requestInfo, map,
+                value -> Utilities.readableFileSize(Long.parseLong(value))));
+        sb.append(getLine("Received data: ",
+                InventoryItem.receivedBytes, seedNode, requestInfo, map,
+                value -> Utilities.readableFileSize(Long.parseLong(value))));
         return sb.toString();
     }
 
@@ -292,63 +314,87 @@ public class InventoryWebServer {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private String getLine(InventoryItem inventoryItem,
+                           NodeAddress seedNode,
                            RequestInfo requestInfo,
-                           Map<InventoryItem, Double> averageValues,
-                           Collection<List<RequestInfo>> collection) {
+                           Map<NodeAddress, List<RequestInfo>> map) {
         return getLine(getTitle(inventoryItem),
                 inventoryItem,
+                seedNode,
                 requestInfo,
-                averageValues,
-                collection);
+                map);
     }
 
     private String getLine(String title,
                            InventoryItem inventoryItem,
+                           NodeAddress seedNode,
                            RequestInfo requestInfo,
-                           Map<InventoryItem, Double> averageValues,
-                           Collection<List<RequestInfo>> collection) {
+                           Map<NodeAddress, List<RequestInfo>> map) {
         return getLine(title,
                 inventoryItem,
+                seedNode,
                 requestInfo,
-                averageValues,
-                collection,
-                null,
+                map,
                 null);
     }
 
     private String getLine(String title,
                            InventoryItem inventoryItem,
+                           NodeAddress seedNode,
                            RequestInfo requestInfo,
-                           Map<InventoryItem, Double> averageValues,
-                           Collection<List<RequestInfo>> collection,
-                           @Nullable String daoStateChainHeight) {
-        return getLine(title,
-                inventoryItem,
-                requestInfo,
-                averageValues,
-                collection,
-                daoStateChainHeight,
-                null);
-    }
-
-    private String getLine(String title,
-                           InventoryItem inventoryItem,
-                           RequestInfo requestInfo,
-                           Map<InventoryItem, Double> averageValues,
-                           Collection<List<RequestInfo>> collection,
-                           @Nullable String daoStateChainHeight,
+                           Map<NodeAddress, List<RequestInfo>> map,
                            @Nullable Function<String, String> formatter) {
         String displayValue = requestInfo.getDisplayValue(inventoryItem);
         String value = requestInfo.getValue(inventoryItem);
         if (formatter != null && value != null) {
             displayValue = formatter.apply(value);
         }
-        Double deviation = inventoryItem.getDeviation(averageValues, value);
-        DeviationSeverity deviationSeverity = inventoryItem.getDeviationSeverity(deviation, collection, value, daoStateChainHeight);
+
+        String deviationAsPercentString = "";
+        DeviationSeverity deviationSeverity = DeviationSeverity.OK;
+        if (requestInfo.getDataMap().containsKey(inventoryItem)) {
+            RequestInfo.Data data = requestInfo.getDataMap().get(inventoryItem);
+            deviationAsPercentString = getDeviationAsPercentString(data.getDeviation());
+            deviationSeverity = data.getDeviationSeverity();
+        }
+
+        List<RequestInfo> requestInfoList = map.get(seedNode);
+        String historicalWarnings = "";
+        String historicalAlerts = "";
+        List<Integer> warningsAtRequestNumber = new ArrayList<>();
+        List<Integer> alertsAtRequestNumber = new ArrayList<>();
+        if (requestInfoList != null) {
+            for (int i = 0; i < requestInfoList.size(); i++) {
+                RequestInfo reqInfo = requestInfoList.get(i);
+                Map<InventoryItem, RequestInfo.Data> deviationInfoMap = reqInfo.getDataMap();
+                if (deviationInfoMap.containsKey(inventoryItem)) {
+                    if (deviationInfoMap.get(inventoryItem).isPersistentWarning()) {
+                        warningsAtRequestNumber.add(i + 1);
+                    } else if (deviationInfoMap.get(inventoryItem).isPersistentAlert()) {
+                        alertsAtRequestNumber.add(i + 1);
+                    }
+                }
+            }
+
+            if (!warningsAtRequestNumber.isEmpty()) {
+                historicalWarnings = inventoryItem.getDeviationTolerance() + " repeated warning(s) at request(s) " + Joiner.on(", ").join(warningsAtRequestNumber);
+            }
+            if (!alertsAtRequestNumber.isEmpty()) {
+                historicalAlerts = inventoryItem.getDeviationTolerance() + " repeated alert(s) at request(s): " + Joiner.on(", ").join(alertsAtRequestNumber);
+            }
+        }
+        String warningIcon = "&#9888; ";
+        String historicalWarningsHtml = warningsAtRequestNumber.isEmpty() ? "" :
+                ", <b><a id=\"warn\" href=\"#\" title=\"" + historicalWarnings + "\">" + warningIcon + warningsAtRequestNumber.size() + "</a></b>";
+        String errorIcon = "&#9760; "; // &#9889;  &#9889;
+        String historicalAlertsHtml = alertsAtRequestNumber.isEmpty() ? "" :
+                ", <b><a id=\"alert\" href=\"#\" title=\"" + historicalAlerts + "\">" + errorIcon + alertsAtRequestNumber.size() + "</a></b>";
+
         return title +
                 getColorTagByDeviationSeverity(deviationSeverity) +
                 displayValue +
-                getDeviationAsPercentString(deviation) +
+                deviationAsPercentString +
+                historicalWarningsHtml +
+                historicalAlertsHtml +
                 CLOSE_TAG;
     }
 
@@ -367,9 +413,11 @@ public class InventoryWebServer {
 
         switch (deviationSeverity) {
             case WARN:
-                return "<font color=\"blue\">";
+                return "<font color=\"#0000cc\">";
             case ALERT:
-                return "<font color=\"red\">";
+                return "<font color=\"#cc0000\">";
+            case IGNORED:
+                return "<font color=\"#333333\">";
             case OK:
             default:
                 return "<font color=\"black\">";

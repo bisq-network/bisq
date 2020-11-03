@@ -17,24 +17,28 @@
 
 package bisq.core.network.p2p.inventory.model;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import lombok.Getter;
 import lombok.Setter;
+import lombok.Value;
 
 import org.jetbrains.annotations.Nullable;
 
 @Getter
 public class RequestInfo {
+    // Carries latest commit hash of feature changes (not latest commit as that is then the commit for editing that field)
+    public static final String COMMIT_HASH = "d789282b";
+
     private final long requestStartTime;
     @Setter
     private long responseTime;
     @Nullable
     @Setter
-    private Map<InventoryItem, String> inventory;
-    @Nullable
-    @Setter
     private String errorMessage;
+
+    private final Map<InventoryItem, Data> dataMap = new HashMap<>();
 
     public RequestInfo(long requestStartTime) {
         this.requestStartTime = requestStartTime;
@@ -47,8 +51,45 @@ public class RequestInfo {
 
     @Nullable
     public String getValue(InventoryItem inventoryItem) {
-        return inventory != null && inventory.containsKey(inventoryItem) ?
-                inventory.get(inventoryItem) :
+        return dataMap.containsKey(inventoryItem) ?
+                dataMap.get(inventoryItem).getValue() :
                 null;
+    }
+
+    @Value
+    public static class Data {
+        private final String value;
+        @Nullable
+        private final Double average;
+        private final Double deviation;
+        private final DeviationSeverity deviationSeverity;
+        private final boolean persistentWarning;
+        private final boolean persistentAlert;
+
+        public Data(String value,
+                    @Nullable Double average,
+                    Double deviation,
+                    DeviationSeverity deviationSeverity,
+                    boolean persistentWarning,
+                    boolean persistentAlert) {
+            this.value = value;
+            this.average = average;
+            this.deviation = deviation;
+            this.deviationSeverity = deviationSeverity;
+            this.persistentWarning = persistentWarning;
+            this.persistentAlert = persistentAlert;
+        }
+
+        @Override
+        public String toString() {
+            return "InventoryData{" +
+                    "\n     value='" + value + '\'' +
+                    ",\n     average=" + average +
+                    ",\n     deviation=" + deviation +
+                    ",\n     deviationSeverity=" + deviationSeverity +
+                    ",\n     persistentWarning=" + persistentWarning +
+                    ",\n     persistentAlert=" + persistentAlert +
+                    "\n}";
+        }
     }
 }

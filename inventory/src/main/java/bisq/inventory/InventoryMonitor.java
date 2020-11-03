@@ -20,6 +20,7 @@ package bisq.inventory;
 
 import bisq.core.network.p2p.inventory.GetInventoryRequestManager;
 import bisq.core.network.p2p.inventory.model.Average;
+import bisq.core.network.p2p.inventory.model.DeviationSeverity;
 import bisq.core.network.p2p.inventory.model.InventoryItem;
 import bisq.core.network.p2p.inventory.model.RequestInfo;
 import bisq.core.network.p2p.seed.DefaultSeedNodeRepository;
@@ -33,6 +34,7 @@ import bisq.network.p2p.network.SetupListener;
 import bisq.common.UserThread;
 import bisq.common.config.BaseCurrencyNetwork;
 import bisq.common.file.JsonFileManager;
+import bisq.common.util.Tuple2;
 import bisq.common.util.Utilities;
 
 import java.time.Clock;
@@ -40,10 +42,12 @@ import java.time.Clock;
 import java.io.File;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
@@ -155,26 +159,78 @@ public class InventoryMonitor implements SetupListener {
             requestInfo.setErrorMessage(errorMessage);
         }
 
+        boolean ignoreDeviationAtStartup;
         if (result != null) {
             log.info("nodeAddress={}, result={}", nodeAddress, result.toString());
-            requestInfo.setInventory(result);
             long responseTime = System.currentTimeMillis();
             requestInfo.setResponseTime(responseTime);
+
+            // If seed just started up we ignore the deviation as it can be expected that seed is still syncing
+            // DAO state/blocks. P2P data should be ready but as we received it from other seeds it is not that
+            // valuable information either, so we apply the ignore to all data.
+            if (result.containsKey(InventoryItem.jvmStartTime)) {
+                String jvmStartTimeString = result.get(InventoryItem.jvmStartTime);
+                long jvmStartTime = Long.parseLong(jvmStartTimeString);
+                ignoreDeviationAtStartup = jvmStartTime < TimeUnit.MINUTES.toMillis(2);
+            } else {
+                ignoreDeviationAtStartup = false;
+            }
+        } else {
+            ignoreDeviationAtStartup = false;
         }
 
         requestInfoListByNode.putIfAbsent(nodeAddress, new ArrayList<>());
         List<RequestInfo> requestInfoList = requestInfoListByNode.get(nodeAddress);
-        requestInfoList.add(requestInfo);
+
 
         // We create average of all nodes latest results. It might be that the nodes last result is
         // from a previous request as the response has not arrived yet.
-        Set<RequestInfo> requestInfoSet = requestInfoListByNode.values().stream()
+        //TODO might be not a good idea to use the last result if its not a recent one. a faulty node would distort
+        // the average calculation.
+        // As we add at the end our own result the average is excluding our own value
+        Collection<List<RequestInfo>> requestInfoListByNodeValues = requestInfoListByNode.values();
+        Set<RequestInfo> requestInfoSet = requestInfoListByNodeValues.stream()
                 .filter(list -> !list.isEmpty())
                 .map(list -> list.get(list.size() - 1))
                 .collect(Collectors.toSet());
         Map<InventoryItem, Double> averageValues = Average.of(requestInfoSet);
 
-        inventoryWebServer.onNewRequestInfo(requestInfoListByNode, averageValues, requestCounter);
+        String daoStateChainHeight = result != null &&
+                result.containsKey(InventoryItem.daoStateChainHeight) ?
+                result.get(InventoryItem.daoStateChainHeight) :
+                null;
+        List.of(InventoryItem.values()).forEach(inventoryItem -> {
+            String value = result != null ? result.get(inventoryItem) : null;
+            Tuple2<Double, Double> tuple = inventoryItem.getDeviationAndAverage(averageValues, value);
+            Double deviation = tuple != null ? tuple.first : null;
+            Double average = tuple != null ? tuple.second : null;
+            DeviationSeverity deviationSeverity = ignoreDeviationAtStartup ? DeviationSeverity.IGNORED :
+                    inventoryItem.getDeviationSeverity(deviation,
+                            requestInfoListByNodeValues,
+                            value,
+                            daoStateChainHeight);
+            int endIndex = Math.max(0, requestInfoList.size() - 1);
+            int deviationTolerance = inventoryItem.getDeviationTolerance();
+            int fromIndex = Math.max(0, endIndex - deviationTolerance);
+            List<DeviationSeverity> lastDeviationSeverityEntries = requestInfoList.subList(fromIndex, endIndex).stream()
+                    .filter(e -> e.getDataMap().containsKey(inventoryItem))
+                    .map(e -> e.getDataMap().get(inventoryItem).getDeviationSeverity())
+                    .collect(Collectors.toList());
+            long numWarnings = lastDeviationSeverityEntries.stream()
+                    .filter(e -> e == DeviationSeverity.WARN)
+                    .count();
+            long numAlerts = lastDeviationSeverityEntries.stream()
+                    .filter(e -> e == DeviationSeverity.ALERT)
+                    .count();
+            boolean persistentWarning = numWarnings == deviationTolerance;
+            boolean persistentAlert = numAlerts == deviationTolerance;
+            RequestInfo.Data data = new RequestInfo.Data(value, average, deviation, deviationSeverity, persistentWarning, persistentAlert);
+            requestInfo.getDataMap().put(inventoryItem, data);
+        });
+
+        requestInfoList.add(requestInfo);
+
+        inventoryWebServer.onNewRequestInfo(requestInfoListByNode, requestCounter);
 
         String json = Utilities.objectToJson(requestInfo);
         jsonFileManagerByNodeAddress.get(nodeAddress).writeToDisc(json, String.valueOf(requestInfo.getRequestStartTime()));
