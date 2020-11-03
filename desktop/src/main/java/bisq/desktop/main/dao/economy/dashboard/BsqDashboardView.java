@@ -114,7 +114,6 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
 
     private Coin availableAmount;
     private int gridRow = 0;
-    double percentToTrim = 5;
     double howManyStdDevsConstituteOutlier = 10;
 
 
