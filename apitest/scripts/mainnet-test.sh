@@ -14,7 +14,7 @@
 #
 #  This script must be run from the root of the project, e.g.:
 #
-#     ./cli/test.sh
+#     bats apitest/scripts/mainnet-test.sh
 
 @test "test unsupported method error" {
   run ./bisq-cli --password=xyz bogus
