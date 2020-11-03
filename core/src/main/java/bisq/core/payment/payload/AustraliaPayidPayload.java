@@ -23,7 +23,7 @@ import bisq.common.util.CollectionUtils;
 
 import com.google.protobuf.Message;
 
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -39,12 +39,11 @@ import lombok.extern.slf4j.Slf4j;
 @Setter
 @Getter
 @Slf4j
-public final class AustraliaPayIDPayload extends PaymentAccountPayload {
-    // payid
+public final class AustraliaPayidPayload extends PaymentAccountPayload {
     private String payid = "";
     private String bankAccountName = "";
 
-    public AustraliaPayIDPayload(String paymentMethod, String id) {
+    public AustraliaPayidPayload(String paymentMethod, String id) {
         super(paymentMethod, id);
     }
 
@@ -53,7 +52,7 @@ public final class AustraliaPayIDPayload extends PaymentAccountPayload {
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private AustraliaPayIDPayload(String paymentMethod,
+    private AustraliaPayidPayload(String paymentMethod,
                                   String id,
                                   String payid,
                                   String bankAccountName,
@@ -72,18 +71,18 @@ public final class AustraliaPayIDPayload extends PaymentAccountPayload {
     public Message toProtoMessage() {
         return getPaymentAccountPayloadBuilder()
                 .setAustraliaPayidPayload(
-                        protobuf.AustraliaPayIDPayload.newBuilder()
-                        .setPayid(payid)
-                        .setBankAccountName(bankAccountName)
+                        protobuf.AustraliaPayidPayload.newBuilder()
+                                .setPayid(payid)
+                                .setBankAccountName(bankAccountName)
                 ).build();
     }
 
-    public static AustraliaPayIDPayload fromProto(protobuf.PaymentAccountPayload proto) {
-        protobuf.AustraliaPayIDPayload AustraliaPayIDPayload = proto.getAustraliaPayidPayload();
-        return new AustraliaPayIDPayload(proto.getPaymentMethodId(),
+    public static AustraliaPayidPayload fromProto(protobuf.PaymentAccountPayload proto) {
+        protobuf.AustraliaPayidPayload AustraliaPayidPayload = proto.getAustraliaPayidPayload();
+        return new AustraliaPayidPayload(proto.getPaymentMethodId(),
                 proto.getId(),
-                AustraliaPayIDPayload.getPayid(),
-                AustraliaPayIDPayload.getBankAccountName(),
+                AustraliaPayidPayload.getPayid(),
+                AustraliaPayidPayload.getBankAccountName(),
                 proto.getMaxTradePeriod(),
                 CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
     }
@@ -94,23 +93,21 @@ public final class AustraliaPayIDPayload extends PaymentAccountPayload {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public String getPaymentDetails()
-    {
+    public String getPaymentDetails() {
         return Res.get(paymentMethodId) + " - " + getPaymentDetailsForTradePopup().replace("\n", ", ");
     }
 
     @Override
-    public String getPaymentDetailsForTradePopup()
-    {
+    public String getPaymentDetailsForTradePopup() {
         return
-        Res.get("payment.australia.payid") + ": " + payid + "\n" +
-                Res.get("payment.account.owner") + ": " + bankAccountName;
-     }
+                Res.get("payment.australia.payid") + ": " + payid + "\n" +
+                        Res.get("payment.account.owner") + ": " + bankAccountName;
+    }
 
 
     @Override
     public byte[] getAgeWitnessInputData() {
         String all = this.payid + this.bankAccountName;
-        return super.getAgeWitnessInputData(all.getBytes(Charset.forName("UTF-8")));
+        return super.getAgeWitnessInputData(all.getBytes(StandardCharsets.UTF_8));
     }
 }

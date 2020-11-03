@@ -20,14 +20,14 @@ package bisq.desktop.components.paymentmethods;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
-import bisq.desktop.util.validation.AustraliaPayIDValidator;
+import bisq.desktop.util.validation.AustraliaPayidValidator;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
-import bisq.core.payment.AustraliaPayID;
+import bisq.core.payment.AustraliaPayid;
 import bisq.core.payment.PaymentAccount;
-import bisq.core.payment.payload.AustraliaPayIDPayload;
+import bisq.core.payment.payload.AustraliaPayidPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.validation.InputValidator;
@@ -38,24 +38,29 @@ import javafx.scene.layout.GridPane;
 import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextField;
 import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
 
-public class AustraliaPayIDForm extends PaymentMethodForm {
-    private final AustraliaPayID australiaPayID;
-    private final AustraliaPayIDValidator australiaPayIDValidator;
+public class AustraliaPayidForm extends PaymentMethodForm {
+    private final AustraliaPayid australiaPayid;
+    private final AustraliaPayidValidator australiaPayidValidator;
     private InputTextField mobileNrInputTextField;
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountPayload paymentAccountPayload) {
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner"),
-                ((AustraliaPayIDPayload) paymentAccountPayload).getBankAccountName());
+                ((AustraliaPayidPayload) paymentAccountPayload).getBankAccountName());
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.payid"),
-                ((AustraliaPayIDPayload) paymentAccountPayload).getPayid());
+                ((AustraliaPayidPayload) paymentAccountPayload).getPayid());
         return gridRow;
     }
 
-    public AustraliaPayIDForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, AustraliaPayIDValidator australiaPayIDValidator,
-                             InputValidator inputValidator, GridPane gridPane, int gridRow, CoinFormatter formatter) {
+    public AustraliaPayidForm(PaymentAccount paymentAccount,
+                              AccountAgeWitnessService accountAgeWitnessService,
+                              AustraliaPayidValidator australiaPayidValidator,
+                              InputValidator inputValidator,
+                              GridPane gridPane,
+                              int gridRow,
+                              CoinFormatter formatter) {
         super(paymentAccount, accountAgeWitnessService, inputValidator, gridPane, gridRow, formatter);
-        this.australiaPayID = (AustraliaPayID) paymentAccount;
-        this.australiaPayIDValidator = australiaPayIDValidator;
+        this.australiaPayid = (AustraliaPayid) paymentAccount;
+        this.australiaPayidValidator = australiaPayidValidator;
     }
 
     @Override
@@ -66,18 +71,18 @@ public class AustraliaPayIDForm extends PaymentMethodForm {
                 Res.get("payment.account.owner"));
         holderNameInputTextField.setValidator(inputValidator);
         holderNameInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
-            australiaPayID.setBankAccountName(newValue);
+            australiaPayid.setBankAccountName(newValue);
             updateFromInputs();
         });
 
         mobileNrInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.payid"));
-        mobileNrInputTextField.setValidator(australiaPayIDValidator);
+        mobileNrInputTextField.setValidator(australiaPayidValidator);
         mobileNrInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
-            australiaPayID.setPayID(newValue);
+            australiaPayid.setPayid(newValue);
             updateFromInputs();
         });
 
-        TradeCurrency singleTradeCurrency = australiaPayID.getSingleTradeCurrency();
+        TradeCurrency singleTradeCurrency = australiaPayid.getSingleTradeCurrency();
         String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "null";
         addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"), nameAndCode);
         addLimitations(false);
@@ -93,15 +98,15 @@ public class AustraliaPayIDForm extends PaymentMethodForm {
     public void addFormForDisplayAccount() {
         gridRowFrom = gridRow;
         addTopLabelTextField(gridPane, gridRow, Res.get("payment.account.name"),
-                australiaPayID.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+                australiaPayid.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
-                Res.get(australiaPayID.getPaymentMethod().getId()));
+                Res.get(australiaPayid.getPaymentMethod().getId()));
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.payid"),
-                australiaPayID.getPayID());
+                australiaPayid.getPayid());
         TextField field = addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner"),
-                australiaPayID.getBankAccountName()).second;
+                australiaPayid.getBankAccountName()).second;
         field.setMouseTransparent(false);
-        TradeCurrency singleTradeCurrency = australiaPayID.getSingleTradeCurrency();
+        TradeCurrency singleTradeCurrency = australiaPayid.getSingleTradeCurrency();
         String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "null";
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"), nameAndCode);
         addLimitations(true);
@@ -110,8 +115,8 @@ public class AustraliaPayIDForm extends PaymentMethodForm {
     @Override
     public void updateAllInputsValid() {
         allInputsValid.set(isAccountNameValid()
-                && australiaPayIDValidator.validate(australiaPayID.getPayID()).isValid
-                && inputValidator.validate(australiaPayID.getBankAccountName()).isValid
-                && australiaPayID.getTradeCurrencies().size() > 0);
+                && australiaPayidValidator.validate(australiaPayid.getPayid()).isValid
+                && inputValidator.validate(australiaPayid.getBankAccountName()).isValid
+                && australiaPayid.getTradeCurrencies().size() > 0);
     }
 }

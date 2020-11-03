@@ -19,7 +19,7 @@ package bisq.desktop.util.validation;
 
 import bisq.core.util.validation.InputValidator;
 
-public final class AustraliaPayIDValidator extends InputValidator {
+public final class AustraliaPayidValidator extends InputValidator {
 
     private final EmailValidator emailValidator;
 
@@ -27,7 +27,7 @@ public final class AustraliaPayIDValidator extends InputValidator {
     // Public methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public AustraliaPayIDValidator() {
+    public AustraliaPayidValidator() {
         emailValidator = new EmailValidator();
     }
 
