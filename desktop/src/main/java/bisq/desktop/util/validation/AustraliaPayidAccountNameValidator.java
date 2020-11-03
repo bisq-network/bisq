@@ -19,6 +19,8 @@
 package bisq.desktop.util.validation;
 
 import bisq.core.util.validation.InputValidator;
+import bisq.core.util.validation.RegexValidator;
+
 import javax.inject.Inject;
 
 public final class AustraliaPayidAccountNameValidator extends InputValidator {
@@ -34,8 +36,8 @@ public final class AustraliaPayidAccountNameValidator extends InputValidator {
         return result;
     }
 
-    private LengthValidator lengthValidator;
-    private RegexValidator regexValidator;
+    private final LengthValidator lengthValidator;
+    private final RegexValidator regexValidator;
 
     @Inject
     public AustraliaPayidAccountNameValidator(LengthValidator lengthValidator, RegexValidator regexValidator) {

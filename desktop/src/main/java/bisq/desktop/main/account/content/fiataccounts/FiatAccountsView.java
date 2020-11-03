@@ -21,6 +21,7 @@ import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.components.paymentmethods.AdvancedCashForm;
 import bisq.desktop.components.paymentmethods.AliPayForm;
+import bisq.desktop.components.paymentmethods.AustraliaPayidForm;
 import bisq.desktop.components.paymentmethods.CashDepositForm;
 import bisq.desktop.components.paymentmethods.ChaseQuickPayForm;
 import bisq.desktop.components.paymentmethods.ClearXchangeForm;
@@ -29,7 +30,6 @@ import bisq.desktop.components.paymentmethods.FasterPaymentsForm;
 import bisq.desktop.components.paymentmethods.HalCashForm;
 import bisq.desktop.components.paymentmethods.InteracETransferForm;
 import bisq.desktop.components.paymentmethods.JapanBankTransferForm;
-import bisq.desktop.components.paymentmethods.AustraliaPayIDForm;
 import bisq.desktop.components.paymentmethods.MoneyBeamForm;
 import bisq.desktop.components.paymentmethods.MoneyGramForm;
 import bisq.desktop.components.paymentmethods.NationalBankForm;
@@ -55,7 +55,7 @@ import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.AdvancedCashValidator;
 import bisq.desktop.util.validation.AliPayValidator;
-import bisq.desktop.util.validation.AustraliaPayIDValidator;
+import bisq.desktop.util.validation.AustraliaPayidValidator;
 import bisq.desktop.util.validation.BICValidator;
 import bisq.desktop.util.validation.ChaseQuickPayValidator;
 import bisq.desktop.util.validation.ClearXchangeValidator;
@@ -64,7 +64,6 @@ import bisq.desktop.util.validation.HalCashValidator;
 import bisq.desktop.util.validation.IBANValidator;
 import bisq.desktop.util.validation.InteracETransferValidator;
 import bisq.desktop.util.validation.JapanBankTransferValidator;
-import bisq.desktop.util.validation.AustraliaPayIDValidator;
 import bisq.desktop.util.validation.MoneyBeamValidator;
 import bisq.desktop.util.validation.PerfectMoneyValidator;
 import bisq.desktop.util.validation.PopmoneyValidator;
@@ -79,7 +78,7 @@ import bisq.desktop.util.validation.WeChatPayValidator;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.Res;
 import bisq.core.offer.OfferRestrictions;
-import bisq.core.payment.AustraliaPayID;
+import bisq.core.payment.AustraliaPayid;
 import bisq.core.payment.CashDepositAccount;
 import bisq.core.payment.ClearXchangeAccount;
 import bisq.core.payment.F2FAccount;
@@ -143,7 +142,7 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
     private final ChaseQuickPayValidator chaseQuickPayValidator;
     private final InteracETransferValidator interacETransferValidator;
     private final JapanBankTransferValidator japanBankTransferValidator;
-    private final AustraliaPayIDValidator australiapayidValidator;
+    private final AustraliaPayidValidator australiapayidValidator;
     private final USPostalMoneyOrderValidator usPostalMoneyOrderValidator;
     private final WeChatPayValidator weChatPayValidator;
     private final HalCashValidator halCashValidator;
@@ -174,7 +173,7 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
                             ChaseQuickPayValidator chaseQuickPayValidator,
                             InteracETransferValidator interacETransferValidator,
                             JapanBankTransferValidator japanBankTransferValidator,
-                            AustraliaPayIDValidator australiaPayIDValidator,
+                            AustraliaPayidValidator australiaPayIDValidator,
                             USPostalMoneyOrderValidator usPostalMoneyOrderValidator,
                             WeChatPayValidator weChatPayValidator,
                             HalCashValidator halCashValidator,
@@ -311,13 +310,13 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
                                     .actionButtonText(Res.get("shared.iUnderstand"))
                                     .onAction(() -> doSaveNewAccount(paymentAccount))
                                     .show();
-                        } else if (paymentAccount instanceof AustraliaPayID) {
-                                new Popup().information(Res.get("payment.payid.info", currencyName, currencyName))
-                                        .width(900)
-                                        .closeButtonText(Res.get("shared.cancel"))
-                                        .actionButtonText(Res.get("shared.iConfirm"))
-                                        .onAction(() -> doSaveNewAccount(paymentAccount))
-                                        .show();
+                        } else if (paymentAccount instanceof AustraliaPayid) {
+                            new Popup().information(Res.get("payment.payid.info", currencyName, currencyName))
+                                    .width(900)
+                                    .closeButtonText(Res.get("shared.cancel"))
+                                    .actionButtonText(Res.get("shared.iConfirm"))
+                                    .onAction(() -> doSaveNewAccount(paymentAccount))
+                                    .show();
                         } else {
                             doSaveNewAccount(paymentAccount);
                         }
@@ -472,7 +471,7 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
             case PaymentMethod.JAPAN_BANK_ID:
                 return new JapanBankTransferForm(paymentAccount, accountAgeWitnessService, japanBankTransferValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.AUSTRALIA_PAYID_ID:
-                return new AustraliaPayIDForm(paymentAccount, accountAgeWitnessService, australiapayidValidator, inputValidator, root, gridRow, formatter);
+                return new AustraliaPayidForm(paymentAccount, accountAgeWitnessService, australiapayidValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.ALI_PAY_ID:
                 return new AliPayForm(paymentAccount, accountAgeWitnessService, aliPayValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.WECHAT_PAY_ID:
