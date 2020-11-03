@@ -21,11 +21,9 @@ import bisq.core.locale.BankUtil;
 import bisq.core.locale.CountryUtil;
 import bisq.core.locale.Res;
 
-import bisq.common.util.CollectionUtils;
-
 import com.google.protobuf.Message;
 
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -44,7 +42,7 @@ import javax.annotation.Nullable;
 @Setter
 @Getter
 @Slf4j
-public class CashDepositAccountPayload extends CountryBasedPaymentAccountPayload {
+public class CashDepositAccountPayload extends CountryBasedPaymentAccountPayload implements PayloadWithHolderName {
     private String holderName = "";
     @Nullable
     private String holderEmail;
@@ -88,7 +86,7 @@ public class CashDepositAccountPayload extends CountryBasedPaymentAccountPayload
                                       @Nullable String bankId,
                                       @Nullable String nationalAccountId,
                                       long maxTradePeriod,
-                                      @Nullable Map<String, String> excludeFromJsonDataMap) {
+                                      Map<String, String> excludeFromJsonDataMap) {
         super(paymentMethodName,
                 id,
                 countryCode,
@@ -146,7 +144,7 @@ public class CashDepositAccountPayload extends CountryBasedPaymentAccountPayload
                 cashDepositAccountPayload.getBankId().isEmpty() ? null : cashDepositAccountPayload.getBankId(),
                 cashDepositAccountPayload.getNationalAccountId().isEmpty() ? null : cashDepositAccountPayload.getNationalAccountId(),
                 proto.getMaxTradePeriod(),
-                CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
+                new HashMap<>(proto.getExcludeFromJsonDataMap()));
     }
 
 
@@ -224,6 +222,11 @@ public class CashDepositAccountPayload extends CountryBasedPaymentAccountPayload
                 holderTaxIdString +
                 nationalAccountId;
 
-        return super.getAgeWitnessInputData(all.getBytes(Charset.forName("UTF-8")));
+        return super.getAgeWitnessInputData(all.getBytes(StandardCharsets.UTF_8));
+    }
+
+    @Override
+    public String getOwnerId() {
+        return holderName;
     }
 }

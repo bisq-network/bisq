@@ -19,7 +19,6 @@ package bisq.core.payment;
 
 import bisq.core.proto.CoreProtoResolver;
 
-import bisq.common.proto.persistable.PersistableEnvelope;
 import bisq.common.proto.persistable.PersistableList;
 
 import com.google.protobuf.Message;
@@ -45,7 +44,7 @@ public class PaymentAccountList extends PersistableList<PaymentAccount> {
                 .build();
     }
 
-    public static PersistableEnvelope fromProto(protobuf.PaymentAccountList proto, CoreProtoResolver coreProtoResolver) {
+    public static PaymentAccountList fromProto(protobuf.PaymentAccountList proto, CoreProtoResolver coreProtoResolver) {
         return new PaymentAccountList(new ArrayList<>(proto.getPaymentAccountList().stream()
                 .map(e -> PaymentAccount.fromProto(e, coreProtoResolver))
                 .collect(Collectors.toList())));

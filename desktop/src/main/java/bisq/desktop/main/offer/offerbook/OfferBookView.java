@@ -38,7 +38,6 @@ import bisq.desktop.main.offer.OfferView;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
 import bisq.desktop.util.CssTheme;
-import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
@@ -69,10 +68,10 @@ import org.bitcoinj.core.Coin;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import de.jensd.fx.fontawesome.AwesomeIcon;
 import de.jensd.fx.glyphs.GlyphIcons;
 import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 
-import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ContentDisplay;
@@ -130,7 +129,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private AutocompleteComboBox<PaymentMethod> paymentMethodComboBox;
     private AutoTooltipButton createOfferButton;
     private AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem> amountColumn, volumeColumn, marketColumn,
-            priceColumn, paymentMethodColumn, signingStateColumn, avatarColumn;
+            priceColumn, paymentMethodColumn, depositColumn, signingStateColumn, avatarColumn;
     private TableView<OfferBookListItem> tableView;
 
     private OfferView.OfferActionHandler offerActionHandler;
@@ -224,6 +223,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         tableView.getColumns().add(volumeColumn);
         paymentMethodColumn = getPaymentMethodColumn();
         tableView.getColumns().add(paymentMethodColumn);
+        depositColumn = getDepositColumn();
+        tableView.getColumns().add(depositColumn);
         signingStateColumn = getSigningStateColumn();
         tableView.getColumns().add(signingStateColumn);
         avatarColumn = getAvatarColumn();
@@ -245,6 +246,14 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         volumeColumn.setComparator(Comparator.comparing(o -> o.getOffer().getMinVolume(), Comparator.nullsFirst(Comparator.naturalOrder())));
         paymentMethodColumn.setComparator(Comparator.comparing(o -> o.getOffer().getPaymentMethod()));
         avatarColumn.setComparator(Comparator.comparing(o -> o.getOffer().getOwnerNodeAddress().getFullAddress()));
+        depositColumn.setComparator(Comparator.comparing(o -> {
+            var isSellOffer = o.getOffer().getDirection() == OfferPayload.Direction.SELL;
+            var deposit = isSellOffer ? o.getOffer().getBuyerSecurityDeposit() :
+                    o.getOffer().getSellerSecurityDeposit();
+
+            return (deposit == null) ? 0.0 : deposit.getValue() / (double) o.getOffer().getAmount().getValue();
+
+        }, Comparator.nullsFirst(Comparator.naturalOrder())));
 
         nrOfOffersLabel = new AutoTooltipLabel("");
         nrOfOffersLabel.setId("num-offers");
@@ -722,6 +731,12 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         return column;
     }
 
+    private ObservableValue<OfferBookListItem> asPriceDependentObservable(OfferBookListItem item) {
+        return item.getOffer().isUseMarketBasedPrice()
+                ? EasyBind.map(model.priceFeedService.updateCounterProperty(), n -> item)
+                : new ReadOnlyObjectWrapper<>(item);
+    }
+
     private AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem> getPriceColumn() {
         AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem> column = new AutoTooltipTableColumn<>("") {
             {
@@ -729,59 +744,20 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
             }
         };
         column.getStyleClass().add("number-column");
-        column.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
+        column.setCellValueFactory(offer -> asPriceDependentObservable(offer.getValue()));
         column.setCellFactory(
                 new Callback<>() {
                     @Override
                     public TableCell<OfferBookListItem, OfferBookListItem> call(
                             TableColumn<OfferBookListItem, OfferBookListItem> column) {
                         return new TableCell<>() {
-                            private OfferBookListItem offerBookListItem;
-                            private ChangeListener<Number> priceChangedListener;
-                            ChangeListener<Scene> sceneChangeListener;
-
                             @Override
                             public void updateItem(final OfferBookListItem item, boolean empty) {
                                 super.updateItem(item, empty);
 
                                 if (item != null && !empty) {
-                                    if (getTableView().getScene() != null && sceneChangeListener == null) {
-                                        sceneChangeListener = (observable, oldValue, newValue) -> {
-                                            if (newValue == null) {
-                                                if (priceChangedListener != null) {
-                                                    model.priceFeedService.updateCounterProperty().removeListener(priceChangedListener);
-                                                    priceChangedListener = null;
-                                                }
-                                                offerBookListItem = null;
-                                                setGraphic(null);
-                                                getTableView().sceneProperty().removeListener(sceneChangeListener);
-                                                sceneChangeListener = null;
-                                            }
-                                        };
-                                        getTableView().sceneProperty().addListener(sceneChangeListener);
-                                    }
-
-                                    this.offerBookListItem = item;
-
-                                    if (priceChangedListener == null) {
-                                        priceChangedListener = (observable, oldValue, newValue) -> {
-                                            if (offerBookListItem != null && offerBookListItem.getOffer().getPrice() != null) {
-                                                setGraphic(getPriceLabel(model.getPrice(offerBookListItem), offerBookListItem));
-                                            }
-                                        };
-                                        model.priceFeedService.updateCounterProperty().addListener(priceChangedListener);
-                                    }
-                                    setGraphic(getPriceLabel(item.getOffer().getPrice() == null ? Res.get("shared.na") : model.getPrice(item), item));
+                                    setGraphic(getPriceLabel(model.getPrice(item), item));
                                 } else {
-                                    if (priceChangedListener != null) {
-                                        model.priceFeedService.updateCounterProperty().removeListener(priceChangedListener);
-                                        priceChangedListener = null;
-                                    }
-                                    if (sceneChangeListener != null) {
-                                        getTableView().sceneProperty().removeListener(sceneChangeListener);
-                                        sceneChangeListener = null;
-                                    }
-                                    this.offerBookListItem = null;
                                     setGraphic(null);
                                 }
                             }
@@ -836,35 +812,19 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
             }
         };
         column.getStyleClass().add("number-column");
-        column.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
+        column.setCellValueFactory(offer -> asPriceDependentObservable(offer.getValue()));
         column.setCellFactory(
                 new Callback<>() {
                     @Override
                     public TableCell<OfferBookListItem, OfferBookListItem> call(
                             TableColumn<OfferBookListItem, OfferBookListItem> column) {
                         return new TableCell<>() {
-                            private OfferBookListItem offerBookListItem;
-                            final ChangeListener<Number> listener = new ChangeListener<>() {
-                                @Override
-                                public void changed(ObservableValue<? extends Number> observable,
-                                                    Number oldValue,
-                                                    Number newValue) {
-                                    if (offerBookListItem != null && offerBookListItem.getOffer().getVolume() != null) {
-                                        setText("");
-                                        setGraphic(new ColoredDecimalPlacesWithZerosText(model.getVolume(offerBookListItem),
-                                                model.getNumberOfDecimalsForVolume(offerBookListItem)));
-                                        model.priceFeedService.updateCounterProperty().removeListener(listener);
-                                    }
-                                }
-                            };
-
                             @Override
                             public void updateItem(final OfferBookListItem item, boolean empty) {
                                 super.updateItem(item, empty);
+
                                 if (item != null && !empty) {
                                     if (item.getOffer().getPrice() == null) {
-                                        this.offerBookListItem = item;
-                                        model.priceFeedService.updateCounterProperty().addListener(listener);
                                         setText(Res.get("shared.na"));
                                         setGraphic(null);
                                     } else {
@@ -873,8 +833,6 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                                 model.getNumberOfDecimalsForVolume(item)));
                                     }
                                 } else {
-                                    model.priceFeedService.updateCounterProperty().removeListener(listener);
-                                    this.offerBookListItem = null;
                                     setText("");
                                     setGraphic(null);
                                 }
@@ -910,7 +868,11 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                     if (model.isOfferBanned(item.getOffer())) {
                                         setGraphic(new AutoTooltipLabel(model.getPaymentMethod(item)));
                                     } else {
-                                        field = new HyperlinkWithIcon(model.getPaymentMethod(item));
+                                        if (item.getOffer().isXmrAutoConf()) {
+                                            field = new HyperlinkWithIcon(model.getPaymentMethod(item), AwesomeIcon.ROCKET);
+                                        } else {
+                                            field = new HyperlinkWithIcon(model.getPaymentMethod(item));
+                                        }
                                         field.setOnAction(event -> offerDetailsWindow.show(item.getOffer()));
                                         field.setTooltip(new Tooltip(model.getPaymentMethodToolTip(item)));
                                         setGraphic(field);
@@ -927,13 +889,60 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         return column;
     }
 
+
+    private AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem> getDepositColumn() {
+        AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem> column = new AutoTooltipTableColumn<>(
+                Res.get("offerbook.deposit"),
+                Res.get("offerbook.deposit.help")) {
+            {
+                setMinWidth(70);
+                setSortable(true);
+            }
+        };
+
+        column.getStyleClass().add("number-column");
+        column.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
+        column.setCellFactory(
+                new Callback<>() {
+                    @Override
+                    public TableCell<OfferBookListItem, OfferBookListItem> call(
+                            TableColumn<OfferBookListItem, OfferBookListItem> column) {
+                        return new TableCell<>() {
+                            @Override
+                            public void updateItem(final OfferBookListItem item, boolean empty) {
+                                super.updateItem(item, empty);
+                                if (item != null && !empty) {
+                                    var isSellOffer = item.getOffer().getDirection() == OfferPayload.Direction.SELL;
+                                    var deposit = isSellOffer ? item.getOffer().getBuyerSecurityDeposit() :
+                                            item.getOffer().getSellerSecurityDeposit();
+                                    if (deposit == null) {
+                                        setText(Res.get("shared.na"));
+                                        setGraphic(null);
+                                    } else {
+                                        setText("");
+                                        setGraphic(new ColoredDecimalPlacesWithZerosText(model.formatDepositString(
+                                                deposit, item.getOffer().getAmount().getValue()),
+                                                GUIUtil.AMOUNT_DECIMALS_WITH_ZEROS));
+                                    }
+                                } else {
+                                    setText("");
+                                    setGraphic(null);
+                                }
+                            }
+                        };
+                    }
+                });
+        return column;
+    }
+
     private TableColumn<OfferBookListItem, OfferBookListItem> getActionColumn() {
         TableColumn<OfferBookListItem, OfferBookListItem> column = new AutoTooltipTableColumn<>(Res.get("shared.actions")) {
             {
-                setMinWidth(200);
+                setMinWidth(180);
                 setSortable(false);
             }
         };
+        column.getStyleClass().addAll("last-column", "avatar-column");
         column.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         column.setCellFactory(
                 new Callback<>() {
@@ -960,7 +969,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                             public void updateItem(final OfferBookListItem newItem, boolean empty) {
                                 super.updateItem(newItem, empty);
 
-                                TableRow tableRow = getTableRow();
+                                TableRow<OfferBookListItem> tableRow = getTableRow();
                                 if (newItem != null && !empty) {
                                     final Offer offer = newItem.getOffer();
                                     boolean myOffer = model.isMyOffer(offer);
@@ -1098,19 +1107,20 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                             String info;
                             String timeSinceSigning;
 
-                            if (accountAgeWitnessService.hasSignedWitness(item.getOffer())) {
-                                AccountAgeWitnessService.SignState signState = accountAgeWitnessService.getSignState(item.getOffer());
-                                icon = GUIUtil.getIconForSignState(signState);
-                                info = Res.get("offerbook.timeSinceSigning.info",
-                                        signState.getPresentation());
-                                long daysSinceSigning = TimeUnit.MILLISECONDS.toDays(
-                                        accountAgeWitnessService.getWitnessSignAge(item.getOffer(), new Date()));
-                                timeSinceSigning = Res.get("offerbook.timeSinceSigning.daysSinceSigning",
-                                        daysSinceSigning);
-                            } else {
-                                boolean needsSigning = PaymentMethod.hasChargebackRisk(
-                                        item.getOffer().getPaymentMethod(), item.getOffer().getCurrencyCode());
-                                if (needsSigning) {
+                            boolean needsSigning = PaymentMethod.hasChargebackRisk(
+                                    item.getOffer().getPaymentMethod(), item.getOffer().getCurrencyCode());
+
+                            if (needsSigning) {
+                                if (accountAgeWitnessService.hasSignedWitness(item.getOffer())) {
+                                    AccountAgeWitnessService.SignState signState = accountAgeWitnessService.getSignState(item.getOffer());
+                                    icon = GUIUtil.getIconForSignState(signState);
+                                    info = Res.get("offerbook.timeSinceSigning.info",
+                                            signState.getPresentation());
+                                    long daysSinceSigning = TimeUnit.MILLISECONDS.toDays(
+                                            accountAgeWitnessService.getWitnessSignAge(item.getOffer(), new Date()));
+                                    timeSinceSigning = Res.get("offerbook.timeSinceSigning.daysSinceSigning",
+                                            daysSinceSigning);
+                                } else {
                                     AccountAgeWitnessService.SignState signState = accountAgeWitnessService.getSignState(item.getOffer());
 
                                     icon = GUIUtil.getIconForSignState(signState);
@@ -1125,11 +1135,12 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                         info = Res.get("shared.notSigned");
                                         timeSinceSigning = Res.get("offerbook.timeSinceSigning.notSigned");
                                     }
-                                } else {
-                                    icon = MaterialDesignIcon.INFORMATION_OUTLINE;
-                                    info = Res.get("shared.notSigned.noNeed");
-                                    timeSinceSigning = Res.get("offerbook.timeSinceSigning.notSigned.noNeed");
                                 }
+
+                            } else {
+                                icon = MaterialDesignIcon.INFORMATION_OUTLINE;
+                                info = Res.get("shared.notSigned.noNeed");
+                                timeSinceSigning = Res.get("offerbook.timeSinceSigning.notSigned.noNeed");
                             }
 
                             InfoAutoTooltipLabel label = new InfoAutoTooltipLabel(timeSinceSigning, icon, ContentDisplay.RIGHT, info);
@@ -1147,8 +1158,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem> getAvatarColumn() {
         AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem> column = new AutoTooltipTableColumn<>(Res.get("offerbook.trader")) {
             {
-                setMinWidth(80);
-                setMaxWidth(80);
+                setMinWidth(60);
+                setMaxWidth(60);
                 setSortable(true);
             }
         };

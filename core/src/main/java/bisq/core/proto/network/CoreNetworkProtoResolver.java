@@ -34,6 +34,8 @@ import bisq.core.dao.node.messages.GetBlocksRequest;
 import bisq.core.dao.node.messages.GetBlocksResponse;
 import bisq.core.dao.node.messages.NewBlockBroadcastMessage;
 import bisq.core.filter.Filter;
+import bisq.core.network.p2p.inventory.messages.GetInventoryRequest;
+import bisq.core.network.p2p.inventory.messages.GetInventoryResponse;
 import bisq.core.offer.OfferPayload;
 import bisq.core.offer.messages.OfferAvailabilityRequest;
 import bisq.core.offer.messages.OfferAvailabilityResponse;
@@ -58,7 +60,7 @@ import bisq.core.trade.messages.MediatedPayoutTxSignatureMessage;
 import bisq.core.trade.messages.PayoutTxPublishedMessage;
 import bisq.core.trade.messages.PeerPublishedDelayedPayoutTxMessage;
 import bisq.core.trade.messages.RefreshTradeStateRequest;
-import bisq.core.trade.statistics.TradeStatistics;
+import bisq.core.trade.messages.TraderSignedWitnessMessage;
 
 import bisq.network.p2p.AckMessage;
 import bisq.network.p2p.BundleOfEnvelopes;
@@ -165,6 +167,8 @@ public class CoreNetworkProtoResolver extends CoreProtoResolver implements Netwo
                     return PayoutTxPublishedMessage.fromProto(proto.getPayoutTxPublishedMessage(), messageVersion);
                 case PEER_PUBLISHED_DELAYED_PAYOUT_TX_MESSAGE:
                     return PeerPublishedDelayedPayoutTxMessage.fromProto(proto.getPeerPublishedDelayedPayoutTxMessage(), messageVersion);
+                case TRADER_SIGNED_WITNESS_MESSAGE:
+                    return TraderSignedWitnessMessage.fromProto(proto.getTraderSignedWitnessMessage(), messageVersion);
 
                 case MEDIATED_PAYOUT_TX_SIGNATURE_MESSAGE:
                     return MediatedPayoutTxSignatureMessage.fromProto(proto.getMediatedPayoutTxSignatureMessage(), messageVersion);
@@ -222,6 +226,11 @@ public class CoreNetworkProtoResolver extends CoreProtoResolver implements Netwo
                 case BUNDLE_OF_ENVELOPES:
                     return BundleOfEnvelopes.fromProto(proto.getBundleOfEnvelopes(), this, messageVersion);
 
+                case GET_INVENTORY_REQUEST:
+                    return GetInventoryRequest.fromProto(proto.getGetInventoryRequest(), messageVersion);
+                case GET_INVENTORY_RESPONSE:
+                    return GetInventoryResponse.fromProto(proto.getGetInventoryResponse(), messageVersion);
+
                 default:
                     throw new ProtobufferException("Unknown proto message case (PB.NetworkEnvelope). messageCase=" +
                             proto.getMessageCase() + "; proto raw data=" + proto.toString());
@@ -262,9 +271,6 @@ public class CoreNetworkProtoResolver extends CoreProtoResolver implements Netwo
                     return RefundAgent.fromProto(proto.getRefundAgent());
                 case FILTER:
                     return Filter.fromProto(proto.getFilter());
-                case TRADE_STATISTICS:
-                    // Still used to convert TradeStatistics data from pre v0.6 versions
-                    return TradeStatistics.fromProto(proto.getTradeStatistics());
                 case MAILBOX_STORAGE_PAYLOAD:
                     return MailboxStoragePayload.fromProto(proto.getMailboxStoragePayload());
                 case OFFER_PAYLOAD:

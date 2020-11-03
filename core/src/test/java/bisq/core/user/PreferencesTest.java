@@ -26,7 +26,7 @@ import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.Res;
 
 import bisq.common.config.Config;
-import bisq.common.storage.Storage;
+import bisq.common.persistence.PersistenceManager;
 
 import javafx.collections.ObservableList;
 
@@ -40,7 +40,6 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -48,7 +47,7 @@ import static org.mockito.Mockito.when;
 public class PreferencesTest {
 
     private Preferences preferences;
-    private Storage storage;
+    private PersistenceManager persistenceManager;
 
     @Before
     public void setUp() {
@@ -58,11 +57,11 @@ public class PreferencesTest {
         Res.setBaseCurrencyCode("BTC");
         Res.setBaseCurrencyName("Bitcoin");
 
-        storage = mock(Storage.class);
+        persistenceManager = mock(PersistenceManager.class);
         Config config = new Config();
         LocalBitcoinNode localBitcoinNode = new LocalBitcoinNode(config);
         preferences = new Preferences(
-                storage, config, localBitcoinNode, null, null, Config.DEFAULT_FULL_DAO_NODE,
+                persistenceManager, config, localBitcoinNode, null, null, Config.DEFAULT_FULL_DAO_NODE,
                 null, null, Config.UNSPECIFIED_PORT);
     }
 
@@ -89,17 +88,16 @@ public class PreferencesTest {
         final FiatCurrency usd = new FiatCurrency("USD");
         fiatCurrencies.add(usd);
 
-        when(storage.initAndGetPersistedWithFileName(anyString(), anyLong())).thenReturn(payload);
+        when(persistenceManager.getPersisted(anyString())).thenReturn(payload);
         when(payload.getUserLanguage()).thenReturn("en");
         when(payload.getUserCountry()).thenReturn(CountryUtil.getDefaultCountry());
         when(payload.getPreferredTradeCurrency()).thenReturn(usd);
         when(payload.getFiatCurrencies()).thenReturn(fiatCurrencies);
 
-        preferences.readPersisted();
-
-        assertEquals(7, preferences.getFiatCurrenciesAsObservable().size());
-        assertTrue(preferences.getFiatCurrenciesAsObservable().contains(usd));
-
+        preferences.readPersisted(() -> {
+            assertEquals(7, preferences.getFiatCurrenciesAsObservable().size());
+            assertTrue(preferences.getFiatCurrenciesAsObservable().contains(usd));
+        });
     }
 
     @Test
@@ -110,15 +108,15 @@ public class PreferencesTest {
         final CryptoCurrency dash = new CryptoCurrency("DASH", "Dash");
         cryptoCurrencies.add(dash);
 
-        when(storage.initAndGetPersistedWithFileName(anyString(), anyLong())).thenReturn(payload);
+        when(persistenceManager.getPersisted(anyString())).thenReturn(payload);
         when(payload.getUserLanguage()).thenReturn("en");
         when(payload.getUserCountry()).thenReturn(CountryUtil.getDefaultCountry());
         when(payload.getPreferredTradeCurrency()).thenReturn(new FiatCurrency("USD"));
         when(payload.getCryptoCurrencies()).thenReturn(cryptoCurrencies);
 
-        preferences.readPersisted();
-
-        assertTrue(preferences.getCryptoCurrenciesAsObservable().contains(dash));
+        preferences.readPersisted(() -> {
+            assertTrue(preferences.getCryptoCurrenciesAsObservable().contains(dash));
+        });
     }
 
     @Test
@@ -131,15 +129,14 @@ public class PreferencesTest {
 
         assertEquals("US-Dollar (USD)", usd.getNameAndCode());
 
-        when(storage.initAndGetPersistedWithFileName(anyString(), anyLong())).thenReturn(payload);
+        when(persistenceManager.getPersisted(anyString())).thenReturn(payload);
         when(payload.getUserLanguage()).thenReturn("en");
         when(payload.getUserCountry()).thenReturn(CountryUtil.getDefaultCountry());
         when(payload.getPreferredTradeCurrency()).thenReturn(usd);
         when(payload.getFiatCurrencies()).thenReturn(fiatCurrencies);
 
-        preferences.readPersisted();
-
-        assertEquals("US Dollar (USD)", preferences.getFiatCurrenciesAsObservable().get(0).getNameAndCode());
+        preferences.readPersisted(() -> {
+            assertEquals("US Dollar (USD)", preferences.getFiatCurrenciesAsObservable().get(0).getNameAndCode());
+        });
     }
-
 }

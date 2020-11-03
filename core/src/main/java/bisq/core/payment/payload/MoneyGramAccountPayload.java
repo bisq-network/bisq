@@ -21,11 +21,9 @@ import bisq.core.locale.BankUtil;
 import bisq.core.locale.CountryUtil;
 import bisq.core.locale.Res;
 
-import bisq.common.util.CollectionUtils;
-
 import com.google.protobuf.Message;
 
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -36,14 +34,12 @@ import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.annotation.Nullable;
-
 @EqualsAndHashCode(callSuper = true)
 @ToString
 @Setter
 @Getter
 @Slf4j
-public class MoneyGramAccountPayload extends PaymentAccountPayload {
+public class MoneyGramAccountPayload extends PaymentAccountPayload implements PayloadWithHolderName {
     private String holderName;
     private String countryCode = "";
     private String state = ""; // is optional. we don't use @Nullable because it would makes UI code more complex.
@@ -65,7 +61,7 @@ public class MoneyGramAccountPayload extends PaymentAccountPayload {
                                     String state,
                                     String email,
                                     long maxTradePeriod,
-                                    @Nullable Map<String, String> excludeFromJsonDataMap) {
+                                    Map<String, String> excludeFromJsonDataMap) {
         super(paymentMethodName,
                 id,
                 maxTradePeriod,
@@ -99,7 +95,7 @@ public class MoneyGramAccountPayload extends PaymentAccountPayload {
                 moneyGramAccountPayload.getState(),
                 moneyGramAccountPayload.getEmail(),
                 proto.getMaxTradePeriod(),
-                CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
+                new HashMap<>(proto.getExcludeFromJsonDataMap()));
     }
 
 
@@ -128,6 +124,6 @@ public class MoneyGramAccountPayload extends PaymentAccountPayload {
                 this.state +
                 this.holderName +
                 this.email;
-        return super.getAgeWitnessInputData(all.getBytes(Charset.forName("UTF-8")));
+        return super.getAgeWitnessInputData(all.getBytes(StandardCharsets.UTF_8));
     }
 }

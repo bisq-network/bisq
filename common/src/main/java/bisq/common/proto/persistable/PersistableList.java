@@ -17,68 +17,68 @@
 
 package bisq.common.proto.persistable;
 
-import com.google.protobuf.Message;
-
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.Collection;
 import java.util.List;
-import java.util.function.Function;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.Setter;
-import lombok.experimental.Delegate;
 
-@EqualsAndHashCode
-public class PersistableList<T extends PersistablePayload> implements PersistableEnvelope, Iterable<T> {
-    @Delegate(excludes = ExcludesDelegateMethods.class)
+public abstract class PersistableList<T extends PersistablePayload> implements PersistableEnvelope {
+
     @Getter
-    @Setter
-    private List<T> list;
-    @Setter
-    private Function<List<T>, Message> toProto;
+    public final List<T> list = createList();
+
+    protected List<T> createList() {
+        return new ArrayList<>();
+    }
 
     public PersistableList() {
-        list = new ArrayList<>();
     }
 
-    public PersistableList(List<T> list) {
-        this.list = list;
+    protected PersistableList(Collection<T> collection) {
+        setAll(collection);
     }
 
-    public PersistableList(List<T> list, Function<List<T>, Message> toProto) {
-        this(list);
-        this.toProto = toProto;
+    public void setAll(Collection<T> collection) {
+        this.list.clear();
+        this.list.addAll(collection);
     }
 
-    public PersistableList(HashSet<T> set) {
-        this(new ArrayList<>(set));
+    public boolean add(T item) {
+        if (!list.contains(item)) {
+            list.add(item);
+            return true;
+        }
+        return false;
     }
 
-    public PersistableList(HashSet<T> set, Function<List<T>, Message> toProto) {
-        this(set);
-        this.toProto = toProto;
+    public boolean remove(T item) {
+        return list.remove(item);
     }
 
-    // this.stream() does not compile for unknown reasons, so add that manual delegate method
     public Stream<T> stream() {
         return list.stream();
     }
 
-    @Override
-    public Message toProtoMessage() {
-        return toProto.apply(list);
+    public int size() {
+        return list.size();
     }
 
-    private interface ExcludesDelegateMethods<T> {
-        Stream<T> stream();
+    public boolean contains(T item) {
+        return list.contains(item);
     }
 
-    @Override
-    public String toString() {
-        return "PersistableList{" +
-                "\n     list=" + list +
-                "\n}";
+    public boolean isEmpty() {
+        return list.isEmpty();
+    }
+
+    public void forEach(Consumer<? super T> action) {
+        list.forEach(action);
+    }
+
+    public void clear() {
+        list.clear();
     }
 }

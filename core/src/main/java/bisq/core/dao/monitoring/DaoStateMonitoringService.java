@@ -39,7 +39,7 @@ import bisq.network.p2p.seed.SeedNodeRepository;
 import bisq.common.UserThread;
 import bisq.common.config.Config;
 import bisq.common.crypto.Hash;
-import bisq.common.storage.FileManager;
+import bisq.common.file.FileUtil;
 import bisq.common.util.Utilities;
 
 import javax.inject.Inject;
@@ -109,13 +109,13 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
     @Getter
     private boolean isInConflictWithSeedNode;
     @Getter
-    private ObservableList<UtxoMismatch> utxoMismatches = FXCollections.observableArrayList();
+    private final ObservableList<UtxoMismatch> utxoMismatches = FXCollections.observableArrayList();
 
-    private List<Checkpoint> checkpoints = Arrays.asList(
+    private final List<Checkpoint> checkpoints = Arrays.asList(
             new Checkpoint(586920, Utilities.decodeFromHex("523aaad4e760f6ac6196fec1b3ec9a2f42e5b272"))
     );
     private boolean checkpointFailed;
-    private boolean ignoreDevMsg;
+    private final boolean ignoreDevMsg;
     private int numCalls;
     private long accumulatedDuration;
 
@@ -419,7 +419,7 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
         File corrupted = new File(storageDir, storeName);
         try {
             if (corrupted.exists()) {
-                FileManager.removeAndBackupFile(storageDir, corrupted, newFileName, backupDirName);
+                FileUtil.removeAndBackupFile(storageDir, corrupted, newFileName, backupDirName);
             }
         } catch (Throwable t) {
             t.printStackTrace();

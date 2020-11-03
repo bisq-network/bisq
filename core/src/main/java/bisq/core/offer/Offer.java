@@ -27,6 +27,7 @@ import bisq.core.offer.availability.OfferAvailabilityProtocol;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
+import bisq.core.util.VolumeUtil;
 
 import bisq.network.p2p.NodeAddress;
 
@@ -96,13 +97,13 @@ public class Offer implements NetworkPayload, PersistablePayload {
     private final OfferPayload offerPayload;
     @JsonExclude
     @Getter
-    transient private ObjectProperty<Offer.State> stateProperty = new SimpleObjectProperty<>(Offer.State.UNKNOWN);
+    final transient private ObjectProperty<Offer.State> stateProperty = new SimpleObjectProperty<>(Offer.State.UNKNOWN);
     @JsonExclude
     @Nullable
     transient private OfferAvailabilityProtocol availabilityProtocol;
     @JsonExclude
     @Getter
-    transient private StringProperty errorMessageProperty = new SimpleStringProperty();
+    final transient private StringProperty errorMessageProperty = new SimpleStringProperty();
     @JsonExclude
     @Nullable
     @Setter
@@ -231,9 +232,9 @@ public class Offer implements NetworkPayload, PersistablePayload {
         if (price != null && amount != null) {
             Volume volumeByAmount = price.getVolumeByAmount(amount);
             if (offerPayload.getPaymentMethodId().equals(PaymentMethod.HAL_CASH_ID))
-                volumeByAmount = OfferUtil.getAdjustedVolumeForHalCash(volumeByAmount);
+                volumeByAmount = VolumeUtil.getAdjustedVolumeForHalCash(volumeByAmount);
             else if (CurrencyUtil.isFiatCurrency(offerPayload.getCurrencyCode()))
-                volumeByAmount = OfferUtil.getRoundedFiatVolume(volumeByAmount);
+                volumeByAmount = VolumeUtil.getRoundedFiatVolume(volumeByAmount);
 
             return volumeByAmount;
         } else {
@@ -365,6 +366,14 @@ public class Offer implements NetworkPayload, PersistablePayload {
             return "";
     }
 
+    public String getPaymentMethodNameWithCountryCode() {
+        String method = this.getPaymentMethod().getShortName();
+        String methodCountryCode = this.getCountryCode();
+        if (methodCountryCode != null)
+            method = method + " (" + methodCountryCode + ")";
+        return method;
+    }
+
     // domain properties
     public Offer.State getState() {
         return stateProperty.get();
@@ -494,6 +503,21 @@ public class Offer implements NetworkPayload, PersistablePayload {
 
     public boolean isUseReOpenAfterAutoClose() {
         return offerPayload.isUseReOpenAfterAutoClose();
+    }
+
+    public boolean isXmrAutoConf() {
+        if (!isXmr()) {
+            return false;
+        }
+        if (getExtraDataMap() == null || !getExtraDataMap().containsKey(OfferPayload.XMR_AUTO_CONF)) {
+            return false;
+        }
+
+        return getExtraDataMap().get(OfferPayload.XMR_AUTO_CONF).equals(OfferPayload.XMR_AUTO_CONF_ENABLED_VALUE);
+    }
+
+    public boolean isXmr() {
+        return getCurrencyCode().equals("XMR");
     }
 
     @Override

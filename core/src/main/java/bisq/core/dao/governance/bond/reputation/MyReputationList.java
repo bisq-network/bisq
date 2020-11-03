@@ -69,4 +69,3 @@ public class MyReputationList extends PersistableList<MyReputation> {
                 .collect(Collectors.toList());
     }
 }
-

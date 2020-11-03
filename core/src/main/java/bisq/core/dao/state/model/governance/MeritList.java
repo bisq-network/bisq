@@ -20,7 +20,7 @@ package bisq.core.dao.state.model.governance;
 import bisq.core.dao.governance.ConsensusCritical;
 import bisq.core.dao.state.model.ImmutableDaoStateModel;
 
-import bisq.common.proto.persistable.PersistableList;
+import bisq.common.Proto;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 
@@ -28,20 +28,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import lombok.EqualsAndHashCode;
+import lombok.Value;
 
-import javax.annotation.concurrent.Immutable;
-
-// We don't persist that list but use it only for encoding the MeritList list
-// to PB bytes in the blindVote.
-@Immutable
-@EqualsAndHashCode(callSuper = true)
-public class MeritList extends PersistableList<Merit> implements ConsensusCritical, ImmutableDaoStateModel {
-
-    public MeritList(List<Merit> list) {
-        super(list);
-    }
-
+@Value
+public class MeritList implements Proto, ConsensusCritical, ImmutableDaoStateModel {
+    private final List<Merit> list;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // PROTO BUFFER

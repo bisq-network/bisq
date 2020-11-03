@@ -17,6 +17,8 @@
 
 package bisq.monitor;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -31,7 +33,9 @@ import java.util.Map;
  */
 public class StatisticsHelper {
 
-    public static Map<String, String> process(List<Long> samples) {
+    public static Map<String, String> process(Collection<Long> input) {
+
+        List<Long> samples = new ArrayList<>(input);
 
         // aftermath
         Collections.sort(samples);

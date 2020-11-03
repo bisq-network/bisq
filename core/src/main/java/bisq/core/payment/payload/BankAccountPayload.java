@@ -21,7 +21,7 @@ import bisq.core.locale.BankUtil;
 import bisq.core.locale.CountryUtil;
 import bisq.core.locale.Res;
 
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 import java.util.Map;
 import java.util.Optional;
@@ -39,7 +39,7 @@ import javax.annotation.Nullable;
 @Getter
 @ToString
 @Slf4j
-public abstract class BankAccountPayload extends CountryBasedPaymentAccountPayload {
+public abstract class BankAccountPayload extends CountryBasedPaymentAccountPayload implements PayloadWithHolderName {
     protected String holderName = "";
     @Nullable
     protected String bankName;
@@ -56,7 +56,7 @@ public abstract class BankAccountPayload extends CountryBasedPaymentAccountPaylo
     @Nullable
     protected String nationalAccountId;
 
-    public BankAccountPayload(String paymentMethod, String id) {
+    protected BankAccountPayload(String paymentMethod, String id) {
         super(paymentMethod, id);
     }
 
@@ -64,20 +64,19 @@ public abstract class BankAccountPayload extends CountryBasedPaymentAccountPaylo
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @SuppressWarnings("NullableProblems")
     protected BankAccountPayload(String paymentMethodName,
                                  String id,
                                  String countryCode,
                                  String holderName,
-                                 String bankName,
-                                 String branchId,
-                                 String accountNr,
-                                 String accountType,
-                                 String holderTaxId,
-                                 String bankId,
-                                 String nationalAccountId,
+                                 @Nullable String bankName,
+                                 @Nullable String branchId,
+                                 @Nullable String accountNr,
+                                 @Nullable String accountType,
+                                 @Nullable String holderTaxId,
+                                 @Nullable String bankId,
+                                 @Nullable String nationalAccountId,
                                  long maxTradePeriod,
-                                 @Nullable Map<String, String> excludeFromJsonDataMap) {
+                                 Map<String, String> excludeFromJsonDataMap) {
         super(paymentMethodName,
                 id,
                 countryCode,
@@ -178,6 +177,11 @@ public abstract class BankAccountPayload extends CountryBasedPaymentAccountPaylo
                 holderTaxIdString +
                 nationalAccountId;
 
-        return super.getAgeWitnessInputData(all.getBytes(Charset.forName("UTF-8")));
+        return super.getAgeWitnessInputData(all.getBytes(StandardCharsets.UTF_8));
+    }
+
+    @Override
+    public String getOwnerId() {
+        return holderName;
     }
 }

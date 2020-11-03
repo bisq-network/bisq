@@ -27,7 +27,6 @@ import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.TorNetworkSettingsWindow;
 import bisq.desktop.util.GUIUtil;
-import bisq.desktop.util.validation.RegexValidator;
 
 import bisq.core.btc.nodes.BtcNodes;
 import bisq.core.btc.nodes.LocalBitcoinNode;
@@ -37,6 +36,8 @@ import bisq.core.filter.FilterManager;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
 import bisq.core.util.FormattingUtils;
+import bisq.core.util.validation.RegexValidator;
+import bisq.core.util.validation.RegexValidatorFactory;
 
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.network.Statistic;
@@ -73,6 +74,8 @@ import javafx.collections.transformation.SortedList;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import static javafx.beans.binding.Bindings.createStringBinding;
+
 @FxmlView
 public class NetworkSettingsView extends ActivatableView<GridPane, Void> {
 
@@ -83,7 +86,7 @@ public class NetworkSettingsView extends ActivatableView<GridPane, Void> {
     @FXML
     InputTextField btcNodesInputTextField;
     @FXML
-    TextField onionAddress, totalTrafficTextField;
+    TextField onionAddress, sentDataTextField, receivedDataTextField;
     @FXML
     Label p2PPeersLabel, bitcoinPeersLabel;
     @FXML
@@ -175,7 +178,8 @@ public class NetworkSettingsView extends ActivatableView<GridPane, Void> {
         onionAddressColumn.getStyleClass().add("first-column");
         creationDateColumn.setGraphic(new AutoTooltipLabel(Res.get("settings.net.creationDateColumn")));
         connectionTypeColumn.setGraphic(new AutoTooltipLabel(Res.get("settings.net.connectionTypeColumn")));
-        totalTrafficTextField.setPromptText(Res.get("settings.net.totalTrafficLabel"));
+        sentDataTextField.setPromptText(Res.get("settings.net.sentDataLabel"));
+        receivedDataTextField.setPromptText(Res.get("settings.net.receivedDataLabel"));
         roundTripTimeColumn.setGraphic(new AutoTooltipLabel(Res.get("settings.net.roundTripTimeColumn")));
         sentBytesColumn.setGraphic(new AutoTooltipLabel(Res.get("settings.net.sentBytesColumn")));
         receivedBytesColumn.setGraphic(new AutoTooltipLabel(Res.get("settings.net.receivedBytesColumn")));
@@ -227,12 +231,14 @@ public class NetworkSettingsView extends ActivatableView<GridPane, Void> {
         onBitcoinPeersToggleSelected(false);
 
         bitcoinPeersToggleGroupListener = (observable, oldValue, newValue) -> {
-            selectedBitcoinNodesOption = (BtcNodes.BitcoinNodesOption) newValue.getUserData();
-            onBitcoinPeersToggleSelected(true);
+            if (newValue != null) {
+                selectedBitcoinNodesOption = (BtcNodes.BitcoinNodesOption) newValue.getUserData();
+                onBitcoinPeersToggleSelected(true);
+            }
         };
 
         btcNodesInputTextField.setPromptText(Res.get("settings.net.ips"));
-        RegexValidator regexValidator = GUIUtil.addressRegexValidator();
+        RegexValidator regexValidator = RegexValidatorFactory.addressRegexValidator();
         btcNodesInputTextField.setValidator(regexValidator);
         btcNodesInputTextField.setErrorMessage(Res.get("validation.invalidAddressList"));
         btcNodesInputTextFieldFocusListener = (observable, oldValue, newValue) -> {
@@ -295,11 +301,18 @@ public class NetworkSettingsView extends ActivatableView<GridPane, Void> {
                         Res.get("settings.net.notKnownYet") :
                         nodeAddress.getFullAddress()));
         numP2PPeersSubscription = EasyBind.subscribe(p2PService.getNumConnectedPeers(), numPeers -> updateP2PTable());
-        totalTrafficTextField.textProperty().bind(EasyBind.combine(Statistic.totalSentBytesProperty(),
-                Statistic.totalReceivedBytesProperty(),
-                (sent, received) -> Res.get("settings.net.sentReceived",
-                        FormattingUtils.formatBytes((long) sent),
-                        FormattingUtils.formatBytes((long) received))));
+
+        sentDataTextField.textProperty().bind(createStringBinding(() -> Res.get("settings.net.sentData",
+                FormattingUtils.formatBytes(Statistic.totalSentBytesProperty().get()),
+                Statistic.numTotalSentMessagesProperty().get(),
+                Statistic.numTotalSentMessagesPerSecProperty().get()),
+                Statistic.numTotalSentMessagesPerSecProperty()));
+
+        receivedDataTextField.textProperty().bind(createStringBinding(() -> Res.get("settings.net.receivedData",
+                FormattingUtils.formatBytes(Statistic.totalReceivedBytesProperty().get()),
+                Statistic.numTotalReceivedMessagesProperty().get(),
+                Statistic.numTotalReceivedMessagesPerSecProperty().get()),
+                Statistic.numTotalReceivedMessagesPerSecProperty()));
 
         bitcoinSortedList.comparatorProperty().bind(bitcoinPeersTableView.comparatorProperty());
         bitcoinPeersTableView.setItems(bitcoinSortedList);
@@ -336,7 +349,8 @@ public class NetworkSettingsView extends ActivatableView<GridPane, Void> {
         if (numP2PPeersSubscription != null)
             numP2PPeersSubscription.unsubscribe();
 
-        totalTrafficTextField.textProperty().unbind();
+        sentDataTextField.textProperty().unbind();
+        receivedDataTextField.textProperty().unbind();
 
         bitcoinSortedList.comparatorProperty().unbind();
         p2pSortedList.comparatorProperty().unbind();

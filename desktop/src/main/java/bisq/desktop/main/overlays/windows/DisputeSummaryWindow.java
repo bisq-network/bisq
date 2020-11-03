@@ -23,6 +23,7 @@ import bisq.desktop.components.BisqTextArea;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.main.support.dispute.DisputeSummaryVerification;
 import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.Layout;
 
@@ -34,6 +35,7 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.Restrictions;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.btc.wallet.TxBroadcaster;
+import bisq.core.dao.DaoFacade;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.provider.fee.FeeService;
@@ -45,6 +47,7 @@ import bisq.core.support.dispute.DisputeResult;
 import bisq.core.support.dispute.mediation.MediationManager;
 import bisq.core.support.dispute.refund.RefundManager;
 import bisq.core.trade.Contract;
+import bisq.core.trade.TradeDataValidation;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.ParsingUtils;
 import bisq.core.util.coin.CoinFormatter;
@@ -86,8 +89,7 @@ import java.util.Date;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import static bisq.desktop.util.FormBuilder.add2ButtonsWithBox;
 import static bisq.desktop.util.FormBuilder.addConfirmationLabelLabel;
@@ -95,9 +97,8 @@ import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 import static bisq.desktop.util.FormBuilder.addTopLabelWithVBox;
 import static com.google.common.base.Preconditions.checkNotNull;
 
+@Slf4j
 public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
-    private static final Logger log = LoggerFactory.getLogger(DisputeSummaryWindow.class);
-
     private final CoinFormatter formatter;
     private final MediationManager mediationManager;
     private final RefundManager refundManager;
@@ -105,15 +106,19 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     private final BtcWalletService btcWalletService;
     private final TxFeeEstimationService txFeeEstimationService;
     private final FeeService feeService;
+    private final DaoFacade daoFacade;
     private Dispute dispute;
-    private Optional<Runnable> finalizeDisputeHandlerOptional = Optional.<Runnable>empty();
+    private Optional<Runnable> finalizeDisputeHandlerOptional = Optional.empty();
     private ToggleGroup tradeAmountToggleGroup, reasonToggleGroup;
     private DisputeResult disputeResult;
     private RadioButton buyerGetsTradeAmountRadioButton, sellerGetsTradeAmountRadioButton,
             buyerGetsAllRadioButton, sellerGetsAllRadioButton, customRadioButton;
     private RadioButton reasonWasBugRadioButton, reasonWasUsabilityIssueRadioButton,
             reasonProtocolViolationRadioButton, reasonNoReplyRadioButton, reasonWasScamRadioButton,
-            reasonWasOtherRadioButton, reasonWasBankRadioButton;
+            reasonWasOtherRadioButton, reasonWasBankRadioButton, reasonWasOptionTradeRadioButton,
+            reasonWasSellerNotRespondingRadioButton, reasonWasWrongSenderAccountRadioButton,
+            reasonWasPeerWasLateRadioButton, reasonWasTradeAlreadySettledRadioButton;
+
     // Dispute object of other trade peer. The dispute field is the one from which we opened the close dispute window.
     private Optional<Dispute> peersDisputeOptional;
     private String role;
@@ -138,7 +143,8 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                                 TradeWalletService tradeWalletService,
                                 BtcWalletService btcWalletService,
                                 TxFeeEstimationService txFeeEstimationService,
-                                FeeService feeService) {
+                                FeeService feeService,
+                                DaoFacade daoFacade) {
 
         this.formatter = formatter;
         this.mediationManager = mediationManager;
@@ -147,6 +153,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         this.btcWalletService = btcWalletService;
         this.txFeeEstimationService = txFeeEstimationService;
         this.feeService = feeService;
+        this.daoFacade = daoFacade;
 
         type = Type.Confirmation;
     }
@@ -155,7 +162,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         this.dispute = dispute;
 
         rowIndex = -1;
-        width = 700;
+        width = 1150;
         createGridPane();
         addContent();
         display();
@@ -209,7 +216,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         gridPane.setPadding(new Insets(35, 40, 30, 40));
         gridPane.getStyleClass().add("grid-pane");
         gridPane.getColumnConstraints().get(0).setHalignment(HPos.LEFT);
-        gridPane.setPrefWidth(900);
+        gridPane.setPrefWidth(width);
     }
 
     private void addContent() {
@@ -219,7 +226,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         else
             disputeResult = dispute.getDisputeResultProperty().get();
 
-        peersDisputeOptional = getDisputeManager(dispute).getDisputesAsObservableList().stream()
+        peersDisputeOptional = checkNotNull(getDisputeManager(dispute)).getDisputesAsObservableList().stream()
                 .filter(d -> dispute.getTradeId().equals(d.getTradeId()) && dispute.getTraderId() != d.getTraderId())
                 .findFirst();
 
@@ -258,6 +265,11 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
             reasonWasScamRadioButton.setDisable(true);
             reasonWasOtherRadioButton.setDisable(true);
             reasonWasBankRadioButton.setDisable(true);
+            reasonWasOptionTradeRadioButton.setDisable(true);
+            reasonWasSellerNotRespondingRadioButton.setDisable(true);
+            reasonWasWrongSenderAccountRadioButton.setDisable(true);
+            reasonWasPeerWasLateRadioButton.setDisable(true);
+            reasonWasTradeAlreadySettledRadioButton.setDisable(true);
 
             isLoserPublisherCheckBox.setDisable(true);
             isLoserPublisherCheckBox.setSelected(peersDisputeResult.isLoserPublisher());
@@ -374,14 +386,15 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                 .add(offer.getSellerSecurityDeposit());
         Coin totalAmount = buyerAmount.add(sellerAmount);
 
-        if (!totalAmount.isPositive()) {
-            return false;
-        }
-
-        if (getDisputeManager(dispute) instanceof RefundManager) {
-            // We allow to spend less in case of RefundAgent
+        boolean isRefundAgent = getDisputeManager(dispute) instanceof RefundManager;
+        if (isRefundAgent) {
+            // We allow to spend less in case of RefundAgent or even zero to both, so in that case no payout tx will
+            // be made
             return totalAmount.compareTo(available) <= 0;
         } else {
+            if (!totalAmount.isPositive()) {
+                return false;
+            }
             return totalAmount.compareTo(available) == 0;
         }
     }
@@ -478,19 +491,34 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     }
 
     private void addReasonControls() {
-        reasonWasBugRadioButton = new AutoTooltipRadioButton(Res.get("disputeSummaryWindow.reason.bug"));
-        reasonWasUsabilityIssueRadioButton = new AutoTooltipRadioButton(Res.get("disputeSummaryWindow.reason.usability"));
-        reasonProtocolViolationRadioButton = new AutoTooltipRadioButton(Res.get("disputeSummaryWindow.reason.protocolViolation"));
-        reasonNoReplyRadioButton = new AutoTooltipRadioButton(Res.get("disputeSummaryWindow.reason.noReply"));
-        reasonWasScamRadioButton = new AutoTooltipRadioButton(Res.get("disputeSummaryWindow.reason.scam"));
-        reasonWasBankRadioButton = new AutoTooltipRadioButton(Res.get("disputeSummaryWindow.reason.bank"));
-        reasonWasOtherRadioButton = new AutoTooltipRadioButton(Res.get("disputeSummaryWindow.reason.other"));
+        reasonWasBugRadioButton = new AutoTooltipRadioButton(Res.get("disputeSummaryWindow.reason." + DisputeResult.Reason.BUG.name()));
+        reasonWasUsabilityIssueRadioButton = new AutoTooltipRadioButton(Res.get("disputeSummaryWindow.reason." + DisputeResult.Reason.USABILITY.name()));
+        reasonProtocolViolationRadioButton = new AutoTooltipRadioButton(Res.get("disputeSummaryWindow.reason." + DisputeResult.Reason.PROTOCOL_VIOLATION.name()));
+        reasonNoReplyRadioButton = new AutoTooltipRadioButton(Res.get("disputeSummaryWindow.reason." + DisputeResult.Reason.NO_REPLY.name()));
+        reasonWasScamRadioButton = new AutoTooltipRadioButton(Res.get("disputeSummaryWindow.reason." + DisputeResult.Reason.SCAM.name()));
+        reasonWasBankRadioButton = new AutoTooltipRadioButton(Res.get("disputeSummaryWindow.reason." + DisputeResult.Reason.BANK_PROBLEMS.name()));
+        reasonWasOtherRadioButton = new AutoTooltipRadioButton(Res.get("disputeSummaryWindow.reason." + DisputeResult.Reason.OTHER.name()));
+        reasonWasOptionTradeRadioButton = new AutoTooltipRadioButton(Res.get("disputeSummaryWindow.reason." + DisputeResult.Reason.OPTION_TRADE.name()));
+        reasonWasSellerNotRespondingRadioButton = new AutoTooltipRadioButton(Res.get("disputeSummaryWindow.reason." + DisputeResult.Reason.SELLER_NOT_RESPONDING.name()));
+        reasonWasWrongSenderAccountRadioButton = new AutoTooltipRadioButton(Res.get("disputeSummaryWindow.reason." + DisputeResult.Reason.WRONG_SENDER_ACCOUNT.name()));
+        reasonWasPeerWasLateRadioButton = new AutoTooltipRadioButton(Res.get("disputeSummaryWindow.reason." + DisputeResult.Reason.PEER_WAS_LATE.name()));
+        reasonWasTradeAlreadySettledRadioButton = new AutoTooltipRadioButton(Res.get("disputeSummaryWindow.reason." + DisputeResult.Reason.TRADE_ALREADY_SETTLED.name()));
 
         HBox feeRadioButtonPane = new HBox();
         feeRadioButtonPane.setSpacing(20);
-        feeRadioButtonPane.getChildren().addAll(reasonWasBugRadioButton, reasonWasUsabilityIssueRadioButton,
-                reasonProtocolViolationRadioButton, reasonNoReplyRadioButton,
-                reasonWasBankRadioButton, reasonWasScamRadioButton, reasonWasOtherRadioButton);
+        // We don't show no reply and protocol violation as those should be covered by more specific ones. We still leave
+        // the code to enable it if it turns out it is still requested by mediators.
+        feeRadioButtonPane.getChildren().addAll(
+                reasonWasTradeAlreadySettledRadioButton,
+                reasonWasPeerWasLateRadioButton,
+                reasonWasOptionTradeRadioButton,
+                reasonWasSellerNotRespondingRadioButton,
+                reasonWasWrongSenderAccountRadioButton,
+                reasonWasBugRadioButton,
+                reasonWasUsabilityIssueRadioButton,
+                reasonWasBankRadioButton,
+                reasonWasOtherRadioButton
+        );
 
         VBox vBox = addTopLabelWithVBox(gridPane, ++rowIndex,
                 Res.get("disputeSummaryWindow.reason"),
@@ -505,22 +533,38 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         reasonWasScamRadioButton.setToggleGroup(reasonToggleGroup);
         reasonWasOtherRadioButton.setToggleGroup(reasonToggleGroup);
         reasonWasBankRadioButton.setToggleGroup(reasonToggleGroup);
+        reasonWasOptionTradeRadioButton.setToggleGroup(reasonToggleGroup);
+        reasonWasSellerNotRespondingRadioButton.setToggleGroup(reasonToggleGroup);
+        reasonWasWrongSenderAccountRadioButton.setToggleGroup(reasonToggleGroup);
+        reasonWasPeerWasLateRadioButton.setToggleGroup(reasonToggleGroup);
+        reasonWasTradeAlreadySettledRadioButton.setToggleGroup(reasonToggleGroup);
 
         reasonToggleSelectionListener = (observable, oldValue, newValue) -> {
-            if (newValue == reasonWasBugRadioButton)
+            if (newValue == reasonWasBugRadioButton) {
                 disputeResult.setReason(DisputeResult.Reason.BUG);
-            else if (newValue == reasonWasUsabilityIssueRadioButton)
+            } else if (newValue == reasonWasUsabilityIssueRadioButton) {
                 disputeResult.setReason(DisputeResult.Reason.USABILITY);
-            else if (newValue == reasonProtocolViolationRadioButton)
+            } else if (newValue == reasonProtocolViolationRadioButton) {
                 disputeResult.setReason(DisputeResult.Reason.PROTOCOL_VIOLATION);
-            else if (newValue == reasonNoReplyRadioButton)
+            } else if (newValue == reasonNoReplyRadioButton) {
                 disputeResult.setReason(DisputeResult.Reason.NO_REPLY);
-            else if (newValue == reasonWasScamRadioButton)
+            } else if (newValue == reasonWasScamRadioButton) {
                 disputeResult.setReason(DisputeResult.Reason.SCAM);
-            else if (newValue == reasonWasBankRadioButton)
+            } else if (newValue == reasonWasBankRadioButton) {
                 disputeResult.setReason(DisputeResult.Reason.BANK_PROBLEMS);
-            else if (newValue == reasonWasOtherRadioButton)
+            } else if (newValue == reasonWasOtherRadioButton) {
                 disputeResult.setReason(DisputeResult.Reason.OTHER);
+            } else if (newValue == reasonWasOptionTradeRadioButton) {
+                disputeResult.setReason(DisputeResult.Reason.OPTION_TRADE);
+            } else if (newValue == reasonWasSellerNotRespondingRadioButton) {
+                disputeResult.setReason(DisputeResult.Reason.SELLER_NOT_RESPONDING);
+            } else if (newValue == reasonWasWrongSenderAccountRadioButton) {
+                disputeResult.setReason(DisputeResult.Reason.WRONG_SENDER_ACCOUNT);
+            } else if (newValue == reasonWasTradeAlreadySettledRadioButton) {
+                disputeResult.setReason(DisputeResult.Reason.TRADE_ALREADY_SETTLED);
+            } else if (newValue == reasonWasPeerWasLateRadioButton) {
+                disputeResult.setReason(DisputeResult.Reason.PEER_WAS_LATE);
+            }
         };
         reasonToggleGroup.selectedToggleProperty().addListener(reasonToggleSelectionListener);
     }
@@ -548,6 +592,21 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                     break;
                 case OTHER:
                     reasonToggleGroup.selectToggle(reasonWasOtherRadioButton);
+                    break;
+                case OPTION_TRADE:
+                    reasonToggleGroup.selectToggle(reasonWasOptionTradeRadioButton);
+                    break;
+                case SELLER_NOT_RESPONDING:
+                    reasonToggleGroup.selectToggle(reasonWasSellerNotRespondingRadioButton);
+                    break;
+                case WRONG_SENDER_ACCOUNT:
+                    reasonToggleGroup.selectToggle(reasonWasWrongSenderAccountRadioButton);
+                    break;
+                case PEER_WAS_LATE:
+                    reasonToggleGroup.selectToggle(reasonWasPeerWasLateRadioButton);
+                    break;
+                case TRADE_ALREADY_SETTLED:
+                    reasonToggleGroup.selectToggle(reasonWasTradeAlreadySettledRadioButton);
                     break;
             }
         }
@@ -588,20 +647,21 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                 log.warn("dispute.getDepositTxSerialized is null");
                 return;
             }
+
             if (dispute.getSupportType() == SupportType.REFUND &&
                     peersDisputeOptional.isPresent() &&
                     !peersDisputeOptional.get().isClosed()) {
-                showPayoutTxConfirmation(contract, disputeResult,
-                        () -> {
-                            doClose(closeTicketButton);
-                        });
+                showPayoutTxConfirmation(contract,
+                        disputeResult,
+                        () -> doCloseIfValid(closeTicketButton));
             } else {
-                doClose(closeTicketButton);
+                doCloseIfValid(closeTicketButton);
             }
         });
 
         cancelButton.setOnAction(e -> {
             dispute.setDisputeResult(disputeResult);
+            checkNotNull(getDisputeManager(dispute)).requestPersistence();
             hide();
         });
     }
@@ -630,28 +690,36 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                     formatter.formatCoinWithCode(sellerPayoutAmount),
                     sellerPayoutAddressString);
         }
-        new Popup().width(900)
-                .headLine(Res.get("disputeSummaryWindow.close.txDetails.headline"))
-                .confirmation(Res.get("disputeSummaryWindow.close.txDetails",
-                        formatter.formatCoinWithCode(inputAmount),
-                        buyerDetails,
-                        sellerDetails,
-                        formatter.formatCoinWithCode(fee),
-                        feePerByte,
-                        kb))
-                .actionButtonText(Res.get("shared.yes"))
-                .onAction(() -> {
-                    doPayout(buyerPayoutAmount,
-                            sellerPayoutAmount,
-                            fee,
-                            buyerPayoutAddressString,
-                            sellerPayoutAddressString,
-                            resultHandler);
-                })
-                .closeButtonText(Res.get("shared.cancel"))
-                .onClose(() -> {
-                })
-                .show();
+        if (outputAmount.isPositive()) {
+            new Popup().width(900)
+                    .headLine(Res.get("disputeSummaryWindow.close.txDetails.headline"))
+                    .confirmation(Res.get("disputeSummaryWindow.close.txDetails",
+                            formatter.formatCoinWithCode(inputAmount),
+                            buyerDetails,
+                            sellerDetails,
+                            formatter.formatCoinWithCode(fee),
+                            feePerByte,
+                            kb))
+                    .actionButtonText(Res.get("shared.yes"))
+                    .onAction(() -> {
+                        doPayout(buyerPayoutAmount,
+                                sellerPayoutAmount,
+                                fee,
+                                buyerPayoutAddressString,
+                                sellerPayoutAddressString,
+                                resultHandler);
+                    })
+                    .closeButtonText(Res.get("shared.cancel"))
+                    .show();
+        } else {
+            // No payout will be made
+            new Popup().headLine(Res.get("disputeSummaryWindow.close.noPayout.headline"))
+                    .confirmation(Res.get("disputeSummaryWindow.close.noPayout.text"))
+                    .actionButtonText(Res.get("shared.yes"))
+                    .onAction(resultHandler::handleResult)
+                    .closeButtonText(Res.get("shared.cancel"))
+                    .show();
+        }
     }
 
     private void doPayout(Coin buyerPayoutAmount,
@@ -666,7 +734,6 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                     fee,
                     buyerPayoutAddressString,
                     sellerPayoutAddressString);
-            log.error("transaction " + tx);
             tradeWalletService.broadcastTx(tx, new TxBroadcaster.Callback() {
                 @Override
                 public void onSuccess(Transaction transaction) {
@@ -677,7 +744,6 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                 public void onFailure(TxBroadcastException exception) {
                     log.error("TxBroadcastException at doPayout", exception);
                     new Popup().error(exception.toString()).show();
-                    ;
                 }
             });
         } catch (InsufficientMoneyException | WalletException | TransactionVerificationException e) {
@@ -686,24 +752,105 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         }
     }
 
+    private void doCloseIfValid(Button closeTicketButton) {
+        var disputeManager = checkNotNull(getDisputeManager(dispute));
+        try {
+            TradeDataValidation.validateDonationAddress(dispute.getDonationAddressOfDelayedPayoutTx(), daoFacade);
+            TradeDataValidation.testIfDisputeTriesReplay(dispute, disputeManager.getDisputesAsObservableList());
+            doClose(closeTicketButton);
+        } catch (TradeDataValidation.AddressException exception) {
+            String addressAsString = dispute.getDonationAddressOfDelayedPayoutTx();
+            String tradeId = dispute.getTradeId();
+
+            // For mediators we do not enforce that the case cannot be closed to stay flexible,
+            // but for refund agents we do.
+            if (disputeManager instanceof MediationManager) {
+                new Popup().width(900)
+                        .warning(Res.get("support.warning.disputesWithInvalidDonationAddress",
+                                addressAsString,
+                                daoFacade.getAllDonationAddresses(),
+                                tradeId,
+                                Res.get("support.warning.disputesWithInvalidDonationAddress.mediator")))
+                        .onAction(() -> {
+                            doClose(closeTicketButton);
+                        })
+                        .actionButtonText(Res.get("shared.yes"))
+                        .closeButtonText(Res.get("shared.no"))
+                        .show();
+            } else {
+                new Popup().width(900)
+                        .warning(Res.get("support.warning.disputesWithInvalidDonationAddress",
+                                addressAsString,
+                                daoFacade.getAllDonationAddresses(),
+                                tradeId,
+                                Res.get("support.warning.disputesWithInvalidDonationAddress.refundAgent")))
+                        .show();
+            }
+        } catch (TradeDataValidation.DisputeReplayException exception) {
+            if (disputeManager instanceof MediationManager) {
+                new Popup().width(900)
+                        .warning(exception.getMessage())
+                        .onAction(() -> {
+                            doClose(closeTicketButton);
+                        })
+                        .actionButtonText(Res.get("shared.yes"))
+                        .closeButtonText(Res.get("shared.no"))
+                        .show();
+            } else {
+                new Popup().width(900)
+                        .warning(exception.getMessage())
+                        .show();
+            }
+        }
+    }
+
     private void doClose(Button closeTicketButton) {
+        DisputeManager<? extends DisputeList<Dispute>> disputeManager = getDisputeManager(dispute);
+        if (disputeManager == null) {
+            return;
+        }
+
+        boolean isRefundAgent = disputeManager instanceof RefundManager;
         disputeResult.setLoserPublisher(isLoserPublisherCheckBox.isSelected());
         disputeResult.setCloseDate(new Date());
         dispute.setDisputeResult(disputeResult);
         dispute.setIsClosed(true);
-        String text = Res.get("disputeSummaryWindow.close.msg",
+        DisputeResult.Reason reason = disputeResult.getReason();
+
+        summaryNotesTextArea.textProperty().unbindBidirectional(disputeResult.summaryNotesProperty());
+        String role = isRefundAgent ? Res.get("shared.refundAgent") : Res.get("shared.mediator");
+        String agentNodeAddress = checkNotNull(disputeManager.getAgentNodeAddress(dispute)).getFullAddress();
+        Contract contract = dispute.getContract();
+        String currencyCode = contract.getOfferPayload().getCurrencyCode();
+        String amount = formatter.formatCoinWithCode(contract.getTradeAmount());
+        String textToSign = Res.get("disputeSummaryWindow.close.msg",
                 DisplayUtils.formatDateTime(disputeResult.getCloseDate()),
+                role,
+                agentNodeAddress,
+                dispute.getShortTradeId(),
+                currencyCode,
+                amount,
                 formatter.formatCoinWithCode(disputeResult.getBuyerPayoutAmount()),
                 formatter.formatCoinWithCode(disputeResult.getSellerPayoutAmount()),
-                disputeResult.summaryNotesProperty().get());
+                Res.get("disputeSummaryWindow.reason." + reason.name()),
+                disputeResult.summaryNotesProperty().get()
+        );
 
-        if (dispute.getSupportType() == SupportType.MEDIATION) {
-            text += Res.get("disputeSummaryWindow.close.nextStepsForMediation");
-        } else if (dispute.getSupportType() == SupportType.REFUND) {
-            text += Res.get("disputeSummaryWindow.close.nextStepsForRefundAgentArbitration");
+        if (reason == DisputeResult.Reason.OPTION_TRADE &&
+                dispute.getChatMessages().size() > 1 &&
+                dispute.getChatMessages().get(1).isSystemMessage()) {
+            textToSign += "\n" + dispute.getChatMessages().get(1).getMessage() + "\n";
         }
 
-        checkNotNull(getDisputeManager(dispute)).sendDisputeResultMessage(disputeResult, dispute, text);
+        String summaryText = DisputeSummaryVerification.signAndApply(disputeManager, disputeResult, textToSign);
+
+        if (isRefundAgent) {
+            summaryText += Res.get("disputeSummaryWindow.close.nextStepsForRefundAgentArbitration");
+        } else {
+            summaryText += Res.get("disputeSummaryWindow.close.nextStepsForMediation");
+        }
+
+        disputeManager.sendDisputeResultMessage(disputeResult, dispute, summaryText);
 
         if (peersDisputeOptional.isPresent() && !peersDisputeOptional.get().isClosed() && !DevEnv.isDevMode()) {
             UserThread.runAfter(() -> new Popup()
@@ -714,12 +861,14 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
 
         finalizeDisputeHandlerOptional.ifPresent(Runnable::run);
 
+        disputeManager.requestPersistence();
+
         closeTicketButton.disableProperty().unbind();
 
         hide();
     }
 
-    private DisputeManager<? extends DisputeList<? extends DisputeList>> getDisputeManager(Dispute dispute) {
+    private DisputeManager<? extends DisputeList<Dispute>> getDisputeManager(Dispute dispute) {
         if (dispute.getSupportType() != null) {
             switch (dispute.getSupportType()) {
                 case ARBITRATION:

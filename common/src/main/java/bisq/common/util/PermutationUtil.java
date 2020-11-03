@@ -21,7 +21,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiFunction;
 
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -53,8 +56,73 @@ public class PermutationUtil {
         return altered;
     }
 
+    public static <T, R> List<T> findMatchingPermutation(R targetValue,
+                                                         List<T> list,
+                                                         BiFunction<R, List<T>, Boolean> predicate,
+                                                         int maxIterations) {
+        if (predicate.apply(targetValue, list)) {
+            return list;
+        } else {
+            return findMatchingPermutation(targetValue,
+                    list,
+                    new ArrayList<>(),
+                    predicate,
+                    new AtomicInteger(maxIterations));
+        }
+    }
+
+    private static <T, R> List<T> findMatchingPermutation(R targetValue,
+                                                          List<T> list,
+                                                          List<List<T>> lists,
+                                                          BiFunction<R, List<T>, Boolean> predicate,
+                                                          AtomicInteger maxIterations) {
+        for (int level = 0; level < list.size(); level++) {
+            // Test one level at a time
+            var result = checkLevel(targetValue, list, predicate, level, 0, maxIterations);
+            if (!result.isEmpty()) {
+                return result;
+            }
+        }
+
+        return new ArrayList<>();
+    }
+
+    @NonNull
+    private static <T, R> List<T> checkLevel(R targetValue,
+                                             List<T> previousLevel,
+                                             BiFunction<R, List<T>, Boolean> predicate,
+                                             int level,
+                                             int permutationIndex,
+                                             AtomicInteger maxIterations) {
+        if (previousLevel.size() == 1) {
+            return new ArrayList<>();
+        }
+        for (int i = permutationIndex; i < previousLevel.size(); i++) {
+            if (maxIterations.get() <= 0) {
+                return new ArrayList<>();
+            }
+            List<T> newList = new ArrayList<>(previousLevel);
+            newList.remove(i);
+            if (level == 0) {
+                maxIterations.decrementAndGet();
+                // Check all permutations on this level
+                if (predicate.apply(targetValue, newList)) {
+                    return newList;
+                }
+            } else {
+                // Test next level
+                var result = checkLevel(targetValue, newList, predicate, level - 1, i, maxIterations);
+                if (!result.isEmpty()) {
+                    return result;
+                }
+            }
+        }
+        return new ArrayList<>();
+    }
+
     //TODO optimize algorithm so that it starts from all objects and goes down instead starting with from the bottom.
     // That should help that we are not hitting the iteration limit so easily.
+
     /**
      * Returns a list of all possible permutations of a give sorted list ignoring duplicates.
      * E.g. List [A,B,C] results in this list of permutations: [[A], [B], [A,B], [C], [A,C], [B,C], [A,B,C]]

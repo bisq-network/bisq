@@ -17,49 +17,59 @@
 
 package bisq.core.btc.model;
 
+import bisq.common.config.Config;
+import bisq.common.persistence.PersistenceManager;
 import bisq.common.proto.persistable.PersistableEnvelope;
 import bisq.common.proto.persistable.PersistedDataHost;
-import bisq.common.storage.Storage;
 
 import com.google.protobuf.Message;
 
+import org.bitcoinj.core.Address;
+import org.bitcoinj.core.SegwitAddress;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.crypto.DeterministicKey;
+import org.bitcoinj.script.Script;
 import org.bitcoinj.wallet.Wallet;
 
 import com.google.inject.Inject;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import com.google.common.collect.ImmutableList;
 
-import lombok.Getter;
-import lombok.ToString;
+import org.apache.commons.lang3.tuple.Pair;
+
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.stream.Collectors;
+
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * The List supporting our persistence solution.
+ * The AddressEntries was previously stored as list, now as hashSet. We still keep the old name to reflect the
+ * associated protobuf message.
  */
-@ToString
 @Slf4j
 public final class AddressEntryList implements PersistableEnvelope, PersistedDataHost {
-    transient private Storage<AddressEntryList> storage;
+    transient private PersistenceManager<AddressEntryList> persistenceManager;
     transient private Wallet wallet;
-    @Getter
-    private List<AddressEntry> list;
+    private final Set<AddressEntry> entrySet = new CopyOnWriteArraySet<>();
 
     @Inject
-    public AddressEntryList(Storage<AddressEntryList> storage) {
-        this.storage = storage;
+    public AddressEntryList(PersistenceManager<AddressEntryList> persistenceManager) {
+        this.persistenceManager = persistenceManager;
+
+        this.persistenceManager.initialize(this, PersistenceManager.Source.PRIVATE);
     }
 
     @Override
-    public void readPersisted() {
-        AddressEntryList persisted = storage.initAndGetPersisted(this, 50);
-        if (persisted != null)
-            list = new ArrayList<>(persisted.getList());
+    public void readPersisted(Runnable completeHandler) {
+        persistenceManager.readPersisted(persisted -> {
+                    entrySet.clear();
+                    entrySet.addAll(persisted.entrySet);
+                    completeHandler.run();
+                },
+                completeHandler);
     }
 
 
@@ -67,22 +77,22 @@ public final class AddressEntryList implements PersistableEnvelope, PersistedDat
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private AddressEntryList(List<AddressEntry> list) {
-        this.list = list;
+    private AddressEntryList(Set<AddressEntry> entrySet) {
+        this.entrySet.addAll(entrySet);
     }
 
     public static AddressEntryList fromProto(protobuf.AddressEntryList proto) {
-        return new AddressEntryList(new ArrayList<>(proto.getAddressEntryList().stream().map(AddressEntry::fromProto).collect(Collectors.toList())));
+        Set<AddressEntry> entrySet = proto.getAddressEntryList().stream()
+                .map(AddressEntry::fromProto)
+                .collect(Collectors.toSet());
+        return new AddressEntryList(entrySet);
     }
 
     @Override
     public Message toProtoMessage() {
-        // We clone list as we got ConcurrentModificationExceptions
-        List<AddressEntry> clone = new ArrayList<>(list);
-        List<protobuf.AddressEntry> addressEntries = clone.stream()
+        Set<protobuf.AddressEntry> addressEntries = entrySet.stream()
                 .map(AddressEntry::toProtoMessage)
-                .collect(Collectors.toList());
-
+                .collect(Collectors.toSet());
         return protobuf.PersistableEnvelope.newBuilder()
                 .setAddressEntryList(protobuf.AddressEntryList.newBuilder()
                         .addAllAddressEntry(addressEntries))
@@ -97,29 +107,55 @@ public final class AddressEntryList implements PersistableEnvelope, PersistedDat
     public void onWalletReady(Wallet wallet) {
         this.wallet = wallet;
 
-        if (list != null) {
-            list.forEach(addressEntry -> {
-                DeterministicKey keyFromPubHash = (DeterministicKey) wallet.findKeyFromPubHash(addressEntry.getPubKeyHash());
+        if (!entrySet.isEmpty()) {
+            Set<AddressEntry> toBeRemoved = new HashSet<>();
+            entrySet.forEach(addressEntry -> {
+                Script.ScriptType scriptType = addressEntry.isSegwit() ? Script.ScriptType.P2WPKH
+                        : Script.ScriptType.P2PKH;
+                DeterministicKey keyFromPubHash = (DeterministicKey) wallet.findKeyFromPubKeyHash(
+                        addressEntry.getPubKeyHash(), scriptType);
                 if (keyFromPubHash != null) {
-                    addressEntry.setDeterministicKey(keyFromPubHash);
+                    Address addressFromKey = Address.fromKey(Config.baseCurrencyNetworkParameters(), keyFromPubHash,
+                            scriptType);
+                    // We want to ensure key and address matches in case we have address in entry available already
+                    if (addressEntry.getAddress() == null || addressFromKey.equals(addressEntry.getAddress())) {
+                        addressEntry.setDeterministicKey(keyFromPubHash);
+                    } else {
+                        log.error("We found an address entry without key but cannot apply the key as the address " +
+                                        "is not matching. " +
+                                        "We remove that entry as it seems it is not compatible with our wallet. " +
+                                        "addressFromKey={}, addressEntry.getAddress()={}",
+                                addressFromKey, addressEntry.getAddress());
+                        toBeRemoved.add(addressEntry);
+                    }
                 } else {
-                    log.error("Key from addressEntry not found in that wallet " + addressEntry.toString());
+                    log.error("Key from addressEntry {} not found in that wallet. We remove that entry. " +
+                            "This is expected at restore from seeds.", addressEntry.toString());
+                    toBeRemoved.add(addressEntry);
                 }
             });
-        } else {
-            list = new ArrayList<>();
-            add(new AddressEntry(wallet.freshReceiveKey(), AddressEntry.Context.ARBITRATOR));
 
-            // In case we restore from seed words and have balance we need to add the relevant addresses to our list.
-            // IssuedReceiveAddresses does not contain all addresses where we expect balance so we need to listen to
-            // incoming txs at blockchain sync to add the rest.
-            if (wallet.getBalance().isPositive()) {
-                wallet.getIssuedReceiveAddresses().forEach(address -> {
-                    log.info("Create AddressEntry for IssuedReceiveAddress. address={}", address.toString());
-                    add(new AddressEntry((DeterministicKey) wallet.findKeyFromPubHash(address.getHash160()), AddressEntry.Context.AVAILABLE));
-                });
-            }
-            persist();
+            toBeRemoved.forEach(entrySet::remove);
+        } else {
+            // As long the old arbitration domain is not removed from the code base we still support it here.
+            DeterministicKey key = (DeterministicKey) wallet.findKeyFromAddress(wallet.freshReceiveAddress(Script.ScriptType.P2PKH));
+            entrySet.add(new AddressEntry(key, AddressEntry.Context.ARBITRATOR, false));
+        }
+
+        // In case we restore from seed words and have balance we need to add the relevant addresses to our list.
+        // IssuedReceiveAddresses does not contain all addresses where we expect balance so we need to listen to
+        // incoming txs at blockchain sync to add the rest.
+        if (wallet.getBalance().isPositive()) {
+            wallet.getIssuedReceiveAddresses().stream()
+                    .filter(this::isAddressNotInEntries)
+                    .forEach(address -> {
+                        log.info("Create AddressEntry for IssuedReceiveAddress. address={}", address.toString());
+                        DeterministicKey key = (DeterministicKey) wallet.findKeyFromAddress(address);
+                        if (key != null) {
+                            // Address will be derived from key in getAddress method
+                            entrySet.add(new AddressEntry(key, AddressEntry.Context.AVAILABLE, address instanceof SegwitAddress));
+                        }
+                    });
         }
 
         // We add those listeners to get notified about potential new transactions and
@@ -127,72 +163,90 @@ public final class AddressEntryList implements PersistableEnvelope, PersistedDat
         // but can help as well in case the addressEntry list would miss an address where the wallet was received
         // funds (e.g. if the user sends funds to an address which has not been provided in the main UI - like from the
         // wallet details window).
-        wallet.addCoinsReceivedEventListener((w, tx, prevBalance, newBalance) -> {
-            updateList(tx);
+        wallet.addCoinsReceivedEventListener((wallet1, tx, prevBalance, newBalance) -> {
+            maybeAddNewAddressEntry(tx);
         });
-        wallet.addCoinsSentEventListener((w, tx, prevBalance, newBalance) -> {
-            updateList(tx);
+        wallet.addCoinsSentEventListener((wallet1, tx, prevBalance, newBalance) -> {
+            maybeAddNewAddressEntry(tx);
         });
+
+        requestPersistence();
     }
 
-    private void updateList(Transaction tx) {
-        tx.getOutputs().stream()
-                .filter(output -> output.isMine(wallet))
-                .map(output -> output.getAddressFromP2PKHScript(wallet.getNetworkParameters()))
-                .filter(Objects::nonNull)
-                .filter(address -> !listContainsEntryWithAddress(address.toBase58()))
-                .map(address -> (DeterministicKey) wallet.findKeyFromPubHash(address.getHash160()))
-                .filter(Objects::nonNull)
-                .map(deterministicKey -> new AddressEntry(deterministicKey, AddressEntry.Context.AVAILABLE))
-                .forEach(addressEntry -> list.add(addressEntry));
+    public ImmutableList<AddressEntry> getAddressEntriesAsListImmutable() {
+        return ImmutableList.copyOf(entrySet);
     }
 
-    private boolean listContainsEntryWithAddress(String addressString) {
-        return list.stream().anyMatch(addressEntry -> Objects.equals(addressEntry.getAddressString(), addressString));
-    }
+    public void addAddressEntry(AddressEntry addressEntry) {
+        boolean entryWithSameOfferIdAndContextAlreadyExist = entrySet.stream().anyMatch(e -> {
+            if (addressEntry.getOfferId() != null) {
+                return addressEntry.getOfferId().equals(e.getOfferId()) && addressEntry.getContext() == e.getContext();
+            }
+            return false;
+        });
+        if (entryWithSameOfferIdAndContextAlreadyExist) {
+            log.error("We have an address entry with the same offer ID and context. We do not add the new one. " +
+                    "addressEntry={}, entrySet={}", addressEntry, entrySet);
+            return;
+        }
 
-    private boolean add(AddressEntry addressEntry) {
-        return list.add(addressEntry);
-    }
-
-    private boolean remove(AddressEntry addressEntry) {
-        return list.remove(addressEntry);
-    }
-
-    public AddressEntry addAddressEntry(AddressEntry addressEntry) {
-        boolean changed = add(addressEntry);
-        if (changed)
-            persist();
-        return addressEntry;
-    }
-
-    public void swapTradeToSavings(String offerId) {
-        list.stream().filter(addressEntry -> offerId.equals(addressEntry.getOfferId()))
-                .findAny().ifPresent(this::swapToAvailable);
+        boolean setChangedByAdd = entrySet.add(addressEntry);
+        if (setChangedByAdd)
+            requestPersistence();
     }
 
     public void swapToAvailable(AddressEntry addressEntry) {
-        boolean changed1 = remove(addressEntry);
-        boolean changed2 = add(new AddressEntry(addressEntry.getKeyPair(), AddressEntry.Context.AVAILABLE));
-        if (changed1 || changed2)
-            persist();
+        boolean setChangedByRemove = entrySet.remove(addressEntry);
+        boolean setChangedByAdd = entrySet.add(new AddressEntry(addressEntry.getKeyPair(),
+                AddressEntry.Context.AVAILABLE,
+                addressEntry.isSegwit()));
+        if (setChangedByRemove || setChangedByAdd) {
+            requestPersistence();
+        }
     }
 
-    public AddressEntry swapAvailableToAddressEntryWithOfferId(AddressEntry addressEntry, AddressEntry.Context context, String offerId) {
-        boolean changed1 = remove(addressEntry);
-        final AddressEntry newAddressEntry = new AddressEntry(addressEntry.getKeyPair(), context, offerId);
-        boolean changed2 = add(newAddressEntry);
-        if (changed1 || changed2)
-            persist();
+    public AddressEntry swapAvailableToAddressEntryWithOfferId(AddressEntry addressEntry,
+                                                               AddressEntry.Context context,
+                                                               String offerId) {
+        boolean setChangedByRemove = entrySet.remove(addressEntry);
+        final AddressEntry newAddressEntry = new AddressEntry(addressEntry.getKeyPair(), context, offerId, addressEntry.isSegwit());
+        boolean setChangedByAdd = entrySet.add(newAddressEntry);
+        if (setChangedByRemove || setChangedByAdd)
+            requestPersistence();
 
         return newAddressEntry;
     }
 
-    public void persist() {
-        storage.queueUpForSave(50);
+    public void requestPersistence() {
+        persistenceManager.requestPersistence();
     }
 
-    public Stream<AddressEntry> stream() {
-        return list.stream();
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void maybeAddNewAddressEntry(Transaction tx) {
+        tx.getOutputs().stream()
+                .filter(output -> output.isMine(wallet))
+                .map(output -> output.getScriptPubKey().getToAddress(wallet.getNetworkParameters()))
+                .filter(Objects::nonNull)
+                .filter(this::isAddressNotInEntries)
+                .map(address -> Pair.of(address, (DeterministicKey) wallet.findKeyFromAddress(address)))
+                .filter(pair -> pair.getRight() != null)
+                .map(pair -> new AddressEntry(pair.getRight(), AddressEntry.Context.AVAILABLE,
+                        pair.getLeft() instanceof SegwitAddress))
+                .forEach(this::addAddressEntry);
+    }
+
+    private boolean isAddressNotInEntries(Address address) {
+        return entrySet.stream().noneMatch(e -> address.equals(e.getAddress()));
+    }
+
+    @Override
+    public String toString() {
+        return "AddressEntryList{" +
+                ",\n     entrySet=" + entrySet +
+                "\n}";
     }
 }

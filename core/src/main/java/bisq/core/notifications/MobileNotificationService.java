@@ -37,6 +37,7 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 
 import org.apache.commons.codec.binary.Hex;
 
@@ -313,6 +314,6 @@ public class MobileNotificationService {
             public void onFailure(@NotNull Throwable throwable) {
                 UserThread.execute(() -> errorHandler.accept(throwable));
             }
-        });
+        }, MoreExecutors.directExecutor());
     }
 }

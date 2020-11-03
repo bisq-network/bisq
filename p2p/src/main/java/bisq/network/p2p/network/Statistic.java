@@ -20,8 +20,10 @@ package bisq.network.p2p.network;
 import bisq.common.UserThread;
 import bisq.common.proto.network.NetworkEnvelope;
 
+import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.LongProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleLongProperty;
 
@@ -29,29 +31,93 @@ import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import lombok.extern.slf4j.Slf4j;
+
+/**
+ * Network statistics per connection. As we are also interested in total network statistics
+ * we use static properties to get traffic of all connections combined.
+ */
+@Slf4j
 public class Statistic {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Static
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private final static LongProperty totalSentBytes = new SimpleLongProperty(0);
-    private final static LongProperty totalReceivedBytes = new SimpleLongProperty(0);
 
-    public static long getTotalSentBytes() {
-        return totalSentBytes.get();
+    private final static long startTime = System.currentTimeMillis();
+    private final static LongProperty totalSentBytes = new SimpleLongProperty(0);
+    private final static DoubleProperty totalSentBytesPerSec = new SimpleDoubleProperty(0);
+    private final static LongProperty totalReceivedBytes = new SimpleLongProperty(0);
+    private final static DoubleProperty totalReceivedBytesPerSec = new SimpleDoubleProperty(0);
+    private final static Map<String, Integer> totalReceivedMessages = new ConcurrentHashMap<>();
+    private final static Map<String, Integer> totalSentMessages = new ConcurrentHashMap<>();
+    private final static LongProperty numTotalSentMessages = new SimpleLongProperty(0);
+    private final static DoubleProperty numTotalSentMessagesPerSec = new SimpleDoubleProperty(0);
+    private final static LongProperty numTotalReceivedMessages = new SimpleLongProperty(0);
+    private final static DoubleProperty numTotalReceivedMessagesPerSec = new SimpleDoubleProperty(0);
+
+    static {
+        UserThread.runPeriodically(() -> {
+            numTotalSentMessages.set(totalSentMessages.values().stream().mapToInt(Integer::intValue).sum());
+            numTotalReceivedMessages.set(totalReceivedMessages.values().stream().mapToInt(Integer::intValue).sum());
+
+            long passed = (System.currentTimeMillis() - startTime) / 1000;
+            numTotalSentMessagesPerSec.set(((double) numTotalSentMessages.get()) / passed);
+            numTotalReceivedMessagesPerSec.set(((double) numTotalReceivedMessages.get()) / passed);
+
+            totalSentBytesPerSec.set(((double) totalSentBytes.get()) / passed);
+            totalReceivedBytesPerSec.set(((double) totalReceivedBytes.get()) / passed);
+        }, 1);
+
+        // We log statistics every minute
+        UserThread.runPeriodically(() -> {
+            log.info("Network statistics:\n" +
+                            "Bytes sent: {} kb;\n" +
+                            "Number of sent messages/Sent messages: {} / {};\n" +
+                            "Number of sent messages per sec: {};\n" +
+                            "Bytes received: {} kb\n" +
+                            "Number of received messages/Received messages: {} / {};\n" +
+                            "Number of received messages per sec: {};",
+                    totalSentBytes.get() / 1024d,
+                    numTotalSentMessages.get(), totalSentMessages,
+                    numTotalSentMessagesPerSec.get(),
+                    totalReceivedBytes.get() / 1024d,
+                    numTotalReceivedMessages.get(), totalReceivedMessages,
+                    numTotalReceivedMessagesPerSec.get());
+        }, 60);
     }
 
     public static LongProperty totalSentBytesProperty() {
         return totalSentBytes;
     }
 
-    public static long getTotalReceivedBytes() {
-        return totalReceivedBytes.get();
+    public static DoubleProperty totalSentBytesPerSecProperty() {
+        return totalSentBytesPerSec;
     }
 
     public static LongProperty totalReceivedBytesProperty() {
         return totalReceivedBytes;
+    }
+
+    public static DoubleProperty totalReceivedBytesPerSecProperty() {
+        return totalReceivedBytesPerSec;
+    }
+
+    public static LongProperty numTotalSentMessagesProperty() {
+        return numTotalSentMessages;
+    }
+
+    public static DoubleProperty numTotalSentMessagesPerSecProperty() {
+        return numTotalSentMessagesPerSec;
+    }
+
+    public static LongProperty numTotalReceivedMessagesProperty() {
+        return numTotalReceivedMessages;
+    }
+
+    public static DoubleProperty numTotalReceivedMessagesPerSecProperty() {
+        return numTotalReceivedMessagesPerSec;
     }
 
 
@@ -72,7 +138,7 @@ public class Statistic {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Statistic() {
+    Statistic() {
         creationDate = new Date();
     }
 
@@ -80,18 +146,18 @@ public class Statistic {
     // Update, increment
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void updateLastActivityTimestamp() {
+    void updateLastActivityTimestamp() {
         UserThread.execute(() -> lastActivityTimestamp = System.currentTimeMillis());
     }
 
-    public void addSentBytes(int value) {
+    void addSentBytes(int value) {
         UserThread.execute(() -> {
             sentBytes.set(sentBytes.get() + value);
             totalSentBytes.set(totalSentBytes.get() + value);
         });
     }
 
-    public void addReceivedBytes(int value) {
+    void addReceivedBytes(int value) {
         UserThread.execute(() -> {
             receivedBytes.set(receivedBytes.get() + value);
             totalReceivedBytes.set(totalReceivedBytes.get() + value);
@@ -99,22 +165,34 @@ public class Statistic {
     }
 
     // TODO would need msg inspection to get useful information...
-    public void addReceivedMessage(NetworkEnvelope networkEnvelope) {
+    void addReceivedMessage(NetworkEnvelope networkEnvelope) {
         String messageClassName = networkEnvelope.getClass().getSimpleName();
         int counter = 1;
-        if (receivedMessages.containsKey(messageClassName))
+        if (receivedMessages.containsKey(messageClassName)) {
             counter = receivedMessages.get(messageClassName) + 1;
-
+        }
         receivedMessages.put(messageClassName, counter);
+
+        counter = 1;
+        if (totalReceivedMessages.containsKey(messageClassName)) {
+            counter = totalReceivedMessages.get(messageClassName) + 1;
+        }
+        totalReceivedMessages.put(messageClassName, counter);
     }
 
-    public void addSentMessage(NetworkEnvelope networkEnvelope) {
+    void addSentMessage(NetworkEnvelope networkEnvelope) {
         String messageClassName = networkEnvelope.getClass().getSimpleName();
         int counter = 1;
-        if (sentMessages.containsKey(messageClassName))
+        if (sentMessages.containsKey(messageClassName)) {
             counter = sentMessages.get(messageClassName) + 1;
-
+        }
         sentMessages.put(messageClassName, counter);
+
+        counter = 1;
+        if (totalSentMessages.containsKey(messageClassName)) {
+            counter = totalSentMessages.get(messageClassName) + 1;
+        }
+        totalSentMessages.put(messageClassName, counter);
     }
 
     public void setRoundTripTime(int roundTripTime) {
@@ -160,11 +238,13 @@ public class Statistic {
     @Override
     public String toString() {
         return "Statistic{" +
-                "creationDate=" + creationDate +
-                ", lastActivityTimestamp=" + lastActivityTimestamp +
-                ", sentBytes=" + sentBytes +
-                ", receivedBytes=" + receivedBytes +
-                '}';
+                "\n     creationDate=" + creationDate +
+                ",\n     lastActivityTimestamp=" + lastActivityTimestamp +
+                ",\n     sentBytes=" + sentBytes +
+                ",\n     receivedBytes=" + receivedBytes +
+                ",\n     receivedMessages=" + receivedMessages +
+                ",\n     sentMessages=" + sentMessages +
+                ",\n     roundTripTime=" + roundTripTime +
+                "\n}";
     }
-
 }

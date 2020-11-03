@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.support.dispute.client;
 
-import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.main.overlays.windows.ContractWindow;
 import bisq.desktop.main.overlays.windows.DisputeSummaryWindow;
 import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
@@ -25,17 +24,20 @@ import bisq.desktop.main.support.dispute.DisputeView;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.alert.PrivateNotificationManager;
+import bisq.core.dao.DaoFacade;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeList;
 import bisq.core.support.dispute.DisputeManager;
 import bisq.core.support.dispute.DisputeSession;
+import bisq.core.support.dispute.mediation.mediator.MediatorManager;
+import bisq.core.support.dispute.refund.refundagent.RefundAgentManager;
 import bisq.core.trade.TradeManager;
 import bisq.core.util.coin.CoinFormatter;
 
 import bisq.common.crypto.KeyRing;
 
 public abstract class DisputeClientView extends DisputeView {
-    public DisputeClientView(DisputeManager<? extends DisputeList<? extends DisputeList>> DisputeManager,
+    public DisputeClientView(DisputeManager<? extends DisputeList<Dispute>> DisputeManager,
                              KeyRing keyRing,
                              TradeManager tradeManager,
                              CoinFormatter formatter,
@@ -44,14 +46,28 @@ public abstract class DisputeClientView extends DisputeView {
                              ContractWindow contractWindow,
                              TradeDetailsWindow tradeDetailsWindow,
                              AccountAgeWitnessService accountAgeWitnessService,
+                             MediatorManager mediatorManager,
+                             RefundAgentManager refundAgentManager,
+                             DaoFacade daoFacade,
                              boolean useDevPrivilegeKeys) {
         super(DisputeManager, keyRing, tradeManager, formatter, disputeSummaryWindow, privateNotificationManager,
-                contractWindow, tradeDetailsWindow, accountAgeWitnessService, useDevPrivilegeKeys);
+                contractWindow, tradeDetailsWindow, accountAgeWitnessService,
+                mediatorManager, refundAgentManager, daoFacade, useDevPrivilegeKeys);
     }
 
     @Override
     protected void handleOnSelectDispute(Dispute dispute) {
         DisputeSession chatSession = getConcreteDisputeChatSession(dispute);
         chatView.display(chatSession, root.widthProperty());
+    }
+
+    @Override
+    protected DisputeView.FilterResult getFilterResult(Dispute dispute, String filterString) {
+        // As we are in the client view we hide disputes where we are the agent
+        if (dispute.getAgentPubKeyRing().equals(keyRing.getPubKeyRing())) {
+            return FilterResult.NO_MATCH;
+        }
+
+        return super.getFilterResult(dispute, filterString);
     }
 }

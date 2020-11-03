@@ -21,8 +21,8 @@ import bisq.common.crypto.CryptoException;
 import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.KeyStorage;
 import bisq.common.crypto.PubKeyRing;
+import bisq.common.file.FileUtil;
 import bisq.common.proto.network.NetworkEnvelope;
-import bisq.common.storage.FileUtil;
 
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;

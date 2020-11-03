@@ -1,0 +1,83 @@
+// This gradle file contains tasks to install and clean dao-setup files downloaded from
+//          https://github.com/bisq-network/bisq/raw/master/docs/dao-setup.zip
+// These tasks are not run by the default build, but they can can be run during a full
+// or partial builds, or by themselves.
+// To run a full Bisq clean build, test, and install dao-setup files:
+//      ./gradlew clean build :apitest:installDaoSetup
+// To install or re-install dao-setup file only:
+//      ./gradlew :apitest:installDaoSetup -x test
+// To clean installed dao-setup files:
+//      ./gradlew :apitest:cleanDaoSetup -x test
+//
+// The :apitest subproject will not run on Windows, and these tasks have not been
+// tested on Windows.
+def buildResourcesDir = project(":apitest").buildDir.path + '/resources/main'
+
+// This task requires ant in the system $PATH.
+task installDaoSetup(dependsOn: 'cleanDaoSetup') {
+    doLast {
+        println "Installing dao-setup directories in build dir $buildResourcesDir ..."
+        def src = 'https://github.com/bisq-network/bisq/raw/master/docs/dao-setup.zip'
+        def destfile = project.rootDir.path + '/apitest/src/main/resources/dao-setup.zip'
+        def url = new URL(src)
+        def f = new File(destfile)
+        if (f.exists()) {
+            println "File $destfile already exists, skipping download."
+        } else {
+            if (!f.parentFile.exists())
+                mkdir "$buildResourcesDir"
+
+            println "Downloading $url to $buildResourcesDir ..."
+            url.withInputStream { i -> f.withOutputStream { it << i } }
+        }
+
+        // We need an ant task for unzipping the dao-setup.zip file.
+        println "Unzipping $destfile to $buildResourcesDir ..."
+        ant.unzip(src: 'src/main/resources/dao-setup.zip',
+                dest: 'src/main/resources',
+                overwrite: "true") {
+            // Warning: overwrite: "true" does not work if empty dirs exist, so the
+            // cleanDaoSetup task should be run before trying to re-install fresh
+            // dao-setup files.
+            patternset() {
+                include(name: '**')
+                exclude(name: '**/bitcoin.conf') // installed at runtime with correct blocknotify script path
+                exclude(name: '**/blocknotify')  // installed from src/main/resources to allow port configs
+            }
+            mapper(type: "identity")
+        }
+
+        // Copy files from unzip target dir 'dao-setup' to build/resources/main.
+        def daoSetupSrc = project.rootDir.path + '/apitest/src/main/resources/dao-setup'
+        def daoSetupDest = buildResourcesDir + '/dao-setup'
+        println "Copying $daoSetupSrc to $daoSetupDest ..."
+        copy {
+            from daoSetupSrc
+            into daoSetupDest
+        }
+
+        // Move dao-setup files from build/resources/main/dao-setup to build/resources/main
+        file(buildResourcesDir + '/dao-setup/Bitcoin-regtest')
+                .renameTo(file(buildResourcesDir + '/Bitcoin-regtest'))
+        file(buildResourcesDir + '/dao-setup/bisq-BTC_REGTEST_Alice_dao')
+                .renameTo(file(buildResourcesDir + '/bisq-BTC_REGTEST_Alice_dao'))
+        file(buildResourcesDir + '/dao-setup/bisq-BTC_REGTEST_Bob_dao')
+                .renameTo(file(buildResourcesDir + '/bisq-BTC_REGTEST_Bob_dao'))
+        delete file(buildResourcesDir + '/dao-setup')
+    }
+}
+
+task cleanDaoSetup {
+    doLast {
+        // When re-installing dao-setup files before re-running tests, the bitcoin
+        // datadir and dao-setup dirs have to be cleaned first.  This task allows
+        // you to re-install dao-setup files and re-run tests without having to
+        // re-compile any code.
+        println "Deleting dao-setup directories in build dir $buildResourcesDir ..."
+        delete file(buildResourcesDir + '/Bitcoin-regtest')
+        delete file(buildResourcesDir + '/bisq-BTC_REGTEST_Seed_2002')
+        delete file(buildResourcesDir + '/bisq-BTC_REGTEST_Arb_dao')
+        delete file(buildResourcesDir + '/bisq-BTC_REGTEST_Alice_dao')
+        delete file(buildResourcesDir + '/bisq-BTC_REGTEST_Bob_dao')
+    }
+}

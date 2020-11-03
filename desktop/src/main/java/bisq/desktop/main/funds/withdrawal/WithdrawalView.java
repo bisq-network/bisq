@@ -41,9 +41,9 @@ import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
 import bisq.core.user.Preferences;
 import bisq.core.util.FormattingUtils;
+import bisq.core.util.ParsingUtils;
 import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.coin.CoinUtil;
-import bisq.core.util.ParsingUtils;
 import bisq.core.util.validation.BtcAddressValidator;
 
 import bisq.network.p2p.P2PService;
@@ -56,6 +56,7 @@ import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.TransactionOutput;
 import org.bitcoinj.wallet.Wallet;
 
 import javax.inject.Inject;
@@ -95,7 +96,7 @@ import javafx.collections.transformation.SortedList;
 
 import javafx.util.Callback;
 
-import org.spongycastle.crypto.params.KeyParameter;
+import org.bouncycastle.crypto.params.KeyParameter;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -120,11 +121,11 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     @FXML
     TableColumn<WithdrawalListItem, WithdrawalListItem> addressColumn, balanceColumn, selectColumn;
 
-    private RadioButton useAllInputsRadioButton, useCustomInputsRadioButton, feeExcludedRadioButton;
+    private RadioButton useAllInputsRadioButton, useCustomInputsRadioButton, feeExcludedRadioButton, feeIncludedRadioButton;
     private Label amountLabel;
-    private TextField amountTextField, withdrawFromTextField, withdrawToTextField;
+    private TextField amountTextField, withdrawFromTextField, withdrawToTextField, withdrawMemoTextField;
 
-    private final BtcWalletService walletService;
+    private final BtcWalletService btcWalletService;
     private final TradeManager tradeManager;
     private final P2PService p2PService;
     private final WalletsSetup walletsSetup;
@@ -134,7 +135,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     private final WalletPasswordWindow walletPasswordWindow;
     private final ObservableList<WithdrawalListItem> observableList = FXCollections.observableArrayList();
     private final SortedList<WithdrawalListItem> sortedList = new SortedList<>(observableList);
-    private Set<WithdrawalListItem> selectedItems = new HashSet<>();
+    private final Set<WithdrawalListItem> selectedItems = new HashSet<>();
     private BalanceListener balanceListener;
     private Set<String> fromAddresses = new HashSet<>();
     private Coin totalAvailableAmountOfSelectedItems = Coin.ZERO;
@@ -154,7 +155,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private WithdrawalView(BtcWalletService walletService,
+    private WithdrawalView(BtcWalletService btcWalletService,
                            TradeManager tradeManager,
                            P2PService p2PService,
                            WalletsSetup walletsSetup,
@@ -162,7 +163,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                            Preferences preferences,
                            BtcAddressValidator btcAddressValidator,
                            WalletPasswordWindow walletPasswordWindow) {
-        this.walletService = walletService;
+        this.btcWalletService = btcWalletService;
         this.tradeManager = tradeManager;
         this.p2PService = p2PService;
         this.walletsSetup = walletsSetup;
@@ -208,14 +209,16 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
         amountTextField = feeTuple3.second;
         amountTextField.setMinWidth(180);
         feeExcludedRadioButton = feeTuple3.third;
-        RadioButton feeIncludedRadioButton = feeTuple3.fourth;
+        feeIncludedRadioButton = feeTuple3.fourth;
 
         withdrawFromTextField = addTopLabelTextField(gridPane, ++rowIndex,
                 Res.get("funds.withdrawal.fromLabel", Res.getBaseCurrencyCode())).second;
 
         withdrawToTextField = addTopLabelInputTextField(gridPane, ++rowIndex,
                 Res.get("funds.withdrawal.toLabel", Res.getBaseCurrencyCode())).second;
-        withdrawToTextField.setMaxWidth(380);
+
+        withdrawMemoTextField = addTopLabelInputTextField(gridPane, ++rowIndex,
+                Res.get("funds.withdrawal.memoLabel", Res.getBaseCurrencyCode())).second;
 
         final Button withdrawButton = addButton(gridPane, ++rowIndex, Res.get("funds.withdrawal.withdrawButton"), 15);
 
@@ -290,12 +293,12 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
 
         amountTextField.textProperty().addListener(amountListener);
         amountTextField.focusedProperty().addListener(amountFocusListener);
-        walletService.addBalanceListener(balanceListener);
+        btcWalletService.addBalanceListener(balanceListener);
         feeToggleGroup.selectedToggleProperty().addListener(feeToggleGroupListener);
         inputsToggleGroup.selectedToggleProperty().addListener(inputsToggleGroupListener);
 
         if (feeToggleGroup.getSelectedToggle() == null)
-            feeToggleGroup.selectToggle(feeExcludedRadioButton);
+            feeToggleGroup.selectToggle(feeIncludedRadioButton);
 
         if (inputsToggleGroup.getSelectedToggle() == null)
             inputsToggleGroup.selectToggle(useAllInputsRadioButton);
@@ -308,7 +311,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     protected void deactivate() {
         sortedList.comparatorProperty().unbind();
         observableList.forEach(WithdrawalListItem::cleanup);
-        walletService.removeBalanceListener(balanceListener);
+        btcWalletService.removeBalanceListener(balanceListener);
         amountTextField.textProperty().removeListener(amountListener);
         amountTextField.focusedProperty().removeListener(amountFocusListener);
         feeToggleGroup.selectedToggleProperty().removeListener(feeToggleGroupListener);
@@ -324,15 +327,34 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
         if (GUIUtil.isReadyForTxBroadcastOrShowPopup(p2PService, walletsSetup)) {
             try {
                 // We do not know sendersAmount if senderPaysFee is true. We repeat fee calculation after first attempt if senderPaysFee is true.
-                Transaction feeEstimationTransaction = walletService.getFeeEstimationTransactionForMultipleAddresses(fromAddresses, amountAsCoin);
+                Transaction feeEstimationTransaction = btcWalletService.getFeeEstimationTransactionForMultipleAddresses(fromAddresses, amountAsCoin);
                 if (feeExcluded && feeEstimationTransaction != null) {
                     sendersAmount = amountAsCoin.add(feeEstimationTransaction.getFee());
-                    feeEstimationTransaction = walletService.getFeeEstimationTransactionForMultipleAddresses(fromAddresses, sendersAmount);
+                    feeEstimationTransaction = btcWalletService.getFeeEstimationTransactionForMultipleAddresses(fromAddresses, sendersAmount);
                 }
                 checkNotNull(feeEstimationTransaction, "feeEstimationTransaction must not be null");
-                Coin fee = feeEstimationTransaction.getFee();
-                sendersAmount = feeExcluded ? amountAsCoin.add(fee) : amountAsCoin;
-                Coin receiverAmount = feeExcluded ? amountAsCoin : amountAsCoin.subtract(fee);
+
+                Coin dust = getDust(feeEstimationTransaction);
+                Coin fee = feeEstimationTransaction.getFee().add(dust);
+                Coin receiverAmount = Coin.ZERO;
+                // amountAsCoin is what the user typed into the withdrawal field.
+                // this can be interpreted as either the senders amount or receivers amount depending
+                // on a radio button "fee excluded / fee included".
+                // therefore we calculate the actual sendersAmount and receiverAmount as follows:
+                if (feeExcluded) {
+                    receiverAmount = amountAsCoin;
+                    sendersAmount = receiverAmount.add(fee);
+                } else {
+                    sendersAmount = amountAsCoin.add(dust); // sendersAmount bumped up to UTXO size when dust is in play
+                    receiverAmount = sendersAmount.subtract(fee);
+                }
+                if (dust.isPositive()) {
+                    log.info("Dust output ({} satoshi) was detected, the dust amount has been added to the fee (was {}, now {})",
+                            dust.value,
+                            feeEstimationTransaction.getFee(),
+                            fee.value);
+                }
+
                 if (areInputsValid()) {
                     int txSize = feeEstimationTransaction.bitcoinSerialize().length;
                     log.info("Fee for tx with size {}: {} " + Res.getBaseCurrencyCode() + "", txSize, fee.toPlainString());
@@ -340,32 +362,40 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                     if (receiverAmount.isPositive()) {
                         double feePerByte = CoinUtil.getFeePerByte(fee, txSize);
                         double kb = txSize / 1000d;
+
+                        String messageText = Res.get("shared.sendFundsDetailsWithFee",
+                                formatter.formatCoinWithCode(sendersAmount),
+                                withdrawFromTextField.getText(),
+                                withdrawToTextField.getText(),
+                                formatter.formatCoinWithCode(fee),
+                                feePerByte,
+                                kb,
+                                formatter.formatCoinWithCode(receiverAmount));
+                        if (dust.isPositive()) {
+                            messageText = Res.get("shared.sendFundsDetailsDust",
+                                    dust.value, dust.value > 1 ? "s" : "")
+                                    + messageText;
+                        }
+
                         new Popup().headLine(Res.get("funds.withdrawal.confirmWithdrawalRequest"))
-                                .confirmation(Res.get("shared.sendFundsDetailsWithFee",
-                                        formatter.formatCoinWithCode(sendersAmount),
-                                        withdrawFromTextField.getText(),
-                                        withdrawToTextField.getText(),
-                                        formatter.formatCoinWithCode(fee),
-                                        feePerByte,
-                                        kb,
-                                        formatter.formatCoinWithCode(receiverAmount)))
+                                .confirmation(messageText)
                                 .actionButtonText(Res.get("shared.yes"))
                                 .onAction(() -> doWithdraw(sendersAmount, fee, new FutureCallback<>() {
                                     @Override
                                     public void onSuccess(@javax.annotation.Nullable Transaction transaction) {
                                         if (transaction != null) {
-                                            log.debug("onWithdraw onSuccess tx ID:{}", transaction.getHashAsString());
+                                            log.debug("onWithdraw onSuccess tx ID:{}", transaction.getTxId().toString());
                                         } else {
                                             log.error("onWithdraw transaction is null");
                                         }
 
-                                        List<Trade> trades = new ArrayList<>(tradeManager.getTradableList());
+                                        List<Trade> trades = new ArrayList<>(tradeManager.getObservableList());
                                         trades.stream()
                                                 .filter(Trade::isPayoutPublished)
-                                                .forEach(trade -> walletService.getAddressEntry(trade.getId(), AddressEntry.Context.TRADE_PAYOUT)
+                                                .forEach(trade -> btcWalletService.getAddressEntry(trade.getId(), AddressEntry.Context.TRADE_PAYOUT)
                                                         .ifPresent(addressEntry -> {
-                                                            if (walletService.getBalanceForAddress(addressEntry.getAddress()).isZero())
-                                                                tradeManager.addTradeToClosedTrades(trade);
+                                                            if (btcWalletService.getBalanceForAddress(addressEntry.getAddress()).isZero())
+                                                                tradeManager.onTradeCompleted(trade);
                                                         }));
                                     }
 
@@ -446,15 +476,15 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
 
     private void updateList() {
         observableList.forEach(WithdrawalListItem::cleanup);
-        observableList.setAll(tradeManager.getAddressEntriesForAvailableBalanceStream()
-                .map(addressEntry -> new WithdrawalListItem(addressEntry, walletService, formatter))
+        observableList.setAll(btcWalletService.getAddressEntriesForAvailableBalanceStream()
+                .map(addressEntry -> new WithdrawalListItem(addressEntry, btcWalletService, formatter))
                 .collect(Collectors.toList()));
 
         updateInputSelection();
     }
 
     private void doWithdraw(Coin amount, Coin fee, FutureCallback<Transaction> callback) {
-        if (walletService.isEncrypted()) {
+        if (btcWalletService.isEncrypted()) {
             UserThread.runAfter(() -> walletPasswordWindow.onAesKey(aesKey ->
                     sendFunds(amount, fee, aesKey, callback))
                     .show(), 300, TimeUnit.MILLISECONDS);
@@ -465,7 +495,14 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
 
     private void sendFunds(Coin amount, Coin fee, KeyParameter aesKey, FutureCallback<Transaction> callback) {
         try {
-            walletService.sendFundsForMultipleAddresses(fromAddresses, withdrawToTextField.getText(), amount, fee, null, aesKey, callback);
+            Transaction transaction = btcWalletService.sendFundsForMultipleAddresses(fromAddresses,
+                    withdrawToTextField.getText(),
+                    amount,
+                    fee,
+                    null,
+                    aesKey,
+                    callback);
+            transaction.setMemo(withdrawMemoTextField.getText());
             reset();
             updateList();
         } catch (AddressFormatException e) {
@@ -497,6 +534,9 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
 
         withdrawToTextField.setText("");
         withdrawToTextField.setPromptText(Res.get("funds.withdrawal.fillDestAddress"));
+
+        withdrawMemoTextField.setText("");
+        withdrawMemoTextField.setPromptText(Res.get("funds.withdrawal.memo"));
 
         selectedItems.clear();
         tableView.getSelectionModel().clearSelection();
@@ -628,6 +668,21 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                         };
                     }
                 });
+    }
+
+    // BISQ issue #4039: prevent dust outputs from being created.
+    // check the outputs of a proposed transaction, if any are below the dust threshold
+    // add up the dust, noting the details in the log.
+    // returns the 'dust amount' to indicate if any dust was detected.
+    private Coin getDust(Transaction transaction) {
+        Coin dust = Coin.ZERO;
+        for (TransactionOutput transactionOutput : transaction.getOutputs()) {
+            if (transactionOutput.getValue().isLessThan(Restrictions.getMinNonDustOutput())) {
+                dust = dust.add(transactionOutput.getValue());
+                log.info("dust TXO = {}", transactionOutput.toString());
+            }
+        }
+        return dust;
     }
 }
 

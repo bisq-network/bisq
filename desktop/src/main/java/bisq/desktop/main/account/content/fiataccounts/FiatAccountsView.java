@@ -43,6 +43,7 @@ import bisq.desktop.components.paymentmethods.SepaForm;
 import bisq.desktop.components.paymentmethods.SepaInstantForm;
 import bisq.desktop.components.paymentmethods.SpecificBankForm;
 import bisq.desktop.components.paymentmethods.SwishForm;
+import bisq.desktop.components.paymentmethods.TransferwiseForm;
 import bisq.desktop.components.paymentmethods.USPostalMoneyOrderForm;
 import bisq.desktop.components.paymentmethods.UpholdForm;
 import bisq.desktop.components.paymentmethods.WeChatPayForm;
@@ -70,6 +71,7 @@ import bisq.desktop.util.validation.PopmoneyValidator;
 import bisq.desktop.util.validation.PromptPayValidator;
 import bisq.desktop.util.validation.RevolutValidator;
 import bisq.desktop.util.validation.SwishValidator;
+import bisq.desktop.util.validation.TransferwiseValidator;
 import bisq.desktop.util.validation.USPostalMoneyOrderValidator;
 import bisq.desktop.util.validation.UpholdValidator;
 import bisq.desktop.util.validation.WeChatPayValidator;
@@ -148,6 +150,7 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
     private final F2FValidator f2FValidator;
     private final PromptPayValidator promptPayValidator;
     private final AdvancedCashValidator advancedCashValidator;
+    private final TransferwiseValidator transferwiseValidator;
     private final CoinFormatter formatter;
     private ComboBox<PaymentMethod> paymentMethodComboBox;
     private PaymentMethodForm paymentMethodForm;
@@ -178,6 +181,7 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
                             F2FValidator f2FValidator,
                             PromptPayValidator promptPayValidator,
                             AdvancedCashValidator advancedCashValidator,
+                            TransferwiseValidator transferwiseValidator,
                             AccountAgeWitnessService accountAgeWitnessService,
                             @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter) {
         super(model, accountAgeWitnessService);
@@ -203,6 +207,7 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
         this.f2FValidator = f2FValidator;
         this.promptPayValidator = promptPayValidator;
         this.advancedCashValidator = advancedCashValidator;
+        this.transferwiseValidator = transferwiseValidator;
         this.formatter = formatter;
     }
 
@@ -496,6 +501,8 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
                 return new PromptPayForm(paymentAccount, accountAgeWitnessService, promptPayValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.ADVANCED_CASH_ID:
                 return new AdvancedCashForm(paymentAccount, accountAgeWitnessService, advancedCashValidator, inputValidator, root, gridRow, formatter);
+            case PaymentMethod.TRANSFERWISE_ID:
+                return new TransferwiseForm(paymentAccount, accountAgeWitnessService, transferwiseValidator, inputValidator, root, gridRow, formatter);
             default:
                 log.error("Not supported PaymentMethod: " + paymentMethod);
                 return null;

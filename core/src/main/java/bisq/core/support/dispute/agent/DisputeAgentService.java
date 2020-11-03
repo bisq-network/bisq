@@ -66,7 +66,7 @@ public abstract class DisputeAgentService<T extends DisputeAgent> {
                 !Utilities.encodeToHex(disputeAgent.getRegistrationPubKey()).equals(DevEnv.DEV_PRIVILEGE_PUB_KEY)) {
             boolean result = p2PService.addProtectedStorageEntry(disputeAgent);
             if (result) {
-                log.trace("Add disputeAgent to network was successful. DisputeAgent.hashCode() = " + disputeAgent.hashCode());
+                log.trace("Add disputeAgent to network was successful. DisputeAgent.hashCode() = {}", disputeAgent.hashCode());
                 resultHandler.handleResult();
             } else {
                 errorMessageHandler.handleErrorMessage("Add disputeAgent failed");
@@ -82,7 +82,7 @@ public abstract class DisputeAgentService<T extends DisputeAgent> {
                                    ErrorMessageHandler errorMessageHandler) {
         log.debug("removeDisputeAgent disputeAgent.hashCode() " + disputeAgent.hashCode());
         if (p2PService.removeData(disputeAgent)) {
-            log.trace("Remove disputeAgent from network was successful. DisputeAgent.hashCode() = " + disputeAgent.hashCode());
+            log.trace("Remove disputeAgent from network was successful. DisputeAgent.hashCode() = {}", disputeAgent.hashCode());
             resultHandler.handleResult();
         } else {
             errorMessageHandler.handleErrorMessage("Remove disputeAgent failed");
@@ -100,8 +100,11 @@ public abstract class DisputeAgentService<T extends DisputeAgent> {
         } else {
             bannedDisputeAgents = null;
         }
-        if (bannedDisputeAgents != null)
+
+        if (bannedDisputeAgents != null && !bannedDisputeAgents.isEmpty()) {
             log.warn("bannedDisputeAgents=" + bannedDisputeAgents);
+        }
+
         Set<T> disputeAgentSet = getDisputeAgentSet(bannedDisputeAgents);
 
         Map<NodeAddress, T> map = new HashMap<>();

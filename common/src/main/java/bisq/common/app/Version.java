@@ -17,6 +17,9 @@
 
 package bisq.common.app;
 
+import java.util.Arrays;
+import java.util.List;
+
 import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -27,7 +30,14 @@ public class Version {
     // VERSION = 0.5.0 introduces proto buffer for the P2P network and local DB and is a not backward compatible update
     // Therefore all sub versions start again with 1
     // We use semantic versioning with major, minor and patch
-    public static final String VERSION = "1.2.9";
+    public static final String VERSION = "1.4.2";
+
+    /**
+     * Holds a list of the tagged resource files for optimizing the getData requests.
+     * This must not contain each version but only those where we add new version-tagged resource files for
+     * historical data stores.
+     */
+    public static final List<String> HISTORICAL_RESOURCE_FILE_VERSION_TAGS = Arrays.asList("1.4.0");
 
     public static int getMajorVersion(String version) {
         return getSubVersion(version, 0);
@@ -45,7 +55,7 @@ public class Version {
         return isNewVersion(newVersion, VERSION);
     }
 
-    static boolean isNewVersion(String newVersion, String currentVersion) {
+    public static boolean isNewVersion(String newVersion, String currentVersion) {
         if (newVersion.equals(currentVersion))
             return false;
         else if (getMajorVersion(newVersion) > getMajorVersion(currentVersion))
@@ -120,7 +130,6 @@ public class Version {
                 '}');
     }
 
-    //TODO move to consensus area
     public static final byte COMPENSATION_REQUEST = (byte) 0x01;
     public static final byte REIMBURSEMENT_REQUEST = (byte) 0x01;
     public static final byte PROPOSAL = (byte) 0x01;

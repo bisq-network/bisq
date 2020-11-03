@@ -19,11 +19,9 @@ package bisq.core.payment.payload;
 
 import bisq.core.locale.Res;
 
-import bisq.common.util.CollectionUtils;
-
 import com.google.protobuf.Message;
 
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -34,14 +32,12 @@ import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.annotation.Nullable;
-
 @EqualsAndHashCode(callSuper = true)
 @ToString
 @Setter
 @Getter
 @Slf4j
-public final class ChaseQuickPayAccountPayload extends PaymentAccountPayload {
+public final class ChaseQuickPayAccountPayload extends PaymentAccountPayload implements PayloadWithHolderName {
     private String email = "";
     private String holderName = "";
 
@@ -59,7 +55,7 @@ public final class ChaseQuickPayAccountPayload extends PaymentAccountPayload {
                                         String email,
                                         String holderName,
                                         long maxTradePeriod,
-                                        @Nullable Map<String, String> excludeFromJsonDataMap) {
+                                        Map<String, String> excludeFromJsonDataMap) {
         super(paymentMethod,
                 id,
                 maxTradePeriod,
@@ -84,7 +80,7 @@ public final class ChaseQuickPayAccountPayload extends PaymentAccountPayload {
                 proto.getChaseQuickPayAccountPayload().getEmail(),
                 proto.getChaseQuickPayAccountPayload().getHolderName(),
                 proto.getMaxTradePeriod(),
-                CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
+                new HashMap<>(proto.getExcludeFromJsonDataMap()));
     }
 
 
@@ -94,7 +90,8 @@ public final class ChaseQuickPayAccountPayload extends PaymentAccountPayload {
 
     @Override
     public String getPaymentDetails() {
-        return Res.get(paymentMethodId) + " - " + Res.getWithCol("payment.account.owner") + " " + holderName + ", " + Res.get("payment.email") + " " + email;
+        return Res.get(paymentMethodId) + " - " + Res.getWithCol("payment.account.owner") + " " + holderName + ", " +
+                Res.get("payment.email") + " " + email;
     }
 
     @Override
@@ -107,6 +104,11 @@ public final class ChaseQuickPayAccountPayload extends PaymentAccountPayload {
     public byte[] getAgeWitnessInputData() {
         // We don't add holderName because we don't want to break age validation if the user recreates an account with
         // slight changes in holder name (e.g. add or remove middle name)
-        return super.getAgeWitnessInputData(email.getBytes(Charset.forName("UTF-8")));
+        return super.getAgeWitnessInputData(email.getBytes(StandardCharsets.UTF_8));
+    }
+
+    @Override
+    public String getOwnerId() {
+        return holderName;
     }
 }

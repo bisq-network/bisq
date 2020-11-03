@@ -17,20 +17,19 @@
 
 package bisq.asset.coins;
 
-import bisq.asset.Base58BitcoinAddressValidator;
+import bisq.asset.Base58AddressValidator;
 import bisq.asset.Coin;
 import bisq.asset.NetworkParametersAdapter;
 
 public class Dash extends Coin {
     public Dash() {
-        super("Dash", "DASH", new Base58BitcoinAddressValidator(new DashMainNetParams()), Network.MAINNET);
+        super("Dash", "DASH", new Base58AddressValidator(new DashMainNetParams()), Network.MAINNET);
     }
 
     public static class DashMainNetParams extends NetworkParametersAdapter {
         public DashMainNetParams() {
             this.addressHeader = 76;
             this.p2shHeader = 16;
-            this.acceptableAddressCodes = new int[]{this.addressHeader, this.p2shHeader};
         }
     }
 }

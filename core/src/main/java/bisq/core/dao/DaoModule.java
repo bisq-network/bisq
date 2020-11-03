@@ -80,9 +80,9 @@ import bisq.core.dao.node.parser.BlockParser;
 import bisq.core.dao.node.parser.TxParser;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.DaoStateSnapshotService;
-import bisq.core.dao.state.DaoStateStorageService;
 import bisq.core.dao.state.GenesisTxInfo;
 import bisq.core.dao.state.model.DaoState;
+import bisq.core.dao.state.storage.DaoStateStorageService;
 import bisq.core.dao.state.unconfirmed.UnconfirmedBsqChangeOutputListService;
 
 import bisq.common.app.AppModule;

@@ -214,8 +214,6 @@ public abstract class DisputeAgentManager<T extends DisputeAgent> {
 
         observableMap.putAll(filtered);
         observableMap.values().forEach(this::addAcceptedDisputeAgentToUser);
-
-        log.info("Available disputeAgents: {}", observableMap.keySet());
     }
 
 

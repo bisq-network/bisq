@@ -72,4 +72,3 @@ public class MyProposalList extends PersistableList<Proposal> implements Consens
                 .collect(Collectors.toList());
     }
 }
-

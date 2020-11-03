@@ -29,8 +29,11 @@ import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -62,26 +65,16 @@ public class DefaultSeedNodeRepository implements SeedNodeRepository {
                 return;
             }
 
-            // else, we fetch the seed nodes from our resources
-            InputStream fileInputStream = DefaultSeedNodeRepository.class.getClassLoader().getResourceAsStream(config.baseCurrencyNetwork.name().toLowerCase() + ENDING);
-            BufferedReader seedNodeFile = new BufferedReader(new InputStreamReader(fileInputStream));
-
-            // only clear if we have a fresh data source (otherwise, an exception would prevent us from getting here)
             cache.clear();
-
-            // refill the cache
-            seedNodeFile.lines().forEach(line -> {
-                Matcher matcher = pattern.matcher(line);
-                if (matcher.find())
-                    cache.add(new NodeAddress(matcher.group(1)));
-
-                // Maybe better include in regex...
-                if (line.startsWith("localhost"))
-                    cache.add(new NodeAddress(line));
-            });
+            List<NodeAddress> result = getSeedNodeAddressesFromPropertyFile(config.baseCurrencyNetwork.name().toLowerCase());
+            cache.addAll(result);
 
             // filter
-            cache.removeAll(config.bannedSeedNodes.stream().map(NodeAddress::new).collect(Collectors.toSet()));
+            cache.removeAll(
+                    config.bannedSeedNodes.stream()
+                            .filter(n -> !n.isEmpty())
+                            .map(NodeAddress::new)
+                            .collect(Collectors.toSet()));
 
             log.info("Seed nodes: {}", cache);
         } catch (Throwable t) {
@@ -89,6 +82,34 @@ public class DefaultSeedNodeRepository implements SeedNodeRepository {
             t.printStackTrace();
             throw t;
         }
+    }
+
+    public static Optional<BufferedReader> readSeedNodePropertyFile(String fileName) {
+        InputStream fileInputStream = DefaultSeedNodeRepository.class.getClassLoader().getResourceAsStream(
+                fileName + ENDING);
+        if (fileInputStream == null) {
+            return Optional.empty();
+        }
+        return Optional.of(new BufferedReader(new InputStreamReader(fileInputStream)));
+    }
+
+    public static List<NodeAddress> getSeedNodeAddressesFromPropertyFile(String fileName) {
+        List<NodeAddress> list = new ArrayList<>();
+        readSeedNodePropertyFile(fileName).ifPresent(seedNodeFile -> {
+            seedNodeFile.lines().forEach(line -> {
+                Matcher matcher = pattern.matcher(line);
+                if (matcher.find())
+                    list.add(new NodeAddress(matcher.group(1)));
+
+                // Maybe better include in regex...
+                if (line.startsWith("localhost")) {
+                    String[] strings = line.split(" \\(@");
+                    String node = strings[0];
+                    list.add(new NodeAddress(node));
+                }
+            });
+        });
+        return list;
     }
 
     public Collection<NodeAddress> getSeedNodeAddresses() {

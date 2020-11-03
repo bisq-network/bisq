@@ -1,14 +1,12 @@
 package bisq.core.offer;
 
-import bisq.core.trade.TradableList;
-
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.peers.PeerManager;
 
+import bisq.common.file.CorruptedStorageFileHandler;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
-import bisq.common.storage.CorruptedDatabaseFilesHandler;
-import bisq.common.storage.Storage;
+import bisq.common.persistence.PersistenceManager;
 
 import java.nio.file.Files;
 
@@ -28,12 +26,12 @@ import static org.mockito.Mockito.*;
 
 public class OpenOfferManagerTest {
 
-    private CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler;
+    private CorruptedStorageFileHandler corruptedStorageFileHandler;
     private File storageDir;
 
     @Before
     public void setUp() throws Exception {
-        corruptedDatabaseFilesHandler = mock(CorruptedDatabaseFilesHandler.class);
+        corruptedStorageFileHandler = mock(CorruptedStorageFileHandler.class);
         storageDir = Files.createTempDirectory("storage").toFile();
     }
 
@@ -47,8 +45,8 @@ public class OpenOfferManagerTest {
         final OpenOfferManager manager = new OpenOfferManager(null, null, null, p2PService,
                 null, null, null, offerBookService,
                 null, null, null,
-                null, null, null, null, null,
-                new Storage<>(storageDir, null, corruptedDatabaseFilesHandler));
+                null, null, null, null, null, null,
+                new PersistenceManager<>(storageDir, null, corruptedStorageFileHandler));
 
         AtomicBoolean startEditOfferSuccessful = new AtomicBoolean(false);
 
@@ -58,7 +56,7 @@ public class OpenOfferManagerTest {
             return null;
         }).when(offerBookService).deactivateOffer(any(OfferPayload.class), any(ResultHandler.class), any(ErrorMessageHandler.class));
 
-        final OpenOffer openOffer = new OpenOffer(make(btcUsdOffer), null);
+        final OpenOffer openOffer = new OpenOffer(make(btcUsdOffer));
 
         ResultHandler resultHandler = () -> {
             startEditOfferSuccessful.set(true);
@@ -76,15 +74,13 @@ public class OpenOfferManagerTest {
     public void testStartEditOfferForDeactivatedOffer() throws IOException {
         P2PService p2PService = mock(P2PService.class);
         OfferBookService offerBookService = mock(OfferBookService.class);
-        Storage storage = mock(Storage.class);
-
         when(p2PService.getPeerManager()).thenReturn(mock(PeerManager.class));
 
         final OpenOfferManager manager = new OpenOfferManager(null, null, null, p2PService,
                 null, null, null, offerBookService,
                 null, null, null,
-                null, null, null, null, null,
-                new Storage<>(storageDir, null, corruptedDatabaseFilesHandler));
+                null, null, null, null, null, null,
+                new PersistenceManager<>(storageDir, null, corruptedStorageFileHandler));
 
         AtomicBoolean startEditOfferSuccessful = new AtomicBoolean(false);
 
@@ -92,7 +88,7 @@ public class OpenOfferManagerTest {
             startEditOfferSuccessful.set(true);
         };
 
-        final OpenOffer openOffer = new OpenOffer(make(btcUsdOffer), storage);
+        final OpenOffer openOffer = new OpenOffer(make(btcUsdOffer));
         openOffer.setState(OpenOffer.State.DEACTIVATED);
 
         manager.editOpenOfferStart(openOffer, resultHandler, null);
@@ -104,15 +100,14 @@ public class OpenOfferManagerTest {
     public void testStartEditOfferForOfferThatIsCurrentlyEdited() {
         P2PService p2PService = mock(P2PService.class);
         OfferBookService offerBookService = mock(OfferBookService.class);
-        Storage storage = mock(Storage.class);
 
         when(p2PService.getPeerManager()).thenReturn(mock(PeerManager.class));
 
         final OpenOfferManager manager = new OpenOfferManager(null, null, null, p2PService,
                 null, null, null, offerBookService,
                 null, null, null,
-                null, null, null, null, null,
-                new Storage<>(storageDir, null, corruptedDatabaseFilesHandler));
+                null, null, null, null, null, null,
+                new PersistenceManager<>(storageDir, null, corruptedStorageFileHandler));
 
         AtomicBoolean startEditOfferSuccessful = new AtomicBoolean(false);
 
@@ -120,7 +115,7 @@ public class OpenOfferManagerTest {
             startEditOfferSuccessful.set(true);
         };
 
-        final OpenOffer openOffer = new OpenOffer(make(btcUsdOffer), storage);
+        final OpenOffer openOffer = new OpenOffer(make(btcUsdOffer));
         openOffer.setState(OpenOffer.State.DEACTIVATED);
 
         manager.editOpenOfferStart(openOffer, resultHandler, null);

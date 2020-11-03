@@ -22,6 +22,7 @@ import bisq.desktop.common.model.ActivatableDataModel;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.trade.Trade;
+import bisq.core.trade.TradeManager;
 import bisq.core.trade.failed.FailedTradesManager;
 
 import com.google.inject.Inject;
@@ -35,13 +36,15 @@ import java.util.stream.Collectors;
 class FailedTradesDataModel extends ActivatableDataModel {
 
     private final FailedTradesManager failedTradesManager;
+    private final TradeManager tradeManager;
 
     private final ObservableList<FailedTradesListItem> list = FXCollections.observableArrayList();
     private final ListChangeListener<Trade> tradesListChangeListener;
 
     @Inject
-    public FailedTradesDataModel(FailedTradesManager failedTradesManager) {
+    public FailedTradesDataModel(FailedTradesManager failedTradesManager, TradeManager tradeManager) {
         this.failedTradesManager = failedTradesManager;
+        this.tradeManager = tradeManager;
 
         tradesListChangeListener = change -> applyList();
     }
@@ -49,12 +52,12 @@ class FailedTradesDataModel extends ActivatableDataModel {
     @Override
     protected void activate() {
         applyList();
-        failedTradesManager.getFailedTrades().addListener(tradesListChangeListener);
+        failedTradesManager.getObservableList().addListener(tradesListChangeListener);
     }
 
     @Override
     protected void deactivate() {
-        failedTradesManager.getFailedTrades().removeListener(tradesListChangeListener);
+        failedTradesManager.getObservableList().removeListener(tradesListChangeListener);
     }
 
     public ObservableList<FailedTradesListItem> getList() {
@@ -68,10 +71,22 @@ class FailedTradesDataModel extends ActivatableDataModel {
     private void applyList() {
         list.clear();
 
-        list.addAll(failedTradesManager.getFailedTrades().stream().map(FailedTradesListItem::new).collect(Collectors.toList()));
+        list.addAll(failedTradesManager.getObservableList().stream().map(FailedTradesListItem::new).collect(Collectors.toList()));
 
         // we sort by date, earliest first
         list.sort((o1, o2) -> o2.getTrade().getDate().compareTo(o1.getTrade().getDate()));
     }
 
+    public void onMoveTradeToPendingTrades(Trade trade) {
+        failedTradesManager.removeTrade(trade);
+        tradeManager.addFailedTradeToPendingTrades(trade);
+    }
+
+    public void unfailTrade(Trade trade) {
+        failedTradesManager.unFailTrade(trade);
+    }
+
+    public String checkUnfail(Trade trade) {
+        return failedTradesManager.checkUnFail(trade);
+    }
 }

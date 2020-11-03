@@ -17,8 +17,6 @@
 
 package bisq.desktop.util;
 
-import bisq.desktop.util.validation.RegexValidator;
-
 import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
@@ -39,7 +37,6 @@ import java.util.Locale;
 import java.util.Map;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import static bisq.desktop.maker.TradeCurrencyMakers.bitcoin;
@@ -50,8 +47,6 @@ import static com.natpryce.makeiteasy.MakeItEasy.with;
 import static org.bitcoinj.core.CoinMaker.oneBitcoin;
 import static org.bitcoinj.core.CoinMaker.satoshis;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -117,60 +112,6 @@ public class GUIUtilTest {
 
         assertEquals("https://www.github.com", captor.getValue().toString());
 */
-    }
-
-    @Test
-    public void testAddressRegexValidator() {
-        RegexValidator regexValidator = GUIUtil.addressRegexValidator();
-
-        assertTrue(regexValidator.validate("").isValid);
-        assertFalse(regexValidator.validate(" ").isValid);
-
-        // onion V2 addresses
-        assertTrue(regexValidator.validate("abcdefghij234567.onion").isValid);
-        assertTrue(regexValidator.validate("abcdefghijklmnop.onion,abcdefghijklmnop.onion").isValid);
-        assertTrue(regexValidator.validate("qrstuvwxyzABCDEF.onion,qrstuvwxyzABCDEF.onion,aaaaaaaaaaaaaaaa.onion").isValid);
-        assertTrue(regexValidator.validate("GHIJKLMNOPQRSTUV.onion:9999").isValid);
-        assertTrue(regexValidator.validate("WXYZ234567abcdef.onion,GHIJKLMNOPQRSTUV.onion:9999").isValid);
-        assertTrue(regexValidator.validate("aaaaaaaaaaaaaaaa.onion:9999,WXYZ234567abcdef.onion:9999,2222222222222222.onion:9999").isValid);
-        assertFalse(regexValidator.validate("abcd.onion").isValid);
-        assertFalse(regexValidator.validate("abcdefghijklmnop,abcdefghijklmnop.onion").isValid);
-        assertFalse(regexValidator.validate("abcdefghi2345689.onion:9999").isValid);
-        assertFalse(regexValidator.validate("onion:9999,abcdefghijklmnop.onion:9999").isValid);
-        assertFalse(regexValidator.validate("abcdefghijklmnop.onion:").isValid);
-
-        // onion v3 addresses
-        assertFalse(regexValidator.validate("32zzibxmqi2ybxpqyggwwuwz7a3lbvtzoloti7cxoevyvijexvgsfeid.onion:8333").isValid);
-
-        // ipv4 addresses
-        assertTrue(regexValidator.validate("12.34.56.78").isValid);
-        assertTrue(regexValidator.validate("12.34.56.78,87.65.43.21").isValid);
-        assertTrue(regexValidator.validate("12.34.56.78:8888").isValid);
-        assertFalse(regexValidator.validate("12.34.56.788").isValid);
-        assertFalse(regexValidator.validate("12.34.56.78:").isValid);
-
-        // ipv6 addresses
-        assertTrue(regexValidator.validate("FE80:0000:0000:0000:0202:B3FF:FE1E:8329").isValid);
-        assertTrue(regexValidator.validate("FE80::0202:B3FF:FE1E:8329").isValid);
-        assertTrue(regexValidator.validate("FE80::0202:B3FF:FE1E:8329,FE80:0000:0000:0000:0202:B3FF:FE1E:8329").isValid);
-        assertTrue(regexValidator.validate("::1").isValid);
-        assertTrue(regexValidator.validate("fe80::").isValid);
-        assertTrue(regexValidator.validate("2001::").isValid);
-        assertTrue(regexValidator.validate("[::1]:8333").isValid);
-        assertTrue(regexValidator.validate("[FE80::0202:B3FF:FE1E:8329]:8333").isValid);
-        assertTrue(regexValidator.validate("[2001:db8::1]:80").isValid);
-        assertTrue(regexValidator.validate("[aaaa::bbbb]:8333").isValid);
-        assertFalse(regexValidator.validate("1200:0000:AB00:1234:O000:2552:7777:1313").isValid);
-
-        // fqdn addresses
-        assertTrue(regexValidator.validate("example.com").isValid);
-        assertTrue(regexValidator.validate("mynode.local:8333").isValid);
-        assertTrue(regexValidator.validate("foo.example.com,bar.example.com").isValid);
-        assertTrue(regexValidator.validate("foo.example.com:8333,bar.example.com:8333").isValid);
-
-        assertFalse(regexValidator.validate("mynode.local:65536").isValid);
-        assertFalse(regexValidator.validate("-example.com").isValid);
-        assertFalse(regexValidator.validate("example-.com").isValid);
     }
 
     @Test

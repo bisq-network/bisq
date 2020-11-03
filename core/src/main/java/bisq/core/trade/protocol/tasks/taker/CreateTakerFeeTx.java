@@ -22,9 +22,9 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.btc.wallet.WalletService;
 import bisq.core.dao.exceptions.DaoDisabledException;
-import bisq.core.dao.governance.param.Param;
 import bisq.core.trade.Trade;
 import bisq.core.trade.protocol.tasks.TradeTask;
+import bisq.core.util.FeeReceiverSelector;
 
 import bisq.common.taskrunner.TaskRunner;
 
@@ -36,8 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class CreateTakerFeeTx extends TradeTask {
 
-    @SuppressWarnings({"unused"})
-    public CreateTakerFeeTx(TaskRunner taskHandler, Trade trade) {
+    public CreateTakerFeeTx(TaskRunner<Trade> taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -51,27 +50,29 @@ public class CreateTakerFeeTx extends TradeTask {
 
             // We enforce here to create a MULTI_SIG and TRADE_PAYOUT address entry to avoid that the change output would be used later
             // for those address entries. Because we do not commit our fee tx yet the change address would
-            // appear as unused and therefor selected for the outputs for the MS tx.
+            // appear as unused and therefore selected for the outputs for the MS tx.
             // That would cause incorrect display of the balance as
             // the change output would be considered as not available balance (part of the locked trade amount).
-            walletService.getNewAddressEntry(id, AddressEntry.Context.MULTI_SIG);
-            walletService.getNewAddressEntry(id, AddressEntry.Context.TRADE_PAYOUT);
+            walletService.getOrCreateAddressEntry(id, AddressEntry.Context.MULTI_SIG);
+            walletService.getOrCreateAddressEntry(id, AddressEntry.Context.TRADE_PAYOUT);
 
-            AddressEntry addressEntry = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.OFFER_FUNDING);
+            AddressEntry fundingAddressEntry = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.OFFER_FUNDING);
             AddressEntry reservedForTradeAddressEntry = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.RESERVED_FOR_TRADE);
             AddressEntry changeAddressEntry = walletService.getFreshAddressEntry();
-            Address fundingAddress = addressEntry.getAddress();
+            Address fundingAddress = fundingAddressEntry.getAddress();
             Address reservedForTradeAddress = reservedForTradeAddressEntry.getAddress();
             Address changeAddress = changeAddressEntry.getAddress();
             TradeWalletService tradeWalletService = processModel.getTradeWalletService();
             Transaction transaction;
-            String feeReceiver = processModel.getDaoFacade().getParamValue(Param.RECIPIENT_BTC_ADDRESS);
+
+            String feeReceiver = FeeReceiverSelector.getAddress(processModel.getDaoFacade(), processModel.getFilterManager());
+
             if (trade.isCurrencyForTakerFeeBtc()) {
                 transaction = tradeWalletService.createBtcTradingFeeTx(
                         fundingAddress,
                         reservedForTradeAddress,
                         changeAddress,
-                        processModel.getFundsNeededForTradeAsLong(),
+                        processModel.getFundsNeededForTrade(),
                         processModel.isUseSavingsWallet(),
                         trade.getTakerFee(),
                         trade.getTxFee(),
@@ -84,7 +85,7 @@ public class CreateTakerFeeTx extends TradeTask {
                         fundingAddress,
                         reservedForTradeAddress,
                         changeAddress,
-                        processModel.getFundsNeededForTradeAsLong(),
+                        processModel.getFundsNeededForTrade(),
                         processModel.isUseSavingsWallet(),
                         trade.getTxFee());
                 transaction = processModel.getBsqWalletService().signTx(txWithBsqFee);
@@ -94,7 +95,9 @@ public class CreateTakerFeeTx extends TradeTask {
             // We did not broadcast and commit the tx yet to avoid issues with lost trade fee in case the
             // take offer attempt failed.
 
-            trade.setTakerFeeTxId(transaction.getHashAsString());
+            // We do not set the takerFeeTxId yet to trade as it is not published.
+            processModel.setTakeOfferFeeTxId(transaction.getTxId().toString());
+
             processModel.setTakeOfferFeeTx(transaction);
             walletService.swapTradeEntryToAvailableEntry(id, AddressEntry.Context.OFFER_FUNDING);
             complete();

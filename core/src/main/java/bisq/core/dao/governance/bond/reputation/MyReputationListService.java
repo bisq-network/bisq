@@ -20,8 +20,8 @@ package bisq.core.dao.governance.bond.reputation;
 import bisq.core.dao.DaoSetupService;
 
 import bisq.common.app.DevEnv;
+import bisq.common.persistence.PersistenceManager;
 import bisq.common.proto.persistable.PersistedDataHost;
-import bisq.common.storage.Storage;
 
 import javax.inject.Inject;
 
@@ -35,7 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class MyReputationListService implements PersistedDataHost, DaoSetupService {
 
-    private final Storage<MyReputationList> storage;
+    private final PersistenceManager<MyReputationList> persistenceManager;
     private final MyReputationList myReputationList = new MyReputationList();
 
 
@@ -44,8 +44,9 @@ public class MyReputationListService implements PersistedDataHost, DaoSetupServi
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public MyReputationListService(Storage<MyReputationList> storage) {
-        this.storage = storage;
+    public MyReputationListService(PersistenceManager<MyReputationList> persistenceManager) {
+        this.persistenceManager = persistenceManager;
+        persistenceManager.initialize(myReputationList, PersistenceManager.Source.PRIVATE);
     }
 
 
@@ -54,13 +55,15 @@ public class MyReputationListService implements PersistedDataHost, DaoSetupServi
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void readPersisted() {
+    public void readPersisted(Runnable completeHandler) {
         if (DevEnv.isDaoActivated()) {
-            MyReputationList persisted = storage.initAndGetPersisted(myReputationList, 100);
-            if (persisted != null) {
-                myReputationList.clear();
-                myReputationList.addAll(persisted.getList());
-            }
+            persistenceManager.readPersisted(persisted -> {
+                        myReputationList.setAll(persisted.getList());
+                        completeHandler.run();
+                    },
+                    completeHandler);
+        } else {
+            completeHandler.run();
         }
     }
 
@@ -84,7 +87,7 @@ public class MyReputationListService implements PersistedDataHost, DaoSetupServi
     public void addReputation(MyReputation reputation) {
         if (!myReputationList.contains(reputation)) {
             myReputationList.add(reputation);
-            persist();
+            requestPersistence();
         }
     }
 
@@ -97,7 +100,7 @@ public class MyReputationListService implements PersistedDataHost, DaoSetupServi
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void persist() {
-        storage.queueUpForSave(20);
+    private void requestPersistence() {
+        persistenceManager.requestPersistence();
     }
 }

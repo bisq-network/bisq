@@ -20,14 +20,9 @@ package bisq.core.trade;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.offer.Offer;
 import bisq.core.proto.CoreProtoResolver;
-import bisq.core.trade.messages.InputsForDepositTxRequest;
-import bisq.core.trade.protocol.MakerProtocol;
-import bisq.core.trade.protocol.SellerAsMakerProtocol;
+import bisq.core.trade.protocol.ProcessModel;
 
 import bisq.network.p2p.NodeAddress;
-
-import bisq.common.handlers.ErrorMessageHandler;
-import bisq.common.storage.Storage;
 
 import org.bitcoinj.core.Coin;
 
@@ -49,8 +44,8 @@ public final class SellerAsMakerTrade extends SellerTrade implements MakerTrade 
                               @Nullable NodeAddress arbitratorNodeAddress,
                               @Nullable NodeAddress mediatorNodeAddress,
                               @Nullable NodeAddress refundAgentNodeAddress,
-                              Storage<? extends TradableList> storage,
-                              BtcWalletService btcWalletService) {
+                              BtcWalletService btcWalletService,
+                              ProcessModel processModel) {
         super(offer,
                 txFee,
                 takerFee,
@@ -58,8 +53,8 @@ public final class SellerAsMakerTrade extends SellerTrade implements MakerTrade 
                 arbitratorNodeAddress,
                 mediatorNodeAddress,
                 refundAgentNodeAddress,
-                storage,
-                btcWalletService);
+                btcWalletService,
+                processModel);
     }
 
 
@@ -76,10 +71,10 @@ public final class SellerAsMakerTrade extends SellerTrade implements MakerTrade 
     }
 
     public static Tradable fromProto(protobuf.SellerAsMakerTrade sellerAsMakerTradeProto,
-                                     Storage<? extends TradableList> storage,
                                      BtcWalletService btcWalletService,
                                      CoreProtoResolver coreProtoResolver) {
         protobuf.Trade proto = sellerAsMakerTradeProto.getTrade();
+        ProcessModel processModel = ProcessModel.fromProto(proto.getProcessModel(), coreProtoResolver);
         SellerAsMakerTrade trade = new SellerAsMakerTrade(
                 Offer.fromProto(proto.getOffer()),
                 Coin.valueOf(proto.getTxFeeAsLong()),
@@ -88,8 +83,8 @@ public final class SellerAsMakerTrade extends SellerTrade implements MakerTrade 
                 proto.hasArbitratorNodeAddress() ? NodeAddress.fromProto(proto.getArbitratorNodeAddress()) : null,
                 proto.hasMediatorNodeAddress() ? NodeAddress.fromProto(proto.getMediatorNodeAddress()) : null,
                 proto.hasRefundAgentNodeAddress() ? NodeAddress.fromProto(proto.getRefundAgentNodeAddress()) : null,
-                storage,
-                btcWalletService);
+                btcWalletService,
+                processModel);
 
         trade.setTradeAmountAsLong(proto.getTradeAmountAsLong());
         trade.setTradePrice(proto.getTradePrice());
@@ -98,20 +93,5 @@ public final class SellerAsMakerTrade extends SellerTrade implements MakerTrade 
         return fromProto(trade,
                 proto,
                 coreProtoResolver);
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // API
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    protected void createTradeProtocol() {
-        tradeProtocol = new SellerAsMakerProtocol(this);
-    }
-
-    @Override
-    public void handleTakeOfferRequest(InputsForDepositTxRequest message, NodeAddress taker, ErrorMessageHandler errorMessageHandler) {
-        ((MakerProtocol) tradeProtocol).handleTakeOfferRequest(message, taker, errorMessageHandler);
     }
 }

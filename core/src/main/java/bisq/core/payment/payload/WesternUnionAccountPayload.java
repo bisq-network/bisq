@@ -21,11 +21,9 @@ import bisq.core.locale.BankUtil;
 import bisq.core.locale.CountryUtil;
 import bisq.core.locale.Res;
 
-import bisq.common.util.CollectionUtils;
-
 import com.google.protobuf.Message;
 
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -36,14 +34,12 @@ import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.annotation.Nullable;
-
 @EqualsAndHashCode(callSuper = true)
 @ToString
 @Setter
 @Getter
 @Slf4j
-public class WesternUnionAccountPayload extends CountryBasedPaymentAccountPayload {
+public class WesternUnionAccountPayload extends CountryBasedPaymentAccountPayload implements PayloadWithHolderName {
     private String holderName;
     private String city;
     private String state = ""; // is optional. we don't use @Nullable because it would makes UI code more complex.
@@ -66,7 +62,7 @@ public class WesternUnionAccountPayload extends CountryBasedPaymentAccountPayloa
                                        String state,
                                        String email,
                                        long maxTradePeriod,
-                                       @Nullable Map<String, String> excludeFromJsonDataMap) {
+                                       Map<String, String> excludeFromJsonDataMap) {
         super(paymentMethodName,
                 id,
                 countryCode,
@@ -106,7 +102,7 @@ public class WesternUnionAccountPayload extends CountryBasedPaymentAccountPayloa
                 westernUnionAccountPayload.getState(),
                 westernUnionAccountPayload.getEmail(),
                 proto.getMaxTradePeriod(),
-                CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
+                new HashMap<>(proto.getExcludeFromJsonDataMap()));
     }
 
 
@@ -121,7 +117,8 @@ public class WesternUnionAccountPayload extends CountryBasedPaymentAccountPayloa
 
     @Override
     public String getPaymentDetailsForTradePopup() {
-        String cityState = BankUtil.isStateRequired(countryCode) ? (Res.get("payment.account.city") + " / " + Res.getWithCol("payment.account.state") + " " + city + " / " + state + "\n")
+        String cityState = BankUtil.isStateRequired(countryCode)
+                ? (Res.get("payment.account.city") + " / " + Res.getWithCol("payment.account.state") + " " + city + " / " + state + "\n")
                 : (Res.getWithCol("payment.account.city") + " " + city + "\n");
         return Res.getWithCol("payment.account.fullName") + " " + holderName + "\n" +
                 cityState +
@@ -134,6 +131,6 @@ public class WesternUnionAccountPayload extends CountryBasedPaymentAccountPayloa
         String all = this.countryCode +
                 this.holderName +
                 this.email;
-        return super.getAgeWitnessInputData(all.getBytes(Charset.forName("UTF-8")));
+        return super.getAgeWitnessInputData(all.getBytes(StandardCharsets.UTF_8));
     }
 }

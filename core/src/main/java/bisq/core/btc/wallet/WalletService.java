@@ -37,42 +37,49 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Context;
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.InsufficientMoneyException;
+import org.bitcoinj.core.LegacyAddress;
 import org.bitcoinj.core.NetworkParameters;
-import org.bitcoinj.core.ScriptException;
 import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionConfidence;
 import org.bitcoinj.core.TransactionInput;
 import org.bitcoinj.core.TransactionOutput;
+import org.bitcoinj.core.TransactionWitness;
 import org.bitcoinj.core.VerificationException;
 import org.bitcoinj.core.listeners.NewBestBlockListener;
+import org.bitcoinj.core.listeners.TransactionConfidenceEventListener;
 import org.bitcoinj.crypto.DeterministicKey;
 import org.bitcoinj.crypto.KeyCrypter;
 import org.bitcoinj.crypto.KeyCrypterScrypt;
 import org.bitcoinj.crypto.TransactionSignature;
 import org.bitcoinj.script.Script;
+import org.bitcoinj.script.ScriptBuilder;
 import org.bitcoinj.script.ScriptChunk;
+import org.bitcoinj.script.ScriptException;
+import org.bitcoinj.script.ScriptPattern;
 import org.bitcoinj.signers.TransactionSigner;
 import org.bitcoinj.utils.Threading;
 import org.bitcoinj.wallet.DecryptingKeyBag;
 import org.bitcoinj.wallet.DeterministicSeed;
 import org.bitcoinj.wallet.KeyBag;
-import org.bitcoinj.wallet.KeyChain;
 import org.bitcoinj.wallet.RedeemData;
 import org.bitcoinj.wallet.SendRequest;
 import org.bitcoinj.wallet.Wallet;
-import org.bitcoinj.wallet.listeners.AbstractWalletEventListener;
-import org.bitcoinj.wallet.listeners.WalletEventListener;
+import org.bitcoinj.wallet.listeners.WalletChangeEventListener;
+import org.bitcoinj.wallet.listeners.WalletCoinsReceivedEventListener;
+import org.bitcoinj.wallet.listeners.WalletCoinsSentEventListener;
+import org.bitcoinj.wallet.listeners.WalletReorganizeEventListener;
 
 import javax.inject.Inject;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.MoreExecutors;
 
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 
-import org.spongycastle.crypto.params.KeyParameter;
+import org.bouncycastle.crypto.params.KeyParameter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -99,8 +106,7 @@ public abstract class WalletService {
     protected final Preferences preferences;
     protected final FeeService feeService;
     protected final NetworkParameters params;
-    @SuppressWarnings("deprecation")
-    protected final WalletEventListener walletEventListener = new BisqWalletListener();
+    protected final BisqWalletListener walletEventListener = new BisqWalletListener();
     protected final CopyOnWriteArraySet<AddressConfidenceListener> addressConfidenceListeners = new CopyOnWriteArraySet<>();
     protected final CopyOnWriteArraySet<TxConfidenceListener> txConfidenceListeners = new CopyOnWriteArraySet<>();
     protected final CopyOnWriteArraySet<BalanceListener> balanceListeners = new CopyOnWriteArraySet<>();
@@ -133,9 +139,13 @@ public abstract class WalletService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void shutDown() {
-        if (wallet != null)
+        if (wallet != null) {
             //noinspection deprecation
-            wallet.removeEventListener(walletEventListener);
+            wallet.removeCoinsReceivedEventListener(walletEventListener);
+            wallet.removeCoinsSentEventListener(walletEventListener);
+            wallet.removeReorganizeEventListener(walletEventListener);
+            wallet.removeTransactionConfidenceEventListener(walletEventListener);
+        }
     }
 
 
@@ -231,17 +241,11 @@ public abstract class WalletService {
                                       int inputIndex) throws TransactionVerificationException {
         try {
             checkNotNull(input.getConnectedOutput(), "input.getConnectedOutput() must not be null");
-            input.getScriptSig().correctlySpends(transaction, inputIndex, input.getConnectedOutput().getScriptPubKey(), Script.ALL_VERIFY_FLAGS);
+            input.getScriptSig().correctlySpends(transaction, inputIndex, input.getWitness(), input.getValue(), input.getConnectedOutput().getScriptPubKey(), Script.ALL_VERIFY_FLAGS);
         } catch (Throwable t) {
             t.printStackTrace();
             log.error(t.getMessage());
             throw new TransactionVerificationException(t);
-        }
-    }
-
-    public static void removeSignatures(Transaction transaction) {
-        for (TransactionInput input : transaction.getInputs()) {
-            input.setScriptSig(new Script(new byte[]{}));
         }
     }
 
@@ -261,7 +265,7 @@ public abstract class WalletService {
                 // We assume if it's already signed, it's hopefully got a SIGHASH type that will not invalidate when
                 // we sign missing pieces (to check this would require either assuming any signatures are signing
                 // standard output types or a way to get processed signatures out of script execution)
-                txIn.getScriptSig().correctlySpends(tx, index, txIn.getConnectedOutput().getScriptPubKey(), Script.ALL_VERIFY_FLAGS);
+                txIn.getScriptSig().correctlySpends(tx, index, txIn.getWitness(), txIn.getValue(), txIn.getConnectedOutput().getScriptPubKey(), Script.ALL_VERIFY_FLAGS);
                 log.warn("Input {} already correctly spends output, assuming SIGHASH type used will be safe and skipping signing.", index);
                 return;
             } catch (ScriptException e) {
@@ -284,7 +288,7 @@ public abstract class WalletService {
                         // We assume if it's already signed, it's hopefully got a SIGHASH type that will not invalidate when
                         // we sign missing pieces (to check this would require either assuming any signatures are signing
                         // standard output types or a way to get processed signatures out of script execution)
-                        txIn.getScriptSig().correctlySpends(tx, index, txIn.getConnectedOutput().getScriptPubKey(), Script.ALL_VERIFY_FLAGS);
+                        txIn.getScriptSig().correctlySpends(tx, index, txIn.getWitness(), txIn.getValue(), txIn.getConnectedOutput().getScriptPubKey(), Script.ALL_VERIFY_FLAGS);
                         log.warn("Input {} already correctly spends output, assuming SIGHASH type used will be safe and skipping signing.", index);
                         return;
                     } catch (ScriptException e) {
@@ -308,14 +312,37 @@ public abstract class WalletService {
 
                 Script inputScript = txIn.getScriptSig();
                 byte[] script = redeemData.redeemScript.getProgram();
-                try {
-                    TransactionSignature signature = partialTx.calculateSignature(index, key, script, Transaction.SigHash.ALL, false);
-                    inputScript = scriptPubKey.getScriptSigWithSignature(inputScript, signature.encodeToBitcoin(), 0);
-                    txIn.setScriptSig(inputScript);
-                } catch (ECKey.KeyIsEncryptedException e1) {
-                    throw e1;
-                } catch (ECKey.MissingPrivateKeyException e1) {
-                    log.warn("No private key in keypair for input {}", index);
+
+                if (ScriptPattern.isP2PK(scriptPubKey) || ScriptPattern.isP2PKH(scriptPubKey)) {
+                    try {
+                        TransactionSignature signature = partialTx.calculateSignature(index, key, script, Transaction.SigHash.ALL, false);
+                        inputScript = scriptPubKey.getScriptSigWithSignature(inputScript, signature.encodeToBitcoin(), 0);
+                        txIn.setScriptSig(inputScript);
+                    } catch (ECKey.KeyIsEncryptedException e1) {
+                        throw e1;
+                    } catch (ECKey.MissingPrivateKeyException e1) {
+                        log.warn("No private key in keypair for input {}", index);
+                    }
+                } else if (ScriptPattern.isP2WPKH(scriptPubKey)) {
+                    try {
+                        // TODO: Consider using this alternative way to build the scriptCode (taken from bitcoinj master)
+                        // Script scriptCode = ScriptBuilder.createP2PKHOutputScript(key);
+                        Script scriptCode = new ScriptBuilder().data(
+                                ScriptBuilder.createOutputScript(LegacyAddress.fromKey(tx.getParams(), key)).getProgram())
+                                .build();
+                        Coin value = txIn.getValue();
+                        TransactionSignature txSig = tx.calculateWitnessSignature(index, key, scriptCode, value,
+                                Transaction.SigHash.ALL, false);
+                        txIn.setScriptSig(ScriptBuilder.createEmpty());
+                        txIn.setWitness(TransactionWitness.redeemP2WPKH(txSig, key));
+                    } catch (ECKey.KeyIsEncryptedException e1) {
+                        throw e1;
+                    } catch (ECKey.MissingPrivateKeyException e1) {
+                        log.warn("No private key in keypair for input {}", index);
+                    }
+                } else {
+                    // log.error("Unexpected script type.");
+                    throw new RuntimeException("Unexpected script type.");
                 }
             } else {
                 log.warn("Missing connected output, assuming input {} is already signed.", index);
@@ -330,9 +357,12 @@ public abstract class WalletService {
     // Broadcast tx
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-
     public void broadcastTx(Transaction tx, TxBroadcaster.Callback callback) {
         TxBroadcaster.broadcastTx(wallet, walletsSetup.getPeerGroup(), tx, callback);
+    }
+
+    public void broadcastTx(Transaction tx, TxBroadcaster.Callback callback, int timeOut) {
+        TxBroadcaster.broadcastTx(wallet, walletsSetup.getPeerGroup(), tx, callback, timeOut);
     }
 
 
@@ -358,7 +388,7 @@ public abstract class WalletService {
         if (wallet != null) {
             Set<Transaction> transactions = wallet.getTransactions(false);
             for (Transaction tx : transactions) {
-                if (tx.getHashAsString().equals(txId))
+                if (tx.getTxId().toString().equals(txId))
                     return tx.getConfidence();
             }
         }
@@ -484,30 +514,30 @@ public abstract class WalletService {
     // Empty complete Wallet
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void emptyWallet(String toAddress,
-                            KeyParameter aesKey,
-                            ResultHandler resultHandler,
-                            ErrorMessageHandler errorMessageHandler)
+    public void emptyBtcWallet(String toAddress,
+                               KeyParameter aesKey,
+                               ResultHandler resultHandler,
+                               ErrorMessageHandler errorMessageHandler)
             throws InsufficientMoneyException, AddressFormatException {
-        SendRequest sendRequest = SendRequest.emptyWallet(Address.fromBase58(params, toAddress));
+        SendRequest sendRequest = SendRequest.emptyWallet(Address.fromString(params, toAddress));
         sendRequest.fee = Coin.ZERO;
         sendRequest.feePerKb = getTxFeeForWithdrawalPerByte().multiply(1000);
         sendRequest.aesKey = aesKey;
         Wallet.SendResult sendResult = wallet.sendCoins(sendRequest);
-        printTx("empty wallet", sendResult.tx);
+        printTx("empty btc wallet", sendResult.tx);
         Futures.addCallback(sendResult.broadcastComplete, new FutureCallback<Transaction>() {
             @Override
             public void onSuccess(Transaction result) {
-                log.info("emptyWallet onSuccess Transaction=" + result);
+                log.info("emptyBtcWallet onSuccess Transaction=" + result);
                 resultHandler.handleResult();
             }
 
             @Override
             public void onFailure(@NotNull Throwable t) {
-                log.error("emptyWallet onFailure " + t.toString());
+                log.error("emptyBtcWallet onFailure " + t.toString());
                 errorMessageHandler.handleErrorMessage(t.getMessage());
             }
-        });
+        }, MoreExecutors.directExecutor());
     }
 
 
@@ -537,16 +567,12 @@ public abstract class WalletService {
     // Wallet delegates to avoid direct access to wallet outside the service class
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @SuppressWarnings("deprecation")
-    public void addEventListener(WalletEventListener listener) {
-        //noinspection deprecation
-        wallet.addEventListener(listener, Threading.USER_THREAD);
+    public void addChangeEventListener(WalletChangeEventListener listener) {
+        wallet.addChangeEventListener(Threading.USER_THREAD, listener);
     }
 
-    @SuppressWarnings("deprecation")
-    public boolean removeEventListener(WalletEventListener listener) {
-        //noinspection deprecation
-        return wallet.removeEventListener(listener);
+    public void removeChangeEventListener(WalletChangeEventListener listener) {
+        wallet.removeChangeEventListener(listener);
     }
 
     @SuppressWarnings("deprecation")
@@ -582,18 +608,9 @@ public abstract class WalletService {
         return wallet.checkAESKey(aesKey);
     }
 
-    public DeterministicKey freshKey(KeyChain.KeyPurpose purpose) {
-        return wallet.freshKey(purpose);
-    }
-
-    @Nullable
-    public DeterministicKey findKeyFromPubKeyHash(byte[] pubKeyHash) {
-        return wallet.getActiveKeyChain().findKeyFromPubHash(pubKeyHash);
-    }
-
     @Nullable
     public DeterministicKey findKeyFromPubKey(byte[] pubKey) {
-        return wallet.getActiveKeyChain().findKeyFromPubKey(pubKey);
+        return (DeterministicKey) wallet.findKeyFromPubKey(pubKey);
     }
 
     public boolean isEncrypted() {
@@ -607,6 +624,22 @@ public abstract class WalletService {
 
     public int getLastBlockSeenHeight() {
         return wallet.getLastBlockSeenHeight();
+    }
+
+    /**
+     * Check if there are more than 20 unconfirmed transactions in the chain right now.
+     *
+     * @return true when queue is full
+     */
+    public boolean isUnconfirmedTransactionsLimitHit() {
+        // For published delayed payout transactions we do not receive the tx confidence
+        // so we cannot check if it is confirmed so we ignore it for that check. The check is any arbitrarily
+        // using a limit of 20, so we don't need to be exact here. Should just reduce the likelihood of issues with
+        // the too long chains of unconfirmed transactions.
+        return getTransactions(false).stream()
+                .filter(tx -> tx.getLockTime() == 0)
+                .filter(Transaction::isPending)
+                .count() > 20;
     }
 
     public Set<Transaction> getTransactions(boolean includeDead) {
@@ -670,8 +703,9 @@ public abstract class WalletService {
     }
 
     public static boolean isOutputScriptConvertibleToAddress(TransactionOutput output) {
-        return output.getScriptPubKey().isSentToAddress() ||
-                output.getScriptPubKey().isPayToScriptHash();
+        return ScriptPattern.isP2PKH(output.getScriptPubKey()) ||
+                ScriptPattern.isP2SH(output.getScriptPubKey()) ||
+                ScriptPattern.isP2WH(output.getScriptPubKey());
     }
 
     @Nullable
@@ -696,7 +730,7 @@ public abstract class WalletService {
                                                  Wallet wallet,
                                                  TransactionConfidence.Source source) throws VerificationException {
         Transaction tx = new Transaction(wallet.getParams(), serializedTransaction);
-        Transaction walletTransaction = wallet.getTransaction(tx.getHash());
+        Transaction walletTransaction = wallet.getTransaction(tx.getTxId());
 
         if (walletTransaction == null) {
             // We need to recreate the transaction otherwise we get a null pointer...
@@ -725,13 +759,12 @@ public abstract class WalletService {
         return maybeAddTxToWallet(transaction.bitcoinSerialize(), wallet, source);
     }
 
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // bisqWalletEventListener
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @SuppressWarnings("deprecation")
-    public class BisqWalletListener extends AbstractWalletEventListener {
+    public class BisqWalletListener implements WalletCoinsReceivedEventListener, WalletCoinsSentEventListener, WalletReorganizeEventListener, TransactionConfidenceEventListener {
         @Override
         public void onCoinsReceived(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
             notifyBalanceListeners(tx);
@@ -758,9 +791,9 @@ public abstract class WalletService {
             }
             txConfidenceListeners.stream()
                     .filter(txConfidenceListener -> tx != null &&
-                            tx.getHashAsString() != null &&
+                            tx.getTxId().toString() != null &&
                             txConfidenceListener != null &&
-                            tx.getHashAsString().equals(txConfidenceListener.getTxID()))
+                            tx.getTxId().toString().equals(txConfidenceListener.getTxID()))
                     .forEach(txConfidenceListener ->
                             txConfidenceListener.onTransactionConfidenceChanged(tx.getConfidence()));
         }

@@ -24,6 +24,7 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 
 import java.util.Map;
@@ -43,7 +44,7 @@ public class PriceRequest {
         final String baseUrl = provider.getBaseUrl();
         final SettableFuture<Tuple2<Map<String, Long>, Map<String, MarketPrice>>> resultFuture = SettableFuture.create();
         ListenableFuture<Tuple2<Map<String, Long>, Map<String, MarketPrice>>> future = executorService.submit(() -> {
-            Thread.currentThread().setName("PriceRequest-" + provider.toString());
+            Thread.currentThread().setName("PriceRequest-" + provider.getBaseUrl());
             return provider.getAll();
         });
 
@@ -56,7 +57,7 @@ public class PriceRequest {
             public void onFailure(@NotNull Throwable throwable) {
                 resultFuture.setException(new PriceRequestException(throwable, baseUrl));
             }
-        });
+        }, MoreExecutors.directExecutor());
 
         return resultFuture;
     }

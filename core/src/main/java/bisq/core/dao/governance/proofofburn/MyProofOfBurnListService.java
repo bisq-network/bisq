@@ -20,8 +20,8 @@ package bisq.core.dao.governance.proofofburn;
 import bisq.core.dao.DaoSetupService;
 
 import bisq.common.app.DevEnv;
+import bisq.common.persistence.PersistenceManager;
 import bisq.common.proto.persistable.PersistedDataHost;
-import bisq.common.storage.Storage;
 
 import javax.inject.Inject;
 
@@ -35,7 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class MyProofOfBurnListService implements PersistedDataHost, DaoSetupService {
 
-    private final Storage<MyProofOfBurnList> storage;
+    private final PersistenceManager<MyProofOfBurnList> persistenceManager;
     private final MyProofOfBurnList myProofOfBurnList = new MyProofOfBurnList();
 
 
@@ -44,8 +44,9 @@ public class MyProofOfBurnListService implements PersistedDataHost, DaoSetupServ
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public MyProofOfBurnListService(Storage<MyProofOfBurnList> storage) {
-        this.storage = storage;
+    public MyProofOfBurnListService(PersistenceManager<MyProofOfBurnList> persistenceManager) {
+        this.persistenceManager = persistenceManager;
+        persistenceManager.initialize(myProofOfBurnList, PersistenceManager.Source.PRIVATE);
     }
 
 
@@ -54,13 +55,15 @@ public class MyProofOfBurnListService implements PersistedDataHost, DaoSetupServ
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void readPersisted() {
+    public void readPersisted(Runnable completeHandler) {
         if (DevEnv.isDaoActivated()) {
-            MyProofOfBurnList persisted = storage.initAndGetPersisted(myProofOfBurnList, 100);
-            if (persisted != null) {
-                myProofOfBurnList.clear();
-                myProofOfBurnList.addAll(persisted.getList());
-            }
+            persistenceManager.readPersisted(persisted -> {
+                        myProofOfBurnList.setAll(persisted.getList());
+                        completeHandler.run();
+                    },
+                    completeHandler);
+        } else {
+            completeHandler.run();
         }
     }
 
@@ -85,7 +88,7 @@ public class MyProofOfBurnListService implements PersistedDataHost, DaoSetupServ
     public void addMyProofOfBurn(MyProofOfBurn myProofOfBurn) {
         if (!myProofOfBurnList.contains(myProofOfBurn)) {
             myProofOfBurnList.add(myProofOfBurn);
-            persist();
+            requestPersistence();
         }
     }
 
@@ -98,7 +101,7 @@ public class MyProofOfBurnListService implements PersistedDataHost, DaoSetupServ
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void persist() {
-        storage.queueUpForSave(20);
+    private void requestPersistence() {
+        persistenceManager.requestPersistence();
     }
 }

@@ -19,8 +19,6 @@ package bisq.core.payment.payload;
 
 import bisq.core.locale.Res;
 
-import bisq.common.util.CollectionUtils;
-
 import com.google.protobuf.Message;
 
 import java.util.HashMap;
@@ -29,8 +27,6 @@ import java.util.Map;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
-
-import javax.annotation.Nullable;
 
 @EqualsAndHashCode(callSuper = true)
 @ToString
@@ -58,7 +54,7 @@ public final class SameBankAccountPayload extends BankAccountPayload {
                                    String bankId,
                                    String nationalAccountId,
                                    long maxTradePeriod,
-                                   @Nullable Map<String, String> excludeFromJsonDataMap) {
+                                   Map<String, String> excludeFromJsonDataMap) {
         super(paymentMethodName,
                 id,
                 countryCode,
@@ -72,7 +68,6 @@ public final class SameBankAccountPayload extends BankAccountPayload {
                 nationalAccountId,
                 maxTradePeriod,
                 excludeFromJsonDataMap);
-
     }
 
     @Override
@@ -106,7 +101,7 @@ public final class SameBankAccountPayload extends BankAccountPayload {
                 bankAccountPayload.getBankId().isEmpty() ? null : bankAccountPayload.getBankId(),
                 bankAccountPayload.getNationalAccountId().isEmpty() ? null : bankAccountPayload.getNationalAccountId(),
                 proto.getMaxTradePeriod(),
-                CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
+                new HashMap<>(proto.getExcludeFromJsonDataMap()));
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

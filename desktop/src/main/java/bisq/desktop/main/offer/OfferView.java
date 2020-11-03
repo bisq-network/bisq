@@ -179,23 +179,21 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
             OfferActionHandler offerActionHandler = new OfferActionHandler() {
                 @Override
                 public void onCreateOffer(TradeCurrency tradeCurrency) {
-                    if (!createOfferViewOpen) {
-                        if (canCreateOrTakeOffer()) {
-                            openCreateOffer(tradeCurrency);
-                        }
-                    } else {
-                        log.error("You have already a \"Create offer\" tab open.");
+                    if (createOfferViewOpen) {
+                        tabPane.getTabs().remove(createOfferTab);
+                    }
+                    if (canCreateOrTakeOffer()) {
+                        openCreateOffer(tradeCurrency);
                     }
                 }
 
                 @Override
                 public void onTakeOffer(Offer offer) {
-                    if (!takeOfferViewOpen) {
-                        if (canCreateOrTakeOffer()) {
-                            openTakeOffer(offer);
-                        }
-                    } else {
-                        log.error("You have already a \"Take offer\" tab open.");
+                    if (takeOfferViewOpen) {
+                        tabPane.getTabs().remove(takeOfferTab);
+                    }
+                    if (canCreateOrTakeOffer()) {
+                        openTakeOffer(offer);
                     }
                 }
             };

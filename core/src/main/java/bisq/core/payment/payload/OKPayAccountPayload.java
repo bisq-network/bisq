@@ -19,11 +19,9 @@ package bisq.core.payment.payload;
 
 import bisq.core.locale.Res;
 
-import bisq.common.util.CollectionUtils;
-
 import com.google.protobuf.Message;
 
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -79,7 +77,7 @@ public final class OKPayAccountPayload extends PaymentAccountPayload {
                 proto.getId(),
                 proto.getOKPayAccountPayload().getAccountNr(),
                 proto.getMaxTradePeriod(),
-                CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
+                new HashMap<>(proto.getExcludeFromJsonDataMap()));
     }
 
 
@@ -99,6 +97,6 @@ public final class OKPayAccountPayload extends PaymentAccountPayload {
 
     @Override
     public byte[] getAgeWitnessInputData() {
-        return super.getAgeWitnessInputData(accountNr.getBytes(Charset.forName("UTF-8")));
+        return super.getAgeWitnessInputData(accountNr.getBytes(StandardCharsets.UTF_8));
     }
 }

@@ -17,66 +17,83 @@
 
 package bisq.core.trade.failed;
 
+import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.offer.Offer;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.DumpDelayedPayoutTx;
 import bisq.core.trade.TradableList;
 import bisq.core.trade.Trade;
+import bisq.core.trade.TradeUtil;
 
 import bisq.common.crypto.KeyRing;
+import bisq.common.persistence.PersistenceManager;
 import bisq.common.proto.persistable.PersistedDataHost;
-import bisq.common.storage.Storage;
 
 import com.google.inject.Inject;
 
 import javafx.collections.ObservableList;
 
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import lombok.Setter;
+
 public class FailedTradesManager implements PersistedDataHost {
     private static final Logger log = LoggerFactory.getLogger(FailedTradesManager.class);
-    private TradableList<Trade> failedTrades;
+    private final TradableList<Trade> failedTrades = new TradableList<>();
     private final KeyRing keyRing;
     private final PriceFeedService priceFeedService;
     private final BtcWalletService btcWalletService;
-    private final Storage<TradableList<Trade>> tradableListStorage;
+    private final PersistenceManager<TradableList<Trade>> persistenceManager;
+    private final TradeUtil tradeUtil;
     private final DumpDelayedPayoutTx dumpDelayedPayoutTx;
+    @Setter
+    private Function<Trade, Boolean> unFailTradeCallback;
 
     @Inject
     public FailedTradesManager(KeyRing keyRing,
                                PriceFeedService priceFeedService,
                                BtcWalletService btcWalletService,
-                               Storage<TradableList<Trade>> storage,
+                               PersistenceManager<TradableList<Trade>> persistenceManager,
+                               TradeUtil tradeUtil,
                                DumpDelayedPayoutTx dumpDelayedPayoutTx) {
         this.keyRing = keyRing;
         this.priceFeedService = priceFeedService;
         this.btcWalletService = btcWalletService;
-        tradableListStorage = storage;
         this.dumpDelayedPayoutTx = dumpDelayedPayoutTx;
+        this.persistenceManager = persistenceManager;
+        this.tradeUtil = tradeUtil;
+
+        this.persistenceManager.initialize(failedTrades, "FailedTrades", PersistenceManager.Source.PRIVATE);
     }
 
     @Override
-    public void readPersisted() {
-        this.failedTrades = new TradableList<>(tradableListStorage, "FailedTrades");
-        failedTrades.forEach(trade -> {
-            if (trade.getOffer() != null) {
-                trade.getOffer().setPriceFeedService(priceFeedService);
-            }
-
-            trade.setTransientFields(tradableListStorage, btcWalletService);
-        });
-
-        dumpDelayedPayoutTx.maybeDumpDelayedPayoutTxs(failedTrades, "delayed_payout_txs_failed");
+    public void readPersisted(Runnable completeHandler) {
+        persistenceManager.readPersisted(persisted -> {
+                    failedTrades.setAll(persisted.getList());
+                    failedTrades.stream()
+                            .filter(trade -> trade.getOffer() != null)
+                            .forEach(trade -> trade.getOffer().setPriceFeedService(priceFeedService));
+                    dumpDelayedPayoutTx.maybeDumpDelayedPayoutTxs(failedTrades, "delayed_payout_txs_failed");
+                    completeHandler.run();
+                },
+                completeHandler);
     }
 
     public void add(Trade trade) {
-        if (!failedTrades.contains(trade)) {
-            failedTrades.add(trade);
+        if (failedTrades.add(trade)) {
+            persistenceManager.requestPersistence();
+        }
+    }
+
+    public void removeTrade(Trade trade) {
+        if (failedTrades.remove(trade)) {
+            persistenceManager.requestPersistence();
         }
     }
 
@@ -84,8 +101,8 @@ public class FailedTradesManager implements PersistedDataHost {
         return offer.isMyOffer(keyRing);
     }
 
-    public ObservableList<Trade> getFailedTrades() {
-        return failedTrades.getList();
+    public ObservableList<Trade> getObservableList() {
+        return failedTrades.getObservableList();
     }
 
     public Optional<Trade> getTradeById(String id) {
@@ -95,5 +112,35 @@ public class FailedTradesManager implements PersistedDataHost {
     public Stream<Trade> getTradesStreamWithFundsLockedIn() {
         return failedTrades.stream()
                 .filter(Trade::isFundsLockedIn);
+    }
+
+    public void unFailTrade(Trade trade) {
+        if (unFailTradeCallback == null)
+            return;
+
+        if (unFailTradeCallback.apply(trade)) {
+            log.info("Unfailing trade {}", trade.getId());
+            if (failedTrades.remove(trade)) {
+                persistenceManager.requestPersistence();
+            }
+        }
+    }
+
+    public String checkUnFail(Trade trade) {
+        var addresses = tradeUtil.getTradeAddresses(trade);
+        if (addresses == null) {
+            return "Addresses not found";
+        }
+        StringBuilder blockingTrades = new StringBuilder();
+        for (var entry : btcWalletService.getAddressEntryListAsImmutableList()) {
+            if (entry.getContext() == AddressEntry.Context.AVAILABLE)
+                continue;
+            if (entry.getAddressString() != null &&
+                    (entry.getAddressString().equals(addresses.first) ||
+                            entry.getAddressString().equals(addresses.second))) {
+                blockingTrades.append(entry.getOfferId()).append(", ");
+            }
+        }
+        return blockingTrades.toString();
     }
 }

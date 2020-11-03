@@ -680,9 +680,11 @@ public class ChatView extends AnchorPane {
     }
 
     public void setInputBoxVisible(boolean visible) {
-        messagesInputBox.setVisible(visible);
-        messagesInputBox.setManaged(visible);
-        AnchorPane.setBottomAnchor(messageListView, visible ? 120d : 0d);
+        if (messagesInputBox != null) {
+            messagesInputBox.setVisible(visible);
+            messagesInputBox.setManaged(visible);
+            AnchorPane.setBottomAnchor(messageListView, visible ? 120d : 0d);
+        }
     }
 
     public void removeInputBox() {

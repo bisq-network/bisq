@@ -19,8 +19,18 @@ package bisq.common.proto.persistable;
 
 import bisq.common.Envelope;
 
+import com.google.protobuf.Message;
+
 /**
  * Interface for the outside envelope object persisted to disk.
  */
 public interface PersistableEnvelope extends Envelope {
+
+    default Message toPersistableMessage() {
+        return toProtoMessage();
+    }
+
+    default String getDefaultStorageFileName() {
+        return this.getClass().getSimpleName();
+    }
 }

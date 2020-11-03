@@ -29,6 +29,7 @@ import bisq.core.trade.Trade;
 import bisq.common.crypto.PubKeyRing;
 
 import org.bitcoinj.core.Address;
+import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionOutput;
 
@@ -64,7 +65,7 @@ class TransactionAwareTrade implements TransactionAwareTradable {
 
     @Override
     public boolean isRelatedToTransaction(Transaction transaction) {
-        String txId = transaction.getHashAsString();
+        String txId = transaction.getTxId().toString();
 
         boolean isTakerOfferFeeTx = txId.equals(trade.getTakerFeeTxId());
         boolean isOfferFeeTx = isOfferFeeTx(txId);
@@ -80,14 +81,16 @@ class TransactionAwareTrade implements TransactionAwareTradable {
 
     private boolean isPayoutTx(String txId) {
         return Optional.ofNullable(trade.getPayoutTx())
-                .map(Transaction::getHashAsString)
+                .map(Transaction::getTxId)
+                .map(Sha256Hash::toString)
                 .map(hash -> hash.equals(txId))
                 .orElse(false);
     }
 
     private boolean isDepositTx(String txId) {
         return Optional.ofNullable(trade.getDepositTx())
-                .map(Transaction::getHashAsString)
+                .map(Transaction::getTxId)
+                .map(Sha256Hash::toString)
                 .map(hash -> hash.equals(txId))
                 .orElse(false);
     }
@@ -136,7 +139,7 @@ class TransactionAwareTrade implements TransactionAwareTradable {
                     if (parentTransaction == null) {
                         return false;
                     }
-                    return isDepositTx(parentTransaction.getHashAsString());
+                    return isDepositTx(parentTransaction.getTxId().toString());
                 });
     }
 
@@ -154,7 +157,7 @@ class TransactionAwareTrade implements TransactionAwareTradable {
                     tx.getOutputs().forEach(txo -> {
                         if (btcWalletService.isTransactionOutputMine(txo)) {
                             try {
-                                Address receiverAddress = txo.getAddressFromP2PKHScript(btcWalletService.getParams());
+                                Address receiverAddress = txo.getScriptPubKey().getToAddress(btcWalletService.getParams());
                                 Contract contract = checkNotNull(trade.getContract());
                                 String myPayoutAddressString = contract.isMyRoleBuyer(pubKeyRing) ?
                                         contract.getBuyerPayoutAddressString() :

@@ -92,6 +92,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
     public static final String BLOCK_CHAINS_ID = "BLOCK_CHAINS";
     public static final String PROMPT_PAY_ID = "PROMPT_PAY";
     public static final String ADVANCED_CASH_ID = "ADVANCED_CASH";
+    public static final String TRANSFERWISE_ID = "TRANSFERWISE";
     public static final String BLOCK_CHAINS_INSTANT_ID = "BLOCK_CHAINS_INSTANT";
 
     // Cannot be deleted as it would break old trade history entries
@@ -130,6 +131,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
     public static PaymentMethod BLOCK_CHAINS;
     public static PaymentMethod PROMPT_PAY;
     public static PaymentMethod ADVANCED_CASH;
+    public static PaymentMethod TRANSFERWISE;
     public static PaymentMethod BLOCK_CHAINS_INSTANT;
 
     // Cannot be deleted as it would break old trade history entries
@@ -180,6 +182,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
             REVOLUT = new PaymentMethod(REVOLUT_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
             PERFECT_MONEY = new PaymentMethod(PERFECT_MONEY_ID, DAY, DEFAULT_TRADE_LIMIT_LOW_RISK),
             ADVANCED_CASH = new PaymentMethod(ADVANCED_CASH_ID, DAY, DEFAULT_TRADE_LIMIT_VERY_LOW_RISK),
+            TRANSFERWISE = new PaymentMethod(TRANSFERWISE_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
 
             // Japan
             JAPAN_BANK = new PaymentMethod(JAPAN_BANK_ID, DAY, DEFAULT_TRADE_LIMIT_LOW_RISK),
@@ -307,13 +310,21 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
             riskFactor = 4;
         else if (maxTradeLimit == DEFAULT_TRADE_LIMIT_HIGH_RISK.value)
             riskFactor = 8;
-        else
-            throw new RuntimeException("maxTradeLimit is not matching one of our default values. maxTradeLimit=" + Coin.valueOf(maxTradeLimit).toFriendlyString());
+        else {
+            riskFactor = 8;
+            log.error("maxTradeLimit is not matching one of our default values. maxTradeLimit=" + Coin.valueOf(maxTradeLimit).toFriendlyString());
+        }
 
         TradeLimits tradeLimits = TradeLimits.getINSTANCE();
         checkNotNull(tradeLimits, "tradeLimits must not be null");
         long maxTradeLimit = tradeLimits.getMaxTradeLimit().value;
         return Coin.valueOf(tradeLimits.getRoundedRiskBasedTradeLimit(maxTradeLimit, riskFactor));
+    }
+
+    public String getShortName() {
+        // in cases where translation is not found, Res.get() simply returns the key string
+        // so no need for special error-handling code.
+        return Res.get(this.id + "_SHORT");
     }
 
     @Override
@@ -344,8 +355,9 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
 
     public static boolean hasChargebackRisk(String id, String currencyCode) {
         if (CurrencyUtil.getMatureMarketCurrencies().stream()
-            .noneMatch(c -> c.getCode().equals(currencyCode)))
+                .noneMatch(c -> c.getCode().equals(currencyCode)))
             return false;
+
         return id.equals(PaymentMethod.SEPA_ID) ||
                 id.equals(PaymentMethod.SEPA_INSTANT_ID) ||
                 id.equals(PaymentMethod.INTERAC_E_TRANSFER_ID) ||

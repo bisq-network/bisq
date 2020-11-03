@@ -47,8 +47,8 @@ import bisq.core.trade.Trade;
 import bisq.core.trade.closed.ClosedTradableManager;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
-import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.FormattingUtils;
+import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.coin.CoinFormatter;
 
 import bisq.network.p2p.NodeAddress;
@@ -168,9 +168,7 @@ class OfferBookViewModel extends ActivatableViewModel {
         this.filteredItems = new FilteredList<>(offerBook.getOfferBookListItems());
         this.sortedItems = new SortedList<>(filteredItems);
 
-        tradeCurrencyListChangeListener = c -> {
-            fillAllTradeCurrencies();
-        };
+        tradeCurrencyListChangeListener = c -> fillAllTradeCurrencies();
 
         filterItemsListener = c -> {
             final Optional<OfferBookListItem> highestAmountOffer = filteredItems.stream()
@@ -435,6 +433,13 @@ class OfferBookViewModel extends ActivatableViewModel {
             result = Res.getWithCol("shared.paymentMethod") + " " + Res.get(offer.getPaymentMethod().getId());
             result += "\n" + Res.getWithCol("shared.currency") + " " + CurrencyUtil.getNameAndCode(offer.getCurrencyCode());
 
+            if (offer.isXmr()) {
+                String isAutoConf = offer.isXmrAutoConf() ?
+                        Res.get("shared.yes") :
+                        Res.get("shared.no");
+                result += "\n" + Res.getWithCol("offerbook.xmrAutoConf") + " " + isAutoConf;
+            }
+
             String countryCode = offer.getCountryCode();
             if (isF2F(offer)) {
                 if (countryCode != null) {
@@ -608,7 +613,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     }
 
     int getNumTrades(Offer offer) {
-        return closedTradableManager.getClosedTradables().stream()
+        return closedTradableManager.getObservableList().stream()
                 .filter(e -> {
                     final NodeAddress tradingPeerNodeAddress = e instanceof Trade ? ((Trade) e).getTradingPeerNodeAddress() : null;
                     return tradingPeerNodeAddress != null &&
@@ -644,5 +649,10 @@ class OfferBookViewModel extends ActivatableViewModel {
             return (direction == OfferPayload.Direction.BUY) ? Res.get("shared.buyingBTCWith", currencyCode) : Res.get("shared.sellingBTCFor", currencyCode);
         else
             return (direction == OfferPayload.Direction.SELL) ? Res.get("shared.buyingCurrency", currencyCode) : Res.get("shared.sellingCurrency", currencyCode);
+    }
+
+    public String formatDepositString(Coin deposit, long amount) {
+        var percentage = FormattingUtils.formatToRoundedPercentWithSymbol(deposit.getValue() / (double) amount);
+        return btcFormatter.formatCoin(deposit) + " (" + percentage + ")";
     }
 }

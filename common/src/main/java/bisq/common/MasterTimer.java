@@ -35,7 +35,7 @@ public class MasterTimer {
         timer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
-                UserThread.execute(() -> listeners.stream().forEach(Runnable::run));
+                UserThread.execute(() -> listeners.forEach(Runnable::run));
             }
         }, FRAME_INTERVAL_MS, FRAME_INTERVAL_MS);
     }

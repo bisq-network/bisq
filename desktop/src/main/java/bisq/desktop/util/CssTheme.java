@@ -24,12 +24,14 @@ public class CssTheme {
     public static final int CSS_THEME_DARK = 1;
 
     private static int currentCSSTheme;
+    private static boolean useDevHeader;
 
-    public static void loadSceneStyles(Scene scene, int cssTheme) {
+    public static void loadSceneStyles(Scene scene, int cssTheme, boolean devHeader) {
         String cssThemeFolder = "/bisq/desktop/";
         String cssThemeFile = "";
 
         currentCSSTheme = cssTheme;
+        useDevHeader = devHeader;
 
         switch (cssTheme) {
 
@@ -52,6 +54,8 @@ public class CssTheme {
                 // load theme last to allow override
                 cssThemeFolder + cssThemeFile
         );
+        if (useDevHeader)
+            scene.getStylesheets().add(cssThemeFolder + "theme-dev.css");
     }
 
     public static boolean isDarkTheme() {

@@ -27,8 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class BroadcastMediatedPayoutTx extends BroadcastPayoutTx {
-    @SuppressWarnings({"unused"})
-    public BroadcastMediatedPayoutTx(TaskRunner taskHandler, Trade trade) {
+    public BroadcastMediatedPayoutTx(TaskRunner<Trade> taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 

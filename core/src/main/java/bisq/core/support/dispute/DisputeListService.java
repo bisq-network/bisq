@@ -22,8 +22,8 @@ import bisq.core.trade.Contract;
 import bisq.network.p2p.NodeAddress;
 
 import bisq.common.UserThread;
+import bisq.common.persistence.PersistenceManager;
 import bisq.common.proto.persistable.PersistedDataHost;
-import bisq.common.storage.Storage;
 
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -31,8 +31,6 @@ import org.fxmisc.easybind.Subscription;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 
-import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 
 import java.util.HashMap;
@@ -47,12 +45,11 @@ import lombok.extern.slf4j.Slf4j;
 import javax.annotation.Nullable;
 
 @Slf4j
-public abstract class DisputeListService<T extends DisputeList<? extends DisputeList>> implements PersistedDataHost {
+public abstract class DisputeListService<T extends DisputeList<Dispute>> implements PersistedDataHost {
     @Getter
-    protected final Storage<T> storage;
-    @Nullable
+    protected final PersistenceManager<T> persistenceManager;
     @Getter
-    private T disputeList;
+    private final T disputeList;
     private final Map<String, Subscription> disputeIsClosedSubscriptionsMap = new HashMap<>();
     @Getter
     private final IntegerProperty numOpenDisputes = new SimpleIntegerProperty();
@@ -62,8 +59,11 @@ public abstract class DisputeListService<T extends DisputeList<? extends Dispute
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public DisputeListService(Storage<T> storage) {
-        this.storage = storage;
+    public DisputeListService(PersistenceManager<T> persistenceManager) {
+        this.persistenceManager = persistenceManager;
+        disputeList = getConcreteDisputeList();
+
+        this.persistenceManager.initialize(disputeList, getFileName(), PersistenceManager.Source.PRIVATE);
     }
 
 
@@ -79,10 +79,16 @@ public abstract class DisputeListService<T extends DisputeList<? extends Dispute
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void readPersisted() {
-        disputeList = getConcreteDisputeList();
-        disputeList.readPersisted();
-        disputeList.stream().forEach(dispute -> dispute.setStorage(storage));
+    public void readPersisted(Runnable completeHandler) {
+        persistenceManager.readPersisted(getFileName(), persisted -> {
+                    disputeList.setAll(persisted.getList());
+                    completeHandler.run();
+                },
+                completeHandler);
+    }
+
+    protected String getFileName() {
+        return disputeList.getDefaultStorageFileName();
     }
 
 
@@ -91,19 +97,12 @@ public abstract class DisputeListService<T extends DisputeList<? extends Dispute
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void cleanupDisputes(@Nullable Consumer<String> closedDisputeHandler) {
-        if (disputeList != null) {
-            disputeList.stream().forEach(dispute -> {
-                dispute.setStorage(storage);
-                String tradeId = dispute.getTradeId();
-                if (dispute.isClosed()) {
-                    if (closedDisputeHandler != null) {
-                        closedDisputeHandler.accept(tradeId);
-                    }
-                }
-            });
-        } else {
-            log.warn("disputes is null");
-        }
+        disputeList.stream().forEach(dispute -> {
+            String tradeId = dispute.getTradeId();
+            if (dispute.isClosed() && closedDisputeHandler != null) {
+                closedDisputeHandler.accept(tradeId);
+            }
+        });
     }
 
 
@@ -112,19 +111,15 @@ public abstract class DisputeListService<T extends DisputeList<? extends Dispute
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     void onAllServicesInitialized() {
-        if (disputeList != null) {
-            disputeList.getList().addListener((ListChangeListener<Dispute>) change -> {
-                change.next();
-                onDisputesChangeListener(change.getAddedSubList(), change.getRemoved());
-            });
-            onDisputesChangeListener(disputeList.getList(), null);
-        } else {
-            log.warn("disputes is null");
-        }
+        disputeList.addListener(change -> {
+            change.next();
+            onDisputesChangeListener(change.getAddedSubList(), change.getRemoved());
+        });
+        onDisputesChangeListener(disputeList.getList(), null);
     }
 
     String getNrOfDisputes(boolean isBuyer, Contract contract) {
-        return String.valueOf(getDisputesAsObservableList().stream()
+        return String.valueOf(getObservableList().stream()
                 .filter(e -> {
                     Contract contract1 = e.getContract();
                     if (contract1 == null)
@@ -141,12 +136,8 @@ public abstract class DisputeListService<T extends DisputeList<? extends Dispute
                 .collect(Collectors.toSet()).size());
     }
 
-    ObservableList<Dispute> getDisputesAsObservableList() {
-        if (disputeList == null) {
-            log.warn("disputes is null");
-            return FXCollections.observableArrayList();
-        }
-        return disputeList.getList();
+    ObservableList<Dispute> getObservableList() {
+        return disputeList.getObservableList();
     }
 
 
@@ -169,22 +160,18 @@ public abstract class DisputeListService<T extends DisputeList<? extends Dispute
             String id = dispute.getId();
             Subscription disputeStateSubscription = EasyBind.subscribe(dispute.isClosedProperty(),
                     isClosed -> {
-                        if (disputeList != null) {
-                            // We get the event before the list gets updated, so we execute on next frame
-                            UserThread.execute(() -> {
-                                int openDisputes = (int) disputeList.getList().stream()
-                                        .filter(e -> !e.isClosed()).count();
-                                numOpenDisputes.set(openDisputes);
-                            });
-                        }
+                        // We get the event before the list gets updated, so we execute on next frame
+                        UserThread.execute(() -> {
+                            int openDisputes = (int) disputeList.getList().stream()
+                                    .filter(e -> !e.isClosed()).count();
+                            numOpenDisputes.set(openDisputes);
+                        });
                     });
             disputeIsClosedSubscriptionsMap.put(id, disputeStateSubscription);
         });
     }
 
-    public void persist() {
-        if (disputeList != null) {
-            disputeList.persist();
-        }
+    public void requestPersistence() {
+        persistenceManager.requestPersistence();
     }
 }

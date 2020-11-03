@@ -17,13 +17,15 @@
 
 package bisq.monitor;
 
-import java.io.File;
-import org.berndpruenster.netlayer.tor.Tor;
 import bisq.network.p2p.network.TorMode;
+
+import org.berndpruenster.netlayer.tor.Tor;
+
+import java.io.File;
 
 /**
  * This class uses an already defined Tor via <code>Tor.getDefault()</code>
- * 
+ *
  * @author Florian Reimair
  *
  */

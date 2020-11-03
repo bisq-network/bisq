@@ -172,7 +172,7 @@ class SpreadViewModel extends ActivatableViewModel {
                     else
                         spread = bestBuyOfferPrice.subtract(bestSellOfferPrice);
 
-                    // TODO maybe show extra colums with spread and use real amount diff
+                    // TODO maybe show extra columns with spread and use real amount diff
                     // not % based. e.g. diff between best buy and sell offer (of small amounts its a smaller gain)
 
                     if (spread != null && marketPrice != null && marketPrice.isPriceAvailable()) {

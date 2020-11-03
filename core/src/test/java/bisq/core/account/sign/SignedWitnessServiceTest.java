@@ -19,6 +19,7 @@ package bisq.core.account.sign;
 
 
 import bisq.core.account.witness.AccountAgeWitness;
+import bisq.core.filter.FilterManager;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 
 import bisq.network.p2p.P2PService;
@@ -79,7 +80,11 @@ public class SignedWitnessServiceTest {
     private long SIGN_AGE_3 = SignedWitnessService.SIGNER_AGE_DAYS + 3;
     private KeyRing keyRing;
     private P2PService p2pService;
-
+    private FilterManager filterManager;
+    private ECKey arbitrator1Key;
+    KeyPair peer1KeyPair;
+    KeyPair peer2KeyPair;
+    KeyPair peer3KeyPair;
 
     @Before
     public void setup() throws Exception {
@@ -88,7 +93,8 @@ public class SignedWitnessServiceTest {
         when(arbitratorManager.isPublicKeyInList(any())).thenReturn(true);
         keyRing = mock(KeyRing.class);
         p2pService = mock(P2PService.class);
-        signedWitnessService = new SignedWitnessService(keyRing, p2pService, arbitratorManager, null, appendOnlyDataStoreService, null);
+        filterManager = mock(FilterManager.class);
+        signedWitnessService = new SignedWitnessService(keyRing, p2pService, arbitratorManager, null, appendOnlyDataStoreService, null, filterManager);
         account1DataHash = org.bitcoinj.core.Utils.sha256hash160(new byte[]{1});
         account2DataHash = org.bitcoinj.core.Utils.sha256hash160(new byte[]{2});
         account3DataHash = org.bitcoinj.core.Utils.sha256hash160(new byte[]{3});
@@ -98,10 +104,10 @@ public class SignedWitnessServiceTest {
         aew1 = new AccountAgeWitness(account1DataHash, account1CreationTime);
         aew2 = new AccountAgeWitness(account2DataHash, account2CreationTime);
         aew3 = new AccountAgeWitness(account3DataHash, account3CreationTime);
-        ECKey arbitrator1Key = new ECKey();
-        KeyPair peer1KeyPair = Sig.generateKeyPair();
-        KeyPair peer2KeyPair = Sig.generateKeyPair();
-        KeyPair peer3KeyPair = Sig.generateKeyPair();
+        arbitrator1Key = new ECKey();
+        peer1KeyPair = Sig.generateKeyPair();
+        peer2KeyPair = Sig.generateKeyPair();
+        peer3KeyPair = Sig.generateKeyPair();
         signature1 = arbitrator1Key.signMessage(Utilities.encodeToHex(account1DataHash)).getBytes(Charsets.UTF_8);
         signature2 = Sig.sign(peer1KeyPair.getPrivate(), Utilities.encodeToHex(account2DataHash).getBytes(Charsets.UTF_8));
         signature3 = Sig.sign(peer2KeyPair.getPrivate(), Utilities.encodeToHex(account3DataHash).getBytes(Charsets.UTF_8));
@@ -348,7 +354,7 @@ public class SignedWitnessServiceTest {
         when(keyRing.getSignatureKeyPair()).thenReturn(signerKeyPair);
 
         AccountAgeWitness accountAgeWitness = new AccountAgeWitness(account1DataHash, accountCreationTime);
-        signedWitnessService.signAccountAgeWitness(Coin.ZERO, accountAgeWitness, peerKeyPair.getPublic());
+        signedWitnessService.signAndPublishAccountAgeWitness(Coin.ZERO, accountAgeWitness, peerKeyPair.getPublic());
 
         verify(p2pService, never()).addPersistableNetworkPayload(any(PersistableNetworkPayload.class), anyBoolean());
     }
@@ -364,9 +370,138 @@ public class SignedWitnessServiceTest {
 
 
         AccountAgeWitness accountAgeWitness = new AccountAgeWitness(account1DataHash, accountCreationTime);
-        signedWitnessService.signAccountAgeWitness(SignedWitnessService.MINIMUM_TRADE_AMOUNT_FOR_SIGNING, accountAgeWitness, peerKeyPair.getPublic());
+        signedWitnessService.signAndPublishAccountAgeWitness(SignedWitnessService.MINIMUM_TRADE_AMOUNT_FOR_SIGNING, accountAgeWitness, peerKeyPair.getPublic());
 
         verify(p2pService, times(1)).addPersistableNetworkPayload(any(PersistableNetworkPayload.class), anyBoolean());
+    }
+
+    /* Signed witness tree
+     Each edge in the graph represents one signature
+
+     Arbitrator
+      |
+     sw1
+      |
+     sw2
+      |
+     sw3
+    */
+    @Test
+    public void testBanFilterSingleTree() {
+        SignedWitness sw1 = new SignedWitness(ARBITRATOR, account1DataHash, signature1, signer1PubKey, witnessOwner1PubKey, date1, tradeAmount1);
+        SignedWitness sw2 = new SignedWitness(TRADE, account2DataHash, signature2, signer2PubKey, witnessOwner2PubKey, date2, tradeAmount2);
+        SignedWitness sw3 = new SignedWitness(TRADE, account3DataHash, signature3, signer3PubKey, witnessOwner3PubKey, date3, tradeAmount3);
+
+        signedWitnessService.addToMap(sw1);
+        signedWitnessService.addToMap(sw2);
+        signedWitnessService.addToMap(sw3);
+
+        // Second account is banned, first account is still a signer but the other two are no longer signers
+        when(filterManager.isWitnessSignerPubKeyBanned(Utilities.bytesAsHexString(witnessOwner2PubKey))).thenReturn(true);
+        assertTrue(signedWitnessService.isSignerAccountAgeWitness(aew1));
+        assertFalse(signedWitnessService.isSignerAccountAgeWitness(aew2));
+        assertFalse(signedWitnessService.isSignerAccountAgeWitness(aew3));
+
+        // First account is banned, no accounts in the tree below it are signers
+        when(filterManager.isWitnessSignerPubKeyBanned(Utilities.bytesAsHexString(witnessOwner1PubKey))).thenReturn(true);
+        when(filterManager.isWitnessSignerPubKeyBanned(Utilities.bytesAsHexString(witnessOwner2PubKey))).thenReturn(false);
+        assertFalse(signedWitnessService.isSignerAccountAgeWitness(aew1));
+        assertFalse(signedWitnessService.isSignerAccountAgeWitness(aew2));
+        assertFalse(signedWitnessService.isSignerAccountAgeWitness(aew3));
+    }
+
+    /* Signed witness trees
+     Each edge in the graph represents one signature
+
+     Arbitrator
+      |    |
+     sw1  sw2
+           |
+          sw3
+    */
+    @Test
+    public void testBanFilterTwoTrees() {
+        // Signer 2 is signed by arbitrator
+        signer2PubKey = arbitrator1Key.getPubKey();
+        signature2 = arbitrator1Key.signMessage(Utilities.encodeToHex(account2DataHash)).getBytes(Charsets.UTF_8);
+
+        SignedWitness sw1 = new SignedWitness(ARBITRATOR, account1DataHash, signature1, signer1PubKey, witnessOwner1PubKey, date1, tradeAmount1);
+        SignedWitness sw2 = new SignedWitness(ARBITRATOR, account2DataHash, signature2, signer2PubKey, witnessOwner2PubKey, date2, tradeAmount2);
+        SignedWitness sw3 = new SignedWitness(TRADE, account3DataHash, signature3, signer3PubKey, witnessOwner3PubKey, date3, tradeAmount3);
+
+        signedWitnessService.addToMap(sw1);
+        signedWitnessService.addToMap(sw2);
+        signedWitnessService.addToMap(sw3);
+
+        // Only second account is banned, first account is still a signer but the other two are no longer signers
+        when(filterManager.isWitnessSignerPubKeyBanned(Utilities.bytesAsHexString(witnessOwner2PubKey))).thenReturn(true);
+        assertTrue(signedWitnessService.isSignerAccountAgeWitness(aew1));
+        assertFalse(signedWitnessService.isSignerAccountAgeWitness(aew2));
+        assertFalse(signedWitnessService.isSignerAccountAgeWitness(aew3));
+
+        // Only first account is banned, account2 and account3 are still signers
+        when(filterManager.isWitnessSignerPubKeyBanned(Utilities.bytesAsHexString(witnessOwner1PubKey))).thenReturn(true);
+        when(filterManager.isWitnessSignerPubKeyBanned(Utilities.bytesAsHexString(witnessOwner2PubKey))).thenReturn(false);
+        assertFalse(signedWitnessService.isSignerAccountAgeWitness(aew1));
+        assertTrue(signedWitnessService.isSignerAccountAgeWitness(aew2));
+        assertTrue(signedWitnessService.isSignerAccountAgeWitness(aew3));
+    }
+
+    /* Signed witness tree
+     Each edge in the graph represents one signature
+
+     Arbitrator
+      |    |
+     sw1  sw2
+      \   /
+       sw3
+    */
+    @Test
+    public void testBanFilterJoinedTrees() throws Exception {
+        // Signer 2 is signed by arbitrator
+        signer2PubKey = arbitrator1Key.getPubKey();
+        signature2 = arbitrator1Key.signMessage(Utilities.encodeToHex(account2DataHash)).getBytes(Charsets.UTF_8);
+
+        // Peer1 owns both account1 and account2
+//        witnessOwner2PubKey = witnessOwner1PubKey;
+//        peer2KeyPair = peer1KeyPair;
+//        signature3 = Sig.sign(peer2KeyPair.getPrivate(), Utilities.encodeToHex(account3DataHash).getBytes(Charsets.UTF_8));
+
+        // sw1 also signs sw3 (not supported yet but a possible addition for a more robust system)
+        var signature3p = Sig.sign(peer1KeyPair.getPrivate(), Utilities.encodeToHex(account3DataHash).getBytes(Charsets.UTF_8));
+        var signer3pPubKey = witnessOwner1PubKey;
+        var date3p = date3;
+        var tradeAmount3p = tradeAmount3;
+
+        SignedWitness sw1 = new SignedWitness(ARBITRATOR, account1DataHash, signature1, signer1PubKey, witnessOwner1PubKey, date1, tradeAmount1);
+        SignedWitness sw2 = new SignedWitness(ARBITRATOR, account2DataHash, signature2, signer2PubKey, witnessOwner2PubKey, date2, tradeAmount2);
+        SignedWitness sw3 = new SignedWitness(TRADE, account3DataHash, signature3, signer3PubKey, witnessOwner3PubKey, date3, tradeAmount3);
+        SignedWitness sw3p = new SignedWitness(TRADE, account3DataHash, signature3p, signer3pPubKey, witnessOwner3PubKey, date3p, tradeAmount3p);
+
+        signedWitnessService.addToMap(sw1);
+        signedWitnessService.addToMap(sw2);
+        signedWitnessService.addToMap(sw3);
+        signedWitnessService.addToMap(sw3p);
+
+        // First account is banned, the other two are still signers
+        when(filterManager.isWitnessSignerPubKeyBanned(Utilities.bytesAsHexString(witnessOwner1PubKey))).thenReturn(true);
+        assertFalse(signedWitnessService.isSignerAccountAgeWitness(aew1));
+        assertTrue(signedWitnessService.isSignerAccountAgeWitness(aew2));
+        assertTrue(signedWitnessService.isSignerAccountAgeWitness(aew3));
+
+        // Second account is banned, the other two are still signers
+        when(filterManager.isWitnessSignerPubKeyBanned(Utilities.bytesAsHexString(witnessOwner1PubKey))).thenReturn(false);
+        when(filterManager.isWitnessSignerPubKeyBanned(Utilities.bytesAsHexString(witnessOwner2PubKey))).thenReturn(true);
+        assertTrue(signedWitnessService.isSignerAccountAgeWitness(aew1));
+        assertFalse(signedWitnessService.isSignerAccountAgeWitness(aew2));
+        assertTrue(signedWitnessService.isSignerAccountAgeWitness(aew3));
+
+        // First and second account is banned, the third is no longer a signer
+        when(filterManager.isWitnessSignerPubKeyBanned(Utilities.bytesAsHexString(witnessOwner1PubKey))).thenReturn(true);
+        when(filterManager.isWitnessSignerPubKeyBanned(Utilities.bytesAsHexString(witnessOwner2PubKey))).thenReturn(true);
+        assertFalse(signedWitnessService.isSignerAccountAgeWitness(aew1));
+        assertFalse(signedWitnessService.isSignerAccountAgeWitness(aew2));
+        assertFalse(signedWitnessService.isSignerAccountAgeWitness(aew3));
     }
 }
 

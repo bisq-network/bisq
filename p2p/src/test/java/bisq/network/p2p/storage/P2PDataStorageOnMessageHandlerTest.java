@@ -33,8 +33,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -69,7 +67,7 @@ public class P2PDataStorageOnMessageHandlerTest {
         this.testState.mockedStorage.onMessage(envelope, mockedConnection);
 
         verify(this.testState.appendOnlyDataStoreListener, never()).onAdded(any(PersistableNetworkPayload.class));
-        verify(this.testState.mockBroadcaster, never()).broadcast(any(BroadcastMessage.class), any(NodeAddress.class), eq(null));
+        verify(this.testState.mockBroadcaster, never()).broadcast(any(BroadcastMessage.class), any(NodeAddress.class));
     }
 
     @Test
@@ -82,7 +80,7 @@ public class P2PDataStorageOnMessageHandlerTest {
         this.testState.mockedStorage.onMessage(envelope, mockedConnection);
 
         verify(this.testState.appendOnlyDataStoreListener, never()).onAdded(any(PersistableNetworkPayload.class));
-        verify(this.testState.mockBroadcaster, never()).broadcast(any(BroadcastMessage.class), any(NodeAddress.class), eq(null));
+        verify(this.testState.mockBroadcaster, never()).broadcast(any(BroadcastMessage.class), any(NodeAddress.class));
     }
 
     @Test
@@ -96,6 +94,6 @@ public class P2PDataStorageOnMessageHandlerTest {
         this.testState.mockedStorage.onMessage(envelope, mockedConnection);
 
         verify(this.testState.appendOnlyDataStoreListener, never()).onAdded(any(PersistableNetworkPayload.class));
-        verify(this.testState.mockBroadcaster, never()).broadcast(any(BroadcastMessage.class), any(NodeAddress.class), eq(null));
+        verify(this.testState.mockBroadcaster, never()).broadcast(any(BroadcastMessage.class), any(NodeAddress.class));
     }
 }

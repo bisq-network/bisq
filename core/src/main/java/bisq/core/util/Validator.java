@@ -53,6 +53,10 @@ public class Validator {
     }
 
     public static void checkTradeId(String tradeId, TradeMessage tradeMessage) {
-        checkArgument(tradeId.equals(tradeMessage.getTradeId()));
+        checkArgument(isTradeIdValid(tradeId, tradeMessage));
+    }
+
+    public static boolean isTradeIdValid(String tradeId, TradeMessage tradeMessage) {
+        return tradeId.equals(tradeMessage.getTradeId());
     }
 }

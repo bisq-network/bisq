@@ -21,23 +21,32 @@ import bisq.core.app.BisqExecutable;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.dao.DaoSetup;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 
+import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
+import bisq.network.p2p.seed.SeedNodeRepository;
 
 import bisq.common.UserThread;
+import bisq.common.app.DevEnv;
 import bisq.common.config.Config;
+import bisq.common.file.JsonFileManager;
 import bisq.common.handlers.ResultHandler;
+import bisq.common.persistence.PersistenceManager;
 import bisq.common.setup.GracefulShutDownHandler;
-import bisq.common.setup.UncaughtExceptionHandler;
 import bisq.common.util.Profiler;
-import bisq.common.util.RestartUtil;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
-import java.io.IOException;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
@@ -45,7 +54,7 @@ import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public abstract class ExecutableForAppWithP2p extends BisqExecutable implements UncaughtExceptionHandler {
+public abstract class ExecutableForAppWithP2p extends BisqExecutable {
     private static final long CHECK_MEMORY_PERIOD_SEC = 300;
     private static final long CHECK_SHUTDOWN_SEC = TimeUnit.HOURS.toSeconds(1);
     private static final long SHUTDOWN_INTERVAL = TimeUnit.HOURS.toMillis(24);
@@ -73,42 +82,111 @@ public abstract class ExecutableForAppWithP2p extends BisqExecutable implements 
     // We don't use the gracefulShutDown implementation of the super class as we have a limited set of modules
     @Override
     public void gracefulShutDown(ResultHandler resultHandler) {
-        log.debug("gracefulShutDown");
+        log.info("gracefulShutDown");
         try {
             if (injector != null) {
+                JsonFileManager.shutDownAllInstances();
+                injector.getInstance(DaoSetup.class).shutDown();
                 injector.getInstance(ArbitratorManager.class).shutDown();
                 injector.getInstance(OpenOfferManager.class).shutDown(() -> injector.getInstance(P2PService.class).shutDown(() -> {
                     injector.getInstance(WalletsSetup.class).shutDownComplete.addListener((ov, o, n) -> {
                         module.close(injector);
-                        log.debug("Graceful shutdown completed");
-                        resultHandler.handleResult();
+
+                        PersistenceManager.flushAllDataToDisk(() -> {
+                            resultHandler.handleResult();
+                            log.info("Graceful shutdown completed. Exiting now.");
+                            System.exit(BisqExecutable.EXIT_SUCCESS);
+                        });
                     });
                     injector.getInstance(WalletsSetup.class).shutDown();
                     injector.getInstance(BtcWalletService.class).shutDown();
                     injector.getInstance(BsqWalletService.class).shutDown();
                 }));
                 // we wait max 5 sec.
-                UserThread.runAfter(resultHandler::handleResult, 5);
+                UserThread.runAfter(() -> {
+                    PersistenceManager.flushAllDataToDisk(() -> {
+                        resultHandler.handleResult();
+                        log.info("Graceful shutdown caused a timeout. Exiting now.");
+                        System.exit(BisqExecutable.EXIT_SUCCESS);
+                    });
+                }, 5);
             } else {
-                UserThread.runAfter(resultHandler::handleResult, 1);
+                UserThread.runAfter(() -> {
+                    resultHandler.handleResult();
+                    System.exit(BisqExecutable.EXIT_SUCCESS);
+                }, 1);
             }
         } catch (Throwable t) {
             log.debug("App shutdown failed with exception");
             t.printStackTrace();
-            System.exit(1);
+            PersistenceManager.flushAllDataToDisk(() -> {
+                resultHandler.handleResult();
+                log.info("Graceful shutdown resulted in an error. Exiting now.");
+                System.exit(BisqExecutable.EXIT_FAILURE);
+            });
+
         }
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // UncaughtExceptionHandler implementation
-    ///////////////////////////////////////////////////////////////////////////////////////////
+    public void startShutDownInterval(GracefulShutDownHandler gracefulShutDownHandler) {
+        if (DevEnv.isDevMode() || injector.getInstance(Config.class).useLocalhostForP2P) {
+            return;
+        }
 
-    @Override
-    public void handleUncaughtException(Throwable throwable, boolean doShutDown) {
-        log.error(throwable.toString());
+        List<NodeAddress> seedNodeAddresses = new ArrayList<>(injector.getInstance(SeedNodeRepository.class).getSeedNodeAddresses());
+        seedNodeAddresses.sort(Comparator.comparing(NodeAddress::getFullAddress));
 
-        if (doShutDown)
-            gracefulShutDown(() -> log.info("gracefulShutDown complete"));
+        NodeAddress myAddress = injector.getInstance(P2PService.class).getNetworkNode().getNodeAddress();
+        int myIndex = -1;
+        for (int i = 0; i < seedNodeAddresses.size(); i++) {
+            if (seedNodeAddresses.get(i).equals(myAddress)) {
+                myIndex = i;
+                break;
+            }
+        }
+
+        if (myIndex == -1) {
+            log.warn("We did not find our node address in the seed nodes repository. " +
+                            "We use a 24 hour delay after startup as shut down strategy." +
+                            "myAddress={}, seedNodeAddresses={}",
+                    myAddress, seedNodeAddresses);
+
+            UserThread.runPeriodically(() -> {
+                if (System.currentTimeMillis() - startTime > SHUTDOWN_INTERVAL) {
+                    log.warn("\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" +
+                                    "Shut down as node was running longer as {} hours" +
+                                    "\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n",
+                            SHUTDOWN_INTERVAL / 3600000);
+
+                    shutDown(gracefulShutDownHandler);
+                }
+
+            }, CHECK_SHUTDOWN_SEC);
+            return;
+        }
+
+        // We interpret the value of myIndex as hour of day (0-23). That way we avoid the risk of a restart of
+        // multiple nodes around the same time in case it would be not deterministic.
+
+        // We wrap our periodic check in a delay of 2 hours to avoid that we get
+        // triggered multiple times after a restart while being in the same hour. It can be that we miss our target
+        // hour during that delay but that is not considered problematic, the seed would just restart a bit longer than
+        // 24 hours.
+        int target = myIndex;
+        UserThread.runAfter(() -> {
+            // We check every hour if we are in the target hour.
+            UserThread.runPeriodically(() -> {
+                int currentHour = ZonedDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")).getHour();
+                if (currentHour == target) {
+                    log.warn("\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" +
+                                    "Shut down node at hour {} (UTC time is {})" +
+                                    "\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n",
+                            target,
+                            ZonedDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")).toString());
+                    shutDown(gracefulShutDownHandler);
+                }
+            }, TimeUnit.MINUTES.toSeconds(10));
+        }, TimeUnit.HOURS.toSeconds(2));
     }
 
     @SuppressWarnings("InfiniteLoopStatement")
@@ -121,24 +199,10 @@ public abstract class ExecutableForAppWithP2p extends BisqExecutable implements 
         }
     }
 
-    protected void startShutDownInterval(GracefulShutDownHandler gracefulShutDownHandler) {
-        UserThread.runPeriodically(() -> {
-            if (System.currentTimeMillis() - startTime > SHUTDOWN_INTERVAL) {
-                log.warn("\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" +
-                                "Shut down as node was running longer as {} hours" +
-                                "\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n",
-                        SHUTDOWN_INTERVAL / 3600000);
-
-                shutDown(gracefulShutDownHandler);
-            }
-
-        }, CHECK_SHUTDOWN_SEC);
-    }
-
     protected void checkMemory(Config config, GracefulShutDownHandler gracefulShutDownHandler) {
         int maxMemory = config.maxMemory;
         UserThread.runPeriodically(() -> {
-            Profiler.printSystemLoad(log);
+            Profiler.printSystemLoad();
             if (!stopped) {
                 long usedMemoryInMB = Profiler.getUsedMemoryInMB();
                 double warningTrigger = maxMemory * 0.8;
@@ -148,7 +212,7 @@ public abstract class ExecutableForAppWithP2p extends BisqExecutable implements 
                                     "\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n",
                             (int) warningTrigger, usedMemoryInMB, Profiler.getFreeMemoryInMB());
                     System.gc();
-                    Profiler.printSystemLoad(log);
+                    Profiler.printSystemLoad();
                 }
 
                 UserThread.runAfter(() -> {
@@ -175,24 +239,6 @@ public abstract class ExecutableForAppWithP2p extends BisqExecutable implements 
         gracefulShutDownHandler.gracefulShutDown(() -> {
             log.info("Shutdown complete");
             System.exit(1);
-        });
-    }
-
-    protected void restart(Config config, GracefulShutDownHandler gracefulShutDownHandler) {
-        stopped = true;
-        gracefulShutDownHandler.gracefulShutDown(() -> {
-            //noinspection finally
-            try {
-                final String[] tokens = config.appDataDir.getPath().split("_");
-                String logPath = "error_" + (tokens.length > 1 ? tokens[tokens.length - 2] : "") + ".log";
-                RestartUtil.restartApplication(logPath);
-            } catch (IOException e) {
-                log.error(e.toString());
-                e.printStackTrace();
-            } finally {
-                log.warn("Shutdown complete");
-                System.exit(0);
-            }
         });
     }
 }

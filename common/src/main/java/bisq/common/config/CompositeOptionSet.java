@@ -4,6 +4,8 @@ import joptsimple.ArgumentAcceptingOptionSpec;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,7 +19,8 @@ import java.util.List;
  * the command line with those provided via config file, such that those provided at the
  * command line take precedence over those provided in the config file.
  */
-class CompositeOptionSet {
+@VisibleForTesting
+public class CompositeOptionSet {
 
     private final List<OptionSet> optionSets = new ArrayList<>();
 

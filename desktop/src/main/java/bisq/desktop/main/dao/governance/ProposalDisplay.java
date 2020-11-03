@@ -29,9 +29,7 @@ import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.BsqValidator;
-import bisq.desktop.util.validation.RegexValidator;
 
-import bisq.common.config.BaseCurrencyNetwork;
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.governance.bond.Bond;
 import bisq.core.dao.governance.bond.role.BondedRole;
@@ -60,9 +58,11 @@ import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
 import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.validation.InputValidator;
+import bisq.core.util.validation.RegexValidator;
 
 import bisq.asset.Asset;
 
+import bisq.common.config.BaseCurrencyNetwork;
 import bisq.common.util.Tuple3;
 
 import org.bitcoinj.core.Coin;

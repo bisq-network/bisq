@@ -101,8 +101,16 @@
     -fx-default-button: derive(-fx-accent, 95%);
     -bs-progress-bar-track: #e0e0e0;
     -bs-white: white;
+    -bs-prompt-text: -fx-control-inner-background;
 
     /* dao chart colors */
     -bs-chart-dao-line1: -bs-color-green-3;
     -bs-chart-dao-line2: -bs-color-blue-5;
+
+    /* Monero orange color code */
+    -xmr-orange: #f26822;
+}
+
+.warning-box {
+    -fx-background-color: -bs-yellow-light;
 }

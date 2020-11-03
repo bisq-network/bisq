@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.settings.preferences;
 
+import bisq.desktop.app.BisqApp;
 import bisq.desktop.common.view.ActivatableViewAndModel;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipButton;
@@ -25,14 +26,16 @@ import bisq.desktop.components.InputTextField;
 import bisq.desktop.components.PasswordTextField;
 import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.main.overlays.windows.EditCustomExplorerWindow;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.ImageUtil;
 import bisq.desktop.util.Layout;
-import bisq.desktop.util.validation.RegexValidator;
+import bisq.desktop.util.validation.BtcValidator;
 
 import bisq.core.btc.wallet.Restrictions;
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.governance.asset.AssetService;
+import bisq.core.filter.Filter;
 import bisq.core.filter.FilterManager;
 import bisq.core.locale.Country;
 import bisq.core.locale.CountryUtil;
@@ -43,15 +46,18 @@ import bisq.core.locale.LanguageUtil;
 import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.provider.fee.FeeService;
-import bisq.core.user.BlockChainExplorer;
 import bisq.core.user.Preferences;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.ParsingUtils;
+import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.validation.IntegerValidator;
+import bisq.core.util.validation.RegexValidator;
+import bisq.core.util.validation.RegexValidatorFactory;
 
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
 import bisq.common.config.Config;
+import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple3;
 import bisq.common.util.Utilities;
 
@@ -68,6 +74,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.Separator;
+import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
@@ -88,8 +95,12 @@ import javafx.collections.ObservableList;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
 
+import java.io.File;
+
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static bisq.desktop.util.FormBuilder.*;
@@ -97,41 +108,39 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @FxmlView
 public class PreferencesView extends ActivatableViewAndModel<GridPane, PreferencesViewModel> {
-
-    // not supported yet
-    //private ComboBox<String> btcDenominationComboBox;
-    private ComboBox<BlockChainExplorer> blockChainExplorerComboBox;
-    private ComboBox<BlockChainExplorer> bsqBlockChainExplorerComboBox;
+    private final CoinFormatter formatter;
+    private TextField btcExplorerTextField, bsqExplorerTextField;
     private ComboBox<String> userLanguageComboBox;
     private ComboBox<Country> userCountryComboBox;
     private ComboBox<TradeCurrency> preferredTradeCurrencyComboBox;
 
     private ToggleButton showOwnOffersInOfferBook, useAnimations, useDarkMode, sortMarketCurrenciesNumerically,
-            avoidStandbyMode, useCustomFee;
+            avoidStandbyMode, useCustomFee, autoConfirmXmrToggle;
     private int gridRow = 0;
+    private int displayCurrenciesGridRowIndex = 0;
     private InputTextField transactionFeeInputTextField, ignoreTradersListInputTextField, ignoreDustThresholdInputTextField,
-    /*referralIdInputTextField,*/
-    rpcUserTextField, blockNotifyPortTextField;
+            autoConfRequiredConfirmationsTf, autoConfServiceAddressTf, autoConfTradeLimitTf, /*referralIdInputTextField,*/
+            rpcUserTextField, blockNotifyPortTextField;
     private ToggleButton isDaoFullNodeToggleButton;
     private PasswordTextField rpcPwTextField;
     private TitledGroupBg daoOptionsTitledGroupBg;
 
     private ChangeListener<Boolean> transactionFeeFocusedListener;
+    private ChangeListener<Boolean> autoConfServiceAddressFocusOutListener, autoConfRequiredConfirmationsFocusOutListener;
     private final Preferences preferences;
     private final FeeService feeService;
     //private final ReferralIdService referralIdService;
     private final AssetService assetService;
     private final FilterManager filterManager;
     private final DaoFacade daoFacade;
+    private final File storageDir;
 
     private ListView<FiatCurrency> fiatCurrenciesListView;
     private ComboBox<FiatCurrency> fiatCurrenciesComboBox;
     private ListView<CryptoCurrency> cryptoCurrenciesListView;
     private ComboBox<CryptoCurrency> cryptoCurrenciesComboBox;
-    private Button resetDontShowAgainButton, resyncDaoButton;
-    // private ListChangeListener<TradeCurrency> displayCurrenciesListChangeListener;
-    private ObservableList<BlockChainExplorer> blockExplorers;
-    private ObservableList<BlockChainExplorer> bsqBlockChainExplorers;
+    private Button resetDontShowAgainButton, resyncDaoFromGenesisButton, resyncDaoFromResourcesButton,
+            editCustomBtcExplorer, editCustomBsqExplorer;
     private ObservableList<String> languageCodes;
     private ObservableList<Country> countries;
     private ObservableList<FiatCurrency> fiatCurrencies;
@@ -139,14 +148,17 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     private ObservableList<CryptoCurrency> cryptoCurrencies;
     private ObservableList<CryptoCurrency> allCryptoCurrencies;
     private ObservableList<TradeCurrency> tradeCurrencies;
-    private InputTextField deviationInputTextField;
-    private ChangeListener<String> deviationListener, ignoreTradersListListener, ignoreDustThresholdListener,
-    /*referralIdListener,*/ rpcUserListener, rpcPwListener, blockNotifyPortListener;
-    private ChangeListener<Boolean> deviationFocusedListener;
+    private InputTextField deviationInputTextField, bsqAverageTrimThresholdTextField;
+    private ChangeListener<String> deviationListener, bsqAverageTrimThresholdListener, ignoreTradersListListener, ignoreDustThresholdListener,
+            rpcUserListener, rpcPwListener, blockNotifyPortListener,
+            autoConfTradeLimitListener, autoConfServiceAddressListener;
+    private ChangeListener<Boolean> deviationFocusedListener, bsqAverageTrimThresholdFocusedListener;
     private ChangeListener<Boolean> useCustomFeeCheckboxListener;
     private ChangeListener<Number> transactionFeeChangeListener;
     private final boolean daoOptionsSet;
     private final boolean displayStandbyModeFeature;
+    private ChangeListener<Filter> filterChangeListener;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, initialisation
@@ -160,26 +172,28 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
                            FilterManager filterManager,
                            DaoFacade daoFacade,
                            Config config,
+                           @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter,
                            @Named(Config.RPC_USER) String rpcUser,
                            @Named(Config.RPC_PASSWORD) String rpcPassword,
-                           @Named(Config.RPC_BLOCK_NOTIFICATION_PORT) int rpcBlockNotificationPort) {
+                           @Named(Config.RPC_BLOCK_NOTIFICATION_PORT) int rpcBlockNotificationPort,
+                           @Named(Config.STORAGE_DIR) File storageDir) {
         super(model);
+        this.formatter = formatter;
         this.preferences = preferences;
         this.feeService = feeService;
         this.assetService = assetService;
         this.filterManager = filterManager;
         this.daoFacade = daoFacade;
+        this.storageDir = storageDir;
         daoOptionsSet = config.fullDaoNodeOptionSetExplicitly &&
                 !rpcUser.isEmpty() &&
                 !rpcPassword.isEmpty() &&
                 rpcBlockNotificationPort != Config.UNSPECIFIED_PORT;
-        this.displayStandbyModeFeature = Utilities.isOSX() || Utilities.isWindows();
+        this.displayStandbyModeFeature = Utilities.isLinux() || Utilities.isOSX() || Utilities.isWindows();
     }
 
     @Override
     public void initialize() {
-        blockExplorers = FXCollections.observableArrayList(preferences.getBlockChainExplorers());
-        bsqBlockChainExplorers = FXCollections.observableArrayList(preferences.getBsqBlockChainExplorers());
         languageCodes = FXCollections.observableArrayList(LanguageUtil.getUserLanguageCodes());
         countries = FXCollections.observableArrayList(CountryUtil.getAllCountries());
         fiatCurrencies = preferences.getFiatCurrenciesAsObservable();
@@ -190,12 +204,12 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         allFiatCurrencies.removeAll(fiatCurrencies);
 
         initializeGeneralOptions();
-        initializeSeparator();
-        initializeDisplayCurrencies();
         initializeDisplayOptions();
         if (DevEnv.isDaoActivated())
             initializeDaoOptions();
-
+        initializeSeparator();
+        initializeAutoConfirmOptions();
+        initializeDisplayCurrencies();
     }
 
 
@@ -208,6 +222,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         activateGeneralOptions();
         activateDisplayCurrencies();
         activateDisplayPreferences();
+        activateAutoConfirmPreferences();
         if (DevEnv.isDaoActivated())
             activateDaoPreferences();
     }
@@ -217,6 +232,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         deactivateGeneralOptions();
         deactivateDisplayCurrencies();
         deactivateDisplayPreferences();
+        deactivateAutoConfirmPreferences();
         if (DevEnv.isDaoActivated())
             deactivateDaoPreferences();
     }
@@ -226,7 +242,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void initializeGeneralOptions() {
-        int titledGroupBgRowSpan = displayStandbyModeFeature ? 8 : 7;
+        int titledGroupBgRowSpan = displayStandbyModeFeature ? 9 : 8;
         TitledGroupBg titledGroupBg = addTitledGroupBg(root, gridRow, titledGroupBgRowSpan, Res.get("setting.preferences.general"));
         GridPane.setColumnSpan(titledGroupBg, 1);
 
@@ -237,15 +253,13 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         userCountryComboBox.setButtonCell(GUIUtil.getComboBoxButtonCell(Res.get("shared.country"), userCountryComboBox,
                 false));
 
-        blockChainExplorerComboBox = addComboBox(root, ++gridRow,
-                Res.get("setting.preferences.explorer"));
-        blockChainExplorerComboBox.setButtonCell(GUIUtil.getComboBoxButtonCell(Res.get("setting.preferences.explorer"),
-                blockChainExplorerComboBox, false));
+        Tuple2<TextField, Button> btcExp = addTextFieldWithEditButton(root, ++gridRow, Res.get("setting.preferences.explorer"));
+        btcExplorerTextField = btcExp.first;
+        editCustomBtcExplorer = btcExp.second;
 
-        bsqBlockChainExplorerComboBox = addComboBox(root, ++gridRow,
-                Res.get("setting.preferences.explorer.bsq"));
-        bsqBlockChainExplorerComboBox.setButtonCell(GUIUtil.getComboBoxButtonCell(Res.get("setting.preferences.explorer.bsq"),
-                bsqBlockChainExplorerComboBox, false));
+        Tuple2<TextField, Button> bsqExp = addTextFieldWithEditButton(root, ++gridRow, Res.get("setting.preferences.explorer.bsq"));
+        bsqExplorerTextField = bsqExp.first;
+        editCustomBsqExplorer = bsqExp.second;
 
         Tuple3<Label, InputTextField, ToggleButton> tuple = addTopLabelInputTextFieldSlideToggleButton(root, ++gridRow,
                 Res.get("setting.preferences.txFee"), Res.get("setting.preferences.useCustomValue"));
@@ -300,7 +314,6 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         // deviation
         deviationInputTextField = addInputTextField(root, ++gridRow,
                 Res.get("setting.preferences.deviation"));
-
         deviationListener = (observable, oldValue, newValue) -> {
             try {
                 double value = ParsingUtils.parsePercentStringToDouble(newValue);
@@ -309,22 +322,22 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
                     preferences.setMaxPriceDistanceInPercent(value);
                 } else {
                     new Popup().warning(Res.get("setting.preferences.deviationToLarge", maxDeviation * 100)).show();
-                    UserThread.runAfter(() -> deviationInputTextField.setText(FormattingUtils.formatPercentagePrice(preferences.getMaxPriceDistanceInPercent())), 100, TimeUnit.MILLISECONDS);
+                    UserThread.runAfter(() -> deviationInputTextField.setText(FormattingUtils.formatToPercentWithSymbol(preferences.getMaxPriceDistanceInPercent())), 100, TimeUnit.MILLISECONDS);
                 }
             } catch (NumberFormatException t) {
                 log.error("Exception at parseDouble deviation: " + t.toString());
-                UserThread.runAfter(() -> deviationInputTextField.setText(FormattingUtils.formatPercentagePrice(preferences.getMaxPriceDistanceInPercent())), 100, TimeUnit.MILLISECONDS);
+                UserThread.runAfter(() -> deviationInputTextField.setText(FormattingUtils.formatToPercentWithSymbol(preferences.getMaxPriceDistanceInPercent())), 100, TimeUnit.MILLISECONDS);
             }
         };
         deviationFocusedListener = (observable1, oldValue1, newValue1) -> {
             if (oldValue1 && !newValue1)
-                UserThread.runAfter(() -> deviationInputTextField.setText(FormattingUtils.formatPercentagePrice(preferences.getMaxPriceDistanceInPercent())), 100, TimeUnit.MILLISECONDS);
+                UserThread.runAfter(() -> deviationInputTextField.setText(FormattingUtils.formatToPercentWithSymbol(preferences.getMaxPriceDistanceInPercent())), 100, TimeUnit.MILLISECONDS);
         };
 
         // ignoreTraders
         ignoreTradersListInputTextField = addInputTextField(root, ++gridRow,
                 Res.get("setting.preferences.ignorePeers"));
-        RegexValidator regexValidator = GUIUtil.addressRegexValidator();
+        RegexValidator regexValidator = RegexValidatorFactory.addressRegexValidator();
         ignoreTradersListInputTextField.setValidator(regexValidator);
         ignoreTradersListInputTextField.setErrorMessage(Res.get("validation.invalidAddressList"));
         ignoreTradersListListener = (observable, oldValue, newValue) -> {
@@ -379,17 +392,15 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     }
 
     private void initializeDisplayCurrencies() {
-        int displayCurrenciesGridRowIndex = 0;
 
-        TitledGroupBg titledGroupBg = addTitledGroupBg(root, displayCurrenciesGridRowIndex, 9,
-                Res.get("setting.preferences.currenciesInList"));
+        TitledGroupBg titledGroupBg = addTitledGroupBg(root, displayCurrenciesGridRowIndex, 8,
+                Res.get("setting.preferences.currenciesInList"), Layout.GROUP_DISTANCE);
         GridPane.setColumnIndex(titledGroupBg, 2);
         GridPane.setColumnSpan(titledGroupBg, 2);
 
-
         preferredTradeCurrencyComboBox = addComboBox(root, displayCurrenciesGridRowIndex++,
                 Res.get("setting.preferences.prefCurrency"),
-                Layout.FIRST_ROW_DISTANCE);
+                Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         GridPane.setColumnIndex(preferredTradeCurrencyComboBox, 2);
 
         preferredTradeCurrencyComboBox.setConverter(new StringConverter<>() {
@@ -580,13 +591,14 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
                 return null;
             }
         });
+
+        displayCurrenciesGridRowIndex += listRowSpan;
     }
 
     private void initializeDisplayOptions() {
         TitledGroupBg titledGroupBg = addTitledGroupBg(root, ++gridRow, 5, Res.get("setting.preferences.displayOptions"), Layout.GROUP_DISTANCE);
         GridPane.setColumnSpan(titledGroupBg, 1);
 
-//        showOwnOffersInOfferBook = addLabelCheckBox(root, gridRow, Res.get("setting.preferences.showOwnOffers"), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         showOwnOffersInOfferBook = addSlideToggleButton(root, gridRow, Res.get("setting.preferences.showOwnOffers"), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         useAnimations = addSlideToggleButton(root, ++gridRow, Res.get("setting.preferences.useAnimations"));
         useDarkMode = addSlideToggleButton(root, ++gridRow, Res.get("setting.preferences.useDarkMode"));
@@ -600,10 +612,44 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     }
 
     private void initializeDaoOptions() {
-        daoOptionsTitledGroupBg = addTitledGroupBg(root, ++gridRow, 1, Res.get("setting.preferences.daoOptions"), Layout.GROUP_DISTANCE);
-        resyncDaoButton = addButton(root, gridRow, Res.get("setting.preferences.dao.resync.label"), Layout.TWICE_FIRST_ROW_AND_GROUP_DISTANCE);
-        resyncDaoButton.setMaxWidth(Double.MAX_VALUE);
-        GridPane.setHgrow(resyncDaoButton, Priority.ALWAYS);
+        daoOptionsTitledGroupBg = addTitledGroupBg(root, ++gridRow, 4, Res.get("setting.preferences.daoOptions"), Layout.GROUP_DISTANCE);
+        resyncDaoFromResourcesButton = addButton(root, gridRow, Res.get("setting.preferences.dao.resyncFromResources.label"), Layout.TWICE_FIRST_ROW_AND_GROUP_DISTANCE);
+        resyncDaoFromResourcesButton.setMaxWidth(Double.MAX_VALUE);
+        GridPane.setHgrow(resyncDaoFromResourcesButton, Priority.ALWAYS);
+
+        resyncDaoFromGenesisButton = addButton(root, ++gridRow, Res.get("setting.preferences.dao.resyncFromGenesis.label"));
+        resyncDaoFromGenesisButton.setMaxWidth(Double.MAX_VALUE);
+        GridPane.setHgrow(resyncDaoFromGenesisButton, Priority.ALWAYS);
+
+        bsqAverageTrimThresholdTextField = addInputTextField(root, ++gridRow,
+                Res.get("setting.preferences.bsqAverageTrimThreshold"));
+        bsqAverageTrimThresholdTextField.setText(FormattingUtils.formatToPercentWithSymbol(preferences.getBsqAverageTrimThreshold()));
+
+        bsqAverageTrimThresholdListener = (observable, oldValue, newValue) -> {
+            try {
+                double value = ParsingUtils.parsePercentStringToDouble(newValue);
+                double maxValue = 0.49;
+                checkArgument(value >= 0, "Input must be positive");
+                if (value <= maxValue) {
+                    preferences.setBsqAverageTrimThreshold(value);
+                } else {
+                    new Popup().warning(Res.get("setting.preferences.deviationToLarge",
+                            maxValue * 100)).show();
+                    UserThread.runAfter(() -> bsqAverageTrimThresholdTextField.setText(FormattingUtils.formatToPercentWithSymbol(
+                            preferences.getBsqAverageTrimThreshold())), 100, TimeUnit.MILLISECONDS);
+                }
+            } catch (NumberFormatException t) {
+                log.error("Exception: " + t.toString());
+                UserThread.runAfter(() -> bsqAverageTrimThresholdTextField.setText(FormattingUtils.formatToPercentWithSymbol(
+                        preferences.getBsqAverageTrimThreshold())), 100, TimeUnit.MILLISECONDS);
+            }
+        };
+        bsqAverageTrimThresholdFocusedListener = (observable1, oldValue1, newValue1) -> {
+            if (oldValue1 && !newValue1)
+                UserThread.runAfter(() -> bsqAverageTrimThresholdTextField.setText(FormattingUtils.formatToPercentWithSymbol(
+                        preferences.getBsqAverageTrimThreshold())), 100, TimeUnit.MILLISECONDS);
+        };
+
 
         isDaoFullNodeToggleButton = addSlideToggleButton(root, ++gridRow, Res.get("setting.preferences.dao.isDaoFullNode"));
         rpcUserTextField = addInputTextField(root, ++gridRow, Res.get("setting.preferences.dao.rpcUser"));
@@ -633,24 +679,117 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         };
     }
 
+    private void initializeAutoConfirmOptions() {
+        GridPane autoConfirmGridPane = new GridPane();
+        GridPane.setHgrow(autoConfirmGridPane, Priority.ALWAYS);
+        root.add(autoConfirmGridPane, 2, displayCurrenciesGridRowIndex, 2, 10);
+        addTitledGroupBg(autoConfirmGridPane, 0, 4, Res.get("setting.preferences.autoConfirmXMR"), 0);
+        int localRowIndex = 0;
+        autoConfirmXmrToggle = addSlideToggleButton(autoConfirmGridPane, localRowIndex, Res.get("setting.preferences.autoConfirmEnabled"), Layout.FIRST_ROW_DISTANCE);
+
+        autoConfRequiredConfirmationsTf = addInputTextField(autoConfirmGridPane, ++localRowIndex, Res.get("setting.preferences.autoConfirmRequiredConfirmations"));
+        autoConfRequiredConfirmationsTf.setValidator(new IntegerValidator(1, DevEnv.isDevMode() ? 100000000 : 1000));
+
+        autoConfTradeLimitTf = addInputTextField(autoConfirmGridPane, ++localRowIndex, Res.get("setting.preferences.autoConfirmMaxTradeSize"));
+        autoConfTradeLimitTf.setValidator(new BtcValidator(formatter));
+
+        autoConfServiceAddressTf = addInputTextField(autoConfirmGridPane, ++localRowIndex, Res.get("setting.preferences.autoConfirmServiceAddresses"));
+        GridPane.setHgrow(autoConfServiceAddressTf, Priority.ALWAYS);
+        displayCurrenciesGridRowIndex += 4;
+
+        autoConfServiceAddressListener = (observable, oldValue, newValue) -> {
+            if (!newValue.equals(oldValue)) {
+
+                RegexValidator onionRegex = RegexValidatorFactory.onionAddressRegexValidator();
+                RegexValidator localhostRegex = RegexValidatorFactory.localhostAddressRegexValidator();
+                RegexValidator localnetRegex = RegexValidatorFactory.localnetAddressRegexValidator();
+
+                List<String> serviceAddressesRaw = Arrays.asList(StringUtils.deleteWhitespace(newValue).split(","));
+
+                // revert to default service providers when user empties the list
+                if (serviceAddressesRaw.size() == 1 && serviceAddressesRaw.get(0).isEmpty()) {
+                    serviceAddressesRaw = preferences.getDefaultXmrTxProofServices();
+                }
+
+                // we must always communicate with XMR explorer API securely
+                // if *.onion hostname, we use Tor normally
+                // if localhost, LAN address, or *.local FQDN we use HTTP without Tor
+                // otherwise we enforce https:// for any clearnet FQDN hostname
+                List<String> serviceAddressesParsed = new ArrayList<String>();
+                serviceAddressesRaw.forEach((addr) -> {
+                    addr = addr.replaceAll("http://", "").replaceAll("https://", "");
+                    if (onionRegex.validate(addr).isValid) {
+                        log.info("Using Tor for onion hostname: {}", addr);
+                        serviceAddressesParsed.add(addr);
+                    } else if (localhostRegex.validate(addr).isValid) {
+                        log.info("Using HTTP without Tor for Loopback address: {}", addr);
+                        serviceAddressesParsed.add("http://" + addr);
+                    } else if (localnetRegex.validate(addr).isValid) {
+                        log.info("Using HTTP without Tor for LAN address: {}", addr);
+                        serviceAddressesParsed.add("http://" + addr);
+                    } else {
+                        log.info("Using HTTPS with Tor for Clearnet address: {}", addr);
+                        serviceAddressesParsed.add("https://" + addr);
+                    }
+                });
+
+                preferences.setAutoConfServiceAddresses("XMR", serviceAddressesParsed);
+            }
+        };
+
+        autoConfTradeLimitListener = (observable, oldValue, newValue) -> {
+            if (!newValue.equals(oldValue) && autoConfTradeLimitTf.getValidator().validate(newValue).isValid) {
+                Coin amountAsCoin = ParsingUtils.parseToCoin(newValue, formatter);
+                preferences.setAutoConfTradeLimit("XMR", amountAsCoin.value);
+            }
+        };
+
+        autoConfServiceAddressFocusOutListener = (observable, oldValue, newValue) -> {
+            if (oldValue && !newValue) {
+                log.info("Service address focus out, check and re-display default option");
+                if (autoConfServiceAddressTf.getText().isEmpty()) {
+                    preferences.findAutoConfirmSettings("XMR").ifPresent(autoConfirmSettings -> {
+                        List<String> serviceAddresses = autoConfirmSettings.getServiceAddresses();
+                        autoConfServiceAddressTf.setText(String.join(", ", serviceAddresses));
+                    });
+                }
+            }
+        };
+
+        // We use a focus out handler to not update the data during entering text as that might lead to lower than
+        // intended numbers which could be lead in the worst case to auto completion as number of confirmations is
+        // reached. E.g. user had value 10 and wants to change it to 15 and deletes the 0, so current value would be 1.
+        // If the service result just comes in at that moment the service might be considered complete as 1 is at that
+        // moment used. We read the data just in time to make changes more flexible, otherwise user would need to
+        // restart to apply changes from the number of confirmations settings.
+        // Other fields like service addresses and limits are not affected and are taken at service start and cannot be
+        // changed for already started services.
+        autoConfRequiredConfirmationsFocusOutListener = (observable, oldValue, newValue) -> {
+            if (oldValue && !newValue) {
+                String txt = autoConfRequiredConfirmationsTf.getText();
+                if (autoConfRequiredConfirmationsTf.getValidator().validate(txt).isValid) {
+                    int requiredConfirmations = Integer.parseInt(txt);
+                    preferences.setAutoConfRequiredConfirmations("XMR", requiredConfirmations);
+                } else {
+                    preferences.findAutoConfirmSettings("XMR")
+                            .ifPresent(e -> autoConfRequiredConfirmationsTf
+                                    .setText(String.valueOf(e.getRequiredConfirmations())));
+                }
+            }
+        };
+
+        filterChangeListener = (observable, oldValue, newValue) -> {
+            autoConfirmGridPane.setDisable(newValue != null && newValue.isDisableAutoConf());
+        };
+        autoConfirmGridPane.setDisable(filterManager.getFilter() != null && filterManager.getFilter().isDisableAutoConf());
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Activate
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void activateGeneralOptions() {
-       /* List<BaseCurrencyNetwork> baseCurrencyNetworks = Arrays.asList(BaseCurrencyNetwork.values());
-
-        // We allow switching to testnet to make it easier for users to test the testnet DAO version
-        // We only show mainnet and dao testnet. Testnet is rather un-usable for application testing when asics
-        // create 10000s of blocks per day.
-        baseCurrencyNetworks = baseCurrencyNetworks.stream()
-                .filter(e -> e.isMainnet() || e.isDaoBetaNet() || e.isDaoRegTest())
-                .collect(Collectors.toList());
-        selectBaseCurrencyNetworkComboBox.setItems(FXCollections.observableArrayList(baseCurrencyNetworks));
-        selectBaseCurrencyNetworkComboBox.setOnAction(e -> onSelectNetwork());
-        selectBaseCurrencyNetworkComboBox.getSelectionModel().select(BaseCurrencyNetwork.CURRENT_VALUE);*/
-
         boolean useCustomWithdrawalTxFee = preferences.isUseCustomWithdrawalTxFee();
         useCustomFee.setSelected(useCustomWithdrawalTxFee);
 
@@ -695,17 +834,6 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
                             .show();
                 }
             }
-            // Should we apply the changed currency immediately to the language list?
-            // If so and the user selects a unknown language he might get lost and it is hard to find
-            // again the language he understands
-           /* if (selectedItem != null && !selectedItem.equals(preferences.getUserLanguage())) {
-                preferences.setUserLanguage(selectedItem);
-                UserThread.execute(() -> {
-                    languageCodes.clear();
-                    languageCodes.addAll(LanguageUtil.getAllLanguageCodes());
-                    userLanguageComboBox.getSelectionModel().select(preferences.getUserLanguage());
-                });
-            }*/
         });
 
         userCountryComboBox.setItems(countries);
@@ -728,37 +856,10 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
             }
         });
 
-        blockChainExplorerComboBox.setItems(blockExplorers);
-        blockChainExplorerComboBox.getSelectionModel().select(preferences.getBlockChainExplorer());
-        blockChainExplorerComboBox.setConverter(new StringConverter<>() {
-            @Override
-            public String toString(BlockChainExplorer blockChainExplorer) {
-                return blockChainExplorer.name;
-            }
+        btcExplorerTextField.setText(preferences.getBlockChainExplorer().name);
+        bsqExplorerTextField.setText(preferences.getBsqBlockChainExplorer().name);
 
-            @Override
-            public BlockChainExplorer fromString(String string) {
-                return null;
-            }
-        });
-        blockChainExplorerComboBox.setOnAction(e -> preferences.setBlockChainExplorer(blockChainExplorerComboBox.getSelectionModel().getSelectedItem()));
-
-        bsqBlockChainExplorerComboBox.setItems(bsqBlockChainExplorers);
-        bsqBlockChainExplorerComboBox.getSelectionModel().select(preferences.getBsqBlockChainExplorer());
-        bsqBlockChainExplorerComboBox.setConverter(new StringConverter<>() {
-            @Override
-            public String toString(BlockChainExplorer bsqBlockChainExplorer) {
-                return bsqBlockChainExplorer.name;
-            }
-
-            @Override
-            public BlockChainExplorer fromString(String string) {
-                return null;
-            }
-        });
-        bsqBlockChainExplorerComboBox.setOnAction(e -> preferences.setBsqBlockChainExplorer(bsqBlockChainExplorerComboBox.getSelectionModel().getSelectedItem()));
-
-        deviationInputTextField.setText(FormattingUtils.formatPercentagePrice(preferences.getMaxPriceDistanceInPercent()));
+        deviationInputTextField.setText(FormattingUtils.formatToPercentWithSymbol(preferences.getMaxPriceDistanceInPercent()));
         deviationInputTextField.textProperty().addListener(deviationListener);
         deviationInputTextField.focusedProperty().addListener(deviationFocusedListener);
 
@@ -829,13 +930,38 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         useDarkMode.setSelected(preferences.getCssTheme() == 1);
         useDarkMode.setOnAction(e -> preferences.setCssTheme(useDarkMode.isSelected()));
 
-        // useStickyMarketPriceCheckBox.setSelected(preferences.isUseStickyMarketPrice());
-        // useStickyMarketPriceCheckBox.setOnAction(e -> preferences.setUseStickyMarketPrice(useStickyMarketPriceCheckBox.isSelected()));
-
         sortMarketCurrenciesNumerically.setSelected(preferences.isSortMarketCurrenciesNumerically());
         sortMarketCurrenciesNumerically.setOnAction(e -> preferences.setSortMarketCurrenciesNumerically(sortMarketCurrenciesNumerically.isSelected()));
 
         resetDontShowAgainButton.setOnAction(e -> preferences.resetDontShowAgain());
+
+        editCustomBtcExplorer.setOnAction(e -> {
+            EditCustomExplorerWindow urlWindow = new EditCustomExplorerWindow("BTC",
+                    preferences.getBlockChainExplorer(), preferences.getBlockChainExplorers());
+            urlWindow
+                    .actionButtonText(Res.get("shared.save"))
+                    .onAction(() -> {
+                        preferences.setBlockChainExplorer(urlWindow.getEditedBlockChainExplorer());
+                        btcExplorerTextField.setText(preferences.getBlockChainExplorer().name);
+                    })
+                    .closeButtonText(Res.get("shared.cancel"))
+                    .onClose(urlWindow::hide)
+                    .show();
+        });
+
+        editCustomBsqExplorer.setOnAction(e -> {
+            EditCustomExplorerWindow urlWindow = new EditCustomExplorerWindow("BSQ",
+                    preferences.getBsqBlockChainExplorer(), preferences.getBsqBlockChainExplorers());
+            urlWindow
+                    .actionButtonText(Res.get("shared.save"))
+                    .onAction(() -> {
+                        preferences.setBsqBlockChainExplorer(urlWindow.getEditedBlockChainExplorer());
+                        bsqExplorerTextField.setText(preferences.getBsqBlockChainExplorer().name);
+                    })
+                    .closeButtonText(Res.get("shared.cancel"))
+                    .onClose(urlWindow::hide)
+                    .show();
+        });
 
         // We use opposite property (useStandbyMode) in preferences to have the default value (false) set as we want it,
         // so users who update gets set avoidStandbyMode=true (useStandbyMode=false)
@@ -850,6 +976,10 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     private void activateDaoPreferences() {
         boolean daoFullNode = preferences.isDaoFullNode();
         isDaoFullNodeToggleButton.setSelected(daoFullNode);
+
+        bsqAverageTrimThresholdTextField.textProperty().addListener(bsqAverageTrimThresholdListener);
+        bsqAverageTrimThresholdTextField.focusedProperty().addListener(bsqAverageTrimThresholdFocusedListener);
+
         String rpcUser = preferences.getRpcUser();
         String rpcPw = preferences.getRpcPw();
         int blockNotifyPort = preferences.getBlockNotifyPort();
@@ -865,11 +995,26 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         blockNotifyPortTextField.setText(blockNotifyPort > 0 ? String.valueOf(blockNotifyPort) : "");
         updateDaoFields();
 
-        resyncDaoButton.setOnAction(e -> daoFacade.resyncDao(() ->
-                new Popup().attention(Res.get("setting.preferences.dao.resync.popup"))
+        resyncDaoFromResourcesButton.setOnAction(e -> {
+            try {
+                daoFacade.resyncDaoStateFromResources(storageDir);
+                new Popup().attention(Res.get("setting.preferences.dao.resyncFromResources.popup"))
                         .useShutDownButton()
                         .hideCloseButton()
-                        .show()));
+                        .show();
+            } catch (Throwable t) {
+                t.printStackTrace();
+                log.error(t.toString());
+                new Popup().error(t.toString()).show();
+            }
+        });
+
+        resyncDaoFromGenesisButton.setOnAction(e ->
+                new Popup().attention(Res.get("setting.preferences.dao.resyncFromGenesis.popup"))
+                        .actionButtonText(Res.get("setting.preferences.dao.resyncFromGenesis.resync"))
+                        .onAction(() -> daoFacade.resyncDaoStateFromGenesis(() -> BisqApp.getShutDownHandler().run()))
+                        .closeButtonText(Res.get("shared.cancel"))
+                        .show());
 
         isDaoFullNodeToggleButton.setOnAction(e -> {
             String key = "daoFullModeInfoShown";
@@ -896,9 +1041,26 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         blockNotifyPortTextField.textProperty().addListener(blockNotifyPortListener);
     }
 
+    private void activateAutoConfirmPreferences() {
+        preferences.findAutoConfirmSettings("XMR").ifPresent(autoConfirmSettings -> {
+            autoConfirmXmrToggle.setSelected(autoConfirmSettings.isEnabled());
+            autoConfRequiredConfirmationsTf.setText(String.valueOf(autoConfirmSettings.getRequiredConfirmations()));
+            autoConfTradeLimitTf.setText(formatter.formatCoin(Coin.valueOf(autoConfirmSettings.getTradeLimit())));
+            autoConfServiceAddressTf.setText(String.join(", ", autoConfirmSettings.getServiceAddresses()));
+            autoConfRequiredConfirmationsTf.focusedProperty().addListener(autoConfRequiredConfirmationsFocusOutListener);
+            autoConfTradeLimitTf.textProperty().addListener(autoConfTradeLimitListener);
+            autoConfServiceAddressTf.textProperty().addListener(autoConfServiceAddressListener);
+            autoConfServiceAddressTf.focusedProperty().addListener(autoConfServiceAddressFocusOutListener);
+            autoConfirmXmrToggle.setOnAction(e -> {
+                preferences.setAutoConfEnabled(autoConfirmSettings.getCurrencyCode(), autoConfirmXmrToggle.isSelected());
+            });
+            filterManager.filterProperty().addListener(filterChangeListener);
+        });
+    }
+
     private void updateDaoFields() {
         boolean isDaoFullNode = isDaoFullNodeToggleButton.isSelected();
-        GridPane.setRowSpan(daoOptionsTitledGroupBg, isDaoFullNode ? 5 : 2);
+        GridPane.setRowSpan(daoOptionsTitledGroupBg, isDaoFullNode ? 6 : 3);
         rpcUserTextField.setVisible(isDaoFullNode);
         rpcUserTextField.setManaged(isDaoFullNode);
         rpcPwTextField.setVisible(isDaoFullNode);
@@ -918,22 +1080,6 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         blockNotifyPortTextField.setDisable(daoOptionsSet);
     }
 
-   /* private void onSelectNetwork() {
-        if (selectBaseCurrencyNetworkComboBox.getSelectionModel().getSelectedItem() != BaseCurrencyNetwork.CURRENT_VALUE)
-            selectNetwork();
-    }
-
-    private void selectNetwork() {
-        new Popup().warning(Res.get("settings.net.needRestart"))
-                .onAction(() -> {
-                    bisqEnvironment.saveBaseCryptoNetwork(selectBaseCurrencyNetworkComboBox.getSelectionModel().getSelectedItem());
-                    UserThread.runAfter(BisqApp.getShutDownHandler(), 500, TimeUnit.MILLISECONDS);
-                })
-                .actionButtonText(Res.get("shared.shutDown"))
-                .closeButtonText(Res.get("shared.cancel"))
-                .onClose(() -> selectBaseCurrencyNetworkComboBox.getSelectionModel().select(BaseCurrencyNetwork.CURRENT_VALUE))
-                .show();
-    }*/
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Deactivate
@@ -943,8 +1089,8 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         //selectBaseCurrencyNetworkComboBox.setOnAction(null);
         userLanguageComboBox.setOnAction(null);
         userCountryComboBox.setOnAction(null);
-        blockChainExplorerComboBox.setOnAction(null);
-        bsqBlockChainExplorerComboBox.setOnAction(null);
+        editCustomBtcExplorer.setOnAction(null);
+        editCustomBsqExplorer.setOnAction(null);
         deviationInputTextField.textProperty().removeListener(deviationListener);
         deviationInputTextField.focusedProperty().removeListener(deviationFocusedListener);
         transactionFeeInputTextField.focusedProperty().removeListener(transactionFeeFocusedListener);
@@ -973,10 +1119,24 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     }
 
     private void deactivateDaoPreferences() {
-        resyncDaoButton.setOnAction(null);
+        resyncDaoFromResourcesButton.setOnAction(null);
+        resyncDaoFromGenesisButton.setOnAction(null);
+        bsqAverageTrimThresholdTextField.textProperty().removeListener(bsqAverageTrimThresholdListener);
+        bsqAverageTrimThresholdTextField.focusedProperty().removeListener(bsqAverageTrimThresholdFocusedListener);
         isDaoFullNodeToggleButton.setOnAction(null);
         rpcUserTextField.textProperty().removeListener(rpcUserListener);
         rpcPwTextField.textProperty().removeListener(rpcPwListener);
         blockNotifyPortTextField.textProperty().removeListener(blockNotifyPortListener);
+    }
+
+    private void deactivateAutoConfirmPreferences() {
+        preferences.findAutoConfirmSettings("XMR").ifPresent(autoConfirmSettings -> {
+            autoConfirmXmrToggle.setOnAction(null);
+            autoConfTradeLimitTf.textProperty().removeListener(autoConfTradeLimitListener);
+            autoConfServiceAddressTf.textProperty().removeListener(autoConfServiceAddressListener);
+            autoConfServiceAddressTf.focusedProperty().removeListener(autoConfServiceAddressFocusOutListener);
+            autoConfRequiredConfirmationsTf.focusedProperty().removeListener(autoConfRequiredConfirmationsFocusOutListener);
+            filterManager.filterProperty().removeListener(filterChangeListener);
+        });
     }
 }

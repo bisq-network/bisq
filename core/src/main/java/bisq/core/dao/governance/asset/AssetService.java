@@ -36,12 +36,9 @@ import bisq.core.dao.state.model.blockchain.TxType;
 import bisq.core.dao.state.model.governance.EvaluatedProposal;
 import bisq.core.dao.state.model.governance.RemoveAssetProposal;
 import bisq.core.locale.CurrencyUtil;
-import bisq.core.trade.statistics.TradeStatistics2;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.util.coin.BsqFormatter;
 
-import bisq.common.Timer;
-import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
@@ -52,29 +49,24 @@ import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
 
-import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.SimpleIntegerProperty;
-
-import javafx.collections.SetChangeListener;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import lombok.Getter;
+import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
 import org.jetbrains.annotations.NotNull;
+
+import javax.annotation.Nullable;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -89,14 +81,10 @@ public class AssetService implements DaoSetupService, DaoStateListener {
     private final DaoStateService daoStateService;
     private final BsqFormatter bsqFormatter;
 
-    @Getter
-    private IntegerProperty updateFlag = new SimpleIntegerProperty(0);
-    @Getter
-    private final List<StatefulAsset> statefulAssets = new ArrayList<>();
-    private Map<String, List<TradeStatistics2>> tradeStatsByTickerSymbol;
+    // Only accessed via getter which fills the list on demand
+    private final List<StatefulAsset> lazyLoadedStatefulAssets = new ArrayList<>();
     private long bsqFeePerDay;
     private long minVolumeInBtc;
-    private Timer timer;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -118,21 +106,6 @@ public class AssetService implements DaoSetupService, DaoStateListener {
         this.bsqFormatter = bsqFormatter;
     }
 
-    public void onAllServicesInitialized() {
-        tradeStatsByTickerSymbol = getTradeStatsByTickerSymbol();
-        tradeStatisticsManager.getObservableTradeStatisticsSet().addListener((SetChangeListener<TradeStatistics2>) change -> {
-            // At startup if a user has downloaded the app long after the release he might receive a lots of trade statistic
-            // objects from the seed node. We don't want to trigger the expensive getTradeStatsByTickerSymbol call in
-            // between so we delay 20 sec. to be sure to call it after the data has been processed.
-            // To use a listener would be better but that requires bigger effort at the p2p lib side.
-            if (timer == null)
-                timer = UserThread.runAfter(() -> {
-                    tradeStatsByTickerSymbol = getTradeStatsByTickerSymbol();
-                    updateList();
-                    timer = null;
-                }, 20);
-        });
-    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // DaoSetupService
@@ -144,127 +117,8 @@ public class AssetService implements DaoSetupService, DaoStateListener {
     }
 
     @Override
+    @SuppressWarnings({"EmptyMethod"})
     public void start() {
-        statefulAssets.clear();
-        statefulAssets.addAll(CurrencyUtil.getSortedAssetStream()
-                .filter(asset -> !asset.getTickerSymbol().equals("BSQ"))
-                .map(StatefulAsset::new)
-                .collect(Collectors.toList()));
-    }
-
-    private void updateList() {
-        if (tradeStatsByTickerSymbol == null)
-            return;
-
-        statefulAssets.forEach(statefulAsset -> {
-            AssetState assetState;
-            if (wasAssetRemovedByVoting(statefulAsset.getTickerSymbol())) {
-                assetState = AssetState.REMOVED_BY_VOTING;
-            } else {
-                statefulAsset.setFeePayments(getFeePayments(statefulAsset));
-
-                long lookBackPeriodInDays = getLookBackPeriodInDays(statefulAsset);
-                statefulAsset.setLookBackPeriodInDays(lookBackPeriodInDays);
-                long tradeVolume = getTradeVolume(statefulAsset, lookBackPeriodInDays);
-                statefulAsset.setTradeVolume(tradeVolume);
-                if (isInTrialPeriod(statefulAsset)) {
-                    assetState = AssetState.IN_TRIAL_PERIOD;
-                } else if (tradeVolume >= minVolumeInBtc) {
-                    assetState = AssetState.ACTIVELY_TRADED;
-                } else {
-                    assetState = AssetState.DE_LISTED;
-                }
-            }
-            statefulAsset.setAssetState(assetState);
-        });
-
-        updateFlag.set(updateFlag.get() + 1);
-    }
-
-    private Map<String, List<TradeStatistics2>> getTradeStatsByTickerSymbol() {
-        Map<String, List<TradeStatistics2>> map = new HashMap<>();
-        tradeStatisticsManager.getObservableTradeStatisticsSet().stream()
-                .filter(e -> CurrencyUtil.isCryptoCurrency(e.getBaseCurrency()))
-                .forEach(e -> {
-                    map.putIfAbsent(e.getBaseCurrency(), new ArrayList<>());
-                    map.get(e.getBaseCurrency()).add(e);
-                });
-        return map;
-    }
-
-    private boolean isInTrialPeriod(StatefulAsset statefulAsset) {
-        for (FeePayment feePayment : statefulAsset.getFeePayments()) {
-            Optional<Integer> passedDays = feePayment.getPassedDays(daoStateService);
-            if (passedDays.isPresent()) {
-                long daysCoveredByFee = feePayment.daysCoveredByFee(bsqFeePerDay);
-                if (daysCoveredByFee >= passedDays.get()) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    private long getTradeVolume(StatefulAsset statefulAsset, long lookBackPeriodInDays) {
-        String tickerSymbol = statefulAsset.getTickerSymbol();
-        if (tradeStatsByTickerSymbol.containsKey(tickerSymbol)) {
-            List<TradeStatistics2> tradeStatisticsForAsset = tradeStatsByTickerSymbol.get(tickerSymbol);
-            return getTradeVolume(tradeStatisticsForAsset, lookBackPeriodInDays);
-        } else {
-            return 0;
-        }
-    }
-
-    @NotNull
-    private Long getLookBackPeriodInDays(StatefulAsset statefulAsset) {
-        // We need to use the block height of the fee payment tx not the current one as feePerDay might have been
-        // changed in the meantime.
-        long bsqFeePerDay = statefulAsset.getLastFeePayment()
-                .flatMap(feePayment -> daoStateService.getTx(feePayment.getTxId()))
-                .map(tx -> daoStateService.getParamValueAsCoin(Param.ASSET_LISTING_FEE_PER_DAY, tx.getBlockHeight()).value)
-                .orElse(bsqFormatter.parseParamValueToCoin(Param.ASSET_LISTING_FEE_PER_DAY, Param.ASSET_LISTING_FEE_PER_DAY.getDefaultValue()).value);
-
-        return statefulAsset.getLastFeePayment()
-                .map(feePayment -> feePayment.daysCoveredByFee(bsqFeePerDay))
-                .orElse(DEFAULT_LOOK_BACK_PERIOD);
-    }
-
-    private long getTradeVolume(List<TradeStatistics2> tradeStatisticsForAsset, long lookBackPeriodInDays) {
-        // We cannot use blocks as the block height is not in the TradeStatistics2 object and the lookup for all the
-        // deposit txs would be too expensive.
-        long lookBackPeriodInMs = TimeUnit.DAYS.toMillis(lookBackPeriodInDays);
-        AtomicLong accumulatedTradeAmount = new AtomicLong(0);
-        long now = new Date().getTime();
-        tradeStatisticsForAsset.forEach(stat -> {
-            long timePassed = now - stat.getTradeDate().getTime();
-            if (timePassed < lookBackPeriodInMs) {
-                accumulatedTradeAmount.addAndGet(stat.getTradeAmount().value);
-            }
-        });
-        return accumulatedTradeAmount.get();
-    }
-
-    private List<FeePayment> getFeePayments(StatefulAsset statefulAsset) {
-        return getFeeTxs(statefulAsset).stream()
-                .map(tx -> {
-                    String txId = tx.getId();
-                    long burntFee = tx.getBurntFee();
-                    return new FeePayment(txId, burntFee);
-                })
-                .collect(Collectors.toList());
-    }
-
-    private List<Tx> getFeeTxs(StatefulAsset statefulAsset) {
-        return daoStateService.getAssetListingFeeOpReturnTxOutputs().stream()
-                .filter(txOutput -> {
-                    byte[] hash = AssetConsensus.getHash(statefulAsset);
-                    byte[] opReturnData = AssetConsensus.getOpReturnData(hash);
-                    return Arrays.equals(opReturnData, txOutput.getOpReturnData());
-                })
-                .map(txOutput -> daoStateService.getTx(txOutput.getTxId()).orElse(null))
-                .filter(Objects::nonNull)
-                .sorted(Comparator.comparing(BaseTx::getTime))
-                .collect(Collectors.toList());
     }
 
 
@@ -277,8 +131,6 @@ public class AssetService implements DaoSetupService, DaoStateListener {
         int chainHeight = daoStateService.getChainHeight();
         bsqFeePerDay = daoStateService.getParamValueAsCoin(Param.ASSET_LISTING_FEE_PER_DAY, chainHeight).value;
         minVolumeInBtc = daoStateService.getParamValueAsCoin(Param.ASSET_MIN_VOLUME, chainHeight).value;
-        updateList();
-
     }
 
 
@@ -286,37 +138,62 @@ public class AssetService implements DaoSetupService, DaoStateListener {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    public List<StatefulAsset> getStatefulAssets() {
+        if (lazyLoadedStatefulAssets.isEmpty()) {
+            lazyLoadedStatefulAssets.addAll(CurrencyUtil.getSortedAssetStream()
+                    .filter(asset -> !asset.getTickerSymbol().equals("BSQ"))
+                    .map(StatefulAsset::new)
+                    .collect(Collectors.toList()));
+        }
+        return lazyLoadedStatefulAssets;
+    }
+
+    // Call takes bout 22 ms. Should be only called on demand (e.g. view is showing the data)
+    public void updateAssetStates() {
+        // For performance optimisation we map the trade stats to a temporary lookup map and convert it to a custom
+        // TradeAmountDateTuple object holding only the data we need.
+        Map<String, List<TradeAmountDateTuple>> lookupMap = new HashMap<>();
+        tradeStatisticsManager.getObservableTradeStatisticsSet().stream()
+                .filter(e -> CurrencyUtil.isCryptoCurrency(e.getCurrency()))
+                .forEach(e -> {
+                    lookupMap.putIfAbsent(e.getCurrency(), new ArrayList<>());
+                    lookupMap.get(e.getCurrency()).add(new TradeAmountDateTuple(e.getAmount(), e.getDateAsLong()));
+                });
+
+        getStatefulAssets().stream()
+                .filter(e -> AssetState.REMOVED_BY_VOTING != e.getAssetState()) // if once set to REMOVED_BY_VOTING we ignore it for further processing
+                .forEach(statefulAsset -> {
+                    AssetState assetState;
+                    String tickerSymbol = statefulAsset.getTickerSymbol();
+                    if (wasAssetRemovedByVoting(tickerSymbol)) {
+                        assetState = AssetState.REMOVED_BY_VOTING;
+                    } else {
+                        statefulAsset.setFeePayments(getFeePayments(statefulAsset));
+                        long lookBackPeriodInDays = getLookBackPeriodInDays(statefulAsset);
+                        statefulAsset.setLookBackPeriodInDays(lookBackPeriodInDays);
+                        long lookupDate = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(lookBackPeriodInDays);
+                        long tradeVolume = getTradeVolume(lookupDate, lookupMap.get(tickerSymbol));
+                        statefulAsset.setTradeVolume(tradeVolume);
+                        if (isInTrialPeriod(statefulAsset)) {
+                            assetState = AssetState.IN_TRIAL_PERIOD;
+                        } else if (tradeVolume >= minVolumeInBtc) {
+                            assetState = AssetState.ACTIVELY_TRADED;
+                        } else {
+                            assetState = AssetState.DE_LISTED;
+                        }
+                    }
+                    statefulAsset.setAssetState(assetState);
+                });
+
+        lookupMap.clear();
+    }
+
     public boolean isActive(String tickerSymbol) {
         return DevEnv.isDaoActivated() ? findAsset(tickerSymbol).map(StatefulAsset::isActive).orElse(false) : true;
     }
 
-    private Optional<StatefulAsset> findAsset(String tickerSymbol) {
-        return statefulAssets.stream().filter(e -> e.getTickerSymbol().equals(tickerSymbol)).findAny();
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private boolean wasAssetRemovedByVoting(String tickerSymbol) {
-        boolean isRemoved = getAcceptedRemoveAssetProposalStream()
-                .anyMatch(proposal -> proposal.getTickerSymbol().equals(tickerSymbol));
-        if (isRemoved)
-            log.info("Asset '{}' was removed", CurrencyUtil.getNameAndCode(tickerSymbol));
-
-        return isRemoved;
-    }
-
-    private Stream<RemoveAssetProposal> getAcceptedRemoveAssetProposalStream() {
-        return daoStateService.getEvaluatedProposalList().stream()
-                .filter(evaluatedProposal -> evaluatedProposal.getProposal() instanceof RemoveAssetProposal)
-                .filter(EvaluatedProposal::isAccepted)
-                .map(e -> ((RemoveAssetProposal) e.getProposal()));
-    }
-
-
-    public Transaction payFee(StatefulAsset statefulAsset, long listingFee) throws InsufficientMoneyException, TxException {
+    public Transaction payFee(StatefulAsset statefulAsset,
+                              long listingFee) throws InsufficientMoneyException, TxException {
         checkArgument(!statefulAsset.wasRemovedByVoting(), "Asset must not have been removed");
         checkArgument(listingFee >= getFeePerDay().value, "Fee must not be less then listing fee for 1 day.");
         checkArgument(listingFee % 100 == 0, "Fee must be a multiple of 1 BSQ (100 satoshi).");
@@ -345,7 +222,7 @@ public class AssetService implements DaoSetupService, DaoStateListener {
         walletsManager.publishAndCommitBsqTx(transaction, TxType.ASSET_LISTING_FEE, new TxBroadcaster.Callback() {
             @Override
             public void onSuccess(Transaction transaction) {
-                log.info("Asset listing fee tx has been published. TxId={}", transaction.getHashAsString());
+                log.info("Asset listing fee tx has been published. TxId={}", transaction.getTxId().toString());
                 resultHandler.handleResult();
             }
 
@@ -354,5 +231,105 @@ public class AssetService implements DaoSetupService, DaoStateListener {
                 errorMessageHandler.handleErrorMessage(exception.getMessage());
             }
         });
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    // Get the trade volume from lookupDate until current date
+    private long getTradeVolume(long lookupDate, @Nullable List<TradeAmountDateTuple> tradeAmountDateTupleList) {
+        if (tradeAmountDateTupleList == null) {
+            // Was never traded
+            return 0;
+        }
+
+        return tradeAmountDateTupleList.stream()
+                .filter(e -> e.getTradeDate() > lookupDate)
+                .mapToLong(TradeAmountDateTuple::getTradeAmount)
+                .sum();
+    }
+
+    private boolean isInTrialPeriod(StatefulAsset statefulAsset) {
+        for (FeePayment feePayment : statefulAsset.getFeePayments()) {
+            Optional<Integer> passedDays = feePayment.getPassedDays(daoStateService);
+            if (passedDays.isPresent()) {
+                long daysCoveredByFee = feePayment.daysCoveredByFee(bsqFeePerDay);
+                if (daysCoveredByFee >= passedDays.get()) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+
+    @NotNull
+    private Long getLookBackPeriodInDays(StatefulAsset statefulAsset) {
+        // We need to use the block height of the fee payment tx not the current one as feePerDay might have been
+        // changed in the meantime.
+        long bsqFeePerDay = statefulAsset.getLastFeePayment()
+                .flatMap(feePayment -> daoStateService.getTx(feePayment.getTxId()))
+                .map(tx -> daoStateService.getParamValueAsCoin(Param.ASSET_LISTING_FEE_PER_DAY, tx.getBlockHeight()).value)
+                .orElse(bsqFormatter.parseParamValueToCoin(Param.ASSET_LISTING_FEE_PER_DAY, Param.ASSET_LISTING_FEE_PER_DAY.getDefaultValue()).value);
+
+        return statefulAsset.getLastFeePayment()
+                .map(feePayment -> feePayment.daysCoveredByFee(bsqFeePerDay))
+                .orElse(DEFAULT_LOOK_BACK_PERIOD);
+    }
+
+    private List<FeePayment> getFeePayments(StatefulAsset statefulAsset) {
+        return getFeeTxs(statefulAsset).stream()
+                .map(tx -> {
+                    String txId = tx.getId();
+                    long burntFee = tx.getBurntFee();
+                    return new FeePayment(txId, burntFee);
+                })
+                .collect(Collectors.toList());
+    }
+
+    private List<Tx> getFeeTxs(StatefulAsset statefulAsset) {
+        return daoStateService.getAssetListingFeeOpReturnTxOutputs().stream()
+                .filter(txOutput -> {
+                    byte[] hash = AssetConsensus.getHash(statefulAsset);
+                    byte[] opReturnData = AssetConsensus.getOpReturnData(hash);
+                    return Arrays.equals(opReturnData, txOutput.getOpReturnData());
+                })
+                .map(txOutput -> daoStateService.getTx(txOutput.getTxId()).orElse(null))
+                .filter(Objects::nonNull)
+                .sorted(Comparator.comparing(BaseTx::getTime))
+                .collect(Collectors.toList());
+    }
+
+    private Optional<StatefulAsset> findAsset(String tickerSymbol) {
+        return getStatefulAssets().stream().filter(e -> e.getTickerSymbol().equals(tickerSymbol)).findAny();
+    }
+
+    private boolean wasAssetRemovedByVoting(String tickerSymbol) {
+        boolean isRemoved = getAcceptedRemoveAssetProposalStream()
+                .anyMatch(proposal -> proposal.getTickerSymbol().equals(tickerSymbol));
+        if (isRemoved)
+            log.info("Asset '{}' was removed", CurrencyUtil.getNameAndCode(tickerSymbol));
+
+        return isRemoved;
+    }
+
+    private Stream<RemoveAssetProposal> getAcceptedRemoveAssetProposalStream() {
+        return daoStateService.getEvaluatedProposalList().stream()
+                .filter(evaluatedProposal -> evaluatedProposal.getProposal() instanceof RemoveAssetProposal)
+                .filter(EvaluatedProposal::isAccepted)
+                .map(e -> ((RemoveAssetProposal) e.getProposal()));
+    }
+
+    @Value
+    private static final class TradeAmountDateTuple {
+        private final long tradeAmount;
+        private final long tradeDate;
+
+        TradeAmountDateTuple(long tradeAmount, long tradeDate) {
+            this.tradeAmount = tradeAmount;
+            this.tradeDate = tradeDate;
+        }
     }
 }

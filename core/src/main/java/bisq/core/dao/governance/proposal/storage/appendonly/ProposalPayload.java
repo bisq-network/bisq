@@ -23,7 +23,6 @@ import bisq.core.dao.state.model.governance.Proposal;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 
 import bisq.common.crypto.Hash;
-import bisq.common.proto.persistable.PersistableEnvelope;
 import bisq.common.util.Utilities;
 
 import com.google.protobuf.ByteString;
@@ -40,7 +39,7 @@ import javax.annotation.concurrent.Immutable;
 @Immutable
 @Slf4j
 @Value
-public class ProposalPayload implements PersistableNetworkPayload, PersistableEnvelope, ConsensusCritical {
+public class ProposalPayload implements PersistableNetworkPayload, ConsensusCritical {
     private final Proposal proposal;
     protected final byte[] hash;        // 20 byte
 

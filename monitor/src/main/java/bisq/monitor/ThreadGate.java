@@ -41,7 +41,7 @@ public class ThreadGate {
 
     /**
      * Make everyone wait until the gate is open again.
-     * 
+     *
      * @param numberOfLocks how often the gate has to be unlocked until the gate
      *                      opens.
      */
@@ -57,7 +57,7 @@ public class ThreadGate {
         while (lock.getCount() > 0)
             try {
                 if (!lock.await(60, TimeUnit.SECONDS)) {
-                    log.warn("timeout occured!");
+                    log.warn("timeout occurred!");
                     break; // break the loop
                 }
             } catch (InterruptedException ignore) {

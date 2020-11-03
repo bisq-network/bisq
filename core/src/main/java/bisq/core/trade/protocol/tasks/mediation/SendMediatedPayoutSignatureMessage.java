@@ -38,8 +38,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class SendMediatedPayoutSignatureMessage extends TradeTask {
-    @SuppressWarnings({"unused"})
-    public SendMediatedPayoutSignatureMessage(TaskRunner taskHandler, Trade trade) {
+    public SendMediatedPayoutSignatureMessage(TaskRunner<Trade> taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 

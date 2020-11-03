@@ -82,7 +82,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
     @FXML
     TableView<ClosedTradableListItem> tableView;
     @FXML
-    TableColumn<ClosedTradableListItem, ClosedTradableListItem> priceColumn, amountColumn, volumeColumn, txFeeColumn, makerFeeColumn, buyerSecurityDepositColumn, sellerSecurityDepositColumn,
+    TableColumn<ClosedTradableListItem, ClosedTradableListItem> priceColumn, amountColumn, volumeColumn, txFeeColumn, tradeFeeColumn, buyerSecurityDepositColumn, sellerSecurityDepositColumn,
             marketColumn, directionColumn, dateColumn, tradeIdColumn, stateColumn, avatarColumn;
     @FXML
     HBox footerBox;
@@ -121,7 +121,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
 	@Override
 	public void initialize() {
 		txFeeColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.txFee")));
-		makerFeeColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.makerFee")));
+		tradeFeeColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.tradeFee")));
 		buyerSecurityDepositColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.buyerSecurityDeposit")));
 		sellerSecurityDepositColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.sellerSecurityDeposit")));
         priceColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.price")));
@@ -141,7 +141,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
         setDirectionColumnCellFactory();
         setAmountColumnCellFactory();
 		setTxFeeColumnCellFactory();
-		setMakerFeeColumnCellFactory();
+		setTradeFeeColumnCellFactory();
 		setBuyerSecurityDepositColumnCellFactory();
 		setSellerSecurityDepositColumnCellFactory();
         setPriceColumnCellFactory();
@@ -167,7 +167,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
         txFeeColumn.setComparator(nullsFirstComparing(o ->
                 o instanceof Trade ? ((Trade) o).getTxFee() : o.getOffer().getTxFee()
         ));
-        makerFeeColumn.setComparator(nullsFirstComparing(o ->
+        tradeFeeColumn.setComparator(nullsFirstComparing(o ->
                 o instanceof Trade ? ((Trade) o).getTakerFee() : o.getOffer().getMakerFee()
         ));
         buyerSecurityDepositColumn.setComparator(nullsFirstComparing(o ->
@@ -518,9 +518,9 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                 });
 	}
 
-	private void setMakerFeeColumnCellFactory() {
-		makerFeeColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
-		makerFeeColumn.setCellFactory(
+	private void setTradeFeeColumnCellFactory() {
+		tradeFeeColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
+		tradeFeeColumn.setCellFactory(
                 new Callback<>() {
                     @Override
                     public TableCell<ClosedTradableListItem, ClosedTradableListItem> call(

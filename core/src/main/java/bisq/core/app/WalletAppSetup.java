@@ -22,11 +22,16 @@ import bisq.core.btc.exceptions.RejectedTxException;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.locale.Res;
+import bisq.core.provider.fee.FeeService;
+import bisq.core.offer.OpenOfferManager;
+import bisq.core.trade.TradeManager;
 import bisq.core.user.Preferences;
 import bisq.core.util.FormattingUtils;
 
+import bisq.common.UserThread;
 import bisq.common.config.Config;
 
+import org.bitcoinj.core.RejectMessage;
 import org.bitcoinj.core.VersionMessage;
 import org.bitcoinj.store.BlockStoreException;
 import org.bitcoinj.store.ChainFileLockedException;
@@ -60,6 +65,7 @@ public class WalletAppSetup {
 
     private final WalletsManager walletsManager;
     private final WalletsSetup walletsSetup;
+    private final FeeService feeService;
     private final Config config;
     private final Preferences preferences;
 
@@ -77,17 +83,17 @@ public class WalletAppSetup {
     @Getter
     private final ObjectProperty<RejectedTxException> rejectedTxException = new SimpleObjectProperty<>();
     @Getter
-    private int numBtcPeers = 0;
-    @Getter
     private final BooleanProperty useTorForBTC = new SimpleBooleanProperty();
 
     @Inject
     public WalletAppSetup(WalletsManager walletsManager,
                           WalletsSetup walletsSetup,
+                          FeeService feeService,
                           Config config,
                           Preferences preferences) {
         this.walletsManager = walletsManager;
         this.walletsSetup = walletsSetup;
+        this.feeService = feeService;
         this.config = config;
         this.preferences = preferences;
         this.useTorForBTC.set(preferences.getUseTorForBitcoinJ());
@@ -101,40 +107,37 @@ public class WalletAppSetup {
               Runnable downloadCompleteHandler,
               Runnable walletInitializedHandler) {
         log.info("Initialize WalletAppSetup with BitcoinJ version {} and hash of BitcoinJ commit {}",
-                VersionMessage.BITCOINJ_VERSION, "cd30ad5b");
+                VersionMessage.BITCOINJ_VERSION, "a733034");
 
         ObjectProperty<Throwable> walletServiceException = new SimpleObjectProperty<>();
         btcInfoBinding = EasyBind.combine(walletsSetup.downloadPercentageProperty(),
-                walletsSetup.numPeersProperty(),
+                feeService.feeUpdateCounterProperty(),
                 walletServiceException,
-                (downloadPercentage, numPeers, exception) -> {
+                (downloadPercentage, feeUpdate, exception) -> {
                     String result;
                     if (exception == null) {
                         double percentage = (double) downloadPercentage;
-                        int peers = (int) numPeers;
+                        long fees = feeService.getTxFeePerByte().longValue();
                         btcSyncProgress.set(percentage);
                         if (percentage == 1) {
+                            String feeRate = Res.get("mainView.footer.btcFeeRate", fees);
                             result = Res.get("mainView.footer.btcInfo",
-                                    peers,
                                     Res.get("mainView.footer.btcInfo.synchronizedWith"),
-                                    getBtcNetworkAsString());
+                                    getBtcNetworkAsString() + " / " + feeRate);
                             getBtcSplashSyncIconId().set("image-connection-synced");
 
                             downloadCompleteHandler.run();
                         } else if (percentage > 0.0) {
                             result = Res.get("mainView.footer.btcInfo",
-                                    peers,
                                     Res.get("mainView.footer.btcInfo.synchronizingWith"),
                                     getBtcNetworkAsString() + ": " + FormattingUtils.formatToPercentWithSymbol(percentage));
                         } else {
                             result = Res.get("mainView.footer.btcInfo",
-                                    peers,
                                     Res.get("mainView.footer.btcInfo.connectingTo"),
                                     getBtcNetworkAsString());
                         }
                     } else {
                         result = Res.get("mainView.footer.btcInfo",
-                                getNumBtcPeers(),
                                 Res.get("mainView.footer.btcInfo.connectionFailed"),
                                 getBtcNetworkAsString());
                         log.error(exception.toString());
@@ -160,8 +163,6 @@ public class WalletAppSetup {
 
         walletsSetup.initialize(null,
                 () -> {
-                    numBtcPeers = walletsSetup.numPeersProperty().get();
-
                     // We only check one wallet as we apply encryption to all or none
                     if (walletsManager.areWalletsEncrypted()) {
                         walletPasswordHandler.run();
@@ -183,6 +184,81 @@ public class WalletAppSetup {
                 });
     }
 
+    void setRejectedTxErrorMessageHandler(Consumer<String> rejectedTxErrorMessageHandler,
+                                          OpenOfferManager openOfferManager,
+                                          TradeManager tradeManager) {
+        getRejectedTxException().addListener((observable, oldValue, newValue) -> {
+            if (newValue == null || newValue.getTxId() == null) {
+                return;
+            }
+
+            RejectMessage rejectMessage = newValue.getRejectMessage();
+            log.warn("We received reject message: {}", rejectMessage);
+
+            // TODO: Find out which reject messages are critical and which not.
+            // We got a report where a "tx already known" message caused a failed trade but the deposit tx was valid.
+            // To avoid such false positives we only handle reject messages which we consider clearly critical.
+
+            switch (rejectMessage.getReasonCode()) {
+                case OBSOLETE:
+                case DUPLICATE:
+                case NONSTANDARD:
+                case CHECKPOINT:
+                case OTHER:
+                    // We ignore those cases to avoid that not critical reject messages trigger a failed trade.
+                    log.warn("We ignore that reject message as it is likely not critical.");
+                    break;
+                case MALFORMED:
+                case INVALID:
+                case DUST:
+                case INSUFFICIENTFEE:
+                    // We delay as we might get the rejected tx error before we have completed the create offer protocol
+                    log.warn("We handle that reject message as it is likely critical.");
+                    UserThread.runAfter(() -> {
+                        String txId = newValue.getTxId();
+                        openOfferManager.getObservableList().stream()
+                                .filter(openOffer -> txId.equals(openOffer.getOffer().getOfferFeePaymentTxId()))
+                                .forEach(openOffer -> {
+                                    // We delay to avoid concurrent modification exceptions
+                                    UserThread.runAfter(() -> {
+                                        openOffer.getOffer().setErrorMessage(newValue.getMessage());
+                                        if (rejectedTxErrorMessageHandler != null) {
+                                            rejectedTxErrorMessageHandler.accept(Res.get("popup.warning.openOffer.makerFeeTxRejected", openOffer.getId(), txId));
+                                        }
+                                        openOfferManager.removeOpenOffer(openOffer, () -> {
+                                            log.warn("We removed an open offer because the maker fee was rejected by the Bitcoin " +
+                                                    "network. OfferId={}, txId={}", openOffer.getShortId(), txId);
+                                        }, log::warn);
+                                    }, 1);
+                                });
+
+                        tradeManager.getObservableList().stream()
+                                .filter(trade -> trade.getOffer() != null)
+                                .forEach(trade -> {
+                                    String details = null;
+                                    if (txId.equals(trade.getDepositTxId())) {
+                                        details = Res.get("popup.warning.trade.txRejected.deposit");
+                                    }
+                                    if (txId.equals(trade.getOffer().getOfferFeePaymentTxId()) || txId.equals(trade.getTakerFeeTxId())) {
+                                        details = Res.get("popup.warning.trade.txRejected.tradeFee");
+                                    }
+
+                                    if (details != null) {
+                                        // We delay to avoid concurrent modification exceptions
+                                        String finalDetails = details;
+                                        UserThread.runAfter(() -> {
+                                            trade.setErrorMessage(newValue.getMessage());
+                                            if (rejectedTxErrorMessageHandler != null) {
+                                                rejectedTxErrorMessageHandler.accept(Res.get("popup.warning.trade.txRejected",
+                                                        finalDetails, trade.getShortId(), txId));
+                                            }
+                                        }, 1);
+                                    }
+                                });
+                    }, 3);
+            }
+        });
+    }
     private String getBtcNetworkAsString() {
         String postFix;
         if (config.ignoreLocalBtcNode)

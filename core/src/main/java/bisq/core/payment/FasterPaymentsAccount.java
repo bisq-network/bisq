@@ -36,6 +36,14 @@ public final class FasterPaymentsAccount extends PaymentAccount {
         return new FasterPaymentsAccountPayload(paymentMethod.getId(), id);
     }
 
+    public void setHolderName(String value) {
+        ((FasterPaymentsAccountPayload) paymentAccountPayload).setHolderName(value);
+    }
+
+    public String getHolderName() {
+        return ((FasterPaymentsAccountPayload) paymentAccountPayload).getHolderName();
+    }
+
     public void setSortCode(String value) {
         ((FasterPaymentsAccountPayload) paymentAccountPayload).setSortCode(value);
     }

@@ -17,8 +17,11 @@
 
 package bisq.desktop.main.overlays.popups;
 
+import bisq.common.UserThread;
+
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,7 +43,7 @@ public class PopupManager {
     public static void onHidden(Popup popup) {
         if (displayedPopup == null || displayedPopup == popup) {
             displayedPopup = null;
-            displayNext();
+            UserThread.runAfter(() -> { displayNext(); }, 100, TimeUnit.MILLISECONDS);
         } else {
             log.warn("We got a isHidden called with a wrong popup.\n\t" +
                     "popup (argument)=" + popup + "\n\tdisplayedPopup=" + displayedPopup);

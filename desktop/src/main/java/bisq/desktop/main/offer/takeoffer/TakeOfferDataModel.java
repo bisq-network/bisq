@@ -19,6 +19,7 @@ package bisq.desktop.main.offer.takeoffer;
 
 import bisq.desktop.Navigation;
 import bisq.desktop.main.offer.OfferDataModel;
+import bisq.desktop.main.offer.offerbook.OfferBook;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.GUIUtil;
 
@@ -37,7 +38,6 @@ import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.offer.OfferUtil;
-import bisq.core.payment.HalCashAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.PaymentAccountUtil;
 import bisq.core.payment.payload.PaymentMethod;
@@ -47,6 +47,7 @@ import bisq.core.trade.TradeManager;
 import bisq.core.trade.handlers.TradeResultHandler;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
+import bisq.core.util.VolumeUtil;
 import bisq.core.util.coin.CoinUtil;
 
 import bisq.network.p2p.P2PService;
@@ -81,6 +82,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 class TakeOfferDataModel extends OfferDataModel {
     private final TradeManager tradeManager;
+    private final OfferBook offerBook;
     private final BsqWalletService bsqWalletService;
     private final User user;
     private final FeeService feeService;
@@ -120,6 +122,8 @@ class TakeOfferDataModel extends OfferDataModel {
 
     @Inject
     TakeOfferDataModel(TradeManager tradeManager,
+                       OfferBook offerBook,
+                       OfferUtil offerUtil,
                        BtcWalletService btcWalletService,
                        BsqWalletService bsqWalletService,
                        User user, FeeService feeService,
@@ -131,9 +135,10 @@ class TakeOfferDataModel extends OfferDataModel {
                        Navigation navigation,
                        P2PService p2PService
     ) {
-        super(btcWalletService);
+        super(btcWalletService, offerUtil);
 
         this.tradeManager = tradeManager;
+        this.offerBook = offerBook;
         this.bsqWalletService = bsqWalletService;
         this.user = user;
         this.feeService = feeService;
@@ -175,8 +180,9 @@ class TakeOfferDataModel extends OfferDataModel {
     @Override
     protected void deactivate() {
         removeListeners();
-        if (offer != null)
-            tradeManager.onCancelAvailabilityRequest(offer);
+        if (offer != null) {
+            offer.cancelAvailabilityRequest();
+        }
     }
 
 
@@ -241,31 +247,6 @@ class TakeOfferDataModel extends OfferDataModel {
             @Override
             public void onBalanceChanged(Coin balance, Transaction tx) {
                 updateBalance();
-
-                /*if (isMainNet.get()) {
-                    SettableFuture<Coin> future = blockchainService.requestFee(tx.getHashAsString());
-                    Futures.addCallback(future, new FutureCallback<Coin>() {
-                        public void onSuccess(Coin fee) {
-                            UserThread.execute(() -> setFeeFromFundingTx(fee));
-                        }
-
-                        public void onFailure(@NotNull Throwable throwable) {
-                            UserThread.execute(() -> new Popup<>()
-                                    .warning("We did not get a response for the request of the mining fee used " +
-                                            "in the funding transaction.\n\n" +
-                                            "Are you sure you used a sufficiently high fee of at least " +
-                                            formatter.formatCoinWithCode(FeePolicy.getMinRequiredFeeForFundingTx()) + "?")
-                                    .actionButtonText("Yes, I used a sufficiently high fee.")
-                                    .onAction(() -> setFeeFromFundingTx(FeePolicy.getMinRequiredFeeForFundingTx()))
-                                    .closeButtonText("No. Let's cancel that payment.")
-                                    .onClose(() -> setFeeFromFundingTx(Coin.NEGATIVE_SATOSHI))
-                                    .show());
-                        }
-                    });
-                } else {
-                    setFeeFromFundingTx(FeePolicy.getMinRequiredFeeForFundingTx());
-                    isFeeFromFundingTxSufficient.set(feeFromFundingTx.compareTo(FeePolicy.getMinRequiredFeeForFundingTx()) >= 0);
-                }*/
             }
         };
 
@@ -287,9 +268,20 @@ class TakeOfferDataModel extends OfferDataModel {
             priceFeedService.setCurrencyCode(offer.getCurrencyCode());
     }
 
-    public void onClose() {
+    public void onClose(boolean removeOffer) {
+        // We do not wait until the offer got removed by a network remove message but remove it
+        // directly from the offer book. The broadcast gets now bundled and has 2 sec. delay so the
+        // removal from the network is a bit slower as it has been before. To avoid that the taker gets
+        // confused to see the same offer still in the offerbook we remove it manually. This removal has
+        // only local effect. Other trader might see the offer for a few seconds
+        // still (but cannot take it).
+        if (removeOffer) {
+            offerBook.removeOffer(checkNotNull(offer), tradeManager);
+        }
+
         btcWalletService.resetAddressEntriesForOpenOffer(offer.getId());
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // UI actions
@@ -315,6 +307,8 @@ class TakeOfferDataModel extends OfferDataModel {
             new Popup().warning(Res.get("offerbook.warning.nodeBlocked")).show();
         } else if (filterManager.requireUpdateToNewVersionForTrading()) {
             new Popup().warning(Res.get("offerbook.warning.requireUpdateToNewVersion")).show();
+        } else if (tradeManager.wasOfferAlreadyUsedInTrade(offer.getId())) {
+            new Popup().warning(Res.get("offerbook.warning.offerWasAlreadyUsedInTrade")).show();
         } else {
             tradeManager.onTakeOffer(amount.get(),
                     txFeeFromFeeService,
@@ -325,7 +319,7 @@ class TakeOfferDataModel extends OfferDataModel {
                     offer,
                     paymentAccount.getId(),
                     useSavingsWallet,
-                    tradeResultHandler,
+                    tradeResultHandler::handleResult,
                     errorMessage -> {
                         log.warn(errorMessage);
                         new Popup().warning(errorMessage).show();
@@ -470,9 +464,9 @@ class TakeOfferDataModel extends OfferDataModel {
                 !amount.get().isZero()) {
             Volume volumeByAmount = tradePrice.getVolumeByAmount(amount.get());
             if (offer.getPaymentMethod().getId().equals(PaymentMethod.HAL_CASH_ID))
-                volumeByAmount = OfferUtil.getAdjustedVolumeForHalCash(volumeByAmount);
+                volumeByAmount = VolumeUtil.getAdjustedVolumeForHalCash(volumeByAmount);
             else if (CurrencyUtil.isFiatCurrency(getCurrencyCode()))
-                volumeByAmount = OfferUtil.getRoundedFiatVolume(volumeByAmount);
+                volumeByAmount = VolumeUtil.getRoundedFiatVolume(volumeByAmount);
 
             volume.set(volumeByAmount);
 
@@ -639,16 +633,22 @@ class TakeOfferDataModel extends OfferDataModel {
         return offer.getSellerSecurityDeposit();
     }
 
-    public Coin getBsqBalance() {
-        return bsqWalletService.getAvailableConfirmedBalance();
+    public Coin getUsableBsqBalance() {
+        // we have to keep a minimum amount of BSQ == bitcoin dust limit
+        // otherwise there would be dust violations for change UTXOs
+        // essentially means the minimum usable balance of BSQ is 5.46
+        Coin usableBsqBalance = bsqWalletService.getAvailableConfirmedBalance().subtract(Restrictions.getMinNonDustOutput());
+        if (usableBsqBalance.isNegative())
+            usableBsqBalance = Coin.ZERO;
+        return usableBsqBalance;
     }
 
     public boolean isHalCashAccount() {
-        return paymentAccount instanceof HalCashAccount;
+        return paymentAccount.isHalCashAccount();
     }
 
     public boolean isCurrencyForTakerFeeBtc() {
-        return OfferUtil.isCurrencyForTakerFeeBtc(preferences, bsqWalletService, amount.get());
+        return offerUtil.isCurrencyForTakerFeeBtc(amount.get());
     }
 
     public void setPreferredCurrencyForTakerFeeBtc(boolean isCurrencyForTakerFeeBtc) {
@@ -660,18 +660,18 @@ class TakeOfferDataModel extends OfferDataModel {
     }
 
     public Coin getTakerFeeInBtc() {
-        return OfferUtil.getTakerFee(true, amount.get());
+        return offerUtil.getTakerFee(true, amount.get());
     }
 
     public Coin getTakerFeeInBsq() {
-        return OfferUtil.getTakerFee(false, amount.get());
+        return offerUtil.getTakerFee(false, amount.get());
     }
 
     boolean isTakerFeeValid() {
-        return preferences.getPayFeeInBtc() || OfferUtil.isBsqForTakerFeeAvailable(bsqWalletService, amount.get());
+        return preferences.getPayFeeInBtc() || offerUtil.isBsqForTakerFeeAvailable(amount.get());
     }
 
     public boolean isBsqForFeeAvailable() {
-        return OfferUtil.isBsqForTakerFeeAvailable(bsqWalletService, amount.get());
+        return offerUtil.isBsqForTakerFeeAvailable(amount.get());
     }
 }

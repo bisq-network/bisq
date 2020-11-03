@@ -30,11 +30,9 @@ import bisq.core.dao.governance.proposal.MyProposalListService;
 import bisq.core.filter.FilterManager;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 
-import bisq.network.crypto.EncryptionService;
 import bisq.network.p2p.P2PService;
 
 import bisq.common.config.Config;
-import bisq.common.crypto.KeyRing;
 
 import javax.inject.Inject;
 
@@ -45,9 +43,7 @@ public class AppSetupWithP2PAndDAO extends AppSetupWithP2P {
     private final DaoSetup daoSetup;
 
     @Inject
-    public AppSetupWithP2PAndDAO(EncryptionService encryptionService,
-                                 KeyRing keyRing,
-                                 P2PService p2PService,
+    public AppSetupWithP2PAndDAO(P2PService p2PService,
                                  TradeStatisticsManager tradeStatisticsManager,
                                  AccountAgeWitnessService accountAgeWitnessService,
                                  SignedWitnessService signedWitnessService,
@@ -61,9 +57,7 @@ public class AppSetupWithP2PAndDAO extends AppSetupWithP2P {
                                  MyProofOfBurnListService myProofOfBurnListService,
                                  TorSetup torSetup,
                                  Config config) {
-        super(encryptionService,
-                keyRing,
-                p2PService,
+        super(p2PService,
                 tradeStatisticsManager,
                 accountAgeWitnessService,
                 signedWitnessService,

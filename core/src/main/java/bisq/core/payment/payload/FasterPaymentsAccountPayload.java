@@ -19,13 +19,13 @@ package bisq.core.payment.payload;
 
 import bisq.core.locale.Res;
 
-import bisq.common.util.CollectionUtils;
-
 import com.google.protobuf.Message;
+
+import com.google.common.base.Strings;
 
 import org.apache.commons.lang3.ArrayUtils;
 
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -35,8 +35,6 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
-
-import javax.annotation.Nullable;
 
 @EqualsAndHashCode(callSuper = true)
 @ToString
@@ -64,7 +62,7 @@ public final class FasterPaymentsAccountPayload extends PaymentAccountPayload {
                                          String accountNr,
                                          String email,
                                          long maxTradePeriod,
-                                         @Nullable Map<String, String> excludeFromJsonDataMap) {
+                                         Map<String, String> excludeFromJsonDataMap) {
         super(paymentMethod,
                 id,
                 maxTradePeriod,
@@ -91,7 +89,7 @@ public final class FasterPaymentsAccountPayload extends PaymentAccountPayload {
                 proto.getFasterPaymentsAccountPayload().getAccountNr(),
                 proto.getFasterPaymentsAccountPayload().getEmail(),
                 proto.getMaxTradePeriod(),
-                CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
+                new HashMap<>(proto.getExcludeFromJsonDataMap()));
     }
 
 
@@ -99,20 +97,29 @@ public final class FasterPaymentsAccountPayload extends PaymentAccountPayload {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    public String getHolderName() {
+        return excludeFromJsonDataMap.getOrDefault(HOLDER_NAME, "");
+    }
+
+    public void setHolderName(String holderName) {
+        excludeFromJsonDataMap.compute(HOLDER_NAME, (k, v) -> Strings.emptyToNull(holderName));
+    }
+
     @Override
     public String getPaymentDetails() {
-        return Res.get(paymentMethodId) + " - UK Sort code: " + sortCode + ", " + Res.getWithCol("payment.accountNr") + " " + accountNr;
+        return Res.get(paymentMethodId) + " - " + getPaymentDetailsForTradePopup().replace("\n", ", ");
     }
 
     @Override
     public String getPaymentDetailsForTradePopup() {
-        return "UK Sort code: " + sortCode + "\n" +
+        return (getHolderName().isEmpty() ? "" : Res.getWithCol("payment.account.owner") + " " + getHolderName() + "\n") +
+                "UK Sort code: " + sortCode + "\n" +
                 Res.getWithCol("payment.accountNr") + " " + accountNr;
     }
 
     @Override
     public byte[] getAgeWitnessInputData() {
-        return super.getAgeWitnessInputData(ArrayUtils.addAll(sortCode.getBytes(Charset.forName("UTF-8")),
-                accountNr.getBytes(Charset.forName("UTF-8"))));
+        return super.getAgeWitnessInputData(ArrayUtils.addAll(sortCode.getBytes(StandardCharsets.UTF_8),
+                accountNr.getBytes(StandardCharsets.UTF_8)));
     }
 }

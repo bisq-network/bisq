@@ -21,6 +21,7 @@ import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.dao.DaoFacade;
+import bisq.core.filter.FilterManager;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferBookService;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
@@ -51,6 +52,8 @@ public class PlaceOfferModel implements Model {
     private final TradeStatisticsManager tradeStatisticsManager;
     private final DaoFacade daoFacade;
     private final User user;
+    @Getter
+    private final FilterManager filterManager;
 
     // Mutable
     @Setter
@@ -68,7 +71,8 @@ public class PlaceOfferModel implements Model {
                            ArbitratorManager arbitratorManager,
                            TradeStatisticsManager tradeStatisticsManager,
                            DaoFacade daoFacade,
-                           User user) {
+                           User user,
+                           FilterManager filterManager) {
         this.offer = offer;
         this.reservedFundsForOffer = reservedFundsForOffer;
         this.useSavingsWallet = useSavingsWallet;
@@ -80,10 +84,7 @@ public class PlaceOfferModel implements Model {
         this.tradeStatisticsManager = tradeStatisticsManager;
         this.daoFacade = daoFacade;
         this.user = user;
-    }
-
-    @Override
-    public void persist() {
+        this.filterManager = filterManager;
     }
 
     @Override

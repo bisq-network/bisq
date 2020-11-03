@@ -40,7 +40,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class P2PRoundTripTime extends P2PSeedNodeSnapshotBase {
 
     private static final String SAMPLE_SIZE = "run.sampleSize";
-    private Map<Integer, Long> sentAt = new HashMap<>();
+    private final Map<Integer, Long> sentAt = new HashMap<>();
     private Map<NodeAddress, Statistics> measurements = new HashMap<>();
 
     public P2PRoundTripTime(Reporter reporter) {
@@ -57,7 +57,7 @@ public class P2PRoundTripTime extends P2PSeedNodeSnapshotBase {
         public synchronized void log(Object message) {
             Pong pong = (Pong) message;
             Long start = sentAt.get(pong.getRequestNonce());
-            if(start != null)
+            if (start != null)
                 samples.add(System.currentTimeMillis() - start);
         }
 

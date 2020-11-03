@@ -17,17 +17,11 @@
 
 package bisq.core.support.dispute;
 
-import bisq.common.proto.persistable.PersistableEnvelope;
-import bisq.common.proto.persistable.PersistedDataHost;
-import bisq.common.storage.Storage;
+import bisq.common.proto.persistable.PersistableListAsObservable;
+import bisq.common.proto.persistable.PersistablePayload;
 
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
+import java.util.Collection;
 
-import java.util.List;
-import java.util.stream.Stream;
-
-import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
@@ -39,67 +33,12 @@ import lombok.extern.slf4j.Slf4j;
  * Calls to the List are delegated because this class intercepts the add/remove calls so changes
  * can be saved to disc.
  */
-public abstract class DisputeList<T extends PersistableEnvelope> implements PersistableEnvelope, PersistedDataHost {
-    transient protected final Storage<T> storage;
+public abstract class DisputeList<T extends PersistablePayload> extends PersistableListAsObservable<T> {
 
-    @Getter
-    protected final ObservableList<Dispute> list = FXCollections.observableArrayList();
-
-    public DisputeList(Storage<T> storage) {
-        this.storage = storage;
+    public DisputeList() {
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // PROTO BUFFER
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    protected DisputeList(Storage<T> storage, List<Dispute> list) {
-        this.storage = storage;
-        this.list.addAll(list);
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // API
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public boolean add(Dispute dispute) {
-        if (!list.contains(dispute)) {
-            list.add(dispute);
-            persist();
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    public boolean remove(Object dispute) {
-        //noinspection SuspiciousMethodCalls
-        boolean changed = list.remove(dispute);
-        if (changed)
-            persist();
-        return changed;
-    }
-
-    public void persist() {
-        storage.queueUpForSave();
-    }
-
-    public int size() {
-        return list.size();
-    }
-
-    public boolean isEmpty() {
-        return list.isEmpty();
-    }
-
-    @SuppressWarnings({"SuspiciousMethodCalls"})
-    public boolean contains(Object o) {
-        return list.contains(o);
-    }
-
-    public Stream<Dispute> stream() {
-        return list.stream();
+    protected DisputeList(Collection<T> collection) {
+        super(collection);
     }
 }

@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.offer.offerbook;
 
+import bisq.core.filter.FilterManager;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferBookService;
 import bisq.core.trade.TradeManager;
@@ -37,7 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 import static bisq.core.offer.OfferPayload.Direction.BUY;
 
 /**
- * Holds and manages the unsorted and unfiltered offerbook list of both buy and sell offers.
+ * Holds and manages the unsorted and unfiltered offerbook list (except for banned offers) of both buy and sell offers.
  * It is handled as singleton by Guice and is used by 2 instances of OfferBookDataModel (one for Buy one for Sell).
  * As it is used only by the Buy and Sell UIs we treat it as local UI model.
  * It also use OfferRepository.Listener as the lists items class and we don't want to get any dependency out of the
@@ -50,21 +51,30 @@ public class OfferBook {
     private final ObservableList<OfferBookListItem> offerBookListItems = FXCollections.observableArrayList();
     private final Map<String, Integer> buyOfferCountMap = new HashMap<>();
     private final Map<String, Integer> sellOfferCountMap = new HashMap<>();
+    private final FilterManager filterManager;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    OfferBook(OfferBookService offerBookService, TradeManager tradeManager) {
+    OfferBook(OfferBookService offerBookService, TradeManager tradeManager, FilterManager filterManager) {
         this.offerBookService = offerBookService;
+        this.filterManager = filterManager;
 
         offerBookService.addOfferBookChangedListener(new OfferBookService.OfferBookChangedListener() {
             @Override
             public void onAdded(Offer offer) {
                 // We get onAdded called every time a new ProtectedStorageEntry is received.
                 // Mostly it is the same OfferPayload but the ProtectedStorageEntry is different.
-                // We filter here to only add new offers if the same offer (using equals) was not already added.
+                // We filter here to only add new offers if the same offer (using equals) was not already added and it
+                // is not banned.
+
+                if (filterManager.isOfferIdBanned(offer.getId())) {
+                    log.debug("Ignored banned offer. ID={}", offer.getId());
+                    return;
+                }
+
                 boolean hasSameOffer = offerBookListItems.stream()
                         .anyMatch(item -> item.getOffer().equals(offer));
                 if (!hasSameOffer) {
@@ -75,7 +85,7 @@ public class OfferBook {
                             .filter(item -> item.getOffer().getId().equals(offer.getId()))
                             .findAny();
                     if (candidateWithSameId.isPresent()) {
-                        log.warn("We had an old offer in the list with the same Offer ID. Might be that the state or errorMessage was different. " +
+                        log.warn("We had an old offer in the list with the same Offer ID. We remove the old one. " +
                                 "old offerBookListItem={}, new offerBookListItem={}", candidateWithSameId.get(), offerBookListItem);
                         offerBookListItems.remove(candidateWithSameId.get());
                     }
@@ -88,18 +98,21 @@ public class OfferBook {
 
             @Override
             public void onRemoved(Offer offer) {
-                // Update state in case that that offer is used in the take offer screen, so it gets updated correctly
-                offer.setState(Offer.State.REMOVED);
-
-                // clean up possible references in openOfferManager
-                tradeManager.onOfferRemovedFromRemoteOfferBook(offer);
-                // We don't use the contains method as the equals method in Offer takes state and errorMessage into account.
-                Optional<OfferBookListItem> candidateToRemove = offerBookListItems.stream()
-                        .filter(item -> item.getOffer().getId().equals(offer.getId()))
-                        .findAny();
-                candidateToRemove.ifPresent(offerBookListItems::remove);
+                removeOffer(offer, tradeManager);
             }
         });
+    }
+
+    public void removeOffer(Offer offer, TradeManager tradeManager) {
+        // Update state in case that that offer is used in the take offer screen, so it gets updated correctly
+        offer.setState(Offer.State.REMOVED);
+
+        offer.cancelAvailabilityRequest();
+        // We don't use the contains method as the equals method in Offer takes state and errorMessage into account.
+        Optional<OfferBookListItem> candidateToRemove = offerBookListItems.stream()
+                .filter(item -> item.getOffer().getId().equals(offer.getId()))
+                .findAny();
+        candidateToRemove.ifPresent(offerBookListItems::remove);
     }
 
     public ObservableList<OfferBookListItem> getOfferBookListItems() {
@@ -112,6 +125,7 @@ public class OfferBook {
             // Investigate why....
             offerBookListItems.clear();
             offerBookListItems.addAll(offerBookService.getOffers().stream()
+                    .filter(o -> !filterManager.isOfferIdBanned(o.getId()))
                     .map(OfferBookListItem::new)
                     .collect(Collectors.toList()));
 

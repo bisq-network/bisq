@@ -22,5 +22,6 @@ public interface ConnectionListener {
 
     void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection);
 
+    //TODO is never called, can be removed
     void onError(Throwable throwable);
 }

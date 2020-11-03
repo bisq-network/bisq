@@ -19,7 +19,6 @@ package bisq.core.trade.protocol.tasks.maker;
 
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.trade.BuyerAsMakerTrade;
 import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
@@ -28,21 +27,18 @@ import bisq.core.trade.protocol.tasks.TradeTask;
 
 import bisq.network.p2p.NodeAddress;
 
+import bisq.common.crypto.Hash;
 import bisq.common.crypto.Sig;
 import bisq.common.taskrunner.TaskRunner;
 import bisq.common.util.Utilities;
 
-import com.google.common.base.Preconditions;
-
 import lombok.extern.slf4j.Slf4j;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class MakerCreateAndSignContract extends TradeTask {
-    @SuppressWarnings({"unused"})
-    public MakerCreateAndSignContract(TaskRunner taskHandler, Trade trade) {
+    public MakerCreateAndSignContract(TaskRunner<Trade> taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -50,14 +46,10 @@ public class MakerCreateAndSignContract extends TradeTask {
     protected void run() {
         try {
             runInterceptHook();
-            Preconditions.checkNotNull(trade.getTakerFeeTxId(), "trade.getTakeOfferFeeTxId() must not be null");
+            String takerFeeTxId = checkNotNull(processModel.getTakeOfferFeeTxId());
 
             TradingPeer taker = processModel.getTradingPeer();
-            PaymentAccountPayload makerPaymentAccountPayload = processModel.getPaymentAccountPayload(trade);
-            checkNotNull(makerPaymentAccountPayload, "makerPaymentAccountPayload must not be null");
-            PaymentAccountPayload takerPaymentAccountPayload = checkNotNull(taker.getPaymentAccountPayload());
             boolean isBuyerMakerAndSellerTaker = trade instanceof BuyerAsMakerTrade;
-
             NodeAddress buyerNodeAddress = isBuyerMakerAndSellerTaker ?
                     processModel.getMyNodeAddress() : processModel.getTempTradingPeerNodeAddress();
             NodeAddress sellerNodeAddress = isBuyerMakerAndSellerTaker ?
@@ -65,32 +57,29 @@ public class MakerCreateAndSignContract extends TradeTask {
             BtcWalletService walletService = processModel.getBtcWalletService();
             String id = processModel.getOffer().getId();
 
-            checkArgument(!walletService.getAddressEntry(id, AddressEntry.Context.MULTI_SIG).isPresent(),
-                    "addressEntry must not be set here.");
             AddressEntry makerAddressEntry = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.MULTI_SIG);
             byte[] makerMultiSigPubKey = makerAddressEntry.getPubKey();
 
             AddressEntry takerAddressEntry = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.TRADE_PAYOUT);
-            checkNotNull(trade.getTradeAmount(), "trade.getTradeAmount() must not be null");
             Contract contract = new Contract(
                     processModel.getOffer().getOfferPayload(),
-                    trade.getTradeAmount().value,
+                    checkNotNull(trade.getTradeAmount()).value,
                     trade.getTradePrice().getValue(),
-                    trade.getTakerFeeTxId(),
+                    takerFeeTxId,
                     buyerNodeAddress,
                     sellerNodeAddress,
                     trade.getMediatorNodeAddress(),
                     isBuyerMakerAndSellerTaker,
                     processModel.getAccountId(),
-                    taker.getAccountId(),
-                    makerPaymentAccountPayload,
-                    takerPaymentAccountPayload,
+                    checkNotNull(taker.getAccountId()),
+                    checkNotNull(processModel.getPaymentAccountPayload(trade)),
+                    checkNotNull(taker.getPaymentAccountPayload()),
                     processModel.getPubKeyRing(),
-                    taker.getPubKeyRing(),
+                    checkNotNull(taker.getPubKeyRing()),
                     takerAddressEntry.getAddressString(),
-                    taker.getPayoutAddressString(),
+                    checkNotNull(taker.getPayoutAddressString()),
                     makerMultiSigPubKey,
-                    taker.getMultiSigPubKey(),
+                    checkNotNull(taker.getMultiSigPubKey()),
                     trade.getLockTime(),
                     trade.getRefundAgentNodeAddress()
             );
@@ -100,6 +89,10 @@ public class MakerCreateAndSignContract extends TradeTask {
             trade.setContract(contract);
             trade.setContractAsJson(contractAsJson);
             trade.setMakerContractSignature(signature);
+
+            byte[] contractHash = Hash.getSha256Hash(checkNotNull(trade.getContractAsJson()));
+            trade.setContractHash(contractHash);
+
             processModel.setMyMultiSigPubKey(makerMultiSigPubKey);
 
             complete();

@@ -44,7 +44,7 @@ public enum BondedRoleType {
     GITHUB_ADMIN(50, 110, "https://bisq.network/roles/16", true),
     FORUM_ADMIN(20, 110, "https://bisq.network/roles/19", true),
     TWITTER_ADMIN(20, 110, "https://bisq.network/roles/21", true),
-    ROCKET_CHAT_ADMIN(20, 110, "https://bisq.network/roles/79", true),
+    ROCKET_CHAT_ADMIN(20, 110, "https://bisq.network/roles/79", true),// Now Keybase Admin
     YOUTUBE_ADMIN(10, 110, "https://bisq.network/roles/56", true),
 
     // maintainers

@@ -25,21 +25,17 @@ import bisq.common.util.Utilities;
 
 import org.apache.commons.lang3.ArrayUtils;
 
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.annotation.Nullable;
-
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
 
 // That class is used in the contract for creating the contract json. Any change will break the contract.
 // If a field gets added it need to be be annotated with @JsonExclude (excluded from contract).
@@ -53,6 +49,7 @@ public abstract class PaymentAccountPayload implements NetworkPayload, UsedForTr
 
     // Keys for excludeFromJsonDataMap
     public static final String SALT = "salt";
+    public static final String HOLDER_NAME = "holderName";
 
     protected final String paymentMethodId;
     protected final String id;
@@ -67,7 +64,6 @@ public abstract class PaymentAccountPayload implements NetworkPayload, UsedForTr
     // PaymentAccountPayload is used for the json contract and a trade with a user who has an older version would
     // fail the contract verification.
     @JsonExclude
-    @Nullable
     protected final Map<String, String> excludeFromJsonDataMap;
 
 
@@ -79,7 +75,7 @@ public abstract class PaymentAccountPayload implements NetworkPayload, UsedForTr
         this(paymentMethodId,
                 id,
                 -1,
-                null);
+                new HashMap<>());
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -89,11 +85,11 @@ public abstract class PaymentAccountPayload implements NetworkPayload, UsedForTr
     protected PaymentAccountPayload(String paymentMethodId,
                                     String id,
                                     long maxTradePeriod,
-                                    @Nullable Map<String, String> excludeFromJsonDataMapParam) {
+                                    Map<String, String> excludeFromJsonDataMapParam) {
         this.paymentMethodId = paymentMethodId;
         this.id = id;
         this.maxTradePeriod = maxTradePeriod;
-        this.excludeFromJsonDataMap = excludeFromJsonDataMapParam == null ? new HashMap<>() : excludeFromJsonDataMapParam;
+        this.excludeFromJsonDataMap = excludeFromJsonDataMapParam;
 
         // If not set (old versions) we set by default a random 256 bit salt.
         // User can set salt as well by hex string.
@@ -108,7 +104,7 @@ public abstract class PaymentAccountPayload implements NetworkPayload, UsedForTr
                 .setMaxTradePeriod(maxTradePeriod)
                 .setId(id);
 
-        Optional.ofNullable(excludeFromJsonDataMap).ifPresent(builder::putAllExcludeFromJsonData);
+        builder.putAllExcludeFromJsonData(excludeFromJsonDataMap);
 
         return builder;
     }
@@ -123,13 +119,11 @@ public abstract class PaymentAccountPayload implements NetworkPayload, UsedForTr
     public abstract String getPaymentDetailsForTradePopup();
 
     public byte[] getSalt() {
-        checkNotNull(excludeFromJsonDataMap, "excludeFromJsonDataMap must not be null");
         checkArgument(excludeFromJsonDataMap.containsKey(SALT), "Salt must have been set in excludeFromJsonDataMap.");
         return Utilities.decodeFromHex(excludeFromJsonDataMap.get(SALT));
     }
 
     public void setSalt(byte[] salt) {
-        checkNotNull(excludeFromJsonDataMap, "excludeFromJsonDataMap must not be null");
         excludeFromJsonDataMap.put(SALT, Utilities.encodeToHex(salt));
     }
 
@@ -139,6 +133,10 @@ public abstract class PaymentAccountPayload implements NetworkPayload, UsedForTr
     public abstract byte[] getAgeWitnessInputData();
 
     protected byte[] getAgeWitnessInputData(byte[] data) {
-        return ArrayUtils.addAll(paymentMethodId.getBytes(Charset.forName("UTF-8")), data);
+        return ArrayUtils.addAll(paymentMethodId.getBytes(StandardCharsets.UTF_8), data);
+    }
+
+    public String getOwnerId() {
+        return null;
     }
 }

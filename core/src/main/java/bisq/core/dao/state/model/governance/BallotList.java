@@ -75,4 +75,3 @@ public class BallotList extends PersistableList<Ballot> implements ConsensusCrit
                 .collect(Collectors.toList());
     }
 }
-

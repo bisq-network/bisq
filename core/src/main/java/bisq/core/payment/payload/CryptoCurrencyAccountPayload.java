@@ -17,9 +17,6 @@
 
 package bisq.core.payment.payload;
 
-
-import bisq.common.util.CollectionUtils;
-
 import com.google.protobuf.Message;
 
 import java.util.HashMap;
@@ -30,8 +27,6 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
-
-import javax.annotation.Nullable;
 
 @EqualsAndHashCode(callSuper = true)
 @ToString
@@ -53,7 +48,7 @@ public final class CryptoCurrencyAccountPayload extends AssetsAccountPayload {
                                          String id,
                                          String address,
                                          long maxTradePeriod,
-                                         @Nullable Map<String, String> excludeFromJsonDataMap) {
+                                         Map<String, String> excludeFromJsonDataMap) {
         super(paymentMethod,
                 id,
                 address,
@@ -74,7 +69,6 @@ public final class CryptoCurrencyAccountPayload extends AssetsAccountPayload {
                 proto.getId(),
                 proto.getCryptoCurrencyAccountPayload().getAddress(),
                 proto.getMaxTradePeriod(),
-                CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
+                new HashMap<>(proto.getExcludeFromJsonDataMap()));
     }
-
 }

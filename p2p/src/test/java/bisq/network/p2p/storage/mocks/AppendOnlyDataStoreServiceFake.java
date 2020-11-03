@@ -21,7 +21,6 @@ import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreService;
 
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -31,18 +30,16 @@ import java.util.Map;
  * @see <a href="https://martinfowler.com/articles/mocksArentStubs.html#TheDifferenceBetweenMocksAndStubs">Reference</a>
  */
 public class AppendOnlyDataStoreServiceFake extends AppendOnlyDataStoreService {
-    private final Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> map;
 
     public AppendOnlyDataStoreServiceFake() {
-        super(null);
-        map = new HashMap<>();
+        addService(new MapStoreServiceFake());
     }
 
     public Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> getMap() {
-        return map;
+        return super.getMap();
     }
 
     public void put(P2PDataStorage.ByteArray hashAsByteArray, PersistableNetworkPayload payload) {
-        map.put(hashAsByteArray, payload);
+        super.put(hashAsByteArray, payload);
     }
 }

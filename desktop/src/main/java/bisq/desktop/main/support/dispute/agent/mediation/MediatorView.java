@@ -25,11 +25,14 @@ import bisq.desktop.main.support.dispute.agent.DisputeAgentView;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.alert.PrivateNotificationManager;
+import bisq.core.dao.DaoFacade;
 import bisq.core.support.SupportType;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeSession;
 import bisq.core.support.dispute.mediation.MediationManager;
 import bisq.core.support.dispute.mediation.MediationSession;
+import bisq.core.support.dispute.mediation.mediator.MediatorManager;
+import bisq.core.support.dispute.refund.refundagent.RefundAgentManager;
 import bisq.core.trade.TradeManager;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.CoinFormatter;
@@ -37,8 +40,8 @@ import bisq.core.util.coin.CoinFormatter;
 import bisq.common.config.Config;
 import bisq.common.crypto.KeyRing;
 
-import javax.inject.Named;
 import javax.inject.Inject;
+import javax.inject.Named;
 
 @FxmlView
 public class MediatorView extends DisputeAgentView {
@@ -53,6 +56,9 @@ public class MediatorView extends DisputeAgentView {
                         ContractWindow contractWindow,
                         TradeDetailsWindow tradeDetailsWindow,
                         AccountAgeWitnessService accountAgeWitnessService,
+                        DaoFacade daoFacade,
+                        MediatorManager mediatorManager,
+                        RefundAgentManager refundAgentManager,
                         @Named(Config.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         super(mediationManager,
                 keyRing,
@@ -63,7 +69,35 @@ public class MediatorView extends DisputeAgentView {
                 contractWindow,
                 tradeDetailsWindow,
                 accountAgeWitnessService,
+                daoFacade,
+                mediatorManager,
+                refundAgentManager,
                 useDevPrivilegeKeys);
+    }
+
+    @Override
+    public void initialize() {
+        super.initialize();
+        reOpenButton.setVisible(true);
+        reOpenButton.setManaged(true);
+        setupReOpenDisputeListener();
+    }
+
+    @Override
+    protected void activate() {
+        super.activate();
+        activateReOpenDisputeListener();
+
+        // We need to call applyFilteredListPredicate after we called activateReOpenDisputeListener as we use the
+        // "open" string by default and it was applied in the super call but the disputes got set in
+        // activateReOpenDisputeListener
+        applyFilteredListPredicate(filterTextField.getText());
+    }
+
+    @Override
+    protected void deactivate() {
+        super.deactivate();
+        deactivateReOpenDisputeListener();
     }
 
     @Override
@@ -78,7 +112,6 @@ public class MediatorView extends DisputeAgentView {
 
     @Override
     protected void onCloseDispute(Dispute dispute) {
-        disputeSummaryWindow.onFinalizeDispute(() -> chatView.removeInputBox())
-                .show(dispute);
+        disputeSummaryWindow.onFinalizeDispute(() -> chatView.removeInputBox()).show(dispute);
     }
 }

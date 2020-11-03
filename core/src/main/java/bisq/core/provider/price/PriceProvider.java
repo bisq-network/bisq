@@ -20,6 +20,7 @@ package bisq.core.provider.price;
 import bisq.core.provider.HttpClientProvider;
 
 import bisq.network.http.HttpClient;
+import bisq.network.p2p.P2PService;
 
 import bisq.common.app.Version;
 import bisq.common.util.MathUtils;
@@ -47,8 +48,13 @@ public class PriceProvider extends HttpClientProvider {
 
     public Tuple2<Map<String, Long>, Map<String, MarketPrice>> getAll() throws IOException {
         Map<String, MarketPrice> marketPriceMap = new HashMap<>();
+        String hsVersion = "";
+        if (P2PService.getMyNodeAddress() != null)
+            hsVersion = P2PService.getMyNodeAddress().getHostName().length() > 22 ? ", HSv3" : ", HSv2";
+
         String json = httpClient.requestWithGET("getAllMarketPrices", "User-Agent", "bisq/"
-                + Version.VERSION);
+                + Version.VERSION + hsVersion);
+
 
         LinkedTreeMap<?, ?> map = new Gson().fromJson(json, LinkedTreeMap.class);
         Map<String, Long> tsMap = new HashMap<>();

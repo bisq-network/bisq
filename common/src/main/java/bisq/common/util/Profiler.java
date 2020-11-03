@@ -17,21 +17,28 @@
 
 package bisq.common.util;
 
-import org.slf4j.Logger;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class Profiler {
-    public static void printSystemLoad(Logger log) {
-        log.info(printSystemLoadString());
-    }
-
-    public static String printSystemLoadString() {
-        return "System load: Memory (MB): " + getUsedMemoryInMB() + " / No. of threads: " + Thread.activeCount();
-    }
-
-    public static long getUsedMemoryInMB() {
+    public static void printSystemLoad() {
         Runtime runtime = Runtime.getRuntime();
         long free = runtime.freeMemory() / 1024 / 1024;
         long total = runtime.totalMemory() / 1024 / 1024;
+        long used = total - free;
+
+        log.info("System report: Used memory: {} MB; Free memory: {} MB; Total memory: {} MB; No. of threads: {}",
+                used, free, total, Thread.activeCount());
+    }
+
+    public static long getUsedMemoryInMB() {
+        return getUsedMemoryInBytes() / 1024 / 1024;
+    }
+
+    public static long getUsedMemoryInBytes() {
+        Runtime runtime = Runtime.getRuntime();
+        long free = runtime.freeMemory();
+        long total = runtime.totalMemory();
         return total - free;
     }
 

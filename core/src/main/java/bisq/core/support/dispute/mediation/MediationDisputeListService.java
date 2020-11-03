@@ -19,7 +19,7 @@ package bisq.core.support.dispute.mediation;
 
 import bisq.core.support.dispute.DisputeListService;
 
-import bisq.common.storage.Storage;
+import bisq.common.persistence.PersistenceManager;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -32,8 +32,8 @@ public final class MediationDisputeListService extends DisputeListService<Mediat
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public MediationDisputeListService(Storage<MediationDisputeList> storage) {
-        super(storage);
+    public MediationDisputeListService(PersistenceManager<MediationDisputeList> persistenceManager) {
+        super(persistenceManager);
     }
 
 
@@ -43,6 +43,6 @@ public final class MediationDisputeListService extends DisputeListService<Mediat
 
     @Override
     protected MediationDisputeList getConcreteDisputeList() {
-        return new MediationDisputeList(storage);
+        return new MediationDisputeList();
     }
 }

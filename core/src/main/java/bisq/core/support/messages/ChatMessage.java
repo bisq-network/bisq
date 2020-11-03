@@ -19,6 +19,8 @@ package bisq.core.support.messages;
 
 import bisq.core.support.SupportType;
 import bisq.core.support.dispute.Attachment;
+import bisq.core.support.dispute.Dispute;
+import bisq.core.support.dispute.DisputeResult;
 
 import bisq.network.p2p.NodeAddress;
 
@@ -49,7 +51,7 @@ import lombok.extern.slf4j.Slf4j;
 import javax.annotation.Nullable;
 
 /* Message for direct communication between two nodes. Originally built for trader to
- * arbitrator communication as no other direct communication was allowed. Aribtrator is
+ * arbitrator communication as no other direct communication was allowed. Arbitrator is
  * considered as the server and trader as the client in arbitration chats
  *
  * For trader to trader communication the maker is considered to be the server
@@ -59,7 +61,6 @@ import javax.annotation.Nullable;
 @Getter
 @Slf4j
 public final class ChatMessage extends SupportMessage {
-
     public interface Listener {
         void onMessageStateChanged();
     }
@@ -328,6 +329,16 @@ public final class ChatMessage extends SupportMessage {
         this.listener = new WeakReference<>(listener);
     }
 
+    public boolean isResultMessage(Dispute dispute) {
+        DisputeResult disputeResult = dispute.getDisputeResultProperty().get();
+        if (disputeResult == null) {
+            return false;
+        }
+
+        ChatMessage resultChatMessage = disputeResult.getChatMessage();
+        return resultChatMessage != null && resultChatMessage.getUid().equals(uid);
+    }
+
     private void notifyChangeListener() {
         if (listener != null) {
             Listener listener = this.listener.get();
@@ -340,8 +351,7 @@ public final class ChatMessage extends SupportMessage {
     @Override
     public String toString() {
         return "ChatMessage{" +
-                "\n     type='" + supportType + '\'' +
-                ",\n     tradeId='" + tradeId + '\'' +
+                "\n     tradeId='" + tradeId + '\'' +
                 ",\n     traderId=" + traderId +
                 ",\n     senderIsTrader=" + senderIsTrader +
                 ",\n     message='" + message + '\'' +
@@ -349,10 +359,9 @@ public final class ChatMessage extends SupportMessage {
                 ",\n     senderNodeAddress=" + senderNodeAddress +
                 ",\n     date=" + date +
                 ",\n     isSystemMessage=" + isSystemMessage +
+                ",\n     wasDisplayed=" + wasDisplayed +
                 ",\n     arrivedProperty=" + arrivedProperty +
                 ",\n     storedInMailboxProperty=" + storedInMailboxProperty +
-                ",\n     ChatMessage.uid='" + uid + '\'' +
-                ",\n     messageVersion=" + messageVersion +
                 ",\n     acknowledgedProperty=" + acknowledgedProperty +
                 ",\n     sendMessageErrorProperty=" + sendMessageErrorProperty +
                 ",\n     ackErrorProperty=" + ackErrorProperty +

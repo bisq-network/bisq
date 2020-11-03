@@ -20,7 +20,7 @@ package bisq.core.crypto;
 import bisq.common.crypto.CryptoException;
 import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.KeyStorage;
-import bisq.common.storage.FileUtil;
+import bisq.common.file.FileUtil;
 
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;

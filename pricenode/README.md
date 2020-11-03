@@ -24,7 +24,6 @@ Operating a production pricenode is a valuable service to the Bisq network, and 
 
 To run a pricenode, you will need:
 
-  - [BitcoinAverage API keys](https://bitcoinaverage.com/en/plans). Free plans are fine for local development or personal nodes; paid plans should be used for well-known production nodes.
   - JDK 8 if you want to build and run a node locally.
   - The `tor` binary (e.g. `brew install tor`) if you want to run a hidden service locally.
 
@@ -39,21 +38,6 @@ curl -s https://raw.githubusercontent.com/bisq-network/bisq/master/pricenode/ins
 ```
 
 At the end of the installer script, it should print your Tor onion hostname.
-
-### Setting your BitcoinAverage API keys
-
-Open `/etc/default/bisq-pricenode.env` in a text editor and look for these lines:
-```bash
-BITCOIN_AVG_PUBKEY=foo
-BITCOIN_AVG_PRIVKEY=bar
-```
-
-Add your pubkey and privkey and then reload/restart bisq-pricenode service:
-
-```bash
-systemctl daemon-reload
-systemctl restart bisq-pricenode
-```
 
 ### Test
 
@@ -72,7 +56,7 @@ curl http://localhost:8080/info
 If you run a main pricenode, you also are obliged to activate the monitoring feed by running
 
 ```bash
-curl -s https://raw.githubusercontent.com/bisq-network/bisq/master/monitor/install_collectd_debian.sh | sudo bash
+bash <(curl -s https://raw.githubusercontent.com/bisq-network/bisq/master/monitor/install_collectd_debian.sh)
 ```
 Follow the instruction given by the script and report your certificate to the [@bisq-network/monitoring](https://github.com/orgs/bisq-network/teams/monitoring-operators) team or via the [Keybase](https://keybase.io/team/bisq) `#monitoring` channel!
 
@@ -81,8 +65,23 @@ Furthermore, you are obliged to provide network size data to the monitor by runn
 curl -s https://raw.githubusercontent.com/bisq-network/bisq/master/pricenode/install_networksize_debian.sh | sudo bash
 ```
 
+### Updating
+
+Update your bisq code in /bisq/bisq with ```git pull```
+
+Then build an updated pricenode:
+```./gradlew :pricenode:installDist  -x test```
 
 ## How to deploy elsewhere
 
  - [README-HEROKU.md](README-HEROKU.md)
  - [docker/README.md](docker/README.md)
+
+
+## Bitcoin mining fee estimates
+
+The pricenode exposes a service API to Bisq clients under `/getFees`.
+
+This API returns a mining fee rate estimate, representing an average of several mining fee rate values retrieved from different `mempool.space` instances.
+
+To configure which `mempool.space` instances are queried to calculate this average, see the relevant section in the file `application.properties`.

@@ -60,6 +60,11 @@ sudo -H -i -u "${ROOT_USER}" DEBIAN_FRONTEND=noninteractive apt-get upgrade -qq 
 echo "[*] Installing base packages"
 sudo -H -i -u "${ROOT_USER}" DEBIAN_FRONTEND=noninteractive apt-get install -qq -y ${ROOT_PKG}
 
+echo "[*] Installing Git LFS"
+sudo -H -i -u "${ROOT_USER}" curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | bash
+sudo -H -i -u "${ROOT_USER}" apt-get install git-lfs
+sudo -H -i -u "${ROOT_USER}" git lfs install
+
 echo "[*] Cloning Bisq repo"
 sudo -H -i -u "${ROOT_USER}" git config --global advice.detachedHead false
 sudo -H -i -u "${ROOT_USER}" git clone --branch "${BISQ_REPO_TAG}" "${BISQ_REPO_URL}" "${ROOT_HOME}/${BISQ_REPO_NAME}"
@@ -144,6 +149,9 @@ sudo sed -i -e "s!__BISQ_HOME__!${BISQ_HOME}!" "${SYSTEMD_ENV_HOME}/bisq.env"
 
 echo "[*] Checking out Bisq ${BISQ_LATEST_RELEASE}"
 sudo -H -i -u "${BISQ_USER}" sh -c "cd ${BISQ_HOME}/${BISQ_REPO_NAME} && git checkout ${BISQ_LATEST_RELEASE}"
+
+echo "[*] Performing Git LFS pull"
+sudo -H -i -u "${BISQ_USER}" sh -c "cd ${BISQ_HOME}/${BISQ_REPO_NAME} && git lfs pull"
 
 echo "[*] Building Bisq from source"
 sudo -H -i -u "${BISQ_USER}" sh -c "cd ${BISQ_HOME}/${BISQ_REPO_NAME} && ./gradlew build -x test < /dev/null" # redirect from /dev/null is necessary to workaround gradlew non-interactive shell hanging issue

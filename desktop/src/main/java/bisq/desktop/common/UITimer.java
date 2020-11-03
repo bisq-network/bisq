@@ -18,7 +18,10 @@
 package bisq.desktop.common;
 
 import bisq.common.Timer;
+import bisq.common.UserThread;
 import bisq.common.reactfx.FxTimer;
+
+import javafx.application.Platform;
 
 import java.time.Duration;
 
@@ -34,31 +37,45 @@ public class UITimer implements Timer {
 
     @Override
     public Timer runLater(Duration delay, Runnable runnable) {
-        if (timer == null) {
-            timer = FxTimer.create(delay, runnable);
-            timer.restart();
-        } else {
-            log.warn("runLater called on an already running timer.");
-        }
+        executeDirectlyIfPossible(() -> {
+            if (timer == null) {
+                timer = FxTimer.create(delay, runnable);
+                timer.restart();
+            } else {
+                log.warn("runLater called on an already running timer.");
+            }
+        });
         return this;
     }
 
     @Override
     public Timer runPeriodically(Duration interval, Runnable runnable) {
-        if (timer == null) {
-            timer = FxTimer.createPeriodic(interval, runnable);
-            timer.restart();
-        } else {
-            log.warn("runPeriodically called on an already running timer.");
-        }
+        executeDirectlyIfPossible(() -> {
+            if (timer == null) {
+                timer = FxTimer.createPeriodic(interval, runnable);
+                timer.restart();
+            } else {
+                log.warn("runPeriodically called on an already running timer.");
+            }
+        });
         return this;
     }
 
     @Override
     public void stop() {
-        if (timer != null) {
-            timer.stop();
-            timer = null;
+        executeDirectlyIfPossible(() -> {
+            if (timer != null) {
+                timer.stop();
+                timer = null;
+            }
+        });
+    }
+
+    private void executeDirectlyIfPossible(Runnable runnable) {
+        if (Platform.isFxApplicationThread()) {
+            runnable.run();
+        } else {
+            UserThread.execute(runnable);
         }
     }
 }

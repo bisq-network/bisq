@@ -19,5 +19,5 @@ package bisq.network.p2p;
 
 public interface DecryptedDirectMessageListener {
 
-    void onDirectMessage(DecryptedMessageWithPubKey decryptedMessageWithPubKey, @SuppressWarnings("UnusedParameters") NodeAddress peerNodeAddress);
+    void onDirectMessage(DecryptedMessageWithPubKey decryptedMessageWithPubKey, NodeAddress peerNodeAddress);
 }

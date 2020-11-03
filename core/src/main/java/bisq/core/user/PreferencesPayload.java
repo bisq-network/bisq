@@ -52,9 +52,7 @@ import static bisq.core.btc.wallet.Restrictions.getDefaultBuyerSecurityDepositAs
 public final class PreferencesPayload implements PersistableEnvelope {
     private String userLanguage;
     private Country userCountry;
-    @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
     private List<FiatCurrency> fiatCurrencies = new ArrayList<>();
-    @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
     private List<CryptoCurrency> cryptoCurrencies = new ArrayList<>();
     private BlockChainExplorer blockChainExplorerMainNet;
     private BlockChainExplorer blockChainExplorerTestNet;
@@ -126,13 +124,17 @@ public final class PreferencesPayload implements PersistableEnvelope {
     private double buyerSecurityDepositAsPercentForCrypto = getDefaultBuyerSecurityDepositAsPercent();
     private int blockNotifyPort;
     private boolean tacAcceptedV120;
+    private double bsqAverageTrimThreshold = 0.05;
+
+    // Added at 1.3.8
+    private List<AutoConfirmSettings> autoConfirmSettingsList = new ArrayList<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public PreferencesPayload() {
+    PreferencesPayload() {
     }
 
 
@@ -186,7 +188,12 @@ public final class PreferencesPayload implements PersistableEnvelope {
                 .setIgnoreDustThreshold(ignoreDustThreshold)
                 .setBuyerSecurityDepositAsPercentForCrypto(buyerSecurityDepositAsPercentForCrypto)
                 .setBlockNotifyPort(blockNotifyPort)
-                .setTacAcceptedV120(tacAcceptedV120);
+                .setTacAcceptedV120(tacAcceptedV120)
+                .setBsqAverageTrimThreshold(bsqAverageTrimThreshold)
+                .addAllAutoConfirmSettings(autoConfirmSettingsList.stream()
+                        .map(autoConfirmSettings -> ((protobuf.AutoConfirmSettings) autoConfirmSettings.toProtoMessage()))
+                        .collect(Collectors.toList()));
+
         Optional.ofNullable(backupDirectory).ifPresent(builder::setBackupDirectory);
         Optional.ofNullable(preferredTradeCurrency).ifPresent(e -> builder.setPreferredTradeCurrency((protobuf.TradeCurrency) e.toProtoMessage()));
         Optional.ofNullable(offerBookChartScreenCurrencyCode).ifPresent(builder::setOfferBookChartScreenCurrencyCode);
@@ -207,7 +214,7 @@ public final class PreferencesPayload implements PersistableEnvelope {
         return protobuf.PersistableEnvelope.newBuilder().setPreferencesPayload(builder).build();
     }
 
-    public static PersistableEnvelope fromProto(protobuf.PreferencesPayload proto, CoreProtoResolver coreProtoResolver) {
+    public static PreferencesPayload fromProto(protobuf.PreferencesPayload proto, CoreProtoResolver coreProtoResolver) {
         final protobuf.Country userCountry = proto.getUserCountry();
         PaymentAccount paymentAccount = null;
         if (proto.hasSelectedPaymentAccountForCreateOffer() && proto.getSelectedPaymentAccountForCreateOffer().hasPaymentMethod())
@@ -274,7 +281,12 @@ public final class PreferencesPayload implements PersistableEnvelope {
                 proto.getIgnoreDustThreshold(),
                 proto.getBuyerSecurityDepositAsPercentForCrypto(),
                 proto.getBlockNotifyPort(),
-                proto.getTacAcceptedV120());
-
+                proto.getTacAcceptedV120(),
+                proto.getBsqAverageTrimThreshold(),
+                proto.getAutoConfirmSettingsList().isEmpty() ? new ArrayList<>() :
+                        new ArrayList<>(proto.getAutoConfirmSettingsList().stream()
+                                .map(AutoConfirmSettings::fromProto)
+                                .collect(Collectors.toList()))
+        );
     }
 }

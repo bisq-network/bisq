@@ -29,6 +29,8 @@ import bisq.core.dao.state.model.governance.Issuance;
 import bisq.core.dao.state.model.governance.IssuanceType;
 import bisq.core.dao.state.model.governance.ReimbursementProposal;
 
+import bisq.common.util.MathUtils;
+
 import javax.inject.Inject;
 
 import java.util.Optional;
@@ -85,7 +87,7 @@ public class IssuanceService {
                     StringBuilder sb = new StringBuilder();
                     sb.append("\n################################################################################\n");
                     sb.append("We issued new BSQ to tx with ID ").append(txOutput.getTxId())
-                            .append("\nIssued BSQ: ").append(issuanceProposal.getRequestedBsq())
+                            .append("\nIssued BSQ: ").append(MathUtils.scaleDownByPowerOf10(amount, 2))
                             .append("\nIssuance type: ").append(issuanceType.name())
                             .append("\n################################################################################\n");
                     log.info(sb.toString());

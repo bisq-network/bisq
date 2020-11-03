@@ -17,6 +17,7 @@
 
 package bisq.core.trade.protocol.tasks.maker;
 
+import bisq.core.btc.wallet.Restrictions;
 import bisq.core.trade.Trade;
 import bisq.core.trade.protocol.tasks.TradeTask;
 
@@ -27,8 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class MakerSetsLockTime extends TradeTask {
-    @SuppressWarnings({"unused"})
-    public MakerSetsLockTime(TaskRunner taskHandler, Trade trade) {
+    public MakerSetsLockTime(TaskRunner<Trade> taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -38,10 +38,10 @@ public class MakerSetsLockTime extends TradeTask {
             runInterceptHook();
 
             // 10 days for altcoins, 20 days for other payment methods
-            int delay = processModel.getOffer().getPaymentMethod().isAsset() ? 144 * 10 : 144 * 20;
-            if (Config.baseCurrencyNetwork().isRegtest()) {
-                delay = 5;
-            }
+            // For regtest dev environment we use 5 blocks
+            int delay = Config.baseCurrencyNetwork().isRegtest() ?
+                    5 :
+                    Restrictions.getLockTime(processModel.getOffer().getPaymentMethod().isAsset());
 
             long lockTime = processModel.getBtcWalletService().getBestChainHeight() + delay;
             log.info("lockTime={}, delay={}", lockTime, delay);

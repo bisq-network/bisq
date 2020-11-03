@@ -28,9 +28,9 @@ import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 
 import bisq.common.UserThread;
 import bisq.common.config.Config;
+import bisq.common.file.JsonFileManager;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
-import bisq.common.storage.JsonFileManager;
 import bisq.common.util.Utilities;
 
 import javax.inject.Inject;
@@ -245,6 +245,6 @@ public class OfferBookService {
                 })
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
-        jsonFileManager.writeToDisc(Utilities.objectToJson(offerForJsonList), "offers_statistics");
+        jsonFileManager.writeToDiscThreaded(Utilities.objectToJson(offerForJsonList), "offers_statistics");
     }
 }

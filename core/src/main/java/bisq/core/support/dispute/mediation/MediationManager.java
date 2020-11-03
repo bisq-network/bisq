@@ -20,9 +20,11 @@ package bisq.core.support.dispute.mediation;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
+import bisq.core.dao.DaoFacade;
 import bisq.core.locale.Res;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
+import bisq.core.provider.price.PriceFeedService;
 import bisq.core.support.SupportType;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeManager;
@@ -35,8 +37,8 @@ import bisq.core.support.messages.SupportMessage;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.closed.ClosedTradableManager;
+import bisq.core.trade.protocol.DisputeProtocol;
 import bisq.core.trade.protocol.ProcessModel;
-import bisq.core.trade.protocol.TradeProtocol;
 
 import bisq.network.p2p.AckMessageSourceType;
 import bisq.network.p2p.NodeAddress;
@@ -45,7 +47,8 @@ import bisq.network.p2p.P2PService;
 import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.app.Version;
-import bisq.common.crypto.PubKeyRing;
+import bisq.common.config.Config;
+import bisq.common.crypto.KeyRing;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
 
@@ -79,11 +82,15 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
                             TradeManager tradeManager,
                             ClosedTradableManager closedTradableManager,
                             OpenOfferManager openOfferManager,
-                            PubKeyRing pubKeyRing,
-                            MediationDisputeListService mediationDisputeListService) {
+                            DaoFacade daoFacade,
+                            KeyRing keyRing,
+                            MediationDisputeListService mediationDisputeListService,
+                            Config config,
+                            PriceFeedService priceFeedService) {
         super(p2PService, tradeWalletService, walletService, walletsSetup, tradeManager, closedTradableManager,
-                openOfferManager, pubKeyRing, mediationDisputeListService);
+                openOfferManager, daoFacade, keyRing, mediationDisputeListService, config, priceFeedService);
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Implement template methods
@@ -115,7 +122,7 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
     }
 
     @Override
-    protected Trade.DisputeState getDisputeState_StartedByPeer() {
+    protected Trade.DisputeState getDisputeStateStartedByPeer() {
         return Trade.DisputeState.MEDIATION_STARTED_BY_PEER;
     }
 
@@ -188,11 +195,6 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
         }
         dispute.setIsClosed(true);
 
-        if (dispute.disputeResultProperty().get() != null) {
-            log.warn("We got already a dispute result. That should only happen if a dispute needs to be closed " +
-                    "again because the first close did not succeed. TradeId = " + tradeId);
-        }
-
         dispute.setDisputeResult(disputeResult);
 
         Optional<Trade> tradeOptional = tradeManager.getTradeById(tradeId);
@@ -200,6 +202,10 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
             Trade trade = tradeOptional.get();
             if (trade.getDisputeState() == Trade.DisputeState.MEDIATION_REQUESTED ||
                     trade.getDisputeState() == Trade.DisputeState.MEDIATION_STARTED_BY_PEER) {
+                trade.getProcessModel().setBuyerPayoutAmountFromMediation(disputeResult.getBuyerPayoutAmount().value);
+                trade.getProcessModel().setSellerPayoutAmountFromMediation(disputeResult.getSellerPayoutAmount().value);
+                tradeManager.requestPersistence();
+
                 trade.setDisputeState(Trade.DisputeState.MEDIATION_CLOSED);
             }
         } else {
@@ -207,6 +213,8 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
             openOfferOptional.ifPresent(openOffer -> openOfferManager.closeOpenOffer(openOffer.getOffer()));
         }
         sendAckMessage(chatMessage, dispute.getAgentPubKeyRing(), true, null);
+
+        requestPersistence();
     }
 
 
@@ -220,9 +228,9 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
         return dispute.getContract().getMediatorNodeAddress();
     }
 
-    public void acceptMediationResult(Trade trade,
-                                      ResultHandler resultHandler,
-                                      ErrorMessageHandler errorMessageHandler) {
+    public void onAcceptMediationResult(Trade trade,
+                                        ResultHandler resultHandler,
+                                        ErrorMessageHandler errorMessageHandler) {
         String tradeId = trade.getId();
         Optional<Dispute> optionalDispute = findDispute(tradeId);
         checkArgument(optionalDispute.isPresent(), "dispute must be present");
@@ -232,7 +240,7 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
         ProcessModel processModel = trade.getProcessModel();
         processModel.setBuyerPayoutAmountFromMediation(buyerPayoutAmount.value);
         processModel.setSellerPayoutAmountFromMediation(sellerPayoutAmount.value);
-        TradeProtocol tradeProtocol = trade.getTradeProtocol();
+        DisputeProtocol tradeProtocol = (DisputeProtocol) tradeManager.getTradeProtocol(trade);
 
         trade.setMediationResultState(MediationResultState.MEDIATION_RESULT_ACCEPTED);
 

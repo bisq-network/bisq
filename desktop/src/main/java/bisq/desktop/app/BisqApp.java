@@ -32,8 +32,6 @@ import bisq.desktop.main.overlays.windows.ShowWalletDataWindow;
 import bisq.desktop.util.CssTheme;
 import bisq.desktop.util.ImageUtil;
 
-import bisq.core.app.AvoidStandbyModeService;
-import bisq.core.app.OSXStandbyModeDisabler;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.dao.governance.voteresult.MissingDataRequestService;
@@ -42,18 +40,18 @@ import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.user.Preferences;
 
-import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
 import bisq.common.app.Log;
 import bisq.common.config.Config;
 import bisq.common.setup.GracefulShutDownHandler;
 import bisq.common.setup.UncaughtExceptionHandler;
-import bisq.common.util.Profiler;
 import bisq.common.util.Utilities;
 
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.name.Names;
+
+import com.google.common.base.Joiner;
 
 import javafx.application.Application;
 
@@ -70,8 +68,9 @@ import javafx.scene.layout.StackPane;
 import java.awt.GraphicsEnvironment;
 import java.awt.Rectangle;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 import org.slf4j.LoggerFactory;
@@ -90,7 +89,6 @@ import static bisq.desktop.util.Layout.MIN_WINDOW_WIDTH;
 
 @Slf4j
 public class BisqApp extends Application implements UncaughtExceptionHandler {
-    private static final long LOG_MEMORY_PERIOD_MIN = 10;
     @Setter
     private static Consumer<Application> appLaunchedHandler;
     @Getter
@@ -126,17 +124,12 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
         appLaunchedHandler.accept(this);
     }
 
-    public void startApplication(Runnable onUiReadyHandler) {
+    public void startApplication(Runnable onApplicationStartedHandler) {
         try {
             MainView mainView = loadMainView(injector);
-            mainView.setOnUiReadyHandler(onUiReadyHandler);
+            mainView.setOnApplicationStartedHandler(onApplicationStartedHandler);
             scene = createAndConfigScene(mainView, injector);
             setupStage(scene);
-
-            injector.getInstance(OSXStandbyModeDisabler.class).doIt();
-            injector.getInstance(AvoidStandbyModeService.class).init();
-
-            UserThread.runPeriodically(() -> Profiler.printSystemLoad(log), LOG_MEMORY_PERIOD_MIN, TimeUnit.MINUTES);
         } catch (Throwable throwable) {
             log.error("Error during app init", throwable);
             handleUncaughtException(throwable, false);
@@ -151,11 +144,11 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
                     .hideCloseButton()
                     .useAnimation(false)
                     .show();
-            UserThread.runAfter(() -> {
+            new Thread(() -> {
                 gracefulShutDownHandler.gracefulShutDown(() -> {
                     log.debug("App shutdown complete");
                 });
-            }, 200, TimeUnit.MILLISECONDS);
+            }).start();
             shutDownRequested = true;
         }
     }
@@ -171,7 +164,7 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
             if (scene == null) {
                 log.warn("Scene not available yet, we create a new scene. The bug might be caused by an exception in a constructor or by a circular dependency in Guice. throwable=" + throwable.toString());
                 scene = new Scene(new StackPane(), 1000, 650);
-                CssTheme.loadSceneStyles(scene, CssTheme.CSS_THEME_LIGHT);
+                CssTheme.loadSceneStyles(scene, CssTheme.CSS_THEME_LIGHT, false);
                 stage.setScene(scene);
                 stage.show();
             }
@@ -223,10 +216,11 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
         addSceneKeyEventHandler(scene, injector);
 
         Preferences preferences = injector.getInstance(Preferences.class);
+        var config = injector.getInstance(Config.class);
         preferences.getCssThemeProperty().addListener((ov) -> {
-            CssTheme.loadSceneStyles(scene, preferences.getCssTheme());
+            CssTheme.loadSceneStyles(scene, preferences.getCssTheme(), config.useDevModeHeader);
         });
-        CssTheme.loadSceneStyles(scene, preferences.getCssTheme());
+        CssTheme.loadSceneStyles(scene, preferences.getCssTheme(), config.useDevModeHeader);
 
         return scene;
     }
@@ -242,8 +236,19 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
 
         // configure the primary stage
         String appName = injector.getInstance(Key.get(String.class, Names.named(Config.APP_NAME)));
-        if (!Config.baseCurrencyNetwork().isMainnet())
-            appName += " [" + Res.get(Config.baseCurrencyNetwork().name()) + "]";
+        List<String> postFixes = new ArrayList<>();
+        if (!Config.baseCurrencyNetwork().isMainnet()) {
+            postFixes.add(Config.baseCurrencyNetwork().name());
+        }
+        if (injector.getInstance(Config.class).useLocalhostForP2P) {
+            postFixes.add("LOCALHOST");
+        }
+        if (injector.getInstance(Config.class).useDevMode) {
+            postFixes.add("DEV MODE");
+        }
+        if (!postFixes.isEmpty()) {
+            appName += " [" + Joiner.on(", ").join(postFixes) + " ]";
+        }
 
         stage.setTitle(appName);
         stage.setScene(scene);

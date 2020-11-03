@@ -20,19 +20,20 @@ package bisq.monitor;
 import bisq.monitor.metric.P2PNetworkLoad;
 import bisq.monitor.reporter.ConsoleReporter;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import org.berndpruenster.netlayer.tor.NativeTor;
+import org.berndpruenster.netlayer.tor.Tor;
+import org.berndpruenster.netlayer.tor.TorCtlException;
 
 import java.util.Map;
 import java.util.Properties;
 
-import org.berndpruenster.netlayer.tor.NativeTor;
-import org.berndpruenster.netlayer.tor.Tor;
-import org.berndpruenster.netlayer.tor.TorCtlException;
 import org.junit.Assert;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Test the round trip time metric against the hidden service of tor project.org.

@@ -21,21 +21,38 @@ import bisq.desktop.common.view.ActivatableViewAndModel;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.HyperlinkWithIcon;
+import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
+import bisq.desktop.util.FormBuilder;
 
 import bisq.core.locale.Res;
+import bisq.core.trade.Trade;
+
+import bisq.common.config.Config;
+import bisq.common.util.Utilities;
 
 import javax.inject.Inject;
+import javax.inject.Named;
+
+import de.jensd.fx.fontawesome.AwesomeIcon;
+
+import com.jfoenix.controls.JFXButton;
 
 import javafx.fxml.FXML;
 
+import javafx.scene.Scene;
+import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.Tooltip;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.VBox;
 
 import javafx.beans.property.ReadOnlyObjectWrapper;
+
+import javafx.event.EventHandler;
 
 import javafx.collections.transformation.SortedList;
 
@@ -50,14 +67,20 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
     TableView<FailedTradesListItem> tableView;
     @FXML
     TableColumn<FailedTradesListItem, FailedTradesListItem> priceColumn, amountColumn, volumeColumn,
-            marketColumn, directionColumn, dateColumn, tradeIdColumn, stateColumn;
+            marketColumn, directionColumn, dateColumn, tradeIdColumn, stateColumn, removeTradeColumn;
     private final TradeDetailsWindow tradeDetailsWindow;
     private SortedList<FailedTradesListItem> sortedList;
+    private EventHandler<KeyEvent> keyEventEventHandler;
+    private Scene scene;
+    private final boolean allowFaultyDelayedTxs;
 
     @Inject
-    public FailedTradesView(FailedTradesViewModel model, TradeDetailsWindow tradeDetailsWindow) {
+    public FailedTradesView(FailedTradesViewModel model,
+                            TradeDetailsWindow tradeDetailsWindow,
+                            @Named(Config.ALLOW_FAULTY_DELAYED_TXS) boolean allowFaultyDelayedTxs) {
         super(model);
         this.tradeDetailsWindow = tradeDetailsWindow;
+        this.allowFaultyDelayedTxs = allowFaultyDelayedTxs;
     }
 
     @Override
@@ -82,6 +105,7 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
         setDateColumnCellFactory();
         setMarketColumnCellFactory();
         setStateColumnCellFactory();
+        setRemoveTradeColumnCellFactory();
 
         tradeIdColumn.setComparator(Comparator.comparing(o -> o.getTrade().getId()));
         dateColumn.setComparator(Comparator.comparing(o -> o.getTrade().getDate()));
@@ -95,10 +119,59 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
         dateColumn.setSortType(TableColumn.SortType.DESCENDING);
         tableView.getSortOrder().add(dateColumn);
 
+        keyEventEventHandler = keyEvent -> {
+            if (Utilities.isAltOrCtrlPressed(KeyCode.Y, keyEvent)) {
+                var checkTxs = checkTxs();
+                var checkUnfailString = checkUnfail();
+                if (!checkTxs.isEmpty()) {
+                    log.warn("Cannot unfail, error {}", checkTxs);
+                    new Popup().warning(checkTxs)
+                            .show();
+                } else if (!checkUnfailString.isEmpty()) {
+                    log.warn("Cannot unfail, error {}", checkUnfailString);
+                    new Popup().warning(Res.get("portfolio.failed.cantUnfail", checkUnfailString))
+                            .show();
+                } else {
+                    new Popup().warning(Res.get("portfolio.failed.unfail"))
+                            .onAction(this::onUnfail)
+                            .show();
+                }
+            }
+        };
+    }
+
+    private void onUnfail() {
+        Trade trade = sortedList.get(tableView.getSelectionModel().getFocusedIndex()).getTrade();
+        model.dataModel.unfailTrade(trade);
+    }
+
+    private String checkUnfail() {
+        Trade trade = sortedList.get(tableView.getSelectionModel().getFocusedIndex()).getTrade();
+        return model.dataModel.checkUnfail(trade);
+    }
+
+    private String checkTxs() {
+        Trade trade = sortedList.get(tableView.getSelectionModel().getFocusedIndex()).getTrade();
+        log.info("Initiated unfail of trade {}", trade.getId());
+        if (trade.getDepositTx() == null) {
+            log.info("Check unfail found no depositTx for trade {}", trade.getId());
+            return Res.get("portfolio.failed.depositTxNull");
+        }
+        if (trade.getDelayedPayoutTxBytes() == null) {
+            log.info("Check unfail found no delayedPayoutTxBytes for trade {}", trade.getId());
+            if (!allowFaultyDelayedTxs) {
+                return Res.get("portfolio.failed.delayedPayoutTxNull");
+            }
+        }
+        return "";
     }
 
     @Override
     protected void activate() {
+        scene = root.getScene();
+        if (scene != null) {
+            scene.addEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
+        }
         sortedList = new SortedList<>(model.getList());
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
         tableView.setItems(sortedList);
@@ -106,9 +179,23 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
 
     @Override
     protected void deactivate() {
+        if (scene != null) {
+            scene.removeEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
+        }
         sortedList.comparatorProperty().unbind();
     }
 
+    private void onRevertTrade(Trade trade) {
+        new Popup().attention(Res.get("portfolio.failed.revertToPending.popup"))
+                .onAction(() -> onMoveTradeToPendingTrades(trade))
+                .actionButtonText(Res.get("shared.yes"))
+                .closeButtonText(Res.get("shared.no"))
+                .show();
+    }
+
+    private void onMoveTradeToPendingTrades(Trade trade) {
+        model.dataModel.onMoveTradeToPendingTrades(trade);
+    }
 
     private void setTradeIdColumnCellFactory() {
         tradeIdColumn.getStyleClass().add("first-column");
@@ -142,7 +229,7 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
     }
 
     private void setDateColumnCellFactory() {
-        dateColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
+        dateColumn.setCellValueFactory((trade) -> new ReadOnlyObjectWrapper<>(trade.getValue()));
         dateColumn.setCellFactory(
                 new Callback<>() {
                     @Override
@@ -163,7 +250,7 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
     }
 
     private void setMarketColumnCellFactory() {
-        marketColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
+        marketColumn.setCellValueFactory((trade) -> new ReadOnlyObjectWrapper<>(trade.getValue()));
         marketColumn.setCellFactory(
                 new Callback<>() {
                     @Override
@@ -182,7 +269,7 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
 
     private void setStateColumnCellFactory() {
         stateColumn.getStyleClass().add("last-column");
-        stateColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
+        stateColumn.setCellValueFactory((trade) -> new ReadOnlyObjectWrapper<>(trade.getValue()));
         stateColumn.setCellFactory(
                 new Callback<>() {
                     @Override
@@ -204,7 +291,7 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
 
 
     private void setAmountColumnCellFactory() {
-        amountColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
+        amountColumn.setCellValueFactory((trade) -> new ReadOnlyObjectWrapper<>(trade.getValue()));
         amountColumn.setCellFactory(
                 new Callback<>() {
                     @Override
@@ -222,7 +309,7 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
     }
 
     private void setPriceColumnCellFactory() {
-        priceColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
+        priceColumn.setCellValueFactory((trade) -> new ReadOnlyObjectWrapper<>(trade.getValue()));
         priceColumn.setCellFactory(
                 new Callback<>() {
                     @Override
@@ -240,7 +327,7 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
     }
 
     private void setVolumeColumnCellFactory() {
-        volumeColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
+        volumeColumn.setCellValueFactory((trade) -> new ReadOnlyObjectWrapper<>(trade.getValue()));
         volumeColumn.setCellFactory(
                 new Callback<>() {
                     @Override
@@ -261,7 +348,7 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
     }
 
     private void setDirectionColumnCellFactory() {
-        directionColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
+        directionColumn.setCellValueFactory((trade) -> new ReadOnlyObjectWrapper<>(trade.getValue()));
         directionColumn.setCellFactory(
                 new Callback<>() {
                     @Override
@@ -276,6 +363,37 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
                         };
                     }
                 });
+    }
+
+    private TableColumn<FailedTradesListItem, FailedTradesListItem> setRemoveTradeColumnCellFactory() {
+        removeTradeColumn.setCellValueFactory((trade) -> new ReadOnlyObjectWrapper<>(trade.getValue()));
+        removeTradeColumn.setCellFactory(
+                new Callback<>() {
+                    @Override
+                    public TableCell<FailedTradesListItem, FailedTradesListItem> call(TableColumn<FailedTradesListItem,
+                            FailedTradesListItem> column) {
+                        return new TableCell<>() {
+
+                            @Override
+                            public void updateItem(FailedTradesListItem newItem, boolean empty) {
+                                super.updateItem(newItem, empty);
+                                if (!empty && newItem != null) {
+                                    Label icon = FormBuilder.getIcon(AwesomeIcon.UNDO);
+                                    icon.getStyleClass().addAll("icon", "dao-remove-proposal-icon");
+                                    JFXButton iconButton = new JFXButton("", icon);
+                                    iconButton.setStyle("-fx-cursor: hand;");
+                                    iconButton.getStyleClass().add("hidden-icon-button");
+                                    iconButton.setTooltip(new Tooltip(Res.get("portfolio.failed.revertToPending")));
+                                    iconButton.setOnAction(e -> onRevertTrade(newItem.getTrade()));
+                                    setGraphic(iconButton);
+                                } else {
+                                    setGraphic(null);
+                                }
+                            }
+                        };
+                    }
+                });
+        return removeTradeColumn;
     }
 }
 

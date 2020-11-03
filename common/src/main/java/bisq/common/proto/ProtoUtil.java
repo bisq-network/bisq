@@ -18,12 +18,15 @@
 package bisq.common.proto;
 
 import bisq.common.Proto;
+import bisq.common.util.CollectionUtils;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
+import com.google.protobuf.ProtocolStringList;
 
 import com.google.common.base.Enums;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
@@ -66,18 +69,19 @@ public class ProtoUtil {
      */
     @Nullable
     public static <E extends Enum<E>> E enumFromProto(Class<E> enumType, String name) {
-        E result = Enums.getIfPresent(enumType, name).orNull();
+        String enumName = name != null ? name : "UNDEFINED";
+        E result = Enums.getIfPresent(enumType, enumName).orNull();
         if (result == null) {
-            log.error("Invalid value for enum " + enumType.getSimpleName() + ": " + name);
             result = Enums.getIfPresent(enumType, "UNDEFINED").orNull();
-            log.error("We try to lookup for an enum entry with name 'UNDEFINED' and use that if available, " +
+            log.debug("We try to lookup for an enum entry with name 'UNDEFINED' and use that if available, " +
                     "otherwise the enum is null. enum={}", result);
             return result;
         }
         return result;
     }
 
-    public static <T extends Message> Iterable<T> collectionToProto(Collection<? extends Proto> collection, Class<T> messageType) {
+    public static <T extends Message> Iterable<T> collectionToProto(Collection<? extends Proto> collection,
+                                                                    Class<T> messageType) {
         return collection.stream()
                 .map(e -> {
                     final Message message = e.toProtoMessage();
@@ -92,7 +96,13 @@ public class ProtoUtil {
                 .collect(Collectors.toList());
     }
 
-    public static <T> Iterable<T> collectionToProto(Collection<? extends Proto> collection, Function<? super Message, T> extra) {
+    public static <T> Iterable<T> collectionToProto(Collection<? extends Proto> collection,
+                                                    Function<? super Message, T> extra) {
         return collection.stream().map(o -> extra.apply(o.toProtoMessage())).collect(Collectors.toList());
     }
+
+    public static List<String> protocolStringListToList(ProtocolStringList protocolStringList) {
+        return CollectionUtils.isEmpty(protocolStringList) ? new ArrayList<>() : new ArrayList<>(protocolStringList);
+    }
+
 }

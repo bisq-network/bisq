@@ -19,7 +19,7 @@ package bisq.core.support.dispute.refund;
 
 import bisq.core.support.dispute.DisputeListService;
 
-import bisq.common.storage.Storage;
+import bisq.common.persistence.PersistenceManager;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -32,8 +32,8 @@ public final class RefundDisputeListService extends DisputeListService<RefundDis
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public RefundDisputeListService(Storage<RefundDisputeList> storage) {
-        super(storage);
+    public RefundDisputeListService(PersistenceManager<RefundDisputeList> persistenceManager) {
+        super(persistenceManager);
     }
 
 
@@ -43,6 +43,6 @@ public final class RefundDisputeListService extends DisputeListService<RefundDis
 
     @Override
     protected RefundDisputeList getConcreteDisputeList() {
-        return new RefundDisputeList(storage);
+        return new RefundDisputeList();
     }
 }

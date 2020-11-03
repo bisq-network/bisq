@@ -69,4 +69,3 @@ public class MyProofOfBurnList extends PersistableList<MyProofOfBurn> {
                 .collect(Collectors.toList());
     }
 }
-

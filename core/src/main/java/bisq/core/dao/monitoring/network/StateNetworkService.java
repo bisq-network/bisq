@@ -156,7 +156,7 @@ public abstract class StateNetworkService<Msg extends NewStateHashMessage,
 
     public void broadcastMyStateHash(StH myStateHash) {
         NewStateHashMessage newStateHashMessage = getNewStateHashMessage(myStateHash);
-        broadcaster.broadcast(newStateHashMessage, networkNode.getNodeAddress(), null);
+        broadcaster.broadcast(newStateHashMessage, networkNode.getNodeAddress());
     }
 
     public void requestHashes(int fromHeight, String peersAddress) {

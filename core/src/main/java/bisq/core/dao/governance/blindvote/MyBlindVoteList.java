@@ -19,7 +19,6 @@ package bisq.core.dao.governance.blindvote;
 
 import bisq.core.dao.governance.ConsensusCritical;
 
-import bisq.common.proto.persistable.PersistableEnvelope;
 import bisq.common.proto.persistable.PersistableList;
 
 import com.google.protobuf.Message;
@@ -59,7 +58,7 @@ public class MyBlindVoteList extends PersistableList<BlindVote> implements Conse
                 .build();
     }
 
-    public static PersistableEnvelope fromProto(protobuf.MyBlindVoteList proto) {
+    public static MyBlindVoteList fromProto(protobuf.MyBlindVoteList proto) {
         return new MyBlindVoteList(new ArrayList<>(proto.getBlindVoteList().stream()
                 .map(BlindVote::fromProto)
                 .collect(Collectors.toList())));

@@ -7,7 +7,7 @@ import bisq.core.dao.state.DaoStateService;
 import bisq.network.p2p.P2PService;
 
 import bisq.common.crypto.PubKeyRing;
-import bisq.common.storage.Storage;
+import bisq.common.persistence.PersistenceManager;
 
 import javafx.beans.property.SimpleIntegerProperty;
 
@@ -21,12 +21,10 @@ public class MyProposalListServiceTest {
     public void canInstantiate() {
         P2PService p2PService = mock(P2PService.class);
         when(p2PService.getNumConnectedPeers()).thenReturn(new SimpleIntegerProperty(0));
-        Storage storage = mock(Storage.class);
+        PersistenceManager persistenceManager = mock(PersistenceManager.class);
         MyProposalListService service = new MyProposalListService(p2PService,
                 mock(DaoStateService.class),
-                mock(PeriodService.class), mock(WalletsManager.class), storage, mock(PubKeyRing.class)
+                mock(PeriodService.class), mock(WalletsManager.class), persistenceManager, mock(PubKeyRing.class)
         );
     }
-
-
 }

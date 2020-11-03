@@ -81,6 +81,7 @@ public class Monitor {
         // start Tor
         Tor.setDefault(new NativeTor(TOR_WORKING_DIR, null, null, false));
 
+        //noinspection deprecation,deprecation,deprecation,deprecation,deprecation,deprecation,deprecation,deprecation
         Capabilities.app.addAll(Capability.TRADE_STATISTICS,
                 Capability.TRADE_STATISTICS_2,
                 Capability.ACCOUNT_AGE_WITNESS,
@@ -90,7 +91,8 @@ public class Monitor {
                 Capability.DAO_STATE,
                 Capability.BUNDLE_OF_ENVELOPES,
                 Capability.REFUND_AGENT,
-                Capability.MEDIATION);
+                Capability.MEDIATION,
+                Capability.TRADE_STATISTICS_3);
 
         // assemble Metrics
         // - create reporters

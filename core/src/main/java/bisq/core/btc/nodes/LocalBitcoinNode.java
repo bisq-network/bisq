@@ -6,9 +6,9 @@ import bisq.common.config.Config;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
-import java.net.Socket;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.Socket;
 
 import java.io.IOException;
 
@@ -34,7 +34,7 @@ public class LocalBitcoinNode {
     @Inject
     public LocalBitcoinNode(Config config) {
         this.config = config;
-        this.port = config.baseCurrencyNetworkParameters.getPort();
+        this.port = config.networkParameters.getPort();
     }
 
     /**
@@ -81,7 +81,7 @@ public class LocalBitcoinNode {
      */
     private static boolean detect(int port) {
         try (Socket socket = new Socket()) {
-            var address = new InetSocketAddress(InetAddress.getLocalHost(), port);
+            var address = new InetSocketAddress(InetAddress.getLoopbackAddress(), port);
             socket.connect(address, CONNECTION_TIMEOUT);
             log.info("Local Bitcoin node detected on port {}", port);
             return true;

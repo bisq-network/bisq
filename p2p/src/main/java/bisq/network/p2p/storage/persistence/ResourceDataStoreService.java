@@ -21,8 +21,11 @@ import bisq.common.proto.persistable.PersistableEnvelope;
 
 import javax.inject.Inject;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -31,7 +34,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class ResourceDataStoreService {
-    private List<StoreService<? extends PersistableEnvelope>> services;
+    private final List<StoreService<? extends PersistableEnvelope>> services;
 
     @Inject
     public ResourceDataStoreService() {
@@ -42,7 +45,20 @@ public class ResourceDataStoreService {
         services.add(service);
     }
 
-    public void readFromResources(String postFix) {
-        services.forEach(service -> service.readFromResources(postFix));
+    public void readFromResources(String postFix, Runnable completeHandler) {
+        AtomicInteger remaining = new AtomicInteger(services.size());
+        services.forEach(service -> {
+            service.readFromResources(postFix, () -> {
+                if (remaining.decrementAndGet() == 0) {
+                    completeHandler.run();
+                }
+            });
+        });
+    }
+
+    // Uses synchronous execution on the userThread. Only used by tests. The async methods should be used by app code.
+    @VisibleForTesting
+    public void readFromResourcesSync(String postFix) {
+        services.forEach(service -> service.readFromResourcesSync(postFix));
     }
 }

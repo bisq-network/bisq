@@ -51,9 +51,9 @@ public class TradableRepository {
     Set<Tradable> getAll() {
         return ImmutableSet.<Tradable>builder()
                 .addAll(openOfferManager.getObservableList())
-                .addAll(tradeManager.getTradableList())
-                .addAll(closedTradableManager.getClosedTradables())
-                .addAll(failedTradesManager.getFailedTrades())
+                .addAll(tradeManager.getObservableList())
+                .addAll(closedTradableManager.getObservableList())
+                .addAll(failedTradesManager.getObservableList())
                 .build();
     }
 }

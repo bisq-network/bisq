@@ -51,6 +51,7 @@ import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
+import bisq.core.payment.FasterPaymentsAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.user.DontShowAgainLookup;
@@ -162,6 +163,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
             priceAsPercentageFocusedListener, getShowWalletFundedNotificationListener,
             tradeFeeInBtcToggleListener, tradeFeeInBsqToggleListener, tradeFeeVisibleListener,
             isMinBuyerSecurityDepositListener;
+    private ChangeListener<Coin> missingCoinListener;
     private ChangeListener<String> tradeCurrencyCodeListener, errorMessageListener,
             marketPriceMarginListener, volumeListener, buyerSecurityDepositInBTCListener;
     private ChangeListener<Number> marketPriceAvailableListener;
@@ -170,7 +172,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
 
     protected int gridRow = 0;
     private final List<Node> editOfferElements = new ArrayList<>();
-    private boolean clearXchangeWarningDisplayed, isActivated;
+    private boolean clearXchangeWarningDisplayed, fasterPaymentsWarningDisplayed, isActivated;
     private InfoInputTextField marketBasedPriceInfoInputTextField, volumeInfoInputTextField,
             buyerSecurityDepositInfoInputTextField;
     private AutoTooltipSlideToggleButton tradeFeeInBtcToggle, tradeFeeInBsqToggle;
@@ -371,9 +373,9 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
         String message = null;
         if (makerFee != null) {
             message = Res.get("popup.warning.insufficientBsqFundsForBtcFeePayment",
-                    bsqFormatter.formatCoinWithCode(makerFee.subtract(model.getDataModel().getBsqBalance())));
+                    bsqFormatter.formatCoinWithCode(makerFee.subtract(model.getDataModel().getUsableBsqBalance())));
 
-        } else if (model.getDataModel().getBsqBalance().isZero())
+        } else if (model.getDataModel().getUsableBsqBalance().isZero())
             message = Res.get("popup.warning.noBsqFundsForBtcFeePayment");
 
         if (message != null)
@@ -454,15 +456,6 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
         qrCodeImageView.setVisible(true);
         balanceTextField.setVisible(true);
         cancelButton2.setVisible(true);
-
-        final byte[] imageBytes = QRCode
-                .from(getBitcoinURI())
-                .withSize(98, 98) // code has 41 elements 8 px is border with 98 we get double scale and min. border
-                .to(ImageType.PNG)
-                .stream()
-                .toByteArray();
-        Image qrImage = new Image(new ByteArrayInputStream(imageBytes));
-        qrCodeImageView.setImage(qrImage);
     }
 
     private void updateOfferElementsStyle() {
@@ -492,8 +485,16 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
         if (paymentAccount.getPaymentMethod().getId().equals(PaymentMethod.CLEAR_X_CHANGE_ID) &&
                 !clearXchangeWarningDisplayed) {
             clearXchangeWarningDisplayed = true;
-            UserThread.runAfter(GUIUtil::showClearXchangeWarning,
-                    500, TimeUnit.MILLISECONDS);
+            UserThread.runAfter(GUIUtil::showClearXchangeWarning, 500, TimeUnit.MILLISECONDS);
+        }
+    }
+
+    private void maybeShowFasterPaymentsWarning(PaymentAccount paymentAccount) {
+        if (paymentAccount.getPaymentMethod().getId().equals(PaymentMethod.FASTER_PAYMENTS_ID) &&
+                ((FasterPaymentsAccount) paymentAccount).getHolderName().isEmpty() &&
+                !fasterPaymentsWarningDisplayed) {
+            fasterPaymentsWarningDisplayed = true;
+            UserThread.runAfter(() -> GUIUtil.showFasterPaymentsWarning(navigation), 500, TimeUnit.MILLISECONDS);
         }
     }
 
@@ -505,6 +506,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
         PaymentAccount paymentAccount = paymentAccountsComboBox.getSelectionModel().getSelectedItem();
         if (paymentAccount != null) {
             maybeShowClearXchangeWarning(paymentAccount);
+            maybeShowFasterPaymentsWarning(paymentAccount);
 
             currencySelection.setVisible(paymentAccount.hasMultipleCurrencies());
             currencySelection.setManaged(paymentAccount.hasMultipleCurrencies());
@@ -768,6 +770,19 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
             }
         };
 
+        missingCoinListener = (observable, oldValue, newValue) -> {
+            if (!newValue.toString().equals("")) {
+                final byte[] imageBytes = QRCode
+                        .from(getBitcoinURI())
+                        .withSize(98, 98) // code has 41 elements 8 px is border with 98 we get double scale and min. border
+                        .to(ImageType.PNG)
+                        .stream()
+                        .toByteArray();
+                Image qrImage = new Image(new ByteArrayInputStream(imageBytes));
+                qrCodeImageView.setImage(qrImage);
+            }
+        };
+
         marketPriceMarginListener = (observable, oldValue, newValue) -> {
             if (marketBasedPriceInfoInputTextField != null) {
                 String tooltip;
@@ -859,7 +874,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
         int marketPriceAvailableValue = model.marketPriceAvailableProperty.get();
         if (marketPriceAvailableValue > -1) {
             boolean showPriceToggle = marketPriceAvailableValue == 1 &&
-                    !model.getDataModel().isHalCashAccount();
+                    !model.getDataModel().paymentAccount.isHalCashAccount();
             percentagePriceBox.setVisible(showPriceToggle);
             priceTypeToggleButton.setVisible(showPriceToggle);
             boolean fixedPriceSelected = !model.getDataModel().getUseMarketBasedPrice().get() || !showPriceToggle;
@@ -872,6 +887,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
         model.marketPriceAvailableProperty.addListener(marketPriceAvailableListener);
         model.marketPriceMargin.addListener(marketPriceMarginListener);
         model.volume.addListener(volumeListener);
+        model.getDataModel().missingCoin.addListener(missingCoinListener);
         model.isTradeFeeVisible.addListener(tradeFeeVisibleListener);
         model.buyerSecurityDepositInBTC.addListener(buyerSecurityDepositInBTCListener);
         model.isMinBuyerSecurityDeposit.addListener(isMinBuyerSecurityDepositListener);
@@ -906,6 +922,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
         model.marketPriceAvailableProperty.removeListener(marketPriceAvailableListener);
         model.marketPriceMargin.removeListener(marketPriceMarginListener);
         model.volume.removeListener(volumeListener);
+        model.getDataModel().missingCoin.removeListener(missingCoinListener);
         model.isTradeFeeVisible.removeListener(tradeFeeVisibleListener);
         model.buyerSecurityDepositInBTC.removeListener(buyerSecurityDepositInBTCListener);
         tradeFeeInBtcToggle.selectedProperty().removeListener(tradeFeeInBtcToggleListener);
@@ -1092,9 +1109,9 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
             String missingBsq = null;
             if (makerFee != null) {
                 missingBsq = Res.get("popup.warning.insufficientBsqFundsForBtcFeePayment",
-                        bsqFormatter.formatCoinWithCode(makerFee.subtract(model.getDataModel().getBsqBalance())));
+                        bsqFormatter.formatCoinWithCode(makerFee.subtract(model.getDataModel().getUsableBsqBalance())));
 
-            } else if (model.getDataModel().getBsqBalance().isZero()) {
+            } else if (model.getDataModel().getUsableBsqBalance().isZero()) {
                 missingBsq = Res.get("popup.warning.noBsqFundsForBtcFeePayment");
             }
 

@@ -65,7 +65,7 @@ public class CoreModule extends AppModule {
 
         bind(File.class).annotatedWith(named(STORAGE_DIR)).toInstance(config.storageDir);
 
-        CoinFormatter btcFormatter = new ImmutableCoinFormatter(config.baseCurrencyNetworkParameters.getMonetaryFormat());
+        CoinFormatter btcFormatter = new ImmutableCoinFormatter(config.networkParameters.getMonetaryFormat());
         bind(CoinFormatter.class).annotatedWith(named(FormattingUtils.BTC_FORMATTER_KEY)).toInstance(btcFormatter);
 
         bind(File.class).annotatedWith(named(KEY_STORAGE_DIR)).toInstance(config.keyStorageDir);
@@ -75,6 +75,7 @@ public class CoreModule extends AppModule {
 
         bindConstant().annotatedWith(named(USE_DEV_PRIVILEGE_KEYS)).to(config.useDevPrivilegeKeys);
         bindConstant().annotatedWith(named(USE_DEV_MODE)).to(config.useDevMode);
+        bindConstant().annotatedWith(named(USE_DEV_MODE_HEADER)).to(config.useDevModeHeader);
         bindConstant().annotatedWith(named(REFERRAL_ID)).to(config.referralId);
 
         // ordering is used for shut down sequence

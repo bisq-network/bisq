@@ -43,14 +43,14 @@ import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.Transitions;
 
 import bisq.core.dao.monitoring.DaoStateMonitoringService;
-import bisq.common.BisqException;
 import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.LanguageUtil;
 import bisq.core.locale.Res;
+import bisq.core.provider.price.MarketPrice;
 
+import bisq.common.BisqException;
 import bisq.common.Timer;
 import bisq.common.UserThread;
-import bisq.common.app.Version;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Utilities;
 
@@ -95,6 +95,7 @@ import javafx.beans.value.ChangeListener;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 
+import java.util.Date;
 import java.util.Locale;
 
 import lombok.Setter;
@@ -113,9 +114,8 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
         implements DaoStateMonitoringService.Listener {
     // If after 30 sec we have not got connected we show "open network settings" button
     private final static int SHOW_TOR_SETTINGS_DELAY_SEC = 90;
-    private Label versionLabel;
     @Setter
-    private Runnable onUiReadyHandler;
+    private Runnable onApplicationStartedHandler;
 
     public static StackPane getRootContainer() {
         return MainView.rootContainer;
@@ -189,10 +189,8 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
 
         JFXBadge portfolioButtonWithBadge = new JFXBadge(portfolioButton);
         JFXBadge supportButtonWithBadge = new JFXBadge(supportButton);
-        JFXBadge daoButtonWithBadge = new JFXBadge(daoButton);
-        daoButtonWithBadge.getStyleClass().add("new");
-        JFXBadge accountButtonWithBadge = new JFXBadge(accountButton);
-        accountButtonWithBadge.getStyleClass().add("new");
+        JFXBadge settingsButtonWithBadge = new JFXBadge(settingsButton);
+        settingsButtonWithBadge.getStyleClass().add("new");
 
         Locale locale = GlobalSettings.getLocale();
         DecimalFormat currencyFormat = (DecimalFormat) NumberFormat.getNumberInstance(locale);
@@ -323,8 +321,8 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
         primaryNav.getStyleClass().add("nav-primary");
         HBox.setHgrow(primaryNav, Priority.SOMETIMES);
 
-        HBox secondaryNav = new HBox(supportButtonWithBadge, getNavigationSpacer(), settingsButton,
-                getNavigationSpacer(), accountButtonWithBadge, getNavigationSpacer(), daoButtonWithBadge);
+        HBox secondaryNav = new HBox(supportButtonWithBadge, getNavigationSpacer(), settingsButtonWithBadge,
+                getNavigationSpacer(), accountButton, getNavigationSpacer(), daoButton);
         secondaryNav.getStyleClass().add("nav-secondary");
         HBox.setHgrow(secondaryNav, Priority.SOMETIMES);
 
@@ -367,8 +365,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
 
         setupBadge(portfolioButtonWithBadge, model.getNumPendingTrades(), model.getShowPendingTradesNotification());
         setupBadge(supportButtonWithBadge, model.getNumOpenSupportTickets(), model.getShowOpenSupportTicketsNotification());
-        setupBadge(daoButtonWithBadge, new SimpleStringProperty(Res.get("shared.new")), model.getShowDaoUpdatesNotification());
-        setupBadge(accountButtonWithBadge, new SimpleStringProperty(Res.get("shared.new")), model.getShowAccountUpdatesNotification());
+        setupBadge(settingsButtonWithBadge, new SimpleStringProperty(Res.get("shared.new")), model.getShowSettingsUpdatesNotification());
 
         navigation.addListener(viewPath -> {
             if (viewPath.size() != 2 || viewPath.indexOf(MainView.class) != 0)
@@ -379,15 +376,15 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
             contentContainer.getChildren().setAll(view.getRoot());
 
             try {
-            	navButtons.getToggles().stream()
-                    .filter(toggle -> toggle instanceof NavButton)
-                    .filter(button -> viewClass == ((NavButton) button).viewClass)
-                    .findFirst()
-                    .orElseThrow(() -> new BisqException("No button matching %s found", viewClass))
-                    .setSelected(true);
+                navButtons.getToggles().stream()
+                        .filter(toggle -> toggle instanceof NavButton)
+                        .filter(button -> viewClass == ((NavButton) button).viewClass)
+                        .findFirst()
+                        .orElseThrow(() -> new BisqException("No button matching %s found", viewClass))
+                        .setSelected(true);
             } catch (BisqException e) {
                 navigation.navigateTo(MainView.class, MarketView.class, OfferBookChartView.class);
-			}
+            }
         });
 
         VBox splashScreen = createSplashScreen();
@@ -406,7 +403,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
         daoStateMonitoringService.addListener(this);
 
         // Delay a bit to give time for rendering the splash screen
-        UserThread.execute(() -> onUiReadyHandler.run());
+        UserThread.execute(() -> onApplicationStartedHandler.run());
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -512,7 +509,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
     private void updateMarketPriceLabel(Label label) {
         if (model.getIsPriceAvailable().get()) {
             if (model.getIsExternallyProvidedPrice().get()) {
-                label.setText(Res.get("mainView.marketPriceWithProvider.label", getPriceProvider()));
+                label.setText(Res.get("mainView.marketPriceWithProvider.label", "Bisq Price Index"));
                 label.setTooltip(new Tooltip(getPriceProviderTooltipString()));
             } else {
                 label.setText(Res.get("mainView.marketPrice.bisqInternalPrice"));
@@ -528,22 +525,14 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
     @NotNull
     private String getPriceProviderTooltipString() {
 
-        String res;
-        if (model.getIsFiatCurrencyPriceFeedSelected().get()) {
-            res = Res.get("mainView.marketPrice.tooltip",
-                    "https://bitcoinaverage.com",
-                    "",
-                    DisplayUtils.formatTime(model.getPriceFeedService().getLastRequestTimeStampBtcAverage()),
-                    model.getPriceFeedService().getProviderNodeAddress());
-        } else {
-            String altcoinExtra = "\n" + Res.get("mainView.marketPrice.tooltip.altcoinExtra");
-            res = Res.get("mainView.marketPrice.tooltip",
-                    "https://poloniex.com",
-                    altcoinExtra,
-                    DisplayUtils.formatTime(model.getPriceFeedService().getLastRequestTimeStampPoloniex()),
-                    model.getPriceFeedService().getProviderNodeAddress());
-        }
-        return res;
+        String selectedCurrencyCode = model.getPriceFeedService().getCurrencyCode();
+        MarketPrice selectedMarketPrice = model.getPriceFeedService().getMarketPrice(selectedCurrencyCode);
+
+        return Res.get("mainView.marketPrice.tooltip",
+                "Bisq Price Index for " + selectedCurrencyCode,
+                "",
+                selectedMarketPrice != null ? DisplayUtils.formatTime(new Date(selectedMarketPrice.getTimestampSec())) : Res.get("shared.na"),
+                model.getPriceFeedService().getProviderNodeAddress());
     }
 
     private VBox createSplashScreen() {
@@ -696,6 +685,8 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
         Label btcInfoLabel = new AutoTooltipLabel();
         btcInfoLabel.setId("footer-pane");
         btcInfoLabel.textProperty().bind(model.getBtcInfo());
+        setLeftAnchor(btcInfoLabel, 10d);
+        setBottomAnchor(btcInfoLabel, 7d);
 
         ProgressBar blockchainSyncIndicator = new JFXProgressBar(-1);
         blockchainSyncIndicator.setPrefWidth(80);
@@ -724,34 +715,32 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
             }
         });
 
-        HBox blockchainSyncBox = new HBox();
-        blockchainSyncBox.setSpacing(10);
-        blockchainSyncBox.setAlignment(Pos.CENTER);
-        blockchainSyncBox.getChildren().addAll(btcInfoLabel, blockchainSyncIndicator);
-        setLeftAnchor(blockchainSyncBox, 10d);
-        setBottomAnchor(blockchainSyncBox, 7d);
-
         // version
-        versionLabel = new AutoTooltipLabel();
+        Label versionLabel = new AutoTooltipLabel();
         versionLabel.setId("footer-pane");
         versionLabel.setTextAlignment(TextAlignment.CENTER);
         versionLabel.setAlignment(Pos.BASELINE_CENTER);
-        versionLabel.setText("v" + Version.VERSION);
+        versionLabel.textProperty().bind(model.getCombinedFooterInfo());
         root.widthProperty().addListener((ov, oldValue, newValue) ->
                 versionLabel.setLayoutX(((double) newValue - versionLabel.getWidth()) / 2));
-        setBottomAnchor(versionLabel, 7d);
         model.getNewVersionAvailableProperty().addListener((observable, oldValue, newValue) -> {
             versionLabel.getStyleClass().removeAll("version-new", "version");
             if (newValue) {
                 versionLabel.getStyleClass().add("version-new");
                 versionLabel.setOnMouseClicked(e -> model.onOpenDownloadWindow());
-                versionLabel.setText("v" + Version.VERSION + " " + Res.get("mainView.version.update"));
             } else {
                 versionLabel.getStyleClass().add("version");
                 versionLabel.setOnMouseClicked(null);
-                versionLabel.setText("v" + Version.VERSION);
             }
         });
+        HBox versionBox = new HBox();
+        versionBox.setSpacing(10);
+        versionBox.setAlignment(Pos.CENTER);
+        versionBox.setAlignment(Pos.BASELINE_CENTER);
+        versionBox.getChildren().addAll(versionLabel, blockchainSyncIndicator);
+        setLeftAnchor(versionBox, 10d);
+        setRightAnchor(versionBox, 10d);
+        setBottomAnchor(versionBox, 7d);
 
         // P2P Network
         Label p2PNetworkLabel = new AutoTooltipLabel();
@@ -788,7 +777,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
         setRightAnchor(vBox, 33d);
         setBottomAnchor(vBox, 5d);
 
-        return new AnchorPane(separator, blockchainSyncBox, versionLabel, vBox, p2PNetworkIcon) {{
+        return new AnchorPane(separator, btcInfoLabel, versionBox, vBox, p2PNetworkIcon) {{
             setId("footer-pane");
             setMinHeight(30);
             setMaxHeight(30);

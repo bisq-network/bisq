@@ -24,6 +24,7 @@ import bisq.desktop.main.portfolio.pendingtrades.steps.TradeWizardItem;
 import bisq.desktop.util.Layout;
 
 import bisq.core.locale.Res;
+import bisq.core.trade.Trade;
 
 import javafx.scene.control.Label;
 import javafx.scene.control.Separator;
@@ -56,6 +57,7 @@ public abstract class TradeSubView extends HBox {
     private TitledGroupBg tradeProcessTitledGroupBg;
     private int leftGridPaneRowIndex = 0;
     Subscription viewStateSubscription;
+    private PendingTradesView.ChatCallback chatCallback;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -144,6 +146,13 @@ public abstract class TradeSubView extends HBox {
             tradeStepView = viewClass.getDeclaredConstructor(PendingTradesViewModel.class).newInstance(model);
             contentPane.getChildren().setAll(tradeStepView);
             tradeStepView.setTradeStepInfo(tradeStepInfo);
+            ChatCallback chatCallback = trade -> {
+                // call up the chain to open chat
+                if (this.chatCallback != null) {
+                    this.chatCallback.onOpenChat(trade);
+                }
+            };
+            tradeStepView.setChatCallback(chatCallback);
             tradeStepView.activate();
         } catch (Exception e) {
             log.error("Creating viewClass {} caused an error {}", viewClass, e.getMessage());
@@ -163,7 +172,15 @@ public abstract class TradeSubView extends HBox {
         HBox.setHgrow(contentPane, Priority.SOMETIMES);
         getChildren().add(contentPane);
     }
-}
 
+
+    public interface ChatCallback {
+        void onOpenChat(Trade trade);
+    }
+
+    public void setChatCallback(PendingTradesView.ChatCallback chatCallback) {
+        this.chatCallback = chatCallback;
+    }
+}
 
 

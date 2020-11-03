@@ -78,12 +78,10 @@ public class AboutView extends ActivatableView<GridPane, Void> {
         label = addLabel(root, gridRow, Res.get(isBtc ? "setting.about.apisWithFee" : "setting.about.apis"), Layout.TWICE_FIRST_ROW_AND_GROUP_DISTANCE);
         label.setWrapText(true);
         GridPane.setHalignment(label, HPos.LEFT);
-        addCompactTopLabelTextField(root, ++gridRow, Res.get("setting.about.pricesProvided"), Res.get("setting.about.pricesProviders",
-                "BitcoinAverage (https://bitcoinaverage.com)",
-                "Poloniex (https://poloniex.com)",
-                "Coinmarketcap (https://coinmarketcap.com)"));
+        addCompactTopLabelTextField(root, ++gridRow, Res.get("setting.about.pricesProvided"),
+                "Bisq Price Index (https://bisq.wiki/Bisq_Price_Index)");
         if (isBtc)
-            addCompactTopLabelTextField(root, ++gridRow, Res.get("setting.about.feeEstimation.label"), "Earn.com (https://bitcoinfees.earn.com)");
+            addCompactTopLabelTextField(root, ++gridRow, Res.get("setting.about.feeEstimation.label"), "mempool.space (https://mempool.space)");
 
         addTitledGroupBg(root, ++gridRow, 2, Res.get("setting.about.versionDetails"), Layout.GROUP_DISTANCE);
         addCompactTopLabelTextField(root, gridRow, Res.get("setting.about.version"), Version.VERSION, Layout.TWICE_FIRST_ROW_AND_GROUP_DISTANCE);
@@ -95,7 +93,7 @@ public class AboutView extends ActivatableView<GridPane, Void> {
                         Version.LOCAL_DB_VERSION,
                         Version.TRADE_PROTOCOL_VERSION));
 
-        addTitledGroupBg(root, ++gridRow, 20, Res.get("setting.about.shortcuts"), Layout.GROUP_DISTANCE);
+        addTitledGroupBg(root, ++gridRow, 18, Res.get("setting.about.shortcuts"), Layout.GROUP_DISTANCE);
 
         // basics
         addCompactTopLabelTextField(root, gridRow, Res.get("setting.about.shortcuts.menuNav"),
@@ -124,10 +122,6 @@ public class AboutView extends ActivatableView<GridPane, Void> {
         addCompactTopLabelTextField(root, ++gridRow, Res.get("setting.about.shortcuts.openEmergencyBsqWalletTool"),
                 Res.get("setting.about.shortcuts.ctrlOrAltOrCmd", "b"));
 
-        addCompactTopLabelTextField(root, ++gridRow, Res.get("setting.about.shortcuts.showDisputeStatistics"),
-                Res.get("setting.about.shortcuts.showDisputeStatistics.value",
-                        Res.get("setting.about.shortcuts.ctrlOrAltOrCmd", "l")));
-
         addCompactTopLabelTextField(root, ++gridRow, Res.get("setting.about.shortcuts.showTorLogs"),
                 Res.get("setting.about.shortcuts.ctrlOrAltOrCmd", "t"));
 
@@ -150,10 +144,6 @@ public class AboutView extends ActivatableView<GridPane, Void> {
         addCompactTopLabelTextField(root, ++gridRow, Res.get("setting.about.shortcuts.registerMediator"),
                 Res.get("setting.about.shortcuts.registerMediator.value",
                         Res.get("setting.about.shortcuts.ctrlOrAltOrCmd", "d")));
-
-        addCompactTopLabelTextField(root, ++gridRow, Res.get("setting.about.shortcuts.reOpenDispute"),
-                Res.get("setting.about.shortcuts.reOpenDispute.value",
-                        Res.get("setting.about.shortcuts.ctrlOrAltOrCmd", "u")));
 
         addCompactTopLabelTextField(root, ++gridRow, Res.get("setting.about.shortcuts.openSignPaymentAccountsWindow"),
                 Res.get("setting.about.shortcuts.openSignPaymentAccountsWindow.value",

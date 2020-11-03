@@ -18,34 +18,58 @@
 package bisq.network.p2p.peers.peerexchange;
 
 import bisq.common.proto.persistable.PersistableEnvelope;
-import bisq.common.proto.persistable.PersistableList;
 
 import com.google.protobuf.Message;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
-@EqualsAndHashCode(callSuper = true)
-public class PeerList extends PersistableList<Peer> {
+@Slf4j
+@EqualsAndHashCode
+public class PeerList implements PersistableEnvelope {
+    @Getter
+    private final Set<Peer> set = new HashSet<>();
 
-    public PeerList(List<Peer> list) {
-        super(list);
+    public PeerList() {
+    }
+
+    public PeerList(Set<Peer> set) {
+        setAll(set);
+    }
+
+    public int size() {
+        return set.size();
     }
 
     @Override
     public Message toProtoMessage() {
         return protobuf.PersistableEnvelope.newBuilder()
                 .setPeerList(protobuf.PeerList.newBuilder()
-                        .addAllPeer(getList().stream().map(Peer::toProtoMessage).collect(Collectors.toList())))
+                        .addAllPeer(set.stream().map(Peer::toProtoMessage).collect(Collectors.toList())))
                 .build();
     }
 
-    public static PersistableEnvelope fromProto(protobuf.PeerList proto) {
-        return new PeerList(new ArrayList<>(proto.getPeerList().stream()
+    public static PeerList fromProto(protobuf.PeerList proto) {
+        return new PeerList(proto.getPeerList().stream()
                 .map(Peer::fromProto)
-                .collect(Collectors.toList())));
+                .collect(Collectors.toSet()));
+    }
+
+    public void setAll(Collection<Peer> collection) {
+        this.set.clear();
+        this.set.addAll(collection);
+    }
+
+    @Override
+    public String toString() {
+        return "PeerList{" +
+                "\n     set=" + set +
+                "\n}";
     }
 }

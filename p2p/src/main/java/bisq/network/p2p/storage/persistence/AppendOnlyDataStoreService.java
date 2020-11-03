@@ -20,15 +20,17 @@ package bisq.network.p2p.storage.persistence;
 import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 
-import bisq.common.proto.persistable.PersistableEnvelope;
-
 import javax.inject.Inject;
+
+import com.google.common.annotations.VisibleForTesting;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -36,44 +38,39 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class AppendOnlyDataStoreService {
-    private List<MapStoreService<? extends PersistableEnvelope, PersistableNetworkPayload>> services = new ArrayList<>();
-
-    // We do not add PersistableNetworkPayloadListService to the services list as it it deprecated and used only to
-    // transfer old persisted data to the new data structure.
-    @SuppressWarnings("deprecation")
-    private PersistableNetworkPayloadListService persistableNetworkPayloadListService;
+    @Getter
+    private final List<MapStoreService<? extends PersistableNetworkPayloadStore<? extends PersistableNetworkPayload>, PersistableNetworkPayload>> services = new ArrayList<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @SuppressWarnings("deprecation")
     @Inject
-    public AppendOnlyDataStoreService(PersistableNetworkPayloadListService persistableNetworkPayloadListService) {
-        this.persistableNetworkPayloadListService = persistableNetworkPayloadListService;
+    public AppendOnlyDataStoreService() {
     }
 
-    public void addService(MapStoreService<? extends PersistableEnvelope, PersistableNetworkPayload> service) {
+    public void addService(MapStoreService<? extends PersistableNetworkPayloadStore<? extends PersistableNetworkPayload>, PersistableNetworkPayload> service) {
         services.add(service);
     }
 
-    public void readFromResources(String postFix) {
-        services.forEach(service -> service.readFromResources(postFix));
-
-        // transferDeprecatedDataStructure();
+    public void readFromResources(String postFix, Runnable completeHandler) {
+        AtomicInteger remaining = new AtomicInteger(services.size());
+        services.forEach(service -> {
+            service.readFromResources(postFix, () -> {
+                if (remaining.decrementAndGet() == 0) {
+                    completeHandler.run();
+                }
+            });
+        });
     }
 
-    // Only needed for one time converting the old data store to the new ones. Can be removed after next release when we
-    // are sure that no issues occurred.
-    private void transferDeprecatedDataStructure() {
-        // We read the file if it exists in the db folder
-        persistableNetworkPayloadListService.readStore();
-        // Transfer the content to the new services
-        persistableNetworkPayloadListService.getMap().forEach(this::put);
-        // We are done with the transfer, now let's remove the file
-        persistableNetworkPayloadListService.removeFile();
+    // Uses synchronous execution on the userThread. Only used by tests. The async methods should be used by app code.
+    @VisibleForTesting
+    public void readFromResourcesSync(String postFix) {
+        services.forEach(service -> service.readFromResourcesSync(postFix));
     }
+
 
     public Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> getMap() {
         return services.stream()

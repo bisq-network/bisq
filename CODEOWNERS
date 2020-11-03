@@ -1,8 +1,6 @@
 # This doc specifies who gets requested to review GitHub pull requests.
 # See https://help.github.com/articles/about-codeowners/.
 
-*gradle* @cbeams
-/pricenode/ @cbeams
 /core/main/java/bisq/core/dao/ @ManfredKarrer
 
 # For seednode configuration changes

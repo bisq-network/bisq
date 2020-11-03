@@ -43,17 +43,19 @@ import bisq.desktop.components.paymentmethods.SepaForm;
 import bisq.desktop.components.paymentmethods.SepaInstantForm;
 import bisq.desktop.components.paymentmethods.SpecificBankForm;
 import bisq.desktop.components.paymentmethods.SwishForm;
+import bisq.desktop.components.paymentmethods.TransferwiseForm;
 import bisq.desktop.components.paymentmethods.USPostalMoneyOrderForm;
 import bisq.desktop.components.paymentmethods.UpholdForm;
 import bisq.desktop.components.paymentmethods.WeChatPayForm;
 import bisq.desktop.components.paymentmethods.WesternUnionForm;
 import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.main.overlays.windows.SetXmrTxKeyWindow;
 import bisq.desktop.main.portfolio.pendingtrades.PendingTradesViewModel;
 import bisq.desktop.main.portfolio.pendingtrades.steps.TradeStepView;
 import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.Layout;
+import bisq.desktop.util.Transitions;
 
-import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.network.MessageState;
 import bisq.core.offer.Offer;
@@ -70,6 +72,7 @@ import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.payment.payload.USPostalMoneyOrderAccountPayload;
 import bisq.core.payment.payload.WesternUnionAccountPayload;
 import bisq.core.trade.Trade;
+import bisq.core.trade.TradeDataValidation;
 import bisq.core.user.DontShowAgainLookup;
 
 import bisq.common.Timer;
@@ -87,6 +90,7 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import static bisq.desktop.util.FormBuilder.addButtonBusyAnimationLabel;
 import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextFieldWithCopyIcon;
@@ -131,12 +135,10 @@ public class BuyerStep2View extends TradeStepView {
                             case BUYER_CONFIRMED_IN_UI_FIAT_PAYMENT_INITIATED:
                             case BUYER_SENT_FIAT_PAYMENT_INITIATED_MSG:
                                 busyAnimation.play();
-                                // confirmButton.setDisable(true);
                                 statusLabel.setText(Res.get("shared.sendingConfirmation"));
                                 model.setMessageStateProperty(MessageState.SENT);
                                 timeoutTimer = UserThread.runAfter(() -> {
                                     busyAnimation.stop();
-                                    // confirmButton.setDisable(false);
                                     statusLabel.setText(Res.get("shared.sendingConfirmationAgain"));
                                 }, 10);
                                 break;
@@ -153,20 +155,17 @@ public class BuyerStep2View extends TradeStepView {
                             case BUYER_SEND_FAILED_FIAT_PAYMENT_INITIATED_MSG:
                                 // We get a popup and the trade closed, so we dont need to show anything here
                                 busyAnimation.stop();
-                                // confirmButton.setDisable(false);
                                 statusLabel.setText("");
                                 model.setMessageStateProperty(MessageState.FAILED);
                                 break;
                             default:
                                 log.warn("Unexpected case: State={}, tradeId={} " + state.name(), trade.getId());
                                 busyAnimation.stop();
-                                // confirmButton.setDisable(false);
                                 statusLabel.setText(Res.get("shared.sendingConfirmationAgain"));
                                 break;
                         }
                     } else {
-                        log.warn("confirmButton gets disabled because trade contains error message {}", trade.getErrorMessage());
-                        // confirmButton.setDisable(true);
+                        log.warn("Trade contains error message {}", trade.getErrorMessage());
                         statusLabel.setText("");
                     }
                 }
@@ -188,6 +187,13 @@ public class BuyerStep2View extends TradeStepView {
             tradeStatePropertySubscription = null;
         }
     }
+
+    @Override
+    protected void onPendingTradesInitialized() {
+        super.onPendingTradesInitialized();
+        validatePayoutTx();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Content
@@ -292,8 +298,7 @@ public class BuyerStep2View extends TradeStepView {
                 break;
             case PaymentMethod.BLOCK_CHAINS_ID:
             case PaymentMethod.BLOCK_CHAINS_INSTANT_ID:
-                String labelTitle = Res.get("portfolio.pending.step2_buyer.sellersAddress",
-                        CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode()));
+                String labelTitle = Res.get("portfolio.pending.step2_buyer.sellersAddress", getCurrencyName(trade));
                 gridRow = AssetsForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload, labelTitle);
                 break;
             case PaymentMethod.PROMPT_PAY_ID:
@@ -301,6 +306,9 @@ public class BuyerStep2View extends TradeStepView {
                 break;
             case PaymentMethod.ADVANCED_CASH_ID:
                 gridRow = AdvancedCashForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
+                break;
+            case PaymentMethod.TRANSFERWISE_ID:
+                gridRow = TransferwiseForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
                 break;
             default:
                 log.error("Not supported PaymentMethod: " + paymentMethodId);
@@ -344,7 +352,7 @@ public class BuyerStep2View extends TradeStepView {
     @Override
     protected String getFirstHalfOverWarnText() {
         return Res.get("portfolio.pending.step2_buyer.warn",
-                model.dataModel.getCurrencyCode(),
+                getCurrencyCode(trade),
                 model.getDateForOpenDispute());
     }
 
@@ -361,79 +369,122 @@ public class BuyerStep2View extends TradeStepView {
     protected void applyOnDisputeOpened() {
     }
 
+    @Override
+    protected void updateDisputeState(Trade.DisputeState disputeState) {
+        super.updateDisputeState(disputeState);
+
+        confirmButton.setDisable(!trade.confirmPermitted());
+    }
+
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // UI Handlers
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void onPaymentStarted() {
-        if (model.dataModel.isBootstrappedOrShowPopup()) {
-            if (model.dataModel.getSellersPaymentAccountPayload() instanceof CashDepositAccountPayload) {
-                String key = "confirmPaperReceiptSent";
-                if (!DevEnv.isDevMode() && DontShowAgainLookup.showAgain(key)) {
-                    Popup popup = new Popup();
-                    popup.headLine(Res.get("portfolio.pending.step2_buyer.paperReceipt.headline"))
-                            .feedback(Res.get("portfolio.pending.step2_buyer.paperReceipt.msg"))
-                            .onAction(this::showConfirmPaymentStartedPopup)
-                            .closeButtonText(Res.get("shared.no"))
-                            .onClose(popup::hide)
-                            .dontShowAgainId(key)
-                            .show();
-                } else {
-                    showConfirmPaymentStartedPopup();
-                }
-            } else if (model.dataModel.getSellersPaymentAccountPayload() instanceof WesternUnionAccountPayload) {
-                String key = "westernUnionMTCNSent";
-                if (!DevEnv.isDevMode() && DontShowAgainLookup.showAgain(key)) {
-                    String email = ((WesternUnionAccountPayload) model.dataModel.getSellersPaymentAccountPayload()).getEmail();
-                    Popup popup = new Popup();
-                    popup.headLine(Res.get("portfolio.pending.step2_buyer.westernUnionMTCNInfo.headline"))
-                            .feedback(Res.get("portfolio.pending.step2_buyer.westernUnionMTCNInfo.msg", email))
-                            .onAction(this::showConfirmPaymentStartedPopup)
-                            .actionButtonText(Res.get("shared.yes"))
-                            .closeButtonText(Res.get("shared.no"))
-                            .onClose(popup::hide)
-                            .dontShowAgainId(key)
-                            .show();
-                } else {
-                    showConfirmPaymentStartedPopup();
-                }
-            } else if (model.dataModel.getSellersPaymentAccountPayload() instanceof MoneyGramAccountPayload) {
-                String key = "moneyGramMTCNSent";
-                if (!DevEnv.isDevMode() && DontShowAgainLookup.showAgain(key)) {
-                    String email = ((MoneyGramAccountPayload) model.dataModel.getSellersPaymentAccountPayload()).getEmail();
-                    Popup popup = new Popup();
-                    popup.headLine(Res.get("portfolio.pending.step2_buyer.moneyGramMTCNInfo.headline"))
-                            .feedback(Res.get("portfolio.pending.step2_buyer.moneyGramMTCNInfo.msg", email))
-                            .onAction(this::showConfirmPaymentStartedPopup)
-                            .actionButtonText(Res.get("shared.yes"))
-                            .closeButtonText(Res.get("shared.no"))
-                            .onClose(popup::hide)
-                            .dontShowAgainId(key)
-                            .show();
-                } else {
-                    showConfirmPaymentStartedPopup();
-                }
-            } else if (model.dataModel.getSellersPaymentAccountPayload() instanceof HalCashAccountPayload) {
-                String key = "halCashCodeInfo";
-                if (!DevEnv.isDevMode() && DontShowAgainLookup.showAgain(key)) {
-                    String mobileNr = ((HalCashAccountPayload) model.dataModel.getSellersPaymentAccountPayload()).getMobileNr();
-                    Popup popup = new Popup();
-                    popup.headLine(Res.get("portfolio.pending.step2_buyer.halCashInfo.headline"))
-                            .feedback(Res.get("portfolio.pending.step2_buyer.halCashInfo.msg",
-                                    model.dataModel.getTrade().getShortId(), mobileNr))
-                            .onAction(this::showConfirmPaymentStartedPopup)
-                            .actionButtonText(Res.get("shared.yes"))
-                            .closeButtonText(Res.get("shared.no"))
-                            .onClose(popup::hide)
-                            .dontShowAgainId(key)
-                            .show();
-                } else {
-                    showConfirmPaymentStartedPopup();
-                }
+        if (!model.dataModel.isBootstrappedOrShowPopup()) {
+            return;
+        }
+
+        PaymentAccountPayload sellersPaymentAccountPayload = model.dataModel.getSellersPaymentAccountPayload();
+        Trade trade = checkNotNull(model.dataModel.getTrade(), "trade must not be null");
+        if (sellersPaymentAccountPayload instanceof CashDepositAccountPayload) {
+            String key = "confirmPaperReceiptSent";
+            if (!DevEnv.isDevMode() && DontShowAgainLookup.showAgain(key)) {
+                Popup popup = new Popup();
+                popup.headLine(Res.get("portfolio.pending.step2_buyer.paperReceipt.headline"))
+                        .feedback(Res.get("portfolio.pending.step2_buyer.paperReceipt.msg"))
+                        .onAction(this::showConfirmPaymentStartedPopup)
+                        .closeButtonText(Res.get("shared.no"))
+                        .onClose(popup::hide)
+                        .dontShowAgainId(key)
+                        .show();
             } else {
                 showConfirmPaymentStartedPopup();
             }
+        } else if (sellersPaymentAccountPayload instanceof WesternUnionAccountPayload) {
+            String key = "westernUnionMTCNSent";
+            if (!DevEnv.isDevMode() && DontShowAgainLookup.showAgain(key)) {
+                String email = ((WesternUnionAccountPayload) sellersPaymentAccountPayload).getEmail();
+                Popup popup = new Popup();
+                popup.headLine(Res.get("portfolio.pending.step2_buyer.westernUnionMTCNInfo.headline"))
+                        .feedback(Res.get("portfolio.pending.step2_buyer.westernUnionMTCNInfo.msg", email))
+                        .onAction(this::showConfirmPaymentStartedPopup)
+                        .actionButtonText(Res.get("shared.yes"))
+                        .closeButtonText(Res.get("shared.no"))
+                        .onClose(popup::hide)
+                        .dontShowAgainId(key)
+                        .show();
+            } else {
+                showConfirmPaymentStartedPopup();
+            }
+        } else if (sellersPaymentAccountPayload instanceof MoneyGramAccountPayload) {
+            String key = "moneyGramMTCNSent";
+            if (!DevEnv.isDevMode() && DontShowAgainLookup.showAgain(key)) {
+                String email = ((MoneyGramAccountPayload) sellersPaymentAccountPayload).getEmail();
+                Popup popup = new Popup();
+                popup.headLine(Res.get("portfolio.pending.step2_buyer.moneyGramMTCNInfo.headline"))
+                        .feedback(Res.get("portfolio.pending.step2_buyer.moneyGramMTCNInfo.msg", email))
+                        .onAction(this::showConfirmPaymentStartedPopup)
+                        .actionButtonText(Res.get("shared.yes"))
+                        .closeButtonText(Res.get("shared.no"))
+                        .onClose(popup::hide)
+                        .dontShowAgainId(key)
+                        .show();
+            } else {
+                showConfirmPaymentStartedPopup();
+            }
+        } else if (sellersPaymentAccountPayload instanceof HalCashAccountPayload) {
+            String key = "halCashCodeInfo";
+            if (!DevEnv.isDevMode() && DontShowAgainLookup.showAgain(key)) {
+                String mobileNr = ((HalCashAccountPayload) sellersPaymentAccountPayload).getMobileNr();
+                Popup popup = new Popup();
+                popup.headLine(Res.get("portfolio.pending.step2_buyer.halCashInfo.headline"))
+                        .feedback(Res.get("portfolio.pending.step2_buyer.halCashInfo.msg",
+                                trade.getShortId(), mobileNr))
+                        .onAction(this::showConfirmPaymentStartedPopup)
+                        .actionButtonText(Res.get("shared.yes"))
+                        .closeButtonText(Res.get("shared.no"))
+                        .onClose(popup::hide)
+                        .dontShowAgainId(key)
+                        .show();
+            } else {
+                showConfirmPaymentStartedPopup();
+            }
+        } else if (sellersPaymentAccountPayload instanceof AssetsAccountPayload && isXmrTrade()) {
+            SetXmrTxKeyWindow setXmrTxKeyWindow = new SetXmrTxKeyWindow();
+            setXmrTxKeyWindow
+                    .actionButtonText(Res.get("portfolio.pending.step2_buyer.confirmStart.headline"))
+                    .onAction(() -> {
+                        String txKey = setXmrTxKeyWindow.getTxKey();
+                        String txHash = setXmrTxKeyWindow.getTxHash();
+                        if (txKey == null || txHash == null || txKey.isEmpty() || txHash.isEmpty()) {
+                            UserThread.runAfter(this::showProofWarningPopup, Transitions.DEFAULT_DURATION, TimeUnit.MILLISECONDS);
+                            return;
+                        }
+
+                        trade.setCounterCurrencyExtraData(txKey);
+                        trade.setCounterCurrencyTxId(txHash);
+                        showConfirmPaymentStartedPopup();
+                    })
+                    .closeButtonText(Res.get("shared.cancel"))
+                    .onClose(setXmrTxKeyWindow::hide)
+                    .show();
+        } else {
+            showConfirmPaymentStartedPopup();
         }
+    }
+
+    private void showProofWarningPopup() {
+        Popup popup = new Popup();
+        popup.headLine(Res.get("portfolio.pending.step2_buyer.confirmStart.proof.warningTitle"))
+                .confirmation(Res.get("portfolio.pending.step2_buyer.confirmStart.proof.noneProvided"))
+                .width(700)
+                .actionButtonText(Res.get("portfolio.pending.step2_buyer.confirmStart.warningButton"))
+                .onAction(this::showConfirmPaymentStartedPopup)
+                .closeButtonText(Res.get("shared.cancel"))
+                .onClose(popup::hide)
+                .show();
     }
 
     private void showConfirmPaymentStartedPopup() {
@@ -441,8 +492,7 @@ public class BuyerStep2View extends TradeStepView {
         if (!DevEnv.isDevMode() && DontShowAgainLookup.showAgain(key)) {
             Popup popup = new Popup();
             popup.headLine(Res.get("portfolio.pending.step2_buyer.confirmStart.headline"))
-                    .confirmation(Res.get("portfolio.pending.step2_buyer.confirmStart.msg",
-                            CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode())))
+                    .confirmation(Res.get("portfolio.pending.step2_buyer.confirmStart.msg", getCurrencyName(trade)))
                     .width(700)
                     .actionButtonText(Res.get("portfolio.pending.step2_buyer.confirmStart.yes"))
                     .onAction(this::confirmPaymentStarted)
@@ -456,20 +506,16 @@ public class BuyerStep2View extends TradeStepView {
     }
 
     private void confirmPaymentStarted() {
-        // confirmButton.setDisable(true);
         busyAnimation.play();
         statusLabel.setText(Res.get("shared.sendingConfirmation"));
-        if (trade.isFiatSent())
+
+        //TODO seems this was a hack to enable repeated confirm???
+        if (trade.isFiatSent()) {
             trade.setState(Trade.State.DEPOSIT_CONFIRMED_IN_BLOCK_CHAIN);
+        }
 
         model.dataModel.onPaymentStarted(() -> {
-            // In case the first send failed we got the support button displayed.
-            // If it succeeds at a second try we remove the support button again.
-            //TODO check for support. in case of a dispute we dont want to hide the button
-            //if (notificationGroup != null)
-            //   notificationGroup.setButtonVisible(false);
         }, errorMessage -> {
-            // confirmButton.setDisable(false);
             busyAnimation.stop();
             new Popup().warning(Res.get("popup.warning.sendMsgFailed")).show();
         });
@@ -491,7 +537,7 @@ public class BuyerStep2View extends TradeStepView {
             String amount = DisplayUtils.formatVolumeWithCode(trade.getTradeVolume());
             if (paymentAccountPayload instanceof AssetsAccountPayload) {
                 message += Res.get("portfolio.pending.step2_buyer.altcoin",
-                        CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode()),
+                        getCurrencyName(trade),
                         amount) +
                         accountDetails +
                         paymentDetailsForTradePopup + "\n\n" +
@@ -573,8 +619,19 @@ public class BuyerStep2View extends TradeStepView {
         }
     }
 
-    @Override
-    protected void deactivatePaymentButtons(boolean isDisabled) {
-        confirmButton.setDisable(isDisabled);
+    private void validatePayoutTx() {
+        try {
+            TradeDataValidation.validateDelayedPayoutTx(trade,
+                    trade.getDelayedPayoutTx(),
+                    model.dataModel.daoFacade,
+                    model.dataModel.btcWalletService);
+        } catch (TradeDataValidation.MissingTxException ignore) {
+            // We don't react on those errors as a failed trade might get listed initially but getting removed from the
+            // trade manager after initPendingTrades which happens after activate might be called.
+        } catch (TradeDataValidation.ValidationException e) {
+            if (!model.dataModel.tradeManager.isAllowFaultyDelayedTxs()) {
+                new Popup().warning(Res.get("portfolio.pending.invalidDelayedPayoutTx", e.getMessage())).show();
+            }
+        }
     }
 }

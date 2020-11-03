@@ -17,7 +17,6 @@
 
 package bisq.core.dao.state.unconfirmed;
 
-import bisq.common.proto.persistable.PersistableEnvelope;
 import bisq.common.proto.persistable.PersistableList;
 
 import com.google.protobuf.Message;
@@ -52,7 +51,7 @@ public class UnconfirmedBsqChangeOutputList extends PersistableList<UnconfirmedT
                 .build();
     }
 
-    public static PersistableEnvelope fromProto(protobuf.UnconfirmedBsqChangeOutputList proto) {
+    public static UnconfirmedBsqChangeOutputList fromProto(protobuf.UnconfirmedBsqChangeOutputList proto) {
         return new UnconfirmedBsqChangeOutputList(new ArrayList<>(proto.getUnconfirmedTxOutputList().stream()
                 .map(UnconfirmedTxOutput::fromProto)
                 .collect(Collectors.toList())));

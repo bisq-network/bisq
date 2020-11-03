@@ -17,10 +17,17 @@
 
 package bisq.desktop.util.validation;
 
-public final class RevolutValidator extends PhoneNumberValidator {
+public final class RevolutValidator extends LengthValidator {
+    public RevolutValidator() {
+        // Not sure what are requirements for Revolut user names
+        // Please keep in mind that even we force users to set user name at startup we should handle also the case
+        // that the old accountID as phone number or email is displayed at the username text field and we do not
+        // want to break validation in those cases. So being too strict on the validators might cause more troubles
+        // as its worth...
+        super(5, 100);
+    }
 
-    public ValidationResult validate(String input, String code) {
-        super.setIsoCountryCode(code);
+    public ValidationResult validate(String input) {
         return super.validate(input);
     }
 

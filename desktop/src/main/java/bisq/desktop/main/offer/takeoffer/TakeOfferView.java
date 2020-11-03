@@ -51,6 +51,7 @@ import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
+import bisq.core.payment.FasterPaymentsAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.user.DontShowAgainLookup;
@@ -137,7 +138,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             paymentMethodLabel,
             priceCurrencyLabel, priceAsPercentageLabel,
             volumeCurrencyLabel, priceDescriptionLabel, volumeDescriptionLabel,
-            waitingForFundsLabel, offerAvailabilityLabel, amountCurrency, priceAsPercentageDescription,
+            waitingForFundsLabel, offerAvailabilityLabel, priceAsPercentageDescription,
             tradeFeeDescriptionLabel, resultLabel, tradeFeeInBtcLabel, tradeFeeInBsqLabel, xLabel,
             fakeXLabel;
     private InputTextField amountTextField;
@@ -159,7 +160,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             isOfferAvailableSubscription;
 
     private int gridRow = 0;
-    private boolean offerDetailsWindowDisplayed, clearXchangeWarningDisplayed;
+    private boolean offerDetailsWindowDisplayed, clearXchangeWarningDisplayed, fasterPaymentsWarningDisplayed;
     private SimpleBooleanProperty errorPopupDisplayed;
     private ChangeListener<Boolean> amountFocusedListener, getShowWalletFundedNotificationListener;
     private InfoInputTextField volumeInfoTextField;
@@ -283,14 +284,14 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         priceDescriptionLabel.setText(CurrencyUtil.getPriceWithCurrencyCode(currencyCode));
         volumeDescriptionLabel.setText(model.volumeDescriptionLabel.get());
 
-        if (model.getPossiblePaymentAccounts().size() > 1) {
+        PaymentAccount lastPaymentAccount = model.getLastSelectedPaymentAccount();
 
+        if (model.getPossiblePaymentAccounts().size() > 1) {
             new Popup().headLine(Res.get("popup.info.multiplePaymentAccounts.headline"))
                     .information(Res.get("popup.info.multiplePaymentAccounts.msg"))
                     .dontShowAgainId("MultiplePaymentAccountsAvailableWarning")
                     .show();
 
-            PaymentAccount lastPaymentAccount = model.getLastSelectedPaymentAccount();
             paymentAccountsComboBox.setItems(model.getPossiblePaymentAccounts());
             paymentAccountsComboBox.getSelectionModel().select(lastPaymentAccount);
             model.onPaymentAccountSelected(lastPaymentAccount);
@@ -299,7 +300,8 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
         balanceTextField.setTargetAmount(model.dataModel.getTotalToPayAsCoin().get());
 
-        maybeShowClearXchangeWarning();
+        maybeShowClearXchangeWarning(lastPaymentAccount);
+        maybeShowFasterPaymentsWarning(lastPaymentAccount);
 
         if (!DevEnv.isDaoActivated() && !model.isRange()) {
             nextButton.setVisible(false);
@@ -386,7 +388,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
         if (offer.getPrice() == null)
             new Popup().warning(Res.get("takeOffer.noPriceFeedAvailable"))
-                    .onClose(this::close)
+                    .onClose(() -> close(false))
                     .show();
     }
 
@@ -420,25 +422,32 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void onTakeOffer() {
-        if (model.dataModel.canTakeOffer()) {
-            if (model.dataModel.isTakerFeeValid()) {
-                if (!DevEnv.isDevMode()) {
-                    offerDetailsWindow.onTakeOffer(() ->
-                            model.onTakeOffer(() -> {
-                                offerDetailsWindow.hide();
-                                offerDetailsWindowDisplayed = false;
-                            })
-                    ).show(model.getOffer(), model.dataModel.getAmount().get(), model.dataModel.tradePrice);
-                    offerDetailsWindowDisplayed = true;
-                } else {
-                    balanceSubscription.unsubscribe();
-                    model.onTakeOffer(() -> {
-                    });
-                }
-            } else {
-                showInsufficientBsqFundsForBtcFeePaymentPopup();
-            }
+        if (!model.dataModel.canTakeOffer()) {
+            return;
         }
+
+        if (!model.dataModel.isTakerFeeValid()) {
+            showInsufficientBsqFundsForBtcFeePaymentPopup();
+            return;
+        }
+
+        if (DevEnv.isDevMode()) {
+            balanceSubscription.unsubscribe();
+            model.onTakeOffer(() -> {
+            });
+            return;
+        }
+
+        offerDetailsWindow.onTakeOffer(() ->
+                model.onTakeOffer(() -> {
+                    offerDetailsWindow.hide();
+                    offerDetailsWindowDisplayed = false;
+                })
+        ).show(model.getOffer(),
+                model.dataModel.getAmount().get(),
+                model.dataModel.tradePrice);
+
+        offerDetailsWindowDisplayed = true;
     }
 
     private void onShowPayFundsScreen() {
@@ -586,7 +595,11 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void close() {
-        model.dataModel.onClose();
+        close(true);
+    }
+
+    private void close(boolean removeOffer) {
+        model.dataModel.onClose(removeOffer);
         if (closeHandler != null)
             closeHandler.close();
     }
@@ -647,7 +660,6 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         takeOfferButton.disableProperty().unbind();
     }
 
-    @SuppressWarnings("PointlessBooleanExpression")
     private void addSubscriptions() {
         errorPopupDisplayed = new SimpleBooleanProperty();
         offerWarningSubscription = EasyBind.subscribe(model.offerWarning, newValue -> {
@@ -712,52 +724,28 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         });
 
         showTransactionPublishedScreenSubscription = EasyBind.subscribe(model.showTransactionPublishedScreen, newValue -> {
-            //noinspection ConstantConditions
             if (newValue && DevEnv.isDevMode()) {
                 close();
-            } else //noinspection ConstantConditions,ConstantConditions
-                if (newValue && model.getTrade() != null && !model.getTrade().hasFailed()) {
-                    String key = "takeOfferSuccessInfo";
-                    if (DontShowAgainLookup.showAgain(key)) {
-                        UserThread.runAfter(() -> new Popup().headLine(Res.get("takeOffer.success.headline"))
-                                .feedback(Res.get("takeOffer.success.info"))
-                                .actionButtonTextWithGoTo("navigation.portfolio.pending")
-                                .dontShowAgainId(key)
-                                .onAction(() -> {
-                                    UserThread.runAfter(
-                                            () -> navigation.navigateTo(MainView.class, PortfolioView.class, PendingTradesView.class)
-                                            , 100, TimeUnit.MILLISECONDS);
-                                    close();
-                                })
-                                .onClose(this::close)
-                                .show(), 1);
-                    } else {
-                        close();
-                    }
+            } else if (newValue && model.getTrade() != null && !model.getTrade().hasFailed()) {
+                String key = "takeOfferSuccessInfo";
+                if (DontShowAgainLookup.showAgain(key)) {
+                    UserThread.runAfter(() -> new Popup().headLine(Res.get("takeOffer.success.headline"))
+                            .feedback(Res.get("takeOffer.success.info"))
+                            .actionButtonTextWithGoTo("navigation.portfolio.pending")
+                            .dontShowAgainId(key)
+                            .onAction(() -> {
+                                UserThread.runAfter(
+                                        () -> navigation.navigateTo(MainView.class, PortfolioView.class, PendingTradesView.class)
+                                        , 100, TimeUnit.MILLISECONDS);
+                                close();
+                            })
+                            .onClose(this::close)
+                            .show(), 1);
+                } else {
+                    close();
                 }
+            }
         });
-
- /*       noSufficientFeeBinding = EasyBind.combine(model.dataModel.getIsWalletFunded(), model.dataModel.isMainNet, model.dataModel.isFeeFromFundingTxSufficient,
-                (getIsWalletFunded(), isMainNet, isFeeSufficient) -> getIsWalletFunded() && isMainNet && !isFeeSufficient);
-        noSufficientFeeSubscription = noSufficientFeeBinding.subscribe((observable, oldValue, newValue) -> {
-            if (newValue)
-                new Popup<>().warning("The mining fee from your funding transaction is not sufficiently high.\n\n" +
-                        "You need to use at least a mining fee of " +
-                        model.formatter.formatCoinWithCode(FeePolicy.getMinRequiredFeeForFundingTx()) + ".\n\n" +
-                        "The fee used in your funding transaction was only " +
-                        model.formatter.formatCoinWithCode(model.dataModel.feeFromFundingTx) + ".\n\n" +
-                        "The trade transactions might take too much time to be included in " +
-                        "a block if the fee is too low.\n" +
-                        "Please check at your external wallet that you set the required fee and " +
-                        "do a funding again with the correct fee.\n\n" +
-                        "In the \"Funds/Open for withdrawal\" section you can withdraw those funds.")
-                        .closeButtonText(Res.get("shared.close"))
-                        .onClose(() -> {
-                            close();
-                            navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class);
-                        })
-                        .show();
-        });*/
 
         balanceSubscription = EasyBind.subscribe(model.dataModel.getBalance(), balanceTextField::setBalance);
     }
@@ -837,8 +825,12 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         paymentAccountsComboBox.setVisible(false);
         paymentAccountsComboBox.setManaged(false);
         paymentAccountsComboBox.setOnAction(e -> {
-            maybeShowClearXchangeWarning();
-            model.onPaymentAccountSelected(paymentAccountsComboBox.getSelectionModel().getSelectedItem());
+            PaymentAccount paymentAccount = paymentAccountsComboBox.getSelectionModel().getSelectedItem();
+            if (paymentAccount != null) {
+                maybeShowClearXchangeWarning(paymentAccount);
+                maybeShowFasterPaymentsWarning(paymentAccount);
+            }
+            model.onPaymentAccountSelected(paymentAccount);
         });
 
         paymentMethodLabel = paymentAccountTuple.second;
@@ -898,16 +890,14 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         nextButton = tuple.first;
         nextButton.setMaxWidth(200);
         nextButton.setDefaultButton(true);
-        nextButton.setOnAction(e -> {
-            showNextStepAfterAmountIsSet();
-        });
+        nextButton.setOnAction(e -> showNextStepAfterAmountIsSet());
 
         cancelButton1 = tuple.second;
         cancelButton1.setMaxWidth(200);
         cancelButton1.setDefaultButton(false);
         cancelButton1.setOnAction(e -> {
             model.dataModel.swapTradeToSavings();
-            close();
+            close(false);
         });
     }
 
@@ -926,9 +916,9 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             String missingBsq = null;
             if (takerFee != null) {
                 missingBsq = Res.get("popup.warning.insufficientBsqFundsForBtcFeePayment",
-                        bsqFormatter.formatCoinWithCode(takerFee.subtract(model.dataModel.getBsqBalance())));
+                        bsqFormatter.formatCoinWithCode(takerFee.subtract(model.dataModel.getUsableBsqBalance())));
 
-            } else if (model.dataModel.getBsqBalance().isZero()) {
+            } else if (model.dataModel.getUsableBsqBalance().isZero()) {
                 missingBsq = Res.get("popup.warning.noBsqFundsForBtcFeePayment");
             }
 
@@ -1054,7 +1044,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                         })
                         .show();
             } else {
-                close();
+                close(false);
                 model.dataModel.swapTradeToSavings();
             }
         });
@@ -1083,7 +1073,6 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         Tuple3<HBox, InputTextField, Label> amountValueCurrencyBoxTuple = getEditableValueBox(Res.get("takeOffer.amount.prompt"));
         amountValueCurrencyBox = amountValueCurrencyBoxTuple.first;
         amountTextField = amountValueCurrencyBoxTuple.second;
-        amountCurrency = amountValueCurrencyBoxTuple.third;
         Tuple2<Label, VBox> amountInputBoxTuple = getTradeInputBox(amountValueCurrencyBox, model.getAmountDescription());
         amountDescriptionLabel = amountInputBoxTuple.first;
         VBox amountBox = amountInputBoxTuple.second;
@@ -1224,9 +1213,9 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         String message = null;
         if (takerFee != null)
             message = Res.get("popup.warning.insufficientBsqFundsForBtcFeePayment",
-                    bsqFormatter.formatCoinWithCode(takerFee.subtract(model.dataModel.getBsqBalance())));
+                    bsqFormatter.formatCoinWithCode(takerFee.subtract(model.dataModel.getUsableBsqBalance())));
 
-        else if (model.dataModel.getBsqBalance().isZero())
+        else if (model.dataModel.getUsableBsqBalance().isZero())
             message = Res.get("popup.warning.noBsqFundsForBtcFeePayment");
 
         if (message != null)
@@ -1236,12 +1225,20 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                     .show();
     }
 
-    private void maybeShowClearXchangeWarning() {
-        if (model.getPaymentMethod().getId().equals(PaymentMethod.CLEAR_X_CHANGE_ID) &&
+    private void maybeShowClearXchangeWarning(PaymentAccount paymentAccount) {
+        if (paymentAccount.getPaymentMethod().getId().equals(PaymentMethod.CLEAR_X_CHANGE_ID) &&
                 !clearXchangeWarningDisplayed) {
             clearXchangeWarningDisplayed = true;
-            UserThread.runAfter(GUIUtil::showClearXchangeWarning,
-                    500, TimeUnit.MILLISECONDS);
+            UserThread.runAfter(GUIUtil::showClearXchangeWarning, 500, TimeUnit.MILLISECONDS);
+        }
+    }
+
+    private void maybeShowFasterPaymentsWarning(PaymentAccount paymentAccount) {
+        if (paymentAccount.getPaymentMethod().getId().equals(PaymentMethod.FASTER_PAYMENTS_ID) &&
+                ((FasterPaymentsAccount) paymentAccount).getHolderName().isEmpty() &&
+                !fasterPaymentsWarningDisplayed) {
+            fasterPaymentsWarningDisplayed = true;
+            UserThread.runAfter(() -> GUIUtil.showFasterPaymentsWarning(navigation), 500, TimeUnit.MILLISECONDS);
         }
     }
 

@@ -54,7 +54,6 @@ import bisq.core.dao.governance.proposal.removeAsset.RemoveAssetProposalFactory;
 import bisq.core.dao.governance.proposal.role.RoleProposalFactory;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
-import bisq.core.dao.state.DaoStateStorageService;
 import bisq.core.dao.state.model.blockchain.BaseTx;
 import bisq.core.dao.state.model.blockchain.BaseTxOutput;
 import bisq.core.dao.state.model.blockchain.Block;
@@ -70,9 +69,11 @@ import bisq.core.dao.state.model.governance.Proposal;
 import bisq.core.dao.state.model.governance.Role;
 import bisq.core.dao.state.model.governance.RoleProposal;
 import bisq.core.dao.state.model.governance.Vote;
+import bisq.core.dao.state.storage.DaoStateStorageService;
 
 import bisq.asset.Asset;
 
+import bisq.common.config.Config;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ExceptionHandler;
 import bisq.common.handlers.ResultHandler;
@@ -91,12 +92,18 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 
+import java.io.File;
 import java.io.IOException;
 
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 import lombok.extern.slf4j.Slf4j;
@@ -422,8 +429,16 @@ public class DaoFacade implements DaoSetupService {
             case RESULT:
                 break;
         }
-
         return firstBlock;
+    }
+
+    public Map<Integer, Date> getBlockStartDateByCycleIndex() {
+        AtomicInteger index = new AtomicInteger();
+        Map<Integer, Date> map = new HashMap<>();
+        periodService.getCycles()
+                .forEach(cycle -> daoStateService.getBlockAtHeight(cycle.getHeightOfFirstBlock())
+                        .ifPresent(block -> map.put(index.getAndIncrement(), new Date(block.getTime()))));
+        return map;
     }
 
     // Because last block in request and voting phases must not be used for making a tx as it will get confirmed in the
@@ -517,7 +532,10 @@ public class DaoFacade implements DaoSetupService {
         lockupTxService.publishLockupTx(lockupAmount, lockTime, lockupReason, hash, resultHandler, exceptionHandler);
     }
 
-    public Tuple2<Coin, Integer> getLockupTxMiningFeeAndTxSize(Coin lockupAmount, int lockTime, LockupReason lockupReason, byte[] hash)
+    public Tuple2<Coin, Integer> getLockupTxMiningFeeAndTxSize(Coin lockupAmount,
+                                                               int lockTime,
+                                                               LockupReason lockupReason,
+                                                               byte[] hash)
             throws InsufficientMoneyException, IOException, TransactionVerificationException, WalletException {
         return lockupTxService.getMiningFeeAndTxSize(lockupAmount, lockTime, lockupReason, hash);
     }
@@ -700,8 +718,12 @@ public class DaoFacade implements DaoSetupService {
         return daoStateService.getParamValue(param, blockHeight);
     }
 
-    public void resyncDao(Runnable resultHandler) {
-        daoStateStorageService.resetDaoState(resultHandler);
+    public void resyncDaoStateFromGenesis(Runnable resultHandler) {
+        daoStateStorageService.resyncDaoStateFromGenesis(resultHandler);
+    }
+
+    public void resyncDaoStateFromResources(File storageDir) throws IOException {
+        daoStateStorageService.resyncDaoStateFromResources(storageDir);
     }
 
     public boolean isMyRole(Role role) {
@@ -741,5 +763,33 @@ public class DaoFacade implements DaoSetupService {
         long requiredBondUnit = bondedRoleType.getRequiredBondUnit();
         long baseFactor = daoStateService.getParamValueAsCoin(Param.BONDED_ROLE_FACTOR, height).value;
         return requiredBondUnit * baseFactor;
+    }
+
+    public Set<String> getAllPastParamValues(Param param) {
+        Set<String> set = new HashSet<>();
+        periodService.getCycles().forEach(cycle -> {
+            set.add(getParamValue(param, cycle.getHeightOfFirstBlock()));
+        });
+        return set;
+    }
+
+    public Set<String> getAllDonationAddresses() {
+        // We support any of the past addresses as well as in case the peer has not enabled the DAO or is out of sync we
+        // do not want to break validation.
+        Set<String> allPastParamValues = getAllPastParamValues(Param.RECIPIENT_BTC_ADDRESS);
+
+        // If Dao is deactivated we need to add the default address as getAllPastParamValues will not return us any.
+        if (allPastParamValues.isEmpty()) {
+            allPastParamValues.add(Param.RECIPIENT_BTC_ADDRESS.getDefaultValue());
+        }
+
+        if (Config.baseCurrencyNetwork().isMainnet()) {
+            // If Dao is deactivated we need to add the past addresses used as well.
+            // This list need to be updated once a new address gets defined.
+            allPastParamValues.add("3EtUWqsGThPtjwUczw27YCo6EWvQdaPUyp"); // burning man 2019
+            allPastParamValues.add("3A8Zc1XioE2HRzYfbb5P8iemCS72M6vRJV"); // burningman2
+        }
+
+        return allPastParamValues;
     }
 }

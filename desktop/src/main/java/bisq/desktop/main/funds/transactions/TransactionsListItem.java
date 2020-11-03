@@ -35,6 +35,7 @@ import bisq.core.trade.Trade;
 import bisq.core.util.coin.CoinFormatter;
 
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionConfidence;
 import org.bitcoinj.core.TransactionOutput;
@@ -67,6 +68,7 @@ class TransactionsListItem {
     private boolean received;
     private boolean detailsAvailable;
     private Coin amountAsCoin = Coin.ZERO;
+    private String memo = "";
     private int confirmations = 0;
     @Getter
     private final boolean isDustAttackTx;
@@ -91,8 +93,9 @@ class TransactionsListItem {
                          long ignoreDustThreshold) {
         this.btcWalletService = btcWalletService;
         this.formatter = formatter;
+        this.memo = transaction.getMemo();
 
-        txId = transaction.getHashAsString();
+        txId = transaction.getTxId().toString();
 
         Optional<Tradable> optionalTradable = Optional.ofNullable(transactionAwareTradable)
                 .map(TransactionAwareTradable::asTradable);
@@ -215,10 +218,10 @@ class TransactionsListItem {
                     if (offerFeePaymentTxID != null && offerFeePaymentTxID.equals(txId)) {
                         details = Res.get("funds.tx.createOfferFee", tradeId);
                     } else if (trade.getDepositTx() != null &&
-                            trade.getDepositTx().getHashAsString().equals(txId)) {
+                            trade.getDepositTx().getTxId().equals(Sha256Hash.wrap(txId))) {
                         details = Res.get("funds.tx.multiSigDeposit", tradeId);
                     } else if (trade.getPayoutTx() != null &&
-                            trade.getPayoutTx().getHashAsString().equals(txId)) {
+                            trade.getPayoutTx().getTxId().equals(Sha256Hash.wrap(txId))) {
                         details = Res.get("funds.tx.multiSigPayout", tradeId);
 
                         if (amountAsCoin.isZero()) {
@@ -340,5 +343,7 @@ class TransactionsListItem {
     public String getNumConfirmations() {
         return String.valueOf(confirmations);
     }
+
+    public String getMemo() { return memo; }
 }
 

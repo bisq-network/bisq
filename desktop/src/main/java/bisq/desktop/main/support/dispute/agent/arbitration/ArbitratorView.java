@@ -17,38 +17,36 @@
 
 package bisq.desktop.main.support.dispute.agent.arbitration;
 
-import bisq.common.config.Config;
-import bisq.common.util.Utilities;
 import bisq.desktop.common.view.FxmlView;
+import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.ContractWindow;
 import bisq.desktop.main.overlays.windows.DisputeSummaryWindow;
-import bisq.desktop.main.overlays.windows.SignPaymentAccountsWindow;
 import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
 import bisq.desktop.main.support.dispute.agent.DisputeAgentView;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.alert.PrivateNotificationManager;
+import bisq.core.dao.DaoFacade;
+import bisq.core.locale.Res;
 import bisq.core.support.SupportType;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeSession;
 import bisq.core.support.dispute.arbitration.ArbitrationManager;
 import bisq.core.support.dispute.arbitration.ArbitrationSession;
+import bisq.core.support.dispute.mediation.mediator.MediatorManager;
+import bisq.core.support.dispute.refund.refundagent.RefundAgentManager;
 import bisq.core.trade.TradeManager;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.CoinFormatter;
 
+import bisq.common.config.Config;
 import bisq.common.crypto.KeyRing;
 
-import javax.inject.Named;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyEvent;
-
 import javax.inject.Inject;
+import javax.inject.Named;
 
 @FxmlView
 public class ArbitratorView extends DisputeAgentView {
-
-    private final SignPaymentAccountsWindow signPaymentAccountsWindow;
 
     @Inject
     public ArbitratorView(ArbitrationManager arbitrationManager,
@@ -60,8 +58,10 @@ public class ArbitratorView extends DisputeAgentView {
                           ContractWindow contractWindow,
                           TradeDetailsWindow tradeDetailsWindow,
                           AccountAgeWitnessService accountAgeWitnessService,
-                          @Named(Config.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys,
-                          SignPaymentAccountsWindow signPaymentAccountsWindow) {
+                          DaoFacade daoFacade,
+                          MediatorManager mediatorManager,
+                          RefundAgentManager refundAgentManager,
+                          @Named(Config.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         super(arbitrationManager,
                 keyRing,
                 tradeManager,
@@ -71,8 +71,10 @@ public class ArbitratorView extends DisputeAgentView {
                 contractWindow,
                 tradeDetailsWindow,
                 accountAgeWitnessService,
+                daoFacade,
+                mediatorManager,
+                refundAgentManager,
                 useDevPrivilegeKeys);
-        this.signPaymentAccountsWindow = signPaymentAccountsWindow;
     }
 
     @Override
@@ -86,9 +88,15 @@ public class ArbitratorView extends DisputeAgentView {
     }
 
     @Override
-    protected void handleKeyPressed(KeyEvent event) {
-        if (Utilities.isAltOrCtrlPressed(KeyCode.S, event)) {
-            signPaymentAccountsWindow.show();
+    protected void onCloseDispute(Dispute dispute) {
+        long protocolVersion = dispute.getContract().getOfferPayload().getProtocolVersion();
+        // Only cases with protocolVersion 1 are candidates for legacy arbitration.
+        // This code path is not tested and it is not assumed that it is still be used as old arbitrators would use
+        // their old Bisq version if still cases are pending.
+        if (protocolVersion == 1) {
+            disputeSummaryWindow.onFinalizeDispute(() -> chatView.removeInputBox()).show(dispute);
+        } else {
+            new Popup().warning(Res.get("support.wrongVersion", protocolVersion)).show();
         }
     }
 }

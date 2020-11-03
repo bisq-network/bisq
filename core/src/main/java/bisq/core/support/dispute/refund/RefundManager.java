@@ -20,9 +20,11 @@ package bisq.core.support.dispute.refund;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
+import bisq.core.dao.DaoFacade;
 import bisq.core.locale.Res;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
+import bisq.core.provider.price.PriceFeedService;
 import bisq.core.support.SupportType;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeManager;
@@ -43,7 +45,8 @@ import bisq.network.p2p.P2PService;
 import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.app.Version;
-import bisq.common.crypto.PubKeyRing;
+import bisq.common.config.Config;
+import bisq.common.crypto.KeyRing;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -73,11 +76,15 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
                          TradeManager tradeManager,
                          ClosedTradableManager closedTradableManager,
                          OpenOfferManager openOfferManager,
-                         PubKeyRing pubKeyRing,
-                         RefundDisputeListService refundDisputeListService) {
+                         DaoFacade daoFacade,
+                         KeyRing keyRing,
+                         RefundDisputeListService refundDisputeListService,
+                         Config config,
+                         PriceFeedService priceFeedService) {
         super(p2PService, tradeWalletService, walletService, walletsSetup, tradeManager, closedTradableManager,
-                openOfferManager, pubKeyRing, refundDisputeListService);
+                openOfferManager, daoFacade, keyRing, refundDisputeListService, config, priceFeedService);
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Implement template methods
@@ -109,7 +116,7 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
     }
 
     @Override
-    protected Trade.DisputeState getDisputeState_StartedByPeer() {
+    protected Trade.DisputeState getDisputeStateStartedByPeer() {
         return Trade.DisputeState.REFUND_REQUEST_STARTED_BY_PEER;
     }
 
@@ -139,6 +146,14 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
     protected String getDisputeIntroForDisputeCreator(String disputeInfo) {
         return Res.get("support.youOpenedDispute", disputeInfo, Version.VERSION);
     }
+
+    @Override
+    protected void addPriceInfoMessage(Dispute dispute, int counter) {
+        // At refund agent we do not add the option trade price check as the time for dispute opening is not correct.
+        // In case of an option trade the mediator adds to the result summary message automatically the system message
+        // with the option trade detection info so the refund agent can see that as well.
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Message handler
@@ -204,6 +219,8 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
             Optional<OpenOffer> openOfferOptional = openOfferManager.getOpenOfferById(tradeId);
             openOfferOptional.ifPresent(openOffer -> openOfferManager.closeOpenOffer(openOffer.getOffer()));
         }
+
+        requestPersistence();
     }
 
 

@@ -1,0 +1,364 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+syntax = "proto3";
+package io.bisq.protobuffer;
+
+import "pb.proto";
+
+option java_package = "bisq.proto.grpc";
+option java_multiple_files = true;
+
+///////////////////////////////////////////////////////////////////////////////////////////
+// DisputeAgents
+///////////////////////////////////////////////////////////////////////////////////////////
+
+service DisputeAgents {
+    rpc RegisterDisputeAgent (RegisterDisputeAgentRequest) returns (RegisterDisputeAgentReply) {
+    }
+}
+
+message RegisterDisputeAgentRequest {
+    string disputeAgentType = 1;
+    string registrationKey = 2;
+}
+
+message RegisterDisputeAgentReply {
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+// Offers
+///////////////////////////////////////////////////////////////////////////////////////////
+
+service Offers {
+    rpc GetOffer (GetOfferRequest) returns (GetOfferReply) {
+    }
+    rpc GetOffers (GetOffersRequest) returns (GetOffersReply) {
+    }
+    rpc CreateOffer (CreateOfferRequest) returns (CreateOfferReply) {
+    }
+    rpc CancelOffer (CancelOfferRequest) returns (CancelOfferReply) {
+    }
+}
+
+message GetOfferRequest {
+    string id = 1;
+}
+
+message GetOfferReply {
+    OfferInfo offer = 1;
+}
+message GetOffersRequest {
+    string direction = 1;
+    string currencyCode = 2;
+}
+
+message GetOffersReply {
+    repeated OfferInfo offers = 1;
+}
+
+message CreateOfferRequest {
+    string currencyCode = 1;
+    string direction = 2;
+    string price = 3;
+    bool useMarketBasedPrice = 4;
+    double marketPriceMargin = 5;
+    uint64 amount = 6;
+    uint64 minAmount = 7;
+    double buyerSecurityDeposit = 8;
+    string paymentAccountId = 9;
+}
+
+message CreateOfferReply {
+    OfferInfo offer = 1;
+}
+
+message CancelOfferRequest {
+    string id = 1;
+}
+
+message CancelOfferReply {
+}
+
+message OfferInfo {
+    string id = 1;
+    string direction = 2;
+    uint64 price = 3;
+    bool useMarketBasedPrice = 4;
+    double marketPriceMargin = 5;
+    uint64 amount = 6;
+    uint64 minAmount = 7;
+    uint64 volume = 8;
+    uint64 minVolume = 9;
+    uint64 buyerSecurityDeposit = 10;
+    string paymentAccountId = 11;
+    string paymentMethodId = 12;
+    string paymentMethodShortName = 13;
+    string baseCurrencyCode = 14;
+    string counterCurrencyCode = 15;
+    uint64 date = 16;
+    string state = 17;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+// PaymentAccounts
+///////////////////////////////////////////////////////////////////////////////////////////
+
+service PaymentAccounts {
+    rpc CreatePaymentAccount (CreatePaymentAccountRequest) returns (CreatePaymentAccountReply) {
+    }
+    rpc GetPaymentAccounts (GetPaymentAccountsRequest) returns (GetPaymentAccountsReply) {
+    }
+}
+
+message CreatePaymentAccountRequest {
+    string paymentMethodId = 1;
+    string accountName = 2;
+    string accountNumber = 3;
+    // TODO  Support all currencies. Maybe add a repeated and if only one is used its a singletonList.
+    string currencyCode = 4;
+}
+
+message CreatePaymentAccountReply {
+}
+
+message GetPaymentAccountsRequest {
+}
+
+message GetPaymentAccountsReply {
+    repeated PaymentAccount paymentAccounts = 1;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+// Price
+///////////////////////////////////////////////////////////////////////////////////////////
+
+service Price {
+    rpc GetMarketPrice (MarketPriceRequest) returns (MarketPriceReply) {
+    }
+}
+
+message MarketPriceRequest {
+    string currencyCode = 1;
+}
+
+message MarketPriceReply {
+    double price = 1;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+// GetTradeStatistics
+///////////////////////////////////////////////////////////////////////////////////////////
+
+service GetTradeStatistics {
+    rpc GetTradeStatistics (GetTradeStatisticsRequest) returns (GetTradeStatisticsReply) {
+    }
+}
+
+message GetTradeStatisticsRequest {
+}
+
+message GetTradeStatisticsReply {
+    repeated TradeStatistics3 TradeStatistics = 1;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+// Trades
+///////////////////////////////////////////////////////////////////////////////////////////
+
+service Trades {
+    rpc GetTrade (GetTradeRequest) returns (GetTradeReply) {
+    }
+    rpc TakeOffer (TakeOfferRequest) returns (TakeOfferReply) {
+    }
+    rpc ConfirmPaymentStarted (ConfirmPaymentStartedRequest) returns (ConfirmPaymentStartedReply) {
+    }
+    rpc ConfirmPaymentReceived (ConfirmPaymentReceivedRequest) returns (ConfirmPaymentReceivedReply) {
+    }
+    rpc KeepFunds (KeepFundsRequest) returns (KeepFundsReply) {
+    }
+    rpc WithdrawFunds (WithdrawFundsRequest) returns (WithdrawFundsReply) {
+    }
+}
+
+message TakeOfferRequest {
+    string offerId = 1;
+    string paymentAccountId = 2;
+}
+
+message TakeOfferReply {
+    TradeInfo trade = 1;
+}
+
+message ConfirmPaymentStartedRequest {
+    string tradeId = 1;
+}
+
+message ConfirmPaymentStartedReply {
+}
+
+message ConfirmPaymentReceivedRequest {
+    string tradeId = 1;
+}
+
+message ConfirmPaymentReceivedReply {
+}
+
+message GetTradeRequest {
+    string tradeId = 1;
+}
+
+message GetTradeReply {
+    TradeInfo trade = 1;
+}
+
+message KeepFundsRequest {
+    string tradeId = 1;
+}
+
+message KeepFundsReply {
+}
+
+message WithdrawFundsRequest {
+    string tradeId = 1;
+    string address = 2;
+}
+
+message WithdrawFundsReply {
+}
+
+message TradeInfo {
+    OfferInfo offer = 1;
+    string tradeId = 2;
+    string shortId = 3;
+    uint64 date = 4;
+    string role = 5;
+    bool isCurrencyForTakerFeeBtc = 6;
+    uint64 txFeeAsLong = 7;
+    uint64 takerFeeAsLong = 8;
+    string takerFeeTxId = 9;
+    string depositTxId = 10;
+    string payoutTxId = 11;
+    uint64 tradeAmountAsLong = 12;
+    uint64 tradePrice = 13;
+    string tradingPeerNodeAddress = 14;
+    string state = 15;
+    string phase = 16;
+    string tradePeriodState = 17;
+    bool isDepositPublished = 18;
+    bool isDepositConfirmed = 19;
+    bool isFiatSent = 20;
+    bool isFiatReceived = 21;
+    bool isPayoutPublished = 22;
+    bool isWithdrawn = 23;
+    string contractAsJson = 24;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+// Wallets
+///////////////////////////////////////////////////////////////////////////////////////////
+
+service Wallets {
+    rpc GetBalance (GetBalanceRequest) returns (GetBalanceReply) {
+    }
+    rpc GetAddressBalance (GetAddressBalanceRequest) returns (GetAddressBalanceReply) {
+    }
+    rpc GetFundingAddresses (GetFundingAddressesRequest) returns (GetFundingAddressesReply) {
+    }
+    rpc SetWalletPassword (SetWalletPasswordRequest) returns (SetWalletPasswordReply) {
+    }
+    rpc RemoveWalletPassword (RemoveWalletPasswordRequest) returns (RemoveWalletPasswordReply) {
+    }
+    rpc LockWallet (LockWalletRequest) returns (LockWalletReply) {
+    }
+    rpc UnlockWallet (UnlockWalletRequest) returns (UnlockWalletReply) {
+    }
+}
+
+message GetBalanceRequest {
+}
+
+message GetBalanceReply {
+    uint64 balance = 1;
+}
+
+message GetAddressBalanceRequest {
+    string address = 1;
+}
+
+message GetAddressBalanceReply {
+    AddressBalanceInfo addressBalanceInfo = 1;
+}
+
+message GetFundingAddressesRequest {
+}
+
+message GetFundingAddressesReply {
+    repeated AddressBalanceInfo addressBalanceInfo = 1;
+}
+
+message SetWalletPasswordRequest {
+    string password = 1;
+    string newPassword = 2;
+}
+
+message SetWalletPasswordReply {
+}
+
+message RemoveWalletPasswordRequest {
+    string password = 1;
+}
+
+message RemoveWalletPasswordReply {
+}
+
+message LockWalletRequest {
+}
+
+message LockWalletReply {
+}
+
+message UnlockWalletRequest {
+    string password = 1;
+    uint64 timeout = 2;
+}
+
+message UnlockWalletReply {
+}
+
+message AddressBalanceInfo {
+    string address = 1;
+    int64 balance = 2;
+    int64 numConfirmations = 3;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+// Version
+///////////////////////////////////////////////////////////////////////////////////////////
+
+service GetVersion {
+    rpc GetVersion (GetVersionRequest) returns (GetVersionReply) {
+    }
+}
+
+message GetVersionRequest {
+}
+
+message GetVersionReply {
+    string version = 1;
+}
+

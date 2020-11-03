@@ -18,14 +18,12 @@
 package bisq.core.offer;
 
 import bisq.core.trade.Tradable;
-import bisq.core.trade.TradableList;
 
 import bisq.network.p2p.NodeAddress;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.proto.ProtoUtil;
-import bisq.common.storage.Storage;
 
 import java.util.Date;
 import java.util.Optional;
@@ -71,11 +69,9 @@ public final class OpenOffer implements Tradable {
     @Nullable
     private NodeAddress refundAgentNodeAddress;
 
-    transient private Storage<TradableList<OpenOffer>> storage;
 
-    public OpenOffer(Offer offer, Storage<TradableList<OpenOffer>> storage) {
+    public OpenOffer(Offer offer) {
         this.offer = offer;
-        this.storage = storage;
         state = State.AVAILABLE;
     }
 
@@ -139,21 +135,15 @@ public final class OpenOffer implements Tradable {
         return offer.getShortId();
     }
 
-    public void setStorage(Storage<TradableList<OpenOffer>> storage) {
-        this.storage = storage;
-    }
-
     public void setState(State state) {
-        boolean changed = this.state != state;
         this.state = state;
-        if (changed && storage != null)
-            storage.queueUpForSave();
 
         // We keep it reserved for a limited time, if trade preparation fails we revert to available state
-        if (this.state == State.RESERVED)
+        if (this.state == State.RESERVED) {
             startTimeout();
-        else
+        } else {
             stopTimeout();
+        }
     }
 
     public boolean isDeactivated() {
@@ -164,9 +154,11 @@ public final class OpenOffer implements Tradable {
         stopTimeout();
 
         timeoutTimer = UserThread.runAfter(() -> {
-            log.debug("Timeout for resettin State.RESERVED reached");
-            if (state == State.RESERVED)
+            log.debug("Timeout for resetting State.RESERVED reached");
+            if (state == State.RESERVED) {
+                // we do not need to persist that as at startup any RESERVED state would be reset to AVAILABLE anyway
                 setState(State.AVAILABLE);
+            }
         }, TIMEOUT);
     }
 

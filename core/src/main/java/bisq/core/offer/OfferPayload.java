@@ -48,6 +48,9 @@ import javax.annotation.Nullable;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
+// OfferPayload has about 1.4 kb. We should look into options to make it smaller but will be hard to do it in a
+// backward compatible way. Maybe a candidate when segwit activation is done as hardfork?
+
 @EqualsAndHashCode
 @Getter
 @Slf4j
@@ -82,6 +85,9 @@ public final class OfferPayload implements ProtectedStoragePayload, ExpirablePay
     // Capability.SIGNED_ACCOUNT_AGE_WITNESS is 11 and Capability.MEDIATION is 12 so if we want to signal that maker
     // of the offer supports both capabilities we add "11, 12" to capabilities.
     public static final String CAPABILITIES = "capabilities";
+    // If maker is seller and has xmrAutoConf enabled it is set to "1" otherwise it is not set
+    public static final String XMR_AUTO_CONF = "xmrAutoConf";
+    public static final String XMR_AUTO_CONF_ENABLED_VALUE = "1";
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

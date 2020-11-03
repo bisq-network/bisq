@@ -77,6 +77,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -362,7 +363,7 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
 
         // We convert the list to a map with proposalTxId as key and the vote as value. As the vote can be null we
         // wrap it into an optional.
-        Map<String, Optional<Vote>> voteByTxIdMap = voteWithProposalTxIdList.stream()
+        Map<String, Optional<Vote>> voteByTxIdMap = voteWithProposalTxIdList.getList().stream()
                 .collect(Collectors.toMap(VoteWithProposalTxId::getProposalTxId, e -> Optional.ofNullable(e.getVote())));
 
         // We make a map with proposalTxId as key and the ballot as value out of our stored ballot list.
@@ -414,11 +415,11 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
         // If we received a proposal after we had already voted we consider it as a proposal withhold attack and
         // treat the proposal as it was voted with a rejected vote.
         ballotByTxIdMap.entrySet().stream()
-                .filter(e -> !voteByTxIdMap.keySet().contains(e.getKey()))
+                .filter(e -> !voteByTxIdMap.containsKey(e.getKey()))
                 .map(Map.Entry::getValue)
                 .forEach(ballot -> {
                     log.warn("We have a proposal which was not part of our blind vote and reject it. " +
-                            "Proposal ={}" + ballot.getProposal());
+                            "Proposal={}", ballot.getProposal());
                     ballots.add(new Ballot(ballot.getProposal(), new Vote(false)));
                 });
 
@@ -486,20 +487,20 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
     private Optional<List<BlindVote>> findPermutatedListMatchingMajority(byte[] majorityVoteListHash) {
         List<BlindVote> list = BlindVoteConsensus.getSortedBlindVoteListOfCycle(blindVoteListService);
         long ts = System.currentTimeMillis();
-        List<List<BlindVote>> result = PermutationUtil.findAllPermutations(list, 1000000);
-        for (List<BlindVote> variation : result) {
-            if (isListMatchingMajority(majorityVoteListHash, variation, false)) {
-                log.info("We found a variation of the blind vote list which matches the majority hash. variation={}",
-                        variation);
-                log.info("findPermutatedListMatchingMajority for {} items took {} ms.",
-                        list.size(), (System.currentTimeMillis() - ts));
-                return Optional.of(variation);
-            }
-        }
-        log.info("We did not find a variation of the blind vote list which matches the majority hash.");
+
+        BiFunction<byte[], List<BlindVote>, Boolean> predicate = (hash, variation) ->
+                isListMatchingMajority(hash, variation, false);
+
+        List<BlindVote> result = PermutationUtil.findMatchingPermutation(majorityVoteListHash, list, predicate, 1000000);
         log.info("findPermutatedListMatchingMajority for {} items took {} ms.",
                 list.size(), (System.currentTimeMillis() - ts));
-        return Optional.empty();
+        if (result.isEmpty()) {
+            log.info("We did not find a variation of the blind vote list which matches the majority hash.");
+            return Optional.empty();
+        } else {
+            log.info("We found a variation of the blind vote list which matches the majority hash. variation={}", result);
+            return Optional.of(result);
+        }
     }
 
     private boolean isListMatchingMajority(byte[] majorityVoteListHash, List<BlindVote> list, boolean doLog) {
@@ -513,7 +514,8 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
         return Arrays.equals(majorityVoteListHash, hashOfBlindVoteList);
     }
 
-    private Set<EvaluatedProposal> getEvaluatedProposals(Set<DecryptedBallotsWithMerits> decryptedBallotsWithMeritsSet, int chainHeight) {
+    private Set<EvaluatedProposal> getEvaluatedProposals(Set<DecryptedBallotsWithMerits> decryptedBallotsWithMeritsSet,
+                                                         int chainHeight) {
         // We reorganize the data structure to have a map of proposals with a list of VoteWithStake objects
         Map<Proposal, List<VoteWithStake>> resultListByProposalMap = getVoteWithStakeListByProposalMap(decryptedBallotsWithMeritsSet);
 
@@ -776,7 +778,7 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Value
-    public class HashWithStake {
+    public static class HashWithStake {
         private final byte[] hash;
         private final long stake;
 

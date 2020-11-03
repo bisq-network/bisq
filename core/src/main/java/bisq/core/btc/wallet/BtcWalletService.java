@@ -32,7 +32,9 @@ import bisq.common.handlers.ErrorMessageHandler;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.InsufficientMoneyException;
+import org.bitcoinj.core.LegacyAddress;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionConfidence;
 import org.bitcoinj.core.TransactionInput;
@@ -40,6 +42,7 @@ import org.bitcoinj.core.TransactionOutPoint;
 import org.bitcoinj.core.TransactionOutput;
 import org.bitcoinj.crypto.DeterministicKey;
 import org.bitcoinj.crypto.KeyCrypterScrypt;
+import org.bitcoinj.script.Script;
 import org.bitcoinj.script.ScriptBuilder;
 import org.bitcoinj.wallet.SendRequest;
 import org.bitcoinj.wallet.Wallet;
@@ -47,17 +50,18 @@ import org.bitcoinj.wallet.Wallet;
 import javax.inject.Inject;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.MoreExecutors;
 
-import org.spongycastle.crypto.params.KeyParameter;
+import org.bouncycastle.crypto.params.KeyParameter;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -92,7 +96,10 @@ public class BtcWalletService extends WalletService {
 
         walletsSetup.addSetupCompletedHandler(() -> {
             wallet = walletsSetup.getBtcWallet();
-            wallet.addEventListener(walletEventListener);
+            wallet.addCoinsReceivedEventListener(walletEventListener);
+            wallet.addCoinsSentEventListener(walletEventListener);
+            wallet.addReorganizeEventListener(walletEventListener);
+            wallet.addTransactionConfidenceEventListener(walletEventListener);
 
             walletsSetup.getChain().addNewBestBlockListener(block -> chainHeightProperty.set(block.getHeight()));
             chainHeightProperty.set(walletsSetup.getChain().getBestChainHeight());
@@ -108,33 +115,34 @@ public class BtcWalletService extends WalletService {
     void decryptWallet(@NotNull KeyParameter key) {
         super.decryptWallet(key);
 
-        addressEntryList.stream().forEach(e -> {
-            final DeterministicKey keyPair = e.getKeyPair();
+        addressEntryList.getAddressEntriesAsListImmutable().forEach(e -> {
+            DeterministicKey keyPair = e.getKeyPair();
             if (keyPair.isEncrypted())
                 e.setDeterministicKey(keyPair.decrypt(key));
         });
-        addressEntryList.persist();
+        addressEntryList.requestPersistence();
     }
 
     @Override
     void encryptWallet(KeyCrypterScrypt keyCrypterScrypt, KeyParameter key) {
         super.encryptWallet(keyCrypterScrypt, key);
-        addressEntryList.stream().forEach(e -> {
-            final DeterministicKey keyPair = e.getKeyPair();
+        addressEntryList.getAddressEntriesAsListImmutable().forEach(e -> {
+            DeterministicKey keyPair = e.getKeyPair();
             if (keyPair.isEncrypted())
                 e.setDeterministicKey(keyPair.encrypt(keyCrypterScrypt, key));
         });
-        addressEntryList.persist();
+        addressEntryList.requestPersistence();
     }
 
     @Override
     String getWalletAsString(boolean includePrivKeys) {
         StringBuilder sb = new StringBuilder();
-        getAddressEntryListAsImmutableList().stream().forEach(e -> sb.append(e.toString()).append("\n"));
+        getAddressEntryListAsImmutableList().forEach(e -> sb.append(e.toString()).append("\n"));
+        //boolean reallyIncludePrivKeys = includePrivKeys && !wallet.isEncrypted();
         return "Address entry list:\n" +
                 sb.toString() +
                 "\n\n" +
-                wallet.toString(includePrivKeys, true, true, walletsSetup.getChain()) + "\n\n" +
+                wallet.toString(true, includePrivKeys, this.aesKey, true, true, walletsSetup.getChain()) + "\n\n" +
                 "All pubKeys as hex:\n" +
                 wallet.printAllPubKeysAsHex();
     }
@@ -157,12 +165,18 @@ public class BtcWalletService extends WalletService {
     // Proposal txs
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Transaction completePreparedReimbursementRequestTx(Coin issuanceAmount, Address issuanceAddress, Transaction feeTx, byte[] opReturnData)
+    public Transaction completePreparedReimbursementRequestTx(Coin issuanceAmount,
+                                                              Address issuanceAddress,
+                                                              Transaction feeTx,
+                                                              byte[] opReturnData)
             throws TransactionVerificationException, WalletException, InsufficientMoneyException {
         return completePreparedProposalTx(feeTx, opReturnData, issuanceAmount, issuanceAddress);
     }
 
-    public Transaction completePreparedCompensationRequestTx(Coin issuanceAmount, Address issuanceAddress, Transaction feeTx, byte[] opReturnData)
+    public Transaction completePreparedCompensationRequestTx(Coin issuanceAmount,
+                                                             Address issuanceAddress,
+                                                             Transaction feeTx,
+                                                             byte[] opReturnData)
             throws TransactionVerificationException, WalletException, InsufficientMoneyException {
         return completePreparedProposalTx(feeTx, opReturnData, issuanceAmount, issuanceAddress);
     }
@@ -292,7 +306,8 @@ public class BtcWalletService extends WalletService {
         return completePreparedBsqTxWithBtcFee(preparedTx, opReturnData);
     }
 
-    private Transaction completePreparedBsqTxWithBtcFee(Transaction preparedTx, byte[] opReturnData) throws InsufficientMoneyException, TransactionVerificationException, WalletException {
+    private Transaction completePreparedBsqTxWithBtcFee(Transaction preparedTx,
+                                                        byte[] opReturnData) throws InsufficientMoneyException, TransactionVerificationException, WalletException {
         // Remember index for first BTC input
         int indexOfBtcFirstInput = preparedTx.getInputs().size();
 
@@ -306,7 +321,8 @@ public class BtcWalletService extends WalletService {
         return tx;
     }
 
-    private Transaction addInputsForMinerFee(Transaction preparedTx, byte[] opReturnData) throws InsufficientMoneyException {
+    private Transaction addInputsForMinerFee(Transaction preparedTx,
+                                             byte[] opReturnData) throws InsufficientMoneyException {
         // safety check counter to avoid endless loops
         int counter = 0;
         // estimated size of input sig
@@ -421,7 +437,9 @@ public class BtcWalletService extends WalletService {
         return completePreparedBsqTx(preparedBsqTx, isSendTx, null);
     }
 
-    public Transaction completePreparedBsqTx(Transaction preparedBsqTx, boolean useCustomTxFee, @Nullable byte[] opReturnData) throws
+    public Transaction completePreparedBsqTx(Transaction preparedBsqTx,
+                                             boolean useCustomTxFee,
+                                             @Nullable byte[] opReturnData) throws
             TransactionVerificationException, WalletException, InsufficientMoneyException {
 
         // preparedBsqTx has following structure:
@@ -545,7 +563,8 @@ public class BtcWalletService extends WalletService {
     // AddressEntry
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Optional<AddressEntry> getAddressEntry(String offerId, @SuppressWarnings("SameParameterValue") AddressEntry.Context context) {
+    public Optional<AddressEntry> getAddressEntry(String offerId,
+                                                  @SuppressWarnings("SameParameterValue") AddressEntry.Context context) {
         return getAddressEntryListAsImmutableList().stream()
                 .filter(e -> offerId.equals(e.getOfferId()))
                 .filter(e -> context == e.getContext())
@@ -560,15 +579,18 @@ public class BtcWalletService extends WalletService {
         if (addressEntry.isPresent()) {
             return addressEntry.get();
         } else {
+            // We still use non-segwit addresses for the trade protocol.
             // We try to use available and not yet used entries
             Optional<AddressEntry> emptyAvailableAddressEntry = getAddressEntryListAsImmutableList().stream()
                     .filter(e -> AddressEntry.Context.AVAILABLE == e.getContext())
                     .filter(e -> isAddressUnused(e.getAddress()))
+                    .filter(e -> Script.ScriptType.P2PKH.equals(e.getAddress().getOutputScriptType()))
                     .findAny();
             if (emptyAvailableAddressEntry.isPresent()) {
                 return addressEntryList.swapAvailableToAddressEntryWithOfferId(emptyAvailableAddressEntry.get(), context, offerId);
             } else {
-                AddressEntry entry = new AddressEntry(wallet.freshReceiveKey(), context, offerId);
+                DeterministicKey key = (DeterministicKey) wallet.findKeyFromAddress(wallet.freshReceiveAddress(Script.ScriptType.P2PKH));
+                AddressEntry entry = new AddressEntry(key, context, offerId, false);
                 addressEntryList.addAddressEntry(entry);
                 return entry;
             }
@@ -580,29 +602,46 @@ public class BtcWalletService extends WalletService {
         Optional<AddressEntry> addressEntry = getAddressEntryListAsImmutableList().stream()
                 .filter(e -> context == e.getContext())
                 .findAny();
-        return getOrCreateAddressEntry(context, addressEntry);
+        return getOrCreateAddressEntry(context, addressEntry, false);
     }
 
     public AddressEntry getFreshAddressEntry() {
+        return getFreshAddressEntry(true);
+    }
+
+    public AddressEntry getFreshAddressEntry(boolean segwit) {
         AddressEntry.Context context = AddressEntry.Context.AVAILABLE;
         Optional<AddressEntry> addressEntry = getAddressEntryListAsImmutableList().stream()
                 .filter(e -> context == e.getContext())
                 .filter(e -> isAddressUnused(e.getAddress()))
+                .filter(e -> {
+                    boolean isSegwitOutputScriptType = Script.ScriptType.P2WPKH.equals(e.getAddress().getOutputScriptType());
+                    // We need to ensure that we take only addressEntries which matches our segWit flag
+                    boolean isMatchingOutputScriptType = isSegwitOutputScriptType == segwit;
+                    return isMatchingOutputScriptType;
+                })
                 .findAny();
-        return getOrCreateAddressEntry(context, addressEntry);
+        return getOrCreateAddressEntry(context, addressEntry, segwit);
     }
 
-    public AddressEntry getNewAddressEntry(String offerId, AddressEntry.Context context) {
-        AddressEntry entry = new AddressEntry(wallet.freshReceiveKey(), context, offerId);
-        addressEntryList.addAddressEntry(entry);
-        return entry;
+    public void recoverAddressEntry(String offerId, String address, AddressEntry.Context context) {
+        findAddressEntry(address, AddressEntry.Context.AVAILABLE).ifPresent(addressEntry ->
+                addressEntryList.swapAvailableToAddressEntryWithOfferId(addressEntry, context, offerId));
     }
 
-    private AddressEntry getOrCreateAddressEntry(AddressEntry.Context context, Optional<AddressEntry> addressEntry) {
+    private AddressEntry getOrCreateAddressEntry(AddressEntry.Context context,
+                                                 Optional<AddressEntry> addressEntry,
+                                                 boolean segwit) {
         if (addressEntry.isPresent()) {
             return addressEntry.get();
         } else {
-            AddressEntry entry = new AddressEntry(wallet.freshReceiveKey(), context);
+            DeterministicKey key;
+            if (segwit) {
+                key = (DeterministicKey) wallet.findKeyFromAddress(wallet.freshReceiveAddress(Script.ScriptType.P2WPKH));
+            } else {
+                key = (DeterministicKey) wallet.findKeyFromAddress(wallet.freshReceiveAddress(Script.ScriptType.P2PKH));
+            }
+            AddressEntry entry = new AddressEntry(key, context, segwit);
             addressEntryList.addAddressEntry(entry);
             return entry;
         }
@@ -648,20 +687,18 @@ public class BtcWalletService extends WalletService {
     }
 
     public List<AddressEntry> getAddressEntryListAsImmutableList() {
-        return ImmutableList.copyOf(addressEntryList.getList());
+        return addressEntryList.getAddressEntriesAsListImmutable();
     }
 
     public void swapTradeEntryToAvailableEntry(String offerId, AddressEntry.Context context) {
-        Optional<AddressEntry> addressEntryOptional = getAddressEntryListAsImmutableList().stream()
+        getAddressEntryListAsImmutableList().stream()
                 .filter(e -> offerId.equals(e.getOfferId()))
                 .filter(e -> context == e.getContext())
-                .findAny();
-        addressEntryOptional.ifPresent(e -> {
-            log.info("swap addressEntry with address {} and offerId {} from context {} to available",
-                    e.getAddressString(), e.getOfferId(), context);
-            addressEntryList.swapToAvailable(e);
-            saveAddressEntryList();
-        });
+                .forEach(e -> {
+                    log.info("swap addressEntry with address {} and offerId {} from context {} to available",
+                            e.getAddressString(), e.getOfferId(), context);
+                    addressEntryList.swapToAvailable(e);
+                });
     }
 
     public void resetAddressEntriesForOpenOffer(String offerId) {
@@ -687,7 +724,7 @@ public class BtcWalletService extends WalletService {
     }
 
     public void saveAddressEntryList() {
-        addressEntryList.persist();
+        addressEntryList.requestPersistence();
     }
 
     public DeterministicKey getMultiSigKeyPair(String tradeId, byte[] pubKey) {
@@ -721,6 +758,15 @@ public class BtcWalletService extends WalletService {
                 .sum());
     }
 
+    public Stream<AddressEntry> getAddressEntriesForAvailableBalanceStream() {
+        Stream<AddressEntry> availableAndPayout = Stream.concat(getAddressEntries(AddressEntry.Context.TRADE_PAYOUT)
+                .stream(), getFundedAvailableAddressEntries().stream());
+        Stream<AddressEntry> available = Stream.concat(availableAndPayout,
+                getAddressEntries(AddressEntry.Context.ARBITRATOR).stream());
+        available = Stream.concat(available, getAddressEntries(AddressEntry.Context.OFFER_FUNDING).stream());
+        return available.filter(addressEntry -> getBalanceForAddress(addressEntry.getAddress()).isPositive());
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Double spend unconfirmed transaction (unlock in case we got into a tx with a too low mining fee)
@@ -731,7 +777,7 @@ public class BtcWalletService extends WalletService {
         AddressEntry addressEntry = getFreshAddressEntry();
         checkNotNull(addressEntry.getAddress(), "addressEntry.getAddress() must not be null");
         Optional<Transaction> transactionOptional = wallet.getTransactions(true).stream()
-                .filter(t -> t.getHashAsString().equals(txId))
+                .filter(t -> t.getTxId().toString().equals(txId))
                 .findAny();
         if (transactionOptional.isPresent()) {
             Transaction txToDoubleSpend = transactionOptional.get();
@@ -852,7 +898,7 @@ public class BtcWalletService extends WalletService {
                                     log.error("Broadcasting double spending transaction failed. " + t.getMessage());
                                     errorMessageHandler.handleErrorMessage(t.getMessage());
                                 }
-                            });
+                            }, MoreExecutors.directExecutor());
                         }
 
                     } catch (InsufficientMoneyException e) {
@@ -947,7 +993,7 @@ public class BtcWalletService extends WalletService {
                 counter++;
                 fee = txFeeForWithdrawalPerByte.multiply(txSize);
                 // We use a dummy address for the output
-                final String dummyReceiver = getFreshAddressEntry().getAddressString();
+                final String dummyReceiver = LegacyAddress.fromKey(params, new ECKey()).toBase58();
                 SendRequest sendRequest = getSendRequestForMultipleAddresses(fromAddresses, dummyReceiver, amount, fee, null, aesKey);
                 wallet.completeTx(sendRequest);
                 tx = sendRequest.tx;
@@ -976,7 +1022,7 @@ public class BtcWalletService extends WalletService {
     public int getEstimatedFeeTxSize(List<Coin> outputValues, Coin txFee)
             throws InsufficientMoneyException, AddressFormatException {
         Transaction transaction = new Transaction(params);
-        Address dummyAddress = wallet.currentReceiveKey().toAddress(params);
+        Address dummyAddress = LegacyAddress.fromKey(params, new ECKey());
         outputValues.forEach(outputValue -> transaction.addOutput(outputValue, dummyAddress));
 
         SendRequest sendRequest = SendRequest.forTx(transaction);
@@ -1007,27 +1053,27 @@ public class BtcWalletService extends WalletService {
             AddressEntryException, InsufficientMoneyException {
         SendRequest sendRequest = getSendRequest(fromAddress, toAddress, receiverAmount, fee, aesKey, context);
         Wallet.SendResult sendResult = wallet.sendCoins(sendRequest);
-        Futures.addCallback(sendResult.broadcastComplete, callback);
+        Futures.addCallback(sendResult.broadcastComplete, callback, MoreExecutors.directExecutor());
 
         printTx("sendFunds", sendResult.tx);
-        return sendResult.tx.getHashAsString();
+        return sendResult.tx.getTxId().toString();
     }
 
-    public String sendFundsForMultipleAddresses(Set<String> fromAddresses,
-                                                String toAddress,
-                                                Coin receiverAmount,
-                                                Coin fee,
-                                                @Nullable String changeAddress,
-                                                @Nullable KeyParameter aesKey,
-                                                FutureCallback<Transaction> callback) throws AddressFormatException,
+    public Transaction sendFundsForMultipleAddresses(Set<String> fromAddresses,
+                                                     String toAddress,
+                                                     Coin receiverAmount,
+                                                     Coin fee,
+                                                     @Nullable String changeAddress,
+                                                     @Nullable KeyParameter aesKey,
+                                                     FutureCallback<Transaction> callback) throws AddressFormatException,
             AddressEntryException, InsufficientMoneyException {
 
         SendRequest request = getSendRequestForMultipleAddresses(fromAddresses, toAddress, receiverAmount, fee, changeAddress, aesKey);
         Wallet.SendResult sendResult = wallet.sendCoins(request);
-        Futures.addCallback(sendResult.broadcastComplete, callback);
+        Futures.addCallback(sendResult.broadcastComplete, callback, MoreExecutors.directExecutor());
 
         printTx("sendFunds", sendResult.tx);
-        return sendResult.tx.getHashAsString();
+        return sendResult.tx;
     }
 
     private SendRequest getSendRequest(String fromAddress,
@@ -1041,7 +1087,7 @@ public class BtcWalletService extends WalletService {
         final Coin receiverAmount = amount.subtract(fee);
         Preconditions.checkArgument(Restrictions.isAboveDust(receiverAmount),
                 "The amount is too low (dust limit).");
-        tx.addOutput(receiverAmount, Address.fromBase58(params, toAddress));
+        tx.addOutput(receiverAmount, Address.fromString(params, toAddress));
 
         SendRequest sendRequest = SendRequest.forTx(tx);
         sendRequest.fee = fee;
@@ -1072,7 +1118,7 @@ public class BtcWalletService extends WalletService {
         checkArgument(Restrictions.isAboveDust(netValue),
                 "The amount is too low (dust limit).");
 
-        tx.addOutput(netValue, Address.fromBase58(params, toAddress));
+        tx.addOutput(netValue, Address.fromString(params, toAddress));
 
         SendRequest sendRequest = SendRequest.forTx(tx);
         sendRequest.fee = fee;
@@ -1137,14 +1183,14 @@ public class BtcWalletService extends WalletService {
             Preconditions.checkArgument(Restrictions.isAboveDust(buyerAmount),
                     "The buyerAmount is too low (dust limit).");
 
-            tx.addOutput(buyerAmount, Address.fromBase58(params, buyerAddressString));
+            tx.addOutput(buyerAmount, Address.fromString(params, buyerAddressString));
         }
         // sellerAmount can be 0
         if (sellerAmount.isPositive()) {
             Preconditions.checkArgument(Restrictions.isAboveDust(sellerAmount),
                     "The sellerAmount is too low (dust limit).");
 
-            tx.addOutput(sellerAmount, Address.fromBase58(params, sellerAddressString));
+            tx.addOutput(sellerAmount, Address.fromString(params, sellerAddressString));
         }
 
         SendRequest sendRequest = SendRequest.forTx(tx);

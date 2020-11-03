@@ -54,9 +54,10 @@ import bisq.core.dao.state.model.governance.Vote;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
 import bisq.core.util.FormattingUtils;
-import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.ParsingUtils;
+import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.coin.CoinFormatter;
+import bisq.core.util.validation.InputValidator;
 
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
@@ -285,6 +286,11 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
                 availableForVoting = Coin.valueOf(0);
             stakeInputTextField.setPromptText(Res.get("dao.proposal.myVote.stake.prompt",
                     bsqFormatter.formatCoinWithCode(availableForVoting)));
+
+            BsqValidator stakeInputTextFieldValidator = new BsqValidator(bsqFormatter);
+            stakeInputTextFieldValidator.setMaxValue(availableForVoting);
+
+            stakeInputTextField.setValidator(stakeInputTextFieldValidator);
         } else
             stakeInputTextField.setPromptText("");
     }
@@ -554,6 +560,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
                 if (optionalMyVote.isPresent()) {
                     MyVote myVote = optionalMyVote.get();
                     Coin stake = Coin.valueOf(myVote.getBlindVote().getStake());
+                    stakeInputTextField.setValidator(new InputValidator());
                     stakeInputTextField.setText(bsqFormatter.formatCoinWithCode(stake));
 
                     if (myVote.getBlindVoteTxId() != null) {
@@ -583,7 +590,11 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
 
         switch (daoFacade.phaseProperty().get()) {
             case PROPOSAL:
-                lastColumn.setText(Res.get("dao.proposal.table.header.remove"));
+                // We have a bug in removing a proposal which is not trivial to fix (p2p network layer). Until that bug is fixed
+                // it is better to not show the remove button as it confused users and a removed proposal will reappear with a
+                // high probability at the vote phase.
+                //lastColumn.setText(Res.get("dao.proposal.table.header.remove"));
+                lastColumn.setText("");
                 break;
             case BLIND_VOTE:
                 lastColumn.setText(Res.get("dao.proposal.table.header.myVote"));
@@ -834,25 +845,36 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
                             item.onPhaseChanged(currentPhase);
                             JFXButton iconButton = item.getIconButton();
                             if (iconButton != null) {
+                                ProposalsListItem.IconButtonType iconButtonType = (ProposalsListItem.IconButtonType) iconButton.getUserData();
                                 iconButton.setOnAction(e -> {
                                     selectedItem = item;
                                     if (areVoteButtonsVisible) {
-                                        if (iconButton.getUserData() == ProposalsListItem.IconButtonTypes.ACCEPT)
+                                        if (iconButtonType == ProposalsListItem.IconButtonType.ACCEPT)
                                             onReject();
-                                        else if (iconButton.getUserData() == ProposalsListItem.IconButtonTypes.REJECT)
+                                        else if (iconButtonType == ProposalsListItem.IconButtonType.REJECT)
                                             onIgnore();
-                                        else if (iconButton.getUserData() == ProposalsListItem.IconButtonTypes.IGNORE)
+                                        else if (iconButtonType == ProposalsListItem.IconButtonType.IGNORE)
                                             onAccept();
                                     } else {
-                                        if (iconButton.getUserData() == ProposalsListItem.IconButtonTypes.REMOVE_PROPOSAL)
+                                        if (iconButtonType == ProposalsListItem.IconButtonType.REMOVE_PROPOSAL)
                                             onRemoveProposal();
                                     }
                                 });
 
-                                if (!areVoteButtonsVisible && iconButton.getUserData() != ProposalsListItem.IconButtonTypes.REMOVE_PROPOSAL) {
+                                if (!areVoteButtonsVisible && iconButtonType != ProposalsListItem.IconButtonType.REMOVE_PROPOSAL) {
                                     iconButton.setMouseTransparent(true);
                                     iconButton.setStyle("-fx-cursor: default;");
                                 }
+
+                                // We have a bug in removing a proposal which is not trivial to fix (p2p network layer).
+                                // Until that bug is fixed
+                                // it is better to not show the remove button as it confused users and a removed proposal will reappear with a
+                                // high probability at the vote phase. The following lines can be removed once the bug is fixed.
+                                boolean showIcon = iconButtonType != null &&
+                                        iconButtonType != ProposalsListItem.IconButtonType.REMOVE_PROPOSAL;
+                                iconButton.setVisible(showIcon);
+                                iconButton.setManaged(showIcon);
+
                                 setGraphic(iconButton);
                             } else {
                                 setGraphic(null);

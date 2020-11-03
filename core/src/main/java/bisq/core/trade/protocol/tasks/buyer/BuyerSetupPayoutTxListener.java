@@ -26,8 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class BuyerSetupPayoutTxListener extends SetupPayoutTxListener {
-    @SuppressWarnings({"unused"})
-    public BuyerSetupPayoutTxListener(TaskRunner taskHandler, Trade trade) {
+    public BuyerSetupPayoutTxListener(TaskRunner<Trade> taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -45,7 +44,6 @@ public class BuyerSetupPayoutTxListener extends SetupPayoutTxListener {
 
     @Override
     protected void setState() {
-        trade.setState(Trade.State.BUYER_SAW_PAYOUT_TX_IN_NETWORK);
+        trade.setStateIfValidTransitionTo(Trade.State.BUYER_SAW_PAYOUT_TX_IN_NETWORK);
     }
-
 }

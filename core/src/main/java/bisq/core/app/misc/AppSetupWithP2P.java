@@ -19,12 +19,10 @@ package bisq.core.app.misc;
 
 import bisq.core.account.sign.SignedWitnessService;
 import bisq.core.account.witness.AccountAgeWitnessService;
-import bisq.core.app.SetupUtils;
 import bisq.core.app.TorSetup;
 import bisq.core.filter.FilterManager;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 
-import bisq.network.crypto.EncryptionService;
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.P2PServiceListener;
 import bisq.network.p2p.network.CloseConnectionReason;
@@ -32,7 +30,6 @@ import bisq.network.p2p.network.Connection;
 import bisq.network.p2p.network.ConnectionListener;
 
 import bisq.common.config.Config;
-import bisq.common.crypto.KeyRing;
 import bisq.common.proto.persistable.PersistedDataHost;
 
 import javax.inject.Inject;
@@ -56,16 +53,14 @@ public class AppSetupWithP2P extends AppSetup {
     protected ArrayList<PersistedDataHost> persistedDataHosts;
 
     @Inject
-    public AppSetupWithP2P(EncryptionService encryptionService,
-                           KeyRing keyRing,
-                           P2PService p2PService,
+    public AppSetupWithP2P(P2PService p2PService,
                            TradeStatisticsManager tradeStatisticsManager,
                            AccountAgeWitnessService accountAgeWitnessService,
                            SignedWitnessService signedWitnessService,
                            FilterManager filterManager,
                            TorSetup torSetup,
                            Config config) {
-        super(encryptionService, keyRing, config);
+        super(config);
         this.p2PService = p2PService;
         this.tradeStatisticsManager = tradeStatisticsManager;
         this.accountAgeWitnessService = accountAgeWitnessService;
@@ -77,13 +72,13 @@ public class AppSetupWithP2P extends AppSetup {
 
     @Override
     public void initPersistedDataHosts() {
-        torSetup.cleanupTorFiles();
         persistedDataHosts.add(p2PService);
 
         // we apply at startup the reading of persisted data but don't want to get it triggered in the constructor
         persistedDataHosts.forEach(e -> {
             try {
-                e.readPersisted();
+                e.readPersisted(() -> {
+                });
             } catch (Throwable e1) {
                 log.error("readPersisted error", e1);
             }
@@ -92,10 +87,8 @@ public class AppSetupWithP2P extends AppSetup {
 
     @Override
     protected void initBasicServices() {
-        SetupUtils.readFromResources(p2PService.getP2PDataStorage(), config).addListener((observable, oldValue, newValue) -> {
-            if (newValue)
-                startInitP2PNetwork();
-        });
+        String postFix = "_" + config.baseCurrencyNetwork.name();
+        p2PService.getP2PDataStorage().readFromResources(postFix, this::startInitP2PNetwork);
     }
 
     private void startInitP2PNetwork() {

@@ -211,6 +211,10 @@ public class FormattingUtils {
         return formatToPercent(value) + "%";
     }
 
+    public static String formatToRoundedPercentWithSymbol(double value) {
+        return formatToPercent(value, new DecimalFormat("#")) + "%";
+    }
+
     public static String formatPercentagePrice(double value) {
         return formatToPercentWithSymbol(value);
     }
@@ -219,6 +223,11 @@ public class FormattingUtils {
         DecimalFormat decimalFormat = new DecimalFormat("#.##");
         decimalFormat.setMinimumFractionDigits(2);
         decimalFormat.setMaximumFractionDigits(2);
+
+        return formatToPercent(value, decimalFormat);
+    }
+
+    public static String formatToPercent(double value, DecimalFormat decimalFormat) {
         return decimalFormat.format(MathUtils.roundDouble(value * 100.0, 2)).replace(",", ".");
     }
 

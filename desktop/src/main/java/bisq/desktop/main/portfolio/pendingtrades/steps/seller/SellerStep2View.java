@@ -24,26 +24,11 @@ import bisq.desktop.util.Layout;
 
 import bisq.core.locale.Res;
 import bisq.core.payment.payload.F2FAccountPayload;
-import bisq.core.trade.Trade;
 
-import bisq.common.Timer;
-import bisq.common.UserThread;
-
-import javafx.scene.control.Button;
-import javafx.scene.layout.GridPane;
-
-import java.util.Date;
-import java.util.concurrent.TimeUnit;
-
-import static bisq.desktop.util.FormBuilder.addButtonAfterGroup;
-import static bisq.desktop.util.FormBuilder.addMultilineLabel;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class SellerStep2View extends TradeStepView {
-
-    private GridPane refreshButtonPane;
-    private Timer timer;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, Initialisation
@@ -65,61 +50,16 @@ public class SellerStep2View extends TradeStepView {
             gridRow = F2FForm.addFormForBuyer(gridPane, --gridRow, model.dataModel.getSellersPaymentAccountPayload(),
                     model.dataModel.getTrade().getOffer(), Layout.COMPACT_FIRST_ROW_AND_GROUP_DISTANCE);
         }
-
-        addRefreshBlock();
     }
-
-    private void addRefreshBlock() {
-        refreshButtonPane = new GridPane();
-        addTitledGroupBg(refreshButtonPane, 0, 1,
-                Res.get("portfolio.pending.step2_seller.refresh"), Layout.COMPACT_GROUP_DISTANCE);
-        addMultilineLabel(refreshButtonPane, 1, Res.get("portfolio.pending.step2_seller.refreshInfo"),
-                Layout.COMPACT_FIRST_ROW_DISTANCE);
-        Button refreshButton = addButtonAfterGroup(refreshButtonPane, 2, Res.get("portfolio.pending.step2_seller.refresh"));
-        refreshButton.setOnAction(event -> onRefreshButton());
-
-        GridPane.setRowIndex(refreshButtonPane, ++gridRow);
-        GridPane.setColumnIndex(refreshButtonPane, 0);
-        GridPane.setColumnSpan(refreshButtonPane, 2);
-        gridPane.getChildren().add(refreshButtonPane);
-    }
-
 
     @Override
     public void activate() {
         super.activate();
-        activateRefreshButton();
     }
 
     @Override
     public void deactivate() {
         super.deactivate();
-        deActivateRefreshButtonTimer();
-    }
-
-    private void activateRefreshButton() {
-        checkNotNull(model.dataModel.getTrade(), "No trade found");
-
-        Trade trade = model.dataModel.getTrade();
-        var timeToNextRefresh =
-                trade.getLastRefreshRequestDate() + trade.getRefreshInterval() - new Date().getTime();
-        if (timeToNextRefresh <= 0) {
-            refreshButtonPane.setVisible(true);
-        } else {
-            refreshButtonPane.setVisible(false);
-            timer = UserThread.runAfter(this::activateRefreshButton, timeToNextRefresh, TimeUnit.MILLISECONDS);
-        }
-    }
-
-    private void deActivateRefreshButtonTimer() {
-        if (timer != null) {
-            timer.stop();
-        }
-    }
-
-    private void onRefreshButton() {
-        model.dataModel.refreshTradeState();
-        activateRefreshButton();
     }
 
 
@@ -134,7 +74,7 @@ public class SellerStep2View extends TradeStepView {
 
     @Override
     protected String getInfoText() {
-        return Res.get("portfolio.pending.step2_seller.waitPayment.msg", model.dataModel.getCurrencyCode());
+        return Res.get("portfolio.pending.step2_seller.waitPayment.msg", getCurrencyCode(trade));
     }
 
 
@@ -145,7 +85,7 @@ public class SellerStep2View extends TradeStepView {
     @Override
     protected String getFirstHalfOverWarnText() {
         return Res.get("portfolio.pending.step2_seller.warn",
-                model.dataModel.getCurrencyCode(),
+                getCurrencyCode(trade),
                 model.getDateForOpenDispute());
     }
 

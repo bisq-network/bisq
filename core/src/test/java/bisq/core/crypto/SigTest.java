@@ -21,7 +21,7 @@ import bisq.common.crypto.CryptoException;
 import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.KeyStorage;
 import bisq.common.crypto.Sig;
-import bisq.common.storage.FileUtil;
+import bisq.common.file.FileUtil;
 
 import java.io.File;
 import java.io.IOException;
@@ -82,7 +82,7 @@ public class SigTest {
                 assertTrue(false);
             }
         }
-        log.trace("took " + (System.currentTimeMillis() - ts) + " ms.");
+        log.trace("took {} ms.", System.currentTimeMillis() - ts);
     }
 }
 

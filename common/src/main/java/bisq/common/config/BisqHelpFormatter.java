@@ -110,7 +110,7 @@ public class BisqHelpFormatter implements HelpFormatter {
         // without any spaces (e.g. a URL) are allowed to overflow the 80-char margin.
         while (remainder.length() > 72) {
             int idxFirstSpace = remainder.indexOf(' ');
-            int chunkLen = idxFirstSpace == -1 ? remainder.length() : idxFirstSpace > 73 ? idxFirstSpace : 73;
+            int chunkLen = idxFirstSpace == -1 ? remainder.length() : Math.max(idxFirstSpace, 73);
             String chunk = remainder.substring(0, chunkLen);
             int idxLastSpace = chunk.lastIndexOf(' ');
             int idxBreak = idxLastSpace > 0 ? idxLastSpace : chunk.length();

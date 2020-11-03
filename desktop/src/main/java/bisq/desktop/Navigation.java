@@ -22,9 +22,9 @@ import bisq.desktop.common.view.ViewPath;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.market.MarketView;
 
+import bisq.common.persistence.PersistenceManager;
 import bisq.common.proto.persistable.NavigationPath;
 import bisq.common.proto.persistable.PersistedDataHost;
-import bisq.common.storage.Storage;
 
 import com.google.inject.Inject;
 
@@ -57,7 +57,7 @@ public final class Navigation implements PersistedDataHost {
     // New listeners can be added during iteration so we use CopyOnWriteArrayList to
     // prevent invalid array modification
     private final CopyOnWriteArraySet<Listener> listeners = new CopyOnWriteArraySet<>();
-    private final Storage<NavigationPath> storage;
+    private final PersistenceManager<NavigationPath> persistenceManager;
     private ViewPath currentPath;
     // Used for returning to the last important view. After setup is done we want to
     // return to the last opened view (e.g. sell/buy)
@@ -72,30 +72,33 @@ public final class Navigation implements PersistedDataHost {
 
 
     @Inject
-    public Navigation(Storage<NavigationPath> storage) {
-        this.storage = storage;
-        storage.setNumMaxBackupFiles(3);
+    public Navigation(PersistenceManager<NavigationPath> persistenceManager) {
+        this.persistenceManager = persistenceManager;
+
+        persistenceManager.initialize(navigationPath, PersistenceManager.Source.PRIVATE_LOW_PRIO);
     }
 
     @Override
-    public void readPersisted() {
-        NavigationPath persisted = storage.initAndGetPersisted(navigationPath, "NavigationPath", 300);
-        if (persisted != null) {
-            List<Class<? extends View>> viewClasses = persisted.getPath().stream()
-                    .map(className -> {
-                        try {
-                            return (Class<? extends View>) Class.forName(className).asSubclass(View.class);
-                        } catch (ClassNotFoundException e) {
-                            log.warn("Could not find the viewPath class {}; exception: {}", className, e);
-                        }
-                        return null;
-                    })
-                    .filter(Objects::nonNull)
-                    .collect(Collectors.toList());
+    public void readPersisted(Runnable completeHandler) {
+        persistenceManager.readPersisted(persisted -> {
+                    List<Class<? extends View>> viewClasses = persisted.getPath().stream()
+                            .map(className -> {
+                                try {
+                                    return (Class<? extends View>) Class.forName(className).asSubclass(View.class);
+                                } catch (ClassNotFoundException e) {
+                                    log.warn("Could not find the viewPath class {}; exception: {}", className, e);
+                                }
+                                return null;
+                            })
+                            .filter(Objects::nonNull)
+                            .collect(Collectors.toList());
 
-            if (!viewClasses.isEmpty())
-                previousPath = new ViewPath(viewClasses);
-        }
+                    if (!viewClasses.isEmpty()) {
+                        previousPath = new ViewPath(viewClasses);
+                    }
+                    completeHandler.run();
+                },
+                completeHandler);
     }
 
     @SafeVarargs
@@ -134,16 +137,16 @@ public final class Navigation implements PersistedDataHost {
 
         currentPath = newPath;
         previousPath = currentPath;
-        queueUpForSave();
         listeners.forEach((e) -> e.onNavigationRequested(currentPath));
         listeners.forEach((e) -> e.onNavigationRequested(currentPath, data));
+        requestPersistence();
     }
 
-    private void queueUpForSave() {
+    private void requestPersistence() {
         if (currentPath.tip() != null) {
-            navigationPath.setPath(currentPath.stream().map(Class::getName).collect(Collectors.toList()));
+            navigationPath.setPath(currentPath.stream().map(Class::getName).collect(Collectors.toUnmodifiableList()));
         }
-        storage.queueUpForSave(navigationPath, 1000);
+        persistenceManager.requestPersistence();
     }
 
     public void navigateToPreviousVisitedView() {

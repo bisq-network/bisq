@@ -18,7 +18,5 @@
 package bisq.common.taskrunner;
 
 public interface Model {
-    void persist();
-
     void onComplete();
 }

@@ -17,6 +17,7 @@
 
 package bisq.network.p2p;
 
+import bisq.network.p2p.storage.messages.BroadcastMessage;
 import bisq.network.p2p.storage.payload.CapabilityRequiringPayload;
 
 import bisq.common.app.Capabilities;
@@ -36,12 +37,16 @@ import lombok.Value;
 
 @EqualsAndHashCode(callSuper = true)
 @Value
-public final class BundleOfEnvelopes extends NetworkEnvelope implements ExtendedDataSizePermission, CapabilityRequiringPayload {
+public final class BundleOfEnvelopes extends BroadcastMessage implements ExtendedDataSizePermission, CapabilityRequiringPayload {
 
     private final List<NetworkEnvelope> envelopes;
 
     public BundleOfEnvelopes() {
         this(new ArrayList<>(), Version.getP2PMessageVersion());
+    }
+
+    public BundleOfEnvelopes(List<NetworkEnvelope> envelopes) {
+        this(envelopes, Version.getP2PMessageVersion());
     }
 
     public void add(NetworkEnvelope networkEnvelope) {
@@ -67,7 +72,9 @@ public final class BundleOfEnvelopes extends NetworkEnvelope implements Extended
                 .build();
     }
 
-    public static BundleOfEnvelopes fromProto(protobuf.BundleOfEnvelopes proto, NetworkProtoResolver resolver, int messageVersion) {
+    public static BundleOfEnvelopes fromProto(protobuf.BundleOfEnvelopes proto,
+                                              NetworkProtoResolver resolver,
+                                              int messageVersion) {
         List<NetworkEnvelope> envelopes = proto.getEnvelopesList()
                 .stream()
                 .map(envelope -> {

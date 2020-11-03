@@ -17,19 +17,13 @@
 
 package bisq.core.dao.governance.proposal.storage.appendonly;
 
-import bisq.network.p2p.storage.P2PDataStorage;
-import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
-
-import bisq.common.proto.persistable.PersistableEnvelope;
+import bisq.network.p2p.storage.persistence.PersistableNetworkPayloadStore;
 
 import com.google.protobuf.Message;
 
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 
@@ -39,9 +33,7 @@ import lombok.extern.slf4j.Slf4j;
  * definition and provide a hashMap for the domain access.
  */
 @Slf4j
-public class ProposalStore implements PersistableEnvelope {
-    @Getter
-    private Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> map = new ConcurrentHashMap<>();
+public class ProposalStore extends PersistableNetworkPayloadStore<ProposalPayload> {
 
     ProposalStore() {
     }
@@ -52,7 +44,7 @@ public class ProposalStore implements PersistableEnvelope {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private ProposalStore(List<ProposalPayload> list) {
-        list.forEach(item -> map.put(new P2PDataStorage.ByteArray(item.getHash()), item));
+        super(list);
     }
 
     public Message toProtoMessage() {
@@ -69,13 +61,9 @@ public class ProposalStore implements PersistableEnvelope {
         return protobuf.ProposalStore.newBuilder().addAllItems(protoList);
     }
 
-    public static PersistableEnvelope fromProto(protobuf.ProposalStore proto) {
+    public static ProposalStore fromProto(protobuf.ProposalStore proto) {
         List<ProposalPayload> list = proto.getItemsList().stream()
                 .map(ProposalPayload::fromProto).collect(Collectors.toList());
         return new ProposalStore(list);
-    }
-
-    public boolean containsKey(P2PDataStorage.ByteArray hash) {
-        return map.containsKey(hash);
     }
 }

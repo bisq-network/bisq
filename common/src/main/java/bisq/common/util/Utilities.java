@@ -17,8 +17,6 @@
 
 package bisq.common.util;
 
-import bisq.common.crypto.LimitedKeyStrengthException;
-
 import org.bitcoinj.core.Utils;
 
 import com.google.gson.ExclusionStrategy;
@@ -42,12 +40,12 @@ import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 
-import javax.crypto.Cipher;
-
-import java.security.NoSuchAlgorithmException;
+import java.text.DecimalFormat;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+
+import java.nio.file.Paths;
 
 import java.io.File;
 import java.io.IOException;
@@ -56,21 +54,27 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashSet;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.awt.Desktop.Action;
 import static java.awt.Desktop.getDesktop;
@@ -78,7 +82,6 @@ import static java.awt.Desktop.isDesktopSupported;
 
 @Slf4j
 public class Utilities {
-    // TODO check out Jackson lib
     public static String objectToJson(Object object) {
         Gson gson = new GsonBuilder()
                 .setExclusionStrategies(new AnnotationExclusionStrategy())
@@ -89,12 +92,16 @@ public class Utilities {
         return gson.toJson(object);
     }
 
-    public static ListeningExecutorService getSingleThreadExecutor(String name) {
+    public static ExecutorService getSingleThreadExecutor(String name) {
         final ThreadFactory threadFactory = new ThreadFactoryBuilder()
                 .setNameFormat(name)
                 .setDaemon(true)
                 .build();
-        return MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor(threadFactory));
+        return Executors.newSingleThreadExecutor(threadFactory);
+    }
+
+    public static ListeningExecutorService getSingleThreadListeningExecutor(String name) {
+        return MoreExecutors.listeningDecorator(getSingleThreadExecutor(name));
     }
 
     public static ListeningExecutorService getListeningExecutorService(String name,
@@ -162,6 +169,19 @@ public class Utilities {
         return getOSName().contains("win");
     }
 
+    /**
+     * @return True, if Bisq is running on a virtualized OS within Qubes, false otherwise
+     */
+    public static boolean isQubesOS() {
+        // For Linux qubes, "os.version" looks like "4.19.132-1.pvops.qubes.x86_64"
+        // The presence of the "qubes" substring indicates this Linux is running as a qube
+        // This is the case for all 3 virtualization modes (PV, PVH, HVM)
+        // In addition, this works for both simple AppVMs, as well as for StandaloneVMs
+        // TODO This might not work for detecting Qubes virtualization for other OSes
+        // like Windows
+        return getOSVersion().contains("qubes");
+    }
+
     public static boolean isOSX() {
         return getOSName().contains("mac") || getOSName().contains("darwin");
     }
@@ -180,6 +200,48 @@ public class Utilities {
 
     private static String getOSName() {
         return System.getProperty("os.name").toLowerCase(Locale.US);
+    }
+
+    public static String getOSVersion() {
+        return System.getProperty("os.version").toLowerCase(Locale.US);
+    }
+
+    /**
+     * Returns the well-known "user data directory" for the current operating system.
+     */
+    public static File getUserDataDir() {
+        if (Utilities.isWindows())
+            return new File(System.getenv("APPDATA"));
+
+        if (Utilities.isOSX())
+            return Paths.get(System.getProperty("user.home"), "Library", "Application Support").toFile();
+
+        // *nix
+        return Paths.get(System.getProperty("user.home"), ".local", "share").toFile();
+    }
+
+    public static int getMinorVersion() throws InvalidVersionException {
+        String version = getOSVersion();
+        String[] tokens = version.split("\\.");
+        try {
+            checkArgument(tokens.length > 1);
+            return Integer.parseInt(tokens[1]);
+        } catch (IllegalArgumentException e) {
+            printSysInfo();
+            throw new InvalidVersionException("Version is not in expected format. Version=" + version);
+        }
+    }
+
+    public static int getMajorVersion() throws InvalidVersionException {
+        String version = getOSVersion();
+        String[] tokens = version.split("\\.");
+        try {
+            checkArgument(tokens.length > 0);
+            return Integer.parseInt(tokens[0]);
+        } catch (IllegalArgumentException e) {
+            printSysInfo();
+            throw new InvalidVersionException("Version is not in expected format. Version=" + version);
+        }
     }
 
     public static String getOSArchitecture() {
@@ -330,6 +392,10 @@ public class Utilities {
         return new KeyCodeCombination(keyCode, KeyCombination.ALT_DOWN).match(keyEvent);
     }
 
+    public static boolean isCtrlShiftPressed(KeyCode keyCode, KeyEvent keyEvent) {
+        return new KeyCodeCombination(keyCode, KeyCombination.CONTROL_DOWN, KeyCombination.SHIFT_DOWN).match(keyEvent);
+    }
+
     public static byte[] concatenateByteArrays(byte[] array1, byte[] array2) {
         return ArrayUtils.addAll(array1, array2);
     }
@@ -381,13 +447,13 @@ public class Utilities {
         return toTruncatedString(message, maxLength, true);
     }
 
-    public static String toTruncatedString(Object message, int maxLength, boolean removeLinebreaks) {
+    public static String toTruncatedString(Object message, int maxLength, boolean removeLineBreaks) {
         if (message == null)
             return "null";
 
 
         String result = StringUtils.abbreviate(message.toString(), maxLength);
-        if (removeLinebreaks)
+        if (removeLineBreaks)
             return result.replace("\n", "");
 
         return result;
@@ -452,4 +518,18 @@ public class Utilities {
         }
         return result;
     }
+
+    // Helper to filter unique elements by key
+    public static <T> Predicate<T> distinctByKey(Function<? super T, Object> keyExtractor) {
+        Map<Object, Boolean> map = new ConcurrentHashMap<>();
+        return t -> map.putIfAbsent(keyExtractor.apply(t), Boolean.TRUE) == null;
+    }
+
+    public static String readableFileSize(long size) {
+        if (size <= 0) return "0";
+        String[] units = new String[]{"B", "kB", "MB", "GB", "TB"};
+        int digitGroups = (int) (Math.log10(size) / Math.log10(1024));
+        return new DecimalFormat("#,##0.###").format(size / Math.pow(1024, digitGroups)) + " " + units[digitGroups];
+    }
+
 }

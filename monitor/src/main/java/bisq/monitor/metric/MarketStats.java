@@ -20,30 +20,15 @@ package bisq.monitor.metric;
 import bisq.monitor.Metric;
 import bisq.monitor.Reporter;
 
-import bisq.asset.Asset;
-import bisq.asset.AssetRegistry;
-
-import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
-
-import org.berndpruenster.netlayer.tor.TorCtlException;
-
-import com.runjva.sourceforge.jsocks.protocol.SocksSocket;
-
-import java.net.HttpURLConnection;
-import java.net.Socket;
 import java.net.URL;
 import java.net.URLConnection;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
 
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
@@ -59,14 +44,13 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class MarketStats extends Metric {
-
+    private static final String MARKETS_BISQ_NETWORK = "https://markets.bisq.network";
     // poor mans JSON parser
     private final Pattern marketPattern = Pattern.compile("\"market\" ?: ?\"([a-z_]+)\"");
     private final Pattern amountPattern = Pattern.compile("\"amount\" ?: ?\"([\\d\\.]+)\"");
     private final Pattern volumePattern = Pattern.compile("\"volume\" ?: ?\"([\\d\\.]+)\"");
     private final Pattern timestampPattern = Pattern.compile("\"trade_date\" ?: ?([\\d]+)");
 
-    private final String marketApi = "https://markets.bisq.network";
     private Long lastRun = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(15));
 
     public MarketStats(Reporter reporter) {
@@ -80,12 +64,12 @@ public class MarketStats extends Metric {
             Map<String, String> result = new HashMap<>();
 
             // assemble query
-            Long now = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis());
+            long now = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis());
             String query = "/api/trades?format=json&market=all&timestamp_from=" + lastRun + "&timestamp_to=" + now;
             lastRun = now; // thought about adding 1 second but what if a trade is done exactly in this one second?
 
             // connect
-            URLConnection connection = new URL(marketApi + query).openConnection();
+            URLConnection connection = new URL(MARKETS_BISQ_NETWORK + query).openConnection();
 
             // prepare to receive data
             BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
@@ -110,7 +94,6 @@ public class MarketStats extends Metric {
         } catch (IllegalStateException ignore) {
             // no match found
         } catch (IOException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
     }

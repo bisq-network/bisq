@@ -20,7 +20,6 @@ package bisq.price.spot.providers;
 import bisq.price.spot.ExchangeRate;
 import bisq.price.spot.ExchangeRateProvider;
 
-import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
@@ -32,7 +31,6 @@ import java.util.Set;
  * Stub implementation of CoinMarketCap price provider to prevent NullPointerExceptions within legacy clients
  */
 @Component
-@Order(3)
 class CoinMarketCap extends ExchangeRateProvider {
 
     public CoinMarketCap() {

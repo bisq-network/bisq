@@ -94,7 +94,7 @@ public class SelectDepositTxWindow extends Overlay<SelectDepositTxWindow> {
         transactionsComboBox.setConverter(new StringConverter<>() {
             @Override
             public String toString(Transaction transaction) {
-                return transaction.getHashAsString();
+                return transaction.getTxId().toString();
             }
 
             @Override
@@ -104,7 +104,9 @@ public class SelectDepositTxWindow extends Overlay<SelectDepositTxWindow> {
         });
         transactionsComboBox.setItems(FXCollections.observableArrayList(transactions));
         transactionsComboBox.setOnAction(event -> {
-            selectHandlerOptional.get().accept(transactionsComboBox.getSelectionModel().getSelectedItem());
+            if (selectHandlerOptional.isPresent()) {
+                selectHandlerOptional.get().accept(transactionsComboBox.getSelectionModel().getSelectedItem());
+            }
             hide();
         });
     }

@@ -69,7 +69,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
     @FXML
     TableColumn<OpenOfferListItem, OpenOfferListItem> priceColumn, amountColumn, volumeColumn,
             marketColumn, directionColumn, dateColumn, offerIdColumn, deactivateItemColumn,
-            removeItemColumn, editItemColumn;
+            removeItemColumn, editItemColumn, paymentMethodColumn;
     private final Navigation navigation;
     private final OfferDetailsWindow offerDetailsWindow;
     private SortedList<OpenOfferListItem> sortedList;
@@ -84,6 +84,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
 
     @Override
     public void initialize() {
+        paymentMethodColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.paymentMethod")));
         priceColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.price")));
         amountColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.BTCMinMax")));
         volumeColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.amountMinMax")));
@@ -101,6 +102,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
         setPriceColumnCellFactory();
         setAmountColumnCellFactory();
         setVolumeColumnCellFactory();
+        setPaymentMethodColumnCellFactory();
         setDateColumnCellFactory();
         setDeactivateColumnCellFactory();
         setEditColumnCellFactory();
@@ -116,6 +118,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
         priceColumn.setComparator(Comparator.comparing(o -> o.getOffer().getPrice(), Comparator.nullsFirst(Comparator.naturalOrder())));
         volumeColumn.setComparator(Comparator.comparing(o -> o.getOffer().getVolume(), Comparator.nullsFirst(Comparator.naturalOrder())));
         dateColumn.setComparator(Comparator.comparing(o -> o.getOffer().getDate()));
+        paymentMethodColumn.setComparator(Comparator.comparing(o -> o.getOffer().getPaymentMethod().getId()));
 
         dateColumn.setSortType(TableColumn.SortType.DESCENDING);
         tableView.getSortOrder().add(dateColumn);
@@ -321,6 +324,31 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                                 if (item != null) {
                                     if (model.isDeactivated(item)) getStyleClass().add("offer-disabled");
                                     setGraphic(new AutoTooltipLabel(model.getVolume(item)));
+                                } else {
+                                    setGraphic(null);
+                                }
+                            }
+                        };
+                    }
+                });
+    }
+
+    private void setPaymentMethodColumnCellFactory() {
+        paymentMethodColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
+        paymentMethodColumn.setCellFactory(
+                new Callback<>() {
+                    @Override
+                    public TableCell<OpenOfferListItem, OpenOfferListItem> call(
+                            TableColumn<OpenOfferListItem, OpenOfferListItem> column) {
+                        return new TableCell<>() {
+                            @Override
+                            public void updateItem(final OpenOfferListItem item, boolean empty) {
+                                super.updateItem(item, empty);
+                                getStyleClass().removeAll("offer-disabled");
+
+                                if (item != null) {
+                                    if (model.isDeactivated(item)) getStyleClass().add("offer-disabled");
+                                    setGraphic(new AutoTooltipLabel(model.getPaymentMethod(item)));
                                 } else {
                                     setGraphic(null);
                                 }

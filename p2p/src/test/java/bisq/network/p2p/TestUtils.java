@@ -21,7 +21,7 @@ import bisq.common.Payload;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.network.NetworkPayload;
 import bisq.common.proto.network.NetworkProtoResolver;
-import bisq.common.proto.persistable.PersistableEnvelope;
+import bisq.common.proto.persistable.PersistablePayload;
 
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -168,7 +168,7 @@ public class TestUtils {
             }
 
             @Override
-            public PersistableEnvelope fromProto(protobuf.PersistableNetworkPayload persistable) {
+            public PersistablePayload fromProto(protobuf.PersistableNetworkPayload persistable) {
                 return null;
             }
 
@@ -188,7 +188,9 @@ public class TestUtils {
             }
 
             @Override
-            public Clock getClock() { return null; }
+            public Clock getClock() {
+                return null;
+            }
         };
     }
 }

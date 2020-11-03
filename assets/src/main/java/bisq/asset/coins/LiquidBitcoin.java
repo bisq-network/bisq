@@ -19,12 +19,12 @@ package bisq.asset.coins;
 
 import bisq.asset.AltCoinAccountDisclaimer;
 import bisq.asset.Coin;
-import bisq.asset.RegexAddressValidator;
+import bisq.asset.LiquidBitcoinAddressValidator;
 
 @AltCoinAccountDisclaimer("account.altcoin.popup.liquidbitcoin.msg")
 public class LiquidBitcoin extends Coin {
 
     public LiquidBitcoin() {
-        super("Liquid Bitcoin", "L-BTC", new RegexAddressValidator("^([a-km-zA-HJ-NP-Z1-9]{26,35}|[a-km-zA-HJ-NP-Z1-9]{80}|[a-z]{2,5}1[ac-hj-np-z02-9]{8,87}|[A-Z]{2,5}1[AC-HJ-NP-Z02-9]{8,87})$", "validation.altcoin.liquidBitcoin.invalidAddress"));
+        super("Liquid Bitcoin", "L-BTC", new LiquidBitcoinAddressValidator());
     }
 }

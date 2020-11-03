@@ -57,6 +57,7 @@ import javafx.scene.PerspectiveCamera;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
+import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.ColumnConstraints;
@@ -65,6 +66,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.transform.Rotate;
 
@@ -84,9 +86,12 @@ import javafx.util.Duration;
 import java.io.File;
 import java.io.IOException;
 
+import java.util.ArrayList;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -168,6 +173,7 @@ public abstract class Overlay<T extends Overlay<T>> {
     protected String headLine, message, closeButtonText, actionButtonText,
             secondaryActionButtonText, dontShowAgainId, dontShowAgainText,
             truncatedMessage;
+    private ArrayList<String> messageHyperlinks;
     private String headlineStyle;
     protected Button actionButton, secondaryActionButton;
     private HBox buttonBox;
@@ -299,8 +305,7 @@ public abstract class Overlay<T extends Overlay<T>> {
         type = Type.Notification;
         if (headLine == null)
             this.headLine = Res.get("popup.headline.notification");
-        this.message = message;
-        setTruncatedMessage();
+        preProcessMessage(message);
         return cast();
     }
 
@@ -308,8 +313,7 @@ public abstract class Overlay<T extends Overlay<T>> {
         type = Type.Instruction;
         if (headLine == null)
             this.headLine = Res.get("popup.headline.instruction");
-        this.message = message;
-        setTruncatedMessage();
+        preProcessMessage(message);
         return cast();
     }
 
@@ -317,8 +321,7 @@ public abstract class Overlay<T extends Overlay<T>> {
         type = Type.Attention;
         if (headLine == null)
             this.headLine = Res.get("popup.headline.attention");
-        this.message = message;
-        setTruncatedMessage();
+        preProcessMessage(message);
         return cast();
     }
 
@@ -326,8 +329,7 @@ public abstract class Overlay<T extends Overlay<T>> {
         type = Type.BackgroundInfo;
         if (headLine == null)
             this.headLine = Res.get("popup.headline.backgroundInfo");
-        this.message = message;
-        setTruncatedMessage();
+        preProcessMessage(message);
         return cast();
     }
 
@@ -335,8 +337,7 @@ public abstract class Overlay<T extends Overlay<T>> {
         type = Type.Feedback;
         if (headLine == null)
             this.headLine = Res.get("popup.headline.feedback");
-        this.message = message;
-        setTruncatedMessage();
+        preProcessMessage(message);
         return cast();
     }
 
@@ -344,8 +345,7 @@ public abstract class Overlay<T extends Overlay<T>> {
         type = Type.Confirmation;
         if (headLine == null)
             this.headLine = Res.get("popup.headline.confirmation");
-        this.message = message;
-        setTruncatedMessage();
+        preProcessMessage(message);
         return cast();
     }
 
@@ -353,8 +353,7 @@ public abstract class Overlay<T extends Overlay<T>> {
         type = Type.Information;
         if (headLine == null)
             this.headLine = Res.get("popup.headline.information");
-        this.message = message;
-        setTruncatedMessage();
+        preProcessMessage(message);
         return cast();
     }
 
@@ -363,8 +362,7 @@ public abstract class Overlay<T extends Overlay<T>> {
 
         if (headLine == null)
             this.headLine = Res.get("popup.headline.warning");
-        this.message = message;
-        setTruncatedMessage();
+        preProcessMessage(message);
         return cast();
     }
 
@@ -374,8 +372,7 @@ public abstract class Overlay<T extends Overlay<T>> {
         width = 1100;
         if (headLine == null)
             this.headLine = Res.get("popup.headline.error");
-        this.message = message;
-        setTruncatedMessage();
+        preProcessMessage(message);
         return cast();
     }
 
@@ -386,8 +383,7 @@ public abstract class Overlay<T extends Overlay<T>> {
     }
 
     public T message(String message) {
-        this.message = message;
-        setTruncatedMessage();
+        preProcessMessage(message);
         return cast();
     }
 
@@ -830,6 +826,24 @@ public abstract class Overlay<T extends Overlay<T>> {
             GridPane.setColumnIndex(messageLabel, 0);
             GridPane.setColumnSpan(messageLabel, 2);
             gridPane.getChildren().add(messageLabel);
+            addFooter();
+        }
+    }
+
+    // footer contains optional hyperlinks extracted from the message
+    private void addFooter() {
+        if (messageHyperlinks != null && messageHyperlinks.size() > 0) {
+            VBox footerBox = new VBox();
+            GridPane.setRowIndex(footerBox, ++rowIndex);
+            GridPane.setColumnSpan(footerBox, 2);
+            GridPane.setMargin(footerBox, new Insets(buttonDistance, 0, 0, 0));
+            gridPane.getChildren().add(footerBox);
+            for (int i = 0; i < messageHyperlinks.size(); i++) {
+                Label label = new Label(String.format("[%d]", i + 1));
+                Hyperlink link = new Hyperlink(messageHyperlinks.get(i));
+                link.setOnAction(event -> GUIUtil.openWebPageNoPopup(link.getText()));
+                footerBox.getChildren().addAll(new HBox(label, link));
+            }
         }
     }
 
@@ -973,6 +987,26 @@ public abstract class Overlay<T extends Overlay<T>> {
         if (message != null && message.length() > maxChar)
             truncatedMessage = StringUtils.abbreviate(message, maxChar);
         else truncatedMessage = Objects.requireNonNullElse(message, "");
+    }
+
+    // separate a popup message from optional hyperlinks.  [bisq-network/bisq/pull/4637]
+    // hyperlinks are distinguished by [HYPERLINK:] tag
+    // referenced in order from within the message via [1], [2] etc.
+    // e.g. [HYPERLINK:https://bisq.wiki]
+    private void preProcessMessage(String message) {
+        Pattern pattern = Pattern.compile("\\[HYPERLINK:(.*?)\\]");
+        Matcher matcher = pattern.matcher(message);
+        String work = message;
+        while (matcher.find()) {  // extract hyperlinks & store in array
+            if (messageHyperlinks == null) {
+                messageHyperlinks = new ArrayList<>();
+            }
+            messageHyperlinks.add(matcher.group(1));
+            // replace hyperlink in message with [n] reference
+            work = work.replaceFirst(pattern.toString(), String.format("[%d]", messageHyperlinks.size()));
+        }
+        this.message = work;
+        setTruncatedMessage();
     }
 
     protected double getDuration(double duration) {

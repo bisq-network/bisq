@@ -2,6 +2,7 @@ package bisq.desktop.util.validation;
 
 import bisq.core.locale.Res;
 import bisq.core.util.validation.InputValidator;
+import bisq.core.util.validation.RegexValidator;
 
 import javax.inject.Inject;
 

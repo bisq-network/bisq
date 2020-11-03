@@ -293,6 +293,7 @@ class TxOutputParser {
                         long blindVoteFee = daoStateService.getParamValueAsCoin(Param.BLIND_VOTE_FEE, tempTxOutput.getBlockHeight()).value;
                         return availableInputValue == blindVoteFee;
                     }
+                    break;
                 case VOTE_REVEAL:
                     break;
                 case LOCKUP:

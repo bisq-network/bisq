@@ -27,7 +27,6 @@ import com.google.common.collect.Lists;
 
 import org.junit.Ignore;
 
-@SuppressWarnings("UnusedAssignment")
 public class UserPayloadModelVOTest {
     @Ignore("TODO InvalidKeySpecException at bisq.common.crypto.Sig.getPublicKeyFromBytes(Sig.java:135)")
     public void testRoundtrip() {
@@ -54,11 +53,19 @@ public class UserPayloadModelVOTest {
                 false,
                 null,
                 null,
-                "string",
-                new byte[]{10, 0, 0},
-                null,
                 Lists.newArrayList(),
+                Lists.newArrayList(),
+                Lists.newArrayList(),
+                Lists.newArrayList(),
+                null,
+                0,
+                null,
+                null,
+                null,
+                null,
+                false,
                 Lists.newArrayList()));
+
         vo.setRegisteredArbitrator(ArbitratorTest.getArbitratorMock());
         vo.setRegisteredMediator(MediatorTest.getMediatorMock());
         vo.setAcceptedArbitrators(Lists.newArrayList(ArbitratorTest.getArbitratorMock()));

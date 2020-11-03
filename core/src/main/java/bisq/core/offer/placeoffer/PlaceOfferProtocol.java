@@ -18,6 +18,7 @@
 package bisq.core.offer.placeoffer;
 
 import bisq.core.offer.placeoffer.tasks.AddToOfferBook;
+import bisq.core.offer.placeoffer.tasks.CheckNumberOfUnconfirmedTransactions;
 import bisq.core.offer.placeoffer.tasks.CreateMakerFeeTx;
 import bisq.core.offer.placeoffer.tasks.ValidateOffer;
 import bisq.core.trade.handlers.TransactionResultHandler;
@@ -71,11 +72,13 @@ public class PlaceOfferProtocol {
                                 },
                                 log::error);
                     }
+                    model.getOffer().setErrorMessage(errorMessage);
                     errorMessageHandler.handleErrorMessage(errorMessage);
                 }
         );
         taskRunner.addTasks(
                 ValidateOffer.class,
+                CheckNumberOfUnconfirmedTransactions.class,
                 CreateMakerFeeTx.class,
                 AddToOfferBook.class
         );

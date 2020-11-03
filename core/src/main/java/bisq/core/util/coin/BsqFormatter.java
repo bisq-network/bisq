@@ -31,9 +31,9 @@ import bisq.common.app.DevEnv;
 import bisq.common.config.Config;
 import bisq.common.util.MathUtils;
 
-import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.LegacyAddress;
 import org.bitcoinj.utils.MonetaryFormat;
 
 import javax.inject.Inject;
@@ -96,7 +96,7 @@ public class BsqFormatter implements CoinFormatter {
      * Returns the base-58 encoded String representation of this
      * object, including version and checksum bytes.
      */
-    public String getBsqAddressStringFromAddress(Address address) {
+    public String getBsqAddressStringFromAddress(LegacyAddress address) {
         final String addressString = address.toString();
         if (useBsqAddressFormat)
             return prefix + addressString;
@@ -105,12 +105,13 @@ public class BsqFormatter implements CoinFormatter {
 
     }
 
-    public Address getAddressFromBsqAddress(String encoded) {
+    public LegacyAddress getAddressFromBsqAddress(String encoded) {
+        String maybeUpdatedEncoded = encoded;
         if (useBsqAddressFormat)
-            encoded = encoded.substring(prefix.length(), encoded.length());
+            maybeUpdatedEncoded = encoded.substring(prefix.length(), encoded.length());
 
         try {
-            return Address.fromBase58(Config.baseCurrencyNetworkParameters(), encoded);
+            return LegacyAddress.fromBase58(Config.baseCurrencyNetworkParameters(), maybeUpdatedEncoded);
         } catch (AddressFormatException e) {
             throw new RuntimeException(e);
         }

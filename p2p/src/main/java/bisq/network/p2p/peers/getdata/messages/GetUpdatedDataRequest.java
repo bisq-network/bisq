@@ -23,8 +23,11 @@ import bisq.network.p2p.SendersNodeAddressMessage;
 import bisq.common.app.Version;
 import bisq.common.proto.ProtoUtil;
 
+import protobuf.NetworkEnvelope;
+
 import com.google.protobuf.ByteString;
 
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -32,11 +35,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
-
-
-import protobuf.NetworkEnvelope;
+import javax.annotation.Nullable;
 
 @Slf4j
 @EqualsAndHashCode(callSuper = true)
@@ -50,6 +49,7 @@ public final class GetUpdatedDataRequest extends GetDataRequest implements Sende
         this(senderNodeAddress,
                 nonce,
                 excludedKeys,
+                Version.VERSION,
                 Version.getP2PMessageVersion());
     }
 
@@ -61,35 +61,41 @@ public final class GetUpdatedDataRequest extends GetDataRequest implements Sende
     private GetUpdatedDataRequest(NodeAddress senderNodeAddress,
                                   int nonce,
                                   Set<byte[]> excludedKeys,
+                                  @Nullable String version,
                                   int messageVersion) {
         super(messageVersion,
                 nonce,
-                excludedKeys);
-        checkNotNull(senderNodeAddress, "senderNodeAddress must not be null at GetUpdatedDataRequest");
+                excludedKeys,
+                version);
         this.senderNodeAddress = senderNodeAddress;
     }
 
     @Override
     public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
-        final protobuf.GetUpdatedDataRequest.Builder builder = protobuf.GetUpdatedDataRequest.newBuilder()
+        protobuf.GetUpdatedDataRequest.Builder builder = protobuf.GetUpdatedDataRequest.newBuilder()
                 .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
                 .setNonce(nonce)
                 .addAllExcludedKeys(excludedKeys.stream()
                         .map(ByteString::copyFrom)
                         .collect(Collectors.toList()));
-
+        Optional.ofNullable(version).ifPresent(builder::setVersion);
         NetworkEnvelope proto = getNetworkEnvelopeBuilder()
                 .setGetUpdatedDataRequest(builder)
                 .build();
-        log.info("Sending a GetUpdatedDataRequest with {} kB", proto.getSerializedSize() / 1000d);
+        log.info("Sending a GetUpdatedDataRequest with {} kB and {} excluded key entries. Requesters version={}",
+                proto.getSerializedSize() / 1000d, excludedKeys.size(), version);
         return proto;
     }
 
     public static GetUpdatedDataRequest fromProto(protobuf.GetUpdatedDataRequest proto, int messageVersion) {
-        log.info("Received a GetUpdatedDataRequest with {} kB", proto.getSerializedSize() / 1000d);
+        Set<byte[]> excludedKeys = ProtoUtil.byteSetFromProtoByteStringList(proto.getExcludedKeysList());
+        String requestersVersion = ProtoUtil.stringOrNullFromProto(proto.getVersion());
+        log.info("Received a GetUpdatedDataRequest with {} kB and {} excluded key entries. Requesters version={}",
+                proto.getSerializedSize() / 1000d, excludedKeys.size(), requestersVersion);
         return new GetUpdatedDataRequest(NodeAddress.fromProto(proto.getSenderNodeAddress()),
                 proto.getNonce(),
-                ProtoUtil.byteSetFromProtoByteStringList(proto.getExcludedKeysList()),
+                excludedKeys,
+                requestersVersion,
                 messageVersion);
     }
 }

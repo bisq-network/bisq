@@ -38,8 +38,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class ProcessMediatedPayoutTxPublishedMessage extends TradeTask {
-    @SuppressWarnings({"unused"})
-    public ProcessMediatedPayoutTxPublishedMessage(TaskRunner taskHandler, Trade trade) {
+    public ProcessMediatedPayoutTxPublishedMessage(TaskRunner<Trade> taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -75,7 +74,6 @@ public class ProcessMediatedPayoutTxPublishedMessage extends TradeTask {
             } else {
                 log.info("We got the payout tx already set from BuyerSetupPayoutTxListener and do nothing here. trade ID={}", trade.getId());
             }
-            processModel.removeMailboxMessageAfterProcessing(trade);
             complete();
         } catch (Throwable t) {
             failed(t);

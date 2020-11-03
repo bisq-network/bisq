@@ -19,7 +19,6 @@ package bisq.desktop.main.portfolio.editoffer;
 
 
 import bisq.desktop.Navigation;
-import bisq.desktop.main.offer.MakerFeeProvider;
 import bisq.desktop.main.offer.MutableOfferDataModel;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
@@ -31,12 +30,14 @@ import bisq.core.locale.TradeCurrency;
 import bisq.core.offer.CreateOfferService;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
+import bisq.core.offer.OfferUtil;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.proto.persistable.CorePersistenceProtoResolver;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.PriceFeedService;
+import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
 import bisq.core.util.FormattingUtils;
@@ -63,6 +64,7 @@ class EditOfferDataModel extends MutableOfferDataModel {
     @Inject
     EditOfferDataModel(CreateOfferService createOfferService,
                        OpenOfferManager openOfferManager,
+                       OfferUtil offerUtil,
                        BtcWalletService btcWalletService,
                        BsqWalletService bsqWalletService,
                        Preferences preferences,
@@ -73,10 +75,12 @@ class EditOfferDataModel extends MutableOfferDataModel {
                        FeeService feeService,
                        @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
                        CorePersistenceProtoResolver corePersistenceProtoResolver,
-                       MakerFeeProvider makerFeeProvider,
+                       TradeStatisticsManager tradeStatisticsManager,
                        Navigation navigation) {
+
         super(createOfferService,
                 openOfferManager,
+                offerUtil,
                 btcWalletService,
                 bsqWalletService,
                 preferences,
@@ -86,7 +90,7 @@ class EditOfferDataModel extends MutableOfferDataModel {
                 accountAgeWitnessService,
                 feeService,
                 btcFormatter,
-                makerFeeProvider,
+                tradeStatisticsManager,
                 navigation);
         this.corePersistenceProtoResolver = corePersistenceProtoResolver;
     }
@@ -175,28 +179,32 @@ class EditOfferDataModel extends MutableOfferDataModel {
     }
 
     public void onPublishOffer(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+        // editedPayload is a merge of the original offerPayload and newOfferPayload
+        // fields which are editable are merged in from newOfferPayload (such as payment account details)
+        // fields which cannot change (most importantly BTC amount) are sourced from the original offerPayload
         final OfferPayload offerPayload = openOffer.getOffer().getOfferPayload();
+        final OfferPayload newOfferPayload = createAndGetOffer().getOfferPayload();
         final OfferPayload editedPayload = new OfferPayload(offerPayload.getId(),
                 offerPayload.getDate(),
                 offerPayload.getOwnerNodeAddress(),
                 offerPayload.getPubKeyRing(),
                 offerPayload.getDirection(),
-                getPrice().get().getValue(),
-                getMarketPriceMargin(),
-                isUseMarketBasedPriceValue(),
-                getAmount().get().getValue(),
-                getMinAmount().get().getValue(),
-                offerPayload.getBaseCurrencyCode(),
-                offerPayload.getCounterCurrencyCode(),
+                newOfferPayload.getPrice(),
+                newOfferPayload.getMarketPriceMargin(),
+                newOfferPayload.isUseMarketBasedPrice(),
+                offerPayload.getAmount(),
+                offerPayload.getMinAmount(),
+                newOfferPayload.getBaseCurrencyCode(),
+                newOfferPayload.getCounterCurrencyCode(),
                 offerPayload.getArbitratorNodeAddresses(),
                 offerPayload.getMediatorNodeAddresses(),
-                offerPayload.getPaymentMethodId(),
-                offerPayload.getMakerPaymentAccountId(),
+                newOfferPayload.getPaymentMethodId(),
+                newOfferPayload.getMakerPaymentAccountId(),
                 offerPayload.getOfferFeePaymentTxId(),
-                offerPayload.getCountryCode(),
-                offerPayload.getAcceptedCountryCodes(),
-                offerPayload.getBankId(),
-                offerPayload.getAcceptedBankIds(),
+                newOfferPayload.getCountryCode(),
+                newOfferPayload.getAcceptedCountryCodes(),
+                newOfferPayload.getBankId(),
+                newOfferPayload.getAcceptedBankIds(),
                 offerPayload.getVersionNr(),
                 offerPayload.getBlockHeightAtOfferCreation(),
                 offerPayload.getTxFee(),

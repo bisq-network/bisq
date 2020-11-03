@@ -19,8 +19,6 @@ package bisq.core.payment.payload;
 
 import bisq.core.locale.Res;
 
-import bisq.common.util.CollectionUtils;
-
 import com.google.protobuf.Message;
 
 import com.google.common.base.Joiner;
@@ -34,14 +32,12 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.annotation.Nullable;
-
 @EqualsAndHashCode(callSuper = true)
 @ToString
 @Getter
 @Slf4j
 public final class SpecificBanksAccountPayload extends BankAccountPayload {
-    // Dont use a set here as we need a deterministic ordering, otherwise the contract hash does not match
+    // Don't use a set here as we need a deterministic ordering, otherwise the contract hash does not match
     private ArrayList<String> acceptedBanks = new ArrayList<>();
 
     public SpecificBanksAccountPayload(String paymentMethod, String id) {
@@ -66,7 +62,7 @@ public final class SpecificBanksAccountPayload extends BankAccountPayload {
                                         String nationalAccountId,
                                         ArrayList<String> acceptedBanks,
                                         long maxTradePeriod,
-                                        @Nullable Map<String, String> excludeFromJsonDataMap) {
+                                        Map<String, String> excludeFromJsonDataMap) {
         super(paymentMethodName,
                 id,
                 countryCode,
@@ -120,7 +116,7 @@ public final class SpecificBanksAccountPayload extends BankAccountPayload {
                 bankAccountPayload.getNationalAccountId().isEmpty() ? null : bankAccountPayload.getNationalAccountId(),
                 new ArrayList<>(specificBanksAccountPayload.getAcceptedBanksList()),
                 proto.getMaxTradePeriod(),
-                CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
+                new HashMap<>(proto.getExcludeFromJsonDataMap()));
     }
 
 

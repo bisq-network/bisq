@@ -28,8 +28,8 @@ import bisq.core.dao.state.model.governance.Proposal;
 import bisq.core.dao.state.model.governance.Vote;
 
 import bisq.common.app.DevEnv;
+import bisq.common.persistence.PersistenceManager;
 import bisq.common.proto.persistable.PersistedDataHost;
-import bisq.common.storage.Storage;
 
 import javax.inject.Inject;
 
@@ -58,7 +58,7 @@ public class BallotListService implements PersistedDataHost, DaoSetupService {
     private final ProposalService proposalService;
     private final PeriodService periodService;
     private final ProposalValidatorProvider validatorProvider;
-    private final Storage<BallotList> storage;
+    private final PersistenceManager<BallotList> persistenceManager;
 
     private final BallotList ballotList = new BallotList();
     private final List<BallotListChangeListener> listeners = new CopyOnWriteArrayList<>();
@@ -67,11 +67,13 @@ public class BallotListService implements PersistedDataHost, DaoSetupService {
     public BallotListService(ProposalService proposalService,
                              PeriodService periodService,
                              ProposalValidatorProvider validatorProvider,
-                             Storage<BallotList> storage) {
+                             PersistenceManager<BallotList> persistenceManager) {
         this.proposalService = proposalService;
         this.periodService = periodService;
         this.validatorProvider = validatorProvider;
-        this.storage = storage;
+        this.persistenceManager = persistenceManager;
+
+        this.persistenceManager.initialize(ballotList, PersistenceManager.Source.NETWORK);
     }
 
 
@@ -93,7 +95,7 @@ public class BallotListService implements PersistedDataHost, DaoSetupService {
                     .map(ProposalPayload::getProposal)
                     .filter(this::isNewProposal)
                     .forEach(this::registerProposalAsBallot);
-            persist();
+            requestPersistence();
         }
     }
 
@@ -106,7 +108,7 @@ public class BallotListService implements PersistedDataHost, DaoSetupService {
     private void registerProposalAsBallot(Proposal proposal) {
         Ballot ballot = new Ballot(proposal); // vote is null
         if (log.isInfoEnabled()) {
-            log.info("We create a new ballot with a proposal and add it to our list. " +
+            log.debug("We create a new ballot with a proposal and add it to our list. " +
                     "Vote is null at that moment. proposalTxId={}", proposal.getTxId());
         }
         if (ballotList.contains(ballot)) {
@@ -127,14 +129,16 @@ public class BallotListService implements PersistedDataHost, DaoSetupService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void readPersisted() {
+    public void readPersisted(Runnable completeHandler) {
         if (DevEnv.isDaoActivated()) {
-            BallotList persisted = storage.initAndGetPersisted(ballotList, 100);
-            if (persisted != null) {
-                ballotList.clear();
-                ballotList.addAll(persisted.getList());
-                listeners.forEach(l -> l.onListChanged(ballotList.getList()));
-            }
+            persistenceManager.readPersisted(persisted -> {
+                        ballotList.setAll(persisted.getList());
+                        listeners.forEach(l -> l.onListChanged(ballotList.getList()));
+                        completeHandler.run();
+                    },
+                    completeHandler);
+        } else {
+            completeHandler.run();
         }
     }
 
@@ -145,7 +149,7 @@ public class BallotListService implements PersistedDataHost, DaoSetupService {
 
     public void setVote(Ballot ballot, @Nullable Vote vote) {
         ballot.setVote(vote);
-        persist();
+        requestPersistence();
     }
 
     public void addListener(BallotListChangeListener listener) {
@@ -170,7 +174,7 @@ public class BallotListService implements PersistedDataHost, DaoSetupService {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void persist() {
-        storage.queueUpForSave();
+    private void requestPersistence() {
+        persistenceManager.requestPersistence();
     }
 }

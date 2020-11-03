@@ -26,6 +26,9 @@ import java.time.Duration;
  */
 public abstract class FeeRateProvider extends PriceProvider<FeeRate> {
 
+    public static final long MIN_FEE_RATE = 10; // satoshi/byte
+    public static final long MAX_FEE_RATE = 1000;
+
     public FeeRateProvider(Duration refreshInterval) {
         super(refreshInterval);
     }

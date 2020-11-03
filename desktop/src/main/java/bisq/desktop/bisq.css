@@ -237,6 +237,30 @@
     -fx-background-color: -fx-selection-bar;
 }
 
+
+/* list view */
+.list-view .list-cell {
+    -fx-background-color: -bs-background-color;
+}
+.list-view .list-cell:odd {
+    -fx-background-color: derive(-bs-background-color, -5%);
+}
+.list-view .list-cell:even {
+    -fx-background-color: derive(-bs-background-color, 5%);
+}
+.list-view .list-cell:hover,
+.list-view .list-cell:selected,
+.table-view .table-cell:hover,
+.table-view .table-cell:selected {
+    -fx-background: -fx-accent;
+    -fx-background-color: -fx-selection-bar;
+    -fx-border-color: -fx-selection-bar;
+}
+
+.number-column.table-cell {
+    -fx-background-color: -bs-background-color;
+}
+
 .list-view:focused,
 .tree-view:focused,
 .table-view:focused,
@@ -410,6 +434,12 @@ tree-table-view:focused {
 
 .jfx-badge.new .badge-pane {
     -fx-pref-width: 30;
+}
+
+.jfx-badge.auto-conf .badge-pane {
+    -fx-background-color: -xmr-orange;
+    -fx-pref-width: -1;
+    -fx-padding: -1 10 0 10;
 }
 
 .jfx-badge .badge-pane .label {
@@ -701,11 +731,11 @@ tree-table-view:focused {
 }
 
 .text-field {
-    -fx-prompt-text-fill: derive(-fx-control-inner-background, -30%);
+    -fx-prompt-text-fill: derive(-bs-prompt-text, -30%);
 }
 
 .text-area {
-    -fx-prompt-text-fill: derive(-fx-control-inner-background, -30%);
+    -fx-prompt-text-fill: derive(-bs-prompt-text, -30%);
 }
 
 #label-url {
@@ -786,6 +816,11 @@ tree-table-view:focused {
     -fx-padding: 27 2 0 2;
 }
 
+.alert-icon {
+    -fx-fill: -bs-rd-error-red;
+    -fx-cursor: hand;
+}
+
 .close-icon {
     -fx-fill: -bs-text-color;
 }
@@ -828,6 +863,12 @@ textfield */
     -fx-max-height: 20;
 }
 
+#xmr-confidence {
+    -fx-progress-color: -xmr-orange;
+    -fx-max-width: 20;
+    -fx-max-height: 20;
+}
+
 .hyperlink,
 .hyperlink.force-underline .text,
 .hyperlink:hover,
@@ -862,11 +903,42 @@ textfield */
     -fx-fill: -fx-accent;
 }
 
+.hyperlink.error {
+     -fx-text-fill: -bs-rd-error-red;
+     -fx-fill: -bs-rd-error-red;
+}
+
 /*******************************************************************************
  *                                                                             *
  * Table                                                                       *
  *                                                                             *
  ******************************************************************************/
+.table-view .table-row-cell:even .table-cell {
+    -fx-background-color: derive(-bs-background-color, 5%);
+    -fx-border-color: derive(-bs-background-color,5%);
+}
+.table-view .table-row-cell:odd .table-cell {
+    -fx-background-color: derive(-bs-background-color,-5%);
+    -fx-border-color: derive(-bs-background-color,-5%);
+}
+.table-view .table-row-cell:hover .table-cell,
+.table-view .table-row-cell:selected .table-cell {
+    -fx-background: -fx-accent;
+    -fx-background-color: -fx-selection-bar;
+    -fx-border-color: -fx-selection-bar;
+}
+.table-row-cell {
+    -fx-border-color: -bs-background-color;
+}
+.table-row-cell:empty, .table-row-cell:empty:even, .table-row-cell:empty:odd {
+    -fx-background-color: -bs-background-color;
+    -fx-min-height: 36;
+}
+.offer-table .table-row-cell {
+    -fx-background: -fx-accent;
+    -fx-background-color: -bs-color-gray-6;
+}
+
 .table-view .table-cell {
     -fx-alignment: center-left;
     -fx-padding: 2 0 2 0;
@@ -1058,6 +1130,27 @@ textfield */
     -fx-text-fill: -bs-text-color;
     -fx-fill: -bs-text-color;
 }
+
+.warn-icon {
+    -fx-text-fill: -bs-yellow;
+    -fx-fill: -bs-yellow;
+}
+
+.warn-icon:hover {
+    -fx-text-fill: -bs-yellow;
+    -fx-fill: -bs-yellow;
+}
+
+.error-icon {
+    -fx-text-fill: -bs-rd-error-red;
+    -fx-fill: -bs-rd-error-red;
+}
+
+.error-icon:hover {
+    -fx-text-fill: -bs-rd-error-red;
+    -fx-fill: -bs-rd-error-red;
+}
+
 
 /*******************************************************************************
  *                                                                             *
@@ -1326,6 +1419,12 @@ textfield */
     -fx-text-fill: -bs-text-color;
 }
 
+#address-text-field-error {
+    -fx-cursor: hand;
+    -fx-text-fill: -bs-rd-error-red;
+    -fx-prompt-text-fill: -bs-text-color;
+}
+
 /* Account setup */
 #wizard-item-background-deactivated {
     -fx-body-color: linear-gradient(to bottom, -bs-content-background-gray, -bs-color-gray-aaa);
@@ -1485,7 +1584,7 @@ textfield */
     -fx-text-fill: -fx-text-inner-color;
     -fx-highlight-fill: derive(-fx-control-inner-background, -20%);
     -fx-highlight-text-fill: -fx-text-inner-color;
-    -fx-prompt-text-fill: derive(-fx-control-inner-background, -30%);
+    -fx-prompt-text-fill: derive(-bs-prompt-text, -30%);
     -fx-background-color: linear-gradient(to bottom, derive(-fx-text-box-border, -10%), -fx-text-box-border),
     linear-gradient(from 0px 0px to 0px 5px, derive(-fx-control-inner-background, -9%), -fx-control-inner-background);
     -fx-background-insets: 0, 1;
@@ -1497,7 +1596,7 @@ textfield */
     -fx-text-fill: -fx-text-inner-color;
     -fx-highlight-fill: derive(-fx-control-inner-background, -20%);
     -fx-highlight-text-fill: -fx-text-inner-color;
-    -fx-prompt-text-fill: derive(-fx-control-inner-background, -30%);
+    -fx-prompt-text-fill: derive(-bs-prompt-text, -30%);
     -fx-background-color: linear-gradient(to bottom, derive(-fx-text-box-border, -10%), -fx-text-box-border),
     linear-gradient(from 0px 0px to 0px 5px, derive(-fx-control-inner-background, -9%), -bs-color-gray-1);
     -fx-background-insets: 0, 1;
@@ -1599,6 +1698,10 @@ textfield */
     -fx-tick-label-fill: -bs-rd-font-lighter;
     -fx-tick-label-font-size: 0.769em;
     -fx-font-size: 0.880em;
+}
+
+#price-chart .axis-tick-mark-text-node, #volume-chart .axis-tick-mark-text-node {
+    -fx-text-alignment: center;
 }
 
 #charts .chart-plot-background, #charts-dao .chart-plot-background {
@@ -2070,4 +2173,3 @@ textfield */
     -fx-stroke: linear-gradient(to bottom, -bs-text-color-transparent, -bs-text-color-transparent-dark) !important;
     -fx-fill: -bs-background-color !important;
 }
-

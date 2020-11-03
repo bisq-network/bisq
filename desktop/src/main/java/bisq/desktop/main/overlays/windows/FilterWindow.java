@@ -39,9 +39,11 @@ import org.apache.commons.lang3.StringUtils;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Region;
 
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
@@ -58,6 +60,7 @@ import static bisq.desktop.util.FormBuilder.addTopLabelInputTextField;
 public class FilterWindow extends Overlay<FilterWindow> {
     private final FilterManager filterManager;
     private final boolean useDevPrivilegeKeys;
+    private ScrollPane scrollPane;
 
     @Inject
     public FilterWindow(FilterManager filterManager,
@@ -67,12 +70,26 @@ public class FilterWindow extends Overlay<FilterWindow> {
         type = Type.Attention;
     }
 
+    @Override
+    protected Region getRootContainer() {
+        return scrollPane;
+    }
+
     public void show() {
         if (headLine == null)
             headLine = Res.get("filterWindow.headline");
 
-        width = 968;
+        width = 1000;
+
         createGridPane();
+
+        scrollPane = new ScrollPane();
+        scrollPane.setContent(gridPane);
+        scrollPane.setFitToWidth(true);
+        scrollPane.setFitToHeight(true);
+        scrollPane.setMaxHeight(700);
+        scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+
         addHeadLine();
         addContent();
         applyStyles();
@@ -95,82 +112,135 @@ public class FilterWindow extends Overlay<FilterWindow> {
         gridPane.getColumnConstraints().remove(1);
         gridPane.getColumnConstraints().get(0).setHalignment(HPos.LEFT);
 
-        InputTextField keyInputTextField = addInputTextField(gridPane, ++rowIndex, Res.get("shared.unlock"), 10);
-        if (useDevPrivilegeKeys)
-            keyInputTextField.setText(DevEnv.DEV_PRIVILEGE_PRIV_KEY);
+        InputTextField keyTF = addInputTextField(gridPane, ++rowIndex,
+                Res.get("shared.unlock"), 10);
+        if (useDevPrivilegeKeys) {
+            keyTF.setText(DevEnv.DEV_PRIVILEGE_PRIV_KEY);
+        }
 
-        InputTextField offerIdsInputTextField = addInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.offers"));
-        InputTextField nodesInputTextField = addTopLabelInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.onions")).second;
-        nodesInputTextField.setPromptText("E.g. zqnzx6o3nifef5df.onion:9999"); // Do not translate
-        InputTextField paymentAccountFilterInputTextField = addTopLabelInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.accounts")).second;
-        GridPane.setHalignment(paymentAccountFilterInputTextField, HPos.RIGHT);
-        paymentAccountFilterInputTextField.setPromptText("E.g. PERFECT_MONEY|getAccountNr|12345"); // Do not translate
-        InputTextField bannedCurrenciesInputTextField = addInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.bannedCurrencies"));
-        InputTextField bannedPaymentMethodsInputTextField = addTopLabelInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.bannedPaymentMethods")).second;
-        bannedPaymentMethodsInputTextField.setPromptText("E.g. PERFECT_MONEY"); // Do not translate
-        InputTextField arbitratorsInputTextField = addInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.arbitrators"));
-        InputTextField mediatorsInputTextField = addInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.mediators"));
-        InputTextField refundAgentsInputTextField = addInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.refundAgents"));
-        InputTextField seedNodesInputTextField = addInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.seedNode"));
-        InputTextField priceRelayNodesInputTextField = addInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.priceRelayNode"));
-        InputTextField btcNodesInputTextField = addInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.btcNode"));
-        CheckBox preventPublicBtcNetworkCheckBox = addLabelCheckBox(gridPane, ++rowIndex, Res.get("filterWindow.preventPublicBtcNetwork"));
-        CheckBox disableDaoCheckBox = addLabelCheckBox(gridPane, ++rowIndex, Res.get("filterWindow.disableDao"));
-        InputTextField disableDaoBelowVersionInputTextField = addInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.disableDaoBelowVersion"));
-        InputTextField disableTradeBelowVersionInputTextField = addInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.disableTradeBelowVersion"));
+        InputTextField offerIdsTF = addInputTextField(gridPane, ++rowIndex,
+                Res.get("filterWindow.offers"));
+        InputTextField nodesTF = addTopLabelInputTextField(gridPane, ++rowIndex,
+                Res.get("filterWindow.onions")).second;
+        nodesTF.setPromptText("E.g. zqnzx6o3nifef5df.onion:9999"); // Do not translate
+        InputTextField paymentAccountFilterTF = addTopLabelInputTextField(gridPane, ++rowIndex,
+                Res.get("filterWindow.accounts")).second;
+        GridPane.setHalignment(paymentAccountFilterTF, HPos.RIGHT);
+        paymentAccountFilterTF.setPromptText("E.g. PERFECT_MONEY|getAccountNr|12345"); // Do not translate
+        InputTextField bannedCurrenciesTF = addInputTextField(gridPane, ++rowIndex,
+                Res.get("filterWindow.bannedCurrencies"));
+        InputTextField bannedPaymentMethodsTF = addTopLabelInputTextField(gridPane, ++rowIndex,
+                Res.get("filterWindow.bannedPaymentMethods")).second;
+        bannedPaymentMethodsTF.setPromptText("E.g. PERFECT_MONEY"); // Do not translate
+        InputTextField bannedAccountWitnessSignerPubKeysTF = addTopLabelInputTextField(gridPane, ++rowIndex,
+                Res.get("filterWindow.bannedAccountWitnessSignerPubKeys")).second;
+        bannedAccountWitnessSignerPubKeysTF.setPromptText("E.g. 7f66117aa084e5a2c54fe17d29dd1fee2b241257"); // Do not translate
+        InputTextField arbitratorsTF = addInputTextField(gridPane, ++rowIndex,
+                Res.get("filterWindow.arbitrators"));
+        InputTextField mediatorsTF = addInputTextField(gridPane, ++rowIndex,
+                Res.get("filterWindow.mediators"));
+        InputTextField refundAgentsTF = addInputTextField(gridPane, ++rowIndex,
+                Res.get("filterWindow.refundAgents"));
+        InputTextField btcFeeReceiverAddressesTF = addInputTextField(gridPane, ++rowIndex,
+                Res.get("filterWindow.btcFeeReceiverAddresses"));
+        InputTextField seedNodesTF = addInputTextField(gridPane, ++rowIndex,
+                Res.get("filterWindow.seedNode"));
+        InputTextField priceRelayNodesTF = addInputTextField(gridPane, ++rowIndex,
+                Res.get("filterWindow.priceRelayNode"));
+        InputTextField btcNodesTF = addInputTextField(gridPane, ++rowIndex,
+                Res.get("filterWindow.btcNode"));
+        CheckBox preventPublicBtcNetworkCheckBox = addLabelCheckBox(gridPane, ++rowIndex,
+                Res.get("filterWindow.preventPublicBtcNetwork"));
+        CheckBox disableDaoCheckBox = addLabelCheckBox(gridPane, ++rowIndex,
+                Res.get("filterWindow.disableDao"));
+        CheckBox disableAutoConfCheckBox = addLabelCheckBox(gridPane, ++rowIndex,
+                Res.get("filterWindow.disableAutoConf"));
+        InputTextField disableDaoBelowVersionTF = addInputTextField(gridPane, ++rowIndex,
+                Res.get("filterWindow.disableDaoBelowVersion"));
+        InputTextField disableTradeBelowVersionTF = addInputTextField(gridPane, ++rowIndex,
+                Res.get("filterWindow.disableTradeBelowVersion"));
+        InputTextField bannedPrivilegedDevPubKeysTF = addTopLabelInputTextField(gridPane, ++rowIndex,
+                Res.get("filterWindow.bannedPrivilegedDevPubKeys")).second;
+        InputTextField autoConfExplorersTF = addTopLabelInputTextField(gridPane, ++rowIndex,
+                Res.get("filterWindow.autoConfExplorers")).second;
 
-        final Filter filter = filterManager.getDevelopersFilter();
+        Filter filter = filterManager.getDevFilter();
         if (filter != null) {
-            setupFieldFromList(offerIdsInputTextField, filter.getBannedOfferIds());
-            setupFieldFromList(nodesInputTextField, filter.getBannedNodeAddress());
-            setupFieldFromPaymentAccountFiltersList(paymentAccountFilterInputTextField, filter.getBannedPaymentAccounts());
-            setupFieldFromList(bannedCurrenciesInputTextField, filter.getBannedCurrencies());
-            setupFieldFromList(bannedPaymentMethodsInputTextField, filter.getBannedPaymentMethods());
-            setupFieldFromList(arbitratorsInputTextField, filter.getArbitrators());
-            setupFieldFromList(mediatorsInputTextField, filter.getMediators());
-            setupFieldFromList(refundAgentsInputTextField, filter.getRefundAgents());
-            setupFieldFromList(seedNodesInputTextField, filter.getSeedNodes());
-            setupFieldFromList(priceRelayNodesInputTextField, filter.getPriceRelayNodes());
-            setupFieldFromList(btcNodesInputTextField, filter.getBtcNodes());
+            setupFieldFromList(offerIdsTF, filter.getBannedOfferIds());
+            setupFieldFromList(nodesTF, filter.getBannedNodeAddress());
+            setupFieldFromPaymentAccountFiltersList(paymentAccountFilterTF, filter.getBannedPaymentAccounts());
+            setupFieldFromList(bannedCurrenciesTF, filter.getBannedCurrencies());
+            setupFieldFromList(bannedPaymentMethodsTF, filter.getBannedPaymentMethods());
+            setupFieldFromList(bannedAccountWitnessSignerPubKeysTF, filter.getBannedAccountWitnessSignerPubKeys());
+            setupFieldFromList(arbitratorsTF, filter.getArbitrators());
+            setupFieldFromList(mediatorsTF, filter.getMediators());
+            setupFieldFromList(refundAgentsTF, filter.getRefundAgents());
+            setupFieldFromList(btcFeeReceiverAddressesTF, filter.getBtcFeeReceiverAddresses());
+            setupFieldFromList(seedNodesTF, filter.getSeedNodes());
+            setupFieldFromList(priceRelayNodesTF, filter.getPriceRelayNodes());
+            setupFieldFromList(btcNodesTF, filter.getBtcNodes());
+            setupFieldFromList(bannedPrivilegedDevPubKeysTF, filter.getBannedPrivilegedDevPubKeys());
+            setupFieldFromList(autoConfExplorersTF, filter.getBannedAutoConfExplorers());
+
             preventPublicBtcNetworkCheckBox.setSelected(filter.isPreventPublicBtcNetwork());
             disableDaoCheckBox.setSelected(filter.isDisableDao());
-            disableDaoBelowVersionInputTextField.setText(filter.getDisableDaoBelowVersion());
-            disableTradeBelowVersionInputTextField.setText(filter.getDisableTradeBelowVersion());
+            disableAutoConfCheckBox.setSelected(filter.isDisableAutoConf());
+            disableDaoBelowVersionTF.setText(filter.getDisableDaoBelowVersion());
+            disableTradeBelowVersionTF.setText(filter.getDisableTradeBelowVersion());
         }
-        Button sendButton = new AutoTooltipButton(Res.get("filterWindow.add"));
-        sendButton.setOnAction(e -> {
-            if (filterManager.addFilterMessageIfKeyIsValid(
-                    new Filter(
-                            readAsList(offerIdsInputTextField),
-                            readAsList(nodesInputTextField),
-                            readAsPaymentAccountFiltersList(paymentAccountFilterInputTextField),
-                            readAsList(bannedCurrenciesInputTextField),
-                            readAsList(bannedPaymentMethodsInputTextField),
-                            readAsList(arbitratorsInputTextField),
-                            readAsList(seedNodesInputTextField),
-                            readAsList(priceRelayNodesInputTextField),
-                            preventPublicBtcNetworkCheckBox.isSelected(),
-                            readAsList(btcNodesInputTextField),
-                            disableDaoCheckBox.isSelected(),
-                            disableDaoBelowVersionInputTextField.getText(),
-                            disableTradeBelowVersionInputTextField.getText(),
-                            readAsList(mediatorsInputTextField),
-                            readAsList(refundAgentsInputTextField)
-                    ),
-                    keyInputTextField.getText())
-            )
-                hide();
-            else
-                new Popup().warning(Res.get("shared.invalidKey")).width(300).onClose(this::blurAgain).show();
-        });
 
         Button removeFilterMessageButton = new AutoTooltipButton(Res.get("filterWindow.remove"));
+        removeFilterMessageButton.setDisable(filterManager.getDevFilter() == null);
+
+        Button sendButton = new AutoTooltipButton(Res.get("filterWindow.add"));
+        sendButton.setOnAction(e -> {
+            String privKeyString = keyTF.getText();
+            if (filterManager.canAddDevFilter(privKeyString)) {
+                String signerPubKeyAsHex = filterManager.getSignerPubKeyAsHex(privKeyString);
+                Filter newFilter = new Filter(
+                        readAsList(offerIdsTF),
+                        readAsList(nodesTF),
+                        readAsPaymentAccountFiltersList(paymentAccountFilterTF),
+                        readAsList(bannedCurrenciesTF),
+                        readAsList(bannedPaymentMethodsTF),
+                        readAsList(arbitratorsTF),
+                        readAsList(seedNodesTF),
+                        readAsList(priceRelayNodesTF),
+                        preventPublicBtcNetworkCheckBox.isSelected(),
+                        readAsList(btcNodesTF),
+                        disableDaoCheckBox.isSelected(),
+                        disableDaoBelowVersionTF.getText(),
+                        disableTradeBelowVersionTF.getText(),
+                        readAsList(mediatorsTF),
+                        readAsList(refundAgentsTF),
+                        readAsList(bannedAccountWitnessSignerPubKeysTF),
+                        readAsList(btcFeeReceiverAddressesTF),
+                        filterManager.getOwnerPubKey(),
+                        signerPubKeyAsHex,
+                        readAsList(bannedPrivilegedDevPubKeysTF),
+                        disableAutoConfCheckBox.isSelected(),
+                        readAsList(autoConfExplorersTF)
+                );
+
+                // We remove first the old filter
+                if (filterManager.canRemoveDevFilter(privKeyString)) {
+                    filterManager.removeDevFilter(privKeyString);
+                }
+                filterManager.addDevFilter(newFilter, privKeyString);
+                removeFilterMessageButton.setDisable(filterManager.getDevFilter() == null);
+                hide();
+            } else {
+                new Popup().warning(Res.get("shared.invalidKey")).onClose(this::blurAgain).show();
+            }
+        });
+
         removeFilterMessageButton.setOnAction(e -> {
-            if (keyInputTextField.getText().length() > 0) {
-                if (filterManager.removeFilterMessageIfKeyIsValid(keyInputTextField.getText()))
-                    hide();
-                else
-                    new Popup().warning(Res.get("shared.invalidKey")).width(300).onClose(this::blurAgain).show();
+            String privKeyString = keyTF.getText();
+            if (filterManager.canRemoveDevFilter(privKeyString)) {
+                filterManager.removeDevFilter(privKeyString);
+                hide();
+            } else {
+                new Popup().warning(Res.get("shared.invalidKey")).onClose(this::blurAgain).show();
             }
         });
 
@@ -190,13 +260,13 @@ public class FilterWindow extends Overlay<FilterWindow> {
 
     private void setupFieldFromList(InputTextField field, List<String> values) {
         if (values != null)
-            field.setText(values.stream().collect(Collectors.joining(", ")));
+            field.setText(String.join(", ", values));
     }
 
     private void setupFieldFromPaymentAccountFiltersList(InputTextField field, List<PaymentAccountFilter> values) {
         if (values != null) {
             StringBuilder sb = new StringBuilder();
-            values.stream().forEach(e -> {
+            values.forEach(e -> {
                 if (e != null && e.getPaymentMethodId() != null) {
                     sb
                             .append(e.getPaymentMethodId())

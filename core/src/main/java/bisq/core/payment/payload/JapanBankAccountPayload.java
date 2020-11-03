@@ -19,11 +19,9 @@ package bisq.core.payment.payload;
 
 import bisq.core.locale.Res;
 
-import bisq.common.util.CollectionUtils;
-
 import com.google.protobuf.Message;
 
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -39,7 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 @Setter
 @Getter
 @Slf4j
-public final class JapanBankAccountPayload extends PaymentAccountPayload {
+public final class JapanBankAccountPayload extends PaymentAccountPayload implements PayloadWithHolderName {
     // bank
     private String bankName = "";
     private String bankCode = "";
@@ -61,16 +59,16 @@ public final class JapanBankAccountPayload extends PaymentAccountPayload {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private JapanBankAccountPayload(String paymentMethod,
-                                  String id,
-                                  String bankName,
-                                  String bankCode,
-                                  String bankBranchName,
-                                  String bankBranchCode,
-                                  String bankAccountType,
-                                  String bankAccountName,
-                                  String bankAccountNumber,
-                                  long maxTradePeriod,
-                                  Map<String, String> excludeFromJsonDataMap) {
+                                    String id,
+                                    String bankName,
+                                    String bankCode,
+                                    String bankBranchName,
+                                    String bankBranchCode,
+                                    String bankAccountType,
+                                    String bankAccountName,
+                                    String bankAccountNumber,
+                                    long maxTradePeriod,
+                                    Map<String, String> excludeFromJsonDataMap) {
         super(paymentMethod,
                 id,
                 maxTradePeriod,
@@ -90,13 +88,13 @@ public final class JapanBankAccountPayload extends PaymentAccountPayload {
         return getPaymentAccountPayloadBuilder()
                 .setJapanBankAccountPayload(
                         protobuf.JapanBankAccountPayload.newBuilder()
-                        .setBankName(bankName)
-                        .setBankCode(bankCode)
-                        .setBankBranchName(bankBranchName)
-                        .setBankBranchCode(bankBranchCode)
-                        .setBankAccountType(bankAccountType)
-                        .setBankAccountName(bankAccountName)
-                        .setBankAccountNumber(bankAccountNumber)
+                                .setBankName(bankName)
+                                .setBankCode(bankCode)
+                                .setBankBranchName(bankBranchName)
+                                .setBankBranchCode(bankBranchCode)
+                                .setBankAccountType(bankAccountType)
+                                .setBankAccountName(bankAccountName)
+                                .setBankAccountNumber(bankAccountNumber)
                 ).build();
     }
 
@@ -112,7 +110,7 @@ public final class JapanBankAccountPayload extends PaymentAccountPayload {
                 japanBankAccountPayload.getBankAccountName(),
                 japanBankAccountPayload.getBankAccountNumber(),
                 proto.getMaxTradePeriod(),
-                CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
+                new HashMap<>(proto.getExcludeFromJsonDataMap()));
     }
 
 
@@ -121,24 +119,27 @@ public final class JapanBankAccountPayload extends PaymentAccountPayload {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public String getPaymentDetails()
-    {
+    public String getPaymentDetails() {
         return Res.get(paymentMethodId) + " - " + getPaymentDetailsForTradePopup().replace("\n", ", ");
     }
 
     @Override
-    public String getPaymentDetailsForTradePopup()
-    {
-        return
-        Res.get("payment.japan.bank") + ": " + bankName + "(" + bankCode + ")\n" +
-        Res.get("payment.japan.branch") + ": " +  bankBranchName + "(" + bankBranchCode + ")\n" +
-        Res.get("payment.japan.account") + ": " + bankAccountType + " " + bankAccountNumber + "\n" + Res.get("payment.japan.recipient") + ": " + bankAccountName;
+    public String getPaymentDetailsForTradePopup() {
+        return Res.get("payment.japan.bank") + ": " + bankName + "(" + bankCode + ")\n" +
+                Res.get("payment.japan.branch") + ": " + bankBranchName + "(" + bankBranchCode + ")\n" +
+                Res.get("payment.japan.account") + ": " + bankAccountType + " " + bankAccountNumber + "\n" +
+                Res.get("payment.japan.recipient") + ": " + bankAccountName;
     }
 
 
     @Override
     public byte[] getAgeWitnessInputData() {
         String all = this.bankName + this.bankBranchName + this.bankAccountType + this.bankAccountNumber + this.bankAccountName;
-        return super.getAgeWitnessInputData(all.getBytes(Charset.forName("UTF-8")));
+        return super.getAgeWitnessInputData(all.getBytes(StandardCharsets.UTF_8));
+    }
+
+    @Override
+    public String getHolderName() {
+        return bankAccountName;
     }
 }

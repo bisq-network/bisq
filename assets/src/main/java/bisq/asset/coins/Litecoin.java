@@ -17,20 +17,19 @@
 
 package bisq.asset.coins;
 
-import bisq.asset.Base58BitcoinAddressValidator;
+import bisq.asset.Base58AddressValidator;
 import bisq.asset.Coin;
 import bisq.asset.NetworkParametersAdapter;
 
 public class Litecoin extends Coin {
     public Litecoin() {
-        super("Litecoin", "LTC", new Base58BitcoinAddressValidator(new LitecoinMainNetParams()), Network.MAINNET);
+        super("Litecoin", "LTC", new Base58AddressValidator(new LitecoinMainNetParams()), Network.MAINNET);
     }
 
     public static class LitecoinMainNetParams extends NetworkParametersAdapter {
         public LitecoinMainNetParams() {
             this.addressHeader = 48;
             this.p2shHeader = 5;
-            this.acceptableAddressCodes = new int[]{this.addressHeader, this.p2shHeader};
         }
     }
 }

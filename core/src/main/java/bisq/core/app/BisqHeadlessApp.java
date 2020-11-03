@@ -20,9 +20,8 @@ package bisq.core.app;
 import bisq.core.trade.TradeManager;
 
 import bisq.common.UserThread;
+import bisq.common.file.CorruptedStorageFileHandler;
 import bisq.common.setup.GracefulShutDownHandler;
-import bisq.common.storage.CorruptedDatabaseFilesHandler;
-import bisq.common.util.Profiler;
 
 import com.google.inject.Injector;
 
@@ -34,7 +33,6 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class BisqHeadlessApp implements HeadlessApp {
-    private static final long LOG_MEMORY_PERIOD_MIN = 10;
     @Getter
     private static Runnable shutDownHandler;
 
@@ -44,7 +42,7 @@ public class BisqHeadlessApp implements HeadlessApp {
     private GracefulShutDownHandler gracefulShutDownHandler;
     private boolean shutDownRequested;
     protected BisqSetup bisqSetup;
-    private CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler;
+    private CorruptedStorageFileHandler corruptedStorageFileHandler;
     private TradeManager tradeManager;
 
     public BisqHeadlessApp() {
@@ -56,12 +54,10 @@ public class BisqHeadlessApp implements HeadlessApp {
             bisqSetup = injector.getInstance(BisqSetup.class);
             bisqSetup.addBisqSetupListener(this);
 
-            corruptedDatabaseFilesHandler = injector.getInstance(CorruptedDatabaseFilesHandler.class);
+            corruptedStorageFileHandler = injector.getInstance(CorruptedStorageFileHandler.class);
             tradeManager = injector.getInstance(TradeManager.class);
 
             setupHandlers();
-
-            UserThread.runPeriodically(() -> Profiler.printSystemLoad(log), LOG_MEMORY_PERIOD_MIN, TimeUnit.MINUTES);
         } catch (Throwable throwable) {
             log.error("Error during app init", throwable);
             handleUncaughtException(throwable, false);
@@ -78,7 +74,6 @@ public class BisqHeadlessApp implements HeadlessApp {
             log.info("onDisplayTacHandler: We accept the tacs automatically in headless mode");
             acceptedHandler.run();
         });
-        bisqSetup.setCryptoSetupFailedHandler(msg -> log.error("onCryptoSetupFailedHandler: msg={}", msg));
         bisqSetup.setDisplayTorNetworkSettingsHandler(show -> log.info("onDisplayTorNetworkSettingsHandler: show={}", show));
         bisqSetup.setSpvFileCorruptedHandler(msg -> log.error("onSpvFileCorruptedHandler: msg={}", msg));
         bisqSetup.setChainFileLockedExceptionHandler(msg -> log.error("onChainFileLockedExceptionHandler: msg={}", msg));
@@ -96,9 +91,11 @@ public class BisqHeadlessApp implements HeadlessApp {
         bisqSetup.setVoteResultExceptionHandler(voteResultException -> log.warn("voteResultException={}", voteResultException.toString()));
         bisqSetup.setRejectedTxErrorMessageHandler(errorMessage -> log.warn("setRejectedTxErrorMessageHandler. errorMessage={}", errorMessage));
         bisqSetup.setShowPopupIfInvalidBtcConfigHandler(() -> log.error("onShowPopupIfInvalidBtcConfigHandler"));
+        bisqSetup.setRevolutAccountsUpdateHandler(revolutAccountList -> log.info("setRevolutAccountsUpdateHandler: revolutAccountList={}", revolutAccountList));
+        bisqSetup.setOsxKeyLoggerWarningHandler(() -> log.info("setOsxKeyLoggerWarningHandler"));
+        bisqSetup.setQubesOSInfoHandler(() -> log.info("setQubesOSInfoHandler"));
 
-        //TODO move to bisqSetup
-        corruptedDatabaseFilesHandler.getCorruptedDatabaseFiles().ifPresent(files -> log.warn("getCorruptedDatabaseFiles. files={}", files));
+        corruptedStorageFileHandler.getFiles().ifPresent(files -> log.warn("getCorruptedDatabaseFiles. files={}", files));
         tradeManager.setTakeOfferRequestErrorMessageHandler(errorMessage -> log.error("onTakeOfferRequestErrorMessageHandler"));
     }
 

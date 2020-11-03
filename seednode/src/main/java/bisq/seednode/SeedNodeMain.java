@@ -20,24 +20,27 @@ package bisq.seednode;
 import bisq.core.app.misc.ExecutableForAppWithP2p;
 import bisq.core.app.misc.ModuleForAppWithP2p;
 
+import bisq.network.p2p.P2PService;
+import bisq.network.p2p.P2PServiceListener;
+
 import bisq.common.UserThread;
 import bisq.common.app.AppModule;
 import bisq.common.app.Capabilities;
 import bisq.common.app.Capability;
-import bisq.common.setup.CommonSetup;
+import bisq.common.handlers.ResultHandler;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class SeedNodeMain extends ExecutableForAppWithP2p {
-    private static final String VERSION = "1.2.9";
+    private static final String VERSION = "1.4.2";
     private SeedNode seedNode;
 
     public SeedNodeMain() {
         super("Bisq Seednode", "bisq-seednode", "bisq_seednode", VERSION);
     }
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
         log.info("SeedNode.VERSION: " + VERSION);
         new SeedNodeMain().execute(args);
     }
@@ -47,8 +50,6 @@ public class SeedNodeMain extends ExecutableForAppWithP2p {
         super.doExecute();
 
         checkMemory(config, this);
-        startShutDownInterval(this);
-        CommonSetup.setup(this);
 
         keepRunning();
     }
@@ -95,5 +96,53 @@ public class SeedNodeMain extends ExecutableForAppWithP2p {
     @Override
     protected void startApplication() {
         seedNode.startApplication();
+
+        injector.getInstance(P2PService.class).addP2PServiceListener(new P2PServiceListener() {
+            @Override
+            public void onDataReceived() {
+                // Do nothing
+            }
+
+            @Override
+            public void onNoSeedNodeAvailable() {
+                // Do nothing
+            }
+
+            @Override
+            public void onNoPeersAvailable() {
+                // Do nothing
+            }
+
+            @Override
+            public void onUpdatedDataReceived() {
+                // Do nothing
+            }
+
+            @Override
+            public void onTorNodeReady() {
+                // Do nothing
+            }
+
+            @Override
+            public void onHiddenServicePublished() {
+                startShutDownInterval(SeedNodeMain.this);
+            }
+
+            @Override
+            public void onSetupFailed(Throwable throwable) {
+                // Do nothing
+            }
+
+            @Override
+            public void onRequestCustomBridges() {
+                // Do nothing
+            }
+        });
+    }
+
+    @Override
+    public void gracefulShutDown(ResultHandler resultHandler) {
+        seedNode.shutDown();
+        super.gracefulShutDown(resultHandler);
     }
 }

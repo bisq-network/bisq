@@ -23,8 +23,6 @@ import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.RevolutValidator;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
-import bisq.core.locale.Country;
-import bisq.core.locale.CountryUtil;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.payment.PaymentAccount;
@@ -34,44 +32,30 @@ import bisq.core.payment.payload.RevolutAccountPayload;
 import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.validation.InputValidator;
 
-import com.jfoenix.controls.JFXComboBox;
+import bisq.common.util.Tuple2;
 
-import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
 
-import javafx.collections.FXCollections;
-
-import javafx.util.StringConverter;
+import lombok.extern.slf4j.Slf4j;
 
 import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextField;
 import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextFieldWithCopyIcon;
 import static bisq.desktop.util.FormBuilder.addTopLabelFlowPane;
 import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
-import static bisq.desktop.util.FormBuilder.addTopLabelWithVBox;
 
+@Slf4j
 public class RevolutForm extends PaymentMethodForm {
     private final RevolutAccount account;
     private RevolutValidator validator;
-    private InputTextField accountIdInputTextField;
-    private Country selectedCountry;
+    private InputTextField userNameInputTextField;
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow,
                                       PaymentAccountPayload paymentAccountPayload) {
-        String accountId = ((RevolutAccountPayload) paymentAccountPayload).getAccountId();
-        addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, getTitle(accountId), accountId);
-
+        Tuple2<String, String> tuple = ((RevolutAccountPayload) paymentAccountPayload).getRecipientsAccountData();
+        addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, tuple.first, tuple.second);
         return gridRow;
-    }
-
-    private static String getTitle(String accountId) {
-        // From 0.9.4 on we only allow phone nr. as with emails we got too many disputes as users used an email which was
-        // not registered at Revolut. It seems that phone numbers need to be registered at least we have no reports from
-        // arbitrators with such cases. Thought email is still supported for backward compatibility.
-        // We might still get emails from users who have registered when email was supported
-        return accountId.contains("@") ? Res.get("payment.revolut.email") : Res.get("payment.revolut.phoneNr");
     }
 
     public RevolutForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService,
@@ -86,69 +70,22 @@ public class RevolutForm extends PaymentMethodForm {
     public void addFormForAddAccount() {
         gridRowFrom = gridRow + 1;
 
-        // country selection is added only to prevent anymore email id input and
-        // solely to validate the given phone number
-        ComboBox<Country> countryComboBox = addCountrySelection();
-        setCountryComboBoxAction(countryComboBox);
-        countryComboBox.setItems(FXCollections.observableArrayList(CountryUtil.getAllRevolutCountries()));
-
-        accountIdInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.revolut.phoneNr"));
-        accountIdInputTextField.setValidator(validator);
-        accountIdInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
-            account.setAccountId(newValue.trim());
+        userNameInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.account.userName"));
+        userNameInputTextField.setValidator(validator);
+        userNameInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
+            account.setUserName(newValue.trim());
             updateFromInputs();
         });
 
         addCurrenciesGrid(true);
         addLimitations(false);
         addAccountNameTextFieldWithAutoFillToggleButton();
-
-        //set default country as selected
-        selectedCountry = CountryUtil.getDefaultCountry();
-        if (CountryUtil.getAllRevolutCountries().contains(selectedCountry)) {
-            countryComboBox.getSelectionModel().select(selectedCountry);
-        }
-    }
-
-    ComboBox<Country> addCountrySelection() {
-        HBox hBox = new HBox();
-
-        hBox.setSpacing(5);
-        ComboBox<Country> countryComboBox = new JFXComboBox<>();
-        hBox.getChildren().add(countryComboBox);
-
-        addTopLabelWithVBox(gridPane, ++gridRow, Res.get("payment.bank.country"), hBox, 0);
-
-        countryComboBox.setPromptText(Res.get("payment.select.bank.country"));
-        countryComboBox.setConverter(new StringConverter<>() {
-            @Override
-            public String toString(Country country) {
-                return country.name + " (" + country.code + ")";
-            }
-
-            @Override
-            public Country fromString(String s) {
-                return null;
-            }
-        });
-        return countryComboBox;
-    }
-
-    void setCountryComboBoxAction(ComboBox<Country> countryComboBox) {
-        countryComboBox.setOnAction(e -> {
-            selectedCountry = countryComboBox.getSelectionModel().getSelectedItem();
-            updateFromInputs();
-            accountIdInputTextField.resetValidation();
-            accountIdInputTextField.validate();
-            accountIdInputTextField.requestFocus();
-            countryComboBox.requestFocus();
-        });
     }
 
     private void addCurrenciesGrid(boolean isEditable) {
         FlowPane flowPane = addTopLabelFlowPane(gridPane, ++gridRow,
-                Res.get("payment.supportedCurrencies"), Layout.FLOATING_LABEL_DISTANCE,
-                Layout.FLOATING_LABEL_DISTANCE).second;
+                Res.get("payment.supportedCurrencies"), Layout.FLOATING_LABEL_DISTANCE * 3,
+                Layout.FLOATING_LABEL_DISTANCE * 3).second;
 
         if (isEditable)
             flowPane.setId("flow-pane-checkboxes-bg");
@@ -161,7 +98,7 @@ public class RevolutForm extends PaymentMethodForm {
 
     @Override
     protected void autoFillNameTextField() {
-        setAccountNameWithString(accountIdInputTextField.getText());
+        setAccountNameWithString(userNameInputTextField.getText());
     }
 
     @Override
@@ -171,9 +108,17 @@ public class RevolutForm extends PaymentMethodForm {
                 account.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
                 Res.get(account.getPaymentMethod().getId()));
-        String accountId = account.getAccountId();
-        TextField field = addCompactTopLabelTextField(gridPane, ++gridRow, getTitle(accountId), accountId).second;
-        field.setMouseTransparent(false);
+
+        String userName = account.getUserName();
+        TextField userNameTf = addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.userName"), userName).second;
+        userNameTf.setMouseTransparent(false);
+
+        if (account.hasOldAccountId()) {
+            String accountId = account.getAccountId();
+            TextField accountIdTf = addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.phoneNr"), accountId).second;
+            accountIdTf.setMouseTransparent(false);
+        }
+
         addLimitations(true);
         addCurrenciesGrid(false);
     }
@@ -181,7 +126,7 @@ public class RevolutForm extends PaymentMethodForm {
     @Override
     public void updateAllInputsValid() {
         allInputsValid.set(isAccountNameValid()
-                && validator.validate(account.getAccountId(), selectedCountry.code).isValid
+                && validator.validate(account.getUserName()).isValid
                 && account.getTradeCurrencies().size() > 0);
     }
 }

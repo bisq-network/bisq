@@ -27,12 +27,10 @@ import bisq.desktop.main.MainView;
 import bisq.desktop.main.account.AccountView;
 import bisq.desktop.main.account.content.fiataccounts.FiatAccountsView;
 import bisq.desktop.main.overlays.popups.Popup;
-import bisq.desktop.util.validation.RegexValidator;
 
 import bisq.core.account.witness.AccountAgeWitness;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.btc.setup.WalletsSetup;
-import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.locale.Country;
 import bisq.core.locale.CountryUtil;
 import bisq.core.locale.CurrencyUtil;
@@ -46,6 +44,7 @@ import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
+import bisq.core.trade.txproof.AssetTxProofResult;
 import bisq.core.user.DontShowAgainLookup;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
@@ -59,11 +58,10 @@ import bisq.network.p2p.P2PService;
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
 import bisq.common.config.Config;
-import bisq.common.proto.persistable.PersistableList;
+import bisq.common.file.CorruptedStorageFileHandler;
+import bisq.common.persistence.PersistenceManager;
+import bisq.common.proto.persistable.PersistableEnvelope;
 import bisq.common.proto.persistable.PersistenceProtoResolver;
-import bisq.common.storage.CorruptedDatabaseFilesHandler;
-import bisq.common.storage.FileUtil;
-import bisq.common.storage.Storage;
 import bisq.common.util.MathUtils;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple3;
@@ -74,7 +72,6 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.TransactionConfidence;
 import org.bitcoinj.uri.BitcoinURI;
 import org.bitcoinj.utils.Fiat;
-import org.bitcoinj.wallet.DeterministicSeed;
 
 import com.googlecode.jcsv.CSVStrategy;
 import com.googlecode.jcsv.writer.CSVEntryConverter;
@@ -143,6 +140,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nullable;
+
 import static bisq.desktop.util.FormBuilder.addTopLabelComboBoxComboBox;
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -170,7 +169,9 @@ public class GUIUtil {
         GUIUtil.preferences = preferences;
     }
 
-    public static String getUserLanguage() { return preferences.getUserLanguage(); }
+    public static String getUserLanguage() {
+        return preferences.getUserLanguage();
+    }
 
     public static double getScrollbarWidth(Node scrollablePane) {
         Node node = scrollablePane.lookup(".scroll-bar");
@@ -208,14 +209,19 @@ public class GUIUtil {
                                       Preferences preferences,
                                       Stage stage,
                                       PersistenceProtoResolver persistenceProtoResolver,
-                                      CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler) {
+                                      CorruptedStorageFileHandler corruptedStorageFileHandler) {
         if (!accounts.isEmpty()) {
             String directory = getDirectoryFromChooser(preferences, stage);
             if (!directory.isEmpty()) {
-                Storage<PersistableList<PaymentAccount>> paymentAccountsStorage = new Storage<>(new File(directory), persistenceProtoResolver, corruptedDatabaseFilesHandler);
-                paymentAccountsStorage.initAndGetPersisted(new PaymentAccountList(accounts), fileName, 100);
-                paymentAccountsStorage.queueUpForSave();
-                new Popup().feedback(Res.get("guiUtil.accountExport.savedToPath", Paths.get(directory, fileName).toAbsolutePath())).show();
+                PersistenceManager<PersistableEnvelope> persistenceManager = new PersistenceManager<>(new File(directory), persistenceProtoResolver, corruptedStorageFileHandler);
+                PaymentAccountList paymentAccounts = new PaymentAccountList(accounts);
+                persistenceManager.initialize(paymentAccounts, fileName, PersistenceManager.Source.PRIVATE_LOW_PRIO);
+                persistenceManager.persistNow(() -> {
+                    persistenceManager.shutdown();
+                    new Popup().feedback(Res.get("guiUtil.accountExport.savedToPath",
+                            Paths.get(directory, fileName).toAbsolutePath()))
+                            .show();
+                });
             }
         } else {
             new Popup().warning(Res.get("guiUtil.accountExport.noAccountSetup")).show();
@@ -227,7 +233,7 @@ public class GUIUtil {
                                       Preferences preferences,
                                       Stage stage,
                                       PersistenceProtoResolver persistenceProtoResolver,
-                                      CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler) {
+                                      CorruptedStorageFileHandler corruptedStorageFileHandler) {
         FileChooser fileChooser = new FileChooser();
         File initDir = new File(preferences.getDirectoryChooserPath());
         if (initDir.isDirectory()) {
@@ -240,26 +246,25 @@ public class GUIUtil {
             if (Paths.get(path).getFileName().toString().equals(fileName)) {
                 String directory = Paths.get(path).getParent().toString();
                 preferences.setDirectoryChooserPath(directory);
-                Storage<PaymentAccountList> paymentAccountsStorage = new Storage<>(new File(directory), persistenceProtoResolver, corruptedDatabaseFilesHandler);
-                PaymentAccountList persisted = paymentAccountsStorage.initAndGetPersistedWithFileName(fileName, 100);
-                if (persisted != null) {
-                    final StringBuilder msg = new StringBuilder();
-                    final HashSet<PaymentAccount> paymentAccounts = new HashSet<>();
-                    persisted.getList().forEach(paymentAccount -> {
-                        final String id = paymentAccount.getId();
-                        if (user.getPaymentAccount(id) == null) {
-                            paymentAccounts.add(paymentAccount);
-                            msg.append(Res.get("guiUtil.accountExport.tradingAccount", id));
-                        } else {
-                            msg.append(Res.get("guiUtil.accountImport.noImport", id));
-                        }
-                    });
-                    user.addImportedPaymentAccounts(paymentAccounts);
-                    new Popup().feedback(Res.get("guiUtil.accountImport.imported", path, msg)).show();
-
-                } else {
-                    new Popup().warning(Res.get("guiUtil.accountImport.noAccountsFound", path, fileName)).show();
-                }
+                PersistenceManager<PaymentAccountList> persistenceManager = new PersistenceManager<>(new File(directory), persistenceProtoResolver, corruptedStorageFileHandler);
+                persistenceManager.readPersisted(fileName, persisted -> {
+                            StringBuilder msg = new StringBuilder();
+                            HashSet<PaymentAccount> paymentAccounts = new HashSet<>();
+                            persisted.getList().forEach(paymentAccount -> {
+                                String id = paymentAccount.getId();
+                                if (user.getPaymentAccount(id) == null) {
+                                    paymentAccounts.add(paymentAccount);
+                                    msg.append(Res.get("guiUtil.accountExport.tradingAccount", id));
+                                } else {
+                                    msg.append(Res.get("guiUtil.accountImport.noImport", id));
+                                }
+                            });
+                            user.addImportedPaymentAccounts(paymentAccounts);
+                            new Popup().feedback(Res.get("guiUtil.accountImport.imported", path, msg)).show();
+                        },
+                        () -> {
+                            new Popup().warning(Res.get("guiUtil.accountImport.noAccountsFound", path, fileName)).show();
+                        });
             } else {
                 log.error("The selected file is not the expected file for import. The expected file name is: " + fileName + ".");
             }
@@ -270,7 +275,6 @@ public class GUIUtil {
     public static <T> void exportCSV(String fileName, CSVEntryConverter<T> headerConverter,
                                      CSVEntryConverter<T> contentConverter, T emptyItem,
                                      List<T> list, Stage stage) {
-
         FileChooser fileChooser = new FileChooser();
         fileChooser.setInitialFileName(fileName);
         File file = fileChooser.showSaveDialog(stage);
@@ -290,7 +294,7 @@ public class GUIUtil {
             } catch (RuntimeException | IOException e) {
                 e.printStackTrace();
                 log.error(e.getMessage());
-                new Popup().error(Res.get("guiUtil.accountExport.exportFailed", e.getMessage()));
+                new Popup().error(Res.get("guiUtil.accountExport.exportFailed", e.getMessage())).show();
             }
         }
     }
@@ -597,6 +601,10 @@ public class GUIUtil {
         openWebPage(target, useReferrer, null);
     }
 
+    public static void openWebPageNoPopup(String target) {
+        doOpenWebPage(target);
+    }
+
     public static void openWebPage(String target, boolean useReferrer, Runnable closeHandler) {
 
         if (useReferrer && target.contains("bisq.network")) {
@@ -700,9 +708,23 @@ public class GUIUtil {
                 .show();
     }
 
+    public static void showFasterPaymentsWarning(Navigation navigation) {
+        String key = "recreateFasterPaymentsAccount";
+        String currencyName = Config.baseCurrencyNetwork().getCurrencyName();
+        new Popup().information(Res.get("payment.fasterPayments.newRequirements.info", currencyName))
+                .width(900)
+                .actionButtonTextWithGoTo("navigation.account")
+                .onAction(() -> {
+                    navigation.setReturnPath(navigation.getCurrentPath());
+                    navigation.navigateTo(MainView.class, AccountView.class, FiatAccountsView.class);
+                })
+                .dontShowAgainId(key)
+                .show();
+    }
+
     public static String getBitcoinURI(String address, Coin amount, String label) {
         return address != null ?
-                BitcoinURI.convertToBitcoinURI(Address.fromBase58(Config.baseCurrencyNetworkParameters(),
+                BitcoinURI.convertToBitcoinURI(Address.fromString(Config.baseCurrencyNetworkParameters(),
                         address), amount, label, null) :
                 "";
     }
@@ -782,26 +804,6 @@ public class GUIUtil {
         } catch (Throwable t) {
             new Popup().error(Res.get("settings.net.reSyncSPVFailed", t)).show();
         }
-    }
-
-    public static void restoreSeedWords(DeterministicSeed seed, WalletsManager walletsManager, File storageDir) {
-        try {
-            FileUtil.renameFile(new File(storageDir, "AddressEntryList"), new File(storageDir, "AddressEntryList_wallet_restore_" + System.currentTimeMillis()));
-        } catch (Throwable t) {
-            new Popup().error(Res.get("error.deleteAddressEntryListFailed", t)).show();
-        }
-        walletsManager.restoreSeedWords(
-                seed,
-                () -> UserThread.execute(() -> {
-                    log.info("Wallets restored with seed words");
-                    new Popup().feedback(Res.get("seed.restore.success")).hideCloseButton().show();
-                    BisqApp.getShutDownHandler().run();
-                }),
-                throwable -> UserThread.execute(() -> {
-                    log.error(throwable.toString());
-                    new Popup().error(Res.get("seed.restore.error", Res.get("shared.errorMessageInline", throwable)))
-                            .show();
-                }));
     }
 
     public static void showSelectableTextModal(String title, String text) {
@@ -1109,35 +1111,32 @@ public class GUIUtil {
                 MaterialDesignIcon.APPROVAL : MaterialDesignIcon.ALERT_CIRCLE_OUTLINE;
     }
 
-    public static RegexValidator addressRegexValidator() {
-        RegexValidator regexValidator = new RegexValidator();
-        String portRegexPattern = "(0|[1-9][0-9]{0,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])";
-        String onionV2RegexPattern = String.format("[a-zA-Z2-7]{16}\\.onion(?:\\:%1$s)?", portRegexPattern);
-        String ipv4RegexPattern = String.format("(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}" +
-                "(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)" +
-                "(?:\\:%1$s)?", portRegexPattern);
-        String ipv6RegexPattern = "(" +
-                "([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|" +          // 1:2:3:4:5:6:7:8
-                "([0-9a-fA-F]{1,4}:){1,7}:|" +                         // 1::                              1:2:3:4:5:6:7::
-                "([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|" +         // 1::8             1:2:3:4:5:6::8  1:2:3:4:5:6::8
-                "([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|" +  // 1::7:8           1:2:3:4:5::7:8  1:2:3:4:5::8
-                "([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|" +  // 1::6:7:8         1:2:3:4::6:7:8  1:2:3:4::8
-                "([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|" +  // 1::5:6:7:8       1:2:3::5:6:7:8  1:2:3::8
-                "([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|" +  // 1::4:5:6:7:8     1:2::4:5:6:7:8  1:2::8
-                "[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|" +       // 1::3:4:5:6:7:8   1::3:4:5:6:7:8  1::8
-                ":((:[0-9a-fA-F]{1,4}){1,7}|:)|" +                     // ::2:3:4:5:6:7:8  ::2:3:4:5:6:7:8 ::8       ::
-                "fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|" +     // fe80::7:8%eth0   fe80::7:8%1
-                "::(ffff(:0{1,4}){0,1}:){0,1}" +                       // (link-local IPv6 addresses with zone index)
-                "((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\\.){3,3}" +
-                "(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|" +          // ::255.255.255.255   ::ffff:255.255.255.255  ::ffff:0:255.255.255.255
-                "([0-9a-fA-F]{1,4}:){1,4}:" +                          // (IPv4-mapped IPv6 addresses and IPv4-translated addresses)
-                "((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\\.){3,3}" +
-                "(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])" +           // 2001:db8:3:4::192.0.2.33  64:ff9b::192.0.2.33
-                ")";                                                   // (IPv4-Embedded IPv6 Address)
-        ipv6RegexPattern = String.format("(?:%1$s)|(?:\\[%1$s\\]\\:%2$s)", ipv6RegexPattern, portRegexPattern);
-        String fqdnRegexPattern = String.format("(((?!-)[a-zA-Z0-9-]{1,63}(?<!-)\\.)+(?!onion)[a-zA-Z]{2,63}(?:\\:%1$s)?)", portRegexPattern);
-        regexValidator.setPattern(String.format("^(?:(?:(?:%1$s)|(?:%2$s)|(?:%3$s)|(?:%4$s)),)*(?:(?:%1$s)|(?:%2$s)|(?:%3$s)|(?:%4$s))*$",
-                onionV2RegexPattern, ipv4RegexPattern, ipv6RegexPattern, fqdnRegexPattern));
-        return regexValidator;
+    public static String getProofResultAsString(@Nullable AssetTxProofResult result) {
+        if (result == null) {
+            return "";
+        }
+        String key = "portfolio.pending.autoConf.state." + result.name();
+        switch (result) {
+            case UNDEFINED:
+                return "";
+            case FEATURE_DISABLED:
+                return Res.get(key, result.getDetails());
+            case TRADE_LIMIT_EXCEEDED:
+                return Res.get(key);
+            case INVALID_DATA:
+                return Res.get(key, result.getDetails());
+            case PAYOUT_TX_ALREADY_PUBLISHED:
+            case DISPUTE_OPENED:
+            case REQUESTS_STARTED:
+                return Res.get(key);
+            case PENDING:
+                return Res.get(key, result.getNumSuccessResults(), result.getNumRequiredSuccessResults(), result.getDetails());
+            case COMPLETED:
+            case ERROR:
+            case FAILED:
+                return Res.get(key);
+            default:
+                return result.name();
+        }
     }
 }
