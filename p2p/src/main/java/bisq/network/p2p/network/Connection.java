@@ -120,9 +120,9 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
 
     // Leaving some constants package-private for tests to know limits.
     private static final int PERMITTED_MESSAGE_SIZE = 200 * 1024;                       // 200 kb
-    private static final int MAX_PERMITTED_MESSAGE_SIZE = 10 * 1024 * 1024;             // 10 MB (425 offers resulted in about 660 kb, mailbox msg will add more to it) offer has usually 2 kb, mailbox 3kb.
+    private static final int MAX_PERMITTED_MESSAGE_SIZE = 15 * 1024 * 1024;             // 15 MB (425 offers resulted in about 660 kb, mailbox msg will add more to it) offer has usually 2 kb, mailbox 3kb.
     //TODO decrease limits again after testing
-    private static final int SOCKET_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(180);
+    private static final int SOCKET_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(360);
 
     public static int getPermittedMessageSize() {
         return PERMITTED_MESSAGE_SIZE;
