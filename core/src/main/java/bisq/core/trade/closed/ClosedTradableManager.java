@@ -39,20 +39,26 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class ClosedTradableManager implements PersistedDataHost {
     private final PersistenceManager<TradableList<Tradable>> persistenceManager;
     private final TradableList<Tradable> closedTradables = new TradableList<>();
     private final KeyRing keyRing;
     private final PriceFeedService priceFeedService;
+    private final CleanupMailboxMessages cleanupMailboxMessages;
     private final DumpDelayedPayoutTx dumpDelayedPayoutTx;
 
     @Inject
     public ClosedTradableManager(KeyRing keyRing,
                                  PriceFeedService priceFeedService,
                                  PersistenceManager<TradableList<Tradable>> persistenceManager,
+                                 CleanupMailboxMessages cleanupMailboxMessages,
                                  DumpDelayedPayoutTx dumpDelayedPayoutTx) {
         this.keyRing = keyRing;
         this.priceFeedService = priceFeedService;
+        this.cleanupMailboxMessages = cleanupMailboxMessages;
         this.dumpDelayedPayoutTx = dumpDelayedPayoutTx;
         this.persistenceManager = persistenceManager;
 
@@ -70,6 +76,10 @@ public class ClosedTradableManager implements PersistedDataHost {
                     completeHandler.run();
                 },
                 completeHandler);
+    }
+
+    public void onAllServicesInitialized() {
+        cleanupMailboxMessages.handleTrades(getClosedTrades());
     }
 
     public void add(Tradable tradable) {
