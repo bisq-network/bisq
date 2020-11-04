@@ -47,6 +47,7 @@ import javax.annotation.Nullable;
  * That is the typical requirement for a mailbox like system.
  * <p/>
  * Typical payloads are trade or dispute network_messages to be stored when the peer is offline.
+ * Size depends on payload but typical size is 2000-3000 bytes
  */
 @Getter
 @EqualsAndHashCode
