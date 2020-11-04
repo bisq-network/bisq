@@ -370,9 +370,9 @@ public class InventoryWebServer {
                     RequestInfo.Data data = deviationInfoMap.get(inventoryItem);
                     String deviationAsPercent = getDeviationAsPercentString(data.getDeviation());
                     if (data.isPersistentWarning()) {
-                        warningsAtRequestNumber.add((i + 1) + " (" + deviationAsPercent + ")");
+                        warningsAtRequestNumber.add((i + 1) + deviationAsPercent);
                     } else if (data.isPersistentAlert()) {
-                        alertsAtRequestNumber.add((i + 1) + " (" + deviationAsPercent + ")");
+                        alertsAtRequestNumber.add((i + 1) + deviationAsPercent);
                     }
                 }
             }
