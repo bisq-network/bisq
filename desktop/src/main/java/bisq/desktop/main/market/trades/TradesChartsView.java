@@ -89,6 +89,8 @@ import javafx.collections.transformation.SortedList;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
 
+import java.text.DecimalFormat;
+
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
@@ -349,11 +351,13 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
             public String toString(Number object) {
                 String currencyCode = model.getCurrencyCode();
                 double doubleValue = (double) object;
+
                 if (CurrencyUtil.isCryptoCurrency(currencyCode)) {
                     final double value = MathUtils.scaleDownByPowerOf10(doubleValue, 8);
                     return FormattingUtils.formatRoundedDoubleWithPrecision(value, 8);
                 } else {
-                    return FormattingUtils.formatPrice(Price.valueOf(currencyCode, MathUtils.doubleToLong(doubleValue)));
+                    DecimalFormat df = new DecimalFormat(",###");
+                    return df.format(Double.parseDouble(FormattingUtils.formatPrice(Price.valueOf(currencyCode, MathUtils.doubleToLong(doubleValue)))));
                 }
             }
 
