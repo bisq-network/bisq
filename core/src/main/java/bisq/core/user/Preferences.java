@@ -245,6 +245,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         setCryptoCurrencies(prefPayload.getCryptoCurrencies());
         setBsqBlockChainExplorer(prefPayload.getBsqBlockChainExplorer());
         GlobalSettings.setDefaultTradeCurrency(preferredTradeCurrency);
+        prefPayload.setBsqAverageTrimThreshold(0.05);
         setupPreferences();
     }
 
