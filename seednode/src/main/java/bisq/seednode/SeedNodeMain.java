@@ -41,7 +41,7 @@ public class SeedNodeMain extends ExecutableForAppWithP2p {
     }
 
     public static void main(String[] args) {
-        log.info("SeedNode.VERSION: " + VERSION);
+        System.out.println("SeedNode.VERSION: " + VERSION);
         new SeedNodeMain().execute(args);
     }
 
