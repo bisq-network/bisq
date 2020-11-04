@@ -147,7 +147,7 @@ public final class AckMessage extends NetworkEnvelope implements MailboxMessage,
 
     @Override
     public long getTTL() {
-        return TimeUnit.DAYS.toMillis(10);
+        return TimeUnit.DAYS.toMillis(2);
     }
 
     @Override
