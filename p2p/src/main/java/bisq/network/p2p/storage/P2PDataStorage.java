@@ -511,10 +511,12 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
         // Batch processing can cause performance issues, so do all of the removes first, then update the listeners
         // to let them know about the removes.
-        toRemoveList.forEach(toRemoveItem -> {
-            log.debug("We found an expired data entry. We remove the protectedData:\n\t" +
-                    Utilities.toTruncatedString(toRemoveItem.getValue()));
-        });
+        if (log.isDebugEnabled()) {
+            toRemoveList.forEach(toRemoveItem -> {
+                log.debug("We found an expired data entry. We remove the protectedData:\n\t{}",
+                        Utilities.toTruncatedString(toRemoveItem.getValue()));
+            });
+        }
         removeFromMapAndDataStore(toRemoveList);
 
         if (sequenceNumberMap.size() > this.maxSequenceNumberMapSizeBeforePurge) {
@@ -936,6 +938,8 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
         if (entriesToRemoveWithPayloadHash.isEmpty())
             return;
+
+        log.info("Remove {} expired data entries", entriesToRemoveWithPayloadHash.size());
 
         ArrayList<ProtectedStorageEntry> entriesForSignal = new ArrayList<>(entriesToRemoveWithPayloadHash.size());
         entriesToRemoveWithPayloadHash.forEach(entryToRemoveWithPayloadHash -> {
