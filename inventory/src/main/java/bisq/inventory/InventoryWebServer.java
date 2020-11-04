@@ -360,17 +360,19 @@ public class InventoryWebServer {
         List<RequestInfo> requestInfoList = map.get(seedNode);
         String historicalWarnings = "";
         String historicalAlerts = "";
-        List<Integer> warningsAtRequestNumber = new ArrayList<>();
-        List<Integer> alertsAtRequestNumber = new ArrayList<>();
+        List<String> warningsAtRequestNumber = new ArrayList<>();
+        List<String> alertsAtRequestNumber = new ArrayList<>();
         if (requestInfoList != null) {
             for (int i = 0; i < requestInfoList.size(); i++) {
                 RequestInfo reqInfo = requestInfoList.get(i);
                 Map<InventoryItem, RequestInfo.Data> deviationInfoMap = reqInfo.getDataMap();
                 if (deviationInfoMap.containsKey(inventoryItem)) {
-                    if (deviationInfoMap.get(inventoryItem).isPersistentWarning()) {
-                        warningsAtRequestNumber.add(i + 1);
-                    } else if (deviationInfoMap.get(inventoryItem).isPersistentAlert()) {
-                        alertsAtRequestNumber.add(i + 1);
+                    RequestInfo.Data data = deviationInfoMap.get(inventoryItem);
+                    String deviationAsPercent = getDeviationAsPercentString(data.getDeviation());
+                    if (data.isPersistentWarning()) {
+                        warningsAtRequestNumber.add((i + 1) + " (" + deviationAsPercent + ")");
+                    } else if (data.isPersistentAlert()) {
+                        alertsAtRequestNumber.add((i + 1) + " (" + deviationAsPercent + ")");
                     }
                 }
             }
