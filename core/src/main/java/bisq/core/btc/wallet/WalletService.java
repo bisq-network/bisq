@@ -37,7 +37,6 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Context;
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.InsufficientMoneyException;
-import org.bitcoinj.core.LegacyAddress;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.Transaction;
@@ -325,11 +324,8 @@ public abstract class WalletService {
                     }
                 } else if (ScriptPattern.isP2WPKH(scriptPubKey)) {
                     try {
-                        // TODO: Consider using this alternative way to build the scriptCode (taken from bitcoinj master)
-                        // Script scriptCode = ScriptBuilder.createP2PKHOutputScript(key);
-                        Script scriptCode = new ScriptBuilder().data(
-                                ScriptBuilder.createOutputScript(LegacyAddress.fromKey(tx.getParams(), key)).getProgram())
-                                .build();
+                        // scriptCode is expected to have the format of a legacy P2PKH output script
+                        Script scriptCode = ScriptBuilder.createP2PKHOutputScript(key);
                         Coin value = txIn.getValue();
                         TransactionSignature txSig = tx.calculateWitnessSignature(index, key, scriptCode, value,
                                 Transaction.SigHash.ALL, false);

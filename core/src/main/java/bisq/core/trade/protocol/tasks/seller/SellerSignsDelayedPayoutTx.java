@@ -24,6 +24,7 @@ import bisq.core.trade.protocol.tasks.TradeTask;
 
 import bisq.common.taskrunner.TaskRunner;
 
+import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.crypto.DeterministicKey;
 
@@ -47,6 +48,9 @@ public class SellerSignsDelayedPayoutTx extends TradeTask {
 
             Transaction preparedDelayedPayoutTx = checkNotNull(processModel.getPreparedDelayedPayoutTx());
             BtcWalletService btcWalletService = processModel.getBtcWalletService();
+            NetworkParameters params = btcWalletService.getParams();
+            Transaction preparedDepositTx = new Transaction(params, processModel.getPreparedDepositTx());
+
             String id = processModel.getOffer().getId();
 
             byte[] sellerMultiSigPubKey = processModel.getMyMultiSigPubKey();
@@ -59,6 +63,7 @@ public class SellerSignsDelayedPayoutTx extends TradeTask {
 
             byte[] delayedPayoutTxSignature = processModel.getTradeWalletService().signDelayedPayoutTx(
                     preparedDelayedPayoutTx,
+                    preparedDepositTx,
                     myMultiSigKeyPair,
                     buyerMultiSigPubKey,
                     sellerMultiSigPubKey);
