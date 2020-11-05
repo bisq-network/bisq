@@ -108,7 +108,6 @@ public class PaymentAccountFormTest {
         EXPECTED_FORM.clear();
     }
 
-
     @Test
     public void testBrazilNationalBankAccountForm() {
         File emptyForm = paymentAccountForm.getPaymentAccountForm(NATIONAL_BANK_ID);
@@ -300,7 +299,6 @@ public class PaymentAccountFormTest {
         // log.info("Deserialized {}: {}", paymentAccount.getClass().getSimpleName(), paymentAccount);
     }
 
-
     @Test
     public void testSepaAccountForm() {
         File emptyForm = paymentAccountForm.getPaymentAccountForm(SEPA_ID);
@@ -358,7 +356,6 @@ public class PaymentAccountFormTest {
         assertEquals(EXPECTED_FORM.get(PROPERTY_NAME_POSTAL_ADDRESS), paymentAccount.getPostalAddress());
         // log.info("Deserialized {}: {}", paymentAccount.getClass().getSimpleName(), paymentAccount);
     }
-
 
     // Private
 
