@@ -43,7 +43,7 @@ import java.lang.reflect.Type;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.core.payment.payload.PaymentMethod.getPaymentMethodById;
+import static bisq.core.payment.payload.PaymentMethod.*;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.io.File.separatorChar;
 import static java.lang.String.format;
@@ -129,7 +129,7 @@ public class PaymentAccountForm {
     }
 
     private Class<? extends PaymentAccount> getPaymentAccountClass(String paymentMethodId) {
-        PaymentMethod paymentMethod = PaymentMethod.getPaymentMethodById(paymentMethodId);
+        PaymentMethod paymentMethod = getPaymentMethodById(paymentMethodId);
         return PaymentAccountFactory.getPaymentAccount(paymentMethod).getClass();
     }
 }
