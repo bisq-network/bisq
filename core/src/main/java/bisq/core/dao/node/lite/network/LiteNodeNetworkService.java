@@ -281,6 +281,9 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
             return;
         }
 
+        // In case we would have had an earlier request and had set allowDisconnectSeedNodes to true we un-do that
+        // if we get a repeated request.
+        peerManager.setAllowDisconnectSeedNodes(false);
         RequestBlocksHandler requestBlocksHandler = new RequestBlocksHandler(networkNode,
                 peerManager,
                 peersNodeAddress,
@@ -320,6 +323,9 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
                         requestBlocksHandlerMap.remove(key);
 
                         listeners.forEach(listener -> listener.onFault(errorMessage, connection));
+
+                        // We allow now to disconnect from that seed.
+                        peerManager.setAllowDisconnectSeedNodes(true);
 
                         tryWithNewSeedNode(startBlockHeight);
                     }
