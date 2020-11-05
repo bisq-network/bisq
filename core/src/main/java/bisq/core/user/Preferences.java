@@ -245,6 +245,16 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         setCryptoCurrencies(prefPayload.getCryptoCurrencies());
         setBsqBlockChainExplorer(prefPayload.getBsqBlockChainExplorer());
         GlobalSettings.setDefaultTradeCurrency(preferredTradeCurrency);
+
+        // If a user has updated and the field was not set and get set to 0 by protobuf
+        // As there is no way to detect that a primitive value field was set we cannot apply
+        // a "marker" value like -1 to it. We also do not want to wrap the value in a new
+        // proto message as thats too much for that feature... So we accept that if the user
+        // sets the value to 0 it will be overwritten by the default at next startup.
+        if (prefPayload.getBsqAverageTrimThreshold() == 0) {
+            prefPayload.setBsqAverageTrimThreshold(0.05);
+        }
+
         setupPreferences();
     }
 
