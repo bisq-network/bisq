@@ -129,7 +129,6 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
         peerManager.addListener(this);
     }
 
-    @SuppressWarnings("Duplicates")
     public void shutDown() {
         stopped = true;
         stopRetryTimer();
@@ -154,7 +153,9 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
                 .findAny();
         if (connectionToSeedNodeOptional.isPresent() &&
                 connectionToSeedNodeOptional.get().getPeersNodeAddressOptional().isPresent()) {
-            requestBlocks(connectionToSeedNodeOptional.get().getPeersNodeAddressOptional().get(), startBlockHeight);
+            NodeAddress candidate = connectionToSeedNodeOptional.get().getPeersNodeAddressOptional().get();
+            seedNodeAddresses.remove(candidate);
+            requestBlocks(candidate, startBlockHeight);
         } else {
             tryWithNewSeedNode(startBlockHeight);
         }
@@ -234,15 +235,17 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
             // We combine blockHash and txId list in case we receive blocks with different transactions.
             List<String> txIds = newBlockBroadcastMessage.getBlock().getRawTxs().stream().map(BaseTx::getId).collect(Collectors.toList());
             String extBlockId = newBlockBroadcastMessage.getBlock().getHash() + ":" + txIds;
-            if (!receivedBlocks.contains(extBlockId)) {
-                log.info("We received a NewBlockBroadcastMessage from peer {} and broadcast it to our peers. extBlockId={}",
-                        connection.getPeersNodeAddressOptional().orElse(null), extBlockId);
-                receivedBlocks.add(extBlockId);
-                broadcaster.broadcast(newBlockBroadcastMessage, connection.getPeersNodeAddressOptional().orElse(null));
-                listeners.forEach(listener -> listener.onNewBlockReceived(newBlockBroadcastMessage));
-            } else {
+
+            if (receivedBlocks.contains(extBlockId)) {
                 log.debug("We had that message already and do not further broadcast it. extBlockId={}", extBlockId);
+                return;
             }
+
+            log.info("We received a NewBlockBroadcastMessage from peer {} and broadcast it to our peers. extBlockId={}",
+                    connection.getPeersNodeAddressOptional().orElse(null), extBlockId);
+            receivedBlocks.add(extBlockId);
+            broadcaster.broadcast(newBlockBroadcastMessage, connection.getPeersNodeAddressOptional().orElse(null));
+            listeners.forEach(listener -> listener.onNewBlockReceived(newBlockBroadcastMessage));
         }
     }
 
@@ -341,37 +344,40 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void tryWithNewSeedNode(int startBlockHeight) {
-        if (retryTimer == null) {
-            retryCounter++;
-            if (retryCounter <= MAX_RETRY) {
-                retryTimer = UserThread.runAfter(() -> {
-                            stopped = false;
-
-                            stopRetryTimer();
-
-                            List<NodeAddress> list = seedNodeAddresses.stream()
-                                    .filter(e -> peerManager.isSeedNode(e) && !peerManager.isSelf(e))
-                                    .collect(Collectors.toList());
-                            Collections.shuffle(list);
-
-                            if (!list.isEmpty()) {
-                                NodeAddress nextCandidate = list.get(0);
-                                seedNodeAddresses.remove(nextCandidate);
-                                log.info("We try requestBlocks with {}", nextCandidate);
-                                requestBlocks(nextCandidate, startBlockHeight);
-                            } else {
-                                log.warn("No more seed nodes available we could try.");
-                                listeners.forEach(Listener::onNoSeedNodeAvailable);
-                            }
-                        },
-                        RETRY_DELAY_SEC);
-            } else {
-                log.warn("We tried {} times but could not connect to a seed node.", retryCounter);
-                listeners.forEach(Listener::onNoSeedNodeAvailable);
-            }
-        } else {
+        if (retryTimer != null) {
             log.warn("We have a retry timer already running.");
+            return;
         }
+
+        retryCounter++;
+
+        if (retryCounter > MAX_RETRY) {
+            log.warn("We tried {} times but could not connect to a seed node.", retryCounter);
+            listeners.forEach(Listener::onNoSeedNodeAvailable);
+            return;
+        }
+
+        retryTimer = UserThread.runAfter(() -> {
+                    stopped = false;
+
+                    stopRetryTimer();
+
+                    List<NodeAddress> list = seedNodeAddresses.stream()
+                            .filter(e -> peerManager.isSeedNode(e) && !peerManager.isSelf(e))
+                            .collect(Collectors.toList());
+                    Collections.shuffle(list);
+
+                    if (!list.isEmpty()) {
+                        NodeAddress nextCandidate = list.get(0);
+                        seedNodeAddresses.remove(nextCandidate);
+                        log.info("We try requestBlocks with {}", nextCandidate);
+                        requestBlocks(nextCandidate, startBlockHeight);
+                    } else {
+                        log.warn("No more seed nodes available we could try.");
+                        listeners.forEach(Listener::onNoSeedNodeAvailable);
+                    }
+                },
+                RETRY_DELAY_SEC);
     }
 
     private void stopRetryTimer() {
@@ -395,14 +401,11 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
         requestBlocksHandlerMap.entrySet().stream()
                 .filter(e -> e.getKey().first.equals(nodeAddress))
                 .findAny()
-                .map(Map.Entry::getValue)
-                .ifPresent(handler -> {
-                    final Tuple2<NodeAddress, Integer> key = new Tuple2<>(handler.getNodeAddress(), handler.getStartBlockHeight());
-                    requestBlocksHandlerMap.get(key).cancel();
-                    requestBlocksHandlerMap.remove(key);
+                .ifPresent(e -> {
+                    e.getValue().cancel();
+                    requestBlocksHandlerMap.remove(e.getKey());
                 });
     }
-
 
     private void closeAllHandlers() {
         requestBlocksHandlerMap.values().forEach(RequestBlocksHandler::cancel);
