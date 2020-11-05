@@ -38,6 +38,7 @@ import com.google.common.util.concurrent.SettableFuture;
 
 import java.util.Optional;
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -50,7 +51,7 @@ import org.jetbrains.annotations.Nullable;
  */
 @Slf4j
 public class RequestBlocksHandler implements MessageListener {
-    private static final long TIMEOUT = 120;
+    private static final long TIMEOUT_MIN = 3;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -129,7 +130,7 @@ public class RequestBlocksHandler implements MessageListener {
                                 "Might be caused by an previous networkNode.sendMessage.onFailure.");
                     }
                 },
-                TIMEOUT);
+                TIMEOUT_MIN, TimeUnit.MINUTES);
 
         log.info("We request blocks from peer {} from block height {}.", nodeAddress, getBlocksRequest.getFromBlockHeight());
 
