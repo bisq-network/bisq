@@ -354,7 +354,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
 
                 if (CurrencyUtil.isCryptoCurrency(currencyCode)) {
                     final double value = MathUtils.scaleDownByPowerOf10(doubleValue, 8);
-                    return FormattingUtils.formatRoundedDoubleWithPrecision(value, 8);
+                    return FormattingUtils.formatRoundedDoubleWithPrecision(value, 8).replaceFirst("0{3}$", "");
                 } else {
                     DecimalFormat df = new DecimalFormat(",###");
                     return df.format(Double.parseDouble(FormattingUtils.formatPrice(Price.valueOf(currencyCode, MathUtils.doubleToLong(doubleValue)))));
