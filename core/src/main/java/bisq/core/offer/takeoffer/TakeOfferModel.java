@@ -77,9 +77,8 @@ public class TakeOfferModel implements Model {
     private Coin securityDeposit;
     private boolean useSavingsWallet;
 
-    // 260 kb is typical trade fee tx size with 1 input, but trade tx (deposit + payout)
-    // are larger so we adjust to 320.
-    private final int feeTxSize = 320;
+    // Use an average of a typical trade fee tx with 1 input, deposit tx and payout tx.
+    private final int feeTxSize = 192;  // (175+233+169)/3
     private Coin txFeePerByteFromFeeService;
     @Getter
     private Coin txFeeFromFeeService;
@@ -150,15 +149,15 @@ public class TakeOfferModel implements Model {
         // payout tx with different fees might be an option but RBF is not supported yet
         // in BitcoinJ and batched txs would add more complexity to the trade protocol.
 
-        // A typical trade fee tx has about 260 bytes (if one input). The trade txs has
-        // about 336-414 bytes.  We use 320 as a average value.
+        // A typical trade fee tx has about 175 bytes (if one input). The trade txs has
+        // about 169-263 bytes. We use 192 as a average value.
 
         // Fee calculations:
-        // Trade fee tx: 260 bytes (1 input)
-        // Deposit tx: 336 bytes (1 MS output+ OP_RETURN) - 414 bytes
+        // Trade fee tx: 175 bytes (1 input)
+        // Deposit tx: 233 bytes (1 MS output+ OP_RETURN) - 263 bytes
         //     (1 MS output + OP_RETURN + change in case of smaller trade amount)
-        // Payout tx: 371 bytes
-        // Disputed payout tx: 408 bytes
+        // Payout tx: 169 bytes
+        // Disputed payout tx: 139 bytes
 
         txFeePerByteFromFeeService = getTxFeePerByte();
         txFeeFromFeeService = offerUtil.getTxFeeBySize(txFeePerByteFromFeeService, feeTxSize);

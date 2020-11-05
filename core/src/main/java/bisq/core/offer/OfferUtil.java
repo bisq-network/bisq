@@ -187,7 +187,7 @@ public class OfferUtil {
     // inputs and we would apply that fee for the other 2 txs as well. We still might
     // overpay a bit for the payout tx.
     public int getAverageTakerFeeTxSize(int txSize) {
-        return (txSize + 320) / 2;
+        return (txSize + 233) / 2;
     }
 
     /**
