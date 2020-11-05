@@ -36,6 +36,7 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 
+import java.util.Optional;
 import java.util.Random;
 
 import lombok.Getter;
@@ -43,8 +44,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * Sends a GetBlocksRequest to a full node and listens on corresponding GetBlocksResponse from the full node.
@@ -108,56 +107,55 @@ public class RequestBlocksHandler implements MessageListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void requestBlocks() {
-        if (!stopped) {
-            GetBlocksRequest getBlocksRequest = new GetBlocksRequest(startBlockHeight, nonce, networkNode.getNodeAddress());
-            log.debug("getBlocksRequest " + getBlocksRequest);
-            if (timeoutTimer == null) {
-                timeoutTimer = UserThread.runAfter(() -> {  // setup before sending to avoid race conditions
-                            if (!stopped) {
-                                String errorMessage = "A timeout occurred when sending getBlocksRequest:" + getBlocksRequest +
-                                        " on peersNodeAddress:" + nodeAddress;
-                                log.debug(errorMessage + " / RequestDataHandler=" + RequestBlocksHandler.this);
-                                handleFault(errorMessage, nodeAddress, CloseConnectionReason.SEND_MSG_TIMEOUT);
-                            } else {
-                                log.trace("We have stopped already. We ignore that timeoutTimer.run call. " +
-                                        "Might be caused by an previous networkNode.sendMessage.onFailure.");
-                            }
-                        },
-                        TIMEOUT);
+        if (stopped) {
+            log.warn("We have stopped already. We ignore that requestData call.");
+            return;
+        }
+
+        GetBlocksRequest getBlocksRequest = new GetBlocksRequest(startBlockHeight, nonce, networkNode.getNodeAddress());
+
+        if (timeoutTimer != null) {
+            log.warn("We had a timer already running and stop it.");
+            timeoutTimer.stop();
+        }
+        timeoutTimer = UserThread.runAfter(() -> {  // setup before sending to avoid race conditions
+                    if (!stopped) {
+                        String errorMessage = "A timeout occurred when sending getBlocksRequest:" + getBlocksRequest +
+                                " on peersNodeAddress:" + nodeAddress;
+                        log.debug("{} / RequestDataHandler={}", errorMessage, RequestBlocksHandler.this);
+                        handleFault(errorMessage, nodeAddress, CloseConnectionReason.SEND_MSG_TIMEOUT);
+                    } else {
+                        log.warn("We have stopped already. We ignore that timeoutTimer.run call. " +
+                                "Might be caused by an previous networkNode.sendMessage.onFailure.");
+                    }
+                },
+                TIMEOUT);
+
+        log.info("We request blocks from peer {} from block height {}.", nodeAddress, getBlocksRequest.getFromBlockHeight());
+
+        networkNode.addMessageListener(this);
+
+        SettableFuture<Connection> future = networkNode.sendMessage(nodeAddress, getBlocksRequest);
+        Futures.addCallback(future, new FutureCallback<>() {
+            @Override
+            public void onSuccess(Connection connection) {
+                log.info("Sending of GetBlocksRequest message to peer {} succeeded.", nodeAddress.getFullAddress());
             }
 
-            log.info("We request blocks from peer {} from block height {}.", nodeAddress, getBlocksRequest.getFromBlockHeight());
-            networkNode.addMessageListener(this);
-            SettableFuture<Connection> future = networkNode.sendMessage(nodeAddress, getBlocksRequest);
-            Futures.addCallback(future, new FutureCallback<>() {
-                @Override
-                public void onSuccess(Connection connection) {
-                    if (!stopped) {
-                        log.info("Sending of GetBlocksRequest message to peer {} succeeded.", nodeAddress.getFullAddress());
-                    } else {
-                        log.trace("We have stopped already. We ignore that networkNode.sendMessage.onSuccess call." +
-                                "Might be caused by a previous timeout.");
-                    }
+            @Override
+            public void onFailure(@NotNull Throwable throwable) {
+                if (!stopped) {
+                    String errorMessage = "Sending getBlocksRequest to " + nodeAddress +
+                            " failed. That is expected if the peer is offline.\n\t" +
+                            "getBlocksRequest=" + getBlocksRequest + "." +
+                            "\n\tException=" + throwable.getMessage();
+                    log.error(errorMessage);
+                    handleFault(errorMessage, nodeAddress, CloseConnectionReason.SEND_MSG_FAILURE);
+                } else {
+                    log.trace("We have stopped already. We ignore that networkNode.sendMessage.onFailure call.");
                 }
-
-                @Override
-                public void onFailure(@NotNull Throwable throwable) {
-                    if (!stopped) {
-                        String errorMessage = "Sending getBlocksRequest to " + nodeAddress +
-                                " failed. That is expected if the peer is offline.\n\t" +
-                                "getBlocksRequest=" + getBlocksRequest + "." +
-                                "\n\tException=" + throwable.getMessage();
-                        log.error(errorMessage);
-                        handleFault(errorMessage, nodeAddress, CloseConnectionReason.SEND_MSG_FAILURE);
-                    } else {
-                        log.trace("We have stopped already. We ignore that networkNode.sendMessage.onFailure call. " +
-                                "Might be caused by a previous timeout.");
-                    }
-                }
-            }, MoreExecutors.directExecutor());
-        } else {
-            log.warn("We have stopped already. We ignore that requestData call.");
-        }
+            }
+        }, MoreExecutors.directExecutor());
     }
 
 
@@ -168,31 +166,36 @@ public class RequestBlocksHandler implements MessageListener {
     @Override
     public void onMessage(NetworkEnvelope networkEnvelope, Connection connection) {
         if (networkEnvelope instanceof GetBlocksResponse) {
-            if (connection.getPeersNodeAddressOptional().isPresent() && connection.getPeersNodeAddressOptional().get().equals(nodeAddress)) {
-                if (!stopped) {
-                    GetBlocksResponse getBlocksResponse = (GetBlocksResponse) networkEnvelope;
-                    if (getBlocksResponse.getRequestNonce() == nonce) {
-                        stopTimeoutTimer();
-                        checkArgument(connection.getPeersNodeAddressOptional().isPresent(),
-                                "RequestDataHandler.onMessage: connection.getPeersNodeAddressOptional() must be present " +
-                                        "at that moment");
-                        cleanup();
-                        log.info("We received from peer {} a BlocksResponse with {} blocks",
-                                nodeAddress.getFullAddress(), getBlocksResponse.getBlocks().size());
-                        listener.onComplete(getBlocksResponse);
-                    } else {
-                        log.warn("Nonce not matching. That can happen rarely if we get a response after a canceled " +
-                                        "handshake (timeout causes connection close but peer might have sent a msg before " +
-                                        "connection was closed).\n\t" +
-                                        "We drop that message. nonce={} / requestNonce={}",
-                                nonce, getBlocksResponse.getRequestNonce());
-                    }
-                } else {
-                    log.warn("We have stopped already. We ignore that onDataRequest call.");
-                }
-            } else {
-                log.warn("We got a message from ourselves. That should never happen.");
+            if (stopped) {
+                log.warn("We have stopped already. We ignore that onDataRequest call.");
+                return;
             }
+
+            Optional<NodeAddress> optionalNodeAddress = connection.getPeersNodeAddressOptional();
+            if (!optionalNodeAddress.isPresent()) {
+                log.warn("Peers node address is not present, that is not expected.");
+                // We do not return here as in case the connection has been created from the peers side we might not
+                // have the address set. As we check the nonce later we do not care that much for the check if the
+                // connection address is the same as the one we used.
+            } else if (!optionalNodeAddress.get().equals(nodeAddress)) {
+                log.warn("Peers node address is the same we requested. We ignore that message.");
+                return;
+            }
+
+            GetBlocksResponse getBlocksResponse = (GetBlocksResponse) networkEnvelope;
+            if (getBlocksResponse.getRequestNonce() != nonce) {
+                log.warn("Nonce not matching. That can happen rarely if we get a response after a canceled " +
+                                "handshake (timeout causes connection close but peer might have sent a msg before " +
+                                "connection was closed).\n\t" +
+                                "We drop that message. nonce={} / requestNonce={}",
+                        nonce, getBlocksResponse.getRequestNonce());
+                return;
+            }
+
+            cleanup();
+            log.info("We received from peer {} a BlocksResponse with {} blocks",
+                    nodeAddress.getFullAddress(), getBlocksResponse.getBlocks().size());
+            listener.onComplete(getBlocksResponse);
         }
     }
 
@@ -206,7 +209,9 @@ public class RequestBlocksHandler implements MessageListener {
 
 
     @SuppressWarnings("UnusedParameters")
-    private void handleFault(String errorMessage, NodeAddress nodeAddress, CloseConnectionReason closeConnectionReason) {
+    private void handleFault(String errorMessage,
+                             NodeAddress nodeAddress,
+                             CloseConnectionReason closeConnectionReason) {
         cleanup();
         peerManager.handleConnectionFault(nodeAddress);
         listener.onFault(errorMessage, null);
