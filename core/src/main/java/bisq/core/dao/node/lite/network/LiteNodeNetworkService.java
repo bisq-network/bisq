@@ -99,7 +99,7 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
     private final Map<Tuple2<NodeAddress, Integer>, RequestBlocksHandler> requestBlocksHandlerMap = new HashMap<>();
     private Timer retryTimer;
     private boolean stopped;
-    private Set<String> receivedBlocks = new HashSet<>();
+    private final Set<String> receivedBlocks = new HashSet<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -235,7 +235,7 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
             List<String> txIds = newBlockBroadcastMessage.getBlock().getRawTxs().stream().map(BaseTx::getId).collect(Collectors.toList());
             String extBlockId = newBlockBroadcastMessage.getBlock().getHash() + ":" + txIds;
             if (!receivedBlocks.contains(extBlockId)) {
-                log.debug("We received a new message from peer {} and broadcast it to our peers. extBlockId={}",
+                log.info("We received a NewBlockBroadcastMessage from peer {} and broadcast it to our peers. extBlockId={}",
                         connection.getPeersNodeAddressOptional().orElse(null), extBlockId);
                 receivedBlocks.add(extBlockId);
                 broadcaster.broadcast(newBlockBroadcastMessage, connection.getPeersNodeAddressOptional().orElse(null));
@@ -252,78 +252,81 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void requestBlocks(NodeAddress peersNodeAddress, int startBlockHeight) {
-        if (!stopped) {
-            final Tuple2<NodeAddress, Integer> key = new Tuple2<>(peersNodeAddress, startBlockHeight);
-            if (!requestBlocksHandlerMap.containsKey(key)) {
-                if (startBlockHeight >= lastReceivedBlockHeight) {
-                    RequestBlocksHandler requestBlocksHandler = new RequestBlocksHandler(networkNode,
-                            peerManager,
-                            peersNodeAddress,
-                            startBlockHeight,
-                            new RequestBlocksHandler.Listener() {
-                                @Override
-                                public void onComplete(GetBlocksResponse getBlocksResponse) {
-                                    log.debug("requestBlocksHandler of outbound connection complete. nodeAddress={}",
-                                            peersNodeAddress);
-                                    stopRetryTimer();
-
-                                    // need to remove before listeners are notified as they cause the update call
-                                    requestBlocksHandlerMap.remove(key);
-                                    // we only notify if our request was latest
-                                    if (startBlockHeight >= lastReceivedBlockHeight) {
-                                        lastReceivedBlockHeight = startBlockHeight;
-
-                                        listeners.forEach(listener -> listener.onRequestedBlocksReceived(getBlocksResponse,
-                                                () -> {
-                                                    // After we received the blocks we allow to disconnect seed nodes.
-                                                    // We delay 20 seconds to allow multiple requests to finish.
-                                                    UserThread.runAfter(() -> peerManager.setAllowDisconnectSeedNodes(true), 20);
-                                                }));
-                                    } else {
-                                        log.warn("We got a response which is already obsolete because we receive a " +
-                                                "response from a request with a higher block height. " +
-                                                "This could theoretically happen, but is very unlikely.");
-                                    }
-                                }
-
-                                @Override
-                                public void onFault(String errorMessage, @Nullable Connection connection) {
-                                    log.warn("requestBlocksHandler with outbound connection failed.\n\tnodeAddress={}\n\t" +
-                                            "ErrorMessage={}", peersNodeAddress, errorMessage);
-
-                                    peerManager.handleConnectionFault(peersNodeAddress);
-                                    requestBlocksHandlerMap.remove(key);
-
-                                    listeners.forEach(listener -> listener.onFault(errorMessage, connection));
-
-                                    tryWithNewSeedNode(startBlockHeight);
-                                }
-                            });
-                    requestBlocksHandlerMap.put(key, requestBlocksHandler);
-                    log.info("requestBlocks with startBlockHeight={} from peer {}", startBlockHeight, peersNodeAddress);
-                    requestBlocksHandler.requestBlocks();
-                } else {
-                    log.warn("startBlockHeight must not be smaller than lastReceivedBlockHeight. That should never happen." +
-                            "startBlockHeight={},lastReceivedBlockHeight={}", startBlockHeight, lastReceivedBlockHeight);
-                    DevEnv.logErrorAndThrowIfDevMode("startBlockHeight must be larger than lastReceivedBlockHeight. startBlockHeight=" +
-                            startBlockHeight + " / lastReceivedBlockHeight=" + lastReceivedBlockHeight);
-                }
-            } else {
-                log.warn("We have started already a requestDataHandshake for startBlockHeight {} to peer. nodeAddress={}\n" +
-                                "We start a cleanup timer if the handler has not closed by itself in between 2 minutes.",
-                        peersNodeAddress, startBlockHeight);
-
-                UserThread.runAfter(() -> {
-                    if (requestBlocksHandlerMap.containsKey(key)) {
-                        RequestBlocksHandler handler = requestBlocksHandlerMap.get(key);
-                        handler.stop();
-                        requestBlocksHandlerMap.remove(key);
-                    }
-                }, CLEANUP_TIMER);
-            }
-        } else {
+        if (stopped) {
             log.warn("We have stopped already. We ignore that requestData call.");
+            return;
         }
+
+        Tuple2<NodeAddress, Integer> key = new Tuple2<>(peersNodeAddress, startBlockHeight);
+        if (requestBlocksHandlerMap.containsKey(key)) {
+            log.warn("We have started already a requestDataHandshake for startBlockHeight {} to peer. nodeAddress={}\n" +
+                            "We start a cleanup timer if the handler has not closed by itself in between 2 minutes.",
+                    peersNodeAddress, startBlockHeight);
+
+            UserThread.runAfter(() -> {
+                if (requestBlocksHandlerMap.containsKey(key)) {
+                    RequestBlocksHandler handler = requestBlocksHandlerMap.get(key);
+                    handler.stop();
+                    requestBlocksHandlerMap.remove(key);
+                }
+            }, CLEANUP_TIMER);
+            return;
+        }
+
+        if (startBlockHeight < lastReceivedBlockHeight) {
+            log.warn("startBlockHeight must not be smaller than lastReceivedBlockHeight. That should never happen." +
+                    "startBlockHeight={},lastReceivedBlockHeight={}", startBlockHeight, lastReceivedBlockHeight);
+            DevEnv.logErrorAndThrowIfDevMode("startBlockHeight must be larger than lastReceivedBlockHeight. startBlockHeight=" +
+                    startBlockHeight + " / lastReceivedBlockHeight=" + lastReceivedBlockHeight);
+            return;
+        }
+
+        RequestBlocksHandler requestBlocksHandler = new RequestBlocksHandler(networkNode,
+                peerManager,
+                peersNodeAddress,
+                startBlockHeight,
+                new RequestBlocksHandler.Listener() {
+                    @Override
+                    public void onComplete(GetBlocksResponse getBlocksResponse) {
+                        log.info("requestBlocksHandler of outbound connection complete. nodeAddress={}",
+                                peersNodeAddress);
+                        stopRetryTimer();
+
+                        // need to remove before listeners are notified as they cause the update call
+                        requestBlocksHandlerMap.remove(key);
+                        // we only notify if our request was latest
+                        if (startBlockHeight >= lastReceivedBlockHeight) {
+                            lastReceivedBlockHeight = startBlockHeight;
+
+                            listeners.forEach(listener -> listener.onRequestedBlocksReceived(getBlocksResponse,
+                                    () -> {
+                                        // After we received the blocks we allow to disconnect seed nodes.
+                                        // We delay 20 seconds to allow multiple requests to finish.
+                                        UserThread.runAfter(() -> peerManager.setAllowDisconnectSeedNodes(true), 20);
+                                    }));
+                        } else {
+                            log.warn("We got a response which is already obsolete because we received a " +
+                                    "response from a request with a higher block height. " +
+                                    "This could theoretically happen, but is very unlikely.");
+                        }
+                    }
+
+                    @Override
+                    public void onFault(String errorMessage, @Nullable Connection connection) {
+                        log.warn("requestBlocksHandler with outbound connection failed.\n\tnodeAddress={}\n\t" +
+                                "ErrorMessage={}", peersNodeAddress, errorMessage);
+
+                        peerManager.handleConnectionFault(peersNodeAddress);
+                        requestBlocksHandlerMap.remove(key);
+
+                        listeners.forEach(listener -> listener.onFault(errorMessage, connection));
+
+                        tryWithNewSeedNode(startBlockHeight);
+                    }
+                });
+        requestBlocksHandlerMap.put(key, requestBlocksHandler);
+        log.info("requestBlocks with startBlockHeight={} from peer {}", startBlockHeight, peersNodeAddress);
+        requestBlocksHandler.requestBlocks();
     }
 
 
