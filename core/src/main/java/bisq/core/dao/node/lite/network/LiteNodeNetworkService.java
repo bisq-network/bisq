@@ -339,7 +339,6 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
                     }
                 });
         requestBlocksHandlerMap.put(key, requestBlocksHandler);
-        log.info("requestBlocks with startBlockHeight={} from peer {}", startBlockHeight, peersNodeAddress);
         requestBlocksHandler.requestBlocks();
     }
 

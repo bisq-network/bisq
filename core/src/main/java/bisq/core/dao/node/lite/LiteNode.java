@@ -182,7 +182,6 @@ public class LiteNode extends BsqNode {
     // First we request the blocks from a full node
     @Override
     protected void startParseBlocks() {
-        log.info("startParseBlocks");
         liteNodeNetworkService.requestBlocks(getStartBlockHeight());
     }
 
