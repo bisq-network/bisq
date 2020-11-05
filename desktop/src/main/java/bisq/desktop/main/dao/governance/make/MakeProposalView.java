@@ -283,7 +283,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
             Proposal proposal = proposalWithTransaction.getProposal();
             Transaction transaction = proposalWithTransaction.getTransaction();
             Coin miningFee = transaction.getFee();
-            int txSize = transaction.getVsize();
+            int txVsize = transaction.getVsize();
             Coin fee = daoFacade.getProposalFee(daoFacade.getChainHeight());
 
             if (type.equals(ProposalType.BONDED_ROLE)) {
@@ -298,13 +298,13 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
                     new Popup().warning(Res.get("dao.proposal.create.missingBsqFundsForBond",
                             bsqFormatter.formatCoinWithCode(missing)))
                             .actionButtonText(Res.get("dao.proposal.create.publish"))
-                            .onAction(() -> showFeeInfoAndPublishMyProposal(proposal, transaction, miningFee, txSize, fee))
+                            .onAction(() -> showFeeInfoAndPublishMyProposal(proposal, transaction, miningFee, txVsize, fee))
                             .show();
                 } else {
-                    showFeeInfoAndPublishMyProposal(proposal, transaction, miningFee, txSize, fee);
+                    showFeeInfoAndPublishMyProposal(proposal, transaction, miningFee, txVsize, fee);
                 }
             } else {
-                showFeeInfoAndPublishMyProposal(proposal, transaction, miningFee, txSize, fee);
+                showFeeInfoAndPublishMyProposal(proposal, transaction, miningFee, txVsize, fee);
             }
         } catch (InsufficientMoneyException e) {
             if (e instanceof InsufficientBsqException) {
@@ -340,13 +340,13 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
         }
     }
 
-    private void showFeeInfoAndPublishMyProposal(Proposal proposal, Transaction transaction, Coin miningFee, int txSize, Coin fee) {
+    private void showFeeInfoAndPublishMyProposal(Proposal proposal, Transaction transaction, Coin miningFee, int txVsize, Coin fee) {
         if (!DevEnv.isDevMode()) {
             Coin btcForIssuance = null;
 
             if (proposal instanceof IssuanceProposal) btcForIssuance = ((IssuanceProposal) proposal).getRequestedBsq();
 
-            GUIUtil.showBsqFeeInfoPopup(fee, miningFee, btcForIssuance, txSize, bsqFormatter, btcFormatter,
+            GUIUtil.showBsqFeeInfoPopup(fee, miningFee, btcForIssuance, txVsize, bsqFormatter, btcFormatter,
                     Res.get("dao.proposal"), () -> doPublishMyProposal(proposal, transaction));
         } else {
             doPublishMyProposal(proposal, transaction);

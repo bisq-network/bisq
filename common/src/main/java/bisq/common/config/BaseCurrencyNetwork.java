@@ -72,7 +72,7 @@ public enum BaseCurrencyNetwork {
         return "BTC_REGTEST".equals(name());
     }
 
-    public long getDefaultMinFeePerByte() {
+    public long getDefaultMinFeePerVbyte() {
         return 2;
     }
 }

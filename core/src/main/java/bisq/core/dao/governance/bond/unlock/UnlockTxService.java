@@ -89,12 +89,12 @@ public class UnlockTxService {
         }
     }
 
-    public Tuple2<Coin, Integer> getMiningFeeAndTxSize(String lockupTxId)
+    public Tuple2<Coin, Integer> getMiningFeeAndTxVsize(String lockupTxId)
             throws InsufficientMoneyException, WalletException, TransactionVerificationException {
         Transaction tx = getUnlockTx(lockupTxId);
         Coin miningFee = tx.getFee();
-        int txSize = tx.getVsize();
-        return new Tuple2<>(miningFee, txSize);
+        int txVsize = tx.getVsize();
+        return new Tuple2<>(miningFee, txVsize);
     }
 
     private Transaction getUnlockTx(String lockupTxId)
