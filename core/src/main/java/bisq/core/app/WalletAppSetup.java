@@ -121,20 +121,19 @@ public class WalletAppSetup {
                         String fees = feeService.getFeeTextForDisplay();
                         btcSyncProgress.set(percentage);
                         int bestChainHeight = walletsSetup.getChain() != null ? walletsSetup.getChain().getBestChainHeight() : 0;
-                        String chainHeightAsString = bestChainHeight > 0 ? " (" + bestChainHeight + ")" : "";
+                        String chainHeightAsString = bestChainHeight > 0 ? String.valueOf(bestChainHeight) : "";
                         if (percentage == 1) {
                             String feeRate = Res.get("mainView.footer.btcFeeRate", fees);
-                            result = Res.get("mainView.footer.btcInfo",
-                                    Res.get("mainView.footer.btcInfo.synchronizedWith"),
-                                    getBtcNetworkAsString() + chainHeightAsString + " / " + feeRate);
+                            String synchronizedWith = Res.get("mainView.footer.btcInfo.synchronizedWith",
+                                    getBtcNetworkAsString(), chainHeightAsString);
+                            result = Res.get("mainView.footer.btcInfo", synchronizedWith, feeRate);
                             getBtcSplashSyncIconId().set("image-connection-synced");
 
                             downloadCompleteHandler.run();
                         } else if (percentage > 0.0) {
-                            result = Res.get("mainView.footer.btcInfo",
-                                    Res.get("mainView.footer.btcInfo.synchronizingWith"),
-                                    getBtcNetworkAsString() + ": " + FormattingUtils.formatToPercentWithSymbol(percentage)) +
-                                    chainHeightAsString;
+                            String synchronizingWith = Res.get("mainView.footer.btcInfo.synchronizingWith",
+                                    getBtcNetworkAsString(), chainHeightAsString, FormattingUtils.formatToPercentWithSymbol(percentage));
+                            result = Res.get("mainView.footer.btcInfo", synchronizingWith, "");
                         } else {
                             result = Res.get("mainView.footer.btcInfo",
                                     Res.get("mainView.footer.btcInfo.connectingTo"),
