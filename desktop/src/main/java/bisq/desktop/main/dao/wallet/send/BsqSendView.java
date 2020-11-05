@@ -243,7 +243,7 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
                     Transaction txWithBtcFee = btcWalletService.completePreparedSendBsqTx(preparedSendTx, true);
                     Transaction signedTx = bsqWalletService.signTx(txWithBtcFee);
                     Coin miningFee = signedTx.getFee();
-                    int txSize = signedTx.bitcoinSerialize().length;
+                    int txSize = signedTx.getVsize();
                     showPublishTxPopup(receiverAmount,
                             txWithBtcFee,
                             TxType.TRANSFER_BSQ,
@@ -305,7 +305,7 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
                     if (miningFee.getValue() >= receiverAmount.getValue())
                         GUIUtil.showWantToBurnBTCPopup(miningFee, receiverAmount, btcFormatter);
                     else {
-                        int txSize = signedTx.bitcoinSerialize().length;
+                        int txSize = signedTx.getVsize();
                         showPublishTxPopup(receiverAmount,
                                 txWithBtcFee,
                                 TxType.INVALID,

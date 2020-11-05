@@ -189,7 +189,7 @@ public class AssetFeeView extends ActivatableView<GridPane, Void> implements Bsq
                 try {
                     Transaction transaction = assetService.payFee(selectedAsset, listingFee.value);
                     Coin miningFee = transaction.getFee();
-                    int txSize = transaction.bitcoinSerialize().length;
+                    int txSize = transaction.getVsize();
 
                     if (!DevEnv.isDevMode()) {
                         GUIUtil.showBsqFeeInfoPopup(listingFee, miningFee, txSize, bsqFormatter, btcFormatter,

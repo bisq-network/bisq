@@ -283,7 +283,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
             Proposal proposal = proposalWithTransaction.getProposal();
             Transaction transaction = proposalWithTransaction.getTransaction();
             Coin miningFee = transaction.getFee();
-            int txSize = transaction.bitcoinSerialize().length;
+            int txSize = transaction.getVsize();
             Coin fee = daoFacade.getProposalFee(daoFacade.getChainHeight());
 
             if (type.equals(ProposalType.BONDED_ROLE)) {

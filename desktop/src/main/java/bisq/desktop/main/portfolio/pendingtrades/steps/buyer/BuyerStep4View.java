@@ -205,7 +205,7 @@ public class BuyerStep4View extends TradeStepView {
                         validateWithdrawAddress();
                     } else if (Restrictions.isAboveDust(receiverAmount)) {
                         CoinFormatter formatter = model.btcFormatter;
-                        int txSize = feeEstimationTransaction.bitcoinSerialize().length;
+                        int txSize = feeEstimationTransaction.getVsize();
                         double feePerByte = CoinUtil.getFeePerByte(fee, txSize);
                         double kb = txSize / 1000d;
                         String recAmount = formatter.formatCoinWithCode(receiverAmount);

@@ -93,7 +93,7 @@ public class UnlockTxService {
             throws InsufficientMoneyException, WalletException, TransactionVerificationException {
         Transaction tx = getUnlockTx(lockupTxId);
         Coin miningFee = tx.getFee();
-        int txSize = tx.bitcoinSerialize().length;
+        int txSize = tx.getVsize();
         return new Tuple2<>(miningFee, txSize);
     }
 

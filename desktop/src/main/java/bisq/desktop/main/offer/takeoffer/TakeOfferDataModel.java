@@ -109,8 +109,8 @@ class TakeOfferDataModel extends OfferDataModel {
     private PaymentAccount paymentAccount;
     private boolean isTabSelected;
     Price tradePrice;
-    // 260 kb is size of typical trade fee tx with 1 input but trade tx (deposit and payout) are larger so we adjust to 320
-    private int feeTxSize = 320;
+    // Use an average of a typical trade fee tx with 1 input, deposit tx and payout tx.
+    private int feeTxSize = 192;  // (175+233+169)/3
     private boolean freezeFee;
     private Coin txFeePerByteFromFeeService;
 
@@ -213,13 +213,13 @@ class TakeOfferDataModel extends OfferDataModel {
         // multiple batch-signed payout tx with different fees might be an option but RBF is not supported yet in BitcoinJ
         // and batched txs would add more complexity to the trade protocol.
 
-        // A typical trade fee tx has about 260 bytes (if one input). The trade txs has about 336-414 bytes.
-        // We use 320 as a average value.
+        // A typical trade fee tx has about 175 bytes (if one input). The trade txs has about 169-263 bytes.
+        // We use 192 as average value.
 
-        // trade fee tx: 260 bytes (1 input)
-        // deposit tx: 336 bytes (1 MS output+ OP_RETURN) - 414 bytes (1 MS output + OP_RETURN + change in case of smaller trade amount)
-        // payout tx: 371 bytes
-        // disputed payout tx: 408 bytes
+        // trade fee tx: 175 bytes (1 input)
+        // deposit tx: 233 bytes (1 MS output+ OP_RETURN) - 263 bytes (1 MS output + OP_RETURN + change in case of smaller trade amount)
+        // payout tx: 169 bytes
+        // disputed payout tx: 139 bytes
 
         // Set the default values (in rare cases if the fee request was not done yet we get the hard coded default values)
         // But the "take offer" happens usually after that so we should have already the value from the estimation service.
@@ -351,22 +351,22 @@ class TakeOfferDataModel extends OfferDataModel {
             // there more deterministic.
             // The trade fee tx can be in the worst case very large if there are many inputs so if we take that tx alone
             // for the fee estimation we would overpay a lot.
-            // On the other side if we have the best case of a 1 input tx fee tx then it is only 260 bytes but the
-            // other 2 txs are larger (320 and 380 bytes) and would get a lower fee/byte as intended.
+            // On the other side if we have the best case of a 1 input tx fee tx then it is only 175 bytes but the
+            // other 2 txs are different (233 and 169 bytes) and may get a lower fee/byte as intended.
             // We apply following model to not overpay too much but be on the safe side as well.
             // We sum the taker fee tx and the deposit tx together as it can be assumed that both be in the same block and
             // as they are dependent txs the miner will pick both if the fee in total is good enough.
-            // We make sure that the fee is sufficient to meet our intended fee/byte for the larger payout tx with 380 bytes.
+            // We make sure that the fee is sufficient to meet our intended fee/byte for the larger deposit tx with 233 bytes.
             Tuple2<Coin, Integer> estimatedFeeAndTxSize = txFeeEstimationService.getEstimatedFeeAndTxSizeForTaker(fundsNeededForTrade,
                     getTakerFee());
             txFeeFromFeeService = estimatedFeeAndTxSize.first;
             feeTxSize = estimatedFeeAndTxSize.second;
         } else {
-            feeTxSize = 380;
+            feeTxSize = 233;
             txFeeFromFeeService = txFeePerByteFromFeeService.multiply(feeTxSize);
             log.info("We cannot do the fee estimation because there are no funds in the wallet.\nThis is expected " +
                             "if the user has not funded their wallet yet.\n" +
-                            "In that case we use an estimated tx size of 380 bytes.\n" +
+                            "In that case we use an estimated tx size of 233 bytes.\n" +
                             "txFee based on estimated size of {} bytes. feeTxSize = {} bytes. Actual tx size = {} bytes. TxFee is {} ({} sat/byte)",
                     feeTxSize, feeTxSize, txSize, txFeeFromFeeService.toFriendlyString(), feeService.getTxFeePerByte());
         }
@@ -531,7 +531,7 @@ class TakeOfferDataModel extends OfferDataModel {
     // With that we avoid that we overpay in case that the trade fee has many inputs and we would apply that fee for the
     // other 2 txs as well. We still might overpay a bit for the payout tx.
     private int getAverageSize(int txSize) {
-        return (txSize + 320) / 2;
+        return (txSize + 233) / 2;
     }
 
     private Coin getTxFeeBySize(int sizeInBytes) {
@@ -606,7 +606,7 @@ class TakeOfferDataModel extends OfferDataModel {
         // Unfortunately we cannot change that to the correct fees as it would break backward compatibility
         // We still might find a way with offer version or app version checks so lets keep that commented out
         // code as that shows how it should be.
-        return txFeeFromFeeService; //feeService.getTxFee(320);
+        return txFeeFromFeeService; //feeService.getTxFee(233);
     }
 
     private Coin getTxFeeForPayoutTx() {
@@ -614,7 +614,7 @@ class TakeOfferDataModel extends OfferDataModel {
         // Unfortunately we cannot change that to the correct fees as it would break backward compatibility
         // We still might find a way with offer version or app version checks so lets keep that commented out
         // code as that shows how it should be.
-        return txFeeFromFeeService; //feeService.getTxFee(380);
+        return txFeeFromFeeService; //feeService.getTxFee(169);
     }
 
     public AddressEntry getAddressEntry() {
