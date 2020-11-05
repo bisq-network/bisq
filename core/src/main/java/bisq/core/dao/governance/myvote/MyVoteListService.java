@@ -96,7 +96,7 @@ public class MyVoteListService implements PersistedDataHost {
 
     public void applyRevealTxId(MyVote myVote, String voteRevealTxId) {
         myVote.setRevealTxId(voteRevealTxId);
-        log.info("Applied revealTxId to myVote.\nmyVote={}\nvoteRevealTxId={}", myVote, voteRevealTxId);
+        log.debug("Applied revealTxId to myVote.\nmyVote={}\nvoteRevealTxId={}", myVote, voteRevealTxId);
         requestPersistence();
     }
 
