@@ -204,14 +204,18 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
         stopRetryTimer();
         stopped = true;
 
-        tryWithNewSeedNode(lastRequestedBlockHeight);
+        if (lastRequestedBlockHeight > 0) {
+            tryWithNewSeedNode(lastRequestedBlockHeight);
+        }
     }
 
     @Override
     public void onNewConnectionAfterAllConnectionsLost() {
         closeAllHandlers();
         stopped = false;
-        tryWithNewSeedNode(lastRequestedBlockHeight);
+        if (lastRequestedBlockHeight > 0) {
+            tryWithNewSeedNode(lastRequestedBlockHeight);
+        }
     }
 
     @Override
@@ -219,8 +223,9 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
         log.info("onAwakeFromStandby");
         closeAllHandlers();
         stopped = false;
-        if (!networkNode.getAllConnections().isEmpty())
+        if (!networkNode.getAllConnections().isEmpty() && lastRequestedBlockHeight > 0) {
             tryWithNewSeedNode(lastRequestedBlockHeight);
+        }
     }
 
 
@@ -370,7 +375,7 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
                     if (!list.isEmpty()) {
                         NodeAddress nextCandidate = list.get(0);
                         seedNodeAddresses.remove(nextCandidate);
-                        log.info("We try requestBlocks with {}", nextCandidate);
+                        log.info("We try requestBlocks from {} with startBlockHeight={}", nextCandidate, startBlockHeight);
                         requestBlocks(nextCandidate, startBlockHeight);
                     } else {
                         log.warn("No more seed nodes available we could try.");
