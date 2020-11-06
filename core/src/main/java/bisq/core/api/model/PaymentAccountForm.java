@@ -43,9 +43,8 @@ import java.lang.reflect.Type;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.core.payment.payload.PaymentMethod.*;
+import static bisq.core.payment.payload.PaymentMethod.getPaymentMethodById;
 import static com.google.common.base.Preconditions.checkNotNull;
-import static java.io.File.separatorChar;
 import static java.lang.String.format;
 import static java.lang.System.getProperty;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -78,9 +77,17 @@ public class PaymentAccountForm {
 
     public File getPaymentAccountForm(String paymentMethodId) {
         PaymentMethod paymentMethod = getPaymentMethodById(paymentMethodId);
-        File file = new File(getProperty("java.io.tmpdir") + separatorChar
-                + paymentMethod.getId().toLowerCase() + "_form.json");
-        try (OutputStreamWriter outputStreamWriter = new OutputStreamWriter(new FileOutputStream(file, false), UTF_8)) {
+
+        File file = null;
+        try {
+            file = File.createTempFile(paymentMethod.getId().toLowerCase() + "_form_",
+                    ".json",
+                    Paths.get(getProperty("java.io.tmpdir")).toFile());
+        } catch (IOException ex) {
+            log.error("", ex);
+        }
+
+        try (OutputStreamWriter outputStreamWriter = new OutputStreamWriter(new FileOutputStream(checkNotNull(file), false), UTF_8)) {
             PaymentAccount paymentAccount = PaymentAccountFactory.getPaymentAccount(paymentMethod);
             Class<? extends PaymentAccount> clazz = paymentAccount.getClass();
             Gson gson = gsonBuilder.registerTypeAdapter(clazz, new PaymentAccountTypeAdapter(clazz, excludedFields)).create();
@@ -89,6 +96,7 @@ public class PaymentAccountForm {
         } catch (Exception ex) {
             log.error(format("Could not export json file for %s account.", paymentMethod.getShortName()), ex);
         }
+
         return file;
     }
 

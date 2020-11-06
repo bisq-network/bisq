@@ -33,6 +33,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.stream.JsonWriter;
 
+import java.nio.file.Paths;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -111,6 +113,7 @@ public class PaymentAccountFormTest {
     @Test
     public void testBrazilNationalBankAccountForm() {
         File emptyForm = paymentAccountForm.getPaymentAccountForm(NATIONAL_BANK_ID);
+        emptyForm.deleteOnExit();
         log.info("Empty form saved to {}", paymentAccountForm.getClickableURI(emptyForm));
         verifyEmptyForm(emptyForm,
                 NATIONAL_BANK_ID,
@@ -158,6 +161,7 @@ public class PaymentAccountFormTest {
     @Test
     public void testChaseQuickPayAccountForm() {
         File emptyForm = paymentAccountForm.getPaymentAccountForm(CHASE_QUICK_PAY_ID);
+        emptyForm.deleteOnExit();
         log.info("Empty form saved to {}", paymentAccountForm.getClickableURI(emptyForm));
         verifyEmptyForm(emptyForm,
                 CHASE_QUICK_PAY_ID,
@@ -183,6 +187,7 @@ public class PaymentAccountFormTest {
     @Test
     public void testClearXChangeAccountForm() {
         File emptyForm = paymentAccountForm.getPaymentAccountForm(CLEAR_X_CHANGE_ID);
+        emptyForm.deleteOnExit();
         log.info("Empty form saved to {}", paymentAccountForm.getClickableURI(emptyForm));
         verifyEmptyForm(emptyForm,
                 CLEAR_X_CHANGE_ID,
@@ -208,6 +213,7 @@ public class PaymentAccountFormTest {
     @Test
     public void testF2FAccountForm() {
         File emptyForm = paymentAccountForm.getPaymentAccountForm(F2F_ID);
+        emptyForm.deleteOnExit();
         log.info("Empty form saved to {}", paymentAccountForm.getClickableURI(emptyForm));
         verifyEmptyForm(emptyForm,
                 F2F_ID,
@@ -240,6 +246,7 @@ public class PaymentAccountFormTest {
     @Test
     public void testHalCashAccountForm() {
         File emptyForm = paymentAccountForm.getPaymentAccountForm(HAL_CASH_ID);
+        emptyForm.deleteOnExit();
         log.info("Empty form saved to {}", paymentAccountForm.getClickableURI(emptyForm));
         verifyEmptyForm(emptyForm,
                 HAL_CASH_ID,
@@ -262,6 +269,7 @@ public class PaymentAccountFormTest {
     @Test
     public void testJapanBankAccountForm() {
         File emptyForm = paymentAccountForm.getPaymentAccountForm(JAPAN_BANK_ID);
+        emptyForm.deleteOnExit();
         log.info("Empty form saved to {}", paymentAccountForm.getClickableURI(emptyForm));
         verifyEmptyForm(emptyForm,
                 JAPAN_BANK_ID,
@@ -302,6 +310,7 @@ public class PaymentAccountFormTest {
     @Test
     public void testSepaAccountForm() {
         File emptyForm = paymentAccountForm.getPaymentAccountForm(SEPA_ID);
+        emptyForm.deleteOnExit();
         log.info("Empty form saved to {}", paymentAccountForm.getClickableURI(emptyForm));
         verifyEmptyForm(emptyForm,
                 SEPA_ID,
@@ -335,6 +344,7 @@ public class PaymentAccountFormTest {
     @Test
     public void testUSPostalMoneyOrderAccountForm() {
         File emptyForm = paymentAccountForm.getPaymentAccountForm(US_POSTAL_MONEY_ORDER_ID);
+        emptyForm.deleteOnExit();
         log.info("Empty form saved to {}", paymentAccountForm.getClickableURI(emptyForm));
         verifyEmptyForm(emptyForm,
                 US_POSTAL_MONEY_ORDER_ID,
@@ -385,9 +395,13 @@ public class PaymentAccountFormTest {
     }
 
     private File fillPaymentAccountForm() {
-        File f = new File(getProperty("java.io.tmpdir"), "tmp.json");
+        File tmpJsonForm = null;
         try {
-            JsonWriter writer = new JsonWriter(new OutputStreamWriter(new FileOutputStream(f), UTF_8));
+            tmpJsonForm = File.createTempFile("temp_acct_form_",
+                    ".json",
+                    Paths.get(getProperty("java.io.tmpdir")).toFile());
+            tmpJsonForm.deleteOnExit();
+            JsonWriter writer = new JsonWriter(new OutputStreamWriter(new FileOutputStream(tmpJsonForm), UTF_8));
             writer.beginObject();
             writer.name(PROPERTY_NAME_COMMENT);
             writer.value(PROPERTY_VALUE_COMMENT);
@@ -403,6 +417,6 @@ public class PaymentAccountFormTest {
             log.error("", ex);
             fail(format("Could not write json file from form entries %s", EXPECTED_FORM));
         }
-        return f;
+        return tmpJsonForm;
     }
 }
