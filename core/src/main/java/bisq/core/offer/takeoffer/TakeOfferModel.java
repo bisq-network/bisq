@@ -78,8 +78,8 @@ public class TakeOfferModel implements Model {
     private boolean useSavingsWallet;
 
     // Use an average of a typical trade fee tx with 1 input, deposit tx and payout tx.
-    private final int feeTxSize = 192;  // (175+233+169)/3
-    private Coin txFeePerByteFromFeeService;
+    private final int feeTxVsize = 192;  // (175+233+169)/3
+    private Coin txFeePerVbyteFromFeeService;
     @Getter
     private Coin txFeeFromFeeService;
     @Getter
@@ -149,26 +149,26 @@ public class TakeOfferModel implements Model {
         // payout tx with different fees might be an option but RBF is not supported yet
         // in BitcoinJ and batched txs would add more complexity to the trade protocol.
 
-        // A typical trade fee tx has about 175 bytes (if one input). The trade txs has
-        // about 169-263 bytes. We use 192 as a average value.
+        // A typical trade fee tx has about 175 vbytes (if one input). The trade txs has
+        // about 169-263 vbytes. We use 192 as a average value.
 
         // Fee calculations:
-        // Trade fee tx: 175 bytes (1 input)
-        // Deposit tx: 233 bytes (1 MS output+ OP_RETURN) - 263 bytes
+        // Trade fee tx: 175 vbytes (1 input)
+        // Deposit tx: 233 vbytes (1 MS output+ OP_RETURN) - 263 vbytes
         //     (1 MS output + OP_RETURN + change in case of smaller trade amount)
-        // Payout tx: 169 bytes
-        // Disputed payout tx: 139 bytes
+        // Payout tx: 169 vbytes
+        // Disputed payout tx: 139 vbytes
 
-        txFeePerByteFromFeeService = getTxFeePerByte();
-        txFeeFromFeeService = offerUtil.getTxFeeBySize(txFeePerByteFromFeeService, feeTxSize);
-        log.info("{} txFeePerByte = {}", feeService.getClass().getSimpleName(), txFeePerByteFromFeeService);
+        txFeePerVbyteFromFeeService = getTxFeePerVbyte();
+        txFeeFromFeeService = offerUtil.getTxFeeByVsize(txFeePerVbyteFromFeeService, feeTxVsize);
+        log.info("{} txFeePerVbyte = {}", feeService.getClass().getSimpleName(), txFeePerVbyteFromFeeService);
     }
 
-    private Coin getTxFeePerByte() {
+    private Coin getTxFeePerVbyte() {
         try {
             CompletableFuture<Void> feeRequestFuture = CompletableFuture.runAsync(feeService::requestFees);
             feeRequestFuture.get();  // Block until async fee request is complete.
-            return feeService.getTxFeePerByte();
+            return feeService.getTxFeePerVbyte();
         } catch (InterruptedException | ExecutionException e) {
             throw new IllegalStateException("Could not request fees from fee service.", e);
         }
@@ -283,7 +283,7 @@ public class TakeOfferModel implements Model {
         this.totalAvailableBalance = null;
         this.totalToPayAsCoin = null;
         this.txFeeFromFeeService = null;
-        this.txFeePerByteFromFeeService = null;
+        this.txFeePerVbyteFromFeeService = null;
         this.useSavingsWallet = true;
         this.volume = null;
     }
@@ -299,8 +299,8 @@ public class TakeOfferModel implements Model {
                 ", addressEntry=" + addressEntry + "\n" +
                 ", amount=" + amount + "\n" +
                 ", securityDeposit=" + securityDeposit + "\n" +
-                ", feeTxSize=" + feeTxSize + "\n" +
-                ", txFeePerByteFromFeeService=" + txFeePerByteFromFeeService + "\n" +
+                ", feeTxVsize=" + feeTxVsize + "\n" +
+                ", txFeePerVbyteFromFeeService=" + txFeePerVbyteFromFeeService + "\n" +
                 ", txFeeFromFeeService=" + txFeeFromFeeService + "\n" +
                 ", takerFee=" + takerFee + "\n" +
                 ", totalToPayAsCoin=" + totalToPayAsCoin + "\n" +

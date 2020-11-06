@@ -382,9 +382,9 @@ public class DaoFacade implements DaoSetupService {
         return BlindVoteConsensus.getFee(daoStateService, daoStateService.getChainHeight());
     }
 
-    public Tuple2<Coin, Integer> getBlindVoteMiningFeeAndTxSize(Coin stake)
+    public Tuple2<Coin, Integer> getBlindVoteMiningFeeAndTxVsize(Coin stake)
             throws WalletException, InsufficientMoneyException, TransactionVerificationException {
-        return myBlindVoteListService.getMiningFeeAndTxSize(stake);
+        return myBlindVoteListService.getMiningFeeAndTxVsize(stake);
     }
 
     // Publish blindVote tx and broadcast blindVote to p2p network and store to blindVoteList.
@@ -532,12 +532,12 @@ public class DaoFacade implements DaoSetupService {
         lockupTxService.publishLockupTx(lockupAmount, lockTime, lockupReason, hash, resultHandler, exceptionHandler);
     }
 
-    public Tuple2<Coin, Integer> getLockupTxMiningFeeAndTxSize(Coin lockupAmount,
-                                                               int lockTime,
-                                                               LockupReason lockupReason,
-                                                               byte[] hash)
+    public Tuple2<Coin, Integer> getLockupTxMiningFeeAndTxVsize(Coin lockupAmount,
+                                                                int lockTime,
+                                                                LockupReason lockupReason,
+                                                                byte[] hash)
             throws InsufficientMoneyException, IOException, TransactionVerificationException, WalletException {
-        return lockupTxService.getMiningFeeAndTxSize(lockupAmount, lockTime, lockupReason, hash);
+        return lockupTxService.getMiningFeeAndTxVsize(lockupAmount, lockTime, lockupReason, hash);
     }
 
     public void publishUnlockTx(String lockupTxId, Consumer<String> resultHandler,
@@ -545,9 +545,9 @@ public class DaoFacade implements DaoSetupService {
         unlockTxService.publishUnlockTx(lockupTxId, resultHandler, exceptionHandler);
     }
 
-    public Tuple2<Coin, Integer> getUnlockTxMiningFeeAndTxSize(String lockupTxId)
+    public Tuple2<Coin, Integer> getUnlockTxMiningFeeAndTxVsize(String lockupTxId)
             throws InsufficientMoneyException, TransactionVerificationException, WalletException {
-        return unlockTxService.getMiningFeeAndTxSize(lockupTxId);
+        return unlockTxService.getMiningFeeAndTxVsize(lockupTxId);
     }
 
     public long getTotalLockupAmount() {

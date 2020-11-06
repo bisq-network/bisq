@@ -205,9 +205,9 @@ public class BuyerStep4View extends TradeStepView {
                         validateWithdrawAddress();
                     } else if (Restrictions.isAboveDust(receiverAmount)) {
                         CoinFormatter formatter = model.btcFormatter;
-                        int txSize = feeEstimationTransaction.getVsize();
-                        double feePerByte = CoinUtil.getFeePerByte(fee, txSize);
-                        double kb = txSize / 1000d;
+                        int txVsize = feeEstimationTransaction.getVsize();
+                        double feePerVbyte = CoinUtil.getFeePerVbyte(fee, txVsize);
+                        double vkb = txVsize / 1000d;
                         String recAmount = formatter.formatCoinWithCode(receiverAmount);
                         new Popup().headLine(Res.get("portfolio.pending.step5_buyer.confirmWithdrawal"))
                                 .confirmation(Res.get("shared.sendFundsDetailsWithFee",
@@ -215,8 +215,8 @@ public class BuyerStep4View extends TradeStepView {
                                         fromAddresses,
                                         toAddresses,
                                         formatter.formatCoinWithCode(fee),
-                                        feePerByte,
-                                        kb,
+                                        feePerVbyte,
+                                        vkb,
                                         recAmount))
                                 .actionButtonText(Res.get("shared.yes"))
                                 .onAction(() -> doWithdrawal(amount, fee))

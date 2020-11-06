@@ -110,9 +110,9 @@ class TakeOfferDataModel extends OfferDataModel {
     private boolean isTabSelected;
     Price tradePrice;
     // Use an average of a typical trade fee tx with 1 input, deposit tx and payout tx.
-    private int feeTxSize = 192;  // (175+233+169)/3
+    private int feeTxVsize = 192;  // (175+233+169)/3
     private boolean freezeFee;
-    private Coin txFeePerByteFromFeeService;
+    private Coin txFeePerVbyteFromFeeService;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -213,25 +213,25 @@ class TakeOfferDataModel extends OfferDataModel {
         // multiple batch-signed payout tx with different fees might be an option but RBF is not supported yet in BitcoinJ
         // and batched txs would add more complexity to the trade protocol.
 
-        // A typical trade fee tx has about 175 bytes (if one input). The trade txs has about 169-263 bytes.
+        // A typical trade fee tx has about 175 vbytes (if one input). The trade txs has about 169-263 vbytes.
         // We use 192 as average value.
 
-        // trade fee tx: 175 bytes (1 input)
-        // deposit tx: 233 bytes (1 MS output+ OP_RETURN) - 263 bytes (1 MS output + OP_RETURN + change in case of smaller trade amount)
-        // payout tx: 169 bytes
-        // disputed payout tx: 139 bytes
+        // trade fee tx: 175 vbytes (1 input)
+        // deposit tx: 233 vbytes (1 MS output+ OP_RETURN) - 263 vbytes (1 MS output + OP_RETURN + change in case of smaller trade amount)
+        // payout tx: 169 vbytes
+        // disputed payout tx: 139 vbytes
 
         // Set the default values (in rare cases if the fee request was not done yet we get the hard coded default values)
         // But the "take offer" happens usually after that so we should have already the value from the estimation service.
-        txFeePerByteFromFeeService = feeService.getTxFeePerByte();
-        txFeeFromFeeService = getTxFeeBySize(feeTxSize);
+        txFeePerVbyteFromFeeService = feeService.getTxFeePerVbyte();
+        txFeeFromFeeService = getTxFeeByVsize(feeTxVsize);
 
         // We request to get the actual estimated fee
         log.info("Start requestTxFee: txFeeFromFeeService={}", txFeeFromFeeService);
         feeService.requestFees(() -> {
             if (!freezeFee) {
-                txFeePerByteFromFeeService = feeService.getTxFeePerByte();
-                txFeeFromFeeService = getTxFeeBySize(feeTxSize);
+                txFeePerVbyteFromFeeService = feeService.getTxFeePerVbyte();
+                txFeeFromFeeService = getTxFeeByVsize(feeTxVsize);
                 calculateTotalToPay();
                 log.info("Completed requestTxFee: txFeeFromFeeService={}", txFeeFromFeeService);
             } else {
@@ -257,7 +257,7 @@ class TakeOfferDataModel extends OfferDataModel {
 
     // We don't want that the fee gets updated anymore after we show the funding screen.
     void onShowPayFundsScreen() {
-        estimateTxSize();
+        estimateTxVsize();
         freezeFee = true;
         calculateTotalToPay();
     }
@@ -338,8 +338,8 @@ class TakeOfferDataModel extends OfferDataModel {
     // leading to a smaller tx and too high fees. Simply updating the fee estimation would lead to changed required funds
     // and if funds get higher (if tx get larger) the user would get confused (adding small inputs would increase total required funds).
     // So that would require more thoughts how to deal with all those cases.
-    public void estimateTxSize() {
-        int txSize = 0;
+    public void estimateTxVsize() {
+        int txVsize = 0;
         if (btcWalletService.getBalance(Wallet.BalanceType.AVAILABLE).isPositive()) {
             Coin fundsNeededForTrade = getFundsNeededForTrade();
             if (isBuyOffer())
@@ -347,28 +347,28 @@ class TakeOfferDataModel extends OfferDataModel {
 
             // As taker we pay 3 times the fee and currently the fee is the same for all 3 txs (trade fee tx, deposit
             // tx and payout tx).
-            // We should try to change that in future to have the deposit and payout tx with a fixed fee as the size is
+            // We should try to change that in future to have the deposit and payout tx with a fixed fee as the vsize is
             // there more deterministic.
             // The trade fee tx can be in the worst case very large if there are many inputs so if we take that tx alone
             // for the fee estimation we would overpay a lot.
-            // On the other side if we have the best case of a 1 input tx fee tx then it is only 175 bytes but the
-            // other 2 txs are different (233 and 169 bytes) and may get a lower fee/byte as intended.
+            // On the other side if we have the best case of a 1 input tx fee tx then it is only 175 vbytes but the
+            // other 2 txs are different (233 and 169 vbytes) and may get a lower fee/vbyte as intended.
             // We apply following model to not overpay too much but be on the safe side as well.
             // We sum the taker fee tx and the deposit tx together as it can be assumed that both be in the same block and
             // as they are dependent txs the miner will pick both if the fee in total is good enough.
-            // We make sure that the fee is sufficient to meet our intended fee/byte for the larger deposit tx with 233 bytes.
-            Tuple2<Coin, Integer> estimatedFeeAndTxSize = txFeeEstimationService.getEstimatedFeeAndTxSizeForTaker(fundsNeededForTrade,
+            // We make sure that the fee is sufficient to meet our intended fee/vbyte for the larger deposit tx with 233 vbytes.
+            Tuple2<Coin, Integer> estimatedFeeAndTxVsize = txFeeEstimationService.getEstimatedFeeAndTxVsizeForTaker(fundsNeededForTrade,
                     getTakerFee());
-            txFeeFromFeeService = estimatedFeeAndTxSize.first;
-            feeTxSize = estimatedFeeAndTxSize.second;
+            txFeeFromFeeService = estimatedFeeAndTxVsize.first;
+            feeTxVsize = estimatedFeeAndTxVsize.second;
         } else {
-            feeTxSize = 233;
-            txFeeFromFeeService = txFeePerByteFromFeeService.multiply(feeTxSize);
+            feeTxVsize = 233;
+            txFeeFromFeeService = txFeePerVbyteFromFeeService.multiply(feeTxVsize);
             log.info("We cannot do the fee estimation because there are no funds in the wallet.\nThis is expected " +
                             "if the user has not funded their wallet yet.\n" +
-                            "In that case we use an estimated tx size of 233 bytes.\n" +
-                            "txFee based on estimated size of {} bytes. feeTxSize = {} bytes. Actual tx size = {} bytes. TxFee is {} ({} sat/byte)",
-                    feeTxSize, feeTxSize, txSize, txFeeFromFeeService.toFriendlyString(), feeService.getTxFeePerByte());
+                            "In that case we use an estimated tx vsize of 233 vbytes.\n" +
+                            "txFee based on estimated vsize of {} vbytes. feeTxVsize = {} vbytes. Actual tx vsize = {} vbytes. TxFee is {} ({} sat/vbyte)",
+                    feeTxVsize, feeTxVsize, txVsize, txFeeFromFeeService.toFriendlyString(), feeService.getTxFeePerVbyte());
         }
     }
 
@@ -526,16 +526,16 @@ class TakeOfferDataModel extends OfferDataModel {
         btcWalletService.resetAddressEntriesForOpenOffer(offer.getId());
     }
 
-    // We use the sum of the size of the trade fee and the deposit tx to get an average.
+    // We use the sum of the vsize of the trade fee and the deposit tx to get an average.
     // Miners will take the trade fee tx if the total fee of both dependent txs are good enough.
     // With that we avoid that we overpay in case that the trade fee has many inputs and we would apply that fee for the
     // other 2 txs as well. We still might overpay a bit for the payout tx.
-    private int getAverageSize(int txSize) {
-        return (txSize + 233) / 2;
+    private int getAverageVsize(int txVsize) {
+        return (txVsize + 233) / 2;
     }
 
-    private Coin getTxFeeBySize(int sizeInBytes) {
-        return txFeePerByteFromFeeService.multiply(getAverageSize(sizeInBytes));
+    private Coin getTxFeeByVsize(int vsizeInVbytes) {
+        return txFeePerVbyteFromFeeService.multiply(getAverageVsize(vsizeInVbytes));
     }
 
   /*  private void setFeeFromFundingTx(Coin fee) {

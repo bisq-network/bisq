@@ -172,10 +172,10 @@ public class ProofOfBurnView extends ActivatableView<GridPane, Void> implements 
                 String preImageAsString = preImageTextField.getText();
                 Transaction transaction = proofOfBurnService.burn(preImageAsString, amount.value);
                 Coin miningFee = transaction.getFee();
-                int txSize = transaction.getVsize();
+                int txVsize = transaction.getVsize();
 
                 if (!DevEnv.isDevMode()) {
-                    GUIUtil.showBsqFeeInfoPopup(amount, miningFee, txSize, bsqFormatter, btcFormatter,
+                    GUIUtil.showBsqFeeInfoPopup(amount, miningFee, txVsize, bsqFormatter, btcFormatter,
                             Res.get("dao.proofOfBurn.header"), () -> doPublishFeeTx(transaction, preImageAsString));
                 } else {
                     doPublishFeeTx(transaction, preImageAsString);

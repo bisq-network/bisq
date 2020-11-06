@@ -117,7 +117,7 @@ public class WalletAppSetup {
                     String result;
                     if (exception == null) {
                         double percentage = (double) downloadPercentage;
-                        long fees = feeService.getTxFeePerByte().longValue();
+                        long fees = feeService.getTxFeePerVbyte().longValue();
                         btcSyncProgress.set(percentage);
                         if (percentage == 1) {
                             String feeRate = Res.get("mainView.footer.btcFeeRate", fees);

@@ -1546,7 +1546,7 @@ message PreferencesPayload {
     bool use_tor_for_bitcoin_j = 12;
     bool show_own_offers_in_offer_book = 13;
     TradeCurrency preferred_trade_currency = 14;
-    int64 withdrawal_tx_fee_in_bytes = 15;
+    int64 withdrawal_tx_fee_in_vbytes = 15;
     bool use_custom_withdrawal_tx_fee = 16;
     double max_price_distance_in_percent = 17;
     string offer_book_chart_screen_currency_code = 18;

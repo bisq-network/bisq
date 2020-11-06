@@ -475,10 +475,10 @@ public abstract class WalletService {
         return getBalanceForAddress(getAddressFromOutput(output));
     }
 
-    public Coin getTxFeeForWithdrawalPerByte() {
+    public Coin getTxFeeForWithdrawalPerVbyte() {
         Coin fee = (preferences.isUseCustomWithdrawalTxFee()) ?
-                Coin.valueOf(preferences.getWithdrawalTxFeeInBytes()) :
-                feeService.getTxFeePerByte();
+                Coin.valueOf(preferences.getWithdrawalTxFeeInVbytes()) :
+                feeService.getTxFeePerVbyte();
         log.info("tx fee = " + fee.toFriendlyString());
         return fee;
     }
@@ -517,7 +517,7 @@ public abstract class WalletService {
             throws InsufficientMoneyException, AddressFormatException {
         SendRequest sendRequest = SendRequest.emptyWallet(Address.fromString(params, toAddress));
         sendRequest.fee = Coin.ZERO;
-        sendRequest.feePerKb = getTxFeeForWithdrawalPerByte().multiply(1000);
+        sendRequest.feePerKb = getTxFeeForWithdrawalPerVbyte().multiply(1000);
         sendRequest.aesKey = aesKey;
         Wallet.SendResult sendResult = wallet.sendCoins(sendRequest);
         printTx("empty btc wallet", sendResult.tx);
