@@ -543,4 +543,8 @@ public class CurrencyUtil {
         else
             return Res.get(translationKey, currencyCode, Res.getBaseCurrencyCode());
     }
+
+    public static String getOfferVolumeCode(String currencyCode) {
+        return Res.get("shared.offerVolumeCode", currencyCode);
+    }
 }
