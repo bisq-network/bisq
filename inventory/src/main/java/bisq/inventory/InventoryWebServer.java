@@ -191,8 +191,12 @@ public class InventoryWebServer {
                     "n/a";
             sb.append("Run duration: ").append(duration).append("<br/>");
 
+            String filteredSeedNodes = requestInfo.getDisplayValue(InventoryItem.filteredSeeds).replace(System.getProperty("line.separator"), "<br/>");
+            if (filteredSeedNodes.isEmpty()) {
+                filteredSeedNodes = "-";
+            }
             sb.append("Filtered seed nodes: ")
-                    .append(requestInfo.getDisplayValue(InventoryItem.filteredSeeds).replace(System.getProperty("line.separator"), "<br/>"))
+                    .append(filteredSeedNodes)
                     .append("<br/>");
         }
 
