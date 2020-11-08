@@ -154,16 +154,17 @@ public class InventoryMonitor implements SetupListener {
                                  RequestInfo requestInfo,
                                  @Nullable Map<InventoryItem, String> result,
                                  @Nullable String errorMessage) {
-        if (errorMessage != null) {
+        long responseTime = System.currentTimeMillis();
+        if (errorMessage != null && !errorMessage.isEmpty()) {
             log.warn("Error at connection to peer {}: {}", nodeAddress, errorMessage);
             requestInfo.setErrorMessage(errorMessage);
+        } else {
+            requestInfo.setResponseTime(responseTime);
         }
 
         boolean ignoreDeviationAtStartup;
         if (result != null) {
             log.info("nodeAddress={}, result={}", nodeAddress, result.toString());
-            long responseTime = System.currentTimeMillis();
-            requestInfo.setResponseTime(responseTime);
 
             // If seed just started up we ignore the deviation as it can be expected that seed is still syncing
             // DAO state/blocks. P2P data should be ready but as we received it from other seeds it is not that
