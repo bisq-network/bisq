@@ -94,7 +94,7 @@
         <AutoTooltipButton fx:id="reSyncSPVChainButton"/>
     </VBox>
 
-    <TitledGroupBg fx:id="p2pHeader" GridPane.rowIndex="5" GridPane.rowSpan="4">
+    <TitledGroupBg fx:id="p2pHeader" GridPane.rowIndex="5" GridPane.rowSpan="5">
         <padding>
             <Insets top="50.0"/>
         </padding>
@@ -159,7 +159,10 @@
     <BisqTextField fx:id="receivedDataTextField" GridPane.rowIndex="8" editable="false"
                    focusTraversable="false" labelFloat="true"/>
 
-    <AutoTooltipButton fx:id="openTorSettingsButton" GridPane.rowIndex="9" GridPane.columnIndex="0"/>
+    <BisqTextField fx:id="chainHeightTextField" GridPane.rowIndex="9" editable="false"
+                   focusTraversable="false" labelFloat="true"/>
+
+    <AutoTooltipButton fx:id="openTorSettingsButton" GridPane.rowIndex="10" GridPane.columnIndex="0"/>
 
     <columnConstraints>
         <ColumnConstraints hgrow="ALWAYS" minWidth="500"/>
