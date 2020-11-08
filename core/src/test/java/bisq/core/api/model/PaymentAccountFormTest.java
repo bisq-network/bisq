@@ -377,11 +377,12 @@ public class PaymentAccountFormTest {
     }
 
     private void verifyEmptyForm(File jsonForm, String paymentMethodId, String... fields) {
+        assertNotNull("Json file cannot be null.", jsonForm);
         @SuppressWarnings("unchecked")
         Map<String, Object> emptyForm = (Map<String, Object>) gson.fromJson(
                 paymentAccountForm.toJsonString(jsonForm),
                 Object.class);
-        assertNotNull(emptyForm);
+        assertNotNull("Empty form map cannot be null.", emptyForm);
         assertEquals(PROPERTY_VALUE_COMMENT, emptyForm.get(PROPERTY_NAME_COMMENT));
         assertEquals(paymentMethodId, emptyForm.get(PROPERTY_NAME_PAYMENT_METHOD_ID));
         assertEquals("Your accountname", emptyForm.get(PROPERTY_NAME_ACCOUNT_NAME));
