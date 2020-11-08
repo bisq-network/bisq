@@ -17,6 +17,8 @@
 
 package bisq.inventory;
 
+import bisq.core.network.p2p.inventory.model.DeviationByIntegerDiff;
+import bisq.core.network.p2p.inventory.model.DeviationByPercentage;
 import bisq.core.network.p2p.inventory.model.DeviationSeverity;
 import bisq.core.network.p2p.inventory.model.InventoryItem;
 import bisq.core.network.p2p.inventory.model.RequestInfo;
@@ -37,6 +39,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 import lombok.extern.slf4j.Slf4j;
@@ -50,6 +53,8 @@ import spark.Spark;
 @Slf4j
 public class InventoryWebServer {
     private final static String CLOSE_TAG = "</font><br/>";
+    private final static String WARNING_ICON = "&#9888; ";
+    private final static String ALERT_ICON = "&#9760; "; // &#9889;  &#9889;
 
     private final List<NodeAddress> seedNodes;
     private final Map<String, String> operatorByNodeAddress = new HashMap<>();
@@ -122,10 +127,10 @@ public class InventoryWebServer {
             html.append("<tr valign=\"top\">");
             if (map.containsKey(seedNode) && !map.get(seedNode).isEmpty()) {
                 List<RequestInfo> list = map.get(seedNode);
-                int numResponses = list.size();
-                RequestInfo requestInfo = list.get(numResponses - 1);
+                int numRequests = list.size();
+                RequestInfo requestInfo = list.get(numRequests - 1);
                 html.append("<td>").append(getSeedNodeInfo(seedNode, requestInfo)).append("</td>")
-                        .append("<td>").append(getRequestInfo(requestInfo, numResponses)).append("</td>")
+                        .append("<td>").append(getRequestInfo(seedNode, requestInfo, numRequests, map)).append("</td>")
                         .append("<td>").append(getDataInfo(seedNode, requestInfo, map)).append("</td>")
                         .append("<td>").append(getDaoInfo(seedNode, requestInfo, map)).append("</td>")
                         .append("<td>").append(getNetworkInfo(seedNode, requestInfo, map)).append("</td>");
@@ -194,16 +199,19 @@ public class InventoryWebServer {
         return sb.toString();
     }
 
-    private String getRequestInfo(RequestInfo requestInfo, int numResponses) {
+    private String getRequestInfo(NodeAddress seedNode,
+                                  RequestInfo requestInfo,
+                                  int numRequests,
+                                  Map<NodeAddress, List<RequestInfo>> map) {
         StringBuilder sb = new StringBuilder();
 
-        DeviationSeverity deviationSeverity = numResponses == requestCounter ?
+        DeviationSeverity deviationSeverity = numRequests == requestCounter ?
                 DeviationSeverity.OK :
-                requestCounter - numResponses > 4 ?
+                requestCounter - numRequests > 4 ?
                         DeviationSeverity.ALERT :
                         DeviationSeverity.WARN;
-        sb.append("Number of responses: ").append(getColorTagByDeviationSeverity(deviationSeverity))
-                .append(numResponses).append(CLOSE_TAG);
+        sb.append("Number of requests: ").append(getColorTagByDeviationSeverity(deviationSeverity))
+                .append(numRequests).append(CLOSE_TAG);
 
         DeviationSeverity rrtDeviationSeverity = DeviationSeverity.OK;
         String rrtString = "n/a";
@@ -228,11 +236,7 @@ public class InventoryWebServer {
                 "n/a";
         sb.append("Response received at: ").append(responseTime).append("<br/>");
 
-        String errorMessage = requestInfo.getErrorMessage();
-        if (errorMessage != null && !errorMessage.isEmpty()) {
-            sb.append("Error message: ").append(getColorTagByDeviationSeverity(DeviationSeverity.ALERT))
-                    .append(errorMessage).append(CLOSE_TAG);
-        }
+        sb.append(getErrorMsgLine(seedNode, requestInfo, map));
         return sb.toString();
     }
 
@@ -353,7 +357,7 @@ public class InventoryWebServer {
         DeviationSeverity deviationSeverity = DeviationSeverity.OK;
         if (requestInfo.getDataMap().containsKey(inventoryItem)) {
             RequestInfo.Data data = requestInfo.getDataMap().get(inventoryItem);
-            deviationAsPercentString = getDeviationAsPercentString(data.getDeviation());
+            deviationAsPercentString = getDeviationAsPercentString(inventoryItem, data);
             deviationSeverity = data.getDeviationSeverity();
         }
 
@@ -368,7 +372,7 @@ public class InventoryWebServer {
                 Map<InventoryItem, RequestInfo.Data> deviationInfoMap = reqInfo.getDataMap();
                 if (deviationInfoMap.containsKey(inventoryItem)) {
                     RequestInfo.Data data = deviationInfoMap.get(inventoryItem);
-                    String deviationAsPercent = getDeviationAsPercentString(data.getDeviation());
+                    String deviationAsPercent = getDeviationAsPercentString(inventoryItem, data);
                     if (data.isPersistentWarning()) {
                         warningsAtRequestNumber.add((i + 1) + deviationAsPercent);
                     } else if (data.isPersistentAlert()) {
@@ -378,18 +382,16 @@ public class InventoryWebServer {
             }
 
             if (!warningsAtRequestNumber.isEmpty()) {
-                historicalWarnings = inventoryItem.getDeviationTolerance() + " repeated warning(s) at request(s) " + Joiner.on(", ").join(warningsAtRequestNumber);
+                historicalWarnings = warningsAtRequestNumber.size() + " repeated warning(s) at request(s) " + Joiner.on(", ").join(warningsAtRequestNumber);
             }
             if (!alertsAtRequestNumber.isEmpty()) {
-                historicalAlerts = inventoryItem.getDeviationTolerance() + " repeated alert(s) at request(s): " + Joiner.on(", ").join(alertsAtRequestNumber);
+                historicalAlerts = alertsAtRequestNumber.size() + " repeated alert(s) at request(s): " + Joiner.on(", ").join(alertsAtRequestNumber);
             }
         }
-        String warningIcon = "&#9888; ";
         String historicalWarningsHtml = warningsAtRequestNumber.isEmpty() ? "" :
-                ", <b><a id=\"warn\" href=\"#\" title=\"" + historicalWarnings + "\">" + warningIcon + warningsAtRequestNumber.size() + "</a></b>";
-        String errorIcon = "&#9760; "; // &#9889;  &#9889;
+                ", <b><a id=\"warn\" href=\"#\" title=\"" + historicalWarnings + "\">" + WARNING_ICON + warningsAtRequestNumber.size() + "</a></b>";
         String historicalAlertsHtml = alertsAtRequestNumber.isEmpty() ? "" :
-                ", <b><a id=\"alert\" href=\"#\" title=\"" + historicalAlerts + "\">" + errorIcon + alertsAtRequestNumber.size() + "</a></b>";
+                ", <b><a id=\"alert\" href=\"#\" title=\"" + historicalAlerts + "\">" + ALERT_ICON + alertsAtRequestNumber.size() + "</a></b>";
 
         return title +
                 getColorTagByDeviationSeverity(deviationSeverity) +
@@ -400,12 +402,27 @@ public class InventoryWebServer {
                 CLOSE_TAG;
     }
 
-    private String getDeviationAsPercentString(@Nullable Double deviation) {
-        if (deviation == null) {
+    private String getDeviationAsPercentString(InventoryItem inventoryItem, RequestInfo.Data data) {
+        Double deviation = data.getDeviation();
+        if (deviation == null || deviation == 1) {
             return "";
         }
+        if (inventoryItem.getDeviationType() instanceof DeviationByPercentage) {
+            return getDeviationInRoundedPercent(deviation);
+        } else if (inventoryItem.getDeviationType() instanceof DeviationByIntegerDiff) {
+            // For larger numbers like chain height we need to show all decimals as diff can be very small
+            return getDeviationInExactPercent(deviation);
+        } else {
+            return "";
+        }
+    }
 
+    private String getDeviationInRoundedPercent(double deviation) {
         return " (" + MathUtils.roundDouble(100 * deviation, 2) + " %)";
+    }
+
+    private String getDeviationInExactPercent(double deviation) {
+        return " (" + 100 * deviation + " %)";
     }
 
     private String getColorTagByDeviationSeverity(@Nullable DeviationSeverity deviationSeverity) {
@@ -443,5 +460,64 @@ public class InventoryWebServer {
                 operatorByNodeAddress.put(node, operator);
             }
         });
+    }
+
+    // We use here a bit diff. model as with other historical data alerts/warnings as we do not store it in the data
+    // object as we do with normal inventoryItems. So the historical error msg are not available in the json file.
+    // If we need it we have to move that handling here to the InventoryMonitor and change the data model to support the
+    // missing data for error messages.
+    private String getErrorMsgLine(NodeAddress seedNode,
+                                   RequestInfo requestInfo,
+                                   Map<NodeAddress, List<RequestInfo>> map) {
+        boolean isError = requestInfo.getErrorMessage() != null &&
+                !requestInfo.getErrorMessage().isEmpty();
+        String errorMessage = isError ? requestInfo.getErrorMessage() : "-";
+        List<RequestInfo> requestInfoList = map.get(seedNode);
+        List<String> errorsAtRequestNumber = new ArrayList<>();
+        String historicalErrorsHtml = "";
+        if (requestInfoList != null) {
+            for (int i = 0; i < requestInfoList.size(); i++) {
+                RequestInfo requestInfo1 = requestInfoList.get(i);
+
+                // We ignore old errors as at startup timeouts are expected and each node restarts once a day
+                if (requestInfo1.getRequestStartTime() > 0 &&
+                        System.currentTimeMillis() - requestInfo1.getRequestStartTime() > TimeUnit.HOURS.toMillis(24)) {
+                    continue;
+                }
+
+                boolean isError1 = requestInfo1.getErrorMessage() != null &&
+                        !requestInfo1.getErrorMessage().isEmpty();
+                if (isError1) {
+                    errorsAtRequestNumber.add((i + 1) + " (" + requestInfo1.getErrorMessage() + ")");
+                }
+            }
+
+            if (!errorsAtRequestNumber.isEmpty()) {
+                String errorIcon;
+                String type;
+                String style;
+                if (errorsAtRequestNumber.size() > 4) {
+                    errorIcon = ALERT_ICON;
+                    type = "alert";
+                    style = "alert";
+                } else {
+                    errorIcon = WARNING_ICON;
+                    type = "warning";
+                    style = "warn";
+                }
+                String historicalAlerts = errorsAtRequestNumber.size() + " repeated " + type + "(s) at request(s): " + Joiner.on(", ").join(errorsAtRequestNumber);
+                historicalErrorsHtml = errorsAtRequestNumber.isEmpty() ? "" :
+                        ", <b><a id=\"" + style + "\" href=\"#\" title=\"" + historicalAlerts + "\">" + errorIcon + errorsAtRequestNumber.size() + "</a></b>";
+            }
+        }
+        DeviationSeverity deviationSeverity = isError ?
+                errorsAtRequestNumber.size() > 4 ? DeviationSeverity.ALERT : DeviationSeverity.WARN
+                : DeviationSeverity.OK;
+
+        return "Error message: " +
+                getColorTagByDeviationSeverity(deviationSeverity) +
+                errorMessage +
+                historicalErrorsHtml +
+                CLOSE_TAG;
     }
 }
