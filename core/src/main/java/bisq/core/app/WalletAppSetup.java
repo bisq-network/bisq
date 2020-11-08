@@ -22,8 +22,8 @@ import bisq.core.btc.exceptions.RejectedTxException;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.locale.Res;
-import bisq.core.provider.fee.FeeService;
 import bisq.core.offer.OpenOfferManager;
+import bisq.core.provider.fee.FeeService;
 import bisq.core.trade.TradeManager;
 import bisq.core.user.Preferences;
 import bisq.core.util.FormattingUtils;
@@ -117,24 +117,23 @@ public class WalletAppSetup {
                     String result;
                     if (exception == null) {
                         double percentage = (double) downloadPercentage;
-                        long fees = feeService.getTxFeePerVbyte().longValue();
                         btcSyncProgress.set(percentage);
                         if (percentage == 1) {
-                            String feeRate = Res.get("mainView.footer.btcFeeRate", fees);
                             result = Res.get("mainView.footer.btcInfo",
                                     Res.get("mainView.footer.btcInfo.synchronizedWith"),
-                                    getBtcNetworkAsString() + " / " + feeRate);
+                                    getBtcNetworkAsString(),
+                                    feeService.getFeeTextForDisplay());
                             getBtcSplashSyncIconId().set("image-connection-synced");
 
                             downloadCompleteHandler.run();
                         } else if (percentage > 0.0) {
                             result = Res.get("mainView.footer.btcInfo",
                                     Res.get("mainView.footer.btcInfo.synchronizingWith"),
-                                    getBtcNetworkAsString() + ": " + FormattingUtils.formatToPercentWithSymbol(percentage));
+                                    getBtcNetworkAsString() + ": " + FormattingUtils.formatToPercentWithSymbol(percentage), "");
                         } else {
                             result = Res.get("mainView.footer.btcInfo",
                                     Res.get("mainView.footer.btcInfo.connectingTo"),
-                                    getBtcNetworkAsString());
+                                    getBtcNetworkAsString(), "");
                         }
                     } else {
                         result = Res.get("mainView.footer.btcInfo",
