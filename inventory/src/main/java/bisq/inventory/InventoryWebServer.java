@@ -191,7 +191,8 @@ public class InventoryWebServer {
                     "n/a";
             sb.append("Run duration: ").append(duration).append("<br/>");
 
-            String filteredSeedNodes = requestInfo.getDisplayValue(InventoryItem.filteredSeeds).replace(System.getProperty("line.separator"), "<br/>");
+            String filteredSeedNodes = requestInfo.getDisplayValue(InventoryItem.filteredSeeds)
+                    .replace(System.getProperty("line.separator"), "<br/>");
             if (filteredSeedNodes.isEmpty()) {
                 filteredSeedNodes = "-";
             }
@@ -386,16 +387,20 @@ public class InventoryWebServer {
             }
 
             if (!warningsAtRequestNumber.isEmpty()) {
-                historicalWarnings = warningsAtRequestNumber.size() + " repeated warning(s) at request(s) " + Joiner.on(", ").join(warningsAtRequestNumber);
+                historicalWarnings = warningsAtRequestNumber.size() + " repeated warning(s) at request(s) " +
+                        Joiner.on(", ").join(warningsAtRequestNumber);
             }
             if (!alertsAtRequestNumber.isEmpty()) {
-                historicalAlerts = alertsAtRequestNumber.size() + " repeated alert(s) at request(s): " + Joiner.on(", ").join(alertsAtRequestNumber);
+                historicalAlerts = alertsAtRequestNumber.size() + " repeated alert(s) at request(s): " +
+                        Joiner.on(", ").join(alertsAtRequestNumber);
             }
         }
         String historicalWarningsHtml = warningsAtRequestNumber.isEmpty() ? "" :
-                ", <b><a id=\"warn\" href=\"#\" title=\"" + historicalWarnings + "\">" + WARNING_ICON + warningsAtRequestNumber.size() + "</a></b>";
+                ", <b><a id=\"warn\" href=\"#\" title=\"" + historicalWarnings + "\">" + WARNING_ICON +
+                        warningsAtRequestNumber.size() + "</a></b>";
         String historicalAlertsHtml = alertsAtRequestNumber.isEmpty() ? "" :
-                ", <b><a id=\"alert\" href=\"#\" title=\"" + historicalAlerts + "\">" + ALERT_ICON + alertsAtRequestNumber.size() + "</a></b>";
+                ", <b><a id=\"alert\" href=\"#\" title=\"" + historicalAlerts + "\">" + ALERT_ICON +
+                        alertsAtRequestNumber.size() + "</a></b>";
 
         return title +
                 getColorTagByDeviationSeverity(deviationSeverity) +
@@ -473,9 +478,7 @@ public class InventoryWebServer {
     private String getErrorMsgLine(NodeAddress seedNode,
                                    RequestInfo requestInfo,
                                    Map<NodeAddress, List<RequestInfo>> map) {
-        boolean isError = requestInfo.getErrorMessage() != null &&
-                !requestInfo.getErrorMessage().isEmpty();
-        String errorMessage = isError ? requestInfo.getErrorMessage() : "-";
+        String errorMessage = requestInfo.hasError() ? requestInfo.getErrorMessage() : "-";
         List<RequestInfo> requestInfoList = map.get(seedNode);
         List<String> errorsAtRequestNumber = new ArrayList<>();
         String historicalErrorsHtml = "";
@@ -484,14 +487,12 @@ public class InventoryWebServer {
                 RequestInfo requestInfo1 = requestInfoList.get(i);
 
                 // We ignore old errors as at startup timeouts are expected and each node restarts once a day
-                if (requestInfo1.getRequestStartTime() > 0 &&
-                        System.currentTimeMillis() - requestInfo1.getRequestStartTime() > TimeUnit.HOURS.toMillis(24)) {
+                long duration = System.currentTimeMillis() - requestInfo1.getRequestStartTime();
+                if (requestInfo1.getRequestStartTime() > 0 && duration > TimeUnit.HOURS.toMillis(24)) {
                     continue;
                 }
 
-                boolean isError1 = requestInfo1.getErrorMessage() != null &&
-                        !requestInfo1.getErrorMessage().isEmpty();
-                if (isError1) {
+                if (requestInfo1.hasError()) {
                     errorsAtRequestNumber.add((i + 1) + " (" + requestInfo1.getErrorMessage() + ")");
                 }
             }
@@ -509,12 +510,14 @@ public class InventoryWebServer {
                     type = "warning";
                     style = "warn";
                 }
-                String historicalAlerts = errorsAtRequestNumber.size() + " repeated " + type + "(s) at request(s): " + Joiner.on(", ").join(errorsAtRequestNumber);
+                String historicalAlerts = errorsAtRequestNumber.size() + " repeated " + type + "(s) at request(s): " +
+                        Joiner.on(", ").join(errorsAtRequestNumber);
                 historicalErrorsHtml = errorsAtRequestNumber.isEmpty() ? "" :
-                        ", <b><a id=\"" + style + "\" href=\"#\" title=\"" + historicalAlerts + "\">" + errorIcon + errorsAtRequestNumber.size() + "</a></b>";
+                        ", <b><a id=\"" + style + "\" href=\"#\" title=\"" + historicalAlerts + "\">" + errorIcon +
+                                errorsAtRequestNumber.size() + "</a></b>";
             }
         }
-        DeviationSeverity deviationSeverity = isError ?
+        DeviationSeverity deviationSeverity = requestInfo.hasError() ?
                 errorsAtRequestNumber.size() > 4 ? DeviationSeverity.ALERT : DeviationSeverity.WARN
                 : DeviationSeverity.OK;
 

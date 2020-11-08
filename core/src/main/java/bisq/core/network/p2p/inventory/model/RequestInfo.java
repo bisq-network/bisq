@@ -56,6 +56,10 @@ public class RequestInfo {
                 null;
     }
 
+    public boolean hasError() {
+        return errorMessage != null && !errorMessage.isEmpty();
+    }
+
     @Value
     public static class Data {
         private final String value;

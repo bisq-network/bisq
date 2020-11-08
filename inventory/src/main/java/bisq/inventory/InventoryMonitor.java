@@ -154,12 +154,11 @@ public class InventoryMonitor implements SetupListener {
                                  RequestInfo requestInfo,
                                  @Nullable Map<InventoryItem, String> result,
                                  @Nullable String errorMessage) {
-        long responseTime = System.currentTimeMillis();
         if (errorMessage != null && !errorMessage.isEmpty()) {
             log.warn("Error at connection to peer {}: {}", nodeAddress, errorMessage);
             requestInfo.setErrorMessage(errorMessage);
         } else {
-            requestInfo.setResponseTime(responseTime);
+            requestInfo.setResponseTime(System.currentTimeMillis());
         }
 
         boolean ignoreDeviationAtStartup;
