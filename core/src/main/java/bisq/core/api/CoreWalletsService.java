@@ -28,6 +28,7 @@ import bisq.common.Timer;
 import bisq.common.UserThread;
 
 import org.bitcoinj.core.Address;
+import org.bitcoinj.core.LegacyAddress;
 import org.bitcoinj.core.TransactionConfidence;
 import org.bitcoinj.crypto.KeyCrypterScrypt;
 
@@ -105,7 +106,7 @@ class CoreWalletsService {
     }
 
     String getUnusedBsqAddress() {
-        return "TODO";
+        return bsqWalletService.getUnusedBsqAddressAsString();
     }
 
     List<AddressBalanceInfo> getFundingAddresses() {

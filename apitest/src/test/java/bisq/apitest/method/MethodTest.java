@@ -26,6 +26,7 @@ import bisq.proto.grpc.GetFundingAddressesRequest;
 import bisq.proto.grpc.GetOfferRequest;
 import bisq.proto.grpc.GetPaymentAccountsRequest;
 import bisq.proto.grpc.GetTradeRequest;
+import bisq.proto.grpc.GetUnusedBsqAddressRequest;
 import bisq.proto.grpc.KeepFundsRequest;
 import bisq.proto.grpc.LockWalletRequest;
 import bisq.proto.grpc.MarketPriceRequest;
@@ -127,6 +128,10 @@ public class MethodTest extends ApiTestCase {
         return LockWalletRequest.newBuilder().build();
     }
 
+    protected final GetUnusedBsqAddressRequest createGetUnusedBsqAddressRequest() {
+        return GetUnusedBsqAddressRequest.newBuilder().build();
+    }
+
     protected final GetFundingAddressesRequest createGetFundingAddressesRequest() {
         return GetFundingAddressesRequest.newBuilder().build();
     }
@@ -186,6 +191,10 @@ public class MethodTest extends ApiTestCase {
     protected final void lockWallet(BisqAppConfig bisqAppConfig) {
         //noinspection ResultOfMethodCallIgnored
         grpcStubs(bisqAppConfig).walletsService.lockWallet(createLockWalletRequest());
+    }
+
+    protected final String getUnusedBsqAddress(BisqAppConfig bisqAppConfig) {
+        return grpcStubs(bisqAppConfig).walletsService.getUnusedBsqAddress(createGetUnusedBsqAddressRequest()).getAddress();
     }
 
     protected final String getUnusedBtcAddress(BisqAppConfig bisqAppConfig) {
