@@ -1,6 +1,5 @@
 language: java
 jdk:
-    - openjdk10
     - openjdk12
 
 cache:
@@ -14,3 +13,7 @@ install:
 
 before_install:
     grep -v '^#' assets/src/main/resources/META-INF/services/bisq.asset.Asset | sort --check --dictionary-order --ignore-case
+
+after_failure:
+    - ls -l /home/travis/build/bisq-network/bisq/core/build/reports/tests/test
+    - cat /home/travis/build/bisq-network/bisq/core/build/reports/tests/test/index.html
