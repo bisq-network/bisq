@@ -29,7 +29,7 @@ class ColumnHeaderConstants {
     // such as COL_HEADER_CREATION_DATE, COL_HEADER_VOLUME and COL_HEADER_UUID, the
     // expected max data string length is accounted for.  In others, the column header length
     // are expected to be greater than any column value length.
-    static final String COL_HEADER_ADDRESS = padEnd("Address", 34, ' ');
+    static final String COL_HEADER_ADDRESS = padEnd("%-3s Address", 52, ' ');
     static final String COL_HEADER_AMOUNT = padEnd("BTC(min - max)", 24, ' ');
     static final String COL_HEADER_BALANCE = padStart("Balance", 12, ' ');
     static final String COL_HEADER_CONFIRMATIONS = "Confirmations";

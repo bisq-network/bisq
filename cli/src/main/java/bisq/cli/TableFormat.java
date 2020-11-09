@@ -45,13 +45,15 @@ class TableFormat {
     static final TimeZone TZ_UTC = getTimeZone("UTC");
     static final SimpleDateFormat DATE_FORMAT_ISO_8601 = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
 
-    static String formatAddressBalanceTbl(List<AddressBalanceInfo> addressBalanceInfo) {
-        String headerLine = (COL_HEADER_ADDRESS + COL_HEADER_DELIMITER
+    public static String formatAddressBalanceTbl(List<AddressBalanceInfo> addressBalanceInfo) {
+        String headerFormatString = COL_HEADER_ADDRESS + COL_HEADER_DELIMITER
                 + COL_HEADER_BALANCE + COL_HEADER_DELIMITER
-                + COL_HEADER_CONFIRMATIONS + COL_HEADER_DELIMITER + "\n");
-        String colDataFormat = "%-" + COL_HEADER_ADDRESS.length() + "s" // left justify
-                + "  %" + COL_HEADER_BALANCE.length() + "s" // right justify
-                + "  %" + COL_HEADER_CONFIRMATIONS.length() + "d"; // right justify
+                + COL_HEADER_CONFIRMATIONS + COL_HEADER_DELIMITER + "\n";
+        String headerLine = format(headerFormatString, "BTC");
+
+        String colDataFormat = "%-" + COL_HEADER_ADDRESS.length() + "s" // lt justify
+                + "  %" + (COL_HEADER_BALANCE.length() - 1) + "s" // rt justify
+                + "  %" + COL_HEADER_CONFIRMATIONS.length() + "d"; // lt justify
         return headerLine
                 + addressBalanceInfo.stream()
                 .map(info -> format(colDataFormat,
