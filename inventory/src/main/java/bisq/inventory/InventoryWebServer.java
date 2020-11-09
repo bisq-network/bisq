@@ -305,9 +305,9 @@ public class InventoryWebServer {
         sb.append(getLine("Received messages/sec: ",
                 InventoryItem.receivedMessagesPerSec, seedNode, requestInfo, map, this::getRounded));
         sb.append(getLine("Sent kB/sec: ",
-                InventoryItem.sentBytesPerSec, seedNode, requestInfo, map, this::getRounded));
+                InventoryItem.sentBytesPerSec, seedNode, requestInfo, map, this::getKbRounded));
         sb.append(getLine("Received kB/sec: ",
-                InventoryItem.receivedBytesPerSec, seedNode, requestInfo, map, this::getRounded));
+                InventoryItem.receivedBytesPerSec, seedNode, requestInfo, map, this::getKbRounded));
         sb.append(getLine("Sent data: ",
                 InventoryItem.sentBytes, seedNode, requestInfo, map,
                 value -> Utilities.readableFileSize(Long.parseLong(value))));
@@ -458,6 +458,10 @@ public class InventoryWebServer {
 
     private String getRounded(String value) {
         return String.valueOf(MathUtils.roundDouble(Double.parseDouble(value), 2));
+    }
+
+    private String getKbRounded(String bytes) {
+        return String.valueOf(MathUtils.roundDouble(Double.parseDouble(bytes) / 1000, 2));
     }
 
     private void setupOperatorMap(BufferedReader seedNodeFile) {
