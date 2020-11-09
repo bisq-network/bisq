@@ -117,24 +117,23 @@ public class WalletAppSetup {
                     String result;
                     if (exception == null) {
                         double percentage = (double) downloadPercentage;
-                        long fees = feeService.getTxFeePerByte().longValue();
                         btcSyncProgress.set(percentage);
                         if (percentage == 1) {
-                            String feeRate = Res.get("mainView.footer.btcFeeRate", fees);
                             result = Res.get("mainView.footer.btcInfo",
                                     Res.get("mainView.footer.btcInfo.synchronizedWith"),
-                                    getBtcNetworkAsString() + " / " + feeRate);
+                                    getBtcNetworkAsString(),
+                                    feeService.getFeeTextForDisplay());
                             getBtcSplashSyncIconId().set("image-connection-synced");
 
                             downloadCompleteHandler.run();
                         } else if (percentage > 0.0) {
                             result = Res.get("mainView.footer.btcInfo",
                                     Res.get("mainView.footer.btcInfo.synchronizingWith"),
-                                    getBtcNetworkAsString() + ": " + FormattingUtils.formatToPercentWithSymbol(percentage));
+                                    getBtcNetworkAsString() + ": " + FormattingUtils.formatToPercentWithSymbol(percentage), "");
                         } else {
                             result = Res.get("mainView.footer.btcInfo",
                                     Res.get("mainView.footer.btcInfo.connectingTo"),
-                                    getBtcNetworkAsString());
+                                    getBtcNetworkAsString(), "");
                         }
                     } else {
                         result = Res.get("mainView.footer.btcInfo",
