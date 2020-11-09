@@ -41,7 +41,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class GetInventoryRequester implements MessageListener, ConnectionListener {
-    private final static int TIMEOUT_SEC = 90;
+    private final static int TIMEOUT_SEC = 45;
 
     private final NetworkNode networkNode;
     private final NodeAddress nodeAddress;
