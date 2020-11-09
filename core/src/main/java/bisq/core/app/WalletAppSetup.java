@@ -120,19 +120,24 @@ public class WalletAppSetup {
                         double percentage = (double) downloadPercentage;
                         String fees = feeService.getFeeTextForDisplay();
                         btcSyncProgress.set(percentage);
-                        int bestChainHeight = walletsSetup.getChain() != null ? walletsSetup.getChain().getBestChainHeight() : 0;
-                        String chainHeightAsString = bestChainHeight > 0 ? String.valueOf(bestChainHeight) : "";
+                        int bestChainHeight = walletsSetup.getChain() != null ?
+                                walletsSetup.getChain().getBestChainHeight() :
+                                0;
+                        String chainHeightAsString = bestChainHeight > 0 ?
+                                String.valueOf(bestChainHeight) :
+                                "";
                         if (percentage == 1) {
-                            String feeRate = Res.get("mainView.footer.btcFeeRate", fees);
                             String synchronizedWith = Res.get("mainView.footer.btcInfo.synchronizedWith",
                                     getBtcNetworkAsString(), chainHeightAsString);
-                            result = Res.get("mainView.footer.btcInfo", synchronizedWith, feeRate);
+                            result = Res.get("mainView.footer.btcInfo", synchronizedWith,
+                                    feeService.getFeeTextForDisplay());
                             getBtcSplashSyncIconId().set("image-connection-synced");
 
                             downloadCompleteHandler.run();
                         } else if (percentage > 0.0) {
                             String synchronizingWith = Res.get("mainView.footer.btcInfo.synchronizingWith",
-                                    getBtcNetworkAsString(), chainHeightAsString, FormattingUtils.formatToPercentWithSymbol(percentage));
+                                    getBtcNetworkAsString(), chainHeightAsString,
+                                    FormattingUtils.formatToPercentWithSymbol(percentage));
                             result = Res.get("mainView.footer.btcInfo", synchronizingWith, "");
                         } else {
                             result = Res.get("mainView.footer.btcInfo",
