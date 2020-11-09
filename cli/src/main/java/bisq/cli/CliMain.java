@@ -29,6 +29,7 @@ import bisq.proto.grpc.GetOfferRequest;
 import bisq.proto.grpc.GetOffersRequest;
 import bisq.proto.grpc.GetPaymentAccountsRequest;
 import bisq.proto.grpc.GetTradeRequest;
+import bisq.proto.grpc.GetUnusedBsqAddressRequest;
 import bisq.proto.grpc.GetVersionRequest;
 import bisq.proto.grpc.KeepFundsRequest;
 import bisq.proto.grpc.LockWalletRequest;
@@ -90,6 +91,7 @@ public class CliMain {
         getbalance,
         getaddressbalance,
         getfundingaddresses,
+        getunusedbsqaddress,
         lockwallet,
         unlockwallet,
         removewalletpassword,
@@ -197,6 +199,12 @@ public class CliMain {
                             .setAddress(nonOptionArgs.get(1)).build();
                     var reply = walletsService.getAddressBalance(request);
                     out.println(formatAddressBalanceTbl(singletonList(reply.getAddressBalanceInfo())));
+                    return;
+                }
+                case getunusedbsqaddress: {
+                    var request = GetUnusedBsqAddressRequest.newBuilder().build();
+                    var reply = walletsService.getUnusedBsqAddress(request);
+                    out.println(reply.getAddress());
                     return;
                 }
                 case getfundingaddresses: {
@@ -484,6 +492,7 @@ public class CliMain {
             stream.format(rowFormat, "getversion", "", "Get server version");
             stream.format(rowFormat, "getbalance", "", "Get server wallet balance");
             stream.format(rowFormat, "getaddressbalance", "address", "Get server wallet address balance");
+            stream.format(rowFormat, "getunusedbsqaddress", "", "Get unused BSQ address");
             stream.format(rowFormat, "getfundingaddresses", "", "Get BTC funding addresses");
             stream.format(rowFormat, "createoffer", "payment acct id, buy | sell, currency code, \\", "Create and place an offer");
             stream.format(rowFormat, "", "amount (btc), min amount, use mkt based price, \\", "");

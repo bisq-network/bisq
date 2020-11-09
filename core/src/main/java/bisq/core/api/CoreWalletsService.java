@@ -20,6 +20,7 @@ package bisq.core.api;
 import bisq.core.api.model.AddressBalanceInfo;
 import bisq.core.btc.Balances;
 import bisq.core.btc.model.AddressEntry;
+import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletsManager;
 
@@ -55,6 +56,7 @@ class CoreWalletsService {
 
     private final Balances balances;
     private final WalletsManager walletsManager;
+    private final BsqWalletService bsqWalletService;
     private final BtcWalletService btcWalletService;
 
     @Nullable
@@ -66,9 +68,11 @@ class CoreWalletsService {
     @Inject
     public CoreWalletsService(Balances balances,
                               WalletsManager walletsManager,
+                              BsqWalletService bsqWalletService,
                               BtcWalletService btcWalletService) {
         this.balances = balances;
         this.walletsManager = walletsManager;
+        this.bsqWalletService = bsqWalletService;
         this.btcWalletService = btcWalletService;
     }
 
@@ -98,6 +102,10 @@ class CoreWalletsService {
         var satoshiBalance = getAddressBalance(addressString);
         var numConfirmations = getNumConfirmationsForMostRecentTransaction(addressString);
         return new AddressBalanceInfo(addressString, satoshiBalance, numConfirmations);
+    }
+
+    String getUnusedBsqAddress() {
+        return "TODO";
     }
 
     List<AddressBalanceInfo> getFundingAddresses() {

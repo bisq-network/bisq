@@ -225,6 +225,10 @@ public class CoreApi {
         return walletsService.getAddressBalanceInfo(addressString);
     }
 
+    public String getUnusedBsqAddress() {
+        return walletsService.getUnusedBsqAddress();
+    }
+
     public List<AddressBalanceInfo> getFundingAddresses() {
         return walletsService.getFundingAddresses();
     }

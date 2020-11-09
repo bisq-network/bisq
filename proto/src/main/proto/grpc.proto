@@ -275,6 +275,8 @@ message TradeInfo {
 service Wallets {
     rpc GetBalance (GetBalanceRequest) returns (GetBalanceReply) {
     }
+    rpc GetUnusedBsqAddress (GetUnusedBsqAddressRequest) returns (GetUnusedBsqAddressReply) {
+    }
     rpc GetAddressBalance (GetAddressBalanceRequest) returns (GetAddressBalanceReply) {
     }
     rpc GetFundingAddresses (GetFundingAddressesRequest) returns (GetFundingAddressesReply) {
@@ -302,6 +304,13 @@ message GetAddressBalanceRequest {
 
 message GetAddressBalanceReply {
     AddressBalanceInfo addressBalanceInfo = 1;
+}
+
+message GetUnusedBsqAddressRequest {
+}
+
+message GetUnusedBsqAddressReply {
+     string address = 1;
 }
 
 message GetFundingAddressesRequest {
