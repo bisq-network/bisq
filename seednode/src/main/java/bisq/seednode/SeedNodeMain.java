@@ -17,6 +17,7 @@
 
 package bisq.seednode;
 
+import bisq.core.app.TorSetup;
 import bisq.core.app.misc.ExecutableForAppWithP2p;
 import bisq.core.app.misc.ModuleForAppWithP2p;
 
@@ -152,7 +153,11 @@ public class SeedNodeMain extends ExecutableForAppWithP2p {
 
         checkConnectionLossTime = UserThread.runPeriodically(() -> {
             if (injector.getInstance(PeerManager.class).getNumAllConnectionsLostEvents() > 1) {
-                shutDown(this);
+                // Removing cache files help in case the node got flagged from Tor's dos protection
+                injector.getInstance(TorSetup.class).cleanupTorFiles(() -> {
+                    log.info("Tor directory reset");
+                    shutDown(this);
+                }, log::error);
             }
         }, CHECK_CONNECTION_LOSS_SEC);
 
