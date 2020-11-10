@@ -27,6 +27,7 @@ import bisq.core.dao.state.model.blockchain.TxType;
 import bisq.core.locale.Res;
 import bisq.core.util.coin.BsqFormatter;
 
+import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.LegacyAddress;
 import org.bitcoinj.core.Transaction;
@@ -101,24 +102,24 @@ class BsqTxListItem extends TxConfidenceListItem {
                     WalletService.isOutputScriptConvertibleToAddress(output)) {
                 // We don't support send txs with multiple outputs to multiple receivers, so we can
                 // assume that only one output is not from our own wallets.
-                LegacyAddress addressFromOutput = (LegacyAddress) WalletService.getAddressFromOutput(output);
-                if (addressFromOutput != null) {
-                    sendToAddress = bsqFormatter.getBsqAddressStringFromAddress(addressFromOutput);
+                // We ignore segwit outputs
+                Address addressFromOutput = WalletService.getAddressFromOutput(output);
+                if (addressFromOutput instanceof LegacyAddress) {
+                    sendToAddress = bsqFormatter.getBsqAddressStringFromAddress((LegacyAddress) addressFromOutput);
+                    break;
                 }
-                break;
             }
         }
 
         // In the case we sent to ourselves (either to BSQ or BTC wallet) we show the first as the other is
         // usually the change output.
         String receivedWithAddress = Res.get("shared.na");
-        if (sendToAddress != null) {
-            for (TransactionOutput output : transaction.getOutputs()) {
-                if (WalletService.isOutputScriptConvertibleToAddress(output)) {
-                    LegacyAddress addressFromOutput = (LegacyAddress) WalletService.getAddressFromOutput(output);
-                    if (addressFromOutput != null) {
-                        receivedWithAddress = bsqFormatter.getBsqAddressStringFromAddress(addressFromOutput);
-                    }
+        for (TransactionOutput output : transaction.getOutputs()) {
+            if (WalletService.isOutputScriptConvertibleToAddress(output)) {
+                Address addressFromOutput = WalletService.getAddressFromOutput(output);
+                // We ignore segwit outputs
+                if (addressFromOutput instanceof LegacyAddress) {
+                    receivedWithAddress = bsqFormatter.getBsqAddressStringFromAddress((LegacyAddress) addressFromOutput);
                     break;
                 }
             }
