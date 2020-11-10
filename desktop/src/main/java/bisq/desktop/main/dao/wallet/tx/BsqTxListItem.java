@@ -34,15 +34,15 @@ import org.bitcoinj.core.TransactionOutput;
 
 import java.util.Date;
 
-import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 @EqualsAndHashCode(callSuper = true)
-@Data
+@Getter
 class BsqTxListItem extends TxConfidenceListItem {
     private final DaoFacade daoFacade;
     private final BsqFormatter bsqFormatter;
@@ -52,10 +52,8 @@ class BsqTxListItem extends TxConfidenceListItem {
 
     private final String address;
     private final String direction;
-    private Coin amount;
+    private final Coin amount;
     private boolean received;
-
-    private boolean issuanceTx;
 
     BsqTxListItem(Transaction transaction,
                   BsqWalletService bsqWalletService,
@@ -103,7 +101,10 @@ class BsqTxListItem extends TxConfidenceListItem {
                     WalletService.isOutputScriptConvertibleToAddress(output)) {
                 // We don't support send txs with multiple outputs to multiple receivers, so we can
                 // assume that only one output is not from our own wallets.
-                sendToAddress = bsqFormatter.getBsqAddressStringFromAddress((LegacyAddress) WalletService.getAddressFromOutput(output));
+                LegacyAddress addressFromOutput = (LegacyAddress) WalletService.getAddressFromOutput(output);
+                if (addressFromOutput != null) {
+                    sendToAddress = bsqFormatter.getBsqAddressStringFromAddress(addressFromOutput);
+                }
                 break;
             }
         }
@@ -114,7 +115,10 @@ class BsqTxListItem extends TxConfidenceListItem {
         if (sendToAddress != null) {
             for (TransactionOutput output : transaction.getOutputs()) {
                 if (WalletService.isOutputScriptConvertibleToAddress(output)) {
-                    receivedWithAddress = bsqFormatter.getBsqAddressStringFromAddress((LegacyAddress) WalletService.getAddressFromOutput(output));
+                    LegacyAddress addressFromOutput = (LegacyAddress) WalletService.getAddressFromOutput(output);
+                    if (addressFromOutput != null) {
+                        receivedWithAddress = bsqFormatter.getBsqAddressStringFromAddress(addressFromOutput);
+                    }
                     break;
                 }
             }
