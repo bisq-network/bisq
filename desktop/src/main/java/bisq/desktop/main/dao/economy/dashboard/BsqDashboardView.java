@@ -115,6 +115,7 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
     private Coin availableAmount;
     private int gridRow = 0;
     double howManyStdDevsConstituteOutlier = 10;
+    private Price avg30DayUSDPrice;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -145,6 +146,7 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
             updatePrice();
             updateAveragePriceFields(avgPrice90TextField, avgPrice30TextField, false);
             updateAveragePriceFields(avgUSDPrice90TextField, avgUSDPrice30TextField, true);
+            updateMarketCap();
         };
     }
 
@@ -188,6 +190,7 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
         updateChartData();
         updateAveragePriceFields(avgPrice90TextField, avgPrice30TextField, false);
         updateAveragePriceFields(avgUSDPrice90TextField, avgUSDPrice30TextField, true);
+        updateMarketCap();
     }
 
 
@@ -333,14 +336,16 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
             Price bsqPrice = optionalBsqPrice.get();
             marketPriceLabel.setText(FormattingUtils.formatPrice(bsqPrice) + " BSQ/BTC");
 
-            marketCapTextField.setText(bsqFormatter.formatMarketCap(priceFeedService.getMarketPrice("BSQ"),
-                    priceFeedService.getMarketPrice(preferences.getPreferredTradeCurrency().getCode()),
-                    availableAmount));
-
             updateChartData();
-
         } else {
             marketPriceLabel.setText(Res.get("shared.na"));
+        }
+    }
+
+    private void updateMarketCap() {
+        if (avg30DayUSDPrice != null) {
+            marketCapTextField.setText(bsqFormatter.formatMarketCap(avg30DayUSDPrice, availableAmount));
+        } else {
             marketCapTextField.setText(Res.get("shared.na"));
         }
     }
@@ -394,6 +399,9 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
         String avg = FormattingUtils.formatPrice(avgPrice);
         if (isUSDField) {
             textField.setText(avg + " USD/BSQ");
+            if (days == 30) {
+                avg30DayUSDPrice = avgPrice;
+            }
         } else {
             textField.setText(avg + " BSQ/BTC");
         }
