@@ -756,6 +756,15 @@ public class GUIUtil {
         return true;
     }
 
+    public static boolean isChainHeightSyncedWithinToleranceOrShowPopup(WalletsSetup walletsSetup) {
+        if (!walletsSetup.isChainHeightSyncedWithinTolerance()) {
+            new Popup().information(Res.get("popup.warning.chainNotSynced")).show();
+            return false;
+        }
+
+        return true;
+    }
+
     public static boolean canCreateOrTakeOfferOrShowPopup(User user, Navigation navigation) {
         if (!user.hasAcceptedRefundAgents()) {
             new Popup().warning(Res.get("popup.warning.noArbitratorsAvailable")).show();

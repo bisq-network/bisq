@@ -558,6 +558,10 @@ public abstract class WalletService {
         return isWalletReady() && chain != null ? chain.getBestChainHeight() : 0;
     }
 
+    public boolean isChainHeightSyncedWithinTolerance() {
+        return walletsSetup.isChainHeightSyncedWithinTolerance();
+    }
+
     public Transaction getClonedTransaction(Transaction tx) {
         return new Transaction(params, tx.bitcoinSerialize());
     }
