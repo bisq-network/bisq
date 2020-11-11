@@ -373,13 +373,14 @@ public class AccountAgeWitnessService {
                                AccountAge accountAgeCategory,
                                OfferPayload.Direction direction,
                                PaymentMethod paymentMethod) {
-        if (!CurrencyUtil.isFiatCurrency(currencyCode)) {
+        if (CurrencyUtil.isCryptoCurrency(currencyCode) ||
+                !PaymentMethod.hasChargebackRisk(paymentMethod, currencyCode) ||
+                direction == OfferPayload.Direction.SELL) {
             return maxTradeLimit.value;
         }
 
         long limit = OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT.value;
-        var factor = PaymentMethod.hasChargebackRisk(paymentMethod, currencyCode) ?
-                signedTypeFactor(accountAgeCategory, direction) : normalFactor();
+        var factor = signedBuyFactor(accountAgeCategory);
         if (factor > 0) {
             limit = MathUtils.roundDoubleToLong((double) maxTradeLimit.value * factor);
         }
@@ -391,12 +392,6 @@ public class AccountAgeWitnessService {
         return limit;
     }
 
-    private double signedTypeFactor(AccountAge accountAgeCategory,
-                                    OfferPayload.Direction direction) {
-        return direction == OfferPayload.Direction.BUY ? signedBuyFactor(accountAgeCategory) :
-                normalFactor();
-    }
-
     private double signedBuyFactor(AccountAge accountAgeCategory) {
         switch (accountAgeCategory) {
             case TWO_MONTHS_OR_MORE:
@@ -406,8 +401,8 @@ public class AccountAgeWitnessService {
             case LESS_ONE_MONTH:
             case UNVERIFIED:
             default:
+                return 0;
         }
-        return 0;
     }
 
     private double normalFactor() {
