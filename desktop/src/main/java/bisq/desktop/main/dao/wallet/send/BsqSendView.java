@@ -27,6 +27,7 @@ import bisq.desktop.main.dao.wallet.BsqBalanceUtil;
 import bisq.desktop.main.funds.FundsView;
 import bisq.desktop.main.funds.deposit.DepositView;
 import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.main.overlays.windows.WalletPasswordWindow;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.BsqAddressValidator;
@@ -53,6 +54,7 @@ import bisq.core.util.validation.BtcAddressValidator;
 
 import bisq.network.p2p.P2PService;
 
+import bisq.common.UserThread;
 import bisq.common.handlers.ResultHandler;
 
 import org.bitcoinj.core.Coin;
@@ -66,6 +68,8 @@ import javafx.scene.control.Button;
 import javafx.scene.layout.GridPane;
 
 import javafx.beans.value.ChangeListener;
+
+import java.util.concurrent.TimeUnit;
 
 import static bisq.desktop.util.FormBuilder.addButtonAfterGroup;
 import static bisq.desktop.util.FormBuilder.addInputTextField;
@@ -86,6 +90,7 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
     private final BtcValidator btcValidator;
     private final BsqAddressValidator bsqAddressValidator;
     private final BtcAddressValidator btcAddressValidator;
+    private final WalletPasswordWindow walletPasswordWindow;
 
     private int gridRow = 0;
     private InputTextField amountInputTextField, btcAmountInputTextField;
@@ -113,7 +118,8 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
                         BsqValidator bsqValidator,
                         BtcValidator btcValidator,
                         BsqAddressValidator bsqAddressValidator,
-                        BtcAddressValidator btcAddressValidator) {
+                        BtcAddressValidator btcAddressValidator,
+                        WalletPasswordWindow walletPasswordWindow) {
         this.bsqWalletService = bsqWalletService;
         this.btcWalletService = btcWalletService;
         this.walletsManager = walletsManager;
@@ -127,6 +133,7 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
         this.btcValidator = btcValidator;
         this.bsqAddressValidator = bsqAddressValidator;
         this.btcAddressValidator = btcAddressValidator;
+        this.walletPasswordWindow = walletPasswordWindow;
     }
 
     @Override
@@ -362,7 +369,7 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
                         amountFormatter.formatCoinWithCode(receiverAmount)))
                 .actionButtonText(Res.get("shared.yes"))
                 .onAction(() -> {
-                    walletsManager.publishAndCommitBsqTx(txWithBtcFee, txType, new TxBroadcaster.Callback() {
+                    doWithdraw(txWithBtcFee, txType, new TxBroadcaster.Callback() {
                         @Override
                         public void onSuccess(Transaction transaction) {
                             log.debug("Successfully sent tx with id {}", txWithBtcFee.getTxId().toString());
@@ -377,6 +384,20 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
                 })
                 .closeButtonText(Res.get("shared.cancel"))
                 .show();
+    }
+
+    private void doWithdraw(Transaction txWithBtcFee, TxType txType, TxBroadcaster.Callback callback) {
+        if (btcWalletService.isEncrypted()) {
+            UserThread.runAfter(() -> walletPasswordWindow.onAesKey(aesKey ->
+                    sendFunds(txWithBtcFee, txType, callback))
+                    .show(), 300, TimeUnit.MILLISECONDS);
+        } else {
+            sendFunds(txWithBtcFee, txType, callback);
+        }
+    }
+
+    private void sendFunds(Transaction txWithBtcFee, TxType txType, TxBroadcaster.Callback callback) {
+        walletsManager.publishAndCommitBsqTx(txWithBtcFee, txType, callback);
     }
 }
 
