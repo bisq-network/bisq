@@ -21,7 +21,7 @@ import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.governance.proposal.ProposalValidationException;
 import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.Res;
-import bisq.core.provider.price.MarketPrice;
+import bisq.core.monetary.Price;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.ParsingUtils;
 import bisq.core.util.validation.BtcAddressValidator;
@@ -121,10 +121,10 @@ public class BsqFormatter implements CoinFormatter {
         return amountFormat.format(MathUtils.scaleDownByPowerOf10(amount.value, 2)) + " BSQ";
     }
 
-    public String formatMarketCap(MarketPrice bsqPriceMarketPrice, MarketPrice fiatMarketPrice, Coin issuedAmount) {
-        if (bsqPriceMarketPrice != null && fiatMarketPrice != null) {
-            double marketCap = bsqPriceMarketPrice.getPrice() * fiatMarketPrice.getPrice() * (MathUtils.scaleDownByPowerOf10(issuedAmount.value, 2));
-            return marketCapFormat.format(MathUtils.doubleToLong(marketCap)) + " " + fiatMarketPrice.getCurrencyCode();
+    public String formatMarketCap(Price usdBsqPrice, Coin issuedAmount) {
+        if (usdBsqPrice != null && issuedAmount != null) {
+            double marketCap = usdBsqPrice.getValue() * (MathUtils.scaleDownByPowerOf10(issuedAmount.value, 6));
+            return marketCapFormat.format(MathUtils.doubleToLong(marketCap)) + " USD";
         } else {
             return "";
         }
