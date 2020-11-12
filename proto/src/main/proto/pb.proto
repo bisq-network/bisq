@@ -570,6 +570,20 @@ message DataAndSeqNrPair {
     int32 sequence_number = 2;
 }
 
+message MailboxMessageList {
+    repeated MailboxItem mailbox_item = 1;
+}
+
+message MailboxItem {
+    ProtectedMailboxStorageEntry protected_mailbox_storage_entry = 1;
+    DecryptedMessageWithPubKey decrypted_message_with_pub_key = 2;
+}
+
+message DecryptedMessageWithPubKey {
+    NetworkEnvelope network_envelope = 1;
+    bytes signature_pub_key_bytes = 2;
+}
+
 // misc
 
 message PrivateNotificationPayload {
@@ -1188,6 +1202,7 @@ message PersistableEnvelope {
         MediationDisputeList mediation_dispute_list = 29;
         RefundDisputeList refund_dispute_list = 30;
         TradeStatistics3Store trade_statistics3_store = 31;
+        MailboxMessageList mailbox_message_list = 32;
     }
 }
 
