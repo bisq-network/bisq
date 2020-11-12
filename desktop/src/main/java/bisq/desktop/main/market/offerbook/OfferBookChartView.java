@@ -88,6 +88,8 @@ import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 
+import java.text.DecimalFormat;
+
 import javafx.util.Callback;
 import javafx.util.StringConverter;
 
@@ -95,6 +97,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static bisq.desktop.util.FormBuilder.addTopLabelAutocompleteComboBox;
 import static bisq.desktop.util.Layout.INITIAL_WINDOW_HEIGHT;
@@ -124,6 +127,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
     private HBox bottomHBox;
     private ListChangeListener<OfferBookListItem> changeListener;
     private ListChangeListener<CurrencyListItem> currencyListItemsListener;
+    private final double chartDataFactor = 3;
     private final double initialOfferTableViewHeight = 121;
     private final double pixelsPerOfferTableRow = (initialOfferTableViewHeight - 30) / 5.0; // initial visible row count=5, header height=30
     private final Function<Double, Double> offerTableViewHeight = (screenSize) -> {
@@ -220,6 +224,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                     volumeColumnLabel.set(Res.get("offerbook.volume", code));
                     xAxis.setTickLabelFormatter(new StringConverter<>() {
                         int cryptoPrecision = 3;
+                        DecimalFormat df = new DecimalFormat(",###");
 
                         @Override
                         public String toString(Number object) {
@@ -227,13 +232,12 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                             if (CurrencyUtil.isCryptoCurrency(model.getCurrencyCode())) {
                                 final String withCryptoPrecision = FormattingUtils.formatRoundedDoubleWithPrecision(doubleValue, cryptoPrecision);
                                 if (withCryptoPrecision.substring(0,3).equals("0.0")) {
-                                    cryptoPrecision = 8;
-                                    return FormattingUtils.formatRoundedDoubleWithPrecision(doubleValue, cryptoPrecision);
+                                    return FormattingUtils.formatRoundedDoubleWithPrecision(doubleValue, 8).replaceFirst("0+$", "");
                                 } else {
-                                    return withCryptoPrecision;
+                                    return withCryptoPrecision.replaceFirst("0+$", "");
                                 }
                             } else {
-                                return FormattingUtils.formatRoundedDoubleWithPrecision(doubleValue, 2);
+                                return df.format(Double.parseDouble(FormattingUtils.formatRoundedDoubleWithPrecision(doubleValue, 0)));
                             }
                         }
 
@@ -341,19 +345,18 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
     private void createChart() {
         xAxis = new NumberAxis();
         xAxis.setForceZeroInRange(false);
-        xAxis.setAutoRanging(false);
-        xAxis.setTickLabelGap(6);
-        xAxis.setTickMarkVisible(false);
+        xAxis.setAutoRanging(true);
+        xAxis.setTickMarkVisible(true);
         xAxis.setMinorTickVisible(false);
 
         NumberAxis yAxis = new NumberAxis();
         yAxis.setForceZeroInRange(false);
         yAxis.setSide(Side.RIGHT);
         yAxis.setAutoRanging(true);
-        yAxis.setTickMarkVisible(false);
+        yAxis.setTickMarkVisible(true);
         yAxis.setMinorTickVisible(false);
-        yAxis.setTickLabelGap(5);
-        yAxis.setTickLabelFormatter(new NumberAxis.DefaultFormatter(yAxis, "", " " + Res.getBaseCurrencyCode()));
+        yAxis.getStyleClass().add("axisy");
+        yAxis.setLabel(CurrencyUtil.getOfferVolumeCode(Res.getBaseCurrencyCode()));
 
         seriesBuy = new XYChart.Series<>();
         seriesSell = new XYChart.Series<>();
@@ -389,10 +392,10 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                 .min()
                 .orElse(Double.MAX_VALUE);
 
-        // Hide buy offers that are more than a factor 3 higher than the lowest buy offer
+        // Hide buy offers that are more than a factor of chartDataFactor higher than the lowest buy offer
         double buyMaxValue = model.getBuyData().stream()
                 .mapToDouble(o -> o.getXValue().doubleValue())
-                .filter(o -> o < buyMinValue * 3)
+                .filter(o -> o < buyMinValue * chartDataFactor)
                 .max()
                 .orElse(Double.MIN_VALUE);
 
@@ -401,27 +404,28 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                 .max()
                 .orElse(Double.MIN_VALUE);
 
-        // Hide sell offers that are less than a factor 3 lower than the highest sell offer
+        // Hide sell offers that are less than a factor of chartDataFactor lower than the highest sell offer
         double sellMinValue = model.getSellData().stream()
                 .mapToDouble(o -> o.getXValue().doubleValue())
-                .filter(o -> o > sellMaxValue / 3)
+                .filter(o -> o > sellMaxValue / chartDataFactor)
                 .min()
                 .orElse(Double.MAX_VALUE);
 
         double minValue = Double.min(buyMinValue, sellMinValue);
         double maxValue = Double.max(buyMaxValue, sellMaxValue);
 
-        if (minValue == Double.MAX_VALUE || maxValue == Double.MIN_VALUE) {
-            xAxis.setAutoRanging(true);
-        } else {
-            xAxis.setAutoRanging(false);
-            xAxis.setLowerBound(minValue);
-            xAxis.setUpperBound(maxValue);
-            xAxis.setTickUnit((maxValue - minValue) / 13);
+        if (minValue == Double.MAX_VALUE || maxValue == Double.MIN_VALUE) { // no filtering
+            seriesBuy.getData().addAll(model.getBuyData());
+            seriesSell.getData().addAll(model.getSellData());
+        } else {                                                            // apply filtering
+            seriesBuy.getData().addAll(model.getBuyData().stream()
+                                       .filter(o -> o.getXValue().doubleValue() < buyMinValue * 3)
+                                       .collect(Collectors.toList()));
+            seriesSell.getData().addAll(model.getSellData().stream()
+                                        .filter(o -> o.getXValue().doubleValue() > sellMaxValue / 3)
+                                        .collect(Collectors.toList()));
         }
 
-        seriesBuy.getData().addAll(model.getBuyData());
-        seriesSell.getData().addAll(model.getSellData());
         areaChart.getData().addAll(List.of(seriesBuy, seriesSell));
     }
 
