@@ -35,6 +35,7 @@ import bisq.core.trade.failed.FailedTradesManager;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
 
+import bisq.network.p2p.P2PService;
 import bisq.network.p2p.peers.PeerManager;
 import bisq.network.p2p.storage.P2PDataStorage;
 
@@ -66,6 +67,7 @@ public class CorePersistedDataHost {
         persistedDataHosts.add(injector.getInstance(RefundDisputeListService.class));
         persistedDataHosts.add(injector.getInstance(P2PDataStorage.class));
         persistedDataHosts.add(injector.getInstance(PeerManager.class));
+        persistedDataHosts.add(injector.getInstance(P2PService.class));
 
         if (injector.getInstance(Config.class).daoActivated) {
             persistedDataHosts.add(injector.getInstance(BallotListService.class));

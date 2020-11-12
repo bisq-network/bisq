@@ -50,8 +50,10 @@ import bisq.common.app.Capability;
 import bisq.common.crypto.CryptoException;
 import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.PubKeyRing;
+import bisq.common.persistence.PersistenceManager;
 import bisq.common.proto.ProtobufferException;
 import bisq.common.proto.network.NetworkEnvelope;
+import bisq.common.proto.persistable.PersistedDataHost;
 import bisq.common.util.Utilities;
 
 import com.google.inject.Inject;
@@ -95,7 +97,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import lombok.Getter;
-import lombok.Value;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -104,11 +105,12 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class P2PService implements SetupListener, MessageListener, ConnectionListener, RequestDataManager.Listener,
-        HashMapChangedListener {
+        HashMapChangedListener, PersistedDataHost {
     private static final Logger log = LoggerFactory.getLogger(P2PService.class);
 
     private final SeedNodeRepository seedNodeRepository;
     private final EncryptionService encryptionService;
+    private final PersistenceManager<MailboxMessageList> persistenceManager;
     private final KeyRing keyRing;
 
     private final NetworkNode networkNode;
@@ -124,6 +126,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     private final Set<DecryptedDirectMessageListener> decryptedDirectMessageListeners = new CopyOnWriteArraySet<>();
     private final Set<DecryptedMailboxListener> decryptedMailboxListeners = new CopyOnWriteArraySet<>();
     private final Set<P2PServiceListener> p2pServiceListeners = new CopyOnWriteArraySet<>();
+    private final MailboxMessageList mailboxMessageList = new MailboxMessageList();
     private final Map<String, List<MailboxItem>> mailboxItemsByUid = new HashMap<>();
     private final Set<Runnable> shutDownResultHandlers = new CopyOnWriteArraySet<>();
     private final BooleanProperty hiddenServicePublished = new SimpleBooleanProperty();
@@ -155,6 +158,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                       SeedNodeRepository seedNodeRepository,
                       Socks5ProxyProvider socks5ProxyProvider,
                       EncryptionService encryptionService,
+                      PersistenceManager<MailboxMessageList> persistenceManager,
                       KeyRing keyRing) {
         this.networkNode = networkNode;
         this.peerManager = peerManager;
@@ -166,6 +170,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         this.seedNodeRepository = seedNodeRepository;
         this.socks5ProxyProvider = socks5ProxyProvider;
         this.encryptionService = encryptionService;
+        this.persistenceManager = persistenceManager;
         this.keyRing = keyRing;
 
         this.networkNode.addConnectionListener(this);
@@ -180,8 +185,31 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
             if (newValue)
                 onNetworkReady();
         });
+
+        this.persistenceManager.initialize(mailboxMessageList, PersistenceManager.Source.PRIVATE);
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PersistedDataHost
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void readPersisted(Runnable completeHandler) {
+        persistenceManager.readPersisted(persisted -> {
+                    persisted.forEach(mailboxItem -> {
+                        DecryptedMessageWithPubKey decryptedMessageWithPubKey = mailboxItem.getDecryptedMessageWithPubKey();
+                        MailboxMessage mailboxMessage = (MailboxMessage) decryptedMessageWithPubKey.getNetworkEnvelope();
+                        String uid = mailboxMessage.getUid();
+                        mailboxItemsByUid.putIfAbsent(uid, new ArrayList<>());
+                        mailboxItemsByUid.get(uid).add(mailboxItem);
+                        mailboxMessageList.add(mailboxItem);
+                    });
+
+                    completeHandler.run();
+                },
+                completeHandler);
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
@@ -507,6 +535,8 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         String uid = mailboxMessage.getUid();
         mailboxItemsByUid.putIfAbsent(uid, new ArrayList<>());
         mailboxItemsByUid.get(uid).add(mailboxItem);
+        mailboxMessageList.add(mailboxItem);
+        persistenceManager.requestPersistence();
 
         NodeAddress sender = mailboxMessage.getSenderNodeAddress();
         log.info("Received a {} mailbox message with uid {} and senderAddress {}",
@@ -781,11 +811,14 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                 String uid = mailboxMessage.getUid();
                 if (mailboxItemsByUid.containsKey(uid)) {
                     List<MailboxItem> list = mailboxItemsByUid.get(uid);
-
                     // In case we have not been bootstrapped when we tried to remove the message at the time when we
                     // received the message, we remove it now.
-                    list.forEach(mailboxItem -> removeMailboxEntryFromNetwork(mailboxItem.getProtectedMailboxStorageEntry()));
+                    list.forEach(mailboxItem -> {
+                        removeMailboxEntryFromNetwork(mailboxItem.getProtectedMailboxStorageEntry());
+                        mailboxMessageList.remove(mailboxItem);
+                    });
                     mailboxItemsByUid.remove(uid);
+                    persistenceManager.requestPersistence();
                 }
             });
         } else {
@@ -931,19 +964,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         return mailboxItemsByUid.values().stream()
                 .filter(list -> !list.isEmpty())
                 .map(list -> list.get(0))
-                .map(P2PService.MailboxItem::getDecryptedMessageWithPubKey)
+                .map(MailboxItem::getDecryptedMessageWithPubKey)
                 .collect(Collectors.toSet());
-    }
-
-    @Value
-    public class MailboxItem {
-        private final ProtectedMailboxStorageEntry protectedMailboxStorageEntry;
-        private final DecryptedMessageWithPubKey decryptedMessageWithPubKey;
-
-        public MailboxItem(ProtectedMailboxStorageEntry protectedMailboxStorageEntry,
-                           DecryptedMessageWithPubKey decryptedMessageWithPubKey) {
-            this.protectedMailboxStorageEntry = protectedMailboxStorageEntry;
-            this.decryptedMessageWithPubKey = decryptedMessageWithPubKey;
-        }
     }
 }
