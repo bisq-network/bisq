@@ -44,6 +44,7 @@ public class SellerAsMakerSendsInputsForDepositTxResponse extends MakerSendsInpu
 
         processModel.getTradeManager().requestPersistence();
 
-        return preparedDepositTx.bitcoinSerialize();
+        // Make sure witnesses are removed as well before sending, to cover the segwit case.
+        return preparedDepositTx.bitcoinSerialize(false);
     }
 }
