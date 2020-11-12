@@ -189,9 +189,7 @@ public abstract class HistoricalDataStoreService<T extends PersistableNetworkPay
                     storesByVersion.put(version, persisted);
                     allHistoricalPayloads.putAll(persisted.getMap());
                     log.info("We have read from {} {} historical items.", fileName, persisted.getMap().size());
-                    if (wasCreatedFromResources) {
-                        pruneStore(persisted, version);
-                    }
+                    pruneStore(persisted, version);
                     completeHandler.run();
                 },
                 () -> {
