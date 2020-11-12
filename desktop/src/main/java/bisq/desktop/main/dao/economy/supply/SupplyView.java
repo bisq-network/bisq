@@ -42,7 +42,6 @@ import org.bitcoinj.core.Coin;
 import javax.inject.Inject;
 
 import javafx.scene.Node;
-import javafx.scene.chart.AreaChart;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
@@ -53,6 +52,7 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Side;
@@ -60,6 +60,8 @@ import javafx.geometry.Side;
 import javafx.collections.ListChangeListener;
 
 import javafx.util.StringConverter;
+
+import java.text.DecimalFormat;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -82,7 +84,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -96,6 +97,7 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
 
     private static final String MONTH = "month";
     private static final String DAY = "day";
+    private static final DecimalFormat dFmt = new DecimalFormat(",###");
 
     private final DaoFacade daoFacade;
     private DaoStateService daoStateService;
@@ -107,8 +109,6 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
             totalUnlockedAmountTextField, totalConfiscatedAmountTextField, totalAmountOfInvalidatedBsqTextField;
     private XYChart.Series<Number, Number> seriesBSQIssuedMonthly, seriesBSQBurntMonthly, seriesBSQBurntDaily,
             seriesBSQBurntDailyMA;
-
-    private XYChart.Series<Number, Number> seriesBSQIssuedMonthly2;
 
     private ListChangeListener<XYChart.Data<Number, Number>> changeListenerBSQBurntDaily;
     private NumberAxis yAxisBSQBurntDaily;
@@ -123,6 +123,9 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
 
     private static final Map<String, TemporalAdjuster> ADJUSTERS = new HashMap<>();
 
+    private static final double monthDurationAvg = 2635200;  // 3600 * 24 * 30.5;
+    private static List<Number> chart1XBounds = List.of();
+    private static NumberAxis xAxisChart1;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -144,9 +147,9 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
 
         initializeSeries();
 
-        createSupplyIncreasedVsDecreasedInformation();
-        createSupplyIncreasedInformation();
-        createSupplyReducedInformation();
+        createSupplyIncreasedVsDecreasedInformation(); // chart #1
+        createSupplyIncreasedInformation();            // chart #2
+        createSupplyReducedInformation();              // chart #3
 
         createSupplyLockedInformation();
     }
@@ -199,8 +202,6 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
         // Because Series cannot be reused in multiple charts, we create a
         // "second" Series and populate it at the same time as the original.
         // Some other solutions: https://stackoverflow.com/questions/49770442
-        seriesBSQIssuedMonthly2 = new XYChart.Series<>();
-        seriesBSQIssuedMonthly2.setName(issuedLabel);
 
         seriesBSQBurntMonthly = new XYChart.Series<>();
         seriesBSQBurntMonthly.setName(burntLabel);
@@ -250,11 +251,6 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
                 Res.get("dao.factsAndFigures.supply.compRequestIssueAmount")).second;
         reimbursementAmountTextField = addTopLabelReadOnlyTextField(root, gridRow, 1,
                 Res.get("dao.factsAndFigures.supply.reimbursementAmount")).second;
-
-        var chart = createBSQIssuedChart(seriesBSQIssuedMonthly2);
-
-        var chartPane = wrapInChartPane(chart);
-        root.getChildren().add(chartPane);
     }
 
     private void createSupplyReducedInformation() {
@@ -291,84 +287,55 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
                 Res.get("dao.factsAndFigures.supply.totalConfiscatedAmount")).second;
     }
 
+    // chart #1 (top)
     private Node createBSQIssuedVsBurntChart(
-            XYChart.Series<Number, Number> seriesBSQIssuedMonthly,
-            XYChart.Series<Number, Number> seriesBSQBurntMonthly
+        XYChart.Series<Number, Number> seriesBSQIssuedMonthly,
+        XYChart.Series<Number, Number> seriesBSQBurntMonthly
     ) {
-        Supplier<NumberAxis> makeXAxis = () -> {
-            NumberAxis xAxis = new NumberAxis();
-            configureAxis(xAxis);
-            xAxis.setTickLabelFormatter(getTimestampTickLabelFormatter("MMM uu"));
-            return xAxis;
-        };
-
-        Supplier<NumberAxis> makeYAxis = () -> {
-            NumberAxis yAxis = new NumberAxis();
-            configureYAxis(yAxis);
-            yAxis.setTickLabelFormatter(BSQPriceTickLabelFormatter);
-            return yAxis;
-        };
-
-        var chart = new LineChart<>(makeXAxis.get(), makeYAxis.get());
-
-        configureChart(chart);
-        chart.setCreateSymbols(false);
-
-        chart.getData().addAll(List.of(seriesBSQIssuedMonthly, seriesBSQBurntMonthly));
-
-        chart.setLegendVisible(true);
-
-        return chart;
-    }
-
-    private Node createBSQIssuedChart(XYChart.Series<Number, Number> series) {
-        NumberAxis xAxis = new NumberAxis();
-        configureAxis(xAxis);
-        xAxis.setTickLabelFormatter(getTimestampTickLabelFormatter("MMM uu"));
+        xAxisChart1 = new NumberAxis();
+        configureAxis(xAxisChart1);
+        xAxisChart1.setLabel("Month");
+        xAxisChart1.setTickLabelFormatter(getMonthTickLabelFormatter("MM\nyyyy"));
+        addTickMarkLabelCssClass(xAxisChart1, "axis-tick-mark-text-node");
 
         NumberAxis yAxis = new NumberAxis();
         configureYAxis(yAxis);
+        yAxis.setLabel("BSQ");
         yAxis.setTickLabelFormatter(BSQPriceTickLabelFormatter);
 
-        AreaChart<Number, Number> chart = new AreaChart<>(xAxis, yAxis);
-
+        var chart = new LineChart<>(xAxisChart1, yAxis);
         configureChart(chart);
-        chart.setCreateSymbols(false);
+        chart.setLegendVisible(true);
+        chart.setCreateSymbols(true);
 
-        chart.getData().add(series);
+        chart.getData().addAll(seriesBSQIssuedMonthly, seriesBSQBurntMonthly);
 
         return chart;
     }
 
+    // chart #3 (bottom)
     private Node createBSQBurntChart(
             XYChart.Series<Number, Number> seriesBSQBurntDaily,
             XYChart.Series<Number, Number> seriesBSQBurntDailyMA
     ) {
-        Supplier<NumberAxis> makeXAxis = () -> {
-            NumberAxis xAxis = new NumberAxis();
-            configureAxis(xAxis);
-            xAxis.setTickLabelFormatter(getTimestampTickLabelFormatter("d MMM"));
-            return xAxis;
-        };
+        NumberAxis xAxis = new NumberAxis();
+        configureAxis(xAxis);
+        xAxis.setTickLabelFormatter(getTimestampTickLabelFormatter("dd/MMM\nyyyy"));
+        addTickMarkLabelCssClass(xAxis, "axis-tick-mark-text-node");
 
-        Supplier<NumberAxis> makeYAxis = () -> {
-            NumberAxis yAxis = new NumberAxis();
-            configureYAxis(yAxis);
-            yAxis.setTickLabelFormatter(BSQPriceTickLabelFormatter);
-            return yAxis;
-        };
+        NumberAxis yAxis = new NumberAxis();
+        configureYAxis(yAxis);
+        yAxis.setLabel("BSQ");
+        yAxis.setTickLabelFormatter(BSQPriceTickLabelFormatter);
 
-        var yAxis = makeYAxis.get();
         initializeChangeListener(yAxis);
 
-        var chart = new LineChart<>(makeXAxis.get(), yAxis);
-
+        var chart = new LineChart<>(xAxis, yAxis);
         configureChart(chart);
         chart.setCreateSymbols(false);
-
-        chart.getData().addAll(List.of(seriesBSQBurntDaily, seriesBSQBurntDailyMA));
-
         chart.setLegendVisible(true);
+
+        chart.getData().addAll(seriesBSQBurntDaily, seriesBSQBurntDailyMA);
 
         return chart;
     }
@@ -381,20 +348,68 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
                 yAxisBSQBurntDaily, chartMaxNumberOfTicks, chartPercentToTrim, chartHowManyStdDevsConstituteOutlier);
     }
 
+    public static List<Number> getListXMinMax (List<XYChart.Data<Number, Number>> bsqList) {
+        long min = Long.MAX_VALUE, max = 0;
+        for (XYChart.Data<Number, ?> data : bsqList) {
+            min = Math.min(data.getXValue().longValue(), min);
+            max = Math.max(data.getXValue().longValue(), max);
+        }
+
+        return List.of(min, max);
+    }
+
     private void configureYAxis(NumberAxis axis) {
         configureAxis(axis);
 
         axis.setForceZeroInRange(true);
-        axis.setTickLabelGap(5);
         axis.setSide(Side.RIGHT);
     }
 
     private void configureAxis(NumberAxis axis) {
         axis.setForceZeroInRange(false);
-        axis.setAutoRanging(true);
-        axis.setTickMarkVisible(false);
+        axis.setTickMarkVisible(true);
         axis.setMinorTickVisible(false);
-        axis.setTickLabelGap(6);
+    }
+
+    // grab the axis tick mark label (text object) and add a CSS class.
+    private void addTickMarkLabelCssClass(NumberAxis axis, String cssClass) {
+        axis.getChildrenUnmodifiable().addListener((ListChangeListener<Node>) c -> {
+                while (c.next()) {
+                    if (c.wasAdded()) {
+                        for (Node mark : c.getAddedSubList()) {
+                            if (mark instanceof Text) {
+                                mark.getStyleClass().add(cssClass);
+                            }
+                        }
+                    }
+                }
+            });
+    }
+
+    // rounds the tick timestamp to the nearest month
+    private StringConverter<Number> getMonthTickLabelFormatter(String datePattern) {
+        return new StringConverter<>() {
+            @Override
+            public String toString(Number timestamp) {
+                double tsd = timestamp.doubleValue();
+                if ((chart1XBounds.size() == 2) &&
+                    ((tsd - monthDurationAvg / 2 < chart1XBounds.get(0).doubleValue()) ||
+                     (tsd + monthDurationAvg / 2 > chart1XBounds.get(1).doubleValue()))) {
+                    return "";
+                }
+                LocalDateTime localDateTime = LocalDateTime.ofEpochSecond(timestamp.longValue(),
+                        0, OffsetDateTime.now(ZoneId.systemDefault()).getOffset());
+                if (localDateTime.getDayOfMonth() > 15) {
+                    localDateTime = localDateTime.with(TemporalAdjusters.firstDayOfNextMonth());
+                }
+                return localDateTime.format(DateTimeFormatter.ofPattern(datePattern, GlobalSettings.getLocale()));
+            }
+
+            @Override
+            public Number fromString(String string) {
+                return 0;
+            }
+        };
     }
 
     private StringConverter<Number> getTimestampTickLabelFormatter(String datePattern) {
@@ -417,7 +432,7 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
             new StringConverter<>() {
                 @Override
                 public String toString(Number marketPrice) {
-                    return bsqFormatter.formatBSQSatoshisWithCode(marketPrice.longValue());
+                    return dFmt.format(Double.parseDouble(bsqFormatter.formatBSQSatoshis(marketPrice.longValue())));
                 }
 
                 @Override
@@ -427,7 +442,6 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
             };
 
     private <X, Y> void configureChart(XYChart<X, Y> chart) {
-        chart.setLegendVisible(false);
         chart.setAnimated(false);
         chart.setId("charts-dao");
 
@@ -487,9 +501,16 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
         var updatedBurntBsqDaily = updateBSQBurntDaily(sortedBurntTxs);
         updateBSQBurntDailyMA(updatedBurntBsqDaily);
 
-        updateBSQBurntMonthly(sortedBurntTxs);
+        List<Number> xMinMaxB = updateBSQBurntMonthly(sortedBurntTxs);
 
-        updateBSQIssuedMonthly();
+        List<Number> xMinMaxI = updateBSQIssuedMonthly();
+
+        chart1XBounds = List.of(Math.min(xMinMaxB.get(0).doubleValue(), xMinMaxI.get(0).doubleValue()) - monthDurationAvg,
+                                Math.max(xMinMaxB.get(1).doubleValue(), xMinMaxI.get(1).doubleValue()) + monthDurationAvg);
+        xAxisChart1.setAutoRanging(false);
+        xAxisChart1.setLowerBound(chart1XBounds.get(0).doubleValue());
+        xAxisChart1.setUpperBound(chart1XBounds.get(1).doubleValue());
+        xAxisChart1.setTickUnit(monthDurationAvg);
     }
 
     private List<Tx> getSortedBurntTxs() {
@@ -534,7 +555,7 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
         return updatedBurntBsqDaily;
     }
 
-    private void updateBSQBurntMonthly(List<Tx> sortedBurntTxs) {
+    private List<Number> updateBSQBurntMonthly(List<Tx> sortedBurntTxs) {
         seriesBSQBurntMonthly.getData().clear();
 
         var burntBsqByMonth =
@@ -563,6 +584,7 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
                         .collect(Collectors.toList());
 
         seriesBSQBurntMonthly.getData().setAll(updatedBurntBsqMonthly);
+        return getListXMinMax(updatedBurntBsqMonthly);
     }
 
     private void updateBSQBurntDailyMA(List<XYChart.Data<Number, Number>> updatedBurntBsq) {
@@ -602,7 +624,7 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
         seriesBSQBurntDailyMA.getData().setAll(burntBsqMA);
     }
 
-    private void updateBSQIssuedMonthly() {
+    private List<Number> updateBSQIssuedMonthly() {
         Function<Integer, LocalDate> blockTimeFn = memoize(height ->
                 Instant.ofEpochMilli(daoFacade.getBlockTime(height)).atZone(ZoneId.systemDefault())
                         .toLocalDate()
@@ -630,7 +652,8 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
                 .collect(Collectors.toList());
 
         seriesBSQIssuedMonthly.getData().setAll(updatedAddedBSQ);
-        seriesBSQIssuedMonthly2.getData().setAll(updatedAddedBSQ);
+
+        return getListXMinMax(updatedAddedBSQ);
     }
 
     private void activateButtons() {
