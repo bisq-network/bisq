@@ -124,8 +124,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     private final Set<DecryptedDirectMessageListener> decryptedDirectMessageListeners = new CopyOnWriteArraySet<>();
     private final Set<DecryptedMailboxListener> decryptedMailboxListeners = new CopyOnWriteArraySet<>();
     private final Set<P2PServiceListener> p2pServiceListeners = new CopyOnWriteArraySet<>();
-    @Getter
-    private final Map<String, MailboxItem> mailboxItemsByUid = new HashMap<>();
+    private final Map<String, List<MailboxItem>> mailboxItemsByUid = new HashMap<>();
     private final Set<Runnable> shutDownResultHandlers = new CopyOnWriteArraySet<>();
     private final BooleanProperty hiddenServicePublished = new SimpleBooleanProperty();
     private final BooleanProperty preliminaryDataReceived = new SimpleBooleanProperty();
@@ -447,7 +446,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         checkArgument(protectedMailboxStorageEntries.size() == 1);
         var decryptedEntries = new ArrayList<>(getDecryptedEntries(protectedMailboxStorageEntries));
         if (decryptedEntries.size() == 1) {
-            storeMailboxDataAndNotifyListeners(decryptedEntries.get(0));
+            processMailboxItem(decryptedEntries.get(0));
         }
     }
 
@@ -466,7 +465,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
         Futures.addCallback(future, new FutureCallback<>() {
             public void onSuccess(Set<MailboxItem> decryptedMailboxMessageWithEntries) {
-                UserThread.execute(() -> decryptedMailboxMessageWithEntries.forEach(e -> storeMailboxDataAndNotifyListeners(e)));
+                UserThread.execute(() -> decryptedMailboxMessageWithEntries.forEach(e -> processMailboxItem(e)));
             }
 
             public void onFailure(@NotNull Throwable throwable) {
@@ -502,14 +501,51 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         return null;
     }
 
-    private void storeMailboxDataAndNotifyListeners(MailboxItem mailboxItem) {
+    private void processMailboxItem(MailboxItem mailboxItem) {
         DecryptedMessageWithPubKey decryptedMessageWithPubKey = mailboxItem.getDecryptedMessageWithPubKey();
         MailboxMessage mailboxMessage = (MailboxMessage) decryptedMessageWithPubKey.getNetworkEnvelope();
+        String uid = mailboxMessage.getUid();
+        mailboxItemsByUid.putIfAbsent(uid, new ArrayList<>());
+        mailboxItemsByUid.get(uid).add(mailboxItem);
+
         NodeAddress sender = mailboxMessage.getSenderNodeAddress();
-        mailboxItemsByUid.put(mailboxMessage.getUid(), mailboxItem);
         log.info("Received a {} mailbox message with uid {} and senderAddress {}",
-                mailboxMessage.getClass().getSimpleName(), mailboxMessage.getUid(), sender);
+                mailboxMessage.getClass().getSimpleName(), uid, sender);
         decryptedMailboxListeners.forEach(e -> e.onMailboxMessageAdded(decryptedMessageWithPubKey, sender));
+
+        if (isBootstrapped()) {
+            // After we notified our listeners we remove the data immediately from the network.
+            // In case the client has not been ready it need to take it via getMailBoxMessages.
+            removeMailboxEntryFromNetwork(mailboxItem.getProtectedMailboxStorageEntry());
+        } else {
+            log.info("We are not bootstrapped yet, so we remove later once the message got processed.");
+        }
+    }
+
+    private void removeMailboxEntryFromNetwork(ProtectedMailboxStorageEntry protectedMailboxStorageEntry) {
+        MailboxStoragePayload mailboxStoragePayload = (MailboxStoragePayload) protectedMailboxStorageEntry.getProtectedStoragePayload();
+        PublicKey receiversPubKey = protectedMailboxStorageEntry.getReceiversPubKey();
+        try {
+            ProtectedMailboxStorageEntry updatedEntry = p2PDataStorage.getMailboxDataWithSignedSeqNr(
+                    mailboxStoragePayload,
+                    keyRing.getSignatureKeyPair(),
+                    receiversPubKey);
+
+            P2PDataStorage.ByteArray hashOfPayload = p2PDataStorage.get32ByteHashAsByteArray(mailboxStoragePayload);
+            if (p2PDataStorage.getMap().containsKey(hashOfPayload)) {
+                boolean result = p2PDataStorage.remove(updatedEntry, networkNode.getNodeAddress());
+                if (result) {
+                    log.info("Removed mailboxEntry from network");
+                } else {
+                    log.warn("Removing mailboxEntry from network failed");
+                }
+            } else {
+                log.info("The mailboxEntry was already removed earlier.");
+            }
+        } catch (CryptoException e) {
+            e.printStackTrace();
+            log.error("Could not remove ProtectedMailboxStorageEntry from network. Error: {}", e.toString());
+        }
     }
 
 
@@ -736,56 +772,25 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         }
     }
 
-    public void removeEntryFromMailbox(DecryptedMessageWithPubKey decryptedMessageWithPubKey) {
-        // We need to delay a bit to avoid that we remove our msg then get it from other peers again and reapply it again.
-        // If we delay the removal we have better chances that repeated network_messages we got from other peers are already filtered
-        // at the P2PService layer.
-        // Though we have to check in the client classes to not apply the same message again as there is no guarantee
-        // when we would get a message again from the network.
-        try {
-            UserThread.runAfter(() -> delayedRemoveEntryFromMailbox(decryptedMessageWithPubKey), 2);
-        } catch (NetworkNotReadyException t) {
-            // If we called too early it might throw a NetworkNotReadyException. We will try again
-            try {
-                UserThread.runAfter(() -> delayedRemoveEntryFromMailbox(decryptedMessageWithPubKey), 60);
-            } catch (NetworkNotReadyException ignore) {
-                log.warn("We tried to call delayedRemoveEntryFromMailbox 60 sec. after we received an " +
-                        "NetworkNotReadyException but it failed again. We give up here.");
-            }
-        }
-    }
+    public void removeMailboxMsg(DecryptedMessageWithPubKey decryptedMessageWithPubKey) {
+        if (isBootstrapped()) {
+            // We need to delay a bit to not get a ConcurrentModificationException as we might iterate over
+            // mailboxItemsByUid while getting called.
+            UserThread.execute(() -> {
+                MailboxMessage mailboxMessage = (MailboxMessage) decryptedMessageWithPubKey.getNetworkEnvelope();
+                String uid = mailboxMessage.getUid();
+                if (mailboxItemsByUid.containsKey(uid)) {
+                    List<MailboxItem> list = mailboxItemsByUid.get(uid);
 
-    private void delayedRemoveEntryFromMailbox(DecryptedMessageWithPubKey decryptedMessageWithPubKey) {
-        if (!isBootstrapped()) {
-            // We don't throw an NetworkNotReadyException here.
-            // This case should not happen anyway as we check for isBootstrapped in the callers.
-            log.warn("You must have bootstrapped before adding data to the P2P network.");
-        }
-
-        MailboxMessage mailboxMessage = (MailboxMessage) decryptedMessageWithPubKey.getNetworkEnvelope();
-        String uid = mailboxMessage.getUid();
-        if (mailboxItemsByUid.containsKey(uid)) {
-            ProtectedMailboxStorageEntry mailboxData = mailboxItemsByUid.get(uid).getProtectedMailboxStorageEntry();
-            if (mailboxData != null && mailboxData.getProtectedStoragePayload() instanceof MailboxStoragePayload) {
-                MailboxStoragePayload expirableMailboxStoragePayload = (MailboxStoragePayload) mailboxData.getProtectedStoragePayload();
-                PublicKey receiversPubKey = mailboxData.getReceiversPubKey();
-                checkArgument(receiversPubKey.equals(keyRing.getSignatureKeyPair().getPublic()),
-                        "receiversPubKey is not matching with our key. That must not happen.");
-                try {
-                    ProtectedMailboxStorageEntry protectedMailboxStorageEntry = p2PDataStorage.getMailboxDataWithSignedSeqNr(
-                            expirableMailboxStoragePayload,
-                            keyRing.getSignatureKeyPair(),
-                            receiversPubKey);
-                    p2PDataStorage.remove(protectedMailboxStorageEntry, networkNode.getNodeAddress());
-                } catch (CryptoException e) {
-                    log.error("Signing at getDataWithSignedSeqNr failed. That should never happen.");
+                    // In case we have not been bootstrapped when we tried to remove the message at the time when we
+                    // received the message, we remove it now.
+                    list.forEach(mailboxItem -> removeMailboxEntryFromNetwork(mailboxItem.getProtectedMailboxStorageEntry()));
+                    mailboxItemsByUid.remove(uid);
                 }
-
-                mailboxItemsByUid.remove(uid);
-                log.info("Removed successfully decryptedMsgWithPubKey. uid={}", uid);
-            }
+            });
         } else {
-            log.warn("uid for mailbox entry not found in mailboxMap." + "uid={}", uid);
+            // In case the network was not ready yet we try again later
+            UserThread.runAfter(() -> removeMailboxMsg(decryptedMessageWithPubKey), 30);
         }
     }
 
@@ -920,6 +925,14 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                 .filter(e -> e.getPeersNodeAddressOptional().get().equals(peer))
                 .map(Connection::getCapabilities)
                 .findAny();
+    }
+
+    public Set<DecryptedMessageWithPubKey> getMailBoxMessages() {
+        return mailboxItemsByUid.values().stream()
+                .filter(list -> !list.isEmpty())
+                .map(list -> list.get(0))
+                .map(P2PService.MailboxItem::getDecryptedMessageWithPubKey)
+                .collect(Collectors.toSet());
     }
 
     @Value

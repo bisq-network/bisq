@@ -931,8 +931,8 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         removeFromMapAndDataStore(Collections.singletonList(Maps.immutableEntry(hashOfPayload, protectedStorageEntry)));
     }
 
-    private void removeFromMapAndDataStore(
-            Collection<Map.Entry<ByteArray, ProtectedStorageEntry>> entriesToRemoveWithPayloadHash) {
+    private void removeFromMapAndDataStore(Collection<Map.Entry<ByteArray,
+            ProtectedStorageEntry>> entriesToRemoveWithPayloadHash) {
 
         if (entriesToRemoveWithPayloadHash.isEmpty())
             return;
