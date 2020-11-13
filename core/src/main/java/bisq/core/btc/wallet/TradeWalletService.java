@@ -733,7 +733,8 @@ public class TradeWalletService {
                                                byte[] buyerPubKey,
                                                byte[] sellerPubKey,
                                                byte[] buyerSignature,
-                                               byte[] sellerSignature)
+                                               byte[] sellerSignature,
+                                               boolean requireConnectedOutput)
             throws AddressFormatException, TransactionVerificationException, WalletException, SignatureDecodeException {
         Script redeemScript = get2of2MultiSigRedeemScript(buyerPubKey, sellerPubKey);
         ECKey.ECDSASignature buyerECDSASignature = ECKey.ECDSASignature.decodeFromDER(buyerSignature);
@@ -746,10 +747,15 @@ public class TradeWalletService {
         input.setWitness(witness);
         WalletService.printTx("finalizeDelayedPayoutTx", delayedPayoutTx);
         WalletService.verifyTransaction(delayedPayoutTx);
-        WalletService.checkWalletConsistency(wallet);
-        WalletService.checkScriptSig(delayedPayoutTx, input, 0);
-        checkNotNull(input.getConnectedOutput(), "input.getConnectedOutput() must not be null");
-        input.verify(input.getConnectedOutput());
+        if (requireConnectedOutput) {
+            WalletService.checkWalletConsistency(wallet);
+            WalletService.checkScriptSig(delayedPayoutTx, input, 0);
+            checkNotNull(input.getConnectedOutput(), "input.getConnectedOutput() must not be null");
+            input.verify(input.getConnectedOutput());
+        } else {
+            Script scriptPubKey = get2of2MultiSigOutputScript(buyerPubKey, sellerPubKey, false);
+            input.getScriptSig().correctlySpends(delayedPayoutTx, 0, scriptPubKey, Script.ALL_VERIFY_FLAGS);
+        }
         return delayedPayoutTx;
     }
 
@@ -1185,9 +1191,18 @@ public class TradeWalletService {
     private TransactionInput getTransactionInput(Transaction depositTx,
                                                  byte[] scriptProgram,
                                                  RawTransactionInput rawTransactionInput) {
-        return new TransactionInput(params, depositTx, scriptProgram, new TransactionOutPoint(params,
-                rawTransactionInput.index, new Transaction(params, rawTransactionInput.parentTransaction)),
+        return new TransactionInput(params, depositTx, scriptProgram, getConnectedOutPoint(rawTransactionInput),
                 Coin.valueOf(rawTransactionInput.value));
+    }
+
+    private TransactionOutPoint getConnectedOutPoint(RawTransactionInput rawTransactionInput) {
+        return new TransactionOutPoint(params, rawTransactionInput.index,
+                new Transaction(params, rawTransactionInput.parentTransaction));
+    }
+
+    public boolean isP2WH(RawTransactionInput rawTransactionInput) {
+        return ScriptPattern.isP2WH(
+                checkNotNull(getConnectedOutPoint(rawTransactionInput).getConnectedOutput()).getScriptPubKey());
     }
 
 
