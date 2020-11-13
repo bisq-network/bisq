@@ -178,7 +178,7 @@ public class BsqWalletTest extends MethodTest {
     }
 
     private void verifyBsqBalances(bisq.core.api.model.BsqBalanceInfo expected,
-                                   bisq.proto.grpc.BsqBalanceInfo actual) {
+                                   BsqBalanceInfo actual) {
         assertEquals(expected.getAvailableConfirmedBalance(), actual.getAvailableConfirmedBalance());
         assertEquals(expected.getUnverifiedBalance(), actual.getUnverifiedBalance());
         assertEquals(expected.getUnconfirmedChangeBalance(), actual.getUnconfirmedChangeBalance());
