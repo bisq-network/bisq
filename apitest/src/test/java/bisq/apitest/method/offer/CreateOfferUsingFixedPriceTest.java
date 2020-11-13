@@ -38,6 +38,8 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class CreateOfferUsingFixedPriceTest extends AbstractOfferTest {
 
+    private static final String MAKER_FEE_CURRENCY_CODE = "bsq";
+
     @Test
     @Order(1)
     public void testCreateAUDBTCBuyOfferUsingFixedPrice16000() {
@@ -51,6 +53,7 @@ public class CreateOfferUsingFixedPriceTest extends AbstractOfferTest {
                 .setMarketPriceMargin(0.00)
                 .setPrice("16000")
                 .setBuyerSecurityDeposit(Restrictions.getDefaultBuyerSecurityDepositAsPercent())
+                .setMakerFeeCurrencyCode(MAKER_FEE_CURRENCY_CODE)
                 .build();
         var newOffer = aliceStubs.offersService.createOffer(req).getOffer();
         String newOfferId = newOffer.getId();
@@ -64,6 +67,7 @@ public class CreateOfferUsingFixedPriceTest extends AbstractOfferTest {
         assertEquals(alicesDummyAcct.getId(), newOffer.getPaymentAccountId());
         assertEquals("BTC", newOffer.getBaseCurrencyCode());
         assertEquals("AUD", newOffer.getCounterCurrencyCode());
+        assertFalse(newOffer.getIsCurrencyForMakerFeeBtc());
 
         newOffer = getOffer(newOfferId);
         assertEquals(newOfferId, newOffer.getId());
@@ -76,6 +80,7 @@ public class CreateOfferUsingFixedPriceTest extends AbstractOfferTest {
         assertEquals(alicesDummyAcct.getId(), newOffer.getPaymentAccountId());
         assertEquals("BTC", newOffer.getBaseCurrencyCode());
         assertEquals("AUD", newOffer.getCounterCurrencyCode());
+        assertFalse(newOffer.getIsCurrencyForMakerFeeBtc());
     }
 
     @Test
@@ -91,6 +96,7 @@ public class CreateOfferUsingFixedPriceTest extends AbstractOfferTest {
                 .setMarketPriceMargin(0.00)
                 .setPrice("10000.1234")
                 .setBuyerSecurityDeposit(Restrictions.getDefaultBuyerSecurityDepositAsPercent())
+                .setMakerFeeCurrencyCode(MAKER_FEE_CURRENCY_CODE)
                 .build();
         var newOffer = aliceStubs.offersService.createOffer(req).getOffer();
         String newOfferId = newOffer.getId();
@@ -104,6 +110,7 @@ public class CreateOfferUsingFixedPriceTest extends AbstractOfferTest {
         assertEquals(alicesDummyAcct.getId(), newOffer.getPaymentAccountId());
         assertEquals("BTC", newOffer.getBaseCurrencyCode());
         assertEquals("USD", newOffer.getCounterCurrencyCode());
+        assertFalse(newOffer.getIsCurrencyForMakerFeeBtc());
 
         newOffer = getOffer(newOfferId);
         assertEquals(newOfferId, newOffer.getId());
@@ -116,6 +123,7 @@ public class CreateOfferUsingFixedPriceTest extends AbstractOfferTest {
         assertEquals(alicesDummyAcct.getId(), newOffer.getPaymentAccountId());
         assertEquals("BTC", newOffer.getBaseCurrencyCode());
         assertEquals("USD", newOffer.getCounterCurrencyCode());
+        assertFalse(newOffer.getIsCurrencyForMakerFeeBtc());
     }
 
     @Test
@@ -131,6 +139,7 @@ public class CreateOfferUsingFixedPriceTest extends AbstractOfferTest {
                 .setMarketPriceMargin(0.00)
                 .setPrice("9500.1234")
                 .setBuyerSecurityDeposit(Restrictions.getDefaultBuyerSecurityDepositAsPercent())
+                .setMakerFeeCurrencyCode(MAKER_FEE_CURRENCY_CODE)
                 .build();
         var newOffer = aliceStubs.offersService.createOffer(req).getOffer();
         String newOfferId = newOffer.getId();
@@ -144,6 +153,7 @@ public class CreateOfferUsingFixedPriceTest extends AbstractOfferTest {
         assertEquals(alicesDummyAcct.getId(), newOffer.getPaymentAccountId());
         assertEquals("BTC", newOffer.getBaseCurrencyCode());
         assertEquals("EUR", newOffer.getCounterCurrencyCode());
+        assertFalse(newOffer.getIsCurrencyForMakerFeeBtc());
 
         newOffer = getOffer(newOfferId);
         assertEquals(newOfferId, newOffer.getId());
@@ -156,5 +166,6 @@ public class CreateOfferUsingFixedPriceTest extends AbstractOfferTest {
         assertEquals(alicesDummyAcct.getId(), newOffer.getPaymentAccountId());
         assertEquals("BTC", newOffer.getBaseCurrencyCode());
         assertEquals("EUR", newOffer.getCounterCurrencyCode());
+        assertFalse(newOffer.getIsCurrencyForMakerFeeBtc());
     }
 }

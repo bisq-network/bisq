@@ -269,7 +269,8 @@ public class CliMain {
                     if (nonOptionArgs.size() < 9)
                         throw new IllegalArgumentException("incorrect parameter count,"
                                 + " expecting payment acct id, buy | sell, currency code, amount, min amount,"
-                                + " use-market-based-price, fixed-price | mkt-price-margin, security-deposit");
+                                + " use-market-based-price, fixed-price | mkt-price-margin, security-deposit"
+                                + " [,maker-fee-currency-code = bsq|btc]");
 
                     var paymentAcctId = nonOptionArgs.get(1);
                     var direction = nonOptionArgs.get(2);
@@ -285,6 +286,9 @@ public class CliMain {
                         fixedPrice = nonOptionArgs.get(7);
 
                     var securityDeposit = new BigDecimal(nonOptionArgs.get(8));
+                    var makerFeeCurrencyCode = nonOptionArgs.size() == 10
+                            ? nonOptionArgs.get(9)
+                            : "btc";
 
                     var request = CreateOfferRequest.newBuilder()
                             .setDirection(direction)
@@ -296,6 +300,7 @@ public class CliMain {
                             .setMarketPriceMargin(marketPriceMargin.doubleValue())
                             .setBuyerSecurityDeposit(securityDeposit.doubleValue())
                             .setPaymentAccountId(paymentAcctId)
+                            .setMakerFeeCurrencyCode(makerFeeCurrencyCode)
                             .build();
                     var reply = offersService.createOffer(request);
                     out.println(formatOfferTable(singletonList(reply.getOffer()), currencyCode));
@@ -344,14 +349,19 @@ public class CliMain {
                 }
                 case takeoffer: {
                     if (nonOptionArgs.size() < 3)
-                        throw new IllegalArgumentException("incorrect parameter count, "
-                                + " expecting offer id, payment acct id");
+                        throw new IllegalArgumentException("incorrect parameter count, " +
+                                " expecting offer id, payment acct id [,taker fee currency code = bsq|btc]");
 
                     var offerId = nonOptionArgs.get(1);
                     var paymentAccountId = nonOptionArgs.get(2);
+                    var takerFeeCurrencyCode = nonOptionArgs.size() == 4
+                            ? nonOptionArgs.get(3)
+                            : "btc";
+
                     var request = TakeOfferRequest.newBuilder()
                             .setOfferId(offerId)
                             .setPaymentAccountId(paymentAccountId)
+                            .setTakerFeeCurrencyCode(takerFeeCurrencyCode)
                             .build();
                     var reply = tradesService.takeOffer(request);
                     out.printf("trade '%s' successfully taken", reply.getTrade().getShortId());
@@ -556,12 +566,12 @@ public class CliMain {
             stream.format(rowFormat, "sendbsq", "address, amount", "Send BSQ");
             stream.format(rowFormat, "createoffer", "payment acct id, buy | sell, currency code, \\", "Create and place an offer");
             stream.format(rowFormat, "", "amount (btc), min amount, use mkt based price, \\", "");
-            stream.format(rowFormat, "", "fixed price (btc) | mkt price margin (%), \\", "");
+            stream.format(rowFormat, "", "fixed price (btc) | mkt price margin (%) [,maker fee currency code = bsq|btc]\\", "");
             stream.format(rowFormat, "", "security deposit (%)", "");
             stream.format(rowFormat, "canceloffer", "offer id", "Cancel offer with id");
             stream.format(rowFormat, "getoffer", "offer id", "Get current offer with id");
             stream.format(rowFormat, "getoffers", "buy | sell, currency code", "Get current offers");
-            stream.format(rowFormat, "takeoffer", "offer id", "Take offer with id");
+            stream.format(rowFormat, "takeoffer", "offer id, [,taker fee currency code = bsq|btc]", "Take offer with id");
             stream.format(rowFormat, "gettrade", "trade id [,showcontract = true|false]", "Get trade summary or full contract");
             stream.format(rowFormat, "confirmpaymentstarted", "trade id", "Confirm payment started");
             stream.format(rowFormat, "confirmpaymentreceived", "trade id", "Confirm payment received");

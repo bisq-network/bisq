@@ -179,10 +179,12 @@ public class MethodTest extends ApiTestCase {
     }
 
     protected final TakeOfferRequest createTakeOfferRequest(String offerId,
-                                                            String paymentAccountId) {
+                                                            String paymentAccountId,
+                                                            String takerFeeCurrencyCode) {
         return TakeOfferRequest.newBuilder()
                 .setOfferId(offerId)
                 .setPaymentAccountId(paymentAccountId)
+                .setTakerFeeCurrencyCode(takerFeeCurrencyCode)
                 .build();
     }
 

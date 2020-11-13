@@ -37,6 +37,7 @@ import static bisq.core.trade.Trade.Phase.FIAT_SENT;
 import static bisq.core.trade.Trade.Phase.PAYOUT_PUBLISHED;
 import static bisq.core.trade.Trade.State.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.fail;
 import static protobuf.Offer.State.OFFER_FEE_PAID;
@@ -49,6 +50,9 @@ public class TakeBuyBTCOfferTest extends AbstractTradeTest {
 
     // Alice is buyer, Bob is seller.
 
+    // Maker and Taker fees are in BSQ.
+    private static final String TRADE_FEE_CURRENCY_CODE = "bsq";
+
     @Test
     @Order(1)
     public void testTakeAlicesBuyOffer(final TestInfo testInfo) {
@@ -56,17 +60,20 @@ public class TakeBuyBTCOfferTest extends AbstractTradeTest {
             var alicesOffer = createAliceOffer(alicesDummyAcct,
                     "buy",
                     "usd",
-                    12500000);
+                    12500000,
+                    TRADE_FEE_CURRENCY_CODE);
             var offerId = alicesOffer.getId();
+            assertFalse(alicesOffer.getIsCurrencyForMakerFeeBtc());
 
             // Wait for Alice's AddToOfferBook task.
             // Wait times vary;  my logs show >= 2 second delay.
-            sleep(3000);
+            sleep(3000); // TODO loop instead of hard code wait time
             assertEquals(1, getOpenOffersCount(aliceStubs, "buy", "usd"));
 
-            var trade = takeAlicesOffer(offerId, bobsDummyAcct.getId());
+            var trade = takeAlicesOffer(offerId, bobsDummyAcct.getId(), TRADE_FEE_CURRENCY_CODE);
             assertNotNull(trade);
             assertEquals(offerId, trade.getTradeId());
+            assertFalse(trade.getIsCurrencyForTakerFeeBtc());
             // Cache the trade id for the other tests.
             tradeId = trade.getTradeId();
 

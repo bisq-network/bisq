@@ -111,6 +111,7 @@ public class CoreApi {
                                    long minAmountAsLong,
                                    double buyerSecurityDeposit,
                                    String paymentAccountId,
+                                   String makerFeeCurrencyCode,
                                    Consumer<Offer> resultHandler) {
         coreOffersService.createAndPlaceOffer(currencyCode,
                 directionAsString,
@@ -121,6 +122,7 @@ public class CoreApi {
                 minAmountAsLong,
                 buyerSecurityDeposit,
                 paymentAccountId,
+                makerFeeCurrencyCode,
                 resultHandler);
     }
 
@@ -182,10 +184,12 @@ public class CoreApi {
 
     public void takeOffer(String offerId,
                           String paymentAccountId,
+                          String takerFeeCurrencyCode,
                           Consumer<Trade> resultHandler) {
         Offer offer = coreOffersService.getOffer(offerId);
         coreTradesService.takeOffer(offer,
                 paymentAccountId,
+                takerFeeCurrencyCode,
                 resultHandler);
     }
 

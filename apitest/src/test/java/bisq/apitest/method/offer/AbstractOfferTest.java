@@ -73,22 +73,35 @@ public abstract class AbstractOfferTest extends MethodTest {
     protected final OfferInfo createAliceOffer(PaymentAccount paymentAccount,
                                                String direction,
                                                String currencyCode,
-                                               long amount) {
-        return createMarketBasedPricedOffer(aliceStubs, paymentAccount, direction, currencyCode, amount);
+                                               long amount,
+                                               String makerFeeCurrencyCode) {
+        return createMarketBasedPricedOffer(aliceStubs,
+                paymentAccount,
+                direction,
+                currencyCode,
+                amount,
+                makerFeeCurrencyCode);
     }
 
     protected final OfferInfo createBobOffer(PaymentAccount paymentAccount,
                                              String direction,
                                              String currencyCode,
-                                             long amount) {
-        return createMarketBasedPricedOffer(bobStubs, paymentAccount, direction, currencyCode, amount);
+                                             long amount,
+                                             String makerFeeCurrencyCode) {
+        return createMarketBasedPricedOffer(bobStubs,
+                paymentAccount,
+                direction,
+                currencyCode,
+                amount,
+                makerFeeCurrencyCode);
     }
 
     protected final OfferInfo createMarketBasedPricedOffer(GrpcStubs grpcStubs,
                                                            PaymentAccount paymentAccount,
                                                            String direction,
                                                            String currencyCode,
-                                                           long amount) {
+                                                           long amount,
+                                                           String makerFeeCurrencyCode) {
         var req = CreateOfferRequest.newBuilder()
                 .setPaymentAccountId(paymentAccount.getId())
                 .setDirection(direction)
@@ -99,6 +112,7 @@ public abstract class AbstractOfferTest extends MethodTest {
                 .setMarketPriceMargin(0.00)
                 .setPrice("0")
                 .setBuyerSecurityDeposit(getDefaultBuyerSecurityDepositAsPercent())
+                .setMakerFeeCurrencyCode(makerFeeCurrencyCode)
                 .build();
         return grpcStubs.offersService.createOffer(req).getOffer();
     }
