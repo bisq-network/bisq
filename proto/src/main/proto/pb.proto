@@ -948,6 +948,7 @@ message PaymentAccountPayload {
         JapanBankAccountPayload japan_bank_account_payload = 28;
         TransferwiseAccountPayload Transferwise_account_payload = 29;
         AustraliaPayidPayload australia_payid_payload = 30;
+        AmazonGiftCardAccountPayload amazon_gift_card_account_payload = 31;
     }
     map<string, string> exclude_from_json_data = 15;
 }
@@ -1053,6 +1054,10 @@ message WesternUnionAccountPayload {
     string city = 2;
     string state = 3;
     string email = 4;
+}
+
+message AmazonGiftCardAccountPayload {
+    string email_or_mobile_nr = 1;
 }
 
 message SepaAccountPayload {
