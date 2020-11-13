@@ -111,7 +111,7 @@ class GrpcWalletsService extends WalletsGrpc.WalletsImplBase {
             throw ex;
         }
     }
-    
+
     @Override
     public void getUnusedBsqAddress(GetUnusedBsqAddressRequest req,
                                     StreamObserver<GetUnusedBsqAddressReply> responseObserver) {
