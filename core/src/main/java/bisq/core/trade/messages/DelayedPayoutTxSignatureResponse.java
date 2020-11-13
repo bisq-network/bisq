@@ -32,17 +32,17 @@ import lombok.Value;
 @Value
 public final class DelayedPayoutTxSignatureResponse extends TradeMessage implements DirectMessage {
     private final NodeAddress senderNodeAddress;
-    private final byte[] delayedPayoutTxSignature;
+    private final byte[] delayedPayoutTxBuyerSignature;
 
     public DelayedPayoutTxSignatureResponse(String uid,
                                             String tradeId,
                                             NodeAddress senderNodeAddress,
-                                            byte[] delayedPayoutTxSignature) {
+                                            byte[] delayedPayoutTxBuyerSignature) {
         this(Version.getP2PMessageVersion(),
                 uid,
                 tradeId,
                 senderNodeAddress,
-                delayedPayoutTxSignature);
+                delayedPayoutTxBuyerSignature);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -53,10 +53,10 @@ public final class DelayedPayoutTxSignatureResponse extends TradeMessage impleme
                                              String uid,
                                              String tradeId,
                                              NodeAddress senderNodeAddress,
-                                             byte[] delayedPayoutTxSignature) {
+                                             byte[] delayedPayoutTxBuyerSignature) {
         super(messageVersion, tradeId, uid);
         this.senderNodeAddress = senderNodeAddress;
-        this.delayedPayoutTxSignature = delayedPayoutTxSignature;
+        this.delayedPayoutTxBuyerSignature = delayedPayoutTxBuyerSignature;
     }
 
 
@@ -67,24 +67,25 @@ public final class DelayedPayoutTxSignatureResponse extends TradeMessage impleme
                         .setUid(uid)
                         .setTradeId(tradeId)
                         .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
-                        .setDelayedPayoutTxSignature(ByteString.copyFrom(delayedPayoutTxSignature))
+                        .setDelayedPayoutTxBuyerSignature(ByteString.copyFrom(delayedPayoutTxBuyerSignature))
                 )
                 .build();
     }
 
-    public static DelayedPayoutTxSignatureResponse fromProto(protobuf.DelayedPayoutTxSignatureResponse proto, int messageVersion) {
+    public static DelayedPayoutTxSignatureResponse fromProto(protobuf.DelayedPayoutTxSignatureResponse proto,
+                                                             int messageVersion) {
         return new DelayedPayoutTxSignatureResponse(messageVersion,
                 proto.getUid(),
                 proto.getTradeId(),
                 NodeAddress.fromProto(proto.getSenderNodeAddress()),
-                proto.getDelayedPayoutTxSignature().toByteArray());
+                proto.getDelayedPayoutTxBuyerSignature().toByteArray());
     }
 
     @Override
     public String toString() {
         return "DelayedPayoutTxSignatureResponse{" +
                 "\n     senderNodeAddress=" + senderNodeAddress +
-                ",\n     delayedPayoutTxSignature=" + Utilities.bytesAsHexString(delayedPayoutTxSignature) +
+                ",\n     delayedPayoutTxBuyerSignature=" + Utilities.bytesAsHexString(delayedPayoutTxBuyerSignature) +
                 "\n} " + super.toString();
     }
 }

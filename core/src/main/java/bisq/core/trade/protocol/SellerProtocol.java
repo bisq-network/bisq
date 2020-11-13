@@ -33,7 +33,6 @@ import bisq.core.trade.protocol.tasks.seller.SellerPublishesTradeStatistics;
 import bisq.core.trade.protocol.tasks.seller.SellerSendPayoutTxPublishedMessage;
 import bisq.core.trade.protocol.tasks.seller.SellerSendsDepositTxAndDelayedPayoutTxMessage;
 import bisq.core.trade.protocol.tasks.seller.SellerSignAndFinalizePayoutTx;
-import bisq.core.trade.protocol.tasks.seller.SellerSignsDelayedPayoutTx;
 
 import bisq.network.p2p.NodeAddress;
 
@@ -77,7 +76,6 @@ public abstract class SellerProtocol extends DisputeProtocol {
                 .with(message)
                 .from(peer))
                 .setup(tasks(SellerProcessDelayedPayoutTxSignatureResponse.class,
-                        SellerSignsDelayedPayoutTx.class,
                         SellerFinalizesDelayedPayoutTx.class,
                         SellerSendsDepositTxAndDelayedPayoutTxMessage.class,
                         SellerPublishesDepositTx.class,

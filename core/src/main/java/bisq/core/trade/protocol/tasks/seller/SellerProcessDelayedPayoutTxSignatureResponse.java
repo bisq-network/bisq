@@ -42,7 +42,7 @@ public class SellerProcessDelayedPayoutTxSignatureResponse extends TradeTask {
             checkNotNull(response);
             checkTradeId(processModel.getOfferId(), response);
 
-            processModel.getTradingPeer().setDelayedPayoutTxSignature(checkNotNull(response.getDelayedPayoutTxSignature()));
+            processModel.getTradingPeer().setDelayedPayoutTxSignature(checkNotNull(response.getDelayedPayoutTxBuyerSignature()));
 
             // update to the latest peer address of our peer if the message is correct
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());

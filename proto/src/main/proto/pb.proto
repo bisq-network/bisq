@@ -271,13 +271,14 @@ message DelayedPayoutTxSignatureRequest {
     string trade_id = 2;
     NodeAddress sender_node_address = 3;
     bytes delayed_payout_tx = 4;
+    bytes delayed_payout_tx_seller_signature = 5;
 }
 
 message DelayedPayoutTxSignatureResponse {
     string uid = 1;
     string trade_id = 2;
     NodeAddress sender_node_address = 3;
-    bytes delayed_payout_tx_signature = 4;
+    bytes delayed_payout_tx_buyer_signature = 4;
 }
 
 message DepositTxAndDelayedPayoutTxMessage {
