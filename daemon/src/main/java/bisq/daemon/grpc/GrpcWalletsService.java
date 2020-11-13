@@ -21,6 +21,8 @@ import bisq.core.api.CoreApi;
 import bisq.core.api.model.AddressBalanceInfo;
 import bisq.core.api.model.BsqBalanceInfo;
 import bisq.core.api.model.BtcBalanceInfo;
+import bisq.core.btc.exceptions.TxBroadcastException;
+import bisq.core.btc.wallet.TxBroadcaster;
 
 import bisq.proto.grpc.GetAddressBalanceReply;
 import bisq.proto.grpc.GetAddressBalanceRequest;
@@ -40,6 +42,8 @@ import bisq.proto.grpc.LockWalletReply;
 import bisq.proto.grpc.LockWalletRequest;
 import bisq.proto.grpc.RemoveWalletPasswordReply;
 import bisq.proto.grpc.RemoveWalletPasswordRequest;
+import bisq.proto.grpc.SendBsqReply;
+import bisq.proto.grpc.SendBsqRequest;
 import bisq.proto.grpc.SetWalletPasswordReply;
 import bisq.proto.grpc.SetWalletPasswordRequest;
 import bisq.proto.grpc.UnlockWalletReply;
@@ -50,11 +54,16 @@ import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 
+import org.bitcoinj.core.Transaction;
+
 import javax.inject.Inject;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 class GrpcWalletsService extends WalletsGrpc.WalletsImplBase {
 
     private final CoreApi coreApi;
@@ -174,6 +183,35 @@ class GrpcWalletsService extends WalletsGrpc.WalletsImplBase {
                     .build();
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
+        } catch (IllegalStateException cause) {
+            var ex = new StatusRuntimeException(Status.UNKNOWN.withDescription(cause.getMessage()));
+            responseObserver.onError(ex);
+            throw ex;
+        }
+    }
+
+    @Override
+    public void sendBsq(SendBsqRequest req,
+                        StreamObserver<SendBsqReply> responseObserver) {
+        try {
+            coreApi.sendBsq(req.getAddress(), req.getAmount(), new TxBroadcaster.Callback() {
+                @Override
+                public void onSuccess(Transaction tx) {
+                    log.info("Successfully published BSQ tx: id {}, output sum {} sats, fee {} sats, size {} bytes",
+                            tx.getTxId().toString(),
+                            tx.getOutputSum(),
+                            tx.getFee(),
+                            tx.getMessageSize());
+                    var reply = SendBsqReply.newBuilder().build();
+                    responseObserver.onNext(reply);
+                    responseObserver.onCompleted();
+                }
+
+                @Override
+                public void onFailure(TxBroadcastException ex) {
+                    throw new IllegalStateException(ex);
+                }
+            });
         } catch (IllegalStateException cause) {
             var ex = new StatusRuntimeException(Status.UNKNOWN.withDescription(cause.getMessage()));
             responseObserver.onError(ex);

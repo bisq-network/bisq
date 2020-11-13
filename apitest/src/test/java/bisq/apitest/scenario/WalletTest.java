@@ -81,8 +81,8 @@ public class WalletTest extends MethodTest {
 
         bsqWalletTest.testGetUnusedBsqAddress();
         bsqWalletTest.testInitialBsqBalances(testInfo);
-        //bsqWalletTest.testSendBsqAndCheckBalancesBeforeGeneratingBtcBlock(testInfo);  // TODO
-        //bsqWalletTest.testBalancesAfterSendingBsqAndGeneratingBtcBlock(testInfo);     // TODO
+        bsqWalletTest.testSendBsqAndCheckBalancesBeforeGeneratingBtcBlock(testInfo);
+        bsqWalletTest.testBalancesAfterSendingBsqAndGeneratingBtcBlock(testInfo);
     }
 
     @Test

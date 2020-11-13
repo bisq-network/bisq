@@ -104,7 +104,6 @@ public class BsqWalletTest extends MethodTest {
         verifyBsqBalances(BOBS_INITIAL_BSQ_BALANCES, bobsBsqBalances);
     }
 
-    @Disabled // TODO
     @Test
     @Order(3)
     public void testSendBsqAndCheckBalancesBeforeGeneratingBtcBlock(final TestInfo testInfo) {
@@ -138,7 +137,6 @@ public class BsqWalletTest extends MethodTest {
                 alicesBsqBalances);
     }
 
-    @Disabled // TODO
     @Test
     @Order(4)
     public void testBalancesAfterSendingBsqAndGeneratingBtcBlock(final TestInfo testInfo) {

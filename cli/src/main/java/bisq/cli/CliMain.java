@@ -38,6 +38,7 @@ import bisq.proto.grpc.KeepFundsRequest;
 import bisq.proto.grpc.LockWalletRequest;
 import bisq.proto.grpc.RegisterDisputeAgentRequest;
 import bisq.proto.grpc.RemoveWalletPasswordRequest;
+import bisq.proto.grpc.SendBsqRequest;
 import bisq.proto.grpc.SetWalletPasswordRequest;
 import bisq.proto.grpc.TakeOfferRequest;
 import bisq.proto.grpc.UnlockWalletRequest;
@@ -99,6 +100,7 @@ public class CliMain {
         getaddressbalance,
         getfundingaddresses,
         getunusedbsqaddress,
+        sendbsq,
         lockwallet,
         unlockwallet,
         removewalletpassword,
@@ -237,6 +239,30 @@ public class CliMain {
                     var request = GetUnusedBsqAddressRequest.newBuilder().build();
                     var reply = walletsService.getUnusedBsqAddress(request);
                     out.println(reply.getAddress());
+                    return;
+                }
+                case sendbsq: {
+                    if (nonOptionArgs.size() < 2)
+                        throw new IllegalArgumentException("no bsq address specified");
+
+                    var address = nonOptionArgs.get(1);
+
+                    if (nonOptionArgs.size() < 3)
+                        throw new IllegalArgumentException("no bsq amount specified");
+
+                    double amount;
+                    try {
+                        amount = Double.parseDouble(nonOptionArgs.get(2));
+                    } catch (NumberFormatException e) {
+                        throw new IllegalArgumentException(format("'%s' is not a number", nonOptionArgs.get(2)));
+                    }
+
+                    var request = SendBsqRequest.newBuilder()
+                            .setAddress(address)
+                            .setAmount(amount)
+                            .build();
+                    walletsService.sendBsq(request);
+                    out.printf("%.2f BSQ sent to %s%n", amount, address);
                     return;
                 }
                 case createoffer: {
@@ -527,6 +553,7 @@ public class CliMain {
             stream.format(rowFormat, "getaddressbalance", "address", "Get server wallet address balance");
             stream.format(rowFormat, "getfundingaddresses", "", "Get BTC funding addresses");
             stream.format(rowFormat, "getunusedbsqaddress", "", "Get unused BSQ address");
+            stream.format(rowFormat, "sendbsq", "address, amount", "Send BSQ");
             stream.format(rowFormat, "createoffer", "payment acct id, buy | sell, currency code, \\", "Create and place an offer");
             stream.format(rowFormat, "", "amount (btc), min amount, use mkt based price, \\", "");
             stream.format(rowFormat, "", "fixed price (btc) | mkt price margin (%), \\", "");

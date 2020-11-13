@@ -21,6 +21,7 @@ import bisq.core.api.model.AddressBalanceInfo;
 import bisq.core.api.model.BalancesInfo;
 import bisq.core.api.model.BsqBalanceInfo;
 import bisq.core.api.model.BtcBalanceInfo;
+import bisq.core.btc.wallet.TxBroadcaster;
 import bisq.core.monetary.Price;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
@@ -247,6 +248,10 @@ public class CoreApi {
 
     public String getUnusedBsqAddress() {
         return walletsService.getUnusedBsqAddress();
+    }
+
+    public void sendBsq(String address, double amount, TxBroadcaster.Callback callback) {
+        walletsService.sendBsq(address, amount, callback);
     }
 
     public void setWalletPassword(String password, String newPassword) {

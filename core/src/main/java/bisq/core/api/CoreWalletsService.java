@@ -25,6 +25,7 @@ import bisq.core.btc.Balances;
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.btc.wallet.TxBroadcaster;
 import bisq.core.btc.wallet.WalletsManager;
 
 import bisq.common.Timer;
@@ -194,6 +195,30 @@ class CoreWalletsService {
 
     String getUnusedBsqAddress() {
         return bsqWalletService.getUnusedBsqAddressAsString();
+    }
+
+    @SuppressWarnings("unused")
+    void sendBsq(String address,
+                 double amount,
+                 TxBroadcaster.Callback callback) {
+
+        throw new UnsupportedOperationException("sendbsq not implemented");
+
+        // TODO Uncomment after desktop::BsqSendView refactoring.
+        /*
+        try {
+            LegacyAddress legacyAddress = getValidBsqLegacyAddress(address);
+            Coin receiverAmount = getValidBsqTransferAmount(amount);
+            BsqTransferModel model = bsqTransferService.getBsqTransferModel(legacyAddress, receiverAmount);
+            bsqTransferService.sendFunds(model, callback);
+        } catch (InsufficientMoneyException
+                | BsqChangeBelowDustException
+                | TransactionVerificationException
+                | WalletException ex) {
+            log.error("", ex);
+            throw new IllegalStateException(ex);
+        }
+         */
     }
 
     int getNumConfirmationsForMostRecentTransaction(String addressString) {
