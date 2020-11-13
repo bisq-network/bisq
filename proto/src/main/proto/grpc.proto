@@ -285,6 +285,8 @@ service Wallets {
     }
     rpc GetUnusedBsqAddress (GetUnusedBsqAddressRequest) returns (GetUnusedBsqAddressReply) {
     }
+    rpc SendBsq (SendBsqRequest) returns (SendBsqReply) {
+    }
     rpc GetFundingAddresses (GetFundingAddressesRequest) returns (GetFundingAddressesReply) {
     }
     rpc SetWalletPassword (SetWalletPasswordRequest) returns (SetWalletPasswordReply) {
@@ -338,6 +340,14 @@ message GetUnusedBsqAddressRequest {
 
 message GetUnusedBsqAddressReply {
      string address = 1;
+}
+
+message SendBsqRequest {
+    string address = 1;
+    double amount = 2;
+}
+
+message SendBsqReply {
 }
 
 message GetFundingAddressesRequest {
