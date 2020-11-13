@@ -17,11 +17,19 @@
 
 package bisq.apitest.method;
 
+import bisq.proto.grpc.AddressBalanceInfo;
+import bisq.proto.grpc.BalancesInfo;
+import bisq.proto.grpc.BsqBalanceInfo;
+import bisq.proto.grpc.BtcBalanceInfo;
 import bisq.proto.grpc.CancelOfferRequest;
 import bisq.proto.grpc.ConfirmPaymentReceivedRequest;
 import bisq.proto.grpc.ConfirmPaymentStartedRequest;
 import bisq.proto.grpc.CreatePaymentAccountRequest;
+import bisq.proto.grpc.GetAddressBalanceRequest;
 import bisq.proto.grpc.GetBalanceRequest;
+import bisq.proto.grpc.GetBalancesRequest;
+import bisq.proto.grpc.GetBsqBalancesRequest;
+import bisq.proto.grpc.GetBtcBalancesRequest;
 import bisq.proto.grpc.GetFundingAddressesRequest;
 import bisq.proto.grpc.GetOfferRequest;
 import bisq.proto.grpc.GetPaymentAccountsRequest;
@@ -33,6 +41,7 @@ import bisq.proto.grpc.MarketPriceRequest;
 import bisq.proto.grpc.OfferInfo;
 import bisq.proto.grpc.RegisterDisputeAgentRequest;
 import bisq.proto.grpc.RemoveWalletPasswordRequest;
+import bisq.proto.grpc.SendBsqRequest;
 import bisq.proto.grpc.SetWalletPasswordRequest;
 import bisq.proto.grpc.TakeOfferRequest;
 import bisq.proto.grpc.TradeInfo;
@@ -104,12 +113,25 @@ public class MethodTest extends ApiTestCase {
 
     // Convenience methods for building gRPC request objects
 
+    @Deprecated
     protected final GetBalanceRequest createBalanceRequest() {
         return GetBalanceRequest.newBuilder().build();
     }
 
-    protected final GetUnusedBsqAddressRequest createGetUnusedBsqAddressRequest() {
-        return GetUnusedBsqAddressRequest.newBuilder().build();
+    protected final GetBalancesRequest createGetBalancesRequest() {
+        return GetBalancesRequest.newBuilder().build();
+    }
+
+    protected final GetAddressBalanceRequest createGetAddressBalanceRequest(String address) {
+        return GetAddressBalanceRequest.newBuilder().setAddress(address).build();
+    }
+
+    protected final GetBsqBalancesRequest createGetBsqBalancesRequest() {
+        return GetBsqBalancesRequest.newBuilder().build();
+    }
+
+    protected final GetBtcBalancesRequest createBtcBalancesRequest() {
+        return GetBtcBalancesRequest.newBuilder().build();
     }
 
     protected final SetWalletPasswordRequest createSetWalletPasswordRequest(String password) {
@@ -132,6 +154,14 @@ public class MethodTest extends ApiTestCase {
         return LockWalletRequest.newBuilder().build();
     }
 
+    protected final GetUnusedBsqAddressRequest createGetUnusedBsqAddressRequest() {
+        return GetUnusedBsqAddressRequest.newBuilder().build();
+    }
+
+    protected final SendBsqRequest createSendBsqRequest(String address, double amount) {
+        return SendBsqRequest.newBuilder().setAddress(address).setAmount(amount).build();
+    }
+
     protected final GetFundingAddressesRequest createGetFundingAddressesRequest() {
         return GetFundingAddressesRequest.newBuilder().build();
     }
@@ -148,8 +178,12 @@ public class MethodTest extends ApiTestCase {
         return CancelOfferRequest.newBuilder().setId(offerId).build();
     }
 
-    protected final TakeOfferRequest createTakeOfferRequest(String offerId, String paymentAccountId) {
-        return TakeOfferRequest.newBuilder().setOfferId(offerId).setPaymentAccountId(paymentAccountId).build();
+    protected final TakeOfferRequest createTakeOfferRequest(String offerId,
+                                                            String paymentAccountId) {
+        return TakeOfferRequest.newBuilder()
+                .setOfferId(offerId)
+                .setPaymentAccountId(paymentAccountId)
+                .build();
     }
 
     protected final GetTradeRequest createGetTradeRequest(String tradeId) {
@@ -179,8 +213,25 @@ public class MethodTest extends ApiTestCase {
 
     // Convenience methods for calling frequently used & thoroughly tested gRPC services.
 
+    @Deprecated
     protected final long getBalance(BisqAppConfig bisqAppConfig) {
         return grpcStubs(bisqAppConfig).walletsService.getBalance(createBalanceRequest()).getBalance();
+    }
+
+    protected final BalancesInfo getBalances(BisqAppConfig bisqAppConfig) {
+        return grpcStubs(bisqAppConfig).walletsService.getBalances(createGetBalancesRequest()).getBalances();
+    }
+
+    protected final BsqBalanceInfo getBsqBalances(BisqAppConfig bisqAppConfig) {
+        return grpcStubs(bisqAppConfig).walletsService.getBsqBalances(createGetBsqBalancesRequest()).getBsqBalanceInfo();
+    }
+
+    protected final BtcBalanceInfo getBtcBalances(BisqAppConfig bisqAppConfig) {
+        return grpcStubs(bisqAppConfig).walletsService.getBtcBalances(createBtcBalancesRequest()).getBtcBalanceInfo();
+    }
+
+    protected final AddressBalanceInfo getAddressBalance(BisqAppConfig bisqAppConfig, String address) {
+        return grpcStubs(bisqAppConfig).walletsService.getAddressBalance(createGetAddressBalanceRequest(address)).getAddressBalanceInfo();
     }
 
     protected final void unlockWallet(BisqAppConfig bisqAppConfig, String password, long timeout) {
@@ -191,6 +242,14 @@ public class MethodTest extends ApiTestCase {
     protected final void lockWallet(BisqAppConfig bisqAppConfig) {
         //noinspection ResultOfMethodCallIgnored
         grpcStubs(bisqAppConfig).walletsService.lockWallet(createLockWalletRequest());
+    }
+
+    protected final String getUnusedBsqAddress(BisqAppConfig bisqAppConfig) {
+        return grpcStubs(bisqAppConfig).walletsService.getUnusedBsqAddress(createGetUnusedBsqAddressRequest()).getAddress();
+    }
+
+    protected final void sendBsq(BisqAppConfig bisqAppConfig, String address, double amount) {
+        grpcStubs(bisqAppConfig).walletsService.sendBsq(createSendBsqRequest(address, amount));
     }
 
     protected final String getUnusedBtcAddress(BisqAppConfig bisqAppConfig) {

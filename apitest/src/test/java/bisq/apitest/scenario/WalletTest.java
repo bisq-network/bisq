@@ -24,55 +24,69 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.TestMethodOrder;
 
 import static bisq.apitest.Scaffold.BitcoinCoreApp.bitcoind;
 import static bisq.apitest.config.BisqAppConfig.alicedaemon;
+import static bisq.apitest.config.BisqAppConfig.arbdaemon;
+import static bisq.apitest.config.BisqAppConfig.bobdaemon;
 import static bisq.apitest.config.BisqAppConfig.seednode;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.fail;
 
 
 
 import bisq.apitest.method.MethodTest;
+import bisq.apitest.method.wallet.BsqWalletTest;
+import bisq.apitest.method.wallet.BtcWalletTest;
+import bisq.apitest.method.wallet.WalletBalancesTest;
 import bisq.apitest.method.wallet.WalletProtectionTest;
 
 @Slf4j
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class WalletTest extends MethodTest {
 
-    // All tests depend on the DAO / regtest environment, and Alice's wallet is
-    // initialized with 10 BTC during the scaffolding setup.
-
     @BeforeAll
     public static void setUp() {
-        try {
-            setUpScaffold(bitcoind, seednode, alicedaemon);
-            genBtcBlocksThenWait(1, 1500);
-        } catch (Exception ex) {
-            fail(ex);
-        }
+        startSupportingApps(true,
+                true,
+                bitcoind,
+                seednode,
+                arbdaemon,
+                alicedaemon,
+                bobdaemon);
     }
 
     @Test
     @Order(1)
-    public void testFundWallet() {
-        // The regtest Bisq wallet was initialized with 10 BTC.
-        long balance = getBalance(alicedaemon);
-        assertEquals(1000000000, balance);
+    public void testGetWalletBalances(final TestInfo testInfo) {
+        WalletBalancesTest btcWalletTest = new WalletBalancesTest();
 
-        String unusedAddress = getUnusedBtcAddress(alicedaemon);
-        bitcoinCli.sendToAddress(unusedAddress, "2.5");
-
-        bitcoinCli.generateBlocks(1);
-        sleep(1500);
-
-        balance = getBalance(alicedaemon);
-        assertEquals(1250000000L, balance); // new balance is 12.5 btc
+        btcWalletTest.testDeprecatedAvailableBtcBalance();
+        btcWalletTest.testNewGetBalances(testInfo);
     }
 
     @Test
     @Order(2)
+    public void testBtcWalletFunding(final TestInfo testInfo) {
+        BtcWalletTest btcWalletTest = new BtcWalletTest();
+
+        btcWalletTest.testDeprecatedAvailableBtcBalance();
+        btcWalletTest.testFundAlicesBtcWallet(testInfo);
+    }
+
+    @Test
+    @Order(3)
+    public void testBsqWalletFunding(final TestInfo testInfo) {
+        BsqWalletTest bsqWalletTest = new BsqWalletTest();
+
+        bsqWalletTest.testGetUnusedBsqAddress();
+        bsqWalletTest.testInitialBsqBalances(testInfo);
+        //bsqWalletTest.testSendBsqAndCheckBalancesBeforeGeneratingBtcBlock(testInfo);  // TODO
+        //bsqWalletTest.testBalancesAfterSendingBsqAndGeneratingBtcBlock(testInfo);     // TODO
+    }
+
+    @Test
+    @Order(4)
     public void testWalletProtection() {
         // Batching all wallet tests in this test case reduces scaffold setup
         // time.  Here, we create a method WalletProtectionTest instance and run each

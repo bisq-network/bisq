@@ -19,11 +19,19 @@ package bisq.daemon.grpc;
 
 import bisq.core.api.CoreApi;
 import bisq.core.api.model.AddressBalanceInfo;
+import bisq.core.api.model.BsqBalanceInfo;
+import bisq.core.api.model.BtcBalanceInfo;
 
 import bisq.proto.grpc.GetAddressBalanceReply;
 import bisq.proto.grpc.GetAddressBalanceRequest;
 import bisq.proto.grpc.GetBalanceReply;
 import bisq.proto.grpc.GetBalanceRequest;
+import bisq.proto.grpc.GetBalancesReply;
+import bisq.proto.grpc.GetBalancesRequest;
+import bisq.proto.grpc.GetBsqBalancesReply;
+import bisq.proto.grpc.GetBsqBalancesRequest;
+import bisq.proto.grpc.GetBtcBalancesReply;
+import bisq.proto.grpc.GetBtcBalancesRequest;
 import bisq.proto.grpc.GetFundingAddressesReply;
 import bisq.proto.grpc.GetFundingAddressesRequest;
 import bisq.proto.grpc.GetUnusedBsqAddressReply;
@@ -56,17 +64,61 @@ class GrpcWalletsService extends WalletsGrpc.WalletsImplBase {
         this.coreApi = coreApi;
     }
 
-    // TODO we need to support 3 or 4 balance types: available, reserved, lockedInTrade
-    //  and maybe total wallet balance (available+reserved). To not duplicate the methods,
-    //  we should pass an enum type. Enums in proto are a bit cumbersome as they are
-    //  global so you quickly run into  namespace conflicts if not always prefixes which
-    //  makes it more verbose. In the core code base we move to the strategy to store the
-    //  enum name and map it. This gives also more flexibility with updates.
+
+    @Deprecated
     @Override
     public void getBalance(GetBalanceRequest req, StreamObserver<GetBalanceReply> responseObserver) {
         try {
             long availableBalance = coreApi.getAvailableBalance();
             var reply = GetBalanceReply.newBuilder().setBalance(availableBalance).build();
+            responseObserver.onNext(reply);
+            responseObserver.onCompleted();
+        } catch (IllegalStateException cause) {
+            var ex = new StatusRuntimeException(Status.UNKNOWN.withDescription(cause.getMessage()));
+            responseObserver.onError(ex);
+            throw ex;
+        }
+    }
+
+    @Override
+    public void getBalances(GetBalancesRequest req, StreamObserver<GetBalancesReply> responseObserver) {
+        try {
+            var balances = coreApi.getBalances();
+            var reply = GetBalancesReply.newBuilder()
+                    .setBalances(balances.toProtoMessage())
+                    .build();
+            responseObserver.onNext(reply);
+            responseObserver.onCompleted();
+        } catch (IllegalStateException cause) {
+            var ex = new StatusRuntimeException(Status.UNKNOWN.withDescription(cause.getMessage()));
+            responseObserver.onError(ex);
+            throw ex;
+        }
+    }
+
+    @Override
+    public void getBsqBalances(GetBsqBalancesRequest req, StreamObserver<GetBsqBalancesReply> responseObserver) {
+        try {
+            BsqBalanceInfo bsqBalanceInfo = coreApi.getBsqBalances();
+            var reply = GetBsqBalancesReply.newBuilder()
+                    .setBsqBalanceInfo(bsqBalanceInfo.toProtoMessage())
+                    .build();
+            responseObserver.onNext(reply);
+            responseObserver.onCompleted();
+        } catch (IllegalStateException cause) {
+            var ex = new StatusRuntimeException(Status.UNKNOWN.withDescription(cause.getMessage()));
+            responseObserver.onError(ex);
+            throw ex;
+        }
+    }
+
+    @Override
+    public void getBtcBalances(GetBtcBalancesRequest req, StreamObserver<GetBtcBalancesReply> responseObserver) {
+        try {
+            BtcBalanceInfo btcBalanceInfo = coreApi.getBtcBalances();
+            var reply = GetBtcBalancesReply.newBuilder()
+                    .setBtcBalanceInfo(btcBalanceInfo.toProtoMessage())
+                    .build();
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
         } catch (IllegalStateException cause) {

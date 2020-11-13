@@ -18,6 +18,9 @@
 package bisq.core.api;
 
 import bisq.core.api.model.AddressBalanceInfo;
+import bisq.core.api.model.BalancesInfo;
+import bisq.core.api.model.BsqBalanceInfo;
+import bisq.core.api.model.BtcBalanceInfo;
 import bisq.core.monetary.Price;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
@@ -213,8 +216,21 @@ public class CoreApi {
     // Wallets
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @Deprecated
     public long getAvailableBalance() {
         return walletsService.getAvailableBalance();
+    }
+
+    public BalancesInfo getBalances() {
+        return walletsService.getBalances();
+    }
+
+    public BsqBalanceInfo getBsqBalances() {
+        return walletsService.getBsqBalances();
+    }
+
+    public BtcBalanceInfo getBtcBalances() {
+        return walletsService.getBtcBalances();
     }
 
     public long getAddressBalance(String addressString) {

@@ -40,6 +40,7 @@ import static org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 
 import bisq.apitest.method.MethodTest;
 
+@Deprecated
 @Disabled
 @Slf4j
 @TestMethodOrder(OrderAnnotation.class)
