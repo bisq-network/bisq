@@ -22,16 +22,25 @@ import bisq.core.api.model.BalancesInfo;
 import bisq.core.api.model.BsqBalanceInfo;
 import bisq.core.api.model.BtcBalanceInfo;
 import bisq.core.btc.Balances;
+import bisq.core.btc.exceptions.BsqChangeBelowDustException;
+import bisq.core.btc.exceptions.TransactionVerificationException;
+import bisq.core.btc.exceptions.WalletException;
 import bisq.core.btc.model.AddressEntry;
+import bisq.core.btc.model.BsqTransferModel;
+import bisq.core.btc.wallet.BsqTransferService;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TxBroadcaster;
 import bisq.core.btc.wallet.WalletsManager;
+import bisq.core.util.coin.BsqFormatter;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
 
 import org.bitcoinj.core.Address;
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.InsufficientMoneyException;
+import org.bitcoinj.core.LegacyAddress;
 import org.bitcoinj.core.TransactionConfidence;
 import org.bitcoinj.crypto.KeyCrypterScrypt;
 
@@ -43,6 +52,8 @@ import com.google.common.cache.LoadingCache;
 
 import org.bouncycastle.crypto.params.KeyParameter;
 
+import java.math.BigDecimal;
+
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
@@ -52,6 +63,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
+import static bisq.core.util.ParsingUtils.parseToCoin;
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
@@ -61,6 +73,8 @@ class CoreWalletsService {
     private final Balances balances;
     private final WalletsManager walletsManager;
     private final BsqWalletService bsqWalletService;
+    private final BsqTransferService bsqTransferService;
+    private final BsqFormatter bsqFormatter;
     private final BtcWalletService btcWalletService;
 
     @Nullable
@@ -73,10 +87,14 @@ class CoreWalletsService {
     public CoreWalletsService(Balances balances,
                               WalletsManager walletsManager,
                               BsqWalletService bsqWalletService,
+                              BsqTransferService bsqTransferService,
+                              BsqFormatter bsqFormatter,
                               BtcWalletService btcWalletService) {
         this.balances = balances;
         this.walletsManager = walletsManager;
         this.bsqWalletService = bsqWalletService;
+        this.bsqTransferService = bsqTransferService;
+        this.bsqFormatter = bsqFormatter;
         this.btcWalletService = btcWalletService;
     }
 
@@ -197,15 +215,9 @@ class CoreWalletsService {
         return bsqWalletService.getUnusedBsqAddressAsString();
     }
 
-    @SuppressWarnings("unused")
     void sendBsq(String address,
                  double amount,
                  TxBroadcaster.Callback callback) {
-
-        throw new UnsupportedOperationException("sendbsq not implemented");
-
-        // TODO Uncomment after desktop::BsqSendView refactoring.
-        /*
         try {
             LegacyAddress legacyAddress = getValidBsqLegacyAddress(address);
             Coin receiverAmount = getValidBsqTransferAmount(amount);
@@ -218,7 +230,6 @@ class CoreWalletsService {
             log.error("", ex);
             throw new IllegalStateException(ex);
         }
-         */
     }
 
     int getNumConfirmationsForMostRecentTransaction(String addressString) {
@@ -329,6 +340,25 @@ class CoreWalletsService {
     private void verifyEncryptedWalletIsUnlocked() {
         if (walletsManager.areWalletsEncrypted() && tempAesKey == null)
             throw new IllegalStateException("wallet is locked");
+    }
+
+    // Returns a LegacyAddress for the string, or a RuntimeException if invalid.
+    private LegacyAddress getValidBsqLegacyAddress(String address) {
+        try {
+            return bsqFormatter.getAddressFromBsqAddress(address);
+        } catch (Throwable t) {
+            log.error("", t);
+            throw new IllegalStateException(format("%s is not a valid bsq address", address));
+        }
+    }
+
+    // Returns a Coin for the double amount, or a RuntimeException if invalid.
+    private Coin getValidBsqTransferAmount(double amount) {
+        Coin amountAsCoin = parseToCoin(new BigDecimal(amount).toString(), bsqFormatter);
+        if (amountAsCoin.equals(Coin.ZERO))
+            throw new IllegalStateException(format("%.2f bsq is an invalid send amount", amount));
+
+        return amountAsCoin;
     }
 
     private KeyCrypterScrypt getKeyCrypterScrypt() {
