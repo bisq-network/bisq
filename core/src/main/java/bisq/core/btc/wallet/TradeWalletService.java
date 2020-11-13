@@ -569,8 +569,9 @@ public class TradeWalletService {
      * @param buyerPubKey               the public key of the buyer
      * @param sellerPubKey              the public key of the seller
      * @throws SigningException if (one of) the taker input(s) was of an unrecognized type for signing
-     * @throws TransactionVerificationException if a maker input wasn't signed, their MultiSig script or contract hash
-     * doesn't match the taker's, or there was an unexpected problem with the final deposit tx or its signatures
+     * @throws TransactionVerificationException if a non-P2WH maker-as-buyer input wasn't signed, the maker's MultiSig
+     * script or contract hash doesn't match the taker's, or there was an unexpected problem with the final deposit tx
+     * or its signatures
      * @throws WalletException if the taker's wallet is null or structurally inconsistent
      */
     public Transaction takerSignsDepositTx(boolean takerIsSeller,
@@ -602,10 +603,11 @@ public class TradeWalletService {
             for (int i = 0; i < buyerInputs.size(); i++) {
                 TransactionInput makersInput = makersDepositTx.getInputs().get(i);
                 byte[] makersScriptSigProgram = makersInput.getScriptSig().getProgram();
-                if (makersScriptSigProgram.length == 0 && TransactionWitness.EMPTY.equals(makersInput.getWitness())) {
-                    throw new TransactionVerificationException("Inputs from maker not signed.");
-                }
                 TransactionInput input = getTransactionInput(depositTx, makersScriptSigProgram, buyerInputs.get(i));
+                Script scriptPubKey = checkNotNull(input.getConnectedOutput()).getScriptPubKey();
+                if (makersScriptSigProgram.length == 0 && !ScriptPattern.isP2WH(scriptPubKey)) {
+                    throw new TransactionVerificationException("Non-segwit inputs from maker not signed.");
+                }
                 if (!TransactionWitness.EMPTY.equals(makersInput.getWitness())) {
                     input.setWitness(makersInput.getWitness());
                 }
@@ -683,6 +685,21 @@ public class TradeWalletService {
 
         WalletService.printTx("sellerAsMakerFinalizesDepositTx", myDepositTx);
         WalletService.verifyTransaction(myDepositTx);
+    }
+
+
+    public void sellerAddsBuyerWitnessesToDepositTx(Transaction myDepositTx,
+                                                    Transaction buyersDepositTxWithWitnesses) {
+        int numberInputs = myDepositTx.getInputs().size();
+        for (int i = 0; i < numberInputs; i++) {
+            var txInput = myDepositTx.getInput(i);
+            var witnessFromBuyer = buyersDepositTxWithWitnesses.getInput(i).getWitness();
+
+            if (TransactionWitness.EMPTY.equals(txInput.getWitness()) &&
+                    !TransactionWitness.EMPTY.equals(witnessFromBuyer)) {
+                txInput.setWitness(witnessFromBuyer);
+            }
+        }
     }
 
 

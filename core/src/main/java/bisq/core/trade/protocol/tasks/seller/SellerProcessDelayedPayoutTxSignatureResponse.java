@@ -44,6 +44,11 @@ public class SellerProcessDelayedPayoutTxSignatureResponse extends TradeTask {
 
             processModel.getTradingPeer().setDelayedPayoutTxSignature(checkNotNull(response.getDelayedPayoutTxBuyerSignature()));
 
+            processModel.getTradeWalletService().sellerAddsBuyerWitnessesToDepositTx(
+                    processModel.getDepositTx(),
+                    processModel.getBtcWalletService().getTxFromSerializedTx(response.getDepositTx())
+            );
+
             // update to the latest peer address of our peer if the message is correct
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
 
