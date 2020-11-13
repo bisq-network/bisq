@@ -72,6 +72,8 @@ public class BuyerAsMakerCreatesAndSignsDepositTx extends TradeTask {
                     .add(tradeAmount);
 
             List<RawTransactionInput> takerRawTransactionInputs = checkNotNull(tradingPeer.getRawTransactionInputs());
+            checkArgument(takerRawTransactionInputs.stream().allMatch(processModel.getTradeWalletService()::isP2WH),
+                    "all takerRawTransactionInputs must be P2WH");
             long takerChangeOutputValue = tradingPeer.getChangeOutputValue();
             @Nullable String takerChangeAddressString = tradingPeer.getChangeOutputAddress();
             Address makerAddress = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.RESERVED_FOR_TRADE).getAddress();
