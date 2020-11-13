@@ -275,6 +275,12 @@ message TradeInfo {
 service Wallets {
     rpc GetBalance (GetBalanceRequest) returns (GetBalanceReply) {
     }
+    rpc GetBalances (GetBalancesRequest) returns (GetBalancesReply) {
+    }
+    rpc GetBsqBalances (GetBsqBalancesRequest) returns (GetBsqBalancesReply) {
+    }
+    rpc GetBtcBalances (GetBtcBalancesRequest) returns (GetBtcBalancesReply) {
+    }
     rpc GetAddressBalance (GetAddressBalanceRequest) returns (GetAddressBalanceReply) {
     }
     rpc GetFundingAddresses (GetFundingAddressesRequest) returns (GetFundingAddressesReply) {
@@ -294,6 +300,27 @@ message GetBalanceRequest {
 
 message GetBalanceReply {
     uint64 balance = 1;
+}
+
+message GetBalancesRequest {
+}
+
+message GetBalancesReply {
+    BalancesInfo balances = 1;
+}
+
+message GetBsqBalancesRequest {
+}
+
+message GetBsqBalancesReply {
+    BsqBalanceInfo bsqBalanceInfo = 1;
+}
+
+message GetBtcBalancesRequest {
+}
+
+message GetBtcBalancesReply {
+    BtcBalanceInfo btcBalanceInfo = 1;
 }
 
 message GetAddressBalanceRequest {
@@ -338,6 +365,27 @@ message UnlockWalletRequest {
 }
 
 message UnlockWalletReply {
+}
+
+message BalancesInfo {
+    BsqBalanceInfo bsqBalanceInfo = 1;
+    BtcBalanceInfo btcBalanceInfo = 2;
+}
+
+message BsqBalanceInfo {
+    uint64 availableConfirmedBalance = 1;
+    uint64 unverifiedBalance = 2;
+    uint64 unconfirmedChangeBalance = 3;
+    uint64 lockedForVotingBalance = 4;
+    uint64 lockupBondsBalance = 5;
+    uint64 unlockingBondsBalance = 6;
+}
+
+message BtcBalanceInfo {
+    uint64 availableBalance = 1;
+    uint64 reservedBalance = 2;
+    uint64 totalAvailableBalance = 3;
+    uint64 lockedBalance = 4;
 }
 
 message AddressBalanceInfo {
