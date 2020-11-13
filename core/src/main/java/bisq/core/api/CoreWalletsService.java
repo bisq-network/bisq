@@ -52,8 +52,6 @@ import com.google.common.cache.LoadingCache;
 
 import org.bouncycastle.crypto.params.KeyParameter;
 
-import java.math.BigDecimal;
-
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
@@ -354,7 +352,7 @@ class CoreWalletsService {
 
     // Returns a Coin for the double amount, or a RuntimeException if invalid.
     private Coin getValidBsqTransferAmount(double amount) {
-        Coin amountAsCoin = parseToCoin(new BigDecimal(amount).toString(), bsqFormatter);
+        Coin amountAsCoin = parseToCoin(Double.toString(amount), bsqFormatter);
         if (amountAsCoin.equals(Coin.ZERO))
             throw new IllegalStateException(format("%.2f bsq is an invalid send amount", amount));
 
