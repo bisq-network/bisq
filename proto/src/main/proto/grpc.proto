@@ -283,6 +283,8 @@ service Wallets {
     }
     rpc GetAddressBalance (GetAddressBalanceRequest) returns (GetAddressBalanceReply) {
     }
+    rpc GetUnusedBsqAddress (GetUnusedBsqAddressRequest) returns (GetUnusedBsqAddressReply) {
+    }
     rpc GetFundingAddresses (GetFundingAddressesRequest) returns (GetFundingAddressesReply) {
     }
     rpc SetWalletPassword (SetWalletPasswordRequest) returns (SetWalletPasswordReply) {
@@ -329,6 +331,13 @@ message GetAddressBalanceRequest {
 
 message GetAddressBalanceReply {
     AddressBalanceInfo addressBalanceInfo = 1;
+}
+
+message GetUnusedBsqAddressRequest {
+}
+
+message GetUnusedBsqAddressReply {
+     string address = 1;
 }
 
 message GetFundingAddressesRequest {
