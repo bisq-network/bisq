@@ -29,6 +29,7 @@ import bisq.proto.grpc.GetOfferRequest;
 import bisq.proto.grpc.GetOffersRequest;
 import bisq.proto.grpc.GetPaymentAccountsRequest;
 import bisq.proto.grpc.GetTradeRequest;
+import bisq.proto.grpc.GetUnusedBsqAddressRequest;
 import bisq.proto.grpc.GetVersionRequest;
 import bisq.proto.grpc.KeepFundsRequest;
 import bisq.proto.grpc.LockWalletRequest;
@@ -90,6 +91,7 @@ public class CliMain {
         getbalance,
         getaddressbalance,
         getfundingaddresses,
+        getunusedbsqaddress,
         lockwallet,
         unlockwallet,
         removewalletpassword,
@@ -205,6 +207,12 @@ public class CliMain {
                     out.println(formatAddressBalanceTbl(reply.getAddressBalanceInfoList()));
                     return;
                 }
+                case getunusedbsqaddress: {
+                    var request = GetUnusedBsqAddressRequest.newBuilder().build();
+                    var reply = walletsService.getUnusedBsqAddress(request);
+                    out.println(reply.getAddress());
+                    return;
+                }
                 case createoffer: {
                     if (nonOptionArgs.size() < 9)
                         throw new IllegalArgumentException("incorrect parameter count,"
@@ -223,6 +231,7 @@ public class CliMain {
                         marketPriceMargin = new BigDecimal(nonOptionArgs.get(7));
                     else
                         fixedPrice = nonOptionArgs.get(7);
+
                     var securityDeposit = new BigDecimal(nonOptionArgs.get(8));
 
                     var request = CreateOfferRequest.newBuilder()
@@ -283,7 +292,8 @@ public class CliMain {
                 }
                 case takeoffer: {
                     if (nonOptionArgs.size() < 3)
-                        throw new IllegalArgumentException("incorrect parameter count, expecting offer id, payment acct id");
+                        throw new IllegalArgumentException("incorrect parameter count, "
+                                + " expecting offer id, payment acct id");
 
                     var offerId = nonOptionArgs.get(1);
                     var paymentAccountId = nonOptionArgs.get(2);
@@ -297,7 +307,8 @@ public class CliMain {
                 }
                 case gettrade: {
                     if (nonOptionArgs.size() < 2)
-                        throw new IllegalArgumentException("incorrect parameter count, expecting trade id, [,showcontract = true|false]");
+                        throw new IllegalArgumentException("incorrect parameter count, "
+                                + " expecting trade id [,showcontract = true|false]");
 
                     var tradeId = nonOptionArgs.get(1);
                     var showContract = false;
@@ -352,7 +363,8 @@ public class CliMain {
                 }
                 case withdrawfunds: {
                     if (nonOptionArgs.size() < 3)
-                        throw new IllegalArgumentException("incorrect parameter count, expecting trade id, bitcoin wallet address");
+                        throw new IllegalArgumentException("incorrect parameter count, "
+                                + " expecting trade id, bitcoin wallet address");
 
                     var tradeId = nonOptionArgs.get(1);
                     var address = nonOptionArgs.get(2);
@@ -485,6 +497,7 @@ public class CliMain {
             stream.format(rowFormat, "getbalance", "", "Get server wallet balance");
             stream.format(rowFormat, "getaddressbalance", "address", "Get server wallet address balance");
             stream.format(rowFormat, "getfundingaddresses", "", "Get BTC funding addresses");
+            stream.format(rowFormat, "getunusedbsqaddress", "", "Get unused BSQ address");
             stream.format(rowFormat, "createoffer", "payment acct id, buy | sell, currency code, \\", "Create and place an offer");
             stream.format(rowFormat, "", "amount (btc), min amount, use mkt based price, \\", "");
             stream.format(rowFormat, "", "fixed price (btc) | mkt price margin (%), \\", "");
@@ -493,7 +506,7 @@ public class CliMain {
             stream.format(rowFormat, "getoffer", "offer id", "Get current offer with id");
             stream.format(rowFormat, "getoffers", "buy | sell, currency code", "Get current offers");
             stream.format(rowFormat, "takeoffer", "offer id", "Take offer with id");
-            stream.format(rowFormat, "gettrade", "trade id [,showcontract]", "Get trade summary or full contract");
+            stream.format(rowFormat, "gettrade", "trade id [,showcontract = true|false]", "Get trade summary or full contract");
             stream.format(rowFormat, "confirmpaymentstarted", "trade id", "Confirm payment started");
             stream.format(rowFormat, "confirmpaymentreceived", "trade id", "Confirm payment received");
             stream.format(rowFormat, "keepfunds", "trade id", "Keep received funds in Bisq wallet");

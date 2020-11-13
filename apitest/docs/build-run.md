@@ -48,7 +48,7 @@ To run all test cases in a package:
 
 To run a single test case:
 
-    $ ./gradlew  :apitest:test --tests "bisq.apitest.method.GetBalanceTest" -DrunApiTests=true
+    $ ./gradlew  :apitest:test --tests "bisq.apitest.method.wallet.GetBalanceTest" -DrunApiTests=true
 
 To run test cases from Intellij, add two JVM arguments to your JUnit launchers:
 

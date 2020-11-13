@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.apitest.method;
+package bisq.apitest.method.wallet;
 
 import bisq.proto.grpc.GetBalanceRequest;
 
@@ -35,6 +35,10 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
+
+
+
+import bisq.apitest.method.MethodTest;
 
 @Disabled
 @Slf4j

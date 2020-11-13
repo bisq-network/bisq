@@ -26,6 +26,8 @@ import bisq.proto.grpc.GetBalanceReply;
 import bisq.proto.grpc.GetBalanceRequest;
 import bisq.proto.grpc.GetFundingAddressesReply;
 import bisq.proto.grpc.GetFundingAddressesRequest;
+import bisq.proto.grpc.GetUnusedBsqAddressReply;
+import bisq.proto.grpc.GetUnusedBsqAddressRequest;
 import bisq.proto.grpc.LockWalletReply;
 import bisq.proto.grpc.LockWalletRequest;
 import bisq.proto.grpc.RemoveWalletPasswordReply;
@@ -100,6 +102,23 @@ class GrpcWalletsService extends WalletsGrpc.WalletsImplBase {
                             balanceInfo.stream()
                                     .map(AddressBalanceInfo::toProtoMessage)
                                     .collect(Collectors.toList()))
+                    .build();
+            responseObserver.onNext(reply);
+            responseObserver.onCompleted();
+        } catch (IllegalStateException cause) {
+            var ex = new StatusRuntimeException(Status.UNKNOWN.withDescription(cause.getMessage()));
+            responseObserver.onError(ex);
+            throw ex;
+        }
+    }
+    
+    @Override
+    public void getUnusedBsqAddress(GetUnusedBsqAddressRequest req,
+                                    StreamObserver<GetUnusedBsqAddressReply> responseObserver) {
+        try {
+            String address = coreApi.getUnusedBsqAddress();
+            var reply = GetUnusedBsqAddressReply.newBuilder()
+                    .setAddress(address)
                     .build();
             responseObserver.onNext(reply);
             responseObserver.onCompleted();

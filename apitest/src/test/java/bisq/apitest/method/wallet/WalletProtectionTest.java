@@ -1,4 +1,4 @@
-package bisq.apitest.method;
+package bisq.apitest.method.wallet;
 
 import io.grpc.StatusRuntimeException;
 
@@ -17,6 +17,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
+
+
+
+import bisq.apitest.method.MethodTest;
 
 @SuppressWarnings("ResultOfMethodCallIgnored")
 @Disabled

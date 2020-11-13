@@ -229,6 +229,10 @@ public class CoreApi {
         return walletsService.getFundingAddresses();
     }
 
+    public String getUnusedBsqAddress() {
+        return walletsService.getUnusedBsqAddress();
+    }
+
     public void setWalletPassword(String password, String newPassword) {
         walletsService.setWalletPassword(password, newPassword);
     }

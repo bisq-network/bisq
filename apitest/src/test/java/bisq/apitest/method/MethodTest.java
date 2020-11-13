@@ -26,6 +26,7 @@ import bisq.proto.grpc.GetFundingAddressesRequest;
 import bisq.proto.grpc.GetOfferRequest;
 import bisq.proto.grpc.GetPaymentAccountsRequest;
 import bisq.proto.grpc.GetTradeRequest;
+import bisq.proto.grpc.GetUnusedBsqAddressRequest;
 import bisq.proto.grpc.KeepFundsRequest;
 import bisq.proto.grpc.LockWalletRequest;
 import bisq.proto.grpc.MarketPriceRequest;
@@ -105,6 +106,10 @@ public class MethodTest extends ApiTestCase {
 
     protected final GetBalanceRequest createBalanceRequest() {
         return GetBalanceRequest.newBuilder().build();
+    }
+
+    protected final GetUnusedBsqAddressRequest createGetUnusedBsqAddressRequest() {
+        return GetUnusedBsqAddressRequest.newBuilder().build();
     }
 
     protected final SetWalletPasswordRequest createSetWalletPasswordRequest(String password) {

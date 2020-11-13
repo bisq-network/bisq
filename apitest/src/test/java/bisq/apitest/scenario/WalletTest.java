@@ -35,7 +35,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 
 import bisq.apitest.method.MethodTest;
-import bisq.apitest.method.WalletProtectionTest;
+import bisq.apitest.method.wallet.WalletProtectionTest;
 
 @Slf4j
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
