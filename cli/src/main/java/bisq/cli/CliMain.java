@@ -23,10 +23,7 @@ import bisq.proto.grpc.ConfirmPaymentStartedRequest;
 import bisq.proto.grpc.CreateOfferRequest;
 import bisq.proto.grpc.CreatePaymentAccountRequest;
 import bisq.proto.grpc.GetAddressBalanceRequest;
-import bisq.proto.grpc.GetBalanceRequest;
 import bisq.proto.grpc.GetBalancesRequest;
-import bisq.proto.grpc.GetBsqBalancesRequest;
-import bisq.proto.grpc.GetBtcBalancesRequest;
 import bisq.proto.grpc.GetFundingAddressesRequest;
 import bisq.proto.grpc.GetOfferRequest;
 import bisq.proto.grpc.GetOffersRequest;
@@ -58,7 +55,6 @@ import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.cli.CurrencyFormat.formatSatoshis;
 import static bisq.cli.CurrencyFormat.toSatoshis;
 import static bisq.cli.NegativeNumberOptions.hasNegativeNumberOptions;
 import static bisq.cli.TableFormat.formatAddressBalanceTbl;
@@ -93,10 +89,7 @@ public class CliMain {
         createpaymentacct,
         getpaymentaccts,
         getversion,
-        @Deprecated getbalance, // Use getbalances, return bsq and btc balance info
-        getbalances,
-        getbsqbalance,
-        getbtcbalance,
+        getbalance,
         getaddressbalance,
         getfundingaddresses,
         getunusedbsqaddress,
@@ -194,29 +187,14 @@ public class CliMain {
                     return;
                 }
                 case getbalance: {
-                    // Deprecated, use getbalances.
-                    var request = GetBalanceRequest.newBuilder().build();
-                    var reply = walletsService.getBalance(request);
-                    var btcBalance = formatSatoshis(reply.getBalance());
-                    out.println(btcBalance);
-                    return;
-                }
-                case getbalances: {
-                    var request = GetBalancesRequest.newBuilder().build();
+                    var currencyCode = nonOptionArgs.size() == 2
+                            ? nonOptionArgs.get(1)
+                            : "";
+                    var request = GetBalancesRequest.newBuilder()
+                            .setCurrencyCode(currencyCode)
+                            .build();
                     var reply = walletsService.getBalances(request);
                     out.println(formatBalancesTbls(reply.getBalances()));
-                    return;
-                }
-                case getbsqbalance: {
-                    var request = GetBsqBalancesRequest.newBuilder().build();
-                    var reply = walletsService.getBsqBalances(request);
-                    out.println(reply.getBsqBalanceInfo());
-                    return;
-                }
-                case getbtcbalance: {
-                    var request = GetBtcBalancesRequest.newBuilder().build();
-                    var reply = walletsService.getBtcBalances(request);
-                    out.println(reply.getBtcBalanceInfo());
                     return;
                 }
                 case getaddressbalance: {
@@ -556,10 +534,7 @@ public class CliMain {
             stream.format(rowFormat, "Method", "Params", "Description");
             stream.format(rowFormat, "------", "------", "------------");
             stream.format(rowFormat, "getversion", "", "Get server version");
-            stream.format(rowFormat, "getbalance", "", "Get server wallet balance (deprecated, use getbalances");
-            stream.format(rowFormat, "getbalances", "", "Get server wallet bsq and btc balances");
-            stream.format(rowFormat, "getbsqbalance", "", "Get server wallet bsq balance");
-            stream.format(rowFormat, "getbtcbalance", "", "Get server wallet btc balance");
+            stream.format(rowFormat, "getbalance [,currency code = bsq|btc]", "", "Get server wallet balances");
             stream.format(rowFormat, "getaddressbalance", "address", "Get server wallet address balance");
             stream.format(rowFormat, "getfundingaddresses", "", "Get BTC funding addresses");
             stream.format(rowFormat, "getunusedbsqaddress", "", "Get unused BSQ address");

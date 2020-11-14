@@ -48,7 +48,7 @@ public class WalletProtectionTest extends MethodTest {
     @Test
     @Order(2)
     public void testGetBalanceOnEncryptedWalletShouldThrowException() {
-        Throwable exception = assertThrows(StatusRuntimeException.class, () -> getBalance(alicedaemon));
+        Throwable exception = assertThrows(StatusRuntimeException.class, () -> getBtcBalances(alicedaemon));
         assertEquals("UNKNOWN: wallet is locked", exception.getMessage());
     }
 
@@ -57,9 +57,9 @@ public class WalletProtectionTest extends MethodTest {
     public void testUnlockWalletFor4Seconds() {
         var request = createUnlockWalletRequest("first-password", 4);
         grpcStubs(alicedaemon).walletsService.unlockWallet(request);
-        getBalance(alicedaemon); // should not throw 'wallet locked' exception
+        getBtcBalances(alicedaemon); // should not throw 'wallet locked' exception
         sleep(4500); // let unlock timeout expire
-        Throwable exception = assertThrows(StatusRuntimeException.class, () -> getBalance(alicedaemon));
+        Throwable exception = assertThrows(StatusRuntimeException.class, () -> getBtcBalances(alicedaemon));
         assertEquals("UNKNOWN: wallet is locked", exception.getMessage());
     }
 
@@ -69,7 +69,7 @@ public class WalletProtectionTest extends MethodTest {
         var request = createUnlockWalletRequest("first-password", 3);
         grpcStubs(alicedaemon).walletsService.unlockWallet(request);
         sleep(4000); // let unlock timeout expire
-        Throwable exception = assertThrows(StatusRuntimeException.class, () -> getBalance(alicedaemon));
+        Throwable exception = assertThrows(StatusRuntimeException.class, () -> getBtcBalances(alicedaemon));
         assertEquals("UNKNOWN: wallet is locked", exception.getMessage());
     }
 
@@ -79,7 +79,7 @@ public class WalletProtectionTest extends MethodTest {
         unlockWallet(alicedaemon, "first-password", 60);
         var request = createLockWalletRequest();
         grpcStubs(alicedaemon).walletsService.lockWallet(request);
-        Throwable exception = assertThrows(StatusRuntimeException.class, () -> getBalance(alicedaemon));
+        Throwable exception = assertThrows(StatusRuntimeException.class, () -> getBtcBalances(alicedaemon));
         assertEquals("UNKNOWN: wallet is locked", exception.getMessage());
     }
 
@@ -99,7 +99,7 @@ public class WalletProtectionTest extends MethodTest {
         sleep(500); // override unlock timeout after 0.5s
         unlockWallet(alicedaemon, "first-password", 6);
         sleep(5000);
-        getBalance(alicedaemon);   // getbalance 5s after resetting unlock timeout to 6s
+        getBtcBalances(alicedaemon);  // getbalance 5s after overriding timeout to 6s
     }
 
     @Test
@@ -109,7 +109,7 @@ public class WalletProtectionTest extends MethodTest {
                 "first-password", "second-password");
         grpcStubs(alicedaemon).walletsService.setWalletPassword(request);
         unlockWallet(alicedaemon, "second-password", 2);
-        getBalance(alicedaemon);
+        getBtcBalances(alicedaemon);
         sleep(2500); // allow time for wallet save
     }
 
@@ -128,7 +128,7 @@ public class WalletProtectionTest extends MethodTest {
     public void testRemoveNewWalletPassword() {
         var request = createRemoveWalletPasswordRequest("second-password");
         grpcStubs(alicedaemon).walletsService.removeWalletPassword(request);
-        getBalance(alicedaemon);  // should not throw 'wallet locked' exception
+        getBtcBalances(alicedaemon);  // should not throw 'wallet locked' exception
     }
 
     @AfterAll

@@ -9,6 +9,11 @@ import lombok.Getter;
 @Getter
 public class BtcBalanceInfo implements Payload {
 
+    public static final BtcBalanceInfo EMPTY = new BtcBalanceInfo(-1,
+            -1,
+            -1,
+            -1);
+
     // All balances are in BTC satoshis.
     private final long availableBalance;
     private final long reservedBalance;

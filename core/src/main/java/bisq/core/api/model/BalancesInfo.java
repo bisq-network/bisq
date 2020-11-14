@@ -7,12 +7,15 @@ import lombok.Getter;
 @Getter
 public class BalancesInfo implements Payload {
 
-    private final BsqBalanceInfo bsqBalanceInfo;
-    private final BtcBalanceInfo btcBalanceInfo;
+    // Getter names are shortened for readability's sake, i.e.,
+    // balancesInfo.getBtc().getAvailableBalance() is clean than
+    // balancesInfo.getBtcBalanceInfo().getAvailableBalance().
+    private final BsqBalanceInfo bsq;
+    private final BtcBalanceInfo btc;
 
-    public BalancesInfo(BsqBalanceInfo bsqBalanceInfo, BtcBalanceInfo btcBalanceInfo) {
-        this.bsqBalanceInfo = bsqBalanceInfo;
-        this.btcBalanceInfo = btcBalanceInfo;
+    public BalancesInfo(BsqBalanceInfo bsq, BtcBalanceInfo btc) {
+        this.bsq = bsq;
+        this.btc = btc;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -22,21 +25,21 @@ public class BalancesInfo implements Payload {
     @Override
     public bisq.proto.grpc.BalancesInfo toProtoMessage() {
         return bisq.proto.grpc.BalancesInfo.newBuilder()
-                .setBsqBalanceInfo(bsqBalanceInfo.toProtoMessage())
-                .setBtcBalanceInfo(btcBalanceInfo.toProtoMessage())
+                .setBsq(bsq.toProtoMessage())
+                .setBtc(btc.toProtoMessage())
                 .build();
     }
 
     public static BalancesInfo fromProto(bisq.proto.grpc.BalancesInfo proto) {
-        return new BalancesInfo(BsqBalanceInfo.fromProto(proto.getBsqBalanceInfo()),
-                BtcBalanceInfo.fromProto(proto.getBtcBalanceInfo()));
+        return new BalancesInfo(BsqBalanceInfo.fromProto(proto.getBsq()),
+                BtcBalanceInfo.fromProto(proto.getBtc()));
     }
 
     @Override
     public String toString() {
         return "BalancesInfo{" + "\n" +
-                "  " + bsqBalanceInfo.toString() + "\n" +
-                ", " + btcBalanceInfo.toString() + "\n" +
+                "  " + bsq.toString() + "\n" +
+                ", " + btc.toString() + "\n" +
                 '}';
     }
 }

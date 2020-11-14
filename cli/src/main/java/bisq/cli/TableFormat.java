@@ -68,9 +68,9 @@ public class TableFormat {
 
     public static String formatBalancesTbls(BalancesInfo balancesInfo) {
         return "BTC" + "\n"
-                + formatBtcBalanceInfoTbl(balancesInfo.getBtcBalanceInfo()) + "\n"
+                + formatBtcBalanceInfoTbl(balancesInfo.getBtc()) + "\n"
                 + "BSQ" + "\n"
-                + formatBsqBalanceInfoTbl(balancesInfo.getBsqBalanceInfo());
+                + formatBsqBalanceInfoTbl(balancesInfo.getBsq());
     }
 
     public static String formatBsqBalanceInfoTbl(BsqBalanceInfo bsqBalanceInfo) {

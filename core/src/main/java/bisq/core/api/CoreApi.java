@@ -221,21 +221,8 @@ public class CoreApi {
     // Wallets
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @Deprecated
-    public long getAvailableBalance() {
-        return walletsService.getAvailableBalance();
-    }
-
-    public BalancesInfo getBalances() {
-        return walletsService.getBalances();
-    }
-
-    public BsqBalanceInfo getBsqBalances() {
-        return walletsService.getBsqBalances();
-    }
-
-    public BtcBalanceInfo getBtcBalances() {
-        return walletsService.getBtcBalances();
+    public BalancesInfo getBalances(String currencyCode) {
+        return walletsService.getBalances(currencyCode);
     }
 
     public long getAddressBalance(String addressString) {

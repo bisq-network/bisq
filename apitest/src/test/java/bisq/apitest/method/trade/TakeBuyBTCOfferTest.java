@@ -17,6 +17,8 @@
 
 package bisq.apitest.method.trade;
 
+import bisq.proto.grpc.BtcBalanceInfo;
+
 import io.grpc.StatusRuntimeException;
 
 import lombok.extern.slf4j.Slf4j;
@@ -154,8 +156,9 @@ public class TakeBuyBTCOfferTest extends AbstractTradeTest {
                 .setPhase(PAYOUT_PUBLISHED);
         verifyExpectedProtocolStatus(trade);
         logTrade(log, testInfo, "Alice's view after keeping funds", trade);
+        BtcBalanceInfo currentBalance = getBtcBalances(bobdaemon);
         log.info("{} Alice's current available balance: {} BTC",
                 testName(testInfo),
-                formatSatoshis(getBalance(alicedaemon)));
+                formatSatoshis(currentBalance.getAvailableBalance()));
     }
 }

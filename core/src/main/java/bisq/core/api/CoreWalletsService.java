@@ -114,54 +114,21 @@ class CoreWalletsService {
         return balance.getValue();
     }
 
-    BalancesInfo getBalances() {
+    BalancesInfo getBalances(String currencyCode) {
+        verifyWalletCurrencyCodeIsValid(currencyCode);
         verifyWalletsAreAvailable();
         verifyEncryptedWalletIsUnlocked();
         if (balances.getAvailableBalance().get() == null)
             throw new IllegalStateException("balance is not yet available");
 
-        return new BalancesInfo(getBsqBalances(), getBtcBalances());
-    }
-
-    BsqBalanceInfo getBsqBalances() {
-        verifyWalletsAreAvailable();
-        verifyEncryptedWalletIsUnlocked();
-
-        var availableConfirmedBalance = bsqWalletService.getAvailableConfirmedBalance();
-        var unverifiedBalance = bsqWalletService.getUnverifiedBalance();
-        var unconfirmedChangeBalance = bsqWalletService.getUnconfirmedChangeBalance();
-        var lockedForVotingBalance = bsqWalletService.getLockedForVotingBalance();
-        var lockupBondsBalance = bsqWalletService.getLockupBondsBalance();
-        var unlockingBondsBalance = bsqWalletService.getUnlockingBondsBalance();
-
-        return new BsqBalanceInfo(availableConfirmedBalance.value,
-                unverifiedBalance.value,
-                unconfirmedChangeBalance.value,
-                lockedForVotingBalance.value,
-                lockupBondsBalance.value,
-                unlockingBondsBalance.value);
-    }
-
-    BtcBalanceInfo getBtcBalances() {
-        verifyWalletsAreAvailable();
-        verifyEncryptedWalletIsUnlocked();
-
-        var availableBalance = balances.getAvailableBalance().get();
-        if (availableBalance == null)
-            throw new IllegalStateException("balance is not yet available");
-
-        var reservedBalance = balances.getReservedBalance().get();
-        if (reservedBalance == null)
-            throw new IllegalStateException("reserved balance is not yet available");
-
-        var lockedBalance = balances.getLockedBalance().get();
-        if (lockedBalance == null)
-            throw new IllegalStateException("locked balance is not yet available");
-
-        return new BtcBalanceInfo(availableBalance.value,
-                reservedBalance.value,
-                availableBalance.add(reservedBalance).value,
-                lockedBalance.value);
+        switch (currencyCode.trim().toUpperCase()) {
+            case "BSQ":
+                return new BalancesInfo(getBsqBalances(), BtcBalanceInfo.EMPTY);
+            case "BTC":
+                return new BalancesInfo(BsqBalanceInfo.EMPTY, getBtcBalances());
+            default:
+                return new BalancesInfo(getBsqBalances(), getBtcBalances());
+        }
     }
 
     long getAddressBalance(String addressString) {
@@ -338,6 +305,57 @@ class CoreWalletsService {
     private void verifyEncryptedWalletIsUnlocked() {
         if (walletsManager.areWalletsEncrypted() && tempAesKey == null)
             throw new IllegalStateException("wallet is locked");
+    }
+
+    // Throws a RuntimeException if wallet currency code is not BSQ or BTC.
+    private void verifyWalletCurrencyCodeIsValid(String currencyCode) {
+        if (currencyCode == null || currencyCode.isEmpty())
+            return;
+
+        if (!currencyCode.equalsIgnoreCase("BSQ")
+                && !currencyCode.equalsIgnoreCase("BTC"))
+            throw new IllegalStateException(format("wallet does not support %s", currencyCode));
+    }
+
+    private BsqBalanceInfo getBsqBalances() {
+        verifyWalletsAreAvailable();
+        verifyEncryptedWalletIsUnlocked();
+
+        var availableConfirmedBalance = bsqWalletService.getAvailableConfirmedBalance();
+        var unverifiedBalance = bsqWalletService.getUnverifiedBalance();
+        var unconfirmedChangeBalance = bsqWalletService.getUnconfirmedChangeBalance();
+        var lockedForVotingBalance = bsqWalletService.getLockedForVotingBalance();
+        var lockupBondsBalance = bsqWalletService.getLockupBondsBalance();
+        var unlockingBondsBalance = bsqWalletService.getUnlockingBondsBalance();
+
+        return new BsqBalanceInfo(availableConfirmedBalance.value,
+                unverifiedBalance.value,
+                unconfirmedChangeBalance.value,
+                lockedForVotingBalance.value,
+                lockupBondsBalance.value,
+                unlockingBondsBalance.value);
+    }
+
+    private BtcBalanceInfo getBtcBalances() {
+        verifyWalletsAreAvailable();
+        verifyEncryptedWalletIsUnlocked();
+
+        var availableBalance = balances.getAvailableBalance().get();
+        if (availableBalance == null)
+            throw new IllegalStateException("balance is not yet available");
+
+        var reservedBalance = balances.getReservedBalance().get();
+        if (reservedBalance == null)
+            throw new IllegalStateException("reserved balance is not yet available");
+
+        var lockedBalance = balances.getLockedBalance().get();
+        if (lockedBalance == null)
+            throw new IllegalStateException("locked balance is not yet available");
+
+        return new BtcBalanceInfo(availableBalance.value,
+                reservedBalance.value,
+                availableBalance.add(reservedBalance).value,
+                lockedBalance.value);
     }
 
     // Returns a LegacyAddress for the string, or a RuntimeException if invalid.

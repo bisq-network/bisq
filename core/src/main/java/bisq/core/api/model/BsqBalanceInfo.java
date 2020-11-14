@@ -9,6 +9,13 @@ import lombok.Getter;
 @Getter
 public class BsqBalanceInfo implements Payload {
 
+    public static final BsqBalanceInfo EMPTY = new BsqBalanceInfo(-1,
+            -1,
+            -1,
+            -1,
+            -1,
+            -1);
+
     // All balances are in BSQ satoshis.
     private final long availableConfirmedBalance;
     private final long unverifiedBalance;

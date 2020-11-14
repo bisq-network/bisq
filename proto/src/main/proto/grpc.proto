@@ -276,13 +276,7 @@ message TradeInfo {
 ///////////////////////////////////////////////////////////////////////////////////////////
 
 service Wallets {
-    rpc GetBalance (GetBalanceRequest) returns (GetBalanceReply) {
-    }
     rpc GetBalances (GetBalancesRequest) returns (GetBalancesReply) {
-    }
-    rpc GetBsqBalances (GetBsqBalancesRequest) returns (GetBsqBalancesReply) {
-    }
-    rpc GetBtcBalances (GetBtcBalancesRequest) returns (GetBtcBalancesReply) {
     }
     rpc GetAddressBalance (GetAddressBalanceRequest) returns (GetAddressBalanceReply) {
     }
@@ -302,32 +296,12 @@ service Wallets {
     }
 }
 
-message GetBalanceRequest {
-}
-
-message GetBalanceReply {
-    uint64 balance = 1;
-}
-
 message GetBalancesRequest {
+    string currencyCode = 1;
 }
 
 message GetBalancesReply {
     BalancesInfo balances = 1;
-}
-
-message GetBsqBalancesRequest {
-}
-
-message GetBsqBalancesReply {
-    BsqBalanceInfo bsqBalanceInfo = 1;
-}
-
-message GetBtcBalancesRequest {
-}
-
-message GetBtcBalancesReply {
-    BtcBalanceInfo btcBalanceInfo = 1;
 }
 
 message GetAddressBalanceRequest {
@@ -390,8 +364,11 @@ message UnlockWalletReply {
 }
 
 message BalancesInfo {
-    BsqBalanceInfo bsqBalanceInfo = 1;
-    BtcBalanceInfo btcBalanceInfo = 2;
+    // Field names are shortened for readability's sake, i.e.,
+    // balancesInfo.getBtc().getAvailableBalance() is cleaner than
+    // balancesInfo.getBtcBalanceInfo().getAvailableBalance().
+    BsqBalanceInfo bsq = 1;
+    BtcBalanceInfo btc = 2;
 }
 
 message BsqBalanceInfo {

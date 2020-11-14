@@ -51,14 +51,17 @@ public class BtcWalletTest extends MethodTest {
 
     @Test
     @Order(1)
-    public void testDeprecatedAvailableBtcBalance() {
-        // Alice's regtest Bisq wallet was initialized with 10 BTC.
-        long balance = getBalance(alicedaemon); // @Deprecated method
-        assertEquals(INITIAL_BTC_BALANCES.getAvailableBalance(), balance);
+    public void testInitialBtcBalances(final TestInfo testInfo) {
+        // Bob & Alice's regtest Bisq wallets were initialized with 10 BTC.
 
-        // Bob's regtest Bisq wallet was initialized with 10 BTC.
-        balance = getBalance(bobdaemon); // @Deprecated method
-        assertEquals(INITIAL_BTC_BALANCES.getAvailableBalance(), balance);
+        BtcBalanceInfo alicesBalances = getBtcBalances(alicedaemon);
+        log.info("{} Alice's BTC Balances:\n{}", testName(testInfo), formatBtcBalanceInfoTbl(alicesBalances));
+
+        BtcBalanceInfo bobsBalances = getBtcBalances(bobdaemon);
+        log.info("{} Bob's BTC Balances:\n{}", testName(testInfo), formatBtcBalanceInfoTbl(bobsBalances));
+
+        assertEquals(INITIAL_BTC_BALANCES.getAvailableBalance(), alicesBalances.getAvailableBalance());
+        assertEquals(INITIAL_BTC_BALANCES.getAvailableBalance(), bobsBalances.getAvailableBalance());
     }
 
     @Test
@@ -68,14 +71,16 @@ public class BtcWalletTest extends MethodTest {
         bitcoinCli.sendToAddress(newAddress, "2.5");
         genBtcBlocksThenWait(1, 1500);
 
-        long balance = getBalance(alicedaemon);  // @Deprecated method
-        assertEquals(1250000000, balance); // new balance is 12.5 btc
+        BtcBalanceInfo btcBalanceInfo = getBtcBalances(alicedaemon);
+        // New balance is 12.5 BTC
+        assertEquals(1250000000, btcBalanceInfo.getAvailableBalance());
 
         log.info("{} -> Alice's Funded Address Balance -> \n{}",
                 testName(testInfo),
                 formatAddressBalanceTbl(singletonList(getAddressBalance(alicedaemon, newAddress))));
 
-        BtcBalanceInfo btcBalanceInfo = getBtcBalances(alicedaemon);  // new balance is 12.5 btc
+        // New balance is 12.5 BTC
+        btcBalanceInfo = getBtcBalances(alicedaemon);
         bisq.core.api.model.BtcBalanceInfo alicesExpectedBalances =
                 bisq.core.api.model.BtcBalanceInfo.valueOf(1250000000,
                         0,
@@ -93,7 +98,7 @@ public class BtcWalletTest extends MethodTest {
     }
 
     private void verifyBtcBalances(bisq.core.api.model.BtcBalanceInfo expected,
-                                   BtcBalanceInfo actual) {
+                                   bisq.proto.grpc.BtcBalanceInfo actual) {
         assertEquals(expected.getAvailableBalance(), actual.getAvailableBalance());
         assertEquals(expected.getReservedBalance(), actual.getReservedBalance());
         assertEquals(expected.getTotalAvailableBalance(), actual.getTotalAvailableBalance());

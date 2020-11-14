@@ -38,7 +38,6 @@ import static bisq.apitest.config.BisqAppConfig.seednode;
 import bisq.apitest.method.MethodTest;
 import bisq.apitest.method.wallet.BsqWalletTest;
 import bisq.apitest.method.wallet.BtcWalletTest;
-import bisq.apitest.method.wallet.WalletBalancesTest;
 import bisq.apitest.method.wallet.WalletProtectionTest;
 
 @Slf4j
@@ -58,24 +57,15 @@ public class WalletTest extends MethodTest {
 
     @Test
     @Order(1)
-    public void testGetWalletBalances(final TestInfo testInfo) {
-        WalletBalancesTest btcWalletTest = new WalletBalancesTest();
-
-        btcWalletTest.testDeprecatedAvailableBtcBalance();
-        btcWalletTest.testNewGetBalances(testInfo);
-    }
-
-    @Test
-    @Order(2)
     public void testBtcWalletFunding(final TestInfo testInfo) {
         BtcWalletTest btcWalletTest = new BtcWalletTest();
 
-        btcWalletTest.testDeprecatedAvailableBtcBalance();
+        btcWalletTest.testInitialBtcBalances(testInfo);
         btcWalletTest.testFundAlicesBtcWallet(testInfo);
     }
 
     @Test
-    @Order(3)
+    @Order(2)
     public void testBsqWalletFunding(final TestInfo testInfo) {
         BsqWalletTest bsqWalletTest = new BsqWalletTest();
 
@@ -86,7 +76,7 @@ public class WalletTest extends MethodTest {
     }
 
     @Test
-    @Order(4)
+    @Order(3)
     public void testWalletProtection() {
         // Batching all wallet tests in this test case reduces scaffold setup
         // time.  Here, we create a method WalletProtectionTest instance and run each
