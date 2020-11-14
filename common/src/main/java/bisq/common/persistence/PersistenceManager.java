@@ -229,6 +229,8 @@ public class PersistenceManager<T extends PersistableEnvelope> {
             throw runtimeException;
         }
 
+        initCalled.set(true);
+
         this.persistable = persistable;
         this.fileName = fileName;
         this.source = source;
