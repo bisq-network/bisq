@@ -98,7 +98,7 @@ public class BtcWalletTest extends MethodTest {
     }
 
     private void verifyBtcBalances(bisq.core.api.model.BtcBalanceInfo expected,
-                                   bisq.proto.grpc.BtcBalanceInfo actual) {
+                                   BtcBalanceInfo actual) {
         assertEquals(expected.getAvailableBalance(), actual.getAvailableBalance());
         assertEquals(expected.getReservedBalance(), actual.getReservedBalance());
         assertEquals(expected.getTotalAvailableBalance(), actual.getTotalAvailableBalance());
