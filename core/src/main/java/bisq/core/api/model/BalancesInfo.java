@@ -8,7 +8,7 @@ import lombok.Getter;
 public class BalancesInfo implements Payload {
 
     // Getter names are shortened for readability's sake, i.e.,
-    // balancesInfo.getBtc().getAvailableBalance() is clean than
+    // balancesInfo.getBtc().getAvailableBalance() is cleaner than
     // balancesInfo.getBtcBalanceInfo().getAvailableBalance().
     private final BsqBalanceInfo bsq;
     private final BtcBalanceInfo btc;
