@@ -17,5 +17,4 @@ before_install:
 
 after_script:
     - pwd
-    - ls -l
-    - ls -l */*
+    - ls -l core/build/reports/tests/test/classes/bisq.core.util.ProtoUtilTest.html
