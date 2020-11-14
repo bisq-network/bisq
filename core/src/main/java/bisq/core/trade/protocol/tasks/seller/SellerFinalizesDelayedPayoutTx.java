@@ -63,8 +63,7 @@ public class SellerFinalizesDelayedPayoutTx extends TradeTask {
                     buyerMultiSigPubKey,
                     sellerMultiSigPubKey,
                     buyerSignature,
-                    sellerSignature,
-                    true);
+                    sellerSignature);
 
             trade.applyDelayedPayoutTx(signedDelayedPayoutTx);
             log.info("DelayedPayoutTxBytes = {}", Utilities.bytesAsHexString(trade.getDelayedPayoutTxBytes()));

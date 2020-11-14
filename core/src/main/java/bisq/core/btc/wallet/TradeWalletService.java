@@ -746,13 +746,14 @@ public class TradeWalletService {
         return mySignature.encodeToDER();
     }
 
-    public Transaction finalizeDelayedPayoutTx(Transaction delayedPayoutTx,
-                                               byte[] buyerPubKey,
-                                               byte[] sellerPubKey,
-                                               byte[] buyerSignature,
-                                               byte[] sellerSignature,
-                                               boolean requireConnectedOutput)
-            throws AddressFormatException, TransactionVerificationException, WalletException, SignatureDecodeException {
+    public Transaction finalizeUnconnectedDelayedPayoutTx(Transaction delayedPayoutTx,
+                                                          byte[] buyerPubKey,
+                                                          byte[] sellerPubKey,
+                                                          byte[] buyerSignature,
+                                                          byte[] sellerSignature,
+                                                          Coin inputValue)
+            throws AddressFormatException, TransactionVerificationException, SignatureDecodeException {
+
         Script redeemScript = get2of2MultiSigRedeemScript(buyerPubKey, sellerPubKey);
         ECKey.ECDSASignature buyerECDSASignature = ECKey.ECDSASignature.decodeFromDER(buyerSignature);
         ECKey.ECDSASignature sellerECDSASignature = ECKey.ECDSASignature.decodeFromDER(sellerSignature);
@@ -764,15 +765,25 @@ public class TradeWalletService {
         input.setWitness(witness);
         WalletService.printTx("finalizeDelayedPayoutTx", delayedPayoutTx);
         WalletService.verifyTransaction(delayedPayoutTx);
-        if (requireConnectedOutput) {
-            WalletService.checkWalletConsistency(wallet);
-            WalletService.checkScriptSig(delayedPayoutTx, input, 0);
-            checkNotNull(input.getConnectedOutput(), "input.getConnectedOutput() must not be null");
-            input.verify(input.getConnectedOutput());
-        } else {
-            Script scriptPubKey = get2of2MultiSigOutputScript(buyerPubKey, sellerPubKey, false);
-            input.getScriptSig().correctlySpends(delayedPayoutTx, 0, scriptPubKey, Script.ALL_VERIFY_FLAGS);
-        }
+
+        Script scriptPubKey = get2of2MultiSigOutputScript(buyerPubKey, sellerPubKey, false);
+        input.getScriptSig().correctlySpends(delayedPayoutTx, 0, witness, inputValue, scriptPubKey, Script.ALL_VERIFY_FLAGS);
+        return delayedPayoutTx;
+    }
+
+    public Transaction finalizeDelayedPayoutTx(Transaction delayedPayoutTx,
+                                               byte[] buyerPubKey,
+                                               byte[] sellerPubKey,
+                                               byte[] buyerSignature,
+                                               byte[] sellerSignature)
+            throws AddressFormatException, TransactionVerificationException, WalletException, SignatureDecodeException {
+
+        TransactionInput input = delayedPayoutTx.getInput(0);
+        finalizeUnconnectedDelayedPayoutTx(delayedPayoutTx, buyerPubKey, sellerPubKey, buyerSignature, sellerSignature, input.getValue());
+
+        WalletService.checkWalletConsistency(wallet);
+        checkNotNull(input.getConnectedOutput(), "input.getConnectedOutput() must not be null");
+        input.verify(input.getConnectedOutput());
         return delayedPayoutTx;
     }
 

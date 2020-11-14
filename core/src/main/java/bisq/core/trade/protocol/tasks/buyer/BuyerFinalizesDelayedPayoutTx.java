@@ -28,9 +28,10 @@ public class BuyerFinalizesDelayedPayoutTx extends TradeTask {
         try {
             runInterceptHook();
 
-            Transaction preparedDelayedPayoutTx = checkNotNull(processModel.getPreparedDelayedPayoutTx());
             BtcWalletService btcWalletService = processModel.getBtcWalletService();
             String id = processModel.getOffer().getId();
+            Transaction preparedDepositTx = btcWalletService.getTxFromSerializedTx(processModel.getPreparedDepositTx());
+            Transaction preparedDelayedPayoutTx = checkNotNull(processModel.getPreparedDelayedPayoutTx());
 
             byte[] buyerMultiSigPubKey = processModel.getMyMultiSigPubKey();
             checkArgument(Arrays.equals(buyerMultiSigPubKey,
@@ -41,13 +42,13 @@ public class BuyerFinalizesDelayedPayoutTx extends TradeTask {
             byte[] buyerSignature = processModel.getDelayedPayoutTxSignature();
             byte[] sellerSignature = processModel.getTradingPeer().getDelayedPayoutTxSignature();
 
-            Transaction signedDelayedPayoutTx = processModel.getTradeWalletService().finalizeDelayedPayoutTx(
+            Transaction signedDelayedPayoutTx = processModel.getTradeWalletService().finalizeUnconnectedDelayedPayoutTx(
                     preparedDelayedPayoutTx,
                     buyerMultiSigPubKey,
                     sellerMultiSigPubKey,
                     buyerSignature,
                     sellerSignature,
-                    false);
+                    preparedDepositTx.getOutput(0).getValue());
 
             trade.applyDelayedPayoutTxBytes(signedDelayedPayoutTx.bitcoinSerialize());
             log.info("DelayedPayoutTxBytes = {}", Utilities.bytesAsHexString(trade.getDelayedPayoutTxBytes()));
