@@ -19,8 +19,6 @@ package bisq.core.api;
 
 import bisq.core.api.model.AddressBalanceInfo;
 import bisq.core.api.model.BalancesInfo;
-import bisq.core.api.model.BsqBalanceInfo;
-import bisq.core.api.model.BtcBalanceInfo;
 import bisq.core.btc.wallet.TxBroadcaster;
 import bisq.core.monetary.Price;
 import bisq.core.offer.Offer;
