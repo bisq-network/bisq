@@ -35,6 +35,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.stream.JsonWriter;
 
+import org.apache.commons.io.FileUtils;
+
 import java.nio.file.Paths;
 
 import java.io.File;
@@ -340,6 +342,11 @@ public class PaymentAccountFormTest {
         File emptyForm = paymentAccountForm.getPaymentAccountForm(SEPA_ID);
         emptyForm.deleteOnExit();
         log.info("Empty form saved to {}", paymentAccountForm.getClickableURI(emptyForm));
+        try {
+            log.info("Empty SEPA form content: {}", FileUtils.readFileToString(emptyForm, UTF_8));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         verifyEmptyForm(emptyForm,
                 SEPA_ID,
                 PROPERTY_NAME_COUNTRY,
