@@ -100,15 +100,16 @@ class PaymentAccountTypeAdapter extends TypeAdapter<PaymentAccount> {
         out.beginObject();
         writeCommonFields(out, account);
         fieldSettersMap.forEach((field, value) -> {
-            if (log.isDebugEnabled())
-                log.debug("Append form with settable field: {} {} {} setter: {}",
-                        getVisibilityModifierAsString(field),
-                        field.getType().getSimpleName(),
-                        field.getName(),
-                        value);
             try {
                 // Write out a json element if there is a @Setter for this field.
                 if (value.isPresent()) {
+                    if (log.isDebugEnabled())
+                        log.debug("Append form with settable field: {} {} {} setter: {}",
+                                getVisibilityModifierAsString(field),
+                                field.getType().getSimpleName(),
+                                field.getName(),
+                                value);
+
                     String fieldName = field.getName();
                     out.name(fieldName);
                     out.value("Your " + fieldName.toLowerCase());
