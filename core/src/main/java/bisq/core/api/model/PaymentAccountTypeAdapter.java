@@ -66,7 +66,7 @@ class PaymentAccountTypeAdapter extends TypeAdapter<PaymentAccount> {
     private final Predicate<Field> isExcludedField;
 
     /**
-     * Constructor used when de-serializing a json payment account from into a
+     * Constructor used when de-serializing a json payment account form into a
      * PaymentAccount instance.
      *
      * @param paymentAccountType the PaymentAccount subclass being instantiated
