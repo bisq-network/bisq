@@ -14,3 +14,8 @@ install:
 
 before_install:
     grep -v '^#' assets/src/main/resources/META-INF/services/bisq.asset.Asset | sort --check --dictionary-order --ignore-case
+
+after_script:
+    - pwd
+    - ls -l core/build/reports/tests/test/classes/bisq.core.api.model.PaymentAccountFormTest.html
+    - cat core/build/reports/tests/test/classes/bisq.core.api.model.PaymentAccountFormTest.html
