@@ -26,6 +26,8 @@ import com.google.gson.GsonBuilder;
 
 import javax.inject.Singleton;
 
+import org.apache.commons.io.FileUtils;
+
 import java.net.URI;
 import java.net.URISyntaxException;
 
@@ -136,6 +138,7 @@ public class PaymentAccountForm {
      */
     public File getPaymentAccountForm(String paymentMethodId) {
         PaymentMethod paymentMethod = getPaymentMethodById(paymentMethodId);
+        log.info("getPaymentAccountForm({}) -> {}", paymentMethodId, paymentMethod);
 
         File file = null;
         try {
@@ -157,6 +160,13 @@ public class PaymentAccountForm {
             outputStreamWriter.write(json);
         } catch (Exception ex) {
             log.error(format("Could not export json file for %s account.", paymentMethod.getShortName()), ex);
+        }
+
+        try {
+            log.info("getPaymentAccountForm({}) -> returning file -> {}",
+                    paymentMethodId, FileUtils.readFileToString(file, UTF_8));
+        } catch (IOException e) {
+            e.printStackTrace();
         }
 
         return file;

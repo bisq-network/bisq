@@ -51,6 +51,7 @@ import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import static bisq.core.payment.payload.PaymentMethod.*;
@@ -115,6 +116,7 @@ public class PaymentAccountFormTest {
         EXPECTED_FORM.clear();
     }
 
+    @Ignore
     @Test
     public void testAustraliaPayidForm() {
         File emptyForm = paymentAccountForm.getPaymentAccountForm(AUSTRALIA_PAYID_ID);
@@ -140,6 +142,7 @@ public class PaymentAccountFormTest {
         log.info("Deserialized {}: {}", paymentAccount.getClass().getSimpleName(), paymentAccount);
     }
 
+    @Ignore
     @Test
     public void testBrazilNationalBankAccountForm() {
         File emptyForm = paymentAccountForm.getPaymentAccountForm(NATIONAL_BANK_ID);
@@ -188,6 +191,7 @@ public class PaymentAccountFormTest {
         log.info("Deserialized {}: {}", paymentAccount.getClass().getSimpleName(), paymentAccount);
     }
 
+    @Ignore
     @Test
     public void testChaseQuickPayAccountForm() {
         File emptyForm = paymentAccountForm.getPaymentAccountForm(CHASE_QUICK_PAY_ID);
@@ -214,6 +218,7 @@ public class PaymentAccountFormTest {
         log.info("Deserialized {}: {}", paymentAccount.getClass().getSimpleName(), paymentAccount);
     }
 
+    @Ignore
     @Test
     public void testClearXChangeAccountForm() {
         File emptyForm = paymentAccountForm.getPaymentAccountForm(CLEAR_X_CHANGE_ID);
@@ -240,6 +245,7 @@ public class PaymentAccountFormTest {
         verifyAccountFiatCurrency(paymentAccount, "USD");
     }
 
+    @Ignore
     @Test
     public void testF2FAccountForm() {
         File emptyForm = paymentAccountForm.getPaymentAccountForm(F2F_ID);
@@ -273,6 +279,7 @@ public class PaymentAccountFormTest {
         log.info("Deserialized {}: {}", paymentAccount.getClass().getSimpleName(), paymentAccount);
     }
 
+    @Ignore
     @Test
     public void testHalCashAccountForm() {
         File emptyForm = paymentAccountForm.getPaymentAccountForm(HAL_CASH_ID);
@@ -296,6 +303,7 @@ public class PaymentAccountFormTest {
         log.info("Deserialized {}: {}", paymentAccount.getClass().getSimpleName(), paymentAccount);
     }
 
+    @Ignore
     @Test
     public void testJapanBankAccountForm() {
         File emptyForm = paymentAccountForm.getPaymentAccountForm(JAPAN_BANK_ID);
@@ -402,6 +410,7 @@ public class PaymentAccountFormTest {
         log.info("Deserialized {}: {}", paymentAccount.getClass().getSimpleName(), paymentAccount);
     }
 
+    @Ignore
     @Test
     public void testUSPostalMoneyOrderAccountForm() {
         File emptyForm = paymentAccountForm.getPaymentAccountForm(US_POSTAL_MONEY_ORDER_ID);
