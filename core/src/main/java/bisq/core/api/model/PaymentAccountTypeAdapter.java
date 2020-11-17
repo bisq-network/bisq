@@ -252,6 +252,9 @@ class PaymentAccountTypeAdapter extends TypeAdapter<PaymentAccount> {
     }
 
     private void writeCommonFields(JsonWriter out, PaymentAccount account) throws IOException {
+        log.info("writeCommonFields(out, {}) -> paymentMethodId = {}",
+                account, account.getPaymentMethod().getId());
+
         out.name("_COMMENT_");
         out.value("Please do not edit the paymentMethodId field.");
 
