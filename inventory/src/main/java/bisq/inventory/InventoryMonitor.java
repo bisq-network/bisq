@@ -18,6 +18,7 @@
 package bisq.inventory;
 
 
+import bisq.core.app.TorSetup;
 import bisq.core.network.p2p.inventory.GetInventoryRequestManager;
 import bisq.core.network.p2p.inventory.model.Average;
 import bisq.core.network.p2p.inventory.model.DeviationSeverity;
@@ -61,8 +62,8 @@ public class InventoryMonitor implements SetupListener {
     private final File appDir;
     private final boolean useLocalhostForP2P;
     private final int intervalSec;
-    private final NetworkNode networkNode;
-    private final GetInventoryRequestManager getInventoryRequestManager;
+    private NetworkNode networkNode;
+    private GetInventoryRequestManager getInventoryRequestManager;
 
     private ArrayList<NodeAddress> seedNodes;
     private InventoryWebServer inventoryWebServer;
@@ -82,20 +83,25 @@ public class InventoryMonitor implements SetupListener {
         this.useLocalhostForP2P = useLocalhostForP2P;
         this.intervalSec = intervalSec;
 
-        networkNode = getNetworkNode(appDir);
-        getInventoryRequestManager = new GetInventoryRequestManager(networkNode);
+        // We get more connectivity issues. Cleaning tor cache files helps usually for those problems.
+        File torDir = new File(appDir, "tor");
+        TorSetup torSetup = new TorSetup(torDir);
+        torSetup.cleanupTorFiles(() -> {
+            networkNode = getNetworkNode(torDir);
+            getInventoryRequestManager = new GetInventoryRequestManager(networkNode);
 
-        // We maintain our own list as we want to monitor also old v2 nodes which are not part of the normal seed
-        // node list anymore.
-        String networkName = network.name().toLowerCase();
-        String fileName = network.isMainnet() ? "inv_" + networkName : networkName;
-        DefaultSeedNodeRepository.readSeedNodePropertyFile(fileName)
-                .ifPresent(bufferedReader -> {
-                    seedNodes = new ArrayList<>(DefaultSeedNodeRepository.getSeedNodeAddressesFromPropertyFile(fileName));
-                    addJsonFileManagers(seedNodes);
-                    inventoryWebServer = new InventoryWebServer(port, seedNodes, bufferedReader);
-                    networkNode.start(this);
-                });
+            // We maintain our own list as we want to monitor also old v2 nodes which are not part of the normal seed
+            // node list anymore.
+            String networkName = network.name().toLowerCase();
+            String fileName = network.isMainnet() ? "inv_" + networkName : networkName;
+            DefaultSeedNodeRepository.readSeedNodePropertyFile(fileName)
+                    .ifPresent(bufferedReader -> {
+                        seedNodes = new ArrayList<>(DefaultSeedNodeRepository.getSeedNodeAddressesFromPropertyFile(fileName));
+                        addJsonFileManagers(seedNodes);
+                        inventoryWebServer = new InventoryWebServer(port, seedNodes, bufferedReader);
+                        networkNode.start(this);
+                    });
+        }, log::error);
     }
 
 
@@ -154,16 +160,16 @@ public class InventoryMonitor implements SetupListener {
                                  RequestInfo requestInfo,
                                  @Nullable Map<InventoryItem, String> result,
                                  @Nullable String errorMessage) {
-        if (errorMessage != null) {
+        if (errorMessage != null && !errorMessage.isEmpty()) {
             log.warn("Error at connection to peer {}: {}", nodeAddress, errorMessage);
             requestInfo.setErrorMessage(errorMessage);
+        } else {
+            requestInfo.setResponseTime(System.currentTimeMillis());
         }
 
         boolean ignoreDeviationAtStartup;
         if (result != null) {
             log.info("nodeAddress={}, result={}", nodeAddress, result.toString());
-            long responseTime = System.currentTimeMillis();
-            requestInfo.setResponseTime(responseTime);
 
             // If seed just started up we ignore the deviation as it can be expected that seed is still syncing
             // DAO state/blocks. P2P data should be ready but as we received it from other seeds it is not that
@@ -247,8 +253,7 @@ public class InventoryMonitor implements SetupListener {
         });
     }
 
-    private NetworkNode getNetworkNode(File appDir) {
-        File torDir = new File(appDir, "tor");
+    private NetworkNode getNetworkNode(File torDir) {
         CoreNetworkProtoResolver networkProtoResolver = new CoreNetworkProtoResolver(Clock.systemDefaultZone());
         return new NetworkNodeProvider(networkProtoResolver,
                 ArrayList::new,
