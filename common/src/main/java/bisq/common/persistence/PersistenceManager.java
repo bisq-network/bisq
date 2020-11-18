@@ -143,25 +143,25 @@ public class PersistenceManager<T extends PersistableEnvelope> {
 
     public enum Source {
         // For data stores we received from the network and which could be rebuilt. We store only for avoiding too much network traffic.
-        NETWORK(1, TimeUnit.HOURS.toSeconds(1), false),
+        NETWORK(1, TimeUnit.MINUTES.toMillis(5), false),
 
         // For data stores which are created from private local data. This data could only be rebuilt from backup files.
-        PRIVATE(10, TimeUnit.SECONDS.toSeconds(30), true),
+        PRIVATE(10, 200, true),
 
-        // For data stores which are created from private local data. Loss of that data would not have any critical consequences.
-        PRIVATE_LOW_PRIO(4, TimeUnit.HOURS.toSeconds(2), false);
+        // For data stores which are created from private local data. Loss of that data would not have critical consequences.
+        PRIVATE_LOW_PRIO(4, TimeUnit.MINUTES.toMillis(1), false);
 
 
         @Getter
         private final int numMaxBackupFiles;
         @Getter
-        private final long delayInSec;
+        private final long delay;
         @Getter
         private final boolean flushAtShutDown;
 
-        Source(int numMaxBackupFiles, long delayInSec, boolean flushAtShutDown) {
+        Source(int numMaxBackupFiles, long delay, boolean flushAtShutDown) {
             this.numMaxBackupFiles = numMaxBackupFiles;
-            this.delayInSec = delayInSec;
+            this.delay = delay;
             this.flushAtShutDown = flushAtShutDown;
         }
     }
@@ -352,7 +352,7 @@ public class PersistenceManager<T extends PersistableEnvelope> {
             timer = UserThread.runAfter(() -> {
                 persistNow(null);
                 UserThread.execute(() -> timer = null);
-            }, source.delayInSec, TimeUnit.SECONDS);
+            }, source.delay, TimeUnit.MILLISECONDS);
         }
     }
 
@@ -454,7 +454,7 @@ public class PersistenceManager<T extends PersistableEnvelope> {
                 ",\n     dir=" + dir +
                 ",\n     storageFile=" + storageFile +
                 ",\n     persistable=" + persistable +
-                ",\n     priority=" + source +
+                ",\n     source=" + source +
                 ",\n     usedTempFilePath=" + usedTempFilePath +
                 ",\n     persistenceRequested=" + persistenceRequested +
                 "\n}";
