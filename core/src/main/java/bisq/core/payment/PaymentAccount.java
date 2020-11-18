@@ -173,6 +173,10 @@ public abstract class PaymentAccount implements PersistablePayload {
         return paymentAccountPayload.getOwnerId();
     }
 
+    public boolean isCountryBasedPaymentAccount() {
+        return this instanceof CountryBasedPaymentAccount;
+    }
+
     public boolean isHalCashAccount() {
         return this instanceof HalCashAccount;
     }
