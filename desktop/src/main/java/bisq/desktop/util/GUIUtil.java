@@ -1115,6 +1115,10 @@ public class GUIUtil {
     }
 
     public static MaterialDesignIcon getIconForSignState(AccountAgeWitnessService.SignState state) {
+        if (state.equals(AccountAgeWitnessService.SignState.PEER_INITIAL)) {
+            return MaterialDesignIcon.CLOCK;
+        }
+
         return (state.equals(AccountAgeWitnessService.SignState.ARBITRATOR) ||
                 state.equals(AccountAgeWitnessService.SignState.PEER_SIGNER)) ?
                 MaterialDesignIcon.APPROVAL : MaterialDesignIcon.ALERT_CIRCLE_OUTLINE;
