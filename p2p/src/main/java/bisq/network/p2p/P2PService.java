@@ -536,7 +536,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         mailboxItemsByUid.putIfAbsent(uid, new ArrayList<>());
         mailboxItemsByUid.get(uid).add(mailboxItem);
         mailboxMessageList.add(mailboxItem);
-        persistenceManager.requestPersistence();
+        requestPersistence();
 
         NodeAddress sender = mailboxMessage.getSenderNodeAddress();
         log.info("Received a {} mailbox message with uid {} and senderAddress {}",
@@ -818,13 +818,17 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                         mailboxMessageList.remove(mailboxItem);
                     });
                     mailboxItemsByUid.remove(uid);
-                    persistenceManager.requestPersistence();
+                    requestPersistence();
                 }
             });
         } else {
             // In case the network was not ready yet we try again later
             UserThread.runAfter(() -> removeMailboxMsg(decryptedMessageWithPubKey), 30);
         }
+    }
+
+    private void requestPersistence() {
+        persistenceManager.requestPersistence();
     }
 
 
