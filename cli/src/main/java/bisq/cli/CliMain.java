@@ -450,23 +450,28 @@ public class CliMain {
                     return;
                 }
                 case createpaymentacct: {
-                    if (nonOptionArgs.size() < 5)
+                    if (nonOptionArgs.size() < 2)
                         throw new IllegalArgumentException(
-                                "incorrect parameter count, expecting payment method id,"
-                                        + " account name, account number, currency code");
+                                "incorrect parameter count, expecting path to payment account form");
 
-                    var paymentMethodId = nonOptionArgs.get(1);
-                    var accountName = nonOptionArgs.get(2);
-                    var accountNumber = nonOptionArgs.get(3);
-                    var currencyCode = nonOptionArgs.get(4);
+                    var paymentAccountFormPath = Paths.get(nonOptionArgs.get(1));
+                    if (!paymentAccountFormPath.toFile().exists())
+                        throw new IllegalStateException(
+                                format("%s could not be found", paymentAccountFormPath.toString()));
+
+                    String jsonString;
+                    try {
+                        jsonString = new String(Files.readAllBytes(paymentAccountFormPath));
+                    } catch (IOException e) {
+                        throw new IllegalStateException(
+                                format("could not read %s", paymentAccountFormPath.toString()));
+                    }
 
                     var request = CreatePaymentAccountRequest.newBuilder()
-                            .setPaymentMethodId(paymentMethodId)
-                            .setAccountName(accountName)
-                            .setAccountNumber(accountNumber)
-                            .setCurrencyCode(currencyCode).build();
+                            .setPaymentAccountForm(jsonString)
+                            .build();
                     paymentAccountsService.createPaymentAccount(request);
-                    out.printf("payment account %s saved", accountName);
+                    out.println("payment account saved");
                     return;
                 }
                 case getpaymentaccts: {
@@ -555,7 +560,9 @@ public class CliMain {
         return Method.valueOf(methodName.toLowerCase());
     }
 
-    private static void saveFileToDisk(String prefix, String suffix, String text) {
+    private static void saveFileToDisk(String prefix,
+                                       @SuppressWarnings("SameParameterValue") String suffix,
+                                       String text) {
         String timestamp = Long.toUnsignedString(new Date().getTime());
         String relativeFileName = prefix + "_" + timestamp + suffix;
         try {
@@ -604,7 +611,7 @@ public class CliMain {
             stream.format(rowFormat, "withdrawfunds", "trade id, bitcoin wallet address", "Withdraw received funds to external wallet address");
             stream.format(rowFormat, "getpaymentmethods", "", "Get list of supported payment account method ids");
             stream.format(rowFormat, "getpaymentacctform", "payment method id", "Get a new payment account form");
-            stream.format(rowFormat, "createpaymentacct", "account name, account number, currency code", "Create PerfectMoney dummy account");
+            stream.format(rowFormat, "createpaymentacct", "path to payment account form", "Create a new payment account");
             stream.format(rowFormat, "getpaymentaccts", "", "Get user payment accounts");
             stream.format(rowFormat, "lockwallet", "", "Remove wallet password from memory, locking the wallet");
             stream.format(rowFormat, "unlockwallet", "password timeout",

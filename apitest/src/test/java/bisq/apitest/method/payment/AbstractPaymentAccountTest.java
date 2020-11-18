@@ -2,6 +2,9 @@ package bisq.apitest.method.payment;
 
 import bisq.core.api.model.PaymentAccountForm;
 import bisq.core.locale.Res;
+import bisq.core.payment.PaymentAccount;
+
+import bisq.proto.grpc.GetPaymentAccountsRequest;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -16,6 +19,7 @@ import java.io.OutputStreamWriter;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -28,6 +32,7 @@ import static java.lang.System.getProperty;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 
@@ -95,7 +100,10 @@ public class AbstractPaymentAccountTest extends MethodTest {
         // A short cut over the API:
         // File emptyForm = PAYMENT_ACCOUNT_FORM.getPaymentAccountForm(paymentMethodId);
         emptyForm.deleteOnExit();
-        log.info("{} Empty form saved to {}", testName(testInfo), PAYMENT_ACCOUNT_FORM.getClickableURI(emptyForm));
+
+        if (log.isDebugEnabled())
+            log.debug("{} Empty form saved to {}", testName(testInfo), PAYMENT_ACCOUNT_FORM.getClickableURI(emptyForm));
+
         return emptyForm;
     }
 
@@ -137,5 +145,28 @@ public class AbstractPaymentAccountTest extends MethodTest {
             fail(format("Could not write json file from form entries %s", EXPECTED_FORM));
         }
         return tmpJsonForm;
+    }
+
+    protected final void verifyCommonFormEntries(PaymentAccount paymentAccount) {
+        // All PaymentAccount subclasses have paymentMethodId and an accountName fields.
+        assertNotNull(paymentAccount);
+        assertEquals(EXPECTED_FORM.get(PROPERTY_NAME_PAYMENT_METHOD_ID), paymentAccount.getPaymentMethod().getId());
+        assertTrue(paymentAccount.getCreationDate().getTime() > 0);
+        assertEquals(EXPECTED_FORM.get(PROPERTY_NAME_ACCOUNT_NAME), paymentAccount.getAccountName());
+    }
+
+    protected final void verifyAccountFiatCurrency(PaymentAccount paymentAccount, String expectedCurrencyCode) {
+        assertNotNull(paymentAccount.getSingleTradeCurrency());
+        assertEquals(expectedCurrencyCode, paymentAccount.getSingleTradeCurrency().getCode());
+    }
+
+    protected final void verifyUserPayloadHasPaymentAccountWithId(String paymentAccountId) {
+        var getPaymentAccountsRequest = GetPaymentAccountsRequest.newBuilder().build();
+        var reply = grpcStubs(alicedaemon)
+                .paymentAccountsService.getPaymentAccounts(getPaymentAccountsRequest);
+        Optional<protobuf.PaymentAccount> paymentAccount = reply.getPaymentAccountsList().stream()
+                .filter(a -> a.getId().equals(paymentAccountId))
+                .findFirst();
+        assertTrue(paymentAccount.isPresent());
     }
 }

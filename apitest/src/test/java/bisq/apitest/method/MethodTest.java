@@ -18,6 +18,7 @@
 package bisq.apitest.method;
 
 import bisq.core.api.model.PaymentAccountForm;
+import bisq.core.proto.CoreProtoResolver;
 
 import bisq.proto.grpc.AddressBalanceInfo;
 import bisq.proto.grpc.BalancesInfo;
@@ -65,7 +66,6 @@ import static bisq.apitest.config.BisqAppConfig.alicedaemon;
 import static bisq.apitest.config.BisqAppConfig.arbdaemon;
 import static bisq.apitest.config.BisqAppConfig.bobdaemon;
 import static bisq.common.app.DevEnv.DEV_PRIVILEGE_PRIV_KEY;
-import static bisq.core.payment.payload.PaymentMethod.PERFECT_MONEY;
 import static java.util.Arrays.stream;
 import static java.util.Comparator.comparing;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -88,6 +88,8 @@ public class MethodTest extends ApiTestCase {
 
     protected static PaymentAccount alicesDummyAcct;
     protected static PaymentAccount bobsDummyAcct;
+
+    private static final CoreProtoResolver CORE_PROTO_RESOLVER = new CoreProtoResolver();
 
     public static void startSupportingApps(boolean registerDisputeAgents,
                                            boolean generateBtcBlock,
@@ -280,16 +282,16 @@ public class MethodTest extends ApiTestCase {
         return jsonFile;
     }
 
-    protected final CreatePaymentAccountRequest createCreatePerfectMoneyPaymentAccountRequest(
-            String accountName,
-            String accountNumber,
-            String currencyCode) {
-        return CreatePaymentAccountRequest.newBuilder()
-                .setPaymentMethodId(PERFECT_MONEY.getId())
-                .setAccountName(accountName)
-                .setAccountNumber(accountNumber)
-                .setCurrencyCode(currencyCode)
+    protected final bisq.core.payment.PaymentAccount createPaymentAccount(BisqAppConfig bisqAppConfig,
+                                                                          String jsonString) {
+        var req = CreatePaymentAccountRequest.newBuilder()
+                .setPaymentAccountForm(jsonString)
                 .build();
+        var paymentAccountsService = grpcStubs(bisqAppConfig).paymentAccountsService;
+        // Normally, we can do asserts on the protos from the gRPC service, but in this
+        // case we need to return a bisq.core.payment.PaymentAccount so it can be cast
+        // to its sub type.
+        return fromProto(paymentAccountsService.createPaymentAccount(req).getPaymentAccount());
     }
 
     protected static PaymentAccount getDefaultPerfectDummyPaymentAccount(BisqAppConfig bisqAppConfig) {
@@ -356,10 +358,14 @@ public class MethodTest extends ApiTestCase {
                 .setRegistrationKey(DEV_PRIVILEGE_PRIV_KEY).build();
     }
 
-    @SuppressWarnings("ResultOfMethodCallIgnored")
+    @SuppressWarnings({"ResultOfMethodCallIgnored", "SameParameterValue"})
     protected static void registerDisputeAgents(BisqAppConfig bisqAppConfig) {
         var disputeAgentsService = grpcStubs(bisqAppConfig).disputeAgentsService;
         disputeAgentsService.registerDisputeAgent(createRegisterDisputeAgentRequest(MEDIATOR));
         disputeAgentsService.registerDisputeAgent(createRegisterDisputeAgentRequest(REFUND_AGENT));
+    }
+
+    private bisq.core.payment.PaymentAccount fromProto(protobuf.PaymentAccount proto) {
+        return bisq.core.payment.PaymentAccount.fromProto(proto, CORE_PROTO_RESOLVER);
     }
 }

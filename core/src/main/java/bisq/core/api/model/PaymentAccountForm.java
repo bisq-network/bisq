@@ -88,7 +88,8 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  * </pre>
  * </p>
  * (3) De-serialize the edited json account form:  Pass the edited json file to
- * {@link bisq.core.api.model.PaymentAccountForm#toPaymentAccount(File)},
+ * {@link bisq.core.api.model.PaymentAccountForm#toPaymentAccount(File)}, or
+ * a json string to {@link bisq.core.api.model.PaymentAccountForm#toPaymentAccount(String)}
  * and get a {@link bisq.core.payment.HalCashAccount} instance.
  * <pre>
  * PaymentAccount(
@@ -152,16 +153,27 @@ public class PaymentAccountForm {
     }
 
     /**
-     * De-serialize a PaymentAccount json form into a populated PaymentAccount instance.
+     * De-serialize a PaymentAccount json form into a new PaymentAccount instance.
      *
      * @param jsonForm The file representing a new payment account form.
      * @return A populated PaymentAccount subclass instance.
      */
+    @VisibleForTesting
     public PaymentAccount toPaymentAccount(File jsonForm) {
-        String json = toJsonString(jsonForm);
-        Class<? extends PaymentAccount> clazz = getPaymentAccountClassFromJson(json);
+        String jsonString = toJsonString(jsonForm);
+        return toPaymentAccount(jsonString);
+    }
+
+    /**
+     * De-serialize a PaymentAccount json string into a new PaymentAccount instance.
+     *
+     * @param jsonString The json data representing a new payment account form.
+     * @return A populated PaymentAccount subclass instance.
+     */
+    public PaymentAccount toPaymentAccount(String jsonString) {
+        Class<? extends PaymentAccount> clazz = getPaymentAccountClassFromJson(jsonString);
         Gson gson = gsonBuilder.registerTypeAdapter(clazz, new PaymentAccountTypeAdapter(clazz)).create();
-        return gson.fromJson(json, clazz);
+        return gson.fromJson(jsonString, clazz);
     }
 
     public String toJsonString(File jsonFile) {
@@ -174,6 +186,7 @@ public class PaymentAccountForm {
         }
     }
 
+    @VisibleForTesting
     public URI getClickableURI(File jsonForm) {
         try {
             return new URI("file",

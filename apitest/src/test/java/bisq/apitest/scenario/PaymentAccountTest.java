@@ -10,7 +10,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.TestMethodOrder;
 
+import static bisq.apitest.Scaffold.BitcoinCoreApp.bitcoind;
 import static bisq.apitest.config.BisqAppConfig.alicedaemon;
+import static bisq.apitest.config.BisqAppConfig.seednode;
 import static org.junit.jupiter.api.Assertions.fail;
 
 
@@ -26,7 +28,7 @@ public class PaymentAccountTest extends AbstractPaymentAccountTest {
     @BeforeAll
     public static void setUp() {
         try {
-            setUpScaffold(alicedaemon);
+            setUpScaffold(bitcoind, seednode, alicedaemon);
         } catch (Exception ex) {
             fail(ex);
         }
@@ -54,8 +56,6 @@ public class PaymentAccountTest extends AbstractPaymentAccountTest {
         test.testSepaAccountForm(testInfo);
         test.testSwishAccountForm(testInfo);
         test.testUSPostalMoneyOrderAccountForm(testInfo);
-
-        test.testDeprecatedCreatePerfectMoneyUSDPaymentAccount();
     }
 
     @AfterAll

@@ -17,15 +17,21 @@
 
 package bisq.apitest.method.payment;
 
-import bisq.proto.grpc.GetPaymentAccountsRequest;
-
-import protobuf.PaymentAccount;
-import protobuf.PerfectMoneyAccountPayload;
+import bisq.core.payment.AustraliaPayid;
+import bisq.core.payment.ChaseQuickPayAccount;
+import bisq.core.payment.ClearXchangeAccount;
+import bisq.core.payment.F2FAccount;
+import bisq.core.payment.HalCashAccount;
+import bisq.core.payment.JapanBankAccount;
+import bisq.core.payment.NationalBankAccount;
+import bisq.core.payment.SepaAccount;
+import bisq.core.payment.SwishAccount;
+import bisq.core.payment.USPostalMoneyOrderAccount;
+import bisq.core.payment.payload.BankAccountPayload;
 
 import java.io.File;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Objects;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -40,8 +46,7 @@ import org.junit.jupiter.api.TestMethodOrder;
 import static bisq.apitest.Scaffold.BitcoinCoreApp.bitcoind;
 import static bisq.apitest.config.BisqAppConfig.alicedaemon;
 import static bisq.core.payment.payload.PaymentMethod.*;
-import static java.util.Comparator.comparing;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.Assert.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 
@@ -49,9 +54,6 @@ import static org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 @Slf4j
 @TestMethodOrder(OrderAnnotation.class)
 public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
-
-    // TODO Test PaymentAccountForm's PaymentAccount toPaymentAccount(File jsonForm)
-    //  after replacement api method 'createpaymentacct' is implemented.
 
     @BeforeAll
     public static void setUp() {
@@ -76,7 +78,18 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         EXPECTED_FORM.put(PROPERTY_NAME_BANK_ACCOUNT_NAME, "Credit Union Australia");
 
         File completedForm = fillPaymentAccountForm();
-        log.info("Completed form: {}", PAYMENT_ACCOUNT_FORM.toJsonString(completedForm));
+        String jsonString = PAYMENT_ACCOUNT_FORM.toJsonString(completedForm);
+        if (log.isDebugEnabled())
+            log.debug("Completed form: {}", jsonString);
+
+        AustraliaPayid paymentAccount = (AustraliaPayid) createPaymentAccount(alicedaemon, jsonString);
+        verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
+        verifyAccountFiatCurrency(paymentAccount, "AUD");
+        verifyCommonFormEntries(paymentAccount);
+        assertEquals(EXPECTED_FORM.get(PROPERTY_NAME_PAY_ID), paymentAccount.getPayid());
+        assertEquals(EXPECTED_FORM.get(PROPERTY_NAME_BANK_ACCOUNT_NAME), paymentAccount.getBankAccountName());
+        if (log.isDebugEnabled())
+            log.debug("Deserialized {}: {}", paymentAccount.getClass().getSimpleName(), paymentAccount);
     }
 
     @Test
@@ -105,8 +118,28 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         EXPECTED_FORM.put(PROPERTY_NAME_NATIONAL_ACCOUNT_ID, "123456789");
 
         File completedForm = fillPaymentAccountForm();
-        log.info("Completed form: {}", PAYMENT_ACCOUNT_FORM.toJsonString(completedForm));
+        String jsonString = PAYMENT_ACCOUNT_FORM.toJsonString(completedForm);
+        if (log.isDebugEnabled())
+            log.debug("Completed form: {}", jsonString);
 
+        NationalBankAccount paymentAccount = (NationalBankAccount) createPaymentAccount(alicedaemon, jsonString);
+        verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
+        verifyAccountFiatCurrency(paymentAccount, "BRL");
+        verifyCommonFormEntries(paymentAccount);
+        assertEquals(EXPECTED_FORM.get(PROPERTY_NAME_COUNTRY),
+                Objects.requireNonNull(paymentAccount.getCountry()).code);
+
+        BankAccountPayload payload = (BankAccountPayload) paymentAccount.getPaymentAccountPayload();
+        assertEquals(EXPECTED_FORM.get(PROPERTY_NAME_ACCOUNT_NR), payload.getAccountNr());
+        // When no BankId is required, getBankId() returns bankName.
+        assertEquals(EXPECTED_FORM.get(PROPERTY_NAME_BANK_NAME), payload.getBankId());
+        assertEquals(EXPECTED_FORM.get(PROPERTY_NAME_BANK_NAME), payload.getBankName());
+        assertEquals(EXPECTED_FORM.get(PROPERTY_NAME_BRANCH_ID), payload.getBranchId());
+        assertEquals(EXPECTED_FORM.get(PROPERTY_NAME_HOLDER_NAME), payload.getHolderName());
+        assertEquals(EXPECTED_FORM.get(PROPERTY_NAME_HOLDER_TAX_ID), payload.getHolderTaxId());
+        assertEquals(EXPECTED_FORM.get(PROPERTY_NAME_NATIONAL_ACCOUNT_ID), payload.getNationalAccountId());
+        if (log.isDebugEnabled())
+            log.debug("Deserialized {}: {}", paymentAccount.getClass().getSimpleName(), paymentAccount);
     }
 
     @Test
@@ -123,8 +156,18 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         EXPECTED_FORM.put(PROPERTY_NAME_HOLDER_NAME, "John Doe");
 
         File completedForm = fillPaymentAccountForm();
-        log.info("Completed form: {}", PAYMENT_ACCOUNT_FORM.toJsonString(completedForm));
+        String jsonString = PAYMENT_ACCOUNT_FORM.toJsonString(completedForm);
+        if (log.isDebugEnabled())
+            log.debug("Completed form: {}", jsonString);
 
+        ChaseQuickPayAccount paymentAccount = (ChaseQuickPayAccount) createPaymentAccount(alicedaemon, jsonString);
+        verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
+        verifyAccountFiatCurrency(paymentAccount, "USD");
+        verifyCommonFormEntries(paymentAccount);
+        assertEquals(EXPECTED_FORM.get(PROPERTY_NAME_EMAIL), paymentAccount.getEmail());
+        assertEquals(EXPECTED_FORM.get(PROPERTY_NAME_HOLDER_NAME), paymentAccount.getHolderName());
+        if (log.isDebugEnabled())
+            log.debug("Deserialized {}: {}", paymentAccount.getClass().getSimpleName(), paymentAccount);
     }
 
     @Test
@@ -141,7 +184,18 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         EXPECTED_FORM.put(PROPERTY_NAME_HOLDER_NAME, "Jane Doe");
 
         File completedForm = fillPaymentAccountForm();
-        log.info("Completed form: {}", PAYMENT_ACCOUNT_FORM.toJsonString(completedForm));
+        String jsonString = PAYMENT_ACCOUNT_FORM.toJsonString(completedForm);
+        if (log.isDebugEnabled())
+            log.debug("Completed form: {}", jsonString);
+
+        ClearXchangeAccount paymentAccount = (ClearXchangeAccount) createPaymentAccount(alicedaemon, jsonString);
+        verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
+        verifyAccountFiatCurrency(paymentAccount, "USD");
+        verifyCommonFormEntries(paymentAccount);
+        assertEquals(EXPECTED_FORM.get(PROPERTY_NAME_EMAIL_OR_MOBILE_NR), paymentAccount.getEmailOrMobileNr());
+        assertEquals(EXPECTED_FORM.get(PROPERTY_NAME_HOLDER_NAME), paymentAccount.getHolderName());
+        if (log.isDebugEnabled())
+            log.debug("Deserialized {}: {}", paymentAccount.getClass().getSimpleName(), paymentAccount);
     }
 
     @Test
@@ -163,7 +217,21 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         EXPECTED_FORM.put(PROPERTY_NAME_EXTRA_INFO, "So fim de semana");
 
         File completedForm = fillPaymentAccountForm();
-        log.info("Completed form: {}", PAYMENT_ACCOUNT_FORM.toJsonString(completedForm));
+        String jsonString = PAYMENT_ACCOUNT_FORM.toJsonString(completedForm);
+        if (log.isDebugEnabled())
+            log.debug("Completed form: {}", jsonString);
+
+        F2FAccount paymentAccount = (F2FAccount) createPaymentAccount(alicedaemon, jsonString);
+        verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
+        verifyAccountFiatCurrency(paymentAccount, "BRL");
+        verifyCommonFormEntries(paymentAccount);
+        assertEquals(EXPECTED_FORM.get(PROPERTY_NAME_COUNTRY),
+                Objects.requireNonNull(paymentAccount.getCountry()).code);
+        assertEquals(EXPECTED_FORM.get(PROPERTY_NAME_CITY), paymentAccount.getCity());
+        assertEquals(EXPECTED_FORM.get(PROPERTY_NAME_CONTACT), paymentAccount.getContact());
+        assertEquals(EXPECTED_FORM.get(PROPERTY_NAME_EXTRA_INFO), paymentAccount.getExtraInfo());
+        if (log.isDebugEnabled())
+            log.debug("Deserialized {}: {}", paymentAccount.getClass().getSimpleName(), paymentAccount);
     }
 
     @Test
@@ -178,7 +246,17 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         EXPECTED_FORM.put(PROPERTY_NAME_MOBILE_NR, "798 123 456");
 
         File completedForm = fillPaymentAccountForm();
-        log.info("Completed form: {}", PAYMENT_ACCOUNT_FORM.toJsonString(completedForm));
+        String jsonString = PAYMENT_ACCOUNT_FORM.toJsonString(completedForm);
+        if (log.isDebugEnabled())
+            log.debug("Completed form: {}", jsonString);
+
+        HalCashAccount paymentAccount = (HalCashAccount) createPaymentAccount(alicedaemon, jsonString);
+        verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
+        verifyAccountFiatCurrency(paymentAccount, "EUR");
+        verifyCommonFormEntries(paymentAccount);
+        assertEquals(EXPECTED_FORM.get(PROPERTY_NAME_MOBILE_NR), paymentAccount.getMobileNr());
+        if (log.isDebugEnabled())
+            log.debug("Deserialized {}: {}", paymentAccount.getClass().getSimpleName(), paymentAccount);
     }
 
     @Test
@@ -205,7 +283,23 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         EXPECTED_FORM.put(PROPERTY_NAME_BANK_ACCOUNT_NUMBER, "8100-8727-0000");
 
         File completedForm = fillPaymentAccountForm();
-        log.info("Completed form: {}", PAYMENT_ACCOUNT_FORM.toJsonString(completedForm));
+        String jsonString = PAYMENT_ACCOUNT_FORM.toJsonString(completedForm);
+        if (log.isDebugEnabled())
+            log.debug("Completed form: {}", jsonString);
+
+        JapanBankAccount paymentAccount = (JapanBankAccount) createPaymentAccount(alicedaemon, jsonString);
+        verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
+        verifyAccountFiatCurrency(paymentAccount, "JPY");
+        verifyCommonFormEntries(paymentAccount);
+        assertEquals(EXPECTED_FORM.get(PROPERTY_NAME_BANK_CODE), paymentAccount.getBankCode());
+        assertEquals(EXPECTED_FORM.get(PROPERTY_NAME_BANK_NAME), paymentAccount.getBankName());
+        assertEquals(EXPECTED_FORM.get(PROPERTY_NAME_BANK_BRANCH_CODE), paymentAccount.getBankBranchCode());
+        assertEquals(EXPECTED_FORM.get(PROPERTY_NAME_BANK_BRANCH_NAME), paymentAccount.getBankBranchName());
+        assertEquals(EXPECTED_FORM.get(PROPERTY_NAME_BANK_ACCOUNT_NAME), paymentAccount.getBankAccountName());
+        assertEquals(EXPECTED_FORM.get(PROPERTY_NAME_BANK_ACCOUNT_TYPE), paymentAccount.getBankAccountType());
+        assertEquals(EXPECTED_FORM.get(PROPERTY_NAME_BANK_ACCOUNT_NUMBER), paymentAccount.getBankAccountNumber());
+        if (log.isDebugEnabled())
+            log.debug("Deserialized {}: {}", paymentAccount.getClass().getSimpleName(), paymentAccount);
     }
 
     @Test
@@ -226,7 +320,22 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         EXPECTED_FORM.put(PROPERTY_NAME_BIC, "909");
 
         File completedForm = fillPaymentAccountForm();
-        log.info("Completed form: {}", PAYMENT_ACCOUNT_FORM.toJsonString(completedForm));
+        String jsonString = PAYMENT_ACCOUNT_FORM.toJsonString(completedForm);
+        if (log.isDebugEnabled())
+            log.debug("Completed form: {}", jsonString);
+
+        SepaAccount paymentAccount = (SepaAccount) createPaymentAccount(alicedaemon, jsonString);
+        verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
+        assertEquals(EXPECTED_FORM.get(PROPERTY_NAME_COUNTRY), Objects.requireNonNull(paymentAccount.getCountry()).code);
+        verifyAccountFiatCurrency(paymentAccount, "EUR");
+        verifyCommonFormEntries(paymentAccount);
+        assertEquals(EXPECTED_FORM.get(PROPERTY_NAME_HOLDER_NAME), paymentAccount.getHolderName());
+        assertEquals(EXPECTED_FORM.get(PROPERTY_NAME_IBAN), paymentAccount.getIban());
+        assertEquals(EXPECTED_FORM.get(PROPERTY_NAME_BIC), paymentAccount.getBic());
+        // bankId == bic
+        assertEquals(EXPECTED_FORM.get(PROPERTY_NAME_BIC), paymentAccount.getBankId());
+        if (log.isDebugEnabled())
+            log.debug("Deserialized {}: {}", paymentAccount.getClass().getSimpleName(), paymentAccount);
     }
 
     @Test
@@ -243,8 +352,18 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         EXPECTED_FORM.put(PROPERTY_NAME_HOLDER_NAME, "Swish Account Holder");
 
         File completedForm = fillPaymentAccountForm();
-        log.info("Completed form: {}", PAYMENT_ACCOUNT_FORM.toJsonString(completedForm));
+        String jsonString = PAYMENT_ACCOUNT_FORM.toJsonString(completedForm);
+        if (log.isDebugEnabled())
+            log.debug("Completed form: {}", jsonString);
 
+        SwishAccount paymentAccount = (SwishAccount) createPaymentAccount(alicedaemon, jsonString);
+        verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
+        verifyAccountFiatCurrency(paymentAccount, "SEK");
+        verifyCommonFormEntries(paymentAccount);
+        assertEquals(EXPECTED_FORM.get(PROPERTY_NAME_MOBILE_NR), paymentAccount.getMobileNr());
+        assertEquals(EXPECTED_FORM.get(PROPERTY_NAME_HOLDER_NAME), paymentAccount.getHolderName());
+        if (log.isDebugEnabled())
+            log.debug("Deserialized {}: {}", paymentAccount.getClass().getSimpleName(), paymentAccount);
     }
 
     @Test
@@ -261,43 +380,18 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         EXPECTED_FORM.put(PROPERTY_NAME_POSTAL_ADDRESS, "000 Westwood Terrace Austin, TX 78700");
 
         File completedForm = fillPaymentAccountForm();
-        log.info("Completed form: {}", PAYMENT_ACCOUNT_FORM.toJsonString(completedForm));
-    }
+        String jsonString = PAYMENT_ACCOUNT_FORM.toJsonString(completedForm);
+        if (log.isDebugEnabled())
+            log.debug("Completed form: {}", jsonString);
 
-    @Test
-    public void testDeprecatedCreatePerfectMoneyUSDPaymentAccount() {
-        String PERFECT_MONEY_ACCT_NAME = "Perfect Money USD";
-        String PERFECT_MONEY_ACCT_NUMBER = "0123456789";
-
-        var perfectMoneyPaymentAccountRequest = createCreatePerfectMoneyPaymentAccountRequest(
-                PERFECT_MONEY_ACCT_NAME,
-                PERFECT_MONEY_ACCT_NUMBER,
-                "USD");
-        //noinspection ResultOfMethodCallIgnored
-        grpcStubs(alicedaemon).paymentAccountsService.createPaymentAccount(perfectMoneyPaymentAccountRequest);
-
-        var getPaymentAccountsRequest = GetPaymentAccountsRequest.newBuilder().build();
-        var reply = grpcStubs(alicedaemon).paymentAccountsService.getPaymentAccounts(getPaymentAccountsRequest);
-
-        // The daemon is running against the regtest/dao setup files, and was set up with
-        // two dummy accounts ("PerfectMoney dummy", "ETH dummy") before any tests ran.
-        // We just added 1 test account, making 3 total.
-        assertEquals(3, reply.getPaymentAccountsCount());
-
-        // Sort the returned list by creation date; the last item in the sorted
-        // list will be the payment acct we just created.
-        List<PaymentAccount> paymentAccountList = reply.getPaymentAccountsList().stream()
-                .sorted(comparing(PaymentAccount::getCreationDate))
-                .collect(Collectors.toList());
-        PaymentAccount paymentAccount = paymentAccountList.get(2);
-        PerfectMoneyAccountPayload perfectMoneyAccount = paymentAccount
-                .getPaymentAccountPayload()
-                .getPerfectMoneyAccountPayload();
-
-        assertEquals(PERFECT_MONEY_ACCT_NAME, paymentAccount.getAccountName());
-        assertEquals("USD",
-                paymentAccount.getSelectedTradeCurrency().getFiatCurrency().getCurrency().getCurrencyCode());
-        assertEquals(PERFECT_MONEY_ACCT_NUMBER, perfectMoneyAccount.getAccountNr());
+        USPostalMoneyOrderAccount paymentAccount = (USPostalMoneyOrderAccount) createPaymentAccount(alicedaemon, jsonString);
+        verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
+        verifyAccountFiatCurrency(paymentAccount, "USD");
+        verifyCommonFormEntries(paymentAccount);
+        assertEquals(EXPECTED_FORM.get(PROPERTY_NAME_HOLDER_NAME), paymentAccount.getHolderName());
+        assertEquals(EXPECTED_FORM.get(PROPERTY_NAME_POSTAL_ADDRESS), paymentAccount.getPostalAddress());
+        if (log.isDebugEnabled())
+            log.debug("Deserialized {}: {}", paymentAccount.getClass().getSimpleName(), paymentAccount);
     }
 
     @AfterAll

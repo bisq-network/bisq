@@ -132,14 +132,11 @@ service PaymentAccounts {
 }
 
 message CreatePaymentAccountRequest {
-    string paymentMethodId = 1;
-    string accountName = 2;
-    string accountNumber = 3;
-    // TODO  Support all currencies. Maybe add a repeated and if only one is used its a singletonList.
-    string currencyCode = 4;
+    string paymentAccountForm = 1;
 }
 
 message CreatePaymentAccountReply {
+    PaymentAccount paymentAccount = 1;
 }
 
 message GetPaymentAccountsRequest {

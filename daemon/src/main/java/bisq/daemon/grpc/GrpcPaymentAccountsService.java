@@ -50,11 +50,10 @@ class GrpcPaymentAccountsService extends PaymentAccountsGrpc.PaymentAccountsImpl
     @Override
     public void createPaymentAccount(CreatePaymentAccountRequest req,
                                      StreamObserver<CreatePaymentAccountReply> responseObserver) {
-        coreApi.createPaymentAccount(req.getPaymentMethodId(),
-                req.getAccountName(),
-                req.getAccountNumber(),
-                req.getCurrencyCode());
-        var reply = CreatePaymentAccountReply.newBuilder().build();
+        PaymentAccount paymentAccount = coreApi.createPaymentAccount(req.getPaymentAccountForm());
+        var reply = CreatePaymentAccountReply.newBuilder()
+                .setPaymentAccount(paymentAccount.toProtoMessage())
+                .build();
         responseObserver.onNext(reply);
         responseObserver.onCompleted();
     }
