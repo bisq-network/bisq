@@ -48,6 +48,8 @@ public class SellerAsMakerFinalizesDepositTx extends TradeTask {
 
             processModel.setDepositTx(myDepositTx);
 
+            processModel.getTradeManager().requestPersistence();
+
             complete();
         } catch (Throwable t) {
             failed(t);
