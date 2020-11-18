@@ -27,6 +27,7 @@ import bisq.proto.grpc.GetBalancesRequest;
 import bisq.proto.grpc.GetFundingAddressesRequest;
 import bisq.proto.grpc.GetOfferRequest;
 import bisq.proto.grpc.GetOffersRequest;
+import bisq.proto.grpc.GetPaymentAccountFormRequest;
 import bisq.proto.grpc.GetPaymentAccountsRequest;
 import bisq.proto.grpc.GetPaymentMethodsRequest;
 import bisq.proto.grpc.GetTradeRequest;
@@ -47,11 +48,18 @@ import io.grpc.StatusRuntimeException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.io.PrintWriter;
 
 import java.math.BigDecimal;
 
+import java.util.Date;
 import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
@@ -88,6 +96,7 @@ public class CliMain {
         keepfunds,
         withdrawfunds,
         getpaymentmethods,
+        getpaymentacctform,
         createpaymentacct,
         getpaymentaccts,
         getversion,
@@ -422,6 +431,23 @@ public class CliMain {
                     var request = GetPaymentMethodsRequest.newBuilder().build();
                     var reply = paymentAccountsService.getPaymentMethods(request);
                     reply.getPaymentMethodsList().forEach(p -> out.println(p.getId()));
+                    return;
+                }
+                case getpaymentacctform: {
+                    if (nonOptionArgs.size() < 2)
+                        throw new IllegalArgumentException("incorrect parameter count, expecting payment method id");
+
+                    var paymentMethodId = nonOptionArgs.get(1);
+                    var request = GetPaymentAccountFormRequest.newBuilder()
+                            .setPaymentMethodId(paymentMethodId)
+                            .build();
+                    String jsonString = paymentAccountsService.getPaymentAccountForm(request)
+                            .getPaymentAccountFormJson();
+                    out.printf("new payment account form: %s%n", jsonString);
+                    saveFileToDisk(paymentMethodId.toLowerCase(),
+                            ".json",
+                            jsonString);
+                    return;
                 }
                 case createpaymentacct: {
                     if (nonOptionArgs.size() < 5)
@@ -529,6 +555,23 @@ public class CliMain {
         return Method.valueOf(methodName.toLowerCase());
     }
 
+    private static void saveFileToDisk(String prefix, String suffix, String text) {
+        String timestamp = Long.toUnsignedString(new Date().getTime());
+        String relativeFileName = prefix + "_" + timestamp + suffix;
+        try {
+            Path path = Paths.get(relativeFileName);
+            if (!Files.exists(path)) {
+                try (PrintWriter out = new PrintWriter(path.toString())) {
+                    out.println(text);
+                }
+            } else {
+                throw new IllegalStateException(format("could not overwrite existing file '%s'", relativeFileName));
+            }
+        } catch (FileNotFoundException e) {
+            throw new IllegalStateException(format("could not create file '%s'", relativeFileName));
+        }
+    }
+
     private static void printHelp(OptionParser parser, PrintStream stream) {
         try {
             stream.println("Bisq RPC Client");
@@ -560,6 +603,7 @@ public class CliMain {
             stream.format(rowFormat, "keepfunds", "trade id", "Keep received funds in Bisq wallet");
             stream.format(rowFormat, "withdrawfunds", "trade id, bitcoin wallet address", "Withdraw received funds to external wallet address");
             stream.format(rowFormat, "getpaymentmethods", "", "Get list of supported payment account method ids");
+            stream.format(rowFormat, "getpaymentacctform", "payment method id", "Get a new payment account form");
             stream.format(rowFormat, "createpaymentacct", "account name, account number, currency code", "Create PerfectMoney dummy account");
             stream.format(rowFormat, "getpaymentaccts", "", "Get user payment accounts");
             stream.format(rowFormat, "lockwallet", "", "Remove wallet password from memory, locking the wallet");
