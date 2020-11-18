@@ -261,8 +261,6 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
         } else {
             ownerPubKey = null;
         }
-
-        log.error("Filter");
     }
 
     @Override
