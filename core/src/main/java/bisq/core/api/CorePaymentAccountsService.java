@@ -18,6 +18,7 @@
 package bisq.core.api;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
+import bisq.core.api.model.PaymentAccountForm;
 import bisq.core.locale.FiatCurrency;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.PaymentAccountFactory;
@@ -28,6 +29,8 @@ import bisq.core.user.User;
 import bisq.common.config.Config;
 
 import javax.inject.Inject;
+
+import java.io.File;
 
 import java.util.Comparator;
 import java.util.List;
@@ -44,14 +47,17 @@ class CorePaymentAccountsService {
 
     private final Config config;
     private final AccountAgeWitnessService accountAgeWitnessService;
+    private final PaymentAccountForm paymentAccountForm;
     private final User user;
 
     @Inject
     public CorePaymentAccountsService(Config config,
                                       AccountAgeWitnessService accountAgeWitnessService,
+                                      PaymentAccountForm paymentAccountForm,
                                       User user) {
         this.config = config;
         this.accountAgeWitnessService = accountAgeWitnessService;
+        this.paymentAccountForm = paymentAccountForm;
         this.user = user;
     }
 
@@ -83,6 +89,15 @@ class CorePaymentAccountsService {
                 .filter(paymentMethod -> !paymentMethod.isAsset())
                 .sorted(Comparator.comparing(PaymentMethod::getId))
                 .collect(Collectors.toList());
+    }
+
+    String getPaymentAccountFormAsString(String paymentMethodId) {
+        File jsonForm = getPaymentAccountForm(paymentMethodId);
+        return paymentAccountForm.toJsonString(jsonForm);
+    }
+
+    File getPaymentAccountForm(String paymentMethodId) {
+        return paymentAccountForm.getPaymentAccountForm(paymentMethodId);
     }
 
     private PaymentAccount getNewPaymentAccount(String paymentMethodId,

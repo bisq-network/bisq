@@ -127,6 +127,8 @@ service PaymentAccounts {
     }
     rpc GetPaymentMethods (GetPaymentMethodsRequest) returns (GetPaymentMethodsReply) {
     }
+    rpc GetPaymentAccountForm (GetPaymentAccountFormRequest) returns (GetPaymentAccountFormReply) {
+    }
 }
 
 message CreatePaymentAccountRequest {
@@ -152,6 +154,14 @@ message GetPaymentMethodsRequest {
 
 message GetPaymentMethodsReply {
     repeated PaymentMethod paymentMethods = 1;
+}
+
+message GetPaymentAccountFormRequest {
+    string paymentMethodId = 1;
+}
+
+message GetPaymentAccountFormReply {
+    string paymentAccountFormJson = 1;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////

@@ -23,6 +23,8 @@ import bisq.core.payment.payload.PaymentMethod;
 
 import bisq.proto.grpc.CreatePaymentAccountReply;
 import bisq.proto.grpc.CreatePaymentAccountRequest;
+import bisq.proto.grpc.GetPaymentAccountFormReply;
+import bisq.proto.grpc.GetPaymentAccountFormRequest;
 import bisq.proto.grpc.GetPaymentAccountsReply;
 import bisq.proto.grpc.GetPaymentAccountsRequest;
 import bisq.proto.grpc.GetPaymentMethodsReply;
@@ -77,6 +79,17 @@ class GrpcPaymentAccountsService extends PaymentAccountsGrpc.PaymentAccountsImpl
                 .collect(Collectors.toList());
         var reply = GetPaymentMethodsReply.newBuilder()
                 .addAllPaymentMethods(paymentMethods).build();
+        responseObserver.onNext(reply);
+        responseObserver.onCompleted();
+    }
+
+    @Override
+    public void getPaymentAccountForm(GetPaymentAccountFormRequest req,
+                                      StreamObserver<GetPaymentAccountFormReply> responseObserver) {
+        var paymentAccountFormJson = coreApi.getPaymentAccountForm(req.getPaymentMethodId());
+        var reply = GetPaymentAccountFormReply.newBuilder()
+                .setPaymentAccountFormJson(paymentAccountFormJson)
+                .build();
         responseObserver.onNext(reply);
         responseObserver.onCompleted();
     }

@@ -173,6 +173,10 @@ public class CoreApi {
         return paymentAccountsService.getFiatPaymentMethods();
     }
 
+    public String getPaymentAccountForm(String paymentMethodId) {
+        return paymentAccountsService.getPaymentAccountFormAsString(paymentMethodId);
+    }
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Prices
     ///////////////////////////////////////////////////////////////////////////////////////////
