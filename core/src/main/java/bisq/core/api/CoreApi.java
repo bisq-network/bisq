@@ -169,8 +169,8 @@ public class CoreApi {
         return paymentAccountsService.getPaymentAccounts();
     }
 
-    public List<PaymentMethod> getPaymentMethodIds() {
-        return paymentAccountsService.getPaymentMethodIds();
+    public List<PaymentMethod> getPaymentMethods() {
+        return paymentAccountsService.getPaymentMethods();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

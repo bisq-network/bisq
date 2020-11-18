@@ -78,8 +78,8 @@ class CorePaymentAccountsService {
         return user.getPaymentAccounts();
     }
 
-    List<PaymentMethod> getPaymentMethodIds() {
-        return getPaymentMethods().stream()
+    List<PaymentMethod> getPaymentMethods() {
+        return PaymentMethod.getPaymentMethods().stream()
                 .filter(paymentMethod -> !paymentMethod.isAsset())
                 .sorted(Comparator.comparing(PaymentMethod::getId))
                 .collect(Collectors.toList());
