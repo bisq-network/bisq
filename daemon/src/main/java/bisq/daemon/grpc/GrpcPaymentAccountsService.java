@@ -72,7 +72,7 @@ class GrpcPaymentAccountsService extends PaymentAccountsGrpc.PaymentAccountsImpl
     @Override
     public void getPaymentMethods(GetPaymentMethodsRequest req,
                                   StreamObserver<GetPaymentMethodsReply> responseObserver) {
-        var paymentMethods = coreApi.getPaymentMethods().stream()
+        var paymentMethods = coreApi.getFiatPaymentMethods().stream()
                 .map(PaymentMethod::toProtoMessage)
                 .collect(Collectors.toList());
         var reply = GetPaymentMethodsReply.newBuilder()
