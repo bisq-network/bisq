@@ -7,12 +7,10 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.TestMethodOrder;
 
-import static bisq.apitest.Scaffold.BitcoinCoreApp.bitcoind;
 import static bisq.apitest.config.BisqAppConfig.alicedaemon;
-import static bisq.apitest.config.BisqAppConfig.arbdaemon;
-import static bisq.apitest.config.BisqAppConfig.seednode;
 import static org.junit.jupiter.api.Assertions.fail;
 
 
@@ -28,7 +26,8 @@ public class PaymentAccountTest extends MethodTest {
     @BeforeAll
     public static void setUp() {
         try {
-            setUpScaffold(bitcoind, seednode, arbdaemon, alicedaemon);
+            // setUpScaffold(bitcoind, seednode, arbdaemon, alicedaemon);
+            setUpScaffold(alicedaemon);
         } catch (Exception ex) {
             fail(ex);
         }
@@ -43,9 +42,21 @@ public class PaymentAccountTest extends MethodTest {
 
     @Test
     @Order(2)
-    public void testCreatePaymentAccount() {
+    public void testCreatePaymentAccount(TestInfo testInfo) {
         CreatePaymentAccountTest test = new CreatePaymentAccountTest();
-        test.testCreatePerfectMoneyUSDPaymentAccount();
+
+        test.testCreateAustraliaPayidAccount(testInfo);
+        test.testBrazilNationalBankAccountForm(testInfo);
+        test.testChaseQuickPayAccountForm(testInfo);
+        test.testClearXChangeAccountForm(testInfo);
+        test.testF2FAccountForm(testInfo);
+        test.testHalCashAccountForm(testInfo);
+        test.testJapanBankAccountForm(testInfo);
+        test.testSepaAccountForm(testInfo);
+        test.testSwishAccountForm(testInfo);
+        test.testUSPostalMoneyOrderAccountForm(testInfo);
+
+        test.testDeprecatedCreatePerfectMoneyUSDPaymentAccount();
     }
 
     @AfterAll

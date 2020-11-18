@@ -17,6 +17,8 @@
 
 package bisq.apitest.method;
 
+import bisq.core.api.model.PaymentAccountForm;
+
 import bisq.proto.grpc.AddressBalanceInfo;
 import bisq.proto.grpc.BalancesInfo;
 import bisq.proto.grpc.BsqBalanceInfo;
@@ -29,6 +31,7 @@ import bisq.proto.grpc.GetAddressBalanceRequest;
 import bisq.proto.grpc.GetBalancesRequest;
 import bisq.proto.grpc.GetFundingAddressesRequest;
 import bisq.proto.grpc.GetOfferRequest;
+import bisq.proto.grpc.GetPaymentAccountFormRequest;
 import bisq.proto.grpc.GetPaymentAccountsRequest;
 import bisq.proto.grpc.GetPaymentMethodsRequest;
 import bisq.proto.grpc.GetTradeRequest;
@@ -48,6 +51,12 @@ import bisq.proto.grpc.WithdrawFundsRequest;
 
 import protobuf.PaymentAccount;
 import protobuf.PaymentMethod;
+
+import java.nio.charset.StandardCharsets;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintWriter;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -250,6 +259,25 @@ public class MethodTest extends ApiTestCase {
     protected final List<PaymentMethod> getPaymentMethods(BisqAppConfig bisqAppConfig) {
         var req = GetPaymentMethodsRequest.newBuilder().build();
         return grpcStubs(bisqAppConfig).paymentAccountsService.getPaymentMethods(req).getPaymentMethodsList();
+    }
+
+    protected final File getPaymentAccountForm(BisqAppConfig bisqAppConfig, String paymentMethodId) {
+        // We take seemingly unnecessary steps to get a File object, but the point is to
+        // test the API, and we do not directly ask bisq.core.api.model.PaymentAccountForm
+        // for an empty json form (file).
+        var req = GetPaymentAccountFormRequest.newBuilder()
+                .setPaymentMethodId(paymentMethodId)
+                .build();
+        String jsonString = grpcStubs(bisqAppConfig).paymentAccountsService.getPaymentAccountForm(req)
+                .getPaymentAccountFormJson();
+        // Write the json string to a file here in the test case.
+        File jsonFile = PaymentAccountForm.getTmpJsonFile(paymentMethodId);
+        try (PrintWriter out = new PrintWriter(jsonFile, StandardCharsets.UTF_8)) {
+            out.println(jsonString);
+        } catch (IOException ex) {
+            fail("Could not create tmp payment account form.", ex);
+        }
+        return jsonFile;
     }
 
     protected final CreatePaymentAccountRequest createCreatePerfectMoneyPaymentAccountRequest(
