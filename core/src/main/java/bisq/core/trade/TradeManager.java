@@ -433,6 +433,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
 
                         ((TakerProtocol) tradeProtocol).onTakeOffer();
                         tradeResultHandler.handleResult(trade);
+                        requestPersistence();
                     }
                 },
                 errorMessageHandler);

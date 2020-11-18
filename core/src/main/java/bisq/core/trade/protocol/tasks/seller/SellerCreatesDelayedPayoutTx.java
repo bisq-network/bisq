@@ -56,6 +56,8 @@ public class SellerCreatesDelayedPayoutTx extends TradeTask {
 
             processModel.setPreparedDelayedPayoutTx(preparedDelayedPayoutTx);
 
+            processModel.getTradeManager().requestPersistence();
+
             complete();
         } catch (Throwable t) {
             failed(t);

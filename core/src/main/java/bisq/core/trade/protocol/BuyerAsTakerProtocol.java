@@ -65,6 +65,7 @@ public class BuyerAsTakerProtocol extends BuyerProtocol implements TakerProtocol
 
         Offer offer = checkNotNull(trade.getOffer());
         processModel.getTradingPeer().setPubKeyRing(offer.getPubKeyRing());
+        processModel.getTradeManager().requestPersistence();
     }
 
 
@@ -83,7 +84,10 @@ public class BuyerAsTakerProtocol extends BuyerProtocol implements TakerProtocol
                         BuyerAsTakerCreatesDepositTxInputs.class,
                         TakerSendInputsForDepositTxRequest.class)
                         .withTimeout(30))
-                .run(() -> processModel.setTempTradingPeerNodeAddress(trade.getTradingPeerNodeAddress()))
+                .run(() -> {
+                    processModel.setTempTradingPeerNodeAddress(trade.getTradingPeerNodeAddress());
+                    processModel.getTradeManager().requestPersistence();
+                })
                 .executeTasks();
     }
 
