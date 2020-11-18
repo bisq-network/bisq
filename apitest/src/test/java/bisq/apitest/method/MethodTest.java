@@ -365,7 +365,7 @@ public class MethodTest extends ApiTestCase {
         disputeAgentsService.registerDisputeAgent(createRegisterDisputeAgentRequest(REFUND_AGENT));
     }
 
-    private bisq.core.payment.PaymentAccount fromProto(protobuf.PaymentAccount proto) {
+    private bisq.core.payment.PaymentAccount fromProto(PaymentAccount proto) {
         return bisq.core.payment.PaymentAccount.fromProto(proto, CORE_PROTO_RESOLVER);
     }
 }
