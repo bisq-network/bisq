@@ -29,7 +29,10 @@ import bisq.common.config.Config;
 
 import javax.inject.Inject;
 
+import java.util.Comparator;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -73,6 +76,13 @@ class CorePaymentAccountsService {
 
     Set<PaymentAccount> getPaymentAccounts() {
         return user.getPaymentAccounts();
+    }
+
+    List<PaymentMethod> getPaymentMethods() {
+        return PaymentMethod.getPaymentMethods().stream()
+                .filter(paymentMethod -> !paymentMethod.isAsset())
+                .sorted(Comparator.comparing(PaymentMethod::getId))
+                .collect(Collectors.toList());
     }
 
     private PaymentAccount getNewPaymentAccount(String paymentMethodId,

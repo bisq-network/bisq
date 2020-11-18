@@ -125,6 +125,8 @@ service PaymentAccounts {
     }
     rpc GetPaymentAccounts (GetPaymentAccountsRequest) returns (GetPaymentAccountsReply) {
     }
+    rpc GetPaymentMethods (GetPaymentMethodsRequest) returns (GetPaymentMethodsReply) {
+    }
 }
 
 message CreatePaymentAccountRequest {
@@ -143,6 +145,13 @@ message GetPaymentAccountsRequest {
 
 message GetPaymentAccountsReply {
     repeated PaymentAccount paymentAccounts = 1;
+}
+
+message GetPaymentMethodsRequest {
+}
+
+message GetPaymentMethodsReply {
+    repeated PaymentMethod paymentMethods = 1;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////

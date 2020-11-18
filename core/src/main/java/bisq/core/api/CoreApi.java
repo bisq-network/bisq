@@ -24,6 +24,7 @@ import bisq.core.monetary.Price;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.payment.PaymentAccount;
+import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.trade.Trade;
 import bisq.core.trade.statistics.TradeStatistics3;
 import bisq.core.trade.statistics.TradeStatisticsManager;
@@ -166,6 +167,10 @@ public class CoreApi {
 
     public Set<PaymentAccount> getPaymentAccounts() {
         return paymentAccountsService.getPaymentAccounts();
+    }
+
+    public List<PaymentMethod> getPaymentMethods() {
+        return paymentAccountsService.getPaymentMethods();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

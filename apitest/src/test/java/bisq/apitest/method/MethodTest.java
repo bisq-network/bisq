@@ -30,6 +30,7 @@ import bisq.proto.grpc.GetBalancesRequest;
 import bisq.proto.grpc.GetFundingAddressesRequest;
 import bisq.proto.grpc.GetOfferRequest;
 import bisq.proto.grpc.GetPaymentAccountsRequest;
+import bisq.proto.grpc.GetPaymentMethodsRequest;
 import bisq.proto.grpc.GetTradeRequest;
 import bisq.proto.grpc.GetUnusedBsqAddressRequest;
 import bisq.proto.grpc.KeepFundsRequest;
@@ -46,7 +47,9 @@ import bisq.proto.grpc.UnlockWalletRequest;
 import bisq.proto.grpc.WithdrawFundsRequest;
 
 import protobuf.PaymentAccount;
+import protobuf.PaymentMethod;
 
+import java.util.List;
 import java.util.stream.Collectors;
 
 import static bisq.apitest.config.BisqAppConfig.alicedaemon;
@@ -242,6 +245,11 @@ public class MethodTest extends ApiTestCase {
                 .findFirst()
                 .get()
                 .getAddress();
+    }
+
+    protected final List<PaymentMethod> getPaymentMethods(BisqAppConfig bisqAppConfig) {
+        var req = GetPaymentMethodsRequest.newBuilder().build();
+        return grpcStubs(bisqAppConfig).paymentAccountsService.getPaymentMethods(req).getPaymentMethodsList();
     }
 
     protected final CreatePaymentAccountRequest createCreatePerfectMoneyPaymentAccountRequest(

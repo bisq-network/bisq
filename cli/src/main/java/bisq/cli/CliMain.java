@@ -28,6 +28,7 @@ import bisq.proto.grpc.GetFundingAddressesRequest;
 import bisq.proto.grpc.GetOfferRequest;
 import bisq.proto.grpc.GetOffersRequest;
 import bisq.proto.grpc.GetPaymentAccountsRequest;
+import bisq.proto.grpc.GetPaymentMethodsRequest;
 import bisq.proto.grpc.GetTradeRequest;
 import bisq.proto.grpc.GetUnusedBsqAddressRequest;
 import bisq.proto.grpc.GetVersionRequest;
@@ -86,6 +87,7 @@ public class CliMain {
         confirmpaymentreceived,
         keepfunds,
         withdrawfunds,
+        getpaymentmethods,
         createpaymentacct,
         getpaymentaccts,
         getversion,
@@ -416,6 +418,11 @@ public class CliMain {
                     out.printf("funds from trade '%s' sent to btc address '%s'", tradeId, address);
                     return;
                 }
+                case getpaymentmethods: {
+                    var request = GetPaymentMethodsRequest.newBuilder().build();
+                    var reply = paymentAccountsService.getPaymentMethods(request);
+                    reply.getPaymentMethodsList().forEach(out::println);
+                }
                 case createpaymentacct: {
                     if (nonOptionArgs.size() < 5)
                         throw new IllegalArgumentException(
@@ -552,6 +559,7 @@ public class CliMain {
             stream.format(rowFormat, "confirmpaymentreceived", "trade id", "Confirm payment received");
             stream.format(rowFormat, "keepfunds", "trade id", "Keep received funds in Bisq wallet");
             stream.format(rowFormat, "withdrawfunds", "trade id, bitcoin wallet address", "Withdraw received funds to external wallet address");
+            stream.format(rowFormat, "getpaymentmethods", "", "Get list of supported payment account method ids");
             stream.format(rowFormat, "createpaymentacct", "account name, account number, currency code", "Create PerfectMoney dummy account");
             stream.format(rowFormat, "getpaymentaccts", "", "Get user payment accounts");
             stream.format(rowFormat, "lockwallet", "", "Remove wallet password from memory, locking the wallet");

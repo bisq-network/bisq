@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.apitest.method;
+package bisq.apitest.method.payment;
 
 import bisq.proto.grpc.GetPaymentAccountsRequest;
 
@@ -40,6 +40,10 @@ import static java.util.Comparator.comparing;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
+
+
+
+import bisq.apitest.method.MethodTest;
 
 @Disabled
 @Slf4j

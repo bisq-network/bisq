@@ -19,11 +19,14 @@ package bisq.daemon.grpc;
 
 import bisq.core.api.CoreApi;
 import bisq.core.payment.PaymentAccount;
+import bisq.core.payment.payload.PaymentMethod;
 
 import bisq.proto.grpc.CreatePaymentAccountReply;
 import bisq.proto.grpc.CreatePaymentAccountRequest;
 import bisq.proto.grpc.GetPaymentAccountsReply;
 import bisq.proto.grpc.GetPaymentAccountsRequest;
+import bisq.proto.grpc.GetPaymentMethodsReply;
+import bisq.proto.grpc.GetPaymentMethodsRequest;
 import bisq.proto.grpc.PaymentAccountsGrpc;
 
 import io.grpc.stub.StreamObserver;
@@ -62,6 +65,18 @@ class GrpcPaymentAccountsService extends PaymentAccountsGrpc.PaymentAccountsImpl
                 .collect(Collectors.toList());
         var reply = GetPaymentAccountsReply.newBuilder()
                 .addAllPaymentAccounts(paymentAccounts).build();
+        responseObserver.onNext(reply);
+        responseObserver.onCompleted();
+    }
+
+    @Override
+    public void getPaymentMethods(GetPaymentMethodsRequest req,
+                                  StreamObserver<GetPaymentMethodsReply> responseObserver) {
+        var paymentMethods = coreApi.getPaymentMethods().stream()
+                .map(PaymentMethod::toProtoMessage)
+                .collect(Collectors.toList());
+        var reply = GetPaymentMethodsReply.newBuilder()
+                .addAllPaymentMethods(paymentMethods).build();
         responseObserver.onNext(reply);
         responseObserver.onCompleted();
     }
