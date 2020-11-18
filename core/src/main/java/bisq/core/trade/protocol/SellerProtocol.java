@@ -141,7 +141,10 @@ public abstract class SellerProtocol extends DisputeProtocol {
                                     errorMessageHandler.handleErrorMessage(errorMessage);
                                     handleTaskRunnerFault(event, errorMessage);
                                 })))
-                .run(() -> trade.setState(Trade.State.SELLER_CONFIRMED_IN_UI_FIAT_PAYMENT_RECEIPT))
+                .run(() -> {
+                    trade.setState(Trade.State.SELLER_CONFIRMED_IN_UI_FIAT_PAYMENT_RECEIPT);
+                    processModel.getTradeManager().requestPersistence();
+                })
                 .executeTasks();
     }
 

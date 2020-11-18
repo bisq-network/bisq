@@ -297,6 +297,8 @@ public abstract class TradeProtocol implements DecryptedDirectMessageListener, D
             log.error("Timeout reached. TradeID={}, state={}, timeoutSec={}",
                     trade.getId(), trade.stateProperty().get(), timeoutSec);
             trade.setErrorMessage("Timeout reached. Protocol did not complete in " + timeoutSec + " sec.");
+
+            processModel.getTradeManager().requestPersistence();
             cleanup();
         }, timeoutSec);
     }

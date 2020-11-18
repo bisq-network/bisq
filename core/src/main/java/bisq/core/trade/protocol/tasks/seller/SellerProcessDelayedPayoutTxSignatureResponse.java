@@ -47,6 +47,8 @@ public class SellerProcessDelayedPayoutTxSignatureResponse extends TradeTask {
             // update to the latest peer address of our peer if the message is correct
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
 
+            processModel.getTradeManager().requestPersistence();
+
             complete();
         } catch (Throwable t) {
             failed(t);

@@ -51,6 +51,8 @@ public class SellerAsMakerProcessDepositTxMessage extends TradeTask {
             // but that cannot be changed due backward compatibility issues. It is a left over from the old trade protocol.
             trade.setTakerFeeTxId(processModel.getTakeOfferFeeTxId());
 
+            processModel.getTradeManager().requestPersistence();
+
             complete();
         } catch (Throwable t) {
             failed(t);

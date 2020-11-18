@@ -247,6 +247,7 @@ public class WalletAppSetup {
                                         String finalDetails = details;
                                         UserThread.runAfter(() -> {
                                             trade.setErrorMessage(newValue.getMessage());
+                                            tradeManager.requestPersistence();
                                             if (rejectedTxErrorMessageHandler != null) {
                                                 rejectedTxErrorMessageHandler.accept(Res.get("popup.warning.trade.txRejected",
                                                         finalDetails, trade.getShortId(), txId));

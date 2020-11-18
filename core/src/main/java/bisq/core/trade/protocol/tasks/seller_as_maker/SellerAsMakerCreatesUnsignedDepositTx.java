@@ -103,6 +103,8 @@ public class SellerAsMakerCreatesUnsignedDepositTx extends TradeTask {
             processModel.setPreparedDepositTx(result.depositTransaction);
             processModel.setRawTransactionInputs(result.rawMakerInputs);
 
+            processModel.getTradeManager().requestPersistence();
+
             complete();
         } catch (Throwable t) {
             failed(t);

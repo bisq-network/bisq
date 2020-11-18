@@ -54,6 +54,8 @@ public class BuyerProcessDelayedPayoutTxSignatureRequest extends TradeTask {
 
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
 
+            processModel.getTradeManager().requestPersistence();
+
             complete();
         } catch (Throwable t) {
             failed(t);

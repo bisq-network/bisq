@@ -76,11 +76,15 @@ public class SellerSendsDepositTxAndDelayedPayoutTxMessage extends SendMailboxMe
     @Override
     protected void setStateSent() {
         trade.setStateIfValidTransitionTo(Trade.State.SELLER_SENT_DEPOSIT_TX_PUBLISHED_MSG);
+
+        processModel.getTradeManager().requestPersistence();
     }
 
     @Override
     protected void setStateArrived() {
         trade.setStateIfValidTransitionTo(Trade.State.SELLER_SAW_ARRIVED_DEPOSIT_TX_PUBLISHED_MSG);
+
+        processModel.getTradeManager().requestPersistence();
         cleanup();
         // Complete is called in base class
     }
@@ -94,6 +98,8 @@ public class SellerSendsDepositTxAndDelayedPayoutTxMessage extends SendMailboxMe
     @Override
     protected void setStateStoredInMailbox() {
         trade.setStateIfValidTransitionTo(Trade.State.SELLER_STORED_IN_MAILBOX_DEPOSIT_TX_PUBLISHED_MSG);
+
+        processModel.getTradeManager().requestPersistence();
         // The DepositTxAndDelayedPayoutTxMessage is a mailbox message as earlier we use only the deposit tx which can
         // be also received from the network once published.
         // Now we send the delayed payout tx as well and with that this message is mandatory for continuing the protocol.
@@ -119,6 +125,8 @@ public class SellerSendsDepositTxAndDelayedPayoutTxMessage extends SendMailboxMe
         if (!trade.isDepositConfirmed()) {
             tryToSendAgainLater();
         }
+
+        processModel.getTradeManager().requestPersistence();
     }
 
     @Override
@@ -173,6 +181,8 @@ public class SellerSendsDepositTxAndDelayedPayoutTxMessage extends SendMailboxMe
         if (newValue == MessageState.ACKNOWLEDGED) {
             // We treat a ACK like SELLER_SAW_ARRIVED_DEPOSIT_TX_PUBLISHED_MSG
             trade.setStateIfValidTransitionTo(Trade.State.SELLER_SAW_ARRIVED_DEPOSIT_TX_PUBLISHED_MSG);
+
+            processModel.getTradeManager().requestPersistence();
             cleanup();
             complete();
         }

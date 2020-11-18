@@ -164,5 +164,7 @@ public class TraderChatManager extends SupportManager {
                 trade.getDate().getTime());
         chatMessage.setSystemMessage(true);
         trade.getChatMessages().add(chatMessage);
+
+        requestPersistence();
     }
 }

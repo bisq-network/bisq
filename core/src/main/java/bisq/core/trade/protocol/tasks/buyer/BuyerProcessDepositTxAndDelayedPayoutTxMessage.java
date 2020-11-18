@@ -73,6 +73,8 @@ public class BuyerProcessDepositTxAndDelayedPayoutTxMessage extends TradeTask {
             processModel.getBtcWalletService().swapTradeEntryToAvailableEntry(trade.getId(),
                     AddressEntry.Context.RESERVED_FOR_TRADE);
 
+            processModel.getTradeManager().requestPersistence();
+
             complete();
         } catch (Throwable t) {
             failed(t);
