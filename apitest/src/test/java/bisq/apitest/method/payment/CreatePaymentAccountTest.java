@@ -264,17 +264,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         log.info("Completed form: {}", PAYMENT_ACCOUNT_FORM.toJsonString(completedForm));
     }
 
-    private File getEmptyForm(TestInfo testInfo, String paymentMethodId) {
-        File emptyForm = getPaymentAccountForm(alicedaemon, paymentMethodId);
-        // A short cut over the API:
-        // File emptyForm = PAYMENT_ACCOUNT_FORM.getPaymentAccountForm(paymentMethodId);
-        emptyForm.deleteOnExit();
-        log.info("{} Empty form saved to {}", testName(testInfo), PAYMENT_ACCOUNT_FORM.getClickableURI(emptyForm));
-        return emptyForm;
-    }
-
     @Test
-    @Order(2)
     public void testDeprecatedCreatePerfectMoneyUSDPaymentAccount() {
         String PERFECT_MONEY_ACCT_NAME = "Perfect Money USD";
         String PERFECT_MONEY_ACCT_NUMBER = "0123456789";

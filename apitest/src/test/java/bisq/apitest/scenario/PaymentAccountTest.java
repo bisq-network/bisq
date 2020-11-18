@@ -15,18 +15,17 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 
 
-import bisq.apitest.method.MethodTest;
+import bisq.apitest.method.payment.AbstractPaymentAccountTest;
 import bisq.apitest.method.payment.CreatePaymentAccountTest;
 import bisq.apitest.method.payment.GetPaymentMethodsTest;
 
 @Slf4j
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class PaymentAccountTest extends MethodTest {
+public class PaymentAccountTest extends AbstractPaymentAccountTest {
 
     @BeforeAll
     public static void setUp() {
         try {
-            // setUpScaffold(bitcoind, seednode, arbdaemon, alicedaemon);
             setUpScaffold(alicedaemon);
         } catch (Exception ex) {
             fail(ex);

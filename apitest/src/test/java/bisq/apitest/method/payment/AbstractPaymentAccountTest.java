@@ -20,7 +20,9 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.TestInfo;
 
+import static bisq.apitest.config.BisqAppConfig.alicedaemon;
 import static java.lang.String.format;
 import static java.lang.System.getProperty;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -81,7 +83,20 @@ public class AbstractPaymentAccountTest extends MethodTest {
     @BeforeEach
     public void setup() {
         Res.setup();
+    }
+
+    protected final File getEmptyForm(TestInfo testInfo, String paymentMethodId) {
+        // This would normally be done in @BeforeEach, but these test cases might be
+        // called from a single 'scenario' test case, and the @BeforeEach -> clear()
+        // would be skipped.
         EXPECTED_FORM.clear();
+
+        File emptyForm = getPaymentAccountForm(alicedaemon, paymentMethodId);
+        // A short cut over the API:
+        // File emptyForm = PAYMENT_ACCOUNT_FORM.getPaymentAccountForm(paymentMethodId);
+        emptyForm.deleteOnExit();
+        log.info("{} Empty form saved to {}", testName(testInfo), PAYMENT_ACCOUNT_FORM.getClickableURI(emptyForm));
+        return emptyForm;
     }
 
     protected final void verifyEmptyForm(File jsonForm, String paymentMethodId, String... fields) {
