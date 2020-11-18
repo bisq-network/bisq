@@ -421,7 +421,7 @@ public class CliMain {
                 case getpaymentmethods: {
                     var request = GetPaymentMethodsRequest.newBuilder().build();
                     var reply = paymentAccountsService.getPaymentMethods(request);
-                    reply.getPaymentMethodsList().forEach(out::println);
+                    reply.getPaymentMethodsList().forEach(p -> out.println(p.getId()));
                 }
                 case createpaymentacct: {
                     if (nonOptionArgs.size() < 5)
