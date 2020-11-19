@@ -76,6 +76,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 public class TradeWalletService {
     private static final Logger log = LoggerFactory.getLogger(TradeWalletService.class);
+    private static final Coin MIN_DELAYED_PAYOUT_TX_FEE = Coin.valueOf(1000);
 
     private final WalletsSetup walletsSetup;
     private final Preferences preferences;
@@ -569,8 +570,9 @@ public class TradeWalletService {
      * @param buyerPubKey               the public key of the buyer
      * @param sellerPubKey              the public key of the seller
      * @throws SigningException if (one of) the taker input(s) was of an unrecognized type for signing
-     * @throws TransactionVerificationException if a maker input wasn't signed, their MultiSig script or contract hash
-     * doesn't match the taker's, or there was an unexpected problem with the final deposit tx or its signatures
+     * @throws TransactionVerificationException if a non-P2WH maker-as-buyer input wasn't signed, the maker's MultiSig
+     * script or contract hash doesn't match the taker's, or there was an unexpected problem with the final deposit tx
+     * or its signatures
      * @throws WalletException if the taker's wallet is null or structurally inconsistent
      */
     public Transaction takerSignsDepositTx(boolean takerIsSeller,
@@ -602,10 +604,11 @@ public class TradeWalletService {
             for (int i = 0; i < buyerInputs.size(); i++) {
                 TransactionInput makersInput = makersDepositTx.getInputs().get(i);
                 byte[] makersScriptSigProgram = makersInput.getScriptSig().getProgram();
-                if (makersScriptSigProgram.length == 0 && TransactionWitness.EMPTY.equals(makersInput.getWitness())) {
-                    throw new TransactionVerificationException("Inputs from maker not signed.");
-                }
                 TransactionInput input = getTransactionInput(depositTx, makersScriptSigProgram, buyerInputs.get(i));
+                Script scriptPubKey = checkNotNull(input.getConnectedOutput()).getScriptPubKey();
+                if (makersScriptSigProgram.length == 0 && !ScriptPattern.isP2WH(scriptPubKey)) {
+                    throw new TransactionVerificationException("Non-segwit inputs from maker not signed.");
+                }
                 if (!TransactionWitness.EMPTY.equals(makersInput.getWitness())) {
                     input.setWitness(makersInput.getWitness());
                 }
@@ -686,6 +689,21 @@ public class TradeWalletService {
     }
 
 
+    public void sellerAddsBuyerWitnessesToDepositTx(Transaction myDepositTx,
+                                                    Transaction buyersDepositTxWithWitnesses) {
+        int numberInputs = myDepositTx.getInputs().size();
+        for (int i = 0; i < numberInputs; i++) {
+            var txInput = myDepositTx.getInput(i);
+            var witnessFromBuyer = buyersDepositTxWithWitnesses.getInput(i).getWitness();
+
+            if (TransactionWitness.EMPTY.equals(txInput.getWitness()) &&
+                    !TransactionWitness.EMPTY.equals(witnessFromBuyer)) {
+                txInput.setWitness(witnessFromBuyer);
+            }
+        }
+    }
+
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Delayed payout tx
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -729,12 +747,14 @@ public class TradeWalletService {
         return mySignature.encodeToDER();
     }
 
-    public Transaction finalizeDelayedPayoutTx(Transaction delayedPayoutTx,
-                                               byte[] buyerPubKey,
-                                               byte[] sellerPubKey,
-                                               byte[] buyerSignature,
-                                               byte[] sellerSignature)
-            throws AddressFormatException, TransactionVerificationException, WalletException, SignatureDecodeException {
+    public Transaction finalizeUnconnectedDelayedPayoutTx(Transaction delayedPayoutTx,
+                                                          byte[] buyerPubKey,
+                                                          byte[] sellerPubKey,
+                                                          byte[] buyerSignature,
+                                                          byte[] sellerSignature,
+                                                          Coin inputValue)
+            throws AddressFormatException, TransactionVerificationException, SignatureDecodeException {
+
         Script redeemScript = get2of2MultiSigRedeemScript(buyerPubKey, sellerPubKey);
         ECKey.ECDSASignature buyerECDSASignature = ECKey.ECDSASignature.decodeFromDER(buyerSignature);
         ECKey.ECDSASignature sellerECDSASignature = ECKey.ECDSASignature.decodeFromDER(sellerSignature);
@@ -746,8 +766,26 @@ public class TradeWalletService {
         input.setWitness(witness);
         WalletService.printTx("finalizeDelayedPayoutTx", delayedPayoutTx);
         WalletService.verifyTransaction(delayedPayoutTx);
+
+        if (checkNotNull(inputValue).isLessThan(delayedPayoutTx.getOutputSum().add(MIN_DELAYED_PAYOUT_TX_FEE))) {
+            throw new TransactionVerificationException("Delayed payout tx is paying less than the minimum allowed tx fee");
+        }
+        Script scriptPubKey = get2of2MultiSigOutputScript(buyerPubKey, sellerPubKey, false);
+        input.getScriptSig().correctlySpends(delayedPayoutTx, 0, witness, inputValue, scriptPubKey, Script.ALL_VERIFY_FLAGS);
+        return delayedPayoutTx;
+    }
+
+    public Transaction finalizeDelayedPayoutTx(Transaction delayedPayoutTx,
+                                               byte[] buyerPubKey,
+                                               byte[] sellerPubKey,
+                                               byte[] buyerSignature,
+                                               byte[] sellerSignature)
+            throws AddressFormatException, TransactionVerificationException, WalletException, SignatureDecodeException {
+
+        TransactionInput input = delayedPayoutTx.getInput(0);
+        finalizeUnconnectedDelayedPayoutTx(delayedPayoutTx, buyerPubKey, sellerPubKey, buyerSignature, sellerSignature, input.getValue());
+
         WalletService.checkWalletConsistency(wallet);
-        WalletService.checkScriptSig(delayedPayoutTx, input, 0);
         checkNotNull(input.getConnectedOutput(), "input.getConnectedOutput() must not be null");
         input.verify(input.getConnectedOutput());
         return delayedPayoutTx;
@@ -1185,9 +1223,18 @@ public class TradeWalletService {
     private TransactionInput getTransactionInput(Transaction depositTx,
                                                  byte[] scriptProgram,
                                                  RawTransactionInput rawTransactionInput) {
-        return new TransactionInput(params, depositTx, scriptProgram, new TransactionOutPoint(params,
-                rawTransactionInput.index, new Transaction(params, rawTransactionInput.parentTransaction)),
+        return new TransactionInput(params, depositTx, scriptProgram, getConnectedOutPoint(rawTransactionInput),
                 Coin.valueOf(rawTransactionInput.value));
+    }
+
+    private TransactionOutPoint getConnectedOutPoint(RawTransactionInput rawTransactionInput) {
+        return new TransactionOutPoint(params, rawTransactionInput.index,
+                new Transaction(params, rawTransactionInput.parentTransaction));
+    }
+
+    public boolean isP2WH(RawTransactionInput rawTransactionInput) {
+        return ScriptPattern.isP2WH(
+                checkNotNull(getConnectedOutPoint(rawTransactionInput).getConnectedOutput()).getScriptPubKey());
     }
 
 

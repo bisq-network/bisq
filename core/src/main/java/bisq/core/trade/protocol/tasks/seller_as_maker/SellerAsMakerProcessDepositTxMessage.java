@@ -43,7 +43,7 @@ public class SellerAsMakerProcessDepositTxMessage extends TradeTask {
             Validator.checkTradeId(processModel.getOfferId(), message);
             checkNotNull(message);
 
-            processModel.getTradingPeer().setPreparedDepositTx(checkNotNull(message.getDepositTx()));
+            processModel.getTradingPeer().setPreparedDepositTx(checkNotNull(message.getDepositTxWithoutWitnesses()));
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
 
             // When we receive that message the taker has published the taker fee, so we apply it to the trade.
