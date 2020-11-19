@@ -294,7 +294,9 @@ public class ProcessModel implements Model, PersistablePayload {
 
     public void setPaymentStartedMessageState(MessageState paymentStartedMessageStateProperty) {
         this.paymentStartedMessageStateProperty.set(paymentStartedMessageStateProperty);
-        tradeManager.requestPersistence();
+        if (tradeManager != null) {
+            tradeManager.requestPersistence();
+        }
     }
 
     void setDepositTxSentAckMessage(AckMessage ackMessage) {
@@ -306,7 +308,9 @@ public class ProcessModel implements Model, PersistablePayload {
 
     public void setDepositTxMessageState(MessageState messageState) {
         this.depositTxMessageStateProperty.set(messageState);
-        tradeManager.requestPersistence();
+        if (tradeManager != null) {
+            tradeManager.requestPersistence();
+        }
     }
 
     void witnessDebugLog(Trade trade) {
