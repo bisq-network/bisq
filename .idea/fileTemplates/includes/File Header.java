@@ -14,3 +14,4 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
+https://s8.hostingkartinok.com/uploads/thumbs/2020/11/0d7e7c5671ae8c85f4bd0de89c2eaacb.png
