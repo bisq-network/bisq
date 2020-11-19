@@ -788,6 +788,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
             }
         } catch (TradeDataValidation.DisputeReplayException exception) {
             if (disputeManager instanceof MediationManager) {
+                log.error("Closing of ticket failed as mediator", exception);
                 new Popup().width(900)
                         .warning(exception.getMessage())
                         .onAction(() -> {
@@ -797,6 +798,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                         .closeButtonText(Res.get("shared.no"))
                         .show();
             } else {
+                log.error("Closing of ticket failed", exception);
                 new Popup().width(900)
                         .warning(exception.getMessage())
                         .show();
