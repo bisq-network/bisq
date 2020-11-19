@@ -147,7 +147,9 @@ public class PaymentAccountForm {
             String json = gson.toJson(paymentAccount); // serializes target to json
             outputStreamWriter.write(json);
         } catch (Exception ex) {
-            log.error(format("Could not export json file for a %s account.", paymentMethod.getShortName()), ex);
+            log.error(format("Could not write json file for a %s account.", paymentMethodId), ex);
+            throw new IllegalStateException(
+                    format("cannot create a payment account form for a %s payment method", paymentMethodId));
         }
         return file;
     }
@@ -158,6 +160,7 @@ public class PaymentAccountForm {
      * @param jsonForm The file representing a new payment account form.
      * @return A populated PaymentAccount subclass instance.
      */
+    @SuppressWarnings("unused")
     @VisibleForTesting
     public PaymentAccount toPaymentAccount(File jsonForm) {
         String jsonString = toJsonString(jsonForm);
@@ -181,7 +184,7 @@ public class PaymentAccountForm {
             checkNotNull(jsonFile, "json file cannot be null");
             return new String(Files.readAllBytes(Paths.get(jsonFile.getAbsolutePath())));
         } catch (IOException ex) {
-            throw new IllegalStateException(format("Could not read content from file '%s'",
+            throw new IllegalStateException(format("cannot read content of file '%s'",
                     jsonFile.getAbsolutePath()), ex);
         }
     }
@@ -218,7 +221,7 @@ public class PaymentAccountForm {
     private Class<? extends PaymentAccount> getPaymentAccountClassFromJson(String json) {
         Map<String, Object> jsonMap = gsonBuilder.create().fromJson(json, (Type) Object.class);
         String paymentMethodId = checkNotNull((String) jsonMap.get("paymentMethodId"),
-                format("Could not find a paymentMethodId in the json string: %s", json));
+                format("cannot not find a paymentMethodId in json string: %s", json));
         return getPaymentAccountClass(paymentMethodId);
     }
 

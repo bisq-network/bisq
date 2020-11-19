@@ -31,6 +31,8 @@ import bisq.proto.grpc.GetPaymentMethodsReply;
 import bisq.proto.grpc.GetPaymentMethodsRequest;
 import bisq.proto.grpc.PaymentAccountsGrpc;
 
+import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 
 import javax.inject.Inject;
@@ -50,46 +52,86 @@ class GrpcPaymentAccountsService extends PaymentAccountsGrpc.PaymentAccountsImpl
     @Override
     public void createPaymentAccount(CreatePaymentAccountRequest req,
                                      StreamObserver<CreatePaymentAccountReply> responseObserver) {
-        PaymentAccount paymentAccount = coreApi.createPaymentAccount(req.getPaymentAccountForm());
-        var reply = CreatePaymentAccountReply.newBuilder()
-                .setPaymentAccount(paymentAccount.toProtoMessage())
-                .build();
-        responseObserver.onNext(reply);
-        responseObserver.onCompleted();
+        try {
+            PaymentAccount paymentAccount = coreApi.createPaymentAccount(req.getPaymentAccountForm());
+            var reply = CreatePaymentAccountReply.newBuilder()
+                    .setPaymentAccount(paymentAccount.toProtoMessage())
+                    .build();
+            responseObserver.onNext(reply);
+            responseObserver.onCompleted();
+        } catch (IllegalArgumentException cause) {
+            var ex = new StatusRuntimeException(Status.INVALID_ARGUMENT.withDescription(cause.getMessage()));
+            responseObserver.onError(ex);
+            throw ex;
+        } catch (IllegalStateException cause) {
+            var ex = new StatusRuntimeException(Status.UNKNOWN.withDescription(cause.getMessage()));
+            responseObserver.onError(ex);
+            throw ex;
+        }
     }
 
     @Override
     public void getPaymentAccounts(GetPaymentAccountsRequest req,
                                    StreamObserver<GetPaymentAccountsReply> responseObserver) {
-        var paymentAccounts = coreApi.getPaymentAccounts().stream()
-                .map(PaymentAccount::toProtoMessage)
-                .collect(Collectors.toList());
-        var reply = GetPaymentAccountsReply.newBuilder()
-                .addAllPaymentAccounts(paymentAccounts).build();
-        responseObserver.onNext(reply);
-        responseObserver.onCompleted();
+        try {
+            var paymentAccounts = coreApi.getPaymentAccounts().stream()
+                    .map(PaymentAccount::toProtoMessage)
+                    .collect(Collectors.toList());
+            var reply = GetPaymentAccountsReply.newBuilder()
+                    .addAllPaymentAccounts(paymentAccounts).build();
+            responseObserver.onNext(reply);
+            responseObserver.onCompleted();
+        } catch (IllegalArgumentException cause) {
+            var ex = new StatusRuntimeException(Status.INVALID_ARGUMENT.withDescription(cause.getMessage()));
+            responseObserver.onError(ex);
+            throw ex;
+        } catch (IllegalStateException cause) {
+            var ex = new StatusRuntimeException(Status.UNKNOWN.withDescription(cause.getMessage()));
+            responseObserver.onError(ex);
+            throw ex;
+        }
     }
 
     @Override
     public void getPaymentMethods(GetPaymentMethodsRequest req,
                                   StreamObserver<GetPaymentMethodsReply> responseObserver) {
-        var paymentMethods = coreApi.getFiatPaymentMethods().stream()
-                .map(PaymentMethod::toProtoMessage)
-                .collect(Collectors.toList());
-        var reply = GetPaymentMethodsReply.newBuilder()
-                .addAllPaymentMethods(paymentMethods).build();
-        responseObserver.onNext(reply);
-        responseObserver.onCompleted();
+        try {
+            var paymentMethods = coreApi.getFiatPaymentMethods().stream()
+                    .map(PaymentMethod::toProtoMessage)
+                    .collect(Collectors.toList());
+            var reply = GetPaymentMethodsReply.newBuilder()
+                    .addAllPaymentMethods(paymentMethods).build();
+            responseObserver.onNext(reply);
+            responseObserver.onCompleted();
+        } catch (IllegalArgumentException cause) {
+            var ex = new StatusRuntimeException(Status.INVALID_ARGUMENT.withDescription(cause.getMessage()));
+            responseObserver.onError(ex);
+            throw ex;
+        } catch (IllegalStateException cause) {
+            var ex = new StatusRuntimeException(Status.UNKNOWN.withDescription(cause.getMessage()));
+            responseObserver.onError(ex);
+            throw ex;
+        }
     }
 
     @Override
     public void getPaymentAccountForm(GetPaymentAccountFormRequest req,
                                       StreamObserver<GetPaymentAccountFormReply> responseObserver) {
-        var paymentAccountFormJson = coreApi.getPaymentAccountForm(req.getPaymentMethodId());
-        var reply = GetPaymentAccountFormReply.newBuilder()
-                .setPaymentAccountFormJson(paymentAccountFormJson)
-                .build();
-        responseObserver.onNext(reply);
-        responseObserver.onCompleted();
+        try {
+            var paymentAccountFormJson = coreApi.getPaymentAccountForm(req.getPaymentMethodId());
+            var reply = GetPaymentAccountFormReply.newBuilder()
+                    .setPaymentAccountFormJson(paymentAccountFormJson)
+                    .build();
+            responseObserver.onNext(reply);
+            responseObserver.onCompleted();
+        } catch (IllegalArgumentException cause) {
+            var ex = new StatusRuntimeException(Status.INVALID_ARGUMENT.withDescription(cause.getMessage()));
+            responseObserver.onError(ex);
+            throw ex;
+        } catch (IllegalStateException cause) {
+            var ex = new StatusRuntimeException(Status.UNKNOWN.withDescription(cause.getMessage()));
+            responseObserver.onError(ex);
+            throw ex;
+        }
     }
 }

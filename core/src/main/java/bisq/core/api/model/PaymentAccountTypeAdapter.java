@@ -116,7 +116,7 @@ class PaymentAccountTypeAdapter extends TypeAdapter<PaymentAccount> {
                 }
             } catch (Exception ex) {
                 throw new IllegalStateException(
-                        format("Could not serialize a %s to json", account.getClass().getSimpleName()), ex);
+                        format("cannot not serialize a %s", account.getClass().getSimpleName()), ex);
             }
         });
         out.endObject();
@@ -144,21 +144,16 @@ class PaymentAccountTypeAdapter extends TypeAdapter<PaymentAccount> {
             if (didReadCountryField(in, account, currentFieldName))
                 continue;
 
-            try {
-                Optional<Field> field = fieldSettersMap.keySet().stream()
-                        .filter(k -> k.getName().equals(currentFieldName)).findFirst();
+            Optional<Field> field = fieldSettersMap.keySet().stream()
+                    .filter(k -> k.getName().equals(currentFieldName)).findFirst();
 
-                field.ifPresentOrElse((f) -> invokeSetterMethod(account, f, in), () -> {
-                    throw new IllegalStateException(
-                            format("Could not de-serialize json to a '%s' because there is no %s field.",
-                                    account.getClass().getSimpleName(),
-                                    currentFieldName));
-                });
-            } catch (Exception ex) {
+            field.ifPresentOrElse((f) -> invokeSetterMethod(account, f, in), () -> {
                 throw new IllegalStateException(
-                        format("Could not de-serialize json to a '%s'.",
-                                account.getClass().getSimpleName()), ex);
-            }
+                        format("programmer error: cannot de-serialize json to a '%s' "
+                                        + " because there is no %s field.",
+                                account.getClass().getSimpleName(),
+                                currentFieldName));
+            });
         }
         in.endObject();
         if (log.isDebugEnabled())
@@ -178,19 +173,20 @@ class PaymentAccountTypeAdapter extends TypeAdapter<PaymentAccount> {
                 } else if (isSetterOnPaymentAccountPayloadClass(setter.get(), account)) {
                     setter.get().invoke(account.getPaymentAccountPayload(), nextStringOrNull(jsonReader));
                 } else {
-                    String exMsg = format("Could not de-serialize json to a '%s' using reflection"
-                                    + " because the setter's declaring class was not found.",
+                    String exMsg = format("programmer error: cannot de-serialize json to a '%s' using reflection"
+                                    + " because the setter method's declaring class was not found.",
                             account.getClass().getSimpleName());
                     throw new IllegalStateException(exMsg);
                 }
             } catch (IllegalAccessException | InvocationTargetException ex) {
                 throw new IllegalStateException(
-                        format("Could not de-serialize json to a '%s' due to reflection error.",
+                        format("programmer error: cannot de-serialize json to a '%s' due to reflection error.",
                                 account.getClass().getSimpleName()), ex);
             }
         } else {
             throw new IllegalStateException(
-                    format("Could not de-serialize json to a '%s' because there is no setter for field %s.",
+                    format("programmer error: cannot de-serialize json to a '%s' "
+                                    + " because there is no setter method for field %s.",
                             account.getClass().getSimpleName(),
                             field.getName()));
         }
@@ -233,7 +229,9 @@ class PaymentAccountTypeAdapter extends TypeAdapter<PaymentAccount> {
                 return in.nextString();
             }
         } catch (IOException ex) {
-            throw new IllegalStateException("Could not peek at next String value in JsonReader.", ex);
+            throw new IllegalStateException(
+                    "programmer error: cannot not peek at next string value in json reader.",
+                    ex);
         }
     }
 
@@ -247,7 +245,9 @@ class PaymentAccountTypeAdapter extends TypeAdapter<PaymentAccount> {
                 return in.nextLong();
             }
         } catch (IOException ex) {
-            throw new IllegalStateException("Could not peek at next Long value in JsonReader.", ex);
+            throw new IllegalStateException(
+                    "programmer error: cannot not peek at next long value in json reader.",
+                    ex);
         }
     }
 
@@ -290,9 +290,8 @@ class PaymentAccountTypeAdapter extends TypeAdapter<PaymentAccount> {
                 account.setSingleTradeCurrency(fiatCurrency);
                 return true;
             } else {
-                throw new IllegalStateException(
-                        format("Could not de-serialize json to a '%s' because %s is an invalid country code.",
-                                account.getClass().getSimpleName(), countryCode));
+                throw new IllegalArgumentException(
+                        format("'%s' is an invalid country code.", countryCode));
             }
         } else {
             return false;
@@ -307,7 +306,7 @@ class PaymentAccountTypeAdapter extends TypeAdapter<PaymentAccount> {
                     + "." + paymentAccountType.getSimpleName() + "Payload");
         } catch (Exception ex) {
             throw new IllegalStateException(
-                    format("Could not get payload class for %s",
+                    format("programmer error: cannot get payload class for %s",
                             paymentAccountType.getSimpleName()), ex);
         }
     }
@@ -319,11 +318,15 @@ class PaymentAccountTypeAdapter extends TypeAdapter<PaymentAccount> {
             paymentAccount.init();
             return paymentAccount;
         } catch (NoSuchMethodException ex) {
-            throw new IllegalStateException(format("No default declared constructor  found for class %s",
-                    paymentAccountType.getSimpleName()), ex);
+            throw new IllegalStateException(
+                    format("programmer error: no default declared constructor  found for class %s",
+                            paymentAccountType.getSimpleName()),
+                    ex);
         } catch (IllegalAccessException | InstantiationException | InvocationTargetException ex) {
-            throw new IllegalStateException(format("Could not instantiate class %s",
-                    paymentAccountType.getSimpleName()), ex);
+            throw new IllegalStateException(
+                    format("programmer error: cannot instantiate class %s",
+                            paymentAccountType.getSimpleName()),
+                    ex);
         }
     }
 }
