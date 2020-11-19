@@ -327,7 +327,7 @@ public abstract class WalletService {
                         // scriptCode is expected to have the format of a legacy P2PKH output script
                         Script scriptCode = ScriptBuilder.createP2PKHOutputScript(key);
                         Coin value = txIn.getValue();
-                        TransactionSignature txSig = tx.calculateWitnessSignature(index, key, scriptCode, value,
+                        TransactionSignature txSig = tx.calculateWitnessSignature(index, key, aesKey, scriptCode, value,
                                 Transaction.SigHash.ALL, false);
                         txIn.setScriptSig(ScriptBuilder.createEmpty());
                         txIn.setWitness(TransactionWitness.redeemP2WPKH(txSig, key));
