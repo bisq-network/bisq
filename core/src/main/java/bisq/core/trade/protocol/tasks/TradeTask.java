@@ -38,6 +38,13 @@ public abstract class TradeTask extends Task<Trade> {
     }
 
     @Override
+    protected void complete() {
+        processModel.getTradeManager().requestPersistence();
+
+        super.complete();
+    }
+
+    @Override
     protected void failed() {
         trade.setErrorMessage(errorMessage);
         processModel.getTradeManager().requestPersistence();
