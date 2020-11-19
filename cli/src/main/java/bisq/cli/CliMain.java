@@ -43,6 +43,8 @@ import bisq.proto.grpc.TakeOfferRequest;
 import bisq.proto.grpc.UnlockWalletRequest;
 import bisq.proto.grpc.WithdrawFundsRequest;
 
+import protobuf.PaymentAccount;
+
 import io.grpc.StatusRuntimeException;
 
 import joptsimple.OptionParser;
@@ -52,6 +54,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -443,10 +446,12 @@ public class CliMain {
                             .build();
                     String jsonString = paymentAccountsService.getPaymentAccountForm(request)
                             .getPaymentAccountFormJson();
-                    out.printf("new payment account form: %s%n", jsonString);
-                    saveFileToDisk(paymentMethodId.toLowerCase(),
+                    File jsonFile = saveFileToDisk(paymentMethodId.toLowerCase(),
                             ".json",
                             jsonString);
+                    out.printf("Payment account form %s%nsaved to %s%n",
+                            jsonString, jsonFile.getAbsolutePath());
+                    out.println("Edit the file, and use as the argument to a 'createpaymentacct' command.");
                     return;
                 }
                 case createpaymentacct: {
@@ -457,7 +462,8 @@ public class CliMain {
                     var paymentAccountFormPath = Paths.get(nonOptionArgs.get(1));
                     if (!paymentAccountFormPath.toFile().exists())
                         throw new IllegalStateException(
-                                format("%s could not be found", paymentAccountFormPath.toString()));
+                                format("payment account form '%s' could not be found",
+                                        paymentAccountFormPath.toString()));
 
                     String jsonString;
                     try {
@@ -470,14 +476,21 @@ public class CliMain {
                     var request = CreatePaymentAccountRequest.newBuilder()
                             .setPaymentAccountForm(jsonString)
                             .build();
-                    paymentAccountsService.createPaymentAccount(request);
+                    var reply = paymentAccountsService.createPaymentAccount(request);
                     out.println("payment account saved");
+                    out.println(formatPaymentAcctTbl(singletonList(reply.getPaymentAccount())));
                     return;
                 }
                 case getpaymentaccts: {
                     var request = GetPaymentAccountsRequest.newBuilder().build();
                     var reply = paymentAccountsService.getPaymentAccounts(request);
-                    out.println(formatPaymentAcctTbl(reply.getPaymentAccountsList()));
+
+                    List<PaymentAccount> paymentAccounts = reply.getPaymentAccountsList();
+                    if (paymentAccounts.size() > 0)
+                        out.println(formatPaymentAcctTbl(paymentAccounts));
+                    else
+                        out.println("no payment accounts are saved");
+
                     return;
                 }
                 case lockwallet: {
@@ -560,7 +573,7 @@ public class CliMain {
         return Method.valueOf(methodName.toLowerCase());
     }
 
-    private static void saveFileToDisk(String prefix,
+    private static File saveFileToDisk(String prefix,
                                        @SuppressWarnings("SameParameterValue") String suffix,
                                        String text) {
         String timestamp = Long.toUnsignedString(new Date().getTime());
@@ -571,6 +584,7 @@ public class CliMain {
                 try (PrintWriter out = new PrintWriter(path.toString())) {
                     out.println(text);
                 }
+                return path.toAbsolutePath().toFile();
             } else {
                 throw new IllegalStateException(format("could not overwrite existing file '%s'", relativeFileName));
             }
