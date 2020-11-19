@@ -99,7 +99,12 @@ public abstract class SellerProtocol extends DisputeProtocol {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     protected void handle(CounterCurrencyTransferStartedMessage message, NodeAddress peer) {
-        expect(phase(Trade.Phase.DEPOSIT_CONFIRMED)
+        // We are more tolerant with expected phase and allow also DEPOSIT_PUBLISHED as it can be the case
+        // that the wallet is still syncing and so the DEPOSIT_CONFIRMED state to yet triggered when we received
+        // a mailbox message with CounterCurrencyTransferStartedMessage.
+        // TODO A better fix would be to add a listener for the wallet sync state and process
+        // the mailbox msg once wallet is ready and trade state set.
+        expect(anyPhase(Trade.Phase.DEPOSIT_CONFIRMED, Trade.Phase.DEPOSIT_PUBLISHED)
                 .with(message)
                 .from(peer)
                 .preCondition(trade.getPayoutTx() == null,
