@@ -83,7 +83,10 @@ public class BuyerAsTakerProtocol extends BuyerProtocol implements TakerProtocol
                         BuyerAsTakerCreatesDepositTxInputs.class,
                         TakerSendInputsForDepositTxRequest.class)
                         .withTimeout(30))
-                .run(() -> processModel.setTempTradingPeerNodeAddress(trade.getTradingPeerNodeAddress()))
+                .run(() -> {
+                    processModel.setTempTradingPeerNodeAddress(trade.getTradingPeerNodeAddress());
+                    processModel.getTradeManager().requestPersistence();
+                })
                 .executeTasks();
     }
 

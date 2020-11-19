@@ -99,6 +99,8 @@ public class SignMediatedPayoutTx extends TradeTask {
                     sellerMultiSigPubKey);
             processModel.setMediatedPayoutTxSignature(mediatedPayoutTxSignature);
 
+            processModel.getTradeManager().requestPersistence();
+
             complete();
         } catch (Throwable t) {
             failed(t);

@@ -41,6 +41,8 @@ import bisq.common.taskrunner.Task;
 
 import java.security.PublicKey;
 
+import java.util.concurrent.TimeUnit;
+
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
@@ -76,9 +78,17 @@ public abstract class TradeProtocol implements DecryptedDirectMessageListener, D
         if (!trade.isWithdrawn()) {
             processModel.getP2PService().addDecryptedDirectMessageListener(this);
         }
-        processModel.getP2PService().addDecryptedMailboxListener(this);
-        processModel.getP2PService().getMailBoxMessages()
-                .forEach(this::handleDecryptedMessageWithPubKey);
+
+        // We delay a bit here as the trade gets updated from the wallet to update the trade
+        // state (deposit confirmed) and that happens after our method is called.
+        // TODO To fix that in a better way we would need to change the order of some routines
+        // from the TradeManager, but as we are close to a release I dont want to risk a bigger
+        // change and leave that for a later PR
+        UserThread.runAfter(() -> {
+            processModel.getP2PService().addDecryptedMailboxListener(this);
+            processModel.getP2PService().getMailBoxMessages()
+                    .forEach(this::handleDecryptedMessageWithPubKey);
+        }, 100, TimeUnit.MILLISECONDS);
     }
 
     public void onWithdrawCompleted() {
@@ -297,6 +307,8 @@ public abstract class TradeProtocol implements DecryptedDirectMessageListener, D
             log.error("Timeout reached. TradeID={}, state={}, timeoutSec={}",
                     trade.getId(), trade.stateProperty().get(), timeoutSec);
             trade.setErrorMessage("Timeout reached. Protocol did not complete in " + timeoutSec + " sec.");
+
+            processModel.getTradeManager().requestPersistence();
             cleanup();
         }, timeoutSec);
     }

@@ -97,6 +97,8 @@ public class BuyerAsMakerCreatesAndSignsDepositTx extends TradeTask {
             processModel.setPreparedDepositTx(result.depositTransaction);
             processModel.setRawTransactionInputs(result.rawMakerInputs);
 
+            processModel.getTradeManager().requestPersistence();
+
             complete();
         } catch (Throwable t) {
             failed(t);

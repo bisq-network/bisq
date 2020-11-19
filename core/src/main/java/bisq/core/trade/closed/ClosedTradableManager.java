@@ -84,13 +84,13 @@ public class ClosedTradableManager implements PersistedDataHost {
 
     public void add(Tradable tradable) {
         if (closedTradables.add(tradable)) {
-            persistenceManager.requestPersistence();
+            requestPersistence();
         }
     }
 
     public void remove(Tradable tradable) {
         if (closedTradables.remove(tradable)) {
-            persistenceManager.requestPersistence();
+            requestPersistence();
         }
     }
 
@@ -116,5 +116,9 @@ public class ClosedTradableManager implements PersistedDataHost {
     public Stream<Trade> getTradesStreamWithFundsLockedIn() {
         return getClosedTrades().stream()
                 .filter(Trade::isFundsLockedIn);
+    }
+
+    private void requestPersistence() {
+        persistenceManager.requestPersistence();
     }
 }

@@ -70,6 +70,8 @@ public class SellerSignsDelayedPayoutTx extends TradeTask {
 
             processModel.setDelayedPayoutTxSignature(delayedPayoutTxSignature);
 
+            processModel.getTradeManager().requestPersistence();
+
             complete();
         } catch (Throwable t) {
             failed(t);

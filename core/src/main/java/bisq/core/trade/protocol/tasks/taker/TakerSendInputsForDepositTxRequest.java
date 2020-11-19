@@ -129,6 +129,9 @@ public class TakerSendInputsForDepositTxRequest extends TradeTask {
             log.info("Send {} with offerId {} and uid {} to peer {}",
                     request.getClass().getSimpleName(), request.getTradeId(),
                     request.getUid(), trade.getTradingPeerNodeAddress());
+
+            processModel.getTradeManager().requestPersistence();
+
             processModel.getP2PService().sendEncryptedDirectMessage(
                     trade.getTradingPeerNodeAddress(),
                     processModel.getTradingPeer().getPubKeyRing(),
