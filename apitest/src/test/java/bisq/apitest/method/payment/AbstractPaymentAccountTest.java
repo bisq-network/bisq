@@ -137,8 +137,7 @@ public class AbstractPaymentAccountTest extends MethodTest {
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_ACCOUNT_NAME), paymentAccount.getAccountName());
     }
 
-    protected final void verifyAccountSingleTradeCurrency(PaymentAccount paymentAccount,
-                                                          String expectedCurrencyCode) {
+    protected final void verifyAccountSingleTradeCurrency(String expectedCurrencyCode, PaymentAccount paymentAccount) {
         assertNotNull(paymentAccount.getSingleTradeCurrency());
         assertEquals(expectedCurrencyCode, paymentAccount.getSingleTradeCurrency().getCode());
     }

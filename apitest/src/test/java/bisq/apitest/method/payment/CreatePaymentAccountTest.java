@@ -116,7 +116,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         String jsonString = getCompletedFormAsJsonString();
         AliPayAccount paymentAccount = (AliPayAccount) createPaymentAccount(alicedaemon, jsonString);
         verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
-        verifyAccountSingleTradeCurrency(paymentAccount, "CNY");
+        verifyAccountSingleTradeCurrency("CNY", paymentAccount);
         verifyCommonFormEntries(paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_ACCOUNT_NR), paymentAccount.getAccountNr());
         if (log.isDebugEnabled())
@@ -136,14 +136,13 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         String jsonString = getCompletedFormAsJsonString();
         AustraliaPayid paymentAccount = (AustraliaPayid) createPaymentAccount(alicedaemon, jsonString);
         verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
-        verifyAccountSingleTradeCurrency(paymentAccount, "AUD");
+        verifyAccountSingleTradeCurrency("AUD", paymentAccount);
         verifyCommonFormEntries(paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_PAY_ID), paymentAccount.getPayid());
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_BANK_ACCOUNT_NAME), paymentAccount.getBankAccountName());
         if (log.isDebugEnabled())
             log.debug("Deserialized {}: {}", paymentAccount.getClass().getSimpleName(), paymentAccount);
     }
-
 
     @Test
     public void testCreateCashDepositAccount(TestInfo testInfo) {
@@ -177,7 +176,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         String jsonString = getCompletedFormAsJsonString();
         CashDepositAccount paymentAccount = (CashDepositAccount) createPaymentAccount(alicedaemon, jsonString);
         verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
-        verifyAccountSingleTradeCurrency(paymentAccount, "EUR");
+        verifyAccountSingleTradeCurrency("EUR", paymentAccount);
         verifyCommonFormEntries(paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_COUNTRY),
                 Objects.requireNonNull(paymentAccount.getCountry()).code);
@@ -223,7 +222,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         String jsonString = getCompletedFormAsJsonString();
         NationalBankAccount paymentAccount = (NationalBankAccount) createPaymentAccount(alicedaemon, jsonString);
         verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
-        verifyAccountSingleTradeCurrency(paymentAccount, "BRL");
+        verifyAccountSingleTradeCurrency("BRL", paymentAccount);
         verifyCommonFormEntries(paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_COUNTRY),
                 Objects.requireNonNull(paymentAccount.getCountry()).code);
@@ -255,7 +254,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         String jsonString = getCompletedFormAsJsonString();
         ChaseQuickPayAccount paymentAccount = (ChaseQuickPayAccount) createPaymentAccount(alicedaemon, jsonString);
         verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
-        verifyAccountSingleTradeCurrency(paymentAccount, "USD");
+        verifyAccountSingleTradeCurrency("USD", paymentAccount);
         verifyCommonFormEntries(paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_EMAIL), paymentAccount.getEmail());
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_HOLDER_NAME), paymentAccount.getHolderName());
@@ -277,7 +276,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         String jsonString = getCompletedFormAsJsonString();
         ClearXchangeAccount paymentAccount = (ClearXchangeAccount) createPaymentAccount(alicedaemon, jsonString);
         verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
-        verifyAccountSingleTradeCurrency(paymentAccount, "USD");
+        verifyAccountSingleTradeCurrency("USD", paymentAccount);
         verifyCommonFormEntries(paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_EMAIL_OR_MOBILE_NR), paymentAccount.getEmailOrMobileNr());
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_HOLDER_NAME), paymentAccount.getHolderName());
@@ -303,7 +302,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         String jsonString = getCompletedFormAsJsonString();
         F2FAccount paymentAccount = (F2FAccount) createPaymentAccount(alicedaemon, jsonString);
         verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
-        verifyAccountSingleTradeCurrency(paymentAccount, "BRL");
+        verifyAccountSingleTradeCurrency("BRL", paymentAccount);
         verifyCommonFormEntries(paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_COUNTRY),
                 Objects.requireNonNull(paymentAccount.getCountry()).code);
@@ -328,7 +327,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         String jsonString = getCompletedFormAsJsonString();
         FasterPaymentsAccount paymentAccount = (FasterPaymentsAccount) createPaymentAccount(alicedaemon, jsonString);
         verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
-        verifyAccountSingleTradeCurrency(paymentAccount, "GBP");
+        verifyAccountSingleTradeCurrency("GBP", paymentAccount);
         verifyCommonFormEntries(paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_ACCOUNT_NR), paymentAccount.getAccountNr());
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_SORT_CODE), paymentAccount.getSortCode());
@@ -348,7 +347,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         String jsonString = getCompletedFormAsJsonString();
         HalCashAccount paymentAccount = (HalCashAccount) createPaymentAccount(alicedaemon, jsonString);
         verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
-        verifyAccountSingleTradeCurrency(paymentAccount, "EUR");
+        verifyAccountSingleTradeCurrency("EUR", paymentAccount);
         verifyCommonFormEntries(paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_MOBILE_NR), paymentAccount.getMobileNr());
         if (log.isDebugEnabled())
@@ -373,7 +372,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         String jsonString = getCompletedFormAsJsonString();
         InteracETransferAccount paymentAccount = (InteracETransferAccount) createPaymentAccount(alicedaemon, jsonString);
         verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
-        verifyAccountSingleTradeCurrency(paymentAccount, "CAD");
+        verifyAccountSingleTradeCurrency("CAD", paymentAccount);
         verifyCommonFormEntries(paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_HOLDER_NAME), paymentAccount.getHolderName());
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_EMAIL), paymentAccount.getEmail());
@@ -407,7 +406,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         String jsonString = getCompletedFormAsJsonString();
         JapanBankAccount paymentAccount = (JapanBankAccount) createPaymentAccount(alicedaemon, jsonString);
         verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
-        verifyAccountSingleTradeCurrency(paymentAccount, "JPY");
+        verifyAccountSingleTradeCurrency("JPY", paymentAccount);
         verifyCommonFormEntries(paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_BANK_CODE), paymentAccount.getBankCode());
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_BANK_NAME), paymentAccount.getBankName());
@@ -432,7 +431,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         String jsonString = getCompletedFormAsJsonString();
         MoneyBeamAccount paymentAccount = (MoneyBeamAccount) createPaymentAccount(alicedaemon, jsonString);
         verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
-        verifyAccountSingleTradeCurrency(paymentAccount, "EUR");
+        verifyAccountSingleTradeCurrency("EUR", paymentAccount);
         verifyCommonFormEntries(paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_ACCOUNT_ID), paymentAccount.getAccountId());
         if (log.isDebugEnabled())
@@ -485,7 +484,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         String jsonString = getCompletedFormAsJsonString();
         PerfectMoneyAccount paymentAccount = (PerfectMoneyAccount) createPaymentAccount(alicedaemon, jsonString);
         verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
-        verifyAccountSingleTradeCurrency(paymentAccount, "USD");
+        verifyAccountSingleTradeCurrency("USD", paymentAccount);
         verifyCommonFormEntries(paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_ACCOUNT_NR), paymentAccount.getAccountNr());
         if (log.isDebugEnabled())
@@ -506,7 +505,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         String jsonString = getCompletedFormAsJsonString();
         PopmoneyAccount paymentAccount = (PopmoneyAccount) createPaymentAccount(alicedaemon, jsonString);
         verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
-        verifyAccountSingleTradeCurrency(paymentAccount, "USD");
+        verifyAccountSingleTradeCurrency("USD", paymentAccount);
         verifyCommonFormEntries(paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_ACCOUNT_ID), paymentAccount.getAccountId());
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_HOLDER_NAME), paymentAccount.getHolderName());
@@ -526,7 +525,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         String jsonString = getCompletedFormAsJsonString();
         PromptPayAccount paymentAccount = (PromptPayAccount) createPaymentAccount(alicedaemon, jsonString);
         verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
-        verifyAccountSingleTradeCurrency(paymentAccount, "THB");
+        verifyAccountSingleTradeCurrency("THB", paymentAccount);
         verifyCommonFormEntries(paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_PROMPT_PAY_ID), paymentAccount.getPromptPayId());
         if (log.isDebugEnabled())
@@ -578,7 +577,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         String jsonString = getCompletedFormAsJsonString();
         SameBankAccount paymentAccount = (SameBankAccount) createPaymentAccount(alicedaemon, jsonString);
         verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
-        verifyAccountSingleTradeCurrency(paymentAccount, "GBP");
+        verifyAccountSingleTradeCurrency("GBP", paymentAccount);
         verifyCommonFormEntries(paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_COUNTRY),
                 Objects.requireNonNull(paymentAccount.getCountry()).code);
@@ -616,7 +615,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_COUNTRY),
                 Objects.requireNonNull(paymentAccount.getCountry()).code);
-        verifyAccountSingleTradeCurrency(paymentAccount, "EUR");
+        verifyAccountSingleTradeCurrency("EUR", paymentAccount);
         verifyCommonFormEntries(paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_HOLDER_NAME), paymentAccount.getHolderName());
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_IBAN), paymentAccount.getIban());
@@ -647,7 +646,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_COUNTRY),
                 Objects.requireNonNull(paymentAccount.getCountry()).code);
-        verifyAccountSingleTradeCurrency(paymentAccount, "EUR");
+        verifyAccountSingleTradeCurrency("EUR", paymentAccount);
         verifyCommonFormEntries(paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_HOLDER_NAME), paymentAccount.getHolderName());
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_IBAN), paymentAccount.getIban());
@@ -687,7 +686,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         String jsonString = getCompletedFormAsJsonString();
         SpecificBanksAccount paymentAccount = (SpecificBanksAccount) createPaymentAccount(alicedaemon, jsonString);
         verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
-        verifyAccountSingleTradeCurrency(paymentAccount, "GBP");
+        verifyAccountSingleTradeCurrency("GBP", paymentAccount);
         verifyCommonFormEntries(paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_COUNTRY),
                 Objects.requireNonNull(paymentAccount.getCountry()).code);
@@ -719,7 +718,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         String jsonString = getCompletedFormAsJsonString();
         SwishAccount paymentAccount = (SwishAccount) createPaymentAccount(alicedaemon, jsonString);
         verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
-        verifyAccountSingleTradeCurrency(paymentAccount, "SEK");
+        verifyAccountSingleTradeCurrency("SEK", paymentAccount);
         verifyCommonFormEntries(paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_MOBILE_NR), paymentAccount.getMobileNr());
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_HOLDER_NAME), paymentAccount.getHolderName());
@@ -779,7 +778,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         String jsonString = getCompletedFormAsJsonString();
         USPostalMoneyOrderAccount paymentAccount = (USPostalMoneyOrderAccount) createPaymentAccount(alicedaemon, jsonString);
         verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
-        verifyAccountSingleTradeCurrency(paymentAccount, "USD");
+        verifyAccountSingleTradeCurrency("USD", paymentAccount);
         verifyCommonFormEntries(paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_HOLDER_NAME), paymentAccount.getHolderName());
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_POSTAL_ADDRESS), paymentAccount.getPostalAddress());
@@ -799,7 +798,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         String jsonString = getCompletedFormAsJsonString();
         WeChatPayAccount paymentAccount = (WeChatPayAccount) createPaymentAccount(alicedaemon, jsonString);
         verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
-        verifyAccountSingleTradeCurrency(paymentAccount, "CNY");
+        verifyAccountSingleTradeCurrency("CNY", paymentAccount);
         verifyCommonFormEntries(paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_ACCOUNT_NR), paymentAccount.getAccountNr());
         if (log.isDebugEnabled())
@@ -826,7 +825,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         String jsonString = getCompletedFormAsJsonString();
         WesternUnionAccount paymentAccount = (WesternUnionAccount) createPaymentAccount(alicedaemon, jsonString);
         verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
-        verifyAccountSingleTradeCurrency(paymentAccount, "USD");
+        verifyAccountSingleTradeCurrency("USD", paymentAccount);
         verifyCommonFormEntries(paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_HOLDER_NAME), paymentAccount.getFullName());
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_CITY), paymentAccount.getCity());
