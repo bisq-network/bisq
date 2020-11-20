@@ -294,14 +294,17 @@ public class MethodTest extends ApiTestCase {
         return fromProto(paymentAccountsService.createPaymentAccount(req).getPaymentAccount());
     }
 
-    protected static PaymentAccount getDefaultPerfectDummyPaymentAccount(BisqAppConfig bisqAppConfig) {
+    protected static List<PaymentAccount> getPaymentAccounts(BisqAppConfig bisqAppConfig) {
         var req = GetPaymentAccountsRequest.newBuilder().build();
-        var paymentAccountsService = grpcStubs(bisqAppConfig).paymentAccountsService;
-        PaymentAccount paymentAccount = paymentAccountsService.getPaymentAccounts(req)
+        return grpcStubs(bisqAppConfig).paymentAccountsService.getPaymentAccounts(req)
                 .getPaymentAccountsList()
                 .stream()
                 .sorted(comparing(PaymentAccount::getCreationDate))
-                .collect(Collectors.toList()).get(0);
+                .collect(Collectors.toList());
+    }
+
+    protected static PaymentAccount getDefaultPerfectDummyPaymentAccount(BisqAppConfig bisqAppConfig) {
+        PaymentAccount paymentAccount = getPaymentAccounts(bisqAppConfig).get(0);
         assertEquals("PerfectMoney dummy", paymentAccount.getAccountName());
         return paymentAccount;
     }

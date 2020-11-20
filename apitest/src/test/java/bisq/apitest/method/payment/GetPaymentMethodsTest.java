@@ -15,7 +15,7 @@ import org.junit.jupiter.api.TestMethodOrder;
 
 import static bisq.apitest.Scaffold.BitcoinCoreApp.bitcoind;
 import static bisq.apitest.config.BisqAppConfig.alicedaemon;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 
 
@@ -43,7 +43,7 @@ public class GetPaymentMethodsTest extends MethodTest {
                 .stream()
                 .map(p -> p.getId())
                 .collect(Collectors.toList());
-        assertTrue(paymentMethodIds.size() > 25);
+        assertEquals(28, paymentMethodIds.size());
     }
 
     @AfterAll

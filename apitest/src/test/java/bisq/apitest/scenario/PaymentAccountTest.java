@@ -13,6 +13,7 @@ import org.junit.jupiter.api.TestMethodOrder;
 import static bisq.apitest.Scaffold.BitcoinCoreApp.bitcoind;
 import static bisq.apitest.config.BisqAppConfig.alicedaemon;
 import static bisq.apitest.config.BisqAppConfig.seednode;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 
 
@@ -46,16 +47,43 @@ public class PaymentAccountTest extends AbstractPaymentAccountTest {
     public void testCreatePaymentAccount(TestInfo testInfo) {
         CreatePaymentAccountTest test = new CreatePaymentAccountTest();
 
+        test.testCreateAdvancedCashAccount(testInfo);
+        test.testCreateAliPayAccount(testInfo);
         test.testCreateAustraliaPayidAccount(testInfo);
-        test.testBrazilNationalBankAccountForm(testInfo);
-        test.testChaseQuickPayAccountForm(testInfo);
-        test.testClearXChangeAccountForm(testInfo);
-        test.testF2FAccountForm(testInfo);
-        test.testHalCashAccountForm(testInfo);
-        test.testJapanBankAccountForm(testInfo);
-        test.testSepaAccountForm(testInfo);
-        test.testSwishAccountForm(testInfo);
-        test.testUSPostalMoneyOrderAccountForm(testInfo);
+        test.testCreateCashDepositAccount(testInfo);
+        test.testCreateBrazilNationalBankAccount(testInfo);
+        test.testCreateChaseQuickPayAccount(testInfo);
+        test.testCreateClearXChangeAccount(testInfo);
+        test.testCreateF2FAccount(testInfo);
+        test.testCreateFasterPaymentsAccount(testInfo);
+        test.testCreateHalCashAccount(testInfo);
+        test.testCreateInteracETransferAccount(testInfo);
+        test.testCreateJapanBankAccount(testInfo);
+        test.testCreateMoneyBeamAccount(testInfo);
+        // test.testCreateMoneyGramAccount(testInfo);
+        test.testCreatePerfectMoneyAccount(testInfo);
+        test.testCreatePopmoneyAccount(testInfo);
+        test.testCreatePromptPayAccount(testInfo);
+        test.testCreateRevolutAccount(testInfo);
+        test.testCreateSameBankAccount(testInfo);
+        test.testCreateSepaInstantAccount(testInfo);
+        test.testCreateSepaAccount(testInfo);
+        test.testCreateSpecificBanksAccount(testInfo);
+        test.testCreateSwishAccount(testInfo);
+        test.testCreateTransferwiseAccount(testInfo);
+        test.testCreateUpholdAccount(testInfo);
+        test.testCreateUSPostalMoneyOrderAccount(testInfo);
+        test.testCreateWeChatPayAccount(testInfo);
+        test.testCreateWesternUnionAccount(testInfo);
+    }
+
+    @Test
+    @Order(3)
+    public void testTestNumSavedPaymentAccounts(TestInfo testInfo) {
+        // Two dummy (usd +eth) accounts are set up as defaults in regtest / dao mode,
+        // then we added more payment accounts in testCreatePaymentAccount().
+        int expectedNumPaymentAccounts = 2 + 27;
+        assertEquals(expectedNumPaymentAccounts, getPaymentAccounts(alicedaemon).size());
     }
 
     @AfterAll
