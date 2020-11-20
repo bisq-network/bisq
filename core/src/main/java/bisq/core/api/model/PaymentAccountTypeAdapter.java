@@ -29,6 +29,8 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import com.google.gson.stream.JsonWriter;
 
+import org.apache.commons.lang3.StringUtils;
+
 import java.io.IOException;
 
 import java.util.ArrayList;
@@ -115,8 +117,10 @@ class PaymentAccountTypeAdapter extends TypeAdapter<PaymentAccount> {
                     out.value("Your " + fieldName.toLowerCase());
                 }
             } catch (Exception ex) {
-                throw new IllegalStateException(
-                        format("cannot not serialize a %s", account.getClass().getSimpleName()), ex);
+                String errMsg = format("cannot create a new %s json form",
+                        account.getClass().getSimpleName());
+                log.error(StringUtils.capitalize(errMsg) + ".", ex);
+                throw new IllegalStateException("programmer error: " + errMsg);
             }
         });
         out.endObject();
@@ -173,15 +177,17 @@ class PaymentAccountTypeAdapter extends TypeAdapter<PaymentAccount> {
                 } else if (isSetterOnPaymentAccountPayloadClass(setter.get(), account)) {
                     setter.get().invoke(account.getPaymentAccountPayload(), nextStringOrNull(jsonReader));
                 } else {
-                    String exMsg = format("programmer error: cannot de-serialize json to a '%s' using reflection"
+                    String errMsg = format("programmer error: cannot de-serialize json to a '%s' using reflection"
                                     + " because the setter method's declaring class was not found.",
                             account.getClass().getSimpleName());
-                    throw new IllegalStateException(exMsg);
+                    throw new IllegalStateException(errMsg);
                 }
             } catch (IllegalAccessException | InvocationTargetException ex) {
-                throw new IllegalStateException(
-                        format("programmer error: cannot de-serialize json to a '%s' due to reflection error.",
-                                account.getClass().getSimpleName()), ex);
+                String errMsg = format("cannot set field value for %s on %s",
+                        field.getName(),
+                        account.getClass().getSimpleName());
+                log.error(StringUtils.capitalize(errMsg) + ".", ex);
+                throw new IllegalStateException("programmer error: " + errMsg);
             }
         } else {
             throw new IllegalStateException(
@@ -229,9 +235,9 @@ class PaymentAccountTypeAdapter extends TypeAdapter<PaymentAccount> {
                 return in.nextString();
             }
         } catch (IOException ex) {
-            throw new IllegalStateException(
-                    "programmer error: cannot not peek at next string value in json reader.",
-                    ex);
+            String errMsg = "cannot see next string in json reader";
+            log.error(StringUtils.capitalize(errMsg) + ".", ex);
+            throw new IllegalStateException("programmer error: " + errMsg);
         }
     }
 
@@ -245,9 +251,9 @@ class PaymentAccountTypeAdapter extends TypeAdapter<PaymentAccount> {
                 return in.nextLong();
             }
         } catch (IOException ex) {
-            throw new IllegalStateException(
-                    "programmer error: cannot not peek at next long value in json reader.",
-                    ex);
+            String errMsg = "cannot see next long in json reader";
+            log.error(StringUtils.capitalize(errMsg) + ".", ex);
+            throw new IllegalStateException("programmer error: " + errMsg);
         }
     }
 
@@ -305,9 +311,11 @@ class PaymentAccountTypeAdapter extends TypeAdapter<PaymentAccount> {
             return (Class<? extends PaymentAccountPayload>) Class.forName(pkg.getName()
                     + "." + paymentAccountType.getSimpleName() + "Payload");
         } catch (Exception ex) {
-            throw new IllegalStateException(
-                    format("programmer error: cannot get payload class for %s",
-                            paymentAccountType.getSimpleName()), ex);
+            String errMsg = format("cannot get the payload class for %s",
+                    paymentAccountType.getSimpleName());
+            log.error(StringUtils.capitalize(errMsg) + ".", ex);
+            throw new IllegalStateException("programmer error: " + errMsg);
+
         }
     }
 
@@ -317,16 +325,14 @@ class PaymentAccountTypeAdapter extends TypeAdapter<PaymentAccount> {
             PaymentAccount paymentAccount = (PaymentAccount) constructor.newInstance();
             paymentAccount.init();
             return paymentAccount;
-        } catch (NoSuchMethodException ex) {
-            throw new IllegalStateException(
-                    format("programmer error: no default declared constructor  found for class %s",
-                            paymentAccountType.getSimpleName()),
-                    ex);
-        } catch (IllegalAccessException | InstantiationException | InvocationTargetException ex) {
-            throw new IllegalStateException(
-                    format("programmer error: cannot instantiate class %s",
-                            paymentAccountType.getSimpleName()),
-                    ex);
+        } catch (NoSuchMethodException
+                | IllegalAccessException
+                | InstantiationException
+                | InvocationTargetException ex) {
+            String errMsg = format("cannot instantiate a new %s",
+                    paymentAccountType.getSimpleName());
+            log.error(StringUtils.capitalize(errMsg) + ".", ex);
+            throw new IllegalStateException("programmer error: " + errMsg);
         }
     }
 }

@@ -28,6 +28,8 @@ import javax.inject.Singleton;
 
 import com.google.common.annotations.VisibleForTesting;
 
+import org.apache.commons.lang3.StringUtils;
+
 import java.net.URI;
 import java.net.URISyntaxException;
 
@@ -147,9 +149,9 @@ public class PaymentAccountForm {
             String json = gson.toJson(paymentAccount); // serializes target to json
             outputStreamWriter.write(json);
         } catch (Exception ex) {
-            log.error(format("Could not write json file for a %s account.", paymentMethodId), ex);
-            throw new IllegalStateException(
-                    format("cannot create a payment account form for a %s payment method", paymentMethodId));
+            String errMsg = format("cannot create a payment account form for a %s payment method", paymentMethodId);
+            log.error(StringUtils.capitalize(errMsg) + ".", ex);
+            throw new IllegalStateException(errMsg);
         }
         return file;
     }
@@ -184,27 +186,32 @@ public class PaymentAccountForm {
             checkNotNull(jsonFile, "json file cannot be null");
             return new String(Files.readAllBytes(Paths.get(jsonFile.getAbsolutePath())));
         } catch (IOException ex) {
-            throw new IllegalStateException(format("cannot read content of file '%s'",
-                    jsonFile.getAbsolutePath()), ex);
+            String errMsg = format("cannot read json string from file '%s'",
+                    jsonFile.getAbsolutePath());
+            log.error(StringUtils.capitalize(errMsg) + ".", ex);
+            throw new IllegalStateException(errMsg);
         }
     }
 
     @VisibleForTesting
-    public URI getClickableURI(File jsonForm) {
+    public URI getClickableURI(File jsonFile) {
         try {
             return new URI("file",
                     "",
-                    jsonForm.toURI().getPath(),
+                    jsonFile.toURI().getPath(),
                     null,
                     null);
         } catch (URISyntaxException ex) {
-            throw new IllegalArgumentException("", ex);
+            String errMsg = format("cannot create clickable url to file '%s'",
+                    jsonFile.getAbsolutePath());
+            log.error(StringUtils.capitalize(errMsg) + ".", ex);
+            throw new IllegalStateException(errMsg);
         }
     }
 
     @VisibleForTesting
     public static File getTmpJsonFile(String paymentMethodId) {
-        File file = null;
+        File file;
         try {
             // Creates a tmp file that includes a random number string between the
             // prefix and suffix, i.e., sepa_form_13243546575879.json, so there is
@@ -213,7 +220,10 @@ public class PaymentAccountForm {
                     ".json",
                     Paths.get(getProperty("java.io.tmpdir")).toFile());
         } catch (IOException ex) {
-            log.error("", ex);
+            String errMsg = format("cannot create json file for a %s payment method",
+                    paymentMethodId);
+            log.error(StringUtils.capitalize(errMsg) + ".", ex);
+            throw new IllegalStateException(errMsg);
         }
         return file;
     }
