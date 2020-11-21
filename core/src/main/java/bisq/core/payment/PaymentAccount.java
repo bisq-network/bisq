@@ -181,6 +181,10 @@ public abstract class PaymentAccount implements PersistablePayload {
         return this instanceof HalCashAccount;
     }
 
+    public boolean isMoneyGramAccount() {
+        return this instanceof MoneyGramAccount;
+    }
+
     /**
      * Return an Optional of the trade currency for this payment account, or
      * Optional.empty() if none is found.  If this payment account has a selected
