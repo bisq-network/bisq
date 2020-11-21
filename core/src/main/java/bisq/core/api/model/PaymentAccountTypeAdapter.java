@@ -21,6 +21,7 @@ package bisq.core.api.model;
 import bisq.core.locale.Country;
 import bisq.core.locale.FiatCurrency;
 import bisq.core.payment.CountryBasedPaymentAccount;
+import bisq.core.payment.MoneyGramAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentAccountPayload;
 
@@ -285,22 +286,31 @@ class PaymentAccountTypeAdapter extends TypeAdapter<PaymentAccount> {
     }
 
     private boolean didReadCountryField(JsonReader in, PaymentAccount account, String fieldName) {
-        if (account.isCountryBasedPaymentAccount() && fieldName.equals("country")) {
-            // Read the country code, and use it to set the account's country and single
-            // trade currency fields.
-            String countryCode = nextStringOrNull(in);
-            Optional<Country> country = findCountryByCode(countryCode);
-            if (country.isPresent()) {
+        if (!fieldName.equals("country"))
+            return false;
+
+        String countryCode = nextStringOrNull(in);
+        Optional<Country> country = findCountryByCode(countryCode);
+        if (country.isPresent()) {
+
+            if (account.isCountryBasedPaymentAccount()) {
                 ((CountryBasedPaymentAccount) account).setCountry(country.get());
                 FiatCurrency fiatCurrency = getCurrencyByCountryCode(checkNotNull(countryCode));
                 account.setSingleTradeCurrency(fiatCurrency);
-                return true;
+            } else if (account.isMoneyGramAccount()) {
+                ((MoneyGramAccount) account).setCountry(country.get());
             } else {
-                throw new IllegalArgumentException(
-                        format("'%s' is an invalid country code.", countryCode));
+                String errMsg = format("cannot set the country on a %s",
+                        paymentAccountType.getSimpleName());
+                log.error(StringUtils.capitalize(errMsg) + ".");
+                throw new IllegalStateException("programmer error: " + errMsg);
             }
+
+            return true;
+
         } else {
-            return false;
+            throw new IllegalArgumentException(
+                    format("'%s' is an invalid country code.", countryCode));
         }
     }
 
@@ -315,7 +325,6 @@ class PaymentAccountTypeAdapter extends TypeAdapter<PaymentAccount> {
                     paymentAccountType.getSimpleName());
             log.error(StringUtils.capitalize(errMsg) + ".", ex);
             throw new IllegalStateException("programmer error: " + errMsg);
-
         }
     }
 
