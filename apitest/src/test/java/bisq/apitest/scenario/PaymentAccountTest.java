@@ -26,6 +26,10 @@ import bisq.apitest.method.payment.GetPaymentMethodsTest;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class PaymentAccountTest extends AbstractPaymentAccountTest {
 
+    // Two dummy (usd +eth) accounts are set up as defaults in regtest / dao mode,
+    // then we add 28 more payment accounts in testCreatePaymentAccount().
+    private static final int EXPECTED_NUM_PAYMENT_ACCOUNTS = 2 + 28;
+
     @BeforeAll
     public static void setUp() {
         try {
@@ -60,7 +64,7 @@ public class PaymentAccountTest extends AbstractPaymentAccountTest {
         test.testCreateInteracETransferAccount(testInfo);
         test.testCreateJapanBankAccount(testInfo);
         test.testCreateMoneyBeamAccount(testInfo);
-        // test.testCreateMoneyGramAccount(testInfo);
+        test.testCreateMoneyGramAccount(testInfo);
         test.testCreatePerfectMoneyAccount(testInfo);
         test.testCreatePopmoneyAccount(testInfo);
         test.testCreatePromptPayAccount(testInfo);
@@ -75,20 +79,12 @@ public class PaymentAccountTest extends AbstractPaymentAccountTest {
         test.testCreateUSPostalMoneyOrderAccount(testInfo);
         test.testCreateWeChatPayAccount(testInfo);
         test.testCreateWesternUnionAccount(testInfo);
-    }
 
-    @Test
-    @Order(3)
-    public void testTestNumSavedPaymentAccounts(TestInfo testInfo) {
-        // Two dummy (usd +eth) accounts are set up as defaults in regtest / dao mode,
-        // then we added more payment accounts in testCreatePaymentAccount().
-        int expectedNumPaymentAccounts = 2 + 27;
-        assertEquals(expectedNumPaymentAccounts, getPaymentAccounts(alicedaemon).size());
+        assertEquals(EXPECTED_NUM_PAYMENT_ACCOUNTS, getPaymentAccounts(alicedaemon).size());
     }
 
     @AfterAll
     public static void tearDown() {
         tearDownScaffold();
     }
-
 }

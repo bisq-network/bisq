@@ -438,14 +438,8 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
             log.debug("Deserialized {}: {}", paymentAccount.getClass().getSimpleName(), paymentAccount);
     }
 
-    @Disabled
     @Test
     public void testCreateMoneyGramAccount(TestInfo testInfo) {
-        // TODO Check the MoneyGramAccount class, it seems it should be a subclass
-        //   of CountryBasedPaymentAccount, and these setters seem wrong:
-        //      setState(email)
-        //      setHolderName(email)
-        // This is the only test that is breaking as of Fri 20 Nov 2020 03:18:34 PM -03.
         File emptyForm = getEmptyForm(testInfo, MONEY_GRAM_ID);
         verifyEmptyForm(emptyForm,
                 MONEY_GRAM_ID,
@@ -466,7 +460,8 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         verifyCommonFormEntries(paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_HOLDER_NAME), paymentAccount.getFullName());
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_EMAIL), paymentAccount.getEmail());
-        assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_COUNTRY), paymentAccount.getCountry());
+        assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_COUNTRY),
+                Objects.requireNonNull(paymentAccount.getCountry()).code);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_STATE), paymentAccount.getState());
         if (log.isDebugEnabled())
             log.debug("Deserialized {}: {}", paymentAccount.getClass().getSimpleName(), paymentAccount);
