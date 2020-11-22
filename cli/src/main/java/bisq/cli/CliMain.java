@@ -35,6 +35,7 @@ import bisq.proto.grpc.GetUnusedBsqAddressRequest;
 import bisq.proto.grpc.GetVersionRequest;
 import bisq.proto.grpc.KeepFundsRequest;
 import bisq.proto.grpc.LockWalletRequest;
+import bisq.proto.grpc.OfferInfo;
 import bisq.proto.grpc.RegisterDisputeAgentRequest;
 import bisq.proto.grpc.RemoveWalletPasswordRequest;
 import bisq.proto.grpc.SendBsqRequest;
@@ -344,7 +345,13 @@ public class CliMain {
                             .setCurrencyCode(currencyCode)
                             .build();
                     var reply = offersService.getOffers(request);
-                    out.println(formatOfferTable(reply.getOffersList(), currencyCode));
+
+                    List<OfferInfo> offers = reply.getOffersList();
+                    if(offers.isEmpty())
+                        out.println("no offers found");
+                    else
+                        out.println(formatOfferTable(reply.getOffersList(), currencyCode));
+
                     return;
                 }
                 case takeoffer: {
