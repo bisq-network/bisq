@@ -69,10 +69,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import static bisq.cli.CurrencyFormat.toSatoshis;
 import static bisq.cli.NegativeNumberOptions.hasNegativeNumberOptions;
-import static bisq.cli.TableFormat.formatAddressBalanceTbl;
-import static bisq.cli.TableFormat.formatBalancesTbls;
-import static bisq.cli.TableFormat.formatOfferTable;
-import static bisq.cli.TableFormat.formatPaymentAcctTbl;
+import static bisq.cli.TableFormat.*;
 import static java.lang.String.format;
 import static java.lang.System.err;
 import static java.lang.System.exit;
@@ -208,7 +205,18 @@ public class CliMain {
                             .setCurrencyCode(currencyCode)
                             .build();
                     var reply = walletsService.getBalances(request);
-                    out.println(formatBalancesTbls(reply.getBalances()));
+                    switch (currencyCode.toUpperCase()) {
+                        case "BSQ":
+                            out.println(formatBsqBalanceInfoTbl(reply.getBalances().getBsq()));
+                            break;
+                        case "BTC":
+                            out.println(formatBtcBalanceInfoTbl(reply.getBalances().getBtc()));
+                            break;
+                        case "":
+                        default:
+                            out.println(formatBalancesTbls(reply.getBalances()));
+                            break;
+                    }
                     return;
                 }
                 case getaddressbalance: {
