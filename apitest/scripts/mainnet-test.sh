@@ -93,8 +93,6 @@
 @test "test getbalance while wallet unlocked for 8s" {
   run ./bisq-cli --password=xyz getbalance
   [ "$status" -eq 0 ]
-  echo "actual output:  $output" >&2
-  [ "$output" = "0.00000000" ]
   sleep 8
 }
 
@@ -145,8 +143,6 @@
 @test "test getbalance when wallet available & unlocked with 0 btc balance" {
   run ./bisq-cli --password=xyz getbalance
   [ "$status" -eq 0 ]
-  echo "actual output:  $output" >&2
-  [ "$output" = "0.00000000" ]
 }
 
 @test "test getfundingaddresses" {
@@ -166,18 +162,6 @@
   [ "$status" -eq 1 ]
   echo "actual output:  $output" >&2
   [ "$output" = "Error: address bogus not found in wallet" ]
-}
-
-@test "test createpaymentacct PerfectMoneyDummy (missing name, nbr, ccy params)" {
-  run ./bisq-cli --password=xyz createpaymentacct PERFECT_MONEY
-  [ "$status" -eq 1 ]
- echo "actual output:  $output" >&2
-  [ "$output" = "Error: incorrect parameter count, expecting payment method id, account name, account number, currency code" ]
-}
-
-@test "test createpaymentacct PERFECT_MONEY PerfectMoneyDummy 0123456789 USD" {
-  run ./bisq-cli --password=xyz createpaymentacct PERFECT_MONEY PerfectMoneyDummy 0123456789 USD
-  [ "$status" -eq 0 ]
 }
 
 @test "test getpaymentaccts" {
