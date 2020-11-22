@@ -150,6 +150,11 @@
   [ "$status" -eq 0 ]
 }
 
+@test "test getunusedbsqaddress" {
+  run ./bisq-cli --password=xyz getfundingaddresses
+  [ "$status" -eq 0 ]
+}
+
 @test "test getaddressbalance missing address argument" {
   run ./bisq-cli --password=xyz getaddressbalance
   [ "$status" -eq 1 ]
@@ -162,6 +167,11 @@
   [ "$status" -eq 1 ]
   echo "actual output:  $output" >&2
   [ "$output" = "Error: address bogus not found in wallet" ]
+}
+
+@test "test getpaymentmethods" {
+  run ./bisq-cli --password=xyz getpaymentmethods
+  [ "$status" -eq 0 ]
 }
 
 @test "test getpaymentaccts" {
