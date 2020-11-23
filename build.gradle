@@ -28,7 +28,7 @@ configure(subprojects) {
 
     ext { // in alphabetical order
         bcVersion = '1.63'
-        bitcoinjVersion = '60b4f2f'
+        bitcoinjVersion = '7752cb7'
         btcdCli4jVersion = '27b94333'
         codecVersion = '1.13'
         easybindVersion = '1.0.3'
