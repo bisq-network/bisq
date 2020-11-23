@@ -22,6 +22,7 @@ import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.dao.DaoSetup;
+import bisq.core.dao.node.full.RpcService;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 
@@ -86,6 +87,7 @@ public abstract class ExecutableForAppWithP2p extends BisqExecutable {
         try {
             if (injector != null) {
                 JsonFileManager.shutDownAllInstances();
+                injector.getInstance(RpcService.class).shutDown();
                 injector.getInstance(DaoSetup.class).shutDown();
                 injector.getInstance(ArbitratorManager.class).shutDown();
                 injector.getInstance(OpenOfferManager.class).shutDown(() -> injector.getInstance(P2PService.class).shutDown(() -> {
