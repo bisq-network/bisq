@@ -347,8 +347,8 @@ public class CliMain {
                     var reply = offersService.getOffers(request);
 
                     List<OfferInfo> offers = reply.getOffersList();
-                    if(offers.isEmpty())
-                        out.println("no offers found");
+                    if (offers.isEmpty())
+                        out.printf("no %s %s offers found\n", direction, currencyCode);
                     else
                         out.println(formatOfferTable(reply.getOffersList(), currencyCode));
 
@@ -627,8 +627,8 @@ public class CliMain {
             stream.format(rowFormat, "sendbsq", "address, amount", "Send BSQ");
             stream.format(rowFormat, "createoffer", "payment acct id, buy | sell, currency code, \\", "Create and place an offer");
             stream.format(rowFormat, "", "amount (btc), min amount, use mkt based price, \\", "");
-            stream.format(rowFormat, "", "fixed price (btc) | mkt price margin (%) [,maker fee currency code = bsq|btc]\\", "");
-            stream.format(rowFormat, "", "security deposit (%)", "");
+            stream.format(rowFormat, "", "fixed price (btc) | mkt price margin (%), security deposit (%) \\", "");
+            stream.format(rowFormat, "", "[,maker fee currency code = bsq|btc]", "");
             stream.format(rowFormat, "canceloffer", "offer id", "Cancel offer with id");
             stream.format(rowFormat, "getoffer", "offer id", "Get current offer with id");
             stream.format(rowFormat, "getoffers", "buy | sell, currency code", "Get current offers");
