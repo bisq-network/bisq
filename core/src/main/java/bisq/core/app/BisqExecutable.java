@@ -250,10 +250,10 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
                             PersistenceManager.flushAllDataToDisk(() -> {
                                 log.info("Graceful shutdown completed. Exiting now.");
                                 resultHandler.handleResult();
-                                System.exit(EXIT_SUCCESS);
+                                UserThread.runAfter(() -> System.exit(EXIT_SUCCESS), 1);
                             });
                         } else {
-                            System.exit(EXIT_SUCCESS);
+                            UserThread.runAfter(() -> System.exit(EXIT_SUCCESS), 1);
                         }
                     });
                 });
@@ -269,10 +269,10 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
                     PersistenceManager.flushAllDataToDisk(() -> {
                         log.info("Graceful shutdown resulted in a timeout. Exiting now.");
                         resultHandler.handleResult();
-                        System.exit(EXIT_SUCCESS);
+                        UserThread.runAfter(() -> System.exit(EXIT_SUCCESS), 1);
                     });
                 } else {
-                    System.exit(EXIT_SUCCESS);
+                    UserThread.runAfter(() -> System.exit(EXIT_SUCCESS), 1);
                 }
 
             }, 20);
@@ -284,10 +284,10 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
                 PersistenceManager.flushAllDataToDisk(() -> {
                     log.info("Graceful shutdown resulted in an error. Exiting now.");
                     resultHandler.handleResult();
-                    System.exit(EXIT_FAILURE);
+                    UserThread.runAfter(() -> System.exit(EXIT_FAILURE), 1);
                 });
             } else {
-                System.exit(EXIT_FAILURE);
+                UserThread.runAfter(() -> System.exit(EXIT_FAILURE), 1);
             }
         }
     }
