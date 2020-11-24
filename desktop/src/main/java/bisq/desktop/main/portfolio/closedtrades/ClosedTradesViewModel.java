@@ -78,6 +78,17 @@ class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataMod
             return FormattingUtils.formatPrice(tradable.getOffer().getPrice());
     }
 
+    String getPriceDeviation(ClosedTradableListItem item) {
+        if (item == null)
+            return "";
+        Tradable tradable = item.getTradable();
+        if (tradable.getOffer().isUseMarketBasedPrice()) {
+            return FormattingUtils.formatPercentagePrice(tradable.getOffer().getMarketPriceMargin());
+        } else {
+            return Res.get("shared.na");
+        }
+    }
+
     String getVolume(ClosedTradableListItem item) {
         if (item != null && item.getTradable() instanceof Trade)
             return DisplayUtils.formatVolumeWithCode(((Trade) item.getTradable()).getTradeVolume());
