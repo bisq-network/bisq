@@ -80,6 +80,8 @@ public class PaymentAccountFactory {
                 return new AdvancedCashAccount();
             case PaymentMethod.TRANSFERWISE_ID:
                 return new TransferwiseAccount();
+            case PaymentMethod.AMAZON_GIFT_CARD_ID:
+                return new AmazonGiftCardAccount();
             case PaymentMethod.BLOCK_CHAINS_INSTANT_ID:
                 return new InstantCryptoCurrencyAccount();
 

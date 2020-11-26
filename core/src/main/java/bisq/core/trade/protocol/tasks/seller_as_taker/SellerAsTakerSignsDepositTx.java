@@ -83,6 +83,8 @@ public class SellerAsTakerSignsDepositTx extends TradeTask {
             // We set the deposit tx to trade once we have it published
             processModel.setDepositTx(depositTx);
 
+            processModel.getTradeManager().requestPersistence();
+
             complete();
         } catch (Throwable t) {
             Contract contract = trade.getContract();

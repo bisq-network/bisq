@@ -47,6 +47,8 @@ public class MakerSetsLockTime extends TradeTask {
             log.info("lockTime={}, delay={}", lockTime, delay);
             trade.setLockTime(lockTime);
 
+            processModel.getTradeManager().requestPersistence();
+
             complete();
         } catch (Throwable t) {
             failed(t);

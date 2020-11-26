@@ -40,11 +40,14 @@ import javax.inject.Singleton;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableSet;
 
+import java.time.Instant;
+
 import java.io.File;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
@@ -135,6 +138,24 @@ public class TradeStatisticsManager {
                     .collect(Collectors.toCollection(ArrayList::new));
             cryptoCurrencyList.add(0, new CurrencyTuple(Res.getBaseCurrencyCode(), Res.getBaseCurrencyName(), 8));
             jsonFileManager.writeToDiscThreaded(Utilities.objectToJson(cryptoCurrencyList), "crypto_currency_list");
+
+            Instant yearAgo = Instant.ofEpochSecond(Instant.now().getEpochSecond() - TimeUnit.DAYS.toSeconds(365));
+            Set<String> activeCurrencies = observableTradeStatisticsSet.stream()
+                    .filter(e -> e.getDate().toInstant().isAfter(yearAgo))
+                    .map(p -> p.getCurrency())
+                    .collect(Collectors.toSet());
+
+            ArrayList<CurrencyTuple> activeFiatCurrencyList = fiatCurrencyList.stream()
+                    .filter(e -> activeCurrencies.contains(e.code))
+                    .map(e -> new CurrencyTuple(e.code, e.name, 8))
+                    .collect(Collectors.toCollection(ArrayList::new));
+            jsonFileManager.writeToDiscThreaded(Utilities.objectToJson(activeFiatCurrencyList), "active_fiat_currency_list");
+
+            ArrayList<CurrencyTuple> activeCryptoCurrencyList = cryptoCurrencyList.stream()
+                    .filter(e -> activeCurrencies.contains(e.code))
+                    .map(e -> new CurrencyTuple(e.code, e.name, 8))
+                    .collect(Collectors.toCollection(ArrayList::new));
+            jsonFileManager.writeToDiscThreaded(Utilities.objectToJson(activeCryptoCurrencyList), "active_crypto_currency_list");
         }
 
         List<TradeStatisticsForJson> list = observableTradeStatisticsSet.stream()

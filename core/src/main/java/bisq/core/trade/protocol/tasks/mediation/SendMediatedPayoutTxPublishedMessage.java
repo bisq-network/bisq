@@ -54,21 +54,25 @@ public class SendMediatedPayoutTxPublishedMessage extends SendMailboxMessageTask
     @Override
     protected void setStateSent() {
         trade.setMediationResultState(MediationResultState.PAYOUT_TX_PUBLISHED_MSG_SENT);
+        processModel.getTradeManager().requestPersistence();
     }
 
     @Override
     protected void setStateArrived() {
         trade.setMediationResultState(MediationResultState.PAYOUT_TX_PUBLISHED_MSG_ARRIVED);
+        processModel.getTradeManager().requestPersistence();
     }
 
     @Override
     protected void setStateStoredInMailbox() {
         trade.setMediationResultState(MediationResultState.PAYOUT_TX_PUBLISHED_MSG_IN_MAILBOX);
+        processModel.getTradeManager().requestPersistence();
     }
 
     @Override
     protected void setStateFault() {
         trade.setMediationResultState(MediationResultState.PAYOUT_TX_PUBLISHED_MSG_SEND_FAILED);
+        processModel.getTradeManager().requestPersistence();
     }
 
     @Override

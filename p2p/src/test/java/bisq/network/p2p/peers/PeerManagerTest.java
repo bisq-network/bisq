@@ -28,6 +28,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -49,6 +50,11 @@ public class PeerManagerTest {
         maxConnectionsNonDirect = Math.max(8, (int) Math.round(node.getMaxConnections() * 1.7));
     }
 
+    @After
+    public void tearDown() {
+        node.getPersistenceManager().shutdown();
+    }
+
     @Test
     public void testCheckMaxConnectionsNotExceeded() {
         for (int i = 0; i < 2; i++) {
@@ -58,9 +64,8 @@ public class PeerManagerTest {
 
         assertFalse(node.getPeerManager().checkMaxConnections());
 
-        node.getNetworkNode().getAllConnections().forEach(connection -> {
-            verify(connection, never()).shutDown(eq(CloseConnectionReason.TOO_MANY_CONNECTIONS_OPEN), isA(Runnable.class));
-        });
+        node.getNetworkNode().getAllConnections().forEach(connection ->
+                verify(connection, never()).shutDown(eq(CloseConnectionReason.TOO_MANY_CONNECTIONS_OPEN), isA(Runnable.class)));
     }
 
     @Test
@@ -84,11 +89,10 @@ public class PeerManagerTest {
         verify(oldestConnection, times(1)).shutDown(
                 eq(CloseConnectionReason.TOO_MANY_CONNECTIONS_OPEN),
                 isA(Runnable.class));
-        inboundSortedPeerConnections.forEach(connection -> {
-            verify(connection, never()).shutDown(
-                    eq(CloseConnectionReason.TOO_MANY_CONNECTIONS_OPEN),
-                    isA(Runnable.class));
-        });
+        inboundSortedPeerConnections.forEach(connection ->
+                verify(connection, never()).shutDown(
+                        eq(CloseConnectionReason.TOO_MANY_CONNECTIONS_OPEN),
+                        isA(Runnable.class)));
     }
 
     @Test
@@ -100,9 +104,8 @@ public class PeerManagerTest {
 
         assertFalse(node.getPeerManager().checkMaxConnections());
 
-        node.getNetworkNode().getAllConnections().forEach(connection -> {
-            verify(connection, never()).shutDown(eq(CloseConnectionReason.TOO_MANY_CONNECTIONS_OPEN), isA(Runnable.class));
-        });
+        node.getNetworkNode().getAllConnections().forEach(connection ->
+                verify(connection, never()).shutDown(eq(CloseConnectionReason.TOO_MANY_CONNECTIONS_OPEN), isA(Runnable.class)));
     }
 
     @Test
@@ -125,11 +128,10 @@ public class PeerManagerTest {
         verify(oldestConnection, times(1)).shutDown(
                 eq(CloseConnectionReason.TOO_MANY_CONNECTIONS_OPEN),
                 isA(Runnable.class));
-        sortedPeerConnections.forEach(connection -> {
-            verify(connection, never()).shutDown(
-                    eq(CloseConnectionReason.TOO_MANY_CONNECTIONS_OPEN),
-                    isA(Runnable.class));
-        });
+        sortedPeerConnections.forEach(connection ->
+                verify(connection, never()).shutDown(
+                        eq(CloseConnectionReason.TOO_MANY_CONNECTIONS_OPEN),
+                        isA(Runnable.class)));
     }
 
     @Test
@@ -141,9 +143,8 @@ public class PeerManagerTest {
 
         assertFalse(node.getPeerManager().checkMaxConnections());
 
-        node.getNetworkNode().getAllConnections().forEach(connection -> {
-            verify(connection, never()).shutDown(eq(CloseConnectionReason.TOO_MANY_CONNECTIONS_OPEN), isA(Runnable.class));
-        });
+        node.getNetworkNode().getAllConnections().forEach(connection ->
+                verify(connection, never()).shutDown(eq(CloseConnectionReason.TOO_MANY_CONNECTIONS_OPEN), isA(Runnable.class)));
     }
 
     @Test
@@ -167,11 +168,10 @@ public class PeerManagerTest {
         verify(oldestConnection, times(1)).shutDown(
                 eq(CloseConnectionReason.TOO_MANY_CONNECTIONS_OPEN),
                 isA(Runnable.class));
-        sortedPeerConnections.forEach(connection -> {
-            verify(connection, never()).shutDown(
-                    eq(CloseConnectionReason.TOO_MANY_CONNECTIONS_OPEN),
-                    isA(Runnable.class));
-        });
+        sortedPeerConnections.forEach(connection ->
+                verify(connection, never()).shutDown(
+                        eq(CloseConnectionReason.TOO_MANY_CONNECTIONS_OPEN),
+                        isA(Runnable.class)));
     }
 
     @Test
@@ -183,8 +183,7 @@ public class PeerManagerTest {
 
         assertFalse(node.getPeerManager().checkMaxConnections());
 
-        node.getNetworkNode().getAllConnections().forEach(connection -> {
-            verify(connection, never()).shutDown(eq(CloseConnectionReason.TOO_MANY_CONNECTIONS_OPEN), isA(Runnable.class));
-        });
+        node.getNetworkNode().getAllConnections().forEach(connection ->
+                verify(connection, never()).shutDown(eq(CloseConnectionReason.TOO_MANY_CONNECTIONS_OPEN), isA(Runnable.class)));
     }
 }

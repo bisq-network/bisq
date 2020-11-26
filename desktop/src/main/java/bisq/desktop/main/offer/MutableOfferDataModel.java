@@ -129,7 +129,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     protected double marketPriceMargin = 0;
     private Coin txFeeFromFeeService = Coin.ZERO;
     private boolean marketPriceAvailable;
-    private int feeTxSize = TxFeeEstimationService.TYPICAL_TX_WITH_1_INPUT_SIZE;
+    private int feeTxVsize = TxFeeEstimationService.TYPICAL_TX_WITH_1_INPUT_VSIZE;
     protected boolean allowAmountUpdate = true;
     private final TradeStatisticsManager tradeStatisticsManager;
 
@@ -262,7 +262,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
 
         // Set the default values (in rare cases if the fee request was not done yet we get the hard coded default values)
         // But offer creation happens usually after that so we should have already the value from the estimation service.
-        txFeeFromFeeService = feeService.getTxFee(feeTxSize);
+        txFeeFromFeeService = feeService.getTxFee(feeTxVsize);
 
         calculateVolume();
         calculateTotalToPay();
@@ -301,13 +301,13 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     }
 
     // This works only if we have already funds in the wallet
-    public void updateEstimatedFeeAndTxSize() {
-        Tuple2<Coin, Integer> estimatedFeeAndTxSize = createOfferService.getEstimatedFeeAndTxSize(amount.get(),
+    public void updateEstimatedFeeAndTxVsize() {
+        Tuple2<Coin, Integer> estimatedFeeAndTxVsize = createOfferService.getEstimatedFeeAndTxVsize(amount.get(),
                 direction,
                 buyerSecurityDeposit.get(),
                 createOfferService.getSellerSecurityDepositAsDouble(buyerSecurityDeposit.get()));
-        txFeeFromFeeService = estimatedFeeAndTxSize.first;
-        feeTxSize = estimatedFeeAndTxSize.second;
+        txFeeFromFeeService = estimatedFeeAndTxVsize.first;
+        feeTxVsize = estimatedFeeAndTxVsize.second;
     }
 
     void onPlaceOffer(Offer offer, TransactionResultHandler resultHandler) {
@@ -439,7 +439,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
 
     void requestTxFee(@Nullable Runnable actionHandler) {
         feeService.requestFees(() -> {
-            txFeeFromFeeService = feeService.getTxFee(feeTxSize);
+            txFeeFromFeeService = feeService.getTxFee(feeTxVsize);
             calculateTotalToPay();
             if (actionHandler != null)
                 actionHandler.run();
