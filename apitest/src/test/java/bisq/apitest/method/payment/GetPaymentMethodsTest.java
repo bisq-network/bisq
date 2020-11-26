@@ -43,7 +43,7 @@ public class GetPaymentMethodsTest extends MethodTest {
                 .stream()
                 .map(p -> p.getId())
                 .collect(Collectors.toList());
-        assertEquals(28, paymentMethodIds.size());
+        assertEquals(29, paymentMethodIds.size());
     }
 
     @AfterAll
