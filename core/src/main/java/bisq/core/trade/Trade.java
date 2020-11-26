@@ -700,10 +700,6 @@ public abstract class Trade implements Tradable, Model {
         }
     }
 
-    public void appendErrorMessage(String msg) {
-        errorMessage = errorMessage == null ? msg : errorMessage + "\n" + msg;
-    }
-
     public boolean mediationResultAppliedPenaltyToSeller() {
         // If mediated payout is same or more then normal payout we enable otherwise a penalty was applied
         // by mediators and we keep the confirm disabled to avoid that the seller can complete the trade
@@ -1099,6 +1095,9 @@ public abstract class Trade implements Tradable, Model {
     private void setConfirmedState() {
         // we only apply the state if we are not already further in the process
         if (!isDepositConfirmed()) {
+            // As setState is called here from the trade itself we cannot trigger a requestPersistence call.
+            // But as we get setupConfidenceListener called at startup anyway there is no issue if it would not be
+            // persisted in case the shutdown routine did not persist the trade.
             setState(State.DEPOSIT_CONFIRMED_IN_BLOCK_CHAIN);
         }
     }

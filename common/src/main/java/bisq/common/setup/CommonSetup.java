@@ -48,8 +48,8 @@ import sun.misc.Signal;
 public class CommonSetup {
 
     public static void setup(Config config, GracefulShutDownHandler gracefulShutDownHandler) {
-        AsciiLogo.showAsciiLogo();
         setupLog(config);
+        AsciiLogo.showAsciiLogo();
         Version.setBaseCryptoNetworkId(config.baseCurrencyNetwork.ordinal());
         Version.printVersion();
         maybePrintPathOfCodeSource();

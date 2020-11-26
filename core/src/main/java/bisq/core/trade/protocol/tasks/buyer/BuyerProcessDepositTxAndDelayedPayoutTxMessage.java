@@ -26,12 +26,16 @@ import bisq.core.trade.protocol.tasks.TradeTask;
 import bisq.core.util.Validator;
 
 import bisq.common.taskrunner.TaskRunner;
+import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.wallet.Wallet;
 
+import java.util.Arrays;
+
 import lombok.extern.slf4j.Slf4j;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -59,9 +63,11 @@ public class BuyerProcessDepositTxAndDelayedPayoutTxMessage extends TradeTask {
 
             // To access tx confidence we need to add that tx into our wallet.
             byte[] delayedPayoutTxBytes = checkNotNull(message.getDelayedPayoutTx());
+            checkArgument(Arrays.equals(delayedPayoutTxBytes, trade.getDelayedPayoutTxBytes()),
+                    "mismatch between delayedPayoutTx received from peer and our one." +
+                            "\n Expected: " + Utilities.bytesAsHexString(trade.getDelayedPayoutTxBytes()) +
+                            "\n Received: " + Utilities.bytesAsHexString(delayedPayoutTxBytes));
             trade.applyDelayedPayoutTxBytes(delayedPayoutTxBytes);
-            BtcWalletService.printTx("delayedPayoutTx received from peer",
-                    checkNotNull(trade.getDelayedPayoutTx()));
 
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
 
@@ -72,6 +78,8 @@ public class BuyerProcessDepositTxAndDelayedPayoutTxMessage extends TradeTask {
 
             processModel.getBtcWalletService().swapTradeEntryToAvailableEntry(trade.getId(),
                     AddressEntry.Context.RESERVED_FOR_TRADE);
+
+            processModel.getTradeManager().requestPersistence();
 
             complete();
         } catch (Throwable t) {

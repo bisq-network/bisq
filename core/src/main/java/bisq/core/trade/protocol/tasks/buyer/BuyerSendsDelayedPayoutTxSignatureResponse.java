@@ -44,10 +44,15 @@ public class BuyerSendsDelayedPayoutTxSignatureResponse extends TradeTask {
             runInterceptHook();
 
             byte[] delayedPayoutTxSignature = checkNotNull(processModel.getDelayedPayoutTxSignature());
+            byte[] depositTxBytes = processModel.getDepositTx() != null
+                    ? processModel.getDepositTx().bitcoinSerialize() // set in BuyerAsTakerSignsDepositTx task
+                    : processModel.getPreparedDepositTx();           // set in BuyerAsMakerCreatesAndSignsDepositTx task
+
             DelayedPayoutTxSignatureResponse message = new DelayedPayoutTxSignatureResponse(UUID.randomUUID().toString(),
                     processModel.getOfferId(),
                     processModel.getMyNodeAddress(),
-                    delayedPayoutTxSignature);
+                    delayedPayoutTxSignature,
+                    depositTxBytes);
 
             NodeAddress peersNodeAddress = trade.getTradingPeerNodeAddress();
             log.info("Send {} to peer {}. tradeId={}, uid={}",
