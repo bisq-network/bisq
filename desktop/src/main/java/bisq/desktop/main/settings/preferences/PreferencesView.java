@@ -270,9 +270,9 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
             preferences.setUseCustomWithdrawalTxFee(newValue);
             transactionFeeInputTextField.setEditable(newValue);
             if (!newValue) {
-                transactionFeeInputTextField.setText(String.valueOf(feeService.getTxFeePerByte().value));
+                transactionFeeInputTextField.setText(String.valueOf(feeService.getTxFeePerVbyte().value));
                 try {
-                    preferences.setWithdrawalTxFeeInBytes(feeService.getTxFeePerByte().value);
+                    preferences.setWithdrawalTxFeeInVbytes(feeService.getTxFeePerVbyte().value);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -283,18 +283,18 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
 
         transactionFeeFocusedListener = (o, oldValue, newValue) -> {
             if (oldValue && !newValue) {
-                String estimatedFee = String.valueOf(feeService.getTxFeePerByte().value);
+                String estimatedFee = String.valueOf(feeService.getTxFeePerVbyte().value);
                 try {
-                    int withdrawalTxFeePerByte = Integer.parseInt(transactionFeeInputTextField.getText());
-                    final long minFeePerByte = Config.baseCurrencyNetwork().getDefaultMinFeePerByte();
-                    if (withdrawalTxFeePerByte < minFeePerByte) {
-                        new Popup().warning(Res.get("setting.preferences.txFeeMin", minFeePerByte)).show();
+                    int withdrawalTxFeePerVbyte = Integer.parseInt(transactionFeeInputTextField.getText());
+                    final long minFeePerVbyte = Config.baseCurrencyNetwork().getDefaultMinFeePerVbyte();
+                    if (withdrawalTxFeePerVbyte < minFeePerVbyte) {
+                        new Popup().warning(Res.get("setting.preferences.txFeeMin", minFeePerVbyte)).show();
                         transactionFeeInputTextField.setText(estimatedFee);
-                    } else if (withdrawalTxFeePerByte > 5000) {
+                    } else if (withdrawalTxFeePerVbyte > 5000) {
                         new Popup().warning(Res.get("setting.preferences.txFeeTooLarge")).show();
                         transactionFeeInputTextField.setText(estimatedFee);
                     } else {
-                        preferences.setWithdrawalTxFeeInBytes(withdrawalTxFeePerByte);
+                        preferences.setWithdrawalTxFeeInVbytes(withdrawalTxFeePerVbyte);
                     }
                 } catch (NumberFormatException t) {
                     log.error(t.toString());
@@ -309,7 +309,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
                 }
             }
         };
-        transactionFeeChangeListener = (observable, oldValue, newValue) -> transactionFeeInputTextField.setText(String.valueOf(feeService.getTxFeePerByte().value));
+        transactionFeeChangeListener = (observable, oldValue, newValue) -> transactionFeeInputTextField.setText(String.valueOf(feeService.getTxFeePerVbyte().value));
 
         // deviation
         deviationInputTextField = addInputTextField(root, ++gridRow,
@@ -795,11 +795,11 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
 
         transactionFeeInputTextField.setEditable(useCustomWithdrawalTxFee);
         if (!useCustomWithdrawalTxFee) {
-            transactionFeeInputTextField.setText(String.valueOf(feeService.getTxFeePerByte().value));
+            transactionFeeInputTextField.setText(String.valueOf(feeService.getTxFeePerVbyte().value));
             feeService.feeUpdateCounterProperty().addListener(transactionFeeChangeListener);
         }
 
-        transactionFeeInputTextField.setText(String.valueOf(getTxFeeForWithdrawalPerByte()));
+        transactionFeeInputTextField.setText(String.valueOf(getTxFeeForWithdrawalPerVbyte()));
         ignoreTradersListInputTextField.setText(String.join(", ", preferences.getIgnoreTradersList()));
         /* referralIdService.getOptionalReferralId().ifPresent(referralId -> referralIdInputTextField.setText(referralId));
         referralIdInputTextField.setPromptText(Res.get("setting.preferences.refererId.prompt"));*/
@@ -870,10 +870,10 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         ignoreDustThresholdInputTextField.textProperty().addListener(ignoreDustThresholdListener);
     }
 
-    private Coin getTxFeeForWithdrawalPerByte() {
+    private Coin getTxFeeForWithdrawalPerVbyte() {
         Coin fee = (preferences.isUseCustomWithdrawalTxFee()) ?
-                Coin.valueOf(preferences.getWithdrawalTxFeeInBytes()) :
-                feeService.getTxFeePerByte();
+                Coin.valueOf(preferences.getWithdrawalTxFeeInVbytes()) :
+                feeService.getTxFeePerVbyte();
         log.info("tx fee = " + fee.toFriendlyString());
         return fee;
     }

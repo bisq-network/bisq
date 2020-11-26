@@ -54,6 +54,8 @@ public class SellerPublishesDepositTx extends TradeTask {
                                 processModel.getBtcWalletService().swapTradeEntryToAvailableEntry(processModel.getOffer().getId(),
                                         AddressEntry.Context.RESERVED_FOR_TRADE);
 
+                                processModel.getTradeManager().requestPersistence();
+
                                 complete();
                             } else {
                                 log.warn("We got the onSuccess callback called after the timeout has been triggered a complete().");

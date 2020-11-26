@@ -376,7 +376,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private void updateSigningStateColumn() {
         if (model.hasSelectionAccountSigning()) {
             if (!tableView.getColumns().contains(signingStateColumn)) {
-                tableView.getColumns().add(tableView.getColumns().indexOf(paymentMethodColumn) + 1, signingStateColumn);
+                tableView.getColumns().add(tableView.getColumns().indexOf(depositColumn) + 1, signingStateColumn);
             }
         } else {
             tableView.getColumns().remove(signingStateColumn);
@@ -1112,6 +1112,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
                             if (needsSigning) {
                                 if (accountAgeWitnessService.hasSignedWitness(item.getOffer())) {
+                                    // either signed & limits lifted, or waiting for limits to be lifted
                                     AccountAgeWitnessService.SignState signState = accountAgeWitnessService.getSignState(item.getOffer());
                                     icon = GUIUtil.getIconForSignState(signState);
                                     info = Res.get("offerbook.timeSinceSigning.info",
@@ -1121,10 +1122,9 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                     timeSinceSigning = Res.get("offerbook.timeSinceSigning.daysSinceSigning",
                                             daysSinceSigning);
                                 } else {
+                                    // either banned, unsigned
                                     AccountAgeWitnessService.SignState signState = accountAgeWitnessService.getSignState(item.getOffer());
-
                                     icon = GUIUtil.getIconForSignState(signState);
-
                                     if (!signState.equals(AccountAgeWitnessService.SignState.UNSIGNED)) {
                                         info = Res.get("offerbook.timeSinceSigning.info", signState.getPresentation());
                                         long daysSinceSigning = TimeUnit.MILLISECONDS.toDays(
@@ -1132,15 +1132,22 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                         timeSinceSigning = Res.get("offerbook.timeSinceSigning.daysSinceSigning",
                                                 daysSinceSigning);
                                     } else {
-                                        info = Res.get("shared.notSigned");
-                                        timeSinceSigning = Res.get("offerbook.timeSinceSigning.notSigned");
+                                        long accountAge = TimeUnit.MILLISECONDS.toDays(accountAgeWitnessService.getAccountAge(item.getOffer()));
+                                        info = Res.get("shared.notSigned", accountAge);
+                                        timeSinceSigning = Res.get("offerbook.timeSinceSigning.notSigned", accountAge);
                                     }
                                 }
-
                             } else {
-                                icon = MaterialDesignIcon.INFORMATION_OUTLINE;
-                                info = Res.get("shared.notSigned.noNeed");
-                                timeSinceSigning = Res.get("offerbook.timeSinceSigning.notSigned.noNeed");
+                                if (CurrencyUtil.isFiatCurrency(item.getOffer().getCurrencyCode())) {
+                                    icon = MaterialDesignIcon.CHECKBOX_MARKED_OUTLINE;
+                                    long days = TimeUnit.MILLISECONDS.toDays(accountAgeWitnessService.getAccountAge(item.getOffer()));
+                                    info = Res.get("shared.notSigned.noNeedDays", days);
+                                    timeSinceSigning = Res.get("offerbook.timeSinceSigning.notSigned.ageDays", days);
+                                } else { // altcoins
+                                    icon = MaterialDesignIcon.INFORMATION_OUTLINE;
+                                    info = Res.get("shared.notSigned.noNeedAlts");
+                                    timeSinceSigning = Res.get("offerbook.timeSinceSigning.notSigned.noNeed");
+                                }
                             }
 
                             InfoAutoTooltipLabel label = new InfoAutoTooltipLabel(timeSinceSigning, icon, ContentDisplay.RIGHT, info);

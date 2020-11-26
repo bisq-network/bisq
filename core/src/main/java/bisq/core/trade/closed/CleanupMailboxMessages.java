@@ -35,6 +35,9 @@ import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
 
+//TODO with the redesign of mailbox messages that is not required anymore. We leave it for now as we want to minimize
+// changes for the 1.5.0 release but we should clean up afterwards...
+
 /**
  * Util for removing pending mailbox messages in case the trade has been closed by the seller after confirming receipt
  * and a AckMessage as mailbox message will be sent by the buyer once they go online. In that case the seller's trade
@@ -73,8 +76,7 @@ public class CleanupMailboxMessages {
     }
 
     private void cleanupMailboxMessages(List<Trade> trades) {
-        p2PService.getMailboxItemsByUid().values()
-                .stream().map(P2PService.MailboxItem::getDecryptedMessageWithPubKey)
+        p2PService.getMailBoxMessages()
                 .forEach(message -> handleDecryptedMessageWithPubKey(message, trades));
     }
 
@@ -102,7 +104,7 @@ public class CleanupMailboxMessages {
     private void removeEntryFromMailbox(DecryptedMessageWithPubKey decryptedMessageWithPubKey, Trade trade) {
         log.info("We found a pending mailbox message ({}) for trade {}. As the trade is closed we remove the mailbox message.",
                 decryptedMessageWithPubKey.getNetworkEnvelope().getClass().getSimpleName(), trade.getId());
-        p2PService.removeEntryFromMailbox(decryptedMessageWithPubKey);
+        p2PService.removeMailboxMsg(decryptedMessageWithPubKey);
     }
 
     private boolean isMyMessage(TradeMessage message, Trade trade) {

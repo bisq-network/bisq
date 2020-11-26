@@ -145,7 +145,8 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
         PROMPT_PAY,
         ADVANCED_CASH,
         BLOCK_CHAINS_INSTANT,
-        TRANSFERWISE
+        TRANSFERWISE,
+        AMAZON_GIFT_CARD
     }
 
     @Getter

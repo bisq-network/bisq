@@ -91,12 +91,12 @@ public class LockupTxService {
         }
     }
 
-    public Tuple2<Coin, Integer> getMiningFeeAndTxSize(Coin lockupAmount, int lockTime, LockupReason lockupReason, byte[] hash)
+    public Tuple2<Coin, Integer> getMiningFeeAndTxVsize(Coin lockupAmount, int lockTime, LockupReason lockupReason, byte[] hash)
             throws InsufficientMoneyException, WalletException, TransactionVerificationException, IOException {
         Transaction tx = getLockupTx(lockupAmount, lockTime, lockupReason, hash);
         Coin miningFee = tx.getFee();
-        int txSize = tx.bitcoinSerialize().length;
-        return new Tuple2<>(miningFee, txSize);
+        int txVsize = tx.getVsize();
+        return new Tuple2<>(miningFee, txVsize);
     }
 
     private Transaction getLockupTx(Coin lockupAmount, int lockTime, LockupReason lockupReason, byte[] hash)
