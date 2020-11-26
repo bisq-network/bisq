@@ -189,7 +189,7 @@ public abstract class BsqNode implements DaoSetupService {
         if (chainHeight > genesisBlockHeight)
             startBlockHeight = chainHeight + 1;
 
-        log.info("Start parse blocks:\n" +
+        log.info("getStartBlockHeight:\n" +
                         "   Start block height={}\n" +
                         "   Genesis txId={}\n" +
                         "   Genesis block height={}\n" +
@@ -223,7 +223,7 @@ public abstract class BsqNode implements DaoSetupService {
         // height we have no block but chainHeight is initially set to genesis height (bad design ;-( but a bit tricky
         // to change now as it used in many areas.)
         if (daoStateService.getBlockAtHeight(rawBlock.getHeight()).isPresent()) {
-            log.debug("We have already a block with the height of the new block. Height of new block={}", rawBlock.getHeight());
+            log.info("We have already a block with the height of the new block. Height of new block={}", rawBlock.getHeight());
             return Optional.empty();
         }
 

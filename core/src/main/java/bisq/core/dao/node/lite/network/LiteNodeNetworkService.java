@@ -99,7 +99,7 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
     private final Map<Tuple2<NodeAddress, Integer>, RequestBlocksHandler> requestBlocksHandlerMap = new HashMap<>();
     private Timer retryTimer;
     private boolean stopped;
-    private Set<String> receivedBlocks = new HashSet<>();
+    private final Set<String> receivedBlocks = new HashSet<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -129,7 +129,6 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
         peerManager.addListener(this);
     }
 
-    @SuppressWarnings("Duplicates")
     public void shutDown() {
         stopped = true;
         stopRetryTimer();
@@ -154,7 +153,9 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
                 .findAny();
         if (connectionToSeedNodeOptional.isPresent() &&
                 connectionToSeedNodeOptional.get().getPeersNodeAddressOptional().isPresent()) {
-            requestBlocks(connectionToSeedNodeOptional.get().getPeersNodeAddressOptional().get(), startBlockHeight);
+            NodeAddress candidate = connectionToSeedNodeOptional.get().getPeersNodeAddressOptional().get();
+            seedNodeAddresses.remove(candidate);
+            requestBlocks(candidate, startBlockHeight);
         } else {
             tryWithNewSeedNode(startBlockHeight);
         }
@@ -203,14 +204,18 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
         stopRetryTimer();
         stopped = true;
 
-        tryWithNewSeedNode(lastRequestedBlockHeight);
+        if (lastRequestedBlockHeight > 0) {
+            tryWithNewSeedNode(lastRequestedBlockHeight);
+        }
     }
 
     @Override
     public void onNewConnectionAfterAllConnectionsLost() {
         closeAllHandlers();
         stopped = false;
-        tryWithNewSeedNode(lastRequestedBlockHeight);
+        if (lastRequestedBlockHeight > 0) {
+            tryWithNewSeedNode(lastRequestedBlockHeight);
+        }
     }
 
     @Override
@@ -218,8 +223,9 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
         log.info("onAwakeFromStandby");
         closeAllHandlers();
         stopped = false;
-        if (!networkNode.getAllConnections().isEmpty())
+        if (!networkNode.getAllConnections().isEmpty() && lastRequestedBlockHeight > 0) {
             tryWithNewSeedNode(lastRequestedBlockHeight);
+        }
     }
 
 
@@ -234,15 +240,17 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
             // We combine blockHash and txId list in case we receive blocks with different transactions.
             List<String> txIds = newBlockBroadcastMessage.getBlock().getRawTxs().stream().map(BaseTx::getId).collect(Collectors.toList());
             String extBlockId = newBlockBroadcastMessage.getBlock().getHash() + ":" + txIds;
-            if (!receivedBlocks.contains(extBlockId)) {
-                log.debug("We received a new message from peer {} and broadcast it to our peers. extBlockId={}",
-                        connection.getPeersNodeAddressOptional().orElse(null), extBlockId);
-                receivedBlocks.add(extBlockId);
-                broadcaster.broadcast(newBlockBroadcastMessage, connection.getPeersNodeAddressOptional().orElse(null));
-                listeners.forEach(listener -> listener.onNewBlockReceived(newBlockBroadcastMessage));
-            } else {
+
+            if (receivedBlocks.contains(extBlockId)) {
                 log.debug("We had that message already and do not further broadcast it. extBlockId={}", extBlockId);
+                return;
             }
+
+            log.info("We received a NewBlockBroadcastMessage from peer {} and broadcast it to our peers. extBlockId={}",
+                    connection.getPeersNodeAddressOptional().orElse(null), extBlockId);
+            receivedBlocks.add(extBlockId);
+            broadcaster.broadcast(newBlockBroadcastMessage, connection.getPeersNodeAddressOptional().orElse(null));
+            listeners.forEach(listener -> listener.onNewBlockReceived(newBlockBroadcastMessage));
         }
     }
 
@@ -252,78 +260,86 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void requestBlocks(NodeAddress peersNodeAddress, int startBlockHeight) {
-        if (!stopped) {
-            final Tuple2<NodeAddress, Integer> key = new Tuple2<>(peersNodeAddress, startBlockHeight);
-            if (!requestBlocksHandlerMap.containsKey(key)) {
-                if (startBlockHeight >= lastReceivedBlockHeight) {
-                    RequestBlocksHandler requestBlocksHandler = new RequestBlocksHandler(networkNode,
-                            peerManager,
-                            peersNodeAddress,
-                            startBlockHeight,
-                            new RequestBlocksHandler.Listener() {
-                                @Override
-                                public void onComplete(GetBlocksResponse getBlocksResponse) {
-                                    log.debug("requestBlocksHandler of outbound connection complete. nodeAddress={}",
-                                            peersNodeAddress);
-                                    stopRetryTimer();
-
-                                    // need to remove before listeners are notified as they cause the update call
-                                    requestBlocksHandlerMap.remove(key);
-                                    // we only notify if our request was latest
-                                    if (startBlockHeight >= lastReceivedBlockHeight) {
-                                        lastReceivedBlockHeight = startBlockHeight;
-
-                                        listeners.forEach(listener -> listener.onRequestedBlocksReceived(getBlocksResponse,
-                                                () -> {
-                                                    // After we received the blocks we allow to disconnect seed nodes.
-                                                    // We delay 20 seconds to allow multiple requests to finish.
-                                                    UserThread.runAfter(() -> peerManager.setAllowDisconnectSeedNodes(true), 20);
-                                                }));
-                                    } else {
-                                        log.warn("We got a response which is already obsolete because we receive a " +
-                                                "response from a request with a higher block height. " +
-                                                "This could theoretically happen, but is very unlikely.");
-                                    }
-                                }
-
-                                @Override
-                                public void onFault(String errorMessage, @Nullable Connection connection) {
-                                    log.warn("requestBlocksHandler with outbound connection failed.\n\tnodeAddress={}\n\t" +
-                                            "ErrorMessage={}", peersNodeAddress, errorMessage);
-
-                                    peerManager.handleConnectionFault(peersNodeAddress);
-                                    requestBlocksHandlerMap.remove(key);
-
-                                    listeners.forEach(listener -> listener.onFault(errorMessage, connection));
-
-                                    tryWithNewSeedNode(startBlockHeight);
-                                }
-                            });
-                    requestBlocksHandlerMap.put(key, requestBlocksHandler);
-                    log.info("requestBlocks with startBlockHeight={} from peer {}", startBlockHeight, peersNodeAddress);
-                    requestBlocksHandler.requestBlocks();
-                } else {
-                    log.warn("startBlockHeight must not be smaller than lastReceivedBlockHeight. That should never happen." +
-                            "startBlockHeight={},lastReceivedBlockHeight={}", startBlockHeight, lastReceivedBlockHeight);
-                    DevEnv.logErrorAndThrowIfDevMode("startBlockHeight must be larger than lastReceivedBlockHeight. startBlockHeight=" +
-                            startBlockHeight + " / lastReceivedBlockHeight=" + lastReceivedBlockHeight);
-                }
-            } else {
-                log.warn("We have started already a requestDataHandshake for startBlockHeight {} to peer. nodeAddress={}\n" +
-                                "We start a cleanup timer if the handler has not closed by itself in between 2 minutes.",
-                        peersNodeAddress, startBlockHeight);
-
-                UserThread.runAfter(() -> {
-                    if (requestBlocksHandlerMap.containsKey(key)) {
-                        RequestBlocksHandler handler = requestBlocksHandlerMap.get(key);
-                        handler.stop();
-                        requestBlocksHandlerMap.remove(key);
-                    }
-                }, CLEANUP_TIMER);
-            }
-        } else {
+        if (stopped) {
             log.warn("We have stopped already. We ignore that requestData call.");
+            return;
         }
+
+        Tuple2<NodeAddress, Integer> key = new Tuple2<>(peersNodeAddress, startBlockHeight);
+        if (requestBlocksHandlerMap.containsKey(key)) {
+            log.warn("We have started already a requestDataHandshake for startBlockHeight {} to peer. nodeAddress={}\n" +
+                            "We start a cleanup timer if the handler has not closed by itself in between 2 minutes.",
+                    peersNodeAddress, startBlockHeight);
+
+            UserThread.runAfter(() -> {
+                if (requestBlocksHandlerMap.containsKey(key)) {
+                    RequestBlocksHandler handler = requestBlocksHandlerMap.get(key);
+                    handler.stop();
+                    requestBlocksHandlerMap.remove(key);
+                }
+            }, CLEANUP_TIMER);
+            return;
+        }
+
+        if (startBlockHeight < lastReceivedBlockHeight) {
+            log.warn("startBlockHeight must not be smaller than lastReceivedBlockHeight. That should never happen." +
+                    "startBlockHeight={},lastReceivedBlockHeight={}", startBlockHeight, lastReceivedBlockHeight);
+            DevEnv.logErrorAndThrowIfDevMode("startBlockHeight must be larger than lastReceivedBlockHeight. startBlockHeight=" +
+                    startBlockHeight + " / lastReceivedBlockHeight=" + lastReceivedBlockHeight);
+            return;
+        }
+
+        // In case we would have had an earlier request and had set allowDisconnectSeedNodes to true we un-do that
+        // if we get a repeated request.
+        peerManager.setAllowDisconnectSeedNodes(false);
+        RequestBlocksHandler requestBlocksHandler = new RequestBlocksHandler(networkNode,
+                peerManager,
+                peersNodeAddress,
+                startBlockHeight,
+                new RequestBlocksHandler.Listener() {
+                    @Override
+                    public void onComplete(GetBlocksResponse getBlocksResponse) {
+                        log.info("requestBlocksHandler of outbound connection complete. nodeAddress={}",
+                                peersNodeAddress);
+                        stopRetryTimer();
+
+                        // need to remove before listeners are notified as they cause the update call
+                        requestBlocksHandlerMap.remove(key);
+                        // we only notify if our request was latest
+                        if (startBlockHeight >= lastReceivedBlockHeight) {
+                            lastReceivedBlockHeight = startBlockHeight;
+
+                            listeners.forEach(listener -> listener.onRequestedBlocksReceived(getBlocksResponse,
+                                    () -> {
+                                        // After we received the blocks we allow to disconnect seed nodes.
+                                        // We delay 20 seconds to allow multiple requests to finish.
+                                        UserThread.runAfter(() -> peerManager.setAllowDisconnectSeedNodes(true), 20);
+                                    }));
+                        } else {
+                            log.warn("We got a response which is already obsolete because we received a " +
+                                    "response from a request with a higher block height. " +
+                                    "This could theoretically happen, but is very unlikely.");
+                        }
+                    }
+
+                    @Override
+                    public void onFault(String errorMessage, @Nullable Connection connection) {
+                        log.warn("requestBlocksHandler with outbound connection failed.\n\tnodeAddress={}\n\t" +
+                                "ErrorMessage={}", peersNodeAddress, errorMessage);
+
+                        peerManager.handleConnectionFault(peersNodeAddress);
+                        requestBlocksHandlerMap.remove(key);
+
+                        listeners.forEach(listener -> listener.onFault(errorMessage, connection));
+
+                        // We allow now to disconnect from that seed.
+                        peerManager.setAllowDisconnectSeedNodes(true);
+
+                        tryWithNewSeedNode(startBlockHeight);
+                    }
+                });
+        requestBlocksHandlerMap.put(key, requestBlocksHandler);
+        requestBlocksHandler.requestBlocks();
     }
 
 
@@ -332,37 +348,40 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void tryWithNewSeedNode(int startBlockHeight) {
-        if (retryTimer == null) {
-            retryCounter++;
-            if (retryCounter <= MAX_RETRY) {
-                retryTimer = UserThread.runAfter(() -> {
-                            stopped = false;
-
-                            stopRetryTimer();
-
-                            List<NodeAddress> list = seedNodeAddresses.stream()
-                                    .filter(e -> peerManager.isSeedNode(e) && !peerManager.isSelf(e))
-                                    .collect(Collectors.toList());
-                            Collections.shuffle(list);
-
-                            if (!list.isEmpty()) {
-                                NodeAddress nextCandidate = list.get(0);
-                                seedNodeAddresses.remove(nextCandidate);
-                                log.info("We try requestBlocks with {}", nextCandidate);
-                                requestBlocks(nextCandidate, startBlockHeight);
-                            } else {
-                                log.warn("No more seed nodes available we could try.");
-                                listeners.forEach(Listener::onNoSeedNodeAvailable);
-                            }
-                        },
-                        RETRY_DELAY_SEC);
-            } else {
-                log.warn("We tried {} times but could not connect to a seed node.", retryCounter);
-                listeners.forEach(Listener::onNoSeedNodeAvailable);
-            }
-        } else {
+        if (retryTimer != null) {
             log.warn("We have a retry timer already running.");
+            return;
         }
+
+        retryCounter++;
+
+        if (retryCounter > MAX_RETRY) {
+            log.warn("We tried {} times but could not connect to a seed node.", retryCounter);
+            listeners.forEach(Listener::onNoSeedNodeAvailable);
+            return;
+        }
+
+        retryTimer = UserThread.runAfter(() -> {
+                    stopped = false;
+
+                    stopRetryTimer();
+
+                    List<NodeAddress> list = seedNodeAddresses.stream()
+                            .filter(e -> peerManager.isSeedNode(e) && !peerManager.isSelf(e))
+                            .collect(Collectors.toList());
+                    Collections.shuffle(list);
+
+                    if (!list.isEmpty()) {
+                        NodeAddress nextCandidate = list.get(0);
+                        seedNodeAddresses.remove(nextCandidate);
+                        log.info("We try requestBlocks from {} with startBlockHeight={}", nextCandidate, startBlockHeight);
+                        requestBlocks(nextCandidate, startBlockHeight);
+                    } else {
+                        log.warn("No more seed nodes available we could try.");
+                        listeners.forEach(Listener::onNoSeedNodeAvailable);
+                    }
+                },
+                RETRY_DELAY_SEC);
     }
 
     private void stopRetryTimer() {
@@ -386,14 +405,11 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
         requestBlocksHandlerMap.entrySet().stream()
                 .filter(e -> e.getKey().first.equals(nodeAddress))
                 .findAny()
-                .map(Map.Entry::getValue)
-                .ifPresent(handler -> {
-                    final Tuple2<NodeAddress, Integer> key = new Tuple2<>(handler.getNodeAddress(), handler.getStartBlockHeight());
-                    requestBlocksHandlerMap.get(key).cancel();
-                    requestBlocksHandlerMap.remove(key);
+                .ifPresent(e -> {
+                    e.getValue().cancel();
+                    requestBlocksHandlerMap.remove(e.getKey());
                 });
     }
-
 
     private void closeAllHandlers() {
         requestBlocksHandlerMap.values().forEach(RequestBlocksHandler::cancel);

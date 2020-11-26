@@ -17,6 +17,7 @@
 
 package bisq.core.dao.node.lite;
 
+import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.node.BsqNode;
 import bisq.core.dao.node.explorer.ExportJsonFilesService;
@@ -37,8 +38,11 @@ import bisq.common.UserThread;
 
 import com.google.inject.Inject;
 
+import javafx.beans.value.ChangeListener;
+
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -54,7 +58,9 @@ public class LiteNode extends BsqNode {
 
     private final LiteNodeNetworkService liteNodeNetworkService;
     private final BsqWalletService bsqWalletService;
+    private final WalletsSetup walletsSetup;
     private Timer checkForBlockReceivedTimer;
+    private ChangeListener<Number> blockDownloadListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -69,11 +75,13 @@ public class LiteNode extends BsqNode {
                     P2PService p2PService,
                     LiteNodeNetworkService liteNodeNetworkService,
                     BsqWalletService bsqWalletService,
+                    WalletsSetup walletsSetup,
                     ExportJsonFilesService exportJsonFilesService) {
         super(blockParser, daoStateService, daoStateSnapshotService, p2PService, exportJsonFilesService);
 
         this.liteNodeNetworkService = liteNodeNetworkService;
         this.bsqWalletService = bsqWalletService;
+        this.walletsSetup = walletsSetup;
     }
 
 
@@ -87,7 +95,24 @@ public class LiteNode extends BsqNode {
 
         liteNodeNetworkService.start();
 
-        bsqWalletService.addNewBestBlockListener(block -> {
+        // We wait until the wallet is synced before using it trigger requests
+        if (walletsSetup.isDownloadComplete()) {
+            setupWalletBestBlockListener();
+        } else {
+            if (blockDownloadListener == null) {
+                blockDownloadListener = (observable, oldValue, newValue) -> {
+                    if ((double) newValue == 1) {
+                        setupWalletBestBlockListener();
+                        UserThread.execute(() -> walletsSetup.downloadPercentageProperty().removeListener(blockDownloadListener));
+                    }
+                };
+                walletsSetup.downloadPercentageProperty().addListener(blockDownloadListener);
+            }
+        }
+    }
+
+    private void setupWalletBestBlockListener() {
+        bsqWalletService.addNewBestBlockListener(btcBlock -> {
             // Check if we are done with parsing
             if (!daoStateService.isParseBlockChainComplete())
                 return;
@@ -97,20 +122,20 @@ public class LiteNode extends BsqNode {
                 checkForBlockReceivedTimer.stop();
             }
 
-            int height = block.getHeight();
-            log.info("New block at height {} from bsqWalletService", height);
+            int btcWalletHeight = btcBlock.getHeight();
+            log.error("New block at height {} from bsqWalletService", btcWalletHeight);
 
             // We expect to receive the new BSQ block from the network shortly after BitcoinJ has been aware of it.
             // If we don't receive it we request it manually from seed nodes
             checkForBlockReceivedTimer = UserThread.runAfter(() -> {
-                int chainHeight = daoStateService.getChainHeight();
-                if (chainHeight < height) {
+                int daoChainHeight = daoStateService.getChainHeight();
+                if (daoChainHeight < btcWalletHeight) {
                     log.warn("We did not receive a block from the network {} seconds after we saw the new block in BicoinJ. " +
                                     "We request from our seed nodes missing blocks from block height {}.",
-                            CHECK_FOR_BLOCK_RECEIVED_DELAY_SEC, chainHeight + 1);
-                    liteNodeNetworkService.requestBlocks(chainHeight + 1);
+                            CHECK_FOR_BLOCK_RECEIVED_DELAY_SEC, daoChainHeight + 1);
+                    liteNodeNetworkService.requestBlocks(daoChainHeight + 1);
                 }
-            }, CHECK_FOR_BLOCK_RECEIVED_DELAY_SEC);
+            }, CHECK_FOR_BLOCK_RECEIVED_DELAY_SEC, TimeUnit.MILLISECONDS);
         });
     }
 
@@ -157,7 +182,6 @@ public class LiteNode extends BsqNode {
     // First we request the blocks from a full node
     @Override
     protected void startParseBlocks() {
-        log.info("startParseBlocks");
         liteNodeNetworkService.requestBlocks(getStartBlockHeight());
     }
 
@@ -199,8 +223,12 @@ public class LiteNode extends BsqNode {
 
         runDelayedBatchProcessing(new ArrayList<>(blockList),
                 () -> {
-                    log.debug("Parsing {} blocks took {} seconds.", blockList.size(), (System.currentTimeMillis() - ts) / 1000d);
-                    if (daoStateService.getChainHeight() < bsqWalletService.getBestChainHeight()) {
+                    log.info("runDelayedBatchProcessing Parsing {} blocks took {} seconds.", blockList.size(),
+                            (System.currentTimeMillis() - ts) / 1000d);
+                    // We only request again if wallet is synced, otherwise we would get repeated calls we want to avoid.
+                    // We deal with that case at the setupWalletBestBlockListener method above.
+                    if (walletsSetup.isDownloadComplete() &&
+                            daoStateService.getChainHeight() < bsqWalletService.getBestChainHeight()) {
                         liteNodeNetworkService.requestBlocks(getStartBlockHeight());
                     } else {
                         onParsingComplete.run();
@@ -229,11 +257,12 @@ public class LiteNode extends BsqNode {
     // We received a new block
     private void onNewBlockReceived(RawBlock block) {
         int blockHeight = block.getHeight();
-        log.debug("onNewBlockReceived: block at height {}, hash={}", blockHeight, block.getHash());
+        log.info("onNewBlockReceived: block at height {}, hash={}. Our DAO chainHeight={}", blockHeight, block.getHash(), chainTipHeight);
 
         // We only update chainTipHeight if we get a newer block
-        if (blockHeight > chainTipHeight)
+        if (blockHeight > chainTipHeight) {
             chainTipHeight = blockHeight;
+        }
 
         try {
             doParseBlock(block);
