@@ -95,7 +95,7 @@ abstract class MempoolFeeRateProvider extends FeeRateProvider {
             .map(Map.Entry::getValue)
             .findFirst()
             .map(r -> {
-                log.info("Retrieved estimated mining fee of {} sat/byte from {}", r, getMempoolApiHostname());
+                log.info("Retrieved estimated mining fee of {} sat/vbyte from {}", r, getMempoolApiHostname());
                 return r;
             })
             .map(r -> Math.max(r, MIN_FEE_RATE))

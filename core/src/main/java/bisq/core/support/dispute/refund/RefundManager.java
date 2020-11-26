@@ -205,6 +205,7 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
             if (trade.getDisputeState() == Trade.DisputeState.REFUND_REQUESTED ||
                     trade.getDisputeState() == Trade.DisputeState.REFUND_REQUEST_STARTED_BY_PEER) {
                 trade.setDisputeState(Trade.DisputeState.REFUND_REQUEST_CLOSED);
+                tradeManager.requestPersistence();
             }
         } else {
             Optional<OpenOffer> openOfferOptional = openOfferManager.getOpenOfferById(tradeId);

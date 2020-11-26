@@ -34,17 +34,17 @@ import lombok.Value;
 @Value
 public final class DepositTxMessage extends TradeMessage implements DirectMessage {
     private final NodeAddress senderNodeAddress;
-    private final byte[] depositTx;
+    private final byte[] depositTxWithoutWitnesses;
 
     public DepositTxMessage(String uid,
                             String tradeId,
                             NodeAddress senderNodeAddress,
-                            byte[] depositTx) {
+                            byte[] depositTxWithoutWitnesses) {
         this(Version.getP2PMessageVersion(),
                 uid,
                 tradeId,
                 senderNodeAddress,
-                depositTx);
+                depositTxWithoutWitnesses);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -55,10 +55,10 @@ public final class DepositTxMessage extends TradeMessage implements DirectMessag
                              String uid,
                              String tradeId,
                              NodeAddress senderNodeAddress,
-                             byte[] depositTx) {
+                             byte[] depositTxWithoutWitnesses) {
         super(messageVersion, tradeId, uid);
         this.senderNodeAddress = senderNodeAddress;
-        this.depositTx = depositTx;
+        this.depositTxWithoutWitnesses = depositTxWithoutWitnesses;
     }
 
     @Override
@@ -68,7 +68,7 @@ public final class DepositTxMessage extends TradeMessage implements DirectMessag
                         .setUid(uid)
                         .setTradeId(tradeId)
                         .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
-                        .setDepositTx(ByteString.copyFrom(depositTx)))
+                        .setDepositTxWithoutWitnesses(ByteString.copyFrom(depositTxWithoutWitnesses)))
                 .build();
     }
 
@@ -77,14 +77,14 @@ public final class DepositTxMessage extends TradeMessage implements DirectMessag
                 proto.getUid(),
                 proto.getTradeId(),
                 NodeAddress.fromProto(proto.getSenderNodeAddress()),
-                proto.getDepositTx().toByteArray());
+                proto.getDepositTxWithoutWitnesses().toByteArray());
     }
 
     @Override
     public String toString() {
         return "DepositTxMessage{" +
                 "\n     senderNodeAddress=" + senderNodeAddress +
-                ",\n     depositTx=" + Utilities.bytesAsHexString(depositTx) +
+                ",\n     depositTxWithoutWitnesses=" + Utilities.bytesAsHexString(depositTxWithoutWitnesses) +
                 "\n} " + super.toString();
     }
 }

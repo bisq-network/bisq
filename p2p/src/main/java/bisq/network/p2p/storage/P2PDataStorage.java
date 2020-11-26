@@ -180,6 +180,11 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         this.persistenceManager.initialize(sequenceNumberMap, PersistenceManager.Source.PRIVATE);
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PersistedDataHost
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     @Override
     public void readPersisted(Runnable completeHandler) {
         persistenceManager.readPersisted(persisted -> {
@@ -933,8 +938,8 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         removeFromMapAndDataStore(Collections.singletonList(Maps.immutableEntry(hashOfPayload, protectedStorageEntry)));
     }
 
-    private void removeFromMapAndDataStore(
-            Collection<Map.Entry<ByteArray, ProtectedStorageEntry>> entriesToRemoveWithPayloadHash) {
+    private void removeFromMapAndDataStore(Collection<Map.Entry<ByteArray,
+            ProtectedStorageEntry>> entriesToRemoveWithPayloadHash) {
 
         if (entriesToRemoveWithPayloadHash.isEmpty())
             return;

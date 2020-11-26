@@ -52,9 +52,9 @@ public class CoinUtil {
         return a.compareTo(b) >= 0 ? a : b;
     }
 
-    public static double getFeePerByte(Coin miningFee, int txSize) {
+    public static double getFeePerVbyte(Coin miningFee, int txVsize) {
         double value = miningFee != null ? miningFee.value : 0;
-        return MathUtils.roundDouble((value / (double) txSize), 2);
+        return MathUtils.roundDouble((value / (double) txVsize), 2);
     }
 
     /**

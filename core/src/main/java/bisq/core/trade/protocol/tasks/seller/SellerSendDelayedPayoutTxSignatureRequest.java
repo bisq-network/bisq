@@ -47,10 +47,13 @@ public class SellerSendDelayedPayoutTxSignatureRequest extends TradeTask {
 
             Transaction preparedDelayedPayoutTx = checkNotNull(processModel.getPreparedDelayedPayoutTx(),
                     "processModel.getPreparedDelayedPayoutTx() must not be null");
+            byte[] delayedPayoutTxSignature = checkNotNull(processModel.getDelayedPayoutTxSignature(),
+                    "processModel.getDelayedPayoutTxSignature() must not be null");
             DelayedPayoutTxSignatureRequest message = new DelayedPayoutTxSignatureRequest(UUID.randomUUID().toString(),
                     processModel.getOfferId(),
                     processModel.getMyNodeAddress(),
-                    preparedDelayedPayoutTx.bitcoinSerialize());
+                    preparedDelayedPayoutTx.bitcoinSerialize(),
+                    delayedPayoutTxSignature);
 
             NodeAddress peersNodeAddress = trade.getTradingPeerNodeAddress();
             log.info("Send {} to peer {}. tradeId={}, uid={}",

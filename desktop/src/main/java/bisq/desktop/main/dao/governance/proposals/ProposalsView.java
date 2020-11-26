@@ -475,12 +475,12 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
         Coin stake = ParsingUtils.parseToCoin(stakeInputTextField.getText(), bsqFormatter);
         try {
             // We create a dummy tx to get the miningFee for displaying it at the confirmation popup
-            Tuple2<Coin, Integer> miningFeeAndTxSize = daoFacade.getBlindVoteMiningFeeAndTxSize(stake);
-            Coin miningFee = miningFeeAndTxSize.first;
-            int txSize = miningFeeAndTxSize.second;
+            Tuple2<Coin, Integer> miningFeeAndTxVsize = daoFacade.getBlindVoteMiningFeeAndTxVsize(stake);
+            Coin miningFee = miningFeeAndTxVsize.first;
+            int txVsize = miningFeeAndTxVsize.second;
             Coin blindVoteFee = daoFacade.getBlindVoteFeeForCycle();
             if (!DevEnv.isDevMode()) {
-                GUIUtil.showBsqFeeInfoPopup(blindVoteFee, miningFee, txSize, bsqFormatter, btcFormatter,
+                GUIUtil.showBsqFeeInfoPopup(blindVoteFee, miningFee, txVsize, bsqFormatter, btcFormatter,
                         Res.get("dao.blindVote"), () -> publishBlindVote(stake));
             } else {
                 publishBlindVote(stake);

@@ -204,9 +204,10 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
                     trade.getDisputeState() == Trade.DisputeState.MEDIATION_STARTED_BY_PEER) {
                 trade.getProcessModel().setBuyerPayoutAmountFromMediation(disputeResult.getBuyerPayoutAmount().value);
                 trade.getProcessModel().setSellerPayoutAmountFromMediation(disputeResult.getSellerPayoutAmount().value);
-                tradeManager.requestPersistence();
 
                 trade.setDisputeState(Trade.DisputeState.MEDIATION_CLOSED);
+
+                tradeManager.requestPersistence();
             }
         } else {
             Optional<OpenOffer> openOfferOptional = openOfferManager.getOpenOfferById(tradeId);
@@ -243,6 +244,7 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
         DisputeProtocol tradeProtocol = (DisputeProtocol) tradeManager.getTradeProtocol(trade);
 
         trade.setMediationResultState(MediationResultState.MEDIATION_RESULT_ACCEPTED);
+        tradeManager.requestPersistence();
 
         // If we have not got yet the peers signature we sign and send to the peer our signature.
         // Otherwise we sign and complete with the peers signature the payout tx.
@@ -265,5 +267,6 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
 
     public void rejectMediationResult(Trade trade) {
         trade.setMediationResultState(MediationResultState.MEDIATION_RESULT_REJECTED);
+        tradeManager.requestPersistence();
     }
 }

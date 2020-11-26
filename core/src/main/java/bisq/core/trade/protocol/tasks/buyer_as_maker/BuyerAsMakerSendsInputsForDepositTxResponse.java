@@ -22,6 +22,8 @@ import bisq.core.trade.protocol.tasks.maker.MakerSendsInputsForDepositTxResponse
 
 import bisq.common.taskrunner.TaskRunner;
 
+import org.bitcoinj.core.Transaction;
+
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -32,6 +34,9 @@ public class BuyerAsMakerSendsInputsForDepositTxResponse extends MakerSendsInput
 
     @Override
     protected byte[] getPreparedDepositTx() {
-        return processModel.getPreparedDepositTx();
+        Transaction preparedDepositTx = processModel.getBtcWalletService().getTxFromSerializedTx(processModel.getPreparedDepositTx());
+        // Remove witnesses from preparedDepositTx, so that the seller can still compute the final
+        // tx id, but cannot publish it before providing the buyer with a signed delayed payout tx.
+        return preparedDepositTx.bitcoinSerialize(false);
     }
 }

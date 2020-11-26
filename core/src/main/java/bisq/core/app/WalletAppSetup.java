@@ -22,8 +22,8 @@ import bisq.core.btc.exceptions.RejectedTxException;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.locale.Res;
-import bisq.core.provider.fee.FeeService;
 import bisq.core.offer.OpenOfferManager;
+import bisq.core.provider.fee.FeeService;
 import bisq.core.trade.TradeManager;
 import bisq.core.user.Preferences;
 import bisq.core.util.FormattingUtils;
@@ -107,7 +107,7 @@ public class WalletAppSetup {
               Runnable downloadCompleteHandler,
               Runnable walletInitializedHandler) {
         log.info("Initialize WalletAppSetup with BitcoinJ version {} and hash of BitcoinJ commit {}",
-                VersionMessage.BITCOINJ_VERSION, "a733034");
+                VersionMessage.BITCOINJ_VERSION, "7752cb7");
 
         ObjectProperty<Throwable> walletServiceException = new SimpleObjectProperty<>();
         btcInfoBinding = EasyBind.combine(walletsSetup.downloadPercentageProperty(),
@@ -247,6 +247,7 @@ public class WalletAppSetup {
                                         String finalDetails = details;
                                         UserThread.runAfter(() -> {
                                             trade.setErrorMessage(newValue.getMessage());
+                                            tradeManager.requestPersistence();
                                             if (rejectedTxErrorMessageHandler != null) {
                                                 rejectedTxErrorMessageHandler.accept(Res.get("popup.warning.trade.txRejected",
                                                         finalDetails, trade.getShortId(), txId));

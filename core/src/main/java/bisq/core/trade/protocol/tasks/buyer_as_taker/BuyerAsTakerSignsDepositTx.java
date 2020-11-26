@@ -88,6 +88,8 @@ public class BuyerAsTakerSignsDepositTx extends TradeTask {
                     sellerMultiSigPubKey);
             processModel.setDepositTx(depositTx);
 
+            processModel.getTradeManager().requestPersistence();
+
             complete();
         } catch (Throwable t) {
             failed(t);

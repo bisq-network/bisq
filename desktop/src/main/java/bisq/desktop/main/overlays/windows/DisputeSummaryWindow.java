@@ -672,11 +672,11 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         Coin sellerPayoutAmount = disputeResult.getSellerPayoutAmount();
         String sellerPayoutAddressString = contract.getSellerPayoutAddressString();
         Coin outputAmount = buyerPayoutAmount.add(sellerPayoutAmount);
-        Tuple2<Coin, Integer> feeTuple = txFeeEstimationService.getEstimatedFeeAndTxSize(outputAmount, feeService, btcWalletService);
+        Tuple2<Coin, Integer> feeTuple = txFeeEstimationService.getEstimatedFeeAndTxVsize(outputAmount, feeService, btcWalletService);
         Coin fee = feeTuple.first;
-        Integer txSize = feeTuple.second;
-        double feePerByte = CoinUtil.getFeePerByte(fee, txSize);
-        double kb = txSize / 1000d;
+        Integer txVsize = feeTuple.second;
+        double feePerVbyte = CoinUtil.getFeePerVbyte(fee, txVsize);
+        double vkb = txVsize / 1000d;
         Coin inputAmount = outputAmount.add(fee);
         String buyerDetails = "";
         if (buyerPayoutAmount.isPositive()) {
@@ -698,8 +698,8 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                             buyerDetails,
                             sellerDetails,
                             formatter.formatCoinWithCode(fee),
-                            feePerByte,
-                            kb))
+                            feePerVbyte,
+                            vkb))
                     .actionButtonText(Res.get("shared.yes"))
                     .onAction(() -> {
                         doPayout(buyerPayoutAmount,

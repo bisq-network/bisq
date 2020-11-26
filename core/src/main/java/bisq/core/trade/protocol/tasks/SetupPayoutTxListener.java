@@ -91,6 +91,7 @@ public abstract class SetupPayoutTxListener extends TradeTask {
         if (trade.getPayoutTx() == null) {
             Transaction walletTx = processModel.getTradeWalletService().getWalletTx(confidence.getTransactionHash());
             trade.setPayoutTx(walletTx);
+            processModel.getTradeManager().requestPersistence();
             BtcWalletService.printTx("payoutTx received from network", walletTx);
             setState();
         } else {

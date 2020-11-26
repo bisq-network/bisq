@@ -40,6 +40,7 @@ import org.bitcoinj.core.Transaction;
 import javax.inject.Inject;
 
 import javafx.scene.Scene;
+import javafx.scene.control.CheckBox;
 import javafx.scene.input.KeyCode;
 
 import org.slf4j.Logger;
@@ -47,6 +48,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 
+import static bisq.desktop.util.FormBuilder.addCheckBox;
 import static bisq.desktop.util.FormBuilder.addInputTextField;
 
 // We don't translate here as it is for dev only purpose
@@ -116,6 +118,8 @@ public class ManualPayoutTxWindow extends Overlay<ManualPayoutTxWindow> {
         InputTextField buyerPubKeyAsHex = addInputTextField(gridPane, ++rowIndex, "buyerPubKeyAsHex");
         InputTextField sellerPubKeyAsHex = addInputTextField(gridPane, ++rowIndex, "sellerPubKeyAsHex");
 
+        CheckBox depositTxLegacy = addCheckBox(gridPane, ++rowIndex, "depositTxLegacy");
+
         // Notes:
         // Open with alt+g
         // Priv key is only visible if pw protection is removed (wallet details data (alt+j))
@@ -135,6 +139,9 @@ public class ManualPayoutTxWindow extends Overlay<ManualPayoutTxWindow> {
         sellerAddressString.setText("");
         sellerPubKeyAsHex.setText("");
         sellerPrivateKeyAsHex.setText("");
+
+        depositTxLegacy.setAllowIndeterminate(false);
+        depositTxLegacy.setSelected(false);
 
         actionButtonText("Sign and publish transaction");
 
@@ -167,6 +174,7 @@ public class ManualPayoutTxWindow extends Overlay<ManualPayoutTxWindow> {
                             sellerPrivateKeyAsHex.getText(),
                             buyerPubKeyAsHex.getText(),
                             sellerPubKeyAsHex.getText(),
+                            depositTxLegacy.isSelected(),
                             callback);
                 } catch (AddressFormatException | WalletException | TransactionVerificationException e) {
                     log.error(e.toString());

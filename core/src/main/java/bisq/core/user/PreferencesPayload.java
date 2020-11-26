@@ -67,7 +67,7 @@ public final class PreferencesPayload implements PersistableEnvelope {
     private boolean showOwnOffersInOfferBook = true;
     @Nullable
     private TradeCurrency preferredTradeCurrency;
-    private long withdrawalTxFeeInBytes = 100;
+    private long withdrawalTxFeeInVbytes = 100;
     private boolean useCustomWithdrawalTxFee = false;
     private double maxPriceDistanceInPercent = 0.3;
     @Nullable
@@ -160,7 +160,7 @@ public final class PreferencesPayload implements PersistableEnvelope {
                 .setTacAccepted(tacAccepted)
                 .setUseTorForBitcoinJ(useTorForBitcoinJ)
                 .setShowOwnOffersInOfferBook(showOwnOffersInOfferBook)
-                .setWithdrawalTxFeeInBytes(withdrawalTxFeeInBytes)
+                .setWithdrawalTxFeeInVbytes(withdrawalTxFeeInVbytes)
                 .setUseCustomWithdrawalTxFee(useCustomWithdrawalTxFee)
                 .setMaxPriceDistanceInPercent(maxPriceDistanceInPercent)
                 .setTradeStatisticsTickUnitIndex(tradeStatisticsTickUnitIndex)
@@ -241,7 +241,7 @@ public final class PreferencesPayload implements PersistableEnvelope {
                 proto.getUseTorForBitcoinJ(),
                 proto.getShowOwnOffersInOfferBook(),
                 proto.hasPreferredTradeCurrency() ? TradeCurrency.fromProto(proto.getPreferredTradeCurrency()) : null,
-                proto.getWithdrawalTxFeeInBytes(),
+                proto.getWithdrawalTxFeeInVbytes(),
                 proto.getUseCustomWithdrawalTxFee(),
                 proto.getMaxPriceDistanceInPercent(),
                 ProtoUtil.stringOrNullFromProto(proto.getOfferBookChartScreenCurrencyCode()),
