@@ -118,7 +118,6 @@ public class WalletAppSetup {
                     String result;
                     if (exception == null) {
                         double percentage = (double) downloadPercentage;
-                        String fees = feeService.getFeeTextForDisplay();
                         btcSyncProgress.set(percentage);
                         int bestChainHeight = walletsSetup.getChain() != null ?
                                 walletsSetup.getChain().getBestChainHeight() :
@@ -129,10 +128,11 @@ public class WalletAppSetup {
                         if (percentage == 1) {
                             String synchronizedWith = Res.get("mainView.footer.btcInfo.synchronizedWith",
                                     getBtcNetworkAsString(), chainHeightAsString);
-                            result = Res.get("mainView.footer.btcInfo", synchronizedWith,
-                                    feeService.getFeeTextForDisplay());
+                            String info = feeService.isFeeAvailable() ?
+                                    Res.get("mainView.footer.btcFeeRate", feeService.getTxFeePerVbyte().value) :
+                                    "";
+                            result = Res.get("mainView.footer.btcInfo", synchronizedWith, info);
                             getBtcSplashSyncIconId().set("image-connection-synced");
-
                             downloadCompleteHandler.run();
                         } else if (percentage > 0.0) {
                             String synchronizingWith = Res.get("mainView.footer.btcInfo.synchronizingWith",
