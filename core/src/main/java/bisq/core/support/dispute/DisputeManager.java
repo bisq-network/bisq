@@ -395,6 +395,7 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
                 if (!storedDisputeOptional.isPresent()) {
                     disputeList.add(dispute);
                     trade.setDisputeState(getDisputeStateStartedByPeer());
+                    tradeManager.requestPersistence();
                     errorMessage = null;
                 } else {
                     // valid case if both have opened a dispute and agent was not online.

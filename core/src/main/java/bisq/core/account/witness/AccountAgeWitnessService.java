@@ -104,6 +104,7 @@ public class AccountAgeWitnessService {
 
         private String presentation;
         private String hash = "";
+        private long daysUntilLimitLifted = 0;
 
         SignState(String presentation) {
             this.presentation = presentation;
@@ -114,11 +115,16 @@ public class AccountAgeWitnessService {
             return this;
         }
 
+        public SignState setDaysUntilLimitLifted(long days) {
+            this.daysUntilLimitLifted = days;
+            return this;
+        }
+
         public String getPresentation() {
             if (!hash.isEmpty()) { // Only showing in DEBUG mode
                 return presentation + " " + hash;
             }
-            return presentation;
+            return String.format(presentation, daysUntilLimitLifted);
         }
 
     }
@@ -806,7 +812,8 @@ public class AccountAgeWitnessService {
                 case ONE_TO_TWO_MONTHS:
                     return SignState.PEER_SIGNER.addHash(hash);
                 case LESS_ONE_MONTH:
-                    return SignState.PEER_INITIAL.addHash(hash);
+                    return SignState.PEER_INITIAL.addHash(hash)
+                            .setDaysUntilLimitLifted(30 - TimeUnit.MILLISECONDS.toDays(accountSignAge));
                 case UNVERIFIED:
                 default:
                     return SignState.UNSIGNED.addHash(hash);

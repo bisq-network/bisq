@@ -555,6 +555,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
 
             trade.setDisputeState(Trade.DisputeState.MEDIATION_REQUESTED);
             sendOpenDisputeMessage(disputeManager, resultHandler, dispute);
+            tradeManager.requestPersistence();
         } else if (useRefundAgent) {
             resultHandler = () -> navigation.navigateTo(MainView.class, SupportView.class, RefundClientView.class);
 
@@ -630,7 +631,6 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                         sendOpenDisputeMessage(disputeManager, resultHandler, dispute);
                     },
                     errorMessage -> new Popup().error(errorMessage).show());
-
         } else {
             log.warn("Invalid dispute state {}", disputeState.name());
         }

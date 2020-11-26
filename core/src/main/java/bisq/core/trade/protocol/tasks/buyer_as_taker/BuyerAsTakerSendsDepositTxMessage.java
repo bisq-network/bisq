@@ -41,10 +41,12 @@ public class BuyerAsTakerSendsDepositTxMessage extends TradeTask {
         try {
             runInterceptHook();
             if (processModel.getDepositTx() != null) {
+                // Remove witnesses from the sent depositTx, so that the seller can still compute the final
+                // tx id, but cannot publish it before providing the buyer with a signed delayed payout tx.
                 DepositTxMessage message = new DepositTxMessage(UUID.randomUUID().toString(),
                         processModel.getOfferId(),
                         processModel.getMyNodeAddress(),
-                        processModel.getDepositTx().bitcoinSerialize());
+                        processModel.getDepositTx().bitcoinSerialize(false));
 
                 NodeAddress peersNodeAddress = trade.getTradingPeerNodeAddress();
                 log.info("Send {} to peer {}. tradeId={}, uid={}",
@@ -72,7 +74,7 @@ public class BuyerAsTakerSendsDepositTxMessage extends TradeTask {
                         }
                 );
             } else {
-                log.error("processModel.getDepositTx() = " + processModel.getDepositTx());
+                log.error("processModel.getDepositTx() = {}", processModel.getDepositTx());
                 failed("DepositTx is null");
             }
         } catch (Throwable t) {

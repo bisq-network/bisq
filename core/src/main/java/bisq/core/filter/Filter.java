@@ -348,6 +348,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
         return "Filter{" +
                 "\n     bannedOfferIds=" + bannedOfferIds +
                 ",\n     bannedNodeAddress=" + bannedNodeAddress +
+                ",\n     bannedAutoConfExplorers=" + bannedAutoConfExplorers +
                 ",\n     bannedPaymentAccounts=" + bannedPaymentAccounts +
                 ",\n     bannedCurrencies=" + bannedCurrencies +
                 ",\n     bannedPaymentMethods=" + bannedPaymentMethods +
@@ -365,12 +366,12 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                 ",\n     mediators=" + mediators +
                 ",\n     refundAgents=" + refundAgents +
                 ",\n     bannedAccountWitnessSignerPubKeys=" + bannedAccountWitnessSignerPubKeys +
-                ",\n     bannedPrivilegedDevPubKeys=" + bannedPrivilegedDevPubKeys +
                 ",\n     btcFeeReceiverAddresses=" + btcFeeReceiverAddresses +
                 ",\n     creationDate=" + creationDate +
+                ",\n     bannedPrivilegedDevPubKeys=" + bannedPrivilegedDevPubKeys +
                 ",\n     extraDataMap=" + extraDataMap +
+                ",\n     ownerPubKey=" + ownerPubKey +
                 ",\n     disableAutoConf=" + disableAutoConf +
-                ",\n     bannedAutoConfExplorers=" + bannedAutoConfExplorers +
                 "\n}";
     }
 }

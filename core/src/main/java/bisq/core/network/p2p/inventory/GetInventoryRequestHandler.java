@@ -141,7 +141,7 @@ public class GetInventoryRequestHandler implements MessageListener {
             inventory.put(InventoryItem.numConnections, String.valueOf(networkNode.getAllConnections().size()));
             inventory.put(InventoryItem.peakNumConnections, String.valueOf(peerManager.getPeakNumConnections()));
             inventory.put(InventoryItem.numAllConnectionsLostEvents, String.valueOf(peerManager.getNumAllConnectionsLostEvents()));
-            peerManager.resetNumAllConnectionsLostEvents();
+            peerManager.maybeResetNumAllConnectionsLostEvents();
             inventory.put(InventoryItem.sentBytes, String.valueOf(Statistic.totalSentBytesProperty().get()));
             inventory.put(InventoryItem.sentBytesPerSec, String.valueOf(Statistic.totalSentBytesPerSecProperty().get()));
             inventory.put(InventoryItem.receivedBytes, String.valueOf(Statistic.totalReceivedBytesProperty().get()));

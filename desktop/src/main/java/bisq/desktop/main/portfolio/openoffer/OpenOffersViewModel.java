@@ -93,10 +93,18 @@ class OpenOffersViewModel extends ActivatableWithDataModel<OpenOffersDataModel> 
         Offer offer = item.getOffer();
         Price price = offer.getPrice();
         if (price != null) {
-            String postFix = "";
-            if (offer.isUseMarketBasedPrice())
-                postFix = " (" + FormattingUtils.formatPercentagePrice(offer.getMarketPriceMargin()) + ")";
-            return FormattingUtils.formatPrice(price) + postFix;
+            return FormattingUtils.formatPrice(price);
+        } else {
+            return Res.get("shared.na");
+        }
+    }
+
+    String getPriceDeviation(OpenOfferListItem item) {
+        if ((item == null))
+            return "";
+        Offer offer = item.getOffer();
+        if (offer.isUseMarketBasedPrice()) {
+            return FormattingUtils.formatPercentagePrice(offer.getMarketPriceMargin());
         } else {
             return Res.get("shared.na");
         }
