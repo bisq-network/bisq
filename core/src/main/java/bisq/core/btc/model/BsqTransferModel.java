@@ -41,7 +41,7 @@ public final class BsqTransferModel {
     }
 
     public double getMiningFeeInSatoshisPerByte() {
-        return CoinUtil.getFeePerByte(miningFee, txSize);
+        return CoinUtil.getFeePerVbyte(miningFee, txSize);
     }
 
     public double getTxSizeInKb() {
