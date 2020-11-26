@@ -97,10 +97,6 @@ public final class AddressEntry implements PersistablePayload {
                         Context context,
                         @Nullable String offerId,
                         boolean segwit) {
-        if (segwit && (!Context.AVAILABLE.equals(context) || offerId != null)) {
-            throw new IllegalArgumentException("Segwit addresses are only allowed for " +
-                    "AVAILABLE entries without an offerId");
-        }
         this.keyPair = keyPair;
         this.context = context;
         this.offerId = offerId;

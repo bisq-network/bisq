@@ -47,19 +47,21 @@ import static org.mockito.Mockito.when;
 
 public class MockNode {
     @Getter
-    public NetworkNode networkNode;
+    private NetworkNode networkNode;
     @Getter
-    public PeerManager peerManager;
+    private PeerManager peerManager;
     @Getter
-    public Set<Connection> connections;
+    private Set<Connection> connections;
     @Getter
-    public int maxConnections;
+    private int maxConnections;
+    @Getter
+    private PersistenceManager<PeerList> persistenceManager;
 
     public MockNode(int maxConnections) throws IOException {
         this.maxConnections = maxConnections;
         networkNode = mock(NetworkNode.class);
         File storageDir = Files.createTempDirectory("storage").toFile();
-        PersistenceManager<PeerList> persistenceManager = new PersistenceManager<>(storageDir, mock(PersistenceProtoResolver.class), mock(CorruptedStorageFileHandler.class));
+        persistenceManager = new PersistenceManager<>(storageDir, mock(PersistenceProtoResolver.class), mock(CorruptedStorageFileHandler.class));
         peerManager = new PeerManager(networkNode, mock(SeedNodeRepository.class), new ClockWatcher(), persistenceManager, maxConnections);
         connections = new HashSet<>();
         when(networkNode.getAllConnections()).thenReturn(connections);

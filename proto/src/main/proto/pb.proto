@@ -271,13 +271,15 @@ message DelayedPayoutTxSignatureRequest {
     string trade_id = 2;
     NodeAddress sender_node_address = 3;
     bytes delayed_payout_tx = 4;
+    bytes delayed_payout_tx_seller_signature = 5;
 }
 
 message DelayedPayoutTxSignatureResponse {
     string uid = 1;
     string trade_id = 2;
     NodeAddress sender_node_address = 3;
-    bytes delayed_payout_tx_signature = 4;
+    bytes delayed_payout_tx_buyer_signature = 4;
+    bytes deposit_tx = 5;
 }
 
 message DepositTxAndDelayedPayoutTxMessage {
@@ -292,7 +294,7 @@ message DepositTxMessage {
     string uid = 1;
     string trade_id = 2;
     NodeAddress sender_node_address = 3;
-    bytes deposit_tx = 4;
+    bytes deposit_tx_without_witnesses = 4;
 }
 
 message PeerPublishedDelayedPayoutTxMessage {
@@ -568,6 +570,20 @@ message ProtectedMailboxStorageEntry {
 message DataAndSeqNrPair {
     StoragePayload payload = 1;
     int32 sequence_number = 2;
+}
+
+message MailboxMessageList {
+    repeated MailboxItem mailbox_item = 1;
+}
+
+message MailboxItem {
+    ProtectedMailboxStorageEntry protected_mailbox_storage_entry = 1;
+    DecryptedMessageWithPubKey decrypted_message_with_pub_key = 2;
+}
+
+message DecryptedMessageWithPubKey {
+    NetworkEnvelope network_envelope = 1;
+    bytes signature_pub_key_bytes = 2;
 }
 
 // misc
@@ -934,6 +950,7 @@ message PaymentAccountPayload {
         JapanBankAccountPayload japan_bank_account_payload = 28;
         TransferwiseAccountPayload Transferwise_account_payload = 29;
         AustraliaPayidPayload australia_payid_payload = 30;
+        AmazonGiftCardAccountPayload amazon_gift_card_account_payload = 31;
     }
     map<string, string> exclude_from_json_data = 15;
 }
@@ -1039,6 +1056,10 @@ message WesternUnionAccountPayload {
     string city = 2;
     string state = 3;
     string email = 4;
+}
+
+message AmazonGiftCardAccountPayload {
+    string email_or_mobile_nr = 1;
 }
 
 message SepaAccountPayload {
@@ -1188,6 +1209,7 @@ message PersistableEnvelope {
         MediationDisputeList mediation_dispute_list = 29;
         RefundDisputeList refund_dispute_list = 30;
         TradeStatistics3Store trade_statistics3_store = 31;
+        MailboxMessageList mailbox_message_list = 32;
     }
 }
 
@@ -1546,7 +1568,7 @@ message PreferencesPayload {
     bool use_tor_for_bitcoin_j = 12;
     bool show_own_offers_in_offer_book = 13;
     TradeCurrency preferred_trade_currency = 14;
-    int64 withdrawal_tx_fee_in_bytes = 15;
+    int64 withdrawal_tx_fee_in_vbytes = 15;
     bool use_custom_withdrawal_tx_fee = 16;
     double max_price_distance_in_percent = 17;
     string offer_book_chart_screen_currency_code = 18;

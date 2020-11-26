@@ -151,19 +151,19 @@ public abstract class HistoricalDataStoreService<T extends PersistableNetworkPay
             log.info("We have created the {} store for the live data and filled it with {} entries from the persisted data.",
                     getFileName(), getMapOfLiveData().size());
 
-            // Now we add our historical data stores. As they are immutable after created we use an ImmutableMap
-            ImmutableMap.Builder<P2PDataStorage.ByteArray, PersistableNetworkPayload> allHistoricalPayloadsBuilder = ImmutableMap.builder();
-            ImmutableMap.Builder<String, PersistableNetworkPayloadStore<? extends PersistableNetworkPayload>> storesByVersionBuilder = ImmutableMap.builder();
-
+            // Now we add our historical data stores.
+            Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> allHistoricalPayloads = new HashMap<>();
+            Map<String, PersistableNetworkPayloadStore<? extends PersistableNetworkPayload>> storesByVersion = new HashMap<>();
             AtomicInteger numFiles = new AtomicInteger(Version.HISTORICAL_RESOURCE_FILE_VERSION_TAGS.size());
             Version.HISTORICAL_RESOURCE_FILE_VERSION_TAGS.forEach(version -> readHistoricalStoreFromResources(version,
                     postFix,
-                    allHistoricalPayloadsBuilder,
-                    storesByVersionBuilder,
+                    allHistoricalPayloads,
+                    storesByVersion,
                     () -> {
                         if (numFiles.decrementAndGet() == 0) {
-                            allHistoricalPayloads = allHistoricalPayloadsBuilder.build();
-                            storesByVersion = storesByVersionBuilder.build();
+                            // At last iteration we set the immutable map
+                            this.allHistoricalPayloads = ImmutableMap.copyOf(allHistoricalPayloads);
+                            this.storesByVersion = ImmutableMap.copyOf(storesByVersion);
                             completeHandler.run();
                         }
                     }));
@@ -177,20 +177,19 @@ public abstract class HistoricalDataStoreService<T extends PersistableNetworkPay
 
     private void readHistoricalStoreFromResources(String version,
                                                   String postFix,
-                                                  ImmutableMap.Builder<P2PDataStorage.ByteArray, PersistableNetworkPayload> allHistoricalDataBuilder,
-                                                  ImmutableMap.Builder<String, PersistableNetworkPayloadStore<? extends PersistableNetworkPayload>> storesByVersionBuilder,
+                                                  Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> allHistoricalPayloads,
+                                                  Map<String, PersistableNetworkPayloadStore<? extends PersistableNetworkPayload>> storesByVersion,
                                                   Runnable completeHandler) {
+
         String fileName = getFileName() + "_" + version;
         boolean wasCreatedFromResources = makeFileFromResourceFile(fileName, postFix);
 
         // If resource file does not exist we do not create a new store as it would never get filled.
         persistenceManager.readPersisted(fileName, persisted -> {
-                    storesByVersionBuilder.put(version, persisted);
-                    allHistoricalDataBuilder.putAll(persisted.getMap());
+                    storesByVersion.put(version, persisted);
+                    allHistoricalPayloads.putAll(persisted.getMap());
                     log.info("We have read from {} {} historical items.", fileName, persisted.getMap().size());
-                    if (wasCreatedFromResources) {
-                        pruneStore(persisted, version);
-                    }
+                    pruneStore(persisted, version);
                     completeHandler.run();
                 },
                 () -> {
@@ -201,9 +200,10 @@ public abstract class HistoricalDataStoreService<T extends PersistableNetworkPay
 
     private void pruneStore(PersistableNetworkPayloadStore<? extends PersistableNetworkPayload> historicalStore,
                             String version) {
-        int preLive = getMapOfLiveData().size();
-        getMapOfLiveData().keySet().removeAll(historicalStore.getMap().keySet());
-        int postLive = getMapOfLiveData().size();
+        Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> mapOfLiveData = getMapOfLiveData();
+        int preLive = mapOfLiveData.size();
+        mapOfLiveData.keySet().removeAll(historicalStore.getMap().keySet());
+        int postLive = mapOfLiveData.size();
         if (preLive > postLive) {
             log.info("We pruned data from our live data store which are already contained in the historical data store with version {}. " +
                             "The live map had {} entries before pruning and has {} entries afterwards.",

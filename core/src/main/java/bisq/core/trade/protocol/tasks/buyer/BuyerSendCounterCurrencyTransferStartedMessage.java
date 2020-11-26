@@ -83,11 +83,15 @@ public class BuyerSendCounterCurrencyTransferStartedMessage extends SendMailboxM
     @Override
     protected void setStateSent() {
         trade.setStateIfValidTransitionTo(Trade.State.BUYER_SENT_FIAT_PAYMENT_INITIATED_MSG);
+
+        processModel.getTradeManager().requestPersistence();
     }
 
     @Override
     protected void setStateArrived() {
         trade.setStateIfValidTransitionTo(Trade.State.BUYER_SAW_ARRIVED_FIAT_PAYMENT_INITIATED_MSG);
+
+        processModel.getTradeManager().requestPersistence();
         cleanup();
         // Complete is called in base class
     }
@@ -104,6 +108,7 @@ public class BuyerSendCounterCurrencyTransferStartedMessage extends SendMailboxM
         if (!trade.isPayoutPublished()) {
             tryToSendAgainLater();
         }
+        processModel.getTradeManager().requestPersistence();
     }
 
     // We override the default behaviour for onFault and do not call appendToErrorMessage and failed
@@ -118,6 +123,7 @@ public class BuyerSendCounterCurrencyTransferStartedMessage extends SendMailboxM
         if (!trade.isPayoutPublished()) {
             tryToSendAgainLater();
         }
+        processModel.getTradeManager().requestPersistence();
     }
 
     @Override
@@ -173,6 +179,9 @@ public class BuyerSendCounterCurrencyTransferStartedMessage extends SendMailboxM
         if (newValue == MessageState.ACKNOWLEDGED) {
             // We treat a ACK like BUYER_SAW_ARRIVED_FIAT_PAYMENT_INITIATED_MSG
             trade.setStateIfValidTransitionTo(Trade.State.BUYER_SAW_ARRIVED_FIAT_PAYMENT_INITIATED_MSG);
+
+            processModel.getTradeManager().requestPersistence();
+
             cleanup();
             complete();
         }
