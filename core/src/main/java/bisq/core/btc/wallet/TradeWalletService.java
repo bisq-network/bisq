@@ -1113,7 +1113,7 @@ public class TradeWalletService {
 
         Transaction payoutTx = new Transaction(params);
         Sha256Hash spendTxHash = Sha256Hash.wrap(depositTxHex);
-        payoutTx.addInput(new TransactionInput(params, depositTx, null, new TransactionOutPoint(params, 0, spendTxHash), msOutputValue));
+        payoutTx.addInput(new TransactionInput(params, depositTx, new byte[]{}, new TransactionOutPoint(params, 0, spendTxHash), msOutputValue));
 
         if (buyerPayoutAmount.isPositive()) {
             payoutTx.addOutput(buyerPayoutAmount, Address.fromString(params, buyerAddressString));
