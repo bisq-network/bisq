@@ -35,13 +35,9 @@ import bisq.desktop.util.validation.BsqValidator;
 import bisq.desktop.util.validation.BtcValidator;
 
 import bisq.core.btc.exceptions.BsqChangeBelowDustException;
-import bisq.core.btc.exceptions.TransactionVerificationException;
 import bisq.core.btc.exceptions.TxBroadcastException;
-import bisq.core.btc.exceptions.WalletException;
 import bisq.core.btc.listeners.BsqBalanceListener;
-import bisq.core.btc.model.BsqTransferModel;
 import bisq.core.btc.setup.WalletsSetup;
-import bisq.core.btc.wallet.BsqTransferService;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.Restrictions;
@@ -50,10 +46,10 @@ import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.dao.state.model.blockchain.TxType;
 import bisq.core.locale.Res;
 import bisq.core.util.FormattingUtils;
-import bisq.core.util.ParsingUtils;
 import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.coin.CoinUtil;
+import bisq.core.util.ParsingUtils;
 import bisq.core.util.validation.BtcAddressValidator;
 
 import bisq.network.p2p.P2PService;
@@ -63,7 +59,6 @@ import bisq.common.handlers.ResultHandler;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.InsufficientMoneyException;
-import org.bitcoinj.core.LegacyAddress;
 import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
@@ -95,7 +90,6 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
     private final BtcValidator btcValidator;
     private final BsqAddressValidator bsqAddressValidator;
     private final BtcAddressValidator btcAddressValidator;
-    private final BsqTransferService bsqTransferService;
     private final WalletPasswordWindow walletPasswordWindow;
 
     private int gridRow = 0;
@@ -125,7 +119,6 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
                         BtcValidator btcValidator,
                         BsqAddressValidator bsqAddressValidator,
                         BtcAddressValidator btcAddressValidator,
-                        BsqTransferService bsqTransferService,
                         WalletPasswordWindow walletPasswordWindow) {
         this.bsqWalletService = bsqWalletService;
         this.btcWalletService = btcWalletService;
@@ -140,7 +133,6 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
         this.btcValidator = btcValidator;
         this.bsqAddressValidator = bsqAddressValidator;
         this.btcAddressValidator = btcAddressValidator;
-        this.bsqTransferService = bsqTransferService;
         this.walletPasswordWindow = walletPasswordWindow;
     }
 
@@ -249,15 +241,22 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
         sendBsqButton = addButtonAfterGroup(root, ++gridRow, Res.get("dao.wallet.send.send"));
 
         sendBsqButton.setOnAction((event) -> {
+            // TODO break up in methods
             if (GUIUtil.isReadyForTxBroadcastOrShowPopup(p2PService, walletsSetup)) {
+                String receiversAddressString = bsqFormatter.getAddressFromBsqAddress(receiversAddressInputTextField.getText()).toString();
+                Coin receiverAmount = ParsingUtils.parseToCoin(amountInputTextField.getText(), bsqFormatter);
                 try {
-                    BsqTransferModel model = getBsqTransferModel();
-                    showPublishTxPopup(model.getReceiverAmount(),
-                            model.getTxWithBtcFee(),
-                            model.getTxType(),
-                            model.getMiningFee(),
-                            model.getTxSize(),
-                            model.getReceiverAddressAsString(),
+                    Transaction preparedSendTx = bsqWalletService.getPreparedSendBsqTx(receiversAddressString, receiverAmount);
+                    Transaction txWithBtcFee = btcWalletService.completePreparedSendBsqTx(preparedSendTx, true);
+                    Transaction signedTx = bsqWalletService.signTx(txWithBtcFee);
+                    Coin miningFee = signedTx.getFee();
+                    int txSize = signedTx.bitcoinSerialize().length;
+                    showPublishTxPopup(receiverAmount,
+                            txWithBtcFee,
+                            TxType.TRANSFER_BSQ,
+                            miningFee,
+                            txSize,
+                            receiversAddressInputTextField.getText(),
                             bsqFormatter,
                             btcFormatter,
                             () -> {
@@ -272,16 +271,6 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
                 }
             }
         });
-    }
-
-    private BsqTransferModel getBsqTransferModel()
-            throws InsufficientMoneyException,
-            TransactionVerificationException,
-            BsqChangeBelowDustException,
-            WalletException {
-        Coin receiverAmount = ParsingUtils.parseToCoin(amountInputTextField.getText(), bsqFormatter);
-        LegacyAddress legacyAddress = bsqFormatter.getAddressFromBsqAddress(receiversAddressInputTextField.getText());
-        return bsqTransferService.getBsqTransferModel(legacyAddress, receiverAmount);
     }
 
     private void setSendBtcGroupVisibleState(boolean visible) {
