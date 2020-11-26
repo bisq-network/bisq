@@ -129,9 +129,28 @@ public class OfferInfo implements Payload {
                 .build();
     }
 
-    @SuppressWarnings({"unused", "SameReturnValue"})
+    @SuppressWarnings("unused")
     public static OfferInfo fromProto(bisq.proto.grpc.OfferInfo proto) {
-        return null; // TODO
+        return new OfferInfo.OfferInfoBuilder()
+                .withId(proto.getId())
+                .withDirection(proto.getDirection())
+                .withPrice(proto.getPrice())
+                .withUseMarketBasedPrice(proto.getUseMarketBasedPrice())
+                .withMarketPriceMargin(proto.getMarketPriceMargin())
+                .withAmount(proto.getAmount())
+                .withMinAmount(proto.getMinAmount())
+                .withVolume(proto.getVolume())
+                .withMinVolume(proto.getMinVolume())
+                .withBuyerSecurityDeposit(proto.getBuyerSecurityDeposit())
+                .withIsCurrencyForMakerFeeBtc(proto.getIsCurrencyForMakerFeeBtc())
+                .withPaymentAccountId(proto.getPaymentAccountId())
+                .withPaymentMethodId(proto.getPaymentMethodId())
+                .withPaymentMethodShortName(proto.getPaymentMethodShortName())
+                .withBaseCurrencyCode(proto.getBaseCurrencyCode())
+                .withCounterCurrencyCode(proto.getCounterCurrencyCode())
+                .withDate(proto.getDate())
+                .withState(proto.getState())
+                .build();
     }
 
     /*
