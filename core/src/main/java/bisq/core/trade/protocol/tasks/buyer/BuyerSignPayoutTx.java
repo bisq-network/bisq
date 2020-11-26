@@ -81,6 +81,8 @@ public class BuyerSignPayoutTx extends TradeTask {
                     sellerMultiSigPubKey);
             processModel.setPayoutTxSignature(payoutTxSignature);
 
+            processModel.getTradeManager().requestPersistence();
+
             complete();
         } catch (Throwable t) {
             failed(t);

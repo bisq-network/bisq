@@ -20,6 +20,7 @@ package bisq.core.app;
 import bisq.core.trade.TradeManager;
 
 import bisq.common.UserThread;
+import bisq.common.app.Version;
 import bisq.common.file.CorruptedStorageFileHandler;
 import bisq.common.setup.GracefulShutDownHandler;
 
@@ -94,6 +95,8 @@ public class BisqHeadlessApp implements HeadlessApp {
         bisqSetup.setRevolutAccountsUpdateHandler(revolutAccountList -> log.info("setRevolutAccountsUpdateHandler: revolutAccountList={}", revolutAccountList));
         bisqSetup.setOsxKeyLoggerWarningHandler(() -> log.info("setOsxKeyLoggerWarningHandler"));
         bisqSetup.setQubesOSInfoHandler(() -> log.info("setQubesOSInfoHandler"));
+        bisqSetup.setDownGradePreventionHandler(lastVersion -> log.info("Downgrade from version {} to version {} is not supported",
+                lastVersion, Version.VERSION));
 
         corruptedStorageFileHandler.getFiles().ifPresent(files -> log.warn("getCorruptedDatabaseFiles. files={}", files));
         tradeManager.setTakeOfferRequestErrorMessageHandler(errorMessage -> log.error("onTakeOfferRequestErrorMessageHandler"));

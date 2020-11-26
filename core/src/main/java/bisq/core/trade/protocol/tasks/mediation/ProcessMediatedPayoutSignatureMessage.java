@@ -51,6 +51,8 @@ public class ProcessMediatedPayoutSignatureMessage extends TradeTask {
 
             trade.setMediationResultState(MediationResultState.RECEIVED_SIG_MSG);
 
+            processModel.getTradeManager().requestPersistence();
+
             complete();
         } catch (Throwable t) {
             failed(t);
