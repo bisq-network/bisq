@@ -348,7 +348,7 @@ public class CliMain {
 
                     List<OfferInfo> offers = reply.getOffersList();
                     if (offers.isEmpty())
-                        out.printf("no %s %s offers found\n", direction, currencyCode);
+                        out.printf("no %s %s offers found%n", direction, currencyCode);
                     else
                         out.println(formatOfferTable(reply.getOffersList(), currencyCode));
 
@@ -371,10 +371,11 @@ public class CliMain {
                             .setTakerFeeCurrencyCode(takerFeeCurrencyCode)
                             .build();
                     var reply = tradesService.takeOffer(request);
-                    out.printf("trade '%s' successfully taken", reply.getTrade().getShortId());
+                    out.printf("trade %s successfully taken%n", reply.getTrade().getTradeId());
                     return;
                 }
                 case gettrade: {
+                    // TODO make short-id a valid argument
                     if (nonOptionArgs.size() < 2)
                         throw new IllegalArgumentException("incorrect parameter count, "
                                 + " expecting trade id [,showcontract = true|false]");
@@ -403,7 +404,7 @@ public class CliMain {
                             .setTradeId(tradeId)
                             .build();
                     tradesService.confirmPaymentStarted(request);
-                    out.printf("trade '%s' payment started message sent", tradeId);
+                    out.printf("trade %s payment started message sent%n", tradeId);
                     return;
                 }
                 case confirmpaymentreceived: {
@@ -415,7 +416,7 @@ public class CliMain {
                             .setTradeId(tradeId)
                             .build();
                     tradesService.confirmPaymentReceived(request);
-                    out.printf("trade '%s' payment received message sent", tradeId);
+                    out.printf("trade %s payment received message sent%n", tradeId);
                     return;
                 }
                 case keepfunds: {
@@ -427,7 +428,7 @@ public class CliMain {
                             .setTradeId(tradeId)
                             .build();
                     tradesService.keepFunds(request);
-                    out.printf("funds from trade '%s' saved in bisq wallet", tradeId);
+                    out.printf("funds from trade %s saved in bisq wallet%n", tradeId);
                     return;
                 }
                 case withdrawfunds: {
@@ -442,7 +443,7 @@ public class CliMain {
                             .setAddress(address)
                             .build();
                     tradesService.withdrawFunds(request);
-                    out.printf("funds from trade '%s' sent to btc address '%s'", tradeId, address);
+                    out.printf("funds from trade %s sent to btc address %s%n", tradeId, address);
                     return;
                 }
                 case getpaymentmethods: {
@@ -464,7 +465,7 @@ public class CliMain {
                     File jsonFile = saveFileToDisk(paymentMethodId.toLowerCase(),
                             ".json",
                             jsonString);
-                    out.printf("Payment account form %s%nsaved to %s%n",
+                    out.printf("payment account form %s%nsaved to %s%n",
                             jsonString, jsonFile.getAbsolutePath());
                     out.println("Edit the file, and use as the argument to a 'createpaymentacct' command.");
                     return;
