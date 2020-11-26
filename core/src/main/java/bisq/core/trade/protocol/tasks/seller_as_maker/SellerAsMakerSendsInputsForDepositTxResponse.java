@@ -41,6 +41,10 @@ public class SellerAsMakerSendsInputsForDepositTxResponse extends MakerSendsInpu
             // before we have received his signature for the delayed payout tx.
             input.setScriptSig(new Script(new byte[]{}));
         });
-        return preparedDepositTx.bitcoinSerialize();
+
+        processModel.getTradeManager().requestPersistence();
+
+        // Make sure witnesses are removed as well before sending, to cover the segwit case.
+        return preparedDepositTx.bitcoinSerialize(false);
     }
 }
