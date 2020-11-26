@@ -19,6 +19,7 @@ package bisq.core.api;
 
 import bisq.core.api.model.AddressBalanceInfo;
 import bisq.core.api.model.BalancesInfo;
+import bisq.core.api.model.TxFeeRateInfo;
 import bisq.core.btc.wallet.TxBroadcaster;
 import bisq.core.monetary.Price;
 import bisq.core.offer.Offer;
@@ -244,6 +245,18 @@ public class CoreApi {
 
     public void sendBsq(String address, double amount, TxBroadcaster.Callback callback) {
         walletsService.sendBsq(address, amount, callback);
+    }
+
+    public TxFeeRateInfo getTxFeeRate() {
+        return walletsService.getTxFeeRate();
+    }
+
+    public TxFeeRateInfo setTxFeeRatePreference(long txFeeRate) {
+        return walletsService.setTxFeeRatePreference(txFeeRate);
+    }
+
+    public TxFeeRateInfo unsetTxFeeRatePreference() {
+        return walletsService.unsetTxFeeRatePreference();
     }
 
     public void setWalletPassword(String password, String newPassword) {

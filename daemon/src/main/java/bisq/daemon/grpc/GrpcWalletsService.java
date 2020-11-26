@@ -19,6 +19,7 @@ package bisq.daemon.grpc;
 
 import bisq.core.api.CoreApi;
 import bisq.core.api.model.AddressBalanceInfo;
+import bisq.core.api.model.TxFeeRateInfo;
 import bisq.core.btc.exceptions.TxBroadcastException;
 import bisq.core.btc.wallet.TxBroadcaster;
 
@@ -28,6 +29,8 @@ import bisq.proto.grpc.GetBalancesReply;
 import bisq.proto.grpc.GetBalancesRequest;
 import bisq.proto.grpc.GetFundingAddressesReply;
 import bisq.proto.grpc.GetFundingAddressesRequest;
+import bisq.proto.grpc.GetTxFeeRateReply;
+import bisq.proto.grpc.GetTxFeeRateRequest;
 import bisq.proto.grpc.GetUnusedBsqAddressReply;
 import bisq.proto.grpc.GetUnusedBsqAddressRequest;
 import bisq.proto.grpc.LockWalletReply;
@@ -36,10 +39,14 @@ import bisq.proto.grpc.RemoveWalletPasswordReply;
 import bisq.proto.grpc.RemoveWalletPasswordRequest;
 import bisq.proto.grpc.SendBsqReply;
 import bisq.proto.grpc.SendBsqRequest;
+import bisq.proto.grpc.SetTxFeeRatePreferenceReply;
+import bisq.proto.grpc.SetTxFeeRatePreferenceRequest;
 import bisq.proto.grpc.SetWalletPasswordReply;
 import bisq.proto.grpc.SetWalletPasswordRequest;
 import bisq.proto.grpc.UnlockWalletReply;
 import bisq.proto.grpc.UnlockWalletRequest;
+import bisq.proto.grpc.UnsetTxFeeRatePreferenceReply;
+import bisq.proto.grpc.UnsetTxFeeRatePreferenceRequest;
 import bisq.proto.grpc.WalletsGrpc;
 
 import io.grpc.Status;
@@ -156,6 +163,57 @@ class GrpcWalletsService extends WalletsGrpc.WalletsImplBase {
                     throw new IllegalStateException(ex);
                 }
             });
+        } catch (IllegalStateException cause) {
+            var ex = new StatusRuntimeException(Status.UNKNOWN.withDescription(cause.getMessage()));
+            responseObserver.onError(ex);
+            throw ex;
+        }
+    }
+
+    @Override
+    public void getTxFeeRate(GetTxFeeRateRequest req,
+                             StreamObserver<GetTxFeeRateReply> responseObserver) {
+        try {
+            TxFeeRateInfo txFeeRateInfo = coreApi.getTxFeeRate();
+            var reply = GetTxFeeRateReply.newBuilder()
+                    .setTxFeeRateInfo(txFeeRateInfo.toProtoMessage())
+                    .build();
+            responseObserver.onNext(reply);
+            responseObserver.onCompleted();
+        } catch (IllegalStateException cause) {
+            var ex = new StatusRuntimeException(Status.UNKNOWN.withDescription(cause.getMessage()));
+            responseObserver.onError(ex);
+            throw ex;
+        }
+    }
+
+    @Override
+    public void setTxFeeRatePreference(SetTxFeeRatePreferenceRequest req,
+                                       StreamObserver<SetTxFeeRatePreferenceReply> responseObserver) {
+        try {
+            TxFeeRateInfo txFeeRateInfo = coreApi.setTxFeeRatePreference(req.getTxFeeRatePreference());
+            var reply = SetTxFeeRatePreferenceReply.newBuilder()
+                    .setTxFeeRateInfo(txFeeRateInfo.toProtoMessage())
+                    .build();
+            responseObserver.onNext(reply);
+            responseObserver.onCompleted();
+        } catch (IllegalStateException cause) {
+            var ex = new StatusRuntimeException(Status.UNKNOWN.withDescription(cause.getMessage()));
+            responseObserver.onError(ex);
+            throw ex;
+        }
+    }
+
+    @Override
+    public void unsetTxFeeRatePreference(UnsetTxFeeRatePreferenceRequest req,
+                                         StreamObserver<UnsetTxFeeRatePreferenceReply> responseObserver) {
+        try {
+            TxFeeRateInfo txFeeRateInfo = coreApi.unsetTxFeeRatePreference();
+            var reply = UnsetTxFeeRatePreferenceReply.newBuilder()
+                    .setTxFeeRateInfo(txFeeRateInfo.toProtoMessage())
+                    .build();
+            responseObserver.onNext(reply);
+            responseObserver.onCompleted();
         } catch (IllegalStateException cause) {
             var ex = new StatusRuntimeException(Status.UNKNOWN.withDescription(cause.getMessage()));
             responseObserver.onError(ex);

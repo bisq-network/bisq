@@ -21,6 +21,7 @@ import bisq.core.api.model.AddressBalanceInfo;
 import bisq.core.api.model.BalancesInfo;
 import bisq.core.api.model.BsqBalanceInfo;
 import bisq.core.api.model.BtcBalanceInfo;
+import bisq.core.api.model.TxFeeRateInfo;
 import bisq.core.btc.Balances;
 import bisq.core.btc.exceptions.BsqChangeBelowDustException;
 import bisq.core.btc.exceptions.TransactionVerificationException;
@@ -32,6 +33,8 @@ import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TxBroadcaster;
 import bisq.core.btc.wallet.WalletsManager;
+import bisq.core.provider.fee.FeeService;
+import bisq.core.user.Preferences;
 import bisq.core.util.coin.BsqFormatter;
 
 import bisq.common.Timer;
@@ -54,6 +57,8 @@ import org.bouncycastle.crypto.params.KeyParameter;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -74,6 +79,8 @@ class CoreWalletsService {
     private final BsqTransferService bsqTransferService;
     private final BsqFormatter bsqFormatter;
     private final BtcWalletService btcWalletService;
+    private final FeeService feeService;
+    private final Preferences preferences;
 
     @Nullable
     private Timer lockTimer;
@@ -87,13 +94,17 @@ class CoreWalletsService {
                               BsqWalletService bsqWalletService,
                               BsqTransferService bsqTransferService,
                               BsqFormatter bsqFormatter,
-                              BtcWalletService btcWalletService) {
+                              BtcWalletService btcWalletService,
+                              FeeService feeService,
+                              Preferences preferences) {
         this.balances = balances;
         this.walletsManager = walletsManager;
         this.bsqWalletService = bsqWalletService;
         this.bsqTransferService = bsqTransferService;
         this.bsqFormatter = bsqFormatter;
         this.btcWalletService = btcWalletService;
+        this.feeService = feeService;
+        this.preferences = preferences;
     }
 
     @Nullable
@@ -183,6 +194,37 @@ class CoreWalletsService {
             log.error("", ex);
             throw new IllegalStateException(ex);
         }
+    }
+
+    TxFeeRateInfo getTxFeeRate() {
+        try {
+            CompletableFuture<Void> feeRequestFuture = CompletableFuture.runAsync(feeService::requestFees);
+            feeRequestFuture.get();  // Block until async fee request is complete.
+        } catch (InterruptedException | ExecutionException e) {
+            throw new IllegalStateException("could not request fees from fee service.", e);
+        }
+
+        Coin stdTxFeeRate = feeService.getTxFeePerVbyte();
+        Coin customTxFeeRate = preferences.isUseCustomWithdrawalTxFee()
+                ? Coin.valueOf(preferences.getWithdrawalTxFeeInVbytes())
+                : Coin.NEGATIVE_SATOSHI;
+
+        return new TxFeeRateInfo(stdTxFeeRate.value, customTxFeeRate.value);
+    }
+
+    TxFeeRateInfo setTxFeeRatePreference(long txFeeRate) {
+        if (txFeeRate <= 0)
+            throw new IllegalStateException("cannot create transactions without fees");
+
+        preferences.setUseCustomWithdrawalTxFee(true);
+        Coin satsPerByte = Coin.valueOf(txFeeRate);
+        preferences.setWithdrawalTxFeeInVbytes(satsPerByte.value);
+        return getTxFeeRate();
+    }
+
+    TxFeeRateInfo unsetTxFeeRatePreference() {
+        preferences.setUseCustomWithdrawalTxFee(false);
+        return getTxFeeRate();
     }
 
     int getNumConfirmationsForMostRecentTransaction(String addressString) {

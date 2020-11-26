@@ -31,6 +31,7 @@ import bisq.proto.grpc.GetPaymentAccountFormRequest;
 import bisq.proto.grpc.GetPaymentAccountsRequest;
 import bisq.proto.grpc.GetPaymentMethodsRequest;
 import bisq.proto.grpc.GetTradeRequest;
+import bisq.proto.grpc.GetTxFeeRateRequest;
 import bisq.proto.grpc.GetUnusedBsqAddressRequest;
 import bisq.proto.grpc.GetVersionRequest;
 import bisq.proto.grpc.KeepFundsRequest;
@@ -39,9 +40,11 @@ import bisq.proto.grpc.OfferInfo;
 import bisq.proto.grpc.RegisterDisputeAgentRequest;
 import bisq.proto.grpc.RemoveWalletPasswordRequest;
 import bisq.proto.grpc.SendBsqRequest;
+import bisq.proto.grpc.SetTxFeeRatePreferenceRequest;
 import bisq.proto.grpc.SetWalletPasswordRequest;
 import bisq.proto.grpc.TakeOfferRequest;
 import bisq.proto.grpc.UnlockWalletRequest;
+import bisq.proto.grpc.UnsetTxFeeRatePreferenceRequest;
 import bisq.proto.grpc.WithdrawFundsRequest;
 
 import protobuf.PaymentAccount;
@@ -68,6 +71,7 @@ import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.cli.CurrencyFormat.formatTxFeeRate;
 import static bisq.cli.CurrencyFormat.toSatoshis;
 import static bisq.cli.NegativeNumberOptions.hasNegativeNumberOptions;
 import static bisq.cli.TableFormat.*;
@@ -106,6 +110,9 @@ public class CliMain {
         getfundingaddresses,
         getunusedbsqaddress,
         sendbsq,
+        gettxfeerate,
+        settxfeerate,
+        unsettxfeerate,
         lockwallet,
         unlockwallet,
         removewalletpassword,
@@ -264,6 +271,36 @@ public class CliMain {
                             .build();
                     walletsService.sendBsq(request);
                     out.printf("%.2f BSQ sent to %s%n", amount, address);
+                    return;
+                }
+                case gettxfeerate: {
+                    var request = GetTxFeeRateRequest.newBuilder().build();
+                    var reply = walletsService.getTxFeeRate(request);
+                    out.println(formatTxFeeRate(reply.getTxFeeRateInfo()));
+                    return;
+                }
+                case settxfeerate: {
+                    if (nonOptionArgs.size() < 2)
+                        throw new IllegalArgumentException("no tx fee rate specified");
+
+                    long txFeeRate;
+                    try {
+                        txFeeRate = Long.parseLong(nonOptionArgs.get(2));
+                    } catch (NumberFormatException e) {
+                        throw new IllegalArgumentException(format("'%s' is not a number", nonOptionArgs.get(2)));
+                    }
+
+                    var request = SetTxFeeRatePreferenceRequest.newBuilder()
+                            .setTxFeeRatePreference(txFeeRate)
+                            .build();
+                    var reply = walletsService.setTxFeeRatePreference(request);
+                    out.println(formatTxFeeRate(reply.getTxFeeRateInfo()));
+                    return;
+                }
+                case unsettxfeerate: {
+                    var request = UnsetTxFeeRatePreferenceRequest.newBuilder().build();
+                    var reply = walletsService.unsetTxFeeRatePreference(request);
+                    out.println(formatTxFeeRate(reply.getTxFeeRateInfo()));
                     return;
                 }
                 case createoffer: {
@@ -626,6 +663,9 @@ public class CliMain {
             stream.format(rowFormat, "getfundingaddresses", "", "Get BTC funding addresses");
             stream.format(rowFormat, "getunusedbsqaddress", "", "Get unused BSQ address");
             stream.format(rowFormat, "sendbsq", "address, amount", "Send BSQ");
+            stream.format(rowFormat, "gettxfeerate", "", "Get current tx fee rate in sats/byte");
+            stream.format(rowFormat, "settxfeerate", "satoshis (per byte)", "Set custom tx fee rate in sats/byte");
+            stream.format(rowFormat, "unsettxfeerate", "", "Unset custom tx fee rate");
             stream.format(rowFormat, "createoffer", "payment acct id, buy | sell, currency code, \\", "Create and place an offer");
             stream.format(rowFormat, "", "amount (btc), min amount, use mkt based price, \\", "");
             stream.format(rowFormat, "", "fixed price (btc) | mkt price margin (%), security deposit (%) \\", "");
