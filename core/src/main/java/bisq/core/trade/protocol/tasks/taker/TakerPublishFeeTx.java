@@ -110,6 +110,9 @@ public class TakerPublishFeeTx extends TradeTask {
             if (transaction != null) {
                 trade.setTakerFeeTxId(transaction.getTxId().toString());
                 trade.setState(Trade.State.TAKER_PUBLISHED_TAKER_FEE_TX);
+
+                processModel.getTradeManager().requestPersistence();
+
                 complete();
             }
         } else {

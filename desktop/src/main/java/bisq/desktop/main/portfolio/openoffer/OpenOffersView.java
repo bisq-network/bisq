@@ -22,6 +22,7 @@ import bisq.desktop.common.view.ActivatableViewAndModel;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipCheckBox;
 import bisq.desktop.components.AutoTooltipLabel;
+import bisq.desktop.components.AutoTooltipTableColumn;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.funds.FundsView;
@@ -67,7 +68,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
     @FXML
     TableView<OpenOfferListItem> tableView;
     @FXML
-    TableColumn<OpenOfferListItem, OpenOfferListItem> priceColumn, amountColumn, volumeColumn,
+    TableColumn<OpenOfferListItem, OpenOfferListItem> priceColumn, deviationColumn, amountColumn, volumeColumn,
             marketColumn, directionColumn, dateColumn, offerIdColumn, deactivateItemColumn,
             removeItemColumn, editItemColumn, paymentMethodColumn;
     private final Navigation navigation;
@@ -86,6 +87,8 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
     public void initialize() {
         paymentMethodColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.paymentMethod")));
         priceColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.price")));
+        deviationColumn.setGraphic(new AutoTooltipTableColumn<>(Res.get("shared.deviation"),
+                Res.get("portfolio.closedTrades.deviation.help")).getGraphic());
         amountColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.BTCMinMax")));
         volumeColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.amountMinMax")));
         marketColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.market")));
@@ -100,6 +103,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
         setDirectionColumnCellFactory();
         setMarketColumnCellFactory();
         setPriceColumnCellFactory();
+        setDeviationColumnCellFactory();
         setAmountColumnCellFactory();
         setVolumeColumnCellFactory();
         setPaymentMethodColumnCellFactory();
@@ -116,6 +120,9 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
         marketColumn.setComparator(Comparator.comparing(model::getMarketLabel));
         amountColumn.setComparator(Comparator.comparing(o -> o.getOffer().getAmount()));
         priceColumn.setComparator(Comparator.comparing(o -> o.getOffer().getPrice(), Comparator.nullsFirst(Comparator.naturalOrder())));
+        deviationColumn.setComparator(Comparator.comparing(o ->
+                o.getOffer().isUseMarketBasedPrice() ? o.getOffer().getMarketPriceMargin() : 1,
+                Comparator.nullsFirst(Comparator.naturalOrder())));
         volumeColumn.setComparator(Comparator.comparing(o -> o.getOffer().getVolume(), Comparator.nullsFirst(Comparator.naturalOrder())));
         dateColumn.setComparator(Comparator.comparing(o -> o.getOffer().getDate()));
         paymentMethodColumn.setComparator(Comparator.comparing(o -> o.getOffer().getPaymentMethod().getId()));
@@ -299,6 +306,31 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                                 if (item != null) {
                                     if (model.isDeactivated(item)) getStyleClass().add("offer-disabled");
                                     setGraphic(new AutoTooltipLabel(model.getPrice(item)));
+                                } else {
+                                    setGraphic(null);
+                                }
+                            }
+                        };
+                    }
+                });
+    }
+
+    private void setDeviationColumnCellFactory() {
+        deviationColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
+        deviationColumn.setCellFactory(
+                new Callback<>() {
+                    @Override
+                    public TableCell<OpenOfferListItem, OpenOfferListItem> call(
+                            TableColumn<OpenOfferListItem, OpenOfferListItem> column) {
+                        return new TableCell<>() {
+                            @Override
+                            public void updateItem(final OpenOfferListItem item, boolean empty) {
+                                super.updateItem(item, empty);
+                                getStyleClass().removeAll("offer-disabled");
+
+                                if (item != null) {
+                                    if (model.isDeactivated(item)) getStyleClass().add("offer-disabled");
+                                    setGraphic(new AutoTooltipLabel(model.getPriceDeviation(item)));
                                 } else {
                                     setGraphic(null);
                                 }

@@ -93,6 +93,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
     public static final String PROMPT_PAY_ID = "PROMPT_PAY";
     public static final String ADVANCED_CASH_ID = "ADVANCED_CASH";
     public static final String TRANSFERWISE_ID = "TRANSFERWISE";
+    public static final String AMAZON_GIFT_CARD_ID = "AMAZON_GIFT_CARD";
     public static final String BLOCK_CHAINS_INSTANT_ID = "BLOCK_CHAINS_INSTANT";
 
     // Cannot be deleted as it would break old trade history entries
@@ -132,6 +133,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
     public static PaymentMethod PROMPT_PAY;
     public static PaymentMethod ADVANCED_CASH;
     public static PaymentMethod TRANSFERWISE;
+    public static PaymentMethod AMAZON_GIFT_CARD;
     public static PaymentMethod BLOCK_CHAINS_INSTANT;
 
     // Cannot be deleted as it would break old trade history entries
@@ -176,6 +178,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
             SPECIFIC_BANKS = new PaymentMethod(SPECIFIC_BANKS_ID, 4 * DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
             HAL_CASH = new PaymentMethod(HAL_CASH_ID, DAY, DEFAULT_TRADE_LIMIT_LOW_RISK),
             F2F = new PaymentMethod(F2F_ID, 4 * DAY, DEFAULT_TRADE_LIMIT_LOW_RISK),
+            AMAZON_GIFT_CARD = new PaymentMethod(AMAZON_GIFT_CARD_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
 
             // Trans national
             UPHOLD = new PaymentMethod(UPHOLD_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),

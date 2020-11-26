@@ -61,7 +61,6 @@ echo "[*] Installing base packages"
 sudo -H -i -u "${ROOT_USER}" DEBIAN_FRONTEND=noninteractive apt-get install -qq -y ${ROOT_PKG}
 
 echo "[*] Installing Git LFS"
-sudo -H -i -u "${ROOT_USER}" curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | bash
 sudo -H -i -u "${ROOT_USER}" apt-get install git-lfs
 sudo -H -i -u "${ROOT_USER}" git lfs install
 

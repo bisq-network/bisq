@@ -356,20 +356,20 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                 }
 
                 if (areInputsValid()) {
-                    int txSize = feeEstimationTransaction.bitcoinSerialize().length;
-                    log.info("Fee for tx with size {}: {} " + Res.getBaseCurrencyCode() + "", txSize, fee.toPlainString());
+                    int txVsize = feeEstimationTransaction.getVsize();
+                    log.info("Fee for tx with size {}: {} " + Res.getBaseCurrencyCode() + "", txVsize, fee.toPlainString());
 
                     if (receiverAmount.isPositive()) {
-                        double feePerByte = CoinUtil.getFeePerByte(fee, txSize);
-                        double kb = txSize / 1000d;
+                        double feePerVbyte = CoinUtil.getFeePerVbyte(fee, txVsize);
+                        double vkb = txVsize / 1000d;
 
                         String messageText = Res.get("shared.sendFundsDetailsWithFee",
                                 formatter.formatCoinWithCode(sendersAmount),
                                 withdrawFromTextField.getText(),
                                 withdrawToTextField.getText(),
                                 formatter.formatCoinWithCode(fee),
-                                feePerByte,
-                                kb,
+                                feePerVbyte,
+                                vkb,
                                 formatter.formatCoinWithCode(receiverAmount));
                         if (dust.isPositive()) {
                             messageText = Res.get("shared.sendFundsDetailsDust",

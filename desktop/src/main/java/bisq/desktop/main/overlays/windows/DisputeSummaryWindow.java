@@ -672,11 +672,11 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         Coin sellerPayoutAmount = disputeResult.getSellerPayoutAmount();
         String sellerPayoutAddressString = contract.getSellerPayoutAddressString();
         Coin outputAmount = buyerPayoutAmount.add(sellerPayoutAmount);
-        Tuple2<Coin, Integer> feeTuple = txFeeEstimationService.getEstimatedFeeAndTxSize(outputAmount, feeService, btcWalletService);
+        Tuple2<Coin, Integer> feeTuple = txFeeEstimationService.getEstimatedFeeAndTxVsize(outputAmount, feeService, btcWalletService);
         Coin fee = feeTuple.first;
-        Integer txSize = feeTuple.second;
-        double feePerByte = CoinUtil.getFeePerByte(fee, txSize);
-        double kb = txSize / 1000d;
+        Integer txVsize = feeTuple.second;
+        double feePerVbyte = CoinUtil.getFeePerVbyte(fee, txVsize);
+        double vkb = txVsize / 1000d;
         Coin inputAmount = outputAmount.add(fee);
         String buyerDetails = "";
         if (buyerPayoutAmount.isPositive()) {
@@ -698,8 +698,8 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                             buyerDetails,
                             sellerDetails,
                             formatter.formatCoinWithCode(fee),
-                            feePerByte,
-                            kb))
+                            feePerVbyte,
+                            vkb))
                     .actionButtonText(Res.get("shared.yes"))
                     .onAction(() -> {
                         doPayout(buyerPayoutAmount,
@@ -788,6 +788,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
             }
         } catch (TradeDataValidation.DisputeReplayException exception) {
             if (disputeManager instanceof MediationManager) {
+                log.error("Closing of ticket failed as mediator", exception);
                 new Popup().width(900)
                         .warning(exception.getMessage())
                         .onAction(() -> {
@@ -797,6 +798,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                         .closeButtonText(Res.get("shared.no"))
                         .show();
             } else {
+                log.error("Closing of ticket failed", exception);
                 new Popup().width(900)
                         .warning(exception.getMessage())
                         .show();

@@ -100,6 +100,9 @@ public class CreateTakerFeeTx extends TradeTask {
 
             processModel.setTakeOfferFeeTx(transaction);
             walletService.swapTradeEntryToAvailableEntry(id, AddressEntry.Context.OFFER_FUNDING);
+
+            processModel.getTradeManager().requestPersistence();
+
             complete();
         } catch (Throwable t) {
             if (t instanceof DaoDisabledException) {

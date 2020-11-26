@@ -250,12 +250,12 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
                     Transaction txWithBtcFee = btcWalletService.completePreparedSendBsqTx(preparedSendTx, true);
                     Transaction signedTx = bsqWalletService.signTx(txWithBtcFee);
                     Coin miningFee = signedTx.getFee();
-                    int txSize = signedTx.bitcoinSerialize().length;
+                    int txVsize = signedTx.getVsize();
                     showPublishTxPopup(receiverAmount,
                             txWithBtcFee,
                             TxType.TRANSFER_BSQ,
                             miningFee,
-                            txSize,
+                            txVsize,
                             receiversAddressInputTextField.getText(),
                             bsqFormatter,
                             btcFormatter,
@@ -312,12 +312,12 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
                     if (miningFee.getValue() >= receiverAmount.getValue())
                         GUIUtil.showWantToBurnBTCPopup(miningFee, receiverAmount, btcFormatter);
                     else {
-                        int txSize = signedTx.bitcoinSerialize().length;
+                        int txVsize = signedTx.getVsize();
                         showPublishTxPopup(receiverAmount,
                                 txWithBtcFee,
                                 TxType.INVALID,
                                 miningFee,
-                                txSize, receiversBtcAddressInputTextField.getText(),
+                                txVsize, receiversBtcAddressInputTextField.getText(),
                                 btcFormatter,
                                 btcFormatter,
                                 () -> {
@@ -355,7 +355,7 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
                                     Transaction txWithBtcFee,
                                     TxType txType,
                                     Coin miningFee,
-                                    int txSize, String address,
+                                    int txVsize, String address,
                                     CoinFormatter amountFormatter, // can be BSQ or BTC formatter
                                     CoinFormatter feeFormatter,
                                     ResultHandler resultHandler) {
@@ -364,8 +364,8 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
                         amountFormatter.formatCoinWithCode(receiverAmount),
                         address,
                         feeFormatter.formatCoinWithCode(miningFee),
-                        CoinUtil.getFeePerByte(miningFee, txSize),
-                        txSize / 1000d,
+                        CoinUtil.getFeePerVbyte(miningFee, txVsize),
+                        txVsize / 1000d,
                         amountFormatter.formatCoinWithCode(receiverAmount)))
                 .actionButtonText(Res.get("shared.yes"))
                 .onAction(() -> {
