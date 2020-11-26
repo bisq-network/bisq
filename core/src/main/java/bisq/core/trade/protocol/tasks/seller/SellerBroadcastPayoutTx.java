@@ -44,5 +44,6 @@ public class SellerBroadcastPayoutTx extends BroadcastPayoutTx {
     @Override
     protected void setState() {
         trade.setState(Trade.State.SELLER_PUBLISHED_PAYOUT_TX);
+        processModel.getTradeManager().requestPersistence();
     }
 }

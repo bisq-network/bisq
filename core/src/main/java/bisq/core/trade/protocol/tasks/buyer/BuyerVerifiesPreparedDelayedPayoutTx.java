@@ -25,6 +25,8 @@ import bisq.common.taskrunner.TaskRunner;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 @Slf4j
 public class BuyerVerifiesPreparedDelayedPayoutTx extends TradeTask {
     public BuyerVerifiesPreparedDelayedPayoutTx(TaskRunner<Trade> taskHandler, Trade trade) {
@@ -36,10 +38,21 @@ public class BuyerVerifiesPreparedDelayedPayoutTx extends TradeTask {
         try {
             runInterceptHook();
 
+            var preparedDelayedPayoutTx = processModel.getPreparedDelayedPayoutTx();
             TradeDataValidation.validateDelayedPayoutTx(trade,
-                    processModel.getPreparedDelayedPayoutTx(),
+                    preparedDelayedPayoutTx,
                     processModel.getDaoFacade(),
                     processModel.getBtcWalletService());
+
+            // If the deposit tx is non-malleable, we already know its final ID, so should check that now
+            // before sending any further data to the seller, to provide extra protection for the buyer.
+            if (isDepositTxNonMalleable()) {
+                var preparedDepositTx = processModel.getBtcWalletService().getTxFromSerializedTx(
+                        processModel.getPreparedDepositTx());
+                TradeDataValidation.validatePayoutTxInput(preparedDepositTx, checkNotNull(preparedDelayedPayoutTx));
+            } else {
+                log.info("Deposit tx is malleable, so we skip preparedDelayedPayoutTx input validation.");
+            }
 
             complete();
         } catch (TradeDataValidation.ValidationException e) {
@@ -47,5 +60,13 @@ public class BuyerVerifiesPreparedDelayedPayoutTx extends TradeTask {
         } catch (Throwable t) {
             failed(t);
         }
+    }
+
+    private boolean isDepositTxNonMalleable() {
+        var buyerInputs = checkNotNull(processModel.getRawTransactionInputs());
+        var sellerInputs = checkNotNull(processModel.getTradingPeer().getRawTransactionInputs());
+
+        return buyerInputs.stream().allMatch(processModel.getTradeWalletService()::isP2WH) &&
+                sellerInputs.stream().allMatch(processModel.getTradeWalletService()::isP2WH);
     }
 }

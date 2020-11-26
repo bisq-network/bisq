@@ -342,11 +342,13 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
     private void initPersistedTrade(Trade trade) {
         initTradeAndProtocol(trade, getTradeProtocol(trade));
         trade.updateDepositTxFromWallet();
+        requestPersistence();
     }
 
     private void initTradeAndProtocol(Trade trade, TradeProtocol tradeProtocol) {
         tradeProtocol.initialize(processModelServiceProvider, this, trade.getOffer());
         trade.initialize(processModelServiceProvider);
+        requestPersistence();
     }
 
     public void requestPersistence() {
@@ -431,6 +433,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
 
                         ((TakerProtocol) tradeProtocol).onTakeOffer();
                         tradeResultHandler.handleResult(trade);
+                        requestPersistence();
                     }
                 },
                 errorMessageHandler);
@@ -544,10 +547,13 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                 Date halfTradePeriodDate = trade.getHalfTradePeriodDate();
                 if (maxTradePeriodDate != null && halfTradePeriodDate != null) {
                     Date now = new Date();
-                    if (now.after(maxTradePeriodDate))
+                    if (now.after(maxTradePeriodDate)) {
                         trade.setTradePeriodState(Trade.TradePeriodState.TRADE_PERIOD_OVER);
-                    else if (now.after(halfTradePeriodDate))
+                        requestPersistence();
+                    } else if (now.after(halfTradePeriodDate)) {
                         trade.setTradePeriodState(Trade.TradePeriodState.SECOND_HALF);
+                        requestPersistence();
+                    }
                 }
             }
         });

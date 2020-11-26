@@ -32,7 +32,7 @@ public enum InventoryItem {
     // Percentage deviation
     OfferPayload("OfferPayload",
             true,
-            new DeviationByPercentage(0.9, 1.1, 0.95, 1.05), 5),
+            new DeviationByPercentage(0.8, 1.2, 0.9, 1.1), 5),
     MailboxStoragePayload("MailboxStoragePayload",
             true,
             new DeviationByPercentage(0.9, 1.1, 0.95, 1.05), 2),
@@ -102,7 +102,7 @@ public enum InventoryItem {
             new DeviationByPercentage(0, 3, 0, 2.5), 2),
     numAllConnectionsLostEvents("numAllConnectionsLostEvents",
             true,
-            new DeviationByIntegerDiff(1, 2), 3),
+            new DeviationByIntegerDiff(1, 2), 1),
     sentBytesPerSec("sentBytesPerSec",
             true,
             new DeviationByPercentage(), 5),
@@ -137,6 +137,7 @@ public enum InventoryItem {
 
     // The number of past requests we check to see if there have been repeated alerts or warnings. The higher the
     // number the more repeated alert need to have happened to cause a notification alert.
+    // Smallest number is 1, as that takes only the last request data and does not look further back.
     @Getter
     private int deviationTolerance = 1;
 

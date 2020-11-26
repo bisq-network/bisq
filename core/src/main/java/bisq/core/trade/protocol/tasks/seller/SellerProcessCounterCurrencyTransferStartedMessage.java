@@ -61,6 +61,8 @@ public class SellerProcessCounterCurrencyTransferStartedMessage extends TradeTas
 
             trade.setState(Trade.State.SELLER_RECEIVED_FIAT_PAYMENT_INITIATED_MSG);
 
+            processModel.getTradeManager().requestPersistence();
+
             complete();
         } catch (Throwable t) {
             failed(t);

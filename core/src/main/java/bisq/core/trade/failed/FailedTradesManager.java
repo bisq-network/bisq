@@ -95,13 +95,13 @@ public class FailedTradesManager implements PersistedDataHost {
 
     public void add(Trade trade) {
         if (failedTrades.add(trade)) {
-            persistenceManager.requestPersistence();
+            requestPersistence();
         }
     }
 
     public void removeTrade(Trade trade) {
         if (failedTrades.remove(trade)) {
-            persistenceManager.requestPersistence();
+            requestPersistence();
         }
     }
 
@@ -129,7 +129,7 @@ public class FailedTradesManager implements PersistedDataHost {
         if (unFailTradeCallback.apply(trade)) {
             log.info("Unfailing trade {}", trade.getId());
             if (failedTrades.remove(trade)) {
-                persistenceManager.requestPersistence();
+                requestPersistence();
             }
         }
     }
@@ -150,5 +150,9 @@ public class FailedTradesManager implements PersistedDataHost {
             }
         }
         return blockingTrades.toString();
+    }
+
+    private void requestPersistence() {
+        persistenceManager.requestPersistence();
     }
 }

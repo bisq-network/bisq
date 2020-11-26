@@ -43,13 +43,15 @@ public class SellerAsMakerProcessDepositTxMessage extends TradeTask {
             Validator.checkTradeId(processModel.getOfferId(), message);
             checkNotNull(message);
 
-            processModel.getTradingPeer().setPreparedDepositTx(checkNotNull(message.getDepositTx()));
+            processModel.getTradingPeer().setPreparedDepositTx(checkNotNull(message.getDepositTxWithoutWitnesses()));
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
 
             // When we receive that message the taker has published the taker fee, so we apply it to the trade.
             // The takerFeeTx was sent in the first message. It should be part of DelayedPayoutTxSignatureRequest
             // but that cannot be changed due backward compatibility issues. It is a left over from the old trade protocol.
             trade.setTakerFeeTxId(processModel.getTakeOfferFeeTxId());
+
+            processModel.getTradeManager().requestPersistence();
 
             complete();
         } catch (Throwable t) {

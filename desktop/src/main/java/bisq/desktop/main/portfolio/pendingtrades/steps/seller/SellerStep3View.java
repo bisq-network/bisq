@@ -32,6 +32,7 @@ import bisq.desktop.util.Layout;
 import bisq.core.locale.Res;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.PaymentAccountUtil;
+import bisq.core.payment.payload.AmazonGiftCardAccountPayload;
 import bisq.core.payment.payload.AssetsAccountPayload;
 import bisq.core.payment.payload.BankAccountPayload;
 import bisq.core.payment.payload.CashDepositAccountPayload;
@@ -378,6 +379,7 @@ public class SellerStep3View extends TradeStepView {
                         message += Res.get("portfolio.pending.step3_seller.onPaymentReceived.name", optionalHolderName.get());
                     }
                 }
+
                 message += Res.get("portfolio.pending.step3_seller.onPaymentReceived.note");
                 if (model.dataModel.isSignWitnessTrade()) {
                     message += Res.get("portfolio.pending.step3_seller.onPaymentReceived.signer");
@@ -415,7 +417,8 @@ public class SellerStep3View extends TradeStepView {
                 message = Res.get("portfolio.pending.step3_seller.postal", part1, tradeVolumeWithCode, id);
             } else if (!(paymentAccountPayload instanceof WesternUnionAccountPayload) &&
                     !(paymentAccountPayload instanceof HalCashAccountPayload) &&
-                    !(paymentAccountPayload instanceof F2FAccountPayload)) {
+                    !(paymentAccountPayload instanceof F2FAccountPayload) &&
+                    !(paymentAccountPayload instanceof AmazonGiftCardAccountPayload)) {
                 message = Res.get("portfolio.pending.step3_seller.bank", currencyName, tradeVolumeWithCode, id);
             }
 
@@ -430,6 +433,8 @@ public class SellerStep3View extends TradeStepView {
                 message = message + Res.get("portfolio.pending.step3_seller.halCash");
             else if (paymentAccountPayload instanceof F2FAccountPayload)
                 message = part1;
+            else if (paymentAccountPayload instanceof AmazonGiftCardAccountPayload)
+                message = Res.get("portfolio.pending.step3_seller.amazonGiftCard");
 
             Optional<String> optionalHolderName = getOptionalHolderName();
             if (optionalHolderName.isPresent()) {
