@@ -50,9 +50,12 @@ public enum InventoryItem {
     Alert("Alert",
             true,
             new DeviationByIntegerDiff(1, 1), 2),
+    // Deactivate filter check as we have too many filters online by a mistake should be cleaned up in a few days after 1.5.
     Filter("Filter",
-            true,
-            new DeviationByIntegerDiff(1, 1), 2),
+            true),
+    /* Filter("Filter",
+             true,
+             new DeviationByIntegerDiff(1, 1), 2),*/
     Mediator("Mediator",
             true,
             new DeviationByIntegerDiff(1, 1), 2),
