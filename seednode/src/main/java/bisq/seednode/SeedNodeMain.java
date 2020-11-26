@@ -17,12 +17,15 @@
 
 package bisq.seednode;
 
+import bisq.core.app.TorSetup;
 import bisq.core.app.misc.ExecutableForAppWithP2p;
 import bisq.core.app.misc.ModuleForAppWithP2p;
 
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.P2PServiceListener;
+import bisq.network.p2p.peers.PeerManager;
 
+import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.app.AppModule;
 import bisq.common.app.Capabilities;
@@ -33,15 +36,17 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class SeedNodeMain extends ExecutableForAppWithP2p {
-    private static final String VERSION = "1.4.2";
+    private static final long CHECK_CONNECTION_LOSS_SEC = 30;
+    private static final String VERSION = "1.5.0";
     private SeedNode seedNode;
+    private Timer checkConnectionLossTime;
 
     public SeedNodeMain() {
         super("Bisq Seednode", "bisq-seednode", "bisq_seednode", VERSION);
     }
 
     public static void main(String[] args) {
-        log.info("SeedNode.VERSION: " + VERSION);
+        System.out.println("SeedNode.VERSION: " + VERSION);
         new SeedNodeMain().execute(args);
     }
 
@@ -126,6 +131,7 @@ public class SeedNodeMain extends ExecutableForAppWithP2p {
             @Override
             public void onHiddenServicePublished() {
                 startShutDownInterval(SeedNodeMain.this);
+                UserThread.runAfter(() -> setupConnectionLossCheck(), 60);
             }
 
             @Override
@@ -138,6 +144,23 @@ public class SeedNodeMain extends ExecutableForAppWithP2p {
                 // Do nothing
             }
         });
+    }
+
+    private void setupConnectionLossCheck() {
+        if (checkConnectionLossTime != null) {
+            return;
+        }
+
+        checkConnectionLossTime = UserThread.runPeriodically(() -> {
+            if (injector.getInstance(PeerManager.class).getNumAllConnectionsLostEvents() > 1) {
+                // Removing cache files help in case the node got flagged from Tor's dos protection
+                injector.getInstance(TorSetup.class).cleanupTorFiles(() -> {
+                    log.info("Tor directory reset");
+                    shutDown(this);
+                }, log::error);
+            }
+        }, CHECK_CONNECTION_LOSS_SEC);
+
     }
 
     @Override

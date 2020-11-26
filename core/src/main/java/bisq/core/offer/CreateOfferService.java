@@ -163,7 +163,7 @@ public class CreateOfferService {
         String bankId = PaymentAccountUtil.getBankId(paymentAccount);
         List<String> acceptedBanks = PaymentAccountUtil.getAcceptedBanks(paymentAccount);
         double sellerSecurityDeposit = getSellerSecurityDepositAsDouble(buyerSecurityDepositAsDouble);
-        Coin txFeeFromFeeService = getEstimatedFeeAndTxSize(amount, direction, buyerSecurityDepositAsDouble, sellerSecurityDeposit).first;
+        Coin txFeeFromFeeService = getEstimatedFeeAndTxVsize(amount, direction, buyerSecurityDepositAsDouble, sellerSecurityDeposit).first;
         Coin txFeeToUse = txFee.isPositive() ? txFee : txFeeFromFeeService;
         Coin makerFeeAsCoin = offerUtil.getMakerFee(amount);
         boolean isCurrencyForMakerFeeBtc = offerUtil.isCurrencyForMakerFeeBtc(amount);
@@ -233,15 +233,15 @@ public class CreateOfferService {
         return offer;
     }
 
-    public Tuple2<Coin, Integer> getEstimatedFeeAndTxSize(Coin amount,
-                                                          OfferPayload.Direction direction,
-                                                          double buyerSecurityDeposit,
-                                                          double sellerSecurityDeposit) {
+    public Tuple2<Coin, Integer> getEstimatedFeeAndTxVsize(Coin amount,
+                                                           OfferPayload.Direction direction,
+                                                           double buyerSecurityDeposit,
+                                                           double sellerSecurityDeposit) {
         Coin reservedFundsForOffer = getReservedFundsForOffer(direction,
                 amount,
                 buyerSecurityDeposit,
                 sellerSecurityDeposit);
-        return txFeeEstimationService.getEstimatedFeeAndTxSizeForMaker(reservedFundsForOffer,
+        return txFeeEstimationService.getEstimatedFeeAndTxVsizeForMaker(reservedFundsForOffer,
                 offerUtil.getMakerFee(amount));
     }
 

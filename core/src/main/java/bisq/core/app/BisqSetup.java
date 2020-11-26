@@ -48,6 +48,7 @@ import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
 import bisq.common.app.Log;
+import bisq.common.app.Version;
 import bisq.common.config.Config;
 import bisq.common.util.InvalidVersionException;
 import bisq.common.util.Utilities;
@@ -71,11 +72,15 @@ import javafx.collections.SetChangeListener;
 
 import org.bouncycastle.crypto.params.KeyParameter;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
 import java.io.IOException;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Scanner;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
@@ -92,6 +97,7 @@ import javax.annotation.Nullable;
 @Slf4j
 @Singleton
 public class BisqSetup {
+    private static final String VERSION_FILE_NAME = "version";
 
     public interface BisqSetupListener {
         default void onInitP2pNetwork() {
@@ -172,6 +178,9 @@ public class BisqSetup {
     @Setter
     @Nullable
     private Runnable qubesOSInfoHandler;
+    @Setter
+    @Nullable
+    private Consumer<String> downGradePreventionHandler;
 
     @Getter
     final BooleanProperty newVersionAvailableProperty = new SimpleBooleanProperty(false);
@@ -255,6 +264,12 @@ public class BisqSetup {
     }
 
     public void start() {
+        // If user tried to downgrade we require a shutdown
+        if (hasDowngraded(downGradePreventionHandler)) {
+            return;
+        }
+
+        persistBisqVersion();
         maybeReSyncSPVChain();
         maybeShowTac(this::step2);
     }
@@ -387,7 +402,7 @@ public class BisqSetup {
                 requestWalletPasswordHandler.accept(aesKey -> {
                     walletsManager.setAesKey(aesKey);
                     walletsSetup.getWalletConfig().maybeAddSegwitKeychain(walletsSetup.getWalletConfig().btcWallet(),
-                                                                          aesKey);
+                            aesKey);
                     if (preferences.isResyncSpvRequested()) {
                         if (showFirstPopupIfResyncSPVRequestedHandler != null)
                             showFirstPopupIfResyncSPVRequestedHandler.run();
@@ -485,6 +500,68 @@ public class BisqSetup {
                 }
             }
         });
+    }
+
+    @Nullable
+    public static String getLastBisqVersion() {
+        File versionFile = getVersionFile();
+        if (!versionFile.exists()) {
+            return null;
+        }
+        try (Scanner scanner = new Scanner(versionFile)) {
+            // We only expect 1 line
+            if (scanner.hasNextLine()) {
+                return scanner.nextLine();
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private static File getVersionFile() {
+        return new File(Config.appDataDir(), VERSION_FILE_NAME);
+    }
+
+    public static boolean hasDowngraded() {
+        return hasDowngraded(getLastBisqVersion());
+    }
+
+    public static boolean hasDowngraded(String lastVersion) {
+        return lastVersion != null && Version.isNewVersion(lastVersion, Version.VERSION);
+    }
+
+    public static boolean hasDowngraded(@Nullable Consumer<String> downGradePreventionHandler) {
+        String lastVersion = getLastBisqVersion();
+        boolean hasDowngraded = hasDowngraded(lastVersion);
+        if (hasDowngraded) {
+            log.error("Downgrade from version {} to version {} is not supported", lastVersion, Version.VERSION);
+            if (downGradePreventionHandler != null) {
+                downGradePreventionHandler.accept(lastVersion);
+            }
+        }
+        return hasDowngraded;
+    }
+
+    public static void persistBisqVersion() {
+        File versionFile = getVersionFile();
+        if (!versionFile.exists()) {
+            try {
+                if (!versionFile.createNewFile()) {
+                    log.error("Version file could not be created");
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+                log.error("Version file could not be created. {}", e.toString());
+            }
+        }
+
+        try (FileWriter fileWriter = new FileWriter(versionFile, false)) {
+            fileWriter.write(Version.VERSION);
+        } catch (IOException e) {
+            e.printStackTrace();
+            log.error("Writing Version failed. {}", e.toString());
+        }
     }
 
     private void checkForCorrectOSArchitecture() {

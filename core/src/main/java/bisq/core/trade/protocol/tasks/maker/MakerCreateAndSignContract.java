@@ -95,6 +95,8 @@ public class MakerCreateAndSignContract extends TradeTask {
 
             processModel.setMyMultiSigPubKey(makerMultiSigPubKey);
 
+            processModel.getTradeManager().requestPersistence();
+
             complete();
         } catch (Throwable t) {
             failed(t);

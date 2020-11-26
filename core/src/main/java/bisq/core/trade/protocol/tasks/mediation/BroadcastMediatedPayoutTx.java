@@ -45,5 +45,6 @@ public class BroadcastMediatedPayoutTx extends BroadcastPayoutTx {
     @Override
     protected void setState() {
         trade.setMediationResultState(MediationResultState.PAYOUT_TX_PUBLISHED);
+        processModel.getTradeManager().requestPersistence();
     }
 }
