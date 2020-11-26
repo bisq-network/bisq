@@ -37,12 +37,17 @@ import static bisq.apitest.config.BisqAppConfig.seednode;
 
 import bisq.apitest.method.MethodTest;
 import bisq.apitest.method.wallet.BsqWalletTest;
+import bisq.apitest.method.wallet.BtcTxFeeRateTest;
 import bisq.apitest.method.wallet.BtcWalletTest;
 import bisq.apitest.method.wallet.WalletProtectionTest;
 
 @Slf4j
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class WalletTest extends MethodTest {
+
+    // Batching all wallet tests in this test case reduces scaffold setup
+    // time.  Here, we create a method WalletProtectionTest instance and run each
+    // test in declared order.
 
     @BeforeAll
     public static void setUp() {
@@ -78,10 +83,6 @@ public class WalletTest extends MethodTest {
     @Test
     @Order(3)
     public void testWalletProtection() {
-        // Batching all wallet tests in this test case reduces scaffold setup
-        // time.  Here, we create a method WalletProtectionTest instance and run each
-        // test in declared order.
-
         WalletProtectionTest walletProtectionTest = new WalletProtectionTest();
 
         walletProtectionTest.testSetWalletPassword();
@@ -94,6 +95,16 @@ public class WalletTest extends MethodTest {
         walletProtectionTest.testSetNewWalletPassword();
         walletProtectionTest.testSetNewWalletPasswordWithIncorrectNewPasswordShouldThrowException();
         walletProtectionTest.testRemoveNewWalletPassword();
+    }
+
+    @Test
+    @Order(4)
+    public void testTxFeeRateMethods(final TestInfo testInfo) {
+        BtcTxFeeRateTest test = new BtcTxFeeRateTest();
+
+        test.testGetTxFeeRate(testInfo);
+        test.testSetTxFeeRate(testInfo);
+        test.testUnsetTxFeeRate(testInfo);
     }
 
     @AfterAll

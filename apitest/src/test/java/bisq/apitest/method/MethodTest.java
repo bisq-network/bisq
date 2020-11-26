@@ -18,6 +18,7 @@
 package bisq.apitest.method;
 
 import bisq.core.api.model.PaymentAccountForm;
+import bisq.core.api.model.TxFeeRateInfo;
 import bisq.core.proto.CoreProtoResolver;
 
 import bisq.proto.grpc.AddressBalanceInfo;
@@ -36,6 +37,7 @@ import bisq.proto.grpc.GetPaymentAccountFormRequest;
 import bisq.proto.grpc.GetPaymentAccountsRequest;
 import bisq.proto.grpc.GetPaymentMethodsRequest;
 import bisq.proto.grpc.GetTradeRequest;
+import bisq.proto.grpc.GetTxFeeRateRequest;
 import bisq.proto.grpc.GetUnusedBsqAddressRequest;
 import bisq.proto.grpc.KeepFundsRequest;
 import bisq.proto.grpc.LockWalletRequest;
@@ -44,10 +46,12 @@ import bisq.proto.grpc.OfferInfo;
 import bisq.proto.grpc.RegisterDisputeAgentRequest;
 import bisq.proto.grpc.RemoveWalletPasswordRequest;
 import bisq.proto.grpc.SendBsqRequest;
+import bisq.proto.grpc.SetTxFeeRatePreferenceRequest;
 import bisq.proto.grpc.SetWalletPasswordRequest;
 import bisq.proto.grpc.TakeOfferRequest;
 import bisq.proto.grpc.TradeInfo;
 import bisq.proto.grpc.UnlockWalletRequest;
+import bisq.proto.grpc.UnsetTxFeeRatePreferenceRequest;
 import bisq.proto.grpc.WithdrawFundsRequest;
 
 import protobuf.PaymentAccount;
@@ -353,6 +357,27 @@ public class MethodTest extends ApiTestCase {
         var req = createWithdrawFundsRequest(tradeId, address);
         grpcStubs(bisqAppConfig).tradesService.withdrawFunds(req);
     }
+
+    protected final TxFeeRateInfo getTxFeeRate(BisqAppConfig bisqAppConfig) {
+        var req = GetTxFeeRateRequest.newBuilder().build();
+        return TxFeeRateInfo.fromProto(
+                grpcStubs(bisqAppConfig).walletsService.getTxFeeRate(req).getTxFeeRateInfo());
+    }
+
+    protected final TxFeeRateInfo setTxFeeRate(BisqAppConfig bisqAppConfig, long feeRate) {
+        var req = SetTxFeeRatePreferenceRequest.newBuilder()
+                .setTxFeeRatePreference(feeRate)
+                .build();
+        return TxFeeRateInfo.fromProto(
+                grpcStubs(bisqAppConfig).walletsService.setTxFeeRatePreference(req).getTxFeeRateInfo());
+    }
+
+    protected final TxFeeRateInfo unsetTxFeeRate(BisqAppConfig bisqAppConfig) {
+        var req = UnsetTxFeeRatePreferenceRequest.newBuilder().build();
+        return TxFeeRateInfo.fromProto(
+                grpcStubs(bisqAppConfig).walletsService.unsetTxFeeRatePreference(req).getTxFeeRateInfo());
+    }
+
     // Static conveniences for test methods and test case fixture setups.
 
     protected static RegisterDisputeAgentRequest createRegisterDisputeAgentRequest(String disputeAgentType) {
