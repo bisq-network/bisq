@@ -300,6 +300,12 @@ service Wallets {
     }
     rpc SendBsq (SendBsqRequest) returns (SendBsqReply) {
     }
+    rpc GetTxFeeRate (GetTxFeeRateRequest) returns (GetTxFeeRateReply) {
+    }
+    rpc SetTxFeeRatePreference (SetTxFeeRatePreferenceRequest) returns (SetTxFeeRatePreferenceReply) {
+    }
+    rpc unsetTxFeeRatePreference (UnsetTxFeeRatePreferenceRequest) returns (UnsetTxFeeRatePreferenceReply) {
+    }
     rpc GetFundingAddresses (GetFundingAddressesRequest) returns (GetFundingAddressesReply) {
     }
     rpc SetWalletPassword (SetWalletPasswordRequest) returns (SetWalletPasswordReply) {
@@ -341,6 +347,28 @@ message SendBsqRequest {
 }
 
 message SendBsqReply {
+}
+
+message GetTxFeeRateRequest {
+}
+
+message GetTxFeeRateReply {
+    TxFeeRateInfo txFeeRateInfo = 1;
+}
+
+message SetTxFeeRatePreferenceRequest {
+    uint64 txFeeRatePreference = 1;
+}
+
+message SetTxFeeRatePreferenceReply {
+    TxFeeRateInfo txFeeRateInfo = 1;
+}
+
+message UnsetTxFeeRatePreferenceRequest {
+}
+
+message UnsetTxFeeRatePreferenceReply {
+    TxFeeRateInfo txFeeRateInfo = 1;
 }
 
 message GetFundingAddressesRequest {
