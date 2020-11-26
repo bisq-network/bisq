@@ -102,18 +102,6 @@ class CoreWalletsService {
         return tempAesKey;
     }
 
-    @Deprecated
-    long getAvailableBalance() {
-        verifyWalletsAreAvailable();
-        verifyEncryptedWalletIsUnlocked();
-
-        var balance = balances.getAvailableBalance().get();
-        if (balance == null)
-            throw new IllegalStateException("balance is not yet available");
-
-        return balance.getValue();
-    }
-
     BalancesInfo getBalances(String currencyCode) {
         verifyWalletCurrencyCodeIsValid(currencyCode);
         verifyWalletsAreAvailable();
