@@ -580,4 +580,8 @@ public class WalletConfig extends AbstractIdleService {
         }
         migratedWalletToSegwit.set(true);
     }
+
+    public boolean stateStartingOrRunning() {
+        return state() == State.STARTING || state() == State.RUNNING;
+    }
 }
