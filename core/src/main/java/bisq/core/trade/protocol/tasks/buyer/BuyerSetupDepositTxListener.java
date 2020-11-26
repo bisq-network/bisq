@@ -100,6 +100,8 @@ public class BuyerSetupDepositTxListener extends TradeTask {
             // We don't want to trigger the tradeStateSubscription when setting the state, so we unsubscribe before
             unSubscribeAndRemoveListener();
             trade.setState(Trade.State.BUYER_SAW_DEPOSIT_TX_IN_NETWORK);
+
+            processModel.getTradeManager().requestPersistence();
         } else {
             unSubscribeAndRemoveListener();
         }

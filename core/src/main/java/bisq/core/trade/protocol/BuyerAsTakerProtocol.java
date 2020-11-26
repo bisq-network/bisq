@@ -29,6 +29,7 @@ import bisq.core.trade.messages.TradeMessage;
 import bisq.core.trade.protocol.tasks.ApplyFilter;
 import bisq.core.trade.protocol.tasks.TradeTask;
 import bisq.core.trade.protocol.tasks.VerifyPeersAccountAgeWitness;
+import bisq.core.trade.protocol.tasks.buyer.BuyerFinalizesDelayedPayoutTx;
 import bisq.core.trade.protocol.tasks.buyer.BuyerProcessDelayedPayoutTxSignatureRequest;
 import bisq.core.trade.protocol.tasks.buyer.BuyerSendsDelayedPayoutTxSignatureResponse;
 import bisq.core.trade.protocol.tasks.buyer.BuyerSetupDepositTxListener;
@@ -83,7 +84,10 @@ public class BuyerAsTakerProtocol extends BuyerProtocol implements TakerProtocol
                         BuyerAsTakerCreatesDepositTxInputs.class,
                         TakerSendInputsForDepositTxRequest.class)
                         .withTimeout(30))
-                .run(() -> processModel.setTempTradingPeerNodeAddress(trade.getTradingPeerNodeAddress()))
+                .run(() -> {
+                    processModel.setTempTradingPeerNodeAddress(trade.getTradingPeerNodeAddress());
+                    processModel.getTradeManager().requestPersistence();
+                })
                 .executeTasks();
     }
 
@@ -116,6 +120,7 @@ public class BuyerAsTakerProtocol extends BuyerProtocol implements TakerProtocol
                         BuyerProcessDelayedPayoutTxSignatureRequest.class,
                         BuyerVerifiesPreparedDelayedPayoutTx.class,
                         BuyerSignsDelayedPayoutTx.class,
+                        BuyerFinalizesDelayedPayoutTx.class,
                         BuyerSendsDelayedPayoutTxSignatureResponse.class)
                         .withTimeout(30))
                 .executeTasks();

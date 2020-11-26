@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 cd $(dirname $0)
-tx pull -l de,es,ja,pt,ru,zh_CN,zh_TW,vi,th_TH,fa,fr,pt_BR
+tx pull -l de,es,ja,pt,ru,zh_CN,zh_TW,vi,th_TH,fa,fr,pt_BR,it,cs
 
 translations="translations/bisq-desktop.displaystringsproperties"
 i18n="src/main/resources/i18n"
@@ -18,5 +18,7 @@ mv "$translations/th_TH.properties" "$i18n/displayStrings_th.properties"
 mv "$translations/fa.properties" "$i18n/displayStrings_fa.properties"
 mv "$translations/fr.properties" "$i18n/displayStrings_fr.properties"
 mv "$translations/pt_BR.properties" "$i18n/displayStrings_pt-br.properties"
+mv "$translations/it.properties" "$i18n/displayStrings_it.properties"
+mv "$translations/cs.properties" "$i18n/displayStrings_cs.properties"
 
 rm -rf $translations

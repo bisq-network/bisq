@@ -194,7 +194,7 @@ public class GUIUtil {
     public static void showFeeInfoBeforeExecute(Runnable runnable) {
         String key = "miningFeeInfo";
         if (!DevEnv.isDevMode() && DontShowAgainLookup.showAgain(key)) {
-            new Popup().attention(Res.get("guiUtil.miningFeeInfo", String.valueOf(GUIUtil.feeService.getTxFeePerByte().value)))
+            new Popup().attention(Res.get("guiUtil.miningFeeInfo", String.valueOf(GUIUtil.feeService.getTxFeePerVbyte().value)))
                     .onClose(runnable)
                     .useIUnderstandButton()
                     .show();
@@ -801,14 +801,14 @@ public class GUIUtil {
 
     public static void reSyncSPVChain(Preferences preferences) {
         try {
-            new Popup().feedback(Res.get("settings.net.reSyncSPVSuccess"))
+            new Popup().information(Res.get("settings.net.reSyncSPVSuccess"))
                     .useShutDownButton()
                     .actionButtonText(Res.get("shared.shutDown"))
                     .onAction(() -> {
                         preferences.setResyncSpvRequested(true);
                         UserThread.runAfter(BisqApp.getShutDownHandler(), 100, TimeUnit.MILLISECONDS);
                     })
-                    .hideCloseButton()
+                    .closeButtonText(Res.get("shared.cancel"))
                     .show();
         } catch (Throwable t) {
             new Popup().error(Res.get("settings.net.reSyncSPVFailed", t)).show();
@@ -920,7 +920,7 @@ public class GUIUtil {
     public static void showBsqFeeInfoPopup(Coin fee,
                                            Coin miningFee,
                                            Coin btcForIssuance,
-                                           int txSize,
+                                           int txVsize,
                                            BsqFormatter bsqFormatter,
                                            CoinFormatter btcFormatter,
                                            String type,
@@ -934,16 +934,16 @@ public class GUIUtil {
                     bsqFormatter.formatBTCWithCode(btcForIssuance),
                     100,
                     btcFormatter.formatCoinWithCode(miningFee),
-                    CoinUtil.getFeePerByte(miningFee, txSize),
-                    txSize / 1000d,
+                    CoinUtil.getFeePerVbyte(miningFee, txVsize),
+                    txVsize / 1000d,
                     type);
         } else {
             confirmationMessage = Res.get("dao.feeTx.confirm.details",
                     StringUtils.capitalize(type),
                     bsqFormatter.formatCoinWithCode(fee),
                     btcFormatter.formatCoinWithCode(miningFee),
-                    CoinUtil.getFeePerByte(miningFee, txSize),
-                    txSize / 1000d,
+                    CoinUtil.getFeePerVbyte(miningFee, txVsize),
+                    txVsize / 1000d,
                     type);
         }
         new Popup().headLine(Res.get("dao.feeTx.confirm", type))
@@ -954,10 +954,10 @@ public class GUIUtil {
                 .show();
     }
 
-    public static void showBsqFeeInfoPopup(Coin fee, Coin miningFee, int txSize, BsqFormatter bsqFormatter,
+    public static void showBsqFeeInfoPopup(Coin fee, Coin miningFee, int txVsize, BsqFormatter bsqFormatter,
                                            CoinFormatter btcFormatter, String type,
                                            Runnable actionHandler) {
-        showBsqFeeInfoPopup(fee, miningFee, null, txSize, bsqFormatter, btcFormatter, type, actionHandler);
+        showBsqFeeInfoPopup(fee, miningFee, null, txVsize, bsqFormatter, btcFormatter, type, actionHandler);
     }
 
     public static void setFitToRowsForTableView(TableView<?> tableView,
@@ -1115,6 +1115,10 @@ public class GUIUtil {
     }
 
     public static MaterialDesignIcon getIconForSignState(AccountAgeWitnessService.SignState state) {
+        if (state.equals(AccountAgeWitnessService.SignState.PEER_INITIAL)) {
+            return MaterialDesignIcon.CLOCK;
+        }
+
         return (state.equals(AccountAgeWitnessService.SignState.ARBITRATOR) ||
                 state.equals(AccountAgeWitnessService.SignState.PEER_SIGNER)) ?
                 MaterialDesignIcon.APPROVAL : MaterialDesignIcon.ALERT_CIRCLE_OUTLINE;

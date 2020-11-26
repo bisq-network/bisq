@@ -41,7 +41,9 @@ public class LanguageUtil {
             "vi", // Vietnamese
             "th", // Thai
             "ja", // Japanese
-            "fa" // Persian
+            "fa", // Persian
+            "it", // Italian
+            "cs" // Czech
             /*
             // not translated yet
             "el", // Greek
@@ -49,7 +51,6 @@ public class LanguageUtil {
             "hu", // Hungarian
             "ro", // Romanian
             "tr" // Turkish
-            "it", // Italian
             "iw", // Hebrew
             "hi", // Hindi
             "ko", // Korean
@@ -77,7 +78,6 @@ public class LanguageUtil {
             "ms", // Malay
             "is", // Icelandic
             "et", // Estonian
-            "cs", // Czech
             "ar", // Arabic
             "vi", // Vietnamese
             "th", // Thai

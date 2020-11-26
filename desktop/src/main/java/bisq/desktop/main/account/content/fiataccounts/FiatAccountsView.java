@@ -21,6 +21,7 @@ import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.components.paymentmethods.AdvancedCashForm;
 import bisq.desktop.components.paymentmethods.AliPayForm;
+import bisq.desktop.components.paymentmethods.AmazonGiftCardForm;
 import bisq.desktop.components.paymentmethods.AustraliaPayidForm;
 import bisq.desktop.components.paymentmethods.CashDepositForm;
 import bisq.desktop.components.paymentmethods.ChaseQuickPayForm;
@@ -78,6 +79,7 @@ import bisq.desktop.util.validation.WeChatPayValidator;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.Res;
 import bisq.core.offer.OfferRestrictions;
+import bisq.core.payment.AmazonGiftCardAccount;
 import bisq.core.payment.AustraliaPayid;
 import bisq.core.payment.CashDepositAccount;
 import bisq.core.payment.ClearXchangeAccount;
@@ -317,6 +319,13 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
                                     .actionButtonText(Res.get("shared.iConfirm"))
                                     .onAction(() -> doSaveNewAccount(paymentAccount))
                                     .show();
+                        } else if (paymentAccount instanceof AmazonGiftCardAccount) {
+                            new Popup().information(Res.get("payment.amazonGiftCard.info", currencyName, currencyName))
+                                    .width(900)
+                                    .closeButtonText(Res.get("shared.cancel"))
+                                    .actionButtonText(Res.get("shared.iUnderstand"))
+                                    .onAction(() -> doSaveNewAccount(paymentAccount))
+                                    .show();
                         } else {
                             doSaveNewAccount(paymentAccount);
                         }
@@ -502,6 +511,8 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
                 return new AdvancedCashForm(paymentAccount, accountAgeWitnessService, advancedCashValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.TRANSFERWISE_ID:
                 return new TransferwiseForm(paymentAccount, accountAgeWitnessService, transferwiseValidator, inputValidator, root, gridRow, formatter);
+            case PaymentMethod.AMAZON_GIFT_CARD_ID:
+                return new AmazonGiftCardForm(paymentAccount, accountAgeWitnessService, inputValidator, root, gridRow, formatter);
             default:
                 log.error("Not supported PaymentMethod: " + paymentMethod);
                 return null;

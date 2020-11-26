@@ -60,6 +60,7 @@ public class SendMediatedPayoutSignatureMessage extends TradeTask {
                     message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
 
             trade.setMediationResultState(MediationResultState.SIG_MSG_SENT);
+            processModel.getTradeManager().requestPersistence();
             p2PService.sendEncryptedMailboxMessage(peersNodeAddress,
                     peersPubKeyRing,
                     message,
@@ -70,6 +71,7 @@ public class SendMediatedPayoutSignatureMessage extends TradeTask {
                                     message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
 
                             trade.setMediationResultState(MediationResultState.SIG_MSG_ARRIVED);
+                            processModel.getTradeManager().requestPersistence();
                             complete();
                         }
 
@@ -79,6 +81,7 @@ public class SendMediatedPayoutSignatureMessage extends TradeTask {
                                     message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
 
                             trade.setMediationResultState(MediationResultState.SIG_MSG_IN_MAILBOX);
+                            processModel.getTradeManager().requestPersistence();
                             complete();
                         }
 
@@ -88,6 +91,7 @@ public class SendMediatedPayoutSignatureMessage extends TradeTask {
                                     message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid(), errorMessage);
                             trade.setMediationResultState(MediationResultState.SIG_MSG_SEND_FAILED);
                             appendToErrorMessage("Sending message failed: message=" + message + "\nerrorMessage=" + errorMessage);
+                            processModel.getTradeManager().requestPersistence();
                             failed(errorMessage);
                         }
                     }
