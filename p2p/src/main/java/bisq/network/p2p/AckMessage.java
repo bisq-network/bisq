@@ -34,6 +34,10 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
+// TODO ExpirablePayload has no effect here as it is either a direct msg or packed into MailboxStoragePayload
+// We could extend the TTL by setting the TTL in MailboxStoragePayload from the type of msg which gets into the
+// SealedAndSigned data.
+
 // We exclude uid from hashcode and equals to detect duplicate entries of the same AckMessage
 @EqualsAndHashCode(callSuper = true, exclude = {"uid"})
 @Value
@@ -145,6 +149,7 @@ public final class AckMessage extends NetworkEnvelope implements MailboxMessage,
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    //TODO has no effect, see comment at class definition
     @Override
     public long getTTL() {
         return TimeUnit.DAYS.toMillis(10);

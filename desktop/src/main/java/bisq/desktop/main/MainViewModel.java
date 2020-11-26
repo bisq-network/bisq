@@ -403,6 +403,13 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
             }
         });
 
+        bisqSetup.setDownGradePreventionHandler(lastVersion -> {
+            new Popup().warning(Res.get("popup.warn.downGradePrevention", lastVersion, Version.VERSION))
+                    .useShutDownButton()
+                    .hideCloseButton()
+                    .show();
+        });
+
         corruptedStorageFileHandler.getFiles().ifPresent(files -> new Popup()
                 .warning(Res.get("popup.warning.incompatibleDB", files.toString(), config.appDataDir))
                 .useShutDownButton()

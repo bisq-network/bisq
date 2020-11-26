@@ -133,7 +133,7 @@ public class PrivateNotificationManager {
     }
 
     public void removePrivateNotification() {
-        p2PService.removeEntryFromMailbox(decryptedMessageWithPubKey);
+        p2PService.removeMailboxMsg(decryptedMessageWithPubKey);
     }
 
     private boolean isKeyValid(String privKeyString) {

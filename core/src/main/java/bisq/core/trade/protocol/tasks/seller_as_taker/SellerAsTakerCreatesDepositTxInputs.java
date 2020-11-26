@@ -57,6 +57,8 @@ public class SellerAsTakerCreatesDepositTxInputs extends TradeTask {
             processModel.setChangeOutputValue(result.changeOutputValue);
             processModel.setChangeOutputAddress(result.changeOutputAddress);
 
+            processModel.getTradeManager().requestPersistence();
+
             complete();
         } catch (Throwable t) {
             failed(t);

@@ -36,106 +36,106 @@ import static org.mockito.Mockito.when;
 public class TxFeeEstimationServiceTest {
 
     @Test
-    public void testGetEstimatedTxSize_withDefaultTxSize() throws InsufficientMoneyException {
+    public void testGetEstimatedTxVsize_withDefaultTxVsize() throws InsufficientMoneyException {
         List<Coin> outputValues = List.of(Coin.valueOf(2000), Coin.valueOf(3000));
-        int initialEstimatedTxSize;
-        Coin txFeePerByte;
+        int initialEstimatedTxVsize;
+        Coin txFeePerVbyte;
         BtcWalletService btcWalletService = mock(BtcWalletService.class);
         int result;
-        int realTxSize;
+        int realTxVsize;
         Coin txFee;
 
-        initialEstimatedTxSize = 260;
-        txFeePerByte = Coin.valueOf(10);
-        realTxSize = 260;
+        initialEstimatedTxVsize = 175;
+        txFeePerVbyte = Coin.valueOf(10);
+        realTxVsize = 175;
 
-        txFee = txFeePerByte.multiply(initialEstimatedTxSize);
-        when(btcWalletService.getEstimatedFeeTxSize(outputValues, txFee)).thenReturn(realTxSize);
-        result = TxFeeEstimationService.getEstimatedTxSize(outputValues, initialEstimatedTxSize, txFeePerByte, btcWalletService);
-        assertEquals(260, result);
+        txFee = txFeePerVbyte.multiply(initialEstimatedTxVsize);
+        when(btcWalletService.getEstimatedFeeTxVsize(outputValues, txFee)).thenReturn(realTxVsize);
+        result = TxFeeEstimationService.getEstimatedTxVsize(outputValues, initialEstimatedTxVsize, txFeePerVbyte, btcWalletService);
+        assertEquals(175, result);
     }
 
     // FIXME @Bernard could you have a look?
     @Test
     @Ignore
-    public void testGetEstimatedTxSize_withLargeTx() throws InsufficientMoneyException {
+    public void testGetEstimatedTxVsize_withLargeTx() throws InsufficientMoneyException {
         List<Coin> outputValues = List.of(Coin.valueOf(2000), Coin.valueOf(3000));
-        int initialEstimatedTxSize;
-        Coin txFeePerByte;
+        int initialEstimatedTxVsize;
+        Coin txFeePerVbyte;
         BtcWalletService btcWalletService = mock(BtcWalletService.class);
         int result;
-        int realTxSize;
+        int realTxVsize;
         Coin txFee;
 
-        initialEstimatedTxSize = 260;
-        txFeePerByte = Coin.valueOf(10);
-        realTxSize = 2600;
+        initialEstimatedTxVsize = 175;
+        txFeePerVbyte = Coin.valueOf(10);
+        realTxVsize = 1750;
 
-        txFee = txFeePerByte.multiply(initialEstimatedTxSize);
-        when(btcWalletService.getEstimatedFeeTxSize(outputValues, txFee)).thenReturn(realTxSize);
+        txFee = txFeePerVbyte.multiply(initialEstimatedTxVsize);
+        when(btcWalletService.getEstimatedFeeTxVsize(outputValues, txFee)).thenReturn(realTxVsize);
 
-        // repeated calls to getEstimatedFeeTxSize do not work (returns 0 at second call in loop which cause test to fail)
-        result = TxFeeEstimationService.getEstimatedTxSize(outputValues, initialEstimatedTxSize, txFeePerByte, btcWalletService);
-        assertEquals(2600, result);
+        // repeated calls to getEstimatedFeeTxVsize do not work (returns 0 at second call in loop which cause test to fail)
+        result = TxFeeEstimationService.getEstimatedTxVsize(outputValues, initialEstimatedTxVsize, txFeePerVbyte, btcWalletService);
+        assertEquals(1750, result);
     }
 
     // FIXME @Bernard could you have a look?
     @Test
     @Ignore
-    public void testGetEstimatedTxSize_withSmallTx() throws InsufficientMoneyException {
+    public void testGetEstimatedTxVsize_withSmallTx() throws InsufficientMoneyException {
         List<Coin> outputValues = List.of(Coin.valueOf(2000), Coin.valueOf(3000));
-        int initialEstimatedTxSize;
-        Coin txFeePerByte;
+        int initialEstimatedTxVsize;
+        Coin txFeePerVbyte;
         BtcWalletService btcWalletService = mock(BtcWalletService.class);
         int result;
-        int realTxSize;
+        int realTxVsize;
         Coin txFee;
 
-        initialEstimatedTxSize = 2600;
-        txFeePerByte = Coin.valueOf(10);
-        realTxSize = 260;
+        initialEstimatedTxVsize = 1750;
+        txFeePerVbyte = Coin.valueOf(10);
+        realTxVsize = 175;
 
-        txFee = txFeePerByte.multiply(initialEstimatedTxSize);
-        when(btcWalletService.getEstimatedFeeTxSize(outputValues, txFee)).thenReturn(realTxSize);
-        result = TxFeeEstimationService.getEstimatedTxSize(outputValues, initialEstimatedTxSize, txFeePerByte, btcWalletService);
-        assertEquals(260, result);
+        txFee = txFeePerVbyte.multiply(initialEstimatedTxVsize);
+        when(btcWalletService.getEstimatedFeeTxVsize(outputValues, txFee)).thenReturn(realTxVsize);
+        result = TxFeeEstimationService.getEstimatedTxVsize(outputValues, initialEstimatedTxVsize, txFeePerVbyte, btcWalletService);
+        assertEquals(175, result);
     }
 
     @Test
     public void testIsInTolerance() {
         int estimatedSize;
-        int txSize;
+        int txVsize;
         double tolerance;
         boolean result;
 
         estimatedSize = 100;
-        txSize = 100;
+        txVsize = 100;
         tolerance = 0.0001;
-        result = TxFeeEstimationService.isInTolerance(estimatedSize, txSize, tolerance);
+        result = TxFeeEstimationService.isInTolerance(estimatedSize, txVsize, tolerance);
         assertTrue(result);
 
         estimatedSize = 100;
-        txSize = 200;
+        txVsize = 200;
         tolerance = 0.2;
-        result = TxFeeEstimationService.isInTolerance(estimatedSize, txSize, tolerance);
+        result = TxFeeEstimationService.isInTolerance(estimatedSize, txVsize, tolerance);
         assertFalse(result);
 
         estimatedSize = 120;
-        txSize = 100;
+        txVsize = 100;
         tolerance = 0.2;
-        result = TxFeeEstimationService.isInTolerance(estimatedSize, txSize, tolerance);
+        result = TxFeeEstimationService.isInTolerance(estimatedSize, txVsize, tolerance);
         assertTrue(result);
 
         estimatedSize = 200;
-        txSize = 100;
+        txVsize = 100;
         tolerance = 1;
-        result = TxFeeEstimationService.isInTolerance(estimatedSize, txSize, tolerance);
+        result = TxFeeEstimationService.isInTolerance(estimatedSize, txVsize, tolerance);
         assertTrue(result);
 
         estimatedSize = 201;
-        txSize = 100;
+        txVsize = 100;
         tolerance = 1;
-        result = TxFeeEstimationService.isInTolerance(estimatedSize, txSize, tolerance);
+        result = TxFeeEstimationService.isInTolerance(estimatedSize, txVsize, tolerance);
         assertFalse(result);
     }
 }
