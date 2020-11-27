@@ -27,6 +27,7 @@ import bisq.core.filter.FilterManager;
 import bisq.core.filter.PaymentAccountFilter;
 import bisq.core.locale.Res;
 
+import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
 import bisq.common.config.Config;
 
@@ -161,6 +162,8 @@ public class FilterWindow extends Overlay<FilterWindow> {
                 Res.get("filterWindow.disableTradeBelowVersion"));
         InputTextField bannedPrivilegedDevPubKeysTF = addTopLabelInputTextField(gridPane, ++rowIndex,
                 Res.get("filterWindow.bannedPrivilegedDevPubKeys")).second;
+        InputTextField autoConfExplorersTF = addTopLabelInputTextField(gridPane, ++rowIndex,
+                Res.get("filterWindow.autoConfExplorers")).second;
 
         Filter filter = filterManager.getDevFilter();
         if (filter != null) {
@@ -178,6 +181,7 @@ public class FilterWindow extends Overlay<FilterWindow> {
             setupFieldFromList(priceRelayNodesTF, filter.getPriceRelayNodes());
             setupFieldFromList(btcNodesTF, filter.getBtcNodes());
             setupFieldFromList(bannedPrivilegedDevPubKeysTF, filter.getBannedPrivilegedDevPubKeys());
+            setupFieldFromList(autoConfExplorersTF, filter.getBannedAutoConfExplorers());
 
             preventPublicBtcNetworkCheckBox.setSelected(filter.isPreventPublicBtcNetwork());
             disableDaoCheckBox.setSelected(filter.isDisableDao());
@@ -215,16 +219,21 @@ public class FilterWindow extends Overlay<FilterWindow> {
                         filterManager.getOwnerPubKey(),
                         signerPubKeyAsHex,
                         readAsList(bannedPrivilegedDevPubKeysTF),
-                        disableAutoConfCheckBox.isSelected()
+                        disableAutoConfCheckBox.isSelected(),
+                        readAsList(autoConfExplorersTF)
                 );
 
                 // We remove first the old filter
+                // We delay a bit with adding as it seems that the instant add/remove calls lead to issues that the
+                // remove msg was rejected (P2P storage should handle it but seems there are edge cases where its not
+                // working as expected)
                 if (filterManager.canRemoveDevFilter(privKeyString)) {
                     filterManager.removeDevFilter(privKeyString);
+                    UserThread.runAfter(() -> addDevFilter(removeFilterMessageButton, privKeyString, newFilter),
+                            5);
+                } else {
+                    addDevFilter(removeFilterMessageButton, privKeyString, newFilter);
                 }
-                filterManager.addDevFilter(newFilter, privKeyString);
-                removeFilterMessageButton.setDisable(filterManager.getDevFilter() == null);
-                hide();
             } else {
                 new Popup().warning(Res.get("shared.invalidKey")).onClose(this::blurAgain).show();
             }
@@ -252,6 +261,12 @@ public class FilterWindow extends Overlay<FilterWindow> {
         hBox.getChildren().addAll(sendButton, removeFilterMessageButton, closeButton);
         gridPane.getChildren().add(hBox);
         GridPane.setMargin(hBox, new Insets(10, 0, 0, 0));
+    }
+
+    private void addDevFilter(Button removeFilterMessageButton, String privKeyString, Filter newFilter) {
+        filterManager.addDevFilter(newFilter, privKeyString);
+        removeFilterMessageButton.setDisable(filterManager.getDevFilter() == null);
+        hide();
     }
 
     private void setupFieldFromList(InputTextField field, List<String> values) {

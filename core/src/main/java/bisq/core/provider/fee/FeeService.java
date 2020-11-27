@@ -20,6 +20,7 @@ package bisq.core.provider.fee;
 import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.state.DaoStateService;
+import bisq.core.locale.Res;
 
 import bisq.common.UserThread;
 import bisq.common.config.Config;
@@ -59,7 +60,7 @@ public class FeeService {
     // Static
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    // Miner fees are between 1-600 sat/byte. We try to stay on the safe side. BTC_DEFAULT_TX_FEE is only used if our
+    // Miner fees are between 1-600 sat/vbyte. We try to stay on the safe side. BTC_DEFAULT_TX_FEE is only used if our
     // fee service would not deliver data.
     private static final long BTC_DEFAULT_TX_FEE = 50;
     private static final long MIN_PAUSE_BETWEEN_REQUESTS_IN_MIN = 2;
@@ -93,10 +94,10 @@ public class FeeService {
 
     private final FeeProvider feeProvider;
     private final IntegerProperty feeUpdateCounter = new SimpleIntegerProperty(0);
-    private long txFeePerByte = BTC_DEFAULT_TX_FEE;
+    private long txFeePerVbyte = BTC_DEFAULT_TX_FEE;
     private Map<String, Long> timeStampMap;
     private long lastRequest;
-    private long minFeePerByte;
+    private long minFeePerVByte;
     private long epochInSecondAtLastRequest;
 
 
@@ -117,7 +118,7 @@ public class FeeService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void onAllServicesInitialized() {
-        minFeePerByte = Config.baseCurrencyNetwork().getDefaultMinFeePerByte();
+        minFeePerVByte = Config.baseCurrencyNetwork().getDefaultMinFeePerVbyte();
 
         requestFees();
 
@@ -149,15 +150,15 @@ public class FeeService {
                         timeStampMap = result.first;
                         epochInSecondAtLastRequest = timeStampMap.get("bitcoinFeesTs");
                         final Map<String, Long> map = result.second;
-                        txFeePerByte = map.get("BTC");
+                        txFeePerVbyte = map.get("BTC");
 
-                        if (txFeePerByte < minFeePerByte) {
-                            log.warn("The delivered fee per byte is smaller than the min. default fee of 5 sat/byte");
-                            txFeePerByte = minFeePerByte;
+                        if (txFeePerVbyte < minFeePerVByte) {
+                            log.warn("The delivered fee per vbyte is smaller than the min. default fee of 5 sat/vbyte");
+                            txFeePerVbyte = minFeePerVByte;
                         }
 
                         feeUpdateCounter.set(feeUpdateCounter.get() + 1);
-                        log.info("BTC tx fee: txFeePerByte={}", txFeePerByte);
+                        log.info("BTC tx fee: txFeePerVbyte={}", txFeePerVbyte);
                         if (resultHandler != null)
                             resultHandler.run();
                     });
@@ -179,15 +180,22 @@ public class FeeService {
         }
     }
 
-    public Coin getTxFee(int sizeInBytes) {
-        return getTxFeePerByte().multiply(sizeInBytes);
+    public Coin getTxFee(int vsizeInVbytes) {
+        return getTxFeePerVbyte().multiply(vsizeInVbytes);
     }
 
-    public Coin getTxFeePerByte() {
-        return Coin.valueOf(txFeePerByte);
+    public Coin getTxFeePerVbyte() {
+        return Coin.valueOf(txFeePerVbyte);
     }
 
     public ReadOnlyIntegerProperty feeUpdateCounterProperty() {
         return feeUpdateCounter;
+    }
+
+    public String getFeeTextForDisplay() {
+        // only show the fee rate if it has been initialized from the service (see feeUpdateCounter)
+        if (feeUpdateCounter.get() > 0)
+            return Res.get("mainView.footer.btcFeeRate", txFeePerVbyte);
+        return "";
     }
 }

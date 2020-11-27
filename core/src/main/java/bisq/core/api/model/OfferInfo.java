@@ -17,7 +17,11 @@
 
 package bisq.core.api.model;
 
+import bisq.core.offer.Offer;
+
 import bisq.common.Payload;
+
+import java.util.Objects;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -27,6 +31,10 @@ import lombok.ToString;
 @ToString
 @Getter
 public class OfferInfo implements Payload {
+
+    // The client cannot see bisq.core.Offer or its fromProto method.  We use the lighter
+    // weight OfferInfo proto wrapper instead, containing just enough fields to view,
+    // create and take offers.
 
     private final String id;
     private final String direction;
@@ -46,6 +54,7 @@ public class OfferInfo implements Payload {
     private final String baseCurrencyCode;
     private final String counterCurrencyCode;
     private final long date;
+    private final String state;
 
     public OfferInfo(OfferInfoBuilder builder) {
         this.id = builder.id;
@@ -64,6 +73,29 @@ public class OfferInfo implements Payload {
         this.baseCurrencyCode = builder.baseCurrencyCode;
         this.counterCurrencyCode = builder.counterCurrencyCode;
         this.date = builder.date;
+        this.state = builder.state;
+    }
+
+    public static OfferInfo toOfferInfo(Offer offer) {
+        return new OfferInfo.OfferInfoBuilder()
+                .withId(offer.getId())
+                .withDirection(offer.getDirection().name())
+                .withPrice(Objects.requireNonNull(offer.getPrice()).getValue())
+                .withUseMarketBasedPrice(offer.isUseMarketBasedPrice())
+                .withMarketPriceMargin(offer.getMarketPriceMargin())
+                .withAmount(offer.getAmount().value)
+                .withMinAmount(offer.getMinAmount().value)
+                .withVolume(Objects.requireNonNull(offer.getVolume()).getValue())
+                .withMinVolume(Objects.requireNonNull(offer.getMinVolume()).getValue())
+                .withBuyerSecurityDeposit(offer.getBuyerSecurityDeposit().value)
+                .withPaymentAccountId(offer.getMakerPaymentAccountId())
+                .withPaymentMethodId(offer.getPaymentMethod().getId())
+                .withPaymentMethodShortName(offer.getPaymentMethod().getShortName())
+                .withBaseCurrencyCode(offer.getOfferPayload().getBaseCurrencyCode())
+                .withCounterCurrencyCode(offer.getOfferPayload().getCounterCurrencyCode())
+                .withDate(offer.getDate().getTime())
+                .withState(offer.getState().name())
+                .build();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -89,16 +121,13 @@ public class OfferInfo implements Payload {
                 .setBaseCurrencyCode(baseCurrencyCode)
                 .setCounterCurrencyCode(counterCurrencyCode)
                 .setDate(date)
+                .setState(state)
                 .build();
     }
 
+    @SuppressWarnings({"unused", "SameReturnValue"})
     public static OfferInfo fromProto(bisq.proto.grpc.OfferInfo proto) {
-        /*
-        TODO (will be needed by the createoffer method)
-        return new OfferInfo(proto.getOfferPayload().getId(),
-                proto.getOfferPayload().getDate());
-        */
-        return null;
+        return null; // TODO
     }
 
     /*
@@ -124,9 +153,7 @@ public class OfferInfo implements Payload {
         private String baseCurrencyCode;
         private String counterCurrencyCode;
         private long date;
-
-        public OfferInfoBuilder() {
-        }
+        private String state;
 
         public OfferInfoBuilder withId(String id) {
             this.id = id;
@@ -205,6 +232,11 @@ public class OfferInfo implements Payload {
 
         public OfferInfoBuilder withDate(long date) {
             this.date = date;
+            return this;
+        }
+
+        public OfferInfoBuilder withState(String state) {
+            this.state = state;
             return this;
         }
 

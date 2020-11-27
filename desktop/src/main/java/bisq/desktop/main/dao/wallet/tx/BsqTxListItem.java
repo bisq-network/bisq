@@ -27,21 +27,23 @@ import bisq.core.dao.state.model.blockchain.TxType;
 import bisq.core.locale.Res;
 import bisq.core.util.coin.BsqFormatter;
 
+import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.LegacyAddress;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionOutput;
 
 import java.util.Date;
 
-import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 @EqualsAndHashCode(callSuper = true)
-@Data
+@Getter
 class BsqTxListItem extends TxConfidenceListItem {
     private final DaoFacade daoFacade;
     private final BsqFormatter bsqFormatter;
@@ -51,10 +53,8 @@ class BsqTxListItem extends TxConfidenceListItem {
 
     private final String address;
     private final String direction;
-    private Coin amount;
+    private final Coin amount;
     private boolean received;
-
-    private boolean issuanceTx;
 
     BsqTxListItem(Transaction transaction,
                   BsqWalletService bsqWalletService,
@@ -102,18 +102,24 @@ class BsqTxListItem extends TxConfidenceListItem {
                     WalletService.isOutputScriptConvertibleToAddress(output)) {
                 // We don't support send txs with multiple outputs to multiple receivers, so we can
                 // assume that only one output is not from our own wallets.
-                sendToAddress = bsqFormatter.getBsqAddressStringFromAddress(WalletService.getAddressFromOutput(output));
-                break;
+                // We ignore segwit outputs
+                Address addressFromOutput = WalletService.getAddressFromOutput(output);
+                if (addressFromOutput instanceof LegacyAddress) {
+                    sendToAddress = bsqFormatter.getBsqAddressStringFromAddress((LegacyAddress) addressFromOutput);
+                    break;
+                }
             }
         }
 
         // In the case we sent to ourselves (either to BSQ or BTC wallet) we show the first as the other is
         // usually the change output.
         String receivedWithAddress = Res.get("shared.na");
-        if (sendToAddress != null) {
-            for (TransactionOutput output : transaction.getOutputs()) {
-                if (WalletService.isOutputScriptConvertibleToAddress(output)) {
-                    receivedWithAddress = bsqFormatter.getBsqAddressStringFromAddress(WalletService.getAddressFromOutput(output));
+        for (TransactionOutput output : transaction.getOutputs()) {
+            if (WalletService.isOutputScriptConvertibleToAddress(output)) {
+                Address addressFromOutput = WalletService.getAddressFromOutput(output);
+                // We ignore segwit outputs
+                if (addressFromOutput instanceof LegacyAddress) {
+                    receivedWithAddress = bsqFormatter.getBsqAddressStringFromAddress((LegacyAddress) addressFromOutput);
                     break;
                 }
             }

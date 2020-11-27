@@ -22,6 +22,7 @@ import bisq.desktop.components.TextFieldWithCopyIcon;
 import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.components.paymentmethods.AdvancedCashForm;
 import bisq.desktop.components.paymentmethods.AliPayForm;
+import bisq.desktop.components.paymentmethods.AmazonGiftCardForm;
 import bisq.desktop.components.paymentmethods.AssetsForm;
 import bisq.desktop.components.paymentmethods.CashDepositForm;
 import bisq.desktop.components.paymentmethods.ChaseQuickPayForm;
@@ -43,6 +44,7 @@ import bisq.desktop.components.paymentmethods.SepaForm;
 import bisq.desktop.components.paymentmethods.SepaInstantForm;
 import bisq.desktop.components.paymentmethods.SpecificBankForm;
 import bisq.desktop.components.paymentmethods.SwishForm;
+import bisq.desktop.components.paymentmethods.TransferwiseForm;
 import bisq.desktop.components.paymentmethods.USPostalMoneyOrderForm;
 import bisq.desktop.components.paymentmethods.UpholdForm;
 import bisq.desktop.components.paymentmethods.WeChatPayForm;
@@ -60,6 +62,7 @@ import bisq.core.network.MessageState;
 import bisq.core.offer.Offer;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.PaymentAccountUtil;
+import bisq.core.payment.payload.AmazonGiftCardAccountPayload;
 import bisq.core.payment.payload.AssetsAccountPayload;
 import bisq.core.payment.payload.CashDepositAccountPayload;
 import bisq.core.payment.payload.F2FAccountPayload;
@@ -216,10 +219,11 @@ public class BuyerStep2View extends TradeStepView {
         field.setCopyWithoutCurrencyPostFix(true);
 
         if (!(paymentAccountPayload instanceof AssetsAccountPayload) &&
-                !(paymentAccountPayload instanceof F2FAccountPayload))
+                !(paymentAccountPayload instanceof F2FAccountPayload)) {
             addTopLabelTextFieldWithCopyIcon(gridPane, gridRow, 1,
                     Res.get("shared.reasonForPayment"), model.dataModel.getReference(),
                     Layout.COMPACT_FIRST_ROW_AND_GROUP_DISTANCE);
+        }
 
         switch (paymentMethodId) {
             case PaymentMethod.UPHOLD_ID:
@@ -292,6 +296,7 @@ public class BuyerStep2View extends TradeStepView {
                 gridRow = HalCashForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
                 break;
             case PaymentMethod.F2F_ID:
+                checkNotNull(model.dataModel.getTrade(), "model.dataModel.getTrade() must not be null");
                 checkNotNull(model.dataModel.getTrade().getOffer(), "model.dataModel.getTrade().getOffer() must not be null");
                 gridRow = F2FForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload, model.dataModel.getTrade().getOffer(), 0);
                 break;
@@ -305,6 +310,12 @@ public class BuyerStep2View extends TradeStepView {
                 break;
             case PaymentMethod.ADVANCED_CASH_ID:
                 gridRow = AdvancedCashForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
+                break;
+            case PaymentMethod.TRANSFERWISE_ID:
+                gridRow = TransferwiseForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
+                break;
+            case PaymentMethod.AMAZON_GIFT_CARD_ID:
+                gridRow = AmazonGiftCardForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
                 break;
             default:
                 log.error("Not supported PaymentMethod: " + paymentMethodId);
@@ -461,6 +472,8 @@ public class BuyerStep2View extends TradeStepView {
 
                         trade.setCounterCurrencyExtraData(txKey);
                         trade.setCounterCurrencyTxId(txHash);
+
+                        model.dataModel.getTradeManager().requestPersistence();
                         showConfirmPaymentStartedPopup();
                     })
                     .closeButtonText(Res.get("shared.cancel"))
@@ -508,6 +521,7 @@ public class BuyerStep2View extends TradeStepView {
         //TODO seems this was a hack to enable repeated confirm???
         if (trade.isFiatSent()) {
             trade.setState(Trade.State.DEPOSIT_CONFIRMED_IN_BLOCK_CHAIN);
+            model.dataModel.getTradeManager().requestPersistence();
         }
 
         model.dataModel.onPaymentStarted(() -> {
@@ -595,6 +609,12 @@ public class BuyerStep2View extends TradeStepView {
                         assign +
                         refTextWarn + "\n\n" +
                         fees;
+            } else if (paymentAccountPayload instanceof AmazonGiftCardAccountPayload) {
+                message += Res.get("portfolio.pending.step2_buyer.amazonGiftCard",
+                        amount) +
+                        accountDetails +
+                        paymentDetailsForTradePopup + ".\n\n" +
+                        copyPaste;
             } else {
                 message += Res.get("portfolio.pending.step2_buyer.bank", amount) +
                         accountDetails +
@@ -605,6 +625,7 @@ public class BuyerStep2View extends TradeStepView {
                         refTextWarn + "\n\n" +
                         fees;
             }
+
             String key = "startPayment" + trade.getId();
             if (!DevEnv.isDevMode() && DontShowAgainLookup.showAgain(key)) {
                 DontShowAgainLookup.dontShowAgain(key, true);

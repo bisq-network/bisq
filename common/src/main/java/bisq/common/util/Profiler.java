@@ -32,9 +32,13 @@ public class Profiler {
     }
 
     public static long getUsedMemoryInMB() {
+        return getUsedMemoryInBytes() / 1024 / 1024;
+    }
+
+    public static long getUsedMemoryInBytes() {
         Runtime runtime = Runtime.getRuntime();
-        long free = runtime.freeMemory() / 1024 / 1024;
-        long total = runtime.totalMemory() / 1024 / 1024;
+        long free = runtime.freeMemory();
+        long total = runtime.totalMemory();
         return total - free;
     }
 

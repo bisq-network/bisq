@@ -67,7 +67,7 @@ public final class PreferencesPayload implements PersistableEnvelope {
     private boolean showOwnOffersInOfferBook = true;
     @Nullable
     private TradeCurrency preferredTradeCurrency;
-    private long withdrawalTxFeeInBytes = 100;
+    private long withdrawalTxFeeInVbytes = 100;
     private boolean useCustomWithdrawalTxFee = false;
     private double maxPriceDistanceInPercent = 0.3;
     @Nullable
@@ -124,6 +124,7 @@ public final class PreferencesPayload implements PersistableEnvelope {
     private double buyerSecurityDepositAsPercentForCrypto = getDefaultBuyerSecurityDepositAsPercent();
     private int blockNotifyPort;
     private boolean tacAcceptedV120;
+    private double bsqAverageTrimThreshold = 0.05;
 
     // Added at 1.3.8
     private List<AutoConfirmSettings> autoConfirmSettingsList = new ArrayList<>();
@@ -159,7 +160,7 @@ public final class PreferencesPayload implements PersistableEnvelope {
                 .setTacAccepted(tacAccepted)
                 .setUseTorForBitcoinJ(useTorForBitcoinJ)
                 .setShowOwnOffersInOfferBook(showOwnOffersInOfferBook)
-                .setWithdrawalTxFeeInBytes(withdrawalTxFeeInBytes)
+                .setWithdrawalTxFeeInVbytes(withdrawalTxFeeInVbytes)
                 .setUseCustomWithdrawalTxFee(useCustomWithdrawalTxFee)
                 .setMaxPriceDistanceInPercent(maxPriceDistanceInPercent)
                 .setTradeStatisticsTickUnitIndex(tradeStatisticsTickUnitIndex)
@@ -188,9 +189,10 @@ public final class PreferencesPayload implements PersistableEnvelope {
                 .setBuyerSecurityDepositAsPercentForCrypto(buyerSecurityDepositAsPercentForCrypto)
                 .setBlockNotifyPort(blockNotifyPort)
                 .setTacAcceptedV120(tacAcceptedV120)
+                .setBsqAverageTrimThreshold(bsqAverageTrimThreshold)
                 .addAllAutoConfirmSettings(autoConfirmSettingsList.stream()
-                    .map(autoConfirmSettings -> ((protobuf.AutoConfirmSettings) autoConfirmSettings.toProtoMessage()))
-                    .collect(Collectors.toList()));
+                        .map(autoConfirmSettings -> ((protobuf.AutoConfirmSettings) autoConfirmSettings.toProtoMessage()))
+                        .collect(Collectors.toList()));
 
         Optional.ofNullable(backupDirectory).ifPresent(builder::setBackupDirectory);
         Optional.ofNullable(preferredTradeCurrency).ifPresent(e -> builder.setPreferredTradeCurrency((protobuf.TradeCurrency) e.toProtoMessage()));
@@ -239,7 +241,7 @@ public final class PreferencesPayload implements PersistableEnvelope {
                 proto.getUseTorForBitcoinJ(),
                 proto.getShowOwnOffersInOfferBook(),
                 proto.hasPreferredTradeCurrency() ? TradeCurrency.fromProto(proto.getPreferredTradeCurrency()) : null,
-                proto.getWithdrawalTxFeeInBytes(),
+                proto.getWithdrawalTxFeeInVbytes(),
                 proto.getUseCustomWithdrawalTxFee(),
                 proto.getMaxPriceDistanceInPercent(),
                 ProtoUtil.stringOrNullFromProto(proto.getOfferBookChartScreenCurrencyCode()),
@@ -280,6 +282,7 @@ public final class PreferencesPayload implements PersistableEnvelope {
                 proto.getBuyerSecurityDepositAsPercentForCrypto(),
                 proto.getBlockNotifyPort(),
                 proto.getTacAcceptedV120(),
+                proto.getBsqAverageTrimThreshold(),
                 proto.getAutoConfirmSettingsList().isEmpty() ? new ArrayList<>() :
                         new ArrayList<>(proto.getAutoConfirmSettingsList().stream()
                                 .map(AutoConfirmSettings::fromProto)

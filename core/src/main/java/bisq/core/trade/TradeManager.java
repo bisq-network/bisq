@@ -120,6 +120,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
     private final P2PService p2PService;
     private final PriceFeedService priceFeedService;
     private final TradeStatisticsManager tradeStatisticsManager;
+    private final TradeUtil tradeUtil;
     @Getter
     private final ArbitratorManager arbitratorManager;
     private final MediatorManager mediatorManager;
@@ -157,6 +158,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                         P2PService p2PService,
                         PriceFeedService priceFeedService,
                         TradeStatisticsManager tradeStatisticsManager,
+                        TradeUtil tradeUtil,
                         ArbitratorManager arbitratorManager,
                         MediatorManager mediatorManager,
                         ProcessModelServiceProvider processModelServiceProvider,
@@ -175,6 +177,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         this.p2PService = p2PService;
         this.priceFeedService = priceFeedService;
         this.tradeStatisticsManager = tradeStatisticsManager;
+        this.tradeUtil = tradeUtil;
         this.arbitratorManager = arbitratorManager;
         this.mediatorManager = mediatorManager;
         this.processModelServiceProvider = processModelServiceProvider;
@@ -197,19 +200,16 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void readPersisted() {
-        TradableList<Trade> persisted = persistenceManager.getPersisted();
-        if (persisted != null) {
-            tradableList.setAll(persisted.getList());
-        }
-
-        tradableList.forEach(trade -> {
-            Offer offer = trade.getOffer();
-            if (offer != null)
-                offer.setPriceFeedService(priceFeedService);
-        });
-
-        dumpDelayedPayoutTx.maybeDumpDelayedPayoutTxs(tradableList, "delayed_payout_txs_pending");
+    public void readPersisted(Runnable completeHandler) {
+        persistenceManager.readPersisted(persisted -> {
+                    tradableList.setAll(persisted.getList());
+                    tradableList.stream()
+                            .filter(trade -> trade.getOffer() != null)
+                            .forEach(trade -> trade.getOffer().setPriceFeedService(priceFeedService));
+                    dumpDelayedPayoutTx.maybeDumpDelayedPayoutTxs(tradableList, "delayed_payout_txs_pending");
+                    completeHandler.run();
+                },
+                completeHandler);
     }
 
 
@@ -342,11 +342,13 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
     private void initPersistedTrade(Trade trade) {
         initTradeAndProtocol(trade, getTradeProtocol(trade));
         trade.updateDepositTxFromWallet();
+        requestPersistence();
     }
 
     private void initTradeAndProtocol(Trade trade, TradeProtocol tradeProtocol) {
         tradeProtocol.initialize(processModelServiceProvider, this, trade.getOffer());
         trade.initialize(processModelServiceProvider);
+        requestPersistence();
     }
 
     public void requestPersistence() {
@@ -431,6 +433,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
 
                         ((TakerProtocol) tradeProtocol).onTakeOffer();
                         tradeResultHandler.handleResult(trade);
+                        requestPersistence();
                     }
                 },
                 errorMessageHandler);
@@ -544,10 +547,13 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                 Date halfTradePeriodDate = trade.getHalfTradePeriodDate();
                 if (maxTradePeriodDate != null && halfTradePeriodDate != null) {
                     Date now = new Date();
-                    if (now.after(maxTradePeriodDate))
+                    if (now.after(maxTradePeriodDate)) {
                         trade.setTradePeriodState(Trade.TradePeriodState.TRADE_PERIOD_OVER);
-                    else if (now.after(halfTradePeriodDate))
+                        requestPersistence();
+                    } else if (now.after(halfTradePeriodDate)) {
                         trade.setTradePeriodState(Trade.TradePeriodState.SECOND_HALF);
+                        requestPersistence();
+                    }
                 }
             }
         });
@@ -634,7 +640,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
     // the relevant entries are changed, otherwise it's not added and no address entries are changed
     private boolean recoverAddresses(Trade trade) {
         // Find addresses associated with this trade.
-        var entries = TradeUtils.getAvailableAddresses(trade, btcWalletService, keyRing);
+        var entries = tradeUtil.getAvailableAddresses(trade);
         if (entries == null)
             return false;
 

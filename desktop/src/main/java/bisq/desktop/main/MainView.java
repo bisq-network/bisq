@@ -51,7 +51,6 @@ import bisq.core.provider.price.MarketPrice;
 import bisq.common.BisqException;
 import bisq.common.Timer;
 import bisq.common.UserThread;
-import bisq.common.app.Version;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Utilities;
 
@@ -115,7 +114,6 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
         implements DaoStateMonitoringService.Listener {
     // If after 30 sec we have not got connected we show "open network settings" button
     private final static int SHOW_TOR_SETTINGS_DELAY_SEC = 90;
-    private Label versionLabel;
     @Setter
     private Runnable onApplicationStartedHandler;
 
@@ -687,6 +685,8 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
         Label btcInfoLabel = new AutoTooltipLabel();
         btcInfoLabel.setId("footer-pane");
         btcInfoLabel.textProperty().bind(model.getBtcInfo());
+        setLeftAnchor(btcInfoLabel, 10d);
+        setBottomAnchor(btcInfoLabel, 7d);
 
         ProgressBar blockchainSyncIndicator = new JFXProgressBar(-1);
         blockchainSyncIndicator.setPrefWidth(80);
@@ -715,34 +715,32 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
             }
         });
 
-        HBox blockchainSyncBox = new HBox();
-        blockchainSyncBox.setSpacing(10);
-        blockchainSyncBox.setAlignment(Pos.CENTER);
-        blockchainSyncBox.getChildren().addAll(btcInfoLabel, blockchainSyncIndicator);
-        setLeftAnchor(blockchainSyncBox, 10d);
-        setBottomAnchor(blockchainSyncBox, 7d);
-
         // version
-        versionLabel = new AutoTooltipLabel();
+        Label versionLabel = new AutoTooltipLabel();
         versionLabel.setId("footer-pane");
         versionLabel.setTextAlignment(TextAlignment.CENTER);
         versionLabel.setAlignment(Pos.BASELINE_CENTER);
-        versionLabel.setText("v" + Version.VERSION);
+        versionLabel.textProperty().bind(model.getCombinedFooterInfo());
         root.widthProperty().addListener((ov, oldValue, newValue) ->
                 versionLabel.setLayoutX(((double) newValue - versionLabel.getWidth()) / 2));
-        setBottomAnchor(versionLabel, 7d);
         model.getNewVersionAvailableProperty().addListener((observable, oldValue, newValue) -> {
             versionLabel.getStyleClass().removeAll("version-new", "version");
             if (newValue) {
                 versionLabel.getStyleClass().add("version-new");
                 versionLabel.setOnMouseClicked(e -> model.onOpenDownloadWindow());
-                versionLabel.setText("v" + Version.VERSION + " " + Res.get("mainView.version.update"));
             } else {
                 versionLabel.getStyleClass().add("version");
                 versionLabel.setOnMouseClicked(null);
-                versionLabel.setText("v" + Version.VERSION);
             }
         });
+        HBox versionBox = new HBox();
+        versionBox.setSpacing(10);
+        versionBox.setAlignment(Pos.CENTER);
+        versionBox.setAlignment(Pos.BASELINE_CENTER);
+        versionBox.getChildren().addAll(versionLabel, blockchainSyncIndicator);
+        setLeftAnchor(versionBox, 10d);
+        setRightAnchor(versionBox, 10d);
+        setBottomAnchor(versionBox, 7d);
 
         // P2P Network
         Label p2PNetworkLabel = new AutoTooltipLabel();
@@ -779,7 +777,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
         setRightAnchor(vBox, 33d);
         setBottomAnchor(vBox, 5d);
 
-        return new AnchorPane(separator, blockchainSyncBox, versionLabel, vBox, p2PNetworkIcon) {{
+        return new AnchorPane(separator, btcInfoLabel, versionBox, vBox, p2PNetworkIcon) {{
             setId("footer-pane");
             setMinHeight(30);
             setMaxHeight(30);
@@ -811,7 +809,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
             this.setToggleGroup(navButtons);
             this.getStyleClass().add("nav-button");
             // Japanese fonts are dense, increase top nav button text size
-            if (model.getPreferences().getUserLanguage().equals("ja")) {
+            if (model.getPreferences() != null && "ja".equals(model.getPreferences().getUserLanguage())) {
                 this.getStyleClass().add("nav-button-japanese");
             }
 

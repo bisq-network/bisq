@@ -160,6 +160,16 @@ class CoreOffersService {
                 paymentAccount);
     }
 
+    void cancelOffer(String id) {
+        Offer offer = getOffer(id);
+        openOfferManager.removeOffer(offer,
+                () -> {
+                },
+                errorMessage -> {
+                    throw new IllegalStateException(errorMessage);
+                });
+    }
+
     private void placeOffer(Offer offer,
                             double buyerSecurityDeposit,
                             boolean useSavingsWallet,

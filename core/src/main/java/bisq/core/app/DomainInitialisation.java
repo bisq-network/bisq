@@ -45,6 +45,8 @@ import bisq.core.support.dispute.refund.RefundManager;
 import bisq.core.support.dispute.refund.refundagent.RefundAgentManager;
 import bisq.core.support.traderchat.TraderChatManager;
 import bisq.core.trade.TradeManager;
+import bisq.core.trade.closed.ClosedTradableManager;
+import bisq.core.trade.failed.FailedTradesManager;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.trade.txproof.xmr.XmrTxProofService;
 import bisq.core.user.User;
@@ -76,6 +78,8 @@ public class DomainInitialisation {
     private final RefundManager refundManager;
     private final TraderChatManager traderChatManager;
     private final TradeManager tradeManager;
+    private final ClosedTradableManager closedTradableManager;
+    private final FailedTradesManager failedTradesManager;
     private final XmrTxProofService xmrTxProofService;
     private final OpenOfferManager openOfferManager;
     private final Balances balances;
@@ -109,6 +113,8 @@ public class DomainInitialisation {
                                 RefundManager refundManager,
                                 TraderChatManager traderChatManager,
                                 TradeManager tradeManager,
+                                ClosedTradableManager closedTradableManager,
+                                FailedTradesManager failedTradesManager,
                                 XmrTxProofService xmrTxProofService,
                                 OpenOfferManager openOfferManager,
                                 Balances balances,
@@ -140,6 +146,8 @@ public class DomainInitialisation {
         this.refundManager = refundManager;
         this.traderChatManager = traderChatManager;
         this.tradeManager = tradeManager;
+        this.closedTradableManager = closedTradableManager;
+        this.failedTradesManager = failedTradesManager;
         this.xmrTxProofService = xmrTxProofService;
         this.openOfferManager = openOfferManager;
         this.balances = balances;
@@ -183,6 +191,8 @@ public class DomainInitialisation {
         traderChatManager.onAllServicesInitialized();
 
         tradeManager.onAllServicesInitialized();
+        closedTradableManager.onAllServicesInitialized();
+        failedTradesManager.onAllServicesInitialized();
         xmrTxProofService.onAllServicesInitialized();
 
         openOfferManager.onAllServicesInitialized();

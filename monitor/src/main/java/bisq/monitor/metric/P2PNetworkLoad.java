@@ -91,7 +91,7 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
      * History implementation using a {@link LinkedHashMap} and its
      * {@link LinkedHashMap#removeEldestEntry(Map.Entry)} option.
      */
-    private class FixedSizeHistoryTracker<K, V> extends LinkedHashMap<K, V> {
+    private static class FixedSizeHistoryTracker<K, V> extends LinkedHashMap<K, V> {
         final int historySize;
 
         FixedSizeHistoryTracker(int historySize) {
@@ -123,7 +123,6 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
             hsReady.await();
 
             // boot up P2P node
-            File storageDir = torHiddenServiceDir;
             try {
                 Config config = new Config();
                 CorruptedStorageFileHandler corruptedStorageFileHandler = new CorruptedStorageFileHandler();
@@ -133,10 +132,11 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
                         networkProtoResolver);
                 DefaultSeedNodeRepository seedNodeRepository = new DefaultSeedNodeRepository(config);
                 PeerManager peerManager = new PeerManager(networkNode, seedNodeRepository, new ClockWatcher(),
-                        new PersistenceManager<>(storageDir, persistenceProtoResolver, corruptedStorageFileHandler), maxConnections);
+                        new PersistenceManager<>(torHiddenServiceDir, persistenceProtoResolver, corruptedStorageFileHandler), maxConnections);
 
                 // init file storage
-                peerManager.readPersisted();
+                peerManager.readPersisted(() -> {
+                });
 
                 PeerExchangeManager peerExchangeManager = new PeerExchangeManager(networkNode, seedNodeRepository,
                         peerManager);
@@ -156,7 +156,7 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
         // report
         Map<String, String> report = new HashMap<>();
 
-        if(lastRun != 0 && System.currentTimeMillis() - lastRun != 0) {
+        if (lastRun != 0 && System.currentTimeMillis() - lastRun != 0) {
             // - normalize to data/minute
             double perMinuteFactor = 60000.0 / (System.currentTimeMillis() - lastRun);
 
@@ -194,7 +194,7 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
     /**
      * Efficient way to count message occurrences.
      */
-    private class Counter {
+    private static class Counter {
         private int value = 1;
 
         /**
@@ -219,7 +219,7 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
     public void onMessage(NetworkEnvelope networkEnvelope, Connection connection) {
         if (networkEnvelope instanceof BroadcastMessage) {
             try {
-                if(history.get(networkEnvelope.hashCode()) == null) {
+                if (history.get(networkEnvelope.hashCode()) == null) {
                     history.put(networkEnvelope.hashCode(), null);
                     buckets.get(networkEnvelope.getClass().getSimpleName()).increment();
                 }

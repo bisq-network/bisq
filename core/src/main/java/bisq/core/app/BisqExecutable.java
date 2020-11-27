@@ -68,6 +68,7 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
     protected AppModule module;
     protected Config config;
     private boolean isShutdownInProgress;
+    private boolean hasDowngraded;
 
     public BisqExecutable(String fullName, String scriptName, String appName, String version) {
         this.fullName = fullName;
@@ -133,9 +134,17 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
         CommonSetup.setupUncaughtExceptionHandler(this);
         setupGuice();
         setupAvoidStandbyMode();
-        readAllPersisted(this::startApplication);
-    }
 
+        hasDowngraded = BisqSetup.hasDowngraded();
+        if (hasDowngraded) {
+            // If user tried to downgrade we do not read the persisted data to avoid data corruption
+            // We call startApplication to enable UI to show popup. We prevent in BisqSetup to go further
+            // in the process and require a shut down.
+            startApplication();
+        } else {
+            readAllPersisted(this::startApplication);
+        }
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // We continue with a series of synchronous execution tasks
@@ -168,15 +177,12 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
         }
 
         AtomicInteger remaining = new AtomicInteger(hosts.size());
-        hosts.forEach(e -> {
-            new Thread(() -> {
-                e.readPersisted();
-                remaining.decrementAndGet();
-                if (remaining.get() == 0) {
+        hosts.forEach(host -> {
+            host.readPersisted(() -> {
+                if (remaining.decrementAndGet() == 0) {
                     UserThread.execute(completeHandler);
                 }
-
-            }, "BisqExecutable-read-" + e.getClass().getSimpleName()).start();
+            });
         });
     }
 
@@ -239,11 +245,16 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
                     injector.getInstance(P2PService.class).shutDown(() -> {
                         log.info("P2PService shutdown completed");
                         module.close(injector);
-                        PersistenceManager.flushAllDataToDisk(() -> {
-                            log.info("Graceful shutdown completed. Exiting now.");
-                            resultHandler.handleResult();
-                            System.exit(EXIT_SUCCESS);
-                        });
+                        if (!hasDowngraded) {
+                            // If user tried to downgrade we do not write the persistable data to avoid data corruption
+                            PersistenceManager.flushAllDataToDisk(() -> {
+                                log.info("Graceful shutdown completed. Exiting now.");
+                                resultHandler.handleResult();
+                                UserThread.runAfter(() -> System.exit(EXIT_SUCCESS), 1);
+                            });
+                        } else {
+                            UserThread.runAfter(() -> System.exit(EXIT_SUCCESS), 1);
+                        }
                     });
                 });
                 walletsSetup.shutDown();
@@ -253,20 +264,31 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
             // Wait max 20 sec.
             UserThread.runAfter(() -> {
                 log.warn("Timeout triggered resultHandler");
-                PersistenceManager.flushAllDataToDisk(() -> {
-                    log.info("Graceful shutdown resulted in a timeout. Exiting now.");
-                    resultHandler.handleResult();
-                    System.exit(EXIT_SUCCESS);
-                });
+                if (!hasDowngraded) {
+                    // If user tried to downgrade we do not write the persistable data to avoid data corruption
+                    PersistenceManager.flushAllDataToDisk(() -> {
+                        log.info("Graceful shutdown resulted in a timeout. Exiting now.");
+                        resultHandler.handleResult();
+                        UserThread.runAfter(() -> System.exit(EXIT_SUCCESS), 1);
+                    });
+                } else {
+                    UserThread.runAfter(() -> System.exit(EXIT_SUCCESS), 1);
+                }
+
             }, 20);
         } catch (Throwable t) {
             log.error("App shutdown failed with exception {}", t.toString());
             t.printStackTrace();
-            PersistenceManager.flushAllDataToDisk(() -> {
-                log.info("Graceful shutdown resulted in an error. Exiting now.");
-                resultHandler.handleResult();
-                System.exit(EXIT_FAILURE);
-            });
+            if (!hasDowngraded) {
+                // If user tried to downgrade we do not write the persistable data to avoid data corruption
+                PersistenceManager.flushAllDataToDisk(() -> {
+                    log.info("Graceful shutdown resulted in an error. Exiting now.");
+                    resultHandler.handleResult();
+                    UserThread.runAfter(() -> System.exit(EXIT_FAILURE), 1);
+                });
+            } else {
+                UserThread.runAfter(() -> System.exit(EXIT_FAILURE), 1);
+            }
         }
     }
 

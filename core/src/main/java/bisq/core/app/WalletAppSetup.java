@@ -23,6 +23,7 @@ import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.locale.Res;
 import bisq.core.offer.OpenOfferManager;
+import bisq.core.provider.fee.FeeService;
 import bisq.core.trade.TradeManager;
 import bisq.core.user.Preferences;
 import bisq.core.util.FormattingUtils;
@@ -64,6 +65,7 @@ public class WalletAppSetup {
 
     private final WalletsManager walletsManager;
     private final WalletsSetup walletsSetup;
+    private final FeeService feeService;
     private final Config config;
     private final Preferences preferences;
 
@@ -81,17 +83,17 @@ public class WalletAppSetup {
     @Getter
     private final ObjectProperty<RejectedTxException> rejectedTxException = new SimpleObjectProperty<>();
     @Getter
-    private int numBtcPeers = 0;
-    @Getter
     private final BooleanProperty useTorForBTC = new SimpleBooleanProperty();
 
     @Inject
     public WalletAppSetup(WalletsManager walletsManager,
                           WalletsSetup walletsSetup,
+                          FeeService feeService,
                           Config config,
                           Preferences preferences) {
         this.walletsManager = walletsManager;
         this.walletsSetup = walletsSetup;
+        this.feeService = feeService;
         this.config = config;
         this.preferences = preferences;
         this.useTorForBTC.set(preferences.getUseTorForBitcoinJ());
@@ -105,40 +107,36 @@ public class WalletAppSetup {
               Runnable downloadCompleteHandler,
               Runnable walletInitializedHandler) {
         log.info("Initialize WalletAppSetup with BitcoinJ version {} and hash of BitcoinJ commit {}",
-                VersionMessage.BITCOINJ_VERSION, "a733034");
+                VersionMessage.BITCOINJ_VERSION, "7752cb7");
 
         ObjectProperty<Throwable> walletServiceException = new SimpleObjectProperty<>();
         btcInfoBinding = EasyBind.combine(walletsSetup.downloadPercentageProperty(),
-                walletsSetup.numPeersProperty(),
+                feeService.feeUpdateCounterProperty(),
                 walletServiceException,
-                (downloadPercentage, numPeers, exception) -> {
+                (downloadPercentage, feeUpdate, exception) -> {
                     String result;
                     if (exception == null) {
                         double percentage = (double) downloadPercentage;
-                        int peers = (int) numPeers;
                         btcSyncProgress.set(percentage);
                         if (percentage == 1) {
                             result = Res.get("mainView.footer.btcInfo",
-                                    peers,
                                     Res.get("mainView.footer.btcInfo.synchronizedWith"),
-                                    getBtcNetworkAsString());
+                                    getBtcNetworkAsString(),
+                                    feeService.getFeeTextForDisplay());
                             getBtcSplashSyncIconId().set("image-connection-synced");
 
                             downloadCompleteHandler.run();
                         } else if (percentage > 0.0) {
                             result = Res.get("mainView.footer.btcInfo",
-                                    peers,
                                     Res.get("mainView.footer.btcInfo.synchronizingWith"),
-                                    getBtcNetworkAsString() + ": " + FormattingUtils.formatToPercentWithSymbol(percentage));
+                                    getBtcNetworkAsString() + ": " + FormattingUtils.formatToPercentWithSymbol(percentage), "");
                         } else {
                             result = Res.get("mainView.footer.btcInfo",
-                                    peers,
                                     Res.get("mainView.footer.btcInfo.connectingTo"),
-                                    getBtcNetworkAsString());
+                                    getBtcNetworkAsString(), "");
                         }
                     } else {
                         result = Res.get("mainView.footer.btcInfo",
-                                getNumBtcPeers(),
                                 Res.get("mainView.footer.btcInfo.connectionFailed"),
                                 getBtcNetworkAsString());
                         log.error(exception.toString());
@@ -164,8 +162,6 @@ public class WalletAppSetup {
 
         walletsSetup.initialize(null,
                 () -> {
-                    numBtcPeers = walletsSetup.numPeersProperty().get();
-
                     // We only check one wallet as we apply encryption to all or none
                     if (walletsManager.areWalletsEncrypted()) {
                         walletPasswordHandler.run();
@@ -251,6 +247,7 @@ public class WalletAppSetup {
                                         String finalDetails = details;
                                         UserThread.runAfter(() -> {
                                             trade.setErrorMessage(newValue.getMessage());
+                                            tradeManager.requestPersistence();
                                             if (rejectedTxErrorMessageHandler != null) {
                                                 rejectedTxErrorMessageHandler.accept(Res.get("popup.warning.trade.txRejected",
                                                         finalDetails, trade.getShortId(), txId));

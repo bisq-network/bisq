@@ -177,8 +177,8 @@ public class OfferUtil {
         return CoinUtil.getMakerFee(isCurrencyForMakerFeeBtc, amount);
     }
 
-    public Coin getTxFeeBySize(Coin txFeePerByteFromFeeService, int sizeInBytes) {
-        return txFeePerByteFromFeeService.multiply(getAverageTakerFeeTxSize(sizeInBytes));
+    public Coin getTxFeeByVsize(Coin txFeePerVbyteFromFeeService, int vsizeInVbytes) {
+        return txFeePerVbyteFromFeeService.multiply(getAverageTakerFeeTxVsize(vsizeInVbytes));
     }
 
     // We use the sum of the size of the trade fee and the deposit tx to get an average.
@@ -186,8 +186,8 @@ public class OfferUtil {
     // enough.  With that we avoid that we overpay in case that the trade fee has many
     // inputs and we would apply that fee for the other 2 txs as well. We still might
     // overpay a bit for the payout tx.
-    public int getAverageTakerFeeTxSize(int txSize) {
-        return (txSize + 320) / 2;
+    public int getAverageTakerFeeTxVsize(int txVsize) {
+        return (txVsize + 233) / 2;
     }
 
     /**
@@ -259,6 +259,10 @@ public class OfferUtil {
             return false; // we can't be left with dust
         }
         return !availableBalance.subtract(takerFee).isNegative();
+    }
+
+    public boolean isBlockChainPaymentMethod(Offer offer) {
+        return offer != null && offer.getPaymentMethod().isAsset();
     }
 
     public Optional<Volume> getFeeInUserFiatCurrency(Coin makerFee,

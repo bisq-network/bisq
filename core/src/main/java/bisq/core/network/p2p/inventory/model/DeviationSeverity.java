@@ -15,32 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.price.spot.providers;
+package bisq.core.network.p2p.inventory.model;
 
-import bisq.price.spot.ExchangeRate;
-import bisq.price.spot.ExchangeRateProvider;
-
-import org.knowm.xchange.hitbtc.v2.HitbtcExchange;
-
-import org.springframework.stereotype.Component;
-
-import java.time.Duration;
-
-import java.util.Set;
-
-@Component
-class Hitbtc extends ExchangeRateProvider {
-
-    public Hitbtc() {
-        super("HITBTC", "hitbtc", Duration.ofMinutes(1));
-    }
-
-    @Override
-    public Set<ExchangeRate> doGet() {
-        // Supported fiat: USD
-        // Supported alts: AEON, BTM, DASH, DCR, DOGE, EMC, ETC, ETH, GRIN, LTC, NAV,
-        // PART, XMR, XRC, XZC, ZEC, ZEN
-        return doGet(HitbtcExchange.class);
-    }
-
+public enum DeviationSeverity {
+    IGNORED,
+    OK,
+    WARN,
+    ALERT
 }

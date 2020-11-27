@@ -68,6 +68,8 @@ public class SellerFinalizesDelayedPayoutTx extends TradeTask {
             trade.applyDelayedPayoutTx(signedDelayedPayoutTx);
             log.info("DelayedPayoutTxBytes = {}", Utilities.bytesAsHexString(trade.getDelayedPayoutTxBytes()));
 
+            processModel.getTradeManager().requestPersistence();
+
             complete();
         } catch (Throwable t) {
             failed(t);

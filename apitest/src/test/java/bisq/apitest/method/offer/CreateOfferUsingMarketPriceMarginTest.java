@@ -26,12 +26,12 @@ import java.text.DecimalFormat;
 
 import lombok.extern.slf4j.Slf4j;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 
-import static bisq.apitest.config.BisqAppConfig.alicedaemon;
 import static bisq.common.util.MathUtils.scaleDownByPowerOf10;
 import static bisq.common.util.MathUtils.scaleUpByPowerOf10;
 import static java.lang.Math.abs;
@@ -41,9 +41,10 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static protobuf.OfferPayload.Direction.BUY;
 
+@Disabled
 @Slf4j
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class CreateOfferUsingMarketPriceMarginTest extends AbstractCreateOfferTest {
+public class CreateOfferUsingMarketPriceMarginTest extends AbstractOfferTest {
 
     private static final DecimalFormat PCT_FORMAT = new DecimalFormat("##0.00");
     private static final double MKT_PRICE_MARGIN_ERROR_TOLERANCE = 0.0050;      // 0.50%
@@ -52,10 +53,9 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractCreateOfferTe
     @Test
     @Order(1)
     public void testCreateUSDBTCBuyOffer5PctPriceMargin() {
-        var paymentAccount = getDefaultPerfectDummyPaymentAccount(alicedaemon);
         double priceMarginPctInput = 5.00;
         var req = CreateOfferRequest.newBuilder()
-                .setPaymentAccountId(paymentAccount.getId())
+                .setPaymentAccountId(alicesDummyAcct.getId())
                 .setDirection("buy")
                 .setCurrencyCode("usd")
                 .setAmount(10000000)
@@ -73,7 +73,7 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractCreateOfferTe
         assertEquals(10000000, newOffer.getAmount());
         assertEquals(10000000, newOffer.getMinAmount());
         assertEquals(1500000, newOffer.getBuyerSecurityDeposit());
-        assertEquals(paymentAccount.getId(), newOffer.getPaymentAccountId());
+        assertEquals(alicesDummyAcct.getId(), newOffer.getPaymentAccountId());
         assertEquals("BTC", newOffer.getBaseCurrencyCode());
         assertEquals("USD", newOffer.getCounterCurrencyCode());
 
@@ -84,7 +84,7 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractCreateOfferTe
         assertEquals(10000000, newOffer.getAmount());
         assertEquals(10000000, newOffer.getMinAmount());
         assertEquals(1500000, newOffer.getBuyerSecurityDeposit());
-        assertEquals(paymentAccount.getId(), newOffer.getPaymentAccountId());
+        assertEquals(alicesDummyAcct.getId(), newOffer.getPaymentAccountId());
         assertEquals("BTC", newOffer.getBaseCurrencyCode());
         assertEquals("USD", newOffer.getCounterCurrencyCode());
 
@@ -94,10 +94,9 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractCreateOfferTe
     @Test
     @Order(2)
     public void testCreateNZDBTCBuyOfferMinus2PctPriceMargin() {
-        var paymentAccount = getDefaultPerfectDummyPaymentAccount(alicedaemon);
         double priceMarginPctInput = -2.00;
         var req = CreateOfferRequest.newBuilder()
-                .setPaymentAccountId(paymentAccount.getId())
+                .setPaymentAccountId(alicesDummyAcct.getId())
                 .setDirection("buy")
                 .setCurrencyCode("nzd")
                 .setAmount(10000000)
@@ -115,7 +114,7 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractCreateOfferTe
         assertEquals(10000000, newOffer.getAmount());
         assertEquals(10000000, newOffer.getMinAmount());
         assertEquals(1500000, newOffer.getBuyerSecurityDeposit());
-        assertEquals(paymentAccount.getId(), newOffer.getPaymentAccountId());
+        assertEquals(alicesDummyAcct.getId(), newOffer.getPaymentAccountId());
         assertEquals("BTC", newOffer.getBaseCurrencyCode());
         assertEquals("NZD", newOffer.getCounterCurrencyCode());
 
@@ -126,7 +125,7 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractCreateOfferTe
         assertEquals(10000000, newOffer.getAmount());
         assertEquals(10000000, newOffer.getMinAmount());
         assertEquals(1500000, newOffer.getBuyerSecurityDeposit());
-        assertEquals(paymentAccount.getId(), newOffer.getPaymentAccountId());
+        assertEquals(alicesDummyAcct.getId(), newOffer.getPaymentAccountId());
         assertEquals("BTC", newOffer.getBaseCurrencyCode());
         assertEquals("NZD", newOffer.getCounterCurrencyCode());
 
@@ -136,10 +135,9 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractCreateOfferTe
     @Test
     @Order(3)
     public void testCreateGBPBTCSellOfferMinus1Point5PctPriceMargin() {
-        var paymentAccount = getDefaultPerfectDummyPaymentAccount(alicedaemon);
         double priceMarginPctInput = -1.5;
         var req = CreateOfferRequest.newBuilder()
-                .setPaymentAccountId(paymentAccount.getId())
+                .setPaymentAccountId(alicesDummyAcct.getId())
                 .setDirection("sell")
                 .setCurrencyCode("gbp")
                 .setAmount(10000000)
@@ -158,7 +156,7 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractCreateOfferTe
         assertEquals(10000000, newOffer.getAmount());
         assertEquals(10000000, newOffer.getMinAmount());
         assertEquals(1500000, newOffer.getBuyerSecurityDeposit());
-        assertEquals(paymentAccount.getId(), newOffer.getPaymentAccountId());
+        assertEquals(alicesDummyAcct.getId(), newOffer.getPaymentAccountId());
         assertEquals("BTC", newOffer.getBaseCurrencyCode());
         assertEquals("GBP", newOffer.getCounterCurrencyCode());
 
@@ -169,7 +167,7 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractCreateOfferTe
         assertEquals(10000000, newOffer.getAmount());
         assertEquals(10000000, newOffer.getMinAmount());
         assertEquals(1500000, newOffer.getBuyerSecurityDeposit());
-        assertEquals(paymentAccount.getId(), newOffer.getPaymentAccountId());
+        assertEquals(alicesDummyAcct.getId(), newOffer.getPaymentAccountId());
         assertEquals("BTC", newOffer.getBaseCurrencyCode());
         assertEquals("GBP", newOffer.getCounterCurrencyCode());
 
@@ -179,10 +177,9 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractCreateOfferTe
     @Test
     @Order(4)
     public void testCreateBRLBTCSellOffer6Point55PctPriceMargin() {
-        var paymentAccount = getDefaultPerfectDummyPaymentAccount(alicedaemon);
         double priceMarginPctInput = 6.55;
         var req = CreateOfferRequest.newBuilder()
-                .setPaymentAccountId(paymentAccount.getId())
+                .setPaymentAccountId(alicesDummyAcct.getId())
                 .setDirection("sell")
                 .setCurrencyCode("brl")
                 .setAmount(10000000)
@@ -201,7 +198,7 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractCreateOfferTe
         assertEquals(10000000, newOffer.getAmount());
         assertEquals(10000000, newOffer.getMinAmount());
         assertEquals(1500000, newOffer.getBuyerSecurityDeposit());
-        assertEquals(paymentAccount.getId(), newOffer.getPaymentAccountId());
+        assertEquals(alicesDummyAcct.getId(), newOffer.getPaymentAccountId());
         assertEquals("BTC", newOffer.getBaseCurrencyCode());
         assertEquals("BRL", newOffer.getCounterCurrencyCode());
 
@@ -212,7 +209,7 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractCreateOfferTe
         assertEquals(10000000, newOffer.getAmount());
         assertEquals(10000000, newOffer.getMinAmount());
         assertEquals(1500000, newOffer.getBuyerSecurityDeposit());
-        assertEquals(paymentAccount.getId(), newOffer.getPaymentAccountId());
+        assertEquals(alicesDummyAcct.getId(), newOffer.getPaymentAccountId());
         assertEquals("BTC", newOffer.getBaseCurrencyCode());
         assertEquals("BRL", newOffer.getCounterCurrencyCode());
 

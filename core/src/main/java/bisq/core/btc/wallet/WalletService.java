@@ -37,7 +37,6 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Context;
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.InsufficientMoneyException;
-import org.bitcoinj.core.LegacyAddress;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.Transaction;
@@ -325,13 +324,10 @@ public abstract class WalletService {
                     }
                 } else if (ScriptPattern.isP2WPKH(scriptPubKey)) {
                     try {
-                        // TODO: Consider using this alternative way to build the scriptCode (taken from bitcoinj master)
-                        // Script scriptCode = ScriptBuilder.createP2PKHOutputScript(key);
-                        Script scriptCode = new ScriptBuilder().data(
-                                ScriptBuilder.createOutputScript(LegacyAddress.fromKey(tx.getParams(), key)).getProgram())
-                                .build();
+                        // scriptCode is expected to have the format of a legacy P2PKH output script
+                        Script scriptCode = ScriptBuilder.createP2PKHOutputScript(key);
                         Coin value = txIn.getValue();
-                        TransactionSignature txSig = tx.calculateWitnessSignature(index, key, scriptCode, value,
+                        TransactionSignature txSig = tx.calculateWitnessSignature(index, key, aesKey, scriptCode, value,
                                 Transaction.SigHash.ALL, false);
                         txIn.setScriptSig(ScriptBuilder.createEmpty());
                         txIn.setWitness(TransactionWitness.redeemP2WPKH(txSig, key));
@@ -479,10 +475,10 @@ public abstract class WalletService {
         return getBalanceForAddress(getAddressFromOutput(output));
     }
 
-    public Coin getTxFeeForWithdrawalPerByte() {
+    public Coin getTxFeeForWithdrawalPerVbyte() {
         Coin fee = (preferences.isUseCustomWithdrawalTxFee()) ?
-                Coin.valueOf(preferences.getWithdrawalTxFeeInBytes()) :
-                feeService.getTxFeePerByte();
+                Coin.valueOf(preferences.getWithdrawalTxFeeInVbytes()) :
+                feeService.getTxFeePerVbyte();
         log.info("tx fee = " + fee.toFriendlyString());
         return fee;
     }
@@ -521,7 +517,7 @@ public abstract class WalletService {
             throws InsufficientMoneyException, AddressFormatException {
         SendRequest sendRequest = SendRequest.emptyWallet(Address.fromString(params, toAddress));
         sendRequest.fee = Coin.ZERO;
-        sendRequest.feePerKb = getTxFeeForWithdrawalPerByte().multiply(1000);
+        sendRequest.feePerKb = getTxFeeForWithdrawalPerVbyte().multiply(1000);
         sendRequest.aesKey = aesKey;
         Wallet.SendResult sendResult = wallet.sendCoins(sendRequest);
         printTx("empty btc wallet", sendResult.tx);
@@ -556,6 +552,10 @@ public abstract class WalletService {
     public int getBestChainHeight() {
         final BlockChain chain = walletsSetup.getChain();
         return isWalletReady() && chain != null ? chain.getBestChainHeight() : 0;
+    }
+
+    public boolean isChainHeightSyncedWithinTolerance() {
+        return walletsSetup.isChainHeightSyncedWithinTolerance();
     }
 
     public Transaction getClonedTransaction(Transaction tx) {

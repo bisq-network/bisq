@@ -29,12 +29,12 @@ import java.util.List;
 import java.util.TimeZone;
 import java.util.stream.Collectors;
 
+import static bisq.cli.ColumnHeaderConstants.*;
 import static bisq.cli.CurrencyFormat.formatAmountRange;
 import static bisq.cli.CurrencyFormat.formatOfferPrice;
 import static bisq.cli.CurrencyFormat.formatSatoshis;
 import static bisq.cli.CurrencyFormat.formatVolumeRange;
 import static com.google.common.base.Strings.padEnd;
-import static com.google.common.base.Strings.padStart;
 import static java.lang.String.format;
 import static java.util.Collections.max;
 import static java.util.Comparator.comparing;
@@ -42,28 +42,8 @@ import static java.util.TimeZone.getTimeZone;
 
 class TableFormat {
 
-    private static final TimeZone TZ_UTC = getTimeZone("UTC");
-    private static final SimpleDateFormat DATE_FORMAT_ISO_8601 = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
-
-    // For inserting 2 spaces between column headers.
-    private static final String COL_HEADER_DELIMITER = "  ";
-
-    // Table column header format specs, right padded with two spaces.  In some cases
-    // such as COL_HEADER_CREATION_DATE, COL_HEADER_VOLUME and COL_HEADER_UUID, the
-    // expected max data string length is accounted for.  In others, the column header length
-    // are expected to be greater than any column value length.
-    private static final String COL_HEADER_ADDRESS = padEnd("Address", 34, ' ');
-    private static final String COL_HEADER_AMOUNT = padEnd("BTC(min - max)", 24, ' ');
-    private static final String COL_HEADER_BALANCE = padStart("Balance", 12, ' ');
-    private static final String COL_HEADER_CONFIRMATIONS = "Confirmations";
-    private static final String COL_HEADER_CREATION_DATE = padEnd("Creation Date (UTC)", 20, ' ');
-    private static final String COL_HEADER_CURRENCY = "Currency";
-    private static final String COL_HEADER_DIRECTION = "Buy/Sell";  // TODO "Take Offer to
-    private static final String COL_HEADER_NAME = "Name";
-    private static final String COL_HEADER_PAYMENT_METHOD = "Payment Method";
-    private static final String COL_HEADER_PRICE = "Price in %-3s for 1 BTC";
-    private static final String COL_HEADER_VOLUME = padEnd("%-3s(min - max)", 15, ' ');
-    private static final String COL_HEADER_UUID = padEnd("ID", 52, ' ');
+    static final TimeZone TZ_UTC = getTimeZone("UTC");
+    static final SimpleDateFormat DATE_FORMAT_ISO_8601 = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
 
     static String formatAddressBalanceTbl(List<AddressBalanceInfo> addressBalanceInfo) {
         String headerLine = (COL_HEADER_ADDRESS + COL_HEADER_DELIMITER
@@ -83,7 +63,7 @@ class TableFormat {
 
     static String formatOfferTable(List<OfferInfo> offerInfo, String fiatCurrency) {
 
-        // Some column values might be longer than header, so we need to calculated them.
+        // Some column values might be longer than header, so we need to calculate them.
         int paymentMethodColWidth = getLengthOfLongestColumn(
                 COL_HEADER_PAYMENT_METHOD.length(),
                 offerInfo.stream()
@@ -120,7 +100,7 @@ class TableFormat {
     }
 
     static String formatPaymentAcctTbl(List<PaymentAccount> paymentAccounts) {
-        // Some column values might be longer than header, so we need to calculated them.
+        // Some column values might be longer than header, so we need to calculate them.
         int nameColWidth = getLengthOfLongestColumn(
                 COL_HEADER_NAME.length(),
                 paymentAccounts.stream().map(PaymentAccount::getAccountName)

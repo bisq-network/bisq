@@ -21,6 +21,8 @@ import bisq.core.api.CoreApi;
 import bisq.core.api.model.OfferInfo;
 import bisq.core.offer.Offer;
 
+import bisq.proto.grpc.CancelOfferReply;
+import bisq.proto.grpc.CancelOfferRequest;
 import bisq.proto.grpc.CreateOfferReply;
 import bisq.proto.grpc.CreateOfferRequest;
 import bisq.proto.grpc.GetOfferReply;
@@ -36,10 +38,11 @@ import io.grpc.stub.StreamObserver;
 import javax.inject.Inject;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
+
+import static bisq.core.api.model.OfferInfo.toOfferInfo;
 
 @Slf4j
 class GrpcOffersService extends OffersGrpc.OffersImplBase {
@@ -72,7 +75,7 @@ class GrpcOffersService extends OffersGrpc.OffersImplBase {
     public void getOffers(GetOffersRequest req,
                           StreamObserver<GetOffersReply> responseObserver) {
         List<OfferInfo> result = coreApi.getOffers(req.getDirection(), req.getCurrencyCode())
-                .stream().map(this::toOfferInfo)
+                .stream().map(OfferInfo::toOfferInfo)
                 .collect(Collectors.toList());
         var reply = GetOffersReply.newBuilder()
                 .addAllOffers(result.stream()
@@ -114,27 +117,18 @@ class GrpcOffersService extends OffersGrpc.OffersImplBase {
         }
     }
 
-    // The client cannot see bisq.core.Offer or its fromProto method.
-    // We use the lighter weight OfferInfo proto wrapper instead, containing just
-    // enough fields to view and create offers.
-    private OfferInfo toOfferInfo(Offer offer) {
-        return new OfferInfo.OfferInfoBuilder()
-                .withId(offer.getId())
-                .withDirection(offer.getDirection().name())
-                .withPrice(Objects.requireNonNull(offer.getPrice()).getValue())
-                .withUseMarketBasedPrice(offer.isUseMarketBasedPrice())
-                .withMarketPriceMargin(offer.getMarketPriceMargin())
-                .withAmount(offer.getAmount().value)
-                .withMinAmount(offer.getMinAmount().value)
-                .withVolume(Objects.requireNonNull(offer.getVolume()).getValue())
-                .withMinVolume(Objects.requireNonNull(offer.getMinVolume()).getValue())
-                .withBuyerSecurityDeposit(offer.getBuyerSecurityDeposit().value)
-                .withPaymentAccountId(offer.getMakerPaymentAccountId())
-                .withPaymentMethodId(offer.getPaymentMethod().getId())
-                .withPaymentMethodShortName(offer.getPaymentMethod().getShortName())
-                .withBaseCurrencyCode(offer.getOfferPayload().getBaseCurrencyCode())
-                .withCounterCurrencyCode(offer.getOfferPayload().getCounterCurrencyCode())
-                .withDate(offer.getDate().getTime())
-                .build();
+    @Override
+    public void cancelOffer(CancelOfferRequest req,
+                            StreamObserver<CancelOfferReply> responseObserver) {
+        try {
+            coreApi.cancelOffer(req.getId());
+            var reply = CancelOfferReply.newBuilder().build();
+            responseObserver.onNext(reply);
+            responseObserver.onCompleted();
+        } catch (IllegalStateException | IllegalArgumentException cause) {
+            var ex = new StatusRuntimeException(Status.UNKNOWN.withDescription(cause.getMessage()));
+            responseObserver.onError(ex);
+            throw ex;
+        }
     }
 }

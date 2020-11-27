@@ -35,6 +35,7 @@ import bisq.core.dao.DaoFacade;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
+import bisq.core.offer.OfferUtil;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.support.SupportType;
 import bisq.core.support.dispute.Dispute;
@@ -107,6 +108,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     public final Navigation navigation;
     public final WalletPasswordWindow walletPasswordWindow;
     private final NotificationCenter notificationCenter;
+    private final OfferUtil offerUtil;
 
     final ObservableList<PendingTradesListItem> list = FXCollections.observableArrayList();
     private final ListChangeListener<Trade> tradesListChangeListener;
@@ -142,7 +144,8 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                                   DaoFacade daoFacade,
                                   Navigation navigation,
                                   WalletPasswordWindow walletPasswordWindow,
-                                  NotificationCenter notificationCenter) {
+                                  NotificationCenter notificationCenter,
+                                  OfferUtil offerUtil) {
         this.tradeManager = tradeManager;
         this.btcWalletService = btcWalletService;
         this.pubKeyRing = pubKeyRing;
@@ -157,6 +160,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         this.navigation = navigation;
         this.walletPasswordWindow = walletPasswordWindow;
         this.notificationCenter = notificationCenter;
+        this.offerUtil = offerUtil;
 
         tradesListChangeListener = change -> onListChanged();
         notificationCenter.setSelectItemByTradeIdConsumer(this::selectItemByTradeId);
@@ -253,7 +257,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     }
 
     private boolean isBuyOffer() {
-        return getOffer() != null && getOffer().getDirection() == OfferPayload.Direction.BUY;
+        return getOffer() != null && offerUtil.isBuyOffer(getOffer().getDirection());
     }
 
     boolean isBuyer() {
@@ -347,11 +351,6 @@ public class PendingTradesDataModel extends ActivatableDataModel {
             return Coin.ZERO;
         }
     }
-
-    public String getCurrencyCode() {
-        return getOffer() != null ? getOffer().getCurrencyCode() : "";
-    }
-
 
     @Nullable
     public PaymentAccountPayload getSellersPaymentAccountPayload() {
@@ -555,26 +554,8 @@ public class PendingTradesDataModel extends ActivatableDataModel {
             }
 
             trade.setDisputeState(Trade.DisputeState.MEDIATION_REQUESTED);
-            disputeManager.sendOpenNewDisputeMessage(dispute,
-                    false,
-                    resultHandler,
-                    (errorMessage, throwable) -> {
-                        if ((throwable instanceof DisputeAlreadyOpenException)) {
-                            errorMessage += "\n\n" + Res.get("portfolio.pending.openAgainDispute.msg");
-                            new Popup().warning(errorMessage)
-                                    .actionButtonText(Res.get("portfolio.pending.openAgainDispute.button"))
-                                    .onAction(() -> disputeManager.sendOpenNewDisputeMessage(dispute,
-                                            true,
-                                            resultHandler,
-                                            (e, t) -> {
-                                                log.error(e);
-                                            }))
-                                    .closeButtonText(Res.get("shared.cancel"))
-                                    .show();
-                        } else {
-                            new Popup().warning(errorMessage).show();
-                        }
-                    });
+            sendOpenDisputeMessage(disputeManager, resultHandler, dispute);
+            tradeManager.requestPersistence();
         } else if (useRefundAgent) {
             resultHandler = () -> navigation.navigateTo(MainView.class, SupportView.class, RefundClientView.class);
 
@@ -643,36 +624,13 @@ public class PendingTradesDataModel extends ActivatableDataModel {
 
             dispute.setDonationAddressOfDelayedPayoutTx(donationAddressString.get());
             dispute.setDelayedPayoutTxId(delayedPayoutTx.getTxId().toString());
-
             trade.setDisputeState(Trade.DisputeState.REFUND_REQUESTED);
 
             ((DisputeProtocol) tradeManager.getTradeProtocol(trade)).onPublishDelayedPayoutTx(() -> {
                         log.info("DelayedPayoutTx published and message sent to peer");
-                        disputeManager.sendOpenNewDisputeMessage(dispute,
-                                false,
-                                resultHandler,
-                                (errorMessage, throwable) -> {
-                                    if ((throwable instanceof DisputeAlreadyOpenException)) {
-                                        errorMessage += "\n\n" + Res.get("portfolio.pending.openAgainDispute.msg");
-                                        new Popup().warning(errorMessage)
-                                                .actionButtonText(Res.get("portfolio.pending.openAgainDispute.button"))
-                                                .onAction(() -> disputeManager.sendOpenNewDisputeMessage(dispute,
-                                                        true,
-                                                        resultHandler,
-                                                        (e, t) -> {
-                                                            log.error(e);
-                                                        }))
-                                                .closeButtonText(Res.get("shared.cancel"))
-                                                .show();
-                                    } else {
-                                        new Popup().warning(errorMessage).show();
-                                    }
-                                });
+                        sendOpenDisputeMessage(disputeManager, resultHandler, dispute);
                     },
-                    errorMessage -> {
-                        new Popup().error(errorMessage).show();
-                    });
-
+                    errorMessage -> new Popup().error(errorMessage).show());
         } else {
             log.warn("Invalid dispute state {}", disputeState.name());
         }
@@ -693,6 +651,29 @@ public class PendingTradesDataModel extends ActivatableDataModel {
 
     public boolean isSignWitnessTrade() {
         return accountAgeWitnessService.isSignWitnessTrade(selectedTrade);
+    }
+
+    private void sendOpenDisputeMessage(DisputeManager<? extends DisputeList<Dispute>> disputeManager,
+                                        ResultHandler resultHandler,
+                                        Dispute dispute) {
+        disputeManager.sendOpenNewDisputeMessage(dispute,
+                false,
+                resultHandler,
+                (errorMessage, throwable) -> {
+                    if ((throwable instanceof DisputeAlreadyOpenException)) {
+                        errorMessage += "\n\n" + Res.get("portfolio.pending.openAgainDispute.msg");
+                        new Popup().warning(errorMessage)
+                                .actionButtonText(Res.get("portfolio.pending.openAgainDispute.button"))
+                                .onAction(() -> disputeManager.sendOpenNewDisputeMessage(dispute,
+                                        true,
+                                        resultHandler,
+                                        (e, t) -> log.error(e)))
+                                .closeButtonText(Res.get("shared.cancel"))
+                                .show();
+                    } else {
+                        new Popup().warning(errorMessage).show();
+                    }
+                });
     }
 }
 

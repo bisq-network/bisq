@@ -117,20 +117,17 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     public static final ArrayList<BlockChainExplorer> BSQ_MAIN_NET_EXPLORERS = new ArrayList<>(Arrays.asList(
             new BlockChainExplorer("mempool.space (@wiz)", "https://mempool.space/bisq/tx/", "https://mempool.space/bisq/address/"),
             new BlockChainExplorer("mempool.emzy.de (@emzy)", "https://mempool.emzy.de/bisq/tx/", "https://mempool.emzy.de/bisq/address/"),
-            new BlockChainExplorer("mempool.bisq.services (@devinbileck)", "https://mempool.bisq.services/bisq/tx/", "https://mempool.bisq.services/bisq/address/"),
-            new BlockChainExplorer("bsq.vante.me (@mrosseel)", "https://bsq.vante.me/tx.html?tx=", "https://bsq.vante.me/Address.html?addr="),
-            new BlockChainExplorer("bsq.sqrrm.net (@sqrrm)", "https://bsq.sqrrm.net/tx.html?tx=", "https://bsq.sqrrm.net/Address.html?addr="),
-            new BlockChainExplorer("bsq.bisq.cc (@m52go)", "https://bsq.bisq.cc/tx.html?tx=", "https://bsq.bisq.cc/Address.html?addr=")
+            new BlockChainExplorer("mempool.bisq.services (@devinbileck)", "https://mempool.bisq.services/bisq/tx/", "https://mempool.bisq.services/bisq/address/")
     ));
 
     private static final ArrayList<String> XMR_TX_PROOF_SERVICES_CLEAR_NET = new ArrayList<>(Arrays.asList(
             "xmrblocks.monero.emzy.de", // @emzy
-            "explorer.monero.wiz.biz", // @wiz
+            //"explorer.monero.wiz.biz", // @wiz
             "xmrblocks.bisq.services" // @devinbileck
     ));
     private static final ArrayList<String> XMR_TX_PROOF_SERVICES = new ArrayList<>(Arrays.asList(
             "monero3bec7m26vx6si6qo7q7imlaoz45ot5m2b5z2ppgoooo6jx2rqd.onion", // @emzy
-            "wizxmr4hbdxdszqm5rfyqvceyca5jq62ppvtuznasnk66wvhhvgm3uyd.onion", // @wiz
+            //"wizxmr4hbdxdszqm5rfyqvceyca5jq62ppvtuznasnk66wvhhvgm3uyd.onion", // @wiz
             "devinxmrwu4jrfq2zmq5kqjpxb44hx7i7didebkwrtvmvygj4uuop2ad.onion" // @devinbileck
     ));
 
@@ -168,8 +165,6 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-
-    @SuppressWarnings("WeakerAccess")
     @Inject
     public Preferences(PersistenceManager<PreferencesPayload> persistenceManager,
                        Config config,
@@ -225,53 +220,76 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     }
 
     @Override
-    public void readPersisted() {
-        BaseCurrencyNetwork baseCurrencyNetwork = Config.baseCurrencyNetwork();
-        TradeCurrency preferredTradeCurrency;
+    public void readPersisted(Runnable completeHandler) {
+        persistenceManager.readPersisted("PreferencesPayload",
+                persisted -> {
+                    initFromPersistedPreferences(persisted);
+                    completeHandler.run();
+                },
+                () -> {
+                    initNewPreferences();
+                    completeHandler.run();
+                });
+    }
 
-        PreferencesPayload persisted = persistenceManager.getPersisted("PreferencesPayload");
-        if (persisted != null) {
-            prefPayload = persisted;
-            GlobalSettings.setLocale(new Locale(prefPayload.getUserLanguage(), prefPayload.getUserCountry().code));
-            GlobalSettings.setUseAnimations(prefPayload.isUseAnimations());
-            preferredTradeCurrency = checkNotNull(prefPayload.getPreferredTradeCurrency(), "preferredTradeCurrency must not be null");
-            setPreferredTradeCurrency(preferredTradeCurrency);
-            setFiatCurrencies(prefPayload.getFiatCurrencies());
-            setCryptoCurrencies(prefPayload.getCryptoCurrencies());
-            setBsqBlockChainExplorer(prefPayload.getBsqBlockChainExplorer());
-        } else {
-            prefPayload = new PreferencesPayload();
-            prefPayload.setUserLanguage(GlobalSettings.getLocale().getLanguage());
-            prefPayload.setUserCountry(CountryUtil.getDefaultCountry());
-            GlobalSettings.setLocale(new Locale(prefPayload.getUserLanguage(), prefPayload.getUserCountry().code));
-            preferredTradeCurrency = checkNotNull(CurrencyUtil.getCurrencyByCountryCode(prefPayload.getUserCountry().code),
-                    "preferredTradeCurrency must not be null");
-            prefPayload.setPreferredTradeCurrency(preferredTradeCurrency);
-            setFiatCurrencies(CurrencyUtil.getMainFiatCurrencies());
-            setCryptoCurrencies(CurrencyUtil.getMainCryptoCurrencies());
+    private void initFromPersistedPreferences(PreferencesPayload persisted) {
+        prefPayload = persisted;
+        GlobalSettings.setLocale(new Locale(prefPayload.getUserLanguage(), prefPayload.getUserCountry().code));
+        GlobalSettings.setUseAnimations(prefPayload.isUseAnimations());
+        TradeCurrency preferredTradeCurrency = checkNotNull(prefPayload.getPreferredTradeCurrency(), "preferredTradeCurrency must not be null");
+        setPreferredTradeCurrency(preferredTradeCurrency);
+        setFiatCurrencies(prefPayload.getFiatCurrencies());
+        setCryptoCurrencies(prefPayload.getCryptoCurrencies());
+        setBsqBlockChainExplorer(prefPayload.getBsqBlockChainExplorer());
+        GlobalSettings.setDefaultTradeCurrency(preferredTradeCurrency);
 
-            if ("BTC".equals(baseCurrencyNetwork.getCurrencyCode())) {
-                setBlockChainExplorerMainNet(BTC_MAIN_NET_EXPLORERS.get(0));
-                setBlockChainExplorerTestNet(BTC_TEST_NET_EXPLORERS.get(0));
-            } else {
-                throw new RuntimeException("BaseCurrencyNetwork not defined. BaseCurrencyNetwork=" + baseCurrencyNetwork);
-            }
-
-            prefPayload.setDirectoryChooserPath(Utilities.getSystemHomeDirectory());
-
-            prefPayload.setOfferBookChartScreenCurrencyCode(preferredTradeCurrency.getCode());
-            prefPayload.setTradeChartsScreenCurrencyCode(preferredTradeCurrency.getCode());
-            prefPayload.setBuyScreenCurrencyCode(preferredTradeCurrency.getCode());
-            prefPayload.setSellScreenCurrencyCode(preferredTradeCurrency.getCode());
+        // If a user has updated and the field was not set and get set to 0 by protobuf
+        // As there is no way to detect that a primitive value field was set we cannot apply
+        // a "marker" value like -1 to it. We also do not want to wrap the value in a new
+        // proto message as thats too much for that feature... So we accept that if the user
+        // sets the value to 0 it will be overwritten by the default at next startup.
+        if (prefPayload.getBsqAverageTrimThreshold() == 0) {
+            prefPayload.setBsqAverageTrimThreshold(0.05);
         }
 
+        setupPreferences();
+    }
+
+    private void initNewPreferences() {
+        prefPayload = new PreferencesPayload();
+        prefPayload.setUserLanguage(GlobalSettings.getLocale().getLanguage());
+        prefPayload.setUserCountry(CountryUtil.getDefaultCountry());
+        GlobalSettings.setLocale(new Locale(prefPayload.getUserLanguage(), prefPayload.getUserCountry().code));
+        TradeCurrency preferredTradeCurrency = checkNotNull(CurrencyUtil.getCurrencyByCountryCode(prefPayload.getUserCountry().code),
+                "preferredTradeCurrency must not be null");
+        prefPayload.setPreferredTradeCurrency(preferredTradeCurrency);
+        setFiatCurrencies(CurrencyUtil.getMainFiatCurrencies());
+        setCryptoCurrencies(CurrencyUtil.getMainCryptoCurrencies());
+
+        BaseCurrencyNetwork baseCurrencyNetwork = Config.baseCurrencyNetwork();
+        if ("BTC".equals(baseCurrencyNetwork.getCurrencyCode())) {
+            setBlockChainExplorerMainNet(BTC_MAIN_NET_EXPLORERS.get(0));
+            setBlockChainExplorerTestNet(BTC_TEST_NET_EXPLORERS.get(0));
+        } else {
+            throw new RuntimeException("BaseCurrencyNetwork not defined. BaseCurrencyNetwork=" + baseCurrencyNetwork);
+        }
+
+        prefPayload.setDirectoryChooserPath(Utilities.getSystemHomeDirectory());
+
+        prefPayload.setOfferBookChartScreenCurrencyCode(preferredTradeCurrency.getCode());
+        prefPayload.setTradeChartsScreenCurrencyCode(preferredTradeCurrency.getCode());
+        prefPayload.setBuyScreenCurrencyCode(preferredTradeCurrency.getCode());
+        prefPayload.setSellScreenCurrencyCode(preferredTradeCurrency.getCode());
+        GlobalSettings.setDefaultTradeCurrency(preferredTradeCurrency);
+        setupPreferences();
+    }
+
+    private void setupPreferences() {
         persistenceManager.initialize(prefPayload, PersistenceManager.Source.PRIVATE);
 
         // We don't want to pass Preferences to all popups where the don't show again checkbox is used, so we use
         // that static lookup class to avoid static access to the Preferences directly.
         DontShowAgainLookup.setPreferences(this);
-
-        GlobalSettings.setDefaultTradeCurrency(preferredTradeCurrency);
 
         // set all properties
         useAnimationsProperty.set(prefPayload.isUseAnimations());
@@ -280,12 +298,12 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
         // if no valid Bitcoin block explorer is set, select the 1st valid Bitcoin block explorer
         ArrayList<BlockChainExplorer> btcExplorers = getBlockChainExplorers();
-        if (!blockExplorerExists(btcExplorers, getBlockChainExplorer()))
+        if (getBlockChainExplorer() == null || getBlockChainExplorer().name.length() == 0)
             setBlockChainExplorer(btcExplorers.get(0));
 
         // if no valid BSQ block explorer is set, randomly select a valid BSQ block explorer
         ArrayList<BlockChainExplorer> bsqExplorers = getBsqBlockChainExplorers();
-        if (!blockExplorerExists(bsqExplorers, getBsqBlockChainExplorer()))
+        if (getBsqBlockChainExplorer() == null || getBsqBlockChainExplorer().name.length() == 0)
             setBsqBlockChainExplorer(bsqExplorers.get((new Random()).nextInt(bsqExplorers.size())));
 
         tradeCurrenciesAsObservable.addAll(prefPayload.getFiatCurrencies());
@@ -335,6 +353,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         initialReadDone = true;
         requestPersistence();
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
@@ -413,6 +432,11 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
     public void setTacAcceptedV120(boolean tacAccepted) {
         prefPayload.setTacAcceptedV120(tacAccepted);
+        requestPersistence();
+    }
+
+    public void setBsqAverageTrimThreshold(double bsqAverageTrimThreshold) {
+        prefPayload.setBsqAverageTrimThreshold(bsqAverageTrimThreshold);
         requestPersistence();
     }
 
@@ -562,8 +586,8 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         requestPersistence();
     }
 
-    public void setWithdrawalTxFeeInBytes(long withdrawalTxFeeInBytes) {
-        prefPayload.setWithdrawalTxFeeInBytes(withdrawalTxFeeInBytes);
+    public void setWithdrawalTxFeeInVbytes(long withdrawalTxFeeInVbytes) {
+        prefPayload.setWithdrawalTxFeeInVbytes(withdrawalTxFeeInVbytes);
         requestPersistence();
     }
 
@@ -838,8 +862,8 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         return prefPayload.getBridgeAddresses();
     }
 
-    public long getWithdrawalTxFeeInBytes() {
-        return Math.max(prefPayload.getWithdrawalTxFeeInBytes(), Config.baseCurrencyNetwork().getDefaultMinFeePerByte());
+    public long getWithdrawalTxFeeInVbytes() {
+        return Math.max(prefPayload.getWithdrawalTxFeeInVbytes(), Config.baseCurrencyNetwork().getDefaultMinFeePerVbyte());
     }
 
     public boolean isDaoFullNode() {
@@ -902,15 +926,6 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         requestPersistence();
     }
 
-    private boolean blockExplorerExists(ArrayList<BlockChainExplorer> explorers,
-                                        BlockChainExplorer explorer) {
-        if (explorer != null && explorers != null && explorers.size() > 0)
-            for (int i = 0; i < explorers.size(); i++)
-                if (explorers.get(i).name.equals(explorer.name))
-                    return true;
-        return false;
-    }
-
     private interface ExcludesDelegateMethods {
         void setTacAccepted(boolean tacAccepted);
 
@@ -958,7 +973,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
         void setUseCustomWithdrawalTxFee(boolean useCustomWithdrawalTxFee);
 
-        void setWithdrawalTxFeeInBytes(long withdrawalTxFeeInBytes);
+        void setWithdrawalTxFeeInVbytes(long withdrawalTxFeeInVbytes);
 
         void setSelectedPaymentAccountForCreateOffer(@Nullable PaymentAccount paymentAccount);
 
@@ -1004,7 +1019,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
         List<String> getBridgeAddresses();
 
-        long getWithdrawalTxFeeInBytes();
+        long getWithdrawalTxFeeInVbytes();
 
         void setUseStandbyMode(boolean useStandbyMode);
 
@@ -1033,6 +1048,8 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         int getBlockNotifyPort();
 
         void setTacAcceptedV120(boolean tacAccepted);
+
+        void setBsqAverageTrimThreshold(double bsqAverageTrimThreshold);
 
         void setAutoConfirmSettings(AutoConfirmSettings autoConfirmSettings);
     }

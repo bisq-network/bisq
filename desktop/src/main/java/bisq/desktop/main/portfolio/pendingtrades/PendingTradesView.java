@@ -471,6 +471,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
             trade.stateProperty().removeListener(tradeStateListener);
             trade.disputeStateProperty().addListener(disputeStateListener);
             trade.mediationResultStateProperty().addListener(mediationResultStateListener);
+            traderChatManager.requestPersistence();
         });
 
         Scene scene = new Scene(pane);

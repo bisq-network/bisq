@@ -73,6 +73,8 @@ public class BuyerProcessPayoutTxPublishedMessage extends TradeTask {
                 processModel.getAccountAgeWitnessService().publishOwnSignedWitness(signedWitness);
             }
 
+            processModel.getTradeManager().requestPersistence();
+
             complete();
         } catch (Throwable t) {
             failed(t);

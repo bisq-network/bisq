@@ -79,11 +79,12 @@ public abstract class DisputeListService<T extends DisputeList<Dispute>> impleme
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void readPersisted() {
-        T persisted = persistenceManager.getPersisted(getFileName());
-        if (persisted != null) {
-            disputeList.setAll(persisted.getList());
-        }
+    public void readPersisted(Runnable completeHandler) {
+        persistenceManager.readPersisted(getFileName(), persisted -> {
+                    disputeList.setAll(persisted.getList());
+                    completeHandler.run();
+                },
+                completeHandler);
     }
 
     protected String getFileName() {

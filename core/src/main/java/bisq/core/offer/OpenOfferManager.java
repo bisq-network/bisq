@@ -166,16 +166,13 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     }
 
     @Override
-    public void readPersisted() {
-        TradableList<OpenOffer> persisted = persistenceManager.getPersisted();
-        if (persisted != null) {
-            openOffers.setAll(persisted.getList());
-        }
-
-        openOffers.forEach(e -> {
-            Offer offer = e.getOffer();
-            offer.setPriceFeedService(priceFeedService);
-        });
+    public void readPersisted(Runnable completeHandler) {
+        persistenceManager.readPersisted(persisted -> {
+                    openOffers.setAll(persisted.getList());
+                    openOffers.forEach(openOffer -> openOffer.getOffer().setPriceFeedService(priceFeedService));
+                    completeHandler.run();
+                },
+                completeHandler);
     }
 
     public void onAllServicesInitialized() {
@@ -578,6 +575,14 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
 
         if (!p2PService.isBootstrapped()) {
             errorMessage = "We got a handleOfferAvailabilityRequest but we have not bootstrapped yet.";
+            log.info(errorMessage);
+            sendAckMessage(request, peer, false, errorMessage);
+            return;
+        }
+
+        // Don't allow trade start if BitcoinJ is not fully synced (bisq issue #4764)
+        if (!btcWalletService.isChainHeightSyncedWithinTolerance()) {
+            errorMessage = "We got a handleOfferAvailabilityRequest but our chain is not synced.";
             log.info(errorMessage);
             sendAckMessage(request, peer, false, errorMessage);
             return;

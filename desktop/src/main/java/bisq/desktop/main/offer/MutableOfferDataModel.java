@@ -129,13 +129,13 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     protected double marketPriceMargin = 0;
     private Coin txFeeFromFeeService = Coin.ZERO;
     private boolean marketPriceAvailable;
-    private int feeTxSize = TxFeeEstimationService.TYPICAL_TX_WITH_1_INPUT_SIZE;
+    private int feeTxVsize = TxFeeEstimationService.TYPICAL_TX_WITH_1_INPUT_VSIZE;
     protected boolean allowAmountUpdate = true;
     private final TradeStatisticsManager tradeStatisticsManager;
 
-    private final Predicate<ObjectProperty<Coin>> isPositiveAmount = (c) -> c.get() != null && !c.get().isZero();
-    private final Predicate<ObjectProperty<Price>> isPositivePrice = (p) -> p.get() != null && !p.get().isZero();
-    private final Predicate<ObjectProperty<Volume>> isPositiveVolume = (v) -> v.get() != null && !v.get().isZero();
+    private final Predicate<ObjectProperty<Coin>> isNonZeroAmount = (c) -> c.get() != null && !c.get().isZero();
+    private final Predicate<ObjectProperty<Price>> isNonZeroPrice = (p) -> p.get() != null && !p.get().isZero();
+    private final Predicate<ObjectProperty<Volume>> isNonZeroVolume = (v) -> v.get() != null && !v.get().isZero();
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -262,7 +262,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
 
         // Set the default values (in rare cases if the fee request was not done yet we get the hard coded default values)
         // But offer creation happens usually after that so we should have already the value from the estimation service.
-        txFeeFromFeeService = feeService.getTxFee(feeTxSize);
+        txFeeFromFeeService = feeService.getTxFee(feeTxVsize);
 
         calculateVolume();
         calculateTotalToPay();
@@ -286,7 +286,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     // UI actions
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    Offer createAndGetOffer() {
+    protected Offer createAndGetOffer() {
         return createOfferService.createAndGetOffer(offerId,
                 direction,
                 tradeCurrencyCode.get(),
@@ -301,13 +301,13 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     }
 
     // This works only if we have already funds in the wallet
-    public void updateEstimatedFeeAndTxSize() {
-        Tuple2<Coin, Integer> estimatedFeeAndTxSize = createOfferService.getEstimatedFeeAndTxSize(amount.get(),
+    public void updateEstimatedFeeAndTxVsize() {
+        Tuple2<Coin, Integer> estimatedFeeAndTxVsize = createOfferService.getEstimatedFeeAndTxVsize(amount.get(),
                 direction,
                 buyerSecurityDeposit.get(),
                 createOfferService.getSellerSecurityDepositAsDouble(buyerSecurityDeposit.get()));
-        txFeeFromFeeService = estimatedFeeAndTxSize.first;
-        feeTxSize = estimatedFeeAndTxSize.second;
+        txFeeFromFeeService = estimatedFeeAndTxVsize.first;
+        feeTxVsize = estimatedFeeAndTxVsize.second;
     }
 
     void onPlaceOffer(Offer offer, TransactionResultHandler resultHandler) {
@@ -439,7 +439,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
 
     void requestTxFee(@Nullable Runnable actionHandler) {
         feeService.requestFees(() -> {
-            txFeeFromFeeService = feeService.getTxFee(feeTxSize);
+            txFeeFromFeeService = feeService.getTxFee(feeTxVsize);
             calculateTotalToPay();
             if (actionHandler != null)
                 actionHandler.run();
@@ -517,7 +517,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     }
 
     void calculateVolume() {
-        if (isPositivePrice.test(price) && isPositiveAmount.test(amount)) {
+        if (isNonZeroPrice.test(price) && isNonZeroAmount.test(amount)) {
             try {
                 Volume volumeByAmount = calculateVolumeForAmount(amount);
 
@@ -533,7 +533,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     }
 
     void calculateMinVolume() {
-        if (isPositivePrice.test(price) && isPositiveAmount.test(minAmount)) {
+        if (isNonZeroPrice.test(price) && isNonZeroAmount.test(minAmount)) {
             try {
                 Volume volumeByAmount = calculateVolumeForAmount(minAmount);
 
@@ -557,7 +557,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     }
 
     void calculateAmount() {
-        if (isPositivePrice.test(price) && isPositiveVolume.test(volume) && allowAmountUpdate) {
+        if (isNonZeroPrice.test(price) && isNonZeroVolume.test(volume) && allowAmountUpdate) {
             try {
                 Coin value = DisplayUtils.reduceTo4Decimals(price.get().getAmountByVolume(volume.get()), btcFormatter);
                 if (paymentAccount.isHalCashAccount())

@@ -15,14 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.apitest.scenario;
+package bisq.core.network.p2p.inventory.model;
 
-import lombok.extern.slf4j.Slf4j;
-
-
-
-import bisq.apitest.method.MethodTest;
-
-@Slf4j
-public class ScenarioTest extends MethodTest {
+public interface DeviationType {
 }

@@ -121,7 +121,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     @FXML
     TableColumn<WithdrawalListItem, WithdrawalListItem> addressColumn, balanceColumn, selectColumn;
 
-    private RadioButton useAllInputsRadioButton, useCustomInputsRadioButton, feeExcludedRadioButton;
+    private RadioButton useAllInputsRadioButton, useCustomInputsRadioButton, feeExcludedRadioButton, feeIncludedRadioButton;
     private Label amountLabel;
     private TextField amountTextField, withdrawFromTextField, withdrawToTextField, withdrawMemoTextField;
 
@@ -209,18 +209,16 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
         amountTextField = feeTuple3.second;
         amountTextField.setMinWidth(180);
         feeExcludedRadioButton = feeTuple3.third;
-        RadioButton feeIncludedRadioButton = feeTuple3.fourth;
+        feeIncludedRadioButton = feeTuple3.fourth;
 
         withdrawFromTextField = addTopLabelTextField(gridPane, ++rowIndex,
                 Res.get("funds.withdrawal.fromLabel", Res.getBaseCurrencyCode())).second;
 
         withdrawToTextField = addTopLabelInputTextField(gridPane, ++rowIndex,
                 Res.get("funds.withdrawal.toLabel", Res.getBaseCurrencyCode())).second;
-        withdrawToTextField.setMaxWidth(380);
 
         withdrawMemoTextField = addTopLabelInputTextField(gridPane, ++rowIndex,
                 Res.get("funds.withdrawal.memoLabel", Res.getBaseCurrencyCode())).second;
-        withdrawMemoTextField.setMaxWidth(380);
 
         final Button withdrawButton = addButton(gridPane, ++rowIndex, Res.get("funds.withdrawal.withdrawButton"), 15);
 
@@ -300,7 +298,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
         inputsToggleGroup.selectedToggleProperty().addListener(inputsToggleGroupListener);
 
         if (feeToggleGroup.getSelectedToggle() == null)
-            feeToggleGroup.selectToggle(feeExcludedRadioButton);
+            feeToggleGroup.selectToggle(feeIncludedRadioButton);
 
         if (inputsToggleGroup.getSelectedToggle() == null)
             inputsToggleGroup.selectToggle(useAllInputsRadioButton);
@@ -358,20 +356,20 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                 }
 
                 if (areInputsValid()) {
-                    int txSize = feeEstimationTransaction.bitcoinSerialize().length;
-                    log.info("Fee for tx with size {}: {} " + Res.getBaseCurrencyCode() + "", txSize, fee.toPlainString());
+                    int txVsize = feeEstimationTransaction.getVsize();
+                    log.info("Fee for tx with size {}: {} " + Res.getBaseCurrencyCode() + "", txVsize, fee.toPlainString());
 
                     if (receiverAmount.isPositive()) {
-                        double feePerByte = CoinUtil.getFeePerByte(fee, txSize);
-                        double kb = txSize / 1000d;
+                        double feePerVbyte = CoinUtil.getFeePerVbyte(fee, txVsize);
+                        double vkb = txVsize / 1000d;
 
                         String messageText = Res.get("shared.sendFundsDetailsWithFee",
                                 formatter.formatCoinWithCode(sendersAmount),
                                 withdrawFromTextField.getText(),
                                 withdrawToTextField.getText(),
                                 formatter.formatCoinWithCode(fee),
-                                feePerByte,
-                                kb,
+                                feePerVbyte,
+                                vkb,
                                 formatter.formatCoinWithCode(receiverAmount));
                         if (dust.isPositive()) {
                             messageText = Res.get("shared.sendFundsDetailsDust",

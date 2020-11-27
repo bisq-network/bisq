@@ -23,6 +23,8 @@ import bisq.core.dao.governance.blindvote.storage.BlindVotePayload;
 import bisq.core.dao.governance.proposal.storage.appendonly.ProposalPayload;
 import bisq.core.payment.payload.AdvancedCashAccountPayload;
 import bisq.core.payment.payload.AliPayAccountPayload;
+import bisq.core.payment.payload.AmazonGiftCardAccountPayload;
+import bisq.core.payment.payload.AustraliaPayidPayload;
 import bisq.core.payment.payload.CashAppAccountPayload;
 import bisq.core.payment.payload.CashDepositAccountPayload;
 import bisq.core.payment.payload.ChaseQuickPayAccountPayload;
@@ -48,6 +50,7 @@ import bisq.core.payment.payload.SepaAccountPayload;
 import bisq.core.payment.payload.SepaInstantAccountPayload;
 import bisq.core.payment.payload.SpecificBanksAccountPayload;
 import bisq.core.payment.payload.SwishAccountPayload;
+import bisq.core.payment.payload.TransferwiseAccountPayload;
 import bisq.core.payment.payload.USPostalMoneyOrderAccountPayload;
 import bisq.core.payment.payload.UpholdAccountPayload;
 import bisq.core.payment.payload.VenmoAccountPayload;
@@ -123,6 +126,8 @@ public class CoreProtoResolver implements ProtoResolver {
                     return InteracETransferAccountPayload.fromProto(proto);
                 case JAPAN_BANK_ACCOUNT_PAYLOAD:
                     return JapanBankAccountPayload.fromProto(proto);
+                case AUSTRALIA_PAYID_PAYLOAD:
+                    return AustraliaPayidPayload.fromProto(proto);
                 case UPHOLD_ACCOUNT_PAYLOAD:
                     return UpholdAccountPayload.fromProto(proto);
                 case MONEY_BEAM_ACCOUNT_PAYLOAD:
@@ -145,6 +150,10 @@ public class CoreProtoResolver implements ProtoResolver {
                     return PromptPayAccountPayload.fromProto(proto);
                 case ADVANCED_CASH_ACCOUNT_PAYLOAD:
                     return AdvancedCashAccountPayload.fromProto(proto);
+                case TRANSFERWISE_ACCOUNT_PAYLOAD:
+                    return TransferwiseAccountPayload.fromProto(proto);
+                case AMAZON_GIFT_CARD_ACCOUNT_PAYLOAD:
+                    return AmazonGiftCardAccountPayload.fromProto(proto);
                 case INSTANT_CRYPTO_CURRENCY_ACCOUNT_PAYLOAD:
                     return InstantCryptoCurrencyPayload.fromProto(proto);
 

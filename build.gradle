@@ -33,7 +33,7 @@ configure(subprojects) {
 
     ext { // in alphabetical order
         bcVersion = '1.63'
-        bitcoinjVersion = 'a733034'
+        bitcoinjVersion = '7752cb7'
         btcdCli4jVersion = '27b94333'
         codecVersion = '1.13'
         easybindVersion = '1.0.3'
@@ -60,7 +60,7 @@ configure(subprojects) {
         joptVersion = '5.0.4'
         jsonsimpleVersion = '1.1.1'
         junitVersion = '4.12'
-        jupiterVersion = '5.3.2'
+        jupiterVersion = '5.7.0'
         kotlinVersion = '1.3.41'
         knowmXchangeVersion = '4.4.2'
         langVersion = '3.11'
@@ -104,6 +104,7 @@ configure([project(':cli'),
            project(':seednode'),
            project(':statsnode'),
            project(':pricenode'),
+           project(':inventory'),
            project(':apitest')]) {
 
     apply plugin: 'application'
@@ -276,10 +277,10 @@ configure(project(':common')) {
 configure(project(':p2p')) {
     dependencies {
         compile project(':common')
-        compile("com.github.cd2357.netlayer:tor.native:$netlayerVersion") {
+        compile("com.github.bisq-network.netlayer:tor.native:$netlayerVersion") {
             exclude(module: 'slf4j-api')
         }
-        compile("com.github.cd2357.netlayer:tor.external:$netlayerVersion") {
+        compile("com.github.bisq-network.netlayer:tor.external:$netlayerVersion") {
             exclude(module: 'slf4j-api')
         }
         implementation("org.apache.httpcomponents:httpclient:$httpclientVersion") {
@@ -391,7 +392,7 @@ configure(project(':desktop')) {
     apply from: '../gradle/witness/gradle-witness.gradle'
     apply from: 'package/package.gradle'
 
-    version = '1.4.2-SNAPSHOT'
+    version = '1.5.0-SNAPSHOT'
 
     jar.manifest.attributes(
         "Implementation-Title": project.name,
@@ -604,6 +605,21 @@ configure(project(':daemon')) {
     }
 }
 
+configure(project(':inventory')) {
+    apply plugin: 'com.github.johnrengelman.shadow'
+
+    mainClassName = 'bisq.inventory.InventoryMonitorMain'
+
+    dependencies {
+        compile project(':core')
+        compile "com.google.guava:guava:$guavaVersion"
+        compile "com.sparkjava:spark-core:$sparkVersion"
+
+        compileOnly "org.projectlombok:lombok:$lombokVersion"
+        annotationProcessor "org.projectlombok:lombok:$lombokVersion"
+    }
+}
+
 configure(project(':apitest')) {
     mainClassName = 'bisq.apitest.ApiTestMain'
 
@@ -637,8 +653,31 @@ configure(project(':apitest')) {
 
     test {
         useJUnitPlatform()
+        outputs.upToDateWhen { false }          // Don't use previously cached test outputs.
         testLogging {
-            events "passed", "skipped", "failed"
+            showStackTraces = true              // Show full stack traces in the console.
+            exceptionFormat = "full"
+            // Show passed & failed tests, and anything printed to stderr by the tests in the console.
+            // Do not show skipped tests in the console;  they are shown in the html report.
+            events "passed", "failed", "standardError"
+        }
+
+        afterSuite { desc, result ->
+            if (!desc.parent) {
+                println("${result.resultType} " +
+                    "[${result.testCount} tests, " +
+                    "${result.successfulTestCount} passed, " +
+                    "${result.failedTestCount} failed, " +
+                    "${result.skippedTestCount} skipped]  html report contains skipped test info")
+
+                // Show report link if all tests passed in case you want to see more detail, stdout, skipped, etc.
+                if(result.resultType == TestResult.ResultType.SUCCESS) {
+                    DirectoryReport htmlReport = getReports().getHtml()
+                    String reportUrl = new org.gradle.internal.logging.ConsoleRenderer()
+                        .asClickableFileUrl(htmlReport.getEntryPoint())
+                    println("REPORT  " + reportUrl)
+                }
+            }
         }
     }
 
@@ -668,12 +707,12 @@ configure(project(':apitest')) {
         compileOnly "javax.annotation:javax.annotation-api:$javaxAnnotationVersion"
         annotationProcessor "org.projectlombok:lombok:$lombokVersion"
 
-        testCompile "org.junit.jupiter:junit-jupiter-api:5.6.2"
-        testCompile "org.junit.jupiter:junit-jupiter-params:5.6.2"
+        testImplementation "org.junit.jupiter:junit-jupiter-api:$jupiterVersion"
+        testImplementation "org.junit.jupiter:junit-jupiter-params:$jupiterVersion"
+        testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$jupiterVersion")
         testAnnotationProcessor "org.projectlombok:lombok:$lombokVersion"
         testCompileOnly "org.projectlombok:lombok:$lombokVersion"
         testRuntime "javax.annotation:javax.annotation-api:$javaxAnnotationVersion"
-        testRuntime("org.junit.jupiter:junit-jupiter-engine:5.6.2")
     }
 }
 

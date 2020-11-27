@@ -24,7 +24,10 @@ import bisq.monitor.OnionParser;
 import bisq.monitor.Reporter;
 import bisq.monitor.ThreadGate;
 
+import bisq.core.account.witness.AccountAgeWitnessStore;
 import bisq.core.proto.network.CoreNetworkProtoResolver;
+import bisq.core.proto.persistable.CorePersistenceProtoResolver;
+import bisq.core.trade.statistics.TradeStatistics3Store;
 
 import bisq.network.p2p.CloseConnectionMessage;
 import bisq.network.p2p.NodeAddress;
@@ -33,6 +36,9 @@ import bisq.network.p2p.network.MessageListener;
 import bisq.network.p2p.network.NetworkNode;
 import bisq.network.p2p.network.TorNetworkNode;
 
+import bisq.common.app.Version;
+import bisq.common.config.BaseCurrencyNetwork;
+import bisq.common.persistence.PersistenceManager;
 import bisq.common.proto.network.NetworkEnvelope;
 
 import com.google.common.util.concurrent.FutureCallback;
@@ -42,10 +48,18 @@ import com.google.common.util.concurrent.SettableFuture;
 
 import java.time.Clock;
 
+import java.io.File;
+
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -65,28 +79,75 @@ public abstract class P2PSeedNodeSnapshotBase extends Metric implements MessageL
 
     private static final String HOSTS = "run.hosts";
     private static final String TOR_PROXY_PORT = "run.torProxyPort";
-    Statistics statistics;
+    private static final String DATABASE_DIR = "run.dbDir";
     final Map<NodeAddress, Statistics<?>> bucketsPerHost = new ConcurrentHashMap<>();
     private final ThreadGate gate = new ThreadGate();
+    protected final Set<byte[]> hashes = new TreeSet<>(Arrays::compare);
 
     /**
      * Statistics Interface for use with derived classes.
      *
      * @param <T> the value type of the statistics implementation
      */
-    protected interface Statistics<T> {
+    protected abstract static class Statistics<T> {
+        protected final Map<String, T> buckets = new HashMap<>();
 
-        Statistics create();
+        abstract void log(Object message);
 
-        void log(Object message);
+        Map<String, T> values() {
+            return buckets;
+        }
 
-        Map<String, T> values();
-
-        void reset();
+        void reset() {
+            buckets.clear();
+        }
     }
 
     public P2PSeedNodeSnapshotBase(Reporter reporter) {
         super(reporter);
+    }
+
+    @Override
+    public void configure(Properties properties) {
+        super.configure(properties);
+
+        if (hashes.isEmpty() && configuration.getProperty(DATABASE_DIR) != null) {
+            File dir = new File(configuration.getProperty(DATABASE_DIR));
+            String networkPostfix = "_" + BaseCurrencyNetwork.values()[Version.getBaseCurrencyNetwork()].toString();
+            try {
+                CorePersistenceProtoResolver persistenceProtoResolver = new CorePersistenceProtoResolver(null, null);
+
+                //TODO will not work with historical data... should be refactored to re-use code for reading resource files
+                TradeStatistics3Store tradeStatistics3Store = new TradeStatistics3Store();
+                PersistenceManager<TradeStatistics3Store> tradeStatistics3PersistenceManager = new PersistenceManager<>(dir,
+                        persistenceProtoResolver, null);
+                tradeStatistics3PersistenceManager.initialize(tradeStatistics3Store,
+                        tradeStatistics3Store.getDefaultStorageFileName() + networkPostfix,
+                        PersistenceManager.Source.NETWORK);
+                TradeStatistics3Store persistedTradeStatistics3Store = tradeStatistics3PersistenceManager.getPersisted();
+                if (persistedTradeStatistics3Store != null) {
+                    tradeStatistics3Store.getMap().putAll(persistedTradeStatistics3Store.getMap());
+                }
+                hashes.addAll(tradeStatistics3Store.getMap().keySet().stream()
+                        .map(byteArray -> byteArray.bytes).collect(Collectors.toSet()));
+
+                AccountAgeWitnessStore accountAgeWitnessStore = new AccountAgeWitnessStore();
+                PersistenceManager<AccountAgeWitnessStore> accountAgeWitnessPersistenceManager = new PersistenceManager<>(dir,
+                        persistenceProtoResolver, null);
+                accountAgeWitnessPersistenceManager.initialize(accountAgeWitnessStore,
+                        accountAgeWitnessStore.getDefaultStorageFileName() + networkPostfix,
+                        PersistenceManager.Source.NETWORK);
+                AccountAgeWitnessStore persistedAccountAgeWitnessStore = accountAgeWitnessPersistenceManager.getPersisted();
+                if (persistedAccountAgeWitnessStore != null) {
+                    accountAgeWitnessStore.getMap().putAll(persistedAccountAgeWitnessStore.getMap());
+                }
+                hashes.addAll(accountAgeWitnessStore.getMap().keySet().stream()
+                        .map(byteArray -> byteArray.bytes).collect(Collectors.toSet()));
+            } catch (NullPointerException e) {
+                // in case there is no store file
+                log.error("There is no storage file where there should be one: {}", dir.getAbsolutePath());
+            }
+        }
     }
 
     @Override
@@ -116,32 +177,32 @@ public abstract class P2PSeedNodeSnapshotBase extends Metric implements MessageL
         for (String current : configuration.getProperty(HOSTS, "").split(",")) {
             threadList.add(new Thread(() -> {
 
-            try {
-                // parse Url
-                NodeAddress target = OnionParser.getNodeAddress(current);
+                try {
+                    // parse Url
+                    NodeAddress target = OnionParser.getNodeAddress(current);
 
-                // do the data request
-                aboutToSend(message);
-                SettableFuture<Connection> future = networkNode.sendMessage(target, message);
+                    // do the data request
+                    aboutToSend(message);
+                    SettableFuture<Connection> future = networkNode.sendMessage(target, message);
 
-                Futures.addCallback(future, new FutureCallback<>() {
-                    @Override
-                    public void onSuccess(Connection connection) {
-                        connection.addMessageListener(P2PSeedNodeSnapshotBase.this);
-                    }
+                    Futures.addCallback(future, new FutureCallback<>() {
+                        @Override
+                        public void onSuccess(Connection connection) {
+                            connection.addMessageListener(P2PSeedNodeSnapshotBase.this);
+                        }
 
-                    @Override
-                    public void onFailure(@NotNull Throwable throwable) {
-                        gate.proceed();
-                        log.error(
-                                "Sending {} failed. That is expected if the peer is offline.\n\tException={}", message.getClass().getSimpleName(), throwable.getMessage());
-                    }
-                }, MoreExecutors.directExecutor());
+                        @Override
+                        public void onFailure(@NotNull Throwable throwable) {
+                            gate.proceed();
+                            log.error(
+                                    "Sending {} failed. That is expected if the peer is offline.\n\tException={}", message.getClass().getSimpleName(), throwable.getMessage());
+                        }
+                    }, MoreExecutors.directExecutor());
 
-            } catch (Exception e) {
-                gate.proceed(); // release the gate on error
-                e.printStackTrace();
-            }
+                } catch (Exception e) {
+                    gate.proceed(); // release the gate on error
+                    e.printStackTrace();
+                }
             }, current));
         }
 
@@ -155,7 +216,8 @@ public abstract class P2PSeedNodeSnapshotBase extends Metric implements MessageL
         gate.await();
     }
 
-    protected void aboutToSend(NetworkEnvelope message) { };
+    protected void aboutToSend(NetworkEnvelope message) {
+    }
 
     /**
      * Report all the stuff. Uses the configured reporter directly.

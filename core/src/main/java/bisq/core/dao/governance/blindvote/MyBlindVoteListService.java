@@ -162,12 +162,15 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void readPersisted() {
+    public void readPersisted(Runnable completeHandler) {
         if (DevEnv.isDaoActivated()) {
-            MyBlindVoteList persisted = persistenceManager.getPersisted();
-            if (persisted != null) {
-                myBlindVoteList.setAll(persisted.getList());
-            }
+            persistenceManager.readPersisted(persisted -> {
+                        myBlindVoteList.setAll(persisted.getList());
+                        completeHandler.run();
+                    },
+                    completeHandler);
+        } else {
+            completeHandler.run();
         }
     }
 
@@ -186,14 +189,14 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Tuple2<Coin, Integer> getMiningFeeAndTxSize(Coin stake)
+    public Tuple2<Coin, Integer> getMiningFeeAndTxVsize(Coin stake)
             throws InsufficientMoneyException, WalletException, TransactionVerificationException {
         // We set dummy opReturn data
         Coin blindVoteFee = BlindVoteConsensus.getFee(daoStateService, daoStateService.getChainHeight());
         Transaction dummyTx = getBlindVoteTx(stake, blindVoteFee, new byte[22]);
         Coin miningFee = dummyTx.getFee();
-        int txSize = dummyTx.bitcoinSerialize().length;
-        return new Tuple2<>(miningFee, txSize);
+        int txVsize = dummyTx.getVsize();
+        return new Tuple2<>(miningFee, txVsize);
     }
 
     public void publishBlindVote(Coin stake, ResultHandler resultHandler, ExceptionHandler exceptionHandler) {

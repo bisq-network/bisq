@@ -22,9 +22,13 @@ import bisq.common.file.ResourceNotFoundException;
 import bisq.common.persistence.PersistenceManager;
 import bisq.common.proto.persistable.PersistableEnvelope;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import java.nio.file.Paths;
 
 import java.io.File;
+
+import java.util.function.Consumer;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -76,14 +80,27 @@ public abstract class StoreService<T extends PersistableEnvelope> {
     // Protected
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    protected void readFromResources(String postFix) {
+    protected void readFromResources(String postFix, Runnable completeHandler) {
         String fileName = getFileName();
         makeFileFromResourceFile(fileName, postFix);
         try {
-            readStore();
+            readStore(persisted -> completeHandler.run());
         } catch (Throwable t) {
             makeFileFromResourceFile(fileName, postFix);
-            readStore();
+            readStore(persisted -> completeHandler.run());
+        }
+    }
+
+    // Uses synchronous execution on the userThread. Only used by tests. The async methods should be used by app code.
+    @VisibleForTesting
+    protected void readFromResourcesSync(String postFix) {
+        String fileName = getFileName();
+        makeFileFromResourceFile(fileName, postFix);
+        try {
+            readStoreSync();
+        } catch (Throwable t) {
+            makeFileFromResourceFile(fileName, postFix);
+            readStoreSync();
         }
     }
 
@@ -112,24 +129,35 @@ public abstract class StoreService<T extends PersistableEnvelope> {
         return false;
     }
 
-    protected T getStore(String fileName) {
-        T store;
-        T persisted = persistenceManager.getPersisted(fileName);
-        if (persisted != null) {
-            store = persisted;
-           /* int length = store.toProtoMessage().getSerializedSize();
-            double size = length > 1_000_000D ? length / 1_000_000D : length / 1_000D;
-            String unit = length > 1_000_000D ? "MB" : "KB";
-            log.info("{}: size of {}: {} {}", this.getClass().getSimpleName(),
-                    persisted.getClass().getSimpleName(), size, unit);*/
-        } else {
+    protected void readStore(String fileName, Consumer<T> consumer) {
+        persistenceManager.readPersisted(fileName,
+                consumer,
+                () -> consumer.accept(createStore()));
+    }
+
+    protected void readStore(Consumer<T> consumer) {
+        readStore(getFileName(),
+                persisted -> {
+                    store = persisted;
+                    initializePersistenceManager();
+                    consumer.accept(persisted);
+                });
+    }
+
+    // Uses synchronous execution on the userThread. Only used by tests. The async methods should be used by app code.
+    @VisibleForTesting
+    protected T getStoreSync(String fileName) {
+        T store = persistenceManager.getPersisted(fileName);
+        if (store == null) {
             store = createStore();
         }
         return store;
     }
 
-    protected void readStore() {
-        store = getStore(getFileName());
+    // Uses synchronous execution on the userThread. Only used by tests. The async methods should be used by app code.
+    @VisibleForTesting
+    protected void readStoreSync() {
+        store = getStoreSync(getFileName());
         initializePersistenceManager();
     }
 

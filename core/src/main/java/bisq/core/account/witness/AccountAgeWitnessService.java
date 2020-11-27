@@ -85,7 +85,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Slf4j
 public class AccountAgeWitnessService {
     private static final Date RELEASE = Utilities.getUTCDate(2017, GregorianCalendar.NOVEMBER, 11);
-    public static final Date FULL_ACTIVATION = Utilities.getUTCDate(2018, GregorianCalendar.FEBRUARY, 15);
     private static final long SAFE_ACCOUNT_AGE_DATE = Utilities.getUTCDate(2019, GregorianCalendar.MARCH, 1).getTime();
 
     public enum AccountAge {
@@ -105,6 +104,7 @@ public class AccountAgeWitnessService {
 
         private String presentation;
         private String hash = "";
+        private long daysUntilLimitLifted = 0;
 
         SignState(String presentation) {
             this.presentation = presentation;
@@ -115,11 +115,16 @@ public class AccountAgeWitnessService {
             return this;
         }
 
+        public SignState setDaysUntilLimitLifted(long days) {
+            this.daysUntilLimitLifted = days;
+            return this;
+        }
+
         public String getPresentation() {
             if (!hash.isEmpty()) { // Only showing in DEBUG mode
                 return presentation + " " + hash;
             }
-            return presentation;
+            return String.format(presentation, daysUntilLimitLifted);
         }
 
     }
@@ -208,10 +213,11 @@ public class AccountAgeWitnessService {
             user.getPaymentAccounts().stream()
                     .filter(e -> !(e instanceof AssetAccount))
                     .forEach(e -> {
-                        // We delay with a random interval of 20-60 sec to ensure to be better connected and don't stress the
-                        // P2P network with publishing all at once at startup time.
+                        // We delay with a random interval of 20-60 sec to ensure to be better connected and don't
+                        // stress the P2P network with publishing all at once at startup time.
                         final int delayInSec = 20 + new Random().nextInt(40);
-                        UserThread.runAfter(() -> p2PService.addPersistableNetworkPayload(getMyWitness(e.getPaymentAccountPayload()), true), delayInSec);
+                        UserThread.runAfter(() -> p2PService.addPersistableNetworkPayload(getMyWitness(
+                                e.getPaymentAccountPayload()), true), delayInSec);
                     });
     }
 
@@ -238,7 +244,8 @@ public class AccountAgeWitnessService {
     }
 
     byte[] getAccountInputDataWithSalt(PaymentAccountPayload paymentAccountPayload) {
-        return Utilities.concatenateByteArrays(paymentAccountPayload.getAgeWitnessInputData(), paymentAccountPayload.getSalt());
+        return Utilities.concatenateByteArrays(paymentAccountPayload.getAgeWitnessInputData(),
+                paymentAccountPayload.getSalt());
     }
 
     @VisibleForTesting
@@ -281,7 +288,8 @@ public class AccountAgeWitnessService {
         if (!containsKey)
             log.debug("hash not found in accountAgeWitnessMap");
 
-        return accountAgeWitnessMap.containsKey(hashAsByteArray) ? Optional.of(accountAgeWitnessMap.get(hashAsByteArray)) : Optional.empty();
+        return accountAgeWitnessMap.containsKey(hashAsByteArray) ?
+                Optional.of(accountAgeWitnessMap.get(hashAsByteArray)) : Optional.empty();
     }
 
     private Optional<AccountAgeWitness> getWitnessByHashAsHex(String hashAsHex) {
@@ -359,65 +367,52 @@ public class AccountAgeWitnessService {
         }
     }
 
-    // Checks trade limit based on time since signing of AccountAgeWitness
+    // Get trade limit based on a time schedule
+    // Buying of BTC with a payment method that has chargeback risk will use a low trade limit schedule
+    // All selling and all other fiat payment methods use the normal trade limit schedule
+    // Non fiat always has max limit
+    // Account types that can get signed will use time since signing, other methods use time since account age creation
+    // when measuring account age
     private long getTradeLimit(Coin maxTradeLimit,
                                String currencyCode,
                                AccountAgeWitness accountAgeWitness,
                                AccountAge accountAgeCategory,
                                OfferPayload.Direction direction,
                                PaymentMethod paymentMethod) {
-        if (CurrencyUtil.isFiatCurrency(currencyCode)) {
-            double factor;
-            boolean isRisky = PaymentMethod.hasChargebackRisk(paymentMethod, currencyCode);
-            if (!isRisky || direction == OfferPayload.Direction.SELL) {
-                // Get age of witness rather than time since signing for non risky payment methods and for selling
-                accountAgeCategory = getAccountAgeCategory(getAccountAge(accountAgeWitness, new Date()));
-            }
-            long limit = OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT.value;
-            if (direction == OfferPayload.Direction.BUY && isRisky) {
-                // Used only for bying of BTC with risky payment methods
-                switch (accountAgeCategory) {
-                    case TWO_MONTHS_OR_MORE:
-                        factor = 1;
-                        break;
-                    case ONE_TO_TWO_MONTHS:
-                        factor = 0.5;
-                        break;
-                    case LESS_ONE_MONTH:
-                    case UNVERIFIED:
-                    default:
-                        factor = 0;
-                }
-            } else {
-                // Used by non risky payment methods and for selling BTC with risky methods
-                switch (accountAgeCategory) {
-                    case TWO_MONTHS_OR_MORE:
-                        factor = 1;
-                        break;
-                    case ONE_TO_TWO_MONTHS:
-                        factor = 0.5;
-                        break;
-                    case LESS_ONE_MONTH:
-                    case UNVERIFIED:
-                        factor = 0.25;
-                        break;
-                    default:
-                        factor = 0;
-                }
-            }
-            if (factor > 0) {
-                limit = MathUtils.roundDoubleToLong((double) maxTradeLimit.value * factor);
-            }
-
-            log.debug("accountAgeCategory={}, limit={}, factor={}, accountAgeWitnessHash={}",
-                    accountAgeCategory,
-                    Coin.valueOf(limit).toFriendlyString(),
-                    factor,
-                    Utilities.bytesAsHexString(accountAgeWitness.getHash()));
-            return limit;
-        } else {
+        if (CurrencyUtil.isCryptoCurrency(currencyCode) ||
+                !PaymentMethod.hasChargebackRisk(paymentMethod, currencyCode) ||
+                direction == OfferPayload.Direction.SELL) {
             return maxTradeLimit.value;
         }
+
+        long limit = OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT.value;
+        var factor = signedBuyFactor(accountAgeCategory);
+        if (factor > 0) {
+            limit = MathUtils.roundDoubleToLong((double) maxTradeLimit.value * factor);
+        }
+
+        log.debug("limit={}, factor={}, accountAgeWitnessHash={}",
+                Coin.valueOf(limit).toFriendlyString(),
+                factor,
+                Utilities.bytesAsHexString(accountAgeWitness.getHash()));
+        return limit;
+    }
+
+    private double signedBuyFactor(AccountAge accountAgeCategory) {
+        switch (accountAgeCategory) {
+            case TWO_MONTHS_OR_MORE:
+                return 1;
+            case ONE_TO_TWO_MONTHS:
+                return 0.5;
+            case LESS_ONE_MONTH:
+            case UNVERIFIED:
+            default:
+                return 0;
+        }
+    }
+
+    private double normalFactor() {
+        return 1;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -444,7 +439,8 @@ public class AccountAgeWitnessService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public AccountAgeWitness getMyWitness(PaymentAccountPayload paymentAccountPayload) {
-        final Optional<AccountAgeWitness> accountAgeWitnessOptional = findWitness(paymentAccountPayload, keyRing.getPubKeyRing());
+        final Optional<AccountAgeWitness> accountAgeWitnessOptional =
+                findWitness(paymentAccountPayload, keyRing.getPubKeyRing());
         return accountAgeWitnessOptional.orElseGet(() -> getNewWitness(paymentAccountPayload, keyRing.getPubKeyRing()));
     }
 
@@ -460,8 +456,7 @@ public class AccountAgeWitnessService {
         return getAccountAge(getMyWitness(paymentAccountPayload), new Date());
     }
 
-    public long getMyTradeLimit(PaymentAccount paymentAccount, String currencyCode, OfferPayload.Direction
-            direction) {
+    public long getMyTradeLimit(PaymentAccount paymentAccount, String currencyCode, OfferPayload.Direction direction) {
         if (paymentAccount == null)
             return 0;
 
@@ -492,7 +487,8 @@ public class AccountAgeWitnessService {
                                            byte[] nonce,
                                            byte[] signature,
                                            ErrorMessageHandler errorMessageHandler) {
-        final Optional<AccountAgeWitness> accountAgeWitnessOptional = findWitness(peersPaymentAccountPayload, peersPubKeyRing);
+        final Optional<AccountAgeWitness> accountAgeWitnessOptional =
+                findWitness(peersPaymentAccountPayload, peersPubKeyRing);
         // If we don't find a stored witness data we create a new dummy object which makes is easier to reuse the
         // below validation methods. This peersWitness object is not used beside for validation. Some of the
         // validation calls are pointless in the case we create a new Witness ourselves but the verifyPeersTradeLimit
@@ -513,8 +509,10 @@ public class AccountAgeWitnessService {
         if (!verifyPeersCurrentDate(peersCurrentDate, errorMessageHandler))
             return false;
 
-        final byte[] peersAccountInputDataWithSalt = Utilities.concatenateByteArrays(peersPaymentAccountPayload.getAgeWitnessInputData(), peersPaymentAccountPayload.getSalt());
-        byte[] hash = Hash.getSha256Ripemd160hash(Utilities.concatenateByteArrays(peersAccountInputDataWithSalt, peersPubKeyRing.getSignaturePubKeyBytes()));
+        final byte[] peersAccountInputDataWithSalt = Utilities.concatenateByteArrays(
+                peersPaymentAccountPayload.getAgeWitnessInputData(), peersPaymentAccountPayload.getSalt());
+        byte[] hash = Hash.getSha256Ripemd160hash(Utilities.concatenateByteArrays(peersAccountInputDataWithSalt,
+                peersPubKeyRing.getSignaturePubKeyBytes()));
 
         // Check if the hash in the witness data matches the hash derived from the data provided by the peer
         final byte[] peersWitnessHash = peersWitness.getHash();
@@ -591,7 +589,8 @@ public class AccountAgeWitnessService {
                                           ErrorMessageHandler errorMessageHandler) {
         checkNotNull(offer);
         final String currencyCode = offer.getCurrencyCode();
-        final Coin defaultMaxTradeLimit = PaymentMethod.getPaymentMethodById(offer.getOfferPayload().getPaymentMethodId()).getMaxTradeLimitAsCoin(currencyCode);
+        final Coin defaultMaxTradeLimit = PaymentMethod.getPaymentMethodById(
+                offer.getOfferPayload().getPaymentMethodId()).getMaxTradeLimitAsCoin(currencyCode);
         long peersCurrentTradeLimit = defaultMaxTradeLimit.value;
         if (!hasTradeLimitException(peersWitness)) {
             final long accountSignAge = getWitnessSignAge(peersWitness, peersCurrentDate);
@@ -654,8 +653,8 @@ public class AccountAgeWitnessService {
                 .findAny()
                 .orElse(null);
         checkNotNull(signedWitness);
-        return signedWitnessService.signAndPublishAccountAgeWitness(accountAgeWitness, key, signedWitness.getWitnessOwnerPubKey(),
-                time);
+        return signedWitnessService.signAndPublishAccountAgeWitness(accountAgeWitness, key,
+                signedWitness.getWitnessOwnerPubKey(), time);
     }
 
     public String arbitratorSignOrphanPubKey(ECKey key,
@@ -676,7 +675,8 @@ public class AccountAgeWitnessService {
         Coin tradeAmount = trade.getTradeAmount();
         checkNotNull(trade.getProcessModel().getTradingPeer().getPubKeyRing(), "Peer must have a keyring");
         PublicKey peersPubKey = trade.getProcessModel().getTradingPeer().getPubKeyRing().getSignaturePubKey();
-        checkNotNull(peersWitness, "Not able to find peers witness, unable to sign for trade {}", trade.toString());
+        checkNotNull(peersWitness, "Not able to find peers witness, unable to sign for trade {}",
+                trade.toString());
         checkNotNull(tradeAmount, "Trade amount must not be null");
         checkNotNull(peersPubKey, "Peers pub key must not be null");
 
@@ -717,7 +717,8 @@ public class AccountAgeWitnessService {
                 filterManager.isPaymentMethodBanned(
                         PaymentMethod.getPaymentMethodById(dispute.getContract().getPaymentMethodId())) ||
                 filterManager.arePeersPaymentAccountDataBanned(dispute.getContract().getBuyerPaymentAccountPayload()) ||
-                filterManager.arePeersPaymentAccountDataBanned(dispute.getContract().getSellerPaymentAccountPayload()) ||
+                filterManager.arePeersPaymentAccountDataBanned(
+                        dispute.getContract().getSellerPaymentAccountPayload()) ||
                 filterManager.isWitnessSignerPubKeyBanned(
                         Utils.HEX.encode(dispute.getContract().getBuyerPubKeyRing().getSignaturePubKeyBytes())) ||
                 filterManager.isWitnessSignerPubKeyBanned(
@@ -811,7 +812,8 @@ public class AccountAgeWitnessService {
                 case ONE_TO_TWO_MONTHS:
                     return SignState.PEER_SIGNER.addHash(hash);
                 case LESS_ONE_MONTH:
-                    return SignState.PEER_INITIAL.addHash(hash);
+                    return SignState.PEER_INITIAL.addHash(hash)
+                            .setDaysUntilLimitLifted(30 - TimeUnit.MILLISECONDS.toDays(accountSignAge));
                 case UNVERIFIED:
                 default:
                     return SignState.UNSIGNED.addHash(hash);

@@ -20,14 +20,11 @@ package bisq.monitor.metric;
 import bisq.monitor.OnionParser;
 import bisq.monitor.Reporter;
 
-import bisq.core.account.witness.AccountAgeWitnessStore;
 import bisq.core.dao.monitoring.model.StateHash;
 import bisq.core.dao.monitoring.network.messages.GetBlindVoteStateHashesRequest;
 import bisq.core.dao.monitoring.network.messages.GetDaoStateHashesRequest;
 import bisq.core.dao.monitoring.network.messages.GetProposalStateHashesRequest;
 import bisq.core.dao.monitoring.network.messages.GetStateHashesResponse;
-import bisq.core.proto.persistable.CorePersistenceProtoResolver;
-import bisq.core.trade.statistics.TradeStatistics3Store;
 
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.network.Connection;
@@ -36,17 +33,11 @@ import bisq.network.p2p.peers.getdata.messages.PreliminaryGetDataRequest;
 import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 
-import bisq.common.app.Version;
-import bisq.common.config.BaseCurrencyNetwork;
-import bisq.common.persistence.PersistenceManager;
 import bisq.common.proto.network.NetworkEnvelope;
-import bisq.common.proto.persistable.PersistableEnvelope;
 
 import java.net.MalformedURLException;
 
 import java.nio.ByteBuffer;
-
-import java.io.File;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -55,12 +46,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Random;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -80,11 +68,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 @Slf4j
 public class P2PSeedNodeSnapshot extends P2PSeedNodeSnapshotBase {
-    private static final String DATABASE_DIR = "run.dbDir";
 
-    Statistics statistics;
     final Map<NodeAddress, Statistics<Set<Integer>>> bucketsPerHost = new ConcurrentHashMap<>();
-    protected final Set<byte[]> hashes = new TreeSet<>(Arrays::compare);
     private int daostateheight = 594000;
     private int proposalheight = daostateheight;
     private int blindvoteheight = daostateheight;
@@ -92,14 +77,7 @@ public class P2PSeedNodeSnapshot extends P2PSeedNodeSnapshotBase {
     /**
      * Use a counter to do statistics.
      */
-    private class MyStatistics implements Statistics<Set<Integer>> {
-
-        private final Map<String, Set<Integer>> buckets = new HashMap<>();
-
-        @Override
-        public Statistics create() {
-            return new MyStatistics();
-        }
+    private static class MyStatistics extends Statistics<Set<Integer>> {
 
         @Override
         public synchronized void log(Object message) {
@@ -110,43 +88,10 @@ public class P2PSeedNodeSnapshot extends P2PSeedNodeSnapshotBase {
             buckets.putIfAbsent(className, new HashSet<>());
             buckets.get(className).add(message.hashCode());
         }
-
-        @Override
-        public Map<String, Set<Integer>> values() {
-            return buckets;
-        }
-
-        @Override
-        public synchronized void reset() {
-            buckets.clear();
-        }
     }
 
     public P2PSeedNodeSnapshot(Reporter reporter) {
         super(reporter);
-
-        statistics = new MyStatistics();
-    }
-
-    @Override
-    public void configure(Properties properties) {
-        super.configure(properties);
-
-        if (hashes.isEmpty() && configuration.getProperty(DATABASE_DIR) != null) {
-            File dir = new File(configuration.getProperty(DATABASE_DIR));
-            String networkPostfix = "_" + BaseCurrencyNetwork.values()[Version.getBaseCurrencyNetwork()].toString();
-            try {
-                PersistenceManager<PersistableEnvelope> persistenceManager = new PersistenceManager<>(dir, new CorePersistenceProtoResolver(null, null), null);
-                TradeStatistics3Store tradeStatistics3Store = (TradeStatistics3Store) persistenceManager.getPersisted(TradeStatistics3Store.class.getSimpleName() + networkPostfix);
-                hashes.addAll(tradeStatistics3Store.getMap().keySet().stream().map(byteArray -> byteArray.bytes).collect(Collectors.toList()));
-
-                AccountAgeWitnessStore accountAgeWitnessStore = (AccountAgeWitnessStore) persistenceManager.getPersisted(AccountAgeWitnessStore.class.getSimpleName() + networkPostfix);
-                hashes.addAll(accountAgeWitnessStore.getMap().keySet().stream().map(byteArray -> byteArray.bytes).collect(Collectors.toList()));
-            } catch (NullPointerException e) {
-                // in case there is no store file
-                log.error("There is no storage file where there should be one: {}", dir.getAbsolutePath());
-            }
-        }
     }
 
     protected List<NetworkEnvelope> getRequests() {
@@ -195,8 +140,8 @@ public class P2PSeedNodeSnapshot extends P2PSeedNodeSnapshotBase {
                         try {
                             report.put(OnionParser.prettyPrint(host) + ".relativeNumberOfMessages." + messageType,
                                     String.valueOf(set.size() - referenceValues.get(messageType).size()));
-                        } catch (MalformedURLException | NullPointerException ignore) {
-                            log.error("we should never have gotten here", ignore);
+                        } catch (MalformedURLException | NullPointerException e) {
+                            log.error("we should never have gotten here", e);
                         }
                     });
                     try {
@@ -229,8 +174,12 @@ public class P2PSeedNodeSnapshot extends P2PSeedNodeSnapshotBase {
         //   - process dao data
         perType.forEach((type, nodeAddressTupleMap) -> {
             //   - find head
-            int head = (int) nodeAddressTupleMap.values().stream().max(Comparator.comparingLong(Tuple::getHeight)).get().height;
-            int oldest = (int) nodeAddressTupleMap.values().stream().min(Comparator.comparingLong(Tuple::getHeight)).get().height;
+            int head = nodeAddressTupleMap.values().stream().max(Comparator.comparingLong(Tuple::getHeight))
+                    .map(value -> (int) value.height)
+                    .orElse(0);
+            int oldest = nodeAddressTupleMap.values().stream().min(Comparator.comparingLong(Tuple::getHeight))
+                    .map(value -> (int) value.height)
+                    .orElse(0);
 
             //   - update queried height
             if (type.contains("DaoState"))
@@ -253,9 +202,14 @@ public class P2PSeedNodeSnapshot extends P2PSeedNodeSnapshotBase {
                     hitcount.put(hash, 1);
             });
 
-            List<ByteBuffer> states = hitcount.entrySet().stream().sorted((o1, o2) -> o2.getValue().compareTo(o1.getValue())).map(byteBufferIntegerEntry -> byteBufferIntegerEntry.getKey()).collect(Collectors.toList());
             hitcount.clear();
-            nodeAddressTupleMap.forEach((nodeAddress, tuple) -> daoreport.put(type + "." + OnionParser.prettyPrint(nodeAddress) + ".hash", Integer.toString(Arrays.asList(states.toArray()).indexOf(ByteBuffer.wrap(tuple.hash)))));
+
+            nodeAddressTupleMap.forEach((nodeAddress, tuple) ->
+                    daoreport.put(type + "." + OnionParser.prettyPrint(nodeAddress) + ".hash",
+                            Integer.toString(Arrays.asList(hitcount.entrySet().stream()
+                                    .sorted((o1, o2) -> o2.getValue().compareTo(o1.getValue()))
+                                    .map(Map.Entry::getKey).toArray()).indexOf(ByteBuffer
+                                    .wrap(tuple.hash)))));
 
             //   - report reference head
             daoreport.put(type + ".referenceHead", Integer.toString(head));
@@ -267,7 +221,7 @@ public class P2PSeedNodeSnapshot extends P2PSeedNodeSnapshotBase {
         reporter.report(daoreport, "DaoStateSnapshot");
     }
 
-    private class Tuple {
+    private static class Tuple {
         @Getter
         private final long height;
         private final byte[] hash;
@@ -278,14 +232,7 @@ public class P2PSeedNodeSnapshot extends P2PSeedNodeSnapshotBase {
         }
     }
 
-    private class DaoStatistics implements Statistics<Tuple> {
-
-        Map<String, Tuple> buckets = new ConcurrentHashMap<>();
-
-        @Override
-        public Statistics create() {
-            return new DaoStatistics();
-        }
+    private class DaoStatistics extends Statistics<Tuple> {
 
         @Override
         public void log(Object message) {
@@ -297,19 +244,9 @@ public class P2PSeedNodeSnapshot extends P2PSeedNodeSnapshotBase {
 
             buckets.putIfAbsent(className, new Tuple(last.getHeight(), last.getHash()));
         }
-
-        @Override
-        public Map<String, Tuple> values() {
-            return buckets;
-        }
-
-        @Override
-        public void reset() {
-            buckets.clear();
-        }
     }
 
-    private Map<NodeAddress, Statistics<Tuple>> daoData = new ConcurrentHashMap<>();
+    private final Map<NodeAddress, Statistics<Tuple>> daoData = new ConcurrentHashMap<>();
 
     protected boolean treatMessage(NetworkEnvelope networkEnvelope, Connection connection) {
         checkNotNull(connection.getPeersNodeAddressProperty(),
@@ -317,7 +254,7 @@ public class P2PSeedNodeSnapshot extends P2PSeedNodeSnapshotBase {
 
         if (networkEnvelope instanceof GetDataResponse) {
 
-            Statistics result = this.statistics.create();
+            Statistics result = new MyStatistics();
 
             GetDataResponse dataResponse = (GetDataResponse) networkEnvelope;
             final Set<ProtectedStorageEntry> dataSet = dataResponse.getDataSet();

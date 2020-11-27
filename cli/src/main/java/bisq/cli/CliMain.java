@@ -17,6 +17,9 @@
 
 package bisq.cli;
 
+import bisq.proto.grpc.CancelOfferRequest;
+import bisq.proto.grpc.ConfirmPaymentReceivedRequest;
+import bisq.proto.grpc.ConfirmPaymentStartedRequest;
 import bisq.proto.grpc.CreateOfferRequest;
 import bisq.proto.grpc.CreatePaymentAccountRequest;
 import bisq.proto.grpc.GetAddressBalanceRequest;
@@ -25,12 +28,16 @@ import bisq.proto.grpc.GetFundingAddressesRequest;
 import bisq.proto.grpc.GetOfferRequest;
 import bisq.proto.grpc.GetOffersRequest;
 import bisq.proto.grpc.GetPaymentAccountsRequest;
+import bisq.proto.grpc.GetTradeRequest;
 import bisq.proto.grpc.GetVersionRequest;
+import bisq.proto.grpc.KeepFundsRequest;
 import bisq.proto.grpc.LockWalletRequest;
 import bisq.proto.grpc.RegisterDisputeAgentRequest;
 import bisq.proto.grpc.RemoveWalletPasswordRequest;
 import bisq.proto.grpc.SetWalletPasswordRequest;
+import bisq.proto.grpc.TakeOfferRequest;
 import bisq.proto.grpc.UnlockWalletRequest;
+import bisq.proto.grpc.WithdrawFundsRequest;
 
 import io.grpc.StatusRuntimeException;
 
@@ -68,8 +75,15 @@ public class CliMain {
 
     private enum Method {
         createoffer,
+        canceloffer,
         getoffer,
         getoffers,
+        takeoffer,
+        gettrade,
+        confirmpaymentstarted,
+        confirmpaymentreceived,
+        keepfunds,
+        withdrawfunds,
         createpaymentacct,
         getpaymentaccts,
         getversion,
@@ -154,9 +168,10 @@ public class CliMain {
 
         GrpcStubs grpcStubs = new GrpcStubs(host, port, password);
         var disputeAgentsService = grpcStubs.disputeAgentsService;
-        var versionService = grpcStubs.versionService;
         var offersService = grpcStubs.offersService;
         var paymentAccountsService = grpcStubs.paymentAccountsService;
+        var tradesService = grpcStubs.tradesService;
+        var versionService = grpcStubs.versionService;
         var walletsService = grpcStubs.walletsService;
 
         try {
@@ -225,6 +240,18 @@ public class CliMain {
                     out.println(formatOfferTable(singletonList(reply.getOffer()), currencyCode));
                     return;
                 }
+                case canceloffer: {
+                    if (nonOptionArgs.size() < 2)
+                        throw new IllegalArgumentException("incorrect parameter count, expecting offer id");
+
+                    var offerId = nonOptionArgs.get(1);
+                    var request = CancelOfferRequest.newBuilder()
+                            .setId(offerId)
+                            .build();
+                    offersService.cancelOffer(request);
+                    out.println("offer canceled and removed from offer book");
+                    return;
+                }
                 case getoffer: {
                     if (nonOptionArgs.size() < 2)
                         throw new IllegalArgumentException("incorrect parameter count, expecting offer id");
@@ -252,6 +279,89 @@ public class CliMain {
                             .build();
                     var reply = offersService.getOffers(request);
                     out.println(formatOfferTable(reply.getOffersList(), currencyCode));
+                    return;
+                }
+                case takeoffer: {
+                    if (nonOptionArgs.size() < 3)
+                        throw new IllegalArgumentException("incorrect parameter count, expecting offer id, payment acct id");
+
+                    var offerId = nonOptionArgs.get(1);
+                    var paymentAccountId = nonOptionArgs.get(2);
+                    var request = TakeOfferRequest.newBuilder()
+                            .setOfferId(offerId)
+                            .setPaymentAccountId(paymentAccountId)
+                            .build();
+                    var reply = tradesService.takeOffer(request);
+                    out.printf("trade '%s' successfully taken", reply.getTrade().getShortId());
+                    return;
+                }
+                case gettrade: {
+                    if (nonOptionArgs.size() < 2)
+                        throw new IllegalArgumentException("incorrect parameter count, expecting trade id, [,showcontract = true|false]");
+
+                    var tradeId = nonOptionArgs.get(1);
+                    var showContract = false;
+                    if (nonOptionArgs.size() == 3)
+                        showContract = Boolean.getBoolean(nonOptionArgs.get(2));
+
+                    var request = GetTradeRequest.newBuilder()
+                            .setTradeId(tradeId)
+                            .build();
+                    var reply = tradesService.getTrade(request);
+                    if (showContract)
+                        out.println(reply.getTrade().getContractAsJson());
+                    else
+                        out.println(TradeFormat.format(reply.getTrade()));
+                    return;
+                }
+                case confirmpaymentstarted: {
+                    if (nonOptionArgs.size() < 2)
+                        throw new IllegalArgumentException("incorrect parameter count, expecting trade id");
+
+                    var tradeId = nonOptionArgs.get(1);
+                    var request = ConfirmPaymentStartedRequest.newBuilder()
+                            .setTradeId(tradeId)
+                            .build();
+                    tradesService.confirmPaymentStarted(request);
+                    out.printf("trade '%s' payment started message sent", tradeId);
+                    return;
+                }
+                case confirmpaymentreceived: {
+                    if (nonOptionArgs.size() < 2)
+                        throw new IllegalArgumentException("incorrect parameter count, expecting trade id");
+
+                    var tradeId = nonOptionArgs.get(1);
+                    var request = ConfirmPaymentReceivedRequest.newBuilder()
+                            .setTradeId(tradeId)
+                            .build();
+                    tradesService.confirmPaymentReceived(request);
+                    out.printf("trade '%s' payment received message sent", tradeId);
+                    return;
+                }
+                case keepfunds: {
+                    if (nonOptionArgs.size() < 2)
+                        throw new IllegalArgumentException("incorrect parameter count, expecting trade id");
+
+                    var tradeId = nonOptionArgs.get(1);
+                    var request = KeepFundsRequest.newBuilder()
+                            .setTradeId(tradeId)
+                            .build();
+                    tradesService.keepFunds(request);
+                    out.printf("funds from trade '%s' saved in bisq wallet", tradeId);
+                    return;
+                }
+                case withdrawfunds: {
+                    if (nonOptionArgs.size() < 3)
+                        throw new IllegalArgumentException("incorrect parameter count, expecting trade id, bitcoin wallet address");
+
+                    var tradeId = nonOptionArgs.get(1);
+                    var address = nonOptionArgs.get(2);
+                    var request = WithdrawFundsRequest.newBuilder()
+                            .setTradeId(tradeId)
+                            .setAddress(address)
+                            .build();
+                    tradesService.withdrawFunds(request);
+                    out.printf("funds from trade '%s' sent to btc address '%s'", tradeId, address);
                     return;
                 }
                 case createpaymentacct: {
@@ -379,8 +489,15 @@ public class CliMain {
             stream.format(rowFormat, "", "amount (btc), min amount, use mkt based price, \\", "");
             stream.format(rowFormat, "", "fixed price (btc) | mkt price margin (%), \\", "");
             stream.format(rowFormat, "", "security deposit (%)", "");
+            stream.format(rowFormat, "canceloffer", "offer id", "Cancel offer with id");
             stream.format(rowFormat, "getoffer", "offer id", "Get current offer with id");
             stream.format(rowFormat, "getoffers", "buy | sell, currency code", "Get current offers");
+            stream.format(rowFormat, "takeoffer", "offer id", "Take offer with id");
+            stream.format(rowFormat, "gettrade", "trade id [,showcontract]", "Get trade summary or full contract");
+            stream.format(rowFormat, "confirmpaymentstarted", "trade id", "Confirm payment started");
+            stream.format(rowFormat, "confirmpaymentreceived", "trade id", "Confirm payment received");
+            stream.format(rowFormat, "keepfunds", "trade id", "Keep received funds in Bisq wallet");
+            stream.format(rowFormat, "withdrawfunds", "trade id, bitcoin wallet address", "Withdraw received funds to external wallet address");
             stream.format(rowFormat, "createpaymentacct", "account name, account number, currency code", "Create PerfectMoney dummy account");
             stream.format(rowFormat, "getpaymentaccts", "", "Get user payment accounts");
             stream.format(rowFormat, "lockwallet", "", "Remove wallet password from memory, locking the wallet");

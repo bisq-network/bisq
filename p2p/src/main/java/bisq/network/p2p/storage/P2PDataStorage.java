@@ -78,6 +78,12 @@ import javax.inject.Inject;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.monadic.MonadicBinding;
+
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+
 import java.security.KeyPair;
 import java.security.PublicKey;
 
@@ -143,6 +149,10 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
     /// which removes entries after PURGE_AGE_DAYS.
     private final int maxSequenceNumberMapSizeBeforePurge;
 
+    // Don't convert to local variable as it might get GC'ed.
+    private MonadicBinding<Boolean> readFromResourcesCompleteBinding;
+
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -170,23 +180,63 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         this.persistenceManager.initialize(sequenceNumberMap, PersistenceManager.Source.PRIVATE);
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PersistedDataHost
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     @Override
-    public void readPersisted() {
-        SequenceNumberMap persisted = persistenceManager.getPersisted();
-        if (persisted != null)
-            sequenceNumberMap.setMap(getPurgedSequenceNumberMap(persisted.getMap()));
+    public void readPersisted(Runnable completeHandler) {
+        persistenceManager.readPersisted(persisted -> {
+                    sequenceNumberMap.setMap(getPurgedSequenceNumberMap(persisted.getMap()));
+                    completeHandler.run();
+                },
+                completeHandler);
     }
 
-    // This method is called at startup in a non-user thread.
-    // We should not have any threading issues here as the p2p network is just initializing
+    // Uses synchronous execution on the userThread. Only used by tests. The async methods should be used by app code.
+    @VisibleForTesting
+    public void readPersistedSync() {
+        SequenceNumberMap persisted = persistenceManager.getPersisted();
+        if (persisted != null) {
+            sequenceNumberMap.setMap(getPurgedSequenceNumberMap(persisted.getMap()));
+        }
+    }
 
-    public synchronized void readFromResources(String postFix) {
-        appendOnlyDataStoreService.readFromResources(postFix);
-        protectedDataStoreService.readFromResources(postFix);
-        resourceDataStoreService.readFromResources(postFix);
+    // Threading is done on the persistenceManager level
+    public void readFromResources(String postFix, Runnable completeHandler) {
+        BooleanProperty appendOnlyDataStoreServiceReady = new SimpleBooleanProperty();
+        BooleanProperty protectedDataStoreServiceReady = new SimpleBooleanProperty();
+        BooleanProperty resourceDataStoreServiceReady = new SimpleBooleanProperty();
+
+        appendOnlyDataStoreService.readFromResources(postFix, () -> appendOnlyDataStoreServiceReady.set(true));
+        protectedDataStoreService.readFromResources(postFix, () -> {
+            map.putAll(protectedDataStoreService.getMap());
+            protectedDataStoreServiceReady.set(true);
+        });
+        resourceDataStoreService.readFromResources(postFix, () -> resourceDataStoreServiceReady.set(true));
+
+        readFromResourcesCompleteBinding = EasyBind.combine(appendOnlyDataStoreServiceReady,
+                protectedDataStoreServiceReady,
+                resourceDataStoreServiceReady,
+                (a, b, c) -> a && b && c);
+        readFromResourcesCompleteBinding.subscribe((observable, oldValue, newValue) -> {
+            if (newValue) {
+                completeHandler.run();
+            }
+        });
+    }
+
+    // Uses synchronous execution on the userThread. Only used by tests. The async methods should be used by app code.
+    @VisibleForTesting
+    public void readFromResourcesSync(String postFix) {
+        appendOnlyDataStoreService.readFromResourcesSync(postFix);
+        protectedDataStoreService.readFromResourcesSync(postFix);
+        resourceDataStoreService.readFromResourcesSync(postFix);
 
         map.putAll(protectedDataStoreService.getMap());
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // RequestData API
@@ -466,10 +516,12 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
         // Batch processing can cause performance issues, so do all of the removes first, then update the listeners
         // to let them know about the removes.
-        toRemoveList.forEach(toRemoveItem -> {
-            log.debug("We found an expired data entry. We remove the protectedData:\n\t" +
-                    Utilities.toTruncatedString(toRemoveItem.getValue()));
-        });
+        if (log.isDebugEnabled()) {
+            toRemoveList.forEach(toRemoveItem -> {
+                log.debug("We found an expired data entry. We remove the protectedData:\n\t{}",
+                        Utilities.toTruncatedString(toRemoveItem.getValue()));
+            });
+        }
         removeFromMapAndDataStore(toRemoveList);
 
         if (sequenceNumberMap.size() > this.maxSequenceNumberMapSizeBeforePurge) {
@@ -886,11 +938,13 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         removeFromMapAndDataStore(Collections.singletonList(Maps.immutableEntry(hashOfPayload, protectedStorageEntry)));
     }
 
-    private void removeFromMapAndDataStore(
-            Collection<Map.Entry<ByteArray, ProtectedStorageEntry>> entriesToRemoveWithPayloadHash) {
+    private void removeFromMapAndDataStore(Collection<Map.Entry<ByteArray,
+            ProtectedStorageEntry>> entriesToRemoveWithPayloadHash) {
 
         if (entriesToRemoveWithPayloadHash.isEmpty())
             return;
+
+        log.info("Remove {} expired data entries", entriesToRemoveWithPayloadHash.size());
 
         ArrayList<ProtectedStorageEntry> entriesForSignal = new ArrayList<>(entriesToRemoveWithPayloadHash.size());
         entriesToRemoveWithPayloadHash.forEach(entryToRemoveWithPayloadHash -> {

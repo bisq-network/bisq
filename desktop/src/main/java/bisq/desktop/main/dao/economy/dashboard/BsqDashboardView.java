@@ -20,6 +20,7 @@ package bisq.desktop.main.dao.economy.dashboard;
 import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.TextFieldWithIcon;
+import bisq.desktop.util.AxisInlierUtils;
 
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.state.DaoStateListener;
@@ -112,8 +113,10 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
     private Label marketPriceLabel;
 
     private Coin availableAmount;
-
     private int gridRow = 0;
+    double howManyStdDevsConstituteOutlier = 10;
+    private Price avg30DayUSDPrice;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -121,10 +124,10 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
 
     @Inject
     public BsqDashboardView(DaoFacade daoFacade,
-                             TradeStatisticsManager tradeStatisticsManager,
-                             PriceFeedService priceFeedService,
-                             Preferences preferences,
-                             BsqFormatter bsqFormatter) {
+                            TradeStatisticsManager tradeStatisticsManager,
+                            PriceFeedService priceFeedService,
+                            Preferences preferences,
+                            BsqFormatter bsqFormatter) {
         this.daoFacade = daoFacade;
         this.tradeStatisticsManager = tradeStatisticsManager;
         this.priceFeedService = priceFeedService;
@@ -134,7 +137,6 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
 
     @Override
     public void initialize() {
-
         ADJUSTERS.put(DAY, TemporalAdjusters.ofDateAdjuster(d -> d));
 
         createKPIs();
@@ -144,6 +146,7 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
             updatePrice();
             updateAveragePriceFields(avgPrice90TextField, avgPrice30TextField, false);
             updateAveragePriceFields(avgUSDPrice90TextField, avgUSDPrice30TextField, true);
+            updateMarketCap();
         };
     }
 
@@ -187,6 +190,7 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
         updateChartData();
         updateAveragePriceFields(avgPrice90TextField, avgPrice30TextField, false);
         updateAveragePriceFields(avgUSDPrice90TextField, avgUSDPrice30TextField, true);
+        updateMarketCap();
     }
 
 
@@ -332,14 +336,16 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
             Price bsqPrice = optionalBsqPrice.get();
             marketPriceLabel.setText(FormattingUtils.formatPrice(bsqPrice) + " BSQ/BTC");
 
-            marketCapTextField.setText(bsqFormatter.formatMarketCap(priceFeedService.getMarketPrice("BSQ"),
-                    priceFeedService.getMarketPrice(preferences.getPreferredTradeCurrency().getCode()),
-                    availableAmount));
-
             updateChartData();
-
         } else {
             marketPriceLabel.setText(Res.get("shared.na"));
+        }
+    }
+
+    private void updateMarketCap() {
+        if (avg30DayUSDPrice != null) {
+            marketCapTextField.setText(bsqFormatter.formatMarketCap(avg30DayUSDPrice, availableAmount));
+        } else {
             marketCapTextField.setText(Res.get("shared.na"));
         }
     }
@@ -368,15 +374,24 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
     }
 
     private long updateAveragePriceField(TextField textField, int days, boolean isUSDField) {
+        double percentToTrim = Math.max(0, Math.min(49, preferences.getBsqAverageTrimThreshold() * 100));
         Date pastXDays = getPastDate(days);
-        List<TradeStatistics3> bsqTradePastXDays = tradeStatisticsManager.getObservableTradeStatisticsSet().stream()
+        List<TradeStatistics3> bsqAllTradePastXDays = tradeStatisticsManager.getObservableTradeStatisticsSet().stream()
                 .filter(e -> e.getCurrency().equals("BSQ"))
                 .filter(e -> e.getDate().after(pastXDays))
                 .collect(Collectors.toList());
-        List<TradeStatistics3> usdTradePastXDays = tradeStatisticsManager.getObservableTradeStatisticsSet().stream()
+        List<TradeStatistics3> bsqTradePastXDays = percentToTrim > 0 ?
+                removeOutliers(bsqAllTradePastXDays, percentToTrim) :
+                bsqAllTradePastXDays;
+
+        List<TradeStatistics3> usdAllTradePastXDays = tradeStatisticsManager.getObservableTradeStatisticsSet().stream()
                 .filter(e -> e.getCurrency().equals("USD"))
                 .filter(e -> e.getDate().after(pastXDays))
                 .collect(Collectors.toList());
+        List<TradeStatistics3> usdTradePastXDays = percentToTrim > 0 ?
+                removeOutliers(usdAllTradePastXDays, percentToTrim) :
+                usdAllTradePastXDays;
+
         long average = isUSDField ? getUSDAverage(bsqTradePastXDays, usdTradePastXDays) :
                 getBTCAverage(bsqTradePastXDays);
         Price avgPrice = isUSDField ? Price.valueOf("USD", average) :
@@ -384,17 +399,35 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
         String avg = FormattingUtils.formatPrice(avgPrice);
         if (isUSDField) {
             textField.setText(avg + " USD/BSQ");
+            if (days == 30) {
+                avg30DayUSDPrice = avgPrice;
+            }
         } else {
             textField.setText(avg + " BSQ/BTC");
         }
         return average;
     }
 
-    private long getBTCAverage(List<TradeStatistics3> bsqList) {
+    private List<TradeStatistics3> removeOutliers(List<TradeStatistics3> list, double percentToTrim) {
+        List<Double> yValues = list.stream()
+                .filter(TradeStatistics3::isValid)
+                .map(e -> (double) e.getPrice())
+                .collect(Collectors.toList());
+
+        Tuple2<Double, Double> tuple = AxisInlierUtils.findInlierRange(yValues, percentToTrim, howManyStdDevsConstituteOutlier);
+        double lowerBound = tuple.first;
+        double upperBound = tuple.second;
+        return list.stream()
+                .filter(e -> e.getPrice() > lowerBound)
+                .filter(e -> e.getPrice() < upperBound)
+                .collect(Collectors.toList());
+    }
+
+    private long getBTCAverage(List<TradeStatistics3> list) {
         long accumulatedVolume = 0;
         long accumulatedAmount = 0;
 
-        for (TradeStatistics3 item : bsqList) {
+        for (TradeStatistics3 item : list) {
             accumulatedVolume += item.getTradeVolume().getValue();
             accumulatedAmount += item.getTradeAmount().getValue(); // Amount of BTC traded
         }

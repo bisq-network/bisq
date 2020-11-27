@@ -44,7 +44,9 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -79,43 +81,59 @@ public class PersistenceManager<T extends PersistableEnvelope> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public static final Map<String, PersistenceManager<?>> ALL_PERSISTENCE_MANAGERS = new HashMap<>();
+    public static boolean FLUSH_ALL_DATA_TO_DISK_CALLED = false;
 
-    // We don't know from which thread we are called so we map back to user thread
+
+    // We require being called only once from the global shutdown routine. As the shutdown routine has a timeout
+    // and error condition where we call the method as well beside the standard path and it could be that those
+    // alternative code paths call our method after it was called already, so it is a valid but rare case.
+    // We add a guard to prevent repeated calls.
     public static void flushAllDataToDisk(ResultHandler completeHandler) {
-        log.info("Start flushAllDataToDisk at shutdown");
-        AtomicInteger openInstances = new AtomicInteger(ALL_PERSISTENCE_MANAGERS.size());
+        // We don't know from which thread we are called so we map to user thread
+        UserThread.execute(() -> {
+            if (FLUSH_ALL_DATA_TO_DISK_CALLED) {
+                log.warn("We got flushAllDataToDisk called again. This can happen in some rare cases. We ignore the repeated call.");
+                return;
+            }
 
-        if (openInstances.get() == 0) {
-            log.info("flushAllDataToDisk completed");
-            UserThread.execute(completeHandler::handleResult);
-        }
+            FLUSH_ALL_DATA_TO_DISK_CALLED = true;
 
-        new HashSet<>(ALL_PERSISTENCE_MANAGERS.values()).forEach(persistenceManager -> {
-            // For Priority.HIGH data we want to write to disk in any case to be on the safe side if we might have missed
-            // a requestPersistence call after an important state update. Those are usually rather small data stores.
-            // Otherwise we only persist if requestPersistence was called since the last persist call.
-            if (persistenceManager.source.flushAtShutDown || persistenceManager.persistenceRequested) {
-                // We don't know from which thread we are called so we map back to user thread when calling persistNow
-                UserThread.execute(() -> {
+            log.info("Start flushAllDataToDisk at shutdown");
+            AtomicInteger openInstances = new AtomicInteger(ALL_PERSISTENCE_MANAGERS.size());
+
+            if (openInstances.get() == 0) {
+                log.info("No PersistenceManager instances have been created yet.");
+                completeHandler.handleResult();
+            }
+
+            new HashSet<>(ALL_PERSISTENCE_MANAGERS.values()).forEach(persistenceManager -> {
+                // For Priority.HIGH data we want to write to disk in any case to be on the safe side if we might have missed
+                // a requestPersistence call after an important state update. Those are usually rather small data stores.
+                // Otherwise we only persist if requestPersistence was called since the last persist call.
+                if (persistenceManager.source.flushAtShutDown || persistenceManager.persistenceRequested) {
                     // We always get our completeHandler called even if exceptions happen. In case a file write fails
                     // we still call our shutdown and count down routine as the completeHandler is triggered in any case.
+
+                    // We get our result handler called from the write thread so we map back to user thread.
                     persistenceManager.persistNow(() ->
-                            onWriteCompleted(completeHandler, openInstances, persistenceManager));
-                });
-            } else {
-                onWriteCompleted(completeHandler, openInstances, persistenceManager);
-            }
+                            UserThread.execute(() -> onWriteCompleted(completeHandler, openInstances, persistenceManager)));
+                } else {
+                    onWriteCompleted(completeHandler, openInstances, persistenceManager);
+                }
+            });
         });
     }
 
+    // We get called always from user thread here.
     private static void onWriteCompleted(ResultHandler completeHandler,
                                          AtomicInteger openInstances,
                                          PersistenceManager<?> persistenceManager) {
         persistenceManager.shutdown();
         if (openInstances.decrementAndGet() == 0) {
             log.info("flushAllDataToDisk completed");
-            UserThread.execute(completeHandler::handleResult);
+            completeHandler.handleResult();
         }
+
     }
 
 
@@ -125,25 +143,25 @@ public class PersistenceManager<T extends PersistableEnvelope> {
 
     public enum Source {
         // For data stores we received from the network and which could be rebuilt. We store only for avoiding too much network traffic.
-        NETWORK(1, TimeUnit.HOURS.toSeconds(1), false),
+        NETWORK(1, TimeUnit.MINUTES.toMillis(5), false),
 
         // For data stores which are created from private local data. This data could only be rebuilt from backup files.
-        PRIVATE(10, TimeUnit.SECONDS.toSeconds(30), true),
+        PRIVATE(10, 200, true),
 
-        // For data stores which are created from private local data. Loss of that data would not have any critical consequences.
-        PRIVATE_LOW_PRIO(4, TimeUnit.HOURS.toSeconds(2), false);
+        // For data stores which are created from private local data. Loss of that data would not have critical consequences.
+        PRIVATE_LOW_PRIO(4, TimeUnit.MINUTES.toMillis(1), false);
 
 
         @Getter
         private final int numMaxBackupFiles;
         @Getter
-        private final long delayInSec;
+        private final long delay;
         @Getter
         private final boolean flushAtShutDown;
 
-        Source(int numMaxBackupFiles, long delayInSec, boolean flushAtShutDown) {
+        Source(int numMaxBackupFiles, long delay, boolean flushAtShutDown) {
             this.numMaxBackupFiles = numMaxBackupFiles;
-            this.delayInSec = delayInSec;
+            this.delay = delay;
             this.flushAtShutDown = flushAtShutDown;
         }
     }
@@ -165,6 +183,7 @@ public class PersistenceManager<T extends PersistableEnvelope> {
     @Nullable
     private Timer timer;
     private ExecutorService writeToDiskExecutor;
+    public final AtomicBoolean initCalled = new AtomicBoolean(false);
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -189,6 +208,29 @@ public class PersistenceManager<T extends PersistableEnvelope> {
     }
 
     public void initialize(T persistable, String fileName, Source source) {
+        if (FLUSH_ALL_DATA_TO_DISK_CALLED) {
+            log.warn("We have started the shut down routine already. We ignore that initialize call.");
+            return;
+        }
+
+        if (ALL_PERSISTENCE_MANAGERS.containsKey(fileName)) {
+            RuntimeException runtimeException = new RuntimeException("We must not create multiple " +
+                    "PersistenceManager instances for file " + fileName + ".");
+            // We want to get logged from where we have been called so lets print the stack trace.
+            runtimeException.printStackTrace();
+            throw runtimeException;
+        }
+
+        if (initCalled.get()) {
+            RuntimeException runtimeException = new RuntimeException("We must not call initialize multiple times. " +
+                    "PersistenceManager for file: " + fileName + ".");
+            // We want to get logged from where we have been called so lets print the stack trace.
+            runtimeException.printStackTrace();
+            throw runtimeException;
+        }
+
+        initCalled.set(true);
+
         this.persistable = persistable;
         this.fileName = fileName;
         this.source = source;
@@ -213,16 +255,54 @@ public class PersistenceManager<T extends PersistableEnvelope> {
     // Reading file
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    /**
+     * Read persisted file in a thread.
+     *
+     * @param resultHandler     Consumer of persisted data once it was read from disk.
+     * @param orElse            Called if no file exists or reading of file failed.
+     */
+    public void readPersisted(Consumer<T> resultHandler, Runnable orElse) {
+        readPersisted(checkNotNull(fileName), resultHandler, orElse);
+    }
+
+    /**
+     * Read persisted file in a thread.
+     * We map result handler calls to UserThread, so clients don't need to worry about threading
+     *
+     * @param fileName          File name of our persisted data.
+     * @param resultHandler     Consumer of persisted data once it was read from disk.
+     * @param orElse            Called if no file exists or reading of file failed.
+     */
+    public void readPersisted(String fileName, Consumer<T> resultHandler, Runnable orElse) {
+        if (FLUSH_ALL_DATA_TO_DISK_CALLED) {
+            log.warn("We have started the shut down routine already. We ignore that readPersisted call.");
+            return;
+        }
+
+        new Thread(() -> {
+            T persisted = getPersisted(fileName);
+            if (persisted != null) {
+                UserThread.execute(() -> resultHandler.accept(persisted));
+            } else {
+                UserThread.execute(orElse);
+            }
+        }, "PersistenceManager-read-" + fileName).start();
+    }
+
+    // API for synchronous reading of data. Not recommended to be used in application code.
+    // Currently used by tests and monitor. Should be converted to the threaded API as well.
     @Nullable
     public T getPersisted() {
         return getPersisted(checkNotNull(fileName));
     }
 
-    //TODO use threading here instead in the clients
-    // We get called at startup either by readAllPersisted or readFromResources. Both are wrapped in a thread so we
-    // are not on the user thread.
     @Nullable
     public T getPersisted(String fileName) {
+        if (FLUSH_ALL_DATA_TO_DISK_CALLED) {
+            log.warn("We have started the shut down routine already. We ignore that getPersisted call.");
+            return null;
+        }
+
         File storageFile = new File(dir, fileName);
         if (!storageFile.exists()) {
             return null;
@@ -259,6 +339,11 @@ public class PersistenceManager<T extends PersistableEnvelope> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void requestPersistence() {
+        if (FLUSH_ALL_DATA_TO_DISK_CALLED) {
+            log.warn("We have started the shut down routine already. We ignore that requestPersistence call.");
+            return;
+        }
+
         persistenceRequested = true;
 
         // We write to disk with a delay to avoid frequent write operations. Depending on the priority those delays
@@ -267,7 +352,7 @@ public class PersistenceManager<T extends PersistableEnvelope> {
             timer = UserThread.runAfter(() -> {
                 persistNow(null);
                 UserThread.execute(() -> timer = null);
-            }, source.delayInSec, TimeUnit.SECONDS);
+            }, source.delay, TimeUnit.MILLISECONDS);
         }
     }
 
@@ -369,7 +454,7 @@ public class PersistenceManager<T extends PersistableEnvelope> {
                 ",\n     dir=" + dir +
                 ",\n     storageFile=" + storageFile +
                 ",\n     persistable=" + persistable +
-                ",\n     priority=" + source +
+                ",\n     source=" + source +
                 ",\n     usedTempFilePath=" + usedTempFilePath +
                 ",\n     persistenceRequested=" + persistenceRequested +
                 "\n}";

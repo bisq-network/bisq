@@ -25,6 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
@@ -40,6 +41,7 @@ import static org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 
 
 @SuppressWarnings("ResultOfMethodCallIgnored")
+@Disabled
 @Slf4j
 @TestMethodOrder(OrderAnnotation.class)
 public class RegisterDisputeAgentsTest extends MethodTest {
@@ -56,8 +58,7 @@ public class RegisterDisputeAgentsTest extends MethodTest {
     @Test
     @Order(1)
     public void testRegisterArbitratorShouldThrowException() {
-        var req =
-                createRegisterDisputeAgentRequest(ARBITRATOR);
+        var req = createRegisterDisputeAgentRequest(ARBITRATOR);
         Throwable exception = assertThrows(StatusRuntimeException.class, () ->
                 grpcStubs(arbdaemon).disputeAgentsService.registerDisputeAgent(req));
         assertEquals("INVALID_ARGUMENT: arbitrators must be registered in a Bisq UI",
@@ -67,8 +68,7 @@ public class RegisterDisputeAgentsTest extends MethodTest {
     @Test
     @Order(2)
     public void testInvalidDisputeAgentTypeArgShouldThrowException() {
-        var req =
-                createRegisterDisputeAgentRequest("badagent");
+        var req = createRegisterDisputeAgentRequest("badagent");
         Throwable exception = assertThrows(StatusRuntimeException.class, () ->
                 grpcStubs(arbdaemon).disputeAgentsService.registerDisputeAgent(req));
         assertEquals("INVALID_ARGUMENT: unknown dispute agent type 'badagent'",
@@ -90,16 +90,14 @@ public class RegisterDisputeAgentsTest extends MethodTest {
     @Test
     @Order(4)
     public void testRegisterMediator() {
-        var req =
-                createRegisterDisputeAgentRequest(MEDIATOR);
+        var req = createRegisterDisputeAgentRequest(MEDIATOR);
         grpcStubs(arbdaemon).disputeAgentsService.registerDisputeAgent(req);
     }
 
     @Test
     @Order(5)
     public void testRegisterRefundAgent() {
-        var req =
-                createRegisterDisputeAgentRequest(REFUND_AGENT);
+        var req = createRegisterDisputeAgentRequest(REFUND_AGENT);
         grpcStubs(arbdaemon).disputeAgentsService.registerDisputeAgent(req);
     }
 

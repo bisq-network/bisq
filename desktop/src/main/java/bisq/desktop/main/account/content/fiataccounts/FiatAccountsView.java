@@ -21,6 +21,8 @@ import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.components.paymentmethods.AdvancedCashForm;
 import bisq.desktop.components.paymentmethods.AliPayForm;
+import bisq.desktop.components.paymentmethods.AmazonGiftCardForm;
+import bisq.desktop.components.paymentmethods.AustraliaPayidForm;
 import bisq.desktop.components.paymentmethods.CashDepositForm;
 import bisq.desktop.components.paymentmethods.ChaseQuickPayForm;
 import bisq.desktop.components.paymentmethods.ClearXchangeForm;
@@ -42,6 +44,7 @@ import bisq.desktop.components.paymentmethods.SepaForm;
 import bisq.desktop.components.paymentmethods.SepaInstantForm;
 import bisq.desktop.components.paymentmethods.SpecificBankForm;
 import bisq.desktop.components.paymentmethods.SwishForm;
+import bisq.desktop.components.paymentmethods.TransferwiseForm;
 import bisq.desktop.components.paymentmethods.USPostalMoneyOrderForm;
 import bisq.desktop.components.paymentmethods.UpholdForm;
 import bisq.desktop.components.paymentmethods.WeChatPayForm;
@@ -53,6 +56,7 @@ import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.AdvancedCashValidator;
 import bisq.desktop.util.validation.AliPayValidator;
+import bisq.desktop.util.validation.AustraliaPayidValidator;
 import bisq.desktop.util.validation.BICValidator;
 import bisq.desktop.util.validation.ChaseQuickPayValidator;
 import bisq.desktop.util.validation.ClearXchangeValidator;
@@ -67,6 +71,7 @@ import bisq.desktop.util.validation.PopmoneyValidator;
 import bisq.desktop.util.validation.PromptPayValidator;
 import bisq.desktop.util.validation.RevolutValidator;
 import bisq.desktop.util.validation.SwishValidator;
+import bisq.desktop.util.validation.TransferwiseValidator;
 import bisq.desktop.util.validation.USPostalMoneyOrderValidator;
 import bisq.desktop.util.validation.UpholdValidator;
 import bisq.desktop.util.validation.WeChatPayValidator;
@@ -74,6 +79,8 @@ import bisq.desktop.util.validation.WeChatPayValidator;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.Res;
 import bisq.core.offer.OfferRestrictions;
+import bisq.core.payment.AmazonGiftCardAccount;
+import bisq.core.payment.AustraliaPayid;
 import bisq.core.payment.CashDepositAccount;
 import bisq.core.payment.ClearXchangeAccount;
 import bisq.core.payment.F2FAccount;
@@ -137,12 +144,14 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
     private final ChaseQuickPayValidator chaseQuickPayValidator;
     private final InteracETransferValidator interacETransferValidator;
     private final JapanBankTransferValidator japanBankTransferValidator;
+    private final AustraliaPayidValidator australiapayidValidator;
     private final USPostalMoneyOrderValidator usPostalMoneyOrderValidator;
     private final WeChatPayValidator weChatPayValidator;
     private final HalCashValidator halCashValidator;
     private final F2FValidator f2FValidator;
     private final PromptPayValidator promptPayValidator;
     private final AdvancedCashValidator advancedCashValidator;
+    private final TransferwiseValidator transferwiseValidator;
     private final CoinFormatter formatter;
     private ComboBox<PaymentMethod> paymentMethodComboBox;
     private PaymentMethodForm paymentMethodForm;
@@ -166,12 +175,14 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
                             ChaseQuickPayValidator chaseQuickPayValidator,
                             InteracETransferValidator interacETransferValidator,
                             JapanBankTransferValidator japanBankTransferValidator,
+                            AustraliaPayidValidator australiaPayIDValidator,
                             USPostalMoneyOrderValidator usPostalMoneyOrderValidator,
                             WeChatPayValidator weChatPayValidator,
                             HalCashValidator halCashValidator,
                             F2FValidator f2FValidator,
                             PromptPayValidator promptPayValidator,
                             AdvancedCashValidator advancedCashValidator,
+                            TransferwiseValidator transferwiseValidator,
                             AccountAgeWitnessService accountAgeWitnessService,
                             @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter) {
         super(model, accountAgeWitnessService);
@@ -190,12 +201,14 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
         this.chaseQuickPayValidator = chaseQuickPayValidator;
         this.interacETransferValidator = interacETransferValidator;
         this.japanBankTransferValidator = japanBankTransferValidator;
+        this.australiapayidValidator = australiaPayIDValidator;
         this.usPostalMoneyOrderValidator = usPostalMoneyOrderValidator;
         this.weChatPayValidator = weChatPayValidator;
         this.halCashValidator = halCashValidator;
         this.f2FValidator = f2FValidator;
         this.promptPayValidator = promptPayValidator;
         this.advancedCashValidator = advancedCashValidator;
+        this.transferwiseValidator = transferwiseValidator;
         this.formatter = formatter;
     }
 
@@ -295,6 +308,20 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
                         } else if (paymentAccount instanceof USPostalMoneyOrderAccount) {
                             new Popup().information(Res.get("payment.usPostalMoneyOrder.info"))
                                     .width(700)
+                                    .closeButtonText(Res.get("shared.cancel"))
+                                    .actionButtonText(Res.get("shared.iUnderstand"))
+                                    .onAction(() -> doSaveNewAccount(paymentAccount))
+                                    .show();
+                        } else if (paymentAccount instanceof AustraliaPayid) {
+                            new Popup().information(Res.get("payment.payid.info", currencyName, currencyName))
+                                    .width(900)
+                                    .closeButtonText(Res.get("shared.cancel"))
+                                    .actionButtonText(Res.get("shared.iConfirm"))
+                                    .onAction(() -> doSaveNewAccount(paymentAccount))
+                                    .show();
+                        } else if (paymentAccount instanceof AmazonGiftCardAccount) {
+                            new Popup().information(Res.get("payment.amazonGiftCard.info", currencyName, currencyName))
+                                    .width(900)
                                     .closeButtonText(Res.get("shared.cancel"))
                                     .actionButtonText(Res.get("shared.iUnderstand"))
                                     .onAction(() -> doSaveNewAccount(paymentAccount))
@@ -452,6 +479,8 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
                 return new SpecificBankForm(paymentAccount, accountAgeWitnessService, inputValidator, root, gridRow, formatter);
             case PaymentMethod.JAPAN_BANK_ID:
                 return new JapanBankTransferForm(paymentAccount, accountAgeWitnessService, japanBankTransferValidator, inputValidator, root, gridRow, formatter);
+            case PaymentMethod.AUSTRALIA_PAYID_ID:
+                return new AustraliaPayidForm(paymentAccount, accountAgeWitnessService, australiapayidValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.ALI_PAY_ID:
                 return new AliPayForm(paymentAccount, accountAgeWitnessService, aliPayValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.WECHAT_PAY_ID:
@@ -480,6 +509,10 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
                 return new PromptPayForm(paymentAccount, accountAgeWitnessService, promptPayValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.ADVANCED_CASH_ID:
                 return new AdvancedCashForm(paymentAccount, accountAgeWitnessService, advancedCashValidator, inputValidator, root, gridRow, formatter);
+            case PaymentMethod.TRANSFERWISE_ID:
+                return new TransferwiseForm(paymentAccount, accountAgeWitnessService, transferwiseValidator, inputValidator, root, gridRow, formatter);
+            case PaymentMethod.AMAZON_GIFT_CARD_ID:
+                return new AmazonGiftCardForm(paymentAccount, accountAgeWitnessService, inputValidator, root, gridRow, formatter);
             default:
                 log.error("Not supported PaymentMethod: " + paymentMethod);
                 return null;

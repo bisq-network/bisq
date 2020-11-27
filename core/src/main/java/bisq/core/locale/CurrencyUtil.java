@@ -267,6 +267,76 @@ public class CurrencyUtil {
         return currencies;
     }
 
+    // https://github.com/bisq-network/proposals/issues/243
+    public static List<TradeCurrency> getAllTransferwiseCurrencies() {
+        ArrayList<TradeCurrency> currencies = new ArrayList<>(Arrays.asList(
+                new FiatCurrency("ARS"),
+                new FiatCurrency("AUD"),
+                new FiatCurrency("XOF"),
+                new FiatCurrency("BGN"),
+                new FiatCurrency("CAD"),
+                new FiatCurrency("CLP"),
+                new FiatCurrency("HRK"),
+                new FiatCurrency("CZK"),
+                new FiatCurrency("DKK"),
+                new FiatCurrency("EGP"),
+                new FiatCurrency("EUR"),
+                new FiatCurrency("GEL"),
+                new FiatCurrency("HKD"),
+                new FiatCurrency("HUF"),
+                new FiatCurrency("IDR"),
+                new FiatCurrency("ILS"),
+                new FiatCurrency("JPY"),
+                new FiatCurrency("KES"),
+                new FiatCurrency("MYR"),
+                new FiatCurrency("MXN"),
+                new FiatCurrency("MAD"),
+                new FiatCurrency("NPR"),
+                new FiatCurrency("NZD"),
+                new FiatCurrency("NGN"),
+                new FiatCurrency("NOK"),
+                new FiatCurrency("PKR"),
+                new FiatCurrency("PEN"),
+                new FiatCurrency("PHP"),
+                new FiatCurrency("PLN"),
+                new FiatCurrency("RON"),
+                new FiatCurrency("RUB"),
+                new FiatCurrency("SGD"),
+                new FiatCurrency("ZAR"),
+                new FiatCurrency("KRW"),
+                new FiatCurrency("SEK"),
+                new FiatCurrency("CHF"),
+                new FiatCurrency("THB"),
+                new FiatCurrency("TRY"),
+                new FiatCurrency("UGX"),
+                new FiatCurrency("AED"),
+                new FiatCurrency("GBP"),
+                new FiatCurrency("VND"),
+                new FiatCurrency("ZMW")
+        ));
+
+        currencies.sort(Comparator.comparing(TradeCurrency::getCode));
+        return currencies;
+    }
+
+    public static List<TradeCurrency> getAllAmazonGiftCardCurrencies() {
+        List<TradeCurrency> currencies = new ArrayList<>(Arrays.asList(
+                new FiatCurrency("AUD"),
+                new FiatCurrency("CAD"),
+                new FiatCurrency("EUR"),
+                new FiatCurrency("GBP"),
+                new FiatCurrency("INR"),
+                new FiatCurrency("JPY"),
+                new FiatCurrency("SAR"),
+                new FiatCurrency("SEK"),
+                new FiatCurrency("SGD"),
+                new FiatCurrency("TRY"),
+                new FiatCurrency("USD")
+        ));
+        currencies.sort(Comparator.comparing(TradeCurrency::getCode));
+        return currencies;
+    }
+
     // https://www.revolut.com/help/getting-started/exchanging-currencies/what-fiat-currencies-are-supported-for-holding-and-exchange
     public static List<TradeCurrency> getAllRevolutCurrencies() {
         ArrayList<TradeCurrency> currencies = new ArrayList<>(Arrays.asList(
@@ -542,5 +612,9 @@ public class CurrencyUtil {
             return Res.get(translationKey, Res.getBaseCurrencyCode(), currencyCode);
         else
             return Res.get(translationKey, currencyCode, Res.getBaseCurrencyCode());
+    }
+
+    public static String getOfferVolumeCode(String currencyCode) {
+        return Res.get("shared.offerVolumeCode", currencyCode);
     }
 }

@@ -51,6 +51,8 @@ service Offers {
     }
     rpc CreateOffer (CreateOfferRequest) returns (CreateOfferReply) {
     }
+    rpc CancelOffer (CancelOfferRequest) returns (CancelOfferReply) {
+    }
 }
 
 message GetOfferRequest {
@@ -85,6 +87,13 @@ message CreateOfferReply {
     OfferInfo offer = 1;
 }
 
+message CancelOfferRequest {
+    string id = 1;
+}
+
+message CancelOfferReply {
+}
+
 message OfferInfo {
     string id = 1;
     string direction = 2;
@@ -96,12 +105,13 @@ message OfferInfo {
     uint64 volume = 8;
     uint64 minVolume = 9;
     uint64 buyerSecurityDeposit = 10;
-    string paymentAccountId = 11; // only used when creating offer
+    string paymentAccountId = 11;
     string paymentMethodId = 12;
     string paymentMethodShortName = 13;
     string baseCurrencyCode = 14;
     string counterCurrencyCode = 15;
     uint64 date = 16;
+    string state = 17;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -164,6 +174,98 @@ message GetTradeStatisticsRequest {
 
 message GetTradeStatisticsReply {
     repeated TradeStatistics3 TradeStatistics = 1;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+// Trades
+///////////////////////////////////////////////////////////////////////////////////////////
+
+service Trades {
+    rpc GetTrade (GetTradeRequest) returns (GetTradeReply) {
+    }
+    rpc TakeOffer (TakeOfferRequest) returns (TakeOfferReply) {
+    }
+    rpc ConfirmPaymentStarted (ConfirmPaymentStartedRequest) returns (ConfirmPaymentStartedReply) {
+    }
+    rpc ConfirmPaymentReceived (ConfirmPaymentReceivedRequest) returns (ConfirmPaymentReceivedReply) {
+    }
+    rpc KeepFunds (KeepFundsRequest) returns (KeepFundsReply) {
+    }
+    rpc WithdrawFunds (WithdrawFundsRequest) returns (WithdrawFundsReply) {
+    }
+}
+
+message TakeOfferRequest {
+    string offerId = 1;
+    string paymentAccountId = 2;
+}
+
+message TakeOfferReply {
+    TradeInfo trade = 1;
+}
+
+message ConfirmPaymentStartedRequest {
+    string tradeId = 1;
+}
+
+message ConfirmPaymentStartedReply {
+}
+
+message ConfirmPaymentReceivedRequest {
+    string tradeId = 1;
+}
+
+message ConfirmPaymentReceivedReply {
+}
+
+message GetTradeRequest {
+    string tradeId = 1;
+}
+
+message GetTradeReply {
+    TradeInfo trade = 1;
+}
+
+message KeepFundsRequest {
+    string tradeId = 1;
+}
+
+message KeepFundsReply {
+}
+
+message WithdrawFundsRequest {
+    string tradeId = 1;
+    string address = 2;
+}
+
+message WithdrawFundsReply {
+}
+
+message TradeInfo {
+    OfferInfo offer = 1;
+    string tradeId = 2;
+    string shortId = 3;
+    uint64 date = 4;
+    string role = 5;
+    bool isCurrencyForTakerFeeBtc = 6;
+    uint64 txFeeAsLong = 7;
+    uint64 takerFeeAsLong = 8;
+    string takerFeeTxId = 9;
+    string depositTxId = 10;
+    string payoutTxId = 11;
+    uint64 tradeAmountAsLong = 12;
+    uint64 tradePrice = 13;
+    string tradingPeerNodeAddress = 14;
+    string state = 15;
+    string phase = 16;
+    string tradePeriodState = 17;
+    bool isDepositPublished = 18;
+    bool isDepositConfirmed = 19;
+    bool isFiatSent = 20;
+    bool isFiatReceived = 21;
+    bool isPayoutPublished = 22;
+    bool isWithdrawn = 23;
+    string contractAsJson = 24;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////

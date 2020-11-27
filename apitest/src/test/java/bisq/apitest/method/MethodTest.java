@@ -17,38 +17,89 @@
 
 package bisq.apitest.method;
 
+import bisq.proto.grpc.CancelOfferRequest;
+import bisq.proto.grpc.ConfirmPaymentReceivedRequest;
+import bisq.proto.grpc.ConfirmPaymentStartedRequest;
 import bisq.proto.grpc.CreatePaymentAccountRequest;
 import bisq.proto.grpc.GetBalanceRequest;
 import bisq.proto.grpc.GetFundingAddressesRequest;
 import bisq.proto.grpc.GetOfferRequest;
 import bisq.proto.grpc.GetPaymentAccountsRequest;
+import bisq.proto.grpc.GetTradeRequest;
+import bisq.proto.grpc.KeepFundsRequest;
 import bisq.proto.grpc.LockWalletRequest;
 import bisq.proto.grpc.MarketPriceRequest;
 import bisq.proto.grpc.OfferInfo;
 import bisq.proto.grpc.RegisterDisputeAgentRequest;
 import bisq.proto.grpc.RemoveWalletPasswordRequest;
 import bisq.proto.grpc.SetWalletPasswordRequest;
+import bisq.proto.grpc.TakeOfferRequest;
+import bisq.proto.grpc.TradeInfo;
 import bisq.proto.grpc.UnlockWalletRequest;
+import bisq.proto.grpc.WithdrawFundsRequest;
 
 import protobuf.PaymentAccount;
 
 import java.util.stream.Collectors;
 
+import static bisq.apitest.config.BisqAppConfig.alicedaemon;
+import static bisq.apitest.config.BisqAppConfig.arbdaemon;
+import static bisq.apitest.config.BisqAppConfig.bobdaemon;
 import static bisq.common.app.DevEnv.DEV_PRIVILEGE_PRIV_KEY;
 import static bisq.core.payment.payload.PaymentMethod.PERFECT_MONEY;
+import static java.util.Arrays.stream;
 import static java.util.Comparator.comparing;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 
 
 import bisq.apitest.ApiTestCase;
 import bisq.apitest.config.BisqAppConfig;
+import bisq.cli.GrpcStubs;
 
 public class MethodTest extends ApiTestCase {
 
     protected static final String ARBITRATOR = "arbitrator";
     protected static final String MEDIATOR = "mediator";
     protected static final String REFUND_AGENT = "refundagent";
+
+    protected static GrpcStubs aliceStubs;
+    protected static GrpcStubs bobStubs;
+
+    protected static PaymentAccount alicesDummyAcct;
+    protected static PaymentAccount bobsDummyAcct;
+
+    public static void startSupportingApps(boolean registerDisputeAgents,
+                                           boolean generateBtcBlock,
+                                           Enum<?>... supportingApps) {
+        try {
+            // To run Bisq apps in debug mode, use the other setUpScaffold method:
+            // setUpScaffold(new String[]{"--supportingApps", "bitcoind,seednode,arbdaemon,alicedaemon,bobdaemon",
+            //                            "--enableBisqDebugging", "true"});
+            setUpScaffold(supportingApps);
+            if (registerDisputeAgents) {
+                registerDisputeAgents(arbdaemon);
+            }
+
+            if (stream(supportingApps).map(Enum::name).anyMatch(name -> name.equals(alicedaemon.name()))) {
+                aliceStubs = grpcStubs(alicedaemon);
+                alicesDummyAcct = getDefaultPerfectDummyPaymentAccount(alicedaemon);
+            }
+
+            if (stream(supportingApps).map(Enum::name).anyMatch(name -> name.equals(bobdaemon.name()))) {
+                bobStubs = grpcStubs(bobdaemon);
+                bobsDummyAcct = getDefaultPerfectDummyPaymentAccount(bobdaemon);
+            }
+
+            // Generate 1 regtest block for alice's and/or bob's wallet to
+            // show 10 BTC balance, and allow time for daemons parse the new block.
+            if (generateBtcBlock)
+                genBtcBlocksThenWait(1, 1500);
+        } catch (Exception ex) {
+            fail(ex);
+        }
+    }
 
     // Convenience methods for building gRPC request objects
 
@@ -86,6 +137,39 @@ public class MethodTest extends ApiTestCase {
 
     protected final GetOfferRequest createGetOfferRequest(String offerId) {
         return GetOfferRequest.newBuilder().setId(offerId).build();
+    }
+
+    protected final CancelOfferRequest createCancelOfferRequest(String offerId) {
+        return CancelOfferRequest.newBuilder().setId(offerId).build();
+    }
+
+    protected final TakeOfferRequest createTakeOfferRequest(String offerId, String paymentAccountId) {
+        return TakeOfferRequest.newBuilder().setOfferId(offerId).setPaymentAccountId(paymentAccountId).build();
+    }
+
+    protected final GetTradeRequest createGetTradeRequest(String tradeId) {
+        return GetTradeRequest.newBuilder().setTradeId(tradeId).build();
+    }
+
+    protected final ConfirmPaymentStartedRequest createConfirmPaymentStartedRequest(String tradeId) {
+        return ConfirmPaymentStartedRequest.newBuilder().setTradeId(tradeId).build();
+    }
+
+    protected final ConfirmPaymentReceivedRequest createConfirmPaymentReceivedRequest(String tradeId) {
+        return ConfirmPaymentReceivedRequest.newBuilder().setTradeId(tradeId).build();
+    }
+
+    protected final KeepFundsRequest createKeepFundsRequest(String tradeId) {
+        return KeepFundsRequest.newBuilder()
+                .setTradeId(tradeId)
+                .build();
+    }
+
+    protected final WithdrawFundsRequest createWithdrawFundsRequest(String tradeId, String address) {
+        return WithdrawFundsRequest.newBuilder()
+                .setTradeId(tradeId)
+                .setAddress(address)
+                .build();
     }
 
     // Convenience methods for calling frequently used & thoroughly tested gRPC services.
@@ -127,7 +211,7 @@ public class MethodTest extends ApiTestCase {
                 .build();
     }
 
-    protected final PaymentAccount getDefaultPerfectDummyPaymentAccount(BisqAppConfig bisqAppConfig) {
+    protected static PaymentAccount getDefaultPerfectDummyPaymentAccount(BisqAppConfig bisqAppConfig) {
         var req = GetPaymentAccountsRequest.newBuilder().build();
         var paymentAccountsService = grpcStubs(bisqAppConfig).paymentAccountsService;
         PaymentAccount paymentAccount = paymentAccountsService.getPaymentAccounts(req)
@@ -149,6 +233,40 @@ public class MethodTest extends ApiTestCase {
         return grpcStubs(bisqAppConfig).offersService.getOffer(req).getOffer();
     }
 
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    protected final void cancelOffer(BisqAppConfig bisqAppConfig, String offerId) {
+        var req = createCancelOfferRequest(offerId);
+        grpcStubs(bisqAppConfig).offersService.cancelOffer(req);
+    }
+
+    protected final TradeInfo getTrade(BisqAppConfig bisqAppConfig, String tradeId) {
+        var req = createGetTradeRequest(tradeId);
+        return grpcStubs(bisqAppConfig).tradesService.getTrade(req).getTrade();
+    }
+
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    protected final void confirmPaymentStarted(BisqAppConfig bisqAppConfig, String tradeId) {
+        var req = createConfirmPaymentStartedRequest(tradeId);
+        grpcStubs(bisqAppConfig).tradesService.confirmPaymentStarted(req);
+    }
+
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    protected final void confirmPaymentReceived(BisqAppConfig bisqAppConfig, String tradeId) {
+        var req = createConfirmPaymentReceivedRequest(tradeId);
+        grpcStubs(bisqAppConfig).tradesService.confirmPaymentReceived(req);
+    }
+
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    protected final void keepFunds(BisqAppConfig bisqAppConfig, String tradeId) {
+        var req = createKeepFundsRequest(tradeId);
+        grpcStubs(bisqAppConfig).tradesService.keepFunds(req);
+    }
+
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    protected final void withdrawFunds(BisqAppConfig bisqAppConfig, String tradeId, String address) {
+        var req = createWithdrawFundsRequest(tradeId, address);
+        grpcStubs(bisqAppConfig).tradesService.withdrawFunds(req);
+    }
     // Static conveniences for test methods and test case fixture setups.
 
     protected static RegisterDisputeAgentRequest createRegisterDisputeAgentRequest(String disputeAgentType) {

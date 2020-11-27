@@ -35,7 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class TradeStatistics3Store extends PersistableNetworkPayloadStore<TradeStatistics3> {
 
-    TradeStatistics3Store() {
+    public TradeStatistics3Store() {
     }
 
 

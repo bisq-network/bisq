@@ -45,5 +45,7 @@ public class BuyerSetupPayoutTxListener extends SetupPayoutTxListener {
     @Override
     protected void setState() {
         trade.setStateIfValidTransitionTo(Trade.State.BUYER_SAW_PAYOUT_TX_IN_NETWORK);
+
+        processModel.getTradeManager().requestPersistence();
     }
 }

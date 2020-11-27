@@ -17,6 +17,8 @@
 
 package bisq.cli;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 
@@ -27,15 +29,17 @@ import java.util.Locale;
 
 import static java.lang.String.format;
 
-class CurrencyFormat {
+@VisibleForTesting
+public class CurrencyFormat {
 
     private static final NumberFormat NUMBER_FORMAT = NumberFormat.getInstance(Locale.US);
 
     static final BigDecimal SATOSHI_DIVISOR = new BigDecimal(100000000);
     static final DecimalFormat BTC_FORMAT = new DecimalFormat("###,##0.00000000");
 
+    @VisibleForTesting
     @SuppressWarnings("BigDecimalMethodWithoutRoundingCalled")
-    static String formatSatoshis(long sats) {
+    public static String formatSatoshis(long sats) {
         return BTC_FORMAT.format(BigDecimal.valueOf(sats).divide(SATOSHI_DIVISOR));
     }
 

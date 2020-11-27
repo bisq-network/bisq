@@ -19,7 +19,6 @@ package bisq.core.app.misc;
 
 import bisq.core.account.sign.SignedWitnessService;
 import bisq.core.account.witness.AccountAgeWitnessService;
-import bisq.core.app.TorSetup;
 import bisq.core.dao.DaoSetup;
 import bisq.core.dao.governance.ballot.BallotListService;
 import bisq.core.dao.governance.blindvote.MyBlindVoteListService;
@@ -31,6 +30,8 @@ import bisq.core.filter.FilterManager;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 
 import bisq.network.p2p.P2PService;
+import bisq.network.p2p.peers.PeerManager;
+import bisq.network.p2p.storage.P2PDataStorage;
 
 import bisq.common.config.Config;
 
@@ -44,6 +45,8 @@ public class AppSetupWithP2PAndDAO extends AppSetupWithP2P {
 
     @Inject
     public AppSetupWithP2PAndDAO(P2PService p2PService,
+                                 P2PDataStorage p2PDataStorage,
+                                 PeerManager peerManager,
                                  TradeStatisticsManager tradeStatisticsManager,
                                  AccountAgeWitnessService accountAgeWitnessService,
                                  SignedWitnessService signedWitnessService,
@@ -55,14 +58,14 @@ public class AppSetupWithP2PAndDAO extends AppSetupWithP2P {
                                  MyProposalListService myProposalListService,
                                  MyReputationListService myReputationListService,
                                  MyProofOfBurnListService myProofOfBurnListService,
-                                 TorSetup torSetup,
                                  Config config) {
         super(p2PService,
+                p2PDataStorage,
+                peerManager,
                 tradeStatisticsManager,
                 accountAgeWitnessService,
                 signedWitnessService,
                 filterManager,
-                torSetup,
                 config);
 
         this.daoSetup = daoSetup;

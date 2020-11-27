@@ -39,20 +39,26 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class ClosedTradableManager implements PersistedDataHost {
     private final PersistenceManager<TradableList<Tradable>> persistenceManager;
     private final TradableList<Tradable> closedTradables = new TradableList<>();
     private final KeyRing keyRing;
     private final PriceFeedService priceFeedService;
+    private final CleanupMailboxMessages cleanupMailboxMessages;
     private final DumpDelayedPayoutTx dumpDelayedPayoutTx;
 
     @Inject
     public ClosedTradableManager(KeyRing keyRing,
                                  PriceFeedService priceFeedService,
                                  PersistenceManager<TradableList<Tradable>> persistenceManager,
+                                 CleanupMailboxMessages cleanupMailboxMessages,
                                  DumpDelayedPayoutTx dumpDelayedPayoutTx) {
         this.keyRing = keyRing;
         this.priceFeedService = priceFeedService;
+        this.cleanupMailboxMessages = cleanupMailboxMessages;
         this.dumpDelayedPayoutTx = dumpDelayedPayoutTx;
         this.persistenceManager = persistenceManager;
 
@@ -60,26 +66,31 @@ public class ClosedTradableManager implements PersistedDataHost {
     }
 
     @Override
-    public void readPersisted() {
-        TradableList<Tradable> persisted = persistenceManager.getPersisted();
-        if (persisted != null) {
-            closedTradables.setAll(persisted.getList());
-        }
+    public void readPersisted(Runnable completeHandler) {
+        persistenceManager.readPersisted(persisted -> {
+                    closedTradables.setAll(persisted.getList());
+                    closedTradables.stream()
+                            .filter(tradable -> tradable.getOffer() != null)
+                            .forEach(tradable -> tradable.getOffer().setPriceFeedService(priceFeedService));
+                    dumpDelayedPayoutTx.maybeDumpDelayedPayoutTxs(closedTradables, "delayed_payout_txs_closed");
+                    completeHandler.run();
+                },
+                completeHandler);
+    }
 
-        closedTradables.forEach(tradable -> tradable.getOffer().setPriceFeedService(priceFeedService));
-
-        dumpDelayedPayoutTx.maybeDumpDelayedPayoutTxs(closedTradables, "delayed_payout_txs_closed");
+    public void onAllServicesInitialized() {
+        cleanupMailboxMessages.handleTrades(getClosedTrades());
     }
 
     public void add(Tradable tradable) {
         if (closedTradables.add(tradable)) {
-            persistenceManager.requestPersistence();
+            requestPersistence();
         }
     }
 
     public void remove(Tradable tradable) {
         if (closedTradables.remove(tradable)) {
-            persistenceManager.requestPersistence();
+            requestPersistence();
         }
     }
 
@@ -105,5 +116,9 @@ public class ClosedTradableManager implements PersistedDataHost {
     public Stream<Trade> getTradesStreamWithFundsLockedIn() {
         return getClosedTrades().stream()
                 .filter(Trade::isFundsLockedIn);
+    }
+
+    private void requestPersistence() {
+        persistenceManager.requestPersistence();
     }
 }

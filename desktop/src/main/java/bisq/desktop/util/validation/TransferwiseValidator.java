@@ -15,20 +15,27 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.price.spot.providers;
+package bisq.desktop.util.validation;
 
-import bisq.price.AbstractExchangeRateProviderTest;
+import bisq.core.util.validation.InputValidator;
 
-import lombok.extern.slf4j.Slf4j;
+import javax.inject.Inject;
 
-import org.junit.jupiter.api.Test;
+public final class TransferwiseValidator extends InputValidator {
+    private final EmailValidator emailValidator;
 
-@Slf4j
-public class HitbtcTest extends AbstractExchangeRateProviderTest {
-
-    @Test
-    public void doGet_successfulCall() {
-        doGet_successfulCall(new Hitbtc());
+    @Inject
+    public TransferwiseValidator(EmailValidator emailValidator) {
+        this.emailValidator = emailValidator;
     }
 
+    @Override
+    public ValidationResult validate(String input) {
+        ValidationResult result = super.validate(input);
+
+        if (!result.isValid)
+            return result;
+
+        return emailValidator.validate(input);
+    }
 }

@@ -1700,6 +1700,10 @@ textfield */
     -fx-font-size: 0.880em;
 }
 
+#price-chart .axis-tick-mark-text-node, #volume-chart .axis-tick-mark-text-node {
+    -fx-text-alignment: center;
+}
+
 #charts .chart-plot-background, #charts-dao .chart-plot-background {
     -fx-background-color: -bs-background-color;
 }
@@ -1745,6 +1749,10 @@ textfield */
 #charts .axis-label {
     -fx-font-size: 0.769em;
     -fx-alignment: center-left;
+}
+
+#charts .axisy .axis-label {
+    -fx-alignment: center;
 }
 
 /********************************************************************************************************************
@@ -2169,4 +2177,3 @@ textfield */
     -fx-stroke: linear-gradient(to bottom, -bs-text-color-transparent, -bs-text-color-transparent-dark) !important;
     -fx-fill: -bs-background-color !important;
 }
-

@@ -89,7 +89,7 @@ public abstract class MakerSendsInputsForDepositTxResponse extends TradeTask {
                     trade.getLockTime());
 
             trade.setState(Trade.State.MAKER_SENT_PUBLISH_DEPOSIT_TX_REQUEST);
-
+            processModel.getTradeManager().requestPersistence();
             NodeAddress peersNodeAddress = trade.getTradingPeerNodeAddress();
             log.info("Send {} to peer {}. tradeId={}, uid={}",
                     message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
@@ -103,6 +103,7 @@ public abstract class MakerSendsInputsForDepositTxResponse extends TradeTask {
                             log.info("{} arrived at peer {}. tradeId={}, uid={}",
                                     message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
                             trade.setState(Trade.State.MAKER_SAW_ARRIVED_PUBLISH_DEPOSIT_TX_REQUEST);
+                            processModel.getTradeManager().requestPersistence();
                             complete();
                         }
 
@@ -112,6 +113,7 @@ public abstract class MakerSendsInputsForDepositTxResponse extends TradeTask {
                                     message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid(), errorMessage);
                             trade.setState(Trade.State.MAKER_SEND_FAILED_PUBLISH_DEPOSIT_TX_REQUEST);
                             appendToErrorMessage("Sending message failed: message=" + message + "\nerrorMessage=" + errorMessage);
+                            processModel.getTradeManager().requestPersistence();
                             failed(errorMessage);
                         }
                     }

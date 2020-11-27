@@ -137,6 +137,7 @@ public class FeeReceiverSelectorTest {
                 null,
                 null,
                 null,
-                false);
+                false,
+                Lists.newArrayList());
     }
 }

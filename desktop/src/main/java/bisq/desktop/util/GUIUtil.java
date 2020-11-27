@@ -194,7 +194,7 @@ public class GUIUtil {
     public static void showFeeInfoBeforeExecute(Runnable runnable) {
         String key = "miningFeeInfo";
         if (!DevEnv.isDevMode() && DontShowAgainLookup.showAgain(key)) {
-            new Popup().attention(Res.get("guiUtil.miningFeeInfo", String.valueOf(GUIUtil.feeService.getTxFeePerByte().value)))
+            new Popup().attention(Res.get("guiUtil.miningFeeInfo", String.valueOf(GUIUtil.feeService.getTxFeePerVbyte().value)))
                     .onClose(runnable)
                     .useIUnderstandButton()
                     .show();
@@ -247,25 +247,24 @@ public class GUIUtil {
                 String directory = Paths.get(path).getParent().toString();
                 preferences.setDirectoryChooserPath(directory);
                 PersistenceManager<PaymentAccountList> persistenceManager = new PersistenceManager<>(new File(directory), persistenceProtoResolver, corruptedStorageFileHandler);
-                PaymentAccountList persisted = persistenceManager.getPersisted(fileName);
-                if (persisted != null) {
-                    final StringBuilder msg = new StringBuilder();
-                    final HashSet<PaymentAccount> paymentAccounts = new HashSet<>();
-                    persisted.getList().forEach(paymentAccount -> {
-                        final String id = paymentAccount.getId();
-                        if (user.getPaymentAccount(id) == null) {
-                            paymentAccounts.add(paymentAccount);
-                            msg.append(Res.get("guiUtil.accountExport.tradingAccount", id));
-                        } else {
-                            msg.append(Res.get("guiUtil.accountImport.noImport", id));
-                        }
-                    });
-                    user.addImportedPaymentAccounts(paymentAccounts);
-                    new Popup().feedback(Res.get("guiUtil.accountImport.imported", path, msg)).show();
-
-                } else {
-                    new Popup().warning(Res.get("guiUtil.accountImport.noAccountsFound", path, fileName)).show();
-                }
+                persistenceManager.readPersisted(fileName, persisted -> {
+                            StringBuilder msg = new StringBuilder();
+                            HashSet<PaymentAccount> paymentAccounts = new HashSet<>();
+                            persisted.getList().forEach(paymentAccount -> {
+                                String id = paymentAccount.getId();
+                                if (user.getPaymentAccount(id) == null) {
+                                    paymentAccounts.add(paymentAccount);
+                                    msg.append(Res.get("guiUtil.accountExport.tradingAccount", id));
+                                } else {
+                                    msg.append(Res.get("guiUtil.accountImport.noImport", id));
+                                }
+                            });
+                            user.addImportedPaymentAccounts(paymentAccounts);
+                            new Popup().feedback(Res.get("guiUtil.accountImport.imported", path, msg)).show();
+                        },
+                        () -> {
+                            new Popup().warning(Res.get("guiUtil.accountImport.noAccountsFound", path, fileName)).show();
+                        });
             } else {
                 log.error("The selected file is not the expected file for import. The expected file name is: " + fileName + ".");
             }
@@ -276,7 +275,6 @@ public class GUIUtil {
     public static <T> void exportCSV(String fileName, CSVEntryConverter<T> headerConverter,
                                      CSVEntryConverter<T> contentConverter, T emptyItem,
                                      List<T> list, Stage stage) {
-
         FileChooser fileChooser = new FileChooser();
         fileChooser.setInitialFileName(fileName);
         File file = fileChooser.showSaveDialog(stage);
@@ -296,7 +294,7 @@ public class GUIUtil {
             } catch (RuntimeException | IOException e) {
                 e.printStackTrace();
                 log.error(e.getMessage());
-                new Popup().error(Res.get("guiUtil.accountExport.exportFailed", e.getMessage()));
+                new Popup().error(Res.get("guiUtil.accountExport.exportFailed", e.getMessage())).show();
             }
         }
     }
@@ -758,6 +756,15 @@ public class GUIUtil {
         return true;
     }
 
+    public static boolean isChainHeightSyncedWithinToleranceOrShowPopup(WalletsSetup walletsSetup) {
+        if (!walletsSetup.isChainHeightSyncedWithinTolerance()) {
+            new Popup().information(Res.get("popup.warning.chainNotSynced")).show();
+            return false;
+        }
+
+        return true;
+    }
+
     public static boolean canCreateOrTakeOfferOrShowPopup(User user, Navigation navigation) {
         if (!user.hasAcceptedRefundAgents()) {
             new Popup().warning(Res.get("popup.warning.noArbitratorsAvailable")).show();
@@ -913,7 +920,7 @@ public class GUIUtil {
     public static void showBsqFeeInfoPopup(Coin fee,
                                            Coin miningFee,
                                            Coin btcForIssuance,
-                                           int txSize,
+                                           int txVsize,
                                            BsqFormatter bsqFormatter,
                                            CoinFormatter btcFormatter,
                                            String type,
@@ -927,16 +934,16 @@ public class GUIUtil {
                     bsqFormatter.formatBTCWithCode(btcForIssuance),
                     100,
                     btcFormatter.formatCoinWithCode(miningFee),
-                    CoinUtil.getFeePerByte(miningFee, txSize),
-                    txSize / 1000d,
+                    CoinUtil.getFeePerVbyte(miningFee, txVsize),
+                    txVsize / 1000d,
                     type);
         } else {
             confirmationMessage = Res.get("dao.feeTx.confirm.details",
                     StringUtils.capitalize(type),
                     bsqFormatter.formatCoinWithCode(fee),
                     btcFormatter.formatCoinWithCode(miningFee),
-                    CoinUtil.getFeePerByte(miningFee, txSize),
-                    txSize / 1000d,
+                    CoinUtil.getFeePerVbyte(miningFee, txVsize),
+                    txVsize / 1000d,
                     type);
         }
         new Popup().headLine(Res.get("dao.feeTx.confirm", type))
@@ -947,10 +954,10 @@ public class GUIUtil {
                 .show();
     }
 
-    public static void showBsqFeeInfoPopup(Coin fee, Coin miningFee, int txSize, BsqFormatter bsqFormatter,
+    public static void showBsqFeeInfoPopup(Coin fee, Coin miningFee, int txVsize, BsqFormatter bsqFormatter,
                                            CoinFormatter btcFormatter, String type,
                                            Runnable actionHandler) {
-        showBsqFeeInfoPopup(fee, miningFee, null, txSize, bsqFormatter, btcFormatter, type, actionHandler);
+        showBsqFeeInfoPopup(fee, miningFee, null, txVsize, bsqFormatter, btcFormatter, type, actionHandler);
     }
 
     public static void setFitToRowsForTableView(TableView<?> tableView,
@@ -1108,6 +1115,10 @@ public class GUIUtil {
     }
 
     public static MaterialDesignIcon getIconForSignState(AccountAgeWitnessService.SignState state) {
+        if (state.equals(AccountAgeWitnessService.SignState.PEER_INITIAL)) {
+            return MaterialDesignIcon.CLOCK;
+        }
+
         return (state.equals(AccountAgeWitnessService.SignState.ARBITRATOR) ||
                 state.equals(AccountAgeWitnessService.SignState.PEER_SIGNER)) ?
                 MaterialDesignIcon.APPROVAL : MaterialDesignIcon.ALERT_CIRCLE_OUTLINE;

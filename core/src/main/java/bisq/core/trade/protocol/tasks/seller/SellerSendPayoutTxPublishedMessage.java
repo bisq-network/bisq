@@ -65,6 +65,7 @@ public class SellerSendPayoutTxPublishedMessage extends SendMailboxMessageTask {
         trade.setState(Trade.State.SELLER_SENT_PAYOUT_TX_PUBLISHED_MSG);
         log.info("Sent PayoutTxPublishedMessage: tradeId={} at peer {} SignedWitness {}",
                 trade.getId(), trade.getTradingPeerNodeAddress(), signedWitness);
+        processModel.getTradeManager().requestPersistence();
     }
 
     @Override
@@ -72,6 +73,7 @@ public class SellerSendPayoutTxPublishedMessage extends SendMailboxMessageTask {
         trade.setState(Trade.State.SELLER_SAW_ARRIVED_PAYOUT_TX_PUBLISHED_MSG);
         log.info("PayoutTxPublishedMessage arrived: tradeId={} at peer {} SignedWitness {}",
                 trade.getId(), trade.getTradingPeerNodeAddress(), signedWitness);
+        processModel.getTradeManager().requestPersistence();
     }
 
     @Override
@@ -79,6 +81,7 @@ public class SellerSendPayoutTxPublishedMessage extends SendMailboxMessageTask {
         trade.setState(Trade.State.SELLER_STORED_IN_MAILBOX_PAYOUT_TX_PUBLISHED_MSG);
         log.info("PayoutTxPublishedMessage storedInMailbox: tradeId={} at peer {} SignedWitness {}",
                 trade.getId(), trade.getTradingPeerNodeAddress(), signedWitness);
+        processModel.getTradeManager().requestPersistence();
     }
 
     @Override
@@ -86,6 +89,7 @@ public class SellerSendPayoutTxPublishedMessage extends SendMailboxMessageTask {
         trade.setState(Trade.State.SELLER_SEND_FAILED_PAYOUT_TX_PUBLISHED_MSG);
         log.error("PayoutTxPublishedMessage failed: tradeId={} at peer {} SignedWitness {}",
                 trade.getId(), trade.getTradingPeerNodeAddress(), signedWitness);
+        processModel.getTradeManager().requestPersistence();
     }
 
     @Override

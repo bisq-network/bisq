@@ -23,6 +23,9 @@ import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletsManager;
 
+import bisq.common.Timer;
+import bisq.common.UserThread;
+
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.TransactionConfidence;
 import org.bitcoinj.crypto.KeyCrypterScrypt;
@@ -37,8 +40,6 @@ import org.bouncycastle.crypto.params.KeyParameter;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -57,7 +58,7 @@ class CoreWalletsService {
     private final BtcWalletService btcWalletService;
 
     @Nullable
-    private TimerTask lockTask;
+    private Timer lockTimer;
 
     @Nullable
     private KeyParameter tempAesKey;
@@ -69,6 +70,12 @@ class CoreWalletsService {
         this.balances = balances;
         this.walletsManager = walletsManager;
         this.btcWalletService = btcWalletService;
+    }
+
+    @Nullable
+    KeyParameter getKey() {
+        verifyEncryptedWalletIsUnlocked();
+        return tempAesKey;
     }
 
     long getAvailableBalance() {
@@ -184,29 +191,22 @@ class CoreWalletsService {
         if (!walletsManager.checkAESKey(tempAesKey))
             throw new IllegalStateException("incorrect password");
 
-        if (lockTask != null) {
-            // The user is overriding a prior unlock timeout.  Cancel the existing
-            // lock TimerTask to prevent it from calling lockWallet() before or after the
-            // new timer task does.
-            lockTask.cancel();
-            // Avoid the synchronized(lock) overhead of an unnecessary lockTask.cancel()
-            // call the next time 'unlockwallet' is called.
-            lockTask = null;
+        if (lockTimer != null) {
+            // The user has called unlockwallet again, before the prior unlockwallet
+            // timeout has expired.  He's overriding it with a new timeout value.
+            // Remove the existing lock timer to prevent it from calling lockwallet
+            // before or after the new one does.
+            lockTimer.stop();
+            lockTimer = null;
         }
 
-        lockTask = new TimerTask() {
-            @Override
-            public void run() {
-                if (tempAesKey != null) {
-                    // Do not try to lock wallet after timeout if the user has already
-                    // done so via 'lockwallet'
-                    log.info("Locking wallet after {} second timeout expired.", timeout);
-                    tempAesKey = null;
-                }
+        lockTimer = UserThread.runAfter(() -> {
+            if (tempAesKey != null) {
+                // The unlockwallet timeout has expired;  re-lock the wallet.
+                log.info("Locking wallet after {} second timeout expired.", timeout);
+                tempAesKey = null;
             }
-        };
-        Timer timer = new Timer("Lock Wallet Timer");
-        timer.schedule(lockTask, SECONDS.toMillis(timeout));
+        }, timeout, SECONDS);
     }
 
     // Provided for automated wallet protection method testing, despite the

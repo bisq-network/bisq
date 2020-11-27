@@ -48,8 +48,8 @@ import sun.misc.Signal;
 public class CommonSetup {
 
     public static void setup(Config config, GracefulShutDownHandler gracefulShutDownHandler) {
-        AsciiLogo.showAsciiLogo();
         setupLog(config);
+        AsciiLogo.showAsciiLogo();
         Version.setBaseCryptoNetworkId(config.baseCurrencyNetwork.ordinal());
         Version.printVersion();
         maybePrintPathOfCodeSource();
@@ -102,13 +102,15 @@ public class CommonSetup {
 
     protected static void setupSigIntHandlers(GracefulShutDownHandler gracefulShutDownHandler) {
         Signal.handle(new Signal("INT"), signal -> {
-            gracefulShutDownHandler.gracefulShutDown(() -> {
-            });
+            log.info("Received {}", signal);
+            UserThread.execute(() -> gracefulShutDownHandler.gracefulShutDown(() -> {
+            }));
         });
 
         Signal.handle(new Signal("TERM"), signal -> {
-            gracefulShutDownHandler.gracefulShutDown(() -> {
-            });
+            log.info("Received {}", signal);
+            UserThread.execute(() -> gracefulShutDownHandler.gracefulShutDown(() -> {
+            }));
         });
     }
 
