@@ -10,11 +10,11 @@
 #     echo 'export JAVA_HOME=/Library/Java/JavaVirtualMachines/<ENTER_NEW_JDK>/Contents/Home' >>~/.bash_profile
 #     echo 'export PATH=$JAVA_HOME/bin:$PATH' >>~/.bash_profile
 #     source ~/.bash_profile
-
+set -e # exit if an error occurs
 
 unameOut="$(uname -s)"
 case "${unameOut}" in
-    Linux*)     
+    Linux*)
         JAVA_HOME=/usr/lib/jvm/openjdk-10.0.2
         JDK_FILENAME=openjdk-10.0.2_linux-x64_bin.tar.gz
         JDK_URL=https://download.java.net/java/GA/jdk10/10.0.2/19aef61b38124481863b1413dce1855f/13/openjdk-10.0.2_linux-x64_bin.tar.gz
