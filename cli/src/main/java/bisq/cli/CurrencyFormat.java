@@ -61,9 +61,9 @@ public class CurrencyFormat {
 
         String formatString;
         if (customTxFeeRate == null)
-            formatString = String.format("tx fee rate: %s sats/byte", stdTxFeeRate);
+            formatString = format("tx fee rate: %s sats/byte", stdTxFeeRate);
         else
-            formatString = String.format("custom tx fee rate: %s sats/byte, network rate: %s sats/byte",
+            formatString = format("custom tx fee rate: %s sats/byte, network rate: %s sats/byte",
                     customTxFeeRate,
                     stdTxFeeRate);
 
