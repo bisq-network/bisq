@@ -20,6 +20,7 @@ package bisq.core.trade.protocol.tasks.buyer_as_taker;
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.offer.Offer;
 import bisq.core.trade.Trade;
 import bisq.core.trade.protocol.TradingPeer;
 import bisq.core.trade.protocol.tasks.TradeTask;
@@ -71,6 +72,10 @@ public class BuyerAsTakerSignsDepositTx extends TradeTask {
             buyerMultiSigAddressEntry.setCoinLockedInMultiSig(buyerInput.subtract(trade.getTxFee().multiply(2)));
             walletService.saveAddressEntryList();
 
+            Offer offer = trade.getOffer();
+            Coin msOutputAmount = offer.getBuyerSecurityDeposit().add(offer.getSellerSecurityDeposit()).add(trade.getTxFee())
+                    .add(checkNotNull(trade.getTradeAmount()));
+
             TradingPeer tradingPeer = processModel.getTradingPeer();
             byte[] buyerMultiSigPubKey = processModel.getMyMultiSigPubKey();
             checkArgument(Arrays.equals(buyerMultiSigPubKey, buyerMultiSigAddressEntry.getPubKey()),
@@ -82,6 +87,7 @@ public class BuyerAsTakerSignsDepositTx extends TradeTask {
                     false,
                     contractHash,
                     processModel.getPreparedDepositTx(),
+                    msOutputAmount,
                     buyerInputs,
                     sellerInputs,
                     buyerMultiSigPubKey,
