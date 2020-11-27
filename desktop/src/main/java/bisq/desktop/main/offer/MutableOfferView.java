@@ -459,7 +459,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
     }
 
     private void updateOfferElementsStyle() {
-        GridPane.setColumnSpan(firstRowHBox, 1);
+        GridPane.setColumnSpan(firstRowHBox, 2);
 
         final String activeInputStyle = "input-with-border";
         final String readOnlyInputStyle = "input-with-border-readonly";
@@ -991,7 +991,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
 
         paymentGroupBox = new HBox();
         paymentGroupBox.setAlignment(Pos.CENTER_LEFT);
-        paymentGroupBox.setSpacing(62);
+        paymentGroupBox.setSpacing(12);
         paymentGroupBox.setPadding(new Insets(10, 0, 18, 0));
 
         final Tuple3<VBox, Label, ComboBox<PaymentAccount>> tradingAccountBoxTuple = addTopLabelComboBox(
@@ -1007,12 +1007,15 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
         GridPane.setMargin(paymentGroupBox, new Insets(Layout.FIRST_ROW_DISTANCE, 0, 0, 0));
         gridPane.getChildren().add(paymentGroupBox);
 
+        tradingAccountBoxTuple.first.setMinWidth(800);
         paymentAccountsComboBox = tradingAccountBoxTuple.third;
-        paymentAccountsComboBox.setMinWidth(300);
+        paymentAccountsComboBox.setMinWidth(tradingAccountBoxTuple.first.getMinWidth());
+        paymentAccountsComboBox.setPrefWidth(tradingAccountBoxTuple.first.getMinWidth());
         editOfferElements.add(tradingAccountBoxTuple.first);
 
         // we display either currencyComboBox (multi currency account) or currencyTextField (single)
         currencyComboBox = currencyBoxTuple.third;
+        currencyComboBox.setMaxWidth(tradingAccountBoxTuple.first.getMinWidth() / 2);
         editOfferElements.add(currencySelection);
         currencyComboBox.setConverter(new StringConverter<>() {
             @Override
