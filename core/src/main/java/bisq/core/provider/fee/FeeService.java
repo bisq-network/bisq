@@ -20,7 +20,6 @@ package bisq.core.provider.fee;
 import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.state.DaoStateService;
-import bisq.core.locale.Res;
 
 import bisq.common.UserThread;
 import bisq.common.config.Config;
@@ -192,10 +191,7 @@ public class FeeService {
         return feeUpdateCounter;
     }
 
-    public String getFeeTextForDisplay() {
-        // only show the fee rate if it has been initialized from the service (see feeUpdateCounter)
-        if (feeUpdateCounter.get() > 0)
-            return Res.get("mainView.footer.btcFeeRate", txFeePerVbyte);
-        return "";
+    public boolean isFeeAvailable() {
+        return feeUpdateCounter.get() > 0;
     }
 }
