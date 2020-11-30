@@ -565,19 +565,21 @@ public class TradeWalletService {
      * @param takerIsSeller             the flag indicating if we are in the taker as seller role or the opposite
      * @param contractHash              the hash of the contract to be added to the OP_RETURN output
      * @param makersDepositTxSerialized the prepared deposit transaction signed by the maker
+     * @param msOutputAmount            the MultiSig output amount, as determined by the taker
      * @param buyerInputs               the connected outputs for all inputs of the buyer
      * @param sellerInputs              the connected outputs for all inputs of the seller
      * @param buyerPubKey               the public key of the buyer
      * @param sellerPubKey              the public key of the seller
      * @throws SigningException if (one of) the taker input(s) was of an unrecognized type for signing
      * @throws TransactionVerificationException if a non-P2WH maker-as-buyer input wasn't signed, the maker's MultiSig
-     * script or contract hash doesn't match the taker's, or there was an unexpected problem with the final deposit tx
-     * or its signatures
+     * script, contract hash or output amount doesn't match the taker's, or there was an unexpected problem with the
+     * final deposit tx or its signatures
      * @throws WalletException if the taker's wallet is null or structurally inconsistent
      */
     public Transaction takerSignsDepositTx(boolean takerIsSeller,
                                            byte[] contractHash,
                                            byte[] makersDepositTxSerialized,
+                                           Coin msOutputAmount,
                                            List<RawTransactionInput> buyerInputs,
                                            List<RawTransactionInput> sellerInputs,
                                            byte[] buyerPubKey,
@@ -588,10 +590,15 @@ public class TradeWalletService {
         checkArgument(!buyerInputs.isEmpty());
         checkArgument(!sellerInputs.isEmpty());
 
-        // Check if maker's MultiSig script is identical to the takers
+        // Check if maker's MultiSig script is identical to the taker's
         Script hashedMultiSigOutputScript = get2of2MultiSigOutputScript(buyerPubKey, sellerPubKey, false);
         if (!makersDepositTx.getOutput(0).getScriptPubKey().equals(hashedMultiSigOutputScript)) {
-            throw new TransactionVerificationException("Maker's hashedMultiSigOutputScript does not match to takers hashedMultiSigOutputScript");
+            throw new TransactionVerificationException("Maker's hashedMultiSigOutputScript does not match taker's hashedMultiSigOutputScript");
+        }
+
+        // Check if maker's MultiSig output value is identical to the taker's
+        if (!makersDepositTx.getOutput(0).getValue().equals(msOutputAmount)) {
+            throw new TransactionVerificationException("Maker's MultiSig output amount does not match taker's MultiSig output amount");
         }
 
         // The outpoints are not available from the serialized makersDepositTx, so we cannot use that tx directly, but we use it to construct a new
@@ -642,7 +649,7 @@ public class TradeWalletService {
         TransactionOutput makersContractHashOutput = makersDepositTx.getOutputs().get(1);
         log.debug("makersContractHashOutput {}", makersContractHashOutput);
         if (!makersContractHashOutput.getScriptPubKey().equals(contractHashOutput.getScriptPubKey())) {
-            throw new TransactionVerificationException("Maker's transaction output for the contract hash is not matching takers version.");
+            throw new TransactionVerificationException("Maker's transaction output for the contract hash is not matching taker's version.");
         }
 
         // Add all outputs from makersDepositTx to depositTx
