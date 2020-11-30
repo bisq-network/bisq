@@ -103,7 +103,7 @@ public class UnlockTxService {
         checkArgument(optionalLockupTxOutput.isPresent(), "lockupTxOutput must be present");
         TxOutput lockupTxOutput = optionalLockupTxOutput.get();
         Transaction preparedTx = bsqWalletService.getPreparedUnlockTx(lockupTxOutput);
-        Transaction txWithBtcFee = btcWalletService.completePreparedBsqTx(preparedTx, true, null);
+        Transaction txWithBtcFee = btcWalletService.completePreparedBsqTx(preparedTx);
         Transaction transaction = bsqWalletService.signTx(txWithBtcFee);
         log.info("Unlock tx: " + transaction);
         return transaction;

@@ -43,6 +43,7 @@ import bisq.proto.grpc.SendBsqRequest;
 import bisq.proto.grpc.SetTxFeeRatePreferenceRequest;
 import bisq.proto.grpc.SetWalletPasswordRequest;
 import bisq.proto.grpc.TakeOfferRequest;
+import bisq.proto.grpc.TxInfo;
 import bisq.proto.grpc.UnlockWalletRequest;
 import bisq.proto.grpc.UnsetTxFeeRatePreferenceRequest;
 import bisq.proto.grpc.WithdrawFundsRequest;
@@ -258,19 +259,19 @@ public class CliMain {
                     if (nonOptionArgs.size() < 3)
                         throw new IllegalArgumentException("no bsq amount specified");
 
-                    double amount;
-                    try {
-                        amount = Double.parseDouble(nonOptionArgs.get(2));
-                    } catch (NumberFormatException e) {
-                        throw new IllegalArgumentException(format("'%s' is not a number", nonOptionArgs.get(2)));
-                    }
+                    double amount = parseAmountParam(nonOptionArgs.get(2));
+                    long txFeeRate = nonOptionArgs.size() == 4
+                            ? parseTxFeeRateParam(nonOptionArgs.get(3))
+                            : -1;
 
                     var request = SendBsqRequest.newBuilder()
                             .setAddress(address)
                             .setAmount(amount)
+                            .setTxFeeRate(txFeeRate)
                             .build();
-                    walletsService.sendBsq(request);
-                    out.printf("%.2f BSQ sent to %s%n", amount, address);
+                    var reply = walletsService.sendBsq(request);
+                    TxInfo txInfo = reply.getTxInfo();
+                    out.printf("%.2f bsq sent to %s in tx %s%n", amount, address, txInfo.getId());
                     return;
                 }
                 case gettxfeerate: {
@@ -646,6 +647,22 @@ public class CliMain {
         }
     }
 
+    private static double parseAmountParam(String amountParam) {
+        try {
+            return Double.parseDouble(amountParam);
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException(format("'%s' is not a number", amountParam));
+        }
+    }
+
+    private static long parseTxFeeRateParam(String txFeeRateParam) {
+        try {
+            return Long.parseLong(txFeeRateParam);
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException(format("'%s' is not a number", txFeeRateParam));
+        }
+    }
+
     private static void printHelp(OptionParser parser, PrintStream stream) {
         try {
             stream.println("Bisq RPC Client");
@@ -662,7 +679,7 @@ public class CliMain {
             stream.format(rowFormat, "getaddressbalance", "address", "Get server wallet address balance");
             stream.format(rowFormat, "getfundingaddresses", "", "Get BTC funding addresses");
             stream.format(rowFormat, "getunusedbsqaddress", "", "Get unused BSQ address");
-            stream.format(rowFormat, "sendbsq", "address, amount", "Send BSQ");
+            stream.format(rowFormat, "sendbsq", "address, amount [,tx fee rate (sats/byte)]", "Send BSQ");
             stream.format(rowFormat, "gettxfeerate", "", "Get current tx fee rate in sats/byte");
             stream.format(rowFormat, "settxfeerate", "satoshis (per byte)", "Set custom tx fee rate in sats/byte");
             stream.format(rowFormat, "unsettxfeerate", "", "Unset custom tx fee rate");

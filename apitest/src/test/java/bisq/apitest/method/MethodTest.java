@@ -50,6 +50,7 @@ import bisq.proto.grpc.SetTxFeeRatePreferenceRequest;
 import bisq.proto.grpc.SetWalletPasswordRequest;
 import bisq.proto.grpc.TakeOfferRequest;
 import bisq.proto.grpc.TradeInfo;
+import bisq.proto.grpc.TxInfo;
 import bisq.proto.grpc.UnlockWalletRequest;
 import bisq.proto.grpc.UnsetTxFeeRatePreferenceRequest;
 import bisq.proto.grpc.WithdrawFundsRequest;
@@ -159,8 +160,12 @@ public class MethodTest extends ApiTestCase {
         return GetUnusedBsqAddressRequest.newBuilder().build();
     }
 
-    protected final SendBsqRequest createSendBsqRequest(String address, double amount) {
-        return SendBsqRequest.newBuilder().setAddress(address).setAmount(amount).build();
+    protected final SendBsqRequest createSendBsqRequest(String address, double amount, long txFeeRate) {
+        return SendBsqRequest.newBuilder()
+                .setAddress(address)
+                .setAmount(amount)
+                .setTxFeeRate(txFeeRate)
+                .build();
     }
 
     protected final GetFundingAddressesRequest createGetFundingAddressesRequest() {
@@ -246,9 +251,16 @@ public class MethodTest extends ApiTestCase {
         return grpcStubs(bisqAppConfig).walletsService.getUnusedBsqAddress(createGetUnusedBsqAddressRequest()).getAddress();
     }
 
-    protected final void sendBsq(BisqAppConfig bisqAppConfig, String address, double amount) {
+    protected final TxInfo sendBsq(BisqAppConfig bisqAppConfig, String address, double amount) {
+        return sendBsq(bisqAppConfig, address, amount, -1);
+    }
+
+    protected final TxInfo sendBsq(BisqAppConfig bisqAppConfig, String address, double amount, long txFeeRate) {
         //noinspection ResultOfMethodCallIgnored
-        grpcStubs(bisqAppConfig).walletsService.sendBsq(createSendBsqRequest(address, amount));
+        return grpcStubs(bisqAppConfig).walletsService.sendBsq(createSendBsqRequest(address,
+                amount,
+                txFeeRate))
+                .getTxInfo();
     }
 
     protected final String getUnusedBtcAddress(BisqAppConfig bisqAppConfig) {

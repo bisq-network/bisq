@@ -1,6 +1,7 @@
 package bisq.apitest.method.wallet;
 
 import bisq.proto.grpc.BsqBalanceInfo;
+import bisq.proto.grpc.TxInfo;
 
 import org.bitcoinj.core.LegacyAddress;
 import org.bitcoinj.core.NetworkParameters;
@@ -24,10 +25,7 @@ import static bisq.cli.TableFormat.formatBsqBalanceInfoTbl;
 import static org.bitcoinj.core.NetworkParameters.PAYMENT_PROTOCOL_ID_MAINNET;
 import static org.bitcoinj.core.NetworkParameters.PAYMENT_PROTOCOL_ID_REGTEST;
 import static org.bitcoinj.core.NetworkParameters.PAYMENT_PROTOCOL_ID_TESTNET;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 
 
@@ -92,15 +90,21 @@ public class BsqWalletTest extends MethodTest {
     @Order(2)
     public void testInitialBsqBalances(final TestInfo testInfo) {
         BsqBalanceInfo alicesBsqBalances = getBsqBalances(alicedaemon);
-        log.info("{} -> Alice's BSQ Initial Balances -> \n{}",
-                testName(testInfo),
-                formatBsqBalanceInfoTbl(alicesBsqBalances));
+
+        if (log.isDebugEnabled())
+            log.debug("{} -> Alice's BSQ Initial Balances -> \n{}",
+                    testName(testInfo),
+                    formatBsqBalanceInfoTbl(alicesBsqBalances));
+
         verifyBsqBalances(ALICES_INITIAL_BSQ_BALANCES, alicesBsqBalances);
 
         BsqBalanceInfo bobsBsqBalances = getBsqBalances(bobdaemon);
-        log.info("{} -> Bob's BSQ Initial Balances -> \n{}",
-                testName(testInfo),
-                formatBsqBalanceInfoTbl(bobsBsqBalances));
+
+        if (log.isDebugEnabled())
+            log.debug("{} -> Bob's BSQ Initial Balances -> \n{}",
+                    testName(testInfo),
+                    formatBsqBalanceInfoTbl(bobsBsqBalances));
+
         verifyBsqBalances(BOBS_INITIAL_BSQ_BALANCES, bobsBsqBalances);
     }
 
@@ -108,13 +112,20 @@ public class BsqWalletTest extends MethodTest {
     @Order(3)
     public void testSendBsqAndCheckBalancesBeforeGeneratingBtcBlock(final TestInfo testInfo) {
         String bobsBsqAddress = getUnusedBsqAddress(bobdaemon);
-        sendBsq(alicedaemon, bobsBsqAddress, SEND_BSQ_AMOUNT);
+
+        TxInfo txInfo = sendBsq(alicedaemon, bobsBsqAddress, SEND_BSQ_AMOUNT, 5);
+        assertNotNull(txInfo.getId());
+        if (log.isDebugEnabled())
+            log.debug("Send BSQ {}", txInfo);
+
         sleep(2000);
 
         BsqBalanceInfo alicesBsqBalances = getBsqBalances(alicedaemon);
         BsqBalanceInfo bobsBsqBalances = waitForNonZeroUnverifiedBalance(bobdaemon);
 
-        log.info("BSQ Balances Before BTC Block Gen...");
+        if (log.isDebugEnabled())
+            log.debug("BSQ Balances Before BTC Block Gen...");
+
         printBobAndAliceBsqBalances(testInfo,
                 bobsBsqBalances,
                 alicesBsqBalances,
@@ -147,7 +158,9 @@ public class BsqWalletTest extends MethodTest {
         BsqBalanceInfo alicesBsqBalances = getBsqBalances(alicedaemon);
         BsqBalanceInfo bobsBsqBalances = waitForNewAvailableConfirmedBalance(bobdaemon, 150000000);
 
-        log.info("See Available Confirmed BSQ Balances...");
+        if (log.isDebugEnabled())
+            log.debug("See Available Confirmed BSQ Balances...");
+
         printBobAndAliceBsqBalances(testInfo,
                 bobsBsqBalances,
                 alicesBsqBalances,
@@ -214,17 +227,19 @@ public class BsqWalletTest extends MethodTest {
                                              BsqBalanceInfo bobsBsqBalances,
                                              BsqBalanceInfo alicesBsqBalances,
                                              BisqAppConfig senderApp) {
-        log.info("{} -> Bob's BSQ Balances After {} {} BSQ-> \n{}",
-                testName(testInfo),
-                senderApp.equals(bobdaemon) ? "Sending" : "Receiving",
-                SEND_BSQ_AMOUNT,
-                formatBsqBalanceInfoTbl(bobsBsqBalances));
+        if (log.isDebugEnabled()) {
+            log.debug("{} -> Bob's BSQ Balances After {} {} BSQ-> \n{}",
+                    testName(testInfo),
+                    senderApp.equals(bobdaemon) ? "Sending" : "Receiving",
+                    SEND_BSQ_AMOUNT,
+                    formatBsqBalanceInfoTbl(bobsBsqBalances));
 
-        log.info("{} -> Alice's Balances After {} {} BSQ-> \n{}",
-                testName(testInfo),
-                senderApp.equals(alicedaemon) ? "Sending" : "Receiving",
-                SEND_BSQ_AMOUNT,
-                formatBsqBalanceInfoTbl(alicesBsqBalances));
+            log.debug("{} -> Alice's Balances After {} {} BSQ-> \n{}",
+                    testName(testInfo),
+                    senderApp.equals(alicedaemon) ? "Sending" : "Receiving",
+                    SEND_BSQ_AMOUNT,
+                    formatBsqBalanceInfoTbl(alicesBsqBalances));
+        }
     }
 
     @SuppressWarnings("SameParameterValue")

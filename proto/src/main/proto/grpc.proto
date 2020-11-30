@@ -287,6 +287,23 @@ message TradeInfo {
     string contractAsJson = 24;
 }
 
+
+///////////////////////////////////////////////////////////////////////////////////////////
+// Transactions
+///////////////////////////////////////////////////////////////////////////////////////////
+
+message TxInfo {
+    string id = 1;
+    uint64 outputSum = 2;
+    uint64 fee = 3;
+    int32 size = 4;
+}
+
+message TxFeeRateInfo {
+    uint64 stdTxFeeRate = 1;
+    uint64 customTxFeeRate = 2;
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////////
 // Wallets
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -344,9 +361,11 @@ message GetUnusedBsqAddressReply {
 message SendBsqRequest {
     string address = 1;
     double amount = 2;
+    uint64 txFeeRate = 3;
 }
 
 message SendBsqReply {
+    TxInfo txInfo = 1;
 }
 
 message GetTxFeeRateRequest {
@@ -435,11 +454,6 @@ message AddressBalanceInfo {
     string address = 1;
     int64 balance = 2;
     int64 numConfirmations = 3;
-}
-
-message TxFeeRateInfo {
-    uint64 stdTxFeeRate = 1;
-    uint64 customTxFeeRate = 2;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
