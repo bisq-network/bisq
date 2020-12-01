@@ -1037,12 +1037,6 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
         paymentGroupBox.getChildren().add(currencyTextFieldBox);
     }
 
-    protected void hidePaymentGroup() {
-        paymentTitledGroupBg.setVisible(false);
-        paymentGroupBox.setManaged(false);
-        paymentGroupBox.setVisible(false);
-    }
-
     private void addAmountPriceGroup() {
         amountTitledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 2,
                 Res.get("createOffer.setAmountPrice"), Layout.COMPACT_GROUP_DISTANCE);
