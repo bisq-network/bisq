@@ -71,7 +71,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  * get the json Hal Cash payment account form:
  * <pre>
  * {
- *   "_COMMENT_": "Please do not edit the paymentMethodId field.",
+ *   "_COMMENT_": "Do not manually edit the paymentMethodId field.",
  *   "paymentMethodId": "HAL_CASH",
  *   "accountName": "Your accountname",
  *   "mobileNr": "Your mobilenr"
@@ -82,7 +82,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  * (2) Save the Hal Cash payment account form to disk, and edit it:
  * <pre>
  * {
- *   "_COMMENT_": "Please do not edit the paymentMethodId field.",
+ *   "_COMMENT_": "Do not manually edit the paymentMethodId field.",
  *   "paymentMethodId": "HAL_CASH",
  *   "accountName": "Hal Cash Acct",
  *   "mobileNr": "798 123 456"

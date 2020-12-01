@@ -255,7 +255,7 @@ class PaymentAccountTypeAdapter extends TypeAdapter<PaymentAccount> {
                 account, account.getPaymentMethod().getId());
 
         out.name("_COMMENT_");
-        out.value("Please do not edit the paymentMethodId field.");
+        out.value("Do not manually edit the paymentMethodId field.");
 
         out.name("paymentMethodId");
         out.value(account.getPaymentMethod().getId());

@@ -42,7 +42,7 @@ import bisq.apitest.method.MethodTest;
 public class AbstractPaymentAccountTest extends MethodTest {
 
     static final String PROPERTY_NAME_COMMENT = "_COMMENT_";
-    static final String PROPERTY_VALUE_COMMENT = "Please do not edit the paymentMethodId field.";
+    static final String PROPERTY_VALUE_COMMENT = "Do not manually edit the paymentMethodId field.";
 
     static final String PROPERTY_NAME_PAYMENT_METHOD_ID = "paymentMethodId";
 
