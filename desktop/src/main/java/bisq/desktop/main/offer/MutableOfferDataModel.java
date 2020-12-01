@@ -91,6 +91,7 @@ import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static java.util.Comparator.comparing;
 
 public abstract class MutableOfferDataModel extends OfferDataModel implements BsqBalanceListener {
     private final CreateOfferService createOfferService;
@@ -330,7 +331,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
             setTradeCurrencyFromPaymentAccount(paymentAccount);
             setSuggestedSecurityDeposit(getPaymentAccount());
 
-            if (amount.get() != null)
+            if (amount.get() != null && this.allowAmountUpdate)
                 this.amount.set(Coin.valueOf(Math.min(amount.get().value, getMaxTradeLimit())));
         }
     }
@@ -612,6 +613,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     private void fillPaymentAccounts() {
         if (user.getPaymentAccounts() != null)
             paymentAccounts.setAll(new HashSet<>(user.getPaymentAccounts()));
+        paymentAccounts.sort(comparing(PaymentAccount::getAccountName));
     }
 
     protected void setAmount(Coin amount) {
