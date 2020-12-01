@@ -41,8 +41,7 @@ public class BtcTxFeeRateTest extends MethodTest {
     @Order(1)
     public void testGetTxFeeRate(final TestInfo testInfo) {
         TxFeeRateInfo txFeeRateInfo = getTxFeeRate(alicedaemon);
-        if (log.isDebugEnabled())
-            log.debug("{} -> Fee rate with no preference: {}", testName(testInfo), txFeeRateInfo);
+        log.debug("{} -> Fee rate with no preference: {}", testName(testInfo), txFeeRateInfo);
 
         assertTrue(txFeeRateInfo.getStdTxFeeRate() > 0);
         assertEquals(-1, txFeeRateInfo.getCustomTxFeeRate());
@@ -52,8 +51,7 @@ public class BtcTxFeeRateTest extends MethodTest {
     @Order(2)
     public void testSetTxFeeRate(final TestInfo testInfo) {
         TxFeeRateInfo txFeeRateInfo = setTxFeeRate(alicedaemon, 10);
-        if (log.isDebugEnabled())
-            log.debug("{} -> Fee rates with custom preference: {}", testName(testInfo), txFeeRateInfo);
+        log.debug("{} -> Fee rates with custom preference: {}", testName(testInfo), txFeeRateInfo);
 
         assertTrue(txFeeRateInfo.getStdTxFeeRate() > 0);
         assertEquals(10, txFeeRateInfo.getCustomTxFeeRate());
@@ -63,8 +61,7 @@ public class BtcTxFeeRateTest extends MethodTest {
     @Order(3)
     public void testUnsetTxFeeRate(final TestInfo testInfo) {
         TxFeeRateInfo txFeeRateInfo = unsetTxFeeRate(alicedaemon);
-        if (log.isDebugEnabled())
-            log.debug("{} -> Fee rate with no preference: {}", testName(testInfo), txFeeRateInfo);
+        log.debug("{} -> Fee rate with no preference: {}", testName(testInfo), txFeeRateInfo);
 
         assertTrue(txFeeRateInfo.getStdTxFeeRate() > 0);
         assertEquals(-1, txFeeRateInfo.getCustomTxFeeRate());

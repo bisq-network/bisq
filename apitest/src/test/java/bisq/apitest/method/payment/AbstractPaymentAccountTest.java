@@ -108,10 +108,7 @@ public class AbstractPaymentAccountTest extends MethodTest {
         // A short cut over the API:
         // File emptyForm = PAYMENT_ACCOUNT_FORM.getPaymentAccountForm(paymentMethodId);
         emptyForm.deleteOnExit();
-
-        if (log.isDebugEnabled())
-            log.debug("{} Empty form saved to {}", testName(testInfo), PAYMENT_ACCOUNT_FORM.getClickableURI(emptyForm));
-
+        log.debug("{} Empty form saved to {}", testName(testInfo), PAYMENT_ACCOUNT_FORM.getClickableURI(emptyForm));
         return emptyForm;
     }
 
@@ -161,9 +158,7 @@ public class AbstractPaymentAccountTest extends MethodTest {
     protected final String getCompletedFormAsJsonString() {
         File completedForm = fillPaymentAccountForm();
         String jsonString = PAYMENT_ACCOUNT_FORM.toJsonString(completedForm);
-        if (log.isDebugEnabled())
-            log.debug("Completed form: {}", jsonString);
-
+        log.debug("Completed form: {}", jsonString);
         return jsonString;
     }
 

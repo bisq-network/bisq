@@ -97,21 +97,18 @@ class PaymentAccountTypeAdapter extends TypeAdapter<PaymentAccount> {
     public void write(JsonWriter out, PaymentAccount account) throws IOException {
         // We write a blank payment acct form for a payment method id.
         // We're not serializing a real payment account instance here.
-        if (log.isDebugEnabled())
-            log.debug("Writing PaymentAccount json form for fields with accessors...");
-
+        log.debug("Writing PaymentAccount json form for fields with accessors...");
         out.beginObject();
         writeCommonFields(out, account);
         fieldSettersMap.forEach((field, value) -> {
             try {
                 // Write out a json element if there is a @Setter for this field.
                 if (value.isPresent()) {
-                    if (log.isDebugEnabled())
-                        log.debug("Append form with settable field: {} {} {} setter: {}",
-                                getVisibilityModifierAsString(field),
-                                field.getType().getSimpleName(),
-                                field.getName(),
-                                value);
+                    log.debug("Append form with settable field: {} {} {} setter: {}",
+                            getVisibilityModifierAsString(field),
+                            field.getType().getSimpleName(),
+                            field.getName(),
+                            value);
 
                     String fieldName = field.getName();
                     out.name(fieldName);
@@ -125,15 +122,12 @@ class PaymentAccountTypeAdapter extends TypeAdapter<PaymentAccount> {
             }
         });
         out.endObject();
-        if (log.isDebugEnabled())
-            log.debug("Done writing PaymentAccount json form.");
+        log.debug("Done writing PaymentAccount json form.");
     }
 
     @Override
     public PaymentAccount read(JsonReader in) throws IOException {
-        if (log.isDebugEnabled())
-            log.debug("De-serializing json to new {} ...", paymentAccountType.getSimpleName());
-
+        log.debug("De-serializing json to new {} ...", paymentAccountType.getSimpleName());
         PaymentAccount account = initNewPaymentAccount();
         in.beginObject();
         while (in.hasNext()) {
@@ -161,9 +155,7 @@ class PaymentAccountTypeAdapter extends TypeAdapter<PaymentAccount> {
             });
         }
         in.endObject();
-        if (log.isDebugEnabled())
-            log.debug("Done de-serializing json.");
-
+        log.debug("Done de-serializing json.");
         return account;
     }
 
@@ -259,9 +251,8 @@ class PaymentAccountTypeAdapter extends TypeAdapter<PaymentAccount> {
     }
 
     private void writeCommonFields(JsonWriter out, PaymentAccount account) throws IOException {
-        if (log.isDebugEnabled())
-            log.debug("writeCommonFields(out, {}) -> paymentMethodId = {}",
-                    account, account.getPaymentMethod().getId());
+        log.debug("writeCommonFields(out, {}) -> paymentMethodId = {}",
+                account, account.getPaymentMethod().getId());
 
         out.name("_COMMENT_");
         out.value("Please do not edit the paymentMethodId field.");
