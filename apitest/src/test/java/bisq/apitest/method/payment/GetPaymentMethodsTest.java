@@ -1,5 +1,7 @@
 package bisq.apitest.method.payment;
 
+import protobuf.PaymentMethod;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -15,7 +17,7 @@ import org.junit.jupiter.api.TestMethodOrder;
 
 import static bisq.apitest.Scaffold.BitcoinCoreApp.bitcoind;
 import static bisq.apitest.config.BisqAppConfig.alicedaemon;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 
@@ -41,9 +43,9 @@ public class GetPaymentMethodsTest extends MethodTest {
     public void testGetPaymentMethods() {
         List<String> paymentMethodIds = getPaymentMethods(alicedaemon)
                 .stream()
-                .map(p -> p.getId())
+                .map(PaymentMethod::getId)
                 .collect(Collectors.toList());
-        assertEquals(29, paymentMethodIds.size());
+        assertTrue(paymentMethodIds.size() >= 20);
     }
 
     @AfterAll
