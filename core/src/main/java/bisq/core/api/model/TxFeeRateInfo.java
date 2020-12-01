@@ -28,10 +28,14 @@ public class TxFeeRateInfo implements Payload {
 
     private final long stdTxFeeRate;
     private final long customTxFeeRate;
+    private final boolean useCustomTxFeeRate;
 
-    public TxFeeRateInfo(long stdTxFeeRate, long customTxFeeRate) {
+    public TxFeeRateInfo(long stdTxFeeRate,
+                         long customTxFeeRate,
+                         boolean useCustomTxFeeRate) {
         this.stdTxFeeRate = stdTxFeeRate;
         this.customTxFeeRate = customTxFeeRate;
+        this.useCustomTxFeeRate = useCustomTxFeeRate;
     }
 
     //////////////////////////////////////////////////////////////////////////////////////
@@ -43,19 +47,23 @@ public class TxFeeRateInfo implements Payload {
         return bisq.proto.grpc.TxFeeRateInfo.newBuilder()
                 .setStdTxFeeRate(stdTxFeeRate)
                 .setCustomTxFeeRate(customTxFeeRate)
+                .setUseCustomTxFeeRate(useCustomTxFeeRate)
                 .build();
     }
 
     @SuppressWarnings("unused")
     public static TxFeeRateInfo fromProto(bisq.proto.grpc.TxFeeRateInfo proto) {
-        return new TxFeeRateInfo(proto.getStdTxFeeRate(), proto.getCustomTxFeeRate());
+        return new TxFeeRateInfo(proto.getStdTxFeeRate(),
+                proto.getCustomTxFeeRate(),
+                proto.getUseCustomTxFeeRate());
     }
 
     @Override
     public String toString() {
         return "TxFeeRateInfo{"
                 + "stdTxFeeRate=" + stdTxFeeRate + " sats/byte"
-                + ", customWithdrawalTxFeeRate=" + customTxFeeRate + " sats/byte"
+                + ", customTxFeeRate=" + customTxFeeRate + " sats/byte"
+                + ", useCustomTxFeeRate=" + useCustomTxFeeRate
                 + "}";
     }
 }

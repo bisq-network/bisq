@@ -440,6 +440,7 @@ message AddressBalanceInfo {
 message TxFeeRateInfo {
     uint64 stdTxFeeRate = 1;
     uint64 customTxFeeRate = 2;
+    bool useCustomTxFeeRate = 3;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////

@@ -53,21 +53,14 @@ public class CurrencyFormat {
         return BSQ_FORMAT.format(BigDecimal.valueOf(sats).divide(BSQ_SATOSHI_DIVISOR));
     }
 
-    public static String formatTxFeeRate(TxFeeRateInfo txFeeRateInfo) {
-        String stdTxFeeRate = formatTxFeeRate(txFeeRateInfo.getStdTxFeeRate());
-        String customTxFeeRate = txFeeRateInfo.getCustomTxFeeRate() < 0
-                ? formatTxFeeRate(txFeeRateInfo.getCustomTxFeeRate())
-                : null;
-
-        String formatString;
-        if (customTxFeeRate == null)
-            formatString = format("tx fee rate: %s sats/byte", stdTxFeeRate);
+    public static String formatTxFeeRateInfo(TxFeeRateInfo txFeeRateInfo) {
+        if (txFeeRateInfo.getUseCustomTxFeeRate())
+            return format("custom tx fee rate: %s sats/byte, network rate: %s sats/byte",
+                    formatFeeSatoshis(txFeeRateInfo.getCustomTxFeeRate()),
+                    formatFeeSatoshis(txFeeRateInfo.getStdTxFeeRate()));
         else
-            formatString = format("custom tx fee rate: %s sats/byte, network rate: %s sats/byte",
-                    customTxFeeRate,
-                    stdTxFeeRate);
-
-        return formatString;
+            return format("tx fee rate: %s sats/byte",
+                    formatFeeSatoshis(txFeeRateInfo.getStdTxFeeRate()));
     }
 
     static String formatAmountRange(long minAmount, long amount) {
@@ -107,7 +100,7 @@ public class CurrencyFormat {
     }
 
     @SuppressWarnings("BigDecimalMethodWithoutRoundingCalled")
-    private static String formatTxFeeRate(long sats) {
+    private static String formatFeeSatoshis(long sats) {
         return BTC_TX_FEE_FORMAT.format(BigDecimal.valueOf(sats).divide(SATOSHI_DIVISOR));
     }
 }

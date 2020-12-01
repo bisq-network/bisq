@@ -71,7 +71,7 @@ import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.cli.CurrencyFormat.formatTxFeeRate;
+import static bisq.cli.CurrencyFormat.formatTxFeeRateInfo;
 import static bisq.cli.CurrencyFormat.toSatoshis;
 import static bisq.cli.NegativeNumberOptions.hasNegativeNumberOptions;
 import static bisq.cli.TableFormat.*;
@@ -276,7 +276,7 @@ public class CliMain {
                 case gettxfeerate: {
                     var request = GetTxFeeRateRequest.newBuilder().build();
                     var reply = walletsService.getTxFeeRate(request);
-                    out.println(formatTxFeeRate(reply.getTxFeeRateInfo()));
+                    out.println(formatTxFeeRateInfo(reply.getTxFeeRateInfo()));
                     return;
                 }
                 case settxfeerate: {
@@ -294,13 +294,13 @@ public class CliMain {
                             .setTxFeeRatePreference(txFeeRate)
                             .build();
                     var reply = walletsService.setTxFeeRatePreference(request);
-                    out.println(formatTxFeeRate(reply.getTxFeeRateInfo()));
+                    out.println(formatTxFeeRateInfo(reply.getTxFeeRateInfo()));
                     return;
                 }
                 case unsettxfeerate: {
                     var request = UnsetTxFeeRatePreferenceRequest.newBuilder().build();
                     var reply = walletsService.unsetTxFeeRatePreference(request);
-                    out.println(formatTxFeeRate(reply.getTxFeeRateInfo()));
+                    out.println(formatTxFeeRateInfo(reply.getTxFeeRateInfo()));
                     return;
                 }
                 case createoffer: {

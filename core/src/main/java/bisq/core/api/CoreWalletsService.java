@@ -204,12 +204,9 @@ class CoreWalletsService {
             throw new IllegalStateException("could not request fees from fee service.", e);
         }
 
-        Coin stdTxFeeRate = feeService.getTxFeePerVbyte();
-        Coin customTxFeeRate = preferences.isUseCustomWithdrawalTxFee()
-                ? Coin.valueOf(preferences.getWithdrawalTxFeeInVbytes())
-                : Coin.NEGATIVE_SATOSHI;
-
-        return new TxFeeRateInfo(stdTxFeeRate.value, customTxFeeRate.value);
+        return new TxFeeRateInfo(feeService.getTxFeePerVbyte().value,
+                preferences.getWithdrawalTxFeeInVbytes(),
+                preferences.isUseCustomWithdrawalTxFee());
     }
 
     TxFeeRateInfo setTxFeeRatePreference(long txFeeRate) {

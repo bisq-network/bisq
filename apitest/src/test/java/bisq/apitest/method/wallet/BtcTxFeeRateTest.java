@@ -16,6 +16,7 @@ import static bisq.apitest.Scaffold.BitcoinCoreApp.bitcoind;
 import static bisq.apitest.config.BisqAppConfig.alicedaemon;
 import static bisq.apitest.config.BisqAppConfig.seednode;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 
@@ -43,8 +44,8 @@ public class BtcTxFeeRateTest extends MethodTest {
         TxFeeRateInfo txFeeRateInfo = getTxFeeRate(alicedaemon);
         log.debug("{} -> Fee rate with no preference: {}", testName(testInfo), txFeeRateInfo);
 
+        assertFalse(txFeeRateInfo.isUseCustomTxFeeRate());
         assertTrue(txFeeRateInfo.getStdTxFeeRate() > 0);
-        assertEquals(-1, txFeeRateInfo.getCustomTxFeeRate());
     }
 
     @Test
@@ -53,8 +54,9 @@ public class BtcTxFeeRateTest extends MethodTest {
         TxFeeRateInfo txFeeRateInfo = setTxFeeRate(alicedaemon, 10);
         log.debug("{} -> Fee rates with custom preference: {}", testName(testInfo), txFeeRateInfo);
 
-        assertTrue(txFeeRateInfo.getStdTxFeeRate() > 0);
+        assertTrue(txFeeRateInfo.isUseCustomTxFeeRate());
         assertEquals(10, txFeeRateInfo.getCustomTxFeeRate());
+        assertTrue(txFeeRateInfo.getStdTxFeeRate() > 0);
     }
 
     @Test
@@ -63,8 +65,8 @@ public class BtcTxFeeRateTest extends MethodTest {
         TxFeeRateInfo txFeeRateInfo = unsetTxFeeRate(alicedaemon);
         log.debug("{} -> Fee rate with no preference: {}", testName(testInfo), txFeeRateInfo);
 
+        assertFalse(txFeeRateInfo.isUseCustomTxFeeRate());
         assertTrue(txFeeRateInfo.getStdTxFeeRate() > 0);
-        assertEquals(-1, txFeeRateInfo.getCustomTxFeeRate());
     }
 
     @AfterAll
