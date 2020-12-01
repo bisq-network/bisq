@@ -122,7 +122,6 @@ import static bisq.desktop.util.FormBuilder.*;
 import static javafx.beans.binding.Bindings.createStringBinding;
 
 public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> extends ActivatableViewAndModel<AnchorPane, M> {
-    public static final String BUYER_SECURITY_DEPOSIT_NEWS = "buyerSecurityDepositNews0.9.5";
     protected final Navigation navigation;
     private final Preferences preferences;
     private final OfferDetailsWindow offerDetailsWindow;
