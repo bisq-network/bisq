@@ -99,7 +99,6 @@ import java.io.File;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -416,9 +415,9 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         });
 
         preferredTradeCurrencyComboBox.setButtonCell(GUIUtil.getTradeCurrencyButtonCell("", "",
-                Collections.emptyMap()));
+                FXCollections.emptyObservableMap()));
         preferredTradeCurrencyComboBox.setCellFactory(GUIUtil.getTradeCurrencyCellFactory("", "",
-                Collections.emptyMap()));
+                FXCollections.emptyObservableMap()));
 
         Tuple3<Label, ListView<FiatCurrency>, VBox> fiatTuple = addTopLabelListView(root, displayCurrenciesGridRowIndex,
                 Res.get("setting.preferences.displayFiat"));

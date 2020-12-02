@@ -93,7 +93,6 @@ import java.text.DecimalFormat;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
@@ -668,12 +667,12 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
     private void reverseTableColumns() {
         ObservableList<TableColumn<OfferListItem, ?>> columns = FXCollections.observableArrayList(buyOfferTableView.getColumns());
         buyOfferTableView.getColumns().clear();
-        Collections.reverse(columns);
+        FXCollections.reverse(columns);
         buyOfferTableView.getColumns().addAll(columns);
 
         columns = FXCollections.observableArrayList(sellOfferTableView.getColumns());
         sellOfferTableView.getColumns().clear();
-        Collections.reverse(columns);
+        FXCollections.reverse(columns);
         sellOfferTableView.getColumns().addAll(columns);
     }
 
