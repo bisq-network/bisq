@@ -1,7 +1,6 @@
 package bisq.core.btc.model;
 
 import bisq.core.dao.state.model.blockchain.TxType;
-import bisq.core.util.coin.CoinUtil;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.LegacyAddress;
@@ -40,10 +39,6 @@ public final class BsqTransferModel {
         return receiverAddress.toString();
     }
 
-    public double getMiningFeeInSatoshisPerByte() {
-        return CoinUtil.getFeePerVbyte(miningFee, txSize);
-    }
-
     public double getTxSizeInKb() {
         return txSize / 1000d;
     }
@@ -54,7 +49,6 @@ public final class BsqTransferModel {
                 ", receiverAmount=" + receiverAmount + "\n" +
                 ", txWithBtcFee.txId=" + txWithBtcFee.getTxId() + "\n" +
                 ", miningFee=" + miningFee + "\n" +
-                ", miningFeeInSatoshisPerByte=" + getMiningFeeInSatoshisPerByte() + "\n" +
                 ", txSizeInKb=" + getTxSizeInKb() + "\n" +
                 '}';
     }
@@ -68,7 +62,6 @@ public final class BsqTransferModel {
                 ", txWithBtcFee=" + txWithBtcFee + "\n" +
                 ", signedTx=" + signedTx + "\n" +
                 ", miningFee=" + miningFee + "\n" +
-                ", miningFeeInSatoshisPerByte=" + getMiningFeeInSatoshisPerByte() + "\n" +
                 ", txSize=" + txSize + "\n" +
                 ", txSizeInKb=" + getTxSizeInKb() + "\n" +
                 ", txType=" + txType + "\n" +
