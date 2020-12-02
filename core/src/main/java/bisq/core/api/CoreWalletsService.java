@@ -39,6 +39,8 @@ import bisq.core.util.coin.BsqFormatter;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
+import bisq.common.handlers.ResultHandler;
+import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
@@ -52,13 +54,16 @@ import javax.inject.Inject;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 
 import org.bouncycastle.crypto.params.KeyParameter;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -87,6 +92,8 @@ class CoreWalletsService {
 
     @Nullable
     private KeyParameter tempAesKey;
+
+    private final ListeningExecutorService executor = Utilities.getSingleThreadListeningExecutor("CoreWalletsService");
 
     @Inject
     public CoreWalletsService(Balances balances,
@@ -196,32 +203,50 @@ class CoreWalletsService {
         }
     }
 
-    TxFeeRateInfo getTxFeeRate() {
+    void getTxFeeRate(ResultHandler resultHandler) {
         try {
-            CompletableFuture<Void> feeRequestFuture = CompletableFuture.runAsync(feeService::requestFees);
-            feeRequestFuture.get();  // Block until async fee request is complete.
-        } catch (InterruptedException | ExecutionException e) {
-            throw new IllegalStateException("could not request fees from fee service.", e);
-        }
+            ListenableFuture<Void> future = (ListenableFuture<Void>) executor.submit(() -> feeService.requestFees());
+            Futures.addCallback(future, new FutureCallback<>() {
+                @Override
+                public void onSuccess(@Nullable Void ignored) {
+                    resultHandler.handleResult();
+                }
 
-        return new TxFeeRateInfo(feeService.getTxFeePerVbyte().value,
-                preferences.getWithdrawalTxFeeInVbytes(),
-                preferences.isUseCustomWithdrawalTxFee());
+                @Override
+                public void onFailure(Throwable t) {
+                    log.error("", t);
+                    throw new IllegalStateException("could not request fees from fee service", t);
+                }
+            }, MoreExecutors.directExecutor());
+
+        } catch (Exception ex) {
+            log.error("", ex);
+            throw new IllegalStateException("could not request fees from fee service", ex);
+        }
     }
 
-    TxFeeRateInfo setTxFeeRatePreference(long txFeeRate) {
+    void setTxFeeRatePreference(long txFeeRate,
+                                ResultHandler resultHandler) {
         if (txFeeRate <= 0)
             throw new IllegalStateException("cannot create transactions without fees");
 
         preferences.setUseCustomWithdrawalTxFee(true);
         Coin satsPerByte = Coin.valueOf(txFeeRate);
         preferences.setWithdrawalTxFeeInVbytes(satsPerByte.value);
-        return getTxFeeRate();
+        getTxFeeRate(resultHandler);
     }
 
-    TxFeeRateInfo unsetTxFeeRatePreference() {
+    void unsetTxFeeRatePreference(ResultHandler resultHandler) {
         preferences.setUseCustomWithdrawalTxFee(false);
-        return getTxFeeRate();
+        getTxFeeRate(resultHandler);
+    }
+
+    TxFeeRateInfo getMostRecentTxFeeRateInfo() {
+        return new TxFeeRateInfo(
+                preferences.isUseCustomWithdrawalTxFee(),
+                preferences.getWithdrawalTxFeeInVbytes(),
+                feeService.getTxFeePerVbyte().value,
+                feeService.getLastRequest());
     }
 
     int getNumConfirmationsForMostRecentTransaction(String addressString) {

@@ -174,12 +174,14 @@ class GrpcWalletsService extends WalletsGrpc.WalletsImplBase {
     public void getTxFeeRate(GetTxFeeRateRequest req,
                              StreamObserver<GetTxFeeRateReply> responseObserver) {
         try {
-            TxFeeRateInfo txFeeRateInfo = coreApi.getTxFeeRate();
-            var reply = GetTxFeeRateReply.newBuilder()
-                    .setTxFeeRateInfo(txFeeRateInfo.toProtoMessage())
-                    .build();
-            responseObserver.onNext(reply);
-            responseObserver.onCompleted();
+            coreApi.getTxFeeRate(() -> {
+                TxFeeRateInfo txFeeRateInfo = coreApi.getMostRecentTxFeeRateInfo();
+                var reply = GetTxFeeRateReply.newBuilder()
+                        .setTxFeeRateInfo(txFeeRateInfo.toProtoMessage())
+                        .build();
+                responseObserver.onNext(reply);
+                responseObserver.onCompleted();
+            });
         } catch (IllegalStateException cause) {
             var ex = new StatusRuntimeException(Status.UNKNOWN.withDescription(cause.getMessage()));
             responseObserver.onError(ex);
@@ -191,12 +193,14 @@ class GrpcWalletsService extends WalletsGrpc.WalletsImplBase {
     public void setTxFeeRatePreference(SetTxFeeRatePreferenceRequest req,
                                        StreamObserver<SetTxFeeRatePreferenceReply> responseObserver) {
         try {
-            TxFeeRateInfo txFeeRateInfo = coreApi.setTxFeeRatePreference(req.getTxFeeRatePreference());
-            var reply = SetTxFeeRatePreferenceReply.newBuilder()
-                    .setTxFeeRateInfo(txFeeRateInfo.toProtoMessage())
-                    .build();
-            responseObserver.onNext(reply);
-            responseObserver.onCompleted();
+            coreApi.setTxFeeRatePreference(req.getTxFeeRatePreference(), () -> {
+                TxFeeRateInfo txFeeRateInfo = coreApi.getMostRecentTxFeeRateInfo();
+                var reply = SetTxFeeRatePreferenceReply.newBuilder()
+                        .setTxFeeRateInfo(txFeeRateInfo.toProtoMessage())
+                        .build();
+                responseObserver.onNext(reply);
+                responseObserver.onCompleted();
+            });
         } catch (IllegalStateException cause) {
             var ex = new StatusRuntimeException(Status.UNKNOWN.withDescription(cause.getMessage()));
             responseObserver.onError(ex);
@@ -208,12 +212,14 @@ class GrpcWalletsService extends WalletsGrpc.WalletsImplBase {
     public void unsetTxFeeRatePreference(UnsetTxFeeRatePreferenceRequest req,
                                          StreamObserver<UnsetTxFeeRatePreferenceReply> responseObserver) {
         try {
-            TxFeeRateInfo txFeeRateInfo = coreApi.unsetTxFeeRatePreference();
-            var reply = UnsetTxFeeRatePreferenceReply.newBuilder()
-                    .setTxFeeRateInfo(txFeeRateInfo.toProtoMessage())
-                    .build();
-            responseObserver.onNext(reply);
-            responseObserver.onCompleted();
+            coreApi.unsetTxFeeRatePreference(() -> {
+                TxFeeRateInfo txFeeRateInfo = coreApi.getMostRecentTxFeeRateInfo();
+                var reply = UnsetTxFeeRatePreferenceReply.newBuilder()
+                        .setTxFeeRateInfo(txFeeRateInfo.toProtoMessage())
+                        .build();
+                responseObserver.onNext(reply);
+                responseObserver.onCompleted();
+            });
         } catch (IllegalStateException cause) {
             var ex = new StatusRuntimeException(Status.UNKNOWN.withDescription(cause.getMessage()));
             responseObserver.onError(ex);

@@ -57,10 +57,10 @@ public class CurrencyFormat {
         if (txFeeRateInfo.getUseCustomTxFeeRate())
             return format("custom tx fee rate: %s sats/byte, network rate: %s sats/byte",
                     formatFeeSatoshis(txFeeRateInfo.getCustomTxFeeRate()),
-                    formatFeeSatoshis(txFeeRateInfo.getStdTxFeeRate()));
+                    formatFeeSatoshis(txFeeRateInfo.getFeeServiceRate()));
         else
             return format("tx fee rate: %s sats/byte",
-                    formatFeeSatoshis(txFeeRateInfo.getStdTxFeeRate()));
+                    formatFeeSatoshis(txFeeRateInfo.getFeeServiceRate()));
     }
 
     static String formatAmountRange(long minAmount, long amount) {

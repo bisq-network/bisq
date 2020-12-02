@@ -45,7 +45,7 @@ public class BtcTxFeeRateTest extends MethodTest {
         log.debug("{} -> Fee rate with no preference: {}", testName(testInfo), txFeeRateInfo);
 
         assertFalse(txFeeRateInfo.isUseCustomTxFeeRate());
-        assertTrue(txFeeRateInfo.getStdTxFeeRate() > 0);
+        assertTrue(txFeeRateInfo.getFeeServiceRate() > 0);
     }
 
     @Test
@@ -56,7 +56,7 @@ public class BtcTxFeeRateTest extends MethodTest {
 
         assertTrue(txFeeRateInfo.isUseCustomTxFeeRate());
         assertEquals(10, txFeeRateInfo.getCustomTxFeeRate());
-        assertTrue(txFeeRateInfo.getStdTxFeeRate() > 0);
+        assertTrue(txFeeRateInfo.getFeeServiceRate() > 0);
     }
 
     @Test
@@ -66,7 +66,7 @@ public class BtcTxFeeRateTest extends MethodTest {
         log.debug("{} -> Fee rate with no preference: {}", testName(testInfo), txFeeRateInfo);
 
         assertFalse(txFeeRateInfo.isUseCustomTxFeeRate());
-        assertTrue(txFeeRateInfo.getStdTxFeeRate() > 0);
+        assertTrue(txFeeRateInfo.getFeeServiceRate() > 0);
     }
 
     @AfterAll

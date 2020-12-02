@@ -26,16 +26,19 @@ import lombok.Getter;
 @Getter
 public class TxFeeRateInfo implements Payload {
 
-    private final long stdTxFeeRate;
-    private final long customTxFeeRate;
     private final boolean useCustomTxFeeRate;
+    private final long customTxFeeRate;
+    private final long feeServiceRate;
+    private final long lastFeeServiceRequestTs;
 
-    public TxFeeRateInfo(long stdTxFeeRate,
+    public TxFeeRateInfo(boolean useCustomTxFeeRate,
                          long customTxFeeRate,
-                         boolean useCustomTxFeeRate) {
-        this.stdTxFeeRate = stdTxFeeRate;
-        this.customTxFeeRate = customTxFeeRate;
+                         long feeServiceRate,
+                         long lastFeeServiceRequestTs) {
         this.useCustomTxFeeRate = useCustomTxFeeRate;
+        this.customTxFeeRate = customTxFeeRate;
+        this.feeServiceRate = feeServiceRate;
+        this.lastFeeServiceRequestTs = lastFeeServiceRequestTs;
     }
 
     //////////////////////////////////////////////////////////////////////////////////////
@@ -45,25 +48,28 @@ public class TxFeeRateInfo implements Payload {
     @Override
     public bisq.proto.grpc.TxFeeRateInfo toProtoMessage() {
         return bisq.proto.grpc.TxFeeRateInfo.newBuilder()
-                .setStdTxFeeRate(stdTxFeeRate)
-                .setCustomTxFeeRate(customTxFeeRate)
                 .setUseCustomTxFeeRate(useCustomTxFeeRate)
+                .setCustomTxFeeRate(customTxFeeRate)
+                .setFeeServiceRate(feeServiceRate)
+                .setLastFeeServiceRequestTs(lastFeeServiceRequestTs)
                 .build();
     }
 
     @SuppressWarnings("unused")
     public static TxFeeRateInfo fromProto(bisq.proto.grpc.TxFeeRateInfo proto) {
-        return new TxFeeRateInfo(proto.getStdTxFeeRate(),
+        return new TxFeeRateInfo(proto.getUseCustomTxFeeRate(),
                 proto.getCustomTxFeeRate(),
-                proto.getUseCustomTxFeeRate());
+                proto.getFeeServiceRate(),
+                proto.getLastFeeServiceRequestTs());
     }
 
     @Override
     public String toString() {
-        return "TxFeeRateInfo{"
-                + "stdTxFeeRate=" + stdTxFeeRate + " sats/byte"
-                + ", customTxFeeRate=" + customTxFeeRate + " sats/byte"
-                + ", useCustomTxFeeRate=" + useCustomTxFeeRate
-                + "}";
+        return "TxFeeRateInfo{" + "\n" +
+                "  useCustomTxFeeRate=" + useCustomTxFeeRate + "\n" +
+                ", customTxFeeRate=" + customTxFeeRate + "sats/byte" + "\n" +
+                ", feeServiceRate=" + feeServiceRate + "sats/byte" + "\n" +
+                ", lastFeeServiceRequestTs=" + lastFeeServiceRequestTs + "\n" +
+                '}';
     }
 }

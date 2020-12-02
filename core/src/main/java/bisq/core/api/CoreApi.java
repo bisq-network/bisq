@@ -31,6 +31,7 @@ import bisq.core.trade.statistics.TradeStatistics3;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 
 import bisq.common.app.Version;
+import bisq.common.handlers.ResultHandler;
 
 import org.bitcoinj.core.Coin;
 
@@ -247,16 +248,21 @@ public class CoreApi {
         walletsService.sendBsq(address, amount, callback);
     }
 
-    public TxFeeRateInfo getTxFeeRate() {
-        return walletsService.getTxFeeRate();
+    public void getTxFeeRate(ResultHandler resultHandler) {
+        walletsService.getTxFeeRate(resultHandler);
     }
 
-    public TxFeeRateInfo setTxFeeRatePreference(long txFeeRate) {
-        return walletsService.setTxFeeRatePreference(txFeeRate);
+    public void setTxFeeRatePreference(long txFeeRate,
+                                       ResultHandler resultHandler) {
+        walletsService.setTxFeeRatePreference(txFeeRate, resultHandler);
     }
 
-    public TxFeeRateInfo unsetTxFeeRatePreference() {
-        return walletsService.unsetTxFeeRatePreference();
+    public void unsetTxFeeRatePreference(ResultHandler resultHandler) {
+        walletsService.unsetTxFeeRatePreference(resultHandler);
+    }
+
+    public TxFeeRateInfo getMostRecentTxFeeRateInfo() {
+        return walletsService.getMostRecentTxFeeRateInfo();
     }
 
     public void setWalletPassword(String password, String newPassword) {

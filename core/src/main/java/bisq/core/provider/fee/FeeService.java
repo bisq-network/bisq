@@ -45,6 +45,7 @@ import java.time.Instant;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import org.jetbrains.annotations.NotNull;
@@ -96,6 +97,7 @@ public class FeeService {
     private final IntegerProperty feeUpdateCounter = new SimpleIntegerProperty(0);
     private long txFeePerVbyte = BTC_DEFAULT_TX_FEE;
     private Map<String, Long> timeStampMap;
+    @Getter
     private long lastRequest;
     private long minFeePerVByte;
     private long epochInSecondAtLastRequest;
