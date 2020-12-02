@@ -187,7 +187,7 @@ class CoreWalletsService {
     }
 
     void sendBsq(String address,
-                 double amount,
+                 String amount,
                  TxBroadcaster.Callback callback) {
         try {
             LegacyAddress legacyAddress = getValidBsqLegacyAddress(address);
@@ -205,7 +205,8 @@ class CoreWalletsService {
 
     void getTxFeeRate(ResultHandler resultHandler) {
         try {
-            ListenableFuture<Void> future = (ListenableFuture<Void>) executor.submit(() -> feeService.requestFees());
+            ListenableFuture<Void> future =
+                    (ListenableFuture<Void>) executor.submit(() -> feeService.requestFees());
             Futures.addCallback(future, new FutureCallback<>() {
                 @Override
                 public void onSuccess(@Nullable Void ignored) {
@@ -420,11 +421,11 @@ class CoreWalletsService {
         }
     }
 
-    // Returns a Coin for the double amount, or a RuntimeException if invalid.
-    private Coin getValidBsqTransferAmount(double amount) {
-        Coin amountAsCoin = parseToCoin(Double.toString(amount), bsqFormatter);
+    // Returns a Coin for the amount string, or a RuntimeException if invalid.
+    private Coin getValidBsqTransferAmount(String amount) {
+        Coin amountAsCoin = parseToCoin(amount, bsqFormatter);
         if (amountAsCoin.equals(Coin.ZERO))
-            throw new IllegalStateException(format("%.2f bsq is an invalid send amount", amount));
+            throw new IllegalStateException(format("%s bsq is an invalid send amount", amount));
 
         return amountAsCoin;
     }

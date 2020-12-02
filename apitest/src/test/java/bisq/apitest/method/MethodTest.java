@@ -160,7 +160,7 @@ public class MethodTest extends ApiTestCase {
         return GetUnusedBsqAddressRequest.newBuilder().build();
     }
 
-    protected final SendBsqRequest createSendBsqRequest(String address, double amount) {
+    protected final SendBsqRequest createSendBsqRequest(String address, String amount) {
         return SendBsqRequest.newBuilder().setAddress(address).setAmount(amount).build();
     }
 
@@ -247,7 +247,7 @@ public class MethodTest extends ApiTestCase {
         return grpcStubs(bisqAppConfig).walletsService.getUnusedBsqAddress(createGetUnusedBsqAddressRequest()).getAddress();
     }
 
-    protected final void sendBsq(BisqAppConfig bisqAppConfig, String address, double amount) {
+    protected final void sendBsq(BisqAppConfig bisqAppConfig, String address, String amount) {
         //noinspection ResultOfMethodCallIgnored
         grpcStubs(bisqAppConfig).walletsService.sendBsq(createSendBsqRequest(address, amount));
     }

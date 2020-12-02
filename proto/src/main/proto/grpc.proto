@@ -343,7 +343,7 @@ message GetUnusedBsqAddressReply {
 
 message SendBsqRequest {
     string address = 1;
-    double amount = 2;
+    string amount = 2;
 }
 
 message SendBsqReply {

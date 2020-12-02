@@ -258,11 +258,12 @@ public class CliMain {
                     if (nonOptionArgs.size() < 3)
                         throw new IllegalArgumentException("no bsq amount specified");
 
-                    double amount;
+                    var amount = nonOptionArgs.get(2);
+
                     try {
-                        amount = Double.parseDouble(nonOptionArgs.get(2));
+                        Double.parseDouble(amount);
                     } catch (NumberFormatException e) {
-                        throw new IllegalArgumentException(format("'%s' is not a number", nonOptionArgs.get(2)));
+                        throw new IllegalArgumentException(format("'%s' is not a number", amount));
                     }
 
                     var request = SendBsqRequest.newBuilder()
@@ -270,7 +271,7 @@ public class CliMain {
                             .setAmount(amount)
                             .build();
                     walletsService.sendBsq(request);
-                    out.printf("%.2f BSQ sent to %s%n", amount, address);
+                    out.printf("%s BSQ sent to %s%n", amount, address);
                     return;
                 }
                 case gettxfeerate: {
