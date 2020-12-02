@@ -71,6 +71,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
+import static bisq.core.btc.wallet.Restrictions.getMinNonDustOutput;
 import static bisq.core.util.ParsingUtils.parseToCoin;
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -205,6 +206,7 @@ class CoreWalletsService {
 
     void getTxFeeRate(ResultHandler resultHandler) {
         try {
+            @SuppressWarnings({"unchecked", "Convert2MethodRef"})
             ListenableFuture<Void> future =
                     (ListenableFuture<Void>) executor.submit(() -> feeService.requestFees());
             Futures.addCallback(future, new FutureCallback<>() {
@@ -424,7 +426,7 @@ class CoreWalletsService {
     // Returns a Coin for the amount string, or a RuntimeException if invalid.
     private Coin getValidBsqTransferAmount(String amount) {
         Coin amountAsCoin = parseToCoin(amount, bsqFormatter);
-        if (amountAsCoin.equals(Coin.ZERO))
+        if (amountAsCoin.isLessThan(getMinNonDustOutput()))
             throw new IllegalStateException(format("%s bsq is an invalid send amount", amount));
 
         return amountAsCoin;
