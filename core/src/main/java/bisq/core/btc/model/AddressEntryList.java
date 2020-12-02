@@ -196,6 +196,15 @@ public final class AddressEntryList implements PersistableEnvelope, PersistedDat
     }
 
     public void swapToAvailable(AddressEntry addressEntry) {
+        if (addressEntry.getContext() == AddressEntry.Context.MULTI_SIG) {
+            log.error("swapToAvailable called with an addressEntry with MULTI_SIG context. " +
+                    "This in not permitted as we must not reuse those address entries and there are " +
+                    "no redeemable funds on those addresses. " +
+                    "Only the keys are used for creating the Multisig address. " +
+                    "addressEntry={}", addressEntry);
+            return;
+        }
+
         boolean setChangedByRemove = entrySet.remove(addressEntry);
         boolean setChangedByAdd = entrySet.add(new AddressEntry(addressEntry.getKeyPair(),
                 AddressEntry.Context.AVAILABLE,

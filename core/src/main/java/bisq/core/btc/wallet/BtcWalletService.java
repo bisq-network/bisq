@@ -742,7 +742,7 @@ public class BtcWalletService extends WalletService {
             log.error("swapTradeEntryToAvailableEntry called with MULTI_SIG context. " +
                     "This in not permitted as we must not reuse those address entries and there " +
                     "are no redeemable funds on that addresses. Only the keys are used for creating " +
-                    "the Multisig address");
+                    "the Multisig address. offerId={}, context={}", offerId, context);
             return;
         }
 
