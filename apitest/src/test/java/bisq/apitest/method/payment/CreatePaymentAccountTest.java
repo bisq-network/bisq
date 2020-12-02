@@ -94,12 +94,14 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_PAYMENT_METHOD_ID, ADVANCED_CASH_ID);
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_ACCOUNT_NAME, "Advanced Cash Acct");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_ACCOUNT_NR, "0000 1111 2222");
+        COMPLETED_FORM_MAP.put(PROPERTY_NAME_SALT, encodeToHex("Restored Advanced Cash Acct Salt"));
         String jsonString = getCompletedFormAsJsonString();
         AdvancedCashAccount paymentAccount = (AdvancedCashAccount) createPaymentAccount(alicedaemon, jsonString);
         verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
         verifyAccountTradeCurrencies(getAllAdvancedCashCurrencies(), paymentAccount);
         verifyCommonFormEntries(paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_ACCOUNT_NR), paymentAccount.getAccountNr());
+        assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_SALT), paymentAccount.getSaltAsHex());
         log.debug("Deserialized {}: {}", paymentAccount.getClass().getSimpleName(), paymentAccount);
     }
 
@@ -112,6 +114,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_PAYMENT_METHOD_ID, ALI_PAY_ID);
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_ACCOUNT_NAME, "Ali Pay Acct");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_ACCOUNT_NR, "2222 3333 4444");
+        COMPLETED_FORM_MAP.put(PROPERTY_NAME_SALT, "");
         String jsonString = getCompletedFormAsJsonString();
         AliPayAccount paymentAccount = (AliPayAccount) createPaymentAccount(alicedaemon, jsonString);
         verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
@@ -128,9 +131,10 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
                 AUSTRALIA_PAYID_ID,
                 PROPERTY_NAME_BANK_ACCOUNT_NAME);
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_PAYMENT_METHOD_ID, AUSTRALIA_PAYID_ID);
-        COMPLETED_FORM_MAP.put(PROPERTY_NAME_ACCOUNT_NAME, "Australia Pay ID Account");
+        COMPLETED_FORM_MAP.put(PROPERTY_NAME_ACCOUNT_NAME, "Australia Pay ID Acct");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_PAY_ID, "123 456 789");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_BANK_ACCOUNT_NAME, "Credit Union Australia");
+        COMPLETED_FORM_MAP.put(PROPERTY_NAME_SALT, encodeToHex("Restored Australia Pay ID Acct Salt"));
         String jsonString = getCompletedFormAsJsonString();
         AustraliaPayid paymentAccount = (AustraliaPayid) createPaymentAccount(alicedaemon, jsonString);
         verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
@@ -138,6 +142,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         verifyCommonFormEntries(paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_PAY_ID), paymentAccount.getPayid());
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_BANK_ACCOUNT_NAME), paymentAccount.getBankAccountName());
+        assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_SALT), paymentAccount.getSaltAsHex());
         log.debug("Deserialized {}: {}", paymentAccount.getClass().getSimpleName(), paymentAccount);
     }
 
@@ -170,6 +175,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_HOLDER_TAX_ID, "123456789");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_NATIONAL_ACCOUNT_ID, "123456789");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_REQUIREMENTS, "Requirements...");
+        COMPLETED_FORM_MAP.put(PROPERTY_NAME_SALT, "");
         String jsonString = getCompletedFormAsJsonString();
         CashDepositAccount paymentAccount = (CashDepositAccount) createPaymentAccount(alicedaemon, jsonString);
         verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
@@ -215,6 +221,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_HOLDER_NAME, "Joao da Silva");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_HOLDER_TAX_ID, "123456789");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_NATIONAL_ACCOUNT_ID, "123456789");
+        COMPLETED_FORM_MAP.put(PROPERTY_NAME_SALT, encodeToHex("Restored Banco do Brasil Acct Salt"));
         String jsonString = getCompletedFormAsJsonString();
         NationalBankAccount paymentAccount = (NationalBankAccount) createPaymentAccount(alicedaemon, jsonString);
         verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
@@ -232,6 +239,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_HOLDER_NAME), payload.getHolderName());
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_HOLDER_TAX_ID), payload.getHolderTaxId());
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_NATIONAL_ACCOUNT_ID), payload.getNationalAccountId());
+        assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_SALT), paymentAccount.getSaltAsHex());
         log.debug("Deserialized {}: {}", paymentAccount.getClass().getSimpleName(), paymentAccount);
     }
 
@@ -246,6 +254,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_ACCOUNT_NAME, "Quick Pay Acct");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_EMAIL, "johndoe@quickpay.com");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_HOLDER_NAME, "John Doe");
+        COMPLETED_FORM_MAP.put(PROPERTY_NAME_SALT, "");
         String jsonString = getCompletedFormAsJsonString();
         ChaseQuickPayAccount paymentAccount = (ChaseQuickPayAccount) createPaymentAccount(alicedaemon, jsonString);
         verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
@@ -264,9 +273,10 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
                 PROPERTY_NAME_EMAIL_OR_MOBILE_NR,
                 PROPERTY_NAME_HOLDER_NAME);
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_PAYMENT_METHOD_ID, CLEAR_X_CHANGE_ID);
-        COMPLETED_FORM_MAP.put(PROPERTY_NAME_ACCOUNT_NAME, "USD Zelle Account");
+        COMPLETED_FORM_MAP.put(PROPERTY_NAME_ACCOUNT_NAME, "USD Zelle Acct");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_EMAIL_OR_MOBILE_NR, "jane@doe.com");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_HOLDER_NAME, "Jane Doe");
+        COMPLETED_FORM_MAP.put(PROPERTY_NAME_SALT, encodeToHex("Restored Zelle Acct Salt"));
         String jsonString = getCompletedFormAsJsonString();
         ClearXchangeAccount paymentAccount = (ClearXchangeAccount) createPaymentAccount(alicedaemon, jsonString);
         verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
@@ -274,6 +284,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         verifyCommonFormEntries(paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_EMAIL_OR_MOBILE_NR), paymentAccount.getEmailOrMobileNr());
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_HOLDER_NAME), paymentAccount.getHolderName());
+        assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_SALT), paymentAccount.getSaltAsHex());
         log.debug("Deserialized {}: {}", paymentAccount.getClass().getSimpleName(), paymentAccount);
     }
 
@@ -292,6 +303,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_CITY, "Rio de Janeiro");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_CONTACT, "Freddy Beira Mar");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_EXTRA_INFO, "So fim de semana");
+        COMPLETED_FORM_MAP.put(PROPERTY_NAME_SALT, "");
         String jsonString = getCompletedFormAsJsonString();
         F2FAccount paymentAccount = (F2FAccount) createPaymentAccount(alicedaemon, jsonString);
         verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
@@ -316,6 +328,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_ACCOUNT_NAME, "Faster Payments Acct");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_ACCOUNT_NR, "9999 8888 7777");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_SORT_CODE, "3127");
+        COMPLETED_FORM_MAP.put(PROPERTY_NAME_SALT, encodeToHex("Restored Faster Payments Acct Salt"));
         String jsonString = getCompletedFormAsJsonString();
         FasterPaymentsAccount paymentAccount = (FasterPaymentsAccount) createPaymentAccount(alicedaemon, jsonString);
         verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
@@ -323,6 +336,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         verifyCommonFormEntries(paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_ACCOUNT_NR), paymentAccount.getAccountNr());
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_SORT_CODE), paymentAccount.getSortCode());
+        assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_SALT), paymentAccount.getSaltAsHex());
         log.debug("Deserialized {}: {}", paymentAccount.getClass().getSimpleName(), paymentAccount);
     }
 
@@ -335,6 +349,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_PAYMENT_METHOD_ID, HAL_CASH_ID);
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_ACCOUNT_NAME, "Hal Cash Acct");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_MOBILE_NR, "798 123 456");
+        COMPLETED_FORM_MAP.put(PROPERTY_NAME_SALT, "");
         String jsonString = getCompletedFormAsJsonString();
         HalCashAccount paymentAccount = (HalCashAccount) createPaymentAccount(alicedaemon, jsonString);
         verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
@@ -359,6 +374,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_EMAIL, "john@doe.info");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_QUESTION, "What is my dog's name?");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_ANSWER, "Fido");
+        COMPLETED_FORM_MAP.put(PROPERTY_NAME_SALT, encodeToHex("Restored Interac Transfer Acct Salt"));
         String jsonString = getCompletedFormAsJsonString();
         InteracETransferAccount paymentAccount = (InteracETransferAccount) createPaymentAccount(alicedaemon, jsonString);
         verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
@@ -368,6 +384,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_EMAIL), paymentAccount.getEmail());
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_QUESTION), paymentAccount.getQuestion());
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_ANSWER), paymentAccount.getAnswer());
+        assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_SALT), paymentAccount.getSaltAsHex());
         log.debug("Deserialized {}: {}", paymentAccount.getClass().getSimpleName(), paymentAccount);
     }
 
@@ -392,6 +409,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_BANK_ACCOUNT_NAME, "Fukuoka Account");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_BANK_ACCOUNT_TYPE, "Yen Account");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_BANK_ACCOUNT_NUMBER, "8100-8727-0000");
+        COMPLETED_FORM_MAP.put(PROPERTY_NAME_SALT, "");
         String jsonString = getCompletedFormAsJsonString();
         JapanBankAccount paymentAccount = (JapanBankAccount) createPaymentAccount(alicedaemon, jsonString);
         verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
@@ -416,12 +434,14 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_PAYMENT_METHOD_ID, MONEY_BEAM_ID);
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_ACCOUNT_NAME, "Money Beam Acct");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_ACCOUNT_ID, "MB 0000 1111");
+        COMPLETED_FORM_MAP.put(PROPERTY_NAME_SALT, encodeToHex("Restored Money Beam Acct Salt"));
         String jsonString = getCompletedFormAsJsonString();
         MoneyBeamAccount paymentAccount = (MoneyBeamAccount) createPaymentAccount(alicedaemon, jsonString);
         verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
         verifyAccountSingleTradeCurrency("EUR", paymentAccount);
         verifyCommonFormEntries(paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_ACCOUNT_ID), paymentAccount.getAccountId());
+        assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_SALT), paymentAccount.getSaltAsHex());
         log.debug("Deserialized {}: {}", paymentAccount.getClass().getSimpleName(), paymentAccount);
     }
 
@@ -440,6 +460,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_EMAIL, "john@doe.info");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_COUNTRY, "US");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_STATE, "NY");
+        COMPLETED_FORM_MAP.put(PROPERTY_NAME_SALT, "");
         String jsonString = getCompletedFormAsJsonString();
         MoneyGramAccount paymentAccount = (MoneyGramAccount) createPaymentAccount(alicedaemon, jsonString);
         verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
@@ -462,12 +483,14 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_PAYMENT_METHOD_ID, PERFECT_MONEY_ID);
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_ACCOUNT_NAME, "Perfect Money Acct");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_ACCOUNT_NR, "PM 0000 1111");
+        COMPLETED_FORM_MAP.put(PROPERTY_NAME_SALT, encodeToHex("Restored Perfect Money Acct Salt"));
         String jsonString = getCompletedFormAsJsonString();
         PerfectMoneyAccount paymentAccount = (PerfectMoneyAccount) createPaymentAccount(alicedaemon, jsonString);
         verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
         verifyAccountSingleTradeCurrency("USD", paymentAccount);
         verifyCommonFormEntries(paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_ACCOUNT_NR), paymentAccount.getAccountNr());
+        assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_SALT), paymentAccount.getSaltAsHex());
         log.debug("Deserialized {}: {}", paymentAccount.getClass().getSimpleName(), paymentAccount);
     }
 
@@ -482,6 +505,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_ACCOUNT_NAME, "Pop Money Acct");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_ACCOUNT_ID, "POPMONEY 0000 1111");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_HOLDER_NAME, "Jane Doe");
+        COMPLETED_FORM_MAP.put(PROPERTY_NAME_SALT, "");
         String jsonString = getCompletedFormAsJsonString();
         PopmoneyAccount paymentAccount = (PopmoneyAccount) createPaymentAccount(alicedaemon, jsonString);
         verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
@@ -501,12 +525,14 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_PAYMENT_METHOD_ID, PROMPT_PAY_ID);
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_ACCOUNT_NAME, "Prompt Pay Acct");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_PROMPT_PAY_ID, "PP 0000 1111");
+        COMPLETED_FORM_MAP.put(PROPERTY_NAME_SALT, encodeToHex("Restored Prompt Pay Acct Salt"));
         String jsonString = getCompletedFormAsJsonString();
         PromptPayAccount paymentAccount = (PromptPayAccount) createPaymentAccount(alicedaemon, jsonString);
         verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
         verifyAccountSingleTradeCurrency("THB", paymentAccount);
         verifyCommonFormEntries(paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_PROMPT_PAY_ID), paymentAccount.getPromptPayId());
+        assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_SALT), paymentAccount.getSaltAsHex());
         log.debug("Deserialized {}: {}", paymentAccount.getClass().getSimpleName(), paymentAccount);
     }
 
@@ -519,6 +545,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_PAYMENT_METHOD_ID, REVOLUT_ID);
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_ACCOUNT_NAME, "Revolut Acct");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_USERNAME, "revolut123");
+        COMPLETED_FORM_MAP.put(PROPERTY_NAME_SALT, "");
         String jsonString = getCompletedFormAsJsonString();
         RevolutAccount paymentAccount = (RevolutAccount) createPaymentAccount(alicedaemon, jsonString);
         verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
@@ -551,6 +578,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_HOLDER_NAME, "Jane Doe");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_HOLDER_TAX_ID, "123456789");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_NATIONAL_ACCOUNT_ID, "123456789");
+        COMPLETED_FORM_MAP.put(PROPERTY_NAME_SALT, encodeToHex("Restored Same Bank Acct Salt"));
         String jsonString = getCompletedFormAsJsonString();
         SameBankAccount paymentAccount = (SameBankAccount) createPaymentAccount(alicedaemon, jsonString);
         verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
@@ -568,6 +596,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_HOLDER_NAME), payload.getHolderName());
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_HOLDER_TAX_ID), payload.getHolderTaxId());
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_NATIONAL_ACCOUNT_ID), payload.getNationalAccountId());
+        assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_SALT), paymentAccount.getSaltAsHex());
         log.debug("Deserialized {}: {}", paymentAccount.getClass().getSimpleName(), paymentAccount);
     }
 
@@ -586,6 +615,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_HOLDER_NAME, "Jose da Silva");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_IBAN, "909-909");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_BIC, "909");
+        COMPLETED_FORM_MAP.put(PROPERTY_NAME_SALT, "");
         String jsonString = getCompletedFormAsJsonString();
         SepaInstantAccount paymentAccount = (SepaInstantAccount) createPaymentAccount(alicedaemon, jsonString);
         verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
@@ -616,6 +646,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_HOLDER_NAME, "Jose da Silva");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_IBAN, "909-909");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_BIC, "909");
+        COMPLETED_FORM_MAP.put(PROPERTY_NAME_SALT, encodeToHex("Restored Conta Sepa Salt"));
         String jsonString = getCompletedFormAsJsonString();
         SepaAccount paymentAccount = (SepaAccount) createPaymentAccount(alicedaemon, jsonString);
         verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
@@ -628,6 +659,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_BIC), paymentAccount.getBic());
         // bankId == bic
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_BIC), paymentAccount.getBankId());
+        assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_SALT), paymentAccount.getSaltAsHex());
         log.debug("Deserialized {}: {}", paymentAccount.getClass().getSimpleName(), paymentAccount);
     }
 
@@ -657,6 +689,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_HOLDER_NAME, "Jane Doe");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_HOLDER_TAX_ID, "123456789");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_NATIONAL_ACCOUNT_ID, "123456789");
+        COMPLETED_FORM_MAP.put(PROPERTY_NAME_SALT, "");
         String jsonString = getCompletedFormAsJsonString();
         SpecificBanksAccount paymentAccount = (SpecificBanksAccount) createPaymentAccount(alicedaemon, jsonString);
         verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
@@ -685,9 +718,10 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
                 PROPERTY_NAME_MOBILE_NR,
                 PROPERTY_NAME_HOLDER_NAME);
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_PAYMENT_METHOD_ID, SWISH_ID);
-        COMPLETED_FORM_MAP.put(PROPERTY_NAME_ACCOUNT_NAME, "Swish Account");
+        COMPLETED_FORM_MAP.put(PROPERTY_NAME_ACCOUNT_NAME, "Swish Acct");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_MOBILE_NR, "+46 7 6060 0101");
-        COMPLETED_FORM_MAP.put(PROPERTY_NAME_HOLDER_NAME, "Swish Account Holder");
+        COMPLETED_FORM_MAP.put(PROPERTY_NAME_HOLDER_NAME, "Swish Acct Holder");
+        COMPLETED_FORM_MAP.put(PROPERTY_NAME_SALT, encodeToHex("Restored Swish Acct Salt"));
         String jsonString = getCompletedFormAsJsonString();
         SwishAccount paymentAccount = (SwishAccount) createPaymentAccount(alicedaemon, jsonString);
         verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
@@ -695,6 +729,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         verifyCommonFormEntries(paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_MOBILE_NR), paymentAccount.getMobileNr());
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_HOLDER_NAME), paymentAccount.getHolderName());
+        assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_SALT), paymentAccount.getSaltAsHex());
         log.debug("Deserialized {}: {}", paymentAccount.getClass().getSimpleName(), paymentAccount);
     }
 
@@ -707,6 +742,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_PAYMENT_METHOD_ID, TRANSFERWISE_ID);
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_ACCOUNT_NAME, "Transferwise Acct");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_EMAIL, "jan@doe.info");
+        COMPLETED_FORM_MAP.put(PROPERTY_NAME_SALT, "");
         String jsonString = getCompletedFormAsJsonString();
         TransferwiseAccount paymentAccount = (TransferwiseAccount) createPaymentAccount(alicedaemon, jsonString);
         verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
@@ -725,12 +761,14 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_PAYMENT_METHOD_ID, UPHOLD_ID);
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_ACCOUNT_NAME, "Uphold Acct");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_ACCOUNT_ID, "UA 9876");
+        COMPLETED_FORM_MAP.put(PROPERTY_NAME_SALT, encodeToHex("Restored Uphold Acct Salt"));
         String jsonString = getCompletedFormAsJsonString();
         UpholdAccount paymentAccount = (UpholdAccount) createPaymentAccount(alicedaemon, jsonString);
         verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
         verifyAccountTradeCurrencies(getAllUpholdCurrencies(), paymentAccount);
         verifyCommonFormEntries(paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_ACCOUNT_ID), paymentAccount.getAccountId());
+        assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_SALT), paymentAccount.getSaltAsHex());
         log.debug("Deserialized {}: {}", paymentAccount.getClass().getSimpleName(), paymentAccount);
     }
 
@@ -745,6 +783,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_ACCOUNT_NAME, "Bubba's Acct");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_HOLDER_NAME, "Bubba");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_POSTAL_ADDRESS, "000 Westwood Terrace Austin, TX 78700");
+        COMPLETED_FORM_MAP.put(PROPERTY_NAME_SALT, "");
         String jsonString = getCompletedFormAsJsonString();
         USPostalMoneyOrderAccount paymentAccount = (USPostalMoneyOrderAccount) createPaymentAccount(alicedaemon, jsonString);
         verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
@@ -764,12 +803,14 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_PAYMENT_METHOD_ID, WECHAT_PAY_ID);
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_ACCOUNT_NAME, "WeChat Pay Acct");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_ACCOUNT_NR, "WC 1234");
+        COMPLETED_FORM_MAP.put(PROPERTY_NAME_SALT, encodeToHex("Restored WeChat Pay Acct Salt"));
         String jsonString = getCompletedFormAsJsonString();
         WeChatPayAccount paymentAccount = (WeChatPayAccount) createPaymentAccount(alicedaemon, jsonString);
         verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
         verifyAccountSingleTradeCurrency("CNY", paymentAccount);
         verifyCommonFormEntries(paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_ACCOUNT_NR), paymentAccount.getAccountNr());
+        assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_SALT), paymentAccount.getSaltAsHex());
         log.debug("Deserialized {}: {}", paymentAccount.getClass().getSimpleName(), paymentAccount);
     }
 
@@ -790,6 +831,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_STATE, "North Dakota");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_COUNTRY, "US");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_EMAIL, "jane@doe.info");
+        COMPLETED_FORM_MAP.put(PROPERTY_NAME_SALT, "");
         String jsonString = getCompletedFormAsJsonString();
         WesternUnionAccount paymentAccount = (WesternUnionAccount) createPaymentAccount(alicedaemon, jsonString);
         verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());

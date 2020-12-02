@@ -21,6 +21,8 @@ import bisq.core.api.model.PaymentAccountForm;
 import bisq.core.api.model.TxFeeRateInfo;
 import bisq.core.proto.CoreProtoResolver;
 
+import bisq.common.util.Utilities;
+
 import bisq.proto.grpc.AddressBalanceInfo;
 import bisq.proto.grpc.BalancesInfo;
 import bisq.proto.grpc.BsqBalanceInfo;
@@ -57,8 +59,6 @@ import bisq.proto.grpc.WithdrawFundsRequest;
 import protobuf.PaymentAccount;
 import protobuf.PaymentMethod;
 
-import java.nio.charset.StandardCharsets;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -70,6 +70,7 @@ import static bisq.apitest.config.BisqAppConfig.alicedaemon;
 import static bisq.apitest.config.BisqAppConfig.arbdaemon;
 import static bisq.apitest.config.BisqAppConfig.bobdaemon;
 import static bisq.common.app.DevEnv.DEV_PRIVILEGE_PRIV_KEY;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.stream;
 import static java.util.Comparator.comparing;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -278,7 +279,7 @@ public class MethodTest extends ApiTestCase {
                 .getPaymentAccountFormJson();
         // Write the json string to a file here in the test case.
         File jsonFile = PaymentAccountForm.getTmpJsonFile(paymentMethodId);
-        try (PrintWriter out = new PrintWriter(jsonFile, StandardCharsets.UTF_8)) {
+        try (PrintWriter out = new PrintWriter(jsonFile, UTF_8)) {
             out.println(jsonString);
         } catch (IOException ex) {
             fail("Could not create tmp payment account form.", ex);
@@ -391,6 +392,10 @@ public class MethodTest extends ApiTestCase {
         var disputeAgentsService = grpcStubs(bisqAppConfig).disputeAgentsService;
         disputeAgentsService.registerDisputeAgent(createRegisterDisputeAgentRequest(MEDIATOR));
         disputeAgentsService.registerDisputeAgent(createRegisterDisputeAgentRequest(REFUND_AGENT));
+    }
+
+    protected static String encodeToHex(String s) {
+        return Utilities.bytesAsHexString(s.getBytes(UTF_8));
     }
 
     private bisq.core.payment.PaymentAccount fromProto(PaymentAccount proto) {

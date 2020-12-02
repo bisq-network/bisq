@@ -18,6 +18,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,8 +42,12 @@ import bisq.apitest.method.MethodTest;
 @Slf4j
 public class AbstractPaymentAccountTest extends MethodTest {
 
-    static final String PROPERTY_NAME_COMMENT = "_COMMENT_";
-    static final String PROPERTY_VALUE_COMMENT = "Do not manually edit the paymentMethodId field.";
+    static final String PROPERTY_NAME_JSON_COMMENTS = "_COMMENTS_";
+    static final List<String> PROPERTY_VALUE_JSON_COMMENTS = new ArrayList<>() {{
+        add("Do not manually edit the paymentMethodId field.");
+        add("Edit the salt field only if you are recreating a payment"
+                + " account on a new installation and wish to preserve the account age.");
+    }};
 
     static final String PROPERTY_NAME_PAYMENT_METHOD_ID = "paymentMethodId";
 
@@ -79,6 +84,7 @@ public class AbstractPaymentAccountTest extends MethodTest {
     static final String PROPERTY_NAME_PROMPT_PAY_ID = "promptPayId";
     static final String PROPERTY_NAME_QUESTION = "question";
     static final String PROPERTY_NAME_REQUIREMENTS = "requirements";
+    static final String PROPERTY_NAME_SALT = "salt";
     static final String PROPERTY_NAME_SORT_CODE = "sortCode";
     static final String PROPERTY_NAME_STATE = "state";
     static final String PROPERTY_NAME_USERNAME = "userName";
@@ -107,8 +113,10 @@ public class AbstractPaymentAccountTest extends MethodTest {
         File emptyForm = getPaymentAccountForm(alicedaemon, paymentMethodId);
         // A short cut over the API:
         // File emptyForm = PAYMENT_ACCOUNT_FORM.getPaymentAccountForm(paymentMethodId);
+        log.debug("{} Empty form saved to {}",
+                testName(testInfo),
+                PAYMENT_ACCOUNT_FORM.getClickableURI(emptyForm));
         emptyForm.deleteOnExit();
-        log.debug("{} Empty form saved to {}", testName(testInfo), PAYMENT_ACCOUNT_FORM.getClickableURI(emptyForm));
         return emptyForm;
     }
 
@@ -118,11 +126,11 @@ public class AbstractPaymentAccountTest extends MethodTest {
                 PAYMENT_ACCOUNT_FORM.toJsonString(jsonForm),
                 Object.class);
         assertNotNull(emptyForm);
-        assertEquals(PROPERTY_VALUE_COMMENT, emptyForm.get(PROPERTY_NAME_COMMENT));
+        assertEquals(PROPERTY_VALUE_JSON_COMMENTS, emptyForm.get(PROPERTY_NAME_JSON_COMMENTS));
         assertEquals(paymentMethodId, emptyForm.get(PROPERTY_NAME_PAYMENT_METHOD_ID));
-        assertEquals("Your accountname", emptyForm.get(PROPERTY_NAME_ACCOUNT_NAME));
+        assertEquals("your accountname", emptyForm.get(PROPERTY_NAME_ACCOUNT_NAME));
         for (String field : fields) {
-            assertEquals("Your " + field.toLowerCase(), emptyForm.get(field));
+            assertEquals("your " + field.toLowerCase(), emptyForm.get(field));
         }
     }
 
@@ -171,8 +179,14 @@ public class AbstractPaymentAccountTest extends MethodTest {
             tmpJsonForm.deleteOnExit();
             JsonWriter writer = new JsonWriter(new OutputStreamWriter(new FileOutputStream(tmpJsonForm), UTF_8));
             writer.beginObject();
-            writer.name(PROPERTY_NAME_COMMENT);
-            writer.value(PROPERTY_VALUE_COMMENT);
+
+            writer.name(PROPERTY_NAME_JSON_COMMENTS);
+            writer.beginArray();
+            for (String s : PROPERTY_VALUE_JSON_COMMENTS) {
+                writer.value(s);
+            }
+            writer.endArray();
+
             for (Map.Entry<String, Object> entry : COMPLETED_FORM_MAP.entrySet()) {
                 String k = entry.getKey();
                 Object v = entry.getValue();
@@ -187,5 +201,4 @@ public class AbstractPaymentAccountTest extends MethodTest {
         }
         return tmpJsonForm;
     }
-
 }

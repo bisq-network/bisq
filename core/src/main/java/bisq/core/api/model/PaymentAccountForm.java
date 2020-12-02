@@ -71,10 +71,14 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  * get the json Hal Cash payment account form:
  * <pre>
  * {
- *   "_COMMENT_": "Do not manually edit the paymentMethodId field.",
+ *   "_COMMENTS_": [
+ *     "Do not manually edit the paymentMethodId field.",
+ *     "Edit the salt field only if you are recreating a payment account on a new installation and wish to preserve the account age."
+ *   ],
  *   "paymentMethodId": "HAL_CASH",
  *   "accountName": "Your accountname",
  *   "mobileNr": "Your mobilenr"
+ *   "salt": ""
  * }
  * </pre>
  * </p>
@@ -82,10 +86,14 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  * (2) Save the Hal Cash payment account form to disk, and edit it:
  * <pre>
  * {
- *   "_COMMENT_": "Do not manually edit the paymentMethodId field.",
+ *   "_COMMENTS_": [
+ *     "Do not manually edit the paymentMethodId field.",
+ *     "Edit the salt field only if you are recreating a payment account on a new installation and wish to preserve the account age."
+ *   ],
  *   "paymentMethodId": "HAL_CASH",
  *   "accountName": "Hal Cash Acct",
  *   "mobileNr": "798 123 456"
+ *   "salt": ""
  * }
  * </pre>
  * </p>
@@ -115,7 +123,7 @@ public class PaymentAccountForm {
             .setPrettyPrinting()
             .serializeNulls();
 
-    // Names of PaymentAccount fields to exclude from json forms.
+    // A list of PaymentAccount fields to exclude from json forms.
     private final String[] excludedFields = new String[]{
             "log",
             "id",
@@ -126,11 +134,11 @@ public class PaymentAccountForm {
             "maxTradePeriod",
             "paymentAccountPayload",
             "paymentMethod",
-            "paymentMethodId",
+            "paymentMethodId",  // This field will be included, but handled differently.
             "selectedTradeCurrency",
             "tradeCurrencies",
             "HOLDER_NAME",
-            "SALT"
+            "SALT"              // This field will be included, but handled differently.
     };
 
     /**

@@ -54,6 +54,7 @@ import static bisq.common.util.ReflectionUtils.getSetterMethodForFieldInClassHie
 import static bisq.common.util.ReflectionUtils.getVisibilityModifierAsString;
 import static bisq.common.util.ReflectionUtils.isSetterOnClass;
 import static bisq.common.util.ReflectionUtils.loadFieldListForClassHierarchy;
+import static bisq.common.util.Utilities.decodeFromHex;
 import static bisq.core.locale.CountryUtil.findCountryByCode;
 import static bisq.core.locale.CurrencyUtil.getCurrencyByCountryCode;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -62,6 +63,12 @@ import static java.util.Comparator.comparing;
 
 @Slf4j
 class PaymentAccountTypeAdapter extends TypeAdapter<PaymentAccount> {
+
+    private static final String[] JSON_COMMENTS = new String[]{
+            "Do not manually edit the paymentMethodId field.",
+            "Edit the salt field only if you are recreating a payment"
+                    + " account on a new installation and wish to preserve the account age."
+    };
 
     private final Class<? extends PaymentAccount> paymentAccountType;
     private final Class<? extends PaymentAccountPayload> paymentAccountPayloadType;
@@ -97,9 +104,30 @@ class PaymentAccountTypeAdapter extends TypeAdapter<PaymentAccount> {
     public void write(JsonWriter out, PaymentAccount account) throws IOException {
         // We write a blank payment acct form for a payment method id.
         // We're not serializing a real payment account instance here.
-        log.debug("Writing PaymentAccount json form for fields with accessors...");
         out.beginObject();
-        writeCommonFields(out, account);
+
+        // All json forms start with immutable _COMMENTS_ and paymentMethodId fields.
+        out.name("_COMMENTS_");
+        out.beginArray();
+        for (String s : JSON_COMMENTS) {
+            out.value(s);
+        }
+        out.endArray();
+
+        out.name("paymentMethodId");
+        out.value(account.getPaymentMethod().getId());
+
+        // Write the editable, PaymentAccount subclass specific fields.
+        writeInnerMutableFields(out, account);
+
+        // The last field in all json forms is the empty, editable salt field.
+        out.name("salt");
+        out.value("");
+
+        out.endObject();
+    }
+
+    private void writeInnerMutableFields(JsonWriter out, PaymentAccount account) {
         fieldSettersMap.forEach((field, value) -> {
             try {
                 // Write out a json element if there is a @Setter for this field.
@@ -112,7 +140,7 @@ class PaymentAccountTypeAdapter extends TypeAdapter<PaymentAccount> {
 
                     String fieldName = field.getName();
                     out.name(fieldName);
-                    out.value("Your " + fieldName.toLowerCase());
+                    out.value("your " + fieldName.toLowerCase());
                 }
             } catch (Exception ex) {
                 String errMsg = format("cannot create a new %s json form",
@@ -121,13 +149,10 @@ class PaymentAccountTypeAdapter extends TypeAdapter<PaymentAccount> {
                 throw new IllegalStateException("programmer error: " + errMsg);
             }
         });
-        out.endObject();
-        log.debug("Done writing PaymentAccount json form.");
     }
 
     @Override
     public PaymentAccount read(JsonReader in) throws IOException {
-        log.debug("De-serializing json to new {} ...", paymentAccountType.getSimpleName());
         PaymentAccount account = initNewPaymentAccount();
         in.beginObject();
         while (in.hasNext()) {
@@ -155,7 +180,6 @@ class PaymentAccountTypeAdapter extends TypeAdapter<PaymentAccount> {
             });
         }
         in.endObject();
-        log.debug("Done de-serializing json.");
         return account;
     }
 
@@ -250,26 +274,26 @@ class PaymentAccountTypeAdapter extends TypeAdapter<PaymentAccount> {
         }
     }
 
-    private void writeCommonFields(JsonWriter out, PaymentAccount account) throws IOException {
-        log.debug("writeCommonFields(out, {}) -> paymentMethodId = {}",
-                account, account.getPaymentMethod().getId());
-
-        out.name("_COMMENT_");
-        out.value("Do not manually edit the paymentMethodId field.");
-
-        out.name("paymentMethodId");
-        out.value(account.getPaymentMethod().getId());
-    }
-
-    private boolean didReadCommonField(JsonReader in, PaymentAccount account, String fieldName) {
+    private boolean didReadCommonField(JsonReader in,
+                                       PaymentAccount account,
+                                       String fieldName) throws IOException {
         switch (fieldName) {
-            case "_COMMENT_":
+            case "_COMMENTS_":
             case "paymentMethodId":
-                // skip
-                nextStringOrNull(in);
+                // Skip over the the comments and paymentMethodId, which is already
+                // set on the PaymentAccount instance.
+                in.skipValue();
                 return true;
             case "accountName":
+                // Set the acct name using the value read from json.
                 account.setAccountName(nextStringOrNull(in));
+                return true;
+            case "salt":
+                // Set the acct salt using the value read from json.
+                String saltAsHex = nextStringOrNull(in);
+                if (saltAsHex != null && !saltAsHex.trim().isEmpty()) {
+                    account.setSalt(decodeFromHex(saltAsHex));
+                }
                 return true;
             default:
                 return false;
