@@ -226,6 +226,24 @@ public final class AddressEntryList implements PersistableEnvelope, PersistedDat
         return newAddressEntry;
     }
 
+    public void setCoinLockedInMultiSigAddressEntry(AddressEntry addressEntry, long value) {
+        if (addressEntry.getContext() != AddressEntry.Context.MULTI_SIG) {
+            log.error("setCoinLockedInMultiSigAddressEntry must be called only on MULTI_SIG entries");
+            return;
+        }
+
+        boolean setChangedByRemove = entrySet.remove(addressEntry);
+        AddressEntry entry = new AddressEntry(addressEntry.getKeyPair(),
+                AddressEntry.Context.MULTI_SIG,
+                addressEntry.getOfferId(),
+                value,
+                addressEntry.isSegwit());
+        boolean setChangedByAdd = entrySet.add(entry);
+        if (setChangedByRemove || setChangedByAdd) {
+            requestPersistence();
+        }
+    }
+
     public void requestPersistence() {
         persistenceManager.requestPersistence();
     }
