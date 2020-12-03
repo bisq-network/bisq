@@ -296,6 +296,11 @@ public abstract class Trade implements Tradable, Model {
     private final long txFeeAsLong;
     @Getter
     private final long takerFeeAsLong;
+
+    // Added in 1.5.1
+    @Getter
+    private final String uid;
+
     @Setter
     private long takeOfferDate;
 
@@ -470,7 +475,8 @@ public abstract class Trade implements Tradable, Model {
                     @Nullable NodeAddress mediatorNodeAddress,
                     @Nullable NodeAddress refundAgentNodeAddress,
                     BtcWalletService btcWalletService,
-                    ProcessModel processModel) {
+                    ProcessModel processModel,
+                    String uid) {
         this.offer = offer;
         this.txFee = txFee;
         this.takerFee = takerFee;
@@ -480,10 +486,13 @@ public abstract class Trade implements Tradable, Model {
         this.refundAgentNodeAddress = refundAgentNodeAddress;
         this.btcWalletService = btcWalletService;
         this.processModel = processModel;
+        this.uid = uid;
 
         txFeeAsLong = txFee.value;
         takerFeeAsLong = takerFee.value;
         takeOfferDate = new Date().getTime();
+
+        log.error("New trade created with offerId={} and Uid={}", offer.getId(), uid);
     }
 
 
@@ -500,7 +509,8 @@ public abstract class Trade implements Tradable, Model {
                     @Nullable NodeAddress mediatorNodeAddress,
                     @Nullable NodeAddress refundAgentNodeAddress,
                     BtcWalletService btcWalletService,
-                    ProcessModel processModel) {
+                    ProcessModel processModel,
+                    String uid) {
 
         this(offer,
                 txFee,
@@ -510,7 +520,8 @@ public abstract class Trade implements Tradable, Model {
                 mediatorNodeAddress,
                 refundAgentNodeAddress,
                 btcWalletService,
-                processModel);
+                processModel,
+                uid);
         this.tradePrice = tradePrice;
         this.tradingPeerNodeAddress = tradingPeerNodeAddress;
 
@@ -539,7 +550,8 @@ public abstract class Trade implements Tradable, Model {
                 .addAllChatMessage(chatMessages.stream()
                         .map(msg -> msg.toProtoNetworkEnvelope().getChatMessage())
                         .collect(Collectors.toList()))
-                .setLockTime(lockTime);
+                .setLockTime(lockTime)
+                .setUid(uid);
 
         Optional.ofNullable(takerFeeTxId).ifPresent(builder::setTakerFeeTxId);
         Optional.ofNullable(depositTxId).ifPresent(builder::setDepositTxId);

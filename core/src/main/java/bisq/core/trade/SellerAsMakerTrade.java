@@ -24,7 +24,11 @@ import bisq.core.trade.protocol.ProcessModel;
 
 import bisq.network.p2p.NodeAddress;
 
+import bisq.common.proto.ProtoUtil;
+
 import org.bitcoinj.core.Coin;
+
+import java.util.UUID;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -45,7 +49,8 @@ public final class SellerAsMakerTrade extends SellerTrade implements MakerTrade 
                               @Nullable NodeAddress mediatorNodeAddress,
                               @Nullable NodeAddress refundAgentNodeAddress,
                               BtcWalletService btcWalletService,
-                              ProcessModel processModel) {
+                              ProcessModel processModel,
+                              String uid) {
         super(offer,
                 txFee,
                 takerFee,
@@ -54,7 +59,8 @@ public final class SellerAsMakerTrade extends SellerTrade implements MakerTrade 
                 mediatorNodeAddress,
                 refundAgentNodeAddress,
                 btcWalletService,
-                processModel);
+                processModel,
+                uid);
     }
 
 
@@ -75,6 +81,10 @@ public final class SellerAsMakerTrade extends SellerTrade implements MakerTrade 
                                      CoreProtoResolver coreProtoResolver) {
         protobuf.Trade proto = sellerAsMakerTradeProto.getTrade();
         ProcessModel processModel = ProcessModel.fromProto(proto.getProcessModel(), coreProtoResolver);
+        String uid = ProtoUtil.stringOrNullFromProto(proto.getUid());
+        if (uid == null) {
+            uid = UUID.randomUUID().toString();
+        }
         SellerAsMakerTrade trade = new SellerAsMakerTrade(
                 Offer.fromProto(proto.getOffer()),
                 Coin.valueOf(proto.getTxFeeAsLong()),
@@ -84,7 +94,8 @@ public final class SellerAsMakerTrade extends SellerTrade implements MakerTrade 
                 proto.hasMediatorNodeAddress() ? NodeAddress.fromProto(proto.getMediatorNodeAddress()) : null,
                 proto.hasRefundAgentNodeAddress() ? NodeAddress.fromProto(proto.getRefundAgentNodeAddress()) : null,
                 btcWalletService,
-                processModel);
+                processModel,
+                uid);
 
         trade.setTradeAmountAsLong(proto.getTradeAmountAsLong());
         trade.setTradePrice(proto.getTradePrice());
