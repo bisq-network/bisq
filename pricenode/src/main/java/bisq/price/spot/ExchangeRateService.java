@@ -61,6 +61,8 @@ class ExchangeRateService {
         Map<String, ExchangeRate> aggregateExchangeRates = getAggregateExchangeRates();
 
         providers.forEach(p -> {
+            if (p.get() == null)
+                return;
             Set<ExchangeRate> exchangeRates = p.get();
 
             // Specific metadata fields for specific providers are expected by the client,
@@ -136,6 +138,8 @@ class ExchangeRateService {
     private Map<String, List<ExchangeRate>> getCurrencyCodeToExchangeRates() {
         Map<String, List<ExchangeRate>> currencyCodeToExchangeRates = new HashMap<>();
         for (ExchangeRateProvider p : providers) {
+            if (p.get() == null)
+                continue;
             for (ExchangeRate exchangeRate : p.get()) {
                 String currencyCode = exchangeRate.getCurrency();
                 if (currencyCodeToExchangeRates.containsKey(currencyCode)) {
