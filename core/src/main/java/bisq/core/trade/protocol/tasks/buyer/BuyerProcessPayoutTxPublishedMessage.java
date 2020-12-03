@@ -18,7 +18,6 @@
 package bisq.core.trade.protocol.tasks.buyer;
 
 import bisq.core.account.sign.SignedWitness;
-import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletService;
 import bisq.core.trade.Trade;
@@ -60,7 +59,7 @@ public class BuyerProcessPayoutTxPublishedMessage extends TradeTask {
                 BtcWalletService.printTx("payoutTx received from peer", committedPayoutTx);
 
                 trade.setState(Trade.State.BUYER_RECEIVED_PAYOUT_TX_PUBLISHED_MSG);
-                processModel.getBtcWalletService().swapTradeEntryToAvailableEntry(trade.getId(), AddressEntry.Context.MULTI_SIG);
+                processModel.getBtcWalletService().resetCoinLockedInMultiSigAddressEntry(trade.getId());
             } else {
                 log.info("We got the payout tx already set from BuyerSetupPayoutTxListener and do nothing here. trade ID={}", trade.getId());
             }
