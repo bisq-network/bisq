@@ -100,8 +100,8 @@ public class SellerAsMakerProtocol extends SellerProtocol implements MakerProtoc
                 .with(message)
                 .from(peer))
                 .setup(tasks(
-                        SellerAsMakerProcessDepositTxMessage.class,
                         MakerRemovesOpenOffer.class,
+                        SellerAsMakerProcessDepositTxMessage.class,
                         SellerAsMakerFinalizesDepositTx.class,
                         SellerCreatesDelayedPayoutTx.class,
                         SellerSignsDelayedPayoutTx.class,

@@ -100,8 +100,8 @@ public class BuyerAsMakerProtocol extends BuyerProtocol implements MakerProtocol
                 .with(message)
                 .from(peer))
                 .setup(tasks(
-                        BuyerProcessDelayedPayoutTxSignatureRequest.class,
                         MakerRemovesOpenOffer.class,
+                        BuyerProcessDelayedPayoutTxSignatureRequest.class,
                         BuyerVerifiesPreparedDelayedPayoutTx.class,
                         BuyerSignsDelayedPayoutTx.class,
                         BuyerFinalizesDelayedPayoutTx.class,
