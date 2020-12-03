@@ -288,7 +288,9 @@ public class ExchangeRateServiceTest {
 
         // Initialize provider
         dummyProvider.start();
-        try { sleep(1000); } catch (InterruptedException e) { }
+        try {
+            sleep(1000);
+        } catch (InterruptedException e) { }
         dummyProvider.stop();
 
         return dummyProvider;
@@ -324,7 +326,9 @@ public class ExchangeRateServiceTest {
 
         // Initialize provider
         dummyProvider.start();
-        try { sleep(1000); } catch (InterruptedException e) { }
+        try {
+            sleep(1000);
+        } catch (InterruptedException e) { }
         dummyProvider.stop();
 
         return dummyProvider;

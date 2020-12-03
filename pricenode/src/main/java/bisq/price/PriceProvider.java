@@ -55,7 +55,9 @@ public abstract class PriceProvider<T> implements SmartLifecycle, Supplier<T> {
     public final void start() {
         // do the initial refresh asynchronously
         UserThread.runAfter(() -> {
-            try { refresh(); } catch (Throwable t) {
+            try {
+                refresh();
+            } catch (Throwable t) {
                 log.warn("initial refresh failed", t);
             }
         }, 1, TimeUnit.MILLISECONDS);
