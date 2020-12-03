@@ -46,6 +46,7 @@ public class OfferInfo implements Payload {
     private final long volume;
     private final long minVolume;
     private final long buyerSecurityDeposit;
+    private final boolean isCurrencyForMakerFeeBtc;
     private final String paymentAccountId;   // only used when creating offer
     private final String paymentMethodId;
     private final String paymentMethodShortName;
@@ -67,6 +68,7 @@ public class OfferInfo implements Payload {
         this.volume = builder.volume;
         this.minVolume = builder.minVolume;
         this.buyerSecurityDeposit = builder.buyerSecurityDeposit;
+        this.isCurrencyForMakerFeeBtc = builder.isCurrencyForMakerFeeBtc;
         this.paymentAccountId = builder.paymentAccountId;
         this.paymentMethodId = builder.paymentMethodId;
         this.paymentMethodShortName = builder.paymentMethodShortName;
@@ -88,6 +90,7 @@ public class OfferInfo implements Payload {
                 .withVolume(Objects.requireNonNull(offer.getVolume()).getValue())
                 .withMinVolume(Objects.requireNonNull(offer.getMinVolume()).getValue())
                 .withBuyerSecurityDeposit(offer.getBuyerSecurityDeposit().value)
+                .withIsCurrencyForMakerFeeBtc(offer.isCurrencyForMakerFeeBtc())
                 .withPaymentAccountId(offer.getMakerPaymentAccountId())
                 .withPaymentMethodId(offer.getPaymentMethod().getId())
                 .withPaymentMethodShortName(offer.getPaymentMethod().getShortName())
@@ -115,6 +118,7 @@ public class OfferInfo implements Payload {
                 .setVolume(volume)
                 .setMinVolume(minVolume)
                 .setBuyerSecurityDeposit(buyerSecurityDeposit)
+                .setIsCurrencyForMakerFeeBtc(isCurrencyForMakerFeeBtc)
                 .setPaymentAccountId(paymentAccountId)
                 .setPaymentMethodId(paymentMethodId)
                 .setPaymentMethodShortName(paymentMethodShortName)
@@ -125,9 +129,28 @@ public class OfferInfo implements Payload {
                 .build();
     }
 
-    @SuppressWarnings({"unused", "SameReturnValue"})
+    @SuppressWarnings("unused")
     public static OfferInfo fromProto(bisq.proto.grpc.OfferInfo proto) {
-        return null; // TODO
+        return new OfferInfo.OfferInfoBuilder()
+                .withId(proto.getId())
+                .withDirection(proto.getDirection())
+                .withPrice(proto.getPrice())
+                .withUseMarketBasedPrice(proto.getUseMarketBasedPrice())
+                .withMarketPriceMargin(proto.getMarketPriceMargin())
+                .withAmount(proto.getAmount())
+                .withMinAmount(proto.getMinAmount())
+                .withVolume(proto.getVolume())
+                .withMinVolume(proto.getMinVolume())
+                .withBuyerSecurityDeposit(proto.getBuyerSecurityDeposit())
+                .withIsCurrencyForMakerFeeBtc(proto.getIsCurrencyForMakerFeeBtc())
+                .withPaymentAccountId(proto.getPaymentAccountId())
+                .withPaymentMethodId(proto.getPaymentMethodId())
+                .withPaymentMethodShortName(proto.getPaymentMethodShortName())
+                .withBaseCurrencyCode(proto.getBaseCurrencyCode())
+                .withCounterCurrencyCode(proto.getCounterCurrencyCode())
+                .withDate(proto.getDate())
+                .withState(proto.getState())
+                .build();
     }
 
     /*
@@ -147,6 +170,7 @@ public class OfferInfo implements Payload {
         private long volume;
         private long minVolume;
         private long buyerSecurityDeposit;
+        private boolean isCurrencyForMakerFeeBtc;
         private String paymentAccountId;
         private String paymentMethodId;
         private String paymentMethodShortName;
@@ -202,6 +226,11 @@ public class OfferInfo implements Payload {
 
         public OfferInfoBuilder withBuyerSecurityDeposit(long buyerSecurityDeposit) {
             this.buyerSecurityDeposit = buyerSecurityDeposit;
+            return this;
+        }
+
+        public OfferInfoBuilder withIsCurrencyForMakerFeeBtc(boolean isCurrencyForMakerFeeBtc) {
+            this.isCurrencyForMakerFeeBtc = isCurrencyForMakerFeeBtc;
             return this;
         }
 

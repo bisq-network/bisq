@@ -18,15 +18,20 @@
 package bisq.core.api;
 
 import bisq.core.api.model.AddressBalanceInfo;
+import bisq.core.api.model.BalancesInfo;
+import bisq.core.api.model.TxFeeRateInfo;
+import bisq.core.btc.wallet.TxBroadcaster;
 import bisq.core.monetary.Price;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.payment.PaymentAccount;
+import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.trade.Trade;
 import bisq.core.trade.statistics.TradeStatistics3;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 
 import bisq.common.app.Version;
+import bisq.common.handlers.ResultHandler;
 
 import org.bitcoinj.core.Coin;
 
@@ -107,6 +112,7 @@ public class CoreApi {
                                    long minAmountAsLong,
                                    double buyerSecurityDeposit,
                                    String paymentAccountId,
+                                   String makerFeeCurrencyCode,
                                    Consumer<Offer> resultHandler) {
         coreOffersService.createAndPlaceOffer(currencyCode,
                 directionAsString,
@@ -117,6 +123,7 @@ public class CoreApi {
                 minAmountAsLong,
                 buyerSecurityDeposit,
                 paymentAccountId,
+                makerFeeCurrencyCode,
                 resultHandler);
     }
 
@@ -150,18 +157,20 @@ public class CoreApi {
     // PaymentAccounts
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void createPaymentAccount(String paymentMethodId,
-                                     String accountName,
-                                     String accountNumber,
-                                     String currencyCode) {
-        paymentAccountsService.createPaymentAccount(paymentMethodId,
-                accountName,
-                accountNumber,
-                currencyCode);
+    public PaymentAccount createPaymentAccount(String jsonString) {
+        return paymentAccountsService.createPaymentAccount(jsonString);
     }
 
     public Set<PaymentAccount> getPaymentAccounts() {
         return paymentAccountsService.getPaymentAccounts();
+    }
+
+    public List<PaymentMethod> getFiatPaymentMethods() {
+        return paymentAccountsService.getFiatPaymentMethods();
+    }
+
+    public String getPaymentAccountForm(String paymentMethodId) {
+        return paymentAccountsService.getPaymentAccountFormAsString(paymentMethodId);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -178,10 +187,12 @@ public class CoreApi {
 
     public void takeOffer(String offerId,
                           String paymentAccountId,
+                          String takerFeeCurrencyCode,
                           Consumer<Trade> resultHandler) {
         Offer offer = coreOffersService.getOffer(offerId);
         coreTradesService.takeOffer(offer,
                 paymentAccountId,
+                takerFeeCurrencyCode,
                 resultHandler);
     }
 
@@ -213,8 +224,8 @@ public class CoreApi {
     // Wallets
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public long getAvailableBalance() {
-        return walletsService.getAvailableBalance();
+    public BalancesInfo getBalances(String currencyCode) {
+        return walletsService.getBalances(currencyCode);
     }
 
     public long getAddressBalance(String addressString) {
@@ -227,6 +238,31 @@ public class CoreApi {
 
     public List<AddressBalanceInfo> getFundingAddresses() {
         return walletsService.getFundingAddresses();
+    }
+
+    public String getUnusedBsqAddress() {
+        return walletsService.getUnusedBsqAddress();
+    }
+
+    public void sendBsq(String address, String amount, TxBroadcaster.Callback callback) {
+        walletsService.sendBsq(address, amount, callback);
+    }
+
+    public void getTxFeeRate(ResultHandler resultHandler) {
+        walletsService.getTxFeeRate(resultHandler);
+    }
+
+    public void setTxFeeRatePreference(long txFeeRate,
+                                       ResultHandler resultHandler) {
+        walletsService.setTxFeeRatePreference(txFeeRate, resultHandler);
+    }
+
+    public void unsetTxFeeRatePreference(ResultHandler resultHandler) {
+        walletsService.unsetTxFeeRatePreference(resultHandler);
+    }
+
+    public TxFeeRateInfo getMostRecentTxFeeRateInfo() {
+        return walletsService.getMostRecentTxFeeRateInfo();
     }
 
     public void setWalletPassword(String password, String newPassword) {

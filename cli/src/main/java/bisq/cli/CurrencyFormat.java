@@ -17,6 +17,8 @@
 
 package bisq.cli;
 
+import bisq.proto.grpc.TxFeeRateInfo;
+
 import com.google.common.annotations.VisibleForTesting;
 
 import java.text.DecimalFormat;
@@ -36,11 +38,29 @@ public class CurrencyFormat {
 
     static final BigDecimal SATOSHI_DIVISOR = new BigDecimal(100000000);
     static final DecimalFormat BTC_FORMAT = new DecimalFormat("###,##0.00000000");
+    static final DecimalFormat BTC_TX_FEE_FORMAT = new DecimalFormat("###,##0.00");
 
-    @VisibleForTesting
+    static final BigDecimal BSQ_SATOSHI_DIVISOR = new BigDecimal(100);
+    static final DecimalFormat BSQ_FORMAT = new DecimalFormat("###,###,###,##0.00");
+
     @SuppressWarnings("BigDecimalMethodWithoutRoundingCalled")
     public static String formatSatoshis(long sats) {
         return BTC_FORMAT.format(BigDecimal.valueOf(sats).divide(SATOSHI_DIVISOR));
+    }
+
+    @SuppressWarnings("BigDecimalMethodWithoutRoundingCalled")
+    public static String formatBsq(long sats) {
+        return BSQ_FORMAT.format(BigDecimal.valueOf(sats).divide(BSQ_SATOSHI_DIVISOR));
+    }
+
+    public static String formatTxFeeRateInfo(TxFeeRateInfo txFeeRateInfo) {
+        if (txFeeRateInfo.getUseCustomTxFeeRate())
+            return format("custom tx fee rate: %s sats/byte, network rate: %s sats/byte",
+                    formatFeeSatoshis(txFeeRateInfo.getCustomTxFeeRate()),
+                    formatFeeSatoshis(txFeeRateInfo.getFeeServiceRate()));
+        else
+            return format("tx fee rate: %s sats/byte",
+                    formatFeeSatoshis(txFeeRateInfo.getFeeServiceRate()));
     }
 
     static String formatAmountRange(long minAmount, long amount) {
@@ -77,5 +97,10 @@ public class CurrencyFormat {
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException(format("'%s' is not a number", btc));
         }
+    }
+
+    @SuppressWarnings("BigDecimalMethodWithoutRoundingCalled")
+    private static String formatFeeSatoshis(long sats) {
+        return BTC_TX_FEE_FORMAT.format(BigDecimal.valueOf(sats).divide(SATOSHI_DIVISOR));
     }
 }

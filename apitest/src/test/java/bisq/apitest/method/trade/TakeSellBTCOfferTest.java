@@ -17,6 +17,8 @@
 
 package bisq.apitest.method.trade;
 
+import bisq.proto.grpc.BtcBalanceInfo;
+
 import io.grpc.StatusRuntimeException;
 
 import lombok.extern.slf4j.Slf4j;
@@ -35,6 +37,7 @@ import static bisq.core.trade.Trade.Phase.*;
 import static bisq.core.trade.Trade.State.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static protobuf.Offer.State.OFFER_FEE_PAID;
 import static protobuf.OpenOffer.State.AVAILABLE;
@@ -46,6 +49,9 @@ public class TakeSellBTCOfferTest extends AbstractTradeTest {
 
     // Alice is seller, Bob is buyer.
 
+    // Maker and Taker fees are in BTC.
+    private static final String TRADE_FEE_CURRENCY_CODE = "btc";
+
     @Test
     @Order(1)
     public void testTakeAlicesSellOffer(final TestInfo testInfo) {
@@ -53,18 +59,21 @@ public class TakeSellBTCOfferTest extends AbstractTradeTest {
             var alicesOffer = createAliceOffer(alicesDummyAcct,
                     "sell",
                     "usd",
-                    12500000);
+                    12500000,
+                    TRADE_FEE_CURRENCY_CODE);
             var offerId = alicesOffer.getId();
+            assertTrue(alicesOffer.getIsCurrencyForMakerFeeBtc());
 
             // Wait for Alice's AddToOfferBook task.
             // Wait times vary;  my logs show >= 2 second delay, but taking sell offers
             // seems to require more time to prepare.
-            sleep(3000);
+            sleep(3000); // TODO loop instead of hard code wait time
             assertEquals(1, getOpenOffersCount(bobStubs, "sell", "usd"));
 
-            var trade = takeAlicesOffer(offerId, bobsDummyAcct.getId());
+            var trade = takeAlicesOffer(offerId, bobsDummyAcct.getId(), TRADE_FEE_CURRENCY_CODE);
             assertNotNull(trade);
             assertEquals(offerId, trade.getTradeId());
+            assertTrue(trade.getIsCurrencyForTakerFeeBtc());
             // Cache the trade id for the other tests.
             tradeId = trade.getTradeId();
 
@@ -148,8 +157,9 @@ public class TakeSellBTCOfferTest extends AbstractTradeTest {
                 .setWithdrawn(true);
         verifyExpectedProtocolStatus(trade);
         logTrade(log, testInfo, "Bob's view after withdrawing funds to external wallet", trade);
+        BtcBalanceInfo currentBalance = getBtcBalances(bobdaemon);
         log.info("{} Bob's current available balance: {} BTC",
                 testName(testInfo),
-                formatSatoshis(getBalance(bobdaemon)));
+                formatSatoshis(currentBalance.getAvailableBalance()));
     }
 }

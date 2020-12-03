@@ -49,6 +49,7 @@ import javax.inject.Singleton;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Predicate;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -63,6 +64,7 @@ import static bisq.core.btc.wallet.Restrictions.isDust;
 import static bisq.core.offer.OfferPayload.*;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static java.lang.String.format;
 
 /**
  * This class holds utility methods for creating, editing and taking an Offer.
@@ -79,6 +81,9 @@ public class OfferUtil {
     private final P2PService p2PService;
     private final ReferralIdService referralIdService;
 
+    private final Predicate<String> isValidFeePaymentCurrencyCode = (c) ->
+            c.equalsIgnoreCase("BSQ") || c.equalsIgnoreCase("BTC");
+
     @Inject
     public OfferUtil(AccountAgeWitnessService accountAgeWitnessService,
                      BsqWalletService bsqWalletService,
@@ -94,6 +99,19 @@ public class OfferUtil {
         this.priceFeedService = priceFeedService;
         this.p2PService = p2PService;
         this.referralIdService = referralIdService;
+    }
+
+    public void maybeSetFeePaymentCurrencyPreference(String feeCurrencyCode) {
+        if (!feeCurrencyCode.isEmpty()) {
+            if (!isValidFeePaymentCurrencyCode.test(feeCurrencyCode))
+                throw new IllegalStateException(format("%s cannot be used to pay trade fees",
+                        feeCurrencyCode.toUpperCase()));
+
+            if (feeCurrencyCode.equalsIgnoreCase("BSQ") && preferences.isPayFeeInBtc())
+                preferences.setPayFeeInBtc(false);
+            else if (feeCurrencyCode.equalsIgnoreCase("BTC") && !preferences.isPayFeeInBtc())
+                preferences.setPayFeeInBtc(true);
+        }
     }
 
     /**

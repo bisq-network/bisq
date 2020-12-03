@@ -863,7 +863,8 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     }
 
     public long getWithdrawalTxFeeInVbytes() {
-        return Math.max(prefPayload.getWithdrawalTxFeeInVbytes(), Config.baseCurrencyNetwork().getDefaultMinFeePerVbyte());
+        return Math.max(prefPayload.getWithdrawalTxFeeInVbytes(),
+                Config.baseCurrencyNetwork().getDefaultMinFeePerVbyte());
     }
 
     public boolean isDaoFullNode() {
