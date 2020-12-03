@@ -89,6 +89,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -259,7 +260,8 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                     openOffer.getMediatorNodeAddress(),
                     openOffer.getRefundAgentNodeAddress(),
                     btcWalletService,
-                    getNewProcessModel(offer));
+                    getNewProcessModel(offer),
+                    UUID.randomUUID().toString());
         } else {
             trade = new SellerAsMakerTrade(offer,
                     Coin.valueOf(inputsForDepositTxRequest.getTxFee()),
@@ -269,10 +271,15 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                     openOffer.getMediatorNodeAddress(),
                     openOffer.getRefundAgentNodeAddress(),
                     btcWalletService,
-                    getNewProcessModel(offer));
+                    getNewProcessModel(offer),
+                    UUID.randomUUID().toString());
         }
         TradeProtocol tradeProtocol = TradeProtocolFactory.getNewTradeProtocol(trade);
-        tradeProtocolByTradeId.put(trade.getId(), tradeProtocol);
+        TradeProtocol prev = tradeProtocolByTradeId.put(trade.getUid(), tradeProtocol);
+        if (prev != null) {
+            log.error("We had already an entry with uid {}", trade.getUid());
+        }
+
         tradableList.add(trade);
         initTradeAndProtocol(trade, tradeProtocol);
 
@@ -313,11 +320,16 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
     }
 
     public TradeProtocol getTradeProtocol(Trade trade) {
-        if (tradeProtocolByTradeId.containsKey(trade.getId())) {
-            return tradeProtocolByTradeId.get(trade.getId());
+        String uid = trade.getUid();
+        if (tradeProtocolByTradeId.containsKey(uid)) {
+            return tradeProtocolByTradeId.get(uid);
         } else {
             TradeProtocol tradeProtocol = TradeProtocolFactory.getNewTradeProtocol(trade);
-            tradeProtocolByTradeId.put(trade.getId(), tradeProtocol);
+            TradeProtocol prev = tradeProtocolByTradeId.put(uid, tradeProtocol);
+            if (prev != null) {
+                log.error("We had already an entry with uid {}", trade.getUid());
+            }
+
             return tradeProtocol;
         }
     }
@@ -406,7 +418,8 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                                     model.getSelectedMediator(),
                                     model.getSelectedRefundAgent(),
                                     btcWalletService,
-                                    getNewProcessModel(offer));
+                                    getNewProcessModel(offer),
+                                    UUID.randomUUID().toString());
                         } else {
                             trade = new BuyerAsTakerTrade(offer,
                                     amount,
@@ -419,14 +432,18 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                                     model.getSelectedMediator(),
                                     model.getSelectedRefundAgent(),
                                     btcWalletService,
-                                    getNewProcessModel(offer));
+                                    getNewProcessModel(offer),
+                                    UUID.randomUUID().toString());
                         }
                         trade.getProcessModel().setUseSavingsWallet(useSavingsWallet);
                         trade.getProcessModel().setFundsNeededForTradeAsLong(fundsNeededForTrade.value);
                         trade.setTakerPaymentAccountId(paymentAccountId);
 
                         TradeProtocol tradeProtocol = TradeProtocolFactory.getNewTradeProtocol(trade);
-                        tradeProtocolByTradeId.put(trade.getId(), tradeProtocol);
+                        TradeProtocol prev = tradeProtocolByTradeId.put(trade.getUid(), tradeProtocol);
+                        if (prev != null) {
+                            log.error("We had already an entry with uid {}", trade.getUid());
+                        }
                         tradableList.add(trade);
 
                         initTradeAndProtocol(trade, tradeProtocol);

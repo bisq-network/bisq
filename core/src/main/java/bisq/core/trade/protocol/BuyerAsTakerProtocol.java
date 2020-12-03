@@ -83,7 +83,7 @@ public class BuyerAsTakerProtocol extends BuyerProtocol implements TakerProtocol
                         CreateTakerFeeTx.class,
                         BuyerAsTakerCreatesDepositTxInputs.class,
                         TakerSendInputsForDepositTxRequest.class)
-                        .withTimeout(30))
+                        .withTimeout(60))
                 .run(() -> {
                     processModel.setTempTradingPeerNodeAddress(trade.getTradingPeerNodeAddress());
                     processModel.getTradeManager().requestPersistence();
@@ -108,7 +108,7 @@ public class BuyerAsTakerProtocol extends BuyerProtocol implements TakerProtocol
                         BuyerAsTakerSignsDepositTx.class,
                         BuyerSetupDepositTxListener.class,
                         BuyerAsTakerSendsDepositTxMessage.class)
-                        .withTimeout(30))
+                        .withTimeout(60))
                 .executeTasks();
     }
 
@@ -122,7 +122,7 @@ public class BuyerAsTakerProtocol extends BuyerProtocol implements TakerProtocol
                         BuyerSignsDelayedPayoutTx.class,
                         BuyerFinalizesDelayedPayoutTx.class,
                         BuyerSendsDelayedPayoutTxSignatureResponse.class)
-                        .withTimeout(30))
+                        .withTimeout(60))
                 .executeTasks();
     }
 

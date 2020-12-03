@@ -44,7 +44,8 @@ public abstract class BuyerTrade extends Trade {
                @Nullable NodeAddress mediatorNodeAddress,
                @Nullable NodeAddress refundAgentNodeAddress,
                BtcWalletService btcWalletService,
-               ProcessModel processModel) {
+               ProcessModel processModel,
+               String uid) {
         super(offer,
                 tradeAmount,
                 txFee,
@@ -56,7 +57,8 @@ public abstract class BuyerTrade extends Trade {
                 mediatorNodeAddress,
                 refundAgentNodeAddress,
                 btcWalletService,
-                processModel);
+                processModel,
+                uid);
     }
 
     BuyerTrade(Offer offer,
@@ -67,7 +69,8 @@ public abstract class BuyerTrade extends Trade {
                @Nullable NodeAddress mediatorNodeAddress,
                @Nullable NodeAddress refundAgentNodeAddress,
                BtcWalletService btcWalletService,
-               ProcessModel processModel) {
+               ProcessModel processModel,
+               String uid) {
         super(offer,
                 txFee,
                 takerFee,
@@ -76,7 +79,8 @@ public abstract class BuyerTrade extends Trade {
                 mediatorNodeAddress,
                 refundAgentNodeAddress,
                 btcWalletService,
-                processModel);
+                processModel,
+                uid);
     }
 
     @Override
