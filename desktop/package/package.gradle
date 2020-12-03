@@ -182,9 +182,9 @@ task packageInstallers {
         // See jpackager argument documentation:
         // https://docs.oracle.com/en/java/javase/15/docs/specs/man/jpackage.html
 
-        // For mac, valid versions are one to three integers separated by dot
-        // TODO Special handling for mac? Or always remove -SNAPSHOT suffix?
-        String appVersion = '1.1.1'
+        // Remove the -SNAPSHOT suffix from the version string (originally defined in build.gradle)
+        // Having it in would have resulted in an invalid version property for several platforms (mac, linux/rpm)
+        String appVersion = version.replaceAll("-SNAPSHOT", "")
         println "Packaging Bisq version ${appVersion}"
 
         String commonOpts = (
@@ -243,8 +243,15 @@ task packageInstallers {
         } else {
             String linuxOpts = (
                 " --icon ${project(':desktop').projectDir}/package/linux/icon.png" +
-                " --linux-package-name bisq-build-test" +
-                " --linux-app-release ${appVersion}" +
+
+                // This defines the first part of the resulting packages (the application name)
+                // deb requires lowercase letters, therefore the application name is written in lowercase
+                " --linux-package-name bisq" +
+
+                // This represents the linux package version (revision)
+                // By convention, this is part of the deb/rpm package names, in addition to the software version
+                " --linux-app-release 1" +
+
                 " --linux-menu-group Network" +
                 " --linux-shortcut"
             )
