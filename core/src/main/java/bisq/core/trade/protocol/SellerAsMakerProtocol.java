@@ -86,7 +86,7 @@ public class SellerAsMakerProtocol extends SellerProtocol implements MakerProtoc
                                     errorMessageHandler.handleErrorMessage(errorMessage);
                                     handleTaskRunnerFault(message, errorMessage);
                                 }))
-                        .withTimeout(30))
+                        .withTimeout(60))
                 .executeTasks();
     }
 
@@ -106,7 +106,7 @@ public class SellerAsMakerProtocol extends SellerProtocol implements MakerProtoc
                         SellerCreatesDelayedPayoutTx.class,
                         SellerSignsDelayedPayoutTx.class,
                         SellerSendDelayedPayoutTxSignatureRequest.class)
-                        .withTimeout(30))
+                        .withTimeout(60))
                 .executeTasks();
     }
 
