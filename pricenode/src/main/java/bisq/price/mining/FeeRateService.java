@@ -27,6 +27,9 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * High-level mining {@link FeeRate} operations.
  */
@@ -34,6 +37,7 @@ import java.util.concurrent.atomic.AtomicLong;
 class FeeRateService {
 
     private final List<FeeRateProvider> providers;
+    protected final Logger log = LoggerFactory.getLogger(this.getClass());
 
     /**
      * Construct a {@link FeeRateService} with a list of all {@link FeeRateProvider}
@@ -56,6 +60,10 @@ class FeeRateService {
         // Process each provider, retrieve and store their fee rate
         providers.forEach(p -> {
             FeeRate feeRate = p.get();
+            if (feeRate == null) {
+                log.warn("feeRate is null, provider={} ", p.toString());
+                return;
+            }
             String currency = feeRate.getCurrency();
             if ("BTC".equals(currency)) {
                 sumOfAllFeeRates.getAndAdd(feeRate.getPrice());

@@ -17,12 +17,15 @@
 
 package bisq.price;
 
+import bisq.common.UserThread;
+
 import org.springframework.context.SmartLifecycle;
 
 import java.time.Duration;
 
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 import org.slf4j.Logger;
@@ -45,17 +48,17 @@ public abstract class PriceProvider<T> implements SmartLifecycle, Supplier<T> {
 
     @Override
     public final T get() {
-        if (!isRunning())
-            throw new IllegalStateException("call start() before calling get()");
-
         return cachedResult;
     }
 
     @Override
     public final void start() {
-        // we call refresh outside the context of a timer once at startup to ensure that
-        // any exceptions thrown get propagated and cause the application to halt
-        refresh();
+        // do the initial refresh asynchronously
+        UserThread.runAfter(() -> {
+            try { refresh(); } catch (Throwable t) {
+                log.warn("initial refresh failed", t);
+            }
+        }, 1, TimeUnit.MILLISECONDS);
 
         timer.scheduleAtFixedRate(new TimerTask() {
             @Override
