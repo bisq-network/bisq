@@ -756,6 +756,23 @@ public class BtcWalletService extends WalletService {
                 });
     }
 
+    // When funds from MultiSig address is spent we reset the coinLockedInMultiSig value to 0.
+    public void resetCoinLockedInMultiSigAddressEntry(String offerId) {
+        setCoinLockedInMultiSigAddressEntry(offerId, 0);
+    }
+
+    public void setCoinLockedInMultiSigAddressEntry(String offerId, long value) {
+        getAddressEntryListAsImmutableList().stream()
+                .filter(e -> AddressEntry.Context.MULTI_SIG == e.getContext())
+                .filter(e -> offerId.equals(e.getOfferId()))
+                .forEach(addressEntry -> setCoinLockedInMultiSigAddressEntry(addressEntry, value));
+    }
+
+    public void setCoinLockedInMultiSigAddressEntry(AddressEntry addressEntry, long value) {
+        log.info("Set coinLockedInMultiSig for addressEntry {} to value {}", addressEntry, value);
+        addressEntryList.setCoinLockedInMultiSigAddressEntry(addressEntry, value);
+    }
+
     public void resetAddressEntriesForOpenOffer(String offerId) {
         log.info("resetAddressEntriesForOpenOffer offerId={}", offerId);
         swapTradeEntryToAvailableEntry(offerId, AddressEntry.Context.OFFER_FUNDING);
