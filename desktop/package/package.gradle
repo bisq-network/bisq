@@ -251,9 +251,16 @@ task packageInstallers {
                 " --linux-shortcut"
             )
 
+            // Package deb
             executeCmd(jPackageFilePath + commonOpts + linuxOpts +
                 " --linux-deb-maintainer contact@bisq.network" +
                 " --type deb")
+
+            // Clean jpackage temp folder, needs to be empty for the next packaging step (rpm)
+            jpackateTempDir.deleteDir();
+            jpackateTempDir.mkdirs();
+
+            // Package rpm
             executeCmd(jPackageFilePath + commonOpts + linuxOpts +
                 " --linux-rpm-license-type AGPLv3" + // https://fedoraproject.org/wiki/Licensing:Main?rd=Licensing#Good_Licenses
                 " --type rpm")
