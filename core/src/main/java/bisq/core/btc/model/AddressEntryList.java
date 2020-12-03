@@ -196,6 +196,15 @@ public final class AddressEntryList implements PersistableEnvelope, PersistedDat
     }
 
     public void swapToAvailable(AddressEntry addressEntry) {
+        if (addressEntry.getContext() == AddressEntry.Context.MULTI_SIG) {
+            log.error("swapToAvailable called with an addressEntry with MULTI_SIG context. " +
+                    "This in not permitted as we must not reuse those address entries and there are " +
+                    "no redeemable funds on those addresses. " +
+                    "Only the keys are used for creating the Multisig address. " +
+                    "addressEntry={}", addressEntry);
+            return;
+        }
+
         boolean setChangedByRemove = entrySet.remove(addressEntry);
         boolean setChangedByAdd = entrySet.add(new AddressEntry(addressEntry.getKeyPair(),
                 AddressEntry.Context.AVAILABLE,
@@ -215,6 +224,24 @@ public final class AddressEntryList implements PersistableEnvelope, PersistedDat
             requestPersistence();
 
         return newAddressEntry;
+    }
+
+    public void setCoinLockedInMultiSigAddressEntry(AddressEntry addressEntry, long value) {
+        if (addressEntry.getContext() != AddressEntry.Context.MULTI_SIG) {
+            log.error("setCoinLockedInMultiSigAddressEntry must be called only on MULTI_SIG entries");
+            return;
+        }
+
+        boolean setChangedByRemove = entrySet.remove(addressEntry);
+        AddressEntry entry = new AddressEntry(addressEntry.getKeyPair(),
+                AddressEntry.Context.MULTI_SIG,
+                addressEntry.getOfferId(),
+                value,
+                addressEntry.isSegwit());
+        boolean setChangedByAdd = entrySet.add(entry);
+        if (setChangedByRemove || setChangedByAdd) {
+            requestPersistence();
+        }
     }
 
     public void requestPersistence() {
