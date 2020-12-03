@@ -228,9 +228,7 @@ task packageInstallers {
 
             // TODO How does the current package/windows/Bisq.iss play into this?
 
-            // TODO Do msi or exe? Or both? For pros and cons see https://stackoverflow.com/a/1925819
             executeCmd(jPackageFilePath + commonOpts + windowsOpts + " --type exe")
-            executeCmd(jPackageFilePath + commonOpts + windowsOpts + " --type msi")
         } else if (Os.isFamily(Os.FAMILY_MAC)) {
             // TODO Include signing args, like --mac-sign / -mac-signing-keychain / --mac-signing-key-user-name
 
