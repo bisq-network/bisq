@@ -68,6 +68,8 @@ public class ProcessMediatedPayoutTxPublishedMessage extends TradeTask {
                     UserThread.execute(() -> processModel.getTradeManager()
                             .closeDisputedTrade(trade.getId(), Trade.DisputeState.MEDIATION_CLOSED));
                 }
+
+                processModel.getBtcWalletService().resetCoinLockedInMultiSigAddressEntry(trade.getId());
             } else {
                 log.info("We got the payout tx already set from BuyerSetupPayoutTxListener and do nothing here. trade ID={}", trade.getId());
             }

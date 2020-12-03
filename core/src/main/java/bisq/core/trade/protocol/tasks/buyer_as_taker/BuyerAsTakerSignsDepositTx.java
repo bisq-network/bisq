@@ -68,7 +68,8 @@ public class BuyerAsTakerSignsDepositTx extends TradeTask {
             AddressEntry buyerMultiSigAddressEntry = addressEntryOptional.get();
             Coin buyerInput = Coin.valueOf(buyerInputs.stream().mapToLong(input -> input.value).sum());
 
-            buyerMultiSigAddressEntry.setCoinLockedInMultiSig(buyerInput.subtract(trade.getTxFee().multiply(2)));
+            Coin multiSigValue = buyerInput.subtract(trade.getTxFee().multiply(2));
+            processModel.getBtcWalletService().setCoinLockedInMultiSigAddressEntry(buyerMultiSigAddressEntry, multiSigValue.value);
             walletService.saveAddressEntryList();
 
             TradingPeer tradingPeer = processModel.getTradingPeer();

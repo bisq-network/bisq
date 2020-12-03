@@ -102,6 +102,8 @@ public class SellerSignAndFinalizePayoutTx extends TradeTask {
 
             processModel.getTradeManager().requestPersistence();
 
+            walletService.resetCoinLockedInMultiSigAddressEntry(id);
+
             complete();
         } catch (Throwable t) {
             failed(t);

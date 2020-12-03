@@ -71,6 +71,8 @@ public abstract class SetupPayoutTxListener extends TradeTask {
 
                     tradeStateSubscription = EasyBind.subscribe(trade.stateProperty(), newValue -> {
                         if (trade.isPayoutPublished()) {
+                            processModel.getBtcWalletService().resetCoinLockedInMultiSigAddressEntry(trade.getId());
+
                             // hack to remove tradeStateSubscription at callback
                             UserThread.execute(this::unSubscribe);
                         }
@@ -95,6 +97,8 @@ public abstract class SetupPayoutTxListener extends TradeTask {
         } else {
             log.info("We had the payout tx already set. tradeId={}, state={}", trade.getId(), trade.getState());
         }
+
+        processModel.getBtcWalletService().resetCoinLockedInMultiSigAddressEntry(trade.getId());
 
         // need delay as it can be called inside the handler before the listener and tradeStateSubscription are actually set.
         UserThread.execute(this::unSubscribe);

@@ -63,7 +63,8 @@ public class BuyerAsMakerCreatesAndSignsDepositTx extends TradeTask {
             Optional<AddressEntry> addressEntryOptional = walletService.getAddressEntry(id, AddressEntry.Context.MULTI_SIG);
             checkArgument(addressEntryOptional.isPresent(), "addressEntryOptional must be present");
             AddressEntry makerMultiSigAddressEntry = addressEntryOptional.get();
-            makerMultiSigAddressEntry.setCoinLockedInMultiSig(makerInputAmount);
+            processModel.getBtcWalletService().setCoinLockedInMultiSigAddressEntry(makerMultiSigAddressEntry, makerInputAmount.value);
+
             walletService.saveAddressEntryList();
 
             Coin msOutputAmount = makerInputAmount
