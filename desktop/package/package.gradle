@@ -60,20 +60,35 @@ task getJavaBinariesDownloadURLs {
         // TODO Extend script logic to alternatively allow a local (separate, v14+) JDK for jpackage
         // TODO Another option is to use the local JDK for everything: build jars and use jpackage (but then it has to be v14+)
 
-        // It seems only the latest version of each JDK is available for download
-        // Therefore, if at any future AdoptOpenJDK release these download links won't work, simply update them
+        // Define the download URLs (and associated binary hashes) for the JDK used to package the installers
+        // These JDKs are independent of what is installed on the building system
+        //
+        // If these specific versions are not hosted by AdoptOpenJDK anymore, or if different versions are desired,
+        // simply update the links and associated hashes below
+        //
         // See https://adoptopenjdk.net/releases.html?variant=openjdk15&jvmVariant=hotspot for latest download URLs
-        // The links must be for: x64 + JDK + zip (for windows) or tar.gz (for mac/linux)
-        Map jdk15DownloadURLs = [
-            'linux'   : 'https://github.com/AdoptOpenJDK/openjdk15-binaries/releases/download/jdk-15%2B36/OpenJDK15U-jdk_x64_linux_hotspot_15_36.tar.gz',
-            'mac'     : 'https://github.com/AdoptOpenJDK/openjdk15-binaries/releases/download/jdk-15%2B36/OpenJDK15U-jdk_x64_mac_hotspot_15_36.tar.gz',
-            'windows' : 'https://github.com/AdoptOpenJDK/openjdk15-binaries/releases/download/jdk-15%2B36/OpenJDK15U-jdk_x64_windows_hotspot_15_36.zip'
+        // On the download page linked above, filter as follows to get the binary URL + associated SHA256:
+        // - architecture: x64
+        // - operating system:
+        // -- linux   ( -> use the tar.gz JDK link)
+        // -- macOS   ( -> use the tar.gz JDK link)
+        // -- windows ( -> use the .zip JDK link)
+        Map jdk15Binaries = [
+            'linux'   : 'https://github.com/AdoptOpenJDK/openjdk15-binaries/releases/download/jdk-15.0.1%2B9/OpenJDK15U-jdk_x64_linux_hotspot_15.0.1_9.tar.gz',
+            'linux-sha256'   : '61045ecb9434e3320dbc2c597715f9884586b7a18a56d29851b4d4a4d48a2a5e',
+            'mac'     : 'https://github.com/AdoptOpenJDK/openjdk15-binaries/releases/download/jdk-15.0.1%2B9.1/OpenJDK15U-jdk_x64_mac_hotspot_15.0.1_9.tar.gz',
+            'mac-sha256'     : 'b8c2e2ad31f3d6676ea665d9505b06df15e23741847556612b40e3ee329fc046',
+            'windows' : 'https://github.com/AdoptOpenJDK/openjdk15-binaries/releases/download/jdk-15.0.1%2B9/OpenJDK15U-jdk_x64_windows_hotspot_15.0.1_9.zip',
+            'windows-sha256' : '0cd7e61b0a37186902062a822caa0e14662b676c245b7ebe541f115f3c45681a'
 
             // TODO For some reason, using "--runtime-image jdk-11" does NOT work with a v15 jpackage, but works with v14
             // v14
 //            'linux'   : 'https://github.com/AdoptOpenJDK/openjdk14-binaries/releases/download/jdk-14.0.2%2B12/OpenJDK14U-jdk_x64_linux_hotspot_14.0.2_12.tar.gz',
+//            'linux-sha256'   : '7d5ee7e06909b8a99c0d029f512f67b092597aa5b0e78c109bd59405bbfa74fe',
 //            'mac'     : 'https://github.com/AdoptOpenJDK/openjdk14-binaries/releases/download/jdk-14.0.2%2B12/OpenJDK14U-jdk_x64_mac_hotspot_14.0.2_12.tar.gz',
-//            'windows' : 'https://github.com/AdoptOpenJDK/openjdk14-binaries/releases/download/jdk-14.0.2%2B12/OpenJDK14U-jdk_x64_windows_hotspot_14.0.2_12.zip'
+//            'mac-sha256'     : '09b7e6ab5d5eb4b73813f4caa793a0b616d33794a17988fa6a6b7c972e8f3dd3',
+//            'windows' : 'https://github.com/AdoptOpenJDK/openjdk14-binaries/releases/download/jdk-14.0.2%2B12/OpenJDK14U-jdk_x64_windows_hotspot_14.0.2_12.zip',
+//            'windows-sha256' : '80926003297bf5afc9357ce24c12aee65483fc7889dc34b65fe08bec4d040611'
         ]
 
         String osKey
@@ -85,10 +100,8 @@ task getJavaBinariesDownloadURLs {
             osKey = 'linux'
         }
 
-        ext.jdk15DownloadURL = jdk15DownloadURLs[osKey]
-
-        // The download URLs can be manually overwritten here, if necessary
-        // ext.jdk15DownloadURL = ...
+        ext.jdk15Binary_DownloadURL = jdk15Binaries[osKey]
+        ext.jdk15Binary_SHA256Hash = jdk15Binaries[osKey + '-sha256']
     }
 }
 
@@ -104,12 +117,13 @@ task retrieveAndExtractJavaBinaries {
         File jdkForJpackageDir = new File(tempRootDir, jdkForJpackageDirName)
         jdkForJpackageDir.mkdirs();
 
-        String jdkForJpackageArchiveURL = getJavaBinariesDownloadURLs.property('jdk15DownloadURL')
+        String jdkForJpackageArchiveURL = getJavaBinariesDownloadURLs.property('jdk15Binary_DownloadURL')
+        String jdkForJpackageArchiveHash = getJavaBinariesDownloadURLs.property('jdk15Binary_SHA256Hash')
         String jdkForJpackageArchiveFileName = jdkForJpackageArchiveURL.tokenize('/').last()
         File jdkForJpackageFile = new File(jdkForJpackageDir, jdkForJpackageArchiveFileName)
 
-        // Download necessary JDK binaries
-        ext.downloadArchive(jdkForJpackageArchiveURL, jdkForJpackageFile)
+        // Download necessary JDK binaries + verify hash
+        ext.downloadAndVerifyArchive(jdkForJpackageArchiveURL, jdkForJpackageArchiveHash, jdkForJpackageFile)
 
         // Extract them
         String jpackageBinaryFileName
@@ -129,10 +143,18 @@ task retrieveAndExtractJavaBinaries {
         }
     }
 
-    ext.downloadArchive = {String archiveURL, File destinationArchiveFile ->
+    ext.downloadAndVerifyArchive = {String archiveURL, String archiveSHA256, File destinationArchiveFile ->
         println "Downloading ${archiveURL}"
         ant.get(src: archiveURL, dest: destinationArchiveFile)
         println 'Download saved to ' + destinationArchiveFile
+
+        println 'Verifying checksum for downloaded binary ...'
+        ant.jdkHash = archiveSHA256
+        ant.checksum(file: destinationArchiveFile, algorithm: 'SHA-256', property: '${jdkHash}', verifyProperty: 'hashMatches')
+        if (ant.properties['hashMatches'] != 'true') {
+            ant.fail('Checksum mismatch: Downloaded JDK binary has a different checksum than expected')
+        }
+        println 'Checksum verified'
     }
 
     ext.extractArchiveTarGz = {File tarGzFile, File destinationDir ->
