@@ -57,7 +57,6 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -94,7 +93,7 @@ public class OfferBookViewModelTest {
     @Ignore("PaymentAccountPayload needs to be set (has been changed with PB changes)")
     public void testIsAnyPaymentAccountValidForOffer() {
         Collection<PaymentAccount> paymentAccounts;
-        paymentAccounts = new ArrayList<>(Collections.singletonList(getSepaAccount("EUR", "DE", "1212324",
+        paymentAccounts = new ArrayList<>(FXCollections.singletonObservableList(getSepaAccount("EUR", "DE", "1212324",
                 new ArrayList<>(Arrays.asList("AT", "DE")))));
         assertTrue(PaymentAccountUtil.isAnyTakerPaymentAccountValidForOffer(
                 getSEPAPaymentMethod("EUR", "AT", new ArrayList<>(Arrays.asList("AT", "DE")), "PSK"), paymentAccounts));
@@ -108,33 +107,33 @@ public class OfferBookViewModelTest {
         // simple cases: same payment methods
 
         // offer: alipay paymentAccount: alipay - same country, same currency
-        paymentAccounts = new ArrayList<>(Collections.singletonList(getAliPayAccount("CNY")));
+        paymentAccounts = new ArrayList<>(FXCollections.singletonObservableList(getAliPayAccount("CNY")));
         assertTrue(PaymentAccountUtil.isAnyTakerPaymentAccountValidForOffer(
                 getAliPayPaymentMethod("EUR"), paymentAccounts));
 
         // offer: ether paymentAccount: ether - same country, same currency
-        paymentAccounts = new ArrayList<>(Collections.singletonList(getCryptoAccount("ETH")));
+        paymentAccounts = new ArrayList<>(FXCollections.singletonObservableList(getCryptoAccount("ETH")));
         assertTrue(PaymentAccountUtil.isAnyTakerPaymentAccountValidForOffer(
                 getBlockChainsPaymentMethod("ETH"), paymentAccounts));
 
         // offer: sepa paymentAccount: sepa - same country, same currency
-        paymentAccounts = new ArrayList<>(Collections.singletonList(getSepaAccount("EUR", "AT", "1212324",
+        paymentAccounts = new ArrayList<>(FXCollections.singletonObservableList(getSepaAccount("EUR", "AT", "1212324",
                 new ArrayList<>(Arrays.asList("AT", "DE")))));
         assertTrue(PaymentAccountUtil.isAnyTakerPaymentAccountValidForOffer(
                 getSEPAPaymentMethod("EUR", "AT", new ArrayList<>(Arrays.asList("AT", "DE")), "PSK"), paymentAccounts));
 
         // offer: nationalBank paymentAccount: nationalBank - same country, same currency
-        paymentAccounts = new ArrayList<>(Collections.singletonList(getNationalBankAccount("EUR", "AT", "PSK")));
+        paymentAccounts = new ArrayList<>(FXCollections.singletonObservableList(getNationalBankAccount("EUR", "AT", "PSK")));
         assertTrue(PaymentAccountUtil.isAnyTakerPaymentAccountValidForOffer(
                 getNationalBankPaymentMethod("EUR", "AT", "PSK"), paymentAccounts));
 
         // offer: SameBank paymentAccount: SameBank - same country, same currency
-        paymentAccounts = new ArrayList<>(Collections.singletonList(getSameBankAccount("EUR", "AT", "PSK")));
+        paymentAccounts = new ArrayList<>(FXCollections.singletonObservableList(getSameBankAccount("EUR", "AT", "PSK")));
         assertTrue(PaymentAccountUtil.isAnyTakerPaymentAccountValidForOffer(
                 getSameBankPaymentMethod("EUR", "AT", "PSK"), paymentAccounts));
 
         // offer: sepa paymentAccount: sepa - diff. country, same currency
-        paymentAccounts = new ArrayList<>(Collections.singletonList(getSepaAccount("EUR", "DE", "1212324", new ArrayList<>(Arrays.asList("AT", "DE")))));
+        paymentAccounts = new ArrayList<>(FXCollections.singletonObservableList(getSepaAccount("EUR", "DE", "1212324", new ArrayList<>(Arrays.asList("AT", "DE")))));
         assertTrue(PaymentAccountUtil.isAnyTakerPaymentAccountValidForOffer(
                 getSEPAPaymentMethod("EUR", "AT", new ArrayList<>(Arrays.asList("AT", "DE")), "PSK"), paymentAccounts));
 
@@ -142,78 +141,78 @@ public class OfferBookViewModelTest {
         //////
 
         // offer: sepa paymentAccount: sepa - same country, same currency
-        paymentAccounts = new ArrayList<>(Collections.singletonList(getSepaAccount("EUR", "AT", "1212324", new ArrayList<>(Arrays.asList("AT", "DE")))));
+        paymentAccounts = new ArrayList<>(FXCollections.singletonObservableList(getSepaAccount("EUR", "AT", "1212324", new ArrayList<>(Arrays.asList("AT", "DE")))));
         assertTrue(PaymentAccountUtil.isAnyTakerPaymentAccountValidForOffer(
                 getSEPAPaymentMethod("EUR", "AT", new ArrayList<>(Arrays.asList("AT", "DE")), "PSK"), paymentAccounts));
 
 
         // offer: sepa paymentAccount: nationalBank - same country, same currency
         // wrong method
-        paymentAccounts = new ArrayList<>(Collections.singletonList(getNationalBankAccount("EUR", "AT", "PSK")));
+        paymentAccounts = new ArrayList<>(FXCollections.singletonObservableList(getNationalBankAccount("EUR", "AT", "PSK")));
         assertFalse(PaymentAccountUtil.isAnyTakerPaymentAccountValidForOffer(
                 getSEPAPaymentMethod("EUR", "AT", new ArrayList<>(Arrays.asList("AT", "DE")), "PSK"), paymentAccounts));
 
         // wrong currency
-        paymentAccounts = new ArrayList<>(Collections.singletonList(getNationalBankAccount("USD", "US", "XXX")));
+        paymentAccounts = new ArrayList<>(FXCollections.singletonObservableList(getNationalBankAccount("USD", "US", "XXX")));
         assertFalse(PaymentAccountUtil.isAnyTakerPaymentAccountValidForOffer(
                 getNationalBankPaymentMethod("EUR", "AT", "PSK"), paymentAccounts));
 
         // wrong country
-        paymentAccounts = new ArrayList<>(Collections.singletonList(getNationalBankAccount("EUR", "FR", "PSK")));
+        paymentAccounts = new ArrayList<>(FXCollections.singletonObservableList(getNationalBankAccount("EUR", "FR", "PSK")));
         assertFalse(PaymentAccountUtil.isAnyTakerPaymentAccountValidForOffer(
                 getNationalBankPaymentMethod("EUR", "AT", "PSK"), paymentAccounts));
 
         // sepa wrong country
-        paymentAccounts = new ArrayList<>(Collections.singletonList(getNationalBankAccount("EUR", "CH", "PSK")));
+        paymentAccounts = new ArrayList<>(FXCollections.singletonObservableList(getNationalBankAccount("EUR", "CH", "PSK")));
         assertFalse(PaymentAccountUtil.isAnyTakerPaymentAccountValidForOffer(
                 getSEPAPaymentMethod("EUR", "AT", new ArrayList<>(Arrays.asList("AT", "DE")), "PSK"), paymentAccounts));
 
         // sepa wrong currency
-        paymentAccounts = new ArrayList<>(Collections.singletonList(getNationalBankAccount("CHF", "DE", "PSK")));
+        paymentAccounts = new ArrayList<>(FXCollections.singletonObservableList(getNationalBankAccount("CHF", "DE", "PSK")));
         assertFalse(PaymentAccountUtil.isAnyTakerPaymentAccountValidForOffer(
                 getSEPAPaymentMethod("EUR", "AT", new ArrayList<>(Arrays.asList("AT", "DE")), "PSK"), paymentAccounts));
 
 
         // same bank
-        paymentAccounts = new ArrayList<>(Collections.singletonList(getSameBankAccount("EUR", "AT", "PSK")));
+        paymentAccounts = new ArrayList<>(FXCollections.singletonObservableList(getSameBankAccount("EUR", "AT", "PSK")));
         assertTrue(PaymentAccountUtil.isAnyTakerPaymentAccountValidForOffer(
                 getNationalBankPaymentMethod("EUR", "AT", "PSK"), paymentAccounts));
 
         // not same bank
-        paymentAccounts = new ArrayList<>(Collections.singletonList(getSameBankAccount("EUR", "AT", "Raika")));
+        paymentAccounts = new ArrayList<>(FXCollections.singletonObservableList(getSameBankAccount("EUR", "AT", "Raika")));
         assertFalse(PaymentAccountUtil.isAnyTakerPaymentAccountValidForOffer(
                 getNationalBankPaymentMethod("EUR", "AT", "PSK"), paymentAccounts));
 
         // same bank, wrong country
-        paymentAccounts = new ArrayList<>(Collections.singletonList(getSameBankAccount("EUR", "DE", "PSK")));
+        paymentAccounts = new ArrayList<>(FXCollections.singletonObservableList(getSameBankAccount("EUR", "DE", "PSK")));
         assertFalse(PaymentAccountUtil.isAnyTakerPaymentAccountValidForOffer(
                 getNationalBankPaymentMethod("EUR", "AT", "PSK"), paymentAccounts));
 
         // same bank, wrong currency
-        paymentAccounts = new ArrayList<>(Collections.singletonList(getSameBankAccount("USD", "AT", "PSK")));
+        paymentAccounts = new ArrayList<>(FXCollections.singletonObservableList(getSameBankAccount("USD", "AT", "PSK")));
         assertFalse(PaymentAccountUtil.isAnyTakerPaymentAccountValidForOffer(
                 getNationalBankPaymentMethod("EUR", "AT", "PSK"), paymentAccounts));
 
         // spec. bank
-        paymentAccounts = new ArrayList<>(Collections.singletonList(getSpecificBanksAccount("EUR", "AT", "PSK",
+        paymentAccounts = new ArrayList<>(FXCollections.singletonObservableList(getSpecificBanksAccount("EUR", "AT", "PSK",
                 new ArrayList<>(Arrays.asList("PSK", "Raika")))));
         assertTrue(PaymentAccountUtil.isAnyTakerPaymentAccountValidForOffer(
                 getNationalBankPaymentMethod("EUR", "AT", "PSK"), paymentAccounts));
 
         // spec. bank, missing bank
-        paymentAccounts = new ArrayList<>(Collections.singletonList(getSpecificBanksAccount("EUR", "AT", "PSK",
-                new ArrayList<>(Collections.singletonList("Raika")))));
+        paymentAccounts = new ArrayList<>(FXCollections.singletonObservableList(getSpecificBanksAccount("EUR", "AT", "PSK",
+                new ArrayList<>(FXCollections.singletonObservableList("Raika")))));
         assertFalse(PaymentAccountUtil.isAnyTakerPaymentAccountValidForOffer(
                 getNationalBankPaymentMethod("EUR", "AT", "PSK"), paymentAccounts));
 
         // spec. bank, wrong country
-        paymentAccounts = new ArrayList<>(Collections.singletonList(getSpecificBanksAccount("EUR", "FR", "PSK",
+        paymentAccounts = new ArrayList<>(FXCollections.singletonObservableList(getSpecificBanksAccount("EUR", "FR", "PSK",
                 new ArrayList<>(Arrays.asList("PSK", "Raika")))));
         assertFalse(PaymentAccountUtil.isAnyTakerPaymentAccountValidForOffer(
                 getNationalBankPaymentMethod("EUR", "AT", "PSK"), paymentAccounts));
 
         // spec. bank, wrong currency
-        paymentAccounts = new ArrayList<>(Collections.singletonList(getSpecificBanksAccount("USD", "AT", "PSK",
+        paymentAccounts = new ArrayList<>(FXCollections.singletonObservableList(getSpecificBanksAccount("USD", "AT", "PSK",
                 new ArrayList<>(Arrays.asList("PSK", "Raika")))));
         assertFalse(PaymentAccountUtil.isAnyTakerPaymentAccountValidForOffer(
                 getNationalBankPaymentMethod("EUR", "AT", "PSK"), paymentAccounts));
@@ -526,7 +525,7 @@ public class OfferBookViewModelTest {
         return getPaymentMethod(currencyCode,
                 PaymentMethod.NATIONAL_BANK_ID,
                 countryCode,
-                new ArrayList<>(Collections.singletonList(countryCode)),
+                new ArrayList<>(FXCollections.singletonObservableList(countryCode)),
                 bankId,
                 null);
     }
@@ -535,9 +534,9 @@ public class OfferBookViewModelTest {
         return getPaymentMethod(currencyCode,
                 PaymentMethod.SAME_BANK_ID,
                 countryCode,
-                new ArrayList<>(Collections.singletonList(countryCode)),
+                new ArrayList<>(FXCollections.singletonObservableList(countryCode)),
                 bankId,
-                new ArrayList<>(Collections.singletonList(bankId)));
+                new ArrayList<>(FXCollections.singletonObservableList(bankId)));
     }
 
     private Offer getSpecificBanksPaymentMethod(String currencyCode,
@@ -547,7 +546,7 @@ public class OfferBookViewModelTest {
         return getPaymentMethod(currencyCode,
                 PaymentMethod.SPECIFIC_BANKS_ID,
                 countryCode,
-                new ArrayList<>(Collections.singletonList(countryCode)),
+                new ArrayList<>(FXCollections.singletonObservableList(countryCode)),
                 bankId,
                 bankIds);
     }
