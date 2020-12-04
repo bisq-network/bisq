@@ -52,6 +52,7 @@ import bisq.proto.grpc.SetTxFeeRatePreferenceRequest;
 import bisq.proto.grpc.SetWalletPasswordRequest;
 import bisq.proto.grpc.TakeOfferRequest;
 import bisq.proto.grpc.TradeInfo;
+import bisq.proto.grpc.TxInfo;
 import bisq.proto.grpc.UnlockWalletRequest;
 import bisq.proto.grpc.UnsetTxFeeRatePreferenceRequest;
 import bisq.proto.grpc.WithdrawFundsRequest;
@@ -160,8 +161,14 @@ public class MethodTest extends ApiTestCase {
         return GetUnusedBsqAddressRequest.newBuilder().build();
     }
 
-    protected final SendBsqRequest createSendBsqRequest(String address, String amount) {
-        return SendBsqRequest.newBuilder().setAddress(address).setAmount(amount).build();
+    protected final SendBsqRequest createSendBsqRequest(String address,
+                                                        String amount,
+                                                        String txFeeRate) {
+        return SendBsqRequest.newBuilder()
+                .setAddress(address)
+                .setAmount(amount)
+                .setTxFeeRate(txFeeRate)
+                .build();
     }
 
     protected final GetFundingAddressesRequest createGetFundingAddressesRequest() {
@@ -247,9 +254,21 @@ public class MethodTest extends ApiTestCase {
         return grpcStubs(bisqAppConfig).walletsService.getUnusedBsqAddress(createGetUnusedBsqAddressRequest()).getAddress();
     }
 
-    protected final void sendBsq(BisqAppConfig bisqAppConfig, String address, String amount) {
+    protected final TxInfo sendBsq(BisqAppConfig bisqAppConfig,
+                                   String address,
+                                   String amount) {
+        return sendBsq(bisqAppConfig, address, amount, "");
+    }
+
+    protected final TxInfo sendBsq(BisqAppConfig bisqAppConfig,
+                                   String address,
+                                   String amount,
+                                   String txFeeRate) {
         //noinspection ResultOfMethodCallIgnored
-        grpcStubs(bisqAppConfig).walletsService.sendBsq(createSendBsqRequest(address, amount));
+        return grpcStubs(bisqAppConfig).walletsService.sendBsq(createSendBsqRequest(address,
+                amount,
+                txFeeRate))
+                .getTxInfo();
     }
 
     protected final String getUnusedBtcAddress(BisqAppConfig bisqAppConfig) {

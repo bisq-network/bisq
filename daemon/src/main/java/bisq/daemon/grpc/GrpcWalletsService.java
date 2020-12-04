@@ -62,6 +62,8 @@ import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.core.api.model.TxInfo.toTxInfo;
+
 @Slf4j
 class GrpcWalletsService extends WalletsGrpc.WalletsImplBase {
 
@@ -145,24 +147,29 @@ class GrpcWalletsService extends WalletsGrpc.WalletsImplBase {
     public void sendBsq(SendBsqRequest req,
                         StreamObserver<SendBsqReply> responseObserver) {
         try {
-            coreApi.sendBsq(req.getAddress(), req.getAmount(), new TxBroadcaster.Callback() {
-                @Override
-                public void onSuccess(Transaction tx) {
-                    log.info("Successfully published BSQ tx: id {}, output sum {} sats, fee {} sats, size {} bytes",
-                            tx.getTxId().toString(),
-                            tx.getOutputSum(),
-                            tx.getFee(),
-                            tx.getMessageSize());
-                    var reply = SendBsqReply.newBuilder().build();
-                    responseObserver.onNext(reply);
-                    responseObserver.onCompleted();
-                }
+            coreApi.sendBsq(req.getAddress(),
+                    req.getAmount(),
+                    req.getTxFeeRate(),
+                    new TxBroadcaster.Callback() {
+                        @Override
+                        public void onSuccess(Transaction tx) {
+                            log.info("Successfully published BSQ tx: id {}, output sum {} sats, fee {} sats, size {} bytes",
+                                    tx.getTxId().toString(),
+                                    tx.getOutputSum(),
+                                    tx.getFee(),
+                                    tx.getMessageSize());
+                            var reply = SendBsqReply.newBuilder()
+                                    .setTxInfo(toTxInfo(tx).toProtoMessage())
+                                    .build();
+                            responseObserver.onNext(reply);
+                            responseObserver.onCompleted();
+                        }
 
-                @Override
-                public void onFailure(TxBroadcastException ex) {
-                    throw new IllegalStateException(ex);
-                }
-            });
+                        @Override
+                        public void onFailure(TxBroadcastException ex) {
+                            throw new IllegalStateException(ex);
+                        }
+                    });
         } catch (IllegalStateException cause) {
             var ex = new StatusRuntimeException(Status.UNKNOWN.withDescription(cause.getMessage()));
             responseObserver.onError(ex);

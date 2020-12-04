@@ -189,13 +189,27 @@ class CoreWalletsService {
 
     void sendBsq(String address,
                  String amount,
+                 String txFeeRate,
                  TxBroadcaster.Callback callback) {
         try {
             LegacyAddress legacyAddress = getValidBsqLegacyAddress(address);
             Coin receiverAmount = getValidBsqTransferAmount(amount);
-            BsqTransferModel model = bsqTransferService.getBsqTransferModel(legacyAddress, receiverAmount);
+
+            // A non txFeeRate String value overrides the fee service and custom fee.
+            Coin txFeePerVbyte = txFeeRate.isEmpty()
+                    ? btcWalletService.getTxFeeForWithdrawalPerVbyte()
+                    : Coin.valueOf(Long.parseLong(txFeeRate));
+
+            BsqTransferModel model = bsqTransferService.getBsqTransferModel(legacyAddress,
+                    receiverAmount,
+                    txFeePerVbyte);
+            log.info("Sending {} BSQ to {} with tx fee rate {} sats/byte).",
+                    amount,
+                    address,
+                    txFeePerVbyte.value);
             bsqTransferService.sendFunds(model, callback);
-        } catch (InsufficientMoneyException
+        } catch (NumberFormatException
+                | InsufficientMoneyException
                 | BsqChangeBelowDustException
                 | TransactionVerificationException
                 | WalletException ex) {

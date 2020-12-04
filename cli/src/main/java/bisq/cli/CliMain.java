@@ -43,6 +43,7 @@ import bisq.proto.grpc.SendBsqRequest;
 import bisq.proto.grpc.SetTxFeeRatePreferenceRequest;
 import bisq.proto.grpc.SetWalletPasswordRequest;
 import bisq.proto.grpc.TakeOfferRequest;
+import bisq.proto.grpc.TxInfo;
 import bisq.proto.grpc.UnlockWalletRequest;
 import bisq.proto.grpc.UnsetTxFeeRatePreferenceRequest;
 import bisq.proto.grpc.WithdrawFundsRequest;
@@ -259,19 +260,20 @@ public class CliMain {
                         throw new IllegalArgumentException("no bsq amount specified");
 
                     var amount = nonOptionArgs.get(2);
+                    verifyStringIsValidDecimal(amount);
 
-                    try {
-                        Double.parseDouble(amount);
-                    } catch (NumberFormatException e) {
-                        throw new IllegalArgumentException(format("'%s' is not a number", amount));
-                    }
+                    var txFeeRate = nonOptionArgs.size() == 4 ? nonOptionArgs.get(3) : "";
+                    if (!txFeeRate.isEmpty())
+                        verifyStringIsValidLong(txFeeRate);
 
                     var request = SendBsqRequest.newBuilder()
                             .setAddress(address)
                             .setAmount(amount)
+                            .setTxFeeRate(txFeeRate)
                             .build();
-                    walletsService.sendBsq(request);
-                    out.printf("%s BSQ sent to %s%n", amount, address);
+                    var reply = walletsService.sendBsq(request);
+                    TxInfo txInfo = reply.getTxInfo();
+                    out.printf("%s bsq sent to %s in tx %s%n", amount, address, txInfo.getId());
                     return;
                 }
                 case gettxfeerate: {
@@ -284,13 +286,7 @@ public class CliMain {
                     if (nonOptionArgs.size() < 2)
                         throw new IllegalArgumentException("no tx fee rate specified");
 
-                    long txFeeRate;
-                    try {
-                        txFeeRate = Long.parseLong(nonOptionArgs.get(2));
-                    } catch (NumberFormatException e) {
-                        throw new IllegalArgumentException(format("'%s' is not a number", nonOptionArgs.get(2)));
-                    }
-
+                    var txFeeRate = toLong(nonOptionArgs.get(2));
                     var request = SetTxFeeRatePreferenceRequest.newBuilder()
                             .setTxFeeRatePreference(txFeeRate)
                             .build();
@@ -560,12 +556,7 @@ public class CliMain {
                     if (nonOptionArgs.size() < 3)
                         throw new IllegalArgumentException("no unlock timeout specified");
 
-                    long timeout;
-                    try {
-                        timeout = Long.parseLong(nonOptionArgs.get(2));
-                    } catch (NumberFormatException e) {
-                        throw new IllegalArgumentException(format("'%s' is not a number", nonOptionArgs.get(2)));
-                    }
+                    var timeout = toLong(nonOptionArgs.get(2));
                     var request = UnlockWalletRequest.newBuilder()
                             .setPassword(nonOptionArgs.get(1))
                             .setTimeout(timeout).build();
@@ -627,6 +618,30 @@ public class CliMain {
         return Method.valueOf(methodName.toLowerCase());
     }
 
+    private static void verifyStringIsValidDecimal(String param) {
+        try {
+            Double.parseDouble(param);
+        } catch (NumberFormatException ex) {
+            throw new IllegalArgumentException(format("'%s' is not a number", param));
+        }
+    }
+
+    private static void verifyStringIsValidLong(String param) {
+        try {
+            Long.parseLong(param);
+        } catch (NumberFormatException ex) {
+            throw new IllegalArgumentException(format("'%s' is not a number", param));
+        }
+    }
+
+    private static long toLong(String param) {
+        try {
+            return Long.parseLong(param);
+        } catch (NumberFormatException ex) {
+            throw new IllegalArgumentException(format("'%s' is not a number", param));
+        }
+    }
+
     private static File saveFileToDisk(String prefix,
                                        @SuppressWarnings("SameParameterValue") String suffix,
                                        String text) {
@@ -663,7 +678,7 @@ public class CliMain {
             stream.format(rowFormat, "getaddressbalance", "address", "Get server wallet address balance");
             stream.format(rowFormat, "getfundingaddresses", "", "Get BTC funding addresses");
             stream.format(rowFormat, "getunusedbsqaddress", "", "Get unused BSQ address");
-            stream.format(rowFormat, "sendbsq", "address, amount", "Send BSQ");
+            stream.format(rowFormat, "sendbsq", "address, amount [,tx fee rate (sats/byte)]", "Send BSQ");
             stream.format(rowFormat, "gettxfeerate", "", "Get current tx fee rate in sats/byte");
             stream.format(rowFormat, "settxfeerate", "satoshis (per byte)", "Set custom tx fee rate in sats/byte");
             stream.format(rowFormat, "unsettxfeerate", "", "Unset custom tx fee rate");

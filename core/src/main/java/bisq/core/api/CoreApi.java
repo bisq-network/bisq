@@ -244,8 +244,11 @@ public class CoreApi {
         return walletsService.getUnusedBsqAddress();
     }
 
-    public void sendBsq(String address, String amount, TxBroadcaster.Callback callback) {
-        walletsService.sendBsq(address, amount, callback);
+    public void sendBsq(String address,
+                        String amount,
+                        String txFeeRate,
+                        TxBroadcaster.Callback callback) {
+        walletsService.sendBsq(address, amount, txFeeRate, callback);
     }
 
     public void getTxFeeRate(ResultHandler resultHandler) {

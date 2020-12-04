@@ -108,7 +108,7 @@ public class BsqWalletTest extends MethodTest {
     @Order(3)
     public void testSendBsqAndCheckBalancesBeforeGeneratingBtcBlock(final TestInfo testInfo) {
         String bobsBsqAddress = getUnusedBsqAddress(bobdaemon);
-        sendBsq(alicedaemon, bobsBsqAddress, SEND_BSQ_AMOUNT);
+        sendBsq(alicedaemon, bobsBsqAddress, SEND_BSQ_AMOUNT, "100");
         sleep(2000);
 
         BsqBalanceInfo alicesBsqBalances = getBsqBalances(alicedaemon);
