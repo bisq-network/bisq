@@ -165,7 +165,7 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
         lastRequestedBlockHeight = 0;
         lastReceivedBlockHeight = 0;
         retryCounter = 0;
-        requestBlocksHandlerMap.values().forEach(RequestBlocksHandler::cancel);
+        requestBlocksHandlerMap.values().forEach(RequestBlocksHandler::terminate);
     }
 
 
@@ -274,7 +274,7 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
             UserThread.runAfter(() -> {
                 if (requestBlocksHandlerMap.containsKey(key)) {
                     RequestBlocksHandler handler = requestBlocksHandlerMap.get(key);
-                    handler.stop();
+                    handler.terminate();
                     requestBlocksHandlerMap.remove(key);
                 }
             }, CLEANUP_TIMER);
@@ -406,13 +406,13 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
                 .filter(e -> e.getKey().first.equals(nodeAddress))
                 .findAny()
                 .ifPresent(e -> {
-                    e.getValue().cancel();
+                    e.getValue().terminate();
                     requestBlocksHandlerMap.remove(e.getKey());
                 });
     }
 
     private void closeAllHandlers() {
-        requestBlocksHandlerMap.values().forEach(RequestBlocksHandler::cancel);
+        requestBlocksHandlerMap.values().forEach(RequestBlocksHandler::terminate);
         requestBlocksHandlerMap.clear();
     }
 }
