@@ -98,10 +98,6 @@ public class RequestBlocksHandler implements MessageListener {
         this.listener = listener;
     }
 
-    public void cancel() {
-        cleanup();
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
@@ -127,7 +123,7 @@ public class RequestBlocksHandler implements MessageListener {
                         handleFault(errorMessage, nodeAddress, CloseConnectionReason.SEND_MSG_TIMEOUT);
                     } else {
                         log.warn("We have stopped already. We ignore that timeoutTimer.run call. " +
-                                "Might be caused by an previous networkNode.sendMessage.onFailure.");
+                                "Might be caused by a previous networkNode.sendMessage.onFailure.");
                     }
                 },
                 TIMEOUT_MIN, TimeUnit.MINUTES);
@@ -193,16 +189,19 @@ public class RequestBlocksHandler implements MessageListener {
                 return;
             }
 
-            cleanup();
+            terminate();
             log.info("We received from peer {} a BlocksResponse with {} blocks",
                     nodeAddress.getFullAddress(), getBlocksResponse.getBlocks().size());
             listener.onComplete(getBlocksResponse);
         }
     }
 
-    public void stop() {
-        cleanup();
+    public void terminate() {
+        stopped = true;
+        networkNode.removeMessageListener(this);
+        stopTimeoutTimer();
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
@@ -213,15 +212,9 @@ public class RequestBlocksHandler implements MessageListener {
     private void handleFault(String errorMessage,
                              NodeAddress nodeAddress,
                              CloseConnectionReason closeConnectionReason) {
-        cleanup();
+        terminate();
         peerManager.handleConnectionFault(nodeAddress);
         listener.onFault(errorMessage, null);
-    }
-
-    private void cleanup() {
-        stopped = true;
-        networkNode.removeMessageListener(this);
-        stopTimeoutTimer();
     }
 
     private void stopTimeoutTimer() {
