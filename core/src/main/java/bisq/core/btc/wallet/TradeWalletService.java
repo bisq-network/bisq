@@ -30,6 +30,7 @@ import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
 
 import bisq.common.config.Config;
+import bisq.common.util.Tuple2;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
@@ -1098,21 +1099,18 @@ public class TradeWalletService {
     // Emergency payoutTx
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void emergencySignAndPublishPayoutTxFrom2of2MultiSig(String depositTxHex,
-                                                                Coin buyerPayoutAmount,
-                                                                Coin sellerPayoutAmount,
-                                                                Coin txFee,
-                                                                String buyerAddressString,
-                                                                String sellerAddressString,
-                                                                String buyerPrivateKeyAsHex,
-                                                                String sellerPrivateKeyAsHex,
-                                                                String buyerPubKeyAsHex,
-                                                                String sellerPubKeyAsHex,
-                                                                boolean hashedMultiSigOutputIsLegacy,
-                                                                TxBroadcaster.Callback callback)
-            throws AddressFormatException, TransactionVerificationException, WalletException {
+    public Tuple2<String, String> emergencyBuildPayoutTxFrom2of2MultiSig(String depositTxHex,
+                                            Coin buyerPayoutAmount,
+                                            Coin sellerPayoutAmount,
+                                            Coin txFee,
+                                            String buyerAddressString,
+                                            String sellerAddressString,
+                                            String buyerPubKeyAsHex,
+                                            String sellerPubKeyAsHex,
+                                            boolean hashedMultiSigOutputIsLegacy) {
         byte[] buyerPubKey = ECKey.fromPublicOnly(Utils.HEX.decode(buyerPubKeyAsHex)).getPubKey();
         byte[] sellerPubKey = ECKey.fromPublicOnly(Utils.HEX.decode(sellerPubKeyAsHex)).getPubKey();
+        Script redeemScript = get2of2MultiSigRedeemScript(buyerPubKey, sellerPubKey);
 
         Script hashedMultiSigOutputScript = get2of2MultiSigOutputScript(buyerPubKey, sellerPubKey,
                 hashedMultiSigOutputIsLegacy);
@@ -1133,27 +1131,44 @@ public class TradeWalletService {
             payoutTx.addOutput(sellerPayoutAmount, Address.fromString(params, sellerAddressString));
         }
 
-        // take care of sorting!
-        Script redeemScript = get2of2MultiSigRedeemScript(buyerPubKey, sellerPubKey);
+        String redeemScriptHex = Utils.HEX.encode(redeemScript.getProgram());
+        String unsignedTxHex = Utils.HEX.encode(payoutTx.bitcoinSerialize(!hashedMultiSigOutputIsLegacy));
+        return new Tuple2<>(redeemScriptHex, unsignedTxHex);
+    }
+
+    public String emergencyGenerateSignature(String rawTxHex, String redeemScriptHex, Coin inputValue, String myPrivKeyAsHex)
+            throws IllegalArgumentException {
+        boolean hashedMultiSigOutputIsLegacy = true;
+        if (rawTxHex.startsWith("010000000001"))
+            hashedMultiSigOutputIsLegacy = false;
+        byte[] payload = Utils.HEX.decode(rawTxHex);
+        Transaction payoutTx = new Transaction(params, payload, null, params.getDefaultSerializer(), payload.length);
+        Script redeemScript = new Script(Utils.HEX.decode(redeemScriptHex));
         Sha256Hash sigHash;
         if (hashedMultiSigOutputIsLegacy) {
             sigHash = payoutTx.hashForSignature(0, redeemScript, Transaction.SigHash.ALL, false);
         } else {
-            Coin inputValue = msOutputValue;
             sigHash = payoutTx.hashForWitnessSignature(0, redeemScript,
                     inputValue, Transaction.SigHash.ALL, false);
         }
 
-        ECKey buyerPrivateKey = ECKey.fromPrivate(Utils.HEX.decode(buyerPrivateKeyAsHex));
-        checkNotNull(buyerPrivateKey, "key must not be null");
-        ECKey.ECDSASignature buyerECDSASignature = buyerPrivateKey.sign(sigHash, aesKey).toCanonicalised();
+        ECKey myPrivateKey = ECKey.fromPrivate(Utils.HEX.decode(myPrivKeyAsHex));
+        checkNotNull(myPrivateKey, "key must not be null");
+        ECKey.ECDSASignature myECDSASignature = myPrivateKey.sign(sigHash, aesKey).toCanonicalised();
+        TransactionSignature myTxSig = new TransactionSignature(myECDSASignature, Transaction.SigHash.ALL, false);
+        return Utils.HEX.encode(myTxSig.encodeToBitcoin());
+    }
 
-        ECKey sellerPrivateKey = ECKey.fromPrivate(Utils.HEX.decode(sellerPrivateKeyAsHex));
-        checkNotNull(sellerPrivateKey, "key must not be null");
-        ECKey.ECDSASignature sellerECDSASignature = sellerPrivateKey.sign(sigHash, aesKey).toCanonicalised();
-
-        TransactionSignature buyerTxSig = new TransactionSignature(buyerECDSASignature, Transaction.SigHash.ALL, false);
-        TransactionSignature sellerTxSig = new TransactionSignature(sellerECDSASignature, Transaction.SigHash.ALL, false);
+    public Tuple2<String, String> emergencyApplySignatureToPayoutTxFrom2of2MultiSig(String unsignedTxHex,
+                                        String redeemScriptHex,
+                                        String buyerSignatureAsHex,
+                                        String sellerSignatureAsHex,
+                                        boolean hashedMultiSigOutputIsLegacy)
+            throws AddressFormatException, SignatureDecodeException {
+        Transaction payoutTx = new Transaction(params, Utils.HEX.decode(unsignedTxHex));
+        TransactionSignature buyerTxSig = TransactionSignature.decodeFromBitcoin(Utils.HEX.decode(buyerSignatureAsHex), true, true);
+        TransactionSignature sellerTxSig = TransactionSignature.decodeFromBitcoin(Utils.HEX.decode(sellerSignatureAsHex), true, true);
+        Script redeemScript = new Script(Utils.HEX.decode(redeemScriptHex));
 
         TransactionInput input = payoutTx.getInput(0);
         if (hashedMultiSigOutputIsLegacy) {
@@ -1165,7 +1180,14 @@ public class TradeWalletService {
             TransactionWitness witness = TransactionWitness.redeemP2WSH(redeemScript, sellerTxSig, buyerTxSig);
             input.setWitness(witness);
         }
+        String txId = payoutTx.getTxId().toString();
+        String signedTxHex = Utils.HEX.encode(payoutTx.bitcoinSerialize(!hashedMultiSigOutputIsLegacy));
+        return new Tuple2<>(txId, signedTxHex);
+    }
 
+    public void emergencyPublishPayoutTxFrom2of2MultiSig(String signedTxHex, TxBroadcaster.Callback callback)
+            throws AddressFormatException, TransactionVerificationException, WalletException {
+        Transaction payoutTx = new Transaction(params, Utils.HEX.decode(signedTxHex));
         WalletService.printTx("payoutTx", payoutTx);
         WalletService.verifyTransaction(payoutTx);
         WalletService.checkWalletConsistency(wallet);
