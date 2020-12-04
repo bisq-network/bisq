@@ -439,8 +439,7 @@ public class BtcWalletService extends WalletService {
     // Add fee input to prepared BSQ send tx
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-
-    public Transaction completePreparedSendBsqTx(Transaction preparedBsqTx, boolean isSendTx) throws
+    public Transaction completePreparedSendBsqTx(Transaction preparedBsqTx) throws
             TransactionVerificationException, WalletException, InsufficientMoneyException {
         // preparedBsqTx has following structure:
         // inputs [1-n] BSQ inputs
@@ -454,12 +453,25 @@ public class BtcWalletService extends WalletService {
         // outputs [0-1] BSQ change output
         // outputs [0-1] BTC change output
         // mining fee: BTC mining fee
-        return completePreparedBsqTx(preparedBsqTx, isSendTx, null);
+        Coin txFeePerVbyte = getTxFeeForWithdrawalPerVbyte();
+        return completePreparedBsqTx(preparedBsqTx, null, txFeePerVbyte);
+    }
+
+    public Transaction completePreparedSendBsqTx(Transaction preparedBsqTx, Coin txFeePerVbyte) throws
+            TransactionVerificationException, WalletException, InsufficientMoneyException {
+        return completePreparedBsqTx(preparedBsqTx, null, txFeePerVbyte);
     }
 
     public Transaction completePreparedBsqTx(Transaction preparedBsqTx,
-                                             boolean useCustomTxFee,
                                              @Nullable byte[] opReturnData) throws
+            TransactionVerificationException, WalletException, InsufficientMoneyException {
+        Coin txFeePerVbyte = getTxFeeForWithdrawalPerVbyte();
+        return completePreparedBsqTx(preparedBsqTx, opReturnData, txFeePerVbyte);
+    }
+
+    public Transaction completePreparedBsqTx(Transaction preparedBsqTx,
+                                             @Nullable byte[] opReturnData,
+                                             Coin txFeePerVbyte) throws
             TransactionVerificationException, WalletException, InsufficientMoneyException {
 
         // preparedBsqTx has following structure:
@@ -487,8 +499,6 @@ public class BtcWalletService extends WalletService {
         int sigSizePerInput = 106;
         // typical size for a tx with 2 inputs
         int txVsizeWithUnsignedInputs = 203;
-        // If useCustomTxFee we allow overriding the estimated fee from preferences
-        Coin txFeePerVbyte = useCustomTxFee ? getTxFeeForWithdrawalPerVbyte() : feeService.getTxFeePerVbyte();
         // In case there are no change outputs we force a change by adding min dust to the BTC input
         Coin forcedChangeValue = Coin.ZERO;
 
@@ -532,8 +542,8 @@ public class BtcWalletService extends WalletService {
             sendRequest.signInputs = false;
 
             sendRequest.fee = txFeePerVbyte.multiply(txVsizeWithUnsignedInputs +
-                                                    sigSizePerInput * numLegacyInputs +
-                                                    sigSizePerInput * numSegwitInputs / 4);
+                    sigSizePerInput * numLegacyInputs +
+                    sigSizePerInput * numSegwitInputs / 4);
             sendRequest.feePerKb = Coin.ZERO;
             sendRequest.ensureMinRequiredFee = false;
 
@@ -558,8 +568,8 @@ public class BtcWalletService extends WalletService {
             numSegwitInputs = numInputs.second;
             txVsizeWithUnsignedInputs = resultTx.getVsize();
             final long estimatedFeeAsLong = txFeePerVbyte.multiply(txVsizeWithUnsignedInputs +
-                                                                  sigSizePerInput * numLegacyInputs +
-                                                                  sigSizePerInput * numSegwitInputs / 4).value;
+                    sigSizePerInput * numLegacyInputs +
+                    sigSizePerInput * numSegwitInputs / 4).value;
             // calculated fee must be inside of a tolerance range with tx fee
             isFeeOutsideTolerance = Math.abs(resultTx.getFee().value - estimatedFeeAsLong) > 1000;
         }
@@ -933,7 +943,7 @@ public class BtcWalletService extends WalletService {
                         }
                         if (sendResult != null) {
                             log.info("Broadcasting double spending transaction. " + sendResult.tx);
-                            Futures.addCallback(sendResult.broadcastComplete, new FutureCallback<Transaction>() {
+                            Futures.addCallback(sendResult.broadcastComplete, new FutureCallback<>() {
                                 @Override
                                 public void onSuccess(Transaction result) {
                                     log.info("Double spending transaction published. " + result);
@@ -1163,7 +1173,7 @@ public class BtcWalletService extends WalletService {
                                                            Coin fee,
                                                            @Nullable String changeAddress,
                                                            @Nullable KeyParameter aesKey) throws
-            AddressFormatException, AddressEntryException, InsufficientMoneyException {
+            AddressFormatException, AddressEntryException {
         Transaction tx = new Transaction(params);
         final Coin netValue = amount.subtract(fee);
         checkArgument(Restrictions.isAboveDust(netValue),
@@ -1196,12 +1206,12 @@ public class BtcWalletService extends WalletService {
 
         sendRequest.coinSelector = new BtcCoinSelector(walletsSetup.getAddressesFromAddressEntries(addressEntries),
                 preferences.getIgnoreDustThreshold());
-        Optional<AddressEntry> addressEntryOptional = Optional.<AddressEntry>empty();
-        AddressEntry changeAddressAddressEntry = null;
+        Optional<AddressEntry> addressEntryOptional = Optional.empty();
+
         if (changeAddress != null)
             addressEntryOptional = findAddressEntry(changeAddress, AddressEntry.Context.AVAILABLE);
 
-        changeAddressAddressEntry = addressEntryOptional.orElseGet(() -> getFreshAddressEntry());
+        AddressEntry changeAddressAddressEntry = addressEntryOptional.orElseGet(this::getFreshAddressEntry);
         checkNotNull(changeAddressAddressEntry, "change address must not be null");
         sendRequest.changeAddress = changeAddressAddressEntry.getAddress();
         return sendRequest;

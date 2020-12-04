@@ -103,7 +103,7 @@ public class LockupTxService {
             throws InsufficientMoneyException, WalletException, TransactionVerificationException, IOException {
         byte[] opReturnData = BondConsensus.getLockupOpReturnData(lockTime, lockupReason, hash);
         Transaction preparedTx = bsqWalletService.getPreparedLockupTx(lockupAmount);
-        Transaction txWithBtcFee = btcWalletService.completePreparedBsqTx(preparedTx, true, opReturnData);
+        Transaction txWithBtcFee = btcWalletService.completePreparedBsqTx(preparedTx, opReturnData);
         Transaction transaction = bsqWalletService.signTx(txWithBtcFee);
         log.info("Lockup tx: " + transaction);
         return transaction;

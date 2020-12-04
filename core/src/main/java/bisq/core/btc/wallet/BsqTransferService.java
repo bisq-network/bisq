@@ -40,7 +40,7 @@ public class BsqTransferService {
             InsufficientMoneyException {
 
         Transaction preparedSendTx = bsqWalletService.getPreparedSendBsqTx(address.toString(), receiverAmount);
-        Transaction txWithBtcFee = btcWalletService.completePreparedSendBsqTx(preparedSendTx, true);
+        Transaction txWithBtcFee = btcWalletService.completePreparedSendBsqTx(preparedSendTx);
         Transaction signedTx = bsqWalletService.signTx(txWithBtcFee);
 
         return new BsqTransferModel(address,
