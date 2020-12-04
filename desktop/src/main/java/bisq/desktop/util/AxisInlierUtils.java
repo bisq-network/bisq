@@ -25,8 +25,8 @@ import javafx.scene.chart.XYChart;
 
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import javafx.collections.FXCollections;
 
-import java.util.Collections;
 import java.util.DoubleSummaryStatistics;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -171,7 +171,7 @@ public class AxisInlierUtils {
             return numbers;
         }
         if (totalPercentTrim == 100) {
-            return Collections.emptyList();
+            return FXCollections.emptyObservableList();
         }
 
         if (numbers.isEmpty()) {

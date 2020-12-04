@@ -75,8 +75,10 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
 
+import javafx.collections.ObservableList;
+import javafx.collections.FXCollections;
+
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 // TODO Copied form OpenJFX, check license issues and way how we integrated it
@@ -261,7 +263,7 @@ public class StaticProgressIndicatorSkin extends SkinBase<TxConfidenceIndicator>
      * CssMetaData of its super classes.
      */
     @SuppressWarnings("SameReturnValue")
-    public static List<CssMetaData<? extends Styleable, ?>> getClassCssMetaData() {
+    public static ObservableList<CssMetaData<? extends Styleable, ?>> getClassCssMetaData() {
         return StyleableProperties.STYLEABLES;
     }
 
@@ -316,7 +318,7 @@ public class StaticProgressIndicatorSkin extends SkinBase<TxConfidenceIndicator>
      * {@inheritDoc}
      */
     @Override
-    public List<CssMetaData<? extends Styleable, ?>> getCssMetaData() {
+    public ObservableList<CssMetaData<? extends Styleable, ?>> getCssMetaData() {
         return getClassCssMetaData();
     }
 
@@ -691,7 +693,7 @@ public class StaticProgressIndicatorSkin extends SkinBase<TxConfidenceIndicator>
      */
     @SuppressWarnings({"deprecation", "unchecked", "ConstantConditions"})
     private static class StyleableProperties {
-        static final List<CssMetaData<? extends Styleable, ?>> STYLEABLES;
+        static final ObservableList<CssMetaData<? extends Styleable, ?>> STYLEABLES;
 
         private static final CssMetaData<TxConfidenceIndicator, Paint> PROGRESS_COLOR =
                 new CssMetaData<>(
@@ -746,7 +748,6 @@ public class StaticProgressIndicatorSkin extends SkinBase<TxConfidenceIndicator>
                         return skin.spinEnabled == null || !skin.spinEnabled.isBound();
                     }
 
-
                     @Override
                     public StyleableProperty<Boolean> getStyleableProperty(TxConfidenceIndicator node) {
                         final StaticProgressIndicatorSkin skin = (StaticProgressIndicatorSkin) node.getSkin();
@@ -755,13 +756,12 @@ public class StaticProgressIndicatorSkin extends SkinBase<TxConfidenceIndicator>
                 };
 
         static {
-            final List<CssMetaData<? extends Styleable, ?>> styleables =
-                    new ArrayList<>(SkinBase.getClassCssMetaData());
+            final ObservableList<CssMetaData<? extends Styleable, ?>> styleables =
+                FXCollections.observableArrayList(SkinBase.getClassCssMetaData());
             styleables.add(PROGRESS_COLOR);
             styleables.add(INDETERMINATE_SEGMENT_COUNT);
             styleables.add(SPIN_ENABLED);
-            STYLEABLES = Collections.unmodifiableList(styleables);
+            STYLEABLES = FXCollections.unmodifiableObservableList(styleables);
         }
     }
-
 }

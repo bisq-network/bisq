@@ -23,6 +23,8 @@ import org.bitcoinj.core.Transaction;
 
 import com.google.common.collect.Sets;
 
+import javafx.collections.FXCollections;
+
 import java.util.Collections;
 import java.util.Set;
 
@@ -61,7 +63,7 @@ public class DisplayedTransactionsTest {
                 .thenReturn(Collections.singleton(mock(Transaction.class)));
 
         TradableRepository tradableRepository = mock(TradableRepository.class);
-        when(tradableRepository.getAll()).thenReturn(Collections.emptySet());
+        when(tradableRepository.getAll()).thenReturn(FXCollections.emptyObservableSet());
 
         TransactionListItemFactory transactionListItemFactory = mock(TransactionListItemFactory.class);
 

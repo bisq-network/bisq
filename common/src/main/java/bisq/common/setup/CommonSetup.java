@@ -74,6 +74,9 @@ public class CommonSetup {
             } else if (throwable instanceof ClassCastException &&
                     "sun.awt.image.BufImgSurfaceData cannot be cast to sun.java2d.xr.XRSurfaceData".equals(throwable.getMessage())) {
                 log.warn(throwable.getMessage());
+            } else if (throwable instanceof UnsupportedOperationException &&
+                    "The system tray is not supported on the current platform.".equals(throwable.getMessage())) {
+                log.warn(throwable.getMessage());
             } else {
                 log.error("Uncaught Exception from thread " + Thread.currentThread().getName());
                 log.error("throwableMessage= " + throwable.getMessage());
