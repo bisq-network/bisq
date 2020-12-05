@@ -40,6 +40,7 @@ import bisq.proto.grpc.OfferInfo;
 import bisq.proto.grpc.RegisterDisputeAgentRequest;
 import bisq.proto.grpc.RemoveWalletPasswordRequest;
 import bisq.proto.grpc.SendBsqRequest;
+import bisq.proto.grpc.SendBtcRequest;
 import bisq.proto.grpc.SetTxFeeRatePreferenceRequest;
 import bisq.proto.grpc.SetWalletPasswordRequest;
 import bisq.proto.grpc.TakeOfferRequest;
@@ -111,6 +112,7 @@ public class CliMain {
         getfundingaddresses,
         getunusedbsqaddress,
         sendbsq,
+        sendbtc,
         gettxfeerate,
         settxfeerate,
         unsettxfeerate,
@@ -274,6 +276,32 @@ public class CliMain {
                     var reply = walletsService.sendBsq(request);
                     TxInfo txInfo = reply.getTxInfo();
                     out.printf("%s bsq sent to %s in tx %s%n", amount, address, txInfo.getId());
+                    return;
+                }
+                case sendbtc: {
+                    if (nonOptionArgs.size() < 2)
+                        throw new IllegalArgumentException("no btc address specified");
+
+                    var address = nonOptionArgs.get(1);
+
+                    if (nonOptionArgs.size() < 3)
+                        throw new IllegalArgumentException("no btc amount specified");
+
+                    var amount = nonOptionArgs.get(2);
+                    verifyStringIsValidDecimal(amount);
+
+                    var txFeeRate = nonOptionArgs.size() == 4 ? nonOptionArgs.get(3) : "";
+                    if (!txFeeRate.isEmpty())
+                        verifyStringIsValidLong(txFeeRate);
+
+                    var request = SendBtcRequest.newBuilder()
+                            .setAddress(address)
+                            .setAmount(amount)
+                            .setTxFeeRate(txFeeRate)
+                            .build();
+                    var reply = walletsService.sendBtc(request);
+                    TxInfo txInfo = reply.getTxInfo();
+                    out.printf("%s btc sent to %s in tx %s%n", amount, address, txInfo.getId());
                     return;
                 }
                 case gettxfeerate: {
@@ -679,6 +707,7 @@ public class CliMain {
             stream.format(rowFormat, "getfundingaddresses", "", "Get BTC funding addresses");
             stream.format(rowFormat, "getunusedbsqaddress", "", "Get unused BSQ address");
             stream.format(rowFormat, "sendbsq", "address, amount [,tx fee rate (sats/byte)]", "Send BSQ");
+            stream.format(rowFormat, "sendbtc", "address, amount [,tx fee rate (sats/byte)]", "Send BTC");
             stream.format(rowFormat, "gettxfeerate", "", "Get current tx fee rate in sats/byte");
             stream.format(rowFormat, "settxfeerate", "satoshis (per byte)", "Set custom tx fee rate in sats/byte");
             stream.format(rowFormat, "unsettxfeerate", "", "Unset custom tx fee rate");

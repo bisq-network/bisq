@@ -991,7 +991,7 @@ public class BtcWalletService extends WalletService {
         if (!addressEntry.isPresent())
             throw new AddressEntryException("WithdrawFromAddress is not found in our wallet.");
 
-        checkNotNull(addressEntry.get().getAddress(), "addressEntry.get().getAddress() must nto be null");
+        checkNotNull(addressEntry.get().getAddress(), "addressEntry.get().getAddress() must not be null");
 
         try {
             Coin fee;
@@ -1023,6 +1023,14 @@ public class BtcWalletService extends WalletService {
     public Transaction getFeeEstimationTransactionForMultipleAddresses(Set<String> fromAddresses,
                                                                        Coin amount)
             throws AddressFormatException, AddressEntryException, InsufficientFundsException {
+        Coin txFeeForWithdrawalPerVbyte = getTxFeeForWithdrawalPerVbyte();
+        return getFeeEstimationTransactionForMultipleAddresses(fromAddresses, amount, txFeeForWithdrawalPerVbyte);
+    }
+
+    public Transaction getFeeEstimationTransactionForMultipleAddresses(Set<String> fromAddresses,
+                                                                       Coin amount,
+                                                                       Coin txFeeForWithdrawalPerVbyte)
+            throws AddressFormatException, AddressEntryException, InsufficientFundsException {
         Set<AddressEntry> addressEntries = fromAddresses.stream()
                 .map(address -> {
                     Optional<AddressEntry> addressEntryOptional = findAddressEntry(address, AddressEntry.Context.AVAILABLE);
@@ -1045,7 +1053,6 @@ public class BtcWalletService extends WalletService {
             int counter = 0;
             int txVsize = 0;
             Transaction tx;
-            Coin txFeeForWithdrawalPerVbyte = getTxFeeForWithdrawalPerVbyte();
             do {
                 counter++;
                 fee = txFeeForWithdrawalPerVbyte.multiply(txVsize);
@@ -1059,7 +1066,7 @@ public class BtcWalletService extends WalletService {
                 txVsize = tx.getVsize();
                 printTx("FeeEstimationTransactionForMultipleAddresses", tx);
             }
-            while (feeEstimationNotSatisfied(counter, tx));
+            while (feeEstimationNotSatisfied(counter, tx, txFeeForWithdrawalPerVbyte));
             if (counter == 10)
                 log.error("Could not calculate the fee. Tx=" + tx);
 
@@ -1072,7 +1079,11 @@ public class BtcWalletService extends WalletService {
     }
 
     private boolean feeEstimationNotSatisfied(int counter, Transaction tx) {
-        long targetFee = getTxFeeForWithdrawalPerVbyte().multiply(tx.getVsize()).value;
+        return feeEstimationNotSatisfied(counter, tx, getTxFeeForWithdrawalPerVbyte());
+    }
+
+    private boolean feeEstimationNotSatisfied(int counter, Transaction tx, Coin txFeeForWithdrawalPerVbyte) {
+        long targetFee = txFeeForWithdrawalPerVbyte.multiply(tx.getVsize()).value;
         return counter < 10 &&
                 (tx.getFee().value < targetFee ||
                         tx.getFee().value - targetFee > 1000);
