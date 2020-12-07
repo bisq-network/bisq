@@ -491,8 +491,6 @@ public abstract class Trade implements Tradable, Model {
         txFeeAsLong = txFee.value;
         takerFeeAsLong = takerFee.value;
         takeOfferDate = new Date().getTime();
-
-        log.error("New trade created with offerId={} and Uid={}", offer.getId(), uid);
     }
 
 
