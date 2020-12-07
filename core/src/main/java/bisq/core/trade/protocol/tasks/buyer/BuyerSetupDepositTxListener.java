@@ -129,14 +129,14 @@ public class BuyerSetupDepositTxListener extends TradeTask {
                 .filter(txId -> txId.equals(takerFeeTxId) || txId.equals(makerFeeTxId))
                 .count();
         if (takerFeeTxId == null && numInputMatches != 1) {
-            log.warn("We  got a transactionConfidenceTx which does not match our inputs. " +
+            log.warn("We got a transactionConfidenceTx which does not match our inputs. " +
                             "takerFeeTxId is null (valid if role is buyer as maker) and numInputMatches " +
                             "is not 1 as expected (for makerFeeTxId). " +
                             "numInputMatches={}, transactionConfidenceTx={}",
                     numInputMatches, walletTx);
             return false;
         } else if (takerFeeTxId != null && numInputMatches != 2) {
-            log.warn("We  got a transactionConfidenceTx which does not match our inputs. " +
+            log.warn("We got a transactionConfidenceTx which does not match our inputs. " +
                             "numInputMatches is not 2 as expected (for makerFeeTxId and takerFeeTxId). " +
                             "numInputMatches={}, transactionConfidenceTx={}",
                     numInputMatches, walletTx);
