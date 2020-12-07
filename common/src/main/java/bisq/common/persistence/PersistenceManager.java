@@ -110,7 +110,11 @@ public class PersistenceManager<T extends PersistableEnvelope> {
                 // For Priority.HIGH data we want to write to disk in any case to be on the safe side if we might have missed
                 // a requestPersistence call after an important state update. Those are usually rather small data stores.
                 // Otherwise we only persist if requestPersistence was called since the last persist call.
-                if (persistenceManager.source.flushAtShutDown || persistenceManager.persistenceRequested) {
+                // We also check if we have called read already to avoid a very early write attempt before we have ever
+                // read the data, which would lead to a write of empty data
+                // (fixes https://github.com/bisq-network/bisq/issues/4844).
+                if (persistenceManager.readCalled.get() &&
+                        (persistenceManager.source.flushAtShutDown || persistenceManager.persistenceRequested)) {
                     // We always get our completeHandler called even if exceptions happen. In case a file write fails
                     // we still call our shutdown and count down routine as the completeHandler is triggered in any case.
 
@@ -184,6 +188,7 @@ public class PersistenceManager<T extends PersistableEnvelope> {
     private Timer timer;
     private ExecutorService writeToDiskExecutor;
     public final AtomicBoolean initCalled = new AtomicBoolean(false);
+    public final AtomicBoolean readCalled = new AtomicBoolean(false);
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -293,7 +298,9 @@ public class PersistenceManager<T extends PersistableEnvelope> {
     // Currently used by tests and monitor. Should be converted to the threaded API as well.
     @Nullable
     public T getPersisted() {
-        return getPersisted(checkNotNull(fileName));
+        T persisted = getPersisted(checkNotNull(fileName));
+        readCalled.set(true);
+        return persisted;
     }
 
     @Nullable
