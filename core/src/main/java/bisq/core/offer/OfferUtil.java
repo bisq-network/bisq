@@ -292,10 +292,14 @@ public class OfferUtil {
     public Optional<Volume> getFeeInUserFiatCurrency(Coin makerFee,
                                                      boolean isCurrencyForMakerFeeBtc,
                                                      CoinFormatter bsqFormatter) {
-        // We use the users currency derived from his selected country.  We don't use the
-        // preferredTradeCurrency from preferences as that can be also set to an altcoin.
-        String countryCode = preferences.getUserCountry().code;
-        String userCurrencyCode = CurrencyUtil.getCurrencyByCountryCode(countryCode).getCode();
+        String userCurrencyCode = preferences.getPreferredTradeCurrency().getCode();
+        if (CurrencyUtil.isCryptoCurrency(userCurrencyCode)) {
+            // In case the user has selected a altcoin as preferredTradeCurrency
+            // we derive the fiat currency from the user country
+            String countryCode = preferences.getUserCountry().code;
+            userCurrencyCode = CurrencyUtil.getCurrencyByCountryCode(countryCode).getCode();
+        }
+
         return getFeeInUserFiatCurrency(makerFee,
                 isCurrencyForMakerFeeBtc,
                 userCurrencyCode,
