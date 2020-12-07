@@ -298,9 +298,7 @@ public class PersistenceManager<T extends PersistableEnvelope> {
     // Currently used by tests and monitor. Should be converted to the threaded API as well.
     @Nullable
     public T getPersisted() {
-        T persisted = getPersisted(checkNotNull(fileName));
-        readCalled.set(true);
-        return persisted;
+        return getPersisted(checkNotNull(fileName));
     }
 
     @Nullable
@@ -309,6 +307,8 @@ public class PersistenceManager<T extends PersistableEnvelope> {
             log.warn("We have started the shut down routine already. We ignore that getPersisted call.");
             return null;
         }
+
+        readCalled.set(true);
 
         File storageFile = new File(dir, fileName);
         if (!storageFile.exists()) {
