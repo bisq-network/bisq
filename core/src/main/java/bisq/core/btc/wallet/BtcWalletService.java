@@ -254,8 +254,8 @@ public class BtcWalletService extends WalletService {
             sendRequest.signInputs = false;
 
             sendRequest.fee = txFeePerVbyte.multiply(txVsizeWithUnsignedInputs +
-                                                    sigSizePerInput * numLegacyInputs +
-                                                    sigSizePerInput * numSegwitInputs / 4);
+                    sigSizePerInput * numLegacyInputs +
+                    sigSizePerInput * numSegwitInputs / 4);
 
             sendRequest.feePerKb = Coin.ZERO;
             sendRequest.ensureMinRequiredFee = false;
@@ -274,8 +274,8 @@ public class BtcWalletService extends WalletService {
             numSegwitInputs = numInputs.second;
             txVsizeWithUnsignedInputs = resultTx.getVsize();
             long estimatedFeeAsLong = txFeePerVbyte.multiply(txVsizeWithUnsignedInputs +
-                                                            sigSizePerInput * numLegacyInputs +
-                                                            sigSizePerInput * numSegwitInputs / 4).value;
+                    sigSizePerInput * numLegacyInputs +
+                    sigSizePerInput * numSegwitInputs / 4).value;
 
             // calculated fee must be inside of a tolerance range with tx fee
             isFeeOutsideTolerance = Math.abs(resultTx.getFee().value - estimatedFeeAsLong) > 1000;
@@ -374,8 +374,8 @@ public class BtcWalletService extends WalletService {
             sendRequest.signInputs = false;
 
             sendRequest.fee = txFeePerVbyte.multiply(txVsizeWithUnsignedInputs +
-                                                    sigSizePerInput * numLegacyInputs +
-                                                    sigSizePerInput * numSegwitInputs / 4);
+                    sigSizePerInput * numLegacyInputs +
+                    sigSizePerInput * numSegwitInputs / 4);
             sendRequest.feePerKb = Coin.ZERO;
             sendRequest.ensureMinRequiredFee = false;
 
@@ -393,8 +393,8 @@ public class BtcWalletService extends WalletService {
             numSegwitInputs = numInputs.second;
             txVsizeWithUnsignedInputs = resultTx.getVsize();
             final long estimatedFeeAsLong = txFeePerVbyte.multiply(txVsizeWithUnsignedInputs +
-                                                                  sigSizePerInput * numLegacyInputs +
-                                                                  sigSizePerInput * numSegwitInputs / 4).value;
+                    sigSizePerInput * numLegacyInputs +
+                    sigSizePerInput * numSegwitInputs / 4).value;
             // calculated fee must be inside of a tolerance range with tx fee
             isFeeOutsideTolerance = Math.abs(resultTx.getFee().value - estimatedFeeAsLong) > 1000;
         }
@@ -532,8 +532,8 @@ public class BtcWalletService extends WalletService {
             sendRequest.signInputs = false;
 
             sendRequest.fee = txFeePerVbyte.multiply(txVsizeWithUnsignedInputs +
-                                                    sigSizePerInput * numLegacyInputs +
-                                                    sigSizePerInput * numSegwitInputs / 4);
+                    sigSizePerInput * numLegacyInputs +
+                    sigSizePerInput * numSegwitInputs / 4);
             sendRequest.feePerKb = Coin.ZERO;
             sendRequest.ensureMinRequiredFee = false;
 
@@ -558,8 +558,8 @@ public class BtcWalletService extends WalletService {
             numSegwitInputs = numInputs.second;
             txVsizeWithUnsignedInputs = resultTx.getVsize();
             final long estimatedFeeAsLong = txFeePerVbyte.multiply(txVsizeWithUnsignedInputs +
-                                                                  sigSizePerInput * numLegacyInputs +
-                                                                  sigSizePerInput * numSegwitInputs / 4).value;
+                    sigSizePerInput * numLegacyInputs +
+                    sigSizePerInput * numSegwitInputs / 4).value;
             // calculated fee must be inside of a tolerance range with tx fee
             isFeeOutsideTolerance = Math.abs(resultTx.getFee().value - estimatedFeeAsLong) > 1000;
         }
@@ -583,7 +583,7 @@ public class BtcWalletService extends WalletService {
         for (TransactionInput input : tx.getInputs()) {
             TransactionOutput connectedOutput = input.getConnectedOutput();
             if (connectedOutput == null || ScriptPattern.isP2PKH(connectedOutput.getScriptPubKey()) ||
-                ScriptPattern.isP2PK(connectedOutput.getScriptPubKey())) {
+                    ScriptPattern.isP2PK(connectedOutput.getScriptPubKey())) {
                 // If connectedOutput is null, we don't know here the input type. To avoid underpaying fees,
                 // we treat it as a legacy input which will result in a higher fee estimation.
                 numLegacyInputs++;
