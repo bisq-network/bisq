@@ -209,6 +209,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                                   Coin amount,
                                   Coin fee,
                                   KeyParameter aesKey,
+                                  @Nullable String memo,
                                   ResultHandler resultHandler,
                                   FaultHandler faultHandler) {
         checkNotNull(getTrade(), "trade must not be null");
@@ -220,6 +221,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                     fee,
                     aesKey,
                     getTrade(),
+                    memo,
                     () -> {
                         resultHandler.handleResult();
                         selectBestItem();
