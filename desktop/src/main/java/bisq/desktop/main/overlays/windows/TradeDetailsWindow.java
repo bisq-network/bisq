@@ -19,6 +19,7 @@ package bisq.desktop.main.overlays.windows;
 
 import bisq.desktop.components.BisqTextArea;
 import bisq.desktop.components.TextFieldWithCopyIcon;
+import bisq.desktop.components.TxIdTextField;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.util.DisplayUtils;
@@ -285,9 +286,17 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
         addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.makerFeeTxId"), offer.getOfferFeePaymentTxId());
         addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.takerFeeTxId"), trade.getTakerFeeTxId());
 
+        String depositTxId = trade.getDepositTxId();
         Transaction depositTx = trade.getDepositTx();
-        String depositTxString = depositTx != null ? depositTx.getTxId().toString() : null;
-        addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.depositTransactionId"), depositTxString);
+        String depositTxIdFromTx = depositTx != null ? depositTx.getTxId().toString() : null;
+        TxIdTextField depositTxIdTextField = addLabelTxIdTextField(gridPane, ++rowIndex,
+                Res.get("shared.depositTransactionId"), depositTxId).second;
+        if (depositTxId == null || !depositTxId.equals(depositTxIdFromTx)) {
+            depositTxIdTextField.getTextField().setId("address-text-field-error");
+            log.error("trade.getDepositTxId() and trade.getDepositTx().getTxId().toString() are not the same. " +
+                            "trade.getDepositTxId()={}, trade.getDepositTx().getTxId().toString()={}, depositTx={}",
+                    depositTxId, depositTxIdFromTx, depositTx);
+        }
 
         Transaction delayedPayoutTx = trade.getDelayedPayoutTx(btcWalletService);
         String delayedPayoutTxString = delayedPayoutTx != null ? delayedPayoutTx.getTxId().toString() : null;
