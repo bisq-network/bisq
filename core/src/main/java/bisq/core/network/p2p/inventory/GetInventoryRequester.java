@@ -70,7 +70,7 @@ public class GetInventoryRequester implements MessageListener, ConnectionListene
     }
 
     private void onTimeOut() {
-        errorMessageHandler.handleErrorMessage("Timeout got triggered (" + TIMEOUT_SEC + " sec)");
+        errorMessageHandler.handleErrorMessage("Request timeout");
         shutDown();
     }
 

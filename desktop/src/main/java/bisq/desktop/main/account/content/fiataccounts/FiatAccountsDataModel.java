@@ -91,7 +91,7 @@ class FiatAccountsDataModel extends ActivatableDataModel {
                     .filter(paymentAccount -> !paymentAccount.getPaymentMethod().isAsset())
                     .collect(Collectors.toList());
             paymentAccounts.setAll(list);
-            paymentAccounts.sort(Comparator.comparing(PaymentAccount::getCreationDate));
+            paymentAccounts.sort(Comparator.comparing(PaymentAccount::getAccountName));
         }
     }
 

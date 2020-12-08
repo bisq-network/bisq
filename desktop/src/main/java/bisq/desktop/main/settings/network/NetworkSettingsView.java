@@ -45,6 +45,8 @@ import bisq.network.p2p.network.Statistic;
 import bisq.common.ClockWatcher;
 import bisq.common.UserThread;
 
+import org.bitcoinj.core.PeerGroup;
+
 import javax.inject.Inject;
 
 import javafx.fxml.FXML;
@@ -86,7 +88,7 @@ public class NetworkSettingsView extends ActivatableView<GridPane, Void> {
     @FXML
     InputTextField btcNodesInputTextField;
     @FXML
-    TextField onionAddress, sentDataTextField, receivedDataTextField;
+    TextField onionAddress, sentDataTextField, receivedDataTextField, chainHeightTextField;
     @FXML
     Label p2PPeersLabel, bitcoinPeersLabel;
     @FXML
@@ -180,6 +182,7 @@ public class NetworkSettingsView extends ActivatableView<GridPane, Void> {
         connectionTypeColumn.setGraphic(new AutoTooltipLabel(Res.get("settings.net.connectionTypeColumn")));
         sentDataTextField.setPromptText(Res.get("settings.net.sentDataLabel"));
         receivedDataTextField.setPromptText(Res.get("settings.net.receivedDataLabel"));
+        chainHeightTextField.setPromptText(Res.get("settings.net.chainHeightLabel"));
         roundTripTimeColumn.setGraphic(new AutoTooltipLabel(Res.get("settings.net.roundTripTimeColumn")));
         sentBytesColumn.setGraphic(new AutoTooltipLabel(Res.get("settings.net.sentBytesColumn")));
         receivedBytesColumn.setGraphic(new AutoTooltipLabel(Res.get("settings.net.receivedBytesColumn")));
@@ -487,6 +490,9 @@ public class NetworkSettingsView extends ActivatableView<GridPane, Void> {
         bitcoinNetworkListItems.setAll(walletsSetup.getPeerGroup().getConnectedPeers().stream()
                 .map(BitcoinNetworkListItem::new)
                 .collect(Collectors.toList()));
+        chainHeightTextField.textProperty().setValue(Res.get("settings.net.chainHeight",
+                walletsSetup.chainHeightProperty().get(),
+                PeerGroup.getMostCommonChainHeight(walletsSetup.connectedPeersProperty().get())));
     }
 }
 

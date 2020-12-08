@@ -65,7 +65,6 @@ import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
@@ -292,7 +291,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
         long accumulatedVolume = 0;
         long accumulatedAmount = 0;
         long numTrades = set.size();
-        List<Long> tradePrices = new ArrayList<>(set.size());
+        ObservableList<Long> tradePrices = FXCollections.observableArrayList();
 
         for (TradeStatistics3 item : set) {
             long tradePriceAsLong = item.getTradePrice().getValue();
@@ -304,13 +303,14 @@ class TradesChartsViewModel extends ActivatableViewModel {
             accumulatedAmount += item.getTradeAmount().getValue();
             tradePrices.add(item.getTradePrice().getValue());
         }
-        Collections.sort(tradePrices);
+        FXCollections.sort(tradePrices);
 
         List<TradeStatistics3> list = new ArrayList<>(set);
-        list.sort(Comparator.comparingLong(TradeStatistics3::getDateAsLong));
-        if (list.size() > 0) {
-            open = list.get(0).getTradePrice().getValue();
-            close = list.get(list.size() - 1).getTradePrice().getValue();
+        ObservableList<TradeStatistics3> obsList = FXCollections.observableArrayList(list);
+        obsList.sort(Comparator.comparingLong(TradeStatistics3::getDateAsLong));
+        if (obsList.size() > 0) {
+            open = obsList.get(0).getTradePrice().getValue();
+            close = obsList.get(obsList.size() - 1).getTradePrice().getValue();
         }
 
         long averagePrice;

@@ -128,8 +128,10 @@ public class WalletConfig extends AbstractIdleService {
     protected DownloadProgressTracker downloadListener;
     protected InputStream checkpoints;
     protected String userAgent, version;
-    @Nullable protected DeterministicSeed restoreFromSeed;
-    @Nullable protected PeerDiscovery discovery;
+    @Nullable
+    protected DeterministicSeed restoreFromSeed;
+    @Nullable
+    protected PeerDiscovery discovery;
 
     protected volatile Context context;
 
@@ -308,7 +310,7 @@ public class WalletConfig extends AbstractIdleService {
             }
             vChain = new BlockChain(params, vStore);
             vPeerGroup = createPeerGroup();
-            if (minBroadcastConnections > 0 )
+            if (minBroadcastConnections > 0)
                 vPeerGroup.setMinBroadcastConnections(minBroadcastConnections);
             if (this.userAgent != null)
                 vPeerGroup.setUserAgent(userAgent, version);
@@ -363,7 +365,9 @@ public class WalletConfig extends AbstractIdleService {
         }, MoreExecutors.directExecutor());
     }
 
-    private Wallet createOrLoadWallet(boolean shouldReplayWallet, File walletFile, boolean isBsqWallet) throws Exception {
+    private Wallet createOrLoadWallet(boolean shouldReplayWallet,
+                                      File walletFile,
+                                      boolean isBsqWallet) throws Exception {
         Wallet wallet;
 
         maybeMoveOldWalletOutOfTheWay(walletFile);
@@ -574,5 +578,9 @@ public class WalletConfig extends AbstractIdleService {
             wallet.addAndActivateHDChain(nativeSegwitKeyChain);
         }
         migratedWalletToSegwit.set(true);
+    }
+
+    public boolean stateStartingOrRunning() {
+        return state() == State.STARTING || state() == State.RUNNING;
     }
 }

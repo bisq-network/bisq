@@ -30,8 +30,10 @@ import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.statistics.ReferralIdService;
+import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.AutoConfirmSettings;
 import bisq.core.user.Preferences;
+import bisq.core.util.AveragePriceUtil;
 import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.coin.CoinUtil;
 
@@ -39,6 +41,7 @@ import bisq.network.p2p.P2PService;
 
 import bisq.common.app.Capabilities;
 import bisq.common.util.MathUtils;
+import bisq.common.util.Tuple2;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;
@@ -49,6 +52,7 @@ import javax.inject.Singleton;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Predicate;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -63,6 +67,7 @@ import static bisq.core.btc.wallet.Restrictions.isDust;
 import static bisq.core.offer.OfferPayload.*;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static java.lang.String.format;
 
 /**
  * This class holds utility methods for creating, editing and taking an Offer.
@@ -78,6 +83,10 @@ public class OfferUtil {
     private final PriceFeedService priceFeedService;
     private final P2PService p2PService;
     private final ReferralIdService referralIdService;
+    private final TradeStatisticsManager tradeStatisticsManager;
+
+    private final Predicate<String> isValidFeePaymentCurrencyCode = (c) ->
+            c.equalsIgnoreCase("BSQ") || c.equalsIgnoreCase("BTC");
 
     @Inject
     public OfferUtil(AccountAgeWitnessService accountAgeWitnessService,
@@ -86,7 +95,8 @@ public class OfferUtil {
                      Preferences preferences,
                      PriceFeedService priceFeedService,
                      P2PService p2PService,
-                     ReferralIdService referralIdService) {
+                     ReferralIdService referralIdService,
+                     TradeStatisticsManager tradeStatisticsManager) {
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.bsqWalletService = bsqWalletService;
         this.filterManager = filterManager;
@@ -94,6 +104,20 @@ public class OfferUtil {
         this.priceFeedService = priceFeedService;
         this.p2PService = p2PService;
         this.referralIdService = referralIdService;
+        this.tradeStatisticsManager = tradeStatisticsManager;
+    }
+
+    public void maybeSetFeePaymentCurrencyPreference(String feeCurrencyCode) {
+        if (!feeCurrencyCode.isEmpty()) {
+            if (!isValidFeePaymentCurrencyCode.test(feeCurrencyCode))
+                throw new IllegalStateException(format("%s cannot be used to pay trade fees",
+                        feeCurrencyCode.toUpperCase()));
+
+            if (feeCurrencyCode.equalsIgnoreCase("BSQ") && preferences.isPayFeeInBtc())
+                preferences.setPayFeeInBtc(false);
+            else if (feeCurrencyCode.equalsIgnoreCase("BTC") && !preferences.isPayFeeInBtc())
+                preferences.setPayFeeInBtc(true);
+        }
     }
 
     /**
@@ -268,8 +292,14 @@ public class OfferUtil {
     public Optional<Volume> getFeeInUserFiatCurrency(Coin makerFee,
                                                      boolean isCurrencyForMakerFeeBtc,
                                                      CoinFormatter bsqFormatter) {
-        String countryCode = preferences.getUserCountry().code;
-        String userCurrencyCode = CurrencyUtil.getCurrencyByCountryCode(countryCode).getCode();
+        String userCurrencyCode = preferences.getPreferredTradeCurrency().getCode();
+        if (CurrencyUtil.isCryptoCurrency(userCurrencyCode)) {
+            // In case the user has selected a altcoin as preferredTradeCurrency
+            // we derive the fiat currency from the user country
+            String countryCode = preferences.getUserCountry().code;
+            userCurrencyCode = CurrencyUtil.getCurrencyByCountryCode(countryCode).getCode();
+        }
+
         return getFeeInUserFiatCurrency(makerFee,
                 isCurrencyForMakerFeeBtc,
                 userCurrencyCode,
@@ -329,8 +359,6 @@ public class OfferUtil {
                                                       boolean isCurrencyForMakerFeeBtc,
                                                       String userCurrencyCode,
                                                       CoinFormatter bsqFormatter) {
-        // We use the users currency derived from his selected country.  We don't use the
-        // preferredTradeCurrency from preferences as that can be also set to an altcoin.
         MarketPrice marketPrice = priceFeedService.getMarketPrice(userCurrencyCode);
         if (marketPrice != null && makerFee != null) {
             long marketPriceAsLong = roundDoubleToLong(
@@ -340,16 +368,16 @@ public class OfferUtil {
             if (isCurrencyForMakerFeeBtc) {
                 return Optional.of(userCurrencyPrice.getVolumeByAmount(makerFee));
             } else {
-                Optional<Price> optionalBsqPrice = priceFeedService.getBsqPrice();
-                if (optionalBsqPrice.isPresent()) {
-                    Price bsqPrice = optionalBsqPrice.get();
-                    String inputValue = bsqFormatter.formatCoin(makerFee);
-                    Volume makerFeeAsVolume = Volume.parse(inputValue, "BSQ");
-                    Coin requiredBtc = bsqPrice.getAmountByVolume(makerFeeAsVolume);
-                    return Optional.of(userCurrencyPrice.getVolumeByAmount(requiredBtc));
-                } else {
-                    return Optional.empty();
-                }
+                // We use the current market price for the fiat currency and the 30 day average BSQ price
+                Tuple2<Price, Price> tuple = AveragePriceUtil.getAveragePriceTuple(preferences,
+                        tradeStatisticsManager,
+                        30);
+                Price bsqPrice = tuple.second;
+                String inputValue = bsqFormatter.formatCoin(makerFee);
+                Volume makerFeeAsVolume = Volume.parse(inputValue, "BSQ");
+                Coin requiredBtc = bsqPrice.getAmountByVolume(makerFeeAsVolume);
+                Volume volumeByAmount = userCurrencyPrice.getVolumeByAmount(requiredBtc);
+                return Optional.of(volumeByAmount);
             }
         } else {
             return Optional.empty();

@@ -20,28 +20,25 @@ package bisq.desktop.main.dao.economy.dashboard;
 import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.TextFieldWithIcon;
-import bisq.desktop.util.AxisInlierUtils;
 
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.dao.state.model.governance.IssuanceType;
 import bisq.core.locale.Res;
-import bisq.core.monetary.Altcoin;
 import bisq.core.monetary.Price;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.statistics.TradeStatistics3;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.Preferences;
+import bisq.core.util.AveragePriceUtil;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.BsqFormatter;
 
-import bisq.common.util.MathUtils;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple3;
 
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.utils.Fiat;
 
 import javax.inject.Inject;
 
@@ -75,11 +72,7 @@ import java.time.format.FormatStyle;
 import java.time.temporal.TemporalAdjuster;
 import java.time.temporal.TemporalAdjusters;
 
-import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Comparator;
-import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -114,7 +107,7 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
 
     private Coin availableAmount;
     private int gridRow = 0;
-    double howManyStdDevsConstituteOutlier = 10;
+    private Price avg30DayUSDPrice;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -145,6 +138,7 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
             updatePrice();
             updateAveragePriceFields(avgPrice90TextField, avgPrice30TextField, false);
             updateAveragePriceFields(avgUSDPrice90TextField, avgUSDPrice30TextField, true);
+            updateMarketCap();
         };
     }
 
@@ -188,6 +182,7 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
         updateChartData();
         updateAveragePriceFields(avgPrice90TextField, avgPrice30TextField, false);
         updateAveragePriceFields(avgUSDPrice90TextField, avgUSDPrice30TextField, true);
+        updateMarketCap();
     }
 
 
@@ -333,14 +328,16 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
             Price bsqPrice = optionalBsqPrice.get();
             marketPriceLabel.setText(FormattingUtils.formatPrice(bsqPrice) + " BSQ/BTC");
 
-            marketCapTextField.setText(bsqFormatter.formatMarketCap(priceFeedService.getMarketPrice("BSQ"),
-                    priceFeedService.getMarketPrice(preferences.getPreferredTradeCurrency().getCode()),
-                    availableAmount));
-
             updateChartData();
-
         } else {
             marketPriceLabel.setText(Res.get("shared.na"));
+        }
+    }
+
+    private void updateMarketCap() {
+        if (avg30DayUSDPrice != null) {
+            marketCapTextField.setText(bsqFormatter.formatMarketCap(avg30DayUSDPrice, availableAmount));
+        } else {
             marketCapTextField.setText(Res.get("shared.na"));
         }
     }
@@ -369,107 +366,21 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
     }
 
     private long updateAveragePriceField(TextField textField, int days, boolean isUSDField) {
-        double percentToTrim = Math.max(0, Math.min(49, preferences.getBsqAverageTrimThreshold() * 100));
-        Date pastXDays = getPastDate(days);
-        List<TradeStatistics3> bsqAllTradePastXDays = tradeStatisticsManager.getObservableTradeStatisticsSet().stream()
-                .filter(e -> e.getCurrency().equals("BSQ"))
-                .filter(e -> e.getDate().after(pastXDays))
-                .collect(Collectors.toList());
-        List<TradeStatistics3> bsqTradePastXDays = percentToTrim > 0 ?
-                removeOutliers(bsqAllTradePastXDays, percentToTrim) :
-                bsqAllTradePastXDays;
+        Tuple2<Price, Price> tuple = AveragePriceUtil.getAveragePriceTuple(preferences, tradeStatisticsManager, days);
+        Price usdPrice = tuple.first;
+        Price bsqPrice = tuple.second;
 
-        List<TradeStatistics3> usdAllTradePastXDays = tradeStatisticsManager.getObservableTradeStatisticsSet().stream()
-                .filter(e -> e.getCurrency().equals("USD"))
-                .filter(e -> e.getDate().after(pastXDays))
-                .collect(Collectors.toList());
-        List<TradeStatistics3> usdTradePastXDays = percentToTrim > 0 ?
-                removeOutliers(usdAllTradePastXDays, percentToTrim) :
-                usdAllTradePastXDays;
-
-        long average = isUSDField ? getUSDAverage(bsqTradePastXDays, usdTradePastXDays) :
-                getBTCAverage(bsqTradePastXDays);
-        Price avgPrice = isUSDField ? Price.valueOf("USD", average) :
-                Price.valueOf("BSQ", average);
-        String avg = FormattingUtils.formatPrice(avgPrice);
         if (isUSDField) {
-            textField.setText(avg + " USD/BSQ");
+            textField.setText(usdPrice + " USD/BSQ");
+            if (days == 30) {
+                avg30DayUSDPrice = usdPrice;
+            }
         } else {
-            textField.setText(avg + " BSQ/BTC");
+            textField.setText(bsqPrice + " BSQ/BTC");
         }
-        return average;
-    }
 
-    private List<TradeStatistics3> removeOutliers(List<TradeStatistics3> list, double percentToTrim) {
-        List<Double> yValues = list.stream()
-                .filter(TradeStatistics3::isValid)
-                .map(e -> (double) e.getPrice())
-                .collect(Collectors.toList());
-
-        Tuple2<Double, Double> tuple = AxisInlierUtils.findInlierRange(yValues, percentToTrim, howManyStdDevsConstituteOutlier);
-        double lowerBound = tuple.first;
-        double upperBound = tuple.second;
-        return list.stream()
-                .filter(e -> e.getPrice() > lowerBound)
-                .filter(e -> e.getPrice() < upperBound)
-                .collect(Collectors.toList());
-    }
-
-    private long getBTCAverage(List<TradeStatistics3> list) {
-        long accumulatedVolume = 0;
-        long accumulatedAmount = 0;
-
-        for (TradeStatistics3 item : list) {
-            accumulatedVolume += item.getTradeVolume().getValue();
-            accumulatedAmount += item.getTradeAmount().getValue(); // Amount of BTC traded
-        }
-        long averagePrice;
-        double accumulatedAmountAsDouble = MathUtils.scaleUpByPowerOf10((double) accumulatedAmount, Altcoin.SMALLEST_UNIT_EXPONENT);
-        averagePrice = accumulatedVolume > 0 ? MathUtils.roundDoubleToLong(accumulatedAmountAsDouble / (double) accumulatedVolume) : 0;
-
-        return averagePrice;
-    }
-
-    private long getUSDAverage(List<TradeStatistics3> bsqList, List<TradeStatistics3> usdList) {
-        // Use next USD/BTC print as price to calculate BSQ/USD rate
-        // Store each trade as amount of USD and amount of BSQ traded
-        List<Tuple2<Double, Double>> usdBsqList = new ArrayList<>(bsqList.size());
-        usdList.sort(Comparator.comparing(TradeStatistics3::getDateAsLong));
-        var usdBTCPrice = 10000d; // Default to 10000 USD per BTC if there is no USD feed at all
-
-        for (TradeStatistics3 item : bsqList) {
-            // Find usdprice for trade item
-            usdBTCPrice = usdList.stream()
-                    .filter(usd -> usd.getDateAsLong() > item.getDateAsLong())
-                    .map(usd -> MathUtils.scaleDownByPowerOf10((double) usd.getTradePrice().getValue(),
-                            Fiat.SMALLEST_UNIT_EXPONENT))
-                    .findFirst()
-                    .orElse(usdBTCPrice);
-            var bsqAmount = MathUtils.scaleDownByPowerOf10((double) item.getTradeVolume().getValue(),
-                    Altcoin.SMALLEST_UNIT_EXPONENT);
-            var btcAmount = MathUtils.scaleDownByPowerOf10((double) item.getTradeAmount().getValue(),
-                    Altcoin.SMALLEST_UNIT_EXPONENT);
-            usdBsqList.add(new Tuple2<>(usdBTCPrice * btcAmount, bsqAmount));
-        }
-        long averagePrice;
-        var usdTraded = usdBsqList.stream()
-                .mapToDouble(item -> item.first)
-                .sum();
-        var bsqTraded = usdBsqList.stream()
-                .mapToDouble(item -> item.second)
-                .sum();
-        var averageAsDouble = bsqTraded > 0 ? usdTraded / bsqTraded : 0d;
-        var averageScaledUp = MathUtils.scaleUpByPowerOf10(averageAsDouble, Fiat.SMALLEST_UNIT_EXPONENT);
-        averagePrice = bsqTraded > 0 ? MathUtils.roundDoubleToLong(averageScaledUp) : 0;
-
-        return averagePrice;
-    }
-
-    private Date getPastDate(int days) {
-        Calendar cal = new GregorianCalendar();
-        cal.setTime(new Date());
-        cal.add(Calendar.DAY_OF_MONTH, -1 * days);
-        return cal.getTime();
+        Price average = isUSDField ? usdPrice : bsqPrice;
+        return average.getValue();
     }
 }
 

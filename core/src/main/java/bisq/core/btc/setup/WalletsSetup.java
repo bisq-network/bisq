@@ -242,6 +242,7 @@ public class WalletsSetup {
                     return message;
                 });
 
+                chainHeight.set(chain.getBestChainHeight());
                 chain.addNewBestBlockListener(block -> {
                     connectedPeers.set(peerGroup.getConnectedPeers());
                     chainHeight.set(block.getHeight());
@@ -487,7 +488,7 @@ public class WalletsSetup {
 
     @Nullable
     public BlockChain getChain() {
-        return walletConfig != null ? walletConfig.chain() : null;
+        return walletConfig != null && walletConfig.stateStartingOrRunning() ? walletConfig.chain() : null;
     }
 
     public PeerGroup getPeerGroup() {
@@ -520,6 +521,16 @@ public class WalletsSetup {
 
     public boolean isDownloadComplete() {
         return downloadPercentageProperty().get() == 1d;
+    }
+
+    public boolean isChainHeightSyncedWithinTolerance() {
+        int peersChainHeight = PeerGroup.getMostCommonChainHeight(connectedPeers.get());
+        int bestChainHeight = walletConfig.chain().getBestChainHeight();
+        if (peersChainHeight - bestChainHeight <= 3) {
+            return true;
+        }
+        log.warn("Our chain height: {} is out of sync with peer nodes chain height: {}", chainHeight.get(), peersChainHeight);
+        return false;
     }
 
     public Set<Address> getAddressesByContext(@SuppressWarnings("SameParameterValue") AddressEntry.Context context) {

@@ -756,6 +756,15 @@ public class GUIUtil {
         return true;
     }
 
+    public static boolean isChainHeightSyncedWithinToleranceOrShowPopup(WalletsSetup walletsSetup) {
+        if (!walletsSetup.isChainHeightSyncedWithinTolerance()) {
+            new Popup().information(Res.get("popup.warning.chainNotSynced")).show();
+            return false;
+        }
+
+        return true;
+    }
+
     public static boolean canCreateOrTakeOfferOrShowPopup(User user, Navigation navigation) {
         if (!user.hasAcceptedRefundAgents()) {
             new Popup().warning(Res.get("popup.warning.noArbitratorsAvailable")).show();
@@ -792,14 +801,14 @@ public class GUIUtil {
 
     public static void reSyncSPVChain(Preferences preferences) {
         try {
-            new Popup().feedback(Res.get("settings.net.reSyncSPVSuccess"))
+            new Popup().information(Res.get("settings.net.reSyncSPVSuccess"))
                     .useShutDownButton()
                     .actionButtonText(Res.get("shared.shutDown"))
                     .onAction(() -> {
                         preferences.setResyncSpvRequested(true);
                         UserThread.runAfter(BisqApp.getShutDownHandler(), 100, TimeUnit.MILLISECONDS);
                     })
-                    .hideCloseButton()
+                    .closeButtonText(Res.get("shared.cancel"))
                     .show();
         } catch (Throwable t) {
             new Popup().error(Res.get("settings.net.reSyncSPVFailed", t)).show();
@@ -1106,6 +1115,10 @@ public class GUIUtil {
     }
 
     public static MaterialDesignIcon getIconForSignState(AccountAgeWitnessService.SignState state) {
+        if (state.equals(AccountAgeWitnessService.SignState.PEER_INITIAL)) {
+            return MaterialDesignIcon.CLOCK;
+        }
+
         return (state.equals(AccountAgeWitnessService.SignState.ARBITRATOR) ||
                 state.equals(AccountAgeWitnessService.SignState.PEER_SIGNER)) ?
                 MaterialDesignIcon.APPROVAL : MaterialDesignIcon.ALERT_CIRCLE_OUTLINE;

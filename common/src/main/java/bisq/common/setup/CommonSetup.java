@@ -48,8 +48,8 @@ import sun.misc.Signal;
 public class CommonSetup {
 
     public static void setup(Config config, GracefulShutDownHandler gracefulShutDownHandler) {
-        AsciiLogo.showAsciiLogo();
         setupLog(config);
+        AsciiLogo.showAsciiLogo();
         Version.setBaseCryptoNetworkId(config.baseCurrencyNetwork.ordinal());
         Version.printVersion();
         maybePrintPathOfCodeSource();
@@ -73,6 +73,9 @@ public class CommonSetup {
                 log.error(throwable.getMessage());
             } else if (throwable instanceof ClassCastException &&
                     "sun.awt.image.BufImgSurfaceData cannot be cast to sun.java2d.xr.XRSurfaceData".equals(throwable.getMessage())) {
+                log.warn(throwable.getMessage());
+            } else if (throwable instanceof UnsupportedOperationException &&
+                    "The system tray is not supported on the current platform.".equals(throwable.getMessage())) {
                 log.warn(throwable.getMessage());
             } else {
                 log.error("Uncaught Exception from thread " + Thread.currentThread().getName());

@@ -104,6 +104,7 @@ public class AccountAgeWitnessService {
 
         private String presentation;
         private String hash = "";
+        private long daysUntilLimitLifted = 0;
 
         SignState(String presentation) {
             this.presentation = presentation;
@@ -114,11 +115,16 @@ public class AccountAgeWitnessService {
             return this;
         }
 
+        public SignState setDaysUntilLimitLifted(long days) {
+            this.daysUntilLimitLifted = days;
+            return this;
+        }
+
         public String getPresentation() {
             if (!hash.isEmpty()) { // Only showing in DEBUG mode
                 return presentation + " " + hash;
             }
-            return presentation;
+            return String.format(presentation, daysUntilLimitLifted);
         }
 
     }
@@ -527,10 +533,18 @@ public class AccountAgeWitnessService {
                                           Coin tradeAmount,
                                           ErrorMessageHandler errorMessageHandler) {
         checkNotNull(offer);
+
+        // In case we don't find the witness we check if the trade amount is above the
+        // TOLERATED_SMALL_TRADE_AMOUNT (0.01 BTC) and only in that case return false.
         return findWitness(offer)
                 .map(witness -> verifyPeersTradeLimit(offer, tradeAmount, witness, new Date(), errorMessageHandler))
-                .orElse(false);
+                .orElse(isToleratedSmalleAmount(tradeAmount));
     }
+
+    private boolean isToleratedSmalleAmount(Coin tradeAmount) {
+        return tradeAmount.value <= OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT.value;
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Package scope verification subroutines
@@ -806,7 +820,8 @@ public class AccountAgeWitnessService {
                 case ONE_TO_TWO_MONTHS:
                     return SignState.PEER_SIGNER.addHash(hash);
                 case LESS_ONE_MONTH:
-                    return SignState.PEER_INITIAL.addHash(hash);
+                    return SignState.PEER_INITIAL.addHash(hash)
+                            .setDaysUntilLimitLifted(30 - TimeUnit.MILLISECONDS.toDays(accountSignAge));
                 case UNVERIFIED:
                 default:
                     return SignState.UNSIGNED.addHash(hash);
