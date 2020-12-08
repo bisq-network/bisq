@@ -149,11 +149,13 @@ public final class AddressEntryList implements PersistableEnvelope, PersistedDat
             wallet.getIssuedReceiveAddresses().stream()
                     .filter(this::isAddressNotInEntries)
                     .forEach(address -> {
-                        log.info("Create AddressEntry for IssuedReceiveAddress. address={}", address.toString());
-                        DeterministicKey key = (DeterministicKey) wallet.findKeyFromAddress(address);
+                         DeterministicKey key = (DeterministicKey) wallet.findKeyFromAddress(address);
                         if (key != null) {
                             // Address will be derived from key in getAddress method
+                            log.info("Create AddressEntry for IssuedReceiveAddress. address={}", address.toString());
                             entrySet.add(new AddressEntry(key, AddressEntry.Context.AVAILABLE, address instanceof SegwitAddress));
+                        } else {
+                            log.warn("DeterministicKey for address {} is null", address);
                         }
                     });
         }
@@ -190,6 +192,7 @@ public final class AddressEntryList implements PersistableEnvelope, PersistedDat
             return;
         }
 
+        log.info("addAddressEntry: add new AddressEntry {}", addressEntry);
         boolean setChangedByAdd = entrySet.add(addressEntry);
         if (setChangedByAdd)
             requestPersistence();
@@ -205,6 +208,7 @@ public final class AddressEntryList implements PersistableEnvelope, PersistedDat
             return;
         }
 
+        log.info("swapToAvailable addressEntry to swap={}", addressEntry);
         boolean setChangedByRemove = entrySet.remove(addressEntry);
         boolean setChangedByAdd = entrySet.add(new AddressEntry(addressEntry.getKeyPair(),
                 AddressEntry.Context.AVAILABLE,
@@ -218,7 +222,8 @@ public final class AddressEntryList implements PersistableEnvelope, PersistedDat
                                                                AddressEntry.Context context,
                                                                String offerId) {
         boolean setChangedByRemove = entrySet.remove(addressEntry);
-        final AddressEntry newAddressEntry = new AddressEntry(addressEntry.getKeyPair(), context, offerId, addressEntry.isSegwit());
+        AddressEntry newAddressEntry = new AddressEntry(addressEntry.getKeyPair(), context, offerId, addressEntry.isSegwit());
+        log.info("swapAvailableToAddressEntryWithOfferId newAddressEntry={}", newAddressEntry);
         boolean setChangedByAdd = entrySet.add(newAddressEntry);
         if (setChangedByRemove || setChangedByAdd)
             requestPersistence();
@@ -232,6 +237,7 @@ public final class AddressEntryList implements PersistableEnvelope, PersistedDat
             return;
         }
 
+        log.info("setCoinLockedInMultiSigAddressEntry addressEntry={}, value={}", addressEntry, value);
         boolean setChangedByRemove = entrySet.remove(addressEntry);
         AddressEntry entry = new AddressEntry(addressEntry.getKeyPair(),
                 addressEntry.getContext(),

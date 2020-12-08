@@ -24,36 +24,66 @@ import bisq.core.btc.wallet.BisqRiskAnalysis;
 import bisq.common.config.Config;
 import bisq.common.file.FileUtil;
 
-import com.google.common.io.Closeables;
-import com.google.common.util.concurrent.*;
-import org.bitcoinj.core.listeners.*;
-import org.bitcoinj.core.*;
+import org.bitcoinj.core.BlockChain;
+import org.bitcoinj.core.CheckpointManager;
+import org.bitcoinj.core.Context;
+import org.bitcoinj.core.NetworkParameters;
+import org.bitcoinj.core.PeerAddress;
+import org.bitcoinj.core.PeerGroup;
+import org.bitcoinj.core.listeners.DownloadProgressTracker;
 import org.bitcoinj.crypto.KeyCrypter;
 import org.bitcoinj.net.BlockingClientManager;
-import org.bitcoinj.net.discovery.*;
+import org.bitcoinj.net.discovery.DnsDiscovery;
+import org.bitcoinj.net.discovery.PeerDiscovery;
 import org.bitcoinj.script.Script;
-import org.bitcoinj.store.*;
-import org.bitcoinj.wallet.*;
+import org.bitcoinj.store.BlockStore;
+import org.bitcoinj.store.BlockStoreException;
+import org.bitcoinj.store.SPVBlockStore;
+import org.bitcoinj.wallet.DeterministicKeyChain;
+import org.bitcoinj.wallet.DeterministicSeed;
+import org.bitcoinj.wallet.KeyChainGroup;
+import org.bitcoinj.wallet.KeyChainGroupStructure;
+import org.bitcoinj.wallet.Protos;
+import org.bitcoinj.wallet.Wallet;
+import org.bitcoinj.wallet.WalletExtension;
+import org.bitcoinj.wallet.WalletProtobufSerializer;
 
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
+
+import com.google.common.io.Closeables;
+import com.google.common.util.concurrent.AbstractIdleService;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.MoreExecutors;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 
 import org.bouncycastle.crypto.params.KeyParameter;
 
-import org.slf4j.*;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
 
-import javax.annotation.*;
-import java.io.*;
-import java.net.*;
-import java.util.concurrent.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+
+import java.util.concurrent.TimeUnit;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import lombok.Getter;
 import lombok.Setter;
 
+import javax.annotation.Nullable;
+
 import static bisq.common.util.Preconditions.checkDir;
-import static com.google.common.base.Preconditions.*;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 
 /**
  * <p>Utility class that wraps the boilerplate needed to set up a new SPV bitcoinj app. Instantiate it with a directory
@@ -233,7 +263,6 @@ public class WalletConfig extends AbstractIdleService {
     protected void startUp() throws Exception {
         // Runs in a separate thread.
         Context.propagate(context);
-        log.info("Starting up with directory = {}", directory);
         try {
             File chainFile = new File(directory, filePrefix + ".spvchain");
             boolean chainFileExists = chainFile.exists();

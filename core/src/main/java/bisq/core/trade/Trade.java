@@ -886,7 +886,6 @@ public abstract class Trade implements Tradable, Model {
                 startTime = now;
             }
         } else {
-            log.warn("Cannot set TradeStartTime because depositTx is null. TradeId={}", getId());
             startTime = now;
         }
         return startTime;

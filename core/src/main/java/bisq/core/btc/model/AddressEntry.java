@@ -195,8 +195,12 @@ public final class AddressEntry implements PersistablePayload {
 
     @Nullable
     public Address getAddress() {
-        if (address == null && keyPair != null)
+        if (address == null && keyPair != null) {
             address = Address.fromKey(Config.baseCurrencyNetworkParameters(), keyPair, segwit ? Script.ScriptType.P2WPKH : Script.ScriptType.P2PKH);
+        }
+        if (address == null) {
+            log.warn("Address is null at getAddress(). keyPair={}", keyPair);
+        }
         return address;
     }
 
