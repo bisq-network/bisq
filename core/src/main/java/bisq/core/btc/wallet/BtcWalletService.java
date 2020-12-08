@@ -638,6 +638,7 @@ public class BtcWalletService extends WalletService {
             } else {
                 DeterministicKey key = (DeterministicKey) wallet.findKeyFromAddress(wallet.freshReceiveAddress(Script.ScriptType.P2WPKH));
                 AddressEntry entry = new AddressEntry(key, context, offerId, true);
+                log.info("getOrCreateAddressEntry: new AddressEntry={}", entry);
                 addressEntryList.addAddressEntry(entry);
                 return entry;
             }
@@ -689,6 +690,7 @@ public class BtcWalletService extends WalletService {
                 key = (DeterministicKey) wallet.findKeyFromAddress(wallet.freshReceiveAddress(Script.ScriptType.P2PKH));
             }
             AddressEntry entry = new AddressEntry(key, context, segwit);
+            log.info("getOrCreateAddressEntry: add new AddressEntry {}", entry);
             addressEntryList.addAddressEntry(entry);
             return entry;
         }
