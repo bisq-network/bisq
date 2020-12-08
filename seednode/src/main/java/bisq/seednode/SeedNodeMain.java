@@ -30,6 +30,8 @@ import bisq.common.UserThread;
 import bisq.common.app.AppModule;
 import bisq.common.app.Capabilities;
 import bisq.common.app.Capability;
+import bisq.common.config.BaseCurrencyNetwork;
+import bisq.common.config.Config;
 import bisq.common.handlers.ResultHandler;
 
 import lombok.extern.slf4j.Slf4j;
@@ -147,6 +149,12 @@ public class SeedNodeMain extends ExecutableForAppWithP2p {
     }
 
     private void setupConnectionLossCheck() {
+        // For dev testing (usually on BTC_REGTEST) we don't want to get the seed shut
+        // down as it is normal that the seed is the only actively running node.
+        if (Config.baseCurrencyNetwork() == BaseCurrencyNetwork.BTC_REGTEST) {
+            return;
+        }
+
         if (checkConnectionLossTime != null) {
             return;
         }
