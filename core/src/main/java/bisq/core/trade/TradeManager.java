@@ -462,8 +462,14 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
     // Complete trade
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void onWithdrawRequest(String toAddress, Coin amount, Coin fee, KeyParameter aesKey,
-                                  Trade trade, ResultHandler resultHandler, FaultHandler faultHandler) {
+    public void onWithdrawRequest(String toAddress,
+                                  Coin amount,
+                                  Coin fee,
+                                  KeyParameter aesKey,
+                                  Trade trade,
+                                  @Nullable String memo,
+                                  ResultHandler resultHandler,
+                                  FaultHandler faultHandler) {
         String fromAddress = btcWalletService.getOrCreateAddressEntry(trade.getId(),
                 AddressEntry.Context.TRADE_PAYOUT).getAddressString();
         FutureCallback<Transaction> callback = new FutureCallback<>() {
@@ -487,7 +493,8 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
             }
         };
         try {
-            btcWalletService.sendFunds(fromAddress, toAddress, amount, fee, aesKey, AddressEntry.Context.TRADE_PAYOUT, callback);
+            btcWalletService.sendFunds(fromAddress, toAddress, amount, fee, aesKey,
+                    AddressEntry.Context.TRADE_PAYOUT, memo, callback);
         } catch (AddressFormatException | InsufficientMoneyException | AddressEntryException e) {
             e.printStackTrace();
             log.error(e.getMessage());
