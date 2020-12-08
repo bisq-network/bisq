@@ -144,7 +144,8 @@ class GrpcTradesService extends TradesGrpc.TradesImplBase {
     public void withdrawFunds(WithdrawFundsRequest req,
                               StreamObserver<WithdrawFundsReply> responseObserver) {
         try {
-            coreApi.withdrawFunds(req.getTradeId(), req.getAddress());
+            //TODO @ghubstan Feel free to add a memo param for withdrawal requests (was just added in UI)
+            coreApi.withdrawFunds(req.getTradeId(), req.getAddress(), null);
             var reply = WithdrawFundsReply.newBuilder().build();
             responseObserver.onNext(reply);
             responseObserver.onCompleted();

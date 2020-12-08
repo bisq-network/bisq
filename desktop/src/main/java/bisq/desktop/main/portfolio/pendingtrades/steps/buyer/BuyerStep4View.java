@@ -74,7 +74,7 @@ import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 public class BuyerStep4View extends TradeStepView {
     // private final ChangeListener<Boolean> focusedPropertyListener;
 
-    private InputTextField withdrawAddressTextField;
+    private InputTextField withdrawAddressTextField, withdrawMemoTextField;
     private Button withdrawToExternalWalletButton, useSavingsWalletButton;
     private TitledGroupBg withdrawTitledGroupBg;
 
@@ -131,9 +131,16 @@ public class BuyerStep4View extends TradeStepView {
         withdrawTitledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 1, Res.get("portfolio.pending.step5_buyer.withdrawBTC"), Layout.COMPACT_GROUP_DISTANCE);
         withdrawTitledGroupBg.getStyleClass().add("last");
         addCompactTopLabelTextField(gridPane, gridRow, Res.get("portfolio.pending.step5_buyer.amount"), model.getPayoutAmount(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+
         withdrawAddressTextField = addInputTextField(gridPane, ++gridRow, Res.get("portfolio.pending.step5_buyer.withdrawToAddress"));
         withdrawAddressTextField.setManaged(false);
         withdrawAddressTextField.setVisible(false);
+
+        withdrawMemoTextField = addInputTextField(gridPane, ++gridRow,
+                Res.get("funds.withdrawal.memoLabel", Res.getBaseCurrencyCode()));
+        withdrawMemoTextField.setPromptText(Res.get("funds.withdrawal.memo"));
+        withdrawMemoTextField.setManaged(false);
+        withdrawMemoTextField.setVisible(false);
 
         HBox hBox = new HBox();
         hBox.setSpacing(10);
@@ -170,7 +177,9 @@ public class BuyerStep4View extends TradeStepView {
     private void onWithdrawal() {
         withdrawAddressTextField.setManaged(true);
         withdrawAddressTextField.setVisible(true);
-        GridPane.setRowSpan(withdrawTitledGroupBg, 2);
+        withdrawMemoTextField.setManaged(true);
+        withdrawMemoTextField.setVisible(true);
+        GridPane.setRowSpan(withdrawTitledGroupBg, 3);
         withdrawToExternalWalletButton.setDefaultButton(true);
         useSavingsWalletButton.setDefaultButton(false);
         withdrawToExternalWalletButton.getStyleClass().add("action-button");
@@ -271,10 +280,15 @@ public class BuyerStep4View extends TradeStepView {
                                    FaultHandler faultHandler) {
         useSavingsWalletButton.setDisable(true);
         withdrawToExternalWalletButton.setDisable(true);
+        String memo = withdrawMemoTextField.getText();
+        if (memo.isEmpty()) {
+            memo = null;
+        }
         model.dataModel.onWithdrawRequest(toAddress,
                 amount,
                 fee,
                 aesKey,
+                memo,
                 resultHandler,
                 faultHandler);
     }

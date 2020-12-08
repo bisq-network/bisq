@@ -41,6 +41,8 @@ import java.util.function.Consumer;
 
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
+
 import static bisq.core.btc.model.AddressEntry.Context.TRADE_PAYOUT;
 import static java.lang.String.format;
 
@@ -154,7 +156,7 @@ class CoreTradesService {
         tradeManager.onTradeCompleted(trade);
     }
 
-    void withdrawFunds(String tradeId, String toAddress) {
+    void withdrawFunds(String tradeId, String toAddress, @Nullable String memo) {
         // An encrypted wallet must be unlocked for this operation.
         verifyTradeIsNotClosed(tradeId);
         var trade = getOpenTrade(tradeId).orElseThrow(() ->
@@ -184,6 +186,7 @@ class CoreTradesService {
                 fee,
                 coreWalletsService.getKey(),
                 trade,
+                memo,
                 () -> {
                 },
                 (errorMessage, throwable) -> {

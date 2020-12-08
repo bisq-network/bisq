@@ -254,8 +254,8 @@ public class BtcWalletService extends WalletService {
             sendRequest.signInputs = false;
 
             sendRequest.fee = txFeePerVbyte.multiply(txVsizeWithUnsignedInputs +
-                                                    sigSizePerInput * numLegacyInputs +
-                                                    sigSizePerInput * numSegwitInputs / 4);
+                    sigSizePerInput * numLegacyInputs +
+                    sigSizePerInput * numSegwitInputs / 4);
 
             sendRequest.feePerKb = Coin.ZERO;
             sendRequest.ensureMinRequiredFee = false;
@@ -274,8 +274,8 @@ public class BtcWalletService extends WalletService {
             numSegwitInputs = numInputs.second;
             txVsizeWithUnsignedInputs = resultTx.getVsize();
             long estimatedFeeAsLong = txFeePerVbyte.multiply(txVsizeWithUnsignedInputs +
-                                                            sigSizePerInput * numLegacyInputs +
-                                                            sigSizePerInput * numSegwitInputs / 4).value;
+                    sigSizePerInput * numLegacyInputs +
+                    sigSizePerInput * numSegwitInputs / 4).value;
 
             // calculated fee must be inside of a tolerance range with tx fee
             isFeeOutsideTolerance = Math.abs(resultTx.getFee().value - estimatedFeeAsLong) > 1000;
@@ -374,8 +374,8 @@ public class BtcWalletService extends WalletService {
             sendRequest.signInputs = false;
 
             sendRequest.fee = txFeePerVbyte.multiply(txVsizeWithUnsignedInputs +
-                                                    sigSizePerInput * numLegacyInputs +
-                                                    sigSizePerInput * numSegwitInputs / 4);
+                    sigSizePerInput * numLegacyInputs +
+                    sigSizePerInput * numSegwitInputs / 4);
             sendRequest.feePerKb = Coin.ZERO;
             sendRequest.ensureMinRequiredFee = false;
 
@@ -393,8 +393,8 @@ public class BtcWalletService extends WalletService {
             numSegwitInputs = numInputs.second;
             txVsizeWithUnsignedInputs = resultTx.getVsize();
             final long estimatedFeeAsLong = txFeePerVbyte.multiply(txVsizeWithUnsignedInputs +
-                                                                  sigSizePerInput * numLegacyInputs +
-                                                                  sigSizePerInput * numSegwitInputs / 4).value;
+                    sigSizePerInput * numLegacyInputs +
+                    sigSizePerInput * numSegwitInputs / 4).value;
             // calculated fee must be inside of a tolerance range with tx fee
             isFeeOutsideTolerance = Math.abs(resultTx.getFee().value - estimatedFeeAsLong) > 1000;
         }
@@ -593,7 +593,7 @@ public class BtcWalletService extends WalletService {
         for (TransactionInput input : tx.getInputs()) {
             TransactionOutput connectedOutput = input.getConnectedOutput();
             if (connectedOutput == null || ScriptPattern.isP2PKH(connectedOutput.getScriptPubKey()) ||
-                ScriptPattern.isP2PK(connectedOutput.getScriptPubKey())) {
+                    ScriptPattern.isP2PK(connectedOutput.getScriptPubKey())) {
                 // If connectedOutput is null, we don't know here the input type. To avoid underpaying fees,
                 // we treat it as a legacy input which will result in a higher fee estimation.
                 numLegacyInputs++;
@@ -1121,12 +1121,15 @@ public class BtcWalletService extends WalletService {
                             Coin fee,
                             @Nullable KeyParameter aesKey,
                             @SuppressWarnings("SameParameterValue") AddressEntry.Context context,
+                            @Nullable String memo,
                             FutureCallback<Transaction> callback) throws AddressFormatException,
             AddressEntryException, InsufficientMoneyException {
         SendRequest sendRequest = getSendRequest(fromAddress, toAddress, receiverAmount, fee, aesKey, context);
         Wallet.SendResult sendResult = wallet.sendCoins(sendRequest);
         Futures.addCallback(sendResult.broadcastComplete, callback, MoreExecutors.directExecutor());
-
+        if (memo != null) {
+            sendResult.tx.setMemo(memo);
+        }
         printTx("sendFunds", sendResult.tx);
         return sendResult.tx.getTxId().toString();
     }
@@ -1137,13 +1140,16 @@ public class BtcWalletService extends WalletService {
                                                      Coin fee,
                                                      @Nullable String changeAddress,
                                                      @Nullable KeyParameter aesKey,
+                                                     @Nullable String memo,
                                                      FutureCallback<Transaction> callback) throws AddressFormatException,
             AddressEntryException, InsufficientMoneyException {
 
         SendRequest request = getSendRequestForMultipleAddresses(fromAddresses, toAddress, receiverAmount, fee, changeAddress, aesKey);
         Wallet.SendResult sendResult = wallet.sendCoins(request);
         Futures.addCallback(sendResult.broadcastComplete, callback, MoreExecutors.directExecutor());
-
+        if (memo != null) {
+            sendResult.tx.setMemo(memo);
+        }
         printTx("sendFunds", sendResult.tx);
         return sendResult.tx;
     }

@@ -494,14 +494,19 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
 
     private void sendFunds(Coin amount, Coin fee, KeyParameter aesKey, FutureCallback<Transaction> callback) {
         try {
+            String memo = withdrawMemoTextField.getText();
+            if (memo.isEmpty()) {
+                memo = null;
+            }
             Transaction transaction = btcWalletService.sendFundsForMultipleAddresses(fromAddresses,
                     withdrawToTextField.getText(),
                     amount,
                     fee,
                     null,
                     aesKey,
+                    memo,
                     callback);
-            transaction.setMemo(withdrawMemoTextField.getText());
+
             reset();
             updateList();
         } catch (AddressFormatException e) {
