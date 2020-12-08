@@ -194,10 +194,9 @@ public class TradeWalletService {
             return tradingFeeTx;
         } catch (Throwable t) {
             if (wallet != null && sendRequest != null && sendRequest.coinSelector != null) {
-                log.warn("Balance = {}; CoinSelector = {}", wallet.getBalance(sendRequest.coinSelector), sendRequest.coinSelector);
+                log.error("Balance = {}; CoinSelector = {}", wallet.getBalance(sendRequest.coinSelector), sendRequest.coinSelector);
             }
-
-            log.warn("createBtcTradingFeeTx failed: tradingFeeTx={}, txOutputs={}", tradingFeeTx.toString(),
+            log.error("createBtcTradingFeeTx failed: tradingFeeTx={}, txOutputs={}", tradingFeeTx.toString(),
                     tradingFeeTx.getOutputs());
             throw t;
         }
@@ -211,83 +210,88 @@ public class TradeWalletService {
                                                boolean useSavingsWallet,
                                                Coin txFee)
             throws TransactionVerificationException, WalletException, InsufficientMoneyException, AddressFormatException {
-        // preparedBsqTx has following structure:
-        // inputs [1-n] BSQ inputs
-        // outputs [0-1] BSQ change output
-        // mining fee: burned BSQ fee
+        try {
+            // preparedBsqTx has following structure:
+            // inputs [1-n] BSQ inputs
+            // outputs [0-1] BSQ change output
+            // mining fee: burned BSQ fee
 
-        // We add BTC mining fee. Result tx looks like:
-        // inputs [1-n] BSQ inputs
-        // inputs [1-n] BTC inputs
-        // outputs [0-1] BSQ change output
-        // outputs [1] BTC reservedForTrade output
-        // outputs [0-1] BTC change output
-        // mining fee: BTC mining fee + burned BSQ fee
+            // We add BTC mining fee. Result tx looks like:
+            // inputs [1-n] BSQ inputs
+            // inputs [1-n] BTC inputs
+            // outputs [0-1] BSQ change output
+            // outputs [1] BTC reservedForTrade output
+            // outputs [0-1] BTC change output
+            // mining fee: BTC mining fee + burned BSQ fee
 
-        // In case all BSQ were burnt as fees we have no receiver output and it might be that there are no change outputs
-        // We need to guarantee that min. 1 valid output is added (OP_RETURN does not count). So we use a higher input
-        // for BTC to force an additional change output.
+            // In case all BSQ were burnt as fees we have no receiver output and it might be that there are no change outputs
+            // We need to guarantee that min. 1 valid output is added (OP_RETURN does not count). So we use a higher input
+            // for BTC to force an additional change output.
 
-        final int preparedBsqTxInputsSize = preparedBsqTx.getInputs().size();
-        final boolean hasBsqOutputs = !preparedBsqTx.getOutputs().isEmpty();
+            final int preparedBsqTxInputsSize = preparedBsqTx.getInputs().size();
+            final boolean hasBsqOutputs = !preparedBsqTx.getOutputs().isEmpty();
 
-        // If there are no BSQ change outputs an output larger than the burnt BSQ amount has to be added as the first
-        // output to make sure the reserved funds are in output 1, deposit tx input creation depends on the reserve
-        // being output 1. The amount has to be larger than the BSQ input to make sure the inputs get burnt.
-        // The BTC changeAddress is used, so it might get used for both output 0 and output 2.
-        if (!hasBsqOutputs) {
-            var bsqInputValue = preparedBsqTx.getInputs().stream()
-                    .map(TransactionInput::getValue)
-                    .reduce(Coin.valueOf(0), Coin::add);
+            // If there are no BSQ change outputs an output larger than the burnt BSQ amount has to be added as the first
+            // output to make sure the reserved funds are in output 1, deposit tx input creation depends on the reserve
+            // being output 1. The amount has to be larger than the BSQ input to make sure the inputs get burnt.
+            // The BTC changeAddress is used, so it might get used for both output 0 and output 2.
+            if (!hasBsqOutputs) {
+                var bsqInputValue = preparedBsqTx.getInputs().stream()
+                        .map(TransactionInput::getValue)
+                        .reduce(Coin.valueOf(0), Coin::add);
 
-            preparedBsqTx.addOutput(bsqInputValue.add(Coin.valueOf(1)), changeAddress);
+                preparedBsqTx.addOutput(bsqInputValue.add(Coin.valueOf(1)), changeAddress);
+            }
+            // the reserved amount we need for the trade we send to our trade reservedForTradeAddress
+            preparedBsqTx.addOutput(reservedFundsForOffer, reservedForTradeAddress);
+
+            // we allow spending of unconfirmed tx (double spend risk is low and usability would suffer if we need to
+            // wait for 1 confirmation)
+            // In case of double spend we will detect later in the trade process and use a ban score to penalize bad behaviour (not impl. yet)
+
+            SendRequest sendRequest = SendRequest.forTx(preparedBsqTx);
+            sendRequest.shuffleOutputs = false;
+            sendRequest.aesKey = aesKey;
+            if (useSavingsWallet) {
+                sendRequest.coinSelector = new BtcCoinSelector(walletsSetup.getAddressesByContext(AddressEntry.Context.AVAILABLE),
+                        preferences.getIgnoreDustThreshold());
+            } else {
+                sendRequest.coinSelector = new BtcCoinSelector(fundingAddress, preferences.getIgnoreDustThreshold());
+            }
+            // We use a fixed fee
+            sendRequest.fee = txFee;
+            sendRequest.feePerKb = Coin.ZERO;
+            sendRequest.ensureMinRequiredFee = false;
+
+            sendRequest.signInputs = false;
+
+            // Change is optional in case of overpay or use of funds from savings wallet
+            sendRequest.changeAddress = changeAddress;
+
+            checkNotNull(wallet, "Wallet must not be null");
+            wallet.completeTx(sendRequest);
+            Transaction resultTx = sendRequest.tx;
+            removeDust(resultTx);
+
+            // Sign all BTC inputs
+            for (int i = preparedBsqTxInputsSize; i < resultTx.getInputs().size(); i++) {
+                TransactionInput txIn = resultTx.getInputs().get(i);
+                checkArgument(txIn.getConnectedOutput() != null &&
+                                txIn.getConnectedOutput().isMine(wallet),
+                        "txIn.getConnectedOutput() is not in our wallet. That must not happen.");
+                WalletService.signTransactionInput(wallet, aesKey, resultTx, txIn, i);
+                WalletService.checkScriptSig(resultTx, txIn, i);
+            }
+
+            WalletService.checkWalletConsistency(wallet);
+            WalletService.verifyTransaction(resultTx);
+
+            WalletService.printTx(Res.getBaseCurrencyCode() + " wallet: Signed tx", resultTx);
+            return resultTx;
+        } catch (Throwable t) {
+            log.error("completeBsqTradingFeeTx: preparedBsqTx={}", preparedBsqTx.toString());
+            throw t;
         }
-        // the reserved amount we need for the trade we send to our trade reservedForTradeAddress
-        preparedBsqTx.addOutput(reservedFundsForOffer, reservedForTradeAddress);
-
-        // we allow spending of unconfirmed tx (double spend risk is low and usability would suffer if we need to
-        // wait for 1 confirmation)
-        // In case of double spend we will detect later in the trade process and use a ban score to penalize bad behaviour (not impl. yet)
-
-        SendRequest sendRequest = SendRequest.forTx(preparedBsqTx);
-        sendRequest.shuffleOutputs = false;
-        sendRequest.aesKey = aesKey;
-        if (useSavingsWallet) {
-            sendRequest.coinSelector = new BtcCoinSelector(walletsSetup.getAddressesByContext(AddressEntry.Context.AVAILABLE),
-                    preferences.getIgnoreDustThreshold());
-        } else {
-            sendRequest.coinSelector = new BtcCoinSelector(fundingAddress, preferences.getIgnoreDustThreshold());
-        }
-        // We use a fixed fee
-        sendRequest.fee = txFee;
-        sendRequest.feePerKb = Coin.ZERO;
-        sendRequest.ensureMinRequiredFee = false;
-
-        sendRequest.signInputs = false;
-
-        // Change is optional in case of overpay or use of funds from savings wallet
-        sendRequest.changeAddress = changeAddress;
-
-        checkNotNull(wallet, "Wallet must not be null");
-        wallet.completeTx(sendRequest);
-        Transaction resultTx = sendRequest.tx;
-        removeDust(resultTx);
-
-        // Sign all BTC inputs
-        for (int i = preparedBsqTxInputsSize; i < resultTx.getInputs().size(); i++) {
-            TransactionInput txIn = resultTx.getInputs().get(i);
-            checkArgument(txIn.getConnectedOutput() != null &&
-                            txIn.getConnectedOutput().isMine(wallet),
-                    "txIn.getConnectedOutput() is not in our wallet. That must not happen.");
-            WalletService.signTransactionInput(wallet, aesKey, resultTx, txIn, i);
-            WalletService.checkScriptSig(resultTx, txIn, i);
-        }
-
-        WalletService.checkWalletConsistency(wallet);
-        WalletService.verifyTransaction(resultTx);
-
-        WalletService.printTx(Res.getBaseCurrencyCode() + " wallet: Signed tx", resultTx);
-        return resultTx;
     }
 
 
