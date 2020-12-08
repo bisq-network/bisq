@@ -735,7 +735,7 @@ public class TradeWalletService {
         Sha256Hash sigHash;
         Coin delayedPayoutTxInputValue = preparedDepositTx.getOutput(0).getValue();
         sigHash = delayedPayoutTx.hashForWitnessSignature(0, redeemScript,
-                                    delayedPayoutTxInputValue, Transaction.SigHash.ALL, false);
+                delayedPayoutTxInputValue, Transaction.SigHash.ALL, false);
         checkNotNull(myMultiSigKeyPair, "myMultiSigKeyPair must not be null");
         if (myMultiSigKeyPair.isEncrypted()) {
             checkNotNull(aesKey);
@@ -1065,8 +1065,8 @@ public class TradeWalletService {
         // Take care of order of signatures. See comment below at getMultiSigRedeemScript (sort order needed here: arbitrator, seller, buyer)
         if (hashedMultiSigOutputIsLegacy) {
             Script inputScript = ScriptBuilder.createP2SHMultiSigInputScript(
-                                                        ImmutableList.of(arbitratorTxSig, tradersTxSig),
-                                                        redeemScript);
+                    ImmutableList.of(arbitratorTxSig, tradersTxSig),
+                    redeemScript);
             input.setScriptSig(inputScript);
         } else {
             input.setScriptSig(ScriptBuilder.createEmpty());
@@ -1104,7 +1104,7 @@ public class TradeWalletService {
         byte[] sellerPubKey = ECKey.fromPublicOnly(Utils.HEX.decode(sellerPubKeyAsHex)).getPubKey();
 
         Script hashedMultiSigOutputScript = get2of2MultiSigOutputScript(buyerPubKey, sellerPubKey,
-                                                                        hashedMultiSigOutputIsLegacy);
+                hashedMultiSigOutputIsLegacy);
 
         Coin msOutputValue = buyerPayoutAmount.add(sellerPayoutAmount).add(txFee);
         TransactionOutput hashedMultiSigOutput = new TransactionOutput(params, null, msOutputValue, hashedMultiSigOutputScript.getProgram());
@@ -1147,7 +1147,7 @@ public class TradeWalletService {
         TransactionInput input = payoutTx.getInput(0);
         if (hashedMultiSigOutputIsLegacy) {
             Script inputScript = ScriptBuilder.createP2SHMultiSigInputScript(ImmutableList.of(sellerTxSig, buyerTxSig),
-                                                                             redeemScript);
+                    redeemScript);
             input.setScriptSig(inputScript);
         } else {
             input.setScriptSig(ScriptBuilder.createEmpty());
