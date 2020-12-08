@@ -467,7 +467,7 @@ public class BisqSetup {
                     .filter(e -> setOfAllTradeIds.contains(e.getOfferId()) &&
                             e.getContext() == AddressEntry.Context.MULTI_SIG)
                     .forEach(e -> {
-                        Coin balance = e.getCoinLockedInMultiSig();
+                        Coin balance = e.getCoinLockedInMultiSigAsCoin();
                         if (balance.isPositive()) {
                             String message = Res.get("popup.warning.lockedUpFunds",
                                     formatter.formatCoinWithCode(balance), e.getAddressString(), e.getOfferId());

@@ -78,7 +78,7 @@ public class SellerAsTakerProtocol extends SellerProtocol implements TakerProtoc
                         CreateTakerFeeTx.class,
                         SellerAsTakerCreatesDepositTxInputs.class,
                         TakerSendInputsForDepositTxRequest.class)
-                        .withTimeout(30))
+                        .withTimeout(60))
                 .executeTasks();
     }
 
@@ -101,7 +101,7 @@ public class SellerAsTakerProtocol extends SellerProtocol implements TakerProtoc
                         SellerCreatesDelayedPayoutTx.class,
                         SellerSignsDelayedPayoutTx.class,
                         SellerSendDelayedPayoutTxSignatureRequest.class)
-                        .withTimeout(30))
+                        .withTimeout(60))
                 .executeTasks();
     }
 
