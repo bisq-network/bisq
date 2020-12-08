@@ -204,6 +204,10 @@ public final class AddressEntry implements PersistablePayload {
         return address;
     }
 
+    public boolean isAddressNull() {
+        return address == null;
+    }
+
     public boolean isOpenOffer() {
         return context == Context.OFFER_FUNDING || context == Context.RESERVED_FOR_TRADE;
     }

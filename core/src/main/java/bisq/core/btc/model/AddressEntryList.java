@@ -118,7 +118,7 @@ public final class AddressEntryList implements PersistableEnvelope, PersistedDat
                     Address addressFromKey = Address.fromKey(Config.baseCurrencyNetworkParameters(), keyFromPubHash,
                             scriptType);
                     // We want to ensure key and address matches in case we have address in entry available already
-                    if (addressEntry.getAddress() == null || addressFromKey.equals(addressEntry.getAddress())) {
+                    if (addressEntry.isAddressNull() || addressFromKey.equals(addressEntry.getAddress())) {
                         addressEntry.setDeterministicKey(keyFromPubHash);
                     } else {
                         log.error("We found an address entry without key but cannot apply the key as the address " +
