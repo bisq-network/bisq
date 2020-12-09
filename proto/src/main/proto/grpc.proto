@@ -318,6 +318,8 @@ service Wallets {
     }
     rpc SendBsq (SendBsqRequest) returns (SendBsqReply) {
     }
+    rpc SendBtc (SendBtcRequest) returns (SendBtcReply) {
+    }
     rpc GetTxFeeRate (GetTxFeeRateRequest) returns (GetTxFeeRateReply) {
     }
     rpc SetTxFeeRatePreference (SetTxFeeRatePreferenceRequest) returns (SetTxFeeRatePreferenceReply) {
@@ -366,6 +368,16 @@ message SendBsqRequest {
 }
 
 message SendBsqReply {
+    TxInfo txInfo = 1;
+}
+
+message SendBtcRequest {
+    string address = 1;
+    string amount = 2;
+    string txFeeRate = 3;
+}
+
+message SendBtcReply {
     TxInfo txInfo = 1;
 }
 

@@ -34,9 +34,12 @@ import bisq.common.app.Version;
 import bisq.common.handlers.ResultHandler;
 
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+
+import com.google.common.util.concurrent.FutureCallback;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -251,6 +254,13 @@ public class CoreApi {
                         String txFeeRate,
                         TxBroadcaster.Callback callback) {
         walletsService.sendBsq(address, amount, txFeeRate, callback);
+    }
+
+    public void sendBtc(String address,
+                        String amount,
+                        String txFeeRate,
+                        FutureCallback<Transaction> callback) {
+        walletsService.sendBtc(address, amount, txFeeRate, callback);
     }
 
     public void getTxFeeRate(ResultHandler resultHandler) {

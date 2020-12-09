@@ -23,7 +23,9 @@ import bisq.core.api.model.BsqBalanceInfo;
 import bisq.core.api.model.BtcBalanceInfo;
 import bisq.core.api.model.TxFeeRateInfo;
 import bisq.core.btc.Balances;
+import bisq.core.btc.exceptions.AddressEntryException;
 import bisq.core.btc.exceptions.BsqChangeBelowDustException;
+import bisq.core.btc.exceptions.InsufficientFundsException;
 import bisq.core.btc.exceptions.TransactionVerificationException;
 import bisq.core.btc.exceptions.WalletException;
 import bisq.core.btc.model.AddressEntry;
@@ -35,7 +37,9 @@ import bisq.core.btc.wallet.TxBroadcaster;
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.user.Preferences;
+import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.BsqFormatter;
+import bisq.core.util.coin.CoinFormatter;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
@@ -46,10 +50,12 @@ import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.LegacyAddress;
+import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionConfidence;
 import org.bitcoinj.crypto.KeyCrypterScrypt;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -64,6 +70,7 @@ import org.bouncycastle.crypto.params.KeyParameter;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -85,6 +92,7 @@ class CoreWalletsService {
     private final BsqTransferService bsqTransferService;
     private final BsqFormatter bsqFormatter;
     private final BtcWalletService btcWalletService;
+    private final CoinFormatter btcFormatter;
     private final FeeService feeService;
     private final Preferences preferences;
 
@@ -103,6 +111,7 @@ class CoreWalletsService {
                               BsqTransferService bsqTransferService,
                               BsqFormatter bsqFormatter,
                               BtcWalletService btcWalletService,
+                              @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
                               FeeService feeService,
                               Preferences preferences) {
         this.balances = balances;
@@ -111,6 +120,7 @@ class CoreWalletsService {
         this.bsqTransferService = bsqTransferService;
         this.bsqFormatter = bsqFormatter;
         this.btcWalletService = btcWalletService;
+        this.btcFormatter = btcFormatter;
         this.feeService = feeService;
         this.preferences = preferences;
     }
@@ -191,30 +201,84 @@ class CoreWalletsService {
                  String amount,
                  String txFeeRate,
                  TxBroadcaster.Callback callback) {
+        verifyWalletsAreAvailable();
+        verifyEncryptedWalletIsUnlocked();
+
         try {
             LegacyAddress legacyAddress = getValidBsqLegacyAddress(address);
-            Coin receiverAmount = getValidBsqTransferAmount(amount);
-
-            // A non txFeeRate String value overrides the fee service and custom fee.
-            Coin txFeePerVbyte = txFeeRate.isEmpty()
-                    ? btcWalletService.getTxFeeForWithdrawalPerVbyte()
-                    : Coin.valueOf(Long.parseLong(txFeeRate));
-
+            Coin receiverAmount = getValidTransferAmount(amount, bsqFormatter);
+            Coin txFeePerVbyte = getTxFeeRateFromParamOrPreferenceOrFeeService(txFeeRate);
             BsqTransferModel model = bsqTransferService.getBsqTransferModel(legacyAddress,
                     receiverAmount,
                     txFeePerVbyte);
-            log.info("Sending {} BSQ to {} with tx fee rate {} sats/byte).",
+            log.info("Sending {} BSQ to {} with tx fee rate {} sats/byte.",
                     amount,
                     address,
                     txFeePerVbyte.value);
             bsqTransferService.sendFunds(model, callback);
+        } catch (InsufficientMoneyException ex) {
+            log.error("", ex);
+            throw new IllegalStateException("cannot send bsq due to insufficient funds", ex);
         } catch (NumberFormatException
-                | InsufficientMoneyException
                 | BsqChangeBelowDustException
                 | TransactionVerificationException
                 | WalletException ex) {
             log.error("", ex);
             throw new IllegalStateException(ex);
+        }
+    }
+
+    void sendBtc(String address,
+                 String amount,
+                 String txFeeRate,
+                 FutureCallback<Transaction> callback) {
+        verifyWalletsAreAvailable();
+        verifyEncryptedWalletIsUnlocked();
+
+        try {
+            Set<String> fromAddresses = btcWalletService.getAddressEntriesForAvailableBalanceStream()
+                    .map(AddressEntry::getAddressString)
+                    .collect(Collectors.toSet());
+            Coin receiverAmount = getValidTransferAmount(amount, btcFormatter);
+            Coin txFeePerVbyte = getTxFeeRateFromParamOrPreferenceOrFeeService(txFeeRate);
+
+            // TODO Support feeExcluded (or included), default is fee included.
+            //  See WithdrawalView # onWithdraw (and refactor).
+            Transaction feeEstimationTransaction =
+                    btcWalletService.getFeeEstimationTransactionForMultipleAddresses(fromAddresses,
+                            receiverAmount,
+                            txFeePerVbyte);
+            if (feeEstimationTransaction == null)
+                throw new IllegalStateException("could not estimate the transaction fee");
+
+            Coin dust = btcWalletService.getDust(feeEstimationTransaction);
+            Coin fee = feeEstimationTransaction.getFee().add(dust);
+            if (dust.isPositive()) {
+                fee = feeEstimationTransaction.getFee().add(dust);
+                log.info("Dust txo ({} sats) was detected, the dust amount has been added to the fee (was {}, now {})",
+                        dust.value,
+                        feeEstimationTransaction.getFee(),
+                        fee.value);
+            }
+            log.info("Sending {} BTC to {} with tx fee of {} sats (fee rate {} sats/byte).",
+                    amount,
+                    address,
+                    fee.value,
+                    txFeePerVbyte.value);
+            btcWalletService.sendFundsForMultipleAddresses(fromAddresses,
+                    address,
+                    receiverAmount,
+                    fee,
+                    null,
+                    tempAesKey,
+                    null, /* memo todo */
+                    callback);
+        } catch (AddressEntryException ex) {
+            log.error("", ex);
+            throw new IllegalStateException("cannot send btc from any addresses in wallet", ex);
+        } catch (InsufficientFundsException | InsufficientMoneyException ex) {
+            log.error("", ex);
+            throw new IllegalStateException("cannot send btc due to insufficient funds", ex);
         }
     }
 
@@ -437,13 +501,20 @@ class CoreWalletsService {
         }
     }
 
-    // Returns a Coin for the amount string, or a RuntimeException if invalid.
-    private Coin getValidBsqTransferAmount(String amount) {
-        Coin amountAsCoin = parseToCoin(amount, bsqFormatter);
+    // Returns a Coin for the transfer amount string, or a RuntimeException if invalid.
+    private Coin getValidTransferAmount(String amount, CoinFormatter coinFormatter) {
+        Coin amountAsCoin = parseToCoin(amount, coinFormatter);
         if (amountAsCoin.isLessThan(getMinNonDustOutput()))
-            throw new IllegalStateException(format("%s bsq is an invalid send amount", amount));
+            throw new IllegalStateException(format("%s is an invalid transfer amount", amount));
 
         return amountAsCoin;
+    }
+
+    private Coin getTxFeeRateFromParamOrPreferenceOrFeeService(String txFeeRate) {
+        // A non txFeeRate String value overrides the fee service and custom fee.
+        return txFeeRate.isEmpty()
+                ? btcWalletService.getTxFeeForWithdrawalPerVbyte()
+                : Coin.valueOf(Long.parseLong(txFeeRate));
     }
 
     private KeyCrypterScrypt getKeyCrypterScrypt() {

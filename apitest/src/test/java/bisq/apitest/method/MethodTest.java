@@ -48,6 +48,7 @@ import bisq.proto.grpc.OfferInfo;
 import bisq.proto.grpc.RegisterDisputeAgentRequest;
 import bisq.proto.grpc.RemoveWalletPasswordRequest;
 import bisq.proto.grpc.SendBsqRequest;
+import bisq.proto.grpc.SendBtcRequest;
 import bisq.proto.grpc.SetTxFeeRatePreferenceRequest;
 import bisq.proto.grpc.SetWalletPasswordRequest;
 import bisq.proto.grpc.TakeOfferRequest;
@@ -171,6 +172,16 @@ public class MethodTest extends ApiTestCase {
                 .build();
     }
 
+    protected final SendBtcRequest createSendBtcRequest(String address,
+                                                        String amount,
+                                                        String txFeeRate) {
+        return SendBtcRequest.newBuilder()
+                .setAddress(address)
+                .setAmount(amount)
+                .setTxFeeRate(txFeeRate)
+                .build();
+    }
+
     protected final GetFundingAddressesRequest createGetFundingAddressesRequest() {
         return GetFundingAddressesRequest.newBuilder().build();
     }
@@ -266,6 +277,21 @@ public class MethodTest extends ApiTestCase {
                                    String txFeeRate) {
         //noinspection ResultOfMethodCallIgnored
         return grpcStubs(bisqAppConfig).walletsService.sendBsq(createSendBsqRequest(address,
+                amount,
+                txFeeRate))
+                .getTxInfo();
+    }
+
+    protected final TxInfo sendBtc(BisqAppConfig bisqAppConfig, String address, String amount) {
+        return sendBtc(bisqAppConfig, address, amount, "");
+    }
+
+    protected final TxInfo sendBtc(BisqAppConfig bisqAppConfig,
+                                   String address,
+                                   String amount,
+                                   String txFeeRate) {
+        //noinspection ResultOfMethodCallIgnored
+        return grpcStubs(bisqAppConfig).walletsService.sendBtc(createSendBtcRequest(address,
                 amount,
                 txFeeRate))
                 .getTxInfo();

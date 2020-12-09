@@ -39,6 +39,8 @@ import bisq.proto.grpc.RemoveWalletPasswordReply;
 import bisq.proto.grpc.RemoveWalletPasswordRequest;
 import bisq.proto.grpc.SendBsqReply;
 import bisq.proto.grpc.SendBsqRequest;
+import bisq.proto.grpc.SendBtcReply;
+import bisq.proto.grpc.SendBtcRequest;
 import bisq.proto.grpc.SetTxFeeRatePreferenceReply;
 import bisq.proto.grpc.SetTxFeeRatePreferenceRequest;
 import bisq.proto.grpc.SetWalletPasswordReply;
@@ -57,10 +59,14 @@ import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
 
+import com.google.common.util.concurrent.FutureCallback;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
+
+import org.jetbrains.annotations.NotNull;
 
 import static bisq.core.api.model.TxInfo.toTxInfo;
 
@@ -171,6 +177,45 @@ class GrpcWalletsService extends WalletsGrpc.WalletsImplBase {
                         }
                     });
         } catch (IllegalStateException cause) {
+            var ex = new StatusRuntimeException(Status.UNKNOWN.withDescription(cause.getMessage()));
+            responseObserver.onError(ex);
+            throw ex;
+        }
+    }
+
+    @Override
+    public void sendBtc(SendBtcRequest req,
+                        StreamObserver<SendBtcReply> responseObserver) {
+        try {
+            coreApi.sendBtc(req.getAddress(),
+                    req.getAmount(),
+                    req.getTxFeeRate(),
+                    new FutureCallback<>() {
+                        @Override
+                        public void onSuccess(Transaction tx) {
+                            if (tx != null) {
+                                log.info("Successfully published BTC tx: id {}, output sum {} sats, fee {} sats, size {} bytes",
+                                        tx.getTxId().toString(),
+                                        tx.getOutputSum(),
+                                        tx.getFee(),
+                                        tx.getMessageSize());
+                                var reply = SendBtcReply.newBuilder()
+                                        .setTxInfo(toTxInfo(tx).toProtoMessage())
+                                        .build();
+                                responseObserver.onNext(reply);
+                                responseObserver.onCompleted();
+                            } else {
+                                throw new IllegalStateException("btc transaction is null");
+                            }
+                        }
+
+                        @Override
+                        public void onFailure(@NotNull Throwable t) {
+                            log.error("", t);
+                            throw new IllegalStateException(t);
+                        }
+                    });
+        } catch (IllegalStateException | IllegalArgumentException cause) {
             var ex = new StatusRuntimeException(Status.UNKNOWN.withDescription(cause.getMessage()));
             responseObserver.onError(ex);
             throw ex;
