@@ -279,7 +279,7 @@ public class PeerInfoIcon extends Group {
 
         if (hasChargebackRisk(trade, offer)) {
             String signAgeInfo = Res.get("peerInfo.age.chargeBackRisk");
-            String accountSigningState = StringUtils.capitalize(signState.getPresentation());
+            String accountSigningState = StringUtils.capitalize(signState.getDisplayString());
             if (signState.equals(AccountAgeWitnessService.SignState.UNSIGNED))
                 signAgeInfo = null;
 

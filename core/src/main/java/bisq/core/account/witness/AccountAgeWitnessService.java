@@ -102,12 +102,12 @@ public class AccountAgeWitnessService {
         PEER_SIGNER(Res.get("offerbook.timeSinceSigning.info.signer")),
         BANNED(Res.get("offerbook.timeSinceSigning.info.banned"));
 
-        private String presentation;
+        private String displayString;
         private String hash = "";
         private long daysUntilLimitLifted = 0;
 
-        SignState(String presentation) {
-            this.presentation = presentation;
+        SignState(String displayString) {
+            this.displayString = displayString;
         }
 
         public SignState addHash(String hash) {
@@ -120,11 +120,11 @@ public class AccountAgeWitnessService {
             return this;
         }
 
-        public String getPresentation() {
+        public String getDisplayString() {
             if (!hash.isEmpty()) { // Only showing in DEBUG mode
-                return presentation + " " + hash;
+                return displayString + " " + hash;
             }
-            return String.format(presentation, daysUntilLimitLifted);
+            return String.format(displayString, daysUntilLimitLifted);
         }
 
     }

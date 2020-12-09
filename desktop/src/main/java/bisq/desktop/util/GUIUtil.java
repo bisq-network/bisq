@@ -876,7 +876,7 @@ public class GUIUtil {
                                 item.paymentAccountPayload);
                         AccountAgeWitnessService.SignState signState =
                                 accountAgeWitnessService.getSignState(myWitness);
-                        String info = StringUtils.capitalize(signState.getPresentation());
+                        String info = StringUtils.capitalize(signState.getDisplayString());
 
                         MaterialDesignIcon icon;
 
