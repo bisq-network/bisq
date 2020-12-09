@@ -596,7 +596,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
                         };
                     }
                 });
-        column.setComparator(Comparator.comparing(CycleListItem::getNumProposals));
+        column.setComparator(Comparator.comparing(CycleListItem::getNumVotesAsString));
         votesTableView.getColumns().add(column);
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.results.cycles.table.header.voteWeight"));
@@ -619,7 +619,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
                         };
                     }
                 });
-        column.setComparator(Comparator.comparing(CycleListItem::getNumProposals));
+        column.setComparator(Comparator.comparing(CycleListItem::getMeritAndStake));
         votesTableView.getColumns().add(column);
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.results.cycles.table.header.issuance"));
@@ -643,7 +643,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
                         };
                     }
                 });
-        column.setComparator(Comparator.comparing(CycleListItem::getNumProposals));
+        column.setComparator(Comparator.comparing(CycleListItem::getIssuance));
         votesTableView.getColumns().add(column);
     }
 
@@ -676,7 +676,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
                         };
                     }
                 });
-        column.setComparator(Comparator.comparing(o3 -> o3.getProposal().getCreationDateAsDate()));
+        column.setComparator(Comparator.comparing(item -> item.getProposal().getCreationDateAsDate()));
         column.setSortType(TableColumn.SortType.DESCENDING);
         votesTableView.getColumns().add(column);
         votesTableView.getSortOrder().add(column);
@@ -721,7 +721,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
                         };
                     }
                 });
-        column.setComparator(Comparator.comparing((evaluatedProposal -> evaluatedProposal.getProposal().getName().toLowerCase())));
+        column.setComparator(Comparator.comparing((item -> item.getProposalOwnerName() + item.getProposal().getLink())));
         votesTableView.getColumns().add(column);
 
 
@@ -745,7 +745,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
                         };
                     }
                 });
-        column.setComparator(Comparator.comparing(o2 -> o2.getProposal().getType().getDisplayName()));
+        column.setComparator(Comparator.comparing(o2 -> o2.getProposal().getType().getShortDisplayName()));
         votesTableView.getColumns().add(column);
 
 
@@ -770,7 +770,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
                     }
                 });
         // We sort by issued amount
-        column.setComparator(Comparator.comparing(ProposalListItem::getIssuedAmount));
+        column.setComparator(Comparator.comparing(ProposalListItem::getDetails));
         votesTableView.getColumns().add(column);
 
 

@@ -245,13 +245,19 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         amountColumn.setComparator(Comparator.comparing(o -> o.getOffer().getMinAmount()));
         volumeColumn.setComparator(Comparator.comparing(o -> o.getOffer().getMinVolume(), Comparator.nullsFirst(Comparator.naturalOrder())));
         paymentMethodColumn.setComparator(Comparator.comparing(o -> Res.get(o.getOffer().getPaymentMethod().getId())));
-        avatarColumn.setComparator(Comparator.comparing(o -> o.getOffer().getOwnerNodeAddress().getFullAddress()));
-        depositColumn.setComparator(Comparator.comparing(o -> {
-            var isSellOffer = o.getOffer().getDirection() == OfferPayload.Direction.SELL;
-            var deposit = isSellOffer ? o.getOffer().getBuyerSecurityDeposit() :
-                    o.getOffer().getSellerSecurityDeposit();
+        avatarColumn.setComparator(Comparator.comparing(o -> model.getNumTrades(o.getOffer())));
+        depositColumn.setComparator(Comparator.comparing(item -> {
+            boolean isSellOffer = item.getOffer().getDirection() == OfferPayload.Direction.SELL;
+            Coin deposit = isSellOffer ?
+                    item.getOffer().getBuyerSecurityDeposit() :
+                    item.getOffer().getSellerSecurityDeposit();
 
-            return (deposit == null) ? 0.0 : deposit.getValue() / (double) o.getOffer().getAmount().getValue();
+            double amountValue = item.getOffer().getAmount().getValue();
+            if ((deposit == null || amountValue == 0)) {
+                return 0d;
+            } else {
+                return deposit.getValue() / amountValue;
+            }
 
         }, Comparator.nullsFirst(Comparator.naturalOrder())));
 
