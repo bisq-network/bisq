@@ -39,14 +39,11 @@ import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 
-import org.bitcoinj.core.Transaction;
-
 import javax.inject.Inject;
 
 import lombok.extern.slf4j.Slf4j;
 
 import static bisq.core.api.model.TradeInfo.toTradeInfo;
-import static bisq.core.api.model.TxInfo.toTxInfo;
 
 @Slf4j
 class GrpcTradesService extends TradesGrpc.TradesImplBase {
