@@ -196,18 +196,19 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         dateColumn.setComparator(Comparator.comparing(o -> o.getTrade().getDate()));
         volumeColumn.setComparator(Comparator.comparing(o -> o.getTrade().getTradeVolume(), Comparator.nullsFirst(Comparator.naturalOrder())));
         amountColumn.setComparator(Comparator.comparing(o -> o.getTrade().getTradeAmount(), Comparator.nullsFirst(Comparator.naturalOrder())));
-        priceColumn.setComparator(Comparator.comparing(PendingTradesListItem::getPrice));
+        priceColumn.setComparator(Comparator.comparing(item -> FormattingUtils.formatPrice(item.getPrice())));
         paymentMethodColumn.setComparator(Comparator.comparing(
-                o -> o.getTrade().getOffer() != null ? o.getTrade().getOffer().getPaymentMethod().getId() : null,
-                Comparator.nullsFirst(Comparator.naturalOrder())
-        ));
-        avatarColumn.setComparator(Comparator.comparing(
-                o -> o.getTrade().getTradingPeerNodeAddress() != null ? o.getTrade().getTradingPeerNodeAddress().getFullAddress() : null,
-                Comparator.nullsFirst(Comparator.naturalOrder())
-        ));
-        roleColumn.setComparator(Comparator.comparing(model::getMyRole));
-        marketColumn.setComparator(Comparator.comparing(model::getMarketLabel));
+                item -> item.getTrade().getOffer() != null ?
+                        Res.get(item.getTrade().getOffer().getPaymentMethod().getId()) :
+                        null,
+                Comparator.nullsFirst(Comparator.naturalOrder())));
 
+        marketColumn.setComparator(Comparator.comparing(model::getMarketLabel));
+        roleColumn.setComparator(Comparator.comparing(model::getMyRole));
+        avatarColumn.setComparator(Comparator.comparing(
+                o -> model.getNumPastTrades(o.getTrade()),
+                Comparator.nullsFirst(Comparator.naturalOrder())
+        ));
         dateColumn.setSortType(TableColumn.SortType.DESCENDING);
         tableView.getSortOrder().add(dateColumn);
 
