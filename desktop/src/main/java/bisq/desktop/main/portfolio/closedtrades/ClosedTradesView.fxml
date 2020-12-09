@@ -41,10 +41,10 @@
             <TableColumn fx:id="deviationColumn" minWidth="70"/>
             <TableColumn fx:id="amountColumn" minWidth="110"/>
             <TableColumn fx:id="volumeColumn" minWidth="110"/>
-            <TableColumn fx:id="txFeeColumn" visible="false"/>
-            <TableColumn fx:id="tradeFeeColumn" visible="false"/>
-            <TableColumn fx:id="buyerSecurityDepositColumn" visible="false"/>
-            <TableColumn fx:id="sellerSecurityDepositColumn" visible="false"/>
+            <TableColumn fx:id="txFeeColumn" visible="false" minWidth="75"/>
+            <TableColumn fx:id="tradeFeeColumn" visible="false" minWidth="110"/>
+            <TableColumn fx:id="buyerSecurityDepositColumn" visible="false" minWidth="75"/>
+            <TableColumn fx:id="sellerSecurityDepositColumn" visible="false" minWidth="75"/>
             <TableColumn fx:id="directionColumn" minWidth="70"/>
             <TableColumn fx:id="stateColumn" minWidth="80"/>
             <TableColumn fx:id="avatarColumn" minWidth="40" maxWidth="40"/>

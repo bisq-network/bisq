@@ -170,6 +170,10 @@ public class ProposalsListItem {
         }
     }
 
+    public String getProposalTypeAsString() {
+        return Res.get("dao.proposal.type." + proposal.getType().name());
+    }
+
     private String getNext(IconButtonType iconButtonType) {
         switch (iconButtonType) {
             case ACCEPT:
