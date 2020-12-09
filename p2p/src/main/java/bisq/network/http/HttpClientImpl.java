@@ -64,6 +64,10 @@ public class HttpClientImpl implements HttpClient {
     private String baseUrl;
     private boolean ignoreSocks5Proxy;
     private final String uid;
+    @Nullable
+    private HttpURLConnection connection;
+    @Nullable
+    private CloseableHttpClient httpclient;
 
     @Inject
     public HttpClientImpl(@Nullable Socks5ProxyProvider socks5ProxyProvider) {
@@ -74,6 +78,19 @@ public class HttpClientImpl implements HttpClient {
     public HttpClientImpl(String baseUrl) {
         this.baseUrl = baseUrl;
         uid = UUID.randomUUID().toString();
+    }
+
+    @Override
+    public void shutDown() {
+        if (connection != null) {
+            connection.disconnect();
+        }
+        if (httpclient != null) {
+            try {
+                httpclient.close();
+            } catch (IOException ignore) {
+            }
+        }
     }
 
     @Override
@@ -117,7 +134,6 @@ public class HttpClientImpl implements HttpClient {
     public String requestWithGETNoProxy(String param,
                                         @Nullable String headerKey,
                                         @Nullable String headerValue) throws IOException {
-        HttpURLConnection connection = null;
         log.debug("Executing HTTP request " + baseUrl + param + " proxy: none.");
         URL url = new URL(baseUrl + param);
         try {
@@ -177,7 +193,8 @@ public class HttpClientImpl implements HttpClient {
         PoolingHttpClientConnectionManager cm = socks5Proxy.resolveAddrLocally() ?
                 new PoolingHttpClientConnectionManager(reg) :
                 new PoolingHttpClientConnectionManager(reg, new FakeDnsResolver());
-        try (CloseableHttpClient httpclient = HttpClients.custom().setConnectionManager(cm).build()) {
+        try {
+            httpclient = HttpClients.custom().setConnectionManager(cm).build();
             InetSocketAddress socksAddress = new InetSocketAddress(socks5Proxy.getInetAddress(), socks5Proxy.getPort());
 
             // remove me: Use this to test with system-wide Tor proxy, or change port for another proxy.
@@ -191,11 +208,15 @@ public class HttpClientImpl implements HttpClient {
                 request.setHeader(headerKey, headerValue);
 
             log.debug("Executing request " + request + " proxy: " + socksAddress);
-            try (CloseableHttpResponse response = httpclient.execute(request, context)) {
+            try (CloseableHttpResponse response = checkNotNull(httpclient).execute(request, context)) {
                 return convertInputStreamToString(response.getEntity().getContent());
             }
         } catch (Throwable t) {
             throw new IOException("Error at requestWithGETProxy with URL: " + (baseUrl + param) + ". Throwable=" + t.getMessage());
+        } finally {
+            if (httpclient != null) {
+                httpclient.close();
+            }
         }
     }
 
