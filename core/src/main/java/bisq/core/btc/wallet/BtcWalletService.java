@@ -638,6 +638,7 @@ public class BtcWalletService extends WalletService {
             } else {
                 DeterministicKey key = (DeterministicKey) wallet.findKeyFromAddress(wallet.freshReceiveAddress(Script.ScriptType.P2WPKH));
                 AddressEntry entry = new AddressEntry(key, context, offerId, true);
+                log.info("getOrCreateAddressEntry: new AddressEntry={}", entry);
                 addressEntryList.addAddressEntry(entry);
                 return entry;
             }
@@ -689,6 +690,7 @@ public class BtcWalletService extends WalletService {
                 key = (DeterministicKey) wallet.findKeyFromAddress(wallet.freshReceiveAddress(Script.ScriptType.P2PKH));
             }
             AddressEntry entry = new AddressEntry(key, context, segwit);
+            log.info("getOrCreateAddressEntry: add new AddressEntry {}", entry);
             addressEntryList.addAddressEntry(entry);
             return entry;
         }
@@ -738,6 +740,14 @@ public class BtcWalletService extends WalletService {
     }
 
     public void swapTradeEntryToAvailableEntry(String offerId, AddressEntry.Context context) {
+        if (context == AddressEntry.Context.MULTI_SIG) {
+            log.error("swapTradeEntryToAvailableEntry called with MULTI_SIG context. " +
+                    "This in not permitted as we must not reuse those address entries and there " +
+                    "are no redeemable funds on that addresses. Only the keys are used for creating " +
+                    "the Multisig address. offerId={}, context={}", offerId, context);
+            return;
+        }
+
         getAddressEntryListAsImmutableList().stream()
                 .filter(e -> offerId.equals(e.getOfferId()))
                 .filter(e -> context == e.getContext())
@@ -748,6 +758,23 @@ public class BtcWalletService extends WalletService {
                 });
     }
 
+    // When funds from MultiSig address is spent we reset the coinLockedInMultiSig value to 0.
+    public void resetCoinLockedInMultiSigAddressEntry(String offerId) {
+        setCoinLockedInMultiSigAddressEntry(offerId, 0);
+    }
+
+    public void setCoinLockedInMultiSigAddressEntry(String offerId, long value) {
+        getAddressEntryListAsImmutableList().stream()
+                .filter(e -> AddressEntry.Context.MULTI_SIG == e.getContext())
+                .filter(e -> offerId.equals(e.getOfferId()))
+                .forEach(addressEntry -> setCoinLockedInMultiSigAddressEntry(addressEntry, value));
+    }
+
+    public void setCoinLockedInMultiSigAddressEntry(AddressEntry addressEntry, long value) {
+        log.info("Set coinLockedInMultiSig for addressEntry {} to value {}", addressEntry, value);
+        addressEntryList.setCoinLockedInMultiSigAddressEntry(addressEntry, value);
+    }
+
     public void resetAddressEntriesForOpenOffer(String offerId) {
         log.info("resetAddressEntriesForOpenOffer offerId={}", offerId);
         swapTradeEntryToAvailableEntry(offerId, AddressEntry.Context.OFFER_FUNDING);
@@ -755,8 +782,11 @@ public class BtcWalletService extends WalletService {
     }
 
     public void resetAddressEntriesForPendingTrade(String offerId) {
-        swapTradeEntryToAvailableEntry(offerId, AddressEntry.Context.MULTI_SIG);
-        // We swap also TRADE_PAYOUT to be sure all is cleaned up. There might be cases where a user cannot send the funds
+        // We must not swap MULTI_SIG entries as those addresses are not detected in the isAddressUnused
+        // check at getOrCreateAddressEntry and could lead to a reuse of those keys and result in the same 2of2 MS
+        // address if same peers trade again.
+
+        // We swap TRADE_PAYOUT to be sure all is cleaned up. There might be cases where a user cannot send the funds
         // to an external wallet directly in the last step of the trade, but the funds are in the Bisq wallet anyway and
         // the dealing with the external wallet is pure UI thing. The user can move the funds to the wallet and then
         // send out the funds to the external wallet. As this cleanup is a rare situation and most users do not use

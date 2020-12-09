@@ -265,7 +265,6 @@ public class WalletConfig extends AbstractIdleService {
     protected void startUp() throws Exception {
         // Runs in a separate thread.
         Context.propagate(context);
-        log.info("Starting up with directory = {}", directory);
         try {
             File chainFile = new File(directory, filePrefix + ".spvchain");
             boolean chainFileExists = chainFile.exists();

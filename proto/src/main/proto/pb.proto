@@ -1449,6 +1449,7 @@ message Trade {
     int64 last_refresh_request_date = 36 [deprecated = true];
     string counter_currency_extra_data = 37;
     string asset_tx_proof_result = 38; // name of AssetTxProofResult enum
+    string uid = 39;
 }
 
 message BuyerAsMakerTrade {
