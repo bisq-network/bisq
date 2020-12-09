@@ -265,7 +265,7 @@ public class AccountAgeWitnessService {
         return getWitnessByHash(hash);
     }
 
-    private Optional<AccountAgeWitness> findWitness(Offer offer) {
+    public Optional<AccountAgeWitness> findWitness(Offer offer) {
         final Optional<String> accountAgeWitnessHash = offer.getAccountAgeWitnessHashAsHex();
         return accountAgeWitnessHash.isPresent() ?
                 getWitnessByHashAsHex(accountAgeWitnessHash.get()) :
@@ -613,7 +613,10 @@ public class AccountAgeWitnessService {
         if (!result) {
             String msg = "The peers trade limit is less than the traded amount.\n" +
                     "tradeAmount=" + tradeAmount.toFriendlyString() +
-                    "\nPeers trade limit=" + Coin.valueOf(peersCurrentTradeLimit).toFriendlyString();
+                    "\nPeers trade limit=" + Coin.valueOf(peersCurrentTradeLimit).toFriendlyString() +
+                    "\nOffer ID=" + offer.getShortId() +
+                    "\nPaymentMethod=" + offer.getPaymentMethod().getId() +
+                    "\nCurrencyCode=" + offer.getCurrencyCode();
             log.warn(msg);
             errorMessageHandler.handleErrorMessage(msg);
         }
