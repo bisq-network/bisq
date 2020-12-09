@@ -190,6 +190,7 @@ class GrpcWalletsService extends WalletsGrpc.WalletsImplBase {
             coreApi.sendBtc(req.getAddress(),
                     req.getAmount(),
                     req.getTxFeeRate(),
+                    req.getMemo(),
                     new FutureCallback<>() {
                         @Override
                         public void onSuccess(Transaction tx) {

@@ -174,11 +174,13 @@ public class MethodTest extends ApiTestCase {
 
     protected final SendBtcRequest createSendBtcRequest(String address,
                                                         String amount,
-                                                        String txFeeRate) {
+                                                        String txFeeRate,
+                                                        String memo) {
         return SendBtcRequest.newBuilder()
                 .setAddress(address)
                 .setAmount(amount)
                 .setTxFeeRate(txFeeRate)
+                .setMemo(memo)
                 .build();
     }
 
@@ -226,10 +228,13 @@ public class MethodTest extends ApiTestCase {
                 .build();
     }
 
-    protected final WithdrawFundsRequest createWithdrawFundsRequest(String tradeId, String address) {
+    protected final WithdrawFundsRequest createWithdrawFundsRequest(String tradeId,
+                                                                    String address,
+                                                                    String memo) {
         return WithdrawFundsRequest.newBuilder()
                 .setTradeId(tradeId)
                 .setAddress(address)
+                .setMemo(memo)
                 .build();
     }
 
@@ -283,17 +288,17 @@ public class MethodTest extends ApiTestCase {
     }
 
     protected final TxInfo sendBtc(BisqAppConfig bisqAppConfig, String address, String amount) {
-        return sendBtc(bisqAppConfig, address, amount, "");
+        return sendBtc(bisqAppConfig, address, amount, "", "");
     }
 
     protected final TxInfo sendBtc(BisqAppConfig bisqAppConfig,
                                    String address,
                                    String amount,
-                                   String txFeeRate) {
+                                   String txFeeRate,
+                                   String memo) {
         //noinspection ResultOfMethodCallIgnored
-        return grpcStubs(bisqAppConfig).walletsService.sendBtc(createSendBtcRequest(address,
-                amount,
-                txFeeRate))
+        return grpcStubs(bisqAppConfig).walletsService.sendBtc(
+                createSendBtcRequest(address, amount, txFeeRate, memo))
                 .getTxInfo();
     }
 
@@ -399,8 +404,11 @@ public class MethodTest extends ApiTestCase {
     }
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
-    protected final void withdrawFunds(BisqAppConfig bisqAppConfig, String tradeId, String address) {
-        var req = createWithdrawFundsRequest(tradeId, address);
+    protected final void withdrawFunds(BisqAppConfig bisqAppConfig,
+                                       String tradeId,
+                                       String address,
+                                       String memo) {
+        var req = createWithdrawFundsRequest(tradeId, address, memo);
         grpcStubs(bisqAppConfig).tradesService.withdrawFunds(req);
     }
 

@@ -231,6 +231,7 @@ class CoreWalletsService {
     void sendBtc(String address,
                  String amount,
                  String txFeeRate,
+                 String memo,
                  FutureCallback<Transaction> callback) {
         verifyWalletsAreAvailable();
         verifyEncryptedWalletIsUnlocked();
@@ -271,7 +272,7 @@ class CoreWalletsService {
                     fee,
                     null,
                     tempAesKey,
-                    null, /* memo todo */
+                    memo.isEmpty() ? null : memo,
                     callback);
         } catch (AddressEntryException ex) {
             log.error("", ex);
@@ -420,13 +421,13 @@ class CoreWalletsService {
     }
 
     // Throws a RuntimeException if wallets are not available (encrypted or not).
-    private void verifyWalletsAreAvailable() {
+    void verifyWalletsAreAvailable() {
         if (!walletsManager.areWalletsAvailable())
             throw new IllegalStateException("wallet is not yet available");
     }
 
     // Throws a RuntimeException if wallets are not available or not encrypted.
-    private void verifyWalletIsAvailableAndEncrypted() {
+    void verifyWalletIsAvailableAndEncrypted() {
         if (!walletsManager.areWalletsAvailable())
             throw new IllegalStateException("wallet is not yet available");
 
@@ -435,7 +436,7 @@ class CoreWalletsService {
     }
 
     // Throws a RuntimeException if wallets are encrypted and locked.
-    private void verifyEncryptedWalletIsUnlocked() {
+    void verifyEncryptedWalletIsUnlocked() {
         if (walletsManager.areWalletsEncrypted() && tempAesKey == null)
             throw new IllegalStateException("wallet is locked");
     }

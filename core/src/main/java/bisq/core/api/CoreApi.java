@@ -48,8 +48,6 @@ import java.util.function.Consumer;
 
 import lombok.extern.slf4j.Slf4j;
 
-import javax.annotation.Nullable;
-
 /**
  * Provides high level interface to functionality of core Bisq features.
  * E.g. useful for different APIs to access data of different domains of Bisq.
@@ -213,7 +211,7 @@ public class CoreApi {
         coreTradesService.keepFunds(tradeId);
     }
 
-    public void withdrawFunds(String tradeId, String address, @Nullable String memo) {
+    public void withdrawFunds(String tradeId, String address, String memo) {
         coreTradesService.withdrawFunds(tradeId, address, memo);
     }
 
@@ -259,8 +257,9 @@ public class CoreApi {
     public void sendBtc(String address,
                         String amount,
                         String txFeeRate,
+                        String memo,
                         FutureCallback<Transaction> callback) {
-        walletsService.sendBtc(address, amount, txFeeRate, callback);
+        walletsService.sendBtc(address, amount, txFeeRate, memo, callback);
     }
 
     public void getTxFeeRate(ResultHandler resultHandler) {

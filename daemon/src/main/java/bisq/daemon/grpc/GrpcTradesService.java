@@ -39,11 +39,14 @@ import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 
+import org.bitcoinj.core.Transaction;
+
 import javax.inject.Inject;
 
 import lombok.extern.slf4j.Slf4j;
 
 import static bisq.core.api.model.TradeInfo.toTradeInfo;
+import static bisq.core.api.model.TxInfo.toTxInfo;
 
 @Slf4j
 class GrpcTradesService extends TradesGrpc.TradesImplBase {
@@ -144,8 +147,7 @@ class GrpcTradesService extends TradesGrpc.TradesImplBase {
     public void withdrawFunds(WithdrawFundsRequest req,
                               StreamObserver<WithdrawFundsReply> responseObserver) {
         try {
-            //TODO @ghubstan Feel free to add a memo param for withdrawal requests (was just added in UI)
-            coreApi.withdrawFunds(req.getTradeId(), req.getAddress(), null);
+            coreApi.withdrawFunds(req.getTradeId(), req.getAddress(), req.getMemo());
             var reply = WithdrawFundsReply.newBuilder().build();
             responseObserver.onNext(reply);
             responseObserver.onCompleted();

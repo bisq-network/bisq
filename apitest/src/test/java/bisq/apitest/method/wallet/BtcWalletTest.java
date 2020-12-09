@@ -99,7 +99,11 @@ public class BtcWalletTest extends MethodTest {
         String bobsBtcAddress = getUnusedBtcAddress(bobdaemon);
         log.debug("Sending 5.5 BTC From Alice to Bob @ {}", bobsBtcAddress);
 
-        sendBtc(alicedaemon, bobsBtcAddress, "5.50", "100");
+        sendBtc(alicedaemon,
+                bobsBtcAddress,
+                "5.50",
+                "100",
+                "to whom it may concern");
         genBtcBlocksThenWait(1, 3000);
 
         BtcBalanceInfo alicesBalances = getBtcBalances(alicedaemon);

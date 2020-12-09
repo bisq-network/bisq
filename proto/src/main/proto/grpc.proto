@@ -255,6 +255,7 @@ message KeepFundsReply {
 message WithdrawFundsRequest {
     string tradeId = 1;
     string address = 2;
+    string memo = 3;
 }
 
 message WithdrawFundsReply {
@@ -375,6 +376,7 @@ message SendBtcRequest {
     string address = 1;
     string amount = 2;
     string txFeeRate = 3;
+    string memo = 4;
 }
 
 message SendBtcReply {

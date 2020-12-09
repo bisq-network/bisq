@@ -290,14 +290,18 @@ public class CliMain {
                     var amount = nonOptionArgs.get(2);
                     verifyStringIsValidDecimal(amount);
 
-                    var txFeeRate = nonOptionArgs.size() == 4 ? nonOptionArgs.get(3) : "";
+                    // TODO Find a better way to handle the two optional parameters.
+                    var txFeeRate = nonOptionArgs.size() >= 4 ? nonOptionArgs.get(3) : "";
                     if (!txFeeRate.isEmpty())
                         verifyStringIsValidLong(txFeeRate);
+
+                    var memo = nonOptionArgs.size() == 5 ? nonOptionArgs.get(4) : "";
 
                     var request = SendBtcRequest.newBuilder()
                             .setAddress(address)
                             .setAmount(amount)
                             .setTxFeeRate(txFeeRate)
+                            .setMemo(memo)
                             .build();
                     var reply = walletsService.sendBtc(request);
                     TxInfo txInfo = reply.getTxInfo();
@@ -496,16 +500,21 @@ public class CliMain {
                 case withdrawfunds: {
                     if (nonOptionArgs.size() < 3)
                         throw new IllegalArgumentException("incorrect parameter count, "
-                                + " expecting trade id, bitcoin wallet address");
+                                + " expecting trade id, bitcoin wallet address [,\"memo\"]");
 
                     var tradeId = nonOptionArgs.get(1);
                     var address = nonOptionArgs.get(2);
+                    // A multi-word memo must be double quoted.
+                    var memo = nonOptionArgs.size() == 4
+                            ? nonOptionArgs.get(3)
+                            : "";
                     var request = WithdrawFundsRequest.newBuilder()
                             .setTradeId(tradeId)
                             .setAddress(address)
+                            .setMemo(memo)
                             .build();
                     tradesService.withdrawFunds(request);
-                    out.printf("funds from trade %s sent to btc address %s%n", tradeId, address);
+                    out.printf("trade %s funds sent to btc address %s%n", tradeId, address);
                     return;
                 }
                 case getpaymentmethods: {
@@ -707,7 +716,7 @@ public class CliMain {
             stream.format(rowFormat, "getfundingaddresses", "", "Get BTC funding addresses");
             stream.format(rowFormat, "getunusedbsqaddress", "", "Get unused BSQ address");
             stream.format(rowFormat, "sendbsq", "address, amount [,tx fee rate (sats/byte)]", "Send BSQ");
-            stream.format(rowFormat, "sendbtc", "address, amount [,tx fee rate (sats/byte)]", "Send BTC");
+            stream.format(rowFormat, "sendbtc", "address, amount [,tx fee rate (sats/byte), \"memo\"]", "Send BTC");
             stream.format(rowFormat, "gettxfeerate", "", "Get current tx fee rate in sats/byte");
             stream.format(rowFormat, "settxfeerate", "satoshis (per byte)", "Set custom tx fee rate in sats/byte");
             stream.format(rowFormat, "unsettxfeerate", "", "Unset custom tx fee rate");
@@ -723,7 +732,8 @@ public class CliMain {
             stream.format(rowFormat, "confirmpaymentstarted", "trade id", "Confirm payment started");
             stream.format(rowFormat, "confirmpaymentreceived", "trade id", "Confirm payment received");
             stream.format(rowFormat, "keepfunds", "trade id", "Keep received funds in Bisq wallet");
-            stream.format(rowFormat, "withdrawfunds", "trade id, bitcoin wallet address", "Withdraw received funds to external wallet address");
+            stream.format(rowFormat, "withdrawfunds", "trade id, bitcoin wallet address  [,\"memo\"]",
+                    "Withdraw received funds to external wallet address");
             stream.format(rowFormat, "getpaymentmethods", "", "Get list of supported payment account method ids");
             stream.format(rowFormat, "getpaymentacctform", "payment method id", "Get a new payment account form");
             stream.format(rowFormat, "createpaymentacct", "path to payment account form", "Create a new payment account");
