@@ -786,7 +786,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
                             public void updateItem(final ProposalsListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
-                                    final Proposal proposal = item.getProposal();
+                                    Proposal proposal = item.getProposal();
                                     field = new HyperlinkWithIcon(proposal.getLink());
                                     field.setOnAction(event -> GUIUtil.openWebPage(proposal.getLink()));
                                     field.setTooltip(new Tooltip(proposal.getLink()));
@@ -800,7 +800,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
                         };
                     }
                 });
-        column.setComparator(Comparator.comparing(o -> o.getProposal().getTxId()));
+        column.setComparator(Comparator.comparing(o -> o.getProposal().getLink()));
         tableView.getColumns().add(column);
 
 
@@ -817,14 +817,14 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
                             public void updateItem(final ProposalsListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
-                                    setText(Res.get("dao.proposal.type." + item.getProposal().getType().name()));
+                                    setText(item.getProposalTypeAsString());
                                 else
                                     setText("");
                             }
                         };
                     }
                 });
-        column.setComparator(Comparator.comparing(o2 -> o2.getProposal().getName()));
+        column.setComparator(Comparator.comparing(ProposalsListItem::getProposalTypeAsString));
         tableView.getColumns().add(column);
 
 
@@ -886,6 +886,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
                 };
             }
         });
+        column.setComparator(Comparator.comparing(item -> ((ProposalsListItem.IconButtonType) item.getIconButton().getUserData()).getTitle()));
         tableView.getColumns().add(column);
         lastColumn = column;
     }

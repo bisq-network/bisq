@@ -118,6 +118,6 @@ public final class MailboxStoragePayload implements ProtectedStoragePayload, Exp
 
     @Override
     public long getTTL() {
-        return TimeUnit.DAYS.toMillis(7);
+        return TimeUnit.DAYS.toMillis(15);
     }
 }

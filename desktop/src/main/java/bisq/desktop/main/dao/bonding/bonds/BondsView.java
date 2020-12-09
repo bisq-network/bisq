@@ -169,7 +169,6 @@ public class BondsView extends ActivatableView<GridPane, Void> {
         column = new AutoTooltipTableColumn<>(Res.get("shared.amountWithCur", "BSQ"));
         column.setMinWidth(80);
         column.getStyleClass().add("first-column");
-        column.setComparator(Comparator.comparingLong(v -> v.getBond().getAmount()));
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(new Callback<>() {
             @Override
@@ -191,7 +190,6 @@ public class BondsView extends ActivatableView<GridPane, Void> {
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.bond.table.column.lockTime"));
         column.setMinWidth(40);
-        column.setComparator(Comparator.comparingInt(v -> v.getBond().getLockTime()));
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(new Callback<>() {
             @Override
@@ -294,7 +292,6 @@ public class BondsView extends ActivatableView<GridPane, Void> {
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.bond.table.column.lockupDate"));
         column.setMinWidth(140);
-        column.setComparator(Comparator.comparingLong(v -> v.getBond().getLockupDate()));
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(new Callback<>() {
             @Override
