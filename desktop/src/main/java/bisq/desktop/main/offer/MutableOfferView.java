@@ -122,7 +122,6 @@ import static bisq.desktop.util.FormBuilder.*;
 import static javafx.beans.binding.Bindings.createStringBinding;
 
 public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> extends ActivatableViewAndModel<AnchorPane, M> {
-    public static final String BUYER_SECURITY_DEPOSIT_NEWS = "buyerSecurityDepositNews0.9.5";
     protected final Navigation navigation;
     private final Preferences preferences;
     private final OfferDetailsWindow offerDetailsWindow;
@@ -136,8 +135,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
     private BusyAnimation waitingForFundsSpinner;
     private AutoTooltipButton nextButton, cancelButton1, cancelButton2, placeOfferButton;
     private Button priceTypeToggleButton;
-    private InputTextField fixedPriceTextField;
-    private InputTextField marketBasedPriceTextField;
+    private InputTextField fixedPriceTextField, marketBasedPriceTextField;
     protected InputTextField amountTextField, minAmountTextField, volumeTextField, buyerSecurityDepositInputTextField;
     private TextField currencyTextField;
     private AddressTextField addressTextField;
@@ -155,7 +153,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
             currencyTextFieldBox;
     private HBox fundingHBox, firstRowHBox, secondRowHBox, placeOfferBox, amountValueCurrencyBox,
             priceAsPercentageValueCurrencyBox, volumeValueCurrencyBox, priceValueCurrencyBox,
-            minAmountValueCurrencyBox, advancedOptionsBox, paymentGroupBox;
+            minAmountValueCurrencyBox, advancedOptionsBox;
 
     private Subscription isWaitingForFundsSubscription, balanceSubscription;
     private ChangeListener<Boolean> amountFocusedListener, minAmountFocusedListener, volumeFocusedListener,
@@ -989,7 +987,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
         paymentTitledGroupBg = addTitledGroupBg(gridPane, gridRow, 1, Res.get("shared.selectTradingAccount"));
         GridPane.setColumnSpan(paymentTitledGroupBg, 2);
 
-        paymentGroupBox = new HBox();
+        HBox paymentGroupBox = new HBox();
         paymentGroupBox.setAlignment(Pos.CENTER_LEFT);
         paymentGroupBox.setSpacing(12);
         paymentGroupBox.setPadding(new Insets(10, 0, 18, 0));
@@ -1036,12 +1034,6 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
         editOfferElements.add(currencyTextFieldBox);
 
         paymentGroupBox.getChildren().add(currencyTextFieldBox);
-    }
-
-    protected void hidePaymentGroup() {
-        paymentTitledGroupBg.setVisible(false);
-        paymentGroupBox.setManaged(false);
-        paymentGroupBox.setVisible(false);
     }
 
     private void addAmountPriceGroup() {

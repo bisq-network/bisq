@@ -65,7 +65,7 @@ public class F2FForm extends PaymentMethodForm {
         addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.f2f.contact"),
                 f2fAccountPayload.getContact());
         TextArea textArea = addTopLabelTextArea(gridPane, gridRow, 1, Res.get("payment.f2f.extra"), "").second;
-        textArea.setPrefHeight(60);
+        textArea.setMinHeight(70);
         textArea.setEditable(false);
         textArea.setId("text-area-disabled");
         textArea.setText(offer.getF2FExtraInfo());
@@ -110,7 +110,7 @@ public class F2FForm extends PaymentMethodForm {
 
         TextArea extraTextArea = addTopLabelTextArea(gridPane, ++gridRow,
                 Res.get("payment.f2f.optionalExtra"), Res.get("payment.f2f.extra.prompt")).second;
-        extraTextArea.setPrefHeight(60);
+        extraTextArea.setMinHeight(70);
         ((JFXTextArea) extraTextArea).setLabelFloat(false);
         //extraTextArea.setValidator(f2fValidator);
         extraTextArea.textProperty().addListener((ov, oldValue, newValue) -> {
@@ -165,7 +165,7 @@ public class F2FForm extends PaymentMethodForm {
                 f2fAccount.getCity());
         TextArea textArea = addCompactTopLabelTextArea(gridPane, ++gridRow, Res.get("payment.f2f.extra"), "").second;
         textArea.setText(f2fAccount.getExtraInfo());
-        textArea.setPrefHeight(60);
+        textArea.setMinHeight(70);
         textArea.setEditable(false);
 
         addLimitations(true);

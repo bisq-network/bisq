@@ -125,7 +125,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                 Comparator.nullsFirst(Comparator.naturalOrder())));
         volumeColumn.setComparator(Comparator.comparing(o -> o.getOffer().getVolume(), Comparator.nullsFirst(Comparator.naturalOrder())));
         dateColumn.setComparator(Comparator.comparing(o -> o.getOffer().getDate()));
-        paymentMethodColumn.setComparator(Comparator.comparing(o -> o.getOffer().getPaymentMethod().getId()));
+        paymentMethodColumn.setComparator(Comparator.comparing(o -> Res.get(o.getOffer().getPaymentMethod().getId())));
 
         dateColumn.setSortType(TableColumn.SortType.DESCENDING);
         tableView.getSortOrder().add(dateColumn);

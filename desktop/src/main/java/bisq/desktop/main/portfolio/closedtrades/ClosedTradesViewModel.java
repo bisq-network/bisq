@@ -22,13 +22,25 @@ import bisq.desktop.common.model.ViewModel;
 import bisq.desktop.util.DisplayUtils;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
+import bisq.core.btc.wallet.BsqWalletService;
+import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
+import bisq.core.offer.Offer;
 import bisq.core.offer.OpenOffer;
 import bisq.core.trade.Tradable;
 import bisq.core.trade.Trade;
 import bisq.core.util.FormattingUtils;
+import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.coin.CoinFormatter;
+
+import bisq.network.p2p.NodeAddress;
+
+import bisq.common.config.Config;
+
+import org.bitcoinj.core.Address;
+import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.TransactionOutput;
 
 import com.google.inject.Inject;
 
@@ -39,16 +51,25 @@ import javafx.collections.ObservableList;
 import java.util.stream.Collectors;
 
 class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataModel> implements ViewModel {
-    private final CoinFormatter formatter;
+    private final BtcWalletService btcWalletService;
+    private final BsqWalletService bsqWalletService;
+    private final BsqFormatter bsqFormatter;
+    private final CoinFormatter btcFormatter;
     final AccountAgeWitnessService accountAgeWitnessService;
 
     @Inject
     public ClosedTradesViewModel(ClosedTradesDataModel dataModel,
                                  AccountAgeWitnessService accountAgeWitnessService,
-                                 @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter) {
+                                 BtcWalletService btcWalletService,
+                                 BsqWalletService bsqWalletService,
+                                 BsqFormatter bsqFormatter,
+                                 @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter) {
         super(dataModel);
         this.accountAgeWitnessService = accountAgeWitnessService;
-        this.formatter = formatter;
+        this.btcWalletService = btcWalletService;
+        this.bsqWalletService = bsqWalletService;
+        this.bsqFormatter = bsqFormatter;
+        this.btcFormatter = btcFormatter;
     }
 
     public ObservableList<ClosedTradableListItem> getList() {
@@ -61,7 +82,7 @@ class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataMod
 
     String getAmount(ClosedTradableListItem item) {
         if (item != null && item.getTradable() instanceof Trade)
-            return formatter.formatCoin(((Trade) item.getTradable()).getTradeAmount());
+            return btcFormatter.formatCoin(((Trade) item.getTradable()).getTradeAmount());
         else if (item != null && item.getTradable() instanceof OpenOffer)
             return "-";
         else
@@ -103,19 +124,39 @@ class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataMod
             return "";
         Tradable tradable = item.getTradable();
         if (!wasMyOffer(tradable) && (tradable instanceof Trade))
-            return formatter.formatCoin(((Trade) tradable).getTxFee());
+            return btcFormatter.formatCoin(((Trade) tradable).getTxFee());
         else
-            return formatter.formatCoin(tradable.getOffer().getTxFee());
+            return btcFormatter.formatCoin(tradable.getOffer().getTxFee());
     }
 
-    String getMakerFee(ClosedTradableListItem item) {
-        if (item == null)
+    String getTradeFee(ClosedTradableListItem item) {
+        if (item == null) {
             return "";
+        }
+
         Tradable tradable = item.getTradable();
-        if (!wasMyOffer(tradable) && (tradable instanceof Trade))
-            return formatter.formatCoin(((Trade) tradable).getTakerFee());
-        else
-            return formatter.formatCoin(tradable.getOffer().getMakerFee());
+        Offer offer = tradable.getOffer();
+
+        if (!wasMyOffer(tradable) && (tradable instanceof Trade)) {
+            Trade trade = (Trade) tradable;
+            Transaction takerFeeTx = btcWalletService.getTransaction(trade.getTakerFeeTxId());
+            if (takerFeeTx != null && takerFeeTx.getOutputs().size() > 1) {
+                // First output is fee receiver address. If its a BSQ (change) address of our own wallet its a BSQ fee
+                TransactionOutput output = takerFeeTx.getOutput(0);
+                Address address = output.getScriptPubKey().getToAddress(Config.baseCurrencyNetworkParameters());
+                if (bsqWalletService.getWallet().findKeyFromAddress(address) != null) {
+                    return bsqFormatter.formatCoinWithCode(trade.getTakerFee());
+                } else {
+                    return btcFormatter.formatCoinWithCode(trade.getTakerFee());
+                }
+            } else {
+                log.warn("takerFeeTx is null or has invalid structure. takerFeeTx={}", takerFeeTx);
+                return Res.get("shared.na");
+            }
+        } else {
+            CoinFormatter formatter = offer.isCurrencyForMakerFeeBtc() ? btcFormatter : bsqFormatter;
+            return formatter.formatCoinWithCode(offer.getMakerFee());
+        }
     }
 
     String getBuyerSecurityDeposit(ClosedTradableListItem item) {
@@ -123,7 +164,7 @@ class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataMod
             return "";
         Tradable tradable = item.getTradable();
         if (tradable.getOffer() != null)
-            return formatter.formatCoin(tradable.getOffer().getBuyerSecurityDeposit());
+            return btcFormatter.formatCoin(tradable.getOffer().getBuyerSecurityDeposit());
         else
             return "";
     }
@@ -133,7 +174,7 @@ class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataMod
             return "";
         Tradable tradable = item.getTradable();
         if (tradable.getOffer() != null)
-            return formatter.formatCoin(tradable.getOffer().getSellerSecurityDeposit());
+            return btcFormatter.formatCoin(tradable.getOffer().getSellerSecurityDeposit());
         else
             return "";
     }
@@ -194,15 +235,16 @@ class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataMod
     }
 
     int getNumPastTrades(Tradable tradable) {
-        //noinspection ConstantConditions
         return dataModel.closedTradableManager.getObservableList().stream()
-                .filter(e -> e instanceof Trade &&
-                        tradable instanceof Trade &&
-                        ((Trade) e).getTradingPeerNodeAddress() != null &&
-                        ((Trade) tradable).getTradingPeerNodeAddress() != null &&
-                        ((Trade) e).getTradingPeerNodeAddress() != null &&
-                        ((Trade) tradable).getTradingPeerNodeAddress() != null &&
-                        ((Trade) e).getTradingPeerNodeAddress().getFullAddress().equals(((Trade) tradable).getTradingPeerNodeAddress().getFullAddress()))
+                .filter(candidate -> {
+                    if (!(candidate instanceof Trade) ||
+                            !(tradable instanceof Trade)) return false;
+                    NodeAddress candidateAddress = ((Trade) candidate).getTradingPeerNodeAddress();
+                    NodeAddress tradableAddress = ((Trade) tradable).getTradingPeerNodeAddress();
+                    return candidateAddress != null &&
+                            tradableAddress != null &&
+                            candidateAddress.getFullAddress().equals(tradableAddress.getFullAddress());
+                })
                 .collect(Collectors.toSet())
                 .size();
     }

@@ -42,13 +42,7 @@ import bisq.network.p2p.P2PService;
 import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.TransactionConfidence;
-import org.bitcoinj.core.listeners.TransactionConfidenceEventListener;
-import org.bitcoinj.wallet.listeners.KeyChainEventListener;
-import org.bitcoinj.wallet.listeners.ScriptsChangeEventListener;
 import org.bitcoinj.wallet.listeners.WalletChangeEventListener;
-import org.bitcoinj.wallet.listeners.WalletCoinsReceivedEventListener;
-import org.bitcoinj.wallet.listeners.WalletCoinsSentEventListener;
-import org.bitcoinj.wallet.listeners.WalletReorganizeEventListener;
 
 import com.googlecode.jcsv.writer.CSVEntryConverter;
 
@@ -155,14 +149,17 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
 
         dateColumn.setComparator(Comparator.comparing(TransactionsListItem::getDate));
         detailsColumn.setComparator((o1, o2) -> {
-            String id1 = o1.getTradable() != null ? o1.getTradable().getId() : o1.getDetails();
-            String id2 = o2.getTradable() != null ? o2.getTradable().getId() : o2.getDetails();
+            String id1 = !o1.getDetails().isEmpty() ? o1.getDetails() :
+                    o1.getTradable() != null ? o1.getTradable().getId() : o1.getTxId();
+            String id2 = !o2.getDetails().isEmpty() ? o2.getDetails() :
+                    o2.getTradable() != null ? o2.getTradable().getId() : o2.getTxId();
             return id1.compareTo(id2);
         });
-        addressColumn.setComparator(Comparator.comparing(TransactionsListItem::getAddressString));
+        addressColumn.setComparator(Comparator.comparing(item -> item.getDirection() + item.getAddressString()));
         transactionColumn.setComparator(Comparator.comparing(TransactionsListItem::getTxId));
         amountColumn.setComparator(Comparator.comparing(TransactionsListItem::getAmountAsCoin));
         confidenceColumn.setComparator(Comparator.comparingDouble(item -> item.getTxConfidenceIndicator().getProgress()));
+        memoColumn.setComparator(Comparator.comparing(TransactionsListItem::getMemo));
 
         dateColumn.setSortType(TableColumn.SortType.DESCENDING);
         tableView.getSortOrder().add(dateColumn);
@@ -200,7 +197,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
 
         exportButton.setOnAction(event -> {
             final ObservableList<TableColumn<TransactionsListItem, ?>> tableColumns = tableView.getColumns();
-            final int reportColumns = tableColumns.size()-1;    // CSV report excludes the last column (an icon)
+            final int reportColumns = tableColumns.size() - 1;    // CSV report excludes the last column (an icon)
             CSVEntryConverter<TransactionsListItem> headerConverter = transactionsListItem -> {
                 String[] columns = new String[reportColumns];
                 for (int i = 0; i < columns.length; i++)
@@ -428,7 +425,6 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
     private void setMemoColumnCellFactory() {
         memoColumn.setCellValueFactory((addressListItem) ->
                 new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
-
         memoColumn.setCellFactory(
                 new Callback<>() {
 

@@ -157,4 +157,8 @@ class AltCoinAccountsDataModel extends ActivatableDataModel {
     public void importAccounts(Stage stage) {
         GUIUtil.importAccounts(user, accountsFileName, preferences, stage, persistenceProtoResolver, corruptedStorageFileHandler);
     }
+
+    public int getNumPaymentAccounts() {
+        return user.getPaymentAccounts() != null ? user.getPaymentAccounts().size() : 0;
+    }
 }
