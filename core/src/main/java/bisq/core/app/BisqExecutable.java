@@ -23,6 +23,7 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.dao.DaoSetup;
 import bisq.core.dao.node.full.RpcService;
 import bisq.core.offer.OpenOfferManager;
+import bisq.core.provider.price.PriceFeedService;
 import bisq.core.setup.CorePersistedDataHost;
 import bisq.core.setup.CoreSetup;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
@@ -227,12 +228,14 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
         }
 
         try {
+            injector.getInstance(PriceFeedService.class).shutDown();
             injector.getInstance(ArbitratorManager.class).shutDown();
             injector.getInstance(TradeStatisticsManager.class).shutDown();
             injector.getInstance(XmrTxProofService.class).shutDown();
             injector.getInstance(RpcService.class).shutDown();
             injector.getInstance(DaoSetup.class).shutDown();
             injector.getInstance(AvoidStandbyModeService.class).shutDown();
+            log.info("OpenOfferManager shutdown started");
             injector.getInstance(OpenOfferManager.class).shutDown(() -> {
                 log.info("OpenOfferManager shutdown completed");
 
@@ -265,7 +268,7 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
 
             // Wait max 20 sec.
             UserThread.runAfter(() -> {
-                log.warn("Timeout triggered resultHandler");
+                log.warn("Graceful shut down not completed in 20 sec. We trigger our timeout handler.");
                 if (!hasDowngraded) {
                     // If user tried to downgrade we do not write the persistable data to avoid data corruption
                     PersistenceManager.flushAllDataToDisk(() -> {

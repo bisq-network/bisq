@@ -92,6 +92,8 @@ public class PriceFeedService {
     private String baseUrlOfRespondingProvider;
     @Nullable
     private Timer requestTimer;
+    @Nullable
+    private PriceRequest priceRequest;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -115,10 +117,20 @@ public class PriceFeedService {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    public void shutDown() {
+        if (requestTimer != null) {
+            requestTimer.stop();
+            requestTimer = null;
+        }
+        if (priceRequest != null) {
+            priceRequest.shutDown();
+        }
+    }
+
     public void setCurrencyCodeOnInit() {
         if (getCurrencyCode() == null) {
-            final TradeCurrency preferredTradeCurrency = preferences.getPreferredTradeCurrency();
-            final String code = preferredTradeCurrency != null ? preferredTradeCurrency.getCode() : "USD";
+            TradeCurrency preferredTradeCurrency = preferences.getPreferredTradeCurrency();
+            String code = preferredTradeCurrency != null ? preferredTradeCurrency.getCode() : "USD";
             setCurrencyCode(code);
         }
     }
@@ -180,8 +192,8 @@ public class PriceFeedService {
             }
         }, (errorMessage, throwable) -> {
             if (throwable instanceof PriceRequestException) {
-                final String baseUrlOfFaultyRequest = ((PriceRequestException) throwable).priceProviderBaseUrl;
-                final String baseUrlOfCurrentRequest = priceProvider.getBaseUrl();
+                String baseUrlOfFaultyRequest = ((PriceRequestException) throwable).priceProviderBaseUrl;
+                String baseUrlOfCurrentRequest = priceProvider.getBaseUrl();
                 if (baseUrlOfFaultyRequest != null && baseUrlOfCurrentRequest.equals(baseUrlOfFaultyRequest)) {
                     log.warn("We received an error: baseUrlOfCurrentRequest={}, baseUrlOfFaultyRequest={}",
                             baseUrlOfCurrentRequest, baseUrlOfFaultyRequest);
@@ -223,7 +235,7 @@ public class PriceFeedService {
         UserThread.runAfter(() -> {
             retryDelay = Math.min(retryDelay + 5, PERIOD_SEC);
 
-            final String oldBaseUrl = priceProvider.getBaseUrl();
+            String oldBaseUrl = priceProvider.getBaseUrl();
             setNewPriceProvider();
             log.warn("We received an error at the request from provider {}. " +
                     "We select the new provider {} and use that for a new request. retryDelay was {} sec.", oldBaseUrl, priceProvider.getBaseUrl(), retryDelay);
@@ -381,15 +393,15 @@ public class PriceFeedService {
     }
 
     private void requestAllPrices(PriceProvider provider, Runnable resultHandler, FaultHandler faultHandler) {
-        PriceRequest priceRequest = new PriceRequest();
+        priceRequest = new PriceRequest();
         SettableFuture<Tuple2<Map<String, Long>, Map<String, MarketPrice>>> future = priceRequest.requestAllPrices(provider);
-        Futures.addCallback(future, new FutureCallback<Tuple2<Map<String, Long>, Map<String, MarketPrice>>>() {
+        Futures.addCallback(future, new FutureCallback<>() {
             @Override
             public void onSuccess(@Nullable Tuple2<Map<String, Long>, Map<String, MarketPrice>> result) {
                 UserThread.execute(() -> {
                     checkNotNull(result, "Result must not be null at requestAllPrices");
                     // Each currency rate has a different timestamp, depending on when
-                    // the pricenode aggregate rate was calculated
+                    // the priceNode aggregate rate was calculated
                     // However, the request timestamp is when the pricenode was queried
                     epochInMillisAtLastRequest = System.currentTimeMillis();
 

@@ -17,7 +17,6 @@
 
 package bisq.core.trade.protocol.tasks.mediation;
 
-import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletService;
 import bisq.core.support.dispute.mediation.MediationResultState;
@@ -70,7 +69,7 @@ public class ProcessMediatedPayoutTxPublishedMessage extends TradeTask {
                             .closeDisputedTrade(trade.getId(), Trade.DisputeState.MEDIATION_CLOSED));
                 }
 
-                processModel.getBtcWalletService().swapTradeEntryToAvailableEntry(trade.getId(), AddressEntry.Context.MULTI_SIG);
+                processModel.getBtcWalletService().resetCoinLockedInMultiSigAddressEntry(trade.getId());
             } else {
                 log.info("We got the payout tx already set from BuyerSetupPayoutTxListener and do nothing here. trade ID={}", trade.getId());
             }
