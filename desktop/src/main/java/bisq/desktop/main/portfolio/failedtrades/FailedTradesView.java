@@ -19,17 +19,21 @@ package bisq.desktop.main.portfolio.failedtrades;
 
 import bisq.desktop.common.view.ActivatableViewAndModel;
 import bisq.desktop.common.view.FxmlView;
+import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
 import bisq.desktop.util.FormBuilder;
+import bisq.desktop.util.GUIUtil;
 
 import bisq.core.locale.Res;
 import bisq.core.trade.Trade;
 
 import bisq.common.config.Config;
 import bisq.common.util.Utilities;
+
+import com.googlecode.jcsv.writer.CSVEntryConverter;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -40,6 +44,8 @@ import com.jfoenix.controls.JFXButton;
 
 import javafx.fxml.FXML;
 
+import javafx.stage.Stage;
+
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
@@ -48,12 +54,18 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.Tooltip;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+
+import javafx.geometry.Insets;
 
 import javafx.beans.property.ReadOnlyObjectWrapper;
 
 import javafx.event.EventHandler;
 
+import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
 
 import javafx.util.Callback;
@@ -68,6 +80,13 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
     @FXML
     TableColumn<FailedTradesListItem, FailedTradesListItem> priceColumn, amountColumn, volumeColumn,
             marketColumn, directionColumn, dateColumn, tradeIdColumn, stateColumn, removeTradeColumn;
+    @FXML
+    Label numItems;
+    @FXML
+    Region spacer;
+    @FXML
+    AutoTooltipButton exportButton;
+
     private final TradeDetailsWindow tradeDetailsWindow;
     private SortedList<FailedTradesListItem> sortedList;
     private EventHandler<KeyEvent> keyEventEventHandler;
@@ -137,6 +156,10 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
                 }
             }
         };
+
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+        numItems.setPadding(new Insets(-5, 0, 0, 10));
+        exportButton.updateText(Res.get("shared.exportCSV"));
     }
 
     private void onUnfail() {
@@ -174,6 +197,37 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
         sortedList = new SortedList<>(model.getList());
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
         tableView.setItems(sortedList);
+
+        numItems.setText(Res.get("shared.numItemsLabel", sortedList.size()));
+        exportButton.setOnAction(event -> {
+            ObservableList<TableColumn<FailedTradesListItem, ?>> tableColumns = tableView.getColumns();
+            int reportColumns = tableColumns.size() - 1;    // CSV report excludes the last column (an icon)
+            CSVEntryConverter<FailedTradesListItem> headerConverter = transactionsListItem -> {
+                String[] columns = new String[reportColumns];
+                for (int i = 0; i < columns.length; i++)
+                    columns[i] = ((AutoTooltipLabel) tableColumns.get(i).getGraphic()).getText();
+                return columns;
+            };
+            CSVEntryConverter<FailedTradesListItem> contentConverter = item -> {
+                String[] columns = new String[reportColumns];
+                columns[0] = model.getTradeId(item);
+                columns[1] = model.getDate(item);
+                columns[2] = model.getMarketLabel(item);
+                columns[3] = model.getPrice(item);
+                columns[4] = model.getAmount(item);
+                columns[5] = model.getVolume(item);
+                columns[6] = model.getDirectionLabel(item);
+                columns[7] = model.getState(item);
+                return columns;
+            };
+
+            GUIUtil.exportCSV("failedTrades.csv",
+                    headerConverter,
+                    contentConverter,
+                    new FailedTradesListItem(),
+                    sortedList,
+                    (Stage) root.getScene().getWindow());
+        });
     }
 
     @Override

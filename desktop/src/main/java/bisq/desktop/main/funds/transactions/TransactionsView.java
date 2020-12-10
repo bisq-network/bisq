@@ -56,13 +56,19 @@ import javafx.stage.Stage;
 
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.Tooltip;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+
+import javafx.geometry.Insets;
 
 import javafx.beans.property.ReadOnlyObjectWrapper;
 
@@ -80,10 +86,15 @@ import javax.annotation.Nullable;
 @FxmlView
 public class TransactionsView extends ActivatableView<VBox, Void> {
 
+
     @FXML
     TableView<TransactionsListItem> tableView;
     @FXML
     TableColumn<TransactionsListItem, TransactionsListItem> dateColumn, detailsColumn, addressColumn, transactionColumn, amountColumn, memoColumn, confidenceColumn, revertTxColumn;
+    @FXML
+    Label numItems;
+    @FXML
+    Region spacer;
     @FXML
     AutoTooltipButton exportButton;
 
@@ -180,6 +191,8 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
             }
         };
 
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+        numItems.setPadding(new Insets(-5, 0, 0, 10));
         exportButton.updateText(Res.get("shared.exportCSV"));
     }
 
@@ -195,6 +208,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
         if (scene != null)
             scene.addEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
 
+        numItems.setText(Res.get("shared.numItemsLabel", sortedDisplayedTransactions.size()));
         exportButton.setOnAction(event -> {
             final ObservableList<TableColumn<TransactionsListItem, ?>> tableColumns = tableView.getColumns();
             final int reportColumns = tableColumns.size() - 1;    // CSV report excludes the last column (an icon)

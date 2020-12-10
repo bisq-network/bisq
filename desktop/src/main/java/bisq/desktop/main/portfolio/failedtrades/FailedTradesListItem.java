@@ -19,18 +19,17 @@ package bisq.desktop.main.portfolio.failedtrades;
 
 import bisq.core.trade.Trade;
 
-/**
- * We could remove that wrapper if it is not needed for additional UI only fields.
- */
-class FailedTradesListItem {
+import lombok.Getter;
 
+class FailedTradesListItem {
+    @Getter
     private final Trade trade;
 
     FailedTradesListItem(Trade trade) {
         this.trade = trade;
     }
 
-    Trade getTrade() {
-        return trade;
+    FailedTradesListItem() {
+        this.trade = null;
     }
 }

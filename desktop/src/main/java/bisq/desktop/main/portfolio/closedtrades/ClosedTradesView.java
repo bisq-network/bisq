@@ -53,6 +53,7 @@ import javafx.fxml.FXML;
 import javafx.stage.Stage;
 
 import javafx.scene.Node;
+import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -60,6 +61,7 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 
 import javafx.geometry.Insets;
@@ -114,15 +116,19 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
             txFeeColumn, tradeFeeColumn, buyerSecurityDepositColumn, sellerSecurityDepositColumn,
             marketColumn, directionColumn, dateColumn, tradeIdColumn, stateColumn, avatarColumn;
     @FXML
-    HBox footerBox;
+    HBox searchBox;
     @FXML
     AutoTooltipLabel filterLabel;
     @FXML
     InputTextField filterTextField;
     @FXML
-    Pane spacer;
+    Pane searchBoxSpacer;
     @FXML
     AutoTooltipButton exportButton;
+    @FXML
+    Label numItems;
+    @FXML
+    Region footerSpacer;
 
     private final OfferDetailsWindow offerDetailsWindow;
     private final Preferences preferences;
@@ -225,14 +231,17 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
         dateColumn.setSortType(TableColumn.SortType.DESCENDING);
         tableView.getSortOrder().add(dateColumn);
 
-        filterLabel.setText(Res.getWithCol("support.filter"));
-        filterTextField.setPromptText(Res.get("support.filter.prompt"));
+        filterLabel.setText(Res.get("shared.filter"));
         HBox.setMargin(filterLabel, new Insets(5, 0, 0, 10));
         filterTextFieldListener = (observable, oldValue, newValue) -> applyFilteredListPredicate(filterTextField.getText());
-        footerBox.setSpacing(5);
-        HBox.setHgrow(spacer, Priority.ALWAYS);
+        searchBox.setSpacing(5);
+        HBox.setHgrow(searchBoxSpacer, Priority.ALWAYS);
         exportButton.updateText(Res.get("shared.exportCSV"));
         HBox.setMargin(exportButton, new Insets(0, 10, 0, 0));
+
+        HBox.setHgrow(footerSpacer, Priority.ALWAYS);
+        numItems.setPadding(new Insets(-5, 0, 0, 10));
+        exportButton.updateText(Res.get("shared.exportCSV"));
     }
 
     @Override
@@ -244,6 +253,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
 
         tableView.setItems(sortedList);
 
+        numItems.setText(Res.get("shared.numItemsLabel", sortedList.size()));
         exportButton.setOnAction(event -> {
             final ObservableList<TableColumn<ClosedTradableListItem, ?>> tableColumns = tableView.getColumns();
             CSVEntryConverter<ClosedTradableListItem> headerConverter = transactionsListItem -> {

@@ -18,12 +18,13 @@
 package bisq.desktop.main.funds.reserved;
 
 import bisq.desktop.components.AutoTooltipLabel;
+import bisq.desktop.util.DisplayUtils;
 
 import bisq.core.btc.listeners.BalanceListener;
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.locale.Res;
 import bisq.core.offer.OpenOffer;
-import bisq.core.trade.Tradable;
 import bisq.core.util.coin.CoinFormatter;
 
 import org.bitcoinj.core.Address;
@@ -34,26 +35,40 @@ import javafx.scene.control.Label;
 
 import java.util.Optional;
 
+import lombok.Getter;
+
 class ReservedListItem {
     private final BalanceListener balanceListener;
-    private final Label balanceLabel;
-    private final OpenOffer openOffer;
-    private final AddressEntry addressEntry;
     private final BtcWalletService btcWalletService;
     private final CoinFormatter formatter;
-    private final String addressString;
-    private Coin balance;
 
-    public ReservedListItem(OpenOffer openOffer, AddressEntry addressEntry, BtcWalletService btcWalletService, CoinFormatter formatter) {
+    @Getter
+    private final Label balanceLabel;
+    @Getter
+    private final OpenOffer openOffer;
+    @Getter
+    private final AddressEntry addressEntry;
+    @Getter
+    private final String addressString;
+    @Getter
+    private final Address address;
+    @Getter
+    private Coin balance;
+    @Getter
+    private String balanceString;
+
+    public ReservedListItem(OpenOffer openOffer,
+                            AddressEntry addressEntry,
+                            BtcWalletService btcWalletService,
+                            CoinFormatter formatter) {
         this.openOffer = openOffer;
         this.addressEntry = addressEntry;
         this.btcWalletService = btcWalletService;
         this.formatter = formatter;
         addressString = addressEntry.getAddressString();
-
-        // balance
+        address = addressEntry.getAddress();
         balanceLabel = new AutoTooltipLabel();
-        balanceListener = new BalanceListener(getAddress()) {
+        balanceListener = new BalanceListener(address) {
             @Override
             public void onBalanceChanged(Coin balance, Transaction tx) {
                 updateBalance();
@@ -63,41 +78,40 @@ class ReservedListItem {
         updateBalance();
     }
 
+    ReservedListItem() {
+        this.openOffer = null;
+        this.addressEntry = null;
+        this.btcWalletService = null;
+        this.formatter = null;
+        addressString = null;
+        address = null;
+        balanceLabel = null;
+        balanceListener = null;
+    }
+
     public void cleanup() {
         btcWalletService.removeBalanceListener(balanceListener);
     }
 
     private void updateBalance() {
-        final Optional<AddressEntry> addressEntryOptional = btcWalletService.getAddressEntry(openOffer.getId(), AddressEntry.Context.RESERVED_FOR_TRADE);
+        Optional<AddressEntry> addressEntryOptional = btcWalletService.getAddressEntry(openOffer.getId(),
+                AddressEntry.Context.RESERVED_FOR_TRADE);
         addressEntryOptional.ifPresent(addressEntry -> {
             balance = btcWalletService.getBalanceForAddress(addressEntry.getAddress());
-            if (balance != null)
-                balanceLabel.setText(formatter.formatCoin(balance));
+            if (balance != null) {
+                balanceString = formatter.formatCoin(balance);
+                balanceLabel.setText(balanceString);
+            }
         });
     }
 
-    private Address getAddress() {
-        return addressEntry.getAddress();
+    public String getDateAsString() {
+        return DisplayUtils.formatDateTime(openOffer.getDate());
     }
 
-    public AddressEntry getAddressEntry() {
-        return addressEntry;
+    public String getDetails() {
+        return openOffer != null ?
+                Res.get("funds.reserved.reserved", openOffer.getShortId()) :
+                Res.get("shared.noDetailsAvailable");
     }
-
-    public Label getBalanceLabel() {
-        return balanceLabel;
-    }
-
-    public Coin getBalance() {
-        return balance;
-    }
-
-    public String getAddressString() {
-        return addressString;
-    }
-
-    public Tradable getOpenOffer() {
-        return openOffer;
-    }
-
 }
