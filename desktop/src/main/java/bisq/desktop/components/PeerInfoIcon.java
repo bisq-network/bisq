@@ -353,10 +353,16 @@ public class PeerInfoIcon extends Group {
         if (!tag.isEmpty())
             tagLabel.setText(tag.substring(0, 1));
 
-        if (numTrades < 10)
+        if (numTrades > 0) {
             numTradesLabel.setText(String.valueOf(numTrades));
-        else
-            numTradesLabel.setText("★");
+
+            double scaleFactor = getScaleFactor();
+            if (numTrades > 9) {
+                numTradesLabel.relocate(scaleFactor * 2, scaleFactor * 1);
+            } else {
+                numTradesLabel.relocate(scaleFactor * 5, scaleFactor * 1);
+            }
+        }
 
         numTradesPane.setVisible(numTrades > 0);
 
