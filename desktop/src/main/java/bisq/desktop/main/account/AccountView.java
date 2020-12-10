@@ -30,6 +30,7 @@ import bisq.desktop.main.account.content.fiataccounts.FiatAccountsView;
 import bisq.desktop.main.account.content.notifications.MobileNotificationsView;
 import bisq.desktop.main.account.content.password.PasswordView;
 import bisq.desktop.main.account.content.seedwords.SeedWordsView;
+import bisq.desktop.main.account.content.walletinfo.WalletInfoView;
 import bisq.desktop.main.account.register.arbitrator.ArbitratorRegistrationView;
 import bisq.desktop.main.account.register.mediator.MediatorRegistrationView;
 import bisq.desktop.main.account.register.refundagent.RefundAgentRegistrationView;
@@ -67,7 +68,7 @@ public class AccountView extends ActivatableView<TabPane, Void> {
 
     @FXML
     Tab fiatAccountsTab, altcoinAccountsTab, notificationTab,
-            passwordTab, seedwordsTab, backupTab;
+            passwordTab, seedWordsTab, walletInfoTab, backupTab;
 
     private Navigation.Listener navigationListener;
     private ChangeListener<Tab> tabChangeListener;
@@ -101,7 +102,8 @@ public class AccountView extends ActivatableView<TabPane, Void> {
         altcoinAccountsTab.setText(Res.get("account.menu.altCoinsAccountView").toUpperCase());
         notificationTab.setText(Res.get("account.menu.notifications").toUpperCase());
         passwordTab.setText(Res.get("account.menu.password").toUpperCase());
-        seedwordsTab.setText(Res.get("account.menu.seedWords").toUpperCase());
+        seedWordsTab.setText(Res.get("account.menu.seedWords").toUpperCase());
+        walletInfoTab.setText(Res.get("account.menu.walletInfo").toUpperCase());
         backupTab.setText(Res.get("account.menu.backup").toUpperCase());
 
         navigationListener = viewPath -> {
@@ -161,8 +163,10 @@ public class AccountView extends ActivatableView<TabPane, Void> {
                 navigation.navigateTo(MainView.class, AccountView.class, MobileNotificationsView.class);
             } else if (newValue == passwordTab && selectedTab != passwordTab) {
                 navigation.navigateTo(MainView.class, AccountView.class, PasswordView.class);
-            } else if (newValue == seedwordsTab && selectedTab != seedwordsTab) {
+            } else if (newValue == seedWordsTab && selectedTab != seedWordsTab) {
                 navigation.navigateTo(MainView.class, AccountView.class, SeedWordsView.class);
+            } else if (newValue == walletInfoTab && selectedTab != walletInfoTab) {
+                navigation.navigateTo(MainView.class, AccountView.class, WalletInfoView.class);
             } else if (newValue == backupTab && selectedTab != backupTab) {
                 navigation.navigateTo(MainView.class, AccountView.class, BackupView.class);
             }
@@ -251,8 +255,10 @@ public class AccountView extends ActivatableView<TabPane, Void> {
                 navigation.navigateTo(MainView.class, AccountView.class, MobileNotificationsView.class);
             else if (root.getSelectionModel().getSelectedItem() == passwordTab)
                 navigation.navigateTo(MainView.class, AccountView.class, PasswordView.class);
-            else if (root.getSelectionModel().getSelectedItem() == seedwordsTab)
+            else if (root.getSelectionModel().getSelectedItem() == seedWordsTab)
                 navigation.navigateTo(MainView.class, AccountView.class, SeedWordsView.class);
+            else if (root.getSelectionModel().getSelectedItem() == walletInfoTab)
+                navigation.navigateTo(MainView.class, AccountView.class, WalletInfoView.class);
             else if (root.getSelectionModel().getSelectedItem() == backupTab)
                 navigation.navigateTo(MainView.class, AccountView.class, BackupView.class);
             else
@@ -314,7 +320,9 @@ public class AccountView extends ActivatableView<TabPane, Void> {
         } else if (view instanceof PasswordView) {
             selectedTab = passwordTab;
         } else if (view instanceof SeedWordsView) {
-            selectedTab = seedwordsTab;
+            selectedTab = seedWordsTab;
+        } else if (view instanceof WalletInfoView) {
+            selectedTab = walletInfoTab;
         } else if (view instanceof BackupView) {
             selectedTab = backupTab;
         } else {
