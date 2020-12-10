@@ -102,12 +102,12 @@ public class AccountAgeWitnessService {
         PEER_SIGNER(Res.get("offerbook.timeSinceSigning.info.signer")),
         BANNED(Res.get("offerbook.timeSinceSigning.info.banned"));
 
-        private String presentation;
+        private String displayString;
         private String hash = "";
         private long daysUntilLimitLifted = 0;
 
-        SignState(String presentation) {
-            this.presentation = presentation;
+        SignState(String displayString) {
+            this.displayString = displayString;
         }
 
         public SignState addHash(String hash) {
@@ -120,11 +120,11 @@ public class AccountAgeWitnessService {
             return this;
         }
 
-        public String getPresentation() {
+        public String getDisplayString() {
             if (!hash.isEmpty()) { // Only showing in DEBUG mode
-                return presentation + " " + hash;
+                return displayString + " " + hash;
             }
-            return String.format(presentation, daysUntilLimitLifted);
+            return String.format(displayString, daysUntilLimitLifted);
         }
 
     }
@@ -265,7 +265,7 @@ public class AccountAgeWitnessService {
         return getWitnessByHash(hash);
     }
 
-    private Optional<AccountAgeWitness> findWitness(Offer offer) {
+    public Optional<AccountAgeWitness> findWitness(Offer offer) {
         final Optional<String> accountAgeWitnessHash = offer.getAccountAgeWitnessHashAsHex();
         return accountAgeWitnessHash.isPresent() ?
                 getWitnessByHashAsHex(accountAgeWitnessHash.get()) :
@@ -613,7 +613,10 @@ public class AccountAgeWitnessService {
         if (!result) {
             String msg = "The peers trade limit is less than the traded amount.\n" +
                     "tradeAmount=" + tradeAmount.toFriendlyString() +
-                    "\nPeers trade limit=" + Coin.valueOf(peersCurrentTradeLimit).toFriendlyString();
+                    "\nPeers trade limit=" + Coin.valueOf(peersCurrentTradeLimit).toFriendlyString() +
+                    "\nOffer ID=" + offer.getShortId() +
+                    "\nPaymentMethod=" + offer.getPaymentMethod().getId() +
+                    "\nCurrencyCode=" + offer.getCurrencyCode();
             log.warn(msg);
             errorMessageHandler.handleErrorMessage(msg);
         }
