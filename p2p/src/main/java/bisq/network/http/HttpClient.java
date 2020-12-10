@@ -37,4 +37,6 @@ public interface HttpClient {
     String getUid();
 
     String getBaseUrl();
+
+    void shutDown();
 }
