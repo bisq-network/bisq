@@ -373,11 +373,15 @@ public class OfferUtil {
                         tradeStatisticsManager,
                         30);
                 Price bsqPrice = tuple.second;
-                String inputValue = bsqFormatter.formatCoin(makerFee);
-                Volume makerFeeAsVolume = Volume.parse(inputValue, "BSQ");
-                Coin requiredBtc = bsqPrice.getAmountByVolume(makerFeeAsVolume);
-                Volume volumeByAmount = userCurrencyPrice.getVolumeByAmount(requiredBtc);
-                return Optional.of(volumeByAmount);
+                if (bsqPrice.isPositive()) {
+                    String inputValue = bsqFormatter.formatCoin(makerFee);
+                    Volume makerFeeAsVolume = Volume.parse(inputValue, "BSQ");
+                    Coin requiredBtc = bsqPrice.getAmountByVolume(makerFeeAsVolume);
+                    Volume volumeByAmount = userCurrencyPrice.getVolumeByAmount(requiredBtc);
+                    return Optional.of(volumeByAmount);
+                } else {
+                    return Optional.empty();
+                }
             }
         } else {
             return Optional.empty();
