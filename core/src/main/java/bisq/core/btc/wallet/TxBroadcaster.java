@@ -25,6 +25,7 @@ import bisq.common.UserThread;
 
 import org.bitcoinj.core.PeerGroup;
 import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.Utils;
 import org.bitcoinj.wallet.Wallet;
 
 import com.google.common.util.concurrent.FutureCallback;
@@ -90,6 +91,7 @@ public class TxBroadcaster {
     public static void broadcastTx(Wallet wallet, PeerGroup peerGroup, Transaction tx, Callback callback, int timeOut) {
         Timer timeoutTimer;
         final String txId = tx.getTxId().toString();
+        log.info("Txid: {} hex: {}", txId, Utils.HEX.encode(tx.bitcoinSerialize()));
         if (!broadcastTimerMap.containsKey(txId)) {
             timeoutTimer = UserThread.runAfter(() -> {
                 log.warn("Broadcast of tx {} not completed after {} sec.", txId, timeOut);

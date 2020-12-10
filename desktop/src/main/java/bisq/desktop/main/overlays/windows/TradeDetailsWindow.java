@@ -329,7 +329,7 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
         }
 
         Tuple3<Button, Button, HBox> tuple = add2ButtonsWithBox(gridPane, ++rowIndex,
-                Res.get("shared.viewContractAsJson"), Res.get("shared.close"), 15, false);
+                Res.get("tradeDetailsWindow.detailData"), Res.get("shared.close"), 15, false);
         Button viewContractButton = tuple.first;
         viewContractButton.setMaxWidth(Region.USE_COMPUTED_SIZE);
         Button closeButton = tuple.second;
@@ -344,15 +344,21 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
             viewContractButton.setOnAction(e -> {
                 TextArea textArea = new BisqTextArea();
                 textArea.setText(trade.getContractAsJson());
-                String contractAsJson = trade.getContractAsJson();
-                contractAsJson += "\n\nBuyerMultiSigPubKeyHex: " + Utils.HEX.encode(contract.getBuyerMultiSigPubKey());
-                contractAsJson += "\nSellerMultiSigPubKeyHex: " + Utils.HEX.encode(contract.getSellerMultiSigPubKey());
+                String data = "Contract as json:\n";
+                data += trade.getContractAsJson();
+                data += "\n\nBuyerMultiSigPubKeyHex: " + Utils.HEX.encode(contract.getBuyerMultiSigPubKey());
+                data += "\nSellerMultiSigPubKeyHex: " + Utils.HEX.encode(contract.getSellerMultiSigPubKey());
                 if (CurrencyUtil.isFiatCurrency(offer.getCurrencyCode())) {
-                    contractAsJson += "\nBuyersAccountAge: " + buyersAccountAge;
-                    contractAsJson += "\nSellersAccountAge: " + sellersAccountAge;
+                    data += "\n\nBuyersAccountAge: " + buyersAccountAge;
+                    data += "\nSellersAccountAge: " + sellersAccountAge;
                 }
 
-                textArea.setText(contractAsJson);
+                if (depositTx != null) {
+                    String depositTxAsHex = Utils.HEX.encode(depositTx.bitcoinSerialize(true));
+                    data += "\n\nRaw deposit transaction as hex:\n" + depositTxAsHex;
+                }
+
+                textArea.setText(data);
                 textArea.setPrefHeight(50);
                 textArea.setEditable(false);
                 textArea.setWrapText(true);
