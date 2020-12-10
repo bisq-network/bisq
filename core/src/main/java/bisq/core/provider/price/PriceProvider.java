@@ -41,12 +41,18 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class PriceProvider extends HttpClientProvider {
 
+    private boolean shutDownRequested;
+
     // Do not use Guice here as we might create multiple instances
     public PriceProvider(HttpClient httpClient, String baseUrl) {
         super(httpClient, baseUrl, false);
     }
 
     public Tuple2<Map<String, Long>, Map<String, MarketPrice>> getAll() throws IOException {
+        if (shutDownRequested) {
+            return new Tuple2<>(new HashMap<>(), new HashMap<>());
+        }
+
         Map<String, MarketPrice> marketPriceMap = new HashMap<>();
         String hsVersion = "";
         if (P2PService.getMyNodeAddress() != null)
@@ -66,10 +72,10 @@ public class PriceProvider extends HttpClientProvider {
         list.forEach(obj -> {
             try {
                 LinkedTreeMap<?, ?> treeMap = (LinkedTreeMap<?, ?>) obj;
-                final String currencyCode = (String) treeMap.get("currencyCode");
-                final double price = (Double) treeMap.get("price");
+                String currencyCode = (String) treeMap.get("currencyCode");
+                double price = (Double) treeMap.get("price");
                 // json uses double for our timestampSec long value...
-                final long timestampSec = MathUtils.doubleToLong((Double) treeMap.get("timestampSec"));
+                long timestampSec = MathUtils.doubleToLong((Double) treeMap.get("timestampSec"));
                 marketPriceMap.put(currencyCode, new MarketPrice(currencyCode, price, timestampSec, true));
             } catch (Throwable t) {
                 log.error(t.toString());
@@ -82,5 +88,10 @@ public class PriceProvider extends HttpClientProvider {
 
     public String getBaseUrl() {
         return httpClient.getBaseUrl();
+    }
+
+    public void shutDown() {
+        shutDownRequested = true;
+        httpClient.shutDown();
     }
 }

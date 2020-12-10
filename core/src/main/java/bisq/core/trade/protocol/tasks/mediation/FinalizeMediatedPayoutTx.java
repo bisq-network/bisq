@@ -110,7 +110,7 @@ public class FinalizeMediatedPayoutTx extends TradeTask {
 
             processModel.getTradeManager().requestPersistence();
 
-            walletService.swapTradeEntryToAvailableEntry(tradeId, AddressEntry.Context.MULTI_SIG);
+            walletService.resetCoinLockedInMultiSigAddressEntry(tradeId);
 
             complete();
         } catch (Throwable t) {

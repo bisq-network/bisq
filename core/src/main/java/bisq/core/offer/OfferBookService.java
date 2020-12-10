@@ -203,7 +203,6 @@ public class OfferBookService {
     }
 
     public void removeOfferAtShutDown(OfferPayload offerPayload) {
-        log.debug("removeOfferAtShutDown " + offerPayload);
         removeOffer(offerPayload, null, null);
     }
 

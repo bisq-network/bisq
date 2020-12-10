@@ -19,6 +19,7 @@ package bisq.core.offer;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.btc.wallet.BsqWalletService;
+import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.filter.FilterManager;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
@@ -44,6 +45,9 @@ import bisq.common.util.MathUtils;
 import bisq.common.util.Tuple2;
 
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.TransactionInput;
+import org.bitcoinj.core.TransactionOutput;
 import org.bitcoinj.utils.Fiat;
 
 import javax.inject.Inject;
@@ -382,5 +386,54 @@ public class OfferUtil {
         } else {
             return Optional.empty();
         }
+    }
+
+    public static Optional<String> getInvalidMakerFeeTxErrorMessage(Offer offer, BtcWalletService btcWalletService) {
+        Transaction makerFeeTx = btcWalletService.getTransaction(offer.getOfferFeePaymentTxId());
+        if (makerFeeTx == null) {
+            return Optional.empty();
+        }
+
+        String errorMsg = null;
+        String header = "The offer with offer ID '" + offer.getShortId() +
+                "' has an invalid maker fee transaction.\n\n";
+        String spendingTransaction = null;
+        String extraString = "\nYou have to remove that offer to avoid failed trades.\n" +
+                "If this happened because of a bug please contact the Bisq developers " +
+                "and you can request reimbursement for the lost maker fee.";
+        if (makerFeeTx.getOutputs().size() > 1) {
+            // Our output to fund the deposit tx is at index 1
+            TransactionOutput output = makerFeeTx.getOutput(1);
+            TransactionInput spentByTransactionInput = output.getSpentBy();
+            if (spentByTransactionInput != null) {
+                spendingTransaction = spentByTransactionInput.getConnectedTransaction() != null ?
+                        spentByTransactionInput.getConnectedTransaction().toString() :
+                        "null";
+                // We this is an exceptional case we do not translate that error msg.
+                errorMsg = "The output of the maker fee tx is already spent.\n" +
+                        extraString +
+                        "\n\nTransaction input which spent the reserved funds for that offer: '" +
+                        spentByTransactionInput.getConnectedTransaction().getTxId().toString() + ":" +
+                        (spentByTransactionInput.getConnectedOutput() != null ?
+                                spentByTransactionInput.getConnectedOutput().getIndex() + "'" :
+                                "null'");
+                log.error("spentByTransactionInput {}", spentByTransactionInput);
+            }
+        } else {
+            errorMsg = "The maker fee tx is invalid as it does not has at least 2 outputs." + extraString +
+                    "\nMakerFeeTx=" + makerFeeTx.toString();
+        }
+
+        if (errorMsg == null) {
+            return Optional.empty();
+        }
+
+        errorMsg = header + errorMsg;
+        log.error(errorMsg);
+        if (spendingTransaction != null) {
+            log.error("Spending transaction: {}", spendingTransaction);
+        }
+
+        return Optional.of(errorMsg);
     }
 }
