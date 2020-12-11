@@ -36,7 +36,7 @@
 
     <HBox fx:id="searchBox">
         <AutoTooltipLabel fx:id="filterLabel"/>
-        <InputTextField fx:id="filterTextField" minWidth="300"/>
+        <InputTextField fx:id="filterTextField" minWidth="500"/>
         <Pane fx:id="searchBoxSpacer"/>
     </HBox>
 

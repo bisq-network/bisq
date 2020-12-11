@@ -335,6 +335,10 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
         return id.compareTo(other.id);
     }
 
+    public String getDisplayString() {
+        return Res.get(id);
+    }
+
     public boolean isAsset() {
         return this.equals(BLOCK_CHAINS_INSTANT) || this.equals(BLOCK_CHAINS);
     }

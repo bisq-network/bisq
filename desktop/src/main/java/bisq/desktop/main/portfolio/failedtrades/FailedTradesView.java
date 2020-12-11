@@ -22,12 +22,15 @@ import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.HyperlinkWithIcon;
+import bisq.desktop.components.InputTextField;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.locale.Res;
+import bisq.core.offer.Offer;
+import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
 
 import bisq.common.config.Config;
@@ -55,6 +58,7 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
@@ -62,10 +66,12 @@ import javafx.scene.layout.VBox;
 import javafx.geometry.Insets;
 
 import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.beans.value.ChangeListener;
 
 import javafx.event.EventHandler;
 
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 
 import javafx.util.Callback;
@@ -81,15 +87,25 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
     TableColumn<FailedTradesListItem, FailedTradesListItem> priceColumn, amountColumn, volumeColumn,
             marketColumn, directionColumn, dateColumn, tradeIdColumn, stateColumn, removeTradeColumn;
     @FXML
+    HBox searchBox;
+    @FXML
+    AutoTooltipLabel filterLabel;
+    @FXML
+    InputTextField filterTextField;
+    @FXML
+    Pane searchBoxSpacer;
+    @FXML
     Label numItems;
     @FXML
-    Region spacer;
+    Region footerSpacer;
     @FXML
     AutoTooltipButton exportButton;
 
     private final TradeDetailsWindow tradeDetailsWindow;
     private SortedList<FailedTradesListItem> sortedList;
+    private FilteredList<FailedTradesListItem> filteredList;
     private EventHandler<KeyEvent> keyEventEventHandler;
+    private ChangeListener<String> filterTextFieldListener;
     private Scene scene;
     private final boolean allowFaultyDelayedTxs;
 
@@ -157,35 +173,16 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
             }
         };
 
-        HBox.setHgrow(spacer, Priority.ALWAYS);
+        filterLabel.setText(Res.get("shared.filter"));
+        HBox.setMargin(filterLabel, new Insets(5, 0, 0, 10));
+        filterTextFieldListener = (observable, oldValue, newValue) -> applyFilteredListPredicate(filterTextField.getText());
+        searchBox.setSpacing(5);
+        HBox.setHgrow(searchBoxSpacer, Priority.ALWAYS);
+
         numItems.setPadding(new Insets(-5, 0, 0, 10));
+        HBox.setHgrow(footerSpacer, Priority.ALWAYS);
+        HBox.setMargin(exportButton, new Insets(0, 10, 0, 0));
         exportButton.updateText(Res.get("shared.exportCSV"));
-    }
-
-    private void onUnfail() {
-        Trade trade = sortedList.get(tableView.getSelectionModel().getFocusedIndex()).getTrade();
-        model.dataModel.unfailTrade(trade);
-    }
-
-    private String checkUnfail() {
-        Trade trade = sortedList.get(tableView.getSelectionModel().getFocusedIndex()).getTrade();
-        return model.dataModel.checkUnfail(trade);
-    }
-
-    private String checkTxs() {
-        Trade trade = sortedList.get(tableView.getSelectionModel().getFocusedIndex()).getTrade();
-        log.info("Initiated unfail of trade {}", trade.getId());
-        if (trade.getDepositTx() == null) {
-            log.info("Check unfail found no depositTx for trade {}", trade.getId());
-            return Res.get("portfolio.failed.depositTxNull");
-        }
-        if (trade.getDelayedPayoutTxBytes() == null) {
-            log.info("Check unfail found no delayedPayoutTxBytes for trade {}", trade.getId());
-            if (!allowFaultyDelayedTxs) {
-                return Res.get("portfolio.failed.delayedPayoutTxNull");
-            }
-        }
-        return "";
     }
 
     @Override
@@ -194,7 +191,9 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
         if (scene != null) {
             scene.addEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
         }
-        sortedList = new SortedList<>(model.getList());
+
+        filteredList = new FilteredList<>(model.getList());
+        sortedList = new SortedList<>(filteredList);
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
         tableView.setItems(sortedList);
 
@@ -228,6 +227,9 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
                     sortedList,
                     (Stage) root.getScene().getWindow());
         });
+
+        filterTextField.textProperty().addListener(filterTextFieldListener);
+        applyFilteredListPredicate(filterTextField.getText());
     }
 
     @Override
@@ -235,7 +237,98 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
         if (scene != null) {
             scene.removeEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
         }
+
         sortedList.comparatorProperty().unbind();
+        exportButton.setOnAction(null);
+
+        filterTextField.textProperty().removeListener(filterTextFieldListener);
+    }
+
+    private void applyFilteredListPredicate(String filterString) {
+        filteredList.setPredicate(item -> {
+            if (filterString.isEmpty())
+                return true;
+
+            Offer offer = item.getTrade().getOffer();
+
+            if (offer.getId().contains(filterString)) {
+                return true;
+            }
+            if (model.getDate(item).contains(filterString)) {
+                return true;
+            }
+            if (model.getMarketLabel(item).contains(filterString)) {
+                return true;
+            }
+            if (model.getPrice(item).contains(filterString)) {
+                return true;
+            }
+            if (model.getVolume(item).contains(filterString)) {
+                return true;
+            }
+            if (model.getAmount(item).contains(filterString)) {
+                return true;
+            }
+            if (model.getDirectionLabel(item).contains(filterString)) {
+                return true;
+            }
+            if (offer.getOfferFeePaymentTxId().contains(filterString)) {
+                return true;
+            }
+
+            Trade trade = item.getTrade();
+
+            if (trade.getTakerFeeTxId() != null && trade.getTakerFeeTxId().contains(filterString)) {
+                return true;
+            }
+            if (trade.getDepositTxId() != null && trade.getDepositTxId().contains(filterString)) {
+                return true;
+            }
+            if (trade.getPayoutTxId() != null && trade.getPayoutTxId().contains(filterString)) {
+                return true;
+            }
+
+            Contract contract = trade.getContract();
+
+            boolean isBuyerOnion = false;
+            boolean isSellerOnion = false;
+            boolean matchesBuyersPaymentAccountData = false;
+            boolean matchesSellersPaymentAccountData = false;
+            if (contract != null) {
+                isBuyerOnion = contract.getBuyerNodeAddress().getFullAddress().contains(filterString);
+                isSellerOnion = contract.getSellerNodeAddress().getFullAddress().contains(filterString);
+                matchesBuyersPaymentAccountData = contract.getBuyerPaymentAccountPayload().getPaymentDetails().contains(filterString);
+                matchesSellersPaymentAccountData = contract.getSellerPaymentAccountPayload().getPaymentDetails().contains(filterString);
+            }
+            return isBuyerOnion || isSellerOnion ||
+                    matchesBuyersPaymentAccountData || matchesSellersPaymentAccountData;
+        });
+    }
+
+    private void onUnfail() {
+        Trade trade = sortedList.get(tableView.getSelectionModel().getFocusedIndex()).getTrade();
+        model.dataModel.unfailTrade(trade);
+    }
+
+    private String checkUnfail() {
+        Trade trade = sortedList.get(tableView.getSelectionModel().getFocusedIndex()).getTrade();
+        return model.dataModel.checkUnfail(trade);
+    }
+
+    private String checkTxs() {
+        Trade trade = sortedList.get(tableView.getSelectionModel().getFocusedIndex()).getTrade();
+        log.info("Initiated unfail of trade {}", trade.getId());
+        if (trade.getDepositTx() == null) {
+            log.info("Check unfail found no depositTx for trade {}", trade.getId());
+            return Res.get("portfolio.failed.depositTxNull");
+        }
+        if (trade.getDelayedPayoutTxBytes() == null) {
+            log.info("Check unfail found no delayedPayoutTxBytes for trade {}", trade.getId());
+            if (!allowFaultyDelayedTxs) {
+                return Res.get("portfolio.failed.delayedPayoutTxNull");
+            }
+        }
+        return "";
     }
 
     private void onRevertTrade(Trade trade) {

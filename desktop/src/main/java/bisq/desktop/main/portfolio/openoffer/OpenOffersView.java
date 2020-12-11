@@ -21,10 +21,11 @@ import bisq.desktop.Navigation;
 import bisq.desktop.common.view.ActivatableViewAndModel;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipButton;
-import bisq.desktop.components.AutoTooltipCheckBox;
 import bisq.desktop.components.AutoTooltipLabel;
+import bisq.desktop.components.AutoTooltipSlideToggleButton;
 import bisq.desktop.components.AutoTooltipTableColumn;
 import bisq.desktop.components.HyperlinkWithIcon;
+import bisq.desktop.components.InputTextField;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.funds.FundsView;
 import bisq.desktop.main.funds.withdrawal.WithdrawalView;
@@ -34,6 +35,7 @@ import bisq.desktop.main.portfolio.PortfolioView;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.locale.Res;
+import bisq.core.offer.Offer;
 import bisq.core.offer.OpenOffer;
 import bisq.core.user.DontShowAgainLookup;
 
@@ -50,7 +52,6 @@ import javafx.stage.Stage;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
-import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
@@ -58,6 +59,7 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
@@ -65,8 +67,10 @@ import javafx.scene.layout.VBox;
 import javafx.geometry.Insets;
 
 import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.beans.value.ChangeListener;
 
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 
 import javafx.util.Callback;
@@ -87,15 +91,27 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
             marketColumn, directionColumn, dateColumn, offerIdColumn, deactivateItemColumn,
             removeItemColumn, editItemColumn, paymentMethodColumn;
     @FXML
+    HBox searchBox;
+    @FXML
+    AutoTooltipLabel filterLabel;
+    @FXML
+    InputTextField filterTextField;
+    @FXML
+    Pane searchBoxSpacer;
+    @FXML
     Label numItems;
     @FXML
-    Region spacer;
+    Region footerSpacer;
     @FXML
     AutoTooltipButton exportButton;
+    @FXML
+    AutoTooltipSlideToggleButton selectToggleButton;
 
     private final Navigation navigation;
     private final OfferDetailsWindow offerDetailsWindow;
     private SortedList<OpenOfferListItem> sortedList;
+    private FilteredList<OpenOfferListItem> filteredList;
+    private ChangeListener<String> filterTextFieldListener;
     private PortfolioView.OpenOfferActionHandler openOfferActionHandler;
 
     @Inject
@@ -117,7 +133,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
         directionColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.offerType")));
         dateColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.dateTime")));
         offerIdColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.offerId")));
-        deactivateItemColumn.setGraphic(new AutoTooltipLabel("Enabled"));
+        deactivateItemColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.enabled")));
         editItemColumn.setGraphic(new AutoTooltipLabel(""));
         removeItemColumn.setGraphic(new AutoTooltipLabel(""));
 
@@ -152,16 +168,38 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
         dateColumn.setSortType(TableColumn.SortType.DESCENDING);
         tableView.getSortOrder().add(dateColumn);
 
-        HBox.setHgrow(spacer, Priority.ALWAYS);
+        filterLabel.setText(Res.get("shared.filter"));
+        HBox.setMargin(filterLabel, new Insets(5, 0, 0, 10));
+        filterTextFieldListener = (observable, oldValue, newValue) -> applyFilteredListPredicate(filterTextField.getText());
+        searchBox.setSpacing(5);
+        HBox.setHgrow(searchBoxSpacer, Priority.ALWAYS);
+
+        selectToggleButton.setPadding(new Insets(0, 60, -20, 0));
+        selectToggleButton.setText(Res.get("shared.enabled"));
+
         numItems.setPadding(new Insets(-5, 0, 0, 10));
+        HBox.setHgrow(footerSpacer, Priority.ALWAYS);
+        HBox.setMargin(exportButton, new Insets(0, 10, 0, 0));
         exportButton.updateText(Res.get("shared.exportCSV"));
     }
 
     @Override
     protected void activate() {
-        sortedList = new SortedList<>(model.getList());
+        filteredList = new FilteredList<>(model.getList());
+        sortedList = new SortedList<>(filteredList);
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
         tableView.setItems(sortedList);
+
+        updateSelectToggleButtonState();
+
+        selectToggleButton.setOnAction(event -> {
+            if (selectToggleButton.isSelected()) {
+                sortedList.forEach(openOfferListItem -> onActivateOpenOffer(openOfferListItem.getOpenOffer()));
+            } else {
+                sortedList.forEach(openOfferListItem -> onDeactivateOpenOffer(openOfferListItem.getOpenOffer()));
+            }
+            tableView.refresh();
+        });
 
         numItems.setText(Res.get("shared.numItemsLabel", sortedList.size()));
         exportButton.setOnAction(event -> {
@@ -205,11 +243,68 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                     sortedList,
                     (Stage) root.getScene().getWindow());
         });
+
+        filterTextField.textProperty().addListener(filterTextFieldListener);
+        applyFilteredListPredicate(filterTextField.getText());
+    }
+
+    private void updateSelectToggleButtonState() {
+        long numDeactivated = sortedList.stream()
+                .filter(openOfferListItem -> openOfferListItem.getOpenOffer().isDeactivated())
+                .count();
+        if (numDeactivated == sortedList.size()) {
+            selectToggleButton.setSelected(false);
+        } else if (numDeactivated == 0) {
+            selectToggleButton.setSelected(true);
+        }
     }
 
     @Override
     protected void deactivate() {
         sortedList.comparatorProperty().unbind();
+        exportButton.setOnAction(null);
+
+        filterTextField.textProperty().removeListener(filterTextFieldListener);
+    }
+
+    private void applyFilteredListPredicate(String filterString) {
+        filteredList.setPredicate(item -> {
+            if (filterString.isEmpty())
+                return true;
+
+            Offer offer = item.getOpenOffer().getOffer();
+            if (offer.getId().contains(filterString)) {
+                return true;
+            }
+            if (model.getDate(item).contains(filterString)) {
+                return true;
+            }
+            if (model.getMarketLabel(item).contains(filterString)) {
+                return true;
+            }
+            if (model.getPrice(item).contains(filterString)) {
+                return true;
+            }
+            if (model.getPriceDeviation(item).contains(filterString)) {
+                return true;
+            }
+            if (model.getPaymentMethod(item).contains(filterString)) {
+                return true;
+            }
+            if (model.getVolume(item).contains(filterString)) {
+                return true;
+            }
+            if (model.getAmount(item).contains(filterString)) {
+                return true;
+            }
+            if (model.getDirectionLabel(item).contains(filterString)) {
+                return true;
+            }
+            if (offer.getOfferFeePaymentTxId().contains(filterString)) {
+                return true;
+            }
+            return false;
+        });
     }
 
     private void onDeactivateOpenOffer(OpenOffer openOffer) {
@@ -220,6 +315,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                         log.error(message);
                         new Popup().warning(Res.get("offerbook.deactivateOffer.failed", message)).show();
                     });
+            updateSelectToggleButtonState();
         }
     }
 
@@ -231,6 +327,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                         log.error(message);
                         new Popup().warning(Res.get("offerbook.activateOffer.failed", message)).show();
                     });
+            updateSelectToggleButtonState();
         }
     }
 
@@ -517,14 +614,10 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                     public TableCell<OpenOfferListItem, OpenOfferListItem> call(TableColumn<OpenOfferListItem, OpenOfferListItem> column) {
                         return new TableCell<>() {
                             final ImageView iconView = new ImageView();
-                            CheckBox checkBox;
+                            AutoTooltipSlideToggleButton checkBox;
 
                             private void updateState(@NotNull OpenOffer openOffer) {
-                                if (openOffer.isDeactivated()) {
-                                    checkBox.setSelected(false);
-                                } else {
-                                    checkBox.setSelected(true);
-                                }
+                                checkBox.setSelected(!openOffer.isDeactivated());
                             }
 
                             @Override
@@ -533,7 +626,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
 
                                 if (item != null && !empty) {
                                     if (checkBox == null) {
-                                        checkBox = new AutoTooltipCheckBox();
+                                        checkBox = new AutoTooltipSlideToggleButton();
                                         checkBox.setGraphic(iconView);
                                     }
                                     checkBox.setOnAction(event -> {
@@ -597,10 +690,10 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
     private void setEditColumnCellFactory() {
         editItemColumn.setCellValueFactory((offerListItem) -> new ReadOnlyObjectWrapper<>(offerListItem.getValue()));
         editItemColumn.setCellFactory(
-                new Callback<TableColumn<OpenOfferListItem, OpenOfferListItem>, TableCell<OpenOfferListItem, OpenOfferListItem>>() {
+                new Callback<>() {
                     @Override
                     public TableCell<OpenOfferListItem, OpenOfferListItem> call(TableColumn<OpenOfferListItem, OpenOfferListItem> column) {
-                        return new TableCell<OpenOfferListItem, OpenOfferListItem>() {
+                        return new TableCell<>() {
                             Button button;
 
                             @Override

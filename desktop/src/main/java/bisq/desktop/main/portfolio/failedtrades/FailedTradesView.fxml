@@ -18,10 +18,13 @@
   -->
 
 <?import bisq.desktop.components.AutoTooltipButton?>
+<?import bisq.desktop.components.AutoTooltipLabel?>
+<?import bisq.desktop.components.InputTextField?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Pane?>
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.geometry.Insets?>
@@ -30,7 +33,11 @@
     <padding>
         <Insets bottom="15.0" left="15.0" right="15.0" top="15.0"/>
     </padding>
-
+    <HBox fx:id="searchBox">
+        <AutoTooltipLabel fx:id="filterLabel"/>
+        <InputTextField fx:id="filterTextField" minWidth="500"/>
+        <Pane fx:id="searchBoxSpacer"/>
+    </HBox>
     <TableView fx:id="tableView" VBox.vgrow="ALWAYS">
         <columns>
             <TableColumn fx:id="tradeIdColumn" minWidth="120" maxWidth="120"/>
@@ -46,7 +53,7 @@
     </TableView>
     <HBox spacing="10">
         <Label fx:id="numItems"/>
-        <Region fx:id="spacer"/>
+        <Region fx:id="footerSpacer"/>
         <AutoTooltipButton fx:id="exportButton"/>
     </HBox>
 </VBox>
