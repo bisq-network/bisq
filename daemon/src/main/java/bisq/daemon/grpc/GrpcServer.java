@@ -17,6 +17,7 @@
 
 package bisq.daemon.grpc;
 
+import bisq.common.UserThread;
 import bisq.common.config.Config;
 
 import io.grpc.Server;
@@ -48,6 +49,7 @@ public class GrpcServer {
                       GrpcTradesService tradesService,
                       GrpcWalletsService walletsService) {
         this.server = ServerBuilder.forPort(config.apiPort)
+                .executor(UserThread.getExecutor())
                 .addService(disputeAgentsService)
                 .addService(offersService)
                 .addService(paymentAccountsService)
