@@ -47,7 +47,7 @@ task getJavaBinariesDownloadURLs {
         // The build directory will be deleted next time the clean task runs
         // Therefore, we can use it to store any temp files (separate JDK for jpackage, etc) and resulting build artefacts
         // We create a temp folder in the build directory which holds all jpackage-related artefacts (not just the final installers)
-        String tempRootDirName = 'temp-' + LocalDateTime.now().getNano()
+        String tempRootDirName = 'temp-' + LocalDateTime.now().format('yyyy.MM.dd-HHmmssSSS')
         File tempRootDir = new File(project.buildDir, tempRootDirName)
         tempRootDir.mkdirs()
         ext.tempRootDir = tempRootDir
