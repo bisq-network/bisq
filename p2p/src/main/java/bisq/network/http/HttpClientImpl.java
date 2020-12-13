@@ -49,6 +49,7 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
@@ -61,8 +62,11 @@ public class HttpClientImpl implements HttpClient {
     @Nullable
     private Socks5ProxyProvider socks5ProxyProvider;
     @Getter
+    @Setter
     private String baseUrl;
+    @Setter
     private boolean ignoreSocks5Proxy;
+    @Getter
     private final String uid;
     @Nullable
     private HttpURLConnection connection;
@@ -91,16 +95,6 @@ public class HttpClientImpl implements HttpClient {
             } catch (IOException ignore) {
             }
         }
-    }
-
-    @Override
-    public void setBaseUrl(String baseUrl) {
-        this.baseUrl = baseUrl;
-    }
-
-    @Override
-    public void setIgnoreSocks5Proxy(boolean ignoreSocks5Proxy) {
-        this.ignoreSocks5Proxy = ignoreSocks5Proxy;
     }
 
     @Override
@@ -164,12 +158,6 @@ public class HttpClientImpl implements HttpClient {
             }
         }
     }
-
-    @Override
-    public String getUid() {
-        return uid;
-    }
-
 
     /**
      * Make an HTTP Get request routed over socks5 proxy.
