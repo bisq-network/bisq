@@ -67,7 +67,7 @@ public class HttpClientImpl implements HttpClient {
     @Nullable
     private HttpURLConnection connection;
     @Nullable
-    private CloseableHttpClient httpclient;
+    private CloseableHttpClient closeableHttpClient;
 
     @Getter
     @Setter
@@ -93,9 +93,9 @@ public class HttpClientImpl implements HttpClient {
         if (connection != null) {
             connection.disconnect();
         }
-        if (httpclient != null) {
+        if (closeableHttpClient != null) {
             try {
-                httpclient.close();
+                closeableHttpClient.close();
             } catch (IOException ignore) {
             }
         }
@@ -189,7 +189,7 @@ public class HttpClientImpl implements HttpClient {
                 new PoolingHttpClientConnectionManager(reg) :
                 new PoolingHttpClientConnectionManager(reg, new FakeDnsResolver());
         try {
-            httpclient = HttpClients.custom().setConnectionManager(cm).build();
+            closeableHttpClient = HttpClients.custom().setConnectionManager(cm).build();
             InetSocketAddress socksAddress = new InetSocketAddress(socks5Proxy.getInetAddress(), socks5Proxy.getPort());
 
             // remove me: Use this to test with system-wide Tor proxy, or change port for another proxy.
@@ -202,7 +202,7 @@ public class HttpClientImpl implements HttpClient {
             if (headerKey != null && headerValue != null)
                 request.setHeader(headerKey, headerValue);
 
-            try (CloseableHttpResponse httpResponse = checkNotNull(httpclient).execute(request, context)) {
+            try (CloseableHttpResponse httpResponse = checkNotNull(closeableHttpClient).execute(request, context)) {
                 String response = convertInputStreamToString(httpResponse.getEntity().getContent());
                 log.info("Response for {} took {} ms. Data size:{}, response: {}",
                         uri,
@@ -216,8 +216,8 @@ public class HttpClientImpl implements HttpClient {
             log.error(message);
             throw new IOException(message);
         } finally {
-            if (httpclient != null) {
-                httpclient.close();
+            if (closeableHttpClient != null) {
+                closeableHttpClient.close();
             }
         }
     }
@@ -268,7 +268,7 @@ public class HttpClientImpl implements HttpClient {
                 ",\n     ignoreSocks5Proxy=" + ignoreSocks5Proxy +
                 ",\n     uid='" + uid + '\'' +
                 ",\n     connection=" + connection +
-                ",\n     httpclient=" + httpclient +
+                ",\n     httpclient=" + closeableHttpClient +
                 "\n}";
     }
 }
