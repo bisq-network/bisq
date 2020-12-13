@@ -198,7 +198,7 @@ class XmrTxProofRequest implements AssetTxProofRequest<XmrTxProofRequest.Result>
         }
 
         if (httpClient.hasPendingRequest()) {
-            log.warn("We have a pending request open on httpClient {}", httpClient);
+            log.warn("We have a pending request open. We ignore that request. httpClient {}", httpClient);
             return;
         }
 

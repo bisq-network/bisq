@@ -257,7 +257,7 @@ public class MobileNotificationService {
                                Consumer<String> resultHandler,
                                Consumer<Throwable> errorHandler) throws Exception {
         if (httpClient.hasPendingRequest()) {
-            log.warn("We have a pending request open on httpClient {}", httpClient);
+            log.warn("We have a pending request open. We ignore that request. httpClient {}", httpClient);
             return;
         }
 

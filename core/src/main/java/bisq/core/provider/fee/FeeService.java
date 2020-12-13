@@ -138,7 +138,7 @@ public class FeeService {
 
     public void requestFees(@Nullable Runnable resultHandler, @Nullable FaultHandler faultHandler) {
         if (feeProvider.getHttpClient().hasPendingRequest()) {
-            log.warn("We have a pending request open on httpClient {}", feeProvider.getHttpClient());
+            log.warn("We have a pending request open. We ignore that request. httpClient {}", feeProvider.getHttpClient());
             return;
         }
 

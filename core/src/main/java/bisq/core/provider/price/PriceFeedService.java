@@ -394,7 +394,7 @@ public class PriceFeedService {
 
     private void requestAllPrices(PriceProvider provider, Runnable resultHandler, FaultHandler faultHandler) {
         if (httpClient.hasPendingRequest()) {
-            log.warn("We have a pending request open on httpClient {}", httpClient);
+            log.warn("We have a pending request open. We ignore that request. httpClient {}", httpClient);
             return;
         }
 
