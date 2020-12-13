@@ -124,7 +124,7 @@ public class Balances {
         long sum = lockedTrades.map(trade -> btcWalletService.getAddressEntry(trade.getId(), AddressEntry.Context.MULTI_SIG)
                 .orElse(null))
                 .filter(Objects::nonNull)
-                .mapToLong(addressEntry -> addressEntry.getCoinLockedInMultiSig().getValue())
+                .mapToLong(AddressEntry::getCoinLockedInMultiSig)
                 .sum();
         lockedBalance.set(Coin.valueOf(sum));
     }

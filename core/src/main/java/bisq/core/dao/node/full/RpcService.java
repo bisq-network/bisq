@@ -121,6 +121,20 @@ public class RpcService {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    public void shutDown() {
+        if (daemon != null) {
+            daemon.shutdown();
+            log.info("daemon shut down");
+        }
+
+        if (client != null) {
+            client.close();
+            log.info("client closed");
+        }
+
+        executor.shutdown();
+    }
+
     void setup(ResultHandler resultHandler, Consumer<Throwable> errorHandler) {
         ListenableFuture<Void> future = executor.submit(() -> {
             try {

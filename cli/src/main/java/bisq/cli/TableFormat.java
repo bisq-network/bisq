@@ -18,9 +18,14 @@
 package bisq.cli;
 
 import bisq.proto.grpc.AddressBalanceInfo;
+import bisq.proto.grpc.BalancesInfo;
+import bisq.proto.grpc.BsqBalanceInfo;
+import bisq.proto.grpc.BtcBalanceInfo;
 import bisq.proto.grpc.OfferInfo;
 
 import protobuf.PaymentAccount;
+
+import com.google.common.annotations.VisibleForTesting;
 
 import java.text.SimpleDateFormat;
 
@@ -30,28 +35,28 @@ import java.util.TimeZone;
 import java.util.stream.Collectors;
 
 import static bisq.cli.ColumnHeaderConstants.*;
-import static bisq.cli.CurrencyFormat.formatAmountRange;
-import static bisq.cli.CurrencyFormat.formatOfferPrice;
-import static bisq.cli.CurrencyFormat.formatSatoshis;
-import static bisq.cli.CurrencyFormat.formatVolumeRange;
+import static bisq.cli.CurrencyFormat.*;
 import static com.google.common.base.Strings.padEnd;
 import static java.lang.String.format;
 import static java.util.Collections.max;
 import static java.util.Comparator.comparing;
 import static java.util.TimeZone.getTimeZone;
 
-class TableFormat {
+@VisibleForTesting
+public class TableFormat {
 
     static final TimeZone TZ_UTC = getTimeZone("UTC");
     static final SimpleDateFormat DATE_FORMAT_ISO_8601 = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
 
-    static String formatAddressBalanceTbl(List<AddressBalanceInfo> addressBalanceInfo) {
-        String headerLine = (COL_HEADER_ADDRESS + COL_HEADER_DELIMITER
-                + COL_HEADER_BALANCE + COL_HEADER_DELIMITER
-                + COL_HEADER_CONFIRMATIONS + COL_HEADER_DELIMITER + "\n");
-        String colDataFormat = "%-" + COL_HEADER_ADDRESS.length() + "s" // left justify
-                + "  %" + COL_HEADER_BALANCE.length() + "s" // right justify
-                + "  %" + COL_HEADER_CONFIRMATIONS.length() + "d"; // right justify
+    public static String formatAddressBalanceTbl(List<AddressBalanceInfo> addressBalanceInfo) {
+        String headerFormatString = COL_HEADER_ADDRESS + COL_HEADER_DELIMITER
+                + COL_HEADER_AVAILABLE_BALANCE + COL_HEADER_DELIMITER
+                + COL_HEADER_CONFIRMATIONS + COL_HEADER_DELIMITER + "\n";
+        String headerLine = format(headerFormatString, "BTC");
+
+        String colDataFormat = "%-" + COL_HEADER_ADDRESS.length() + "s" // lt justify
+                + "  %" + (COL_HEADER_AVAILABLE_BALANCE.length() - 1) + "s" // rt justify
+                + "  %" + COL_HEADER_CONFIRMATIONS.length() + "d"; // lt justify
         return headerLine
                 + addressBalanceInfo.stream()
                 .map(info -> format(colDataFormat,
@@ -61,15 +66,58 @@ class TableFormat {
                 .collect(Collectors.joining("\n"));
     }
 
-    static String formatOfferTable(List<OfferInfo> offerInfo, String fiatCurrency) {
+    public static String formatBalancesTbls(BalancesInfo balancesInfo) {
+        return "BTC" + "\n"
+                + formatBtcBalanceInfoTbl(balancesInfo.getBtc()) + "\n"
+                + "BSQ" + "\n"
+                + formatBsqBalanceInfoTbl(balancesInfo.getBsq());
+    }
 
+    public static String formatBsqBalanceInfoTbl(BsqBalanceInfo bsqBalanceInfo) {
+        String headerLine = COL_HEADER_AVAILABLE_CONFIRMED_BALANCE + COL_HEADER_DELIMITER
+                + COL_HEADER_UNVERIFIED_BALANCE + COL_HEADER_DELIMITER
+                + COL_HEADER_UNCONFIRMED_CHANGE_BALANCE + COL_HEADER_DELIMITER
+                + COL_HEADER_LOCKED_FOR_VOTING_BALANCE + COL_HEADER_DELIMITER
+                + COL_HEADER_LOCKUP_BONDS_BALANCE + COL_HEADER_DELIMITER
+                + COL_HEADER_UNLOCKING_BONDS_BALANCE + COL_HEADER_DELIMITER + "\n";
+        String colDataFormat = "%" + COL_HEADER_AVAILABLE_CONFIRMED_BALANCE.length() + "s" // rt justify
+                + " %" + (COL_HEADER_UNVERIFIED_BALANCE.length() + 1) + "s" // rt justify
+                + " %" + (COL_HEADER_UNCONFIRMED_CHANGE_BALANCE.length() + 1) + "s" // rt justify
+                + " %" + (COL_HEADER_LOCKED_FOR_VOTING_BALANCE.length() + 1) + "s" // rt justify
+                + " %" + (COL_HEADER_LOCKUP_BONDS_BALANCE.length() + 1) + "s" // rt justify
+                + " %" + (COL_HEADER_UNLOCKING_BONDS_BALANCE.length() + 1) + "s"; // rt justify
+        return headerLine + format(colDataFormat,
+                formatBsq(bsqBalanceInfo.getAvailableConfirmedBalance()),
+                formatBsq(bsqBalanceInfo.getUnverifiedBalance()),
+                formatBsq(bsqBalanceInfo.getUnconfirmedChangeBalance()),
+                formatBsq(bsqBalanceInfo.getLockedForVotingBalance()),
+                formatBsq(bsqBalanceInfo.getLockupBondsBalance()),
+                formatBsq(bsqBalanceInfo.getUnlockingBondsBalance()));
+    }
+
+    public static String formatBtcBalanceInfoTbl(BtcBalanceInfo btcBalanceInfo) {
+        String headerLine = COL_HEADER_AVAILABLE_BALANCE + COL_HEADER_DELIMITER
+                + COL_HEADER_RESERVED_BALANCE + COL_HEADER_DELIMITER
+                + COL_HEADER_TOTAL_AVAILABLE_BALANCE + COL_HEADER_DELIMITER
+                + COL_HEADER_LOCKED_BALANCE + COL_HEADER_DELIMITER + "\n";
+        String colDataFormat = "%" + COL_HEADER_AVAILABLE_BALANCE.length() + "s" // rt justify
+                + " %" + (COL_HEADER_RESERVED_BALANCE.length() + 1) + "s" // rt justify
+                + " %" + (COL_HEADER_TOTAL_AVAILABLE_BALANCE.length() + 1) + "s" // rt justify
+                + " %" + (COL_HEADER_LOCKED_BALANCE.length() + 1) + "s"; // rt justify
+        return headerLine + format(colDataFormat,
+                formatSatoshis(btcBalanceInfo.getAvailableBalance()),
+                formatSatoshis(btcBalanceInfo.getReservedBalance()),
+                formatSatoshis(btcBalanceInfo.getTotalAvailableBalance()),
+                formatSatoshis(btcBalanceInfo.getLockedBalance()));
+    }
+
+    static String formatOfferTable(List<OfferInfo> offerInfo, String fiatCurrency) {
         // Some column values might be longer than header, so we need to calculate them.
         int paymentMethodColWidth = getLengthOfLongestColumn(
                 COL_HEADER_PAYMENT_METHOD.length(),
                 offerInfo.stream()
                         .map(OfferInfo::getPaymentMethodShortName)
                         .collect(Collectors.toList()));
-
         String headersFormat = COL_HEADER_DIRECTION + COL_HEADER_DELIMITER
                 + COL_HEADER_PRICE + COL_HEADER_DELIMITER   // includes %s -> fiatCurrency
                 + COL_HEADER_AMOUNT + COL_HEADER_DELIMITER

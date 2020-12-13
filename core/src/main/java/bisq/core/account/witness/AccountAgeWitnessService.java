@@ -533,10 +533,18 @@ public class AccountAgeWitnessService {
                                           Coin tradeAmount,
                                           ErrorMessageHandler errorMessageHandler) {
         checkNotNull(offer);
+
+        // In case we don't find the witness we check if the trade amount is above the
+        // TOLERATED_SMALL_TRADE_AMOUNT (0.01 BTC) and only in that case return false.
         return findWitness(offer)
                 .map(witness -> verifyPeersTradeLimit(offer, tradeAmount, witness, new Date(), errorMessageHandler))
-                .orElse(false);
+                .orElse(isToleratedSmalleAmount(tradeAmount));
     }
+
+    private boolean isToleratedSmalleAmount(Coin tradeAmount) {
+        return tradeAmount.value <= OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT.value;
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Package scope verification subroutines

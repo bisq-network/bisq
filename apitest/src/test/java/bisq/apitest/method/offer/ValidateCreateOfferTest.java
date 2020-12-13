@@ -52,6 +52,7 @@ public class ValidateCreateOfferTest extends AbstractOfferTest {
                 .setMarketPriceMargin(0.00)
                 .setPrice("10000.0000")
                 .setBuyerSecurityDeposit(Restrictions.getDefaultBuyerSecurityDepositAsPercent())
+                .setMakerFeeCurrencyCode("bsq")
                 .build();
         @SuppressWarnings("ResultOfMethodCallIgnored")
         Throwable exception = assertThrows(StatusRuntimeException.class, () ->

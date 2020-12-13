@@ -17,36 +17,60 @@
 
 package bisq.apitest.method;
 
+import bisq.core.api.model.PaymentAccountForm;
+import bisq.core.api.model.TxFeeRateInfo;
+import bisq.core.proto.CoreProtoResolver;
+
+import bisq.common.util.Utilities;
+
+import bisq.proto.grpc.AddressBalanceInfo;
+import bisq.proto.grpc.BalancesInfo;
+import bisq.proto.grpc.BsqBalanceInfo;
+import bisq.proto.grpc.BtcBalanceInfo;
 import bisq.proto.grpc.CancelOfferRequest;
 import bisq.proto.grpc.ConfirmPaymentReceivedRequest;
 import bisq.proto.grpc.ConfirmPaymentStartedRequest;
 import bisq.proto.grpc.CreatePaymentAccountRequest;
-import bisq.proto.grpc.GetBalanceRequest;
+import bisq.proto.grpc.GetAddressBalanceRequest;
+import bisq.proto.grpc.GetBalancesRequest;
 import bisq.proto.grpc.GetFundingAddressesRequest;
 import bisq.proto.grpc.GetOfferRequest;
+import bisq.proto.grpc.GetPaymentAccountFormRequest;
 import bisq.proto.grpc.GetPaymentAccountsRequest;
+import bisq.proto.grpc.GetPaymentMethodsRequest;
 import bisq.proto.grpc.GetTradeRequest;
+import bisq.proto.grpc.GetTxFeeRateRequest;
+import bisq.proto.grpc.GetUnusedBsqAddressRequest;
 import bisq.proto.grpc.KeepFundsRequest;
 import bisq.proto.grpc.LockWalletRequest;
 import bisq.proto.grpc.MarketPriceRequest;
 import bisq.proto.grpc.OfferInfo;
 import bisq.proto.grpc.RegisterDisputeAgentRequest;
 import bisq.proto.grpc.RemoveWalletPasswordRequest;
+import bisq.proto.grpc.SendBsqRequest;
+import bisq.proto.grpc.SetTxFeeRatePreferenceRequest;
 import bisq.proto.grpc.SetWalletPasswordRequest;
 import bisq.proto.grpc.TakeOfferRequest;
 import bisq.proto.grpc.TradeInfo;
 import bisq.proto.grpc.UnlockWalletRequest;
+import bisq.proto.grpc.UnsetTxFeeRatePreferenceRequest;
 import bisq.proto.grpc.WithdrawFundsRequest;
 
 import protobuf.PaymentAccount;
+import protobuf.PaymentMethod;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintWriter;
+
+import java.util.List;
 import java.util.stream.Collectors;
 
 import static bisq.apitest.config.BisqAppConfig.alicedaemon;
 import static bisq.apitest.config.BisqAppConfig.arbdaemon;
 import static bisq.apitest.config.BisqAppConfig.bobdaemon;
 import static bisq.common.app.DevEnv.DEV_PRIVILEGE_PRIV_KEY;
-import static bisq.core.payment.payload.PaymentMethod.PERFECT_MONEY;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.stream;
 import static java.util.Comparator.comparing;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -69,6 +93,8 @@ public class MethodTest extends ApiTestCase {
 
     protected static PaymentAccount alicesDummyAcct;
     protected static PaymentAccount bobsDummyAcct;
+
+    private static final CoreProtoResolver CORE_PROTO_RESOLVER = new CoreProtoResolver();
 
     public static void startSupportingApps(boolean registerDisputeAgents,
                                            boolean generateBtcBlock,
@@ -102,9 +128,12 @@ public class MethodTest extends ApiTestCase {
     }
 
     // Convenience methods for building gRPC request objects
+    protected final GetBalancesRequest createGetBalancesRequest(String currencyCode) {
+        return GetBalancesRequest.newBuilder().setCurrencyCode(currencyCode).build();
+    }
 
-    protected final GetBalanceRequest createBalanceRequest() {
-        return GetBalanceRequest.newBuilder().build();
+    protected final GetAddressBalanceRequest createGetAddressBalanceRequest(String address) {
+        return GetAddressBalanceRequest.newBuilder().setAddress(address).build();
     }
 
     protected final SetWalletPasswordRequest createSetWalletPasswordRequest(String password) {
@@ -127,6 +156,14 @@ public class MethodTest extends ApiTestCase {
         return LockWalletRequest.newBuilder().build();
     }
 
+    protected final GetUnusedBsqAddressRequest createGetUnusedBsqAddressRequest() {
+        return GetUnusedBsqAddressRequest.newBuilder().build();
+    }
+
+    protected final SendBsqRequest createSendBsqRequest(String address, String amount) {
+        return SendBsqRequest.newBuilder().setAddress(address).setAmount(amount).build();
+    }
+
     protected final GetFundingAddressesRequest createGetFundingAddressesRequest() {
         return GetFundingAddressesRequest.newBuilder().build();
     }
@@ -143,8 +180,14 @@ public class MethodTest extends ApiTestCase {
         return CancelOfferRequest.newBuilder().setId(offerId).build();
     }
 
-    protected final TakeOfferRequest createTakeOfferRequest(String offerId, String paymentAccountId) {
-        return TakeOfferRequest.newBuilder().setOfferId(offerId).setPaymentAccountId(paymentAccountId).build();
+    protected final TakeOfferRequest createTakeOfferRequest(String offerId,
+                                                            String paymentAccountId,
+                                                            String takerFeeCurrencyCode) {
+        return TakeOfferRequest.newBuilder()
+                .setOfferId(offerId)
+                .setPaymentAccountId(paymentAccountId)
+                .setTakerFeeCurrencyCode(takerFeeCurrencyCode)
+                .build();
     }
 
     protected final GetTradeRequest createGetTradeRequest(String tradeId) {
@@ -173,9 +216,21 @@ public class MethodTest extends ApiTestCase {
     }
 
     // Convenience methods for calling frequently used & thoroughly tested gRPC services.
+    protected final BalancesInfo getBalances(BisqAppConfig bisqAppConfig, String currencyCode) {
+        return grpcStubs(bisqAppConfig).walletsService.getBalances(
+                createGetBalancesRequest(currencyCode)).getBalances();
+    }
 
-    protected final long getBalance(BisqAppConfig bisqAppConfig) {
-        return grpcStubs(bisqAppConfig).walletsService.getBalance(createBalanceRequest()).getBalance();
+    protected final BsqBalanceInfo getBsqBalances(BisqAppConfig bisqAppConfig) {
+        return getBalances(bisqAppConfig, "bsq").getBsq();
+    }
+
+    protected final BtcBalanceInfo getBtcBalances(BisqAppConfig bisqAppConfig) {
+        return getBalances(bisqAppConfig, "btc").getBtc();
+    }
+
+    protected final AddressBalanceInfo getAddressBalance(BisqAppConfig bisqAppConfig, String address) {
+        return grpcStubs(bisqAppConfig).walletsService.getAddressBalance(createGetAddressBalanceRequest(address)).getAddressBalanceInfo();
     }
 
     protected final void unlockWallet(BisqAppConfig bisqAppConfig, String password, long timeout) {
@@ -186,6 +241,15 @@ public class MethodTest extends ApiTestCase {
     protected final void lockWallet(BisqAppConfig bisqAppConfig) {
         //noinspection ResultOfMethodCallIgnored
         grpcStubs(bisqAppConfig).walletsService.lockWallet(createLockWalletRequest());
+    }
+
+    protected final String getUnusedBsqAddress(BisqAppConfig bisqAppConfig) {
+        return grpcStubs(bisqAppConfig).walletsService.getUnusedBsqAddress(createGetUnusedBsqAddressRequest()).getAddress();
+    }
+
+    protected final void sendBsq(BisqAppConfig bisqAppConfig, String address, String amount) {
+        //noinspection ResultOfMethodCallIgnored
+        grpcStubs(bisqAppConfig).walletsService.sendBsq(createSendBsqRequest(address, amount));
     }
 
     protected final String getUnusedBtcAddress(BisqAppConfig bisqAppConfig) {
@@ -199,26 +263,53 @@ public class MethodTest extends ApiTestCase {
                 .getAddress();
     }
 
-    protected final CreatePaymentAccountRequest createCreatePerfectMoneyPaymentAccountRequest(
-            String accountName,
-            String accountNumber,
-            String currencyCode) {
-        return CreatePaymentAccountRequest.newBuilder()
-                .setPaymentMethodId(PERFECT_MONEY.getId())
-                .setAccountName(accountName)
-                .setAccountNumber(accountNumber)
-                .setCurrencyCode(currencyCode)
-                .build();
+    protected final List<PaymentMethod> getPaymentMethods(BisqAppConfig bisqAppConfig) {
+        var req = GetPaymentMethodsRequest.newBuilder().build();
+        return grpcStubs(bisqAppConfig).paymentAccountsService.getPaymentMethods(req).getPaymentMethodsList();
     }
 
-    protected static PaymentAccount getDefaultPerfectDummyPaymentAccount(BisqAppConfig bisqAppConfig) {
-        var req = GetPaymentAccountsRequest.newBuilder().build();
+    protected final File getPaymentAccountForm(BisqAppConfig bisqAppConfig, String paymentMethodId) {
+        // We take seemingly unnecessary steps to get a File object, but the point is to
+        // test the API, and we do not directly ask bisq.core.api.model.PaymentAccountForm
+        // for an empty json form (file).
+        var req = GetPaymentAccountFormRequest.newBuilder()
+                .setPaymentMethodId(paymentMethodId)
+                .build();
+        String jsonString = grpcStubs(bisqAppConfig).paymentAccountsService.getPaymentAccountForm(req)
+                .getPaymentAccountFormJson();
+        // Write the json string to a file here in the test case.
+        File jsonFile = PaymentAccountForm.getTmpJsonFile(paymentMethodId);
+        try (PrintWriter out = new PrintWriter(jsonFile, UTF_8)) {
+            out.println(jsonString);
+        } catch (IOException ex) {
+            fail("Could not create tmp payment account form.", ex);
+        }
+        return jsonFile;
+    }
+
+    protected final bisq.core.payment.PaymentAccount createPaymentAccount(BisqAppConfig bisqAppConfig,
+                                                                          String jsonString) {
+        var req = CreatePaymentAccountRequest.newBuilder()
+                .setPaymentAccountForm(jsonString)
+                .build();
         var paymentAccountsService = grpcStubs(bisqAppConfig).paymentAccountsService;
-        PaymentAccount paymentAccount = paymentAccountsService.getPaymentAccounts(req)
+        // Normally, we can do asserts on the protos from the gRPC service, but in this
+        // case we need to return a bisq.core.payment.PaymentAccount so it can be cast
+        // to its sub type.
+        return fromProto(paymentAccountsService.createPaymentAccount(req).getPaymentAccount());
+    }
+
+    protected static List<PaymentAccount> getPaymentAccounts(BisqAppConfig bisqAppConfig) {
+        var req = GetPaymentAccountsRequest.newBuilder().build();
+        return grpcStubs(bisqAppConfig).paymentAccountsService.getPaymentAccounts(req)
                 .getPaymentAccountsList()
                 .stream()
                 .sorted(comparing(PaymentAccount::getCreationDate))
-                .collect(Collectors.toList()).get(0);
+                .collect(Collectors.toList());
+    }
+
+    protected static PaymentAccount getDefaultPerfectDummyPaymentAccount(BisqAppConfig bisqAppConfig) {
+        PaymentAccount paymentAccount = getPaymentAccounts(bisqAppConfig).get(0);
         assertEquals("PerfectMoney dummy", paymentAccount.getAccountName());
         return paymentAccount;
     }
@@ -267,6 +358,27 @@ public class MethodTest extends ApiTestCase {
         var req = createWithdrawFundsRequest(tradeId, address);
         grpcStubs(bisqAppConfig).tradesService.withdrawFunds(req);
     }
+
+    protected final TxFeeRateInfo getTxFeeRate(BisqAppConfig bisqAppConfig) {
+        var req = GetTxFeeRateRequest.newBuilder().build();
+        return TxFeeRateInfo.fromProto(
+                grpcStubs(bisqAppConfig).walletsService.getTxFeeRate(req).getTxFeeRateInfo());
+    }
+
+    protected final TxFeeRateInfo setTxFeeRate(BisqAppConfig bisqAppConfig, long feeRate) {
+        var req = SetTxFeeRatePreferenceRequest.newBuilder()
+                .setTxFeeRatePreference(feeRate)
+                .build();
+        return TxFeeRateInfo.fromProto(
+                grpcStubs(bisqAppConfig).walletsService.setTxFeeRatePreference(req).getTxFeeRateInfo());
+    }
+
+    protected final TxFeeRateInfo unsetTxFeeRate(BisqAppConfig bisqAppConfig) {
+        var req = UnsetTxFeeRatePreferenceRequest.newBuilder().build();
+        return TxFeeRateInfo.fromProto(
+                grpcStubs(bisqAppConfig).walletsService.unsetTxFeeRatePreference(req).getTxFeeRateInfo());
+    }
+
     // Static conveniences for test methods and test case fixture setups.
 
     protected static RegisterDisputeAgentRequest createRegisterDisputeAgentRequest(String disputeAgentType) {
@@ -275,10 +387,18 @@ public class MethodTest extends ApiTestCase {
                 .setRegistrationKey(DEV_PRIVILEGE_PRIV_KEY).build();
     }
 
-    @SuppressWarnings("ResultOfMethodCallIgnored")
+    @SuppressWarnings({"ResultOfMethodCallIgnored", "SameParameterValue"})
     protected static void registerDisputeAgents(BisqAppConfig bisqAppConfig) {
         var disputeAgentsService = grpcStubs(bisqAppConfig).disputeAgentsService;
         disputeAgentsService.registerDisputeAgent(createRegisterDisputeAgentRequest(MEDIATOR));
         disputeAgentsService.registerDisputeAgent(createRegisterDisputeAgentRequest(REFUND_AGENT));
+    }
+
+    protected static String encodeToHex(String s) {
+        return Utilities.bytesAsHexString(s.getBytes(UTF_8));
+    }
+
+    private bisq.core.payment.PaymentAccount fromProto(PaymentAccount proto) {
+        return bisq.core.payment.PaymentAccount.fromProto(proto, CORE_PROTO_RESOLVER);
     }
 }

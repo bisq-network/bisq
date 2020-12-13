@@ -21,6 +21,7 @@ import bisq.desktop.common.view.ActivatableViewAndModel;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipLabel;
+import bisq.desktop.components.AutoTooltipTableColumn;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.components.PeerInfoIcon;
@@ -79,10 +80,37 @@ import java.util.function.Function;
 public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTradesViewModel> {
     private final boolean useDevPrivilegeKeys;
 
+    private enum ColumnNames {
+        TRADE_ID(Res.get("shared.tradeId")),
+        DATE(Res.get("shared.dateTime")),
+        MARKET(Res.get("shared.market")),
+        PRICE(Res.get("shared.price")),
+        DEVIATION(Res.get("shared.deviation")),
+        AMOUNT(Res.get("shared.amountWithCur", Res.getBaseCurrencyCode())),
+        VOLUME(Res.get("shared.amount")),
+        TX_FEE(Res.get("shared.txFee")),
+        TRADE_FEE(Res.get("shared.tradeFee")),
+        BUYER_SEC(Res.get("shared.buyerSecurityDeposit")),
+        SELLER_SEC(Res.get("shared.sellerSecurityDeposit")),
+        OFFER_TYPE(Res.get("shared.offerType")),
+        STATUS(Res.get("shared.state"));
+
+        private final String text;
+
+        ColumnNames(String text) {
+            this.text = text;
+        }
+        @Override
+        public String toString() {
+            return text;
+        }
+    }
+
     @FXML
     TableView<ClosedTradableListItem> tableView;
     @FXML
-    TableColumn<ClosedTradableListItem, ClosedTradableListItem> priceColumn, amountColumn, volumeColumn, txFeeColumn, tradeFeeColumn, buyerSecurityDepositColumn, sellerSecurityDepositColumn,
+    TableColumn<ClosedTradableListItem, ClosedTradableListItem> priceColumn, deviationColumn, amountColumn, volumeColumn,
+            txFeeColumn, tradeFeeColumn, buyerSecurityDepositColumn, sellerSecurityDepositColumn,
             marketColumn, directionColumn, dateColumn, tradeIdColumn, stateColumn, avatarColumn;
     @FXML
     HBox footerBox;
@@ -120,18 +148,20 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
 
 	@Override
 	public void initialize() {
-		txFeeColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.txFee")));
-		tradeFeeColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.tradeFee")));
-		buyerSecurityDepositColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.buyerSecurityDeposit")));
-		sellerSecurityDepositColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.sellerSecurityDeposit")));
-        priceColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.price")));
-        amountColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.amountWithCur", Res.getBaseCurrencyCode())));
-        volumeColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.amount")));
-        marketColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.market")));
-        directionColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.offerType")));
-        dateColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.dateTime")));
-        tradeIdColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.tradeId")));
-        stateColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.state")));
+        txFeeColumn.setGraphic(new AutoTooltipLabel(ColumnNames.TX_FEE.toString()));
+        tradeFeeColumn.setGraphic(new AutoTooltipLabel(ColumnNames.TRADE_FEE.toString()));
+        buyerSecurityDepositColumn.setGraphic(new AutoTooltipLabel(ColumnNames.BUYER_SEC.toString()));
+        sellerSecurityDepositColumn.setGraphic(new AutoTooltipLabel(ColumnNames.SELLER_SEC.toString()));
+        priceColumn.setGraphic(new AutoTooltipLabel(ColumnNames.PRICE.toString()));
+        deviationColumn.setGraphic(new AutoTooltipTableColumn<>(ColumnNames.DEVIATION.toString(),
+                Res.get("portfolio.closedTrades.deviation.help")).getGraphic());
+        amountColumn.setGraphic(new AutoTooltipLabel(ColumnNames.AMOUNT.toString()));
+        volumeColumn.setGraphic(new AutoTooltipLabel(ColumnNames.VOLUME.toString()));
+        marketColumn.setGraphic(new AutoTooltipLabel(ColumnNames.MARKET.toString()));
+        directionColumn.setGraphic(new AutoTooltipLabel(ColumnNames.OFFER_TYPE.toString()));
+        dateColumn.setGraphic(new AutoTooltipLabel(ColumnNames.DATE.toString()));
+        tradeIdColumn.setGraphic(new AutoTooltipLabel(ColumnNames.TRADE_ID.toString()));
+        stateColumn.setGraphic(new AutoTooltipLabel(ColumnNames.STATUS.toString()));
         avatarColumn.setText("");
 
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
@@ -145,6 +175,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
 		setBuyerSecurityDepositColumnCellFactory();
 		setSellerSecurityDepositColumnCellFactory();
         setPriceColumnCellFactory();
+        setDeviationColumnCellFactory();
         setVolumeColumnCellFactory();
         setDateColumnCellFactory();
         setMarketColumnCellFactory();
@@ -159,6 +190,9 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
         priceColumn.setComparator(nullsFirstComparing(o ->
                 o instanceof Trade ? ((Trade) o).getTradePrice() : o.getOffer().getPrice()
         ));
+        deviationColumn.setComparator(Comparator.comparing(o ->
+                o.getTradable().getOffer().isUseMarketBasedPrice() ? o.getTradable().getOffer().getMarketPriceMargin() : 1,
+                Comparator.nullsFirst(Comparator.naturalOrder())));
         volumeColumn.setComparator(nullsFirstComparingAsTrade(Trade::getTradeVolume));
         amountColumn.setComparator(nullsFirstComparingAsTrade(Trade::getTradeAmount));
         avatarColumn.setComparator(nullsFirstComparingAsTrade(o ->
@@ -217,25 +251,27 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
         exportButton.setOnAction(event -> {
             final ObservableList<TableColumn<ClosedTradableListItem, ?>> tableColumns = tableView.getColumns();
             CSVEntryConverter<ClosedTradableListItem> headerConverter = transactionsListItem -> {
-                String[] columns = new String[12];
-                for (int i = 0; i < columns.length; i++)
-                    columns[i] = ((AutoTooltipLabel) tableColumns.get(i).getGraphic()).getText();
+                String[] columns = new String[ColumnNames.values().length];
+                for (ColumnNames m : ColumnNames.values()) {
+                    columns[m.ordinal()] = m.toString();
+                }
                 return columns;
             };
             CSVEntryConverter<ClosedTradableListItem> contentConverter = item -> {
-                String[] columns = new String[12];
-                columns[0] = model.getTradeId(item);
-                columns[1] = model.getDate(item);
-                columns[2] = model.getMarketLabel(item);
-                columns[3] = model.getPrice(item);
-                columns[4] = model.getAmount(item);
-				columns[5] = model.getVolume(item);
-                columns[6] = model.getTxFee(item);
-				columns[7] = model.getMakerFee(item);
-				columns[8] = model.getBuyerSecurityDeposit(item);
-				columns[9] = model.getSellerSecurityDeposit(item);
-                columns[10] = model.getDirectionLabel(item);
-                columns[11] = model.getState(item);
+                String[] columns = new String[ColumnNames.values().length];
+                columns[ColumnNames.TRADE_ID.ordinal()] = model.getTradeId(item);
+                columns[ColumnNames.DATE.ordinal()] = model.getDate(item);
+                columns[ColumnNames.MARKET.ordinal()] = model.getMarketLabel(item);
+                columns[ColumnNames.PRICE.ordinal()] = model.getPrice(item);
+                columns[ColumnNames.DEVIATION.ordinal()] = model.getPriceDeviation(item);
+                columns[ColumnNames.AMOUNT.ordinal()] = model.getAmount(item);
+                columns[ColumnNames.VOLUME.ordinal()] = model.getVolume(item);
+                columns[ColumnNames.TX_FEE.ordinal()] = model.getTxFee(item);
+                columns[ColumnNames.TRADE_FEE.ordinal()] = model.getMakerFee(item);
+                columns[ColumnNames.BUYER_SEC.ordinal()] = model.getBuyerSecurityDeposit(item);
+                columns[ColumnNames.SELLER_SEC.ordinal()] = model.getSellerSecurityDeposit(item);
+                columns[ColumnNames.OFFER_TYPE.ordinal()] = model.getDirectionLabel(item);
+                columns[ColumnNames.STATUS.ordinal()] = model.getState(item);
                 return columns;
             };
 
@@ -455,6 +491,24 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                             public void updateItem(final ClosedTradableListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 setGraphic(new AutoTooltipLabel(model.getPrice(item)));
+                            }
+                        };
+                    }
+                });
+    }
+
+    private void setDeviationColumnCellFactory() {
+        deviationColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
+        deviationColumn.setCellFactory(
+                new Callback<>() {
+                    @Override
+                    public TableCell<ClosedTradableListItem, ClosedTradableListItem> call(
+                            TableColumn<ClosedTradableListItem, ClosedTradableListItem> column) {
+                        return new TableCell<>() {
+                            @Override
+                            public void updateItem(final ClosedTradableListItem item, boolean empty) {
+                                super.updateItem(item, empty);
+                                setGraphic(new AutoTooltipLabel(model.getPriceDeviation(item)));
                             }
                         };
                     }

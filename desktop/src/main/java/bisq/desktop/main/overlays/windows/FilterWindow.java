@@ -37,6 +37,8 @@ import javax.inject.Named;
 
 import org.apache.commons.lang3.StringUtils;
 
+import javafx.collections.FXCollections;
+
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
@@ -50,7 +52,6 @@ import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -294,7 +295,7 @@ public class FilterWindow extends Overlay<FilterWindow> {
 
     private List<String> readAsList(InputTextField field) {
         if (field.getText().isEmpty()) {
-            return Collections.emptyList();
+            return FXCollections.emptyObservableList();
         } else {
             return Arrays.asList(StringUtils.deleteWhitespace(field.getText()).split(","));
         }

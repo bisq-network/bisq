@@ -22,6 +22,7 @@ import bisq.core.monetary.Price;
 import bisq.core.offer.CreateOfferService;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferBookService;
+import bisq.core.offer.OfferUtil;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.user.User;
@@ -55,16 +56,19 @@ class CoreOffersService {
     private final CreateOfferService createOfferService;
     private final OfferBookService offerBookService;
     private final OpenOfferManager openOfferManager;
+    private final OfferUtil offerUtil;
     private final User user;
 
     @Inject
     public CoreOffersService(CreateOfferService createOfferService,
                              OfferBookService offerBookService,
                              OpenOfferManager openOfferManager,
+                             OfferUtil offerUtil,
                              User user) {
         this.createOfferService = createOfferService;
         this.offerBookService = offerBookService;
         this.openOfferManager = openOfferManager;
+        this.offerUtil = offerUtil;
         this.user = user;
     }
 
@@ -105,7 +109,11 @@ class CoreOffersService {
                              long minAmountAsLong,
                              double buyerSecurityDeposit,
                              String paymentAccountId,
+                             String makerFeeCurrencyCode,
                              Consumer<Offer> resultHandler) {
+
+        offerUtil.maybeSetFeePaymentCurrencyPreference(makerFeeCurrencyCode);
+
         String upperCaseCurrencyCode = currencyCode.toUpperCase();
         String offerId = createOfferService.getRandomOfferId();
         Direction direction = Direction.valueOf(directionAsString.toUpperCase());

@@ -27,13 +27,25 @@ public class AbstractTradeTest extends AbstractOfferTest {
         EXPECTED_PROTOCOL_STATUS.init();
     }
 
-    protected final TradeInfo takeAlicesOffer(String offerId, String paymentAccountId) {
-        return bobStubs.tradesService.takeOffer(createTakeOfferRequest(offerId, paymentAccountId)).getTrade();
+    protected final TradeInfo takeAlicesOffer(String offerId,
+                                              String paymentAccountId,
+                                              String takerFeeCurrencyCode) {
+        return bobStubs.tradesService.takeOffer(
+                createTakeOfferRequest(offerId,
+                        paymentAccountId,
+                        takerFeeCurrencyCode))
+                .getTrade();
     }
 
     @SuppressWarnings("unused")
-    protected final TradeInfo takeBobsOffer(String offerId, String paymentAccountId) {
-        return aliceStubs.tradesService.takeOffer(createTakeOfferRequest(offerId, paymentAccountId)).getTrade();
+    protected final TradeInfo takeBobsOffer(String offerId,
+                                            String paymentAccountId,
+                                            String takerFeeCurrencyCode) {
+        return aliceStubs.tradesService.takeOffer(
+                createTakeOfferRequest(offerId,
+                        paymentAccountId,
+                        takerFeeCurrencyCode))
+                .getTrade();
     }
 
     protected final void verifyExpectedProtocolStatus(TradeInfo trade) {
