@@ -128,7 +128,7 @@ public class HttpClientImpl implements HttpClient {
                              @Nullable String headerKey,
                              @Nullable String headerValue) throws IOException {
         checkNotNull(baseUrl, "baseUrl must be set before calling doRequest");
-        checkArgument(hasPendingRequest, "We got called on the same HttpClient again while a request is still open.");
+        checkArgument(!hasPendingRequest, "We got called on the same HttpClient again while a request is still open.");
 
         hasPendingRequest = true;
         Socks5Proxy socks5Proxy = getSocks5Proxy(socks5ProxyProvider);
