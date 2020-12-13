@@ -197,6 +197,11 @@ class XmrTxProofRequest implements AssetTxProofRequest<XmrTxProofRequest.Result>
             return;
         }
 
+        if (httpClient.hasPendingRequest()) {
+            log.warn("We have a pending request open on httpClient {}", httpClient);
+            return;
+        }
+
         // Timeout handing is delegated to the connection timeout handling in httpClient.
 
         ListenableFuture<Result> future = executorService.submit(() -> {

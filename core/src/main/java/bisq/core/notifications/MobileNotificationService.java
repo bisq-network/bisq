@@ -256,6 +256,11 @@ public class MobileNotificationService {
                                boolean useSound,
                                Consumer<String> resultHandler,
                                Consumer<Throwable> errorHandler) throws Exception {
+        if (httpClient.hasPendingRequest()) {
+            log.warn("We have a pending request open on httpClient {}", httpClient);
+            return;
+        }
+
         String msg;
         if (mobileModel.getOs() == null)
             throw new RuntimeException("No mobileModel OS set");

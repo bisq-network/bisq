@@ -21,6 +21,8 @@ import bisq.core.provider.HttpClientProvider;
 import bisq.core.provider.PriceNodeHttpClient;
 import bisq.core.provider.ProvidersRepository;
 
+import bisq.network.http.HttpClient;
+
 import bisq.common.app.Version;
 import bisq.common.util.Tuple2;
 
@@ -63,5 +65,9 @@ public class FeeProvider extends HttpClientProvider {
             t.printStackTrace();
         }
         return new Tuple2<>(tsMap, map);
+    }
+
+    public HttpClient getHttpClient() {
+        return httpClient;
     }
 }

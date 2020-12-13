@@ -393,6 +393,11 @@ public class PriceFeedService {
     }
 
     private void requestAllPrices(PriceProvider provider, Runnable resultHandler, FaultHandler faultHandler) {
+        if (httpClient.hasPendingRequest()) {
+            log.warn("We have a pending request open on httpClient {}", httpClient);
+            return;
+        }
+
         priceRequest = new PriceRequest();
         SettableFuture<Tuple2<Map<String, Long>, Map<String, MarketPrice>>> future = priceRequest.requestAllPrices(provider);
         Futures.addCallback(future, new FutureCallback<>() {
