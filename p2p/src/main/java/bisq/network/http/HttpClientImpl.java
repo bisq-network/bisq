@@ -23,6 +23,8 @@ import bisq.common.app.Version;
 
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.config.Registry;
 import org.apache.http.config.RegistryBuilder;
@@ -108,24 +110,25 @@ public class HttpClientImpl implements HttpClient {
         if (ignoreSocks5Proxy || socks5Proxy == null || baseUrl.contains("localhost")) {
             log.debug("Use clear net for HttpClient. socks5Proxy={}, ignoreSocks5Proxy={}, baseUrl={}",
                     socks5Proxy, ignoreSocks5Proxy, baseUrl);
-            return requestWithGETNoProxy(param, headerKey, headerValue);
+            return requestWithoutProxy(param, HttpMethod.GET, headerKey, headerValue);
         } else {
             log.debug("Use socks5Proxy for HttpClient: " + socks5Proxy);
-            return doRequestWithGETProxy(param, socks5Proxy, headerKey, headerValue);
+            return doRequestWithProxy(param, HttpMethod.GET, socks5Proxy, headerKey, headerValue);
         }
     }
 
     /**
      * Make an HTTP Get request directly (not routed over socks5 proxy).
      */
-    public String requestWithGETNoProxy(String param,
-                                        @Nullable String headerKey,
-                                        @Nullable String headerValue) throws IOException {
+    public String requestWithoutProxy(String param,
+                                      HttpMethod httpMethod,
+                                      @Nullable String headerKey,
+                                      @Nullable String headerValue) throws IOException {
         log.debug("Executing HTTP request " + baseUrl + param + " proxy: none.");
         URL url = new URL(baseUrl + param);
         try {
             connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestMethod("GET");
+            connection.setRequestMethod(httpMethod.name());
             connection.setConnectTimeout((int) TimeUnit.SECONDS.toMillis(120));
             connection.setReadTimeout((int) TimeUnit.SECONDS.toMillis(120));
             connection.setRequestProperty("User-Agent", "bisq/" + Version.VERSION);
@@ -155,10 +158,12 @@ public class HttpClientImpl implements HttpClient {
     /**
      * Make an HTTP Get request routed over socks5 proxy.
      */
-    private String doRequestWithGETProxy(String param,
-                                         Socks5Proxy socks5Proxy,
-                                         @Nullable String headerKey,
-                                         @Nullable String headerValue) throws IOException {
+    private String doRequestWithProxy(String param,
+                                      HttpMethod httpMethod,
+                                      Socks5Proxy socks5Proxy,
+                                      @Nullable String headerKey,
+                                      @Nullable String headerValue) throws IOException {
+        String uri = baseUrl + param;
         log.debug("requestWithGETProxy param=" + param);
         // This code is adapted from:
         //  http://stackoverflow.com/a/25203021/5616248
@@ -184,7 +189,7 @@ public class HttpClientImpl implements HttpClient {
             HttpClientContext context = HttpClientContext.create();
             context.setAttribute("socks.address", socksAddress);
 
-            HttpGet request = new HttpGet(baseUrl + param);
+            HttpUriRequest request = getHttpUriRequest(httpMethod, uri);
             if (headerKey != null && headerValue != null)
                 request.setHeader(headerKey, headerValue);
 
@@ -193,11 +198,22 @@ public class HttpClientImpl implements HttpClient {
                 return convertInputStreamToString(response.getEntity().getContent());
             }
         } catch (Throwable t) {
-            throw new IOException("Error at requestWithGETProxy with URL: " + (baseUrl + param) + ". Throwable=" + t.getMessage());
+            throw new IOException("Error at requestWithGETProxy with URL: " + uri + ". Throwable=" + t.getMessage());
         } finally {
             if (httpclient != null) {
                 httpclient.close();
             }
+        }
+    }
+
+    private HttpUriRequest getHttpUriRequest(HttpMethod httpMethod, String uri) {
+        switch (httpMethod) {
+            case GET:
+                return new HttpGet(uri);
+            case POST:
+                return new HttpPost(uri);
+            default:
+                throw new IllegalArgumentException("HttpMethod not supported: " + httpMethod);
         }
     }
 
