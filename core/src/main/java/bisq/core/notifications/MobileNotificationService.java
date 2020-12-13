@@ -297,7 +297,7 @@ public class MobileNotificationService {
         String threadName = "sendMobileNotification-" + msgAsHex.substring(0, 5) + "...";
         ListenableFuture<String> future = executorService.submit(() -> {
             Thread.currentThread().setName(threadName);
-            String result = httpClient.requestWithGET(param, "User-Agent",
+            String result = httpClient.get(param, "User-Agent",
                     "bisq/" + Version.VERSION + ", uid:" + httpClient.getUid());
             log.info("sendMobileNotification result: " + result);
             checkArgument(result.equals(SUCCESS), "Result was not 'success'. result=" + result);

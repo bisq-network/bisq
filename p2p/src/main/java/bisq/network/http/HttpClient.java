@@ -26,9 +26,9 @@ public interface HttpClient {
 
     void setIgnoreSocks5Proxy(boolean ignoreSocks5Proxy);
 
-    String requestWithGET(String param,
-                          @Nullable String headerKey,
-                          @Nullable String headerValue) throws IOException;
+    String get(String param,
+               @Nullable String headerKey,
+               @Nullable String headerValue) throws IOException;
 
     String post(String param,
                 @Nullable String headerKey,

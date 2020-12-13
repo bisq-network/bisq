@@ -102,9 +102,9 @@ public class HttpClientImpl implements HttpClient {
     }
 
     @Override
-    public String requestWithGET(String param,
-                                 @Nullable String headerKey,
-                                 @Nullable String headerValue) throws IOException {
+    public String get(String param,
+                      @Nullable String headerKey,
+                      @Nullable String headerValue) throws IOException {
         return doRequest(param, HttpMethod.GET, headerKey, headerValue);
     }
 
