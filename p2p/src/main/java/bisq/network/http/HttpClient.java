@@ -30,10 +30,6 @@ public interface HttpClient {
                           @Nullable String headerKey,
                           @Nullable String headerValue) throws IOException;
 
-    String requestWithGETNoProxy(String param,
-                                 @Nullable String headerKey,
-                                 @Nullable String headerValue) throws IOException;
-
     String getUid();
 
     String getBaseUrl();

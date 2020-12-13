@@ -61,6 +61,11 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class HttpClientImpl implements HttpClient {
     @Nullable
     private Socks5ProxyProvider socks5ProxyProvider;
+    @Nullable
+    private HttpURLConnection connection;
+    @Nullable
+    private CloseableHttpClient httpclient;
+
     @Getter
     @Setter
     private String baseUrl;
@@ -68,10 +73,6 @@ public class HttpClientImpl implements HttpClient {
     private boolean ignoreSocks5Proxy;
     @Getter
     private final String uid;
-    @Nullable
-    private HttpURLConnection connection;
-    @Nullable
-    private CloseableHttpClient httpclient;
 
     @Inject
     public HttpClientImpl(@Nullable Socks5ProxyProvider socks5ProxyProvider) {
@@ -124,7 +125,6 @@ public class HttpClientImpl implements HttpClient {
     /**
      * Make an HTTP Get request directly (not routed over socks5 proxy).
      */
-    @Override
     public String requestWithGETNoProxy(String param,
                                         @Nullable String headerKey,
                                         @Nullable String headerValue) throws IOException {
