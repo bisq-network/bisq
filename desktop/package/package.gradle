@@ -261,6 +261,45 @@ task packageInstallers {
                 " --resource-dir \"${project(':desktop').projectDir}/package/macosx\""
             )
 
+            ant.input(message: "Sign dylibs before packaging the app? (y=yes, n=no)",
+                    addproperty: "macos-sign-check",
+                    validargs: "y,n")
+            if (ant.properties['macos-sign-check'] == 'y') {
+                // Create a temp folder to extract the macos-specific dylibs that need to be signed
+                File tempDylibFolderPath = new File(tempRootDir, "dylibs-to-sign")
+                tempDylibFolderPath.mkdirs();
+
+                // Dylibs relevant for signing (paths relative to the tempDylibFolderPath)
+                String dylibsToSign = (
+                        " libjavafx_iio.dylib" +
+                        " libglass.dylib" +
+                        " libjavafx_font.dylib" +
+                        " libprism_common.dylib" +
+                        " libprism_es2.dylib" +
+                        " libdecora_sse.dylib" +
+                        " libprism_sw.dylib" +
+                        " org/bridj/lib/darwin_universal/libbridj.dylib" +
+                        " META-INF/native/libio_grpc_netty_shaded_netty_tcnative_osx_x86_64.jnilib" +
+                        " lib/x86_64/darwin/libscrypt.dylib" +
+                        " com/github/sarxos/webcam/ds/buildin/lib/darwin_universal/libOpenIMAJGrabber.dylib"
+                )
+
+                // Extract dylibss for signing
+                executeCmd("cd ${tempDylibFolderPath} &&" +
+                        " jar xf ${fatJarFolderPath}/${mainJarName}" +
+                        dylibsToSign)
+
+                // Sign them
+                executeCmd("cd ${tempDylibFolderPath} &&" +
+                        " codesign -vvv --options runtime --deep --force --sign \"Developer ID Application: Christoph Atteneder (WQT93T6D6C)\"" +
+                        dylibsToSign)
+
+                // Replace unsigned files in jar file
+                executeCmd("cd ${tempDylibFolderPath} &&" +
+                        " jar uf ${fatJarFolderPath}/${mainJarName}" +
+                        dylibsToSign)
+            }
+
             executeCmd(jPackageFilePath + commonOpts + macOpts + " --type dmg")
         } else {
             String linuxOpts = (
