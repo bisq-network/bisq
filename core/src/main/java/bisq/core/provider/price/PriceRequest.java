@@ -50,7 +50,7 @@ public class PriceRequest {
         String baseUrl = provider.getBaseUrl();
         SettableFuture<Tuple2<Map<String, Long>, Map<String, MarketPrice>>> resultFuture = SettableFuture.create();
         ListenableFuture<Tuple2<Map<String, Long>, Map<String, MarketPrice>>> future = executorService.submit(() -> {
-            Thread.currentThread().setName("PriceRequest-" + baseUrl);
+            Thread.currentThread().setName("PriceRequest @ " + baseUrl);
             return provider.getAll();
         });
 
