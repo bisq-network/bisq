@@ -104,14 +104,7 @@ public class HttpClientImpl implements HttpClient {
                                  @Nullable String headerValue) throws IOException {
         checkNotNull(baseUrl, "baseUrl must be set before calling requestWithGET");
 
-        Socks5Proxy socks5Proxy = null;
-        if (socks5ProxyProvider != null) {
-            // We use the custom socks5ProxyHttp. If not set we request socks5ProxyProvider.getSocks5ProxyBtc()
-            // which delivers the btc proxy if set, otherwise the internal proxy.
-            socks5Proxy = socks5ProxyProvider.getSocks5ProxyHttp();
-            if (socks5Proxy == null)
-                socks5Proxy = socks5ProxyProvider.getSocks5Proxy();
-        }
+        Socks5Proxy socks5Proxy = getSocks5Proxy(socks5ProxyProvider);
         if (ignoreSocks5Proxy || socks5Proxy == null || baseUrl.contains("localhost")) {
             log.debug("Use clear net for HttpClient. socks5Proxy={}, ignoreSocks5Proxy={}, baseUrl={}",
                     socks5Proxy, ignoreSocks5Proxy, baseUrl);
@@ -120,6 +113,18 @@ public class HttpClientImpl implements HttpClient {
             log.debug("Use socks5Proxy for HttpClient: " + socks5Proxy);
             return doRequestWithGETProxy(param, socks5Proxy, headerKey, headerValue);
         }
+    }
+
+    private Socks5Proxy getSocks5Proxy(Socks5ProxyProvider socks5ProxyProvider) {
+        Socks5Proxy socks5Proxy = null;
+        if (socks5ProxyProvider != null) {
+            // We use the custom socks5ProxyHttp. If not set we request socks5ProxyProvider.getSocks5ProxyBtc()
+            // which delivers the btc proxy if set, otherwise the internal proxy.
+            socks5Proxy = socks5ProxyProvider.getSocks5ProxyHttp();
+            if (socks5Proxy == null)
+                socks5Proxy = socks5ProxyProvider.getSocks5Proxy();
+        }
+        return socks5Proxy;
     }
 
     /**
