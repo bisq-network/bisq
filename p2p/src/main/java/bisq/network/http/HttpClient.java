@@ -38,5 +38,7 @@ public interface HttpClient {
 
     String getBaseUrl();
 
+    boolean hasPendingRequest();
+
     void shutDown();
 }

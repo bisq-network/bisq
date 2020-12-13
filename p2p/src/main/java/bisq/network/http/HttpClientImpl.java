@@ -57,6 +57,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 // TODO close connection if failing
@@ -76,6 +77,7 @@ public class HttpClientImpl implements HttpClient {
     private boolean ignoreSocks5Proxy;
     @Getter
     private final String uid;
+    private boolean hasPendingRequest;
 
     @Inject
     public HttpClientImpl(@Nullable Socks5ProxyProvider socks5ProxyProvider) {
@@ -90,15 +92,21 @@ public class HttpClientImpl implements HttpClient {
 
     @Override
     public void shutDown() {
-        if (connection != null) {
-            connection.disconnect();
-        }
-        if (closeableHttpClient != null) {
-            try {
-                closeableHttpClient.close();
-            } catch (IOException ignore) {
+        try {
+            if (connection != null) {
+                connection.getInputStream().close();
+                connection.disconnect();
             }
+            if (closeableHttpClient != null) {
+                closeableHttpClient.close();
+            }
+        } catch (IOException ignore) {
         }
+    }
+
+    @Override
+    public boolean hasPendingRequest() {
+        return hasPendingRequest;
     }
 
     @Override
@@ -119,7 +127,10 @@ public class HttpClientImpl implements HttpClient {
                              HttpMethod httpMethod,
                              @Nullable String headerKey,
                              @Nullable String headerValue) throws IOException {
-        checkNotNull(baseUrl, "baseUrl must be set before calling post");
+        checkNotNull(baseUrl, "baseUrl must be set before calling doRequest");
+        checkArgument(hasPendingRequest, "We got called on the same HttpClient again while a request is still open.");
+
+        hasPendingRequest = true;
         Socks5Proxy socks5Proxy = getSocks5Proxy(socks5ProxyProvider);
         if (ignoreSocks5Proxy || socks5Proxy == null || baseUrl.contains("localhost")) {
             return requestWithoutProxy(baseUrl, param, httpMethod, headerKey, headerValue);
@@ -136,8 +147,8 @@ public class HttpClientImpl implements HttpClient {
         long ts = System.currentTimeMillis();
         String spec = baseUrl + param;
         log.info("requestWithoutProxy: URL={}, httpMethod={}", spec, httpMethod);
-        URL url = new URL(spec);
         try {
+            URL url = new URL(spec);
             connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod(httpMethod.name());
             connection.setConnectTimeout((int) TimeUnit.SECONDS.toMillis(120));
@@ -166,10 +177,14 @@ public class HttpClientImpl implements HttpClient {
             throw new IOException(message);
         } finally {
             try {
-                if (connection != null)
+                if (connection != null) {
                     connection.getInputStream().close();
+                    connection.disconnect();
+                    connection = null;
+                }
             } catch (Throwable ignore) {
             }
+            hasPendingRequest = false;
         }
     }
 
@@ -226,7 +241,9 @@ public class HttpClientImpl implements HttpClient {
         } finally {
             if (closeableHttpClient != null) {
                 closeableHttpClient.close();
+                closeableHttpClient = null;
             }
+            hasPendingRequest = false;
         }
     }
 
