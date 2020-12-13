@@ -110,22 +110,24 @@ public class HttpClientImpl implements HttpClient {
         if (ignoreSocks5Proxy || socks5Proxy == null || baseUrl.contains("localhost")) {
             log.debug("Use clear net for HttpClient. socks5Proxy={}, ignoreSocks5Proxy={}, baseUrl={}",
                     socks5Proxy, ignoreSocks5Proxy, baseUrl);
-            return requestWithoutProxy(param, HttpMethod.GET, headerKey, headerValue);
+            return requestWithoutProxy(baseUrl, param, HttpMethod.GET, headerKey, headerValue);
         } else {
             log.debug("Use socks5Proxy for HttpClient: " + socks5Proxy);
-            return doRequestWithProxy(param, HttpMethod.GET, socks5Proxy, headerKey, headerValue);
+            return doRequestWithProxy(baseUrl, param, HttpMethod.GET, socks5Proxy, headerKey, headerValue);
         }
     }
 
     /**
      * Make an HTTP Get request directly (not routed over socks5 proxy).
      */
-    public String requestWithoutProxy(String param,
+    public String requestWithoutProxy(String baseUrl,
+                                      String param,
                                       HttpMethod httpMethod,
                                       @Nullable String headerKey,
                                       @Nullable String headerValue) throws IOException {
         log.debug("Executing HTTP request " + baseUrl + param + " proxy: none.");
-        URL url = new URL(baseUrl + param);
+        String spec = baseUrl + param;
+        URL url = new URL(spec);
         try {
             connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod(httpMethod.name());
@@ -143,7 +145,7 @@ public class HttpClientImpl implements HttpClient {
                 throw new HttpException(error);
             }
         } catch (Throwable t) {
-            final String message = "Error at requestWithGETNoProxy with URL: " + (baseUrl + param) + ". Throwable=" + t.getMessage();
+            final String message = "Error at requestWithGETNoProxy with URL: " + spec + ". Throwable=" + t.getMessage();
             log.error(message);
             throw new IOException(message);
         } finally {
@@ -158,7 +160,8 @@ public class HttpClientImpl implements HttpClient {
     /**
      * Make an HTTP Get request routed over socks5 proxy.
      */
-    private String doRequestWithProxy(String param,
+    private String doRequestWithProxy(String baseUrl,
+                                      String param,
                                       HttpMethod httpMethod,
                                       Socks5Proxy socks5Proxy,
                                       @Nullable String headerKey,
