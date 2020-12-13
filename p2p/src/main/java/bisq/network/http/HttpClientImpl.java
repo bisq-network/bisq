@@ -220,10 +220,13 @@ public class HttpClientImpl implements HttpClient {
 
     @Override
     public String toString() {
-        return "HttpClient{" +
-                "socks5ProxyProvider=" + socks5ProxyProvider +
-                ", baseUrl='" + baseUrl + '\'' +
-                ", ignoreSocks5Proxy=" + ignoreSocks5Proxy +
-                '}';
+        return "HttpClientImpl{" +
+                "\n     socks5ProxyProvider=" + socks5ProxyProvider +
+                ",\n     baseUrl='" + baseUrl + '\'' +
+                ",\n     ignoreSocks5Proxy=" + ignoreSocks5Proxy +
+                ",\n     uid='" + uid + '\'' +
+                ",\n     connection=" + connection +
+                ",\n     httpclient=" + httpclient +
+                "\n}";
     }
 }
