@@ -26,9 +26,9 @@ import javax.inject.Singleton;
 import javax.annotation.Nullable;
 
 @Singleton
-public class PriceNodeHttpClient extends HttpClientImpl {
+public class PriceHttpClient extends HttpClientImpl {
     @Inject
-    public PriceNodeHttpClient(@Nullable Socks5ProxyProvider socks5ProxyProvider) {
+    public PriceHttpClient(@Nullable Socks5ProxyProvider socks5ProxyProvider) {
         super(socks5ProxyProvider);
     }
 }
