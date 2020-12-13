@@ -20,6 +20,7 @@ package bisq.network.http;
 import bisq.network.Socks5ProxyProvider;
 
 import bisq.common.app.Version;
+import bisq.common.util.Utilities;
 
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -105,14 +106,10 @@ public class HttpClientImpl implements HttpClient {
                                  @Nullable String headerKey,
                                  @Nullable String headerValue) throws IOException {
         checkNotNull(baseUrl, "baseUrl must be set before calling requestWithGET");
-
         Socks5Proxy socks5Proxy = getSocks5Proxy(socks5ProxyProvider);
         if (ignoreSocks5Proxy || socks5Proxy == null || baseUrl.contains("localhost")) {
-            log.debug("Use clear net for HttpClient. socks5Proxy={}, ignoreSocks5Proxy={}, baseUrl={}",
-                    socks5Proxy, ignoreSocks5Proxy, baseUrl);
             return requestWithoutProxy(baseUrl, param, HttpMethod.GET, headerKey, headerValue);
         } else {
-            log.debug("Use socks5Proxy for HttpClient: " + socks5Proxy);
             return doRequestWithProxy(baseUrl, param, HttpMethod.GET, socks5Proxy, headerKey, headerValue);
         }
     }
@@ -125,8 +122,9 @@ public class HttpClientImpl implements HttpClient {
                                       HttpMethod httpMethod,
                                       @Nullable String headerKey,
                                       @Nullable String headerValue) throws IOException {
-        log.debug("Executing HTTP request " + baseUrl + param + " proxy: none.");
+        long ts = System.currentTimeMillis();
         String spec = baseUrl + param;
+        log.info("requestWithoutProxy: URL={}, httpMethod={}", spec, httpMethod);
         URL url = new URL(spec);
         try {
             connection = (HttpURLConnection) url.openConnection();
@@ -134,18 +132,25 @@ public class HttpClientImpl implements HttpClient {
             connection.setConnectTimeout((int) TimeUnit.SECONDS.toMillis(120));
             connection.setReadTimeout((int) TimeUnit.SECONDS.toMillis(120));
             connection.setRequestProperty("User-Agent", "bisq/" + Version.VERSION);
-            if (headerKey != null && headerValue != null)
+            if (headerKey != null && headerValue != null) {
                 connection.setRequestProperty(headerKey, headerValue);
+            }
 
             if (connection.getResponseCode() == 200) {
-                return convertInputStreamToString(connection.getInputStream());
+                String response = convertInputStreamToString(connection.getInputStream());
+                log.info("Response for {} took {} ms. Data size:{}, response: {}",
+                        spec,
+                        System.currentTimeMillis() - ts,
+                        Utilities.readableFileSize(response.getBytes().length),
+                        Utilities.toTruncatedString(response));
+                return response;
             } else {
                 String error = convertInputStreamToString(connection.getErrorStream());
                 connection.getErrorStream().close();
                 throw new HttpException(error);
             }
         } catch (Throwable t) {
-            final String message = "Error at requestWithGETNoProxy with URL: " + spec + ". Throwable=" + t.getMessage();
+            String message = "Error at requestWithoutProxy with URL: " + spec + ". Throwable=" + t.getMessage();
             log.error(message);
             throw new IOException(message);
         } finally {
@@ -166,8 +171,9 @@ public class HttpClientImpl implements HttpClient {
                                       Socks5Proxy socks5Proxy,
                                       @Nullable String headerKey,
                                       @Nullable String headerValue) throws IOException {
+        long ts = System.currentTimeMillis();
         String uri = baseUrl + param;
-        log.debug("requestWithGETProxy param=" + param);
+        log.info("requestWithoutProxy: uri={}, httpMethod={}", uri, httpMethod);
         // This code is adapted from:
         //  http://stackoverflow.com/a/25203021/5616248
 
@@ -196,12 +202,19 @@ public class HttpClientImpl implements HttpClient {
             if (headerKey != null && headerValue != null)
                 request.setHeader(headerKey, headerValue);
 
-            log.debug("Executing request " + request + " proxy: " + socksAddress);
-            try (CloseableHttpResponse response = checkNotNull(httpclient).execute(request, context)) {
-                return convertInputStreamToString(response.getEntity().getContent());
+            try (CloseableHttpResponse httpResponse = checkNotNull(httpclient).execute(request, context)) {
+                String response = convertInputStreamToString(httpResponse.getEntity().getContent());
+                log.info("Response for {} took {} ms. Data size:{}, response: {}",
+                        uri,
+                        System.currentTimeMillis() - ts,
+                        Utilities.readableFileSize(response.getBytes().length),
+                        Utilities.toTruncatedString(response));
+                return response;
             }
         } catch (Throwable t) {
-            throw new IOException("Error at requestWithGETProxy with URL: " + uri + ". Throwable=" + t.getMessage());
+            String message = "Error at doRequestWithProxy with URL: " + uri + ". Throwable=" + t.getMessage();
+            log.error(message);
+            throw new IOException(message);
         } finally {
             if (httpclient != null) {
                 httpclient.close();
