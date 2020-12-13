@@ -105,23 +105,34 @@ public class HttpClientImpl implements HttpClient {
     public String requestWithGET(String param,
                                  @Nullable String headerKey,
                                  @Nullable String headerValue) throws IOException {
-        checkNotNull(baseUrl, "baseUrl must be set before calling requestWithGET");
+        return doRequest(param, HttpMethod.GET, headerKey, headerValue);
+    }
+
+    @Override
+    public String post(String param,
+                       @Nullable String headerKey,
+                       @Nullable String headerValue) throws IOException {
+        return doRequest(param, HttpMethod.POST, headerKey, headerValue);
+    }
+
+    private String doRequest(String param,
+                             HttpMethod httpMethod,
+                             @Nullable String headerKey,
+                             @Nullable String headerValue) throws IOException {
+        checkNotNull(baseUrl, "baseUrl must be set before calling post");
         Socks5Proxy socks5Proxy = getSocks5Proxy(socks5ProxyProvider);
         if (ignoreSocks5Proxy || socks5Proxy == null || baseUrl.contains("localhost")) {
-            return requestWithoutProxy(baseUrl, param, HttpMethod.GET, headerKey, headerValue);
+            return requestWithoutProxy(baseUrl, param, httpMethod, headerKey, headerValue);
         } else {
-            return doRequestWithProxy(baseUrl, param, HttpMethod.GET, socks5Proxy, headerKey, headerValue);
+            return doRequestWithProxy(baseUrl, param, httpMethod, socks5Proxy, headerKey, headerValue);
         }
     }
 
-    /**
-     * Make an HTTP Get request directly (not routed over socks5 proxy).
-     */
-    public String requestWithoutProxy(String baseUrl,
-                                      String param,
-                                      HttpMethod httpMethod,
-                                      @Nullable String headerKey,
-                                      @Nullable String headerValue) throws IOException {
+    private String requestWithoutProxy(String baseUrl,
+                                       String param,
+                                       HttpMethod httpMethod,
+                                       @Nullable String headerKey,
+                                       @Nullable String headerValue) throws IOException {
         long ts = System.currentTimeMillis();
         String spec = baseUrl + param;
         log.info("requestWithoutProxy: URL={}, httpMethod={}", spec, httpMethod);
@@ -162,9 +173,6 @@ public class HttpClientImpl implements HttpClient {
         }
     }
 
-    /**
-     * Make an HTTP Get request routed over socks5 proxy.
-     */
     private String doRequestWithProxy(String baseUrl,
                                       String param,
                                       HttpMethod httpMethod,
