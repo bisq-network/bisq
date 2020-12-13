@@ -115,23 +115,6 @@ public class HttpClientImpl implements HttpClient {
         }
     }
 
-    @Nullable
-    private Socks5Proxy getSocks5Proxy(Socks5ProxyProvider socks5ProxyProvider) {
-        if (socks5ProxyProvider == null) {
-            return null;
-        }
-
-        // We use the custom socks5ProxyHttp.
-        Socks5Proxy socks5Proxy = socks5ProxyProvider.getSocks5ProxyHttp();
-        if (socks5Proxy != null) {
-            return socks5Proxy;
-        }
-
-        // If not set we request socks5ProxyProvider.getSocks5Proxy()
-        // which delivers the btc proxy if set, otherwise the internal proxy.
-        return socks5ProxyProvider.getSocks5Proxy();
-    }
-
     /**
      * Make an HTTP Get request directly (not routed over socks5 proxy).
      */
@@ -216,6 +199,23 @@ public class HttpClientImpl implements HttpClient {
                 httpclient.close();
             }
         }
+    }
+
+    @Nullable
+    private Socks5Proxy getSocks5Proxy(Socks5ProxyProvider socks5ProxyProvider) {
+        if (socks5ProxyProvider == null) {
+            return null;
+        }
+
+        // We use the custom socks5ProxyHttp.
+        Socks5Proxy socks5Proxy = socks5ProxyProvider.getSocks5ProxyHttp();
+        if (socks5Proxy != null) {
+            return socks5Proxy;
+        }
+
+        // If not set we request socks5ProxyProvider.getSocks5Proxy()
+        // which delivers the btc proxy if set, otherwise the internal proxy.
+        return socks5ProxyProvider.getSocks5Proxy();
     }
 
     private String convertInputStreamToString(InputStream inputStream) throws IOException {
