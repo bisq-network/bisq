@@ -101,7 +101,7 @@ public class PriceFeedService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public PriceFeedService(@SuppressWarnings("SameParameterValue") PriceNodeHttpClient httpClient,
+    public PriceFeedService(PriceNodeHttpClient httpClient,
                             @SuppressWarnings("SameParameterValue") ProvidersRepository providersRepository,
                             @SuppressWarnings("SameParameterValue") Preferences preferences) {
         this.httpClient = httpClient;
@@ -194,9 +194,9 @@ public class PriceFeedService {
             if (throwable instanceof PriceRequestException) {
                 String baseUrlOfFaultyRequest = ((PriceRequestException) throwable).priceProviderBaseUrl;
                 String baseUrlOfCurrentRequest = priceProvider.getBaseUrl();
-                if (baseUrlOfFaultyRequest != null && baseUrlOfCurrentRequest.equals(baseUrlOfFaultyRequest)) {
-                    log.warn("We received an error: baseUrlOfCurrentRequest={}, baseUrlOfFaultyRequest={}",
-                            baseUrlOfCurrentRequest, baseUrlOfFaultyRequest);
+                if (baseUrlOfCurrentRequest.equals(baseUrlOfFaultyRequest)) {
+                    log.warn("We received an error: baseUrlOfCurrentRequest={}, baseUrlOfFaultyRequest={}, error={}",
+                            baseUrlOfCurrentRequest, baseUrlOfFaultyRequest, throwable.toString());
                     retryWithNewProvider();
                 } else {
                     log.debug("We received an error from an earlier request. We have started a new request already so we ignore that error. " +
@@ -204,7 +204,7 @@ public class PriceFeedService {
                             baseUrlOfCurrentRequest, baseUrlOfFaultyRequest);
                 }
             } else {
-                log.warn("We received an error with throwable={}", throwable);
+                log.warn("We received an error with throwable={}", throwable.toString());
                 retryWithNewProvider();
             }
 
