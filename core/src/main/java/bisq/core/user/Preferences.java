@@ -131,6 +131,19 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
             "devinxmrwu4jrfq2zmq5kqjpxb44hx7i7didebkwrtvmvygj4uuop2ad.onion" // @devinbileck
     ));
 
+
+    private static final ArrayList<String> TX_BROADCAST_SERVICES_CLEAR_NET = new ArrayList<>(Arrays.asList(
+            "https://mempool.space/api/tx",         // @wiz
+            "https://mempool.emzy.de/api/tx",       // @emzy
+            "https://mempool.bisq.services/api/tx"  // @devinbileck
+    ));
+
+    private static final ArrayList<String> TX_BROADCAST_SERVICES = new ArrayList<>(Arrays.asList(
+            "http://mempoolhqx4isw62xs7abwphsq7ldayuidyx2v2oethdhhj6mlo2r6ad.onion/api/tx",     // @wiz
+            "http://mempool4t6mypeemozyterviq3i5de4kpoua65r3qkn5i3kknu5l2cad.onion/api/tx",     // @emzy
+            "http://mempoolusb2f67qi7mz2it7n5e77a6komdzx6wftobcduxszkdfun2yd.onion/api/tx"      // @devinbileck
+    ));
+
     public static final boolean USE_SYMMETRIC_SECURITY_DEPOSIT = true;
 
 
@@ -909,6 +922,14 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
             return XMR_TX_PROOF_SERVICES_CLEAR_NET;
         } else {
             return XMR_TX_PROOF_SERVICES;
+        }
+    }
+
+    public List<String> getDefaultTxBroadcastServices() {
+        if (config.useLocalhostForP2P) {
+            return TX_BROADCAST_SERVICES_CLEAR_NET;
+        } else {
+            return TX_BROADCAST_SERVICES;
         }
     }
 
