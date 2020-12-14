@@ -17,28 +17,7 @@
 
 package bisq.network.http;
 
-import java.io.IOException;
-
-import javax.annotation.Nullable;
-
-public interface HttpClient {
-    void setBaseUrl(String baseUrl);
-
-    void setIgnoreSocks5Proxy(boolean ignoreSocks5Proxy);
-
-    String get(String param,
-               @Nullable String headerKey,
-               @Nullable String headerValue) throws IOException;
-
-    String post(String param,
-                @Nullable String headerKey,
-                @Nullable String headerValue) throws IOException;
-
-    String getUid();
-
-    String getBaseUrl();
-
-    boolean hasPendingRequest();
-
-    void shutDown();
+public enum HttpMethod {
+    GET,
+    POST
 }

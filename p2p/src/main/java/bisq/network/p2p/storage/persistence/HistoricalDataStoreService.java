@@ -192,10 +192,7 @@ public abstract class HistoricalDataStoreService<T extends PersistableNetworkPay
                     pruneStore(persisted, version);
                     completeHandler.run();
                 },
-                () -> {
-                    log.warn("Resource file with file name {} does not exits.", fileName);
-                    completeHandler.run();
-                });
+                completeHandler::run);
     }
 
     private void pruneStore(PersistableNetworkPayloadStore<? extends PersistableNetworkPayload> historicalStore,

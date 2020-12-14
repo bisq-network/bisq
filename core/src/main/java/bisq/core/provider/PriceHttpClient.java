@@ -21,12 +21,14 @@ import bisq.network.Socks5ProxyProvider;
 import bisq.network.http.HttpClientImpl;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import javax.annotation.Nullable;
 
-public class PriceNodeHttpClient extends HttpClientImpl {
+@Singleton
+public class PriceHttpClient extends HttpClientImpl {
     @Inject
-    public PriceNodeHttpClient(@Nullable Socks5ProxyProvider socks5ProxyProvider) {
+    public PriceHttpClient(@Nullable Socks5ProxyProvider socks5ProxyProvider) {
         super(socks5ProxyProvider);
     }
 }

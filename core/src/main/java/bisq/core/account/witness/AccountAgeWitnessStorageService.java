@@ -17,9 +17,8 @@
 
 package bisq.core.account.witness;
 
-import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
-import bisq.network.p2p.storage.persistence.MapStoreService;
+import bisq.network.p2p.storage.persistence.HistoricalDataStoreService;
 
 import bisq.common.config.Config;
 import bisq.common.persistence.PersistenceManager;
@@ -29,12 +28,10 @@ import javax.inject.Named;
 
 import java.io.File;
 
-import java.util.Map;
-
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class AccountAgeWitnessStorageService extends MapStoreService<AccountAgeWitnessStore, PersistableNetworkPayload> {
+public class AccountAgeWitnessStorageService extends HistoricalDataStoreService<AccountAgeWitnessStore> {
     private static final String FILE_NAME = "AccountAgeWitnessStore";
 
 
@@ -48,14 +45,10 @@ public class AccountAgeWitnessStorageService extends MapStoreService<AccountAgeW
         super(storageDir, persistenceManager);
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    protected void initializePersistenceManager() {
-        persistenceManager.initialize(store, PersistenceManager.Source.NETWORK);
-    }
 
     @Override
     public String getFileName() {
@@ -63,8 +56,8 @@ public class AccountAgeWitnessStorageService extends MapStoreService<AccountAgeW
     }
 
     @Override
-    public Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> getMap() {
-        return store.getMap();
+    protected void initializePersistenceManager() {
+        persistenceManager.initialize(store, PersistenceManager.Source.NETWORK);
     }
 
     @Override
