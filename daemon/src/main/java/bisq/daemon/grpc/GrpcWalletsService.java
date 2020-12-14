@@ -29,6 +29,8 @@ import bisq.proto.grpc.GetBalancesReply;
 import bisq.proto.grpc.GetBalancesRequest;
 import bisq.proto.grpc.GetFundingAddressesReply;
 import bisq.proto.grpc.GetFundingAddressesRequest;
+import bisq.proto.grpc.GetTransactionReply;
+import bisq.proto.grpc.GetTransactionRequest;
 import bisq.proto.grpc.GetTxFeeRateReply;
 import bisq.proto.grpc.GetTxFeeRateRequest;
 import bisq.proto.grpc.GetUnusedBsqAddressReply;
@@ -274,6 +276,23 @@ class GrpcWalletsService extends WalletsGrpc.WalletsImplBase {
                 responseObserver.onCompleted();
             });
         } catch (IllegalStateException cause) {
+            var ex = new StatusRuntimeException(Status.UNKNOWN.withDescription(cause.getMessage()));
+            responseObserver.onError(ex);
+            throw ex;
+        }
+    }
+
+    @Override
+    public void getTransaction(GetTransactionRequest req,
+                               StreamObserver<GetTransactionReply> responseObserver) {
+        try {
+            Transaction tx = coreApi.getTransaction(req.getTxId());
+            var reply = GetTransactionReply.newBuilder()
+                    .setTxInfo(toTxInfo(tx).toProtoMessage())
+                    .build();
+            responseObserver.onNext(reply);
+            responseObserver.onCompleted();
+        } catch (IllegalStateException | IllegalArgumentException cause) {
             var ex = new StatusRuntimeException(Status.UNKNOWN.withDescription(cause.getMessage()));
             responseObserver.onError(ex);
             throw ex;

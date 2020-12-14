@@ -31,6 +31,7 @@ import bisq.proto.grpc.GetPaymentAccountFormRequest;
 import bisq.proto.grpc.GetPaymentAccountsRequest;
 import bisq.proto.grpc.GetPaymentMethodsRequest;
 import bisq.proto.grpc.GetTradeRequest;
+import bisq.proto.grpc.GetTransactionRequest;
 import bisq.proto.grpc.GetTxFeeRateRequest;
 import bisq.proto.grpc.GetUnusedBsqAddressRequest;
 import bisq.proto.grpc.GetVersionRequest;
@@ -116,6 +117,7 @@ public class CliMain {
         gettxfeerate,
         settxfeerate,
         unsettxfeerate,
+        gettransaction,
         lockwallet,
         unlockwallet,
         removewalletpassword,
@@ -275,7 +277,10 @@ public class CliMain {
                             .build();
                     var reply = walletsService.sendBsq(request);
                     TxInfo txInfo = reply.getTxInfo();
-                    out.printf("%s bsq sent to %s in tx %s%n", amount, address, txInfo.getId());
+                    out.printf("%s bsq sent to %s in tx %s%n",
+                            amount,
+                            address,
+                            txInfo.getTxId());
                     return;
                 }
                 case sendbtc: {
@@ -305,7 +310,10 @@ public class CliMain {
                             .build();
                     var reply = walletsService.sendBtc(request);
                     TxInfo txInfo = reply.getTxInfo();
-                    out.printf("%s btc sent to %s in tx %s%n", amount, address, txInfo.getId());
+                    out.printf("%s btc sent to %s in tx %s%n",
+                            amount,
+                            address,
+                            txInfo.getTxId());
                     return;
                 }
                 case gettxfeerate: {
@@ -330,6 +338,18 @@ public class CliMain {
                     var request = UnsetTxFeeRatePreferenceRequest.newBuilder().build();
                     var reply = walletsService.unsetTxFeeRatePreference(request);
                     out.println(formatTxFeeRateInfo(reply.getTxFeeRateInfo()));
+                    return;
+                }
+                case gettransaction: {
+                    if (nonOptionArgs.size() < 2)
+                        throw new IllegalArgumentException("no tx id specified");
+
+                    var txId = nonOptionArgs.get(1);
+                    var request = GetTransactionRequest.newBuilder()
+                            .setTxId(txId)
+                            .build();
+                    var reply = walletsService.getTransaction(request);
+                    out.println(TransactionFormat.format(reply.getTxInfo()));
                     return;
                 }
                 case createoffer: {
@@ -441,7 +461,7 @@ public class CliMain {
                     return;
                 }
                 case gettrade: {
-                    // TODO make short-id a valid argument
+                    // TODO make short-id a valid argument?
                     if (nonOptionArgs.size() < 2)
                         throw new IllegalArgumentException("incorrect parameter count, "
                                 + " expecting trade id [,showcontract = true|false]");
@@ -720,6 +740,7 @@ public class CliMain {
             stream.format(rowFormat, "gettxfeerate", "", "Get current tx fee rate in sats/byte");
             stream.format(rowFormat, "settxfeerate", "satoshis (per byte)", "Set custom tx fee rate in sats/byte");
             stream.format(rowFormat, "unsettxfeerate", "", "Unset custom tx fee rate");
+            stream.format(rowFormat, "gettransaction", "transaction id", "Get transaction with id");
             stream.format(rowFormat, "createoffer", "payment acct id, buy | sell, currency code, \\", "Create and place an offer");
             stream.format(rowFormat, "", "amount (btc), min amount, use mkt based price, \\", "");
             stream.format(rowFormat, "", "fixed price (btc) | mkt price margin (%), security deposit (%) \\", "");

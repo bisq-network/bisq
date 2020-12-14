@@ -23,7 +23,6 @@ import io.grpc.StatusRuntimeException;
 
 import lombok.extern.slf4j.Slf4j;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -33,6 +32,7 @@ import org.junit.jupiter.api.TestMethodOrder;
 import static bisq.apitest.config.BisqAppConfig.alicedaemon;
 import static bisq.apitest.config.BisqAppConfig.bobdaemon;
 import static bisq.cli.CurrencyFormat.formatSatoshis;
+import static bisq.cli.TransactionFormat.format;
 import static bisq.core.trade.Trade.Phase.*;
 import static bisq.core.trade.Trade.State.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -42,7 +42,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 import static protobuf.Offer.State.OFFER_FEE_PAID;
 import static protobuf.OpenOffer.State.AVAILABLE;
 
-@Disabled
+// @Disabled
 @Slf4j
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class TakeSellBTCOfferTest extends AbstractTradeTest {
@@ -51,6 +51,8 @@ public class TakeSellBTCOfferTest extends AbstractTradeTest {
 
     // Maker and Taker fees are in BTC.
     private static final String TRADE_FEE_CURRENCY_CODE = "btc";
+
+    private static final String WITHDRAWAL_TX_MEMO = "Bob's trade withdrawal";
 
     @Test
     @Order(1)
@@ -147,7 +149,7 @@ public class TakeSellBTCOfferTest extends AbstractTradeTest {
         logTrade(log, testInfo, "Bob's view before withdrawing funds to external wallet", trade);
 
         String toAddress = bitcoinCli.getNewBtcAddress();
-        withdrawFunds(bobdaemon, tradeId, toAddress, "to whom it may concern");
+        withdrawFunds(bobdaemon, tradeId, toAddress, WITHDRAWAL_TX_MEMO);
 
         genBtcBlocksThenWait(1, 2250);
 
@@ -161,5 +163,20 @@ public class TakeSellBTCOfferTest extends AbstractTradeTest {
         log.debug("{} Bob's current available balance: {} BTC",
                 testName(testInfo),
                 formatSatoshis(currentBalance.getAvailableBalance()));
+    }
+
+    @Test
+    @Order(5)
+    public void testGetTradeWithdrawalTx(final TestInfo testInfo) {
+        var trade = getTrade(bobdaemon, tradeId);
+        var withdrawalTxId = trade.getWithdrawalTxId();
+        assertNotNull(withdrawalTxId);
+
+        var txInfo = getTransaction(bobdaemon, withdrawalTxId);
+        assertEquals(WITHDRAWAL_TX_MEMO, txInfo.getMemo());
+
+        log.debug("{} Trade withdrawal Tx:\n{}",
+                testName(testInfo),
+                format(txInfo));
     }
 }

@@ -28,26 +28,42 @@ import lombok.Getter;
 @Getter
 public class TxInfo implements Payload {
 
-    private final String id;
+    // The client cannot see an instance of an org.bitcoinj.core.Transaction.  We use the
+    // lighter weight TxInfo proto wrapper instead, containing just enough fields to
+    // view some transaction details.  A block explorer or bitcoin-core client can be
+    // used to see more detail.
+
+    private final String txId;
+    private final long inputSum;
     private final long outputSum;
     private final long fee;
     private final int size;
+    private final boolean isPending;
+    private final String memo;
 
-    public TxInfo(String id, long outputSum, long fee, int size) {
-        this.id = id;
-        this.outputSum = outputSum;
-        this.fee = fee;
-        this.size = size;
+    public TxInfo(TxInfo.TxInfoBuilder builder) {
+        this.txId = builder.txId;
+        this.inputSum = builder.inputSum;
+        this.outputSum = builder.outputSum;
+        this.fee = builder.fee;
+        this.size = builder.size;
+        this.isPending = builder.isPending;
+        this.memo = builder.memo;
     }
 
     public static TxInfo toTxInfo(Transaction transaction) {
         if (transaction == null)
             throw new IllegalStateException("server created a null transaction");
 
-        return new TxInfo(transaction.getTxId().toString(),
-                transaction.getOutputSum().value,
-                transaction.getFee().value,
-                transaction.getMessageSize());
+        return new TxInfo.TxInfoBuilder()
+                .withTxId(transaction.getTxId().toString())
+                .withInputSum(transaction.getInputSum().value)
+                .withOutputSum(transaction.getOutputSum().value)
+                .withFee(transaction.getFee().value)
+                .withSize(transaction.getMessageSize())
+                .withIsPending(transaction.isPending())
+                .withMemo(transaction.getMemo())
+                .build();
     }
 
     //////////////////////////////////////////////////////////////////////////////////////
@@ -57,28 +73,88 @@ public class TxInfo implements Payload {
     @Override
     public bisq.proto.grpc.TxInfo toProtoMessage() {
         return bisq.proto.grpc.TxInfo.newBuilder()
-                .setId(id)
+                .setTxId(txId)
+                .setInputSum(inputSum)
                 .setOutputSum(outputSum)
                 .setFee(fee)
                 .setSize(size)
+                .setIsPending(isPending)
+                .setMemo(memo == null ? "" : memo)
                 .build();
     }
 
     @SuppressWarnings("unused")
     public static TxInfo fromProto(bisq.proto.grpc.TxInfo proto) {
-        return new TxInfo(proto.getId(),
-                proto.getOutputSum(),
-                proto.getFee(),
-                proto.getSize());
+        return new TxInfo.TxInfoBuilder()
+                .withTxId(proto.getTxId())
+                .withInputSum(proto.getInputSum())
+                .withOutputSum(proto.getOutputSum())
+                .withFee(proto.getFee())
+                .withSize(proto.getSize())
+                .withIsPending(proto.getIsPending())
+                .withMemo(proto.getMemo())
+                .build();
+    }
+
+    public static class TxInfoBuilder {
+        private String txId;
+        private long inputSum;
+        private long outputSum;
+        private long fee;
+        private int size;
+        private boolean isPending;
+        private String memo;
+
+        public TxInfo.TxInfoBuilder withTxId(String txId) {
+            this.txId = txId;
+            return this;
+        }
+
+        public TxInfo.TxInfoBuilder withInputSum(long inputSum) {
+            this.inputSum = inputSum;
+            return this;
+        }
+
+        public TxInfo.TxInfoBuilder withOutputSum(long outputSum) {
+            this.outputSum = outputSum;
+            return this;
+        }
+
+        public TxInfo.TxInfoBuilder withFee(long fee) {
+            this.fee = fee;
+            return this;
+        }
+
+        public TxInfo.TxInfoBuilder withSize(int size) {
+            this.size = size;
+            return this;
+        }
+
+        public TxInfo.TxInfoBuilder withIsPending(boolean isPending) {
+            this.isPending = isPending;
+            return this;
+        }
+
+        public TxInfo.TxInfoBuilder withMemo(String memo) {
+            this.memo = memo;
+            return this;
+        }
+
+        public TxInfo build() {
+            return new TxInfo(this);
+        }
     }
 
     @Override
     public String toString() {
         return "TxInfo{" + "\n" +
-                "  id='" + id + '\'' + "\n" +
-                ", outputSum=" + outputSum + " sats" + "\n" +
-                ", fee=" + fee + " sats" + "\n" +
-                ", size=" + size + " bytes" + "\n" +
+                "  txId='" + txId + '\'' + "\n" +
+                ", inputSum=" + inputSum + "\n" +
+                ", outputSum=" + outputSum + "\n" +
+                ", fee=" + fee + "\n" +
+                ", size=" + size + "\n" +
+                ", isPending=" + isPending + "\n" +
+                ", memo='" + memo + '\'' + "\n" +
                 '}';
     }
 }

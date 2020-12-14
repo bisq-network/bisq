@@ -279,6 +279,10 @@ public class CoreApi {
         return walletsService.getMostRecentTxFeeRateInfo();
     }
 
+    public Transaction getTransaction(String txId) {
+        return walletsService.getTransaction(txId);
+    }
+
     public void setWalletPassword(String password, String newPassword) {
         walletsService.setWalletPassword(password, newPassword);
     }

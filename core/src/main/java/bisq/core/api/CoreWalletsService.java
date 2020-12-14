@@ -331,6 +331,26 @@ class CoreWalletsService {
                 feeService.getLastRequest());
     }
 
+    Transaction getTransaction(String txId) {
+        if (txId.length() != 64)
+            throw new IllegalArgumentException(format("%s is not a transaction id", txId));
+
+        try {
+            Transaction tx = btcWalletService.getTransaction(txId);
+            if (tx == null)
+                throw new IllegalArgumentException(format("tx with id %s not found", txId));
+            else
+                return tx;
+
+        } catch (IllegalArgumentException ex) {
+            log.error("", ex);
+            throw new IllegalArgumentException(
+                    format("could not get transaction with id %s%ncause: %s",
+                            txId,
+                            ex.getMessage().toLowerCase()));
+        }
+    }
+
     int getNumConfirmationsForMostRecentTransaction(String addressString) {
         Address address = getAddressEntry(addressString).getAddress();
         TransactionConfidence confidence = btcWalletService.getConfidenceForAddress(address);

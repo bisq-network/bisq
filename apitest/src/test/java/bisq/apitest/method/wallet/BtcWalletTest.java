@@ -1,6 +1,7 @@
 package bisq.apitest.method.wallet;
 
 import bisq.proto.grpc.BtcBalanceInfo;
+import bisq.proto.grpc.TxInfo;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -20,6 +21,7 @@ import static bisq.cli.TableFormat.formatAddressBalanceTbl;
 import static bisq.cli.TableFormat.formatBtcBalanceInfoTbl;
 import static java.util.Collections.singletonList;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 
@@ -31,6 +33,8 @@ import bisq.apitest.method.MethodTest;
 @Slf4j
 @TestMethodOrder(OrderAnnotation.class)
 public class BtcWalletTest extends MethodTest {
+
+    private static final String TX_MEMO = "tx memo";
 
     // All api tests depend on the DAO / regtest environment, and Bob & Alice's wallets
     // are initialized with 10 BTC during the scaffolding setup.
@@ -99,15 +103,23 @@ public class BtcWalletTest extends MethodTest {
         String bobsBtcAddress = getUnusedBtcAddress(bobdaemon);
         log.debug("Sending 5.5 BTC From Alice to Bob @ {}", bobsBtcAddress);
 
-        sendBtc(alicedaemon,
+        TxInfo txInfo = sendBtc(alicedaemon,
                 bobsBtcAddress,
                 "5.50",
                 "100",
-                "to whom it may concern");
+                TX_MEMO);
+        assertTrue(txInfo.getIsPending());
+
+        // Note that the memo is not set on the tx yet.
+        assertTrue(txInfo.getMemo().isEmpty());
         genBtcBlocksThenWait(1, 3000);
 
-        BtcBalanceInfo alicesBalances = getBtcBalances(alicedaemon);
+        // Fetch the tx and check for confirmation and memo.
+        txInfo = getTransaction(alicedaemon, txInfo.getTxId());
+        assertFalse(txInfo.getIsPending());
+        assertEquals(TX_MEMO, txInfo.getMemo());
 
+        BtcBalanceInfo alicesBalances = getBtcBalances(alicedaemon);
         log.debug("{} Alice's BTC Balances:\n{}",
                 testName(testInfo),
                 formatBtcBalanceInfoTbl(alicesBalances));

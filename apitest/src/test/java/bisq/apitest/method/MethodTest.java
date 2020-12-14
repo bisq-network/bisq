@@ -39,6 +39,7 @@ import bisq.proto.grpc.GetPaymentAccountFormRequest;
 import bisq.proto.grpc.GetPaymentAccountsRequest;
 import bisq.proto.grpc.GetPaymentMethodsRequest;
 import bisq.proto.grpc.GetTradeRequest;
+import bisq.proto.grpc.GetTransactionRequest;
 import bisq.proto.grpc.GetTxFeeRateRequest;
 import bisq.proto.grpc.GetUnusedBsqAddressRequest;
 import bisq.proto.grpc.KeepFundsRequest;
@@ -430,6 +431,11 @@ public class MethodTest extends ApiTestCase {
         var req = UnsetTxFeeRatePreferenceRequest.newBuilder().build();
         return TxFeeRateInfo.fromProto(
                 grpcStubs(bisqAppConfig).walletsService.unsetTxFeeRatePreference(req).getTxFeeRateInfo());
+    }
+
+    protected final TxInfo getTransaction(BisqAppConfig bisqAppConfig, String txId) {
+        var req = GetTransactionRequest.newBuilder().setTxId(txId).build();
+        return grpcStubs(bisqAppConfig).walletsService.getTransaction(req).getTxInfo();
     }
 
     // Static conveniences for test methods and test case fixture setups.
