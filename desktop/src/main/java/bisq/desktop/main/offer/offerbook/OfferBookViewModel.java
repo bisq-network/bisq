@@ -48,8 +48,10 @@ import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.Trade;
 import bisq.core.trade.closed.ClosedTradableManager;
+import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
+import bisq.core.util.AveragePriceUtil;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.coin.CoinFormatter;
@@ -61,6 +63,7 @@ import bisq.common.app.Version;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
 import bisq.common.util.MathUtils;
+import bisq.common.util.Tuple2;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;
@@ -109,6 +112,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     private final FilterManager filterManager;
     final AccountAgeWitnessService accountAgeWitnessService;
     private final Navigation navigation;
+    private final TradeStatisticsManager tradeStatisticsManager;
     private final CoinFormatter btcFormatter;
     private final BsqFormatter bsqFormatter;
 
@@ -151,6 +155,7 @@ class OfferBookViewModel extends ActivatableViewModel {
                               FilterManager filterManager,
                               AccountAgeWitnessService accountAgeWitnessService,
                               Navigation navigation,
+                              TradeStatisticsManager tradeStatisticsManager,
                               @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
                               BsqFormatter bsqFormatter) {
         super();
@@ -166,6 +171,7 @@ class OfferBookViewModel extends ActivatableViewModel {
         this.filterManager = filterManager;
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.navigation = navigation;
+        this.tradeStatisticsManager = tradeStatisticsManager;
         this.btcFormatter = btcFormatter;
         this.bsqFormatter = bsqFormatter;
 
@@ -379,31 +385,51 @@ class OfferBookViewModel extends ActivatableViewModel {
         }
 
         if (!hasMarketPrice(offer)) {
-            log.trace("We don't have a market price. " +
-                    "That case could only happen if you don't have a price feed.");
-            return Optional.empty();
+            if (offer.getCurrencyCode().equals("BSQ")) {
+                Tuple2<Price, Price> tuple = AveragePriceUtil.getAveragePriceTuple(preferences,
+                        tradeStatisticsManager,
+                        30);
+                Price bsqPrice = tuple.second;
+                if (bsqPrice.isPositive()) {
+                    long bsqPriceValue = bsqPrice.getValue();
+                    double scaled = MathUtils.scaleDownByPowerOf10(bsqPriceValue, 8);
+                    return calculatePercentage(offer, scaled);
+                } else {
+                    return Optional.empty();
+                }
+            } else {
+                log.trace("We don't have a market price. " +
+                        "That case could only happen if you don't have a price feed.");
+                return Optional.empty();
+            }
         }
 
-        // If the offer did not use % price we calculate % from current market price
         String currencyCode = offer.getCurrencyCode();
         checkNotNull(priceFeedService, "priceFeed must not be null");
         MarketPrice marketPrice = priceFeedService.getMarketPrice(currencyCode);
+        double marketPriceAsDouble = checkNotNull(marketPrice).getPrice();
+        return calculatePercentage(offer, marketPriceAsDouble);
+    }
+
+    protected Optional<Double> calculatePercentage(Offer offer, double marketPrice) {
+        // If the offer did not use % price we calculate % from current market price
+        String currencyCode = offer.getCurrencyCode();
         Price price = offer.getPrice();
         int precision = CurrencyUtil.isCryptoCurrency(currencyCode) ?
                 Altcoin.SMALLEST_UNIT_EXPONENT :
                 Fiat.SMALLEST_UNIT_EXPONENT;
         long priceAsLong = checkNotNull(price).getValue();
         double scaled = MathUtils.scaleDownByPowerOf10(priceAsLong, precision);
-        double marketPriceAsDouble = checkNotNull(marketPrice).getPrice();
+
         if (direction == OfferPayload.Direction.SELL) {
             double value = CurrencyUtil.isFiatCurrency(currencyCode) ?
-                    1 - scaled / marketPriceAsDouble :
-                    scaled / marketPriceAsDouble - 1;
+                    1 - scaled / marketPrice :
+                    scaled / marketPrice - 1;
             return Optional.of(value);
         } else {
             double value = CurrencyUtil.isFiatCurrency(currencyCode) ?
-                    scaled / marketPriceAsDouble - 1 :
-                    1 - scaled / marketPriceAsDouble;
+                    scaled / marketPrice - 1 :
+                    1 - scaled / marketPrice;
             return Optional.of(value);
         }
     }
