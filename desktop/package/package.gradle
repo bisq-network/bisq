@@ -252,8 +252,6 @@ task packageInstallers {
 
             executeCmd(jPackageFilePath + commonOpts + windowsOpts + " --type exe")
         } else if (Os.isFamily(Os.FAMILY_MAC)) {
-            // TODO Include signing args, like --mac-sign / -mac-signing-keychain / --mac-signing-key-user-name
-
             // See https://docs.oracle.com/en/java/javase/14/jpackage/override-jpackage-resources.html
             // for details of "--resource-dir"
 
@@ -261,7 +259,11 @@ task packageInstallers {
                 " --resource-dir \"${project(':desktop').projectDir}/package/macosx\""
             )
 
-            ant.input(message: "Sign dylibs before packaging the app? (y=yes, n=no)",
+            // Env variable can be set by calling "export BISQ_PACKAGE_SIGNING_IDENTITY='Some value'"
+            // See "man codesign" for details about the expected signing identity
+            String envVariableSigningID = "$System.env.BISQ_PACKAGE_SIGNING_IDENTITY"
+            println "Environment variable BISQ_PACKAGE_SIGNING_IDENTITY is: ${envVariableSigningID}"
+            ant.input(message: "Sign dylibs using the above signing identity, before packaging the app? (y=yes, n=no)",
                     addproperty: "macos-sign-check",
                     validargs: "y,n")
             if (ant.properties['macos-sign-check'] == 'y') {
@@ -291,7 +293,7 @@ task packageInstallers {
 
                 // Sign them
                 executeCmd("cd ${tempDylibFolderPath} &&" +
-                        " codesign -vvv --options runtime --deep --force --sign \"Developer ID Application: Christoph Atteneder (WQT93T6D6C)\"" +
+                        " codesign -vvv --options runtime --deep --force --sign \"${envVariableSigningID}\"" +
                         dylibsToSign)
 
                 // Replace unsigned files in jar file
