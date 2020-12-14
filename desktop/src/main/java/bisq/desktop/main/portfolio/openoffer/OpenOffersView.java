@@ -176,6 +176,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
 
         selectToggleButton.setPadding(new Insets(0, 60, -20, 0));
         selectToggleButton.setText(Res.get("shared.enabled"));
+        selectToggleButton.setDisable(true);
 
         numItems.setPadding(new Insets(-5, 0, 0, 10));
         HBox.setHgrow(footerSpacer, Priority.ALWAYS);
@@ -249,13 +250,19 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
     }
 
     private void updateSelectToggleButtonState() {
-        long numDeactivated = sortedList.stream()
-                .filter(openOfferListItem -> openOfferListItem.getOpenOffer().isDeactivated())
-                .count();
-        if (numDeactivated == sortedList.size()) {
+        if (sortedList.size() == 0) {
+            selectToggleButton.setDisable(true);
             selectToggleButton.setSelected(false);
-        } else if (numDeactivated == 0) {
-            selectToggleButton.setSelected(true);
+        } else {
+            selectToggleButton.setDisable(false);
+            long numDeactivated = sortedList.stream()
+                    .filter(openOfferListItem -> openOfferListItem.getOpenOffer().isDeactivated())
+                    .count();
+            if (numDeactivated == sortedList.size()) {
+                selectToggleButton.setSelected(false);
+            } else if (numDeactivated == 0) {
+                selectToggleButton.setSelected(true);
+            }
         }
     }
 
@@ -344,6 +351,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
             } else {
                 doRemoveOpenOffer(openOffer);
             }
+            updateSelectToggleButtonState();
         }
     }
 
