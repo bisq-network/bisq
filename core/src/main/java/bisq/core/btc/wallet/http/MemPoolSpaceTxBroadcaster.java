@@ -23,6 +23,7 @@ import bisq.network.Socks5ProxyProvider;
 import bisq.network.http.HttpException;
 
 import bisq.common.app.Version;
+import bisq.common.config.Config;
 import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Transaction;
@@ -58,6 +59,11 @@ public class MemPoolSpaceTxBroadcaster {
     }
 
     public static void broadcastTx(Transaction tx) {
+        if (!Config.baseCurrencyNetwork().isMainnet()) {
+            log.info("MemPoolSpaceTxBroadcaster only supports mainnet");
+            return;
+        }
+
         if (socks5ProxyProvider == null) {
             log.warn("We got broadcastTx called before init was called.");
             return;
