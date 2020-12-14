@@ -137,6 +137,11 @@ public class FeeService {
     }
 
     public void requestFees(@Nullable Runnable resultHandler, @Nullable FaultHandler faultHandler) {
+        if (feeProvider.getHttpClient().hasPendingRequest()) {
+            log.warn("We have a pending request open. We ignore that request. httpClient {}", feeProvider.getHttpClient());
+            return;
+        }
+
         long now = Instant.now().getEpochSecond();
         // We all requests only each 2 minutes
         if (now - lastRequest > MIN_PAUSE_BETWEEN_REQUESTS_IN_MIN * 60) {

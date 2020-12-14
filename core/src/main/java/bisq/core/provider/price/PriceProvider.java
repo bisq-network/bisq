@@ -58,7 +58,7 @@ public class PriceProvider extends HttpClientProvider {
         if (P2PService.getMyNodeAddress() != null)
             hsVersion = P2PService.getMyNodeAddress().getHostName().length() > 22 ? ", HSv3" : ", HSv2";
 
-        String json = httpClient.requestWithGET("getAllMarketPrices", "User-Agent", "bisq/"
+        String json = httpClient.get("getAllMarketPrices", "User-Agent", "bisq/"
                 + Version.VERSION + hsVersion);
 
 

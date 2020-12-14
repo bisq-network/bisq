@@ -20,9 +20,12 @@ package bisq.network.http;
 import bisq.network.Socks5ProxyProvider;
 
 import bisq.common.app.Version;
+import bisq.common.util.Utilities;
 
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.config.Registry;
 import org.apache.http.config.RegistryBuilder;
@@ -49,10 +52,12 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 // TODO close connection if failing
@@ -60,14 +65,19 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class HttpClientImpl implements HttpClient {
     @Nullable
     private Socks5ProxyProvider socks5ProxyProvider;
-    @Getter
-    private String baseUrl;
-    private boolean ignoreSocks5Proxy;
-    private final String uid;
     @Nullable
     private HttpURLConnection connection;
     @Nullable
-    private CloseableHttpClient httpclient;
+    private CloseableHttpClient closeableHttpClient;
+
+    @Getter
+    @Setter
+    private String baseUrl;
+    @Setter
+    private boolean ignoreSocks5Proxy;
+    @Getter
+    private final String uid;
+    private boolean hasPendingRequest;
 
     @Inject
     public HttpClientImpl(@Nullable Socks5ProxyProvider socks5ProxyProvider) {
@@ -82,103 +92,111 @@ public class HttpClientImpl implements HttpClient {
 
     @Override
     public void shutDown() {
-        if (connection != null) {
-            connection.disconnect();
-        }
-        if (httpclient != null) {
-            try {
-                httpclient.close();
-            } catch (IOException ignore) {
-            }
-        }
-    }
-
-    @Override
-    public void setBaseUrl(String baseUrl) {
-        this.baseUrl = baseUrl;
-    }
-
-    @Override
-    public void setIgnoreSocks5Proxy(boolean ignoreSocks5Proxy) {
-        this.ignoreSocks5Proxy = ignoreSocks5Proxy;
-    }
-
-    @Override
-    public String requestWithGET(String param,
-                                 @Nullable String headerKey,
-                                 @Nullable String headerValue) throws IOException {
-        checkNotNull(baseUrl, "baseUrl must be set before calling requestWithGET");
-
-        Socks5Proxy socks5Proxy = null;
-        if (socks5ProxyProvider != null) {
-            // We use the custom socks5ProxyHttp. If not set we request socks5ProxyProvider.getSocks5ProxyBtc()
-            // which delivers the btc proxy if set, otherwise the internal proxy.
-            socks5Proxy = socks5ProxyProvider.getSocks5ProxyHttp();
-            if (socks5Proxy == null)
-                socks5Proxy = socks5ProxyProvider.getSocks5Proxy();
-        }
-        if (ignoreSocks5Proxy || socks5Proxy == null || baseUrl.contains("localhost")) {
-            log.debug("Use clear net for HttpClient. socks5Proxy={}, ignoreSocks5Proxy={}, baseUrl={}",
-                    socks5Proxy, ignoreSocks5Proxy, baseUrl);
-            return requestWithGETNoProxy(param, headerKey, headerValue);
-        } else {
-            log.debug("Use socks5Proxy for HttpClient: " + socks5Proxy);
-            return doRequestWithGETProxy(param, socks5Proxy, headerKey, headerValue);
-        }
-    }
-
-    /**
-     * Make an HTTP Get request directly (not routed over socks5 proxy).
-     */
-    @Override
-    public String requestWithGETNoProxy(String param,
-                                        @Nullable String headerKey,
-                                        @Nullable String headerValue) throws IOException {
-        log.debug("Executing HTTP request " + baseUrl + param + " proxy: none.");
-        URL url = new URL(baseUrl + param);
         try {
+            if (connection != null) {
+                connection.getInputStream().close();
+                connection.disconnect();
+            }
+            if (closeableHttpClient != null) {
+                closeableHttpClient.close();
+            }
+        } catch (IOException ignore) {
+        }
+    }
+
+    @Override
+    public boolean hasPendingRequest() {
+        return hasPendingRequest;
+    }
+
+    @Override
+    public String get(String param,
+                      @Nullable String headerKey,
+                      @Nullable String headerValue) throws IOException {
+        return doRequest(param, HttpMethod.GET, headerKey, headerValue);
+    }
+
+    @Override
+    public String post(String param,
+                       @Nullable String headerKey,
+                       @Nullable String headerValue) throws IOException {
+        return doRequest(param, HttpMethod.POST, headerKey, headerValue);
+    }
+
+    private String doRequest(String param,
+                             HttpMethod httpMethod,
+                             @Nullable String headerKey,
+                             @Nullable String headerValue) throws IOException {
+        checkNotNull(baseUrl, "baseUrl must be set before calling doRequest");
+        checkArgument(!hasPendingRequest, "We got called on the same HttpClient again while a request is still open.");
+
+        hasPendingRequest = true;
+        Socks5Proxy socks5Proxy = getSocks5Proxy(socks5ProxyProvider);
+        if (ignoreSocks5Proxy || socks5Proxy == null || baseUrl.contains("localhost")) {
+            return requestWithoutProxy(baseUrl, param, httpMethod, headerKey, headerValue);
+        } else {
+            return doRequestWithProxy(baseUrl, param, httpMethod, socks5Proxy, headerKey, headerValue);
+        }
+    }
+
+    private String requestWithoutProxy(String baseUrl,
+                                       String param,
+                                       HttpMethod httpMethod,
+                                       @Nullable String headerKey,
+                                       @Nullable String headerValue) throws IOException {
+        long ts = System.currentTimeMillis();
+        String spec = baseUrl + param;
+        log.info("requestWithoutProxy: URL={}, httpMethod={}", spec, httpMethod);
+        try {
+            URL url = new URL(spec);
             connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestMethod("GET");
+            connection.setRequestMethod(httpMethod.name());
             connection.setConnectTimeout((int) TimeUnit.SECONDS.toMillis(120));
             connection.setReadTimeout((int) TimeUnit.SECONDS.toMillis(120));
             connection.setRequestProperty("User-Agent", "bisq/" + Version.VERSION);
-            if (headerKey != null && headerValue != null)
+            if (headerKey != null && headerValue != null) {
                 connection.setRequestProperty(headerKey, headerValue);
+            }
 
             if (connection.getResponseCode() == 200) {
-                return convertInputStreamToString(connection.getInputStream());
+                String response = convertInputStreamToString(connection.getInputStream());
+                log.info("Response for {} took {} ms. Data size:{}, response: {}",
+                        spec,
+                        System.currentTimeMillis() - ts,
+                        Utilities.readableFileSize(response.getBytes().length),
+                        Utilities.toTruncatedString(response));
+                return response;
             } else {
                 String error = convertInputStreamToString(connection.getErrorStream());
                 connection.getErrorStream().close();
                 throw new HttpException(error);
             }
         } catch (Throwable t) {
-            final String message = "Error at requestWithGETNoProxy with URL: " + (baseUrl + param) + ". Throwable=" + t.getMessage();
+            String message = "Error at requestWithoutProxy with URL: " + spec + ". Throwable=" + t.getMessage();
             log.error(message);
             throw new IOException(message);
         } finally {
             try {
-                if (connection != null)
+                if (connection != null) {
                     connection.getInputStream().close();
+                    connection.disconnect();
+                    connection = null;
+                }
             } catch (Throwable ignore) {
             }
+            hasPendingRequest = false;
         }
     }
 
-    @Override
-    public String getUid() {
-        return uid;
-    }
-
-
-    /**
-     * Make an HTTP Get request routed over socks5 proxy.
-     */
-    private String doRequestWithGETProxy(String param,
-                                         Socks5Proxy socks5Proxy,
-                                         @Nullable String headerKey,
-                                         @Nullable String headerValue) throws IOException {
-        log.debug("requestWithGETProxy param=" + param);
+    private String doRequestWithProxy(String baseUrl,
+                                      String param,
+                                      HttpMethod httpMethod,
+                                      Socks5Proxy socks5Proxy,
+                                      @Nullable String headerKey,
+                                      @Nullable String headerValue) throws IOException {
+        long ts = System.currentTimeMillis();
+        String uri = baseUrl + param;
+        log.info("requestWithoutProxy: uri={}, httpMethod={}", uri, httpMethod);
         // This code is adapted from:
         //  http://stackoverflow.com/a/25203021/5616248
 
@@ -194,7 +212,7 @@ public class HttpClientImpl implements HttpClient {
                 new PoolingHttpClientConnectionManager(reg) :
                 new PoolingHttpClientConnectionManager(reg, new FakeDnsResolver());
         try {
-            httpclient = HttpClients.custom().setConnectionManager(cm).build();
+            closeableHttpClient = HttpClients.custom().setConnectionManager(cm).build();
             InetSocketAddress socksAddress = new InetSocketAddress(socks5Proxy.getInetAddress(), socks5Proxy.getPort());
 
             // remove me: Use this to test with system-wide Tor proxy, or change port for another proxy.
@@ -203,21 +221,58 @@ public class HttpClientImpl implements HttpClient {
             HttpClientContext context = HttpClientContext.create();
             context.setAttribute("socks.address", socksAddress);
 
-            HttpGet request = new HttpGet(baseUrl + param);
+            HttpUriRequest request = getHttpUriRequest(httpMethod, uri);
             if (headerKey != null && headerValue != null)
                 request.setHeader(headerKey, headerValue);
 
-            log.debug("Executing request " + request + " proxy: " + socksAddress);
-            try (CloseableHttpResponse response = checkNotNull(httpclient).execute(request, context)) {
-                return convertInputStreamToString(response.getEntity().getContent());
+            try (CloseableHttpResponse httpResponse = checkNotNull(closeableHttpClient).execute(request, context)) {
+                String response = convertInputStreamToString(httpResponse.getEntity().getContent());
+                log.info("Response for {} took {} ms. Data size:{}, response: {}",
+                        uri,
+                        System.currentTimeMillis() - ts,
+                        Utilities.readableFileSize(response.getBytes().length),
+                        Utilities.toTruncatedString(response));
+                return response;
             }
         } catch (Throwable t) {
-            throw new IOException("Error at requestWithGETProxy with URL: " + (baseUrl + param) + ". Throwable=" + t.getMessage());
+            String message = "Error at doRequestWithProxy with URL: " + uri + ". Throwable=" + t.getMessage();
+            log.error(message);
+            throw new IOException(message);
         } finally {
-            if (httpclient != null) {
-                httpclient.close();
+            if (closeableHttpClient != null) {
+                closeableHttpClient.close();
+                closeableHttpClient = null;
             }
+            hasPendingRequest = false;
         }
+    }
+
+    private HttpUriRequest getHttpUriRequest(HttpMethod httpMethod, String uri) {
+        switch (httpMethod) {
+            case GET:
+                return new HttpGet(uri);
+            case POST:
+                return new HttpPost(uri);
+            default:
+                throw new IllegalArgumentException("HttpMethod not supported: " + httpMethod);
+        }
+    }
+
+    @Nullable
+    private Socks5Proxy getSocks5Proxy(Socks5ProxyProvider socks5ProxyProvider) {
+        if (socks5ProxyProvider == null) {
+            return null;
+        }
+
+        // We use the custom socks5ProxyHttp.
+        Socks5Proxy socks5Proxy = socks5ProxyProvider.getSocks5ProxyHttp();
+        if (socks5Proxy != null) {
+            return socks5Proxy;
+        }
+
+        // If not set we request socks5ProxyProvider.getSocks5Proxy()
+        // which delivers the btc proxy if set, otherwise the internal proxy.
+        return socks5ProxyProvider.getSocks5Proxy();
     }
 
     private String convertInputStreamToString(InputStream inputStream) throws IOException {
@@ -232,10 +287,13 @@ public class HttpClientImpl implements HttpClient {
 
     @Override
     public String toString() {
-        return "HttpClient{" +
-                "socks5ProxyProvider=" + socks5ProxyProvider +
-                ", baseUrl='" + baseUrl + '\'' +
-                ", ignoreSocks5Proxy=" + ignoreSocks5Proxy +
-                '}';
+        return "HttpClientImpl{" +
+                "\n     socks5ProxyProvider=" + socks5ProxyProvider +
+                ",\n     baseUrl='" + baseUrl + '\'' +
+                ",\n     ignoreSocks5Proxy=" + ignoreSocks5Proxy +
+                ",\n     uid='" + uid + '\'' +
+                ",\n     connection=" + connection +
+                ",\n     httpclient=" + closeableHttpClient +
+                "\n}";
     }
 }
