@@ -35,6 +35,7 @@ import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
+import bisq.core.monetary.Altcoin;
 import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
@@ -43,6 +44,7 @@ import bisq.core.offer.OpenOfferManager;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.PaymentAccountUtil;
 import bisq.core.payment.payload.PaymentMethod;
+import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.Trade;
 import bisq.core.trade.closed.ClosedTradableManager;
@@ -58,8 +60,10 @@ import bisq.network.p2p.P2PService;
 import bisq.common.app.Version;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
+import bisq.common.util.MathUtils;
 
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.utils.Fiat;
 
 import com.google.inject.Inject;
 
@@ -67,14 +71,10 @@ import javax.inject.Named;
 
 import com.google.common.base.Joiner;
 
-import javafx.scene.control.TableColumn;
-
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
-import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
@@ -94,6 +94,8 @@ import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 @Slf4j
 class OfferBookViewModel extends ActivatableViewModel {
     private final OpenOfferManager openOfferManager;
@@ -109,8 +111,6 @@ class OfferBookViewModel extends ActivatableViewModel {
     private final Navigation navigation;
     private final CoinFormatter btcFormatter;
     private final BsqFormatter bsqFormatter;
-    final ObjectProperty<TableColumn.SortType> priceSortTypeProperty = new SimpleObjectProperty<>();
-
 
     private final FilteredList<OfferBookListItem> filteredItems;
     private final SortedList<OfferBookListItem> sortedItems;
@@ -224,8 +224,6 @@ class OfferBookViewModel extends ActivatableViewModel {
         }
         tradeCurrencyCode.set(selectedTradeCurrency.getCode());
 
-        applyPriceSortTypeProperty(code);
-
         fillAllTradeCurrencies();
         preferences.getTradeCurrenciesAsObservable().addListener(tradeCurrencyListChangeListener);
         offerBook.fillOfferBookListItems();
@@ -267,7 +265,6 @@ class OfferBookViewModel extends ActivatableViewModel {
                 this.selectedTradeCurrency = tradeCurrency;
                 tradeCurrencyCode.set(code);
             }
-            applyPriceSortTypeProperty(code);
 
             setMarketPriceFeedCurrency();
             applyFilterPredicate();
@@ -277,15 +274,6 @@ class OfferBookViewModel extends ActivatableViewModel {
             else
                 preferences.setSellScreenCurrencyCode(code);
         }
-    }
-
-    private void applyPriceSortTypeProperty(String code) {
-        final OfferPayload.Direction compareDirection = CurrencyUtil.isCryptoCurrency(code) ?
-                OfferPayload.Direction.SELL :
-                OfferPayload.Direction.BUY;
-        priceSortTypeProperty.set(getDirection() == compareDirection ?
-                TableColumn.SortType.ASCENDING :
-                TableColumn.SortType.DESCENDING);
     }
 
     void onSetPaymentMethod(PaymentMethod paymentMethod) {
@@ -358,13 +346,14 @@ class OfferBookViewModel extends ActivatableViewModel {
 
 
     String getPrice(OfferBookListItem item) {
-        if ((item == null))
+        if ((item == null)) {
             return "";
+        }
 
-        final Offer offer = item.getOffer();
-        final Price price = offer.getPrice();
+        Offer offer = item.getOffer();
+        Price price = offer.getPrice();
         if (price != null) {
-            return formatPrice(offer, true) + formatMarketPriceMargin(offer, true);
+            return formatPrice(offer, true);
         } else {
             return Res.get("shared.na");
         }
@@ -378,11 +367,59 @@ class OfferBookViewModel extends ActivatableViewModel {
         return DisplayUtils.formatPrice(offer.getPrice(), decimalAligned, maxPlacesForPrice.get());
     }
 
-    private String formatMarketPriceMargin(Offer offer, boolean decimalAligned) {
+    String getPriceAsPercentage(OfferBookListItem item) {
+        return getMarketBasedPrice(item.getOffer())
+                .map(price -> "(" + FormattingUtils.formatPercentagePrice(price) + ")")
+                .orElse("");
+    }
+
+    public Optional<Double> getMarketBasedPrice(Offer offer) {
+        if (offer.isUseMarketBasedPrice()) {
+            return Optional.of(offer.getMarketPriceMargin());
+        }
+
+        if (!hasMarketPrice(offer)) {
+            log.trace("We don't have a market price. " +
+                    "That case could only happen if you don't have a price feed.");
+            return Optional.empty();
+        }
+
+        // If the offer did not use % price we calculate % from current market price
+        String currencyCode = offer.getCurrencyCode();
+        checkNotNull(priceFeedService, "priceFeed must not be null");
+        MarketPrice marketPrice = priceFeedService.getMarketPrice(currencyCode);
+        Price price = offer.getPrice();
+        int precision = CurrencyUtil.isCryptoCurrency(currencyCode) ?
+                Altcoin.SMALLEST_UNIT_EXPONENT :
+                Fiat.SMALLEST_UNIT_EXPONENT;
+        long priceAsLong = checkNotNull(price).getValue();
+        double scaled = MathUtils.scaleDownByPowerOf10(priceAsLong, precision);
+        double marketPriceAsDouble = checkNotNull(marketPrice).getPrice();
+        if (direction == OfferPayload.Direction.SELL) {
+            double value = CurrencyUtil.isFiatCurrency(currencyCode) ?
+                    1 - scaled / marketPriceAsDouble :
+                    scaled / marketPriceAsDouble - 1;
+            return Optional.of(value);
+        } else {
+            double value = CurrencyUtil.isFiatCurrency(currencyCode) ?
+                    scaled / marketPriceAsDouble - 1 :
+                    1 - scaled / marketPriceAsDouble;
+            return Optional.of(value);
+        }
+    }
+
+    public boolean hasMarketPrice(Offer offer) {
+        String currencyCode = offer.getCurrencyCode();
+        checkNotNull(priceFeedService, "priceFeed must not be null");
+        MarketPrice marketPrice = priceFeedService.getMarketPrice(currencyCode);
+        Price price = offer.getPrice();
+        return price != null && marketPrice != null && marketPrice.isRecentExternalPriceAvailable();
+    }
+
+    String formatMarketPriceMargin(Offer offer, boolean decimalAligned) {
         String postFix = "";
         if (offer.isUseMarketBasedPrice()) {
             postFix = " (" + FormattingUtils.formatPercentagePrice(offer.getMarketPriceMargin()) + ")";
-
         }
 
         if (decimalAligned) {
