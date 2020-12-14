@@ -389,7 +389,12 @@ public class OfferUtil {
     }
 
     public static Optional<String> getInvalidMakerFeeTxErrorMessage(Offer offer, BtcWalletService btcWalletService) {
-        Transaction makerFeeTx = btcWalletService.getTransaction(offer.getOfferFeePaymentTxId());
+        String offerFeePaymentTxId = offer.getOfferFeePaymentTxId();
+        if (offerFeePaymentTxId == null) {
+            return Optional.empty();
+        }
+
+        Transaction makerFeeTx = btcWalletService.getTransaction(offerFeePaymentTxId);
         if (makerFeeTx == null) {
             return Optional.empty();
         }
