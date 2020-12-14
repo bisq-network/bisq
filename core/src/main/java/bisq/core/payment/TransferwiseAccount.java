@@ -17,7 +17,6 @@
 
 package bisq.core.payment;
 
-import bisq.core.locale.CurrencyUtil;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.payment.payload.TransferwiseAccountPayload;
@@ -28,8 +27,6 @@ import lombok.EqualsAndHashCode;
 public final class TransferwiseAccount extends PaymentAccount {
     public TransferwiseAccount() {
         super(PaymentMethod.TRANSFERWISE);
-
-        tradeCurrencies.addAll(CurrencyUtil.getAllTransferwiseCurrencies());
     }
 
     @Override

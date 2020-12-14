@@ -45,7 +45,7 @@ public class FeeRequest {
     public SettableFuture<Tuple2<Map<String, Long>, Map<String, Long>>> getFees(FeeProvider provider) {
         final SettableFuture<Tuple2<Map<String, Long>, Map<String, Long>>> resultFuture = SettableFuture.create();
         ListenableFuture<Tuple2<Map<String, Long>, Map<String, Long>>> future = executorService.submit(() -> {
-            Thread.currentThread().setName("FeeRequest-" + provider.toString());
+            Thread.currentThread().setName("FeeRequest @ " + provider.getHttpClient().getBaseUrl());
             return provider.getFees();
         });
 
