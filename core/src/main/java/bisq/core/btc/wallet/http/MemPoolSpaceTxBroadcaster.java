@@ -122,6 +122,7 @@ public class MemPoolSpaceTxBroadcaster {
                 if (cause instanceof HttpException) {
                     int responseCode = ((HttpException) cause).getResponseCode();
                     String message = cause.getMessage();
+                    // See all error codes at: https://github.com/bitcoin/bitcoin/blob/master/src/rpc/protocol.h
                     if (responseCode == 400 && message.contains("code\":-27")) {
                         log.info("Broadcast of raw tx to {} failed as transaction {} is already confirmed",
                                 serviceAddress, txIdToSend);
