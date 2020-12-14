@@ -750,8 +750,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         // As per commit 88f26f93241af698ae689bf081205d0f9dc929fa
         // Do not autofill all currencies by default but keep all unselected.
         // verifyAccountTradeCurrencies(getAllTransferwiseCurrencies(), paymentAccount);
-        // TODO uncomment after master/merge
-        //  assertEquals(0, paymentAccount.getTradeCurrencies().size());
+        assertEquals(0, paymentAccount.getTradeCurrencies().size());
         verifyCommonFormEntries(paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_EMAIL), paymentAccount.getEmail());
         log.debug("Deserialized {}: {}", paymentAccount.getClass().getSimpleName(), paymentAccount);
