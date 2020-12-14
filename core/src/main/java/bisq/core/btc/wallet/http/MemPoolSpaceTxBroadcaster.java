@@ -121,7 +121,7 @@ public class MemPoolSpaceTxBroadcaster {
                 if (cause instanceof HttpException) {
                     int responseCode = ((HttpException) cause).getResponseCode();
                     String message = cause.getMessage();
-                    if (responseCode == 400 && message.equals("sendrawtransaction RPC error: {\"code\":-27,\"message\":\"Transaction already in block chain\"}")) {
+                    if (responseCode == 400 && message.contains("code\":-27")) {
                         log.info("Broadcast of raw tx to {} failed as transaction {} is already confirmed",
                                 serviceAddress, txIdToSend);
                     } else {
