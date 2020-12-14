@@ -35,6 +35,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
@@ -72,7 +73,7 @@ public class MemPoolSpaceTxBroadcaster {
         String txIdToSend = tx.getTxId().toString();
         String rawTx = Utils.HEX.encode(tx.bitcoinSerialize(true));
 
-        List<String> txBroadcastServices = preferences.getDefaultTxBroadcastServices();
+        List<String> txBroadcastServices = new ArrayList<>(preferences.getDefaultTxBroadcastServices());
         // Broadcast to first service
         String serviceAddress = broadcastTx(txIdToSend, rawTx, txBroadcastServices);
         if (serviceAddress != null) {
