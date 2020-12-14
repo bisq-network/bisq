@@ -21,7 +21,7 @@ import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.monetary.Altcoin;
 import bisq.core.monetary.Price;
-import bisq.core.provider.PriceNodeHttpClient;
+import bisq.core.provider.PriceHttpClient;
 import bisq.core.provider.ProvidersRepository;
 import bisq.core.trade.statistics.TradeStatistics3;
 import bisq.core.user.Preferences;
@@ -101,7 +101,7 @@ public class PriceFeedService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public PriceFeedService(@SuppressWarnings("SameParameterValue") PriceNodeHttpClient httpClient,
+    public PriceFeedService(PriceHttpClient httpClient,
                             @SuppressWarnings("SameParameterValue") ProvidersRepository providersRepository,
                             @SuppressWarnings("SameParameterValue") Preferences preferences) {
         this.httpClient = httpClient;
@@ -194,9 +194,9 @@ public class PriceFeedService {
             if (throwable instanceof PriceRequestException) {
                 String baseUrlOfFaultyRequest = ((PriceRequestException) throwable).priceProviderBaseUrl;
                 String baseUrlOfCurrentRequest = priceProvider.getBaseUrl();
-                if (baseUrlOfFaultyRequest != null && baseUrlOfCurrentRequest.equals(baseUrlOfFaultyRequest)) {
-                    log.warn("We received an error: baseUrlOfCurrentRequest={}, baseUrlOfFaultyRequest={}",
-                            baseUrlOfCurrentRequest, baseUrlOfFaultyRequest);
+                if (baseUrlOfCurrentRequest.equals(baseUrlOfFaultyRequest)) {
+                    log.warn("We received an error: baseUrlOfCurrentRequest={}, baseUrlOfFaultyRequest={}, error={}",
+                            baseUrlOfCurrentRequest, baseUrlOfFaultyRequest, throwable.toString());
                     retryWithNewProvider();
                 } else {
                     log.debug("We received an error from an earlier request. We have started a new request already so we ignore that error. " +
@@ -204,7 +204,7 @@ public class PriceFeedService {
                             baseUrlOfCurrentRequest, baseUrlOfFaultyRequest);
                 }
             } else {
-                log.warn("We received an error with throwable={}", throwable);
+                log.warn("We received an error with throwable={}", throwable.toString());
                 retryWithNewProvider();
             }
 
@@ -393,6 +393,11 @@ public class PriceFeedService {
     }
 
     private void requestAllPrices(PriceProvider provider, Runnable resultHandler, FaultHandler faultHandler) {
+        if (httpClient.hasPendingRequest()) {
+            log.warn("We have a pending request open. We ignore that request. httpClient {}", httpClient);
+            return;
+        }
+
         priceRequest = new PriceRequest();
         SettableFuture<Tuple2<Map<String, Long>, Map<String, MarketPrice>>> future = priceRequest.requestAllPrices(provider);
         Futures.addCallback(future, new FutureCallback<>() {

@@ -256,6 +256,11 @@ public class MobileNotificationService {
                                boolean useSound,
                                Consumer<String> resultHandler,
                                Consumer<Throwable> errorHandler) throws Exception {
+        if (httpClient.hasPendingRequest()) {
+            log.warn("We have a pending request open. We ignore that request. httpClient {}", httpClient);
+            return;
+        }
+
         String msg;
         if (mobileModel.getOs() == null)
             throw new RuntimeException("No mobileModel OS set");
@@ -297,7 +302,7 @@ public class MobileNotificationService {
         String threadName = "sendMobileNotification-" + msgAsHex.substring(0, 5) + "...";
         ListenableFuture<String> future = executorService.submit(() -> {
             Thread.currentThread().setName(threadName);
-            String result = httpClient.requestWithGET(param, "User-Agent",
+            String result = httpClient.get(param, "User-Agent",
                     "bisq/" + Version.VERSION + ", uid:" + httpClient.getUid());
             log.info("sendMobileNotification result: " + result);
             checkArgument(result.equals(SUCCESS), "Result was not 'success'. result=" + result);
