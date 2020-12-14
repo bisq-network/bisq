@@ -27,8 +27,8 @@ import bisq.core.locale.Res;
 import bisq.core.monetary.Price;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OpenOffer;
-import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.FormattingUtils;
+import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.coin.CoinFormatter;
 
 import bisq.network.p2p.P2PService;
@@ -78,7 +78,7 @@ class OpenOffersViewModel extends ActivatableWithDataModel<OpenOffersDataModel> 
         return dataModel.getList();
     }
 
-    String getTradeId(OpenOfferListItem item) {
+    String getOfferId(OpenOfferListItem item) {
         return item.getOffer().getShortId();
     }
 
