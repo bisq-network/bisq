@@ -15,30 +15,20 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.http;
+package bisq.core.provider;
 
-import java.io.IOException;
+import bisq.network.Socks5ProxyProvider;
+import bisq.network.http.HttpClientImpl;
+
+import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import javax.annotation.Nullable;
 
-public interface HttpClient {
-    void setBaseUrl(String baseUrl);
-
-    void setIgnoreSocks5Proxy(boolean ignoreSocks5Proxy);
-
-    String get(String param,
-               @Nullable String headerKey,
-               @Nullable String headerValue) throws IOException;
-
-    String post(String param,
-                @Nullable String headerKey,
-                @Nullable String headerValue) throws IOException;
-
-    String getUid();
-
-    String getBaseUrl();
-
-    boolean hasPendingRequest();
-
-    void shutDown();
+@Singleton
+public class FeeHttpClient extends HttpClientImpl {
+    @Inject
+    public FeeHttpClient(@Nullable Socks5ProxyProvider socks5ProxyProvider) {
+        super(socks5ProxyProvider);
+    }
 }
