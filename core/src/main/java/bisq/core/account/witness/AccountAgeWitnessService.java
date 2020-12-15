@@ -890,7 +890,7 @@ public class AccountAgeWitnessService {
 
     public Tuple2<AccountAgeWitness, byte[]> signInfoFromString(String signInfo) {
         var parts = signInfo.split(",");
-        if (parts.length != 2){
+        if (parts.length != 2) {
             return null;
         }
         byte[] pubKeyHash;
