@@ -106,6 +106,10 @@ public class DaoState implements PersistablePayload {
     @JsonExclude
     private transient final Map<String, Tx> txCache; // key is txId
 
+    // Lookup cache for TxOutput
+    @JsonExclude
+    private transient final Map<TxOutputKey, TxOutput> txOutputCache = new HashMap<>();
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -156,6 +160,7 @@ public class DaoState implements PersistablePayload {
 
         txCache = blocks.stream()
                 .flatMap(block -> block.getTxs().stream())
+                .peek(this::addTxOutputsToCache)
                 .collect(Collectors.toMap(Tx::getId, Function.identity(), (x, y) -> x, HashMap::new));
     }
 
@@ -240,15 +245,28 @@ public class DaoState implements PersistablePayload {
         // We shouldn't get duplicate txIds, but use putIfAbsent instead of put for consistency with the map merge
         // function used in the constructor to initialise txCache (and to exactly match the pre-caching behaviour).
         txCache.putIfAbsent(tx.getId(), tx);
+
+        addTxOutputsToCache(tx);
     }
 
     public void setTxCache(Map<String, Tx> txCache) {
         this.txCache.clear();
         this.txCache.putAll(txCache);
+
+        txOutputCache.clear();
+        txCache.values().forEach(this::addTxOutputsToCache);
     }
 
     public Map<String, Tx> getTxCache() {
         return Collections.unmodifiableMap(txCache);
+    }
+
+    public Map<TxOutputKey, TxOutput> getTxOutputCache() {
+        return Collections.unmodifiableMap(txOutputCache);
+    }
+
+    private void addTxOutputsToCache(Tx tx) {
+        tx.getTxOutputs().forEach(txOutput -> txOutputCache.putIfAbsent(txOutput.getKey(), txOutput));
     }
 
     @Override
@@ -265,6 +283,7 @@ public class DaoState implements PersistablePayload {
                 ",\n     evaluatedProposalList=" + evaluatedProposalList +
                 ",\n     decryptedBallotsWithMeritsList=" + decryptedBallotsWithMeritsList +
                 ",\n     txCache=" + txCache +
+                ",\n     txOutputCache=" + txOutputCache +
                 "\n}";
     }
 }

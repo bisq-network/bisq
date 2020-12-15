@@ -47,6 +47,7 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
@@ -429,19 +430,17 @@ public class DaoStateService implements DaoSetupService {
     // TxOutput
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private Stream<TxOutput> getUnorderedTxOutputStream() {
-        return getUnorderedTxStream()
-                .flatMap(tx -> tx.getTxOutputs().stream());
-    }
-
     public boolean existsTxOutput(TxOutputKey key) {
-        return getUnorderedTxOutputStream().anyMatch(txOutput -> txOutput.getKey().equals(key));
+        return daoState.getTxOutputCache().containsKey(key);
     }
 
     public Optional<TxOutput> getTxOutput(TxOutputKey txOutputKey) {
-        return getUnorderedTxOutputStream()
-                .filter(txOutput -> txOutput.getKey().equals(txOutputKey))
-                .findAny();
+        Map<TxOutputKey, TxOutput> txOutputCache = daoState.getTxOutputCache();
+        if (txOutputCache.containsKey(txOutputKey)) {
+            return Optional.of(txOutputCache.get(txOutputKey));
+        }
+
+        return Optional.empty();
     }
 
 
@@ -525,7 +524,7 @@ public class DaoStateService implements DaoSetupService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private Set<TxOutput> getTxOutputsByTxOutputType(TxOutputType txOutputType) {
-        return getUnorderedTxOutputStream()
+        return daoState.getTxOutputCache().values().stream()
                 .filter(txOutput -> txOutput.getTxOutputType() == txOutputType)
                 .collect(Collectors.toSet());
     }
