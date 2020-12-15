@@ -19,6 +19,7 @@ package bisq.core.btc.wallet;
 
 import bisq.core.btc.exceptions.TxBroadcastException;
 import bisq.core.btc.exceptions.TxBroadcastTimeoutException;
+import bisq.core.btc.wallet.http.MemPoolSpaceTxBroadcaster;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
@@ -135,6 +136,10 @@ public class TxBroadcaster {
                         "the peerGroup.broadcastTransaction callback.", throwable)));
             }
         }, MoreExecutors.directExecutor());
+
+        // For better redundancy in case the broadcast via BitcoinJ fails we also
+        // publish the tx via mempool nodes.
+        MemPoolSpaceTxBroadcaster.broadcastTx(tx);
     }
 
     private static void stopAndRemoveTimer(String txId) {
