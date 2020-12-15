@@ -871,38 +871,45 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void republishOffers() {
-        int size = openOffers.size();
-        final ArrayList<OpenOffer> openOffersList = new ArrayList<>(openOffers.getList());
-        if (!stopped) {
-            stopPeriodicRefreshOffersTimer();
-            for (int i = 0; i < size; i++) {
-                // we delay to avoid reaching throttle limits
-
-                long delay = 700;
-                final long minDelay = (i + 1) * delay;
-                final long maxDelay = (i + 2) * delay;
-                final OpenOffer openOffer = openOffersList.get(i);
-                UserThread.runAfterRandomDelay(() -> {
-                    if (openOffers.contains(openOffer)) {
-                        String id = openOffer.getId();
-                        if (id != null && !openOffer.isDeactivated())
-                            republishOffer(openOffer);
-                    }
-
-                }, minDelay, maxDelay, TimeUnit.MILLISECONDS);
-            }
-        } else {
-            log.debug("We have stopped already. We ignore that republishOffers call.");
+        if (stopped) {
+            return;
         }
+
+        List<OpenOffer> openOffersList = new ArrayList<>(openOffers.getList());
+        republishOffers(openOffersList);
+
+        stopPeriodicRefreshOffersTimer();
+    }
+
+    private void republishOffers(List<OpenOffer> list) {
+        if (list.isEmpty()) {
+            return;
+        }
+
+        OpenOffer openOffer = list.remove(0);
+        if (!openOffers.contains(openOffer) || openOffer.isDeactivated()) {
+            republishOffers(list);
+        }
+
+        republishOffer(openOffer,
+                () -> UserThread.runAfter(() -> republishOffers(list),
+                        30, TimeUnit.MILLISECONDS));
     }
 
     private void republishOffer(OpenOffer openOffer) {
+        republishOffer(openOffer, null);
+    }
+
+    private void republishOffer(OpenOffer openOffer, @Nullable Runnable completeHandler) {
         offerBookService.addOffer(openOffer.getOffer(),
                 () -> {
                     if (!stopped) {
                         // Refresh means we send only the data needed to refresh the TTL (hash, signature and sequence no.)
                         if (periodicRefreshOffersTimer == null) {
                             startPeriodicRefreshOffersTimer();
+                        }
+                        if (completeHandler != null) {
+                            completeHandler.run();
                         }
                     }
                 },
@@ -912,6 +919,10 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                         stopRetryRepublishOffersTimer();
                         retryRepublishOffersTimer = UserThread.runAfter(OpenOfferManager.this::republishOffers,
                                 RETRY_REPUBLISH_DELAY_SEC);
+
+                        if (completeHandler != null) {
+                            completeHandler.run();
+                        }
                     }
                 });
     }
