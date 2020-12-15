@@ -111,6 +111,7 @@ public class Offer implements NetworkPayload, PersistablePayload {
 
     // Used only as cache
     @Nullable
+    @JsonExclude
     transient private String currencyCode;
 
 
