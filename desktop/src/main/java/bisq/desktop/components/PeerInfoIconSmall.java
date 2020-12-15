@@ -3,13 +3,17 @@ package bisq.desktop.components;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.offer.Offer;
+import bisq.core.trade.Trade;
 import bisq.core.user.Preferences;
 
 import bisq.network.p2p.NodeAddress;
 
+import javax.annotation.Nullable;
+
 public class PeerInfoIconSmall extends PeerInfoIcon {
     public PeerInfoIconSmall(NodeAddress nodeAddress,
-                             String role, Offer offer,
+                             String role,
+                             Offer offer,
                              Preferences preferences,
                              AccountAgeWitnessService accountAgeWitnessService,
                              boolean useDevPrivilegeKeys) {
@@ -32,6 +36,7 @@ public class PeerInfoIconSmall extends PeerInfoIcon {
     @Override
     protected void addMouseListener(int numTrades,
                                     PrivateNotificationManager privateNotificationManager,
+                                    @Nullable Trade trade,
                                     Offer offer,
                                     Preferences preferences,
                                     boolean useDevPrivilegeKeys,
