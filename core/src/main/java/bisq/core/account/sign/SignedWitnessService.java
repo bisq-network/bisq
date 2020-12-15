@@ -75,9 +75,18 @@ public class SignedWitnessService {
     private final ArbitratorManager arbitratorManager;
     private final User user;
 
+    // TODO signedWitnessMap could be a HashSet as clients access the map values only.
+    // Only one test uses the key for removing an entry but seems that use case does not exist otherwise.
+    // As there are only about 5000 objects it will probably not have a significatn impact to change that...
     @Getter
     private final Map<P2PDataStorage.ByteArray, SignedWitness> signedWitnessMap = new HashMap<>();
+
+    // The getSignedWitnessSet is called very often and is a bit expensive. We cache the result in that map but we
+    // remove the cache entry if we get a matching SignedWitness added to the signedWitnessMap.
+    private final Map<P2PDataStorage.ByteArray, Set<SignedWitness>> getSignedWitnessSetCache = new HashMap<>();
+
     private final FilterManager filterManager;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -345,9 +354,21 @@ public class SignedWitnessService {
     }
 
     private Set<SignedWitness> getSignedWitnessSet(AccountAgeWitness accountAgeWitness) {
-        return signedWitnessMap.values().stream()
-                .filter(e -> Arrays.equals(e.getAccountAgeWitnessHash(), accountAgeWitness.getHash()))
+        byte[] hash = accountAgeWitness.getHash();
+        P2PDataStorage.ByteArray key = new P2PDataStorage.ByteArray(hash);
+        // In case we get a new entry added to signedWitnessMap with our hash we remove the entry from the cache so
+        // that we use the updated signedWitnessMap to fill the cache new.
+        if (getSignedWitnessSetCache.containsKey(key)) {
+            return getSignedWitnessSetCache.get(key);
+        }
+
+        Set<SignedWitness> result = signedWitnessMap.values().stream()
+                .filter(e -> Arrays.equals(e.getAccountAgeWitnessHash(), hash))
                 .collect(Collectors.toSet());
+
+        getSignedWitnessSetCache.put(key, result);
+
+        return result;
     }
 
     // SignedWitness objects signed by arbitrators
@@ -489,6 +510,10 @@ public class SignedWitnessService {
     @VisibleForTesting
     void addToMap(SignedWitness signedWitness) {
         signedWitnessMap.putIfAbsent(signedWitness.getHashAsByteArray(), signedWitness);
+
+        // We remove the entry with that hash in case we have cached it, so at the next getSignedWitnessSet
+        // call we use the updated signedWitnessMap to re-fill our cache.
+        getSignedWitnessSetCache.remove(new P2PDataStorage.ByteArray(signedWitness.getAccountAgeWitnessHash()));
     }
 
     private void publishSignedWitness(SignedWitness signedWitness) {
