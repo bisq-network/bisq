@@ -882,13 +882,13 @@ public class AccountAgeWitnessService {
                 tradeAmountIsSufficient(trade.getTradeAmount());
     }
 
-    public String signInfoFromAccount(PaymentAccount paymentAccount) {
+    public String getSignInfoFromAccount(PaymentAccount paymentAccount) {
         var pubKey = keyRing.getSignatureKeyPair().getPublic();
         var witness = getMyWitness(paymentAccount.getPaymentAccountPayload());
         return Utilities.bytesAsHexString(witness.getHash()) + "," + Utilities.bytesAsHexString(pubKey.getEncoded());
     }
 
-    public Tuple2<AccountAgeWitness, byte[]> signInfoFromString(String signInfo) {
+    public Tuple2<AccountAgeWitness, byte[]> getSignInfoFromString(String signInfo) {
         var parts = signInfo.split(",");
         if (parts.length != 2) {
             return null;
@@ -899,12 +899,11 @@ public class AccountAgeWitnessService {
             var accountAgeWitnessHash = Utilities.decodeFromHex(parts[0]);
             pubKeyHash = Utilities.decodeFromHex(parts[1]);
             accountAgeWitness = getWitnessByHash(accountAgeWitnessHash);
+            return accountAgeWitness
+                    .map(ageWitness -> new Tuple2<>(ageWitness, pubKeyHash))
+                    .orElse(null);
         } catch (Exception e) {
             return null;
         }
-
-        return accountAgeWitness
-                .map(ageWitness -> new Tuple2<>(ageWitness, pubKeyHash))
-                .orElse(null);
     }
 }

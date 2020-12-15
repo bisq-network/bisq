@@ -94,7 +94,7 @@ public class SignSpecificWitnessWindow extends Overlay<SignSpecificWitnessWindow
             if (newValue == null || newValue.isEmpty()) {
                 return;
             }
-            signInfo = accountAgeWitnessService.signInfoFromString(newValue);
+            signInfo = accountAgeWitnessService.getSignInfoFromString(newValue);
             if (signInfo == null) {
                 actionButton.setDisable(true);
                 return;

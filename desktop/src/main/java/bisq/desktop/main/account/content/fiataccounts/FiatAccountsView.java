@@ -547,7 +547,7 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
         if (selectedAccount == null) {
             return;
         }
-        Utilities.copyToClipboard(accountAgeWitnessService.signInfoFromAccount(selectedAccount));
+        Utilities.copyToClipboard(accountAgeWitnessService.getSignInfoFromAccount(selectedAccount));
     }
 
 }
