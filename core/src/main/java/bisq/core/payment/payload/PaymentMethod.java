@@ -332,7 +332,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
 
     @Override
     public int compareTo(@NotNull PaymentMethod other) {
-        return id.compareTo(other.id);
+        return Res.get(id).compareTo(Res.get(other.id));
     }
 
     public String getDisplayString() {
