@@ -99,6 +99,7 @@ import bisq.core.util.validation.InputValidator;
 import bisq.common.config.Config;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple3;
+import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Coin;
 
@@ -538,6 +539,15 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
     private void removeAccountRows() {
         FormBuilder.removeRowsFromGridPane(root, 2, gridRow);
         gridRow = 1;
+    }
+
+    @Override
+    protected void copyAccount() {
+        var selectedAccount = paymentAccountsListView.getSelectionModel().getSelectedItem();
+        if (selectedAccount == null) {
+            return;
+        }
+        Utilities.copyToClipboard(accountAgeWitnessService.signInfoFromAccount(selectedAccount));
     }
 
 }

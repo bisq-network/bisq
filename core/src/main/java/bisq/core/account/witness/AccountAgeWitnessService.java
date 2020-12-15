@@ -880,4 +880,10 @@ public class AccountAgeWitnessService {
                 !peerHasSignedWitness(trade) &&
                 tradeAmountIsSufficient(trade.getTradeAmount());
     }
+
+    public String signInfoFromAccount(PaymentAccount paymentAccount) {
+        var pubKey = keyRing.getSignatureKeyPair().getPublic();
+        var witness = getMyWitness(paymentAccount.getPaymentAccountPayload());
+        return Utilities.bytesAsHexString(witness.getHash()) + "," + Utilities.bytesAsHexString(pubKey.getEncoded());
+    }
 }
