@@ -900,12 +900,10 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         offerBookService.addOffer(openOffer.getOffer(),
                 () -> {
                     if (!stopped) {
-                        log.debug("Successfully added offer to P2P network.");
                         // Refresh means we send only the data needed to refresh the TTL (hash, signature and sequence no.)
-                        if (periodicRefreshOffersTimer == null)
+                        if (periodicRefreshOffersTimer == null) {
                             startPeriodicRefreshOffersTimer();
-                    } else {
-                        log.debug("We have stopped already. We ignore that offerBookService.republishOffers.onSuccess call.");
+                        }
                     }
                 },
                 errorMessage -> {
@@ -914,26 +912,21 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                         stopRetryRepublishOffersTimer();
                         retryRepublishOffersTimer = UserThread.runAfter(OpenOfferManager.this::republishOffers,
                                 RETRY_REPUBLISH_DELAY_SEC);
-                    } else {
-                        log.debug("We have stopped already. We ignore that offerBookService.republishOffers.onFault call.");
                     }
                 });
     }
 
     private void startPeriodicRepublishOffersTimer() {
         stopped = false;
-        if (periodicRepublishOffersTimer == null)
+        if (periodicRepublishOffersTimer == null) {
             periodicRepublishOffersTimer = UserThread.runPeriodically(() -> {
                         if (!stopped) {
                             republishOffers();
-                        } else {
-                            log.debug("We have stopped already. We ignore that periodicRepublishOffersTimer.run call.");
                         }
                     },
                     REPUBLISH_INTERVAL_MS,
                     TimeUnit.MILLISECONDS);
-        else
-            log.trace("periodicRepublishOffersTimer already stated");
+        }
     }
 
     private void startPeriodicRefreshOffersTimer() {
