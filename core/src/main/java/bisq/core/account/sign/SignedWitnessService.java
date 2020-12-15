@@ -60,6 +60,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.Stack;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
@@ -79,7 +80,7 @@ public class SignedWitnessService {
 
     // The getSignedWitnessSet is called very often and is a bit expensive. We cache the result in that map but we
     // remove the cache entry if we get a matching SignedWitness added to the signedWitnessMap.
-    private final Map<P2PDataStorage.ByteArray, Set<SignedWitness>> getSignedWitnessSetCache = new HashMap<>();
+    private final Map<P2PDataStorage.ByteArray, Set<SignedWitness>> getSignedWitnessSetCache = new ConcurrentHashMap<>();
 
     private final FilterManager filterManager;
 

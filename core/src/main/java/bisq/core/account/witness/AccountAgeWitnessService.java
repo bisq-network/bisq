@@ -73,6 +73,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -143,7 +144,7 @@ public class AccountAgeWitnessService {
     // The accountAgeWitnessMap is very large (70k items) and access is a bit expensive. We usually only access less
     // than 100 items, those who have offers online. So we use a cache for a fast lookup and only if
     // not found there we use the accountAgeWitnessMap and put then the new item into our cache.
-    private final Map<P2PDataStorage.ByteArray, AccountAgeWitness> accountAgeWitnessCache = new HashMap<>();
+    private final Map<P2PDataStorage.ByteArray, AccountAgeWitness> accountAgeWitnessCache = new ConcurrentHashMap<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
