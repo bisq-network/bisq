@@ -182,6 +182,10 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
     @Getter
     private final Map<String, String> extraDataMap;
 
+    // We cache the date object to avoid reconstructing a new Date at each getDate call.
+    @JsonExclude
+    private transient final Date dateObj;
+
     public TradeStatistics3(String currency,
                             long price,
                             long amount,
@@ -251,6 +255,8 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
         this.extraDataMap = ExtraDataMapValidator.getValidatedExtraDataMap(extraDataMap);
 
         this.hash = hash == null ? createHash() : hash;
+
+        dateObj = new Date(date);
     }
 
     public byte[] createHash() {
@@ -319,7 +325,7 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
 
     @Override
     public Date getDate() {
-        return new Date(date);
+        return dateObj;
     }
 
     public long getDateAsLong() {
