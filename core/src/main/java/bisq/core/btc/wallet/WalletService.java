@@ -671,6 +671,9 @@ public abstract class WalletService {
 
     @Nullable
     public Transaction getTransaction(String txId) {
+        if (txId == null) {
+            return null;
+        }
         return getTransaction(Sha256Hash.wrap(txId));
     }
 

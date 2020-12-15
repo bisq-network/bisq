@@ -20,19 +20,21 @@ package bisq.desktop.main.portfolio.openoffer;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OpenOffer;
 
+import lombok.Getter;
+
 /**
  * We could remove that wrapper if it is not needed for additional UI only fields.
  */
 class OpenOfferListItem {
-
+    @Getter
     private final OpenOffer openOffer;
 
-    public OpenOfferListItem(OpenOffer openOffer) {
+    OpenOfferListItem(OpenOffer openOffer) {
         this.openOffer = openOffer;
     }
 
-    public OpenOffer getOpenOffer() {
-        return openOffer;
+    OpenOfferListItem() {
+        openOffer = null;
     }
 
     public Offer getOffer() {

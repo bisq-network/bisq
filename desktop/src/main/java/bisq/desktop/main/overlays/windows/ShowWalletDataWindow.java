@@ -54,7 +54,7 @@ public class ShowWalletDataWindow extends Overlay<ShowWalletDataWindow> {
         if (headLine == null)
             headLine = Res.get("showWalletDataWindow.walletData");
 
-        width = 660;
+        width = 1000;
         createGridPane();
         addHeadLine();
         addContent();

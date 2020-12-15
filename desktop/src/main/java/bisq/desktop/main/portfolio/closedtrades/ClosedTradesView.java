@@ -27,7 +27,6 @@ import bisq.desktop.components.InputTextField;
 import bisq.desktop.components.PeerInfoIcon;
 import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
 import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
-import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.alert.PrivateNotificationManager;
@@ -53,6 +52,7 @@ import javafx.fxml.FXML;
 import javafx.stage.Stage;
 
 import javafx.scene.Node;
+import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -60,6 +60,7 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 
 import javafx.geometry.Insets;
@@ -114,15 +115,19 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
             txFeeColumn, tradeFeeColumn, buyerSecurityDepositColumn, sellerSecurityDepositColumn,
             marketColumn, directionColumn, dateColumn, tradeIdColumn, stateColumn, avatarColumn;
     @FXML
-    HBox footerBox;
+    HBox searchBox;
     @FXML
     AutoTooltipLabel filterLabel;
     @FXML
     InputTextField filterTextField;
     @FXML
-    Pane spacer;
+    Pane searchBoxSpacer;
     @FXML
     AutoTooltipButton exportButton;
+    @FXML
+    Label numItems;
+    @FXML
+    Region footerSpacer;
 
     private final OfferDetailsWindow offerDetailsWindow;
     private final Preferences preferences;
@@ -225,14 +230,16 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
         dateColumn.setSortType(TableColumn.SortType.DESCENDING);
         tableView.getSortOrder().add(dateColumn);
 
-        filterLabel.setText(Res.getWithCol("support.filter"));
-        filterTextField.setPromptText(Res.get("support.filter.prompt"));
+        filterLabel.setText(Res.get("shared.filter"));
         HBox.setMargin(filterLabel, new Insets(5, 0, 0, 10));
         filterTextFieldListener = (observable, oldValue, newValue) -> applyFilteredListPredicate(filterTextField.getText());
-        footerBox.setSpacing(5);
-        HBox.setHgrow(spacer, Priority.ALWAYS);
-        exportButton.updateText(Res.get("shared.exportCSV"));
+        searchBox.setSpacing(5);
+        HBox.setHgrow(searchBoxSpacer, Priority.ALWAYS);
+
+        numItems.setPadding(new Insets(-5, 0, 0, 10));
+        HBox.setHgrow(footerSpacer, Priority.ALWAYS);
         HBox.setMargin(exportButton, new Insets(0, 10, 0, 0));
+        exportButton.updateText(Res.get("shared.exportCSV"));
     }
 
     @Override
@@ -244,6 +251,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
 
         tableView.setItems(sortedList);
 
+        numItems.setText(Res.get("shared.numItemsLabel", sortedList.size()));
         exportButton.setOnAction(event -> {
             final ObservableList<TableColumn<ClosedTradableListItem, ?>> tableColumns = tableView.getColumns();
             CSVEntryConverter<ClosedTradableListItem> headerConverter = transactionsListItem -> {
@@ -317,31 +325,82 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
             if (filterString.isEmpty())
                 return true;
 
-            Offer offer = item.getTradable().getOffer();
-            boolean matchesId = offer.getId().contains(filterString);
-            boolean matchesOfferDate = DisplayUtils.formatDate(offer.getDate()).contains(filterString);
-            boolean isMakerOnion = offer.getMakerNodeAddress().getFullAddress().contains(filterString);
+            Tradable tradable = item.getTradable();
+            Offer offer = tradable.getOffer();
+            if (offer.getId().contains(filterString)) {
+                return true;
+            }
+            if (model.getDate(item).contains(filterString)) {
+                return true;
+            }
+            if (model.getMarketLabel(item).contains(filterString)) {
+                return true;
+            }
+            if (model.getPrice(item).contains(filterString)) {
+                return true;
+            }
+            if (model.getPriceDeviation(item).contains(filterString)) {
+                return true;
+            }
 
-            if (item.getTradable() instanceof Trade) {
+            if (model.getVolume(item).contains(filterString)) {
+                return true;
+            }
+            if (model.getAmount(item).contains(filterString)) {
+                return true;
+            }
+            if (model.getTradeFee(item).contains(filterString)) {
+                return true;
+            }
+            if (model.getTxFee(item).contains(filterString)) {
+                return true;
+            }
+            if (model.getBuyerSecurityDeposit(item).contains(filterString)) {
+                return true;
+            }
+            if (model.getSellerSecurityDeposit(item).contains(filterString)) {
+                return true;
+            }
+            if (model.getState(item).contains(filterString)) {
+                return true;
+            }
+            if (model.getDirectionLabel(item).contains(filterString)) {
+                return true;
+            }
+            if (offer.getPaymentMethod().getDisplayString().contains(filterString)) {
+                return true;
+            }
+            if (offer.getOfferFeePaymentTxId().contains(filterString)) {
+                return true;
+            }
+
+            if (tradable instanceof Trade) {
+                Trade trade = (Trade) tradable;
+                if (trade.getTakerFeeTxId() != null && trade.getTakerFeeTxId().contains(filterString)) {
+                    return true;
+                }
+                if (trade.getDepositTxId() != null && trade.getDepositTxId().contains(filterString)) {
+                    return true;
+                }
+                if (trade.getPayoutTxId() != null && trade.getPayoutTxId().contains(filterString)) {
+                    return true;
+                }
+
+                Contract contract = trade.getContract();
                 boolean isBuyerOnion = false;
                 boolean isSellerOnion = false;
                 boolean matchesBuyersPaymentAccountData = false;
                 boolean matchesSellersPaymentAccountData = false;
-
-                Trade trade = (Trade) item.getTradable();
-                boolean matchesTradeDate = DisplayUtils.formatDate(trade.getTakeOfferDate()).contains(filterString);
-                Contract contract = trade.getContract();
                 if (contract != null) {
                     isBuyerOnion = contract.getBuyerNodeAddress().getFullAddress().contains(filterString);
                     isSellerOnion = contract.getSellerNodeAddress().getFullAddress().contains(filterString);
                     matchesBuyersPaymentAccountData = contract.getBuyerPaymentAccountPayload().getPaymentDetails().contains(filterString);
                     matchesSellersPaymentAccountData = contract.getSellerPaymentAccountPayload().getPaymentDetails().contains(filterString);
                 }
-                return matchesId || matchesOfferDate || isMakerOnion ||
-                        matchesTradeDate || isBuyerOnion || isSellerOnion ||
+                return isBuyerOnion || isSellerOnion ||
                         matchesBuyersPaymentAccountData || matchesSellersPaymentAccountData;
             } else {
-                return matchesId || matchesOfferDate || isMakerOnion;
+                return false;
             }
         });
     }

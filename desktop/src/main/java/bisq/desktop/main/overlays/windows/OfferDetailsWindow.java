@@ -320,11 +320,16 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
             textArea.setEditable(false);
         }
 
-        rows = 4;
+        rows = 3;
         if (countryCode != null)
             rows++;
         if (!isF2F)
             rows++;
+
+        // At create offer we do not show the makerFeeTxId
+        if (!placeOfferHandlerOptional.isPresent()) {
+            rows++;
+        }
 
         TitledGroupBg titledGroupBg = addTitledGroupBg(gridPane, ++rowIndex, rows, Res.get("shared.details"), Layout.GROUP_DISTANCE);
         addConfirmationLabelTextFieldWithCopyIcon(gridPane, rowIndex, Res.get("shared.offerId"), offer.getId(),
@@ -342,17 +347,20 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
                 formatter.formatCoinWithCode(offer.getSellerSecurityDeposit());
         addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("shared.securityDeposit"), value);
 
-        TxIdTextField makerFeeTxIdTextField = addLabelTxIdTextField(gridPane, ++rowIndex,
-                Res.get("shared.makerFeeTxId"), offer.getOfferFeePaymentTxId()).second;
+        // At create offer we do not show the makerFeeTxId
+        if (!placeOfferHandlerOptional.isPresent()) {
+            TxIdTextField makerFeeTxIdTextField = addLabelTxIdTextField(gridPane, ++rowIndex,
+                    Res.get("shared.makerFeeTxId"), offer.getOfferFeePaymentTxId()).second;
 
-        int finalRows = rows;
-        OfferUtil.getInvalidMakerFeeTxErrorMessage(offer, btcWalletService)
-                .ifPresent(errorMsg -> {
-                    makerFeeTxIdTextField.getTextField().setId("address-text-field-error");
-                    GridPane.setRowSpan(titledGroupBg, finalRows + 1);
-                    addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("shared.errorMessage"),
-                            errorMsg.replace("\n\n", "\n"));
-                });
+            int finalRows = rows;
+            OfferUtil.getInvalidMakerFeeTxErrorMessage(offer, btcWalletService)
+                    .ifPresent(errorMsg -> {
+                        makerFeeTxIdTextField.getTextField().setId("address-text-field-error");
+                        GridPane.setRowSpan(titledGroupBg, finalRows + 1);
+                        addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("shared.errorMessage"),
+                                errorMsg.replace("\n\n", "\n"));
+                    });
+        }
 
         if (countryCode != null && !isF2F)
             addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("offerDetailsWindow.countryBank"),
