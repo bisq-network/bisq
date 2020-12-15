@@ -37,12 +37,12 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Currency;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -62,9 +62,13 @@ public class CurrencyUtil {
 
     private static String baseCurrencyCode = "BTC";
 
-    // Calls to isFiatCurrency and isCryptoCurrency are very frequent so we use a cache of the results
-    private static final Map<String, Boolean> isFiatCurrencyMap = new HashMap<>();
-    private static final Map<String, Boolean> isCryptoCurrencyMap = new HashMap<>();
+    // Calls to isFiatCurrency and isCryptoCurrency are very frequent so we use a cache of the results.
+    // The main improvement was already achieved with using memoize for the source maps, but
+    // the caching still improves performance by about 20% for isCryptoCurrency and about 100%
+    // for isFiatCurrency calls.
+    // See: https://github.com/bisq-network/bisq/pull/4955#issuecomment-745302802
+    private static final Map<String, Boolean> isFiatCurrencyMap = new ConcurrentHashMap<>();
+    private static final Map<String, Boolean> isCryptoCurrencyMap = new ConcurrentHashMap<>();
 
     private static Supplier<Map<String, FiatCurrency>> fiatCurrencyMapSupplier = Suppliers.memoize(
             CurrencyUtil::createFiatCurrencyMap)::get;
