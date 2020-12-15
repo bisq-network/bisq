@@ -681,7 +681,7 @@ public class AccountAgeWitnessService {
                                               ECKey key,
                                               long time) {
         // Find AccountAgeWitness as signedwitness
-        var signedWitness = signedWitnessService.getSignedWitnessMap().values().stream()
+        var signedWitness = signedWitnessService.getSignedWitnessMapValues().stream()
                 .filter(sw -> Arrays.equals(sw.getAccountAgeWitnessHash(), accountAgeWitness.getHash()))
                 .findAny()
                 .orElse(null);
