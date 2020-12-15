@@ -17,6 +17,7 @@
 
 package bisq.core.btc.wallet.http;
 
+import bisq.core.btc.nodes.LocalBitcoinNode;
 import bisq.core.user.Preferences;
 
 import bisq.network.Socks5ProxyProvider;
@@ -50,18 +51,27 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class MemPoolSpaceTxBroadcaster {
     private static Socks5ProxyProvider socks5ProxyProvider;
     private static Preferences preferences;
+    private static LocalBitcoinNode localBitcoinNode;
     private static final ListeningExecutorService executorService = Utilities.getListeningExecutorService(
             "MemPoolSpaceTxBroadcaster", 3, 5, 10 * 60);
 
     public static void init(Socks5ProxyProvider socks5ProxyProvider,
-                            Preferences preferences) {
+                            Preferences preferences,
+                            LocalBitcoinNode localBitcoinNode) {
         MemPoolSpaceTxBroadcaster.socks5ProxyProvider = socks5ProxyProvider;
         MemPoolSpaceTxBroadcaster.preferences = preferences;
+        MemPoolSpaceTxBroadcaster.localBitcoinNode = localBitcoinNode;
     }
 
     public static void broadcastTx(Transaction tx) {
         if (!Config.baseCurrencyNetwork().isMainnet()) {
             log.info("MemPoolSpaceTxBroadcaster only supports mainnet");
+            return;
+        }
+
+        if (localBitcoinNode.shouldBeUsed()) {
+            log.info("A localBitcoinNode is detected and used. For privacy reasons we do not use the tx " +
+                    "broadcast to mempool nodes in that case.");
             return;
         }
 

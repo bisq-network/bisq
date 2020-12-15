@@ -234,7 +234,7 @@ public class BisqSetup {
         this.localBitcoinNode = localBitcoinNode;
         this.appStartupState = appStartupState;
 
-        MemPoolSpaceTxBroadcaster.init(socks5ProxyProvider, preferences);
+        MemPoolSpaceTxBroadcaster.init(socks5ProxyProvider, preferences, localBitcoinNode);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
