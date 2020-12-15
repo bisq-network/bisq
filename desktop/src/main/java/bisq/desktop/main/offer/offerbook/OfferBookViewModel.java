@@ -421,17 +421,33 @@ class OfferBookViewModel extends ActivatableViewModel {
         long priceAsLong = checkNotNull(price).getValue();
         double scaled = MathUtils.scaleDownByPowerOf10(priceAsLong, precision);
 
+        double value;
         if (direction == OfferPayload.Direction.SELL) {
-            double value = CurrencyUtil.isFiatCurrency(currencyCode) ?
-                    1 - scaled / marketPrice :
-                    scaled / marketPrice - 1;
-            return Optional.of(value);
+            if (CurrencyUtil.isFiatCurrency(currencyCode)) {
+                if (marketPrice == 0) {
+                    return Optional.empty();
+                }
+                value = 1 - scaled / marketPrice;
+            } else {
+                if (marketPrice == 1) {
+                    return Optional.empty();
+                }
+                value = scaled / marketPrice - 1;
+            }
         } else {
-            double value = CurrencyUtil.isFiatCurrency(currencyCode) ?
-                    scaled / marketPrice - 1 :
-                    1 - scaled / marketPrice;
-            return Optional.of(value);
+            if (CurrencyUtil.isFiatCurrency(currencyCode)) {
+                if (marketPrice == 1) {
+                    return Optional.empty();
+                }
+                value = scaled / marketPrice - 1;
+            } else {
+                if (marketPrice == 0) {
+                    return Optional.empty();
+                }
+                value = 1 - scaled / marketPrice;
+            }
         }
+        return Optional.of(value);
     }
 
     public boolean hasMarketPrice(Offer offer) {
@@ -655,11 +671,11 @@ class OfferBookViewModel extends ActivatableViewModel {
 
     boolean isMyInsufficientTradeLimit(Offer offer) {
         Optional<PaymentAccount> accountOptional = getMostMaturePaymentAccountForOffer(offer);
-        final long myTradeLimit = accountOptional
+        long myTradeLimit = accountOptional
                 .map(paymentAccount -> accountAgeWitnessService.getMyTradeLimit(paymentAccount,
                         offer.getCurrencyCode(), offer.getMirroredDirection()))
                 .orElse(0L);
-        final long offerMinAmount = offer.getMinAmount().value;
+        long offerMinAmount = offer.getMinAmount().value;
         log.debug("isInsufficientTradeLimit accountOptional={}, myTradeLimit={}, offerMinAmount={}, ",
                 accountOptional.isPresent() ? accountOptional.get().getAccountName() : "null",
                 Coin.valueOf(myTradeLimit).toFriendlyString(),

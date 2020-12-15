@@ -1010,12 +1010,12 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                             }
 
                             @Override
-                            public void updateItem(final OfferBookListItem newItem, boolean empty) {
-                                super.updateItem(newItem, empty);
+                            public void updateItem(final OfferBookListItem item, boolean empty) {
+                                super.updateItem(item, empty);
 
                                 TableRow<OfferBookListItem> tableRow = getTableRow();
-                                if (newItem != null && !empty) {
-                                    final Offer offer = newItem.getOffer();
+                                if (item != null && !empty) {
+                                    final Offer offer = item.getOffer();
                                     boolean myOffer = model.isMyOffer(offer);
                                     if (tableRow != null) {
                                         isPaymentAccountValidForOffer = model.isAnyPaymentAccountValidForOffer(offer);
