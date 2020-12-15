@@ -51,6 +51,7 @@ import bisq.common.crypto.PubKeyRing;
 import bisq.common.crypto.Sig;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.util.MathUtils;
+import bisq.common.util.Tuple2;
 import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Coin;
@@ -885,5 +886,25 @@ public class AccountAgeWitnessService {
         var pubKey = keyRing.getSignatureKeyPair().getPublic();
         var witness = getMyWitness(paymentAccount.getPaymentAccountPayload());
         return Utilities.bytesAsHexString(witness.getHash()) + "," + Utilities.bytesAsHexString(pubKey.getEncoded());
+    }
+
+    public Tuple2<AccountAgeWitness, byte[]> signInfoFromString(String signInfo) {
+        var parts = signInfo.split(",");
+        if (parts.length != 2){
+            return null;
+        }
+        byte[] pubKeyHash;
+        Optional<AccountAgeWitness> accountAgeWitness;
+        try {
+            var accountAgeWitnessHash = Utilities.decodeFromHex(parts[0]);
+            pubKeyHash = Utilities.decodeFromHex(parts[1]);
+            accountAgeWitness = getWitnessByHash(accountAgeWitnessHash);
+        } catch (Exception e) {
+            return null;
+        }
+
+        return accountAgeWitness
+                .map(ageWitness -> new Tuple2<>(ageWitness, pubKeyHash))
+                .orElse(null);
     }
 }
