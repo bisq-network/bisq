@@ -6,8 +6,6 @@ import bisq.proto.grpc.DisputeAgentsGrpc;
 import bisq.proto.grpc.RegisterDisputeAgentReply;
 import bisq.proto.grpc.RegisterDisputeAgentRequest;
 
-import io.grpc.Status;
-import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 
 import javax.inject.Inject;
@@ -18,10 +16,12 @@ import lombok.extern.slf4j.Slf4j;
 class GrpcDisputeAgentsService extends DisputeAgentsGrpc.DisputeAgentsImplBase {
 
     private final CoreApi coreApi;
+    private final CoreApiExceptionHandler exceptionHandler;
 
     @Inject
-    public GrpcDisputeAgentsService(CoreApi coreApi) {
+    public GrpcDisputeAgentsService(CoreApi coreApi, CoreApiExceptionHandler exceptionHandler) {
         this.coreApi = coreApi;
+        this.exceptionHandler = exceptionHandler;
     }
 
     @Override
@@ -32,14 +32,8 @@ class GrpcDisputeAgentsService extends DisputeAgentsGrpc.DisputeAgentsImplBase {
             var reply = RegisterDisputeAgentReply.newBuilder().build();
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
-        } catch (IllegalArgumentException cause) {
-            var ex = new StatusRuntimeException(Status.INVALID_ARGUMENT.withDescription(cause.getMessage()));
-            responseObserver.onError(ex);
-            throw ex;
-        } catch (IllegalStateException cause) {
-            var ex = new StatusRuntimeException(Status.UNKNOWN.withDescription(cause.getMessage()));
-            responseObserver.onError(ex);
-            throw ex;
+        } catch (Throwable cause) {
+            exceptionHandler.handleException(cause, responseObserver);
         }
     }
 }

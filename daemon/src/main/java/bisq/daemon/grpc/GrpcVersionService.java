@@ -13,16 +13,22 @@ import javax.inject.Inject;
 class GrpcVersionService extends GetVersionGrpc.GetVersionImplBase {
 
     private final CoreApi coreApi;
+    private final CoreApiExceptionHandler exceptionHandler;
 
     @Inject
-    public GrpcVersionService(CoreApi coreApi) {
+    public GrpcVersionService(CoreApi coreApi, CoreApiExceptionHandler exceptionHandler) {
         this.coreApi = coreApi;
+        this.exceptionHandler = exceptionHandler;
     }
 
     @Override
     public void getVersion(GetVersionRequest req, StreamObserver<GetVersionReply> responseObserver) {
-        var reply = GetVersionReply.newBuilder().setVersion(coreApi.getVersion()).build();
-        responseObserver.onNext(reply);
-        responseObserver.onCompleted();
+        try {
+            var reply = GetVersionReply.newBuilder().setVersion(coreApi.getVersion()).build();
+            responseObserver.onNext(reply);
+            responseObserver.onCompleted();
+        } catch (Throwable cause) {
+            exceptionHandler.handleException(cause, responseObserver);
+        }
     }
 }

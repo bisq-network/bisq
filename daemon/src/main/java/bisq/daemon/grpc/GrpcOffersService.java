@@ -31,8 +31,6 @@ import bisq.proto.grpc.GetOffersReply;
 import bisq.proto.grpc.GetOffersRequest;
 import bisq.proto.grpc.OffersGrpc;
 
-import io.grpc.Status;
-import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 
 import javax.inject.Inject;
@@ -48,10 +46,12 @@ import static bisq.core.api.model.OfferInfo.toOfferInfo;
 class GrpcOffersService extends OffersGrpc.OffersImplBase {
 
     private final CoreApi coreApi;
+    private final CoreApiExceptionHandler exceptionHandler;
 
     @Inject
-    public GrpcOffersService(CoreApi coreApi) {
+    public GrpcOffersService(CoreApi coreApi, CoreApiExceptionHandler exceptionHandler) {
         this.coreApi = coreApi;
+        this.exceptionHandler = exceptionHandler;
     }
 
     @Override
@@ -64,26 +64,28 @@ class GrpcOffersService extends OffersGrpc.OffersImplBase {
                     .build();
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
-        } catch (IllegalStateException | IllegalArgumentException cause) {
-            var ex = new StatusRuntimeException(Status.UNKNOWN.withDescription(cause.getMessage()));
-            responseObserver.onError(ex);
-            throw ex;
+        } catch (Throwable cause) {
+            exceptionHandler.handleException(cause, responseObserver);
         }
     }
 
     @Override
     public void getOffers(GetOffersRequest req,
                           StreamObserver<GetOffersReply> responseObserver) {
-        List<OfferInfo> result = coreApi.getOffers(req.getDirection(), req.getCurrencyCode())
-                .stream().map(OfferInfo::toOfferInfo)
-                .collect(Collectors.toList());
-        var reply = GetOffersReply.newBuilder()
-                .addAllOffers(result.stream()
-                        .map(OfferInfo::toProtoMessage)
-                        .collect(Collectors.toList()))
-                .build();
-        responseObserver.onNext(reply);
-        responseObserver.onCompleted();
+        try {
+            List<OfferInfo> result = coreApi.getOffers(req.getDirection(), req.getCurrencyCode())
+                    .stream().map(OfferInfo::toOfferInfo)
+                    .collect(Collectors.toList());
+            var reply = GetOffersReply.newBuilder()
+                    .addAllOffers(result.stream()
+                            .map(OfferInfo::toProtoMessage)
+                            .collect(Collectors.toList()))
+                    .build();
+            responseObserver.onNext(reply);
+            responseObserver.onCompleted();
+        } catch (Throwable cause) {
+            exceptionHandler.handleException(cause, responseObserver);
+        }
     }
 
     @Override
@@ -111,10 +113,8 @@ class GrpcOffersService extends OffersGrpc.OffersImplBase {
                         responseObserver.onNext(reply);
                         responseObserver.onCompleted();
                     });
-        } catch (IllegalStateException | IllegalArgumentException cause) {
-            var ex = new StatusRuntimeException(Status.UNKNOWN.withDescription(cause.getMessage()));
-            responseObserver.onError(ex);
-            throw ex;
+        } catch (Throwable cause) {
+            exceptionHandler.handleException(cause, responseObserver);
         }
     }
 
@@ -126,10 +126,8 @@ class GrpcOffersService extends OffersGrpc.OffersImplBase {
             var reply = CancelOfferReply.newBuilder().build();
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
-        } catch (IllegalStateException | IllegalArgumentException cause) {
-            var ex = new StatusRuntimeException(Status.UNKNOWN.withDescription(cause.getMessage()));
-            responseObserver.onError(ex);
-            throw ex;
+        } catch (Throwable cause) {
+            exceptionHandler.handleException(cause, responseObserver);
         }
     }
 }

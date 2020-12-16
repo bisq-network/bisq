@@ -53,8 +53,6 @@ import bisq.proto.grpc.UnsetTxFeeRatePreferenceReply;
 import bisq.proto.grpc.UnsetTxFeeRatePreferenceRequest;
 import bisq.proto.grpc.WalletsGrpc;
 
-import io.grpc.Status;
-import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 
 import org.bitcoinj.core.Transaction;
@@ -76,10 +74,12 @@ import static bisq.core.api.model.TxInfo.toTxInfo;
 class GrpcWalletsService extends WalletsGrpc.WalletsImplBase {
 
     private final CoreApi coreApi;
+    private final CoreApiExceptionHandler exceptionHandler;
 
     @Inject
-    public GrpcWalletsService(CoreApi coreApi) {
+    public GrpcWalletsService(CoreApi coreApi, CoreApiExceptionHandler exceptionHandler) {
         this.coreApi = coreApi;
+        this.exceptionHandler = exceptionHandler;
     }
 
     @Override
@@ -91,10 +91,8 @@ class GrpcWalletsService extends WalletsGrpc.WalletsImplBase {
                     .build();
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
-        } catch (IllegalStateException cause) {
-            var ex = new StatusRuntimeException(Status.UNKNOWN.withDescription(cause.getMessage()));
-            responseObserver.onError(ex);
-            throw ex;
+        } catch (Throwable cause) {
+            exceptionHandler.handleException(cause, responseObserver);
         }
     }
 
@@ -107,10 +105,8 @@ class GrpcWalletsService extends WalletsGrpc.WalletsImplBase {
                     .setAddressBalanceInfo(balanceInfo.toProtoMessage()).build();
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
-        } catch (IllegalStateException cause) {
-            var ex = new StatusRuntimeException(Status.UNKNOWN.withDescription(cause.getMessage()));
-            responseObserver.onError(ex);
-            throw ex;
+        } catch (Throwable cause) {
+            exceptionHandler.handleException(cause, responseObserver);
         }
     }
 
@@ -127,10 +123,8 @@ class GrpcWalletsService extends WalletsGrpc.WalletsImplBase {
                     .build();
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
-        } catch (IllegalStateException cause) {
-            var ex = new StatusRuntimeException(Status.UNKNOWN.withDescription(cause.getMessage()));
-            responseObserver.onError(ex);
-            throw ex;
+        } catch (Throwable cause) {
+            exceptionHandler.handleException(cause, responseObserver);
         }
     }
 
@@ -144,10 +138,8 @@ class GrpcWalletsService extends WalletsGrpc.WalletsImplBase {
                     .build();
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
-        } catch (IllegalStateException cause) {
-            var ex = new StatusRuntimeException(Status.UNKNOWN.withDescription(cause.getMessage()));
-            responseObserver.onError(ex);
-            throw ex;
+        } catch (Throwable cause) {
+            exceptionHandler.handleException(cause, responseObserver);
         }
     }
 
@@ -178,10 +170,8 @@ class GrpcWalletsService extends WalletsGrpc.WalletsImplBase {
                             throw new IllegalStateException(ex);
                         }
                     });
-        } catch (IllegalStateException cause) {
-            var ex = new StatusRuntimeException(Status.UNKNOWN.withDescription(cause.getMessage()));
-            responseObserver.onError(ex);
-            throw ex;
+        } catch (Throwable cause) {
+            exceptionHandler.handleException(cause, responseObserver);
         }
     }
 
@@ -218,10 +208,8 @@ class GrpcWalletsService extends WalletsGrpc.WalletsImplBase {
                             throw new IllegalStateException(t);
                         }
                     });
-        } catch (IllegalStateException | IllegalArgumentException cause) {
-            var ex = new StatusRuntimeException(Status.UNKNOWN.withDescription(cause.getMessage()));
-            responseObserver.onError(ex);
-            throw ex;
+        } catch (Throwable cause) {
+            exceptionHandler.handleException(cause, responseObserver);
         }
     }
 
@@ -237,10 +225,8 @@ class GrpcWalletsService extends WalletsGrpc.WalletsImplBase {
                 responseObserver.onNext(reply);
                 responseObserver.onCompleted();
             });
-        } catch (IllegalStateException cause) {
-            var ex = new StatusRuntimeException(Status.UNKNOWN.withDescription(cause.getMessage()));
-            responseObserver.onError(ex);
-            throw ex;
+        } catch (Throwable cause) {
+            exceptionHandler.handleException(cause, responseObserver);
         }
     }
 
@@ -256,10 +242,8 @@ class GrpcWalletsService extends WalletsGrpc.WalletsImplBase {
                 responseObserver.onNext(reply);
                 responseObserver.onCompleted();
             });
-        } catch (IllegalStateException cause) {
-            var ex = new StatusRuntimeException(Status.UNKNOWN.withDescription(cause.getMessage()));
-            responseObserver.onError(ex);
-            throw ex;
+        } catch (Throwable cause) {
+            exceptionHandler.handleException(cause, responseObserver);
         }
     }
 
@@ -275,10 +259,8 @@ class GrpcWalletsService extends WalletsGrpc.WalletsImplBase {
                 responseObserver.onNext(reply);
                 responseObserver.onCompleted();
             });
-        } catch (IllegalStateException cause) {
-            var ex = new StatusRuntimeException(Status.UNKNOWN.withDescription(cause.getMessage()));
-            responseObserver.onError(ex);
-            throw ex;
+        } catch (Throwable cause) {
+            exceptionHandler.handleException(cause, responseObserver);
         }
     }
 
@@ -292,10 +274,8 @@ class GrpcWalletsService extends WalletsGrpc.WalletsImplBase {
                     .build();
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
-        } catch (IllegalStateException | IllegalArgumentException cause) {
-            var ex = new StatusRuntimeException(Status.UNKNOWN.withDescription(cause.getMessage()));
-            responseObserver.onError(ex);
-            throw ex;
+        } catch (Throwable cause) {
+            exceptionHandler.handleException(cause, responseObserver);
         }
     }
 
@@ -307,10 +287,8 @@ class GrpcWalletsService extends WalletsGrpc.WalletsImplBase {
             var reply = SetWalletPasswordReply.newBuilder().build();
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
-        } catch (IllegalStateException cause) {
-            var ex = new StatusRuntimeException(Status.UNKNOWN.withDescription(cause.getMessage()));
-            responseObserver.onError(ex);
-            throw ex;
+        } catch (Throwable cause) {
+            exceptionHandler.handleException(cause, responseObserver);
         }
     }
 
@@ -322,10 +300,8 @@ class GrpcWalletsService extends WalletsGrpc.WalletsImplBase {
             var reply = RemoveWalletPasswordReply.newBuilder().build();
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
-        } catch (IllegalStateException cause) {
-            var ex = new StatusRuntimeException(Status.UNKNOWN.withDescription(cause.getMessage()));
-            responseObserver.onError(ex);
-            throw ex;
+        } catch (Throwable cause) {
+            exceptionHandler.handleException(cause, responseObserver);
         }
     }
 
@@ -337,10 +313,8 @@ class GrpcWalletsService extends WalletsGrpc.WalletsImplBase {
             var reply = LockWalletReply.newBuilder().build();
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
-        } catch (IllegalStateException cause) {
-            var ex = new StatusRuntimeException(Status.UNKNOWN.withDescription(cause.getMessage()));
-            responseObserver.onError(ex);
-            throw ex;
+        } catch (Throwable cause) {
+            exceptionHandler.handleException(cause, responseObserver);
         }
     }
 
@@ -352,10 +326,8 @@ class GrpcWalletsService extends WalletsGrpc.WalletsImplBase {
             var reply = UnlockWalletReply.newBuilder().build();
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
-        } catch (IllegalStateException cause) {
-            var ex = new StatusRuntimeException(Status.UNKNOWN.withDescription(cause.getMessage()));
-            responseObserver.onError(ex);
-            throw ex;
+        } catch (Throwable cause) {
+            exceptionHandler.handleException(cause, responseObserver);
         }
     }
 }

@@ -23,8 +23,6 @@ import bisq.proto.grpc.MarketPriceReply;
 import bisq.proto.grpc.MarketPriceRequest;
 import bisq.proto.grpc.PriceGrpc;
 
-import io.grpc.Status;
-import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 
 import javax.inject.Inject;
@@ -35,10 +33,12 @@ import lombok.extern.slf4j.Slf4j;
 class GrpcPriceService extends PriceGrpc.PriceImplBase {
 
     private final CoreApi coreApi;
+    private final CoreApiExceptionHandler exceptionHandler;
 
     @Inject
-    public GrpcPriceService(CoreApi coreApi) {
+    public GrpcPriceService(CoreApi coreApi, CoreApiExceptionHandler exceptionHandler) {
         this.coreApi = coreApi;
+        this.exceptionHandler = exceptionHandler;
     }
 
     @Override
@@ -49,10 +49,8 @@ class GrpcPriceService extends PriceGrpc.PriceImplBase {
             var reply = MarketPriceReply.newBuilder().setPrice(price).build();
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
-        } catch (IllegalStateException cause) {
-            var ex = new StatusRuntimeException(Status.UNKNOWN.withDescription(cause.getMessage()));
-            responseObserver.onError(ex);
-            throw ex;
+        } catch (Throwable cause) {
+            exceptionHandler.handleException(cause, responseObserver);
         }
     }
 }
