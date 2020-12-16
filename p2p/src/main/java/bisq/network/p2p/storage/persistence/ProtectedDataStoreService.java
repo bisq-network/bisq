@@ -56,6 +56,10 @@ public class ProtectedDataStoreService {
     }
 
     public void readFromResources(String postFix, Runnable completeHandler) {
+        if (services.isEmpty()) {
+            completeHandler.run();
+            return;
+        }
         AtomicInteger remaining = new AtomicInteger(services.size());
         services.forEach(service -> {
             service.readFromResources(postFix, () -> {
