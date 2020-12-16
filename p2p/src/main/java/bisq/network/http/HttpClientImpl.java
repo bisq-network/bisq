@@ -22,6 +22,7 @@ import bisq.network.Socks5ProxyProvider;
 import bisq.common.app.Version;
 import bisq.common.util.Utilities;
 
+import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
@@ -30,6 +31,7 @@ import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.config.Registry;
 import org.apache.http.config.RegistryBuilder;
 import org.apache.http.conn.socket.ConnectionSocketFactory;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
@@ -43,10 +45,13 @@ import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
 import java.net.URL;
 
+import java.nio.charset.StandardCharsets;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -145,9 +150,9 @@ public class HttpClientImpl implements HttpClient {
                                        @Nullable String headerKey,
                                        @Nullable String headerValue) throws IOException {
         long ts = System.currentTimeMillis();
-        String spec = baseUrl + param;
-        log.info("requestWithoutProxy: URL={}, httpMethod={}", spec, httpMethod);
+        log.info("requestWithoutProxy: URL={}, param={}, httpMethod={}", baseUrl, param, httpMethod);
         try {
+            String spec = httpMethod == HttpMethod.GET ? baseUrl + param : baseUrl;
             URL url = new URL(spec);
             connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod(httpMethod.name());
@@ -158,23 +163,46 @@ public class HttpClientImpl implements HttpClient {
                 connection.setRequestProperty(headerKey, headerValue);
             }
 
-            if (connection.getResponseCode() == 200) {
+            if (httpMethod == HttpMethod.POST) {
+                connection.setDoOutput(true);
+                connection.getOutputStream().write(param.getBytes(StandardCharsets.UTF_8));
+            }
+
+            int responseCode = connection.getResponseCode();
+            if (responseCode == 200) {
                 String response = convertInputStreamToString(connection.getInputStream());
-                log.info("Response for {} took {} ms. Data size:{}, response: {}",
-                        spec,
+                log.info("Response from {} with param {} took {} ms. Data size:{}, response: {}",
+                        baseUrl,
+                        param,
                         System.currentTimeMillis() - ts,
                         Utilities.readableFileSize(response.getBytes().length),
                         Utilities.toTruncatedString(response));
                 return response;
             } else {
-                String error = convertInputStreamToString(connection.getErrorStream());
-                connection.getErrorStream().close();
-                throw new HttpException(error);
+                InputStream errorStream = connection.getErrorStream();
+                if (errorStream != null) {
+                    String error = convertInputStreamToString(errorStream);
+                    errorStream.close();
+                    log.info("Received errorMsg '{}' with responseCode {} from {}. Response took: {} ms. param: {}",
+                            error,
+                            responseCode,
+                            baseUrl,
+                            System.currentTimeMillis() - ts,
+                            param);
+                    throw new HttpException(error, responseCode);
+                } else {
+                    log.info("Response with responseCode {} from {}. Response took: {} ms. param: {}",
+                            responseCode,
+                            baseUrl,
+                            System.currentTimeMillis() - ts,
+                            param);
+                    throw new HttpException("Request failed", responseCode);
+                }
             }
         } catch (Throwable t) {
-            String message = "Error at requestWithoutProxy with URL: " + spec + ". Throwable=" + t.getMessage();
-            log.error(message);
-            throw new IOException(message);
+            String message = "Error at requestWithoutProxy with url " + baseUrl + " and param " + param +
+                    ". Throwable=" + t.getMessage();
+            throw new IOException(message, t);
         } finally {
             try {
                 if (connection != null) {
@@ -195,8 +223,7 @@ public class HttpClientImpl implements HttpClient {
                                       @Nullable String headerKey,
                                       @Nullable String headerValue) throws IOException {
         long ts = System.currentTimeMillis();
-        String uri = baseUrl + param;
-        log.info("requestWithoutProxy: uri={}, httpMethod={}", uri, httpMethod);
+        log.info("requestWithoutProxy: baseUrl={}, param={}, httpMethod={}", baseUrl, param, httpMethod);
         // This code is adapted from:
         //  http://stackoverflow.com/a/25203021/5616248
 
@@ -212,7 +239,7 @@ public class HttpClientImpl implements HttpClient {
                 new PoolingHttpClientConnectionManager(reg) :
                 new PoolingHttpClientConnectionManager(reg, new FakeDnsResolver());
         try {
-            closeableHttpClient = HttpClients.custom().setConnectionManager(cm).build();
+            closeableHttpClient = checkNotNull(HttpClients.custom().setConnectionManager(cm).build());
             InetSocketAddress socksAddress = new InetSocketAddress(socks5Proxy.getInetAddress(), socks5Proxy.getPort());
 
             // remove me: Use this to test with system-wide Tor proxy, or change port for another proxy.
@@ -221,23 +248,36 @@ public class HttpClientImpl implements HttpClient {
             HttpClientContext context = HttpClientContext.create();
             context.setAttribute("socks.address", socksAddress);
 
-            HttpUriRequest request = getHttpUriRequest(httpMethod, uri);
-            if (headerKey != null && headerValue != null)
+            HttpUriRequest request = getHttpUriRequest(httpMethod, baseUrl, param);
+            if (headerKey != null && headerValue != null) {
                 request.setHeader(headerKey, headerValue);
+            }
 
-            try (CloseableHttpResponse httpResponse = checkNotNull(closeableHttpClient).execute(request, context)) {
+            try (CloseableHttpResponse httpResponse = closeableHttpClient.execute(request, context)) {
                 String response = convertInputStreamToString(httpResponse.getEntity().getContent());
-                log.info("Response for {} took {} ms. Data size:{}, response: {}",
-                        uri,
-                        System.currentTimeMillis() - ts,
-                        Utilities.readableFileSize(response.getBytes().length),
-                        Utilities.toTruncatedString(response));
-                return response;
+                int statusCode = httpResponse.getStatusLine().getStatusCode();
+                if (statusCode == 200) {
+                    log.info("Response from {} took {} ms. Data size:{}, response: {}, param: {}",
+                            baseUrl,
+                            System.currentTimeMillis() - ts,
+                            Utilities.readableFileSize(response.getBytes().length),
+                            Utilities.toTruncatedString(response),
+                            param);
+                    return response;
+                } else {
+                    log.info("Received errorMsg '{}' with statusCode {} from {}. Response took: {} ms. param: {}",
+                            response,
+                            statusCode,
+                            baseUrl,
+                            System.currentTimeMillis() - ts,
+                            param);
+                    throw new HttpException(response, statusCode);
+                }
             }
         } catch (Throwable t) {
-            String message = "Error at doRequestWithProxy with URL: " + uri + ". Throwable=" + t.getMessage();
-            log.error(message);
-            throw new IOException(message);
+            String message = "Error at doRequestWithProxy with url " + baseUrl + " and param " + param +
+                    ". Throwable=" + t.getMessage();
+            throw new IOException(message, t);
         } finally {
             if (closeableHttpClient != null) {
                 closeableHttpClient.close();
@@ -247,12 +287,17 @@ public class HttpClientImpl implements HttpClient {
         }
     }
 
-    private HttpUriRequest getHttpUriRequest(HttpMethod httpMethod, String uri) {
+    private HttpUriRequest getHttpUriRequest(HttpMethod httpMethod, String baseUrl, String param)
+            throws UnsupportedEncodingException {
         switch (httpMethod) {
             case GET:
-                return new HttpGet(uri);
+                return new HttpGet(baseUrl + param);
             case POST:
-                return new HttpPost(uri);
+                HttpPost httpPost = new HttpPost(baseUrl);
+                HttpEntity httpEntity = new StringEntity(param);
+                httpPost.setEntity(httpEntity);
+                return httpPost;
+
             default:
                 throw new IllegalArgumentException("HttpMethod not supported: " + httpMethod);
         }

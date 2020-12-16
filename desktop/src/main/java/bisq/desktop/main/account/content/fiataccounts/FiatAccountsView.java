@@ -99,6 +99,7 @@ import bisq.core.util.validation.InputValidator;
 import bisq.common.config.Config;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple3;
+import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Coin;
 
@@ -385,6 +386,7 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
         paymentMethodComboBox.setPrefWidth(250);
         List<PaymentMethod> list = PaymentMethod.getPaymentMethods().stream()
                 .filter(paymentMethod -> !paymentMethod.isAsset())
+                .sorted()
                 .collect(Collectors.toList());
         paymentMethodComboBox.setItems(FXCollections.observableArrayList(list));
         paymentMethodComboBox.setConverter(new StringConverter<>() {
@@ -538,6 +540,15 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
     private void removeAccountRows() {
         FormBuilder.removeRowsFromGridPane(root, 2, gridRow);
         gridRow = 1;
+    }
+
+    @Override
+    protected void copyAccount() {
+        var selectedAccount = paymentAccountsListView.getSelectionModel().getSelectedItem();
+        if (selectedAccount == null) {
+            return;
+        }
+        Utilities.copyToClipboard(accountAgeWitnessService.getSignInfoFromAccount(selectedAccount));
     }
 
 }

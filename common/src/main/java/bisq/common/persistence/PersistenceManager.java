@@ -375,7 +375,10 @@ public class PersistenceManager<T extends PersistableEnvelope> {
             // reference to the persistable object.
             getWriteToDiskExecutor().execute(() -> writeToDisk(serialized, completeHandler));
 
-            log.info("Serializing {} took {} msec", fileName, System.currentTimeMillis() - ts);
+            long duration = System.currentTimeMillis() - ts;
+            if (duration > 100) {
+                log.info("Serializing {} took {} msec", fileName, duration);
+            }
         } catch (Throwable e) {
             log.error("Error in saveToFile toProtoMessage: {}, {}", persistable.getClass().getSimpleName(), fileName);
             e.printStackTrace();
@@ -437,7 +440,10 @@ public class PersistenceManager<T extends PersistableEnvelope> {
                 e.printStackTrace();
                 log.error("Cannot close resources." + e.getMessage());
             }
-            log.info("Writing the serialized {} completed in {} msec", fileName, System.currentTimeMillis() - ts);
+            long duration = System.currentTimeMillis() - ts;
+            if (duration > 100) {
+                log.info("Writing the serialized {} completed in {} msec", fileName, duration);
+            }
             persistenceRequested = false;
             if (completeHandler != null) {
                 UserThread.execute(completeHandler);

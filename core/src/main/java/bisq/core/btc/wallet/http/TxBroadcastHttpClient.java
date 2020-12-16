@@ -15,20 +15,18 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.http;
+package bisq.core.btc.wallet.http;
 
-import lombok.Getter;
+import bisq.core.trade.txproof.AssetTxProofHttpClient;
 
-public class HttpException extends Exception {
-    @Getter
-    private int responseCode;
+import bisq.network.Socks5ProxyProvider;
+import bisq.network.http.HttpClientImpl;
 
-    public HttpException(String message) {
-        super(message);
-    }
+import lombok.extern.slf4j.Slf4j;
 
-    public HttpException(String message, int responseCode) {
-        super(message);
-        this.responseCode = responseCode;
+@Slf4j
+class TxBroadcastHttpClient extends HttpClientImpl implements AssetTxProofHttpClient {
+    TxBroadcastHttpClient(Socks5ProxyProvider socks5ProxyProvider) {
+        super(socks5ProxyProvider);
     }
 }

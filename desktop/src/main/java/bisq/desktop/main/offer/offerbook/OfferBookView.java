@@ -49,6 +49,7 @@ import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.FiatCurrency;
 import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
+import bisq.core.monetary.Price;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.offer.OfferRestrictions;
@@ -86,6 +87,7 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.TextAlignment;
 
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
@@ -107,8 +109,6 @@ import javafx.util.StringConverter;
 
 import java.util.Comparator;
 import java.util.Optional;
-
-import org.jetbrains.annotations.NotNull;
 
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 
@@ -241,7 +241,31 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                 o -> CurrencyUtil.getCurrencyPair(o.getOffer().getCurrencyCode()),
                 Comparator.nullsFirst(Comparator.naturalOrder())
         ));
-        priceColumn.setComparator(Comparator.comparing(o -> o.getOffer().getPrice(), Comparator.nullsFirst(Comparator.naturalOrder())));
+
+        // We sort by % so we can also sort if SHOW ALL is selected
+        Comparator<OfferBookListItem> marketBasedPriceComparator = (o1, o2) -> {
+            Optional<Double> marketBasedPrice1 = model.getMarketBasedPrice(o1.getOffer());
+            Optional<Double> marketBasedPrice2 = model.getMarketBasedPrice(o2.getOffer());
+            if (marketBasedPrice1.isPresent() && marketBasedPrice2.isPresent()) {
+                return Double.compare(marketBasedPrice1.get(), marketBasedPrice2.get());
+            } else {
+                return 0;
+            }
+        };
+        // If we do not have a % price we use only fix price and sort by that
+        priceColumn.setComparator(marketBasedPriceComparator.thenComparing((o1, o2) -> {
+            Price price2 = o2.getOffer().getPrice();
+            Price price1 = o1.getOffer().getPrice();
+            if (price2 == null || price1 == null) {
+                return 0;
+            }
+            if (model.getDirection() == OfferPayload.Direction.SELL) {
+                return price1.compareTo(price2);
+            } else {
+                return price2.compareTo(price1);
+            }
+        }));
+
         amountColumn.setComparator(Comparator.comparing(o -> o.getOffer().getMinAmount()));
         volumeColumn.setComparator(Comparator.comparing(o -> o.getOffer().getMinVolume(), Comparator.nullsFirst(Comparator.naturalOrder())));
         paymentMethodColumn.setComparator(Comparator.comparing(o -> Res.get(o.getOffer().getPaymentMethod().getId())));
@@ -308,10 +332,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         currencyComboBox.getEditor().setText(new CurrencyStringConverter(currencyComboBox).toString(currencyComboBox.getSelectionModel().getSelectedItem()));
 
         volumeColumn.sortableProperty().bind(model.showAllTradeCurrenciesProperty.not());
-        priceColumn.sortableProperty().bind(model.showAllTradeCurrenciesProperty.not());
         model.getOfferList().comparatorProperty().bind(tableView.comparatorProperty());
-        model.priceSortTypeProperty.addListener((observable, oldValue, newValue) -> priceColumn.setSortType(newValue));
-        priceColumn.setSortType(model.priceSortTypeProperty.get());
 
         amountColumn.sortTypeProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue == TableColumn.SortType.DESCENDING) {
@@ -751,7 +772,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem> getPriceColumn() {
         AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem> column = new AutoTooltipTableColumn<>("") {
             {
-                setMinWidth(100);
+                setMinWidth(130);
             }
         };
         column.getStyleClass().add("number-column");
@@ -767,37 +788,40 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                 super.updateItem(item, empty);
 
                                 if (item != null && !empty) {
-                                    setGraphic(getPriceLabel(model.getPrice(item), item));
+                                    setGraphic(getPriceAndPercentage(item));
                                 } else {
                                     setGraphic(null);
                                 }
                             }
 
-                            @NotNull
-                            private AutoTooltipLabel getPriceLabel(String priceString, OfferBookListItem item) {
-                                final Offer offer = item.getOffer();
-                                final MaterialDesignIcon icon = offer.isUseMarketBasedPrice() ? MaterialDesignIcon.CHART_LINE : MaterialDesignIcon.LOCK;
-
+                            private HBox getPriceAndPercentage(OfferBookListItem item) {
+                                Offer offer = item.getOffer();
+                                boolean useMarketBasedPrice = offer.isUseMarketBasedPrice();
+                                MaterialDesignIcon icon = useMarketBasedPrice ? MaterialDesignIcon.CHART_LINE : MaterialDesignIcon.LOCK;
                                 String info;
 
-                                if (offer.isUseMarketBasedPrice()) {
-                                    if (offer.getMarketPriceMargin() == 0) {
+                                if (useMarketBasedPrice) {
+                                    double marketPriceMargin = offer.getMarketPriceMargin();
+                                    if (marketPriceMargin == 0) {
                                         if (offer.isBuyOffer()) {
                                             info = Res.get("offerbook.info.sellAtMarketPrice");
                                         } else {
                                             info = Res.get("offerbook.info.buyAtMarketPrice");
                                         }
-                                    } else if (offer.getMarketPriceMargin() > 0) {
-                                        if (offer.isBuyOffer()) {
-                                            info = Res.get("offerbook.info.sellBelowMarketPrice", model.getAbsolutePriceMargin(offer));
-                                        } else {
-                                            info = Res.get("offerbook.info.buyAboveMarketPrice", model.getAbsolutePriceMargin(offer));
-                                        }
                                     } else {
-                                        if (offer.isBuyOffer()) {
-                                            info = Res.get("offerbook.info.sellAboveMarketPrice", model.getAbsolutePriceMargin(offer));
+                                        String absolutePriceMargin = model.getAbsolutePriceMargin(offer);
+                                        if (marketPriceMargin > 0) {
+                                            if (offer.isBuyOffer()) {
+                                                info = Res.get("offerbook.info.sellBelowMarketPrice", absolutePriceMargin);
+                                            } else {
+                                                info = Res.get("offerbook.info.buyAboveMarketPrice", absolutePriceMargin);
+                                            }
                                         } else {
-                                            info = Res.get("offerbook.info.buyBelowMarketPrice", model.getAbsolutePriceMargin(offer));
+                                            if (offer.isBuyOffer()) {
+                                                info = Res.get("offerbook.info.sellAboveMarketPrice", absolutePriceMargin);
+                                            } else {
+                                                info = Res.get("offerbook.info.buyBelowMarketPrice", absolutePriceMargin);
+                                            }
                                         }
                                     }
                                 } else {
@@ -807,8 +831,17 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                         info = Res.get("offerbook.info.buyAtFixedPrice");
                                     }
                                 }
+                                InfoAutoTooltipLabel priceLabel = new InfoAutoTooltipLabel(model.getPrice(item),
+                                        icon, ContentDisplay.RIGHT, info);
+                                priceLabel.setTextAlignment(TextAlignment.RIGHT);
+                                AutoTooltipLabel percentageLabel = new AutoTooltipLabel(model.getPriceAsPercentage(item));
+                                percentageLabel.setOpacity(useMarketBasedPrice ? 1 : 0.4);
 
-                                return new InfoAutoTooltipLabel(priceString, icon, ContentDisplay.RIGHT, info);
+                                HBox hBox = new HBox();
+                                hBox.setSpacing(5);
+                                hBox.getChildren().addAll(priceLabel, percentageLabel);
+                                hBox.setPadding(new Insets(7, 0, 0, 0));
+                                return hBox;
                             }
                         };
                     }
@@ -977,12 +1010,12 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                             }
 
                             @Override
-                            public void updateItem(final OfferBookListItem newItem, boolean empty) {
-                                super.updateItem(newItem, empty);
+                            public void updateItem(final OfferBookListItem item, boolean empty) {
+                                super.updateItem(item, empty);
 
                                 TableRow<OfferBookListItem> tableRow = getTableRow();
-                                if (newItem != null && !empty) {
-                                    final Offer offer = newItem.getOffer();
+                                if (item != null && !empty) {
+                                    final Offer offer = item.getOffer();
                                     boolean myOffer = model.isMyOffer(offer);
                                     if (tableRow != null) {
                                         isPaymentAccountValidForOffer = model.isAnyPaymentAccountValidForOffer(offer);

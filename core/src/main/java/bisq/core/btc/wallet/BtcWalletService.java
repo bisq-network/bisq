@@ -24,6 +24,7 @@ import bisq.core.btc.exceptions.WalletException;
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.model.AddressEntryList;
 import bisq.core.btc.setup.WalletsSetup;
+import bisq.core.btc.wallet.http.MemPoolSpaceTxBroadcaster;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.user.Preferences;
 
@@ -967,6 +968,10 @@ public class BtcWalletService extends WalletService {
                             try {
                                 sendResult = wallet.sendCoins(sendRequest);
                                 printTx("FeeEstimationTransaction", newTransaction);
+
+                                // For better redundancy in case the broadcast via BitcoinJ fails we also
+                                // publish the tx via mempool nodes.
+                                MemPoolSpaceTxBroadcaster.broadcastTx(sendResult.tx);
                             } catch (InsufficientMoneyException e2) {
                                 errorMessageHandler.handleErrorMessage("We did not get the correct fee calculated. " + (e2.missing != null ? e2.missing.toFriendlyString() : ""));
                             }
@@ -1160,7 +1165,11 @@ public class BtcWalletService extends WalletService {
         if (memo != null) {
             sendResult.tx.setMemo(memo);
         }
-        printTx("sendFunds", sendResult.tx);
+
+        // For better redundancy in case the broadcast via BitcoinJ fails we also
+        // publish the tx via mempool nodes.
+        MemPoolSpaceTxBroadcaster.broadcastTx(sendResult.tx);
+
         return sendResult.tx.getTxId().toString();
     }
 
@@ -1181,6 +1190,11 @@ public class BtcWalletService extends WalletService {
             sendResult.tx.setMemo(memo);
         }
         printTx("sendFunds", sendResult.tx);
+
+        // For better redundancy in case the broadcast via BitcoinJ fails we also
+        // publish the tx via mempool nodes.
+        MemPoolSpaceTxBroadcaster.broadcastTx(sendResult.tx);
+
         return sendResult.tx;
     }
 
