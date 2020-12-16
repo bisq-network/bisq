@@ -35,6 +35,7 @@ import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
+import bisq.core.monetary.Altcoin;
 import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
@@ -43,11 +44,14 @@ import bisq.core.offer.OpenOfferManager;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.PaymentAccountUtil;
 import bisq.core.payment.payload.PaymentMethod;
+import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.Trade;
 import bisq.core.trade.closed.ClosedTradableManager;
+import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
+import bisq.core.util.AveragePriceUtil;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.coin.CoinFormatter;
@@ -58,8 +62,10 @@ import bisq.network.p2p.P2PService;
 import bisq.common.app.Version;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
+import bisq.common.util.MathUtils;
 
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.utils.Fiat;
 
 import com.google.inject.Inject;
 
@@ -67,14 +73,10 @@ import javax.inject.Named;
 
 import com.google.common.base.Joiner;
 
-import javafx.scene.control.TableColumn;
-
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
-import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
@@ -94,6 +96,10 @@ import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
+
+import static com.google.common.base.Preconditions.checkNotNull;
+
 @Slf4j
 class OfferBookViewModel extends ActivatableViewModel {
     private final OpenOfferManager openOfferManager;
@@ -107,10 +113,9 @@ class OfferBookViewModel extends ActivatableViewModel {
     private final FilterManager filterManager;
     final AccountAgeWitnessService accountAgeWitnessService;
     private final Navigation navigation;
+    private final TradeStatisticsManager tradeStatisticsManager;
     private final CoinFormatter btcFormatter;
     private final BsqFormatter bsqFormatter;
-    final ObjectProperty<TableColumn.SortType> priceSortTypeProperty = new SimpleObjectProperty<>();
-
 
     private final FilteredList<OfferBookListItem> filteredItems;
     private final SortedList<OfferBookListItem> sortedItems;
@@ -134,6 +139,9 @@ class OfferBookViewModel extends ActivatableViewModel {
     final IntegerProperty maxPlacesForPrice = new SimpleIntegerProperty();
     final IntegerProperty maxPlacesForMarketPriceMargin = new SimpleIntegerProperty();
     boolean showAllPaymentMethods = true;
+    @Nullable
+    private Price bsq30DayAveragePrice;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -151,6 +159,7 @@ class OfferBookViewModel extends ActivatableViewModel {
                               FilterManager filterManager,
                               AccountAgeWitnessService accountAgeWitnessService,
                               Navigation navigation,
+                              TradeStatisticsManager tradeStatisticsManager,
                               @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
                               BsqFormatter bsqFormatter) {
         super();
@@ -166,6 +175,7 @@ class OfferBookViewModel extends ActivatableViewModel {
         this.filterManager = filterManager;
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.navigation = navigation;
+        this.tradeStatisticsManager = tradeStatisticsManager;
         this.btcFormatter = btcFormatter;
         this.bsqFormatter = bsqFormatter;
 
@@ -210,7 +220,6 @@ class OfferBookViewModel extends ActivatableViewModel {
 
     @Override
     protected void activate() {
-
         filteredItems.addListener(filterItemsListener);
 
         String code = direction == OfferPayload.Direction.BUY ? preferences.getBuyScreenCurrencyCode() : preferences.getSellScreenCurrencyCode();
@@ -224,13 +233,18 @@ class OfferBookViewModel extends ActivatableViewModel {
         }
         tradeCurrencyCode.set(selectedTradeCurrency.getCode());
 
-        applyPriceSortTypeProperty(code);
-
         fillAllTradeCurrencies();
         preferences.getTradeCurrenciesAsObservable().addListener(tradeCurrencyListChangeListener);
         offerBook.fillOfferBookListItems();
         applyFilterPredicate();
         setMarketPriceFeedCurrency();
+
+        // Null check needed for tests passing null for tradeStatisticsManager
+        if (tradeStatisticsManager != null) {
+            bsq30DayAveragePrice = AveragePriceUtil.getAveragePriceTuple(preferences,
+                    tradeStatisticsManager,
+                    30).second;
+        }
     }
 
     @Override
@@ -267,7 +281,6 @@ class OfferBookViewModel extends ActivatableViewModel {
                 this.selectedTradeCurrency = tradeCurrency;
                 tradeCurrencyCode.set(code);
             }
-            applyPriceSortTypeProperty(code);
 
             setMarketPriceFeedCurrency();
             applyFilterPredicate();
@@ -277,15 +290,6 @@ class OfferBookViewModel extends ActivatableViewModel {
             else
                 preferences.setSellScreenCurrencyCode(code);
         }
-    }
-
-    private void applyPriceSortTypeProperty(String code) {
-        final OfferPayload.Direction compareDirection = CurrencyUtil.isCryptoCurrency(code) ?
-                OfferPayload.Direction.SELL :
-                OfferPayload.Direction.BUY;
-        priceSortTypeProperty.set(getDirection() == compareDirection ?
-                TableColumn.SortType.ASCENDING :
-                TableColumn.SortType.DESCENDING);
     }
 
     void onSetPaymentMethod(PaymentMethod paymentMethod) {
@@ -358,13 +362,14 @@ class OfferBookViewModel extends ActivatableViewModel {
 
 
     String getPrice(OfferBookListItem item) {
-        if ((item == null))
+        if ((item == null)) {
             return "";
+        }
 
-        final Offer offer = item.getOffer();
-        final Price price = offer.getPrice();
+        Offer offer = item.getOffer();
+        Price price = offer.getPrice();
         if (price != null) {
-            return formatPrice(offer, true) + formatMarketPriceMargin(offer, true);
+            return formatPrice(offer, true);
         } else {
             return Res.get("shared.na");
         }
@@ -378,11 +383,90 @@ class OfferBookViewModel extends ActivatableViewModel {
         return DisplayUtils.formatPrice(offer.getPrice(), decimalAligned, maxPlacesForPrice.get());
     }
 
-    private String formatMarketPriceMargin(Offer offer, boolean decimalAligned) {
+    String getPriceAsPercentage(OfferBookListItem item) {
+        return getMarketBasedPrice(item.getOffer())
+                .map(price -> "(" + FormattingUtils.formatPercentagePrice(price) + ")")
+                .orElse("");
+    }
+
+    public Optional<Double> getMarketBasedPrice(Offer offer) {
+        if (offer.isUseMarketBasedPrice()) {
+            return Optional.of(offer.getMarketPriceMargin());
+        }
+
+        if (!hasMarketPrice(offer)) {
+            if (offer.getCurrencyCode().equals("BSQ")) {
+                if (bsq30DayAveragePrice != null && bsq30DayAveragePrice.isPositive()) {
+                    double scaled = MathUtils.scaleDownByPowerOf10(bsq30DayAveragePrice.getValue(), 8);
+                    return calculatePercentage(offer, scaled);
+                } else {
+                    return Optional.empty();
+                }
+            } else {
+                log.trace("We don't have a market price. " +
+                        "That case could only happen if you don't have a price feed.");
+                return Optional.empty();
+            }
+        }
+
+        String currencyCode = offer.getCurrencyCode();
+        checkNotNull(priceFeedService, "priceFeed must not be null");
+        MarketPrice marketPrice = priceFeedService.getMarketPrice(currencyCode);
+        double marketPriceAsDouble = checkNotNull(marketPrice).getPrice();
+        return calculatePercentage(offer, marketPriceAsDouble);
+    }
+
+    protected Optional<Double> calculatePercentage(Offer offer, double marketPrice) {
+        // If the offer did not use % price we calculate % from current market price
+        String currencyCode = offer.getCurrencyCode();
+        Price price = offer.getPrice();
+        int precision = CurrencyUtil.isCryptoCurrency(currencyCode) ?
+                Altcoin.SMALLEST_UNIT_EXPONENT :
+                Fiat.SMALLEST_UNIT_EXPONENT;
+        long priceAsLong = checkNotNull(price).getValue();
+        double scaled = MathUtils.scaleDownByPowerOf10(priceAsLong, precision);
+
+        double value;
+        if (direction == OfferPayload.Direction.SELL) {
+            if (CurrencyUtil.isFiatCurrency(currencyCode)) {
+                if (marketPrice == 0) {
+                    return Optional.empty();
+                }
+                value = 1 - scaled / marketPrice;
+            } else {
+                if (marketPrice == 1) {
+                    return Optional.empty();
+                }
+                value = scaled / marketPrice - 1;
+            }
+        } else {
+            if (CurrencyUtil.isFiatCurrency(currencyCode)) {
+                if (marketPrice == 1) {
+                    return Optional.empty();
+                }
+                value = scaled / marketPrice - 1;
+            } else {
+                if (marketPrice == 0) {
+                    return Optional.empty();
+                }
+                value = 1 - scaled / marketPrice;
+            }
+        }
+        return Optional.of(value);
+    }
+
+    public boolean hasMarketPrice(Offer offer) {
+        String currencyCode = offer.getCurrencyCode();
+        checkNotNull(priceFeedService, "priceFeed must not be null");
+        MarketPrice marketPrice = priceFeedService.getMarketPrice(currencyCode);
+        Price price = offer.getPrice();
+        return price != null && marketPrice != null && marketPrice.isRecentExternalPriceAvailable();
+    }
+
+    String formatMarketPriceMargin(Offer offer, boolean decimalAligned) {
         String postFix = "";
         if (offer.isUseMarketBasedPrice()) {
             postFix = " (" + FormattingUtils.formatPercentagePrice(offer.getMarketPriceMargin()) + ")";
-
         }
 
         if (decimalAligned) {
@@ -592,11 +676,11 @@ class OfferBookViewModel extends ActivatableViewModel {
 
     boolean isMyInsufficientTradeLimit(Offer offer) {
         Optional<PaymentAccount> accountOptional = getMostMaturePaymentAccountForOffer(offer);
-        final long myTradeLimit = accountOptional
+        long myTradeLimit = accountOptional
                 .map(paymentAccount -> accountAgeWitnessService.getMyTradeLimit(paymentAccount,
                         offer.getCurrencyCode(), offer.getMirroredDirection()))
                 .orElse(0L);
-        final long offerMinAmount = offer.getMinAmount().value;
+        long offerMinAmount = offer.getMinAmount().value;
         log.debug("isInsufficientTradeLimit accountOptional={}, myTradeLimit={}, offerMinAmount={}, ",
                 accountOptional.isPresent() ? accountOptional.get().getAccountName() : "null",
                 Coin.valueOf(myTradeLimit).toFriendlyString(),
