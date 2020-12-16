@@ -263,7 +263,7 @@ task packageInstallers {
             // See "man codesign" for details about the expected signing identity
             String envVariableSigningID = "$System.env.BISQ_PACKAGE_SIGNING_IDENTITY"
             println "Environment variable BISQ_PACKAGE_SIGNING_IDENTITY is: ${envVariableSigningID}"
-            ant.input(message: "Sign dylibs using the above signing identity, before packaging the app? (y=yes, n=no)",
+            ant.input(message: "Sign the app using the above signing identity? (y=yes, n=no)",
                     addproperty: "macos-sign-check",
                     validargs: "y,n")
             if (ant.properties['macos-sign-check'] == 'y') {
@@ -286,23 +286,89 @@ task packageInstallers {
                         " com/github/sarxos/webcam/ds/buildin/lib/darwin_universal/libOpenIMAJGrabber.dylib"
                 )
 
+                // macOS step 1: Sign dylibs and replace them in the shadow jar
                 // Extract dylibss for signing
                 executeCmd("cd ${tempDylibFolderPath} &&" +
                         " jar xf ${fatJarFolderPath}/${mainJarName}" +
                         dylibsToSign)
-
                 // Sign them
                 executeCmd("cd ${tempDylibFolderPath} &&" +
                         " codesign -vvv --options runtime --deep --force --sign \"${envVariableSigningID}\"" +
                         dylibsToSign)
-
                 // Replace unsigned files in jar file
                 executeCmd("cd ${tempDylibFolderPath} &&" +
                         " jar uf ${fatJarFolderPath}/${mainJarName}" +
                         dylibsToSign)
-            }
 
-            executeCmd(jPackageFilePath + commonOpts + macOpts + " --type dmg")
+                // macOS step 2: Build app-image using the shadow jar above (containing signed dylibs)
+                // NOTE: licensing file cannot be added at this point only when creating the dmg later
+                executeCmd(jPackageFilePath +
+                        " --dest \"${binariesFolderPath}\"" +
+                        " --name Bisq" +
+                        " --description \"A decentralized bitcoin exchange network.\"" +
+                        " --app-version ${appVersion}" +
+                        " --copyright \"© 2020 Bisq\"" +
+                        " --vendor Bisq" +
+                        " --temp \"${jpackateTempDir}\"" +
+                        " --input ${fatJarFolderPath}" +
+                        " --main-jar ${mainJarName}" +
+                        " --main-class bisq.desktop.app.BisqAppMain" +
+                        " --java-options -Xss1280k" +
+                        " --java-options -XX:MaxRAM=4g" +
+                        " --java-options -Djava.net.preferIPv4Stack=true" +
+                        macOpts +
+                        " --type app-image")
+
+                // macOS step 3: Sign app (hardended runtime)
+                File bisqAppImageFullPath = new File(binariesFolderPath, "Bisq.app")
+                executeCmd("codesign" +
+                        " --sign \"${envVariableSigningID}\"" +
+                        " --options runtime" +
+                        " --entitlements macos.entitlements" +
+                        " --force" +
+                        " --verbose" +
+                        "${bisqAppImageFullPath}/Contents/runtime/Contents/MacOS/libjli.dylib")
+                executeCmd("codesign" +
+                        " --sign \"${envVariableSigningID}\"" +
+                        " --options runtime" +
+                        " --entitlements macos.entitlements" +
+                        " --force" +
+                        " --verbose" +
+                        "${bisqAppImageFullPath}/Contents/MacOS/Bisq")
+                executeCmd("codesign" +
+                        " --sign \"${envVariableSigningID}\"" +
+                        " --options runtime" +
+                        " --entitlements macos.entitlements" +
+                        " --force" +
+                        " --verbose" +
+                        " ${bisqAppImageFullPath}")
+
+                // macOS step 4: Package the app-image into a dmg bundle
+                executeCmd(jPackageFilePath +
+                        " --dest \"${binariesFolderPath}\"" +
+                        " --name Bisq" +
+                        " --description \"A decentralized bitcoin exchange network.\"" +
+                        " --app-version ${appVersion}" +
+                        " --copyright \"© 2020 Bisq\"" +
+                        " --vendor Bisq" +
+                        " --temp \"${jpackateTempDir}\"" +
+                        " --app-image ${bisqAppImageFullPath}" +
+                        " --license-file \"${licenseFilePath}\"" +
+                        " --mac-sign" +
+                        " --type dmg")
+
+                // macOS step 5: Sign dmg bundle
+                executeCmd("codesign" +
+                        " --sign \"${envVariableSigningID}\"" +
+                        " --options runtime" +
+                        " --entitlements '${binariesFolderPath}/macos.entitlements'" +
+                        " -vvvv" +
+                        " --deep" +
+                        " '${binariesFolderPath}/Bisq-${appVersion}.dmg'")
+            } else {
+                // If user didn't confirm the optional signing step, then generate a plain non-signed dmg
+                executeCmd(jPackageFilePath + commonOpts + macOpts + " --type dmg")
+            }
         } else {
             String linuxOpts = (
                 " --icon ${project(':desktop').projectDir}/package/linux/icon.png" +
