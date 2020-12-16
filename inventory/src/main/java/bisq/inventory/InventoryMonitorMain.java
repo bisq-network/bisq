@@ -35,6 +35,7 @@ import java.io.File;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 
 import ch.qos.logback.classic.Level;
 
@@ -46,7 +47,6 @@ import sun.misc.Signal;
 
 @Slf4j
 public class InventoryMonitorMain {
-
     private static InventoryMonitor inventoryMonitor;
     private static boolean stopped;
 
@@ -79,13 +79,17 @@ public class InventoryMonitorMain {
         inventoryMonitor = new InventoryMonitor(appDir, useLocalhostForP2P, network, intervalSec, port);
 
         setup(network, appDir);
+
+        // We shutdown after 5 days to avoid potential memory leak issue.
+        // The start script will restart the app.
+        UserThread.runAfter(InventoryMonitorMain::shutDown, TimeUnit.DAYS.toSeconds(5));
     }
 
     private static void setup(BaseCurrencyNetwork network, File appDir) {
-        AsciiLogo.showAsciiLogo();
         String logPath = Paths.get(appDir.getPath(), "bisq").toString();
         Log.setup(logPath);
         Log.setLevel(Level.INFO);
+        AsciiLogo.showAsciiLogo();
         Version.setBaseCryptoNetworkId(network.ordinal());
 
         Res.setup(); // Used for some formatting in the webserver
