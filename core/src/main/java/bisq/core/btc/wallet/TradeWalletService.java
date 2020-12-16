@@ -352,7 +352,7 @@ public class TradeWalletService {
         // We created the take offer fee tx in the structure that the second output is for the funds for the deposit tx.
         TransactionOutput reservedForTradeOutput = takeOfferFeeTx.getOutputs().get(1);
         checkArgument(reservedForTradeOutput.getValue().equals(inputAmount),
-                "Reserve amount does not equal input amount");
+                Res.get("validation.depositTx.reserveNotEqualInput"));
         dummyTX.addInput(reservedForTradeOutput);
 
         WalletService.verifyTransaction(dummyTX);

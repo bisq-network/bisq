@@ -18,6 +18,7 @@
 package bisq.core.dao.governance.bond.reputation;
 
 import bisq.core.dao.governance.bond.BondedAsset;
+import bisq.core.locale.Res;
 
 import bisq.common.crypto.Hash;
 import bisq.common.proto.network.NetworkPayload;
@@ -52,7 +53,7 @@ public final class MyReputation implements PersistablePayload, NetworkPayload, B
 
     public MyReputation(byte[] salt) {
         this(UUID.randomUUID().toString(), salt);
-        checkArgument(salt.length <= 20, "salt must not be longer then 20 bytes");
+        checkArgument(salt.length <= 20, Res.get("validation.myReputation.saltTooLong"));
     }
 
 

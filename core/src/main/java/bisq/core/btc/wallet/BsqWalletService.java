@@ -32,6 +32,7 @@ import bisq.core.dao.state.model.blockchain.TxOutput;
 import bisq.core.dao.state.model.blockchain.TxOutputKey;
 import bisq.core.dao.state.model.blockchain.TxType;
 import bisq.core.dao.state.unconfirmed.UnconfirmedBsqChangeOutputListService;
+import bisq.core.locale.Res;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.user.Preferences;
 
@@ -354,6 +355,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
                 .collect(Collectors.toSet());
     }
 
+    // FIXME: remove unused method?
     public Set<Transaction> getUnverifiedBsqTransactions() {
         Set<Transaction> bsqWalletTransactions = getBsqWalletTransactions();
         Set<Transaction> walletTxs = new HashSet<>(getTransactions(false));
@@ -483,8 +485,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
             Coin value = txo.getValue();
             // OpReturn outputs have value 0
             if (value.isPositive()) {
-                checkArgument(Restrictions.isAboveDust(txo.getValue()),
-                        "An output value is below dust limit. Transaction=" + tx);
+                checkArgument(Restrictions.isAboveDust(txo.getValue()), Res.get("validation.outputBelowDust", tx));
             }
         }
 
@@ -530,8 +531,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
             throws AddressFormatException, InsufficientBsqException, WalletException, TransactionVerificationException, BsqChangeBelowDustException {
         daoKillSwitch.assertDaoIsNotDisabled();
         Transaction tx = new Transaction(params);
-        checkArgument(Restrictions.isAboveDust(receiverAmount),
-                "The amount is too low (dust limit).");
+        checkArgument(Restrictions.isAboveDust(receiverAmount), Res.get("validation.amountBelowDust.short"));
         if (allowSegwitOuput) {
             tx.addOutput(receiverAmount, Address.fromString(params, receiverAddress));
         } else {
@@ -645,17 +645,13 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
                 change = bsqCoinSelector.getChange(fee, coinSelection);
 
                 log.warn("We increased required input as change output was zero or dust: New change value={}", change);
-                String info = "Available BSQ balance=" + coinSelection.valueGathered.value / 100 + " BSQ. " +
-                        "Intended fee to burn=" + fee.value / 100 + " BSQ. " +
-                        "Please increase your balance to at least " + (coinSelection.valueGathered.value + minDustThreshold.value) / 100 + " BSQ.";
+                String info = Res.get("validation.burnFee.details", coinSelection.valueGathered.value / 100,
+                        fee.value / 100, (coinSelection.valueGathered.value + minDustThreshold.value) / 100);
                 checkArgument(coinSelection.valueGathered.compareTo(fee) > 0,
-                        "This transaction require a change output of at least " + minDustThreshold.value / 100 + " BSQ (dust limit). " +
-                                info);
+                        Res.get("validation.burnFee.insufficientBsqForFee", minDustThreshold.value / 100, info));
 
-                checkArgument(!Restrictions.isDust(change),
-                        "This transaction would create a dust output of " + change.value / 100 + " BSQ. " +
-                                "It requires a change output of at least " + minDustThreshold.value / 100 + " BSQ (dust limit). " +
-                                info);
+                checkArgument(!Restrictions.isDust(change), Res.get("validation.burnFee.changeIsDust",
+                        change.value / 100, minDustThreshold.value / 100, info));
             }
 
             coinSelection.gathered.forEach(tx::addInput);
@@ -688,10 +684,9 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
             // Change can be ZERO, then no change output is created so don't rely on a BSQ change output
             if (change.isPositive()) {
                 checkArgument(Restrictions.isAboveDust(change),
-                        "The change output of " + change.value / 100d + " BSQ is below the min. dust value of "
-                                + Restrictions.getMinNonDustOutput().value / 100d +
-                                ". At least " + Restrictions.getMinNonDustOutput().add(fee).value / 100d +
-                                " BSQ is needed for this transaction");
+                        Res.get("validation.addInputsAndChangeOutput.changeIsDust", change.value / 100d,
+                                Restrictions.getMinNonDustOutput().value / 100d,
+                                Restrictions.getMinNonDustOutput().add(fee).value / 100d));
                 tx.addOutput(change, getChangeAddress());
             }
         } catch (InsufficientMoneyException e) {
@@ -743,7 +738,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
     public Transaction getPreparedLockupTx(Coin lockupAmount) throws AddressFormatException, InsufficientBsqException {
         daoKillSwitch.assertDaoIsNotDisabled();
         Transaction tx = new Transaction(params);
-        checkArgument(Restrictions.isAboveDust(lockupAmount), "The amount is too low (dust limit).");
+        checkArgument(Restrictions.isAboveDust(lockupAmount), Res.get("validation.amountBelowDust.short"));
         tx.addOutput(new TransactionOutput(params, tx, lockupAmount, getUnusedAddress()));
         addInputsAndChangeOutputForTx(tx, lockupAmount, bsqCoinSelector);
         printTx("prepareLockupTx", tx);
@@ -759,7 +754,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
         Transaction tx = new Transaction(params);
         // Unlocking means spending the full value of the locked txOutput to another txOutput with the same value
         Coin amountToUnlock = Coin.valueOf(lockupTxOutput.getValue());
-        checkArgument(Restrictions.isAboveDust(amountToUnlock), "The amount is too low (dust limit).");
+        checkArgument(Restrictions.isAboveDust(amountToUnlock), Res.get("validation.amountBelowDust.short"));
         Transaction lockupTx = getTransaction(lockupTxOutput.getTxId());
         checkNotNull(lockupTx, "lockupTx must not be null");
         TransactionOutPoint outPoint = new TransactionOutPoint(params, lockupTxOutput.getIndex(), lockupTx);

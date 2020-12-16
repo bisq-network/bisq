@@ -25,6 +25,7 @@ import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.model.AddressEntryList;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.http.MemPoolSpaceTxBroadcaster;
+import bisq.core.locale.Res;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.user.Preferences;
 
@@ -1187,7 +1188,7 @@ public class BtcWalletService extends WalletService {
         Transaction tx = new Transaction(params);
         final Coin receiverAmount = amount.subtract(fee);
         Preconditions.checkArgument(Restrictions.isAboveDust(receiverAmount),
-                "The amount is too low (dust limit).");
+                Res.get("validation.amountBelowDust.short"));
         tx.addOutput(receiverAmount, Address.fromString(params, toAddress));
 
         SendRequest sendRequest = SendRequest.forTx(tx);
@@ -1217,7 +1218,7 @@ public class BtcWalletService extends WalletService {
         Transaction tx = new Transaction(params);
         final Coin netValue = amount.subtract(fee);
         checkArgument(Restrictions.isAboveDust(netValue),
-                "The amount is too low (dust limit).");
+                Res.get("validation.amountBelowDust.short"));
 
         tx.addOutput(netValue, Address.fromString(params, toAddress));
 
@@ -1278,18 +1279,18 @@ public class BtcWalletService extends WalletService {
             throws AddressFormatException, InsufficientMoneyException, WalletException, TransactionVerificationException {
         Transaction tx = new Transaction(params);
         Preconditions.checkArgument(buyerAmount.add(sellerAmount).isPositive(),
-                "The sellerAmount + buyerAmount must be positive.");
+                Res.get("validation.refundPayoutTx.buyerSellerNotPositive"));
         // buyerAmount can be 0
         if (buyerAmount.isPositive()) {
             Preconditions.checkArgument(Restrictions.isAboveDust(buyerAmount),
-                    "The buyerAmount is too low (dust limit).");
+                    Res.get("validation.amountBelowDust.shortVar", "buyerAmount"));
 
             tx.addOutput(buyerAmount, Address.fromString(params, buyerAddressString));
         }
         // sellerAmount can be 0
         if (sellerAmount.isPositive()) {
             Preconditions.checkArgument(Restrictions.isAboveDust(sellerAmount),
-                    "The sellerAmount is too low (dust limit).");
+                    Res.get("validation.amountBelowDust.shortVar", "sellerAmount"));
 
             tx.addOutput(sellerAmount, Address.fromString(params, sellerAddressString));
         }
