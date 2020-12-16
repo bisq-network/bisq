@@ -64,8 +64,8 @@ public class CurrencyUtil {
 
     // Calls to isFiatCurrency and isCryptoCurrency are very frequent so we use a cache of the results.
     // The main improvement was already achieved with using memoize for the source maps, but
-    // the caching still improves performance by about 20% for isCryptoCurrency and about 100%
-    // for isFiatCurrency calls.
+    // the caching still reduces performance costs by about 20% for isCryptoCurrency (1752 ms vs 2121 ms) and about 50%
+    // for isFiatCurrency calls (1777 ms vs 3467 ms).
     // See: https://github.com/bisq-network/bisq/pull/4955#issuecomment-745302802
     private static final Map<String, Boolean> isFiatCurrencyMap = new ConcurrentHashMap<>();
     private static final Map<String, Boolean> isCryptoCurrencyMap = new ConcurrentHashMap<>();
@@ -399,7 +399,7 @@ public class CurrencyUtil {
     }
 
     public static boolean isFiatCurrency(String currencyCode) {
-        if (isFiatCurrencyMap.containsKey(currencyCode)) {
+        if (currencyCode != null && isFiatCurrencyMap.containsKey(currencyCode)) {
             return isFiatCurrencyMap.get(currencyCode);
         }
 
@@ -438,7 +438,7 @@ public class CurrencyUtil {
      * contains 3 entries (CryptoCurrency, Fiat, Undefined).
      */
     public static boolean isCryptoCurrency(String currencyCode) {
-        if (isCryptoCurrencyMap.containsKey(currencyCode)) {
+        if (currencyCode != null && isCryptoCurrencyMap.containsKey(currencyCode)) {
             return isCryptoCurrencyMap.get(currencyCode);
         }
 
