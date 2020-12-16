@@ -32,9 +32,9 @@ import static io.grpc.Status.INVALID_ARGUMENT;
 import static io.grpc.Status.UNKNOWN;
 
 /**
- * The singleton instance of this class wraps a RuntimeException from the core api
- * in a gRPC StatusRuntimeException before putting it in the server's response,
- * then throwing it.
+ * The singleton instance of this class handles any expected core api Throwable by
+ * wrapping its message in a gRPC StatusRuntimeException and sending it to the client.
+ * An unexpected Throwable's message will be replaced with an 'unexpected' error message.
  */
 @Singleton
 @Slf4j
