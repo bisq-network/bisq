@@ -18,7 +18,6 @@
 package bisq.core.trade.protocol.tasks.arbitration;
 
 import bisq.core.btc.exceptions.TxBroadcastException;
-import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TxBroadcaster;
 import bisq.core.btc.wallet.WalletService;
@@ -46,7 +45,7 @@ public class PublishedDelayedPayoutTx extends TradeTask {
             BtcWalletService btcWalletService = processModel.getBtcWalletService();
 
             // We have spent the funds from the deposit tx with the delayedPayoutTx
-            btcWalletService.swapTradeEntryToAvailableEntry(trade.getId(), AddressEntry.Context.MULTI_SIG);
+            btcWalletService.resetCoinLockedInMultiSigAddressEntry(trade.getId());
             // We might receive funds on AddressEntry.Context.TRADE_PAYOUT so we don't swap that
 
             Transaction committedDelayedPayoutTx = WalletService.maybeAddSelfTxToWallet(delayedPayoutTx, btcWalletService.getWallet());

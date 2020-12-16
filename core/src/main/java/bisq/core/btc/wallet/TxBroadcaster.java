@@ -19,12 +19,14 @@ package bisq.core.btc.wallet;
 
 import bisq.core.btc.exceptions.TxBroadcastException;
 import bisq.core.btc.exceptions.TxBroadcastTimeoutException;
+import bisq.core.btc.wallet.http.MemPoolSpaceTxBroadcaster;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
 
 import org.bitcoinj.core.PeerGroup;
 import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.Utils;
 import org.bitcoinj.wallet.Wallet;
 
 import com.google.common.util.concurrent.FutureCallback;
@@ -90,6 +92,7 @@ public class TxBroadcaster {
     public static void broadcastTx(Wallet wallet, PeerGroup peerGroup, Transaction tx, Callback callback, int timeOut) {
         Timer timeoutTimer;
         final String txId = tx.getTxId().toString();
+        log.info("Txid: {} hex: {}", txId, Utils.HEX.encode(tx.bitcoinSerialize()));
         if (!broadcastTimerMap.containsKey(txId)) {
             timeoutTimer = UserThread.runAfter(() -> {
                 log.warn("Broadcast of tx {} not completed after {} sec.", txId, timeOut);
@@ -133,6 +136,10 @@ public class TxBroadcaster {
                         "the peerGroup.broadcastTransaction callback.", throwable)));
             }
         }, MoreExecutors.directExecutor());
+
+        // For better redundancy in case the broadcast via BitcoinJ fails we also
+        // publish the tx via mempool nodes.
+        MemPoolSpaceTxBroadcaster.broadcastTx(tx);
     }
 
     private static void stopAndRemoveTimer(String txId) {

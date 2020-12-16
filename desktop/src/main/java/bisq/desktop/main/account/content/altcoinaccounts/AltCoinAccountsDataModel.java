@@ -43,6 +43,7 @@ import javafx.collections.ObservableList;
 import javafx.collections.SetChangeListener;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -88,7 +89,7 @@ class AltCoinAccountsDataModel extends ActivatableDataModel {
             paymentAccounts.setAll(user.getPaymentAccounts().stream()
                     .filter(paymentAccount -> paymentAccount.getPaymentMethod().isAsset())
                     .collect(Collectors.toList()));
-            paymentAccounts.sort((o1, o2) -> o1.getCreationDate().compareTo(o2.getCreationDate()));
+            paymentAccounts.sort(Comparator.comparing(PaymentAccount::getAccountName));
         }
     }
 
@@ -155,5 +156,9 @@ class AltCoinAccountsDataModel extends ActivatableDataModel {
 
     public void importAccounts(Stage stage) {
         GUIUtil.importAccounts(user, accountsFileName, preferences, stage, persistenceProtoResolver, corruptedStorageFileHandler);
+    }
+
+    public int getNumPaymentAccounts() {
+        return user.getPaymentAccounts() != null ? user.getPaymentAccounts().size() : 0;
     }
 }

@@ -27,6 +27,7 @@ import bisq.core.btc.nodes.LocalBitcoinNode;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletsManager;
+import bisq.core.btc.wallet.http.MemPoolSpaceTxBroadcaster;
 import bisq.core.dao.governance.voteresult.VoteResultException;
 import bisq.core.dao.state.unconfirmed.UnconfirmedBsqChangeOutputListService;
 import bisq.core.locale.Res;
@@ -41,6 +42,7 @@ import bisq.core.user.User;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.CoinFormatter;
 
+import bisq.network.Socks5ProxyProvider;
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 
@@ -210,7 +212,8 @@ public class BisqSetup {
                      TorSetup torSetup,
                      @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter,
                      LocalBitcoinNode localBitcoinNode,
-                     AppStartupState appStartupState) {
+                     AppStartupState appStartupState,
+                     Socks5ProxyProvider socks5ProxyProvider) {
         this.domainInitialisation = domainInitialisation;
         this.p2PNetworkSetup = p2PNetworkSetup;
         this.walletAppSetup = walletAppSetup;
@@ -230,6 +233,8 @@ public class BisqSetup {
         this.formatter = formatter;
         this.localBitcoinNode = localBitcoinNode;
         this.appStartupState = appStartupState;
+
+        MemPoolSpaceTxBroadcaster.init(socks5ProxyProvider, preferences);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -467,7 +472,7 @@ public class BisqSetup {
                     .filter(e -> setOfAllTradeIds.contains(e.getOfferId()) &&
                             e.getContext() == AddressEntry.Context.MULTI_SIG)
                     .forEach(e -> {
-                        Coin balance = e.getCoinLockedInMultiSig();
+                        Coin balance = e.getCoinLockedInMultiSigAsCoin();
                         if (balance.isPositive()) {
                             String message = Res.get("popup.warning.lockedUpFunds",
                                     formatter.formatCoinWithCode(balance), e.getAddressString(), e.getOfferId());

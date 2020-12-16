@@ -48,7 +48,7 @@ public class Log {
         rollingPolicy.setParent(appender);
         rollingPolicy.setFileNamePattern(fileName + "_%i.log");
         rollingPolicy.setMinIndex(1);
-        rollingPolicy.setMaxIndex(10);
+        rollingPolicy.setMaxIndex(20);
         rollingPolicy.start();
 
         SizeBasedTriggeringPolicy<ILoggingEvent> triggeringPolicy = new SizeBasedTriggeringPolicy<>();

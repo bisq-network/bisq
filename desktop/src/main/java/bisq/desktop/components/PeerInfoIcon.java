@@ -104,7 +104,7 @@ public class PeerInfoIcon extends Group {
                 role,
                 numTrades,
                 privateNotificationManager,
-                null,
+                trade.getOffer(),
                 trade,
                 preferences,
                 accountAgeWitnessService,
@@ -246,7 +246,7 @@ public class PeerInfoIcon extends Group {
 
         getChildren().addAll(outerBackground, innerBackground, avatarImageView, tagPane, numTradesPane);
 
-        addMouseListener(numTrades, privateNotificationManager, offer, preferences, useDevPrivilegeKeys,
+        addMouseListener(numTrades, privateNotificationManager, trade, offer, preferences, useDevPrivilegeKeys,
                 isFiatCurrency, accountAge, signAge, peersAccount.third, peersAccount.fourth, peersAccount.fifth);
     }
 
@@ -279,7 +279,7 @@ public class PeerInfoIcon extends Group {
 
         if (hasChargebackRisk(trade, offer)) {
             String signAgeInfo = Res.get("peerInfo.age.chargeBackRisk");
-            String accountSigningState = StringUtils.capitalize(signState.getPresentation());
+            String accountSigningState = StringUtils.capitalize(signState.getDisplayString());
             if (signState.equals(AccountAgeWitnessService.SignState.UNSIGNED))
                 signAgeInfo = null;
 
@@ -297,6 +297,7 @@ public class PeerInfoIcon extends Group {
 
     protected void addMouseListener(int numTrades,
                                     PrivateNotificationManager privateNotificationManager,
+                                    @Nullable Trade trade,
                                     Offer offer,
                                     Preferences preferences,
                                     boolean useDevPrivilegeKeys,
@@ -319,7 +320,7 @@ public class PeerInfoIcon extends Group {
                         Res.get("peerInfo.unknownAge") :
                 null;
 
-        setOnMouseClicked(e -> new PeerInfoWithTagEditor(privateNotificationManager, offer, preferences, useDevPrivilegeKeys)
+        setOnMouseClicked(e -> new PeerInfoWithTagEditor(privateNotificationManager, trade, offer, preferences, useDevPrivilegeKeys)
                 .fullAddress(fullAddress)
                 .numTrades(numTrades)
                 .accountAge(accountAgeFormatted)
@@ -353,10 +354,16 @@ public class PeerInfoIcon extends Group {
         if (!tag.isEmpty())
             tagLabel.setText(tag.substring(0, 1));
 
-        if (numTrades < 10)
+        if (numTrades > 0) {
             numTradesLabel.setText(String.valueOf(numTrades));
-        else
-            numTradesLabel.setText("★");
+
+            double scaleFactor = getScaleFactor();
+            if (numTrades > 9) {
+                numTradesLabel.relocate(scaleFactor * 2, scaleFactor * 1);
+            } else {
+                numTradesLabel.relocate(scaleFactor * 5, scaleFactor * 1);
+            }
+        }
 
         numTradesPane.setVisible(numTrades > 0);
 

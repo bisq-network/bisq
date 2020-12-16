@@ -45,12 +45,12 @@ import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.LegacyAddress;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.Sha256Hash;
-import org.bitcoinj.script.ScriptException;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionConfidence;
 import org.bitcoinj.core.TransactionInput;
 import org.bitcoinj.core.TransactionOutPoint;
 import org.bitcoinj.core.TransactionOutput;
+import org.bitcoinj.script.ScriptException;
 import org.bitcoinj.wallet.CoinSelection;
 import org.bitcoinj.wallet.CoinSelector;
 import org.bitcoinj.wallet.SendRequest;
@@ -565,6 +565,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
 
             return tx;
         } catch (InsufficientMoneyException e) {
+            log.error("getPreparedSendTx: tx={}", tx.toString());
             log.error(e.toString());
             throw new InsufficientBsqException(e.missing);
         }

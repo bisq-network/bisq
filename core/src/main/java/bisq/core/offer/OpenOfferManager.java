@@ -63,11 +63,13 @@ import bisq.common.handlers.ResultHandler;
 import bisq.common.persistence.PersistenceManager;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.persistable.PersistedDataHost;
+import bisq.common.util.Tuple2;
 
 import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
 
+import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
 import java.util.ArrayList;
@@ -81,6 +83,8 @@ import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import lombok.Getter;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -118,6 +122,8 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     private final TradableList<OpenOffer> openOffers = new TradableList<>();
     private boolean stopped;
     private Timer periodicRepublishOffersTimer, periodicRefreshOffersTimer, retryRepublishOffersTimer;
+    @Getter
+    private final ObservableList<Tuple2<OpenOffer, String>> invalidOffers = FXCollections.observableArrayList();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -190,6 +196,10 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         }
 
         cleanUpAddressEntries();
+
+        openOffers.stream()
+                .forEach(openOffer -> OfferUtil.getInvalidMakerFeeTxErrorMessage(openOffer.getOffer(), btcWalletService)
+                        .ifPresent(errorMsg -> invalidOffers.add(new Tuple2<>(openOffer, errorMsg))));
     }
 
     private void cleanUpAddressEntries() {
@@ -225,8 +235,12 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
             UserThread.execute(() -> openOffers.forEach(
                     openOffer -> offerBookService.removeOfferAtShutDown(openOffer.getOffer().getOfferPayload())
             ));
-            if (completeHandler != null)
-                UserThread.runAfter(completeHandler, size * 200 + 500, TimeUnit.MILLISECONDS);
+            if (completeHandler != null) {
+                // For typical number of offers we are tolerant with delay to give enough time to broadcast.
+                // If number of offers is very high we limit to 3 sec. to not delay other shutdown routines.
+                int delay = Math.min(3000, size * 200 + 500);
+                UserThread.runAfter(completeHandler, delay, TimeUnit.MILLISECONDS);
+            }
         } else {
             if (completeHandler != null)
                 completeHandler.run();

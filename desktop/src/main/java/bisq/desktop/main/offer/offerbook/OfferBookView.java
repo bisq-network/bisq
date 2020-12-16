@@ -69,7 +69,6 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import de.jensd.fx.fontawesome.AwesomeIcon;
-import de.jensd.fx.glyphs.GlyphIcons;
 import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 
 import javafx.scene.canvas.Canvas;
@@ -107,9 +106,7 @@ import javafx.util.Callback;
 import javafx.util.StringConverter;
 
 import java.util.Comparator;
-import java.util.Date;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -124,6 +121,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private final PrivateNotificationManager privateNotificationManager;
     private final boolean useDevPrivilegeKeys;
     private final AccountAgeWitnessService accountAgeWitnessService;
+    private final SignedWitnessService signedWitnessService;
 
     private AutocompleteComboBox<TradeCurrency> currencyComboBox;
     private AutocompleteComboBox<PaymentMethod> paymentMethodComboBox;
@@ -151,7 +149,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                   @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter,
                   PrivateNotificationManager privateNotificationManager,
                   @Named(Config.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys,
-                  AccountAgeWitnessService accountAgeWitnessService) {
+                  AccountAgeWitnessService accountAgeWitnessService,
+                  SignedWitnessService signedWitnessService) {
         super(model);
 
         this.navigation = navigation;
@@ -160,6 +159,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         this.privateNotificationManager = privateNotificationManager;
         this.useDevPrivilegeKeys = useDevPrivilegeKeys;
         this.accountAgeWitnessService = accountAgeWitnessService;
+        this.signedWitnessService = signedWitnessService;
     }
 
     @Override
@@ -244,16 +244,27 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         priceColumn.setComparator(Comparator.comparing(o -> o.getOffer().getPrice(), Comparator.nullsFirst(Comparator.naturalOrder())));
         amountColumn.setComparator(Comparator.comparing(o -> o.getOffer().getMinAmount()));
         volumeColumn.setComparator(Comparator.comparing(o -> o.getOffer().getMinVolume(), Comparator.nullsFirst(Comparator.naturalOrder())));
-        paymentMethodColumn.setComparator(Comparator.comparing(o -> o.getOffer().getPaymentMethod()));
-        avatarColumn.setComparator(Comparator.comparing(o -> o.getOffer().getOwnerNodeAddress().getFullAddress()));
-        depositColumn.setComparator(Comparator.comparing(o -> {
-            var isSellOffer = o.getOffer().getDirection() == OfferPayload.Direction.SELL;
-            var deposit = isSellOffer ? o.getOffer().getBuyerSecurityDeposit() :
-                    o.getOffer().getSellerSecurityDeposit();
+        paymentMethodColumn.setComparator(Comparator.comparing(o -> Res.get(o.getOffer().getPaymentMethod().getId())));
+        avatarColumn.setComparator(Comparator.comparing(o -> model.getNumTrades(o.getOffer())));
+        depositColumn.setComparator(Comparator.comparing(item -> {
+            boolean isSellOffer = item.getOffer().getDirection() == OfferPayload.Direction.SELL;
+            Coin deposit = isSellOffer ?
+                    item.getOffer().getBuyerSecurityDeposit() :
+                    item.getOffer().getSellerSecurityDeposit();
 
-            return (deposit == null) ? 0.0 : deposit.getValue() / (double) o.getOffer().getAmount().getValue();
+            double amountValue = item.getOffer().getAmount().getValue();
+            if ((deposit == null || amountValue == 0)) {
+                return 0d;
+            } else {
+                return deposit.getValue() / amountValue;
+            }
 
         }, Comparator.nullsFirst(Comparator.naturalOrder())));
+
+        Comparator<OfferBookListItem> comparator = Comparator.comparing(e -> e.getWitnessAgeData(accountAgeWitnessService, signedWitnessService).getType(), Comparator.nullsFirst(Comparator.naturalOrder()));
+        signingStateColumn.setComparator(comparator.
+                thenComparing(e -> e.getWitnessAgeData(accountAgeWitnessService, signedWitnessService).getDays(),
+                        Comparator.nullsFirst(Comparator.naturalOrder())));
 
         nrOfOffersLabel = new AutoTooltipLabel("");
         nrOfOffersLabel.setId("num-offers");
@@ -1102,55 +1113,11 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                         super.updateItem(item, empty);
 
                         if (item != null && !empty) {
-
-                            GlyphIcons icon;
-                            String info;
-                            String timeSinceSigning;
-
-                            boolean needsSigning = PaymentMethod.hasChargebackRisk(
-                                    item.getOffer().getPaymentMethod(), item.getOffer().getCurrencyCode());
-
-                            if (needsSigning) {
-                                if (accountAgeWitnessService.hasSignedWitness(item.getOffer())) {
-                                    // either signed & limits lifted, or waiting for limits to be lifted
-                                    AccountAgeWitnessService.SignState signState = accountAgeWitnessService.getSignState(item.getOffer());
-                                    icon = GUIUtil.getIconForSignState(signState);
-                                    info = Res.get("offerbook.timeSinceSigning.info",
-                                            signState.getPresentation());
-                                    long daysSinceSigning = TimeUnit.MILLISECONDS.toDays(
-                                            accountAgeWitnessService.getWitnessSignAge(item.getOffer(), new Date()));
-                                    timeSinceSigning = Res.get("offerbook.timeSinceSigning.daysSinceSigning",
-                                            daysSinceSigning);
-                                } else {
-                                    // either banned, unsigned
-                                    AccountAgeWitnessService.SignState signState = accountAgeWitnessService.getSignState(item.getOffer());
-                                    icon = GUIUtil.getIconForSignState(signState);
-                                    if (!signState.equals(AccountAgeWitnessService.SignState.UNSIGNED)) {
-                                        info = Res.get("offerbook.timeSinceSigning.info", signState.getPresentation());
-                                        long daysSinceSigning = TimeUnit.MILLISECONDS.toDays(
-                                                accountAgeWitnessService.getWitnessSignAge(item.getOffer(), new Date()));
-                                        timeSinceSigning = Res.get("offerbook.timeSinceSigning.daysSinceSigning",
-                                                daysSinceSigning);
-                                    } else {
-                                        long accountAge = TimeUnit.MILLISECONDS.toDays(accountAgeWitnessService.getAccountAge(item.getOffer()));
-                                        info = Res.get("shared.notSigned", accountAge);
-                                        timeSinceSigning = Res.get("offerbook.timeSinceSigning.notSigned", accountAge);
-                                    }
-                                }
-                            } else {
-                                if (CurrencyUtil.isFiatCurrency(item.getOffer().getCurrencyCode())) {
-                                    icon = MaterialDesignIcon.CHECKBOX_MARKED_OUTLINE;
-                                    long days = TimeUnit.MILLISECONDS.toDays(accountAgeWitnessService.getAccountAge(item.getOffer()));
-                                    info = Res.get("shared.notSigned.noNeedDays", days);
-                                    timeSinceSigning = Res.get("offerbook.timeSinceSigning.notSigned.ageDays", days);
-                                } else { // altcoins
-                                    icon = MaterialDesignIcon.INFORMATION_OUTLINE;
-                                    info = Res.get("shared.notSigned.noNeedAlts");
-                                    timeSinceSigning = Res.get("offerbook.timeSinceSigning.notSigned.noNeed");
-                                }
-                            }
-
-                            InfoAutoTooltipLabel label = new InfoAutoTooltipLabel(timeSinceSigning, icon, ContentDisplay.RIGHT, info);
+                            var witnessAgeData = item.getWitnessAgeData(accountAgeWitnessService, signedWitnessService);
+                            InfoAutoTooltipLabel label = new InfoAutoTooltipLabel(witnessAgeData.getDisplayString(),
+                                    witnessAgeData.getIcon(),
+                                    ContentDisplay.RIGHT,
+                                    witnessAgeData.getInfo());
                             setGraphic(label);
                         } else {
                             setGraphic(null);

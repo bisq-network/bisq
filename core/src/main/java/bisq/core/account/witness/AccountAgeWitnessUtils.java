@@ -123,7 +123,7 @@ public class AccountAgeWitnessUtils {
 
         AccountAgeWitnessService.SignState signState =
                 accountAgeWitnessService.getSignState(accountAgeWitness.get());
-        return signState.name() + " " + signState.getPresentation() +
+        return signState.name() + " " + signState.getDisplayString() +
                 "\n" + accountAgeWitness.toString();
     }
 

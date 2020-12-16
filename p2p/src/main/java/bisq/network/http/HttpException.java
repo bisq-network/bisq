@@ -17,8 +17,18 @@
 
 package bisq.network.http;
 
+import lombok.Getter;
+
 public class HttpException extends Exception {
+    @Getter
+    private int responseCode;
+
     public HttpException(String message) {
         super(message);
+    }
+
+    public HttpException(String message, int responseCode) {
+        super(message);
+        this.responseCode = responseCode;
     }
 }

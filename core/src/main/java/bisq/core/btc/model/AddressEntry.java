@@ -71,16 +71,19 @@ public final class AddressEntry implements PersistablePayload {
     private final byte[] pubKey;
     @Getter
     private final byte[] pubKeyHash;
-
-    private long coinLockedInMultiSig;
-
     @Getter
-    private boolean segwit;
+    private final long coinLockedInMultiSig;
+    @Getter
+    private final boolean segwit;
 
+    // Not an immutable field. Set at startup once wallet is ready and at encrypting/decrypting wallet.
     @Nullable
     transient private DeterministicKey keyPair;
+
+    // Only used as cache
     @Nullable
     transient private Address address;
+    // Only used as cache
     @Nullable
     transient private String addressString;
 
@@ -93,16 +96,29 @@ public final class AddressEntry implements PersistablePayload {
         this(keyPair, context, null, segwit);
     }
 
-    public AddressEntry(@NotNull DeterministicKey keyPair,
+    public AddressEntry(DeterministicKey keyPair,
                         Context context,
                         @Nullable String offerId,
                         boolean segwit) {
+        this(keyPair,
+                context,
+                offerId,
+                0,
+                segwit);
+    }
+
+    public AddressEntry(DeterministicKey keyPair,
+                        Context context,
+                        @Nullable String offerId,
+                        long coinLockedInMultiSig,
+                        boolean segwit) {
+        this(keyPair.getPubKey(),
+                keyPair.getPubKeyHash(),
+                context,
+                offerId,
+                coinLockedInMultiSig,
+                segwit);
         this.keyPair = keyPair;
-        this.context = context;
-        this.offerId = offerId;
-        pubKey = keyPair.getPubKey();
-        pubKeyHash = keyPair.getPubKeyHash();
-        this.segwit = segwit;
     }
 
 
@@ -114,13 +130,13 @@ public final class AddressEntry implements PersistablePayload {
                          byte[] pubKeyHash,
                          Context context,
                          @Nullable String offerId,
-                         Coin coinLockedInMultiSig,
+                         long coinLockedInMultiSig,
                          boolean segwit) {
         this.pubKey = pubKey;
         this.pubKeyHash = pubKeyHash;
         this.context = context;
         this.offerId = offerId;
-        this.coinLockedInMultiSig = coinLockedInMultiSig.value;
+        this.coinLockedInMultiSig = coinLockedInMultiSig;
         this.segwit = segwit;
     }
 
@@ -129,7 +145,7 @@ public final class AddressEntry implements PersistablePayload {
                 proto.getPubKeyHash().toByteArray(),
                 ProtoUtil.enumFromProto(AddressEntry.Context.class, proto.getContext().name()),
                 ProtoUtil.stringOrNullFromProto(proto.getOfferId()),
-                Coin.valueOf(proto.getCoinLockedInMultiSig()),
+                proto.getCoinLockedInMultiSig(),
                 proto.getSegwit());
     }
 
@@ -164,10 +180,6 @@ public final class AddressEntry implements PersistablePayload {
         return keyPair;
     }
 
-    public void setCoinLockedInMultiSig(@NotNull Coin coinLockedInMultiSig) {
-        this.coinLockedInMultiSig = coinLockedInMultiSig.value;
-    }
-
     // For display we usually only display the first 8 characters.
     @Nullable
     public String getShortOfferId() {
@@ -183,9 +195,17 @@ public final class AddressEntry implements PersistablePayload {
 
     @Nullable
     public Address getAddress() {
-        if (address == null && keyPair != null)
+        if (address == null && keyPair != null) {
             address = Address.fromKey(Config.baseCurrencyNetworkParameters(), keyPair, segwit ? Script.ScriptType.P2WPKH : Script.ScriptType.P2PKH);
+        }
+        if (address == null) {
+            log.warn("Address is null at getAddress(). keyPair={}", keyPair);
+        }
         return address;
+    }
+
+    public boolean isAddressNull() {
+        return address == null;
     }
 
     public boolean isOpenOffer() {
@@ -196,14 +216,14 @@ public final class AddressEntry implements PersistablePayload {
         return context == Context.MULTI_SIG || context == Context.TRADE_PAYOUT;
     }
 
-    public Coin getCoinLockedInMultiSig() {
+    public Coin getCoinLockedInMultiSigAsCoin() {
         return Coin.valueOf(coinLockedInMultiSig);
     }
 
     @Override
     public String toString() {
         return "AddressEntry{" +
-                "address=" + address +
+                "address=" + getAddress() +
                 ", context=" + context +
                 ", offerId='" + offerId + '\'' +
                 ", coinLockedInMultiSig=" + coinLockedInMultiSig +

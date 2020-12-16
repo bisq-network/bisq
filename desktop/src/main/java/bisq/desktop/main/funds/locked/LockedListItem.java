@@ -18,12 +18,13 @@
 package bisq.desktop.main.funds.locked;
 
 import bisq.desktop.components.AutoTooltipLabel;
+import bisq.desktop.util.DisplayUtils;
 
 import bisq.core.btc.listeners.BalanceListener;
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletService;
-import bisq.core.trade.Tradable;
+import bisq.core.locale.Res;
 import bisq.core.trade.Trade;
 import bisq.core.util.coin.CoinFormatter;
 
@@ -33,21 +34,34 @@ import org.bitcoinj.core.Transaction;
 
 import javafx.scene.control.Label;
 
+import lombok.Getter;
+
 import javax.annotation.Nullable;
 
 class LockedListItem {
     private final BalanceListener balanceListener;
-    private final Label balanceLabel;
-    private final Trade trade;
-    private final AddressEntry addressEntry;
     private final BtcWalletService btcWalletService;
     private final CoinFormatter formatter;
+
+    @Getter
+    private final Label balanceLabel;
+    @Getter
+    private final Trade trade;
+    @Getter
+    private final AddressEntry addressEntry;
+    @Getter
     private final String addressString;
     @Nullable
     private final Address address;
+    @Getter
     private Coin balance;
+    @Getter
+    private String balanceString;
 
-    public LockedListItem(Trade trade, AddressEntry addressEntry, BtcWalletService btcWalletService, CoinFormatter formatter) {
+    public LockedListItem(Trade trade,
+                          AddressEntry addressEntry,
+                          BtcWalletService btcWalletService,
+                          CoinFormatter formatter) {
         this.trade = trade;
         this.addressEntry = addressEntry;
         this.btcWalletService = btcWalletService;
@@ -55,15 +69,13 @@ class LockedListItem {
 
         if (trade.getDepositTx() != null && !trade.getDepositTx().getOutputs().isEmpty()) {
             address = WalletService.getAddressFromOutput(trade.getDepositTx().getOutput(0));
-            addressString = address.toString();
+            addressString = address != null ? address.toString() : "";
         } else {
             address = null;
             addressString = "";
         }
-
-        // balance
         balanceLabel = new AutoTooltipLabel();
-        balanceListener = new BalanceListener(getAddress()) {
+        balanceListener = new BalanceListener(address) {
             @Override
             public void onBalanceChanged(Coin balance, Transaction tx) {
                 updateBalance();
@@ -73,38 +85,36 @@ class LockedListItem {
         updateBalance();
     }
 
+    LockedListItem() {
+        this.trade = null;
+        this.addressEntry = null;
+        this.btcWalletService = null;
+        this.formatter = null;
+        addressString = null;
+        address = null;
+        balanceLabel = null;
+        balanceListener = null;
+    }
+
     public void cleanup() {
         btcWalletService.removeBalanceListener(balanceListener);
     }
 
     private void updateBalance() {
-        balance = addressEntry.getCoinLockedInMultiSig();
-        balanceLabel.setText(formatter.formatCoin(this.balance));
+        balance = addressEntry.getCoinLockedInMultiSigAsCoin();
+        balanceString = formatter.formatCoin(this.balance);
+        balanceLabel.setText(balanceString);
     }
 
-    @Nullable
-    private Address getAddress() {
-        return address;
+    public String getDetails() {
+        return trade != null ?
+                Res.get("funds.locked.locked", trade.getShortId()) :
+                Res.get("shared.noDetailsAvailable");
     }
 
-    public AddressEntry getAddressEntry() {
-        return addressEntry;
+    public String getDateString() {
+        return trade != null ?
+                DisplayUtils.formatDateTime(trade.getDate()) :
+                Res.get("shared.noDateAvailable");
     }
-
-    public Label getBalanceLabel() {
-        return balanceLabel;
-    }
-
-    public Coin getBalance() {
-        return balance;
-    }
-
-    public String getAddressString() {
-        return addressString;
-    }
-
-    public Tradable getTrade() {
-        return trade;
-    }
-
 }

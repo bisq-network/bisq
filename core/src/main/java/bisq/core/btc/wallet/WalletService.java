@@ -23,6 +23,7 @@ import bisq.core.btc.listeners.AddressConfidenceListener;
 import bisq.core.btc.listeners.BalanceListener;
 import bisq.core.btc.listeners.TxConfidenceListener;
 import bisq.core.btc.setup.WalletsSetup;
+import bisq.core.btc.wallet.http.MemPoolSpaceTxBroadcaster;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.user.Preferences;
 
@@ -505,6 +506,20 @@ public abstract class WalletService {
         return getNumTxOutputsForAddress(address) == 0;
     }
 
+    // BISQ issue #4039: Prevent dust outputs from being created.
+    // Check the outputs of a proposed transaction.  If any are below the dust threshold,
+    // add up the dust, log the details, and return the cumulative dust amount.
+    public Coin getDust(Transaction proposedTransaction) {
+        Coin dust = Coin.ZERO;
+        for (TransactionOutput transactionOutput : proposedTransaction.getOutputs()) {
+            if (transactionOutput.getValue().isLessThan(Restrictions.getMinNonDustOutput())) {
+                dust = dust.add(transactionOutput.getValue());
+                log.info("Dust TXO = {}", transactionOutput.toString());
+            }
+        }
+        return dust;
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Empty complete Wallet
@@ -521,7 +536,12 @@ public abstract class WalletService {
         sendRequest.aesKey = aesKey;
         Wallet.SendResult sendResult = wallet.sendCoins(sendRequest);
         printTx("empty btc wallet", sendResult.tx);
-        Futures.addCallback(sendResult.broadcastComplete, new FutureCallback<Transaction>() {
+
+        // For better redundancy in case the broadcast via BitcoinJ fails we also
+        // publish the tx via mempool nodes.
+        MemPoolSpaceTxBroadcaster.broadcastTx(sendResult.tx);
+
+        Futures.addCallback(sendResult.broadcastComplete, new FutureCallback<>() {
             @Override
             public void onSuccess(Transaction result) {
                 log.info("emptyBtcWallet onSuccess Transaction=" + result);
@@ -657,6 +677,9 @@ public abstract class WalletService {
 
     @Nullable
     public Transaction getTransaction(String txId) {
+        if (txId == null) {
+            return null;
+        }
         return getTransaction(Sha256Hash.wrap(txId));
     }
 

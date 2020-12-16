@@ -84,9 +84,11 @@ public class CreateOfferDataModelTest {
         final HashSet<PaymentAccount> paymentAccounts = new HashSet<>();
         final ClearXchangeAccount zelleAccount = new ClearXchangeAccount();
         zelleAccount.setId("234");
+        zelleAccount.setAccountName("zelleAccount");
         paymentAccounts.add(zelleAccount);
         final RevolutAccount revolutAccount = new RevolutAccount();
         revolutAccount.setId("123");
+        revolutAccount.setAccountName("revolutAccount");
         revolutAccount.setSingleTradeCurrency(new FiatCurrency("EUR"));
         revolutAccount.addCurrency(new FiatCurrency("USD"));
         paymentAccounts.add(revolutAccount);
@@ -104,9 +106,11 @@ public class CreateOfferDataModelTest {
         final HashSet<PaymentAccount> paymentAccounts = new HashSet<>();
         final ClearXchangeAccount zelleAccount = new ClearXchangeAccount();
         zelleAccount.setId("234");
+        zelleAccount.setAccountName("zelleAccount");
         paymentAccounts.add(zelleAccount);
         final RevolutAccount revolutAccount = new RevolutAccount();
         revolutAccount.setId("123");
+        revolutAccount.setAccountName("revolutAccount");
         revolutAccount.setSingleTradeCurrency(new FiatCurrency("EUR"));
         paymentAccounts.add(revolutAccount);
 

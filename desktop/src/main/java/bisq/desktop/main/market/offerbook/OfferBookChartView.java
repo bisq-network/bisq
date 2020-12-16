@@ -93,7 +93,6 @@ import java.text.DecimalFormat;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
@@ -127,7 +126,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
     private HBox bottomHBox;
     private ListChangeListener<OfferBookListItem> changeListener;
     private ListChangeListener<CurrencyListItem> currencyListItemsListener;
-    private final double chartDataFactor = 3;
+    private final double dataLimitFactor = 3;
     private final double initialOfferTableViewHeight = 121;
     private final double pixelsPerOfferTableRow = (initialOfferTableViewHeight - 30) / 5.0; // initial visible row count=5, header height=30
     private final Function<Double, Double> offerTableViewHeight = (screenSize) -> {
@@ -387,46 +386,74 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         seriesSell.getData().clear();
         areaChart.getData().clear();
 
-        double buyMinValue = model.getBuyData().stream()
-                .mapToDouble(o -> o.getXValue().doubleValue())
-                .min()
-                .orElse(Double.MAX_VALUE);
+        boolean isCrypto = CurrencyUtil.isCryptoCurrency(model.getCurrencyCode());
 
-        // Hide buy offers that are more than a factor of chartDataFactor higher than the lowest buy offer
-        double buyMaxValue = model.getBuyData().stream()
-                .mapToDouble(o -> o.getXValue().doubleValue())
-                .filter(o -> o < buyMinValue * chartDataFactor)
-                .max()
-                .orElse(Double.MIN_VALUE);
-
-        double sellMaxValue = model.getSellData().stream()
-                .mapToDouble(o -> o.getXValue().doubleValue())
-                .max()
-                .orElse(Double.MIN_VALUE);
-
-        // Hide sell offers that are less than a factor of chartDataFactor lower than the highest sell offer
-        double sellMinValue = model.getSellData().stream()
-                .mapToDouble(o -> o.getXValue().doubleValue())
-                .filter(o -> o > sellMaxValue / chartDataFactor)
-                .min()
-                .orElse(Double.MAX_VALUE);
-
-        double minValue = Double.min(buyMinValue, sellMinValue);
-        double maxValue = Double.max(buyMaxValue, sellMaxValue);
-
-        if (minValue == Double.MAX_VALUE || maxValue == Double.MIN_VALUE) { // no filtering
-            seriesBuy.getData().addAll(model.getBuyData());
-            seriesSell.getData().addAll(model.getSellData());
-        } else {                                                            // apply filtering
-            seriesBuy.getData().addAll(model.getBuyData().stream()
-                                       .filter(o -> o.getXValue().doubleValue() < buyMinValue * 3)
-                                       .collect(Collectors.toList()));
-            seriesSell.getData().addAll(model.getSellData().stream()
-                                        .filter(o -> o.getXValue().doubleValue() > sellMaxValue / 3)
-                                        .collect(Collectors.toList()));
-        }
+        // crypto: left-sell, right-buy. fiat: left-buy, right-sell
+        seriesBuy.getData().addAll(filterOutliersBuy(model.getBuyData(), isCrypto));
+        seriesSell.getData().addAll(filterOutliersSell(model.getSellData(), isCrypto));
 
         areaChart.getData().addAll(List.of(seriesBuy, seriesSell));
+    }
+
+    List<XYChart.Data<Number, Number>> filterOutliersBuy(List<XYChart.Data<Number, Number>> buy, boolean isCrypto) {
+        List<Double> mnmx = isCrypto ? minMaxFilterRight(buy) : minMaxFilterLeft(buy);
+        if (mnmx.get(0).doubleValue() == Double.MAX_VALUE ||
+            mnmx.get(1).doubleValue() == Double.MIN_VALUE) { // no filtering
+            return buy;
+        }
+        // apply filtering
+        return isCrypto ? filterRight(buy, mnmx.get(0)) : filterLeft(buy, mnmx.get(1));
+    }
+
+    List<XYChart.Data<Number, Number>> filterOutliersSell(List<XYChart.Data<Number, Number>> sell, boolean isCrypto) {
+        List<Double> mnmx = isCrypto ? minMaxFilterLeft(sell) : minMaxFilterRight(sell);
+        if (mnmx.get(0).doubleValue() == Double.MAX_VALUE ||
+            mnmx.get(1).doubleValue() == Double.MIN_VALUE) { // no filtering
+            return sell;
+        }
+        // apply filtering
+        return isCrypto ? filterLeft(sell, mnmx.get(1)) : filterRight(sell, mnmx.get(0));
+    }
+
+    private List<Double> minMaxFilterLeft(List<XYChart.Data<Number, Number>> data) {
+        double maxValue = data.stream()
+            .mapToDouble(o -> o.getXValue().doubleValue())
+            .max()
+            .orElse(Double.MIN_VALUE);
+        // Hide offers less than a div-factor of dataLimitFactor lower than the highest offer.
+        double minValue = data.stream()
+            .mapToDouble(o -> o.getXValue().doubleValue())
+            .filter(o -> o > maxValue / dataLimitFactor)
+            .min()
+            .orElse(Double.MAX_VALUE);
+        return List.of(minValue, maxValue);
+    }
+
+    private List<Double> minMaxFilterRight(List<XYChart.Data<Number, Number>> data) {
+        double minValue = data.stream()
+            .mapToDouble(o -> o.getXValue().doubleValue())
+            .min()
+            .orElse(Double.MAX_VALUE);
+
+        // Hide offers a dataLimitFactor factor higher than the lowest offer
+        double maxValue = data.stream()
+            .mapToDouble(o -> o.getXValue().doubleValue())
+            .filter(o -> o < minValue * dataLimitFactor)
+            .max()
+            .orElse(Double.MIN_VALUE);
+        return List.of(minValue, maxValue);
+    }
+
+    private List<XYChart.Data<Number, Number>> filterLeft(List<XYChart.Data<Number, Number>> data, double maxValue) {
+        return data.stream()
+            .filter(o -> o.getXValue().doubleValue() > maxValue / dataLimitFactor)
+            .collect(Collectors.toList());
+    }
+
+    private List<XYChart.Data<Number, Number>> filterRight(List<XYChart.Data<Number, Number>> data, double minValue) {
+        return data.stream()
+            .filter(o -> o.getXValue().doubleValue() < minValue * dataLimitFactor)
+            .collect(Collectors.toList());
     }
 
     private Tuple4<TableView<OfferListItem>, VBox, Button, Label> getOfferTable(OfferPayload.Direction direction) {
@@ -668,12 +695,12 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
     private void reverseTableColumns() {
         ObservableList<TableColumn<OfferListItem, ?>> columns = FXCollections.observableArrayList(buyOfferTableView.getColumns());
         buyOfferTableView.getColumns().clear();
-        Collections.reverse(columns);
+        FXCollections.reverse(columns);
         buyOfferTableView.getColumns().addAll(columns);
 
         columns = FXCollections.observableArrayList(sellOfferTableView.getColumns());
         sellOfferTableView.getColumns().clear();
-        Collections.reverse(columns);
+        FXCollections.reverse(columns);
         sellOfferTableView.getColumns().addAll(columns);
     }
 

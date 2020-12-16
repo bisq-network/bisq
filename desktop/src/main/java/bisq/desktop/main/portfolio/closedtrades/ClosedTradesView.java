@@ -27,7 +27,6 @@ import bisq.desktop.components.InputTextField;
 import bisq.desktop.components.PeerInfoIcon;
 import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
 import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
-import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.alert.PrivateNotificationManager;
@@ -53,6 +52,7 @@ import javafx.fxml.FXML;
 import javafx.stage.Stage;
 
 import javafx.scene.Node;
+import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -60,6 +60,7 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 
 import javafx.geometry.Insets;
@@ -100,6 +101,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
         ColumnNames(String text) {
             this.text = text;
         }
+
         @Override
         public String toString() {
             return text;
@@ -113,23 +115,28 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
             txFeeColumn, tradeFeeColumn, buyerSecurityDepositColumn, sellerSecurityDepositColumn,
             marketColumn, directionColumn, dateColumn, tradeIdColumn, stateColumn, avatarColumn;
     @FXML
-    HBox footerBox;
+    HBox searchBox;
     @FXML
     AutoTooltipLabel filterLabel;
     @FXML
     InputTextField filterTextField;
     @FXML
-    Pane spacer;
+    Pane searchBoxSpacer;
     @FXML
     AutoTooltipButton exportButton;
+    @FXML
+    Label numItems;
+    @FXML
+    Region footerSpacer;
 
     private final OfferDetailsWindow offerDetailsWindow;
-    private Preferences preferences;
+    private final Preferences preferences;
     private final TradeDetailsWindow tradeDetailsWindow;
     private final PrivateNotificationManager privateNotificationManager;
     private SortedList<ClosedTradableListItem> sortedList;
     private FilteredList<ClosedTradableListItem> filteredList;
     private ChangeListener<String> filterTextFieldListener;
+    private ChangeListener<Number> widthListener;
 
     @Inject
     public ClosedTradesView(ClosedTradesViewModel model,
@@ -146,8 +153,9 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
         this.useDevPrivilegeKeys = useDevPrivilegeKeys;
     }
 
-	@Override
-	public void initialize() {
+    @Override
+    public void initialize() {
+        widthListener = (observable, oldValue, newValue) -> onWidthChange((double) newValue);
         txFeeColumn.setGraphic(new AutoTooltipLabel(ColumnNames.TX_FEE.toString()));
         tradeFeeColumn.setGraphic(new AutoTooltipLabel(ColumnNames.TRADE_FEE.toString()));
         buyerSecurityDepositColumn.setGraphic(new AutoTooltipLabel(ColumnNames.BUYER_SEC.toString()));
@@ -170,10 +178,10 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
         setTradeIdColumnCellFactory();
         setDirectionColumnCellFactory();
         setAmountColumnCellFactory();
-		setTxFeeColumnCellFactory();
-		setTradeFeeColumnCellFactory();
-		setBuyerSecurityDepositColumnCellFactory();
-		setSellerSecurityDepositColumnCellFactory();
+        setTxFeeColumnCellFactory();
+        setTradeFeeColumnCellFactory();
+        setBuyerSecurityDepositColumnCellFactory();
+        setSellerSecurityDepositColumnCellFactory();
         setPriceColumnCellFactory();
         setDeviationColumnCellFactory();
         setVolumeColumnCellFactory();
@@ -186,24 +194,31 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
         dateColumn.setComparator(Comparator.comparing(o -> o.getTradable().getDate()));
         directionColumn.setComparator(Comparator.comparing(o -> o.getTradable().getOffer().getDirection()));
         marketColumn.setComparator(Comparator.comparing(model::getMarketLabel));
-
-        priceColumn.setComparator(nullsFirstComparing(o ->
-                o instanceof Trade ? ((Trade) o).getTradePrice() : o.getOffer().getPrice()
-        ));
+        priceColumn.setComparator(Comparator.comparing(model::getPrice, Comparator.nullsFirst(Comparator.naturalOrder())));
         deviationColumn.setComparator(Comparator.comparing(o ->
-                o.getTradable().getOffer().isUseMarketBasedPrice() ? o.getTradable().getOffer().getMarketPriceMargin() : 1,
+                        o.getTradable().getOffer().isUseMarketBasedPrice() ? o.getTradable().getOffer().getMarketPriceMargin() : 1,
                 Comparator.nullsFirst(Comparator.naturalOrder())));
         volumeColumn.setComparator(nullsFirstComparingAsTrade(Trade::getTradeVolume));
-        amountColumn.setComparator(nullsFirstComparingAsTrade(Trade::getTradeAmount));
-        avatarColumn.setComparator(nullsFirstComparingAsTrade(o ->
-                o.getTradingPeerNodeAddress() != null ? o.getTradingPeerNodeAddress().getFullAddress() : null
+        amountColumn.setComparator(Comparator.comparing(model::getAmount, Comparator.nullsFirst(Comparator.naturalOrder())));
+        avatarColumn.setComparator(Comparator.comparing(
+                o -> model.getNumPastTrades(o.getTradable()),
+                Comparator.nullsFirst(Comparator.naturalOrder())
         ));
         txFeeColumn.setComparator(nullsFirstComparing(o ->
                 o instanceof Trade ? ((Trade) o).getTxFee() : o.getOffer().getTxFee()
         ));
-        tradeFeeColumn.setComparator(nullsFirstComparing(o ->
-                o instanceof Trade ? ((Trade) o).getTakerFee() : o.getOffer().getMakerFee()
-        ));
+        txFeeColumn.setComparator(Comparator.comparing(model::getTxFee, Comparator.nullsFirst(Comparator.naturalOrder())));
+
+        //
+        tradeFeeColumn.setComparator(Comparator.comparing(item -> {
+            String tradeFee = model.getTradeFee(item);
+            // We want to separate BSQ and BTC fees so we use a prefix
+            if (item.getTradable().getOffer().isCurrencyForMakerFeeBtc()) {
+                return "BTC" + tradeFee;
+            } else {
+                return "BSQ" + tradeFee;
+            }
+        }, Comparator.nullsFirst(Comparator.naturalOrder())));
         buyerSecurityDepositColumn.setComparator(nullsFirstComparing(o ->
                 o.getOffer() != null ? o.getOffer().getBuyerSecurityDeposit() : null
         ));
@@ -215,28 +230,16 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
         dateColumn.setSortType(TableColumn.SortType.DESCENDING);
         tableView.getSortOrder().add(dateColumn);
 
-        filterLabel.setText(Res.getWithCol("support.filter"));
-        filterTextField.setPromptText(Res.get("support.filter.prompt"));
+        filterLabel.setText(Res.get("shared.filter"));
         HBox.setMargin(filterLabel, new Insets(5, 0, 0, 10));
         filterTextFieldListener = (observable, oldValue, newValue) -> applyFilteredListPredicate(filterTextField.getText());
-        footerBox.setSpacing(5);
-        HBox.setHgrow(spacer, Priority.ALWAYS);
-        exportButton.updateText(Res.get("shared.exportCSV"));
+        searchBox.setSpacing(5);
+        HBox.setHgrow(searchBoxSpacer, Priority.ALWAYS);
+
+        numItems.setPadding(new Insets(-5, 0, 0, 10));
+        HBox.setHgrow(footerSpacer, Priority.ALWAYS);
         HBox.setMargin(exportButton, new Insets(0, 10, 0, 0));
-    }
-
-    private static <T extends Comparable<T>> Comparator<ClosedTradableListItem> nullsFirstComparing(Function<Tradable, T> keyExtractor) {
-        return Comparator.comparing(
-                o -> o.getTradable() != null ? keyExtractor.apply(o.getTradable()) : null,
-                Comparator.nullsFirst(Comparator.naturalOrder())
-        );
-    }
-
-    private static <T extends Comparable<T>> Comparator<ClosedTradableListItem> nullsFirstComparingAsTrade(Function<Trade, T> keyExtractor) {
-        return Comparator.comparing(
-                o -> o.getTradable() instanceof Trade ? keyExtractor.apply((Trade) o.getTradable()) : null,
-                Comparator.nullsFirst(Comparator.naturalOrder())
-        );
+        exportButton.updateText(Res.get("shared.exportCSV"));
     }
 
     @Override
@@ -248,6 +251,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
 
         tableView.setItems(sortedList);
 
+        numItems.setText(Res.get("shared.numItemsLabel", sortedList.size()));
         exportButton.setOnAction(event -> {
             final ObservableList<TableColumn<ClosedTradableListItem, ?>> tableColumns = tableView.getColumns();
             CSVEntryConverter<ClosedTradableListItem> headerConverter = transactionsListItem -> {
@@ -267,7 +271,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                 columns[ColumnNames.AMOUNT.ordinal()] = model.getAmount(item);
                 columns[ColumnNames.VOLUME.ordinal()] = model.getVolume(item);
                 columns[ColumnNames.TX_FEE.ordinal()] = model.getTxFee(item);
-                columns[ColumnNames.TRADE_FEE.ordinal()] = model.getMakerFee(item);
+                columns[ColumnNames.TRADE_FEE.ordinal()] = model.getTradeFee(item);
                 columns[ColumnNames.BUYER_SEC.ordinal()] = model.getBuyerSecurityDeposit(item);
                 columns[ColumnNames.SELLER_SEC.ordinal()] = model.getSellerSecurityDeposit(item);
                 columns[ColumnNames.OFFER_TYPE.ordinal()] = model.getDirectionLabel(item);
@@ -281,6 +285,8 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
 
         filterTextField.textProperty().addListener(filterTextFieldListener);
         applyFilteredListPredicate(filterTextField.getText());
+        root.widthProperty().addListener(widthListener);
+        onWidthChange(root.getWidth());
     }
 
     @Override
@@ -289,6 +295,29 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
         exportButton.setOnAction(null);
 
         filterTextField.textProperty().removeListener(filterTextFieldListener);
+        root.widthProperty().removeListener(widthListener);
+    }
+
+    private static <T extends Comparable<T>> Comparator<ClosedTradableListItem> nullsFirstComparing(Function<Tradable, T> keyExtractor) {
+        return Comparator.comparing(
+                o -> o.getTradable() != null ? keyExtractor.apply(o.getTradable()) : null,
+                Comparator.nullsFirst(Comparator.naturalOrder())
+        );
+    }
+
+    private static <T extends Comparable<T>> Comparator<ClosedTradableListItem> nullsFirstComparingAsTrade(Function<Trade, T> keyExtractor) {
+        return Comparator.comparing(
+                o -> o.getTradable() instanceof Trade ? keyExtractor.apply((Trade) o.getTradable()) : null,
+                Comparator.nullsFirst(Comparator.naturalOrder())
+        );
+    }
+
+    private void onWidthChange(double width) {
+        log.error("onWidthChange " + width);
+        txFeeColumn.setVisible(width > 1200);
+        tradeFeeColumn.setVisible(width > 1300);
+        buyerSecurityDepositColumn.setVisible(width > 1400);
+        sellerSecurityDepositColumn.setVisible(width > 1500);
     }
 
     private void applyFilteredListPredicate(String filterString) {
@@ -296,31 +325,82 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
             if (filterString.isEmpty())
                 return true;
 
-            Offer offer = item.getTradable().getOffer();
-            boolean matchesId = offer.getId().contains(filterString);
-            boolean matchesOfferDate = DisplayUtils.formatDate(offer.getDate()).contains(filterString);
-            boolean isMakerOnion = offer.getMakerNodeAddress().getFullAddress().contains(filterString);
+            Tradable tradable = item.getTradable();
+            Offer offer = tradable.getOffer();
+            if (offer.getId().contains(filterString)) {
+                return true;
+            }
+            if (model.getDate(item).contains(filterString)) {
+                return true;
+            }
+            if (model.getMarketLabel(item).contains(filterString)) {
+                return true;
+            }
+            if (model.getPrice(item).contains(filterString)) {
+                return true;
+            }
+            if (model.getPriceDeviation(item).contains(filterString)) {
+                return true;
+            }
 
-            if (item.getTradable() instanceof Trade) {
+            if (model.getVolume(item).contains(filterString)) {
+                return true;
+            }
+            if (model.getAmount(item).contains(filterString)) {
+                return true;
+            }
+            if (model.getTradeFee(item).contains(filterString)) {
+                return true;
+            }
+            if (model.getTxFee(item).contains(filterString)) {
+                return true;
+            }
+            if (model.getBuyerSecurityDeposit(item).contains(filterString)) {
+                return true;
+            }
+            if (model.getSellerSecurityDeposit(item).contains(filterString)) {
+                return true;
+            }
+            if (model.getState(item).contains(filterString)) {
+                return true;
+            }
+            if (model.getDirectionLabel(item).contains(filterString)) {
+                return true;
+            }
+            if (offer.getPaymentMethod().getDisplayString().contains(filterString)) {
+                return true;
+            }
+            if (offer.getOfferFeePaymentTxId().contains(filterString)) {
+                return true;
+            }
+
+            if (tradable instanceof Trade) {
+                Trade trade = (Trade) tradable;
+                if (trade.getTakerFeeTxId() != null && trade.getTakerFeeTxId().contains(filterString)) {
+                    return true;
+                }
+                if (trade.getDepositTxId() != null && trade.getDepositTxId().contains(filterString)) {
+                    return true;
+                }
+                if (trade.getPayoutTxId() != null && trade.getPayoutTxId().contains(filterString)) {
+                    return true;
+                }
+
+                Contract contract = trade.getContract();
                 boolean isBuyerOnion = false;
                 boolean isSellerOnion = false;
                 boolean matchesBuyersPaymentAccountData = false;
                 boolean matchesSellersPaymentAccountData = false;
-
-                Trade trade = (Trade) item.getTradable();
-                boolean matchesTradeDate = DisplayUtils.formatDate(trade.getTakeOfferDate()).contains(filterString);
-                Contract contract = trade.getContract();
                 if (contract != null) {
                     isBuyerOnion = contract.getBuyerNodeAddress().getFullAddress().contains(filterString);
                     isSellerOnion = contract.getSellerNodeAddress().getFullAddress().contains(filterString);
                     matchesBuyersPaymentAccountData = contract.getBuyerPaymentAccountPayload().getPaymentDetails().contains(filterString);
                     matchesSellersPaymentAccountData = contract.getSellerPaymentAccountPayload().getPaymentDetails().contains(filterString);
                 }
-                return matchesId || matchesOfferDate || isMakerOnion ||
-                        matchesTradeDate || isBuyerOnion || isSellerOnion ||
+                return isBuyerOnion || isSellerOnion ||
                         matchesBuyersPaymentAccountData || matchesSellersPaymentAccountData;
             } else {
-                return matchesId || matchesOfferDate || isMakerOnion;
+                return false;
             }
         });
     }
@@ -554,9 +634,9 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                 });
     }
 
-	private void setTxFeeColumnCellFactory() {
-		txFeeColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
-		txFeeColumn.setCellFactory(
+    private void setTxFeeColumnCellFactory() {
+        txFeeColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
+        txFeeColumn.setCellFactory(
                 new Callback<>() {
                     @Override
                     public TableCell<ClosedTradableListItem, ClosedTradableListItem> call(
@@ -570,11 +650,11 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                         };
                     }
                 });
-	}
+    }
 
-	private void setTradeFeeColumnCellFactory() {
-		tradeFeeColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
-		tradeFeeColumn.setCellFactory(
+    private void setTradeFeeColumnCellFactory() {
+        tradeFeeColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
+        tradeFeeColumn.setCellFactory(
                 new Callback<>() {
                     @Override
                     public TableCell<ClosedTradableListItem, ClosedTradableListItem> call(
@@ -583,16 +663,16 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                             @Override
                             public void updateItem(final ClosedTradableListItem item, boolean empty) {
                                 super.updateItem(item, empty);
-                                setGraphic(new AutoTooltipLabel(model.getMakerFee(item)));
+                                setGraphic(new AutoTooltipLabel(model.getTradeFee(item)));
                             }
                         };
                     }
                 });
-	}
+    }
 
-	private void setBuyerSecurityDepositColumnCellFactory() {
-		buyerSecurityDepositColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
-		buyerSecurityDepositColumn.setCellFactory(
+    private void setBuyerSecurityDepositColumnCellFactory() {
+        buyerSecurityDepositColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
+        buyerSecurityDepositColumn.setCellFactory(
                 new Callback<>() {
                     @Override
                     public TableCell<ClosedTradableListItem, ClosedTradableListItem> call(
@@ -606,11 +686,11 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                         };
                     }
                 });
-	}
+    }
 
-	private void setSellerSecurityDepositColumnCellFactory() {
-		sellerSecurityDepositColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
-		sellerSecurityDepositColumn.setCellFactory(
+    private void setSellerSecurityDepositColumnCellFactory() {
+        sellerSecurityDepositColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
+        sellerSecurityDepositColumn.setCellFactory(
                 new Callback<>() {
                     @Override
                     public TableCell<ClosedTradableListItem, ClosedTradableListItem> call(
@@ -624,6 +704,6 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                         };
                     }
                 });
-	}
+    }
 
 }

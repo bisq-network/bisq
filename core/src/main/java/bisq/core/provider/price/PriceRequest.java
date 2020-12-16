@@ -28,37 +28,64 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 @Slf4j
 public class PriceRequest {
     private static final ListeningExecutorService executorService = Utilities.getListeningExecutorService("PriceRequest", 3, 5, 10 * 60);
+    @Nullable
+    private PriceProvider provider;
+    private boolean shutDownRequested;
 
     public PriceRequest() {
     }
 
     public SettableFuture<Tuple2<Map<String, Long>, Map<String, MarketPrice>>> requestAllPrices(PriceProvider provider) {
-        final String baseUrl = provider.getBaseUrl();
-        final SettableFuture<Tuple2<Map<String, Long>, Map<String, MarketPrice>>> resultFuture = SettableFuture.create();
+        this.provider = provider;
+        String baseUrl = provider.getBaseUrl();
+        SettableFuture<Tuple2<Map<String, Long>, Map<String, MarketPrice>>> resultFuture = SettableFuture.create();
         ListenableFuture<Tuple2<Map<String, Long>, Map<String, MarketPrice>>> future = executorService.submit(() -> {
-            Thread.currentThread().setName("PriceRequest-" + provider.getBaseUrl());
+            Thread.currentThread().setName("PriceRequest @ " + baseUrl);
             return provider.getAll();
         });
 
-        Futures.addCallback(future, new FutureCallback<Tuple2<Map<String, Long>, Map<String, MarketPrice>>>() {
+        Futures.addCallback(future, new FutureCallback<>() {
             public void onSuccess(Tuple2<Map<String, Long>, Map<String, MarketPrice>> marketPriceTuple) {
                 log.trace("Received marketPriceTuple of {}\nfrom provider {}", marketPriceTuple, provider);
-                resultFuture.set(marketPriceTuple);
+                if (!shutDownRequested) {
+                    resultFuture.set(marketPriceTuple);
+                }
+
             }
 
             public void onFailure(@NotNull Throwable throwable) {
-                resultFuture.setException(new PriceRequestException(throwable, baseUrl));
+                if (!shutDownRequested) {
+                    resultFuture.setException(new PriceRequestException(throwable, baseUrl));
+                }
             }
         }, MoreExecutors.directExecutor());
 
         return resultFuture;
+    }
+
+    public void shutDown() {
+        shutDownRequested = true;
+        if (provider != null) {
+            provider.shutDown();
+        }
+
+        executorService.shutdown();
+        try {
+            if (!executorService.awaitTermination(1, TimeUnit.SECONDS)) {
+                executorService.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            executorService.shutdownNow();
+        }
     }
 }

@@ -107,33 +107,42 @@ public class WalletAppSetup {
               Runnable downloadCompleteHandler,
               Runnable walletInitializedHandler) {
         log.info("Initialize WalletAppSetup with BitcoinJ version {} and hash of BitcoinJ commit {}",
-                VersionMessage.BITCOINJ_VERSION, "7752cb7");
+                VersionMessage.BITCOINJ_VERSION, "dcf8af0");
 
         ObjectProperty<Throwable> walletServiceException = new SimpleObjectProperty<>();
         btcInfoBinding = EasyBind.combine(walletsSetup.downloadPercentageProperty(),
+                walletsSetup.chainHeightProperty(),
                 feeService.feeUpdateCounterProperty(),
                 walletServiceException,
-                (downloadPercentage, feeUpdate, exception) -> {
+                (downloadPercentage, chainHeight, feeUpdate, exception) -> {
                     String result;
                     if (exception == null) {
                         double percentage = (double) downloadPercentage;
                         btcSyncProgress.set(percentage);
+                        int bestChainHeight = walletsSetup.getChain() != null ?
+                                walletsSetup.getChain().getBestChainHeight() :
+                                0;
+                        String chainHeightAsString = bestChainHeight > 0 ?
+                                String.valueOf(bestChainHeight) :
+                                "";
                         if (percentage == 1) {
-                            result = Res.get("mainView.footer.btcInfo",
-                                    Res.get("mainView.footer.btcInfo.synchronizedWith"),
-                                    getBtcNetworkAsString(),
-                                    feeService.getFeeTextForDisplay());
+                            String synchronizedWith = Res.get("mainView.footer.btcInfo.synchronizedWith",
+                                    getBtcNetworkAsString(), chainHeightAsString);
+                            String info = feeService.isFeeAvailable() ?
+                                    Res.get("mainView.footer.btcFeeRate", feeService.getTxFeePerVbyte().value) :
+                                    "";
+                            result = Res.get("mainView.footer.btcInfo", synchronizedWith, info);
                             getBtcSplashSyncIconId().set("image-connection-synced");
-
                             downloadCompleteHandler.run();
                         } else if (percentage > 0.0) {
-                            result = Res.get("mainView.footer.btcInfo",
-                                    Res.get("mainView.footer.btcInfo.synchronizingWith"),
-                                    getBtcNetworkAsString() + ": " + FormattingUtils.formatToPercentWithSymbol(percentage), "");
+                            String synchronizingWith = Res.get("mainView.footer.btcInfo.synchronizingWith",
+                                    getBtcNetworkAsString(), chainHeightAsString,
+                                    FormattingUtils.formatToPercentWithSymbol(percentage));
+                            result = Res.get("mainView.footer.btcInfo", synchronizingWith, "");
                         } else {
                             result = Res.get("mainView.footer.btcInfo",
                                     Res.get("mainView.footer.btcInfo.connectingTo"),
-                                    getBtcNetworkAsString(), "");
+                                    getBtcNetworkAsString());
                         }
                     } else {
                         result = Res.get("mainView.footer.btcInfo",
@@ -259,6 +268,7 @@ public class WalletAppSetup {
             }
         });
     }
+
     private String getBtcNetworkAsString() {
         String postFix;
         if (config.ignoreLocalBtcNode)

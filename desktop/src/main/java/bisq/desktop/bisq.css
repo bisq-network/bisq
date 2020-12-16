@@ -1700,7 +1700,9 @@ textfield */
     -fx-font-size: 0.880em;
 }
 
-#price-chart .axis-tick-mark-text-node, #volume-chart .axis-tick-mark-text-node {
+#price-chart  .axis-tick-mark-text-node,
+#volume-chart .axis-tick-mark-text-node,
+#charts-dao   .axis-tick-mark-text-node {
     -fx-text-alignment: center;
 }
 
@@ -1726,13 +1728,13 @@ textfield */
 
 /* The .chart-line-symbol rules change the color of the legend symbol */
 #charts-dao .default-color0.chart-series-line { -fx-stroke: -bs-chart-dao-line1; }
-#charts-dao .default-color0.chart-line-symbol { -fx-background-color: -bs-chart-dao-line1, -bs-background-color; }
+#charts-dao .default-color0.chart-line-symbol { -fx-background-color: -bs-chart-dao-line1, -bs-chart-dao-line1; }
 
 #charts-dao .default-color1.chart-series-line { -fx-stroke: -bs-chart-dao-line2; }
-#charts-dao .default-color1.chart-line-symbol { -fx-background-color: -bs-chart-dao-line2, -bs-background-color; }
+#charts-dao .default-color1.chart-line-symbol { -fx-background-color: -bs-chart-dao-line2, -bs-chart-dao-line2; }
 
 #charts-dao .chart-series-line {
-    -fx-stroke-width: 1px;
+    -fx-stroke-width: 3px;
 }
 
 #charts .default-color0.chart-series-area-fill {

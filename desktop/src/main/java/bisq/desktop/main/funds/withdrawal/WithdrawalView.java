@@ -56,7 +56,6 @@ import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.Transaction;
-import org.bitcoinj.core.TransactionOutput;
 import org.bitcoinj.wallet.Wallet;
 
 import javax.inject.Inject;
@@ -334,9 +333,9 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                 }
                 checkNotNull(feeEstimationTransaction, "feeEstimationTransaction must not be null");
 
-                Coin dust = getDust(feeEstimationTransaction);
+                Coin dust = btcWalletService.getDust(feeEstimationTransaction);
                 Coin fee = feeEstimationTransaction.getFee().add(dust);
-                Coin receiverAmount = Coin.ZERO;
+                Coin receiverAmount;
                 // amountAsCoin is what the user typed into the withdrawal field.
                 // this can be interpreted as either the senders amount or receivers amount depending
                 // on a radio button "fee excluded / fee included".
@@ -495,14 +494,19 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
 
     private void sendFunds(Coin amount, Coin fee, KeyParameter aesKey, FutureCallback<Transaction> callback) {
         try {
+            String memo = withdrawMemoTextField.getText();
+            if (memo.isEmpty()) {
+                memo = null;
+            }
             Transaction transaction = btcWalletService.sendFundsForMultipleAddresses(fromAddresses,
                     withdrawToTextField.getText(),
                     amount,
                     fee,
                     null,
                     aesKey,
+                    memo,
                     callback);
-            transaction.setMemo(withdrawMemoTextField.getText());
+
             reset();
             updateList();
         } catch (AddressFormatException e) {
@@ -668,21 +672,6 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                         };
                     }
                 });
-    }
-
-    // BISQ issue #4039: prevent dust outputs from being created.
-    // check the outputs of a proposed transaction, if any are below the dust threshold
-    // add up the dust, noting the details in the log.
-    // returns the 'dust amount' to indicate if any dust was detected.
-    private Coin getDust(Transaction transaction) {
-        Coin dust = Coin.ZERO;
-        for (TransactionOutput transactionOutput : transaction.getOutputs()) {
-            if (transactionOutput.getValue().isLessThan(Restrictions.getMinNonDustOutput())) {
-                dust = dust.add(transactionOutput.getValue());
-                log.info("dust TXO = {}", transactionOutput.toString());
-            }
-        }
-        return dust;
     }
 }
 

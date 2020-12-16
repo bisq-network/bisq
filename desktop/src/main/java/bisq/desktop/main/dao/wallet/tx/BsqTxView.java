@@ -266,7 +266,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    // If chain height from wallet of from the BSQ blockchain parsing changed we update our state.
+    // If chain height from wallet or from the BSQ blockchain parsing changed we update our state.
     private void onUpdateAnyChainHeight() {
         int currentBlockHeight = daoFacade.getChainHeight();
         if (walletChainHeight > 0) {
@@ -276,8 +276,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
             chainSyncIndicator.setVisible(!synced);
             chainSyncIndicator.setManaged(!synced);
             if (synced) {
-                chainHeightLabel.setText(Res.get("dao.wallet.chainHeightSynced",
-                        currentBlockHeight));
+                chainHeightLabel.setText(Res.get("dao.wallet.chainHeightSynced", currentBlockHeight));
             } else {
                 chainSyncIndicator.setProgress(progress);
                 if (walletChainHeight > currentBlockHeight) {
@@ -287,12 +286,13 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                             currentBlockHeight,
                             walletChainHeight));
                 } else {
-                    // But when restoring from seed, we receive the latest block height
-                    // from the seed nodes while BitcoinJ has not received all blocks yet and
-                    // is still syncing
-                    chainHeightLabel.setText(Res.get("dao.wallet.chainHeightSyncing",
-                            walletChainHeight,
-                            currentBlockHeight));
+                    // Our wallet chain height is behind our BSQ chain height. That can be the case at SPV resync or if
+                    // we updated manually our DaoStateStore with a newer version. We do not want to show sync state
+                    // as we do not know at that moment if we are missing blocks. Once Btc wallet has synced we will
+                    // trigger a check and request more blocks in case we are the lite node.
+                    chainSyncIndicator.setVisible(false);
+                    chainSyncIndicator.setManaged(false);
+                    chainHeightLabel.setText(Res.get("dao.wallet.chainHeightSynced", currentBlockHeight));
                 }
             }
         } else {

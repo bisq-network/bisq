@@ -194,10 +194,9 @@ public class TradeWalletService {
             return tradingFeeTx;
         } catch (Throwable t) {
             if (wallet != null && sendRequest != null && sendRequest.coinSelector != null) {
-                log.warn("Balance = {}; CoinSelector = {}", wallet.getBalance(sendRequest.coinSelector), sendRequest.coinSelector);
+                log.error("Balance = {}; CoinSelector = {}", wallet.getBalance(sendRequest.coinSelector), sendRequest.coinSelector);
             }
-
-            log.warn("createBtcTradingFeeTx failed: tradingFeeTx={}, txOutputs={}", tradingFeeTx.toString(),
+            log.error("createBtcTradingFeeTx failed: tradingFeeTx={}, txOutputs={}", tradingFeeTx.toString(),
                     tradingFeeTx.getOutputs());
             throw t;
         }
@@ -211,83 +210,88 @@ public class TradeWalletService {
                                                boolean useSavingsWallet,
                                                Coin txFee)
             throws TransactionVerificationException, WalletException, InsufficientMoneyException, AddressFormatException {
-        // preparedBsqTx has following structure:
-        // inputs [1-n] BSQ inputs
-        // outputs [0-1] BSQ change output
-        // mining fee: burned BSQ fee
+        try {
+            // preparedBsqTx has following structure:
+            // inputs [1-n] BSQ inputs
+            // outputs [0-1] BSQ change output
+            // mining fee: burned BSQ fee
 
-        // We add BTC mining fee. Result tx looks like:
-        // inputs [1-n] BSQ inputs
-        // inputs [1-n] BTC inputs
-        // outputs [0-1] BSQ change output
-        // outputs [1] BTC reservedForTrade output
-        // outputs [0-1] BTC change output
-        // mining fee: BTC mining fee + burned BSQ fee
+            // We add BTC mining fee. Result tx looks like:
+            // inputs [1-n] BSQ inputs
+            // inputs [1-n] BTC inputs
+            // outputs [0-1] BSQ change output
+            // outputs [1] BTC reservedForTrade output
+            // outputs [0-1] BTC change output
+            // mining fee: BTC mining fee + burned BSQ fee
 
-        // In case all BSQ were burnt as fees we have no receiver output and it might be that there are no change outputs
-        // We need to guarantee that min. 1 valid output is added (OP_RETURN does not count). So we use a higher input
-        // for BTC to force an additional change output.
+            // In case all BSQ were burnt as fees we have no receiver output and it might be that there are no change outputs
+            // We need to guarantee that min. 1 valid output is added (OP_RETURN does not count). So we use a higher input
+            // for BTC to force an additional change output.
 
-        final int preparedBsqTxInputsSize = preparedBsqTx.getInputs().size();
-        final boolean hasBsqOutputs = !preparedBsqTx.getOutputs().isEmpty();
+            final int preparedBsqTxInputsSize = preparedBsqTx.getInputs().size();
+            final boolean hasBsqOutputs = !preparedBsqTx.getOutputs().isEmpty();
 
-        // If there are no BSQ change outputs an output larger than the burnt BSQ amount has to be added as the first
-        // output to make sure the reserved funds are in output 1, deposit tx input creation depends on the reserve
-        // being output 1. The amount has to be larger than the BSQ input to make sure the inputs get burnt.
-        // The BTC changeAddress is used, so it might get used for both output 0 and output 2.
-        if (!hasBsqOutputs) {
-            var bsqInputValue = preparedBsqTx.getInputs().stream()
-                    .map(TransactionInput::getValue)
-                    .reduce(Coin.valueOf(0), Coin::add);
+            // If there are no BSQ change outputs an output larger than the burnt BSQ amount has to be added as the first
+            // output to make sure the reserved funds are in output 1, deposit tx input creation depends on the reserve
+            // being output 1. The amount has to be larger than the BSQ input to make sure the inputs get burnt.
+            // The BTC changeAddress is used, so it might get used for both output 0 and output 2.
+            if (!hasBsqOutputs) {
+                var bsqInputValue = preparedBsqTx.getInputs().stream()
+                        .map(TransactionInput::getValue)
+                        .reduce(Coin.valueOf(0), Coin::add);
 
-            preparedBsqTx.addOutput(bsqInputValue.add(Coin.valueOf(1)), changeAddress);
+                preparedBsqTx.addOutput(bsqInputValue.add(Coin.valueOf(1)), changeAddress);
+            }
+            // the reserved amount we need for the trade we send to our trade reservedForTradeAddress
+            preparedBsqTx.addOutput(reservedFundsForOffer, reservedForTradeAddress);
+
+            // we allow spending of unconfirmed tx (double spend risk is low and usability would suffer if we need to
+            // wait for 1 confirmation)
+            // In case of double spend we will detect later in the trade process and use a ban score to penalize bad behaviour (not impl. yet)
+
+            SendRequest sendRequest = SendRequest.forTx(preparedBsqTx);
+            sendRequest.shuffleOutputs = false;
+            sendRequest.aesKey = aesKey;
+            if (useSavingsWallet) {
+                sendRequest.coinSelector = new BtcCoinSelector(walletsSetup.getAddressesByContext(AddressEntry.Context.AVAILABLE),
+                        preferences.getIgnoreDustThreshold());
+            } else {
+                sendRequest.coinSelector = new BtcCoinSelector(fundingAddress, preferences.getIgnoreDustThreshold());
+            }
+            // We use a fixed fee
+            sendRequest.fee = txFee;
+            sendRequest.feePerKb = Coin.ZERO;
+            sendRequest.ensureMinRequiredFee = false;
+
+            sendRequest.signInputs = false;
+
+            // Change is optional in case of overpay or use of funds from savings wallet
+            sendRequest.changeAddress = changeAddress;
+
+            checkNotNull(wallet, "Wallet must not be null");
+            wallet.completeTx(sendRequest);
+            Transaction resultTx = sendRequest.tx;
+            removeDust(resultTx);
+
+            // Sign all BTC inputs
+            for (int i = preparedBsqTxInputsSize; i < resultTx.getInputs().size(); i++) {
+                TransactionInput txIn = resultTx.getInputs().get(i);
+                checkArgument(txIn.getConnectedOutput() != null &&
+                                txIn.getConnectedOutput().isMine(wallet),
+                        "txIn.getConnectedOutput() is not in our wallet. That must not happen.");
+                WalletService.signTransactionInput(wallet, aesKey, resultTx, txIn, i);
+                WalletService.checkScriptSig(resultTx, txIn, i);
+            }
+
+            WalletService.checkWalletConsistency(wallet);
+            WalletService.verifyTransaction(resultTx);
+
+            WalletService.printTx(Res.getBaseCurrencyCode() + " wallet: Signed tx", resultTx);
+            return resultTx;
+        } catch (Throwable t) {
+            log.error("completeBsqTradingFeeTx: preparedBsqTx={}", preparedBsqTx.toString());
+            throw t;
         }
-        // the reserved amount we need for the trade we send to our trade reservedForTradeAddress
-        preparedBsqTx.addOutput(reservedFundsForOffer, reservedForTradeAddress);
-
-        // we allow spending of unconfirmed tx (double spend risk is low and usability would suffer if we need to
-        // wait for 1 confirmation)
-        // In case of double spend we will detect later in the trade process and use a ban score to penalize bad behaviour (not impl. yet)
-
-        SendRequest sendRequest = SendRequest.forTx(preparedBsqTx);
-        sendRequest.shuffleOutputs = false;
-        sendRequest.aesKey = aesKey;
-        if (useSavingsWallet) {
-            sendRequest.coinSelector = new BtcCoinSelector(walletsSetup.getAddressesByContext(AddressEntry.Context.AVAILABLE),
-                    preferences.getIgnoreDustThreshold());
-        } else {
-            sendRequest.coinSelector = new BtcCoinSelector(fundingAddress, preferences.getIgnoreDustThreshold());
-        }
-        // We use a fixed fee
-        sendRequest.fee = txFee;
-        sendRequest.feePerKb = Coin.ZERO;
-        sendRequest.ensureMinRequiredFee = false;
-
-        sendRequest.signInputs = false;
-
-        // Change is optional in case of overpay or use of funds from savings wallet
-        sendRequest.changeAddress = changeAddress;
-
-        checkNotNull(wallet, "Wallet must not be null");
-        wallet.completeTx(sendRequest);
-        Transaction resultTx = sendRequest.tx;
-        removeDust(resultTx);
-
-        // Sign all BTC inputs
-        for (int i = preparedBsqTxInputsSize; i < resultTx.getInputs().size(); i++) {
-            TransactionInput txIn = resultTx.getInputs().get(i);
-            checkArgument(txIn.getConnectedOutput() != null &&
-                            txIn.getConnectedOutput().isMine(wallet),
-                    "txIn.getConnectedOutput() is not in our wallet. That must not happen.");
-            WalletService.signTransactionInput(wallet, aesKey, resultTx, txIn, i);
-            WalletService.checkScriptSig(resultTx, txIn, i);
-        }
-
-        WalletService.checkWalletConsistency(wallet);
-        WalletService.verifyTransaction(resultTx);
-
-        WalletService.printTx(Res.getBaseCurrencyCode() + " wallet: Signed tx", resultTx);
-        return resultTx;
     }
 
 
@@ -565,19 +569,21 @@ public class TradeWalletService {
      * @param takerIsSeller             the flag indicating if we are in the taker as seller role or the opposite
      * @param contractHash              the hash of the contract to be added to the OP_RETURN output
      * @param makersDepositTxSerialized the prepared deposit transaction signed by the maker
+     * @param msOutputAmount            the MultiSig output amount, as determined by the taker
      * @param buyerInputs               the connected outputs for all inputs of the buyer
      * @param sellerInputs              the connected outputs for all inputs of the seller
      * @param buyerPubKey               the public key of the buyer
      * @param sellerPubKey              the public key of the seller
      * @throws SigningException if (one of) the taker input(s) was of an unrecognized type for signing
      * @throws TransactionVerificationException if a non-P2WH maker-as-buyer input wasn't signed, the maker's MultiSig
-     * script or contract hash doesn't match the taker's, or there was an unexpected problem with the final deposit tx
-     * or its signatures
+     * script, contract hash or output amount doesn't match the taker's, or there was an unexpected problem with the
+     * final deposit tx or its signatures
      * @throws WalletException if the taker's wallet is null or structurally inconsistent
      */
     public Transaction takerSignsDepositTx(boolean takerIsSeller,
                                            byte[] contractHash,
                                            byte[] makersDepositTxSerialized,
+                                           Coin msOutputAmount,
                                            List<RawTransactionInput> buyerInputs,
                                            List<RawTransactionInput> sellerInputs,
                                            byte[] buyerPubKey,
@@ -588,10 +594,15 @@ public class TradeWalletService {
         checkArgument(!buyerInputs.isEmpty());
         checkArgument(!sellerInputs.isEmpty());
 
-        // Check if maker's MultiSig script is identical to the takers
+        // Check if maker's MultiSig script is identical to the taker's
         Script hashedMultiSigOutputScript = get2of2MultiSigOutputScript(buyerPubKey, sellerPubKey, false);
         if (!makersDepositTx.getOutput(0).getScriptPubKey().equals(hashedMultiSigOutputScript)) {
-            throw new TransactionVerificationException("Maker's hashedMultiSigOutputScript does not match to takers hashedMultiSigOutputScript");
+            throw new TransactionVerificationException("Maker's hashedMultiSigOutputScript does not match taker's hashedMultiSigOutputScript");
+        }
+
+        // Check if maker's MultiSig output value is identical to the taker's
+        if (!makersDepositTx.getOutput(0).getValue().equals(msOutputAmount)) {
+            throw new TransactionVerificationException("Maker's MultiSig output amount does not match taker's MultiSig output amount");
         }
 
         // The outpoints are not available from the serialized makersDepositTx, so we cannot use that tx directly, but we use it to construct a new
@@ -642,7 +653,7 @@ public class TradeWalletService {
         TransactionOutput makersContractHashOutput = makersDepositTx.getOutputs().get(1);
         log.debug("makersContractHashOutput {}", makersContractHashOutput);
         if (!makersContractHashOutput.getScriptPubKey().equals(contractHashOutput.getScriptPubKey())) {
-            throw new TransactionVerificationException("Maker's transaction output for the contract hash is not matching takers version.");
+            throw new TransactionVerificationException("Maker's transaction output for the contract hash is not matching taker's version.");
         }
 
         // Add all outputs from makersDepositTx to depositTx
@@ -735,7 +746,7 @@ public class TradeWalletService {
         Sha256Hash sigHash;
         Coin delayedPayoutTxInputValue = preparedDepositTx.getOutput(0).getValue();
         sigHash = delayedPayoutTx.hashForWitnessSignature(0, redeemScript,
-                                    delayedPayoutTxInputValue, Transaction.SigHash.ALL, false);
+                delayedPayoutTxInputValue, Transaction.SigHash.ALL, false);
         checkNotNull(myMultiSigKeyPair, "myMultiSigKeyPair must not be null");
         if (myMultiSigKeyPair.isEncrypted()) {
             checkNotNull(aesKey);
@@ -1065,8 +1076,8 @@ public class TradeWalletService {
         // Take care of order of signatures. See comment below at getMultiSigRedeemScript (sort order needed here: arbitrator, seller, buyer)
         if (hashedMultiSigOutputIsLegacy) {
             Script inputScript = ScriptBuilder.createP2SHMultiSigInputScript(
-                                                        ImmutableList.of(arbitratorTxSig, tradersTxSig),
-                                                        redeemScript);
+                    ImmutableList.of(arbitratorTxSig, tradersTxSig),
+                    redeemScript);
             input.setScriptSig(inputScript);
         } else {
             input.setScriptSig(ScriptBuilder.createEmpty());
@@ -1104,7 +1115,7 @@ public class TradeWalletService {
         byte[] sellerPubKey = ECKey.fromPublicOnly(Utils.HEX.decode(sellerPubKeyAsHex)).getPubKey();
 
         Script hashedMultiSigOutputScript = get2of2MultiSigOutputScript(buyerPubKey, sellerPubKey,
-                                                                        hashedMultiSigOutputIsLegacy);
+                hashedMultiSigOutputIsLegacy);
 
         Coin msOutputValue = buyerPayoutAmount.add(sellerPayoutAmount).add(txFee);
         TransactionOutput hashedMultiSigOutput = new TransactionOutput(params, null, msOutputValue, hashedMultiSigOutputScript.getProgram());
@@ -1113,7 +1124,7 @@ public class TradeWalletService {
 
         Transaction payoutTx = new Transaction(params);
         Sha256Hash spendTxHash = Sha256Hash.wrap(depositTxHex);
-        payoutTx.addInput(new TransactionInput(params, depositTx, null, new TransactionOutPoint(params, 0, spendTxHash), msOutputValue));
+        payoutTx.addInput(new TransactionInput(params, payoutTx, new byte[]{}, new TransactionOutPoint(params, 0, spendTxHash), msOutputValue));
 
         if (buyerPayoutAmount.isPositive()) {
             payoutTx.addOutput(buyerPayoutAmount, Address.fromString(params, buyerAddressString));
@@ -1147,7 +1158,7 @@ public class TradeWalletService {
         TransactionInput input = payoutTx.getInput(0);
         if (hashedMultiSigOutputIsLegacy) {
             Script inputScript = ScriptBuilder.createP2SHMultiSigInputScript(ImmutableList.of(sellerTxSig, buyerTxSig),
-                                                                             redeemScript);
+                    redeemScript);
             input.setScriptSig(inputScript);
         } else {
             input.setScriptSig(ScriptBuilder.createEmpty());

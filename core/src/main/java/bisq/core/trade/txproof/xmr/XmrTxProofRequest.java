@@ -197,6 +197,11 @@ class XmrTxProofRequest implements AssetTxProofRequest<XmrTxProofRequest.Result>
             return;
         }
 
+        if (httpClient.hasPendingRequest()) {
+            log.warn("We have a pending request open. We ignore that request. httpClient {}", httpClient);
+            return;
+        }
+
         // Timeout handing is delegated to the connection timeout handling in httpClient.
 
         ListenableFuture<Result> future = executorService.submit(() -> {
@@ -206,7 +211,7 @@ class XmrTxProofRequest implements AssetTxProofRequest<XmrTxProofRequest.Result>
                     "&viewkey=" + model.getTxKey() +
                     "&txprove=1";
             log.info("Param {} for {}", param, this);
-            String json = httpClient.requestWithGET(param, "User-Agent", "bisq/" + Version.VERSION);
+            String json = httpClient.get(param, "User-Agent", "bisq/" + Version.VERSION);
             try {
                 String prettyJson = new GsonBuilder().setPrettyPrinting().create().toJson(new JsonParser().parse(json));
                 log.info("Response json from {}\n{}", this, prettyJson);

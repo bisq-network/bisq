@@ -25,6 +25,7 @@ import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
+import bisq.core.trade.Trade;
 import bisq.core.user.Preferences;
 
 import bisq.common.UserThread;
@@ -85,6 +86,8 @@ public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
     private int numTrades;
     private ChangeListener<Boolean> focusListener;
     private final PrivateNotificationManager privateNotificationManager;
+    @Nullable
+    private final Trade trade;
     private final Offer offer;
     private final Preferences preferences;
     private EventHandler<KeyEvent> keyEventEventHandler;
@@ -99,10 +102,12 @@ public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
     private String signAgeInfo;
 
     public PeerInfoWithTagEditor(PrivateNotificationManager privateNotificationManager,
+                                 @Nullable Trade trade,
                                  Offer offer,
                                  Preferences preferences,
                                  boolean useDevPrivilegeKeys) {
         this.privateNotificationManager = privateNotificationManager;
+        this.trade = trade;
         this.offer = offer;
         this.preferences = preferences;
         this.useDevPrivilegeKeys = useDevPrivilegeKeys;
@@ -244,13 +249,20 @@ public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
                 // otherwise the text input handler does not work.
                 doClose();
                 UserThread.runAfter(() -> {
-                    //TODO only taker could send msg as maker would use its own key from offer....
-                    new SendPrivateNotificationWindow(
-                            privateNotificationManager,
-                            offer.getPubKeyRing(),
-                            offer.getMakerNodeAddress(),
-                            useDevPrivilegeKeys
-                    ).show();
+                    PubKeyRing peersPubKeyRing = null;
+                    if (trade != null) {
+                        peersPubKeyRing = trade.getProcessModel().getTradingPeer().getPubKeyRing();
+                    } else if (offer != null) {
+                        peersPubKeyRing = offer.getPubKeyRing();
+                    }
+                    if (peersPubKeyRing != null) {
+                        new SendPrivateNotificationWindow(
+                                privateNotificationManager,
+                                peersPubKeyRing,
+                                offer.getMakerNodeAddress(),
+                                useDevPrivilegeKeys
+                        ).show();
+                    }
                 }, 100, TimeUnit.MILLISECONDS);
             }
         };

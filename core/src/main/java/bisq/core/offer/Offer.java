@@ -109,6 +109,11 @@ public class Offer implements NetworkPayload, PersistablePayload {
     @Setter
     transient private PriceFeedService priceFeedService;
 
+    // Used only as cache
+    @Nullable
+    @JsonExclude
+    transient private String currencyCode;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -346,8 +351,9 @@ public class Offer implements NetworkPayload, PersistablePayload {
 
 
     public Optional<String> getAccountAgeWitnessHashAsHex() {
-        if (getExtraDataMap() != null && getExtraDataMap().containsKey(OfferPayload.ACCOUNT_AGE_WITNESS_HASH))
-            return Optional.of(getExtraDataMap().get(OfferPayload.ACCOUNT_AGE_WITNESS_HASH));
+        Map<String, String> extraDataMap = getExtraDataMap();
+        if (extraDataMap != null && extraDataMap.containsKey(OfferPayload.ACCOUNT_AGE_WITNESS_HASH))
+            return Optional.of(extraDataMap.get(OfferPayload.ACCOUNT_AGE_WITNESS_HASH));
         else
             return Optional.empty();
     }
@@ -421,9 +427,14 @@ public class Offer implements NetworkPayload, PersistablePayload {
     }
 
     public String getCurrencyCode() {
-        return offerPayload.getBaseCurrencyCode().equals("BTC") ?
+        if (currencyCode != null) {
+            return currencyCode;
+        }
+
+        currencyCode = offerPayload.getBaseCurrencyCode().equals("BTC") ?
                 offerPayload.getCounterCurrencyCode() :
                 offerPayload.getBaseCurrencyCode();
+        return currencyCode;
     }
 
     public long getProtocolVersion() {

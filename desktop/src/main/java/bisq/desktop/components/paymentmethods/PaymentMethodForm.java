@@ -218,7 +218,7 @@ public abstract class PaymentMethodForm {
                 AccountAgeWitnessService.SignState signState =
                         accountAgeWitnessService.getSignState(myWitness);
 
-                accountSigningStateText = StringUtils.capitalize(signState.getPresentation());
+                accountSigningStateText = StringUtils.capitalize(signState.getDisplayString());
 
                 long daysSinceSigning = TimeUnit.MILLISECONDS.toDays(
                         accountAgeWitnessService.getWitnessSignAge(myWitness, new Date()));

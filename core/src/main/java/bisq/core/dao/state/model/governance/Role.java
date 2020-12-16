@@ -46,6 +46,9 @@ public final class Role implements PersistablePayload, NetworkPayload, BondedAss
     private final String link;
     private final BondedRoleType bondedRoleType;
 
+    // Only used as cache
+    transient private final byte[] hash;
+
     /**
      * @param name                      Full name or nickname
      * @param link                      GitHub account or forum account of user
@@ -74,6 +77,8 @@ public final class Role implements PersistablePayload, NetworkPayload, BondedAss
         this.name = name;
         this.link = link;
         this.bondedRoleType = bondedRoleType;
+
+        hash = Hash.getSha256Ripemd160hash(toProtoMessage().toByteArray());
     }
 
     @Override
@@ -100,8 +105,7 @@ public final class Role implements PersistablePayload, NetworkPayload, BondedAss
 
     @Override
     public byte[] getHash() {
-        byte[] bytes = toProtoMessage().toByteArray();
-        return Hash.getSha256Ripemd160hash(bytes);
+        return hash;
     }
 
     @Override

@@ -54,6 +54,7 @@ public class CancelOfferTest extends AbstractOfferTest {
                 .setMarketPriceMargin(0.00)
                 .setPrice("0")
                 .setBuyerSecurityDeposit(Restrictions.getDefaultBuyerSecurityDepositAsPercent())
+                .setMakerFeeCurrencyCode("bsq")
                 .build();
 
         // Create some offers.

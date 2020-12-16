@@ -34,7 +34,6 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 
 
-import bisq.apitest.method.CreatePaymentAccountTest;
 import bisq.apitest.method.GetVersionTest;
 import bisq.apitest.method.MethodTest;
 import bisq.apitest.method.RegisterDisputeAgentsTest;
@@ -69,13 +68,6 @@ public class StartupTest extends MethodTest {
         test.testInvalidRegistrationKeyArgShouldThrowException();
         test.testRegisterMediator();
         test.testRegisterRefundAgent();
-    }
-
-    @Test
-    @Order(3)
-    public void testCreatePaymentAccount() {
-        CreatePaymentAccountTest test = new CreatePaymentAccountTest();
-        test.testCreatePerfectMoneyUSDPaymentAccount();
     }
 
     @AfterAll

@@ -119,9 +119,8 @@ public class CreateOfferService {
                         "amount={}, \n" +
                         "minAmount={}, \n" +
                         "buyerSecurityDeposit={}, \n" +
-                        "paymentAccount={}, \n",
-                offerId, currencyCode, direction, price.getValue(), useMarketBasedPrice, marketPriceMargin,
-                amount.value, minAmount.value, buyerSecurityDepositAsDouble, paymentAccount);
+                        offerId, currencyCode, direction, price.getValue(), useMarketBasedPrice, marketPriceMargin,
+                amount.value, minAmount.value, buyerSecurityDepositAsDouble);
 
         // prints our param list for dev testing api
         log.info("{} " +

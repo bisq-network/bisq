@@ -17,9 +17,11 @@
 
 package bisq.core.provider.fee;
 
+import bisq.core.provider.FeeHttpClient;
 import bisq.core.provider.HttpClientProvider;
-import bisq.core.provider.PriceNodeHttpClient;
 import bisq.core.provider.ProvidersRepository;
+
+import bisq.network.http.HttpClient;
 
 import bisq.common.app.Version;
 import bisq.common.util.Tuple2;
@@ -40,12 +42,12 @@ import lombok.extern.slf4j.Slf4j;
 public class FeeProvider extends HttpClientProvider {
 
     @Inject
-    public FeeProvider(PriceNodeHttpClient httpClient, ProvidersRepository providersRepository) {
+    public FeeProvider(FeeHttpClient httpClient, ProvidersRepository providersRepository) {
         super(httpClient, providersRepository.getBaseUrl(), false);
     }
 
     public Tuple2<Map<String, Long>, Map<String, Long>> getFees() throws IOException {
-        String json = httpClient.requestWithGET("getFees", "User-Agent", "bisq/" + Version.VERSION);
+        String json = httpClient.get("getFees", "User-Agent", "bisq/" + Version.VERSION);
 
         LinkedTreeMap<?, ?> linkedTreeMap = new Gson().fromJson(json, LinkedTreeMap.class);
         Map<String, Long> tsMap = new HashMap<>();
@@ -63,5 +65,9 @@ public class FeeProvider extends HttpClientProvider {
             t.printStackTrace();
         }
         return new Tuple2<>(tsMap, map);
+    }
+
+    public HttpClient getHttpClient() {
+        return httpClient;
     }
 }

@@ -20,6 +20,7 @@ package bisq.core.api;
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.offer.Offer;
+import bisq.core.offer.OfferUtil;
 import bisq.core.offer.takeoffer.TakeOfferModel;
 import bisq.core.trade.Tradable;
 import bisq.core.trade.Trade;
@@ -40,6 +41,8 @@ import java.util.function.Consumer;
 
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
+
 import static bisq.core.btc.model.AddressEntry.Context.TRADE_PAYOUT;
 import static java.lang.String.format;
 
@@ -52,6 +55,7 @@ class CoreTradesService {
     private final CoreWalletsService coreWalletsService;
 
     private final BtcWalletService btcWalletService;
+    private final OfferUtil offerUtil;
     private final ClosedTradableManager closedTradableManager;
     private final TakeOfferModel takeOfferModel;
     private final TradeManager tradeManager;
@@ -61,6 +65,7 @@ class CoreTradesService {
     @Inject
     public CoreTradesService(CoreWalletsService coreWalletsService,
                              BtcWalletService btcWalletService,
+                             OfferUtil offerUtil,
                              ClosedTradableManager closedTradableManager,
                              TakeOfferModel takeOfferModel,
                              TradeManager tradeManager,
@@ -68,6 +73,7 @@ class CoreTradesService {
                              User user) {
         this.coreWalletsService = coreWalletsService;
         this.btcWalletService = btcWalletService;
+        this.offerUtil = offerUtil;
         this.closedTradableManager = closedTradableManager;
         this.takeOfferModel = takeOfferModel;
         this.tradeManager = tradeManager;
@@ -77,7 +83,11 @@ class CoreTradesService {
 
     void takeOffer(Offer offer,
                    String paymentAccountId,
+                   String takerFeeCurrencyCode,
                    Consumer<Trade> resultHandler) {
+
+        offerUtil.maybeSetFeePaymentCurrencyPreference(takerFeeCurrencyCode);
+
         var paymentAccount = user.getPaymentAccount(paymentAccountId);
         if (paymentAccount == null)
             throw new IllegalArgumentException(format("payment account with id '%s' not found", paymentAccountId));
@@ -146,7 +156,7 @@ class CoreTradesService {
         tradeManager.onTradeCompleted(trade);
     }
 
-    void withdrawFunds(String tradeId, String toAddress) {
+    void withdrawFunds(String tradeId, String toAddress, @Nullable String memo) {
         // An encrypted wallet must be unlocked for this operation.
         verifyTradeIsNotClosed(tradeId);
         var trade = getOpenTrade(tradeId).orElseThrow(() ->
@@ -176,6 +186,7 @@ class CoreTradesService {
                 fee,
                 coreWalletsService.getKey(),
                 trade,
+                memo,
                 () -> {
                 },
                 (errorMessage, throwable) -> {

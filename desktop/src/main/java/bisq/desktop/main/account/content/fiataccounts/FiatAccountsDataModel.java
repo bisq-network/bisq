@@ -91,7 +91,7 @@ class FiatAccountsDataModel extends ActivatableDataModel {
                     .filter(paymentAccount -> !paymentAccount.getPaymentMethod().isAsset())
                     .collect(Collectors.toList());
             paymentAccounts.setAll(list);
-            paymentAccounts.sort(Comparator.comparing(PaymentAccount::getCreationDate));
+            paymentAccounts.sort(Comparator.comparing(PaymentAccount::getAccountName));
         }
     }
 
@@ -159,5 +159,9 @@ class FiatAccountsDataModel extends ActivatableDataModel {
 
     public void importAccounts(Stage stage) {
         GUIUtil.importAccounts(user, accountsFileName, preferences, stage, persistenceProtoResolver, corruptedStorageFileHandler);
+    }
+
+    public int getNumPaymentAccounts() {
+        return user.getPaymentAccounts() != null ? user.getPaymentAccounts().size() : 0;
     }
 }

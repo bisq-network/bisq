@@ -24,60 +24,65 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.TestMethodOrder;
 
 import static bisq.apitest.Scaffold.BitcoinCoreApp.bitcoind;
 import static bisq.apitest.config.BisqAppConfig.alicedaemon;
+import static bisq.apitest.config.BisqAppConfig.arbdaemon;
+import static bisq.apitest.config.BisqAppConfig.bobdaemon;
 import static bisq.apitest.config.BisqAppConfig.seednode;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.fail;
 
 
 
 import bisq.apitest.method.MethodTest;
-import bisq.apitest.method.WalletProtectionTest;
+import bisq.apitest.method.wallet.BsqWalletTest;
+import bisq.apitest.method.wallet.BtcTxFeeRateTest;
+import bisq.apitest.method.wallet.BtcWalletTest;
+import bisq.apitest.method.wallet.WalletProtectionTest;
 
 @Slf4j
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class WalletTest extends MethodTest {
 
-    // All tests depend on the DAO / regtest environment, and Alice's wallet is
-    // initialized with 10 BTC during the scaffolding setup.
+    // Batching all wallet tests in this test case reduces scaffold setup
+    // time.  Here, we create a method WalletProtectionTest instance and run each
+    // test in declared order.
 
     @BeforeAll
     public static void setUp() {
-        try {
-            setUpScaffold(bitcoind, seednode, alicedaemon);
-            genBtcBlocksThenWait(1, 1500);
-        } catch (Exception ex) {
-            fail(ex);
-        }
+        startSupportingApps(true,
+                true,
+                bitcoind,
+                seednode,
+                arbdaemon,
+                alicedaemon,
+                bobdaemon);
     }
 
     @Test
     @Order(1)
-    public void testFundWallet() {
-        // The regtest Bisq wallet was initialized with 10 BTC.
-        long balance = getBalance(alicedaemon);
-        assertEquals(1000000000, balance);
+    public void testBtcWalletFunding(final TestInfo testInfo) {
+        BtcWalletTest btcWalletTest = new BtcWalletTest();
 
-        String unusedAddress = getUnusedBtcAddress(alicedaemon);
-        bitcoinCli.sendToAddress(unusedAddress, "2.5");
-
-        bitcoinCli.generateBlocks(1);
-        sleep(1500);
-
-        balance = getBalance(alicedaemon);
-        assertEquals(1250000000L, balance); // new balance is 12.5 btc
+        btcWalletTest.testInitialBtcBalances(testInfo);
+        btcWalletTest.testFundAlicesBtcWallet(testInfo);
     }
 
     @Test
     @Order(2)
-    public void testWalletProtection() {
-        // Batching all wallet tests in this test case reduces scaffold setup
-        // time.  Here, we create a method WalletProtectionTest instance and run each
-        // test in declared order.
+    public void testBsqWalletFunding(final TestInfo testInfo) {
+        BsqWalletTest bsqWalletTest = new BsqWalletTest();
 
+        bsqWalletTest.testGetUnusedBsqAddress();
+        bsqWalletTest.testInitialBsqBalances(testInfo);
+        bsqWalletTest.testSendBsqAndCheckBalancesBeforeGeneratingBtcBlock(testInfo);
+        bsqWalletTest.testBalancesAfterSendingBsqAndGeneratingBtcBlock(testInfo);
+    }
+
+    @Test
+    @Order(3)
+    public void testWalletProtection() {
         WalletProtectionTest walletProtectionTest = new WalletProtectionTest();
 
         walletProtectionTest.testSetWalletPassword();
@@ -90,6 +95,16 @@ public class WalletTest extends MethodTest {
         walletProtectionTest.testSetNewWalletPassword();
         walletProtectionTest.testSetNewWalletPasswordWithIncorrectNewPasswordShouldThrowException();
         walletProtectionTest.testRemoveNewWalletPassword();
+    }
+
+    @Test
+    @Order(4)
+    public void testTxFeeRateMethods(final TestInfo testInfo) {
+        BtcTxFeeRateTest test = new BtcTxFeeRateTest();
+
+        test.testGetTxFeeRate(testInfo);
+        test.testSetTxFeeRate(testInfo);
+        test.testUnsetTxFeeRate(testInfo);
     }
 
     @AfterAll

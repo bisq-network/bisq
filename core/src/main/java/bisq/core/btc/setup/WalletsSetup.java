@@ -242,14 +242,16 @@ public class WalletsSetup {
                     return message;
                 });
 
-                chainHeight.set(chain.getBestChainHeight());
                 chain.addNewBestBlockListener(block -> {
-                    connectedPeers.set(peerGroup.getConnectedPeers());
-                    chainHeight.set(block.getHeight());
+                    UserThread.execute(() -> {
+                        connectedPeers.set(peerGroup.getConnectedPeers());
+                        chainHeight.set(block.getHeight());
+                    });
                 });
 
                 // Map to user thread
                 UserThread.execute(() -> {
+                    chainHeight.set(chain.getBestChainHeight());
                     addressEntryList.onWalletReady(walletConfig.btcWallet());
                     timeoutTimer.stop();
                     setupCompletedHandlers.forEach(Runnable::run);
@@ -488,7 +490,7 @@ public class WalletsSetup {
 
     @Nullable
     public BlockChain getChain() {
-        return walletConfig != null ? walletConfig.chain() : null;
+        return walletConfig != null && walletConfig.stateStartingOrRunning() ? walletConfig.chain() : null;
     }
 
     public PeerGroup getPeerGroup() {
