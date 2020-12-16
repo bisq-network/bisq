@@ -50,7 +50,8 @@ public class PasswordAuthInterceptor implements ServerInterceptor {
     }
 
     @Override
-    public <ReqT, RespT> ServerCall.Listener<ReqT> interceptCall(ServerCall<ReqT, RespT> serverCall, Metadata headers,
+    public <ReqT, RespT> ServerCall.Listener<ReqT> interceptCall(ServerCall<ReqT, RespT> serverCall,
+                                                                 Metadata headers,
                                                                  ServerCallHandler<ReqT, RespT> serverCallHandler) {
         var actualPasswordValue = headers.get(Key.of(PASSWORD_KEY, ASCII_STRING_MARSHALLER));
 
