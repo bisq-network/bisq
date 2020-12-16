@@ -31,6 +31,10 @@ import java.io.UncheckedIOException;
 
 import lombok.extern.slf4j.Slf4j;
 
+
+
+import bisq.daemon.grpc.interceptor.PasswordAuthInterceptor;
+
 @Singleton
 @Slf4j
 public class GrpcServer {

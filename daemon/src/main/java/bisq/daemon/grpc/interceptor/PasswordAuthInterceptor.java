@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.daemon.grpc;
+package bisq.daemon.grpc.interceptor;
 
 import bisq.common.config.Config;
 
@@ -38,7 +38,7 @@ import static java.lang.String.format;
  *
  * @see bisq.common.config.Config#apiPassword
  */
-class PasswordAuthInterceptor implements ServerInterceptor {
+public class PasswordAuthInterceptor implements ServerInterceptor {
 
     private static final String PASSWORD_KEY = "password";
 
