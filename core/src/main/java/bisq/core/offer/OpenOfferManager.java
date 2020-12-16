@@ -876,24 +876,26 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         }
 
         List<OpenOffer> openOffersList = new ArrayList<>(openOffers.getList());
-        republishOffers(openOffersList);
+        processListForRepublishOffers(openOffersList);
 
         stopPeriodicRefreshOffersTimer();
     }
 
-    private void republishOffers(List<OpenOffer> list) {
+    private void processListForRepublishOffers(List<OpenOffer> list) {
         if (list.isEmpty()) {
             return;
         }
 
         OpenOffer openOffer = list.remove(0);
-        if (!openOffers.contains(openOffer) || openOffer.isDeactivated()) {
-            republishOffers(list);
+        if (openOffers.contains(openOffer) && !openOffer.isDeactivated()) {
+            republishOffer(openOffer,
+                    () -> UserThread.runAfter(() -> processListForRepublishOffers(list),
+                            30, TimeUnit.MILLISECONDS));
+        } else {
+            // If the offer was removed in the meantime or if its deactivated we skip and call
+            // processListForRepublishOffers again with the list where we removed the offer already.
+            processListForRepublishOffers(list);
         }
-
-        republishOffer(openOffer,
-                () -> UserThread.runAfter(() -> republishOffers(list),
-                        30, TimeUnit.MILLISECONDS));
     }
 
     private void republishOffer(OpenOffer openOffer) {
