@@ -63,7 +63,6 @@ import bisq.common.app.Version;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
 import bisq.common.util.MathUtils;
-import bisq.common.util.Tuple2;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;
@@ -96,6 +95,8 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
+
+import javax.annotation.Nullable;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -138,6 +139,9 @@ class OfferBookViewModel extends ActivatableViewModel {
     final IntegerProperty maxPlacesForPrice = new SimpleIntegerProperty();
     final IntegerProperty maxPlacesForMarketPriceMargin = new SimpleIntegerProperty();
     boolean showAllPaymentMethods = true;
+    @Nullable
+    private Price bsq30DayAveragePrice;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -216,7 +220,6 @@ class OfferBookViewModel extends ActivatableViewModel {
 
     @Override
     protected void activate() {
-
         filteredItems.addListener(filterItemsListener);
 
         String code = direction == OfferPayload.Direction.BUY ? preferences.getBuyScreenCurrencyCode() : preferences.getSellScreenCurrencyCode();
@@ -235,6 +238,10 @@ class OfferBookViewModel extends ActivatableViewModel {
         offerBook.fillOfferBookListItems();
         applyFilterPredicate();
         setMarketPriceFeedCurrency();
+
+        bsq30DayAveragePrice = AveragePriceUtil.getAveragePriceTuple(preferences,
+                tradeStatisticsManager,
+                30).second;
     }
 
     @Override
@@ -386,13 +393,8 @@ class OfferBookViewModel extends ActivatableViewModel {
 
         if (!hasMarketPrice(offer)) {
             if (offer.getCurrencyCode().equals("BSQ")) {
-                Tuple2<Price, Price> tuple = AveragePriceUtil.getAveragePriceTuple(preferences,
-                        tradeStatisticsManager,
-                        30);
-                Price bsqPrice = tuple.second;
-                if (bsqPrice.isPositive()) {
-                    long bsqPriceValue = bsqPrice.getValue();
-                    double scaled = MathUtils.scaleDownByPowerOf10(bsqPriceValue, 8);
+                if (bsq30DayAveragePrice != null && bsq30DayAveragePrice.isPositive()) {
+                    double scaled = MathUtils.scaleDownByPowerOf10(bsq30DayAveragePrice.getValue(), 8);
                     return calculatePercentage(offer, scaled);
                 } else {
                     return Optional.empty();
