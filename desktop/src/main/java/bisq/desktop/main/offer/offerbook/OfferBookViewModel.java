@@ -239,9 +239,12 @@ class OfferBookViewModel extends ActivatableViewModel {
         applyFilterPredicate();
         setMarketPriceFeedCurrency();
 
-        bsq30DayAveragePrice = AveragePriceUtil.getAveragePriceTuple(preferences,
-                tradeStatisticsManager,
-                30).second;
+        // Null check needed for tests passing null for tradeStatisticsManager
+        if (tradeStatisticsManager != null) {
+            bsq30DayAveragePrice = AveragePriceUtil.getAveragePriceTuple(preferences,
+                    tradeStatisticsManager,
+                    30).second;
+        }
     }
 
     @Override
