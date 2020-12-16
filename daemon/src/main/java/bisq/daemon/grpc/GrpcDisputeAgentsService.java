@@ -16,10 +16,10 @@ import lombok.extern.slf4j.Slf4j;
 class GrpcDisputeAgentsService extends DisputeAgentsGrpc.DisputeAgentsImplBase {
 
     private final CoreApi coreApi;
-    private final CoreApiExceptionHandler exceptionHandler;
+    private final GrpcExceptionHandler exceptionHandler;
 
     @Inject
-    public GrpcDisputeAgentsService(CoreApi coreApi, CoreApiExceptionHandler exceptionHandler) {
+    public GrpcDisputeAgentsService(CoreApi coreApi, GrpcExceptionHandler exceptionHandler) {
         this.coreApi = coreApi;
         this.exceptionHandler = exceptionHandler;
     }

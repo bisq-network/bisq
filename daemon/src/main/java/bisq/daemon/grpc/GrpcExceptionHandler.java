@@ -38,13 +38,13 @@ import static io.grpc.Status.UNKNOWN;
  */
 @Singleton
 @Slf4j
-class CoreApiExceptionHandler {
+class GrpcExceptionHandler {
 
     private final Predicate<Throwable> isExpectedException = (t) ->
             t instanceof IllegalStateException || t instanceof IllegalArgumentException;
 
     @Inject
-    public CoreApiExceptionHandler() {
+    public GrpcExceptionHandler() {
     }
 
     public void handleException(Throwable t, StreamObserver<?> responseObserver) {

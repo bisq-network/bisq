@@ -33,10 +33,10 @@ import lombok.extern.slf4j.Slf4j;
 class GrpcPriceService extends PriceGrpc.PriceImplBase {
 
     private final CoreApi coreApi;
-    private final CoreApiExceptionHandler exceptionHandler;
+    private final GrpcExceptionHandler exceptionHandler;
 
     @Inject
-    public GrpcPriceService(CoreApi coreApi, CoreApiExceptionHandler exceptionHandler) {
+    public GrpcPriceService(CoreApi coreApi, GrpcExceptionHandler exceptionHandler) {
         this.coreApi = coreApi;
         this.exceptionHandler = exceptionHandler;
     }

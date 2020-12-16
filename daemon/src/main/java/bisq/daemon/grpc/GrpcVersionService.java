@@ -13,10 +13,10 @@ import javax.inject.Inject;
 class GrpcVersionService extends GetVersionGrpc.GetVersionImplBase {
 
     private final CoreApi coreApi;
-    private final CoreApiExceptionHandler exceptionHandler;
+    private final GrpcExceptionHandler exceptionHandler;
 
     @Inject
-    public GrpcVersionService(CoreApi coreApi, CoreApiExceptionHandler exceptionHandler) {
+    public GrpcVersionService(CoreApi coreApi, GrpcExceptionHandler exceptionHandler) {
         this.coreApi = coreApi;
         this.exceptionHandler = exceptionHandler;
     }

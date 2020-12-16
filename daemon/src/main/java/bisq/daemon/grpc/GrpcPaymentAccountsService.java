@@ -41,10 +41,10 @@ import java.util.stream.Collectors;
 class GrpcPaymentAccountsService extends PaymentAccountsGrpc.PaymentAccountsImplBase {
 
     private final CoreApi coreApi;
-    private final CoreApiExceptionHandler exceptionHandler;
+    private final GrpcExceptionHandler exceptionHandler;
 
     @Inject
-    public GrpcPaymentAccountsService(CoreApi coreApi, CoreApiExceptionHandler exceptionHandler) {
+    public GrpcPaymentAccountsService(CoreApi coreApi, GrpcExceptionHandler exceptionHandler) {
         this.coreApi = coreApi;
         this.exceptionHandler = exceptionHandler;
     }

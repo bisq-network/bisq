@@ -16,10 +16,10 @@ import java.util.stream.Collectors;
 class GrpcGetTradeStatisticsService extends GetTradeStatisticsGrpc.GetTradeStatisticsImplBase {
 
     private final CoreApi coreApi;
-    private final CoreApiExceptionHandler exceptionHandler;
+    private final GrpcExceptionHandler exceptionHandler;
 
     @Inject
-    public GrpcGetTradeStatisticsService(CoreApi coreApi, CoreApiExceptionHandler exceptionHandler) {
+    public GrpcGetTradeStatisticsService(CoreApi coreApi, GrpcExceptionHandler exceptionHandler) {
         this.coreApi = coreApi;
         this.exceptionHandler = exceptionHandler;
     }

@@ -47,10 +47,10 @@ import static bisq.core.api.model.TradeInfo.toTradeInfo;
 class GrpcTradesService extends TradesGrpc.TradesImplBase {
 
     private final CoreApi coreApi;
-    private final CoreApiExceptionHandler exceptionHandler;
+    private final GrpcExceptionHandler exceptionHandler;
 
     @Inject
-    public GrpcTradesService(CoreApi coreApi, CoreApiExceptionHandler exceptionHandler) {
+    public GrpcTradesService(CoreApi coreApi, GrpcExceptionHandler exceptionHandler) {
         this.coreApi = coreApi;
         this.exceptionHandler = exceptionHandler;
     }

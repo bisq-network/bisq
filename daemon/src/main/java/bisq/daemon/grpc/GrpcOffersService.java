@@ -46,10 +46,10 @@ import static bisq.core.api.model.OfferInfo.toOfferInfo;
 class GrpcOffersService extends OffersGrpc.OffersImplBase {
 
     private final CoreApi coreApi;
-    private final CoreApiExceptionHandler exceptionHandler;
+    private final GrpcExceptionHandler exceptionHandler;
 
     @Inject
-    public GrpcOffersService(CoreApi coreApi, CoreApiExceptionHandler exceptionHandler) {
+    public GrpcOffersService(CoreApi coreApi, GrpcExceptionHandler exceptionHandler) {
         this.coreApi = coreApi;
         this.exceptionHandler = exceptionHandler;
     }

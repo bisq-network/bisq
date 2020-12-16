@@ -74,10 +74,10 @@ import static bisq.core.api.model.TxInfo.toTxInfo;
 class GrpcWalletsService extends WalletsGrpc.WalletsImplBase {
 
     private final CoreApi coreApi;
-    private final CoreApiExceptionHandler exceptionHandler;
+    private final GrpcExceptionHandler exceptionHandler;
 
     @Inject
-    public GrpcWalletsService(CoreApi coreApi, CoreApiExceptionHandler exceptionHandler) {
+    public GrpcWalletsService(CoreApi coreApi, GrpcExceptionHandler exceptionHandler) {
         this.coreApi = coreApi;
         this.exceptionHandler = exceptionHandler;
     }
