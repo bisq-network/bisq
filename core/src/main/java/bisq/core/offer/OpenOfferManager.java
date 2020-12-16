@@ -49,6 +49,7 @@ import bisq.network.p2p.DecryptedMessageWithPubKey;
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.SendDirectMessageListener;
+import bisq.network.p2p.peers.Broadcaster;
 import bisq.network.p2p.peers.PeerManager;
 
 import bisq.common.Timer;
@@ -117,6 +118,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     private final RefundAgentManager refundAgentManager;
     private final DaoFacade daoFacade;
     private final FilterManager filterManager;
+    private final Broadcaster broadcaster;
     private final PersistenceManager<TradableList<OpenOffer>> persistenceManager;
     private final Map<String, OpenOffer> offersToBeEdited = new HashMap<>();
     private final TradableList<OpenOffer> openOffers = new TradableList<>();
@@ -148,6 +150,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                             RefundAgentManager refundAgentManager,
                             DaoFacade daoFacade,
                             FilterManager filterManager,
+                            Broadcaster broadcaster,
                             PersistenceManager<TradableList<OpenOffer>> persistenceManager) {
         this.createOfferService = createOfferService;
         this.keyRing = keyRing;
@@ -166,6 +169,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         this.refundAgentManager = refundAgentManager;
         this.daoFacade = daoFacade;
         this.filterManager = filterManager;
+        this.broadcaster = broadcaster;
         this.persistenceManager = persistenceManager;
 
         this.persistenceManager.initialize(openOffers, "OpenOffers", PersistenceManager.Source.PRIVATE);
@@ -214,10 +218,6 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                 });
     }
 
-    private void shutDown() {
-        shutDown(null);
-    }
-
     public void shutDown(@Nullable Runnable completeHandler) {
         stopped = true;
         p2PService.getPeerManager().removeListener(this);
@@ -235,6 +235,11 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
             UserThread.execute(() -> openOffers.forEach(
                     openOffer -> offerBookService.removeOfferAtShutDown(openOffer.getOffer().getOfferPayload())
             ));
+
+            // Force broadcaster to send out immediately, otherwise we could have a 2 sec delay until the
+            // bundled messages sent out.
+            broadcaster.flush();
+
             if (completeHandler != null) {
                 // For typical number of offers we are tolerant with delay to give enough time to broadcast.
                 // If number of offers is very high we limit to 3 sec. to not delay other shutdown routines.
