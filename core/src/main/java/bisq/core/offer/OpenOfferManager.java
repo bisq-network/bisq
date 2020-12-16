@@ -893,9 +893,14 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
 
         OpenOffer openOffer = list.remove(0);
         if (openOffers.contains(openOffer) && !openOffer.isDeactivated()) {
-            republishOffer(openOffer,
+            // TODO It is not clear yet if it is better for the node and the network to send out all add offer
+            //  messages in one go or to spread it over a delay. With power users who have 100-200 offers that can have
+            //  some significant impact to user experience and the network
+            republishOffer(openOffer, () -> processListForRepublishOffers(list));
+
+           /* republishOffer(openOffer,
                     () -> UserThread.runAfter(() -> processListForRepublishOffers(list),
-                            30, TimeUnit.MILLISECONDS));
+                            30, TimeUnit.MILLISECONDS));*/
         } else {
             // If the offer was removed in the meantime or if its deactivated we skip and call
             // processListForRepublishOffers again with the list where we removed the offer already.
