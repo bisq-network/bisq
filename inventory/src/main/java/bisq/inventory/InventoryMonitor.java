@@ -85,6 +85,9 @@ public class InventoryMonitor implements SetupListener {
 
         // We get more connectivity issues. Cleaning tor cache files helps usually for those problems.
         File torDir = new File(appDir, "tor");
+        if (!torDir.exists()) {
+            torDir.mkdir();
+        }
         TorSetup torSetup = new TorSetup(torDir);
         torSetup.cleanupTorFiles(() -> {
             networkNode = getNetworkNode(torDir);
