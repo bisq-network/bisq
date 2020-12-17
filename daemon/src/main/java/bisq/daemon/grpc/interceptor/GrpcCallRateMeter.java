@@ -18,12 +18,12 @@ import static java.lang.String.format;
 public final class GrpcCallRateMeter {
 
     @Getter
-    private final long allowedCallsPerTimeUnit;
+    private final int allowedCallsPerTimeUnit;
     @Getter
     private final TimeUnit timeUnit;
 
     @Getter
-    private long callsCount = 0;
+    private int callsCount = 0;
 
     @Getter
     private boolean isRunning;
@@ -31,7 +31,7 @@ public final class GrpcCallRateMeter {
     @Nullable
     private Timer timer;
 
-    public GrpcCallRateMeter(long allowedCallsPerTimeUnit, TimeUnit timeUnit) {
+    public GrpcCallRateMeter(int allowedCallsPerTimeUnit, TimeUnit timeUnit) {
         this.allowedCallsPerTimeUnit = allowedCallsPerTimeUnit;
         this.timeUnit = timeUnit;
     }
