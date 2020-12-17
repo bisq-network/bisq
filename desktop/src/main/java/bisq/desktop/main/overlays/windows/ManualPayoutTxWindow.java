@@ -528,13 +528,21 @@ public class ManualPayoutTxWindow extends Overlay<ManualPayoutTxWindow> {
                 sellerSignatureAsHex.getText().length() > 0);
     }
 
+    private Coin getInputFieldAsCoin(InputTextField inputTextField) {
+        try {
+            return Coin.parseCoin(inputTextField.getText());
+        } catch (RuntimeException ignore) {
+        }
+        return Coin.ZERO;
+    }
+
     private void calculateTxFee() {
         if (buyerPayoutAmount.getText().length() > 0 &&
                 sellerPayoutAmount.getText().length() > 0 &&
                 amountInMultisig.getText().length() > 0) {
-            Coin txFeeValue = Coin.parseCoin(amountInMultisig.getText())
-                    .subtract(Coin.parseCoin(buyerPayoutAmount.getText()))
-                    .subtract(Coin.parseCoin(sellerPayoutAmount.getText()));
+            Coin txFeeValue = getInputFieldAsCoin(amountInMultisig)
+                    .subtract(getInputFieldAsCoin(buyerPayoutAmount))
+                    .subtract(getInputFieldAsCoin(sellerPayoutAmount));
             txFee.setText(txFeeValue.toPlainString());
         }
     }
@@ -654,9 +662,9 @@ public class ManualPayoutTxWindow extends Overlay<ManualPayoutTxWindow> {
         String retVal = "";
         try {
             Tuple2<String, String> combined = tradeWalletService.emergencyBuildPayoutTxFrom2of2MultiSig(depositTxHex.getText(),
-                    Coin.parseCoin(buyerPayoutAmount.getText()),
-                    Coin.parseCoin(sellerPayoutAmount.getText()),
-                    Coin.parseCoin(txFee.getText()),
+                    getInputFieldAsCoin(buyerPayoutAmount),
+                    getInputFieldAsCoin(sellerPayoutAmount),
+                    getInputFieldAsCoin(txFee),
                     buyerAddressString.getText(),
                     sellerAddressString.getText(),
                     buyerPubKeyAsHex.getText(),
@@ -667,7 +675,7 @@ public class ManualPayoutTxWindow extends Overlay<ManualPayoutTxWindow> {
             retVal = tradeWalletService.emergencyGenerateSignature(
                     unsignedTxHex,
                     redeemScriptHex,
-                    Coin.parseCoin(amountInMultisig.getText()),
+                    getInputFieldAsCoin(amountInMultisig),
                     privateKeyHex.getText());
         } catch (IllegalArgumentException ee) {
             log.error(ee.toString());
@@ -687,9 +695,9 @@ public class ManualPayoutTxWindow extends Overlay<ManualPayoutTxWindow> {
             try {
                 // grab data from the inputs pane, build an unsigned tx and write it to the TextArea
                 Tuple2<String, String> combined = tradeWalletService.emergencyBuildPayoutTxFrom2of2MultiSig(depositTxHex.getText(),
-                        Coin.parseCoin(buyerPayoutAmount.getText()),
-                        Coin.parseCoin(sellerPayoutAmount.getText()),
-                        Coin.parseCoin(txFee.getText()),
+                        getInputFieldAsCoin(buyerPayoutAmount),
+                        getInputFieldAsCoin(sellerPayoutAmount),
+                        getInputFieldAsCoin(txFee),
                         buyerAddressString.getText(),
                         sellerAddressString.getText(),
                         buyerPubKeyAsHex.getText(),
