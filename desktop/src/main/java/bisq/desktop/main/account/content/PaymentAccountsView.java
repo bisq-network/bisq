@@ -62,6 +62,8 @@ public abstract class PaymentAccountsView<R extends Node, M extends ActivatableW
                 accountAgeWitnessService.getAccountAgeWitnessUtils().logSigners();
             } else if (Utilities.isCtrlShiftPressed(KeyCode.U, event)) {
                 accountAgeWitnessService.getAccountAgeWitnessUtils().logUnsignedSignerPubKeys();
+            } else if (Utilities.isAltOrCtrlPressed(KeyCode.C, event)) {
+                copyAccount();
             }
         };
 
@@ -174,4 +176,7 @@ public abstract class PaymentAccountsView<R extends Node, M extends ActivatableW
     protected abstract void buildForm();
 
     protected abstract void onSelectAccount(PaymentAccount paymentAccount);
+
+    protected void copyAccount() {
+    }
 }
