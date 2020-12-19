@@ -184,7 +184,9 @@ public class TorNetworkNode extends NetworkNode {
                 log.info("Tor shut down completed");
             } else {
                 log.info("Tor has not been created yet. We cancel the torStartupFuture.");
-                torStartupFuture.cancel(true);
+                if (torStartupFuture != null) {
+                    torStartupFuture.cancel(true);
+                }
                 log.info("torStartupFuture cancelled");
             }
         } catch (Throwable e) {
