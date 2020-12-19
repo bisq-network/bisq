@@ -67,6 +67,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 
 import java.util.List;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static bisq.apitest.config.BisqAppConfig.alicedaemon;
@@ -99,35 +100,60 @@ public class MethodTest extends ApiTestCase {
 
     private static final CoreProtoResolver CORE_PROTO_RESOLVER = new CoreProtoResolver();
 
+    private static final Function<Enum<?>[], String> toNameList = (enums) ->
+            stream(enums).map(Enum::name).collect(Collectors.joining(","));
+
+    public static void startSupportingApps(File callRateMeteringConfigFile,
+                                           boolean registerDisputeAgents,
+                                           boolean generateBtcBlock,
+                                           Enum<?>... supportingApps) {
+        try {
+            setUpScaffold(new String[]{
+                    "--supportingApps", toNameList.apply(supportingApps),
+                    "--callRateMeteringConfigPath", callRateMeteringConfigFile.getAbsolutePath(),
+                    "--enableBisqDebugging", "false"
+            });
+            doPostStartup(registerDisputeAgents, generateBtcBlock, supportingApps);
+        } catch (Exception ex) {
+            fail(ex);
+        }
+    }
+
     public static void startSupportingApps(boolean registerDisputeAgents,
                                            boolean generateBtcBlock,
                                            Enum<?>... supportingApps) {
         try {
-            // To run Bisq apps in debug mode, use the other setUpScaffold method:
-            // setUpScaffold(new String[]{"--supportingApps", "bitcoind,seednode,arbdaemon,alicedaemon,bobdaemon",
-            //                            "--enableBisqDebugging", "true"});
-            setUpScaffold(supportingApps);
-            if (registerDisputeAgents) {
-                registerDisputeAgents(arbdaemon);
-            }
-
-            if (stream(supportingApps).map(Enum::name).anyMatch(name -> name.equals(alicedaemon.name()))) {
-                aliceStubs = grpcStubs(alicedaemon);
-                alicesDummyAcct = getDefaultPerfectDummyPaymentAccount(alicedaemon);
-            }
-
-            if (stream(supportingApps).map(Enum::name).anyMatch(name -> name.equals(bobdaemon.name()))) {
-                bobStubs = grpcStubs(bobdaemon);
-                bobsDummyAcct = getDefaultPerfectDummyPaymentAccount(bobdaemon);
-            }
-
-            // Generate 1 regtest block for alice's and/or bob's wallet to
-            // show 10 BTC balance, and allow time for daemons parse the new block.
-            if (generateBtcBlock)
-                genBtcBlocksThenWait(1, 1500);
+            setUpScaffold(new String[]{
+                    "--supportingApps", toNameList.apply(supportingApps),
+                    "--enableBisqDebugging", "false"
+            });
+            doPostStartup(registerDisputeAgents, generateBtcBlock, supportingApps);
         } catch (Exception ex) {
             fail(ex);
         }
+    }
+
+    private static void doPostStartup(boolean registerDisputeAgents,
+                                      boolean generateBtcBlock,
+                                      Enum<?>... supportingApps) {
+        if (registerDisputeAgents) {
+            registerDisputeAgents(arbdaemon);
+        }
+
+        if (stream(supportingApps).map(Enum::name).anyMatch(name -> name.equals(alicedaemon.name()))) {
+            aliceStubs = grpcStubs(alicedaemon);
+            alicesDummyAcct = getDefaultPerfectDummyPaymentAccount(alicedaemon);
+        }
+
+        if (stream(supportingApps).map(Enum::name).anyMatch(name -> name.equals(bobdaemon.name()))) {
+            bobStubs = grpcStubs(bobdaemon);
+            bobsDummyAcct = getDefaultPerfectDummyPaymentAccount(bobdaemon);
+        }
+
+        // Generate 1 regtest block for alice's and/or bob's wallet to
+        // show 10 BTC balance, and allow time for daemons parse the new block.
+        if (generateBtcBlock)
+            genBtcBlocksThenWait(1, 1500);
     }
 
     // Convenience methods for building gRPC request objects
