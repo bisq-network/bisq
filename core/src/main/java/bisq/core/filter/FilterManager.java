@@ -597,7 +597,7 @@ public class FilterManager {
     private boolean isFilterPublicKeyInList(Filter filter) {
         String signerPubKeyAsHex = filter.getSignerPubKeyAsHex();
         if (!isPublicKeyInList(signerPubKeyAsHex)) {
-            log.warn("Invalid filter (expected case for pre v1.3.9 filter as we still keep that in the network " +
+            log.info("Invalid filter (expected case for pre v1.3.9 filter as we still keep that in the network " +
                             "but the new version does not recognize it as valid filter): " +
                             "signerPubKeyAsHex from filter is not part of our pub key list. " +
                             "signerPubKeyAsHex={}, publicKeys={}, filterCreationDate={}",
@@ -610,7 +610,7 @@ public class FilterManager {
     private boolean isPublicKeyInList(String pubKeyAsHex) {
         boolean isPublicKeyInList = publicKeys.contains(pubKeyAsHex);
         if (!isPublicKeyInList) {
-            log.warn("pubKeyAsHex is not part of our pub key list. pubKeyAsHex={}, publicKeys={}", pubKeyAsHex, publicKeys);
+            log.info("pubKeyAsHex is not part of our pub key list (expected case for pre v1.3.9 filter). pubKeyAsHex={}, publicKeys={}", pubKeyAsHex, publicKeys);
         }
         return isPublicKeyInList;
     }
