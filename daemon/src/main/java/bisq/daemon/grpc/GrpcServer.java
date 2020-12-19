@@ -31,6 +31,8 @@ import java.io.UncheckedIOException;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static io.grpc.ServerInterceptors.interceptForward;
+
 
 
 import bisq.daemon.grpc.interceptor.PasswordAuthInterceptor;
@@ -60,7 +62,7 @@ public class GrpcServer {
                 .addService(priceService)
                 .addService(tradeStatisticsService)
                 .addService(tradesService)
-                .addService(versionService)
+                .addService(interceptForward(versionService, versionService.interceptors()))
                 .addService(walletsService)
                 .intercept(passwordAuthInterceptor)
                 .build();
