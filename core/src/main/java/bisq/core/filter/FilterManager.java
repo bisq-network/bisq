@@ -466,7 +466,11 @@ public class FilterManager {
         Filter currentFilter = getFilter();
 
         if (!isFilterPublicKeyInList(newFilter)) {
-            log.warn("isFilterPublicKeyInList failed. Filter.getSignerPubKeyAsHex={}", newFilter.getSignerPubKeyAsHex());
+            if (newFilter.getSignerPubKeyAsHex() != null && !newFilter.getSignerPubKeyAsHex().isEmpty()) {
+                log.warn("isFilterPublicKeyInList failed. Filter.getSignerPubKeyAsHex={}", newFilter.getSignerPubKeyAsHex());
+            } else {
+                log.info("isFilterPublicKeyInList failed. Filter.getSignerPubKeyAsHex not set (expected case for pre v1.3.9 filter)");
+            }
             return;
         }
         if (!isSignatureValid(newFilter)) {
@@ -593,7 +597,7 @@ public class FilterManager {
     private boolean isFilterPublicKeyInList(Filter filter) {
         String signerPubKeyAsHex = filter.getSignerPubKeyAsHex();
         if (!isPublicKeyInList(signerPubKeyAsHex)) {
-            log.warn("Invalid filter (expected case for pre v1.3.9 filter as we still keep that in the network " +
+            log.info("Invalid filter (expected case for pre v1.3.9 filter as we still keep that in the network " +
                             "but the new version does not recognize it as valid filter): " +
                             "signerPubKeyAsHex from filter is not part of our pub key list. " +
                             "signerPubKeyAsHex={}, publicKeys={}, filterCreationDate={}",
@@ -606,7 +610,7 @@ public class FilterManager {
     private boolean isPublicKeyInList(String pubKeyAsHex) {
         boolean isPublicKeyInList = publicKeys.contains(pubKeyAsHex);
         if (!isPublicKeyInList) {
-            log.warn("pubKeyAsHex is not part of our pub key list. pubKeyAsHex={}, publicKeys={}", pubKeyAsHex, publicKeys);
+            log.info("pubKeyAsHex is not part of our pub key list (expected case for pre v1.3.9 filter). pubKeyAsHex={}, publicKeys={}", pubKeyAsHex, publicKeys);
         }
         return isPublicKeyInList;
     }

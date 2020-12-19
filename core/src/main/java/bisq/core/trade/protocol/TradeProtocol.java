@@ -196,7 +196,7 @@ public abstract class TradeProtocol implements DecryptedDirectMessageListener, D
                 .condition(condition)
                 .resultHandler(result -> {
                     if (!result.isValid()) {
-                        log.error(result.getInfo());
+                        log.warn(result.getInfo());
                         handleTaskRunnerFault(null,
                                 result.name(),
                                 result.getInfo());

@@ -79,10 +79,8 @@ public class ProvidersRepository {
         fillProviderList();
         selectNextProviderBaseUrl();
 
-        if (bannedNodes == null) {
-            log.info("Selected provider baseUrl={}, providerList={}", baseUrl, providerList);
-        } else if (!bannedNodes.isEmpty()) {
-            log.warn("We have banned provider nodes: bannedNodes={}, selected provider baseUrl={}, providerList={}",
+        if (bannedNodes != null && !bannedNodes.isEmpty()) {
+            log.info("Excluded provider nodes from filter: nodes={}, selected provider baseUrl={}, providerList={}",
                     bannedNodes, baseUrl, providerList);
         }
     }
