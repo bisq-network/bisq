@@ -31,6 +31,7 @@ import bisq.core.trade.statistics.TradeStatistics3;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 
 import bisq.common.app.Version;
+import bisq.common.config.Config;
 import bisq.common.handlers.ResultHandler;
 
 import org.bitcoinj.core.Coin;
@@ -46,6 +47,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 
+import lombok.Getter;
+import lombok.extern.flogger.Flogger;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -56,6 +59,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class CoreApi {
 
+    @Getter
+    private final Config config;
     private final CoreDisputeAgentsService coreDisputeAgentsService;
     private final CoreOffersService coreOffersService;
     private final CorePaymentAccountsService paymentAccountsService;
@@ -65,13 +70,15 @@ public class CoreApi {
     private final TradeStatisticsManager tradeStatisticsManager;
 
     @Inject
-    public CoreApi(CoreDisputeAgentsService coreDisputeAgentsService,
+    public CoreApi(Config config,
+                   CoreDisputeAgentsService coreDisputeAgentsService,
                    CoreOffersService coreOffersService,
                    CorePaymentAccountsService paymentAccountsService,
                    CorePriceService corePriceService,
                    CoreTradesService coreTradesService,
                    CoreWalletsService walletsService,
                    TradeStatisticsManager tradeStatisticsManager) {
+        this.config = config;
         this.coreDisputeAgentsService = coreDisputeAgentsService;
         this.coreOffersService = coreOffersService;
         this.paymentAccountsService = paymentAccountsService;
