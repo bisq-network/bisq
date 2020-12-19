@@ -466,7 +466,11 @@ public class FilterManager {
         Filter currentFilter = getFilter();
 
         if (!isFilterPublicKeyInList(newFilter)) {
-            log.warn("isFilterPublicKeyInList failed. Filter.getSignerPubKeyAsHex={}", newFilter.getSignerPubKeyAsHex());
+            if (newFilter.getSignerPubKeyAsHex() != null && !newFilter.getSignerPubKeyAsHex().isEmpty()) {
+                log.warn("isFilterPublicKeyInList failed. Filter.getSignerPubKeyAsHex={}", newFilter.getSignerPubKeyAsHex());
+            } else {
+                log.info("isFilterPublicKeyInList failed. Filter.getSignerPubKeyAsHex not set (expected case for pre v1.3.9 filter)");
+            }
             return;
         }
         if (!isSignatureValid(newFilter)) {
