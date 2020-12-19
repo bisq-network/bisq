@@ -31,7 +31,6 @@ import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static io.grpc.Status.FAILED_PRECONDITION;
 import static io.grpc.Status.PERMISSION_DENIED;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
@@ -54,7 +53,7 @@ public final class CallRateMeteringInterceptor implements ServerInterceptor {
         Optional<Map.Entry<String, GrpcCallRateMeter>> rateMeterKV = getRateMeterKV(serverCall);
         rateMeterKV.ifPresentOrElse(
                 (kv) -> checkRateMeterAndMaybeCloseCall(kv, serverCall),
-                () -> handleInterceptorConfigErrorAndCloseCall(serverCall));
+                () -> handleMissingRateMeterConfiguration(serverCall));
 
         // We leave it to the gRPC framework to clean up if the server call was closed
         // above.  But we still have to invoke startCall here because the method must
@@ -79,14 +78,11 @@ public final class CallRateMeteringInterceptor implements ServerInterceptor {
             log.info(rateMeter.getCallsCountProgress(methodName));
     }
 
-    private void handleInterceptorConfigErrorAndCloseCall(ServerCall<?, ?> serverCall)
+    private void handleMissingRateMeterConfiguration(ServerCall<?, ?> serverCall)
             throws StatusRuntimeException {
-        String methodName = getRateMeterKey(serverCall);
-        String msg = format("%s's rate metering interceptor is incorrectly configured;"
-                        + "  its rate meter cannot be found",
-                methodName);
-        log.error(StringUtils.capitalize(msg) + ".");
-        serverCall.close(FAILED_PRECONDITION.withDescription(msg), new Metadata());
+        log.debug("The gRPC service's call rate metering interceptor does not"
+                        + " meter the {} method.",
+                getRateMeterKey(serverCall));
     }
 
     private void handlePermissionDeniedErrorAndCloseCall(String methodName,
