@@ -82,23 +82,21 @@ public class CleanupMailboxMessages {
 
     private void handleDecryptedMessageWithPubKey(DecryptedMessageWithPubKey decryptedMessageWithPubKey,
                                                   List<Trade> trades) {
-        trades.forEach(trade -> handleDecryptedMessageWithPubKey(decryptedMessageWithPubKey, trade));
+        trades.stream()
+                .filter(trade -> isMessageForTrade(decryptedMessageWithPubKey, trade))
+                .filter(trade -> isPubKeyValid(decryptedMessageWithPubKey, trade))
+                .forEach(trade -> removeEntryFromMailbox(decryptedMessageWithPubKey, trade));
     }
 
-    private void handleDecryptedMessageWithPubKey(DecryptedMessageWithPubKey decryptedMessageWithPubKey,
-                                                  Trade trade) {
+    private boolean isMessageForTrade(DecryptedMessageWithPubKey decryptedMessageWithPubKey, Trade trade) {
         NetworkEnvelope networkEnvelope = decryptedMessageWithPubKey.getNetworkEnvelope();
-        if (!isPubKeyValid(decryptedMessageWithPubKey, trade)) {
-            return;
+        if (networkEnvelope instanceof TradeMessage) {
+            return isMyMessage((TradeMessage) networkEnvelope, trade);
+        } else if (networkEnvelope instanceof AckMessage) {
+            return isMyMessage((AckMessage) networkEnvelope, trade);
         }
-
-        if (networkEnvelope instanceof TradeMessage &&
-                isMyMessage((TradeMessage) networkEnvelope, trade)) {
-            removeEntryFromMailbox(decryptedMessageWithPubKey, trade);
-        } else if (networkEnvelope instanceof AckMessage &&
-                isMyMessage((AckMessage) networkEnvelope, trade)) {
-            removeEntryFromMailbox(decryptedMessageWithPubKey, trade);
-        }
+        // Instance must be TradeMessage or AckMessage.
+        return false;
     }
 
     private void removeEntryFromMailbox(DecryptedMessageWithPubKey decryptedMessageWithPubKey, Trade trade) {
@@ -124,7 +122,7 @@ public class CleanupMailboxMessages {
         if (peersPubKeyRing != null &&
                 !message.getSignaturePubKey().equals(peersPubKeyRing.getSignaturePubKey())) {
             isValid = false;
-            log.error("SignaturePubKey in message does not match the SignaturePubKey we have set for our trading peer.");
+            log.warn("SignaturePubKey in message does not match the SignaturePubKey we have set for our trading peer.");
         }
         return isValid;
     }
