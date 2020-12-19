@@ -1,3 +1,20 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package bisq.daemon.grpc.interceptor;
 
 import io.grpc.Metadata;
@@ -17,6 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 import static io.grpc.Status.FAILED_PRECONDITION;
 import static io.grpc.Status.PERMISSION_DENIED;
 import static java.lang.String.format;
+import static java.util.stream.Collectors.joining;
 
 @Slf4j
 public final class CallRateMeteringInterceptor implements ServerInterceptor {
@@ -65,7 +83,7 @@ public final class CallRateMeteringInterceptor implements ServerInterceptor {
             throws StatusRuntimeException {
         String methodName = getRateMeterKey(serverCall);
         String msg = format("%s's rate metering interceptor is incorrectly configured;"
-                        + "  its rate meter cannot be found ",
+                        + "  its rate meter cannot be found",
                 methodName);
         log.error(StringUtils.capitalize(msg) + ".");
         serverCall.close(FAILED_PRECONDITION.withDescription(msg), new Metadata());
@@ -105,5 +123,18 @@ public final class CallRateMeteringInterceptor implements ServerInterceptor {
         String fullServiceName = serverCall.getMethodDescriptor().getServiceName();
         return StringUtils.uncapitalize(Objects.requireNonNull(fullServiceName)
                 .substring("io.bisq.protobuffer.".length()));
+    }
+
+    @Override
+    public String toString() {
+        String rateMetersString =
+                serviceCallRateMeters.entrySet()
+                        .stream()
+                        .map(Object::toString)
+                        .collect(joining("\n\t\t"));
+        return "CallRateMeteringInterceptor {" + "\n\t" +
+                "serviceCallRateMeters {" + "\n\t\t" +
+                rateMetersString + "\n\t" + "}" + "\n"
+                + "}";
     }
 }
