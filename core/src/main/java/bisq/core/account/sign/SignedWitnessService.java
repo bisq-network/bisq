@@ -60,7 +60,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.Stack;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
@@ -78,9 +77,9 @@ public class SignedWitnessService {
 
     private final Map<P2PDataStorage.ByteArray, SignedWitness> signedWitnessMap = new HashMap<>();
 
-    // The getSignedWitnessSet is called very often and is a bit expensive. We cache the result in that map but we
-    // remove the cache entry if we get a matching SignedWitness added to the signedWitnessMap.
-    private final Map<P2PDataStorage.ByteArray, Set<SignedWitness>> signedWitnessSetCache = new ConcurrentHashMap<>();
+    // This map keeps all SignedWitnesses with the same AccountAgeWitnessHash in a Set.
+    // This avoids iterations over the signedWitnessMap for getting the set of such SignedWitnesses.
+    private final Map<P2PDataStorage.ByteArray, Set<SignedWitness>> signedWitnessSetByAccountAgeWitnessHash = new HashMap<>();
 
     private final FilterManager filterManager;
 
@@ -355,19 +354,19 @@ public class SignedWitnessService {
     }
 
     private Set<SignedWitness> getSignedWitnessSet(AccountAgeWitness accountAgeWitness) {
-        byte[] hash = accountAgeWitness.getHash();
-        P2PDataStorage.ByteArray key = new P2PDataStorage.ByteArray(hash);
+        byte[] accountAgeWitnessHash = accountAgeWitness.getHash();
+        P2PDataStorage.ByteArray key = new P2PDataStorage.ByteArray(accountAgeWitnessHash);
         // In case we get a new entry added to signedWitnessMap with our hash we remove the entry from the cache so
         // that we use the updated signedWitnessMap to fill the cache new.
-        if (signedWitnessSetCache.containsKey(key)) {
-            return signedWitnessSetCache.get(key);
+        if (signedWitnessSetByAccountAgeWitnessHash.containsKey(key)) {
+            return signedWitnessSetByAccountAgeWitnessHash.get(key);
         }
 
         Set<SignedWitness> result = getSignedWitnessMapValues().stream()
-                .filter(e -> Arrays.equals(e.getAccountAgeWitnessHash(), hash))
+                .filter(signedWitness -> Arrays.equals(signedWitness.getAccountAgeWitnessHash(), accountAgeWitnessHash))
                 .collect(Collectors.toSet());
 
-        signedWitnessSetCache.put(key, result);
+        signedWitnessSetByAccountAgeWitnessHash.put(key, result);
 
         return result;
     }
@@ -510,17 +509,11 @@ public class SignedWitnessService {
 
     @VisibleForTesting
     public void addToMap(SignedWitness signedWitness) {
-        P2PDataStorage.ByteArray hash = signedWitness.getHashAsByteArray();
-        signedWitnessMap.putIfAbsent(hash, signedWitness);
+        signedWitnessMap.putIfAbsent(signedWitness.getHashAsByteArray(), signedWitness);
 
-        // We remove the entry with that hash in case we have cached it, so at the next getSignedWitnessSet
-        // call we use the updated signedWitnessMap to re-fill our cache.
-        signedWitnessSetCache.remove(new P2PDataStorage.ByteArray(signedWitness.getAccountAgeWitnessHash()));
-
-        // Not sure if that is needed as well, tests did succeed in both cases, but seems to be more safe to remove
-        // potential entries with hash as well. A removed item in getSignedWitnessSetCache carries no risk, though a
-        // remaining item would.
-        signedWitnessSetCache.remove(hash);
+        P2PDataStorage.ByteArray accountAgeWitnessHash = new P2PDataStorage.ByteArray(signedWitness.getAccountAgeWitnessHash());
+        signedWitnessSetByAccountAgeWitnessHash.putIfAbsent(accountAgeWitnessHash, new HashSet<>());
+        signedWitnessSetByAccountAgeWitnessHash.get(accountAgeWitnessHash).add(signedWitness);
     }
 
     private void publishSignedWitness(SignedWitness signedWitness) {
@@ -539,16 +532,16 @@ public class SignedWitnessService {
 
     @VisibleForTesting
     public void removeSignedWitness(SignedWitness signedWitness) {
-        P2PDataStorage.ByteArray hash = signedWitness.getHashAsByteArray();
-        signedWitnessMap.remove(hash);
+        signedWitnessMap.remove(signedWitness.getHashAsByteArray());
 
-        // Need to remove the entry matching signedWitness.getAccountAgeWitnessHash() (test would fail otherwise)
-        signedWitnessSetCache.remove(new P2PDataStorage.ByteArray(signedWitness.getAccountAgeWitnessHash()));
-
-        // Not sure if that is needed as well, tests did succeed in both cases, but seems to be more safe to remove
-        // potential entries with hash as well. A removed item in getSignedWitnessSetCache carries no risk, though a
-        // remaining item would.
-        signedWitnessSetCache.remove(hash);
+        P2PDataStorage.ByteArray accountAgeWitnessHash = new P2PDataStorage.ByteArray(signedWitness.getAccountAgeWitnessHash());
+        if (signedWitnessSetByAccountAgeWitnessHash.containsKey(accountAgeWitnessHash)) {
+            Set<SignedWitness> set = signedWitnessSetByAccountAgeWitnessHash.get(accountAgeWitnessHash);
+            set.remove(signedWitness);
+            if (set.isEmpty()) {
+                signedWitnessSetByAccountAgeWitnessHash.remove(accountAgeWitnessHash);
+            }
+        }
     }
 
     // Remove SignedWitnesses that are signed by TRADE that also have an ARBITRATOR signature
