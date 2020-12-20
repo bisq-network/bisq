@@ -396,21 +396,12 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         this.closeHandler = closeHandler;
     }
 
-    // called form parent as the view does not get notified when the tab is closed
+    // Called from parent as the view does not get notified when the tab is closed
     public void onClose() {
         Coin balance = model.dataModel.getBalance().get();
         if (balance != null && balance.isPositive() && !model.takeOfferCompleted.get() && !DevEnv.isDevMode()) {
             model.dataModel.swapTradeToSavings();
-            new Popup().information(Res.get("takeOffer.alreadyFunded.movedFunds"))
-                    .actionButtonTextWithGoTo("navigation.funds.availableForWithdrawal")
-                    .onAction(() -> navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class))
-                    .show();
         }
-
-        // TODO need other implementation as it is displayed also if there are old funds in the wallet
-        /*
-        if (model.dataModel.getIsWalletFunded().get())
-            new Popup<>().warning("You have already funds paid in.\nIn the <Funds/Open for withdrawal> section you can withdraw those funds.").show();*/
     }
 
     public void onTabSelected(boolean isSelected) {
@@ -1034,14 +1025,17 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         fundingHBox.getChildren().add(cancelButton2);
 
         cancelButton2.setOnAction(e -> {
-            if (model.dataModel.getIsBtcWalletFunded().get()) {
-                new Popup().warning(Res.get("takeOffer.alreadyFunded.askCancel"))
+            String key = "CreateOfferCancelAndFunded";
+            if (model.dataModel.getIsBtcWalletFunded().get() &&
+                    model.dataModel.preferences.showAgain(key)) {
+                new Popup().backgroundInfo(Res.get("takeOffer.alreadyFunded.askCancel"))
                         .closeButtonText(Res.get("shared.no"))
                         .actionButtonText(Res.get("shared.yesCancel"))
                         .onAction(() -> {
                             model.dataModel.swapTradeToSavings();
-                            close();
+                            close(false);
                         })
+                        .dontShowAgainId(key)
                         .show();
             } else {
                 close(false);
