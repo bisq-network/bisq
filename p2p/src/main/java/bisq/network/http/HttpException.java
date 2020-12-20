@@ -27,6 +27,10 @@ public class HttpException extends Exception {
         super(message);
     }
 
+    public HttpException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
     public HttpException(String message, int responseCode) {
         super(message);
         this.responseCode = responseCode;

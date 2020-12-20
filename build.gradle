@@ -54,6 +54,7 @@ configure(subprojects) {
         jfoenixVersion = '9.0.6'
         joptVersion = '5.0.4'
         jsonsimpleVersion = '1.1.1'
+        jsonrpc4jVersion = '1.5.3'
         junitVersion = '4.12'
         jupiterVersion = '5.7.0'
         kotlinVersion = '1.3.41'
@@ -332,6 +333,7 @@ configure(project(':core')) {
             exclude(module: 'jackson-annotations')
             exclude(module: 'jackson-databind')
         }
+        compile "com.github.briandilley.jsonrpc4j:jsonrpc4j:$jsonrpc4jVersion"
         compile "com.fasterxml.jackson.core:jackson-core:$jacksonVersion"
         compile "com.fasterxml.jackson.core:jackson-annotations:$jacksonVersion"
         compile("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion") {
