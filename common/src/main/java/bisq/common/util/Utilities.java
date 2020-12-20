@@ -60,6 +60,7 @@ import java.util.Random;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -109,16 +110,33 @@ public class Utilities {
         return MoreExecutors.listeningDecorator(getThreadPoolExecutor(name, corePoolSize, maximumPoolSize, keepAliveTimeInSec));
     }
 
+    public static ListeningExecutorService getListeningExecutorService(String name,
+                                                                       int corePoolSize,
+                                                                       int maximumPoolSize,
+                                                                       long keepAliveTimeInSec,
+                                                                       BlockingQueue<Runnable> workQueue) {
+        return MoreExecutors.listeningDecorator(getThreadPoolExecutor(name, corePoolSize, maximumPoolSize, keepAliveTimeInSec, workQueue));
+    }
+
     public static ThreadPoolExecutor getThreadPoolExecutor(String name,
                                                            int corePoolSize,
                                                            int maximumPoolSize,
                                                            long keepAliveTimeInSec) {
+        return getThreadPoolExecutor(name, corePoolSize, maximumPoolSize, keepAliveTimeInSec,
+                new ArrayBlockingQueue<>(maximumPoolSize));
+    }
+
+    public static ThreadPoolExecutor getThreadPoolExecutor(String name,
+                                                           int corePoolSize,
+                                                           int maximumPoolSize,
+                                                           long keepAliveTimeInSec,
+                                                           BlockingQueue<Runnable> workQueue) {
         final ThreadFactory threadFactory = new ThreadFactoryBuilder()
                 .setNameFormat(name)
                 .setDaemon(true)
                 .build();
         ThreadPoolExecutor executor = new ThreadPoolExecutor(corePoolSize, maximumPoolSize, keepAliveTimeInSec,
-                TimeUnit.SECONDS, new ArrayBlockingQueue<>(maximumPoolSize), threadFactory);
+                TimeUnit.SECONDS, workQueue, threadFactory);
         executor.allowCoreThreadTimeOut(true);
         executor.setRejectedExecutionHandler((r, e) -> log.debug("RejectedExecutionHandler called"));
         return executor;
