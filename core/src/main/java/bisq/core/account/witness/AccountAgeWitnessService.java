@@ -679,16 +679,20 @@ public class AccountAgeWitnessService {
     }
 
     public String arbitratorSignOrphanWitness(AccountAgeWitness accountAgeWitness,
-                                              ECKey key,
+                                              ECKey ecKey,
                                               long time) {
-        // Find AccountAgeWitness as signedwitness
-        var signedWitness = signedWitnessService.getSignedWitnessMapValues().stream()
-                .filter(sw -> Arrays.equals(sw.getAccountAgeWitnessHash(), accountAgeWitness.getHash()))
+        // TODO Is not found signedWitness considered an error case?
+        //  Previous code version was throwing an exception in case no signedWitness was found...
+
+        // signAndPublishAccountAgeWitness returns an empty string in success case and error otherwise
+        return signedWitnessService.getSignedWitnessSet(accountAgeWitness).stream()
                 .findAny()
-                .orElse(null);
-        checkNotNull(signedWitness);
-        return signedWitnessService.signAndPublishAccountAgeWitness(accountAgeWitness, key,
-                signedWitness.getWitnessOwnerPubKey(), time);
+                .map(SignedWitness::getWitnessOwnerPubKey)
+                .map(witnessOwnerPubKey ->
+                        signedWitnessService.signAndPublishAccountAgeWitness(accountAgeWitness, ecKey,
+                                witnessOwnerPubKey, time)
+                )
+                .orElse("No signedWitness found");
     }
 
     public String arbitratorSignOrphanPubKey(ECKey key,
