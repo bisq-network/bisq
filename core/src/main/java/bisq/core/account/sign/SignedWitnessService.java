@@ -353,22 +353,9 @@ public class SignedWitnessService {
         }
     }
 
-    private Set<SignedWitness> getSignedWitnessSet(AccountAgeWitness accountAgeWitness) {
-        byte[] accountAgeWitnessHash = accountAgeWitness.getHash();
-        P2PDataStorage.ByteArray key = new P2PDataStorage.ByteArray(accountAgeWitnessHash);
-        // In case we get a new entry added to signedWitnessMap with our hash we remove the entry from the cache so
-        // that we use the updated signedWitnessMap to fill the cache new.
-        if (signedWitnessSetByAccountAgeWitnessHash.containsKey(key)) {
-            return signedWitnessSetByAccountAgeWitnessHash.get(key);
-        }
-
-        Set<SignedWitness> result = getSignedWitnessMapValues().stream()
-                .filter(signedWitness -> Arrays.equals(signedWitness.getAccountAgeWitnessHash(), accountAgeWitnessHash))
-                .collect(Collectors.toSet());
-
-        signedWitnessSetByAccountAgeWitnessHash.put(key, result);
-
-        return result;
+    public Set<SignedWitness> getSignedWitnessSet(AccountAgeWitness accountAgeWitness) {
+        P2PDataStorage.ByteArray key = new P2PDataStorage.ByteArray(accountAgeWitness.getHash());
+        return signedWitnessSetByAccountAgeWitnessHash.getOrDefault(key, new HashSet<>());
     }
 
     // SignedWitness objects signed by arbitrators
