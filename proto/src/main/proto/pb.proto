@@ -1810,6 +1810,8 @@ enum ScriptType {
     WITNESS_V0_KEYHASH = 6;
     WITNESS_V0_SCRIPTHASH = 7;
     NONSTANDARD = 8;
+    WITNESS_UNKNOWN = 9;
+    WITNESS_V1_TAPROOT = 10;
 }
 
 message PubKeyScript {
