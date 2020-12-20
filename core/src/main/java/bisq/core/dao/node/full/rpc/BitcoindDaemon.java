@@ -20,7 +20,6 @@ import java.io.IOException;
 
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
@@ -79,8 +78,8 @@ public class BitcoindDaemon {
         } catch (IOException e) {
             log.error("Error closing block notification server socket", e);
         } finally {
-            shutdownAndAwaitTermination(executor, 1);
-            shutdownAndAwaitTermination(workerPool, 5);
+            Utilities.shutdownAndAwaitTermination(executor, 1, TimeUnit.SECONDS);
+            Utilities.shutdownAndAwaitTermination(workerPool, 5, TimeUnit.SECONDS);
         }
     }
 
@@ -99,17 +98,6 @@ public class BitcoindDaemon {
                 errorHandler.accept(t);
             }
         };
-    }
-
-    private static void shutdownAndAwaitTermination(ExecutorService executor, long timeoutInSeconds) {
-        executor.shutdown();
-        try {
-            if (!executor.awaitTermination(timeoutInSeconds, TimeUnit.SECONDS)) {
-                executor.shutdownNow();
-            }
-        } catch (InterruptedException e) {
-            executor.shutdownNow();
-        }
     }
 
     public interface BlockListener {

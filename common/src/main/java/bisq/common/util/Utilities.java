@@ -126,11 +126,11 @@ public class Utilities {
                 new ArrayBlockingQueue<>(maximumPoolSize));
     }
 
-    public static ThreadPoolExecutor getThreadPoolExecutor(String name,
-                                                           int corePoolSize,
-                                                           int maximumPoolSize,
-                                                           long keepAliveTimeInSec,
-                                                           BlockingQueue<Runnable> workQueue) {
+    private static ThreadPoolExecutor getThreadPoolExecutor(String name,
+                                                            int corePoolSize,
+                                                            int maximumPoolSize,
+                                                            long keepAliveTimeInSec,
+                                                            BlockingQueue<Runnable> workQueue) {
         final ThreadFactory threadFactory = new ThreadFactoryBuilder()
                 .setNameFormat(name)
                 .setDaemon(true)
@@ -141,7 +141,6 @@ public class Utilities {
         executor.setRejectedExecutionHandler((r, e) -> log.debug("RejectedExecutionHandler called"));
         return executor;
     }
-
 
     @SuppressWarnings("SameParameterValue")
     public static ScheduledThreadPoolExecutor getScheduledThreadPoolExecutor(String name,
@@ -160,6 +159,18 @@ public class Utilities {
         executor.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
         executor.setRejectedExecutionHandler((r, e) -> log.debug("RejectedExecutionHandler called"));
         return executor;
+    }
+
+    // TODO: Can some/all of the uses of this be replaced by guava MoreExecutors.shutdownAndAwaitTermination(..)?
+    public static void shutdownAndAwaitTermination(ExecutorService executor, long timeout, TimeUnit unit) {
+        executor.shutdown();
+        try {
+            if (!executor.awaitTermination(timeout, unit)) {
+                executor.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            executor.shutdownNow();
+        }
     }
 
     /**
