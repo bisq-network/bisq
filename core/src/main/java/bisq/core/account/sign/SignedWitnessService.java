@@ -74,14 +74,13 @@ public class SignedWitnessService {
     private final P2PService p2PService;
     private final ArbitratorManager arbitratorManager;
     private final User user;
+    private final FilterManager filterManager;
 
     private final Map<P2PDataStorage.ByteArray, SignedWitness> signedWitnessMap = new HashMap<>();
 
     // This map keeps all SignedWitnesses with the same AccountAgeWitnessHash in a Set.
     // This avoids iterations over the signedWitnessMap for getting the set of such SignedWitnesses.
     private final Map<P2PDataStorage.ByteArray, Set<SignedWitness>> signedWitnessSetByAccountAgeWitnessHash = new HashMap<>();
-
-    private final FilterManager filterManager;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -360,17 +359,15 @@ public class SignedWitnessService {
 
     // SignedWitness objects signed by arbitrators
     public Set<SignedWitness> getArbitratorsSignedWitnessSet(AccountAgeWitness accountAgeWitness) {
-        return getSignedWitnessMapValues().stream()
+        return getSignedWitnessSet(accountAgeWitness).stream()
                 .filter(SignedWitness::isSignedByArbitrator)
-                .filter(e -> Arrays.equals(e.getAccountAgeWitnessHash(), accountAgeWitness.getHash()))
                 .collect(Collectors.toSet());
     }
 
     // SignedWitness objects signed by any other peer
     public Set<SignedWitness> getTrustedPeerSignedWitnessSet(AccountAgeWitness accountAgeWitness) {
-        return getSignedWitnessMapValues().stream()
+        return getSignedWitnessSet(accountAgeWitness).stream()
                 .filter(e -> !e.isSignedByArbitrator())
-                .filter(e -> Arrays.equals(e.getAccountAgeWitnessHash(), accountAgeWitness.getHash()))
                 .collect(Collectors.toSet());
     }
 
