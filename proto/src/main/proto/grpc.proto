@@ -273,20 +273,19 @@ message TradeInfo {
     string takerFeeTxId = 9;
     string depositTxId = 10;
     string payoutTxId = 11;
-    string withdrawalTxId = 12;
-    uint64 tradeAmountAsLong = 13;
-    uint64 tradePrice = 14;
-    string tradingPeerNodeAddress = 15;
-    string state = 16;
-    string phase = 17;
-    string tradePeriodState = 18;
-    bool isDepositPublished = 19;
-    bool isDepositConfirmed = 20;
-    bool isFiatSent = 21;
-    bool isFiatReceived = 22;
-    bool isPayoutPublished = 23;
-    bool isWithdrawn = 24;
-    string contractAsJson = 25;
+    uint64 tradeAmountAsLong = 12;
+    uint64 tradePrice = 13;
+    string tradingPeerNodeAddress = 14;
+    string state = 15;
+    string phase = 16;
+    string tradePeriodState = 17;
+    bool isDepositPublished = 18;
+    bool isDepositConfirmed = 19;
+    bool isFiatSent = 20;
+    bool isFiatReceived = 21;
+    bool isPayoutPublished = 22;
+    bool isWithdrawn = 23;
+    string contractAsJson = 24;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
