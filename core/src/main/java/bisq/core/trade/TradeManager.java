@@ -497,7 +497,6 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                     onTradeCompleted(trade);
                     trade.setState(Trade.State.WITHDRAW_COMPLETED);
                     getTradeProtocol(trade).onWithdrawCompleted();
-                    trade.setWithdrawalTxId(transaction.getTxId().toString());
                     requestPersistence();
                     resultHandler.handleResult();
                 }
