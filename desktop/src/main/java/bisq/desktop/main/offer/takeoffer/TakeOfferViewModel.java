@@ -23,6 +23,7 @@ import bisq.desktop.common.model.ViewModel;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.funds.FundsView;
 import bisq.desktop.main.funds.deposit.DepositView;
+import bisq.desktop.main.offer.FeeUtil;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.GUIUtil;
@@ -33,7 +34,6 @@ import bisq.core.btc.wallet.Restrictions;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.monetary.Price;
-import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.offer.OfferRestrictions;
@@ -75,8 +75,6 @@ import javafx.beans.value.ChangeListener;
 import javafx.collections.ObservableList;
 
 import javafx.util.Callback;
-
-import java.util.Optional;
 
 import javax.annotation.Nullable;
 
@@ -279,50 +277,23 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     }
 
     private void applyTakerFee() {
-        Coin takerFeeAsCoin = dataModel.getTakerFee();
-        if (takerFeeAsCoin != null) {
-            isTradeFeeVisible.setValue(true);
-
-            tradeFee.set(getFormatterForTakerFee().formatCoin(takerFeeAsCoin));
-
-            Coin makerFeeInBtc = dataModel.getTakerFeeInBtc();
-            Optional<Volume> optionalBtcFeeInFiat = offerUtil.getFeeInUserFiatCurrency(makerFeeInBtc,
-                    true,
-                    bsqFormatter);
-            String btcFeeWithFiatAmount = DisplayUtils.getFeeWithFiatAmount(makerFeeInBtc, optionalBtcFeeInFiat, btcFormatter);
-            if (DevEnv.isDaoActivated()) {
-                tradeFeeInBtcWithFiat.set(btcFeeWithFiatAmount);
-            } else {
-                tradeFeeInBtcWithFiat.set(btcFormatter.formatCoinWithCode(takerFeeAsCoin));
-            }
-
-            Coin makerFeeInBsq = dataModel.getTakerFeeInBsq();
-            Optional<Volume> optionalBsqFeeInFiat = offerUtil.getFeeInUserFiatCurrency(makerFeeInBsq,
-                    false,
-                    bsqFormatter);
-            String bsqFeeWithFiatAmount = DisplayUtils.getFeeWithFiatAmount(makerFeeInBsq, optionalBsqFeeInFiat, bsqFormatter);
-            if (DevEnv.isDaoActivated()) {
-                tradeFeeInBsqWithFiat.set(bsqFeeWithFiatAmount);
-            } else {
-                // Before DAO is enabled we show fee as fiat and % in second line
-                String feeInFiatAsString;
-                if (optionalBtcFeeInFiat != null && optionalBtcFeeInFiat.isPresent()) {
-                    feeInFiatAsString = DisplayUtils.formatVolumeWithCode(optionalBtcFeeInFiat.get());
-                } else {
-                    feeInFiatAsString = Res.get("shared.na");
-                }
-
-                double amountAsLong = (double) dataModel.getAmount().get().value;
-                double makerFeeInBtcAsLong = (double) makerFeeInBtc.value;
-                double percent = makerFeeInBtcAsLong / amountAsLong;
-
-                tradeFeeInBsqWithFiat.set(Res.get("createOffer.tradeFee.fiatAndPercent",
-                        feeInFiatAsString,
-                        FormattingUtils.formatToPercentWithSymbol(percent)));
-            }
-        }
         tradeFeeDescription.set(DevEnv.isDaoActivated() ? Res.get("createOffer.tradeFee.descriptionBSQEnabled") :
                 Res.get("createOffer.tradeFee.descriptionBTCOnly"));
+        Coin takerFeeAsCoin = dataModel.getTakerFee();
+        if (takerFeeAsCoin == null) {
+            return;
+        }
+
+        isTradeFeeVisible.setValue(true);
+        tradeFee.set(getFormatterForTakerFee().formatCoin(takerFeeAsCoin));
+        tradeFeeInBtcWithFiat.set(FeeUtil.getTradeFeeWithFiatEquivalent(offerUtil,
+                dataModel.getTakerFeeInBtc(),
+                true,
+                btcFormatter));
+        tradeFeeInBsqWithFiat.set(FeeUtil.getTradeFeeWithFiatEquivalent(offerUtil,
+                dataModel.getTakerFeeInBsq(),
+                false,
+                bsqFormatter));
     }
 
 
@@ -706,14 +677,21 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     }
 
     public String getTradeFee() {
-        //TODO use last bisq market price to estimate BSQ val
-        final Coin takerFeeAsCoin = dataModel.getTakerFee();
-        final String takerFee = getFormatterForTakerFee().formatCoinWithCode(takerFeeAsCoin);
-        if (dataModel.isCurrencyForTakerFeeBtc())
-            return takerFee + GUIUtil.getPercentageOfTradeAmount(takerFeeAsCoin, dataModel.getAmount().get(),
-                    FeeService.getMinTakerFee(dataModel.isCurrencyForTakerFeeBtc()));
-        else
-            return takerFee + " (" + Res.get("shared.tradingFeeInBsqInfo", btcFormatter.formatCoinWithCode(takerFeeAsCoin)) + ")";
+        if (dataModel.isCurrencyForTakerFeeBtc()) {
+            return FeeUtil.getTradeFeeWithFiatEquivalentAndPercentage(offerUtil,
+                    dataModel.getTakerFeeInBtc(),
+                    dataModel.getAmount().get(),
+                    true,
+                    btcFormatter,
+                    FeeService.getMinMakerFee(dataModel.isCurrencyForTakerFeeBtc()));
+        } else {
+            // For BSQ we use the fiat equivalent only. Calculating the % value would require to
+            // calculate the BTC value of the BSQ fee and use that...
+            return FeeUtil.getTradeFeeWithFiatEquivalent(offerUtil,
+                    dataModel.getTakerFeeInBsq(),
+                    false,
+                    bsqFormatter);
+        }
     }
 
     public String getTakerFeePercentage() {
@@ -733,11 +711,13 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     }
 
     public String getTxFee() {
-        Coin txFeeAsCoin = dataModel.getTotalTxFee();
-        return btcFormatter.formatCoinWithCode(txFeeAsCoin) +
-                GUIUtil.getPercentageOfTradeAmount(txFeeAsCoin, dataModel.getAmount().get(),
-                        Coin.ZERO);
-
+        return FeeUtil.getTradeFeeWithFiatEquivalentAndPercentage(offerUtil,
+                dataModel.getTotalTxFee(),
+                dataModel.getAmount().get(),
+                true,
+                btcFormatter,
+                Coin.ZERO
+        );
     }
 
     public String getTxFeePercentage() {
