@@ -20,6 +20,7 @@ package bisq.seednode;
 import bisq.core.app.TorSetup;
 import bisq.core.app.misc.ExecutableForAppWithP2p;
 import bisq.core.app.misc.ModuleForAppWithP2p;
+import bisq.core.dao.state.DaoStateSnapshotService;
 
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.P2PServiceListener;
@@ -30,6 +31,7 @@ import bisq.common.UserThread;
 import bisq.common.app.AppModule;
 import bisq.common.app.Capabilities;
 import bisq.common.app.Capability;
+import bisq.common.app.DevEnv;
 import bisq.common.config.BaseCurrencyNetwork;
 import bisq.common.config.Config;
 import bisq.common.handlers.ResultHandler;
@@ -98,6 +100,11 @@ public class SeedNodeMain extends ExecutableForAppWithP2p {
         super.applyInjector();
 
         seedNode.setInjector(injector);
+
+        if (DevEnv.isDaoActivated()) {
+            injector.getInstance(DaoStateSnapshotService.class).setDaoRequiresRestartHandler(() -> gracefulShutDown(() -> {
+            }));
+        }
     }
 
     @Override
