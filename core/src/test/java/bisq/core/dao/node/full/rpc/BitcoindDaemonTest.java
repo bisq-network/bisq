@@ -38,7 +38,7 @@ import org.junit.Test;
 import static org.mockito.Mockito.*;
 
 // FIXME: There appears to be a data race in some of these tests, causing intermittent Mockito.verify failures.
-//  We should remove the two Thread.sleep lines added below to try to prevent them.
+//  We should remove the two Thread.sleep lines which were added below to try to prevent them.
 public class BitcoindDaemonTest {
     private BitcoindDaemon daemon;
     private int acceptAnotherCount;
@@ -117,11 +117,12 @@ public class BitcoindDaemonTest {
         }
         errorHandlerLatch.await(5, TimeUnit.SECONDS);
 
-        verify(errorHandler).accept(any(IOException.class));
+        verify(errorHandler).accept(argThat(t -> t instanceof NotificationHandlerException &&
+                t.getCause() instanceof IOException));
     }
 
     @Test
-    public void testExceptionInBlockListener() throws Exception {
+    public void testRuntimeExceptionInBlockListener() throws Exception {
         synchronized (this) {
             daemon.setBlockListener(blockHash -> {
                 throw new IndexOutOfBoundsException();
@@ -131,7 +132,28 @@ public class BitcoindDaemonTest {
         }
         errorHandlerLatch.await(5, TimeUnit.SECONDS);
 
-        verify(errorHandler).accept(any(IndexOutOfBoundsException.class));
+        verify(errorHandler).accept(argThat(t -> t instanceof NotificationHandlerException &&
+                t.getCause() instanceof IndexOutOfBoundsException));
+    }
+
+
+    @Test
+    public void testErrorInBlockListener() throws Exception {
+        synchronized (this) {
+            daemon.setBlockListener(blockHash -> {
+                throw new Error();
+            });
+            when(socket.getInputStream()).then(invocation -> new ByteArrayInputStream("foo".getBytes()));
+            acceptAnother(1);
+        }
+        errorHandlerLatch.await(5, TimeUnit.SECONDS);
+
+        verify(errorHandler).accept(any(Error.class));
+    }
+
+    @Test(expected = NotificationHandlerException.class)
+    public void testUnknownHost() throws Exception {
+        new BitcoindDaemon("[", -1, errorHandler).shutdown();
     }
 
     private synchronized void acceptAnother(int n) {

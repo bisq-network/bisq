@@ -52,8 +52,8 @@ public class BitcoindDaemon {
     private volatile BlockListener blockListener = blockHash -> {
     };
 
-    public BitcoindDaemon(String host, int port, Consumer<Throwable> errorHandler) throws IOException {
-        this(new ServerSocket(port, 5, InetAddress.getByName(host)), errorHandler);
+    public BitcoindDaemon(String host, int port, Consumer<Throwable> errorHandler) throws NotificationHandlerException {
+        this(newServerSocket(host, port), errorHandler);
     }
 
     @VisibleForTesting
@@ -63,25 +63,41 @@ public class BitcoindDaemon {
         initialize();
     }
 
+    private static ServerSocket newServerSocket(String host, int port) throws NotificationHandlerException {
+        try {
+            return new ServerSocket(port, 5, InetAddress.getByName(host));
+        } catch (Exception e) {
+            throw new NotificationHandlerException(e);
+        }
+    }
+
     private void initialize() {
         active = true;
         var serverFuture = executor.submit((Callable<Void>) () -> {
-            while (active) {
-                try (var socket = serverSocket.accept(); var is = socket.getInputStream()) {
-                    var blockHash = IOUtils.toString(is, StandardCharsets.UTF_8).trim();
-                    var future = workerPool.submit(() -> blockListener.blockDetected(blockHash));
-
-                    Futures.addCallback(future, Utilities.failureCallback(errorHandler), MoreExecutors.directExecutor());
-                } catch (SocketException e) {
-                    if (active) {
-                        throw e;
+            try {
+                while (active) {
+                    try (var socket = serverSocket.accept(); var is = socket.getInputStream()) {
+                        var blockHash = IOUtils.toString(is, StandardCharsets.UTF_8).trim();
+                        var future = workerPool.submit((Callable<Void>) () -> {
+                            try {
+                                blockListener.blockDetected(blockHash);
+                                return null;
+                            } catch (RuntimeException e) {
+                                throw new NotificationHandlerException(e);
+                            }
+                        });
+                        Futures.addCallback(future, Utilities.failureCallback(errorHandler), MoreExecutors.directExecutor());
                     }
-                    log.info("Shutting down block notification server");
                 }
+            } catch (Exception e) {
+                if (active || !(e instanceof SocketException)) {
+                    throw new NotificationHandlerException(e);
+                }
+            } finally {
+                log.info("Shutting down block notification server");
             }
             return null;
         });
-
         Futures.addCallback(serverFuture, Utilities.failureCallback(errorHandler), MoreExecutors.directExecutor());
     }
 
