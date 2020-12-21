@@ -47,7 +47,6 @@ public class TradeInfo implements Payload {
     private final String takerFeeTxId;
     private final String depositTxId;
     private final String payoutTxId;
-    private final String withdrawalTxId;
     private final long tradeAmountAsLong;
     private final long tradePrice;
     private final String tradingPeerNodeAddress;
@@ -74,7 +73,6 @@ public class TradeInfo implements Payload {
         this.takerFeeTxId = builder.takerFeeTxId;
         this.depositTxId = builder.depositTxId;
         this.payoutTxId = builder.payoutTxId;
-        this.withdrawalTxId = builder.withdrawalTxId;
         this.tradeAmountAsLong = builder.tradeAmountAsLong;
         this.tradePrice = builder.tradePrice;
         this.tradingPeerNodeAddress = builder.tradingPeerNodeAddress;
@@ -108,7 +106,6 @@ public class TradeInfo implements Payload {
                 .withTakerFeeTxId(trade.getTakerFeeTxId())
                 .withDepositTxId(trade.getDepositTxId())
                 .withPayoutTxId(trade.getPayoutTxId())
-                .withWithdrawalTxId(trade.getWithdrawalTxId())
                 .withTradeAmountAsLong(trade.getTradeAmountAsLong())
                 .withTradePrice(trade.getTradePrice().getValue())
                 .withTradingPeerNodeAddress(Objects.requireNonNull(
@@ -144,7 +141,6 @@ public class TradeInfo implements Payload {
                 .setTakerFeeTxId(takerFeeTxId == null ? "" : takerFeeTxId)
                 .setDepositTxId(depositTxId == null ? "" : depositTxId)
                 .setPayoutTxId(payoutTxId == null ? "" : payoutTxId)
-                .setWithdrawalTxId(withdrawalTxId == null ? "" : withdrawalTxId)
                 .setTradeAmountAsLong(tradeAmountAsLong)
                 .setTradePrice(tradePrice)
                 .setTradingPeerNodeAddress(tradingPeerNodeAddress)
@@ -184,7 +180,6 @@ public class TradeInfo implements Payload {
         private String takerFeeTxId;
         private String depositTxId;
         private String payoutTxId;
-        private String withdrawalTxId;
         private long tradeAmountAsLong;
         private long tradePrice;
         private String tradingPeerNodeAddress;
@@ -251,11 +246,6 @@ public class TradeInfo implements Payload {
 
         public TradeInfoBuilder withPayoutTxId(String payoutTxId) {
             this.payoutTxId = payoutTxId;
-            return this;
-        }
-
-        public TradeInfoBuilder withWithdrawalTxId(String withdrawalTxId) {
-            this.withdrawalTxId = withdrawalTxId;
             return this;
         }
 
@@ -342,7 +332,6 @@ public class TradeInfo implements Payload {
                 ", takerFeeTxId='" + takerFeeTxId + '\'' + "\n" +
                 ", depositTxId='" + depositTxId + '\'' + "\n" +
                 ", payoutTxId='" + payoutTxId + '\'' + "\n" +
-                ", withdrawalTxId='" + withdrawalTxId + '\'' + "\n" +
                 ", tradeAmountAsLong='" + tradeAmountAsLong + '\'' + "\n" +
                 ", tradePrice='" + tradePrice + '\'' + "\n" +
                 ", tradingPeerNodeAddress='" + tradingPeerNodeAddress + '\'' + "\n" +
