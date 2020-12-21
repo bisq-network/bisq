@@ -1450,7 +1450,6 @@ message Trade {
     string counter_currency_extra_data = 37;
     string asset_tx_proof_result = 38; // name of AssetTxProofResult enum
     string uid = 39;
-    string withdrawal_tx_id = 40;
 }
 
 message BuyerAsMakerTrade {
