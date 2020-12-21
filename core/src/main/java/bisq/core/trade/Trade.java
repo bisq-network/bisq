@@ -317,10 +317,6 @@ public abstract class Trade implements Tradable, Model {
     @Getter
     @Setter
     private String payoutTxId;
-    @Nullable
-    @Getter
-    @Setter
-    private String withdrawalTxId;
     @Getter
     @Setter
     private long tradeAmountAsLong;
@@ -558,7 +554,6 @@ public abstract class Trade implements Tradable, Model {
         Optional.ofNullable(takerFeeTxId).ifPresent(builder::setTakerFeeTxId);
         Optional.ofNullable(depositTxId).ifPresent(builder::setDepositTxId);
         Optional.ofNullable(payoutTxId).ifPresent(builder::setPayoutTxId);
-        Optional.ofNullable(withdrawalTxId).ifPresent(builder::setWithdrawalTxId);
         Optional.ofNullable(tradingPeerNodeAddress).ifPresent(e -> builder.setTradingPeerNodeAddress(tradingPeerNodeAddress.toProtoMessage()));
         Optional.ofNullable(contract).ifPresent(e -> builder.setContract(contract.toProtoMessage()));
         Optional.ofNullable(contractAsJson).ifPresent(builder::setContractAsJson);
@@ -592,7 +587,6 @@ public abstract class Trade implements Tradable, Model {
         trade.setTakerFeeTxId(ProtoUtil.stringOrNullFromProto(proto.getTakerFeeTxId()));
         trade.setDepositTxId(ProtoUtil.stringOrNullFromProto(proto.getDepositTxId()));
         trade.setPayoutTxId(ProtoUtil.stringOrNullFromProto(proto.getPayoutTxId()));
-        trade.setWithdrawalTxId(ProtoUtil.stringOrNullFromProto(proto.getWithdrawalTxId()));
         trade.setContract(proto.hasContract() ? Contract.fromProto(proto.getContract(), coreProtoResolver) : null);
         trade.setContractAsJson(ProtoUtil.stringOrNullFromProto(proto.getContractAsJson()));
         trade.setContractHash(ProtoUtil.byteArrayOrNullFromProto(proto.getContractHash()));
@@ -1130,7 +1124,6 @@ public abstract class Trade implements Tradable, Model {
                 ",\n     takerFeeTxId='" + takerFeeTxId + '\'' +
                 ",\n     depositTxId='" + depositTxId + '\'' +
                 ",\n     payoutTxId='" + payoutTxId + '\'' +
-                ",\n     withdrawalTxId='" + withdrawalTxId + '\'' +
                 ",\n     tradeAmountAsLong=" + tradeAmountAsLong +
                 ",\n     tradePrice=" + tradePrice +
                 ",\n     tradingPeerNodeAddress=" + tradingPeerNodeAddress +

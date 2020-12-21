@@ -58,7 +58,6 @@ public class TradeFormat {
                 + COL_HEADER_TRADE_FIAT_RECEIVED + COL_HEADER_DELIMITER
                 + COL_HEADER_TRADE_PAYOUT_PUBLISHED + COL_HEADER_DELIMITER
                 + COL_HEADER_TRADE_WITHDRAWN + COL_HEADER_DELIMITER
-                + (tradeInfo.getIsWithdrawn() ? COL_HEADER_TRADE_WITHDRAWAL_TX_ID + COL_HEADER_DELIMITER : "")
                 + "%n";
 
         String counterCurrencyCode = tradeInfo.getOffer().getCounterCurrencyCode();
@@ -79,8 +78,7 @@ public class TradeFormat {
                 + "  %-" + COL_HEADER_TRADE_FIAT_SENT.length() + "s"        // lt justify
                 + "  %-" + COL_HEADER_TRADE_FIAT_RECEIVED.length() + "s"    // lt justify
                 + "  %-" + COL_HEADER_TRADE_PAYOUT_PUBLISHED.length() + "s" // lt justify
-                + "  %-" + COL_HEADER_TRADE_WITHDRAWN.length() + "s"        // lt justify
-                + "  %-" + COL_HEADER_TRADE_WITHDRAWAL_TX_ID.length() + "s"; // left
+                + "  %-" + COL_HEADER_TRADE_WITHDRAWN.length() + "s";       // lt justify
 
         return headerLine +
                 (isTaker
@@ -100,8 +98,7 @@ public class TradeFormat {
                 tradeInfo.getIsFiatSent() ? "YES" : "NO",
                 tradeInfo.getIsFiatReceived() ? "YES" : "NO",
                 tradeInfo.getIsPayoutPublished() ? "YES" : "NO",
-                tradeInfo.getIsWithdrawn() ? "YES" : "NO",
-                tradeInfo.getIsWithdrawn() ? tradeInfo.getWithdrawalTxId() : "");
+                tradeInfo.getIsWithdrawn() ? "YES" : "NO");
     }
 
     private static String formatTradeForTaker(String format, TradeInfo tradeInfo) {
@@ -117,7 +114,6 @@ public class TradeFormat {
                 tradeInfo.getIsFiatSent() ? "YES" : "NO",
                 tradeInfo.getIsFiatReceived() ? "YES" : "NO",
                 tradeInfo.getIsPayoutPublished() ? "YES" : "NO",
-                tradeInfo.getIsWithdrawn() ? "YES" : "NO",
-                tradeInfo.getIsWithdrawn() ? tradeInfo.getWithdrawalTxId() : "");
+                tradeInfo.getIsWithdrawn() ? "YES" : "NO");
     }
 }

@@ -33,7 +33,6 @@ import org.junit.jupiter.api.TestMethodOrder;
 import static bisq.apitest.config.BisqAppConfig.alicedaemon;
 import static bisq.apitest.config.BisqAppConfig.bobdaemon;
 import static bisq.cli.CurrencyFormat.formatSatoshis;
-import static bisq.cli.TransactionFormat.format;
 import static bisq.core.trade.Trade.Phase.*;
 import static bisq.core.trade.Trade.State.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -164,20 +163,5 @@ public class TakeSellBTCOfferTest extends AbstractTradeTest {
         log.debug("{} Bob's current available balance: {} BTC",
                 testName(testInfo),
                 formatSatoshis(currentBalance.getAvailableBalance()));
-    }
-
-    @Test
-    @Order(5)
-    public void testGetTradeWithdrawalTx(final TestInfo testInfo) {
-        var trade = getTrade(bobdaemon, tradeId);
-        var withdrawalTxId = trade.getWithdrawalTxId();
-        assertNotNull(withdrawalTxId);
-
-        var txInfo = getTransaction(bobdaemon, withdrawalTxId);
-        assertEquals(WITHDRAWAL_TX_MEMO, txInfo.getMemo());
-
-        log.debug("{} Trade withdrawal Tx:\n{}",
-                testName(testInfo),
-                format(txInfo));
     }
 }

@@ -60,6 +60,5 @@ public class TradeTest extends AbstractTradeTest {
         test.testBobsConfirmPaymentStarted(testInfo);
         test.testAlicesConfirmPaymentReceived(testInfo);
         test.testBobsBtcWithdrawalToExternalAddress(testInfo);
-        test.testGetTradeWithdrawalTx(testInfo);
     }
 }
