@@ -43,9 +43,9 @@ public class PubKeyScript implements PersistablePayload, ImmutableDaoStateModel 
     private final String asm;
     private final String hex;
 
-    public PubKeyScript(com.neemre.btcdcli4j.core.domain.PubKeyScript scriptPubKey) {
+    public PubKeyScript(bisq.core.dao.node.full.rpc.dto.PubKeyScript scriptPubKey) {
         this(scriptPubKey.getReqSigs() != null ? scriptPubKey.getReqSigs() : 0,
-                ScriptType.forName(scriptPubKey.getType().getName()),
+                scriptPubKey.getType(),
                 scriptPubKey.getAddresses() != null ? ImmutableList.copyOf(scriptPubKey.getAddresses()) : null,
                 scriptPubKey.getAsm(),
                 scriptPubKey.getHex());

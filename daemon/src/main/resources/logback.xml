@@ -10,7 +10,6 @@
         <appender-ref ref="CONSOLE_APPENDER"/>
     </root>
 
-    <logger name="com.neemre.btcdcli4j" level="WARN"/>
     <logger name="io.grpc.netty" level="WARN"/>
 
 </configuration>

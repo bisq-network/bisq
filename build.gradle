@@ -29,7 +29,6 @@ configure(subprojects) {
     ext { // in alphabetical order
         bcVersion = '1.63'
         bitcoinjVersion = '2a80db4'
-        btcdCli4jVersion = '27b94333'
         codecVersion = '1.13'
         easybindVersion = '1.0.3'
         easyVersion = '4.0.1'
@@ -315,25 +314,9 @@ configure(project(':core')) {
             exclude(module: 'commons-codec')
         }
         compile "com.google.guava:guava:$guavaVersion"
-        compile("network.bisq.btcd-cli4j:btcd-cli4j-core:$btcdCli4jVersion") {
-            exclude(module: 'guava')
-            exclude(module: 'slf4j-api')
-            exclude(module: 'httpclient')
-            exclude(module: 'commons-lang3')
-            exclude(module: 'jackson-core')
-            exclude(module: 'jackson-annotations')
-            exclude(module: 'jackson-databind')
+        compile("com.github.briandilley.jsonrpc4j:jsonrpc4j:$jsonrpc4jVersion") {
+            exclude(module: 'base64')
         }
-        compile("network.bisq.btcd-cli4j:btcd-cli4j-daemon:$btcdCli4jVersion") {
-            exclude(module: 'guava')
-            exclude(module: 'slf4j-api')
-            exclude(module: 'httpclient')
-            exclude(module: 'commons-lang3')
-            exclude(module: 'jackson-core')
-            exclude(module: 'jackson-annotations')
-            exclude(module: 'jackson-databind')
-        }
-        compile "com.github.briandilley.jsonrpc4j:jsonrpc4j:$jsonrpc4jVersion"
         compile "com.fasterxml.jackson.core:jackson-core:$jacksonVersion"
         compile "com.fasterxml.jackson.core:jackson-annotations:$jacksonVersion"
         compile("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion") {
@@ -669,7 +652,7 @@ configure(project(':apitest')) {
                     "${result.skippedTestCount} skipped]  html report contains skipped test info")
 
                 // Show report link if all tests passed in case you want to see more detail, stdout, skipped, etc.
-                if(result.resultType == TestResult.ResultType.SUCCESS) {
+                if (result.resultType == TestResult.ResultType.SUCCESS) {
                     DirectoryReport htmlReport = getReports().getHtml()
                     String reportUrl = new org.gradle.internal.logging.ConsoleRenderer()
                         .asClickableFileUrl(htmlReport.getEntryPoint())
