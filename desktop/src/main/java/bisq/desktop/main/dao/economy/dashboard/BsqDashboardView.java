@@ -150,19 +150,19 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
 
         marketPriceBox.second.getStyleClass().add("dao-kpi-subtext");
 
-        avgPrice90TextField = addTopLabelReadOnlyTextField(root, ++gridRow,
-                Res.get("dao.factsAndFigures.dashboard.avgPrice90")).second;
-
-        avgPrice30TextField = addTopLabelTextFieldWithIcon(root, gridRow, 1,
-                Res.get("dao.factsAndFigures.dashboard.avgPrice30"), -15).second;
-        AnchorPane.setRightAnchor(avgPrice30TextField.getIconLabel(), 10d);
-
         avgUSDPrice90TextField = addTopLabelReadOnlyTextField(root, ++gridRow,
                 Res.get("dao.factsAndFigures.dashboard.avgUSDPrice90")).second;
 
         avgUSDPrice30TextField = addTopLabelTextFieldWithIcon(root, gridRow, 1,
                 Res.get("dao.factsAndFigures.dashboard.avgUSDPrice30"), -15).second;
         AnchorPane.setRightAnchor(avgUSDPrice30TextField.getIconLabel(), 10d);
+
+        avgPrice90TextField = addTopLabelReadOnlyTextField(root, ++gridRow,
+                Res.get("dao.factsAndFigures.dashboard.avgPrice90")).second;
+
+        avgPrice30TextField = addTopLabelTextFieldWithIcon(root, gridRow, 1,
+                Res.get("dao.factsAndFigures.dashboard.avgPrice30"), -15).second;
+        AnchorPane.setRightAnchor(avgPrice30TextField.getIconLabel(), 10d);
 
         marketCapTextField = addTopLabelReadOnlyTextField(root, ++gridRow,
                 Res.get("dao.factsAndFigures.dashboard.marketCap")).second;
