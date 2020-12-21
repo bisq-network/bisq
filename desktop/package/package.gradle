@@ -324,7 +324,7 @@ task packageInstallers {
                 executeCmd("codesign" +
                         " --sign \"${envVariableSigningID}\"" +
                         " --options runtime" +
-                        " --entitlements macos.entitlements" +
+                        " --entitlements '${project(':desktop').projectDir}/package/macosx/macos.entitlements'" +
                         " --force" +
                         " --verbose" +
                         "${bisqAppImageFullPath}/Contents/runtime/Contents/MacOS/libjli.dylib")
