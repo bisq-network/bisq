@@ -1,3 +1,20 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package bisq.core.dao.node.full.rpc.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -46,33 +63,4 @@ public class RawBlock {
     private String previousBlockHash;
     @JsonProperty("nextblockhash")
     private String nextBlockHash;
-
-//    public RawBlock(String hash, Integer confirmations, Integer strippedSize, Integer size, Integer weight,
-//                    Integer height, Integer version, String versionHex, String merkleRoot, List<RawTransaction> tx,
-//                    Long time, Long medianTime, Long nonce, String bits, BigDecimal difficulty, String chainWork,
-//                    Integer nTx, String previousBlockHash, String nextBlockHash) {
-//        setHash(hash);
-//        setConfirmations(confirmations);
-//        setStrippedSize(strippedSize);
-//        setSize(size);
-//        setWeight(weight);
-//        setHeight(height);
-//        setVersion(version);
-//        setVersionHex(versionHex);
-//        setMerkleRoot(merkleRoot);
-//        setTx(tx);
-//        setTime(time);
-//        setMedianTime(medianTime);
-//        setNonce(nonce);
-//        setBits(bits);
-//        setDifficulty(difficulty);
-//        setChainWork(chainWork);
-//        setNTx(nTx);
-//        setPreviousBlockHash(previousBlockHash);
-//        setNextBlockHash(nextBlockHash);
-//    }
-//
-//    public void setDifficulty(BigDecimal difficulty) {
-//        this.difficulty = difficulty.setScale(8, RoundingMode.HALF_UP);
-//    }
 }
