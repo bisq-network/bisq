@@ -19,6 +19,7 @@ package bisq.core.dao.node.full;
 
 import bisq.core.dao.node.full.rpc.BitcoindClient;
 import bisq.core.dao.node.full.rpc.BitcoindDaemon;
+import bisq.core.dao.node.full.rpc.dto.RawInput;
 import bisq.core.dao.node.full.rpc.dto.RawTransaction;
 import bisq.core.dao.state.model.blockchain.PubKeyScript;
 import bisq.core.dao.state.model.blockchain.ScriptType;
@@ -36,6 +37,7 @@ import com.google.inject.Inject;
 
 import javax.inject.Named;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -242,19 +244,15 @@ public class RpcService {
                 .stream()
                 .filter(rawInput -> rawInput != null && rawInput.getVOut() != null && rawInput.getTxId() != null)
                 .map(rawInput -> {
-                    // We don't support segWit inputs yet as well as no pay to pubkey txs...
-                    String[] split = rawInput.getScriptSig().getAsm().split("\\[ALL] ");
-                    String pubKeyAsHex;
-                    if (split.length == 2) {
-                        pubKeyAsHex = rawInput.getScriptSig().getAsm().split("\\[ALL] ")[1];
-                    } else {
-                        // If we receive a pay to pubkey tx the pubKey is not included as
-                        // it is in the output already.
-                        // Bitcoin Core creates payToPubKey tx when spending mined coins (regtest)...
-                        pubKeyAsHex = null;
-                        log.debug("pubKeyAsHex is not set as we received a not supported sigScript " +
-                                        "(segWit or payToPubKey tx). txId={}, asm={}",
-                                rawDtoTx.getTxId(), rawInput.getScriptSig().getAsm());
+                    // To maintain backwards compatibility when serializing and hashing the DAO state,
+                    // segwit pubKeys are only extracted for the first input, as this will always be a
+                    // BSQ input. Later inputs might be segwit BTC, which would have had a null pubKey
+                    // recorded in the DAO state prior to the segwit upgrade of the RPC client.
+                    String pubKeyAsHex = extractPubKeyAsHex(rawInput, rawInput == rawDtoTx.getVIn().get(0));
+                    if (pubKeyAsHex == null) {
+                        log.debug("pubKeyAsHex is not set as we received a not supported sigScript. " +
+                                        "txId={}, asm={}, txInWitness={}",
+                                rawDtoTx.getTxId(), rawInput.getScriptSig().getAsm(), rawInput.getTxInWitness());
                     }
                     return new TxInput(rawInput.getTxId(), rawInput.getVOut(), pubKeyAsHex);
                 })
@@ -303,5 +301,28 @@ public class RpcService {
                 blockTime,
                 ImmutableList.copyOf(txInputs),
                 ImmutableList.copyOf(txOutputs));
+    }
+
+    @VisibleForTesting
+    static String extractPubKeyAsHex(RawInput rawInput, boolean allowSegwit) {
+        // We only allow inputs with a single SIGHASH_ALL signature. That is, multisig or
+        // signing of only some of the tx inputs/outputs is intentionally disallowed...
+        if (rawInput.getScriptSig() == null) {
+            // coinbase input - no pubKey to extract
+            return null;
+        }
+        String[] split = rawInput.getScriptSig().getAsm().split(" ");
+        if (split.length == 2 && split[0].endsWith("[ALL]")) {
+            // P2PKH input
+            return split[1];
+        }
+        List<String> txInWitness = rawInput.getTxInWitness() != null ? rawInput.getTxInWitness() : List.of();
+        if (allowSegwit && split.length < 2 && txInWitness.size() == 2 && txInWitness.get(0).endsWith("01")) {
+            // P2WPKH or P2SH-P2WPKH input
+            return txInWitness.get(1);
+        }
+        // If we receive a pay to pubkey tx, the pubKey is not included as it is in the
+        // output already.
+        return null;
     }
 }
