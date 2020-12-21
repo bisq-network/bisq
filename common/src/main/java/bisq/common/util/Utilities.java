@@ -25,6 +25,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import com.google.common.base.Splitter;
+import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -68,11 +69,14 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
+
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 
@@ -171,6 +175,19 @@ public class Utilities {
         } catch (InterruptedException e) {
             executor.shutdownNow();
         }
+    }
+
+    public static <V> FutureCallback<V> failureCallback(Consumer<Throwable> errorHandler) {
+        return new FutureCallback<>() {
+            @Override
+            public void onSuccess(V result) {
+            }
+
+            @Override
+            public void onFailure(@NotNull Throwable t) {
+                errorHandler.accept(t);
+            }
+        };
     }
 
     /**

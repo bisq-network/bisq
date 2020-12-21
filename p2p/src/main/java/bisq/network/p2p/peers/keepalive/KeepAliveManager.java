@@ -30,6 +30,7 @@ import bisq.network.p2p.peers.keepalive.messages.Pong;
 import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.proto.network.NetworkEnvelope;
+import bisq.common.util.Utilities;
 
 import javax.inject.Inject;
 
@@ -110,24 +111,17 @@ public class KeepAliveManager implements MessageListener, ConnectionListener, Pe
 
                 Pong pong = new Pong(ping.getNonce());
                 SettableFuture<Connection> future = networkNode.sendMessage(connection, pong);
-                Futures.addCallback(future, new FutureCallback<Connection>() {
-                    @Override
-                    public void onSuccess(Connection connection) {
+                Futures.addCallback(future, Utilities.failureCallback(throwable -> {
+                    if (!stopped) {
+                        String errorMessage = "Sending pong to " + connection +
+                                " failed. That is expected if the peer is offline. " +
+                                "Exception: " + throwable.getMessage();
+                        log.info(errorMessage);
+                        peerManager.handleConnectionFault(connection);
+                    } else {
+                        log.warn("We have stopped already. We ignore that  networkNode.sendMessage.onFailure call.");
                     }
-
-                    @Override
-                    public void onFailure(@NotNull Throwable throwable) {
-                        if (!stopped) {
-                            String errorMessage = "Sending pong to " + connection +
-                                    " failed. That is expected if the peer is offline. " +
-                                    "Exception: " + throwable.getMessage();
-                            log.info(errorMessage);
-                            peerManager.handleConnectionFault(connection);
-                        } else {
-                            log.warn("We have stopped already. We ignore that  networkNode.sendMessage.onFailure call.");
-                        }
-                    }
-                }, MoreExecutors.directExecutor());
+                }), MoreExecutors.directExecutor());
             } else {
                 log.warn("We have stopped already. We ignore that onMessage call.");
             }

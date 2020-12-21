@@ -3,7 +3,6 @@ package bisq.core.dao.node.full.rpc;
 import bisq.common.util.Utilities;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -24,8 +23,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 import lombok.extern.slf4j.Slf4j;
-
-import org.jetbrains.annotations.NotNull;
 
 @Slf4j
 public class BitcoindDaemon {
@@ -57,7 +54,7 @@ public class BitcoindDaemon {
                     var blockHash = IOUtils.toString(is, StandardCharsets.UTF_8).trim();
                     var future = workerPool.submit(() -> blockListener.blockDetected(blockHash));
 
-                    Futures.addCallback(future, failureCallback(errorHandler), MoreExecutors.directExecutor());
+                    Futures.addCallback(future, Utilities.failureCallback(errorHandler), MoreExecutors.directExecutor());
                 } catch (SocketException e) {
                     if (active) {
                         throw e;
@@ -68,7 +65,7 @@ public class BitcoindDaemon {
             return null;
         });
 
-        Futures.addCallback(serverFuture, failureCallback(errorHandler), MoreExecutors.directExecutor());
+        Futures.addCallback(serverFuture, Utilities.failureCallback(errorHandler), MoreExecutors.directExecutor());
     }
 
     public void shutdown() {
@@ -85,19 +82,6 @@ public class BitcoindDaemon {
 
     public void setBlockListener(BlockListener blockListener) {
         this.blockListener = blockListener;
-    }
-
-    private static <V> FutureCallback<V> failureCallback(Consumer<Throwable> errorHandler) {
-        return new FutureCallback<>() {
-            @Override
-            public void onSuccess(V result) {
-            }
-
-            @Override
-            public void onFailure(@NotNull Throwable t) {
-                errorHandler.accept(t);
-            }
-        };
     }
 
     public interface BlockListener {
