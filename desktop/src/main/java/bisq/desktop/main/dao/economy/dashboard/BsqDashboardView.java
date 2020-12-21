@@ -171,7 +171,6 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
                 Res.get("dao.factsAndFigures.dashboard.availableAmount")).second;
     }
 
-
     @Override
     protected void activate() {
         daoFacade.addBsqStateListener(this);
