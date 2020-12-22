@@ -277,7 +277,7 @@ task packageInstallers {
                         " libglass.dylib" +
                         " libjavafx_font.dylib" +
                         " libprism_common.dylib" +
-                        " libprism_es2.dylib" +
+                        " libprism_es2.dylib"  +
                         " libdecora_sse.dylib" +
                         " libprism_sw.dylib" +
                         " org/bridj/lib/darwin_universal/libbridj.dylib" +
@@ -355,13 +355,14 @@ task packageInstallers {
                         " --app-image ${bisqAppImageFullPath}" +
                         " --license-file \"${licenseFilePath}\"" +
                         " --mac-sign" +
+                        macOpts +
                         " --type dmg")
 
                 // macOS step 5: Sign dmg bundle
                 executeCmd("codesign" +
                         " --sign \"${envVariableSigningID}\"" +
                         " --options runtime" +
-                        " --entitlements '${binariesFolderPath}/macos.entitlements'" +
+                        " --entitlements '${project(':desktop').projectDir}/package/macosx/macos.entitlements'" +
                         " -vvvv" +
                         " --deep" +
                         " '${binariesFolderPath}/Bisq-${appVersion}.dmg'")
