@@ -128,7 +128,7 @@ public class GrpcServiceRateMeteringConfigTest {
         // We've exceeded the call/second limit.
         assertFalse(rateMeter.isAllowed());
 
-        // Let all of the call timestamps to go stale again.
+        // Let all of the call timestamps go stale again.
         rest(1 + rateMeter.getTimeUnitIntervalInMilliseconds());
 
         // Call 2x, resting 0.25s after each call.
@@ -136,7 +136,7 @@ public class GrpcServiceRateMeteringConfigTest {
             assertTrue(rateMeter.isAllowed());
             rest(250);
         }
-        // Call the 3rd time, then let one of the rate meter's timestamps to go stale.
+        // Call the 3rd time, then let one of the rate meter's timestamps go stale.
         assertTrue(rateMeter.isAllowed());
         rest(510);
 
