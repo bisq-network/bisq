@@ -78,7 +78,7 @@ public class CallRateMeteringInterceptorTest extends MethodTest {
     @Order(2)
     public void testGetVersionCall2ShouldThrowException() {
         Throwable exception = assertThrows(StatusRuntimeException.class, getVersionTest::testGetVersion);
-        assertEquals("PERMISSION_DENIED: the maximum allowed number of getversion calls (1/second) has been exceeded by 1 call",
+        assertEquals("PERMISSION_DENIED: the maximum allowed number of getversion calls (1/second) has been exceeded",
                 exception.getMessage());
     }
 
@@ -86,7 +86,7 @@ public class CallRateMeteringInterceptorTest extends MethodTest {
     @Order(3)
     public void testGetVersionCall3ShouldThrowException() {
         Throwable exception = assertThrows(StatusRuntimeException.class, getVersionTest::testGetVersion);
-        assertEquals("PERMISSION_DENIED: the maximum allowed number of getversion calls (1/second) has been exceeded by 2 calls",
+        assertEquals("PERMISSION_DENIED: the maximum allowed number of getversion calls (1/second) has been exceeded",
                 exception.getMessage());
     }
 

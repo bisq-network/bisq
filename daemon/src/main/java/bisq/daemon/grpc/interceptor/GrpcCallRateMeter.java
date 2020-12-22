@@ -1,75 +1,52 @@
-/*
- * This file is part of Bisq.
- *
- * Bisq is free software: you can redistribute it and/or modify it
- * under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or (at
- * your option) any later version.
- *
- * Bisq is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
- * License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
- */
-
 package bisq.daemon.grpc.interceptor;
-
-import bisq.common.Timer;
-import bisq.common.UserThread;
 
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.ArrayDeque;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.annotation.Nullable;
-
 import static java.lang.String.format;
+import static java.lang.System.currentTimeMillis;
 
 @Slf4j
-public final class GrpcCallRateMeter {
+public class GrpcCallRateMeter {
 
     @Getter
     private final int allowedCallsPerTimeUnit;
     @Getter
     private final TimeUnit timeUnit;
     @Getter
-    private int callsCount = 0;
-    @Getter
-    private transient boolean isRunning;
+    private final long timeUnitIntervalInMilliseconds;
+    private final ArrayDeque<Long> callTimestamps;
 
-    @Nullable
-    private Timer timer;
+    // The total number of calls made within the current time window.
+    private int callsCount;
 
     public GrpcCallRateMeter(int allowedCallsPerTimeUnit, TimeUnit timeUnit) {
         this.allowedCallsPerTimeUnit = allowedCallsPerTimeUnit;
         this.timeUnit = timeUnit;
+        this.timeUnitIntervalInMilliseconds = timeUnit.toMillis(1);
+        this.callsCount = 0;
+        this.callTimestamps = new ArrayDeque<>();
     }
 
-    public void start() {
-        stop();
-        timer = UserThread.runPeriodically(() -> callsCount = 0, 1, timeUnit);
-        isRunning = true;
+    public boolean isAllowed() {
+        removeStaleCallTimestamps();
+        if (callsCount < allowedCallsPerTimeUnit) {
+            incrementCallsCount();
+            return true;
+        } else {
+            return false;
+        }
     }
 
-    public void stop() {
-        if (timer != null)
-            timer.stop();
-
-        isRunning = false;
-    }
-
-    public void incrementCallsCount() {
-        callsCount++;
-    }
-
-    public boolean isCallRateExceeded() {
-        return callsCount > allowedCallsPerTimeUnit;
+    public int getCallsCount() {
+        removeStaleCallTimestamps();
+        return callsCount;
     }
 
     public String getCallsCountProgress(String calledMethodName) {
@@ -83,13 +60,30 @@ public final class GrpcCallRateMeter {
                 shortTimeUnitName);
     }
 
+    private void incrementCallsCount() {
+        callTimestamps.add(currentTimeMillis());
+        callsCount++;
+    }
+
+    private void removeStaleCallTimestamps() {
+        while (!callTimestamps.isEmpty() && isStale.test(callTimestamps.peek())) {
+            callTimestamps.remove();
+            callsCount--; // updates the current time window's call count
+        }
+    }
+
+    private final Predicate<Long> isStale = (t) -> {
+        long stale = currentTimeMillis() - this.getTimeUnitIntervalInMilliseconds();
+        // Is the given timestamp before the current time minus 1 timeUnit in millis?
+        return t < stale;
+    };
+
     @Override
     public String toString() {
         return "GrpcCallRateMeter{" +
                 "allowedCallsPerTimeUnit=" + allowedCallsPerTimeUnit +
                 ", timeUnit=" + timeUnit.name() +
                 ", callsCount=" + callsCount +
-                ", isRunning=" + isRunning +
                 '}';
     }
 }

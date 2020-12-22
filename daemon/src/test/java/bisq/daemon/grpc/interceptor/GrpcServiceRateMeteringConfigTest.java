@@ -53,13 +53,14 @@ public class GrpcServiceRateMeteringConfigTest {
 
     private static final GrpcServiceRateMeteringConfig.Builder builder = new GrpcServiceRateMeteringConfig.Builder();
     private static File configFile;
+    @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
     private static Optional<ServerInterceptor> versionServiceInterceptor;
 
     @BeforeClass
     public static void setup() {
         builder.addCallRateMeter(GrpcVersionService.class.getSimpleName(),
                 "getVersion",
-                2,
+                3,
                 SECONDS);
         builder.addCallRateMeter(GrpcVersionService.class.getSimpleName(),
                 "getNadaButDoNotBreakAnything",
@@ -93,52 +94,68 @@ public class GrpcServiceRateMeteringConfigTest {
         assertNotNull(configFile);
         assertTrue(configFile.exists());
         assertTrue(configFile.length() > 0);
-        String expectedConfigFilePath = Paths.get(getProperty("java.io.tmpdir")) + File.separator + "ratemeters.json";
+        String expectedConfigFilePath = Paths.get(getProperty("java.io.tmpdir"), "ratemeters.json").toString();
         assertEquals(expectedConfigFilePath, configFile.getAbsolutePath());
     }
 
     @Test
-    public void testGrpcVersionServiceRateMeteringConfig() {
+    public void testGetVersionCallRateMeter() {
         CallRateMeteringInterceptor versionServiceInterceptor = buildInterceptor();
         assertEquals(2, versionServiceInterceptor.serviceCallRateMeters.size());
 
-        GrpcCallRateMeter versionCallRateMeter = versionServiceInterceptor.serviceCallRateMeters.get("getVersion");
-        assertFalse(versionCallRateMeter.isRunning());
-        assertEquals(2, versionCallRateMeter.getAllowedCallsPerTimeUnit());
-        assertEquals(SECONDS, versionCallRateMeter.getTimeUnit());
-        assertFalse(versionCallRateMeter.isCallRateExceeded());
-        for (int i = 1; i <= 3; i++) {
-            versionCallRateMeter.incrementCallsCount();
+        GrpcCallRateMeter rateMeter = versionServiceInterceptor.serviceCallRateMeters.get("getVersion");
+        assertEquals(3, rateMeter.getAllowedCallsPerTimeUnit());
+        assertEquals(SECONDS, rateMeter.getTimeUnit());
+
+        doMaxIsAllowedChecks(true,
+                rateMeter.getAllowedCallsPerTimeUnit(),
+                rateMeter);
+
+        // The next 3 getversion calls will be blocked because we've exceeded the limit.
+        doMaxIsAllowedChecks(false,
+                rateMeter.getAllowedCallsPerTimeUnit(),
+                rateMeter);
+
+        // Wait:  let all of the rate meter's cached call timestamps to become stale,
+        // then we can call getversion another 'allowedCallsPerTimeUnit' times.
+        rest(1 + rateMeter.getTimeUnitIntervalInMilliseconds());
+        // All the stale call timestamps are gone and the call count is back to zero.
+        assertEquals(0, rateMeter.getCallsCount());
+
+        doMaxIsAllowedChecks(true,
+                rateMeter.getAllowedCallsPerTimeUnit(),
+                rateMeter);
+        // We've exceeded the call/second limit.
+        assertFalse(rateMeter.isAllowed());
+
+        // Let all of the call timestamps to go stale again.
+        rest(1 + rateMeter.getTimeUnitIntervalInMilliseconds());
+
+        // Call 2x, resting 0.25s after each call.
+        for (int i = 0; i < 2; i++) {
+            assertTrue(rateMeter.isAllowed());
+            rest(250);
         }
-        assertEquals(3, versionCallRateMeter.getCallsCount());
-        assertTrue(versionCallRateMeter.isCallRateExceeded());
+        // Call the 3rd time, then let one of the rate meter's timestamps to go stale.
+        assertTrue(rateMeter.isAllowed());
+        rest(510);
+
+        // The call count was decremented by one because one timestamp went stale.
+        assertEquals(2, rateMeter.getCallsCount());
+        assertTrue(rateMeter.isAllowed());
+        assertEquals(rateMeter.getAllowedCallsPerTimeUnit(), rateMeter.getCallsCount());
+
+        // We've exceeded the call limit again.
+        assertFalse(rateMeter.isAllowed());
     }
 
-    @Test
-    public void testRunningRateMetering() {
-        CallRateMeteringInterceptor versionServiceInterceptor = buildInterceptor();
-        GrpcCallRateMeter versionCallRateMeter = versionServiceInterceptor.serviceCallRateMeters.get("getVersion");
-
-        versionCallRateMeter.start();
-        assertTrue(versionCallRateMeter.isRunning());
-
-        // The timer resets the call count to 0 every 1s (the meter's configured timeunit).
-        // Wait 1.1s to let it do that before bumping the call count and checking state.
-        rest(1100);
-
-        assertEquals(0, versionCallRateMeter.getCallsCount());
-        assertFalse(versionCallRateMeter.isCallRateExceeded());
-
-        // Simulate calling 'getVersion' three times.
-        for (int i = 1; i <= 3; i++) {
-            versionCallRateMeter.incrementCallsCount();
+    private void doMaxIsAllowedChecks(boolean expectedIsAllowed,
+                                      int expectedCallsCount,
+                                      GrpcCallRateMeter rateMeter) {
+        for (int i = 1; i <= rateMeter.getAllowedCallsPerTimeUnit(); i++) {
+            assertEquals(expectedIsAllowed, rateMeter.isAllowed());
         }
-
-        assertEquals(3, versionCallRateMeter.getCallsCount());
-        assertTrue(versionCallRateMeter.isCallRateExceeded());
-        versionCallRateMeter.stop();
-        assertFalse(versionCallRateMeter.isRunning());
-        log.debug("Configured {}", versionServiceInterceptor);
+        assertEquals(expectedCallsCount, rateMeter.getCallsCount());
     }
 
     @AfterClass
@@ -155,6 +172,7 @@ public class GrpcServiceRateMeteringConfigTest {
     }
 
     private CallRateMeteringInterceptor buildInterceptor() {
+        //noinspection OptionalAssignedToNull
         if (versionServiceInterceptor == null) {
             versionServiceInterceptor = getCustomRateMeteringInterceptor(
                     configFile.getParentFile(),

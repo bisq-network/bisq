@@ -230,7 +230,7 @@ public class GrpcServiceRateMeteringConfig {
 
         public File build() {
             File tmpFile = serializeRateMeterDefinitions();
-            File configFile = new File("/tmp/ratemeters.json");
+            File configFile = Paths.get(getProperty("java.io.tmpdir"), "ratemeters.json").toFile();
             try {
                 deleteFileIfExists(configFile);
                 renameFile(tmpFile, configFile);

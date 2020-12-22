@@ -66,14 +66,8 @@ public final class CallRateMeteringInterceptor implements ServerInterceptor {
         String methodName = rateMeterKV.getKey();
         GrpcCallRateMeter rateMeter = rateMeterKV.getValue();
 
-        // The service method's rate meter doesn't start running until the 1st call.
-        if (!rateMeter.isRunning())
-            rateMeter.start();
-
-        rateMeter.incrementCallsCount();
-
-        if (rateMeter.isCallRateExceeded())
-            handlePermissionDeniedErrorAndCloseCall(methodName, rateMeter, serverCall);
+        if (!rateMeter.isAllowed())
+            handlePermissionDeniedWarningAndCloseCall(methodName, rateMeter, serverCall);
         else
             log.info(rateMeter.getCallsCountProgress(methodName));
     }
@@ -85,12 +79,12 @@ public final class CallRateMeteringInterceptor implements ServerInterceptor {
                 getRateMeterKey(serverCall));
     }
 
-    private void handlePermissionDeniedErrorAndCloseCall(String methodName,
-                                                         GrpcCallRateMeter rateMeter,
-                                                         ServerCall<?, ?> serverCall)
+    private void handlePermissionDeniedWarningAndCloseCall(String methodName,
+                                                           GrpcCallRateMeter rateMeter,
+                                                           ServerCall<?, ?> serverCall)
             throws StatusRuntimeException {
         String msg = getDefaultRateExceededError(methodName, rateMeter);
-        log.error(StringUtils.capitalize(msg) + ".");
+        log.warn(StringUtils.capitalize(msg) + ".");
         serverCall.close(PERMISSION_DENIED.withDescription(msg), new Metadata());
     }
 
@@ -99,12 +93,10 @@ public final class CallRateMeteringInterceptor implements ServerInterceptor {
         // The derived method name may not be an exact match to CLI's method name.
         String timeUnitName = StringUtils.chop(rateMeter.getTimeUnit().name().toLowerCase());
         int callCountAboveLimit = rateMeter.getCallsCount() - rateMeter.getAllowedCallsPerTimeUnit();
-        return format("the maximum allowed number of %s calls (%d/%s) has been exceeded by %d call%s",
+        return format("the maximum allowed number of %s calls (%d/%s) has been exceeded",
                 methodName.toLowerCase(),
                 rateMeter.getAllowedCallsPerTimeUnit(),
-                timeUnitName,
-                callCountAboveLimit,
-                callCountAboveLimit == 1 ? "" : "s");
+                timeUnitName);
     }
 
     private Optional<Map.Entry<String, GrpcCallRateMeter>> getRateMeterKV(ServerCall<?, ?> serverCall) {
