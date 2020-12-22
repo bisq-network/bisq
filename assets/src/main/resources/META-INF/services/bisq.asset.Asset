@@ -121,6 +121,7 @@ bisq.asset.coins.ZelCash
 bisq.asset.coins.Zero
 bisq.asset.coins.ZeroClassic
 bisq.asset.tokens.AugmintEuro
+bisq.asset.tokens.Barnbridge
 bisq.asset.tokens.DaiStablecoin
 bisq.asset.tokens.EtherStone
 bisq.asset.tokens.TrueUSD
