@@ -92,7 +92,6 @@ public final class CallRateMeteringInterceptor implements ServerInterceptor {
                                                GrpcCallRateMeter rateMeter) {
         // The derived method name may not be an exact match to CLI's method name.
         String timeUnitName = StringUtils.chop(rateMeter.getTimeUnit().name().toLowerCase());
-        int callCountAboveLimit = rateMeter.getCallsCount() - rateMeter.getAllowedCallsPerTimeUnit();
         return format("the maximum allowed number of %s calls (%d/%s) has been exceeded",
                 methodName.toLowerCase(),
                 rateMeter.getAllowedCallsPerTimeUnit(),
