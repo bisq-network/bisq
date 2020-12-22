@@ -327,14 +327,14 @@ task packageInstallers {
                         " --entitlements '${project(':desktop').projectDir}/package/macosx/macos.entitlements'" +
                         " --force" +
                         " --verbose" +
-                        "${bisqAppImageFullPath}/Contents/runtime/Contents/MacOS/libjli.dylib")
+                        " ${bisqAppImageFullPath}/Contents/runtime/Contents/MacOS/libjli.dylib")
                 executeCmd("codesign" +
                         " --sign \"${envVariableSigningID}\"" +
                         " --options runtime" +
                         " --entitlements '${project(':desktop').projectDir}/package/macosx/macos.entitlements'" +
                         " --force" +
                         " --verbose" +
-                        "${bisqAppImageFullPath}/Contents/MacOS/Bisq")
+                        " ${bisqAppImageFullPath}/Contents/MacOS/Bisq")
                 executeCmd("codesign" +
                         " --sign \"${envVariableSigningID}\"" +
                         " --options runtime" +
