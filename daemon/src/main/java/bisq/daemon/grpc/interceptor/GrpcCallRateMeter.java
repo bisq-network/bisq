@@ -23,20 +23,16 @@ public class GrpcCallRateMeter {
     private final long timeUnitIntervalInMilliseconds;
     private final ArrayDeque<Long> callTimestamps;
 
-    // The total number of calls made within the current time window.
-    private int callsCount;
-
     public GrpcCallRateMeter(int allowedCallsPerTimeUnit, TimeUnit timeUnit) {
         this.allowedCallsPerTimeUnit = allowedCallsPerTimeUnit;
         this.timeUnit = timeUnit;
         this.timeUnitIntervalInMilliseconds = timeUnit.toMillis(1);
-        this.callsCount = 0;
         this.callTimestamps = new ArrayDeque<>();
     }
 
     public boolean isAllowed() {
         removeStaleCallTimestamps();
-        if (callsCount < allowedCallsPerTimeUnit) {
+        if (callTimestamps.size() < allowedCallsPerTimeUnit) {
             incrementCallsCount();
             return true;
         } else {
@@ -46,15 +42,15 @@ public class GrpcCallRateMeter {
 
     public int getCallsCount() {
         removeStaleCallTimestamps();
-        return callsCount;
+        return callTimestamps.size();
     }
 
     public String getCallsCountProgress(String calledMethodName) {
         String shortTimeUnitName = StringUtils.chop(timeUnit.name().toLowerCase());
         return format("%s has been called %d time%s in the last %s, rate limit is %d/%s",
                 calledMethodName,
-                callsCount,
-                callsCount == 1 ? "" : "s",
+                callTimestamps.size(),
+                callTimestamps.size() == 1 ? "" : "s",
                 shortTimeUnitName,
                 allowedCallsPerTimeUnit,
                 shortTimeUnitName);
@@ -62,13 +58,11 @@ public class GrpcCallRateMeter {
 
     private void incrementCallsCount() {
         callTimestamps.add(currentTimeMillis());
-        callsCount++;
     }
 
     private void removeStaleCallTimestamps() {
         while (!callTimestamps.isEmpty() && isStale.test(callTimestamps.peek())) {
             callTimestamps.remove();
-            callsCount--; // updates the current time window's call count
         }
     }
 
@@ -83,7 +77,7 @@ public class GrpcCallRateMeter {
         return "GrpcCallRateMeter{" +
                 "allowedCallsPerTimeUnit=" + allowedCallsPerTimeUnit +
                 ", timeUnit=" + timeUnit.name() +
-                ", callsCount=" + callsCount +
+                ", callsCount=" + callTimestamps.size() +
                 '}';
     }
 }
