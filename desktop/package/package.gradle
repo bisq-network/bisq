@@ -366,6 +366,57 @@ task packageInstallers {
                         " -vvvv" +
                         " --deep" +
                         " '${binariesFolderPath}/Bisq-${appVersion}.dmg'")
+
+                // macOS step 6: Upload for notarization
+                // See https://developer.apple.com/documentation/xcode/notarizing_macos_software_before_distribution/customizing_the_notarization_workflow#3087734
+                String envVariableAcUsername = "$System.env.BISQ_PACKAGE_NOTARIZATION_AC_USERNAME"
+                String envVariableAscProvider = "$System.env.BISQ_PACKAGE_NOTARIZATION_ASC_PROVIDER"
+                def uploadForNotarizationOutput = executeCmd("xcrun altool --notarize-app" +
+                        " --primary-bundle-id 'network.bisq.CAT'" +
+                        " --username '${envVariableAcUsername}'" +
+                        " --password '@keychain:AC_PASSWORD'" +
+                        " --asc-provider '${envVariableAscProvider}'" +
+                        " --file '${binariesFolderPath}/Bisq-${appVersion}.dmg'")
+                // Response:
+                //  No errors uploading '[PATH_TO_BISQ_REPO]/bisq/desktop/build/temp-620637000/binaries/Bisq-1.1.1.dmg'.
+                //  RequestUUID = ea8bba77-97b7-4c15-a53f-8bbccf627190
+                def requestUUID = uploadForNotarizationOutput.split('RequestUUID = ')[1]
+                println "Extracted RequestUUID: " + requestUUID
+
+                // Every 1 minute, check the status
+                def notarizationEndedInSuccess = false
+                def notarizationEndedInFailure = false
+                while (!notarizationEndedInSuccess || !notarizationEndedInFailure)
+                {
+                    println "Current time is:"
+                    executeCmd('date')
+                    println "Waiting for 1 minute..."
+                    sleep(1 * 60 * 1000)
+
+                    println "Checking notarization status"
+
+                    def checkNotarizationStatusOutput = executeCmd("xcrun altool --notarization-info" +
+                            " '${requestUUID}'" +
+                            " --username '${envVariableAcUsername}'" +
+                            " --password '@keychain:AC_PASSWORD'")
+
+                    notarizationEndedInSuccess = checkNotarizationStatusOutput.contains('Status: success')
+                    notarizationEndedInFailure = checkNotarizationStatusOutput.contains('Error')
+                }
+
+                if (notarizationEndedInFailure) {
+                    ant.fail('Notarization failed, aborting')
+                }
+
+                if (notarizationEndedInSuccess) {
+                    println "Notarization was successful"
+
+                    // macOS step 7: Staple ticket on dmg
+                    executeCmd("xcrun stapler staple" +
+                            " '${binariesFolderPath}/Bisq-${appVersion}.dmg'")
+                }
+
+
             } else {
                 // If user didn't confirm the optional signing step, then generate a plain non-signed dmg
                 executeCmd(jPackageFilePath + commonOpts + macOpts + " --type dmg")
@@ -424,9 +475,13 @@ def executeCmd(String cmd) {
     // http://docs.groovy-lang.org/next/html/documentation/
     def commands = [shell, shellArg, cmd]
     def process = commands.execute(null, project.rootDir)
+    def result
     if (process.waitFor() == 0) {
-        println "Command output (stdout):\n${process.text}"
+        result = process.text;
+        println "Command output (stdout):\n${result}"
     } else {
-        println "Command output (stderr):\n${process.err.text}"
+        result = process.err.text;
+        println "Command output (stderr):\n${result}"
     }
+    return result;
 }
