@@ -16,7 +16,7 @@ import static java.lang.System.currentTimeMillis;
 public class GrpcCallRateMeter {
 
     @Getter
-    private final int allowedCallsPerTimeUnit;
+    private final int allowedCallsPerTimeWindow;
     @Getter
     private final TimeUnit timeUnit;
     @Getter
@@ -27,20 +27,20 @@ public class GrpcCallRateMeter {
 
     private transient final ArrayDeque<Long> callTimestamps;
 
-    public GrpcCallRateMeter(int allowedCallsPerTimeUnit, TimeUnit timeUnit) {
-        this(allowedCallsPerTimeUnit, timeUnit, 1);
+    public GrpcCallRateMeter(int allowedCallsPerTimeWindow, TimeUnit timeUnit) {
+        this(allowedCallsPerTimeWindow, timeUnit, 1);
     }
 
-    public GrpcCallRateMeter(int allowedCallsPerTimeUnit, TimeUnit timeUnit, int numTimeUnits) {
-        this.allowedCallsPerTimeUnit = allowedCallsPerTimeUnit;
+    public GrpcCallRateMeter(int allowedCallsPerTimeWindow, TimeUnit timeUnit, int numTimeUnits) {
+        this.allowedCallsPerTimeWindow = allowedCallsPerTimeWindow;
         this.timeUnit = timeUnit;
         this.numTimeUnits = numTimeUnits;
         this.timeUnitIntervalInMilliseconds = timeUnit.toMillis(1) * numTimeUnits;
         this.callTimestamps = new ArrayDeque<>();
     }
 
-    public boolean isAllowed() {
-        if (getCallsCount() < allowedCallsPerTimeUnit) {
+    public boolean checkAndIncrement() {
+        if (getCallsCount() < allowedCallsPerTimeWindow) {
             incrementCallsCount();
             return true;
         } else {
@@ -60,7 +60,7 @@ public class GrpcCallRateMeter {
                 callTimestamps.size(),
                 callTimestamps.size() == 1 ? "" : "s",
                 shortTimeUnitName,
-                allowedCallsPerTimeUnit,
+                allowedCallsPerTimeWindow,
                 shortTimeUnitName);
     }
 
@@ -83,7 +83,7 @@ public class GrpcCallRateMeter {
     @Override
     public String toString() {
         return "GrpcCallRateMeter{" +
-                "allowedCallsPerTimeUnit=" + allowedCallsPerTimeUnit +
+                "allowedCallsPerTimeWindow=" + allowedCallsPerTimeWindow +
                 ", timeUnit=" + timeUnit.name() +
                 ", timeUnitIntervalInMilliseconds=" + timeUnitIntervalInMilliseconds +
                 ", callsCount=" + callTimestamps.size() +

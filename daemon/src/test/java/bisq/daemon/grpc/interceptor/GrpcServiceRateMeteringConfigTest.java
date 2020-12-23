@@ -107,19 +107,19 @@ public class GrpcServiceRateMeteringConfigTest {
 
         // Check the rate meter config.
         GrpcCallRateMeter rateMeter = versionServiceInterceptor.serviceCallRateMeters.get("getVersion");
-        assertEquals(3, rateMeter.getAllowedCallsPerTimeUnit());
+        assertEquals(3, rateMeter.getAllowedCallsPerTimeWindow());
         assertEquals(SECONDS, rateMeter.getTimeUnit());
         assertEquals(2, rateMeter.getNumTimeUnits());
         assertEquals(2 * 1000, rateMeter.getTimeUnitIntervalInMilliseconds());
 
         // Do as many calls as allowed within rateMeter.getTimeUnitIntervalInMilliseconds().
         doMaxIsAllowedChecks(true,
-                rateMeter.getAllowedCallsPerTimeUnit(),
+                rateMeter.getAllowedCallsPerTimeWindow(),
                 rateMeter);
 
         // The next 3 calls are blocked because we've exceeded the 3calls/2s limit.
         doMaxIsAllowedChecks(false,
-                rateMeter.getAllowedCallsPerTimeUnit(),
+                rateMeter.getAllowedCallsPerTimeWindow(),
                 rateMeter);
 
         // Let all of the rate meter's cached call timestamps become stale by waiting for
@@ -129,37 +129,37 @@ public class GrpcServiceRateMeteringConfigTest {
         assertEquals(0, rateMeter.getCallsCount());
 
         doMaxIsAllowedChecks(true,
-                rateMeter.getAllowedCallsPerTimeUnit(),
+                rateMeter.getAllowedCallsPerTimeWindow(),
                 rateMeter);
         // We've exceeded the call/second limit.
-        assertFalse(rateMeter.isAllowed());
+        assertFalse(rateMeter.checkAndIncrement());
 
         // Let all of the call timestamps go stale again by waiting for 2001 ms.
         rest(1 + rateMeter.getTimeUnitIntervalInMilliseconds());
 
         // Call twice, resting 0.5s after each call.
         for (int i = 0; i < 2; i++) {
-            assertTrue(rateMeter.isAllowed());
+            assertTrue(rateMeter.checkAndIncrement());
             rest(500);
         }
         // Call the 3rd time, then let one of the rate meter's timestamps go stale.
-        assertTrue(rateMeter.isAllowed());
+        assertTrue(rateMeter.checkAndIncrement());
         rest(1001);
 
         // The call count was decremented by one because one timestamp went stale.
         assertEquals(2, rateMeter.getCallsCount());
-        assertTrue(rateMeter.isAllowed());
-        assertEquals(rateMeter.getAllowedCallsPerTimeUnit(), rateMeter.getCallsCount());
+        assertTrue(rateMeter.checkAndIncrement());
+        assertEquals(rateMeter.getAllowedCallsPerTimeWindow(), rateMeter.getCallsCount());
 
         // We've exceeded the call limit again.
-        assertFalse(rateMeter.isAllowed());
+        assertFalse(rateMeter.checkAndIncrement());
     }
 
     private void doMaxIsAllowedChecks(boolean expectedIsAllowed,
                                       int expectedCallsCount,
                                       GrpcCallRateMeter rateMeter) {
-        for (int i = 1; i <= rateMeter.getAllowedCallsPerTimeUnit(); i++) {
-            assertEquals(expectedIsAllowed, rateMeter.isAllowed());
+        for (int i = 1; i <= rateMeter.getAllowedCallsPerTimeWindow(); i++) {
+            assertEquals(expectedIsAllowed, rateMeter.checkAndIncrement());
         }
         assertEquals(expectedCallsCount, rateMeter.getCallsCount());
     }

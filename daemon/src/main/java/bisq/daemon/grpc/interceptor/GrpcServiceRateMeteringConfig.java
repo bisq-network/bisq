@@ -57,7 +57,7 @@ public class GrpcServiceRateMeteringConfig {
 
     private static final String KEY_GRPC_SERVICE_CLASS_NAME = "grpcServiceClassName";
     private static final String KEY_METHOD_RATE_METERS = "methodRateMeters";
-    private static final String KEY_ALLOWED_CALL_PER_TIME_UNIT = "allowedCallsPerTimeUnit";
+    private static final String KEY_ALLOWED_CALL_PER_TIME_WINDOW = "allowedCallsPerTimeWindow";
     private static final String KEY_TIME_UNIT = "timeUnit";
     private static final String KEY_NUM_TIME_UNITS = "numTimeUnits";
 
@@ -182,10 +182,10 @@ public class GrpcServiceRateMeteringConfig {
     @SuppressWarnings("unchecked")
     private static GrpcCallRateMeter getGrpcCallRateMeter(Map.Entry<String, Object> gsonEntry) {
         Map<String, Object> valueMap = (Map<String, Object>) gsonEntry.getValue();
-        int allowedCallsPerTimeUnit = ((Number) valueMap.get(KEY_ALLOWED_CALL_PER_TIME_UNIT)).intValue();
+        int allowedCallsPerTimeWindow = ((Number) valueMap.get(KEY_ALLOWED_CALL_PER_TIME_WINDOW)).intValue();
         TimeUnit timeUnit = TimeUnit.valueOf((String) valueMap.get(KEY_TIME_UNIT));
         int numTimeUnits = ((Number) valueMap.get(KEY_NUM_TIME_UNITS)).intValue();
-        return new GrpcCallRateMeter(allowedCallsPerTimeUnit, timeUnit, numTimeUnits);
+        return new GrpcCallRateMeter(allowedCallsPerTimeWindow, timeUnit, numTimeUnits);
     }
 
     private static void verifyConfigFile(File configFile) {

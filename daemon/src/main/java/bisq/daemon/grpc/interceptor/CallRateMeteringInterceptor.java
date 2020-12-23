@@ -66,7 +66,7 @@ public final class CallRateMeteringInterceptor implements ServerInterceptor {
         String methodName = rateMeterKV.getKey();
         GrpcCallRateMeter rateMeter = rateMeterKV.getValue();
 
-        if (!rateMeter.isAllowed())
+        if (!rateMeter.checkAndIncrement())
             handlePermissionDeniedWarningAndCloseCall(methodName, rateMeter, serverCall);
         else
             log.info(rateMeter.getCallsCountProgress(methodName));
@@ -94,7 +94,7 @@ public final class CallRateMeteringInterceptor implements ServerInterceptor {
         String timeUnitName = StringUtils.chop(rateMeter.getTimeUnit().name().toLowerCase());
         return format("the maximum allowed number of %s calls (%d/%s) has been exceeded",
                 methodName.toLowerCase(),
-                rateMeter.getAllowedCallsPerTimeUnit(),
+                rateMeter.getAllowedCallsPerTimeWindow(),
                 timeUnitName);
     }
 
