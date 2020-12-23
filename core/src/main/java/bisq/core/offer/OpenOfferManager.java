@@ -880,10 +880,10 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
             return;
         }
 
+        stopPeriodicRefreshOffersTimer();
+
         List<OpenOffer> openOffersList = new ArrayList<>(openOffers.getList());
         processListForRepublishOffers(openOffersList);
-
-        stopPeriodicRefreshOffersTimer();
     }
 
     private void processListForRepublishOffers(List<OpenOffer> list) {
