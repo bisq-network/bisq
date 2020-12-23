@@ -59,7 +59,7 @@ public class BitcoinDaemon extends AbstractLinuxProcess implements LinuxProcess 
                 + " -rpcport=" + config.bitcoinRpcPort
                 + " -rpcuser=" + config.bitcoinRpcUser
                 + " -rpcpassword=" + config.bitcoinRpcPassword
-                + " -blocknotify=" + config.bitcoinDatadir + "/blocknotify";
+                + " -blocknotify=" + "\"" + config.bitcoinDatadir + "/blocknotify" + " %s\"";
 
         BashCommand cmd = new BashCommand(bitcoindCmd).run();
         log.info("Starting ...\n$ {}", cmd.getCommand());
