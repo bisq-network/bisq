@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.apitest.scenario;
+package bisq.apitest.method;
 
 import io.grpc.StatusRuntimeException;
 
@@ -26,6 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -42,12 +43,10 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 
 
-import bisq.apitest.method.GetVersionTest;
-import bisq.apitest.method.MethodTest;
 import bisq.daemon.grpc.GrpcVersionService;
 import bisq.daemon.grpc.interceptor.GrpcServiceRateMeteringConfig;
 
-
+@Disabled
 @Slf4j
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class CallRateMeteringInterceptorTest extends MethodTest {
@@ -102,7 +101,7 @@ public class CallRateMeteringInterceptorTest extends MethodTest {
         tearDownScaffold();
     }
 
-    private static File buildInterceptorConfigFile() {
+    public static File buildInterceptorConfigFile() {
         GrpcServiceRateMeteringConfig.Builder builder = new GrpcServiceRateMeteringConfig.Builder();
         builder.addCallRateMeter(GrpcVersionService.class.getSimpleName(),
                 "getVersion",
