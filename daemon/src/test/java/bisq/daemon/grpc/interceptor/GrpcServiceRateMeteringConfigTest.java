@@ -58,15 +58,16 @@ public class GrpcServiceRateMeteringConfigTest {
 
     @BeforeClass
     public static void setup() {
+        // This is the tested rate meter, it allows 3 calls every 2 seconds.
         builder.addCallRateMeter(GrpcVersionService.class.getSimpleName(),
                 "getVersion",
                 3,
-                SECONDS);
+                SECONDS,
+                2);
         builder.addCallRateMeter(GrpcVersionService.class.getSimpleName(),
-                "getNadaButDoNotBreakAnything",
+                "badMethodNameDoesNotBreakAnything",
                 100,
                 DAYS);
-
         // The other Grpc*Service classes are not @VisibleForTesting, so we hardcode
         // the simple class name.
         builder.addCallRateMeter("GrpcOffersService",
@@ -100,24 +101,29 @@ public class GrpcServiceRateMeteringConfigTest {
 
     @Test
     public void testGetVersionCallRateMeter() {
+        // Check the interceptor has 2 rate meters, for getVersion and badMethodNameDoesNotBreakAnything.
         CallRateMeteringInterceptor versionServiceInterceptor = buildInterceptor();
         assertEquals(2, versionServiceInterceptor.serviceCallRateMeters.size());
 
+        // Check the rate meter config.
         GrpcCallRateMeter rateMeter = versionServiceInterceptor.serviceCallRateMeters.get("getVersion");
         assertEquals(3, rateMeter.getAllowedCallsPerTimeUnit());
         assertEquals(SECONDS, rateMeter.getTimeUnit());
+        assertEquals(2, rateMeter.getNumTimeUnits());
+        assertEquals(2 * 1000, rateMeter.getTimeUnitIntervalInMilliseconds());
 
+        // Do as many calls as allowed within rateMeter.getTimeUnitIntervalInMilliseconds().
         doMaxIsAllowedChecks(true,
                 rateMeter.getAllowedCallsPerTimeUnit(),
                 rateMeter);
 
-        // The next 3 getversion calls will be blocked because we've exceeded the limit.
+        // The next 3 calls are blocked because we've exceeded the 3calls/2s limit.
         doMaxIsAllowedChecks(false,
                 rateMeter.getAllowedCallsPerTimeUnit(),
                 rateMeter);
 
-        // Wait:  let all of the rate meter's cached call timestamps to become stale,
-        // then we can call getversion another 'allowedCallsPerTimeUnit' times.
+        // Let all of the rate meter's cached call timestamps become stale by waiting for
+        // 2001 ms, then we can call getversion another 'allowedCallsPerTimeUnit' times.
         rest(1 + rateMeter.getTimeUnitIntervalInMilliseconds());
         // All the stale call timestamps are gone and the call count is back to zero.
         assertEquals(0, rateMeter.getCallsCount());
@@ -128,17 +134,17 @@ public class GrpcServiceRateMeteringConfigTest {
         // We've exceeded the call/second limit.
         assertFalse(rateMeter.isAllowed());
 
-        // Let all of the call timestamps go stale again.
+        // Let all of the call timestamps go stale again by waiting for 2001 ms.
         rest(1 + rateMeter.getTimeUnitIntervalInMilliseconds());
 
-        // Call 2x, resting 0.25s after each call.
+        // Call twice, resting 0.5s after each call.
         for (int i = 0; i < 2; i++) {
             assertTrue(rateMeter.isAllowed());
-            rest(250);
+            rest(500);
         }
         // Call the 3rd time, then let one of the rate meter's timestamps go stale.
         assertTrue(rateMeter.isAllowed());
-        rest(510);
+        rest(1001);
 
         // The call count was decremented by one because one timestamp went stale.
         assertEquals(2, rateMeter.getCallsCount());

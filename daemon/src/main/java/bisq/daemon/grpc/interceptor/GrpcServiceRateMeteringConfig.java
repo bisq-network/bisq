@@ -24,8 +24,6 @@ import com.google.gson.GsonBuilder;
 
 import com.google.common.annotations.VisibleForTesting;
 
-import org.apache.commons.lang3.StringUtils;
-
 import java.nio.file.Paths;
 
 import java.io.File;
@@ -61,6 +59,7 @@ public class GrpcServiceRateMeteringConfig {
     private static final String KEY_METHOD_RATE_METERS = "methodRateMeters";
     private static final String KEY_ALLOWED_CALL_PER_TIME_UNIT = "allowedCallsPerTimeUnit";
     private static final String KEY_TIME_UNIT = "timeUnit";
+    private static final String KEY_NUM_TIME_UNITS = "numTimeUnits";
 
     private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
@@ -80,8 +79,15 @@ public class GrpcServiceRateMeteringConfig {
     public GrpcServiceRateMeteringConfig addMethodCallRateMeter(String methodName,
                                                                 int maxCalls,
                                                                 TimeUnit timeUnit) {
+        return addMethodCallRateMeter(methodName, maxCalls, timeUnit, 1);
+    }
+
+    public GrpcServiceRateMeteringConfig addMethodCallRateMeter(String methodName,
+                                                                int maxCalls,
+                                                                TimeUnit timeUnit,
+                                                                int numTimeUnits) {
         methodRateMeters.add(new LinkedHashMap<>() {{
-            put(methodName, new GrpcCallRateMeter(maxCalls, timeUnit));
+            put(methodName, new GrpcCallRateMeter(maxCalls, timeUnit, numTimeUnits));
         }});
         return this;
     }
@@ -178,7 +184,8 @@ public class GrpcServiceRateMeteringConfig {
         Map<String, Object> valueMap = (Map<String, Object>) gsonEntry.getValue();
         int allowedCallsPerTimeUnit = ((Number) valueMap.get(KEY_ALLOWED_CALL_PER_TIME_UNIT)).intValue();
         TimeUnit timeUnit = TimeUnit.valueOf((String) valueMap.get(KEY_TIME_UNIT));
-        return new GrpcCallRateMeter(allowedCallsPerTimeUnit, timeUnit);
+        int numTimeUnits = ((Number) valueMap.get(KEY_NUM_TIME_UNITS)).intValue();
+        return new GrpcCallRateMeter(allowedCallsPerTimeUnit, timeUnit, numTimeUnits);
     }
 
     private static void verifyConfigFile(File configFile) {
@@ -216,16 +223,28 @@ public class GrpcServiceRateMeteringConfig {
                                      String methodName,
                                      int maxCalls,
                                      TimeUnit timeUnit) {
-            log.info("Adding call rate metering definition {}.{} ({}/{}).",
+            addCallRateMeter(grpcServiceClassName,
+                    methodName,
+                    maxCalls,
+                    timeUnit,
+                    1);
+        }
+
+        public void addCallRateMeter(String grpcServiceClassName,
+                                     String methodName,
+                                     int maxCalls,
+                                     TimeUnit timeUnit,
+                                     int numTimeUnits) {
+            log.info("Adding call rate metering definition {}.{} ({}/{}ms).",
                     grpcServiceClassName,
                     methodName,
                     maxCalls,
-                    StringUtils.chop(timeUnit.name().toLowerCase()));
+                    timeUnit.toMillis(1) * numTimeUnits);
             rateMeterConfigs.stream().filter(c -> c.isConfigForGrpcService(grpcServiceClassName))
                     .findFirst().ifPresentOrElse(
-                    (config) -> config.addMethodCallRateMeter(methodName, maxCalls, timeUnit),
+                    (config) -> config.addMethodCallRateMeter(methodName, maxCalls, timeUnit, numTimeUnits),
                     () -> rateMeterConfigs.add(new GrpcServiceRateMeteringConfig(grpcServiceClassName)
-                            .addMethodCallRateMeter(methodName, maxCalls, timeUnit)));
+                            .addMethodCallRateMeter(methodName, maxCalls, timeUnit, numTimeUnits)));
         }
 
         public File build() {

@@ -20,19 +20,27 @@ public class GrpcCallRateMeter {
     @Getter
     private final TimeUnit timeUnit;
     @Getter
-    private final long timeUnitIntervalInMilliseconds;
-    private final ArrayDeque<Long> callTimestamps;
+    private final int numTimeUnits;
+
+    @Getter
+    private transient final long timeUnitIntervalInMilliseconds;
+
+    private transient final ArrayDeque<Long> callTimestamps;
 
     public GrpcCallRateMeter(int allowedCallsPerTimeUnit, TimeUnit timeUnit) {
+        this(allowedCallsPerTimeUnit, timeUnit, 1);
+    }
+
+    public GrpcCallRateMeter(int allowedCallsPerTimeUnit, TimeUnit timeUnit, int numTimeUnits) {
         this.allowedCallsPerTimeUnit = allowedCallsPerTimeUnit;
         this.timeUnit = timeUnit;
-        this.timeUnitIntervalInMilliseconds = timeUnit.toMillis(1);
+        this.numTimeUnits = numTimeUnits;
+        this.timeUnitIntervalInMilliseconds = timeUnit.toMillis(1) * numTimeUnits;
         this.callTimestamps = new ArrayDeque<>();
     }
 
     public boolean isAllowed() {
-        removeStaleCallTimestamps();
-        if (callTimestamps.size() < allowedCallsPerTimeUnit) {
+        if (getCallsCount() < allowedCallsPerTimeUnit) {
             incrementCallsCount();
             return true;
         } else {
@@ -77,6 +85,7 @@ public class GrpcCallRateMeter {
         return "GrpcCallRateMeter{" +
                 "allowedCallsPerTimeUnit=" + allowedCallsPerTimeUnit +
                 ", timeUnit=" + timeUnit.name() +
+                ", timeUnitIntervalInMilliseconds=" + timeUnitIntervalInMilliseconds +
                 ", callsCount=" + callTimestamps.size() +
                 '}';
     }
