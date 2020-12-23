@@ -31,8 +31,6 @@ import bisq.proto.grpc.GetPaymentMethodsReply;
 import bisq.proto.grpc.GetPaymentMethodsRequest;
 import bisq.proto.grpc.PaymentAccountsGrpc;
 
-import io.grpc.Status;
-import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 
 import javax.inject.Inject;
@@ -43,10 +41,12 @@ import java.util.stream.Collectors;
 class GrpcPaymentAccountsService extends PaymentAccountsGrpc.PaymentAccountsImplBase {
 
     private final CoreApi coreApi;
+    private final GrpcExceptionHandler exceptionHandler;
 
     @Inject
-    public GrpcPaymentAccountsService(CoreApi coreApi) {
+    public GrpcPaymentAccountsService(CoreApi coreApi, GrpcExceptionHandler exceptionHandler) {
         this.coreApi = coreApi;
+        this.exceptionHandler = exceptionHandler;
     }
 
     @Override
@@ -59,14 +59,8 @@ class GrpcPaymentAccountsService extends PaymentAccountsGrpc.PaymentAccountsImpl
                     .build();
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
-        } catch (IllegalArgumentException cause) {
-            var ex = new StatusRuntimeException(Status.INVALID_ARGUMENT.withDescription(cause.getMessage()));
-            responseObserver.onError(ex);
-            throw ex;
-        } catch (IllegalStateException cause) {
-            var ex = new StatusRuntimeException(Status.UNKNOWN.withDescription(cause.getMessage()));
-            responseObserver.onError(ex);
-            throw ex;
+        } catch (Throwable cause) {
+            exceptionHandler.handleException(cause, responseObserver);
         }
     }
 
@@ -81,14 +75,8 @@ class GrpcPaymentAccountsService extends PaymentAccountsGrpc.PaymentAccountsImpl
                     .addAllPaymentAccounts(paymentAccounts).build();
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
-        } catch (IllegalArgumentException cause) {
-            var ex = new StatusRuntimeException(Status.INVALID_ARGUMENT.withDescription(cause.getMessage()));
-            responseObserver.onError(ex);
-            throw ex;
-        } catch (IllegalStateException cause) {
-            var ex = new StatusRuntimeException(Status.UNKNOWN.withDescription(cause.getMessage()));
-            responseObserver.onError(ex);
-            throw ex;
+        } catch (Throwable cause) {
+            exceptionHandler.handleException(cause, responseObserver);
         }
     }
 
@@ -103,14 +91,8 @@ class GrpcPaymentAccountsService extends PaymentAccountsGrpc.PaymentAccountsImpl
                     .addAllPaymentMethods(paymentMethods).build();
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
-        } catch (IllegalArgumentException cause) {
-            var ex = new StatusRuntimeException(Status.INVALID_ARGUMENT.withDescription(cause.getMessage()));
-            responseObserver.onError(ex);
-            throw ex;
-        } catch (IllegalStateException cause) {
-            var ex = new StatusRuntimeException(Status.UNKNOWN.withDescription(cause.getMessage()));
-            responseObserver.onError(ex);
-            throw ex;
+        } catch (Throwable cause) {
+            exceptionHandler.handleException(cause, responseObserver);
         }
     }
 
@@ -124,14 +106,8 @@ class GrpcPaymentAccountsService extends PaymentAccountsGrpc.PaymentAccountsImpl
                     .build();
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
-        } catch (IllegalArgumentException cause) {
-            var ex = new StatusRuntimeException(Status.INVALID_ARGUMENT.withDescription(cause.getMessage()));
-            responseObserver.onError(ex);
-            throw ex;
-        } catch (IllegalStateException cause) {
-            var ex = new StatusRuntimeException(Status.UNKNOWN.withDescription(cause.getMessage()));
-            responseObserver.onError(ex);
-            throw ex;
+        } catch (Throwable cause) {
+            exceptionHandler.handleException(cause, responseObserver);
         }
     }
 }
