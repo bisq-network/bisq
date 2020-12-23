@@ -158,9 +158,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
         marketColumn.setComparator(Comparator.comparing(model::getMarketLabel));
         amountColumn.setComparator(Comparator.comparing(o -> o.getOffer().getAmount()));
         priceColumn.setComparator(Comparator.comparing(o -> o.getOffer().getPrice(), Comparator.nullsFirst(Comparator.naturalOrder())));
-        deviationColumn.setComparator(Comparator.comparing(o ->
-                        o.getOffer().isUseMarketBasedPrice() ? o.getOffer().getMarketPriceMargin() : 1,
-                Comparator.nullsFirst(Comparator.naturalOrder())));
+        deviationColumn.setComparator(Comparator.comparing(model::getPriceDeviationAsDouble, Comparator.nullsFirst(Comparator.naturalOrder())));
         volumeColumn.setComparator(Comparator.comparing(o -> o.getOffer().getVolume(), Comparator.nullsFirst(Comparator.naturalOrder())));
         dateColumn.setComparator(Comparator.comparing(o -> o.getOffer().getDate()));
         paymentMethodColumn.setComparator(Comparator.comparing(o -> Res.get(o.getOffer().getPaymentMethod().getId())));
@@ -504,7 +502,9 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
 
                                 if (item != null) {
                                     if (model.isDeactivated(item)) getStyleClass().add("offer-disabled");
-                                    setGraphic(new AutoTooltipLabel(model.getPriceDeviation(item)));
+                                    AutoTooltipLabel autoTooltipLabel = new AutoTooltipLabel(model.getPriceDeviation(item));
+                                    autoTooltipLabel.setOpacity(item.getOffer().isUseMarketBasedPrice() ? 1 : 0.4);
+                                    setGraphic(autoTooltipLabel);
                                 } else {
                                     setGraphic(null);
                                 }
