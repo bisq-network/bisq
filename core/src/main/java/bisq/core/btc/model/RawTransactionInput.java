@@ -27,12 +27,16 @@ import lombok.EqualsAndHashCode;
 
 import javax.annotation.concurrent.Immutable;
 
+/**
+ * Holds the relevant data for the connected output for a tx input.
+ * ParentTransaction means here the spending tx, the tx of the output not the parentTransaction of the input itself.
+ * Also index refers to the index of the spending output
+ */
 @EqualsAndHashCode
 @Immutable
 public final class RawTransactionInput implements NetworkPayload, PersistablePayload {
-    // Payload
-    public final long index;
-    public final byte[] parentTransaction;
+    public final long index;                // Index of spending txo
+    public final byte[] parentTransaction;  // Spending tx (fromTx)
     public final long value;
 
     public RawTransactionInput(long index, byte[] parentTransaction, long value) {
