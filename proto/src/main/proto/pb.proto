@@ -1642,6 +1642,7 @@ message UserPayload {
     repeated MarketAlertFilter market_alert_filters = 13;
     repeated RefundAgent accepted_refund_agents = 14;
     RefundAgent registered_refund_agent = 15;
+    map<string, string> cookie = 16;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
