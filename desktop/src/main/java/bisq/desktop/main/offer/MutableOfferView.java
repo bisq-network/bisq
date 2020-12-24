@@ -174,6 +174,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
     private AutoTooltipSlideToggleButton tradeFeeInBtcToggle, tradeFeeInBsqToggle;
     private Text xIcon, fakeXIcon;
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -237,7 +238,6 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
             if (waitingForFundsSpinner != null)
                 waitingForFundsSpinner.play();
 
-            //directionLabel.setText(model.getDirectionLabel());
             amountDescriptionLabel.setText(model.getAmountDescription());
             addressTextField.setAddress(model.getAddressAsString());
             addressTextField.setPaymentLabel(model.getPaymentLabel());
@@ -449,8 +449,8 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
     private void updateOfferElementsStyle() {
         GridPane.setColumnSpan(firstRowHBox, 2);
 
-        final String activeInputStyle = "input-with-border";
-        final String readOnlyInputStyle = "input-with-border-readonly";
+        String activeInputStyle = "input-with-border";
+        String readOnlyInputStyle = "input-with-border-readonly";
         amountValueCurrencyBox.getStyleClass().remove(activeInputStyle);
         amountValueCurrencyBox.getStyleClass().add(readOnlyInputStyle);
         priceAsPercentageValueCurrencyBox.getStyleClass().remove(activeInputStyle);
@@ -461,6 +461,8 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
         priceValueCurrencyBox.getStyleClass().add(readOnlyInputStyle);
         minAmountValueCurrencyBox.getStyleClass().remove(activeInputStyle);
         minAmountValueCurrencyBox.getStyleClass().add(readOnlyInputStyle);
+
+        priceTypeToggleButton.setVisible(false);
 
         resultLabel.getStyleClass().add("small");
         xLabel.getStyleClass().add("small");
@@ -542,7 +544,6 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
 
     private void addBindings() {
         priceCurrencyLabel.textProperty().bind(createStringBinding(() -> CurrencyUtil.getCounterCurrency(model.tradeCurrencyCode.get()), model.tradeCurrencyCode));
-
         marketBasedPriceLabel.prefWidthProperty().bind(priceCurrencyLabel.widthProperty());
         volumeCurrencyLabel.textProperty().bind(model.tradeCurrencyCode);
         priceDescriptionLabel.textProperty().bind(createStringBinding(() -> CurrencyUtil.getPriceWithCurrencyCode(model.tradeCurrencyCode.get(), "shared.fixedPriceInCurForCur"), model.tradeCurrencyCode));
@@ -590,10 +591,6 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
 
     private void removeBindings() {
         priceCurrencyLabel.textProperty().unbind();
-        fixedPriceTextField.disableProperty().unbind();
-        priceCurrencyLabel.disableProperty().unbind();
-        marketBasedPriceTextField.disableProperty().unbind();
-        marketBasedPriceLabel.disableProperty().unbind();
         volumeCurrencyLabel.textProperty().unbind();
         priceDescriptionLabel.textProperty().unbind();
         volumeDescriptionLabel.textProperty().unbind();
@@ -1387,7 +1384,6 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
 
         Tuple2<Label, VBox> amountInputBoxTuple = getTradeInputBox(minAmountValueCurrencyBox, Res.get("createOffer.amountPriceBox.minAmountDescription"));
 
-
         fakeXLabel = new Label();
         fakeXIcon = getIconForLabel(MaterialDesignIcon.CLOSE, "2em", fakeXLabel);
         fakeXLabel.getStyleClass().add("opaque-icon-character");
@@ -1397,12 +1393,10 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
         priceTypeToggleButton = getIconButton(MaterialDesignIcon.SWAP_VERTICAL);
         editOfferElements.add(priceTypeToggleButton);
         HBox.setMargin(priceTypeToggleButton, new Insets(16, 0, 0, 0));
-
         priceTypeToggleButton.setOnAction((actionEvent) ->
                 updatePriceToggleButtons(model.getDataModel().getUseMarketBasedPrice().getValue()));
 
         secondRowHBox = new HBox();
-
         secondRowHBox.setSpacing(5);
         secondRowHBox.setAlignment(Pos.CENTER_LEFT);
         secondRowHBox.getChildren().addAll(amountInputBoxTuple.second, fakeXLabel, fixedPriceBox, priceTypeToggleButton);
