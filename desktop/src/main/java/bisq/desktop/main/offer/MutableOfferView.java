@@ -754,7 +754,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
             if (!newValue.equals("") && CurrencyUtil.isFiatCurrency(model.tradeCurrencyCode.get())) {
                 volumeInfoInputTextField.setContentForPrivacyPopOver(createPopoverLabel(Res.get("offerbook.info.roundedFiatVolume")));
             } else {
-                volumeInfoInputTextField.hideInfoContent();
+                volumeInfoInputTextField.hideIcon();
             }
         };
 
