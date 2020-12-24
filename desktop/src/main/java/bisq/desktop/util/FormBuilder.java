@@ -1221,8 +1221,7 @@ public class FormBuilder {
             int rowIndex,
             String titleTextfield,
             String titleCombobox
-            )
-    {
+    ) {
         return addTopLabelTextFieldAutocompleteComboBox(gridPane, rowIndex, titleTextfield, titleCombobox, 0);
     }
 
@@ -1232,8 +1231,7 @@ public class FormBuilder {
             String titleTextfield,
             String titleCombobox,
             double top
-            )
-    {
+    ) {
         HBox hBox = new HBox();
         hBox.setSpacing(10);
 
