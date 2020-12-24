@@ -2143,6 +2143,14 @@ public class FormBuilder {
         return getIconButton(icon, styleClass, "2em");
     }
 
+    public static Button getRegularIconButton(GlyphIcons icon) {
+        return getIconButton(icon, "highlight", "1.6em");
+    }
+
+    public static Button getRegularIconButton(GlyphIcons icon, String styleClass) {
+        return getIconButton(icon, styleClass, "1.6em");
+    }
+
     public static Button getIconButton(GlyphIcons icon, String styleClass, String iconSize) {
         if (icon.fontFamily().equals(MATERIAL_DESIGN_ICONS)) {
             Button iconButton = MaterialDesignIconFactory.get().createIconButton(icon,
