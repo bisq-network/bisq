@@ -173,15 +173,16 @@ class OpenOffersViewModel extends ActivatableWithDataModel<OpenOffersDataModel> 
     }
 
     String getTriggerPrice(OpenOfferListItem item) {
-        if ((item == null))
+        if ((item == null)) {
             return "";
+        }
+
         Offer offer = item.getOffer();
-        if (offer.isUseMarketBasedPrice()) {
-            return PriceUtil.formatMarketPrice(item.getOpenOffer().getTriggerPrice(), offer.getCurrencyCode());
-        } else {
+        long triggerPrice = item.getOpenOffer().getTriggerPrice();
+        if (!offer.isUseMarketBasedPrice() || triggerPrice <= 0) {
             return Res.get("shared.na");
+        } else {
+            return PriceUtil.formatMarketPrice(triggerPrice, offer.getCurrencyCode());
         }
     }
-
-
 }

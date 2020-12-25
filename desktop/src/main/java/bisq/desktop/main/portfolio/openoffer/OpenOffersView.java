@@ -210,8 +210,8 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
         numItems.setText(Res.get("shared.numItemsLabel", sortedList.size()));
         exportButton.setOnAction(event -> {
             ObservableList<TableColumn<OpenOfferListItem, ?>> tableColumns = tableView.getColumns();
-            int reportColumns = tableColumns.size() - 2;    // CSV report excludes the last columns (icons)
-            CSVEntryConverter<OpenOfferListItem> headerConverter = transactionsListItem -> {
+            int reportColumns = tableColumns.size() - 3;    // CSV report excludes the last columns (icons)
+            CSVEntryConverter<OpenOfferListItem> headerConverter = item -> {
                 String[] columns = new String[reportColumns];
                 for (int i = 0; i < columns.length; i++) {
                     Node graphic = tableColumns.get(i).getGraphic();
@@ -234,11 +234,12 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                 columns[2] = model.getMarketLabel(item);
                 columns[3] = model.getPrice(item);
                 columns[4] = model.getPriceDeviation(item);
-                columns[5] = model.getAmount(item);
-                columns[6] = model.getVolume(item);
-                columns[7] = model.getPaymentMethod(item);
-                columns[8] = model.getDirectionLabel(item);
-                columns[9] = String.valueOf(!item.getOpenOffer().isDeactivated());
+                columns[5] = model.getTriggerPrice(item);
+                columns[6] = model.getAmount(item);
+                columns[7] = model.getVolume(item);
+                columns[8] = model.getPaymentMethod(item);
+                columns[9] = model.getDirectionLabel(item);
+                columns[10] = String.valueOf(!item.getOpenOffer().isDeactivated());
                 return columns;
             };
 
@@ -340,7 +341,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
     }
 
     private void onActivateOpenOffer(OpenOffer openOffer) {
-        if (model.isBootstrappedOrShowPopup()) {
+        if (model.isBootstrappedOrShowPopup() && !model.dataModel.wasTriggered(openOffer)) {
             model.onActivateOpenOffer(openOffer,
                     () -> log.debug("Activate offer was successful"),
                     (message) -> {
