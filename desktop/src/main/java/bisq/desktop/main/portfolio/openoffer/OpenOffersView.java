@@ -79,7 +79,7 @@ import java.util.Comparator;
 
 import org.jetbrains.annotations.NotNull;
 
-import static bisq.desktop.util.FormBuilder.getIconButton;
+import static bisq.desktop.util.FormBuilder.getRegularIconButton;
 
 @FxmlView
 public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersViewModel> {
@@ -635,6 +635,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                                 if (item != null && !empty) {
                                     if (checkBox == null) {
                                         checkBox = new AutoTooltipSlideToggleButton();
+                                        checkBox.setPadding(new Insets(-7, 0, -7, 0));
                                         checkBox.setGraphic(iconView);
                                     }
                                     checkBox.setOnAction(event -> {
@@ -659,6 +660,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                         };
                     }
                 });
+        deactivateItemColumn.setSortable(false);
     }
 
     private void setRemoveColumnCellFactory() {
@@ -677,7 +679,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
 
                                 if (item != null && !empty) {
                                     if (button == null) {
-                                        button = getIconButton(MaterialDesignIcon.DELETE_FOREVER, "delete");
+                                        button = getRegularIconButton(MaterialDesignIcon.DELETE_FOREVER, "delete");
                                         button.setTooltip(new Tooltip(Res.get("shared.removeOffer")));
                                         setGraphic(button);
                                     }
@@ -693,6 +695,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                         };
                     }
                 });
+        removeItemColumn.setSortable(false);
     }
 
     private void setEditColumnCellFactory() {
@@ -710,7 +713,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
 
                                 if (item != null && !empty) {
                                     if (button == null) {
-                                        button = getIconButton(MaterialDesignIcon.PENCIL);
+                                        button = getRegularIconButton(MaterialDesignIcon.PENCIL);
                                         button.setTooltip(new Tooltip(Res.get("shared.editOffer")));
                                         setGraphic(button);
                                     }
@@ -726,6 +729,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                         };
                     }
                 });
+        editItemColumn.setSortable(false);
     }
 
     public void setOpenOfferActionHandler(PortfolioView.OpenOfferActionHandler openOfferActionHandler) {

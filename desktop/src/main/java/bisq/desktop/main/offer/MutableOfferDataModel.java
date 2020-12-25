@@ -141,7 +141,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     private final Predicate<ObjectProperty<Price>> isNonZeroPrice = (p) -> p.get() != null && !p.get().isZero();
     private final Predicate<ObjectProperty<Volume>> isNonZeroVolume = (v) -> v.get() != null && !v.get().isZero();
     @Getter
-    private long triggerPrice;
+    protected long triggerPrice;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
