@@ -80,15 +80,22 @@ class EditOfferViewModel extends MutableOfferViewModel<EditOfferDataModel> {
     @Override
     public void activate() {
         super.activate();
+
         dataModel.populateData();
+
+        long triggerPriceAsLong = dataModel.getTriggerPrice();
+        dataModel.setTriggerPrice(triggerPriceAsLong);
+        if (triggerPriceAsLong > 0) {
+            triggerPrice.set(PriceUtil.formatMarketPrice(triggerPriceAsLong, dataModel.getCurrencyCode()));
+        } else {
+            triggerPrice.set("");
+        }
+        onTriggerPriceTextFieldChanged();
     }
 
     public void applyOpenOffer(OpenOffer openOffer) {
         dataModel.reset();
         dataModel.applyOpenOffer(openOffer);
-
-        dataModel.setTriggerPrice(openOffer.getTriggerPrice());
-        triggerPrice.set(PriceUtil.formatMarketPrice(openOffer.getTriggerPrice(), openOffer.getOffer().getCurrencyCode()));
     }
 
     public void onStartEditOffer(ErrorMessageHandler errorMessageHandler) {

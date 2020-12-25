@@ -106,8 +106,8 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
     protected final CoinFormatter btcFormatter;
     private final BsqFormatter bsqFormatter;
     private final FiatVolumeValidator fiatVolumeValidator;
-    private final FiatPriceValidator fiatPriceValidator, fiatTriggerPriceValidator;
-    private final AltcoinValidator altcoinValidator, altcoinTriggerPriceValidator;
+    private final FiatPriceValidator fiatPriceValidator;
+    private final AltcoinValidator altcoinValidator;
     protected final OfferUtil offerUtil;
 
     private String amountDescription;
@@ -222,9 +222,6 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
         this.btcFormatter = btcFormatter;
         this.bsqFormatter = bsqFormatter;
         this.offerUtil = offerUtil;
-
-        fiatTriggerPriceValidator = new FiatPriceValidator();
-        altcoinTriggerPriceValidator = new AltcoinValidator();
 
         paymentLabel = Res.get("createOffer.fundsBox.paymentLabel", dataModel.shortOfferId);
 
@@ -788,8 +785,13 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
         }
     }
 
-    void onTriggerPriceTextFieldChanged() {
+    public void onTriggerPriceTextFieldChanged() {
         String triggerPriceAsString = triggerPrice.get();
+
+        // Error field does not update if there was an error and then another different error
+        // if not reset here. Not clear why...
+        triggerPriceValidationResult.set(new InputValidator.ValidationResult(true));
+
         InputValidator.ValidationResult result = PriceUtil.isTriggerPriceValid(triggerPriceAsString,
                 dataModel.getPrice().get(),
                 dataModel.isSellOffer(),

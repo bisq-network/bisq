@@ -171,4 +171,17 @@ class OpenOffersViewModel extends ActivatableWithDataModel<OpenOffersDataModel> 
                 btcFormatter.formatCoinWithCode(offer.getMakerFee()) :
                 bsqFormatter.formatCoinWithCode(offer.getMakerFee());
     }
+
+    String getTriggerPrice(OpenOfferListItem item) {
+        if ((item == null))
+            return "";
+        Offer offer = item.getOffer();
+        if (offer.isUseMarketBasedPrice()) {
+            return PriceUtil.formatMarketPrice(item.getOpenOffer().getTriggerPrice(), offer.getCurrencyCode());
+        } else {
+            return Res.get("shared.na");
+        }
+    }
+
+
 }

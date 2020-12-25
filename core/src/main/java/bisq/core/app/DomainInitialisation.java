@@ -34,6 +34,7 @@ import bisq.core.notifications.alerts.TradeEvents;
 import bisq.core.notifications.alerts.market.MarketAlerts;
 import bisq.core.notifications.alerts.price.PriceAlert;
 import bisq.core.offer.OpenOfferManager;
+import bisq.core.offer.PriceEventHandler;
 import bisq.core.payment.RevolutAccount;
 import bisq.core.payment.TradeLimits;
 import bisq.core.provider.fee.FeeService;
@@ -106,6 +107,7 @@ public class DomainInitialisation {
     private final MarketAlerts marketAlerts;
     private final User user;
     private final DaoStateSnapshotService daoStateSnapshotService;
+    private final PriceEventHandler priceEventHandler;
 
     @Inject
     public DomainInitialisation(ClockWatcher clockWatcher,
@@ -141,7 +143,8 @@ public class DomainInitialisation {
                                 PriceAlert priceAlert,
                                 MarketAlerts marketAlerts,
                                 User user,
-                                DaoStateSnapshotService daoStateSnapshotService) {
+                                DaoStateSnapshotService daoStateSnapshotService,
+                                PriceEventHandler priceEventHandler) {
         this.clockWatcher = clockWatcher;
         this.tradeLimits = tradeLimits;
         this.arbitrationManager = arbitrationManager;
@@ -176,6 +179,7 @@ public class DomainInitialisation {
         this.marketAlerts = marketAlerts;
         this.user = user;
         this.daoStateSnapshotService = daoStateSnapshotService;
+        this.priceEventHandler = priceEventHandler;
     }
 
     public void initDomainServices(Consumer<String> rejectedTxErrorMessageHandler,
@@ -254,6 +258,7 @@ public class DomainInitialisation {
         disputeMsgEvents.onAllServicesInitialized();
         priceAlert.onAllServicesInitialized();
         marketAlerts.onAllServicesInitialized();
+        priceEventHandler.onAllServicesInitialized();
 
         if (revolutAccountsUpdateHandler != null) {
             revolutAccountsUpdateHandler.accept(user.getPaymentAccountsAsObservable().stream()

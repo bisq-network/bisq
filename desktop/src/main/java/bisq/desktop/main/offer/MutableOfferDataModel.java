@@ -679,7 +679,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
         return tradeCurrencyCode;
     }
 
-    String getCurrencyCode() {
+    public String getCurrencyCode() {
         return tradeCurrencyCode.get();
     }
 

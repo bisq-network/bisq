@@ -89,7 +89,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
     @FXML
     TableColumn<OpenOfferListItem, OpenOfferListItem> priceColumn, deviationColumn, amountColumn, volumeColumn,
             marketColumn, directionColumn, dateColumn, offerIdColumn, deactivateItemColumn,
-            removeItemColumn, editItemColumn, paymentMethodColumn;
+            removeItemColumn, editItemColumn, triggerPriceColumn, paymentMethodColumn;
     @FXML
     HBox searchBox;
     @FXML
@@ -113,6 +113,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
     private FilteredList<OpenOfferListItem> filteredList;
     private ChangeListener<String> filterTextFieldListener;
     private PortfolioView.OpenOfferActionHandler openOfferActionHandler;
+    private ChangeListener<Number> widthListener;
 
     @Inject
     public OpenOffersView(OpenOffersViewModel model, Navigation navigation, OfferDetailsWindow offerDetailsWindow) {
@@ -123,6 +124,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
 
     @Override
     public void initialize() {
+        widthListener = (observable, oldValue, newValue) -> onWidthChange((double) newValue);
         paymentMethodColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.paymentMethod")));
         priceColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.price")));
         deviationColumn.setGraphic(new AutoTooltipTableColumn<>(Res.get("shared.deviation"),
@@ -133,6 +135,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
         directionColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.offerType")));
         dateColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.dateTime")));
         offerIdColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.offerId")));
+        triggerPriceColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.triggerPrice")));
         deactivateItemColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.enabled")));
         editItemColumn.setGraphic(new AutoTooltipLabel(""));
         removeItemColumn.setGraphic(new AutoTooltipLabel(""));
@@ -148,6 +151,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
         setDateColumnCellFactory();
         setDeactivateColumnCellFactory();
         setEditColumnCellFactory();
+        setTriggerPriceColumnCellFactory();
         setRemoveColumnCellFactory();
 
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
@@ -159,6 +163,8 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
         amountColumn.setComparator(Comparator.comparing(o -> o.getOffer().getAmount()));
         priceColumn.setComparator(Comparator.comparing(o -> o.getOffer().getPrice(), Comparator.nullsFirst(Comparator.naturalOrder())));
         deviationColumn.setComparator(Comparator.comparing(model::getPriceDeviationAsDouble, Comparator.nullsFirst(Comparator.naturalOrder())));
+        triggerPriceColumn.setComparator(Comparator.comparing(o -> o.getOpenOffer().getTriggerPrice(),
+                Comparator.nullsFirst(Comparator.naturalOrder())));
         volumeColumn.setComparator(Comparator.comparing(o -> o.getOffer().getVolume(), Comparator.nullsFirst(Comparator.naturalOrder())));
         dateColumn.setComparator(Comparator.comparing(o -> o.getOffer().getDate()));
         paymentMethodColumn.setComparator(Comparator.comparing(o -> Res.get(o.getOffer().getPaymentMethod().getId())));
@@ -245,6 +251,18 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
 
         filterTextField.textProperty().addListener(filterTextFieldListener);
         applyFilteredListPredicate(filterTextField.getText());
+
+        root.widthProperty().addListener(widthListener);
+        onWidthChange(root.getWidth());
+    }
+
+    @Override
+    protected void deactivate() {
+        sortedList.comparatorProperty().unbind();
+        exportButton.setOnAction(null);
+
+        filterTextField.textProperty().removeListener(filterTextFieldListener);
+        root.widthProperty().removeListener(widthListener);
     }
 
     private void updateSelectToggleButtonState() {
@@ -262,14 +280,6 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                 selectToggleButton.setSelected(true);
             }
         }
-    }
-
-    @Override
-    protected void deactivate() {
-        sortedList.comparatorProperty().unbind();
-        exportButton.setOnAction(null);
-
-        filterTextField.textProperty().removeListener(filterTextFieldListener);
     }
 
     private void applyFilteredListPredicate(String filterString) {
@@ -310,6 +320,10 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
             }
             return false;
         });
+    }
+
+    private void onWidthChange(double width) {
+        triggerPriceColumn.setVisible(width > 1200);
     }
 
     private void onDeactivateOpenOffer(OpenOffer openOffer) {
@@ -514,6 +528,30 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                 });
     }
 
+    private void setTriggerPriceColumnCellFactory() {
+        triggerPriceColumn.setCellValueFactory((offerListItem) -> new ReadOnlyObjectWrapper<>(offerListItem.getValue()));
+        triggerPriceColumn.setCellFactory(
+                new Callback<>() {
+                    @Override
+                    public TableCell<OpenOfferListItem, OpenOfferListItem> call(
+                            TableColumn<OpenOfferListItem, OpenOfferListItem> column) {
+                        return new TableCell<>() {
+                            @Override
+                            public void updateItem(final OpenOfferListItem item, boolean empty) {
+                                super.updateItem(item, empty);
+                                getStyleClass().removeAll("offer-disabled");
+                                if (item != null) {
+                                    if (model.isDeactivated(item)) getStyleClass().add("offer-disabled");
+                                    setGraphic(new AutoTooltipLabel(model.getTriggerPrice(item)));
+                                } else {
+                                    setGraphic(null);
+                                }
+                            }
+                        };
+                    }
+                });
+    }
+
     private void setVolumeColumnCellFactory() {
         volumeColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         volumeColumn.setCellFactory(
@@ -660,7 +698,6 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                         };
                     }
                 });
-        deactivateItemColumn.setSortable(false);
     }
 
     private void setRemoveColumnCellFactory() {
@@ -695,7 +732,6 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                         };
                     }
                 });
-        removeItemColumn.setSortable(false);
     }
 
     private void setEditColumnCellFactory() {
@@ -729,7 +765,6 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                         };
                     }
                 });
-        editItemColumn.setSortable(false);
     }
 
     public void setOpenOfferActionHandler(PortfolioView.OpenOfferActionHandler openOfferActionHandler) {

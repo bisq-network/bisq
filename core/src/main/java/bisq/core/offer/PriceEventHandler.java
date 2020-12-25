@@ -92,7 +92,8 @@ public class PriceEventHandler {
         }
 
         String currencyCode = openOffer.getOffer().getCurrencyCode();
-        int smallestUnitExponent = CurrencyUtil.isCryptoCurrency(currencyCode) ?
+        boolean cryptoCurrency = CurrencyUtil.isCryptoCurrency(currencyCode);
+        int smallestUnitExponent = cryptoCurrency ?
                 Altcoin.SMALLEST_UNIT_EXPONENT :
                 Fiat.SMALLEST_UNIT_EXPONENT;
         long marketPriceAsLong = roundDoubleToLong(
@@ -100,13 +101,15 @@ public class PriceEventHandler {
         long triggerPrice = openOffer.getTriggerPrice();
         if (triggerPrice > 0) {
             OfferPayload.Direction direction = openOffer.getOffer().getDirection();
-            boolean triggered = direction == OfferPayload.Direction.BUY ?
-                    marketPriceAsLong > triggerPrice :
-                    marketPriceAsLong < triggerPrice;
+            boolean isSellOffer = direction == OfferPayload.Direction.SELL;
+            boolean condition = isSellOffer && !cryptoCurrency || !isSellOffer && cryptoCurrency;
+            boolean triggered = condition ?
+                    marketPriceAsLong < triggerPrice :
+                    marketPriceAsLong > triggerPrice;
             if (triggered) {
-                log.error("Market price exceeded the trigger price of the open offer. " +
-                                "We deactivate the open offer with ID {}. Currency: {}; offer direction: {}; " +
-                                "Market price: {}; Upper price threshold : {}",
+                log.info("Market price exceeded the trigger price of the open offer.\n" +
+                                "We deactivate the open offer with ID {}.\nCurrency: {};\nOffer direction: {};\n" +
+                                "Market price: {};\nTrigger price : {}",
                         openOffer.getOffer().getShortId(),
                         currencyCode,
                         direction,
