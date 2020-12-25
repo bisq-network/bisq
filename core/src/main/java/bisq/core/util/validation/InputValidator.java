@@ -21,6 +21,7 @@ import bisq.core.locale.Res;
 
 import java.math.BigInteger;
 
+import java.util.Objects;
 import java.util.function.Function;
 
 public class InputValidator {
@@ -63,6 +64,12 @@ public class InputValidator {
                     "isValid=" + isValid +
                     ", errorMessage='" + errorMessage + '\'' +
                     '}';
+        }
+
+        public boolean errorMessageEquals(ValidationResult other) {
+            if (this == other) return true;
+            if (other == null) return false;
+            return Objects.equals(errorMessage, other.errorMessage);
         }
 
         public interface Validator extends Function<String, ValidationResult> {
