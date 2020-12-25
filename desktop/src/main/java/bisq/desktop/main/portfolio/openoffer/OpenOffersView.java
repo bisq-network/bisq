@@ -89,7 +89,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
     @FXML
     TableColumn<OpenOfferListItem, OpenOfferListItem> priceColumn, deviationColumn, amountColumn, volumeColumn,
             marketColumn, directionColumn, dateColumn, offerIdColumn, deactivateItemColumn,
-            removeItemColumn, editItemColumn, triggerPriceColumn, paymentMethodColumn;
+            removeItemColumn, editItemColumn, triggerPriceColumn, triggerIconColumn, paymentMethodColumn;
     @FXML
     HBox searchBox;
     @FXML
@@ -135,7 +135,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
         directionColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.offerType")));
         dateColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.dateTime")));
         offerIdColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.offerId")));
-        triggerPriceColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.triggerPrice")));
+        triggerPriceColumn.setGraphic(new AutoTooltipLabel(Res.get("openOffer.header.triggerPrice")));
         deactivateItemColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.enabled")));
         editItemColumn.setGraphic(new AutoTooltipLabel(""));
         removeItemColumn.setGraphic(new AutoTooltipLabel(""));
@@ -151,6 +151,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
         setDateColumnCellFactory();
         setDeactivateColumnCellFactory();
         setEditColumnCellFactory();
+        setTriggerIconColumnCellFactory();
         setTriggerPriceColumnCellFactory();
         setRemoveColumnCellFactory();
 
@@ -671,21 +672,23 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                                 super.updateItem(item, empty);
 
                                 if (item != null && !empty) {
+                                    OpenOffer openOffer = item.getOpenOffer();
                                     if (checkBox == null) {
                                         checkBox = new AutoTooltipSlideToggleButton();
                                         checkBox.setPadding(new Insets(-7, 0, -7, 0));
                                         checkBox.setGraphic(iconView);
                                     }
+                                    checkBox.setDisable(model.dataModel.wasTriggered(openOffer));
                                     checkBox.setOnAction(event -> {
-                                        if (item.getOpenOffer().isDeactivated()) {
-                                            onActivateOpenOffer(item.getOpenOffer());
+                                        if (openOffer.isDeactivated()) {
+                                            onActivateOpenOffer(openOffer);
                                         } else {
-                                            onDeactivateOpenOffer(item.getOpenOffer());
+                                            onDeactivateOpenOffer(openOffer);
                                         }
-                                        updateState(item.getOpenOffer());
+                                        updateState(openOffer);
                                         tableView.refresh();
                                     });
-                                    updateState(item.getOpenOffer());
+                                    updateState(openOffer);
                                     setGraphic(checkBox);
                                 } else {
                                     setGraphic(null);
@@ -721,6 +724,48 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                                         setGraphic(button);
                                     }
                                     button.setOnAction(event -> onRemoveOpenOffer(item.getOpenOffer()));
+                                } else {
+                                    setGraphic(null);
+                                    if (button != null) {
+                                        button.setOnAction(null);
+                                        button = null;
+                                    }
+                                }
+                            }
+                        };
+                    }
+                });
+    }
+
+    private void setTriggerIconColumnCellFactory() {
+        triggerIconColumn.setCellValueFactory((offerListItem) -> new ReadOnlyObjectWrapper<>(offerListItem.getValue()));
+        triggerIconColumn.setCellFactory(
+                new Callback<>() {
+                    @Override
+                    public TableCell<OpenOfferListItem, OpenOfferListItem> call(TableColumn<OpenOfferListItem, OpenOfferListItem> column) {
+                        return new TableCell<>() {
+                            Button button;
+
+                            @Override
+                            public void updateItem(final OpenOfferListItem item, boolean empty) {
+                                super.updateItem(item, empty);
+
+                                if (item != null && !empty) {
+                                    if (button == null) {
+                                        button = getRegularIconButton(MaterialDesignIcon.SHIELD_HALF_FULL);
+                                        boolean triggerPriceSet = item.getOpenOffer().getTriggerPrice() > 0;
+                                        button.setVisible(triggerPriceSet);
+
+                                        if (model.dataModel.wasTriggered(item.getOpenOffer())) {
+                                            button.getGraphic().getStyleClass().add("warning");
+                                            button.setTooltip(new Tooltip(Res.get("openOffer.triggered")));
+                                        } else {
+                                            button.getGraphic().getStyleClass().remove("warning");
+                                            button.setTooltip(new Tooltip(Res.get("openOffer.triggerPrice", model.getTriggerPrice(item))));
+                                        }
+                                        setGraphic(button);
+                                    }
+                                    button.setOnAction(event -> onEditOpenOffer(item.getOpenOffer()));
                                 } else {
                                     setGraphic(null);
                                     if (button != null) {

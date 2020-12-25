@@ -46,13 +46,13 @@ import static bisq.common.util.MathUtils.scaleUpByPowerOf10;
 
 @Slf4j
 @Singleton
-public class PriceEventHandler {
+public class TriggerPriceService {
     private final OpenOfferManager openOfferManager;
     private final PriceFeedService priceFeedService;
     private final Map<String, Set<OpenOffer>> openOffersByCurrency = new HashMap<>();
 
     @Inject
-    public PriceEventHandler(OpenOfferManager openOfferManager, PriceFeedService priceFeedService) {
+    public TriggerPriceService(OpenOfferManager openOfferManager, PriceFeedService priceFeedService) {
         this.openOfferManager = openOfferManager;
         this.priceFeedService = priceFeedService;
     }
@@ -85,10 +85,10 @@ public class PriceEventHandler {
                 });
     }
 
-    private void checkPriceThreshold(bisq.core.provider.price.MarketPrice marketPrice, OpenOffer openOffer) {
+    public static boolean wasTriggered(MarketPrice marketPrice, OpenOffer openOffer) {
         Price price = openOffer.getOffer().getPrice();
         if (price == null) {
-            return;
+            return false;
         }
 
         String currencyCode = openOffer.getOffer().getCurrencyCode();
@@ -99,27 +99,39 @@ public class PriceEventHandler {
         long marketPriceAsLong = roundDoubleToLong(
                 scaleUpByPowerOf10(marketPrice.getPrice(), smallestUnitExponent));
         long triggerPrice = openOffer.getTriggerPrice();
-        if (triggerPrice > 0) {
-            OfferPayload.Direction direction = openOffer.getOffer().getDirection();
-            boolean isSellOffer = direction == OfferPayload.Direction.SELL;
-            boolean condition = isSellOffer && !cryptoCurrency || !isSellOffer && cryptoCurrency;
-            boolean triggered = condition ?
-                    marketPriceAsLong < triggerPrice :
-                    marketPriceAsLong > triggerPrice;
-            if (triggered) {
-                log.info("Market price exceeded the trigger price of the open offer.\n" +
-                                "We deactivate the open offer with ID {}.\nCurrency: {};\nOffer direction: {};\n" +
-                                "Market price: {};\nTrigger price : {}",
-                        openOffer.getOffer().getShortId(),
-                        currencyCode,
-                        direction,
-                        marketPrice.getPrice(),
-                        MathUtils.scaleDownByPowerOf10(triggerPrice, smallestUnitExponent)
-                );
-                openOfferManager.deactivateOpenOffer(openOffer, () -> {
-                }, errorMessage -> {
-                });
-            }
+        if (triggerPrice <= 0) {
+            return false;
+        }
+
+        OfferPayload.Direction direction = openOffer.getOffer().getDirection();
+        boolean isSellOffer = direction == OfferPayload.Direction.SELL;
+        boolean condition = isSellOffer && !cryptoCurrency || !isSellOffer && cryptoCurrency;
+        return condition ?
+                marketPriceAsLong < triggerPrice :
+                marketPriceAsLong > triggerPrice;
+    }
+
+    private void checkPriceThreshold(MarketPrice marketPrice, OpenOffer openOffer) {
+        if (wasTriggered(marketPrice, openOffer)) {
+            String currencyCode = openOffer.getOffer().getCurrencyCode();
+            int smallestUnitExponent = CurrencyUtil.isCryptoCurrency(currencyCode) ?
+                    Altcoin.SMALLEST_UNIT_EXPONENT :
+                    Fiat.SMALLEST_UNIT_EXPONENT;
+            long triggerPrice = openOffer.getTriggerPrice();
+
+            log.info("Market price exceeded the trigger price of the open offer.\n" +
+                            "We deactivate the open offer with ID {}.\nCurrency: {};\nOffer direction: {};\n" +
+                            "Market price: {};\nTrigger price : {}",
+                    openOffer.getOffer().getShortId(),
+                    currencyCode,
+                    openOffer.getOffer().getDirection(),
+                    marketPrice.getPrice(),
+                    MathUtils.scaleDownByPowerOf10(triggerPrice, smallestUnitExponent)
+            );
+
+            openOfferManager.deactivateOpenOffer(openOffer, () -> {
+            }, errorMessage -> {
+            });
         }
     }
 

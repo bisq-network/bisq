@@ -47,14 +47,15 @@
             <TableColumn fx:id="marketColumn" minWidth="75"/>
             <TableColumn fx:id="priceColumn" minWidth="100"/>
             <TableColumn fx:id="deviationColumn" minWidth="70"/>
-            <TableColumn fx:id="triggerPriceColumn" minWidth="70"/>
+            <TableColumn fx:id="triggerPriceColumn" minWidth="90"/>
             <TableColumn fx:id="amountColumn" minWidth="110"/>
             <TableColumn fx:id="volumeColumn" minWidth="110"/>
             <TableColumn fx:id="paymentMethodColumn" minWidth="120" maxWidth="170"/>
             <TableColumn fx:id="directionColumn" minWidth="70"/>
             <TableColumn fx:id="deactivateItemColumn" minWidth="60" maxWidth="60" sortable="false"/>
-            <TableColumn fx:id="editItemColumn" minWidth="50" maxWidth="60" sortable="false"/>
-            <TableColumn fx:id="removeItemColumn" minWidth="50" maxWidth="60" sortable="false"/>
+            <TableColumn fx:id="editItemColumn" minWidth="30" maxWidth="30" sortable="false"/>
+            <TableColumn fx:id="triggerIconColumn" minWidth="30" maxWidth="30" sortable="false"/>
+            <TableColumn fx:id="removeItemColumn" minWidth="30" maxWidth="30" sortable="false"/>
         </columns>
     </TableView>
     <HBox spacing="10">
