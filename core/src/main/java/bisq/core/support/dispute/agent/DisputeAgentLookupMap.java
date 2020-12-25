@@ -17,26 +17,32 @@
 
 package bisq.core.support.dispute.agent;
 
+import bisq.core.locale.Res;
+
+import lombok.extern.slf4j.Slf4j;
+
 import javax.annotation.Nullable;
 
+@Slf4j
 public class DisputeAgentLookupMap {
 
     // See also: https://bisq.wiki/Finding_your_mediator
     @Nullable
     public static String getKeyBaseUserName(String fullAddress) {
         switch (fullAddress) {
-            case "sjlho4zwp3gecspf.onion":
+            case "sjlho4zwp3gecspf.onion:9999":
                 return "leo816";
-            case "wizbisqzd7ku25di7p2ztsajioabihlnyp5lq5av66tmu7do2dke2tid.onion":
+            case "wizbisqzd7ku25di7p2ztsajioabihlnyp5lq5av66tmu7do2dke2tid.onion:9999":
                 return "wiz";
-            case "apbp7ubuyezav4hy.onion":
+            case "apbp7ubuyezav4hy.onion:9999":
                 return "bisq_knight";
-            case "a56olqlmmpxrn5q34itq5g5tb5d3fg7vxekpbceq7xqvfl3cieocgsyd.onion":
+            case "a56olqlmmpxrn5q34itq5g5tb5d3fg7vxekpbceq7xqvfl3cieocgsyd.onion:9999":
                 return "leo816";
-            case "3z5jnirlccgxzoxc6zwkcgwj66bugvqplzf6z2iyd5oxifiaorhnanqd.onion":
+            case "3z5jnirlccgxzoxc6zwkcgwj66bugvqplzf6z2iyd5oxifiaorhnanqd.onion:9999":
                 return "refundagent2";
             default:
-                return null;
+                log.warn("No user name for dispute agent with address {} found.", fullAddress);
+                return Res.get("shared.na");
         }
     }
 }

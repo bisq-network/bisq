@@ -1251,12 +1251,6 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
                                     }
 
                                     String keyBaseUserName = DisputeAgentLookupMap.getKeyBaseUserName(agentNodeAddress.getFullAddress());
-                                    if (keyBaseUserName == null) {
-                                        setText(Res.get("shared.na"));
-                                        log.warn("Support agents user name is not found: {}", keyBaseUserName);
-                                        return;
-                                    }
-
                                     setText(keyBaseUserName);
                                 } else {
                                     setText("");
