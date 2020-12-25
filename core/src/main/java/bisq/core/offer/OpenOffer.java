@@ -72,11 +72,15 @@ public final class OpenOffer implements Tradable {
     // Added in v1.5.3.
     // If market price reaches that trigger price the offer gets deactivated
     @Getter
-    @Setter
-    private long triggerPrice;
+    private final long triggerPrice;
 
     public OpenOffer(Offer offer) {
+        this(offer, 0);
+    }
+
+    public OpenOffer(Offer offer, long triggerPrice) {
         this.offer = offer;
+        this.triggerPrice = triggerPrice;
         state = State.AVAILABLE;
     }
 

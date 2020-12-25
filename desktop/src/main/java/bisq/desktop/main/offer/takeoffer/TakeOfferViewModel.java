@@ -753,4 +753,16 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
             ComboBox<PaymentAccount> paymentAccountsComboBox) {
         return GUIUtil.getPaymentAccountListCellFactory(paymentAccountsComboBox, accountAgeWitnessService);
     }
+
+    String getPercentagePriceDescription() {
+        if (dataModel.isBuyOffer()) {
+            return dataModel.isCryptoCurrency() ?
+                    Res.get("shared.aboveInPercent") :
+                    Res.get("shared.belowInPercent");
+        } else {
+            return dataModel.isCryptoCurrency() ?
+                    Res.get("shared.belowInPercent") :
+                    Res.get("shared.aboveInPercent");
+        }
+    }
 }

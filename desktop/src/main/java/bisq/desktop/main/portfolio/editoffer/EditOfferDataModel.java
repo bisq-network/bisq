@@ -227,7 +227,7 @@ class EditOfferDataModel extends MutableOfferDataModel {
         editedOffer.setPriceFeedService(priceFeedService);
         editedOffer.setState(Offer.State.AVAILABLE);
 
-        openOfferManager.editOpenOfferPublish(editedOffer, initialState, () -> {
+        openOfferManager.editOpenOfferPublish(editedOffer, triggerPrice, initialState, () -> {
             openOffer = null;
             resultHandler.handleResult();
         }, errorMessageHandler);
