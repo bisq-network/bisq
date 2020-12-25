@@ -89,10 +89,12 @@ public class BitcoindDaemon {
                         Futures.addCallback(future, Utilities.failureCallback(errorHandler), MoreExecutors.directExecutor());
                     }
                 }
-            } catch (Exception e) {
-                if (active || !(e instanceof SocketException)) {
+            } catch (SocketException e) {
+                if (active) {
                     throw new NotificationHandlerException(e);
                 }
+            } catch (Exception e) {
+                throw new NotificationHandlerException(e);
             } finally {
                 log.info("Shutting down block notification server");
             }

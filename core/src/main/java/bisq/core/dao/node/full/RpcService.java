@@ -169,14 +169,8 @@ public class RpcService {
                 var rawDtoBlock = client.getBlock(blockHash, 2);
                 log.info("New block received: height={}, id={}", rawDtoBlock.getHeight(), rawDtoBlock.getHash());
 
-                List<RawTx> txList = rawDtoBlock.getTx().stream()
-                        .map(e -> getTxFromRawTransaction(e, rawDtoBlock))
-                        .collect(Collectors.toList());
-                UserThread.execute(() -> dtoBlockHandler.accept(new RawBlock(rawDtoBlock.getHeight(),
-                        rawDtoBlock.getTime() * 1000, // rawDtoBlock.getTime() is in sec but we want ms
-                        rawDtoBlock.getHash(),
-                        rawDtoBlock.getPreviousBlockHash(),
-                        ImmutableList.copyOf(txList))));
+                var block = getBlockFromRawDtoBlock(rawDtoBlock);
+                UserThread.execute(() -> dtoBlockHandler.accept(block));
             } catch (Throwable t) {
                 errorHandler.accept(t);
             }
@@ -203,16 +197,10 @@ public class RpcService {
             long startTs = System.currentTimeMillis();
             String blockHash = client.getBlockHash(blockHeight);
             var rawDtoBlock = client.getBlock(blockHash, 2);
-            List<RawTx> txList = rawDtoBlock.getTx().stream()
-                    .map(e -> getTxFromRawTransaction(e, rawDtoBlock))
-                    .collect(Collectors.toList());
+            var block = getBlockFromRawDtoBlock(rawDtoBlock);
             log.info("requestDtoBlock from bitcoind at blockHeight {} with {} txs took {} ms",
-                    blockHeight, txList.size(), System.currentTimeMillis() - startTs);
-            return new RawBlock(rawDtoBlock.getHeight(),
-                    rawDtoBlock.getTime() * 1000, // rawDtoBlock.getTime() is in sec but we want ms
-                    rawDtoBlock.getHash(),
-                    rawDtoBlock.getPreviousBlockHash(),
-                    ImmutableList.copyOf(txList));
+                    blockHeight, block.getRawTxs().size(), System.currentTimeMillis() - startTs);
+            return block;
         });
 
         Futures.addCallback(future, new FutureCallback<>() {
@@ -234,8 +222,19 @@ public class RpcService {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private RawTx getTxFromRawTransaction(RawTransaction rawDtoTx,
-                                          bisq.core.dao.node.full.rpc.dto.RawBlock rawDtoBlock) {
+    private static RawBlock getBlockFromRawDtoBlock(bisq.core.dao.node.full.rpc.dto.RawBlock rawDtoBlock) { //NOPMD
+        List<RawTx> txList = rawDtoBlock.getTx().stream()
+                .map(e -> getTxFromRawTransaction(e, rawDtoBlock))
+                .collect(Collectors.toList());
+        return new RawBlock(rawDtoBlock.getHeight(),
+                rawDtoBlock.getTime() * 1000, // rawDtoBlock.getTime() is in sec but we want ms
+                rawDtoBlock.getHash(),
+                rawDtoBlock.getPreviousBlockHash(),
+                ImmutableList.copyOf(txList));
+    }
+
+    private static RawTx getTxFromRawTransaction(RawTransaction rawDtoTx,
+                                                 bisq.core.dao.node.full.rpc.dto.RawBlock rawDtoBlock) { //NOPMD
         String txId = rawDtoTx.getTxId();
         long blockTime = rawDtoBlock.getTime() * 1000; // We convert block time from sec to ms
         int blockHeight = rawDtoBlock.getHeight();
