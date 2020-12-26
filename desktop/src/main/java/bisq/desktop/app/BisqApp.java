@@ -56,6 +56,7 @@ import com.google.common.base.Joiner;
 import javafx.application.Application;
 
 import javafx.stage.Modality;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
@@ -65,8 +66,7 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.StackPane;
 
-import java.awt.GraphicsEnvironment;
-import java.awt.Rectangle;
+import javafx.geometry.Rectangle2D;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -197,20 +197,21 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private Scene createAndConfigScene(MainView mainView, Injector injector) {
-        Rectangle maxWindowBounds = new Rectangle();
+        //Rectangle maxWindowBounds = new Rectangle();
+        Rectangle2D maxWindowBounds = new Rectangle2D(0, 0, 0, 0);
         try {
-            maxWindowBounds = GraphicsEnvironment.getLocalGraphicsEnvironment().getMaximumWindowBounds();
+            maxWindowBounds = Screen.getPrimary().getBounds();
         } catch (IllegalArgumentException e) {
             // Multi-screen environments may encounter IllegalArgumentException (Window must not be zero)
             // Just ignore the exception and continue, which means the window will use the minimum window size below
             // since we are unable to determine if we can use a larger size
         }
         Scene scene = new Scene(mainView.getRoot(),
-                maxWindowBounds.width < INITIAL_WINDOW_WIDTH ?
-                        Math.max(maxWindowBounds.width, MIN_WINDOW_WIDTH) :
+                maxWindowBounds.getWidth() < INITIAL_WINDOW_WIDTH ?
+                        Math.max(maxWindowBounds.getWidth(), MIN_WINDOW_WIDTH) :
                         INITIAL_WINDOW_WIDTH,
-                maxWindowBounds.height < INITIAL_WINDOW_HEIGHT ?
-                        Math.max(maxWindowBounds.height, MIN_WINDOW_HEIGHT) :
+                maxWindowBounds.getHeight() < INITIAL_WINDOW_HEIGHT ?
+                        Math.max(maxWindowBounds.getHeight(), MIN_WINDOW_HEIGHT) :
                         INITIAL_WINDOW_HEIGHT);
 
         addSceneKeyEventHandler(scene, injector);
@@ -226,9 +227,6 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
     }
 
     private void setupStage(Scene scene) {
-        // configure the system tray
-        SystemTray.create(stage, shutDownHandler);
-
         stage.setOnCloseRequest(event -> {
             event.consume();
             shutDownByUser();
