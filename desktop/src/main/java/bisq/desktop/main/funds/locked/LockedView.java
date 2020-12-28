@@ -179,7 +179,7 @@ public class LockedView extends ActivatableView<VBox, Void> {
         exportButton.setOnAction(event -> {
             ObservableList<TableColumn<LockedListItem, ?>> tableColumns = tableView.getColumns();
             int reportColumns = tableColumns.size();
-            CSVEntryConverter<LockedListItem> headerConverter = transactionsListItem -> {
+            CSVEntryConverter<LockedListItem> headerConverter = item -> {
                 String[] columns = new String[reportColumns];
                 for (int i = 0; i < columns.length; i++)
                     columns[i] = ((AutoTooltipLabel) tableColumns.get(i).getGraphic()).getText();

@@ -37,6 +37,7 @@ import bisq.desktop.main.dao.wallet.receive.BsqReceiveView;
 import bisq.desktop.main.funds.FundsView;
 import bisq.desktop.main.funds.withdrawal.WithdrawalView;
 import bisq.desktop.main.offer.OfferView;
+import bisq.desktop.main.offer.OfferViewUtil;
 import bisq.desktop.main.overlays.notifications.Notification;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
@@ -347,13 +348,12 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             takeOfferButton.setId("buy-button-big");
             takeOfferButton.updateText(Res.get("takeOffer.takeOfferButton", Res.get("shared.buy")));
             nextButton.setId("buy-button");
-            priceAsPercentageDescription.setText(Res.get("shared.aboveInPercent"));
         } else {
             takeOfferButton.setId("sell-button-big");
             nextButton.setId("sell-button");
             takeOfferButton.updateText(Res.get("takeOffer.takeOfferButton", Res.get("shared.sell")));
-            priceAsPercentageDescription.setText(Res.get("shared.belowInPercent"));
         }
+        priceAsPercentageDescription.setText(model.getPercentagePriceDescription());
 
         boolean showComboBox = model.getPossiblePaymentAccounts().size() > 1;
         paymentAccountsComboBox.setVisible(showComboBox);
@@ -383,8 +383,10 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         addressTextField.setPaymentLabel(model.getPaymentLabel());
         addressTextField.setAddress(model.dataModel.getAddressEntry().getAddressString());
 
-        if (CurrencyUtil.isFiatCurrency(offer.getCurrencyCode()))
-            volumeInfoTextField.setContentForPrivacyPopOver(createPopoverLabel(Res.get("offerbook.info.roundedFiatVolume")));
+        if (CurrencyUtil.isFiatCurrency(offer.getCurrencyCode())) {
+            Label popOverLabel = OfferViewUtil.createPopOverLabel(Res.get("offerbook.info.roundedFiatVolume"));
+            volumeInfoTextField.setContentForPrivacyPopOver(popOverLabel);
+        }
 
         if (offer.getPrice() == null)
             new Popup().warning(Res.get("takeOffer.noPriceFeedAvailable"))
@@ -1121,8 +1123,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         priceAsPercentageTextField = priceAsPercentageTuple.second;
         priceAsPercentageLabel = priceAsPercentageTuple.third;
 
-        Tuple2<Label, VBox> priceAsPercentageInputBoxTuple = getTradeInputBox(priceAsPercentageValueCurrencyBox,
-                Res.get("shared.distanceInPercent"));
+        Tuple2<Label, VBox> priceAsPercentageInputBoxTuple = getTradeInputBox(priceAsPercentageValueCurrencyBox, "");
         priceAsPercentageDescription = priceAsPercentageInputBoxTuple.first;
 
         getSmallIconForLabel(MaterialDesignIcon.CHART_LINE, priceAsPercentageDescription, "small-icon-label");
@@ -1271,14 +1272,6 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                 model.getTotalToPayInfo());
 
         return infoGridPane;
-    }
-
-    private Label createPopoverLabel(String text) {
-        final Label label = new Label(text);
-        label.setPrefWidth(300);
-        label.setWrapText(true);
-        label.setPadding(new Insets(10));
-        return label;
     }
 
     private void addPayInfoEntry(GridPane infoGridPane, int row, String labelText, String value) {

@@ -1221,8 +1221,7 @@ public class FormBuilder {
             int rowIndex,
             String titleTextfield,
             String titleCombobox
-            )
-    {
+    ) {
         return addTopLabelTextFieldAutocompleteComboBox(gridPane, rowIndex, titleTextfield, titleCombobox, 0);
     }
 
@@ -1232,8 +1231,7 @@ public class FormBuilder {
             String titleTextfield,
             String titleCombobox,
             double top
-            )
-    {
+    ) {
         HBox hBox = new HBox();
         hBox.setSpacing(10);
 
@@ -2143,6 +2141,14 @@ public class FormBuilder {
 
     public static Button getIconButton(GlyphIcons icon, String styleClass) {
         return getIconButton(icon, styleClass, "2em");
+    }
+
+    public static Button getRegularIconButton(GlyphIcons icon) {
+        return getIconButton(icon, "highlight", "1.6em");
+    }
+
+    public static Button getRegularIconButton(GlyphIcons icon, String styleClass) {
+        return getIconButton(icon, styleClass, "1.6em");
     }
 
     public static Button getIconButton(GlyphIcons icon, String styleClass, String iconSize) {

@@ -68,6 +68,7 @@ import org.bitcoinj.core.Coin;
 import net.glxn.qrgen.QRCode;
 import net.glxn.qrgen.image.ImageType;
 
+import de.jensd.fx.fontawesome.AwesomeIcon;
 import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 
 import javafx.scene.Node;
@@ -133,32 +134,31 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
     private BusyAnimation waitingForFundsSpinner;
     private AutoTooltipButton nextButton, cancelButton1, cancelButton2, placeOfferButton;
     private Button priceTypeToggleButton;
-    private InputTextField fixedPriceTextField, marketBasedPriceTextField;
+    private InputTextField fixedPriceTextField, marketBasedPriceTextField, triggerPriceInputTextField;
     protected InputTextField amountTextField, minAmountTextField, volumeTextField, buyerSecurityDepositInputTextField;
     private TextField currencyTextField;
     private AddressTextField addressTextField;
     private BalanceTextField balanceTextField;
     private FundsTextField totalToPayTextField;
     private Label amountDescriptionLabel, priceCurrencyLabel, priceDescriptionLabel, volumeDescriptionLabel,
-            waitingForFundsLabel, marketBasedPriceLabel, percentagePriceDescription, tradeFeeDescriptionLabel,
+            waitingForFundsLabel, marketBasedPriceLabel, percentagePriceDescriptionLabel, tradeFeeDescriptionLabel,
             resultLabel, tradeFeeInBtcLabel, tradeFeeInBsqLabel, xLabel, fakeXLabel, buyerSecurityDepositLabel,
-            buyerSecurityDepositPercentageLabel;
+            buyerSecurityDepositPercentageLabel, triggerPriceCurrencyLabel, triggerPriceDescriptionLabel;
     protected Label amountBtcLabel, volumeCurrencyLabel, minAmountBtcLabel;
     private ComboBox<PaymentAccount> paymentAccountsComboBox;
     private ComboBox<TradeCurrency> currencyComboBox;
     private ImageView qrCodeImageView;
-    private VBox currencySelection, fixedPriceBox, percentagePriceBox,
-            currencyTextFieldBox;
+    private VBox currencySelection, fixedPriceBox, percentagePriceBox, currencyTextFieldBox, triggerPriceVBox;
     private HBox fundingHBox, firstRowHBox, secondRowHBox, placeOfferBox, amountValueCurrencyBox,
             priceAsPercentageValueCurrencyBox, volumeValueCurrencyBox, priceValueCurrencyBox,
-            minAmountValueCurrencyBox, advancedOptionsBox;
+            minAmountValueCurrencyBox, advancedOptionsBox, triggerPriceHBox;
 
     private Subscription isWaitingForFundsSubscription, balanceSubscription;
     private ChangeListener<Boolean> amountFocusedListener, minAmountFocusedListener, volumeFocusedListener,
             buyerSecurityDepositFocusedListener, priceFocusedListener, placeOfferCompletedListener,
             priceAsPercentageFocusedListener, getShowWalletFundedNotificationListener,
             tradeFeeInBtcToggleListener, tradeFeeInBsqToggleListener, tradeFeeVisibleListener,
-            isMinBuyerSecurityDepositListener;
+            isMinBuyerSecurityDepositListener, triggerPriceFocusedListener;
     private ChangeListener<Coin> missingCoinListener;
     private ChangeListener<String> tradeCurrencyCodeListener, errorMessageListener,
             marketPriceMarginListener, volumeListener, buyerSecurityDepositInBTCListener;
@@ -170,9 +170,10 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
     private final List<Node> editOfferElements = new ArrayList<>();
     private boolean clearXchangeWarningDisplayed, fasterPaymentsWarningDisplayed, isActivated;
     private InfoInputTextField marketBasedPriceInfoInputTextField, volumeInfoInputTextField,
-            buyerSecurityDepositInfoInputTextField;
+            buyerSecurityDepositInfoInputTextField, triggerPriceInfoInputTextField;
     private AutoTooltipSlideToggleButton tradeFeeInBtcToggle, tradeFeeInBsqToggle;
     private Text xIcon, fakeXIcon;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -237,7 +238,6 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
             if (waitingForFundsSpinner != null)
                 waitingForFundsSpinner.play();
 
-            //directionLabel.setText(model.getDirectionLabel());
             amountDescriptionLabel.setText(model.getAmountDescription());
             addressTextField.setAddress(model.getAddressAsString());
             addressTextField.setPaymentLabel(model.getPaymentLabel());
@@ -261,6 +261,9 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
                 tradeFeeInBsqToggle.setVisible(false);
                 tradeFeeInBsqToggle.setManaged(false);
             }
+
+            Label popOverLabel = OfferViewUtil.createPopOverLabel(Res.get("createOffer.triggerPrice.tooltip"));
+            triggerPriceInfoInputTextField.setContentForPopOver(popOverLabel, AwesomeIcon.SHIELD);
         }
     }
 
@@ -305,14 +308,11 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
         }
 
         if (direction == OfferPayload.Direction.BUY) {
-
             placeOfferButton.setId("buy-button-big");
             placeOfferButton.updateText(Res.get("createOffer.placeOfferButton", Res.get("shared.buy")));
-            percentagePriceDescription.setText(Res.get("shared.belowInPercent"));
         } else {
             placeOfferButton.setId("sell-button-big");
             placeOfferButton.updateText(Res.get("createOffer.placeOfferButton", Res.get("shared.sell")));
-            percentagePriceDescription.setText(Res.get("shared.aboveInPercent"));
         }
 
         updatePriceToggle();
@@ -449,8 +449,8 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
     private void updateOfferElementsStyle() {
         GridPane.setColumnSpan(firstRowHBox, 2);
 
-        final String activeInputStyle = "input-with-border";
-        final String readOnlyInputStyle = "input-with-border-readonly";
+        String activeInputStyle = "input-with-border";
+        String readOnlyInputStyle = "input-with-border-readonly";
         amountValueCurrencyBox.getStyleClass().remove(activeInputStyle);
         amountValueCurrencyBox.getStyleClass().add(readOnlyInputStyle);
         priceAsPercentageValueCurrencyBox.getStyleClass().remove(activeInputStyle);
@@ -461,6 +461,12 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
         priceValueCurrencyBox.getStyleClass().add(readOnlyInputStyle);
         minAmountValueCurrencyBox.getStyleClass().remove(activeInputStyle);
         minAmountValueCurrencyBox.getStyleClass().add(readOnlyInputStyle);
+        triggerPriceHBox.getStyleClass().remove(activeInputStyle);
+        triggerPriceHBox.getStyleClass().add(readOnlyInputStyle);
+
+        GridPane.setColumnSpan(secondRowHBox, 1);
+        priceTypeToggleButton.setVisible(false);
+        HBox.setMargin(priceTypeToggleButton, new Insets(16, -14, 0, 0));
 
         resultLabel.getStyleClass().add("small");
         xLabel.getStyleClass().add("small");
@@ -542,7 +548,10 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
 
     private void addBindings() {
         priceCurrencyLabel.textProperty().bind(createStringBinding(() -> CurrencyUtil.getCounterCurrency(model.tradeCurrencyCode.get()), model.tradeCurrencyCode));
-
+        triggerPriceCurrencyLabel.textProperty().bind(createStringBinding(() ->
+                CurrencyUtil.getCounterCurrency(model.tradeCurrencyCode.get()), model.tradeCurrencyCode));
+        triggerPriceDescriptionLabel.textProperty().bind(model.triggerPriceDescription);
+        percentagePriceDescriptionLabel.textProperty().bind(model.percentagePriceDescription);
         marketBasedPriceLabel.prefWidthProperty().bind(priceCurrencyLabel.widthProperty());
         volumeCurrencyLabel.textProperty().bind(model.tradeCurrencyCode);
         priceDescriptionLabel.textProperty().bind(createStringBinding(() -> CurrencyUtil.getPriceWithCurrencyCode(model.tradeCurrencyCode.get(), "shared.fixedPriceInCurForCur"), model.tradeCurrencyCode));
@@ -550,6 +559,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
         amountTextField.textProperty().bindBidirectional(model.amount);
         minAmountTextField.textProperty().bindBidirectional(model.minAmount);
         fixedPriceTextField.textProperty().bindBidirectional(model.price);
+        triggerPriceInputTextField.textProperty().bindBidirectional(model.triggerPrice);
         marketBasedPriceTextField.textProperty().bindBidirectional(model.marketPriceMargin);
         volumeTextField.textProperty().bindBidirectional(model.volume);
         volumeTextField.promptTextProperty().bind(model.volumePromptLabel);
@@ -568,6 +578,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
         amountTextField.validationResultProperty().bind(model.amountValidationResult);
         minAmountTextField.validationResultProperty().bind(model.minAmountValidationResult);
         fixedPriceTextField.validationResultProperty().bind(model.priceValidationResult);
+        triggerPriceInputTextField.validationResultProperty().bind(model.triggerPriceValidationResult);
         volumeTextField.validationResultProperty().bind(model.volumeValidationResult);
         buyerSecurityDepositInputTextField.validationResultProperty().bind(model.buyerSecurityDepositValidationResult);
 
@@ -590,16 +601,16 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
 
     private void removeBindings() {
         priceCurrencyLabel.textProperty().unbind();
-        fixedPriceTextField.disableProperty().unbind();
-        priceCurrencyLabel.disableProperty().unbind();
-        marketBasedPriceTextField.disableProperty().unbind();
-        marketBasedPriceLabel.disableProperty().unbind();
+        triggerPriceCurrencyLabel.textProperty().unbind();
+        triggerPriceDescriptionLabel.textProperty().unbind();
+        percentagePriceDescriptionLabel.textProperty().unbind();
         volumeCurrencyLabel.textProperty().unbind();
         priceDescriptionLabel.textProperty().unbind();
         volumeDescriptionLabel.textProperty().unbind();
         amountTextField.textProperty().unbindBidirectional(model.amount);
         minAmountTextField.textProperty().unbindBidirectional(model.minAmount);
         fixedPriceTextField.textProperty().unbindBidirectional(model.price);
+        triggerPriceInputTextField.textProperty().unbindBidirectional(model.triggerPrice);
         marketBasedPriceTextField.textProperty().unbindBidirectional(model.marketPriceMargin);
         marketBasedPriceLabel.prefWidthProperty().unbind();
         volumeTextField.textProperty().unbindBidirectional(model.volume);
@@ -619,6 +630,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
         amountTextField.validationResultProperty().unbind();
         minAmountTextField.validationResultProperty().unbind();
         fixedPriceTextField.validationResultProperty().unbind();
+        triggerPriceInputTextField.validationResultProperty().unbind();
         volumeTextField.validationResultProperty().unbind();
         buyerSecurityDepositInputTextField.validationResultProperty().unbind();
 
@@ -686,6 +698,11 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
             buyerSecurityDepositInputTextField.setText(model.buyerSecurityDeposit.get());
         };
 
+        triggerPriceFocusedListener = (o, oldValue, newValue) -> {
+            model.onFocusOutTriggerPriceTextField(oldValue, newValue);
+            triggerPriceInputTextField.setText(model.triggerPrice.get());
+        };
+
         errorMessageListener = (o, oldValue, newValue) -> {
             if (newValue != null)
                 UserThread.runAfter(() -> new Popup().error(Res.get("createOffer.amountPriceBox.error.message", model.errorMessage.get()))
@@ -699,6 +716,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
             fixedPriceTextField.clear();
             marketBasedPriceTextField.clear();
             volumeTextField.clear();
+            triggerPriceInputTextField.clear();
         };
 
         placeOfferCompletedListener = (o, oldValue, newValue) -> {
@@ -743,7 +761,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
 
         buyerSecurityDepositInBTCListener = (observable, oldValue, newValue) -> {
             if (!newValue.equals("")) {
-                Label depositInBTCInfo = createPopoverLabel(model.getSecurityDepositPopOverLabel(newValue));
+                Label depositInBTCInfo = OfferViewUtil.createPopOverLabel(model.getSecurityDepositPopOverLabel(newValue));
                 buyerSecurityDepositInfoInputTextField.setContentForInfoPopOver(depositInBTCInfo);
             } else {
                 buyerSecurityDepositInfoInputTextField.setContentForInfoPopOver(null);
@@ -752,9 +770,10 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
 
         volumeListener = (observable, oldValue, newValue) -> {
             if (!newValue.equals("") && CurrencyUtil.isFiatCurrency(model.tradeCurrencyCode.get())) {
-                volumeInfoInputTextField.setContentForPrivacyPopOver(createPopoverLabel(Res.get("offerbook.info.roundedFiatVolume")));
+                Label popOverLabel = OfferViewUtil.createPopOverLabel(Res.get("offerbook.info.roundedFiatVolume"));
+                volumeInfoInputTextField.setContentForPrivacyPopOver(popOverLabel);
             } else {
-                volumeInfoInputTextField.hideInfoContent();
+                volumeInfoInputTextField.hideIcon();
             }
         };
 
@@ -780,7 +799,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
                     } else {
                         tooltip = Res.get("createOffer.info.buyAtMarketPrice");
                     }
-                    final Label atMarketPriceLabel = createPopoverLabel(tooltip);
+                    final Label atMarketPriceLabel = OfferViewUtil.createPopOverLabel(tooltip);
                     marketBasedPriceInfoInputTextField.setContentForInfoPopOver(atMarketPriceLabel);
                 } else if (newValue.contains("-")) {
                     if (model.isSellOffer()) {
@@ -788,7 +807,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
                     } else {
                         tooltip = Res.get("createOffer.warning.buyAboveMarketPrice", newValue.substring(1));
                     }
-                    final Label negativePercentageLabel = createPopoverLabel(tooltip);
+                    final Label negativePercentageLabel = OfferViewUtil.createPopOverLabel(tooltip);
                     marketBasedPriceInfoInputTextField.setContentForWarningPopOver(negativePercentageLabel);
                 } else if (!newValue.equals("")) {
                     if (model.isSellOffer()) {
@@ -796,7 +815,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
                     } else {
                         tooltip = Res.get("createOffer.info.buyBelowMarketPrice", newValue);
                     }
-                    Label positivePercentageLabel = createPopoverLabel(tooltip);
+                    Label positivePercentageLabel = OfferViewUtil.createPopOverLabel(tooltip);
                     marketBasedPriceInfoInputTextField.setContentForInfoPopOver(positivePercentageLabel);
                 }
             }
@@ -850,14 +869,6 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
         }
     }
 
-    private Label createPopoverLabel(String text) {
-        final Label label = new Label(text);
-        label.setPrefWidth(300);
-        label.setWrapText(true);
-        label.setPadding(new Insets(10));
-        return label;
-    }
-
     protected void updatePriceToggle() {
         int marketPriceAvailableValue = model.marketPriceAvailableProperty.get();
         if (marketPriceAvailableValue > -1) {
@@ -887,6 +898,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
         amountTextField.focusedProperty().addListener(amountFocusedListener);
         minAmountTextField.focusedProperty().addListener(minAmountFocusedListener);
         fixedPriceTextField.focusedProperty().addListener(priceFocusedListener);
+        triggerPriceInputTextField.focusedProperty().addListener(triggerPriceFocusedListener);
         marketBasedPriceTextField.focusedProperty().addListener(priceAsPercentageFocusedListener);
         volumeTextField.focusedProperty().addListener(volumeFocusedListener);
         buyerSecurityDepositInputTextField.focusedProperty().addListener(buyerSecurityDepositFocusedListener);
@@ -921,6 +933,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
         amountTextField.focusedProperty().removeListener(amountFocusedListener);
         minAmountTextField.focusedProperty().removeListener(minAmountFocusedListener);
         fixedPriceTextField.focusedProperty().removeListener(priceFocusedListener);
+        triggerPriceInputTextField.focusedProperty().removeListener(triggerPriceFocusedListener);
         marketBasedPriceTextField.focusedProperty().removeListener(priceAsPercentageFocusedListener);
         volumeTextField.focusedProperty().removeListener(volumeFocusedListener);
         buyerSecurityDepositInputTextField.focusedProperty().removeListener(buyerSecurityDepositFocusedListener);
@@ -1294,10 +1307,10 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
         marketBasedPriceLabel = priceAsPercentageTuple.third;
         editOfferElements.add(marketBasedPriceLabel);
         Tuple2<Label, VBox> priceAsPercentageInputBoxTuple = getTradeInputBox(priceAsPercentageValueCurrencyBox,
-                Res.get("shared.distanceInPercent"));
-        percentagePriceDescription = priceAsPercentageInputBoxTuple.first;
+                model.getPercentagePriceDescription());
+        percentagePriceDescriptionLabel = priceAsPercentageInputBoxTuple.first;
 
-        getSmallIconForLabel(MaterialDesignIcon.CHART_LINE, percentagePriceDescription, "small-icon-label");
+        getSmallIconForLabel(MaterialDesignIcon.CHART_LINE, percentagePriceDescriptionLabel, "small-icon-label");
 
         percentagePriceBox = priceAsPercentageInputBoxTuple.second;
 
@@ -1356,6 +1369,9 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
             if (!secondRowHBox.getChildren().contains(fixedPriceBox))
                 secondRowHBox.getChildren().add(2, fixedPriceBox);
         }
+
+        triggerPriceVBox.setVisible(!fixedPriceSelected);
+        model.onFixPriceToggleChange(fixedPriceSelected);
     }
 
     private void addSecondRow() {
@@ -1387,7 +1403,6 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
 
         Tuple2<Label, VBox> amountInputBoxTuple = getTradeInputBox(minAmountValueCurrencyBox, Res.get("createOffer.amountPriceBox.minAmountDescription"));
 
-
         fakeXLabel = new Label();
         fakeXIcon = getIconForLabel(MaterialDesignIcon.CLOSE, "2em", fakeXLabel);
         fakeXLabel.getStyleClass().add("opaque-icon-character");
@@ -1396,16 +1411,28 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
         // Fixed/Percentage toggle
         priceTypeToggleButton = getIconButton(MaterialDesignIcon.SWAP_VERTICAL);
         editOfferElements.add(priceTypeToggleButton);
-        HBox.setMargin(priceTypeToggleButton, new Insets(16, 0, 0, 0));
-
+        HBox.setMargin(priceTypeToggleButton, new Insets(16, 1.5, 0, 0));
         priceTypeToggleButton.setOnAction((actionEvent) ->
                 updatePriceToggleButtons(model.getDataModel().getUseMarketBasedPrice().getValue()));
 
-        secondRowHBox = new HBox();
+        // triggerPrice
+        Tuple3<HBox, InfoInputTextField, Label> triggerPriceTuple3 = getEditableValueBoxWithInfo(Res.get("createOffer.triggerPrice.prompt"));
+        triggerPriceHBox = triggerPriceTuple3.first;
+        triggerPriceInfoInputTextField = triggerPriceTuple3.second;
+        editOfferElements.add(triggerPriceInfoInputTextField);
+        triggerPriceInputTextField = triggerPriceInfoInputTextField.getInputTextField();
+        triggerPriceCurrencyLabel = triggerPriceTuple3.third;
+        editOfferElements.add(triggerPriceCurrencyLabel);
+        Tuple2<Label, VBox> triggerPriceTuple2 = getTradeInputBox(triggerPriceHBox, model.getTriggerPriceDescriptionLabel());
+        triggerPriceDescriptionLabel = triggerPriceTuple2.first;
+        triggerPriceDescriptionLabel.setPrefWidth(290);
+        triggerPriceVBox = triggerPriceTuple2.second;
 
+        secondRowHBox = new HBox();
         secondRowHBox.setSpacing(5);
         secondRowHBox.setAlignment(Pos.CENTER_LEFT);
-        secondRowHBox.getChildren().addAll(amountInputBoxTuple.second, fakeXLabel, fixedPriceBox, priceTypeToggleButton);
+        secondRowHBox.getChildren().addAll(amountInputBoxTuple.second, fakeXLabel, fixedPriceBox, priceTypeToggleButton, triggerPriceVBox);
+        GridPane.setColumnSpan(secondRowHBox, 2);
         GridPane.setRowIndex(secondRowHBox, ++gridRow);
         GridPane.setColumnIndex(secondRowHBox, 0);
         GridPane.setMargin(secondRowHBox, new Insets(0, 10, 10, 0));

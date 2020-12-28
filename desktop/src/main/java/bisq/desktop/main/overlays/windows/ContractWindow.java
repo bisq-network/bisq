@@ -33,6 +33,7 @@ import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeList;
 import bisq.core.support.dispute.DisputeManager;
+import bisq.core.support.dispute.agent.DisputeAgentLookupMap;
 import bisq.core.support.dispute.arbitration.ArbitrationManager;
 import bisq.core.support.dispute.mediation.MediationManager;
 import bisq.core.support.dispute.refund.RefundManager;
@@ -193,17 +194,20 @@ public class ContractWindow extends Overlay<ContractWindow> {
                 sellerPaymentAccountPayload.getPaymentDetails()).second.setMouseTransparent(false);
 
         String title = "";
+        String agentKeyBaseUserName = "";
         if (dispute.getSupportType() != null) {
             switch (dispute.getSupportType()) {
                 case ARBITRATION:
                     title = Res.get("shared.selectedArbitrator");
                     break;
                 case MEDIATION:
+                    agentKeyBaseUserName = DisputeAgentLookupMap.getKeyBaseUserName(contract.getMediatorNodeAddress().getFullAddress());
                     title = Res.get("shared.selectedMediator");
                     break;
                 case TRADE:
                     break;
                 case REFUND:
+                    agentKeyBaseUserName = DisputeAgentLookupMap.getKeyBaseUserName(contract.getRefundAgentNodeAddress().getFullAddress());
                     title = Res.get("shared.selectedRefundAgent");
                     break;
             }
@@ -212,7 +216,8 @@ public class ContractWindow extends Overlay<ContractWindow> {
         if (disputeManager != null) {
             NodeAddress agentNodeAddress = disputeManager.getAgentNodeAddress(dispute);
             if (agentNodeAddress != null) {
-                addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, title, agentNodeAddress.getFullAddress());
+                String value = agentKeyBaseUserName + " (" + agentNodeAddress.getFullAddress() + ")";
+                addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, title, value);
             }
         }
 
