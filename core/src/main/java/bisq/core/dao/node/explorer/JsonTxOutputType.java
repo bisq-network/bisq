@@ -43,7 +43,7 @@ enum JsonTxOutputType {
     INVALID_OUTPUT("Invalid");
 
     @Getter
-    private String displayString;
+    private final String displayString;
 
     JsonTxOutputType(String displayString) {
         this.displayString = displayString;

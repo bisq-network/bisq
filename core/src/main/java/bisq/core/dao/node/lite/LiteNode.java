@@ -59,7 +59,7 @@ public class LiteNode extends BsqNode {
     private final BsqWalletService bsqWalletService;
     private final WalletsSetup walletsSetup;
     private Timer checkForBlockReceivedTimer;
-    private ChangeListener<Number> blockDownloadListener;
+    private final ChangeListener<Number> blockDownloadListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

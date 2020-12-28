@@ -152,7 +152,7 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
                 .filter(peerManager::isSeedNode)
                 .findAny();
 
-        connectionToSeedNodeOptional.flatMap(e -> e.getPeersNodeAddressOptional())
+        connectionToSeedNodeOptional.flatMap(Connection::getPeersNodeAddressOptional)
                 .ifPresentOrElse(candidate -> {
                     seedNodeAddresses.remove(candidate);
                     requestBlocks(candidate, startBlockHeight);
