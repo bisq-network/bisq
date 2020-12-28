@@ -121,7 +121,7 @@ public class TriggerPriceService {
 
             log.info("Market price exceeded the trigger price of the open offer.\n" +
                             "We deactivate the open offer with ID {}.\nCurrency: {};\nOffer direction: {};\n" +
-                            "Market price: {};\nTrigger price : {}",
+                            "Market price: {};\nTrigger price: {}",
                     openOffer.getOffer().getShortId(),
                     currencyCode,
                     openOffer.getOffer().getDirection(),
