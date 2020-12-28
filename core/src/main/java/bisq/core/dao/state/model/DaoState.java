@@ -81,6 +81,8 @@ public class DaoState implements PersistablePayload {
     private final LinkedList<Cycle> cycles;
 
     // These maps represent mutual data which can get changed at parsing a transaction
+    // We use TreeMaps instead of HashMaps because we need deterministic sorting of the maps for the hashChains
+    // used for the DAO monitor.
     @Getter
     private final TreeMap<TxOutputKey, TxOutput> unspentTxOutputMap;
     @Getter
