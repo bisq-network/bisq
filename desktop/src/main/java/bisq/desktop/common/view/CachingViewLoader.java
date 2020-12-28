@@ -21,11 +21,12 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import java.util.HashMap;
+import java.util.Map;
 
 @Singleton
 public class CachingViewLoader implements ViewLoader {
 
-    private final HashMap<Object, View> cache = new HashMap<>();
+    private final Map<Class<? extends View>, View> cache = new HashMap<>();
     private final ViewLoader viewLoader;
 
     @Inject
