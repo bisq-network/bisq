@@ -17,7 +17,12 @@
 
 package bisq.desktop.main;
 
+import bisq.desktop.util.validation.AltcoinValidator;
+import bisq.desktop.util.validation.FiatPriceValidator;
+import bisq.desktop.util.validation.MonetaryValidator;
+
 import bisq.core.locale.CurrencyUtil;
+import bisq.core.locale.Res;
 import bisq.core.monetary.Altcoin;
 import bisq.core.monetary.Price;
 import bisq.core.offer.Offer;
@@ -27,6 +32,9 @@ import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.Preferences;
 import bisq.core.util.AveragePriceUtil;
+import bisq.core.util.FormattingUtils;
+import bisq.core.util.ParsingUtils;
+import bisq.core.util.validation.InputValidator;
 
 import bisq.common.util.MathUtils;
 
@@ -57,6 +65,45 @@ public class PriceUtil {
         this.priceFeedService = priceFeedService;
         this.tradeStatisticsManager = tradeStatisticsManager;
         this.preferences = preferences;
+    }
+
+    public static MonetaryValidator getPriceValidator(boolean isFiatCurrency) {
+        return isFiatCurrency ?
+                new FiatPriceValidator() :
+                new AltcoinValidator();
+    }
+
+    public static InputValidator.ValidationResult isTriggerPriceValid(String triggerPriceAsString,
+                                                                      Price price,
+                                                                      boolean isSellOffer,
+                                                                      boolean isFiatCurrency) {
+        if (triggerPriceAsString == null || triggerPriceAsString.isEmpty()) {
+            return new InputValidator.ValidationResult(true);
+        }
+
+        InputValidator.ValidationResult result = getPriceValidator(isFiatCurrency).validate(triggerPriceAsString);
+        if (!result.isValid) {
+            return result;
+        }
+
+        long triggerPriceAsLong = PriceUtil.getMarketPriceAsLong(triggerPriceAsString, price.getCurrencyCode());
+        long priceAsLong = price.getValue();
+        String priceAsString = FormattingUtils.formatPrice(price);
+        if ((isSellOffer && isFiatCurrency) || (!isSellOffer && !isFiatCurrency)) {
+            if (triggerPriceAsLong >= priceAsLong) {
+                return new InputValidator.ValidationResult(false,
+                        Res.get("createOffer.triggerPrice.invalid.tooHigh", priceAsString));
+            } else {
+                return new InputValidator.ValidationResult(true);
+            }
+        } else {
+            if (triggerPriceAsLong <= priceAsLong) {
+                return new InputValidator.ValidationResult(false,
+                        Res.get("createOffer.triggerPrice.invalid.tooLow", priceAsString));
+            } else {
+                return new InputValidator.ValidationResult(true);
+            }
+        }
     }
 
     public void recalculateBsq30DayAveragePrice() {
@@ -147,5 +194,40 @@ public class PriceUtil {
             }
         }
         return Optional.of(value);
+    }
+
+    public static long getMarketPriceAsLong(String inputValue, String currencyCode) {
+        if (inputValue == null || inputValue.isEmpty() || currencyCode == null) {
+            return 0;
+        }
+
+        try {
+            int precision = getMarketPricePrecision(currencyCode);
+            String stringValue = reformatMarketPrice(inputValue, currencyCode);
+            return ParsingUtils.parsePriceStringToLong(currencyCode, stringValue, precision);
+        } catch (Throwable t) {
+            return 0;
+        }
+    }
+
+    public static String reformatMarketPrice(String inputValue, String currencyCode) {
+        if (inputValue == null || inputValue.isEmpty() || currencyCode == null) {
+            return "";
+        }
+
+        double priceAsDouble = ParsingUtils.parseNumberStringToDouble(inputValue);
+        int precision = getMarketPricePrecision(currencyCode);
+        return FormattingUtils.formatRoundedDoubleWithPrecision(priceAsDouble, precision);
+    }
+
+    public static String formatMarketPrice(long price, String currencyCode) {
+        int marketPricePrecision = getMarketPricePrecision(currencyCode);
+        double scaled = MathUtils.scaleDownByPowerOf10(price, marketPricePrecision);
+        return FormattingUtils.formatMarketPrice(scaled, marketPricePrecision);
+    }
+
+    public static int getMarketPricePrecision(String currencyCode) {
+        return CurrencyUtil.isCryptoCurrency(currencyCode) ?
+                Altcoin.SMALLEST_UNIT_EXPONENT : Fiat.SMALLEST_UNIT_EXPONENT;
     }
 }

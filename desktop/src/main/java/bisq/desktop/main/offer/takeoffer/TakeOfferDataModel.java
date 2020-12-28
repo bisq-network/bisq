@@ -500,8 +500,16 @@ class TakeOfferDataModel extends OfferDataModel {
         }
     }
 
-    private boolean isBuyOffer() {
+    boolean isBuyOffer() {
         return getDirection() == OfferPayload.Direction.BUY;
+    }
+
+    boolean isSellOffer() {
+        return getDirection() == OfferPayload.Direction.SELL;
+    }
+
+    boolean isCryptoCurrency() {
+        return CurrencyUtil.isCryptoCurrency(getCurrencyCode());
     }
 
     @Nullable

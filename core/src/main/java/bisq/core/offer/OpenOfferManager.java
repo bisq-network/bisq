@@ -358,6 +358,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     public void placeOffer(Offer offer,
                            double buyerSecurityDeposit,
                            boolean useSavingsWallet,
+                           long triggerPrice,
                            TransactionResultHandler resultHandler,
                            ErrorMessageHandler errorMessageHandler) {
         checkNotNull(offer.getMakerFee(), "makerFee must not be null");
@@ -382,7 +383,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         PlaceOfferProtocol placeOfferProtocol = new PlaceOfferProtocol(
                 model,
                 transaction -> {
-                    OpenOffer openOffer = new OpenOffer(offer);
+                    OpenOffer openOffer = new OpenOffer(offer, triggerPrice);
                     openOffers.add(openOffer);
                     requestPersistence();
                     resultHandler.handleResult(transaction);
@@ -486,6 +487,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     }
 
     public void editOpenOfferPublish(Offer editedOffer,
+                                     long triggerPrice,
                                      OpenOffer.State originalState,
                                      ResultHandler resultHandler,
                                      ErrorMessageHandler errorMessageHandler) {
@@ -498,7 +500,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
             openOffer.setState(OpenOffer.State.CANCELED);
             openOffers.remove(openOffer);
 
-            OpenOffer editedOpenOffer = new OpenOffer(editedOffer);
+            OpenOffer editedOpenOffer = new OpenOffer(editedOffer, triggerPrice);
             editedOpenOffer.setState(originalState);
 
             openOffers.add(editedOpenOffer);
@@ -855,7 +857,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                 updatedOffer.setPriceFeedService(priceFeedService);
                 updatedOffer.setState(originalOfferState);
 
-                OpenOffer updatedOpenOffer = new OpenOffer(updatedOffer);
+                OpenOffer updatedOpenOffer = new OpenOffer(updatedOffer, originalOpenOffer.getTriggerPrice());
                 updatedOpenOffer.setState(originalOpenOfferState);
                 openOffers.add(updatedOpenOffer);
                 requestPersistence();

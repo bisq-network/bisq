@@ -54,7 +54,6 @@ public class PerfectMoneyForm extends GeneralAccountNumberForm {
     public void addTradeCurrency() {
         addTradeCurrencyComboBox();
         currencyComboBox.setItems(FXCollections.observableArrayList(new FiatCurrency("USD"), new FiatCurrency("EUR")));
-        currencyComboBox.getSelectionModel().select(0);
     }
 
     @Override

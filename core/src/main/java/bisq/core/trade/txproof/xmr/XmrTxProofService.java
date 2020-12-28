@@ -132,11 +132,8 @@ public class XmrTxProofService implements AssetTxProofService {
             onP2pNetworkAndWalletReady();
         } else {
             p2pNetworkAndWalletReady = EasyBind.combine(isP2pBootstrapped, hasSufficientBtcPeers, isBtcBlockDownloadComplete,
-                    (bootstrapped, sufficientPeers, downloadComplete) -> {
-                        log.info("isP2pBootstrapped={}, hasSufficientBtcPeers={} isBtcBlockDownloadComplete={}",
-                                bootstrapped, sufficientPeers, downloadComplete);
-                        return bootstrapped && sufficientPeers && downloadComplete;
-                    });
+                    (bootstrapped, sufficientPeers, downloadComplete) ->
+                            bootstrapped && sufficientPeers && downloadComplete);
 
             p2pNetworkAndWalletReadyListener = (observable, oldValue, newValue) -> {
                 if (newValue) {

@@ -301,7 +301,6 @@ public class CurrencyUtil {
                 new FiatCurrency("MAD"),
                 new FiatCurrency("NPR"),
                 new FiatCurrency("NZD"),
-                new FiatCurrency("NGN"),
                 new FiatCurrency("NOK"),
                 new FiatCurrency("PKR"),
                 new FiatCurrency("PEN"),

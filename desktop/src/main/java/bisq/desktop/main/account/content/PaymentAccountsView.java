@@ -62,7 +62,7 @@ public abstract class PaymentAccountsView<R extends Node, M extends ActivatableW
                 accountAgeWitnessService.getAccountAgeWitnessUtils().logSigners();
             } else if (Utilities.isCtrlShiftPressed(KeyCode.U, event)) {
                 accountAgeWitnessService.getAccountAgeWitnessUtils().logUnsignedSignerPubKeys();
-            } else if (Utilities.isAltOrCtrlPressed(KeyCode.C, event)) {
+            } else if (Utilities.isCtrlShiftPressed(KeyCode.C, event)) {
                 copyAccount();
             }
         };

@@ -254,7 +254,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
         numItems.setText(Res.get("shared.numItemsLabel", sortedList.size()));
         exportButton.setOnAction(event -> {
             final ObservableList<TableColumn<ClosedTradableListItem, ?>> tableColumns = tableView.getColumns();
-            CSVEntryConverter<ClosedTradableListItem> headerConverter = transactionsListItem -> {
+            CSVEntryConverter<ClosedTradableListItem> headerConverter = item -> {
                 String[] columns = new String[ColumnNames.values().length];
                 for (ColumnNames m : ColumnNames.values()) {
                     columns[m.ordinal()] = m.toString();
@@ -313,7 +313,6 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
     }
 
     private void onWidthChange(double width) {
-        log.error("onWidthChange " + width);
         txFeeColumn.setVisible(width > 1200);
         tradeFeeColumn.setVisible(width > 1300);
         buyerSecurityDepositColumn.setVisible(width > 1400);

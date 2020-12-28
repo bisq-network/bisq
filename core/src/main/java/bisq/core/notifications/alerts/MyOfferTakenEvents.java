@@ -55,8 +55,9 @@ public class MyOfferTakenEvents {
     }
 
     private void onOpenOfferRemoved(OpenOffer openOffer) {
-        log.info("We got a offer removed. id={}, state={}", openOffer.getId(), openOffer.getState());
-        if (openOffer.getState() == OpenOffer.State.RESERVED) {
+        OpenOffer.State state = openOffer.getState();
+        if (state == OpenOffer.State.RESERVED) {
+            log.info("We got a offer removed. id={}, state={}", openOffer.getId(), state);
             String shortId = openOffer.getShortId();
             MobileMessage message = new MobileMessage(Res.get("account.notifications.offer.message.title"),
                     Res.get("account.notifications.offer.message.msg", shortId),

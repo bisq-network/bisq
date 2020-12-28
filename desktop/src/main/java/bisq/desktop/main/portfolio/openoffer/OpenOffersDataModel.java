@@ -23,6 +23,7 @@ import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
+import bisq.core.offer.TriggerPriceService;
 import bisq.core.provider.price.PriceFeedService;
 
 import bisq.common.handlers.ErrorMessageHandler;
@@ -98,5 +99,7 @@ class OpenOffersDataModel extends ActivatableDataModel {
         list.sort((o1, o2) -> o2.getOffer().getDate().compareTo(o1.getOffer().getDate()));
     }
 
-
+    boolean wasTriggered(OpenOffer openOffer) {
+        return TriggerPriceService.wasTriggered(priceFeedService.getMarketPrice(openOffer.getOffer().getCurrencyCode()), openOffer);
+    }
 }

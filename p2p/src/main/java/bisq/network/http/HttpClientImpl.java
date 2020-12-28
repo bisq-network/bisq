@@ -150,7 +150,7 @@ public class HttpClientImpl implements HttpClient {
                                        @Nullable String headerKey,
                                        @Nullable String headerValue) throws IOException {
         long ts = System.currentTimeMillis();
-        log.info("requestWithoutProxy: URL={}, param={}, httpMethod={}", baseUrl, param, httpMethod);
+        log.debug("requestWithoutProxy: URL={}, param={}, httpMethod={}", baseUrl, param, httpMethod);
         try {
             String spec = httpMethod == HttpMethod.GET ? baseUrl + param : baseUrl;
             URL url = new URL(spec);
@@ -171,7 +171,7 @@ public class HttpClientImpl implements HttpClient {
             int responseCode = connection.getResponseCode();
             if (responseCode == 200) {
                 String response = convertInputStreamToString(connection.getInputStream());
-                log.info("Response from {} with param {} took {} ms. Data size:{}, response: {}",
+                log.debug("Response from {} with param {} took {} ms. Data size:{}, response: {}",
                         baseUrl,
                         param,
                         System.currentTimeMillis() - ts,
@@ -223,7 +223,7 @@ public class HttpClientImpl implements HttpClient {
                                       @Nullable String headerKey,
                                       @Nullable String headerValue) throws IOException {
         long ts = System.currentTimeMillis();
-        log.info("requestWithoutProxy: baseUrl={}, param={}, httpMethod={}", baseUrl, param, httpMethod);
+        log.debug("doRequestWithProxy: baseUrl={}, param={}, httpMethod={}", baseUrl, param, httpMethod);
         // This code is adapted from:
         //  http://stackoverflow.com/a/25203021/5616248
 
@@ -257,7 +257,7 @@ public class HttpClientImpl implements HttpClient {
                 String response = convertInputStreamToString(httpResponse.getEntity().getContent());
                 int statusCode = httpResponse.getStatusLine().getStatusCode();
                 if (statusCode == 200) {
-                    log.info("Response from {} took {} ms. Data size:{}, response: {}, param: {}",
+                    log.debug("Response from {} took {} ms. Data size:{}, response: {}, param: {}",
                             baseUrl,
                             System.currentTimeMillis() - ts,
                             Utilities.readableFileSize(response.getBytes().length),
