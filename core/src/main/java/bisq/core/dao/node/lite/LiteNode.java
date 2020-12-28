@@ -81,6 +81,12 @@ public class LiteNode extends BsqNode {
         this.liteNodeNetworkService = liteNodeNetworkService;
         this.bsqWalletService = bsqWalletService;
         this.walletsSetup = walletsSetup;
+
+        blockDownloadListener = (observable, oldValue, newValue) -> {
+            if ((double) newValue == 1) {
+                setupWalletBestBlockListener();
+            }
+        };
     }
 
 
@@ -94,22 +100,18 @@ public class LiteNode extends BsqNode {
 
         liteNodeNetworkService.start();
 
-        // We wait until the wallet is synced before using it trigger requests
+        // We wait until the wallet is synced before using it for triggering requests
         if (walletsSetup.isDownloadComplete()) {
             setupWalletBestBlockListener();
-        } else if (blockDownloadListener == null) {
-            blockDownloadListener = (observable, oldValue, newValue) -> {
-                if ((double) newValue == 1) {
-                    setupWalletBestBlockListener();
-                    UserThread.execute(() -> walletsSetup.downloadPercentageProperty().removeListener(blockDownloadListener));
-                }
-            };
+        } else {
             walletsSetup.downloadPercentageProperty().addListener(blockDownloadListener);
         }
     }
 
     private void setupWalletBestBlockListener() {
-        bsqWalletService.addNewBestBlockListener(btcBlock -> {
+        walletsSetup.downloadPercentageProperty().removeListener(blockDownloadListener);
+
+        bsqWalletService.addNewBestBlockListener(blockFromWallet -> {
             // Check if we are done with parsing
             if (!daoStateService.isParseBlockChainComplete())
                 return;
@@ -119,14 +121,14 @@ public class LiteNode extends BsqNode {
                 checkForBlockReceivedTimer.stop();
             }
 
-            int btcWalletHeight = btcBlock.getHeight();
-            log.info("New block at height {} from bsqWalletService", btcWalletHeight);
+            int walletBlockHeight = blockFromWallet.getHeight();
+            log.info("New block at height {} from bsqWalletService", walletBlockHeight);
 
             // We expect to receive the new BSQ block from the network shortly after BitcoinJ has been aware of it.
             // If we don't receive it we request it manually from seed nodes
             checkForBlockReceivedTimer = UserThread.runAfter(() -> {
                 int daoChainHeight = daoStateService.getChainHeight();
-                if (daoChainHeight < btcWalletHeight) {
+                if (daoChainHeight < walletBlockHeight) {
                     log.warn("We did not receive a block from the network {} seconds after we saw the new block in BitcoinJ. " +
                                     "We request from our seed nodes missing blocks from block height {}.",
                             CHECK_FOR_BLOCK_RECEIVED_DELAY_SEC, daoChainHeight + 1);
@@ -254,7 +256,8 @@ public class LiteNode extends BsqNode {
     // We received a new block
     private void onNewBlockReceived(RawBlock block) {
         int blockHeight = block.getHeight();
-        log.info("onNewBlockReceived: block at height {}, hash={}. Our DAO chainHeight={}", blockHeight, block.getHash(), chainTipHeight);
+        log.info("onNewBlockReceived: block at height {}, hash={}. Our DAO chainHeight={}",
+                blockHeight, block.getHash(), chainTipHeight);
 
         // We only update chainTipHeight if we get a newer block
         if (blockHeight > chainTipHeight) {
