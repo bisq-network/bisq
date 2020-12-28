@@ -611,9 +611,7 @@ public class DaoStateService implements DaoSetupService {
     }
 
     public Optional<Issuance> getIssuance(String txId) {
-        return daoState.getIssuanceMap().values().stream()
-                .filter(issuance -> issuance.getTxId().equals(txId))
-                .findAny();
+        return Optional.ofNullable(daoState.getIssuanceMap().get(txId));
     }
 
     public boolean isIssuanceTx(String txId) {
