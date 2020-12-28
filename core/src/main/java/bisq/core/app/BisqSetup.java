@@ -182,6 +182,9 @@ public class BisqSetup {
     private Runnable qubesOSInfoHandler;
     @Setter
     @Nullable
+    private Runnable daoRequiresRestartHandler;
+    @Setter
+    @Nullable
     private Consumer<String> downGradePreventionHandler;
 
     @Getter
@@ -443,7 +446,8 @@ public class BisqSetup {
                 daoWarnMessageHandler,
                 filterWarningHandler,
                 voteResultExceptionHandler,
-                revolutAccountsUpdateHandler);
+                revolutAccountsUpdateHandler,
+                daoRequiresRestartHandler);
 
         if (walletsSetup.downloadPercentageProperty().get() == 1) {
             checkForLockedUpFunds();

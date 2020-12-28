@@ -71,6 +71,7 @@ public class ApiTestConfig {
     static final String SKIP_TESTS = "skipTests";
     static final String SHUTDOWN_AFTER_TESTS = "shutdownAfterTests";
     static final String SUPPORTING_APPS = "supportingApps";
+    static final String CALL_RATE_METERING_CONFIG_PATH = "callRateMeteringConfigPath";
     static final String ENABLE_BISQ_DEBUGGING = "enableBisqDebugging";
 
     // Default values for certain options
@@ -102,6 +103,7 @@ public class ApiTestConfig {
     public final boolean skipTests;
     public final boolean shutdownAfterTests;
     public final List<String> supportingApps;
+    public final String callRateMeteringConfigPath;
     public final boolean enableBisqDebugging;
 
     // Immutable system configurations set in the constructor.
@@ -228,6 +230,12 @@ public class ApiTestConfig {
                         .ofType(String.class)
                         .defaultsTo("bitcoind,seednode,arbdaemon,alicedaemon,bobdaemon");
 
+        ArgumentAcceptingOptionSpec<String> callRateMeteringConfigPathOpt =
+                parser.accepts(CALL_RATE_METERING_CONFIG_PATH,
+                        "Install a ratemeters.json file to configure call rate metering interceptors")
+                        .withRequiredArg()
+                        .defaultsTo(EMPTY);
+
         ArgumentAcceptingOptionSpec<Boolean> enableBisqDebuggingOpt =
                 parser.accepts(ENABLE_BISQ_DEBUGGING,
                         "Start Bisq apps with remote debug options")
@@ -289,6 +297,7 @@ public class ApiTestConfig {
             this.skipTests = options.valueOf(skipTestsOpt);
             this.shutdownAfterTests = options.valueOf(shutdownAfterTestsOpt);
             this.supportingApps = asList(options.valueOf(supportingAppsOpt).split(","));
+            this.callRateMeteringConfigPath = options.valueOf(callRateMeteringConfigPathOpt);
             this.enableBisqDebugging = options.valueOf(enableBisqDebuggingOpt);
 
             // Assign values to special-case static fields.

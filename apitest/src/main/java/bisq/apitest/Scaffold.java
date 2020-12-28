@@ -154,7 +154,8 @@ public class Scaffold {
             try {
                 log.info("Shutting down executor service ...");
                 executor.shutdownNow();
-                executor.awaitTermination(config.supportingApps.size() * 2000, MILLISECONDS);
+                //noinspection ResultOfMethodCallIgnored
+                executor.awaitTermination(config.supportingApps.size() * 2000L, MILLISECONDS);
 
                 SetupTask[] orderedTasks = new SetupTask[]{
                         bobNodeTask, aliceNodeTask, arbNodeTask, seedNodeTask, bitcoindTask};
@@ -218,19 +219,24 @@ public class Scaffold {
             if (copyBitcoinRegtestDir.run().getExitStatus() != 0)
                 throw new IllegalStateException("Could not install bitcoin regtest dir");
 
+            String aliceDataDir = daoSetupDir + "/" + alicedaemon.appName;
             BashCommand copyAliceDataDir = new BashCommand(
-                    "cp -rf " + daoSetupDir + "/" + alicedaemon.appName
-                            + " " + config.rootAppDataDir);
+                    "cp -rf " + aliceDataDir + " " + config.rootAppDataDir);
             if (copyAliceDataDir.run().getExitStatus() != 0)
                 throw new IllegalStateException("Could not install alice data dir");
 
+            String bobDataDir = daoSetupDir + "/" + bobdaemon.appName;
             BashCommand copyBobDataDir = new BashCommand(
-                    "cp -rf " + daoSetupDir + "/" + bobdaemon.appName
-                            + " " + config.rootAppDataDir);
+                    "cp -rf " + bobDataDir + " " + config.rootAppDataDir);
             if (copyBobDataDir.run().getExitStatus() != 0)
                 throw new IllegalStateException("Could not install bob data dir");
 
             log.info("Installed dao-setup files into {}", buildDataDir);
+
+            if (!config.callRateMeteringConfigPath.isEmpty()) {
+                installCallRateMeteringConfiguration(aliceDataDir);
+                installCallRateMeteringConfiguration(bobDataDir);
+            }
 
             // Copy the blocknotify script from the src resources dir to the build
             // resources dir.  Users may want to edit comment out some lines when all
@@ -285,6 +291,25 @@ public class Scaffold {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private void installCallRateMeteringConfiguration(String dataDir) throws IOException, InterruptedException {
+        File testRateMeteringFile = new File(config.callRateMeteringConfigPath);
+        if (!testRateMeteringFile.exists())
+            throw new FileNotFoundException(
+                    format("Call rate metering config file '%s' not found", config.callRateMeteringConfigPath));
+
+        BashCommand copyRateMeteringConfigFile = new BashCommand(
+                "cp -rf " + config.callRateMeteringConfigPath + " " + dataDir);
+        if (copyRateMeteringConfigFile.run().getExitStatus() != 0)
+            throw new IllegalStateException(
+                    format("Could not install %s file in %s",
+                            testRateMeteringFile.getAbsolutePath(), dataDir));
+
+        Path destPath = Paths.get(dataDir, testRateMeteringFile.getName());
+        String chmod700Perms = "rwx------";
+        Files.setPosixFilePermissions(destPath, PosixFilePermissions.fromString(chmod700Perms));
+        log.info("Installed {} with perms {}.", destPath.toString(), chmod700Perms);
     }
 
     private void installShutdownHook() {

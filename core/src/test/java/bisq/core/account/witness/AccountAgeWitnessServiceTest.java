@@ -310,12 +310,12 @@ public class AccountAgeWitnessServiceTest {
 
         // Remove SignedWitness signed by arbitrator
         @SuppressWarnings("OptionalGetWithoutIsPresent")
-        var signedWitnessArb = signedWitnessService.getSignedWitnessMap().values().stream()
+        var signedWitnessArb = signedWitnessService.getSignedWitnessMapValues().stream()
                 .filter(sw -> sw.getVerificationMethod() == SignedWitness.VerificationMethod.ARBITRATOR)
                 .findAny()
                 .get();
-        signedWitnessService.getSignedWitnessMap().remove(signedWitnessArb.getHashAsByteArray());
-        assertEquals(signedWitnessService.getSignedWitnessMap().size(), 2);
+        signedWitnessService.removeSignedWitness(signedWitnessArb);
+        assertEquals(signedWitnessService.getSignedWitnessMapValues().size(), 2);
 
         // Check that no account age witness is a signer
         assertFalse(service.accountIsSigner(aew1));
@@ -354,7 +354,7 @@ public class AccountAgeWitnessServiceTest {
                 witnessOwnerPubKey.getEncoded(),
                 time,
                 SignedWitnessService.MINIMUM_TRADE_AMOUNT_FOR_SIGNING.value);
-        signedWitnessService.getSignedWitnessMap().putIfAbsent(signedWitness.getHashAsByteArray(), signedWitness);
+        signedWitnessService.addToMap(signedWitness);
     }
 
 }

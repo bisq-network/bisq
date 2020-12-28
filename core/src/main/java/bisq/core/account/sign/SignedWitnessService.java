@@ -51,6 +51,7 @@ import java.time.temporal.ChronoUnit;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -61,7 +62,6 @@ import java.util.Set;
 import java.util.Stack;
 import java.util.stream.Collectors;
 
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -74,10 +74,14 @@ public class SignedWitnessService {
     private final P2PService p2PService;
     private final ArbitratorManager arbitratorManager;
     private final User user;
-
-    @Getter
-    private final Map<P2PDataStorage.ByteArray, SignedWitness> signedWitnessMap = new HashMap<>();
     private final FilterManager filterManager;
+
+    private final Map<P2PDataStorage.ByteArray, SignedWitness> signedWitnessMap = new HashMap<>();
+
+    // This map keeps all SignedWitnesses with the same AccountAgeWitnessHash in a Set.
+    // This avoids iterations over the signedWitnessMap for getting the set of such SignedWitnesses.
+    private final Map<P2PDataStorage.ByteArray, Set<SignedWitness>> signedWitnessSetByAccountAgeWitnessHash = new HashMap<>();
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -142,6 +146,10 @@ public class SignedWitnessService {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    public Collection<SignedWitness> getSignedWitnessMapValues() {
+        return signedWitnessMap.values();
+    }
+
     /**
      * List of dates as long when accountAgeWitness was signed
      *
@@ -199,7 +207,7 @@ public class SignedWitnessService {
 
     @VisibleForTesting
     public Set<SignedWitness> getSignedWitnessSetByOwnerPubKey(byte[] ownerPubKey) {
-        return signedWitnessMap.values().stream()
+        return getSignedWitnessMapValues().stream()
                 .filter(e -> Arrays.equals(e.getWitnessOwnerPubKey(), ownerPubKey))
                 .collect(Collectors.toSet());
     }
@@ -344,30 +352,27 @@ public class SignedWitnessService {
         }
     }
 
-    private Set<SignedWitness> getSignedWitnessSet(AccountAgeWitness accountAgeWitness) {
-        return signedWitnessMap.values().stream()
-                .filter(e -> Arrays.equals(e.getAccountAgeWitnessHash(), accountAgeWitness.getHash()))
-                .collect(Collectors.toSet());
+    public Set<SignedWitness> getSignedWitnessSet(AccountAgeWitness accountAgeWitness) {
+        P2PDataStorage.ByteArray key = new P2PDataStorage.ByteArray(accountAgeWitness.getHash());
+        return signedWitnessSetByAccountAgeWitnessHash.getOrDefault(key, new HashSet<>());
     }
 
     // SignedWitness objects signed by arbitrators
     public Set<SignedWitness> getArbitratorsSignedWitnessSet(AccountAgeWitness accountAgeWitness) {
-        return signedWitnessMap.values().stream()
+        return getSignedWitnessSet(accountAgeWitness).stream()
                 .filter(SignedWitness::isSignedByArbitrator)
-                .filter(e -> Arrays.equals(e.getAccountAgeWitnessHash(), accountAgeWitness.getHash()))
                 .collect(Collectors.toSet());
     }
 
     // SignedWitness objects signed by any other peer
     public Set<SignedWitness> getTrustedPeerSignedWitnessSet(AccountAgeWitness accountAgeWitness) {
-        return signedWitnessMap.values().stream()
+        return getSignedWitnessSet(accountAgeWitness).stream()
                 .filter(e -> !e.isSignedByArbitrator())
-                .filter(e -> Arrays.equals(e.getAccountAgeWitnessHash(), accountAgeWitness.getHash()))
                 .collect(Collectors.toSet());
     }
 
     public Set<SignedWitness> getRootSignedWitnessSet(boolean includeSignedByArbitrator) {
-        return signedWitnessMap.values().stream()
+        return getSignedWitnessMapValues().stream()
                 .filter(witness -> getSignedWitnessSetByOwnerPubKey(witness.getSignerPubKey(), new Stack<>()).isEmpty())
                 .filter(witness -> includeSignedByArbitrator ||
                         witness.getVerificationMethod() != SignedWitness.VerificationMethod.ARBITRATOR)
@@ -388,7 +393,7 @@ public class SignedWitnessService {
     // witnessOwnerPubKey
     private Set<SignedWitness> getSignedWitnessSetByOwnerPubKey(byte[] ownerPubKey,
                                                                 Stack<P2PDataStorage.ByteArray> excluded) {
-        return signedWitnessMap.values().stream()
+        return getSignedWitnessMapValues().stream()
                 .filter(e -> Arrays.equals(e.getWitnessOwnerPubKey(), ownerPubKey))
                 .filter(e -> !excluded.contains(new P2PDataStorage.ByteArray(e.getSignerPubKey())))
                 .collect(Collectors.toSet());
@@ -487,8 +492,12 @@ public class SignedWitnessService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @VisibleForTesting
-    void addToMap(SignedWitness signedWitness) {
+    public void addToMap(SignedWitness signedWitness) {
         signedWitnessMap.putIfAbsent(signedWitness.getHashAsByteArray(), signedWitness);
+
+        P2PDataStorage.ByteArray accountAgeWitnessHash = new P2PDataStorage.ByteArray(signedWitness.getAccountAgeWitnessHash());
+        signedWitnessSetByAccountAgeWitnessHash.putIfAbsent(accountAgeWitnessHash, new HashSet<>());
+        signedWitnessSetByAccountAgeWitnessHash.get(accountAgeWitnessHash).add(signedWitness);
     }
 
     private void publishSignedWitness(SignedWitness signedWitness) {
@@ -501,7 +510,22 @@ public class SignedWitnessService {
     }
 
     private void doRepublishAllSignedWitnesses() {
-        signedWitnessMap.forEach((e, signedWitness) -> p2PService.addPersistableNetworkPayload(signedWitness, true));
+        getSignedWitnessMapValues()
+                .forEach(signedWitness -> p2PService.addPersistableNetworkPayload(signedWitness, true));
+    }
+
+    @VisibleForTesting
+    public void removeSignedWitness(SignedWitness signedWitness) {
+        signedWitnessMap.remove(signedWitness.getHashAsByteArray());
+
+        P2PDataStorage.ByteArray accountAgeWitnessHash = new P2PDataStorage.ByteArray(signedWitness.getAccountAgeWitnessHash());
+        if (signedWitnessSetByAccountAgeWitnessHash.containsKey(accountAgeWitnessHash)) {
+            Set<SignedWitness> set = signedWitnessSetByAccountAgeWitnessHash.get(accountAgeWitnessHash);
+            set.remove(signedWitness);
+            if (set.isEmpty()) {
+                signedWitnessSetByAccountAgeWitnessHash.remove(accountAgeWitnessHash);
+            }
+        }
     }
 
     // Remove SignedWitnesses that are signed by TRADE that also have an ARBITRATOR signature

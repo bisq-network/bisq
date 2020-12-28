@@ -35,8 +35,6 @@ import bisq.desktop.main.account.content.fiataccounts.FiatAccountsView;
 import bisq.desktop.main.dao.DaoView;
 import bisq.desktop.main.dao.wallet.BsqWalletView;
 import bisq.desktop.main.dao.wallet.receive.BsqReceiveView;
-import bisq.desktop.main.funds.FundsView;
-import bisq.desktop.main.funds.withdrawal.WithdrawalView;
 import bisq.desktop.main.overlays.notifications.Notification;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
@@ -328,14 +326,6 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
         // we use model.placeOfferCompleted to not react on close which was triggered by a successful placeOffer
         if (model.getDataModel().getBalance().get().isPositive() && !model.placeOfferCompleted.get()) {
             model.getDataModel().swapTradeToSavings();
-            String key = "CreateOfferCancelAndFunded";
-            if (preferences.showAgain(key)) {
-                new Popup().information(Res.get("createOffer.alreadyFunded"))
-                        .actionButtonTextWithGoTo("navigation.funds.availableForWithdrawal")
-                        .onAction(() -> navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class))
-                        .dontShowAgainId(key)
-                        .show();
-            }
         }
     }
 
@@ -1239,14 +1229,17 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
         fundingHBox.getChildren().add(cancelButton2);
 
         cancelButton2.setOnAction(e -> {
-            if (model.getDataModel().getIsBtcWalletFunded().get()) {
-                new Popup().warning(Res.get("createOffer.warnCancelOffer"))
+            String key = "CreateOfferCancelAndFunded";
+            if (model.getDataModel().getIsBtcWalletFunded().get() &&
+                    preferences.showAgain(key)) {
+                new Popup().backgroundInfo(Res.get("createOffer.warnCancelOffer"))
                         .closeButtonText(Res.get("shared.no"))
                         .actionButtonText(Res.get("shared.yesCancel"))
                         .onAction(() -> {
                             close();
                             model.getDataModel().swapTradeToSavings();
                         })
+                        .dontShowAgainId(key)
                         .show();
             } else {
                 close();

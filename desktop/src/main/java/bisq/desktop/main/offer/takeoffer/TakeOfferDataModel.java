@@ -87,7 +87,7 @@ class TakeOfferDataModel extends OfferDataModel {
     private final User user;
     private final FeeService feeService;
     private final FilterManager filterManager;
-    private final Preferences preferences;
+    final Preferences preferences;
     private final TxFeeEstimationService txFeeEstimationService;
     private final PriceFeedService priceFeedService;
     private final AccountAgeWitnessService accountAgeWitnessService;

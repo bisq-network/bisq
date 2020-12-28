@@ -33,14 +33,15 @@ public class BsqTransferService {
     }
 
     public BsqTransferModel getBsqTransferModel(LegacyAddress address,
-                                                Coin receiverAmount)
+                                                Coin receiverAmount,
+                                                Coin txFeePerVbyte)
             throws TransactionVerificationException,
             WalletException,
             BsqChangeBelowDustException,
             InsufficientMoneyException {
 
         Transaction preparedSendTx = bsqWalletService.getPreparedSendBsqTx(address.toString(), receiverAmount);
-        Transaction txWithBtcFee = btcWalletService.completePreparedSendBsqTx(preparedSendTx, true);
+        Transaction txWithBtcFee = btcWalletService.completePreparedSendBsqTx(preparedSendTx, txFeePerVbyte);
         Transaction signedTx = bsqWalletService.signTx(txWithBtcFee);
 
         return new BsqTransferModel(address,

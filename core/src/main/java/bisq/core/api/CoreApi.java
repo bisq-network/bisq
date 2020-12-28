@@ -31,21 +31,24 @@ import bisq.core.trade.statistics.TradeStatistics3;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 
 import bisq.common.app.Version;
+import bisq.common.config.Config;
 import bisq.common.handlers.ResultHandler;
 
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+
+import com.google.common.util.concurrent.FutureCallback;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-
-import javax.annotation.Nullable;
 
 /**
  * Provides high level interface to functionality of core Bisq features.
@@ -55,6 +58,8 @@ import javax.annotation.Nullable;
 @Slf4j
 public class CoreApi {
 
+    @Getter
+    private final Config config;
     private final CoreDisputeAgentsService coreDisputeAgentsService;
     private final CoreOffersService coreOffersService;
     private final CorePaymentAccountsService paymentAccountsService;
@@ -64,13 +69,15 @@ public class CoreApi {
     private final TradeStatisticsManager tradeStatisticsManager;
 
     @Inject
-    public CoreApi(CoreDisputeAgentsService coreDisputeAgentsService,
+    public CoreApi(Config config,
+                   CoreDisputeAgentsService coreDisputeAgentsService,
                    CoreOffersService coreOffersService,
                    CorePaymentAccountsService paymentAccountsService,
                    CorePriceService corePriceService,
                    CoreTradesService coreTradesService,
                    CoreWalletsService walletsService,
                    TradeStatisticsManager tradeStatisticsManager) {
+        this.config = config;
         this.coreDisputeAgentsService = coreDisputeAgentsService;
         this.coreOffersService = coreOffersService;
         this.paymentAccountsService = paymentAccountsService;
@@ -210,7 +217,7 @@ public class CoreApi {
         coreTradesService.keepFunds(tradeId);
     }
 
-    public void withdrawFunds(String tradeId, String address, @Nullable String memo) {
+    public void withdrawFunds(String tradeId, String address, String memo) {
         coreTradesService.withdrawFunds(tradeId, address, memo);
     }
 
@@ -246,8 +253,19 @@ public class CoreApi {
         return walletsService.getUnusedBsqAddress();
     }
 
-    public void sendBsq(String address, String amount, TxBroadcaster.Callback callback) {
-        walletsService.sendBsq(address, amount, callback);
+    public void sendBsq(String address,
+                        String amount,
+                        String txFeeRate,
+                        TxBroadcaster.Callback callback) {
+        walletsService.sendBsq(address, amount, txFeeRate, callback);
+    }
+
+    public void sendBtc(String address,
+                        String amount,
+                        String txFeeRate,
+                        String memo,
+                        FutureCallback<Transaction> callback) {
+        walletsService.sendBtc(address, amount, txFeeRate, memo, callback);
     }
 
     public void getTxFeeRate(ResultHandler resultHandler) {
@@ -265,6 +283,10 @@ public class CoreApi {
 
     public TxFeeRateInfo getMostRecentTxFeeRateInfo() {
         return walletsService.getMostRecentTxFeeRateInfo();
+    }
+
+    public Transaction getTransaction(String txId) {
+        return walletsService.getTransaction(txId);
     }
 
     public void setWalletPassword(String password, String newPassword) {

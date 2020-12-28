@@ -364,8 +364,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
                         .show());
         bisqSetup.setDisplayLocalhostHandler(key -> {
             if (!DevEnv.isDevMode()) {
-                Popup popup = new Popup().backgroundInfo(Res.get("popup.bitcoinLocalhostNode.msg") +
-                        Res.get("popup.bitcoinLocalhostNode.additionalRequirements"))
+                Popup popup = new Popup().backgroundInfo(Res.get("popup.bitcoinLocalhostNode.msg"))
                         .dontShowAgainId(key);
                 popup.setDisplayOrderPriority(5);
                 popupQueue.add(popup);
@@ -415,6 +414,11 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
                     .hideCloseButton()
                     .show();
         });
+
+        bisqSetup.setDaoRequiresRestartHandler(() -> new Popup().warning("popup.warn.daoRequiresRestart")
+                .useShutDownButton()
+                .hideCloseButton()
+                .show());
 
         corruptedStorageFileHandler.getFiles().ifPresent(files -> new Popup()
                 .warning(Res.get("popup.warning.incompatibleDB", files.toString(), config.appDataDir))

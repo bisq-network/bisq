@@ -19,6 +19,7 @@ package bisq.apitest;
 
 import java.net.InetAddress;
 
+import java.io.File;
 import java.io.IOException;
 
 import java.util.HashMap;
@@ -71,6 +72,16 @@ public class ApiTestCase {
 
     // gRPC service stubs are used by method & scenario tests, but not e2e tests.
     private static final Map<BisqAppConfig, GrpcStubs> grpcStubsCache = new HashMap<>();
+
+    public static void setUpScaffold(File callRateMeteringConfigFile,
+                                     Enum<?>... supportingApps)
+            throws InterruptedException, ExecutionException, IOException {
+        scaffold = new Scaffold(stream(supportingApps).map(Enum::name)
+                .collect(Collectors.joining(",")))
+                .setUp();
+        config = scaffold.config;
+        bitcoinCli = new BitcoinCliHelper((config));
+    }
 
     public static void setUpScaffold(Enum<?>... supportingApps)
             throws InterruptedException, ExecutionException, IOException {
