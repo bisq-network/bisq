@@ -151,14 +151,14 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
         Optional<Connection> connectionToSeedNodeOptional = networkNode.getConfirmedConnections().stream()
                 .filter(peerManager::isSeedNode)
                 .findAny();
-        if (connectionToSeedNodeOptional.isPresent() &&
-                connectionToSeedNodeOptional.get().getPeersNodeAddressOptional().isPresent()) {
-            NodeAddress candidate = connectionToSeedNodeOptional.get().getPeersNodeAddressOptional().get();
-            seedNodeAddresses.remove(candidate);
-            requestBlocks(candidate, startBlockHeight);
-        } else {
-            tryWithNewSeedNode(startBlockHeight);
-        }
+
+        connectionToSeedNodeOptional.flatMap(e -> e.getPeersNodeAddressOptional())
+                .ifPresentOrElse(candidate -> {
+                    seedNodeAddresses.remove(candidate);
+                    requestBlocks(candidate, startBlockHeight);
+                }, () -> {
+                    tryWithNewSeedNode(startBlockHeight);
+                });
     }
 
     public void reset() {
@@ -203,19 +203,14 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
         closeAllHandlers();
         stopRetryTimer();
         stopped = true;
-
-        if (lastRequestedBlockHeight > 0) {
-            tryWithNewSeedNode(lastRequestedBlockHeight);
-        }
+        tryWithNewSeedNode(lastRequestedBlockHeight);
     }
 
     @Override
     public void onNewConnectionAfterAllConnectionsLost() {
         closeAllHandlers();
         stopped = false;
-        if (lastRequestedBlockHeight > 0) {
-            tryWithNewSeedNode(lastRequestedBlockHeight);
-        }
+        tryWithNewSeedNode(lastRequestedBlockHeight);
     }
 
     @Override
@@ -223,9 +218,7 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
         log.info("onAwakeFromStandby");
         closeAllHandlers();
         stopped = false;
-        if (!networkNode.getAllConnections().isEmpty() && lastRequestedBlockHeight > 0) {
-            tryWithNewSeedNode(lastRequestedBlockHeight);
-        }
+        tryWithNewSeedNode(lastRequestedBlockHeight);
     }
 
 
@@ -238,17 +231,18 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
         if (networkEnvelope instanceof NewBlockBroadcastMessage) {
             NewBlockBroadcastMessage newBlockBroadcastMessage = (NewBlockBroadcastMessage) networkEnvelope;
             // We combine blockHash and txId list in case we receive blocks with different transactions.
-            List<String> txIds = newBlockBroadcastMessage.getBlock().getRawTxs().stream().map(BaseTx::getId).collect(Collectors.toList());
-            String extBlockId = newBlockBroadcastMessage.getBlock().getHash() + ":" + txIds;
-
-            if (receivedBlocks.contains(extBlockId)) {
-                log.debug("We had that message already and do not further broadcast it. extBlockId={}", extBlockId);
+            List<String> txIds = newBlockBroadcastMessage.getBlock().getRawTxs().stream()
+                    .map(BaseTx::getId)
+                    .collect(Collectors.toList());
+            String blockUid = newBlockBroadcastMessage.getBlock().getHash() + ":" + txIds;
+            if (receivedBlocks.contains(blockUid)) {
+                log.debug("We had that message already and do not further broadcast it. blockUid={}", blockUid);
                 return;
             }
 
-            log.info("We received a NewBlockBroadcastMessage from peer {} and broadcast it to our peers. extBlockId={}",
-                    connection.getPeersNodeAddressOptional().orElse(null), extBlockId);
-            receivedBlocks.add(extBlockId);
+            log.info("We received a NewBlockBroadcastMessage from peer {} and broadcast it to our peers. blockUid={}",
+                    connection.getPeersNodeAddressOptional().orElse(null), blockUid);
+            receivedBlocks.add(blockUid);
             broadcaster.broadcast(newBlockBroadcastMessage, connection.getPeersNodeAddressOptional().orElse(null));
             listeners.forEach(listener -> listener.onNewBlockReceived(newBlockBroadcastMessage));
         }
@@ -299,8 +293,7 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
                 new RequestBlocksHandler.Listener() {
                     @Override
                     public void onComplete(GetBlocksResponse getBlocksResponse) {
-                        log.info("requestBlocksHandler of outbound connection complete. nodeAddress={}",
-                                peersNodeAddress);
+                        log.info("requestBlocksHandler to {} completed", peersNodeAddress);
                         stopRetryTimer();
 
                         // need to remove before listeners are notified as they cause the update call
@@ -348,6 +341,18 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void tryWithNewSeedNode(int startBlockHeight) {
+        if (networkNode.getAllConnections().isEmpty()) {
+            return;
+        }
+
+        if (lastRequestedBlockHeight == 0) {
+            return;
+        }
+
+        if (stopped) {
+            return;
+        }
+
         if (retryTimer != null) {
             log.warn("We have a retry timer already running.");
             return;
