@@ -604,10 +604,7 @@ public class DaoStateService implements DaoSetupService {
     }
 
     public Optional<Issuance> getIssuance(String txId, IssuanceType issuanceType) {
-        return daoState.getIssuanceMap().values().stream()
-                .filter(issuance -> issuance.getTxId().equals(txId))
-                .filter(issuance -> issuance.getIssuanceType() == issuanceType)
-                .findAny();
+        return getIssuance(txId).filter(issuance -> issuance.getIssuanceType() == issuanceType);
     }
 
     public Optional<Issuance> getIssuance(String txId) {
