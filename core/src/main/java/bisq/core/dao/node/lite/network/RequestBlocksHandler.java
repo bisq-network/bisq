@@ -149,7 +149,7 @@ public class RequestBlocksHandler implements MessageListener {
                     log.error(errorMessage);
                     handleFault(errorMessage, nodeAddress, CloseConnectionReason.SEND_MSG_FAILURE);
                 } else {
-                    log.trace("We have stopped already. We ignore that networkNode.sendMessage.onFailure call.");
+                    log.warn("We have stopped already. We ignore that networkNode.sendMessage.onFailure call.");
                 }
             }
         }, MoreExecutors.directExecutor());
@@ -175,7 +175,7 @@ public class RequestBlocksHandler implements MessageListener {
                 // have the address set. As we check the nonce later we do not care that much for the check if the
                 // connection address is the same as the one we used.
             } else if (!optionalNodeAddress.get().equals(nodeAddress)) {
-                log.warn("Peers node address is the same we requested. We ignore that message.");
+                log.warn("Peers node address is not the same we used for the request. This is not expected. We ignore that message.");
                 return;
             }
 
