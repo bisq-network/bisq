@@ -136,6 +136,7 @@ public class AccountAgeWitnessService {
     private final User user;
     private final SignedWitnessService signedWitnessService;
     private final ChargeBackRisk chargeBackRisk;
+    private final AccountAgeWitnessStorageService accountAgeWitnessStorageService;
     private final FilterManager filterManager;
     @Getter
     private final AccountAgeWitnessUtils accountAgeWitnessUtils;
@@ -167,6 +168,7 @@ public class AccountAgeWitnessService {
         this.user = user;
         this.signedWitnessService = signedWitnessService;
         this.chargeBackRisk = chargeBackRisk;
+        this.accountAgeWitnessStorageService = accountAgeWitnessStorageService;
         this.filterManager = filterManager;
 
         accountAgeWitnessUtils = new AccountAgeWitnessUtils(
@@ -190,10 +192,10 @@ public class AccountAgeWitnessService {
         });
 
         // At startup the P2PDataStorage initializes earlier, otherwise we get the listener called.
-        p2PService.getP2PDataStorage().getAppendOnlyDataStoreMap().values().forEach(e -> {
-            if (e instanceof AccountAgeWitness)
-                addToMap((AccountAgeWitness) e);
-        });
+        accountAgeWitnessStorageService.getMapOfAllData().values().stream()
+                .filter(e -> e instanceof AccountAgeWitness)
+                .map(e -> (AccountAgeWitness) e)
+                .forEach(this::addToMap);
 
         if (p2PService.isBootstrapped()) {
             onBootStrapped();

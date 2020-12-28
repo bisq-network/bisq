@@ -30,6 +30,7 @@ import javafx.beans.property.SimpleLongProperty;
 import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -85,7 +86,7 @@ public class Statistic {
                     totalReceivedBytes.get() / 1024d,
                     numTotalReceivedMessages.get(), totalReceivedMessages,
                     numTotalReceivedMessagesPerSec.get());
-        }, 60);
+        }, TimeUnit.MINUTES.toSeconds(5));
     }
 
     public static LongProperty totalSentBytesProperty() {

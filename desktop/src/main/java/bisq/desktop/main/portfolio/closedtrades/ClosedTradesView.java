@@ -313,7 +313,6 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
     }
 
     private void onWidthChange(double width) {
-        log.error("onWidthChange " + width);
         txFeeColumn.setVisible(width > 1200);
         tradeFeeColumn.setVisible(width > 1300);
         buyerSecurityDepositColumn.setVisible(width > 1400);

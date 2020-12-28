@@ -878,16 +878,8 @@ public class GUIUtil {
                                 accountAgeWitnessService.getSignState(myWitness);
                         String info = StringUtils.capitalize(signState.getDisplayString());
 
-                        MaterialDesignIcon icon;
+                        MaterialDesignIcon icon = getIconForSignState(signState);
 
-                        switch (signState) {
-                            case PEER_SIGNER:
-                            case ARBITRATOR:
-                                icon = MaterialDesignIcon.APPROVAL;
-                                break;
-                            default:
-                                icon = MaterialDesignIcon.ALERT_CIRCLE_OUTLINE;
-                        }
                         label.setIcon(icon, info);
                     }
                     setGraphic(label);
