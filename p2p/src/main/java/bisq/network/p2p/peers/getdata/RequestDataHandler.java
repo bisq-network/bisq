@@ -28,23 +28,25 @@ import bisq.network.p2p.peers.getdata.messages.GetDataResponse;
 import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
-import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.proto.network.NetworkEnvelope;
-import bisq.common.proto.network.NetworkPayload;
+import bisq.common.util.Tuple2;
+import bisq.common.util.Utilities;
 
+import com.google.common.collect.Streams;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -187,10 +189,7 @@ class RequestDataHandler implements MessageListener {
                 if (!stopped) {
                     long ts1 = System.currentTimeMillis();
                     GetDataResponse getDataResponse = (GetDataResponse) networkEnvelope;
-                    final Set<ProtectedStorageEntry> dataSet = getDataResponse.getDataSet();
-                    Set<PersistableNetworkPayload> persistableNetworkPayloadSet = getDataResponse.getPersistableNetworkPayloadSet();
-                    logContents(networkEnvelope, dataSet, persistableNetworkPayloadSet);
-
+                    logContents(getDataResponse);
                     if (getDataResponse.getRequestNonce() == nonce) {
                         stopTimeoutTimer();
                         if (!connection.getPeersNodeAddressOptional().isPresent()) {
@@ -230,35 +229,23 @@ class RequestDataHandler implements MessageListener {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void logContents(NetworkEnvelope networkEnvelope,
-                             Set<ProtectedStorageEntry> dataSet,
-                             Set<PersistableNetworkPayload> persistableNetworkPayloadSet) {
-        Map<String, Set<NetworkPayload>> payloadByClassName = new HashMap<>();
-        dataSet.forEach(e -> {
-            ProtectedStoragePayload protectedStoragePayload = e.getProtectedStoragePayload();
-            if (protectedStoragePayload == null) {
-                log.warn("StoragePayload was null: {}", networkEnvelope.toString());
-                return;
-            }
+    private void logContents(GetDataResponse getDataResponse) {
+        Set<ProtectedStorageEntry> dataSet = getDataResponse.getDataSet();
+        Set<PersistableNetworkPayload> persistableNetworkPayloadSet = getDataResponse.getPersistableNetworkPayloadSet();
+        Map<String, Tuple2<AtomicInteger, Integer>> numPayloadsByClassName = new HashMap<>();
+        Streams.concat(dataSet.stream().map(ProtectedStorageEntry::getProtectedStoragePayload).filter(Objects::nonNull),
+                persistableNetworkPayloadSet.stream())
+                .forEach(data -> {
+                    String className = data.getClass().getSimpleName();
+                    // The data.toProtoMessage().getSerializedSize() call is not cheap, so want to avoid to call it on
+                    // each object. As most objects of the same data type are expected to have a similar size,
+                    // we only take the first and multiply later to get the total size.
+                    // This is sufficient for the informational purpose of that log.
+                    numPayloadsByClassName.putIfAbsent(className, new Tuple2<>(new AtomicInteger(0),
+                            data.toProtoMessage().getSerializedSize()));
+                    numPayloadsByClassName.get(className).first.getAndIncrement();
 
-            // For logging different data types
-            String className = protectedStoragePayload.getClass().getSimpleName();
-            if (!payloadByClassName.containsKey(className))
-                payloadByClassName.put(className, new HashSet<>());
-
-            payloadByClassName.get(className).add(protectedStoragePayload);
-        });
-
-        persistableNetworkPayloadSet.forEach(persistableNetworkPayload -> {
-            // For logging different data types
-            String className = persistableNetworkPayload.getClass().getSimpleName();
-            if (!payloadByClassName.containsKey(className))
-                payloadByClassName.put(className, new HashSet<>());
-
-            payloadByClassName.get(className).add(persistableNetworkPayload);
-        });
-
-        // Log different data types
+                });
         StringBuilder sb = new StringBuilder();
         String sep = System.lineSeparator();
         sb.append(sep).append("#################################################################").append(sep);
@@ -266,9 +253,11 @@ class RequestDataHandler implements MessageListener {
         int items = dataSet.size() + persistableNetworkPayloadSet.size();
         sb.append("Received ").append(items).append(" instances from a ")
                 .append(getDataRequestType).append(sep);
-        payloadByClassName.forEach((key, value) -> sb.append(key)
+        numPayloadsByClassName.forEach((key, value) -> sb.append(key)
                 .append(": ")
-                .append(value.size())
+                .append(value.first.get())
+                .append(" / ≈")
+                .append(Utilities.readableFileSize(value.second * value.first.get()))
                 .append(sep));
         sb.append("#################################################################");
         log.info(sb.toString());
