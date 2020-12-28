@@ -597,7 +597,7 @@ public class DaoStateService implements DaoSetupService {
         daoState.getIssuanceMap().put(issuance.getTxId(), issuance);
     }
 
-    public Set<Issuance> getIssuanceSet(IssuanceType issuanceType) {
+    public Set<Issuance> getIssuanceSetForType(IssuanceType issuanceType) {
         return daoState.getIssuanceMap().values().stream()
                 .filter(issuance -> issuance.getIssuanceType() == issuanceType)
                 .collect(Collectors.toSet());

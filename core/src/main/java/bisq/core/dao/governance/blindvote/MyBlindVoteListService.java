@@ -286,7 +286,7 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
                 .filter(txId -> periodService.isTxInPastCycle(txId, periodService.getChainHeight()))
                 .collect(Collectors.toSet());
 
-        return new MeritList(daoStateService.getIssuanceSet(IssuanceType.COMPENSATION).stream()
+        return new MeritList(daoStateService.getIssuanceSetForType(IssuanceType.COMPENSATION).stream()
                 .map(issuance -> {
                     checkArgument(issuance.getIssuanceType() == IssuanceType.COMPENSATION,
                             "IssuanceType must be COMPENSATION for MeritList");
