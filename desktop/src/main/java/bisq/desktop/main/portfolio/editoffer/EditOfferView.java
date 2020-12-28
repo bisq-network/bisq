@@ -28,6 +28,7 @@ import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.offer.OpenOffer;
+import bisq.core.user.DontShowAgainLookup;
 import bisq.core.user.Preferences;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.BsqFormatter;
@@ -206,8 +207,13 @@ public class EditOfferView extends MutableOfferView<EditOfferViewModel> {
                 spinnerInfoLabel.setText(Res.get("editOffer.publishOffer"));
                 //edit offer
                 model.onPublishOffer(() -> {
-                    log.debug("Edit offer was successful");
-                    new Popup().feedback(Res.get("editOffer.success")).show();
+                    String key = "editOfferSuccess";
+                    if (DontShowAgainLookup.showAgain(key)) {
+                        new Popup()
+                                .feedback(Res.get("editOffer.success"))
+                                .dontShowAgainId(key)
+                                .show();
+                    }
                     spinnerInfoLabel.setText("");
                     busyAnimation.stop();
                     close();
