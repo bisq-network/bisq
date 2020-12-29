@@ -17,6 +17,8 @@ import static bisq.apitest.Scaffold.BitcoinCoreApp.bitcoind;
 import static bisq.apitest.config.BisqAppConfig.alicedaemon;
 import static bisq.apitest.config.BisqAppConfig.bobdaemon;
 import static bisq.apitest.config.BisqAppConfig.seednode;
+import static bisq.apitest.method.wallet.WalletTestUtil.INITIAL_BTC_BALANCES;
+import static bisq.apitest.method.wallet.WalletTestUtil.verifyBtcBalances;
 import static bisq.cli.TableFormat.formatAddressBalanceTbl;
 import static bisq.cli.TableFormat.formatBtcBalanceInfoTbl;
 import static java.util.Collections.singletonList;
@@ -35,14 +37,6 @@ import bisq.apitest.method.MethodTest;
 public class BtcWalletTest extends MethodTest {
 
     private static final String TX_MEMO = "tx memo";
-
-    // All api tests depend on the DAO / regtest environment, and Bob & Alice's wallets
-    // are initialized with 10 BTC during the scaffolding setup.
-    private static final bisq.core.api.model.BtcBalanceInfo INITIAL_BTC_BALANCES =
-            bisq.core.api.model.BtcBalanceInfo.valueOf(1000000000,
-                    0,
-                    1000000000,
-                    0);
 
     @BeforeAll
     public static void setUp() {
@@ -74,7 +68,7 @@ public class BtcWalletTest extends MethodTest {
     public void testFundAlicesBtcWallet(final TestInfo testInfo) {
         String newAddress = getUnusedBtcAddress(alicedaemon);
         bitcoinCli.sendToAddress(newAddress, "2.5");
-        genBtcBlocksThenWait(1, 1500);
+        genBtcBlocksThenWait(1, 1000);
 
         BtcBalanceInfo btcBalanceInfo = getBtcBalances(alicedaemon);
         // New balance is 12.5 BTC
@@ -112,7 +106,7 @@ public class BtcWalletTest extends MethodTest {
 
         // Note that the memo is not set on the tx yet.
         assertTrue(txInfo.getMemo().isEmpty());
-        genBtcBlocksThenWait(1, 3000);
+        genBtcBlocksThenWait(1, 1000);
 
         // Fetch the tx and check for confirmation and memo.
         txInfo = getTransaction(alicedaemon, txInfo.getTxId());
@@ -144,13 +138,5 @@ public class BtcWalletTest extends MethodTest {
     @AfterAll
     public static void tearDown() {
         tearDownScaffold();
-    }
-
-    private void verifyBtcBalances(bisq.core.api.model.BtcBalanceInfo expected,
-                                   BtcBalanceInfo actual) {
-        assertEquals(expected.getAvailableBalance(), actual.getAvailableBalance());
-        assertEquals(expected.getReservedBalance(), actual.getReservedBalance());
-        assertEquals(expected.getTotalAvailableBalance(), actual.getTotalAvailableBalance());
-        assertEquals(expected.getLockedBalance(), actual.getLockedBalance());
     }
 }
