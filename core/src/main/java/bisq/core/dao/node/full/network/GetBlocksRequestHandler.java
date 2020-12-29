@@ -49,7 +49,7 @@ import org.jetbrains.annotations.NotNull;
  */
 @Slf4j
 class GetBlocksRequestHandler {
-    private static final long TIMEOUT = 120;
+    private static final long TIMEOUT_MIN = 3;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -89,22 +89,28 @@ class GetBlocksRequestHandler {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void onGetBlocksRequest(GetBlocksRequest getBlocksRequest, final Connection connection) {
+    public void onGetBlocksRequest(GetBlocksRequest getBlocksRequest, Connection connection) {
+        long ts = System.currentTimeMillis();
         // We limit number of blocks to 6000 which is about 1.5 month.
         List<Block> blocks = new LinkedList<>(daoStateService.getBlocksFromBlockHeight(getBlocksRequest.getFromBlockHeight(), 6000));
         List<RawBlock> rawBlocks = blocks.stream().map(RawBlock::fromBlock).collect(Collectors.toList());
         GetBlocksResponse getBlocksResponse = new GetBlocksResponse(rawBlocks, getBlocksRequest.getNonce());
-        log.info("Received GetBlocksRequest from {} for blocks from height {}",
-                connection.getPeersNodeAddressOptional(), getBlocksRequest.getFromBlockHeight());
-        if (timeoutTimer == null) {
-            timeoutTimer = UserThread.runAfter(() -> {  // setup before sending to avoid race conditions
-                        String errorMessage = "A timeout occurred for getBlocksResponse.requestNonce:" +
-                                getBlocksResponse.getRequestNonce() +
-                                " on connection:" + connection;
-                        handleFault(errorMessage, CloseConnectionReason.SEND_MSG_TIMEOUT, connection);
-                    },
-                    TIMEOUT, TimeUnit.SECONDS);
+        log.info("Received GetBlocksRequest from {} for blocks from height {}. " +
+                        "Building GetBlocksResponse with {} blocks took {} ms.",
+                connection.getPeersNodeAddressOptional(), getBlocksRequest.getFromBlockHeight(),
+                rawBlocks.size(), System.currentTimeMillis() - ts);
+
+        if (timeoutTimer != null) {
+            timeoutTimer.stop();
+            log.warn("Timeout was already running. We stopped it.");
         }
+        timeoutTimer = UserThread.runAfter(() -> {  // setup before sending to avoid race conditions
+                    String errorMessage = "A timeout occurred for getBlocksResponse.requestNonce:" +
+                            getBlocksResponse.getRequestNonce() +
+                            " on connection: " + connection;
+                    handleFault(errorMessage, CloseConnectionReason.SEND_MSG_TIMEOUT, connection);
+                },
+                TIMEOUT_MIN, TimeUnit.MINUTES);
 
         SettableFuture<Connection> future = networkNode.sendMessage(connection, getBlocksResponse);
         Futures.addCallback(future, new FutureCallback<>() {
@@ -145,7 +151,7 @@ class GetBlocksRequestHandler {
 
     private void handleFault(String errorMessage, CloseConnectionReason closeConnectionReason, Connection connection) {
         if (!stopped) {
-            log.debug(errorMessage + "\n\tcloseConnectionReason=" + closeConnectionReason);
+            log.warn("{}, closeConnectionReason={}", errorMessage, closeConnectionReason);
             cleanup();
             listener.onFault(errorMessage, connection);
         } else {
