@@ -60,10 +60,10 @@ public class BtcWalletTest extends MethodTest {
         // Bob & Alice's regtest Bisq wallets were initialized with 10 BTC.
 
         BtcBalanceInfo alicesBalances = getBtcBalances(alicedaemon);
-        log.info("{} Alice's BTC Balances:\n{}", testName(testInfo), formatBtcBalanceInfoTbl(alicesBalances));
+        log.debug("{} Alice's BTC Balances:\n{}", testName(testInfo), formatBtcBalanceInfoTbl(alicesBalances));
 
         BtcBalanceInfo bobsBalances = getBtcBalances(bobdaemon);
-        log.info("{} Bob's BTC Balances:\n{}", testName(testInfo), formatBtcBalanceInfoTbl(bobsBalances));
+        log.debug("{} Bob's BTC Balances:\n{}", testName(testInfo), formatBtcBalanceInfoTbl(bobsBalances));
 
         assertEquals(INITIAL_BTC_BALANCES.getAvailableBalance(), alicesBalances.getAvailableBalance());
         assertEquals(INITIAL_BTC_BALANCES.getAvailableBalance(), bobsBalances.getAvailableBalance());
@@ -80,7 +80,7 @@ public class BtcWalletTest extends MethodTest {
         // New balance is 12.5 BTC
         assertEquals(1250000000, btcBalanceInfo.getAvailableBalance());
 
-        log.info("{} -> Alice's Funded Address Balance -> \n{}",
+        log.debug("{} -> Alice's Funded Address Balance -> \n{}",
                 testName(testInfo),
                 formatAddressBalanceTbl(singletonList(getAddressBalance(alicedaemon, newAddress))));
 
@@ -92,7 +92,7 @@ public class BtcWalletTest extends MethodTest {
                         1250000000,
                         0);
         verifyBtcBalances(alicesExpectedBalances, btcBalanceInfo);
-        log.info("{} -> Alice's BTC Balances After Sending 2.5 BTC -> \n{}",
+        log.debug("{} -> Alice's BTC Balances After Sending 2.5 BTC -> \n{}",
                 testName(testInfo),
                 formatBtcBalanceInfoTbl(btcBalanceInfo));
     }
@@ -134,9 +134,9 @@ public class BtcWalletTest extends MethodTest {
         log.debug("{} Bob's BTC Balances:\n{}",
                 testName(testInfo),
                 formatBtcBalanceInfoTbl(bobsBalances));
-        // We cannot (?) predict the exact tx size and calculate how much in tx fees were
-        // deducted from the 5.5 BTC sent to Bob, but we do know Bob should have something
-        // between 15.49978000 and 15.49978100 BTC.
+        // The sendbtc tx weight and size randomly varies between two distinct values
+        // (876 wu, 219 bytes, OR 880 wu, 220 bytes) from test run to test run, hence
+        // the assertion of an available balance range [1549978000, 1549978100].
         assertTrue(bobsBalances.getAvailableBalance() >= 1549978000);
         assertTrue(bobsBalances.getAvailableBalance() <= 1549978100);
     }
