@@ -80,6 +80,11 @@ public class UserPayload implements PersistableEnvelope {
     @Nullable
     private List<RefundAgent> acceptedRefundAgents = new ArrayList<>();
 
+    // Added at 1.5.3
+    // Generic map for persisting various UI states. We keep values un-typed as string to
+    // provide sufficient flexibility.
+    private Cookie cookie = new Cookie();
+
     public UserPayload() {
     }
 
@@ -118,6 +123,7 @@ public class UserPayload implements PersistableEnvelope {
         Optional.ofNullable(acceptedRefundAgents)
                 .ifPresent(e -> builder.addAllAcceptedRefundAgents(ProtoUtil.collectionToProto(acceptedRefundAgents,
                         message -> ((protobuf.StoragePayload) message).getRefundAgent())));
+        Optional.ofNullable(cookie).ifPresent(e -> builder.putAllCookie(cookie.toProtoMessage()));
         return protobuf.PersistableEnvelope.newBuilder().setUserPayload(builder).build();
     }
 
@@ -147,7 +153,8 @@ public class UserPayload implements PersistableEnvelope {
                 proto.hasRegisteredRefundAgent() ? RefundAgent.fromProto(proto.getRegisteredRefundAgent()) : null,
                 proto.getAcceptedRefundAgentsList().isEmpty() ? new ArrayList<>() : new ArrayList<>(proto.getAcceptedRefundAgentsList().stream()
                         .map(RefundAgent::fromProto)
-                        .collect(Collectors.toList()))
+                        .collect(Collectors.toList())),
+                Cookie.fromProto(proto.getCookieMap())
         );
     }
 }
