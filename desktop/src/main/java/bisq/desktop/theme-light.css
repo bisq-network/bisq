@@ -114,3 +114,7 @@
 .warning-box {
     -fx-background-color: -bs-yellow-light;
 }
+
+.progress-bar > .secondary-bar {
+    -fx-background-color: -bs-color-gray-3;
+}

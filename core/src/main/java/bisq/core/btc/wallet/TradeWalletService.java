@@ -1111,15 +1111,7 @@ public class TradeWalletService {
         byte[] buyerPubKey = ECKey.fromPublicOnly(Utils.HEX.decode(buyerPubKeyAsHex)).getPubKey();
         byte[] sellerPubKey = ECKey.fromPublicOnly(Utils.HEX.decode(sellerPubKeyAsHex)).getPubKey();
         Script redeemScript = get2of2MultiSigRedeemScript(buyerPubKey, sellerPubKey);
-
-        Script hashedMultiSigOutputScript = get2of2MultiSigOutputScript(buyerPubKey, sellerPubKey,
-                hashedMultiSigOutputIsLegacy);
-
         Coin msOutputValue = buyerPayoutAmount.add(sellerPayoutAmount).add(txFee);
-        TransactionOutput hashedMultiSigOutput = new TransactionOutput(params, null, msOutputValue, hashedMultiSigOutputScript.getProgram());
-        Transaction depositTx = new Transaction(params);
-        depositTx.addOutput(hashedMultiSigOutput);
-
         Transaction payoutTx = new Transaction(params);
         Sha256Hash spendTxHash = Sha256Hash.wrap(depositTxHex);
         payoutTx.addInput(new TransactionInput(params, payoutTx, new byte[]{}, new TransactionOutPoint(params, 0, spendTxHash), msOutputValue));
