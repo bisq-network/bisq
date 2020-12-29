@@ -79,7 +79,7 @@ public class TakeBuyBTCOfferTest extends AbstractTradeTest {
             // Cache the trade id for the other tests.
             tradeId = trade.getTradeId();
 
-            genBtcBlocksThenWait(1, 2250);
+            genBtcBlocksThenWait(1, 1000);
             assertEquals(0, getOpenOffersCount(aliceStubs, "buy", "usd"));
 
             trade = getTrade(bobdaemon, trade.getTradeId());
@@ -89,7 +89,7 @@ public class TakeBuyBTCOfferTest extends AbstractTradeTest {
             verifyExpectedProtocolStatus(trade);
             logTrade(log, testInfo, "Bob's view after taking offer and sending deposit", trade);
 
-            genBtcBlocksThenWait(1, 2250);
+            genBtcBlocksThenWait(1, 1000);
             trade = getTrade(bobdaemon, trade.getTradeId());
             EXPECTED_PROTOCOL_STATUS.setState(DEPOSIT_CONFIRMED_IN_BLOCK_CHAIN)
                     .setPhase(DEPOSIT_CONFIRMED)
@@ -142,14 +142,14 @@ public class TakeBuyBTCOfferTest extends AbstractTradeTest {
     @Test
     @Order(4)
     public void testAlicesKeepFunds(final TestInfo testInfo) {
-        genBtcBlocksThenWait(1, 2250);
+        genBtcBlocksThenWait(1, 1000);
 
         var trade = getTrade(alicedaemon, tradeId);
         logTrade(log, testInfo, "Alice's view before keeping funds", trade);
 
         keepFunds(alicedaemon, tradeId);
 
-        genBtcBlocksThenWait(1, 2250);
+        genBtcBlocksThenWait(1, 1000);
 
         trade = getTrade(alicedaemon, tradeId);
         EXPECTED_PROTOCOL_STATUS.setState(BUYER_RECEIVED_PAYOUT_TX_PUBLISHED_MSG)
@@ -157,7 +157,7 @@ public class TakeBuyBTCOfferTest extends AbstractTradeTest {
         verifyExpectedProtocolStatus(trade);
         logTrade(log, testInfo, "Alice's view after keeping funds", trade);
         BtcBalanceInfo currentBalance = getBtcBalances(bobdaemon);
-        log.info("{} Alice's current available balance: {} BTC",
+        log.debug("{} Alice's current available balance: {} BTC",
                 testName(testInfo),
                 formatSatoshis(currentBalance.getAvailableBalance()));
     }
