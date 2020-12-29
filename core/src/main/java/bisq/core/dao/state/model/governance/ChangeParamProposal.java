@@ -29,9 +29,7 @@ import java.util.Date;
 import java.util.Map;
 import java.util.Objects;
 
-import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.concurrent.Immutable;
