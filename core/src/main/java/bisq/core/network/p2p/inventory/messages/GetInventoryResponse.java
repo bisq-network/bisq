@@ -28,9 +28,11 @@ import com.google.common.base.Optional;
 import java.util.HashMap;
 import java.util.Map;
 
+import lombok.EqualsAndHashCode;
 import lombok.Value;
 
 @Value
+@EqualsAndHashCode(callSuper = false)
 public class GetInventoryResponse extends NetworkEnvelope {
     private final Map<InventoryItem, String> inventory;
 

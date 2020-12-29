@@ -24,7 +24,8 @@ import bisq.common.proto.persistable.PersistablePayload;
 
 import java.util.Objects;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
@@ -36,7 +37,8 @@ import javax.annotation.concurrent.Immutable;
  * Gets persisted.
  */
 @Immutable
-@Data
+@Getter
+@Setter
 public class TxOutput extends BaseTxOutput implements PersistablePayload, ImmutableDaoStateModel {
     public static TxOutput fromTempOutput(TempTxOutput tempTxOutput) {
         return new TxOutput(tempTxOutput.getIndex(),
