@@ -269,8 +269,8 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
         feeToggleGroupListener = (observable, oldValue, newValue) -> {
             feeExcluded = newValue == feeExcludedRadioButton;
             amountLabel.setText(feeExcluded ?
-                    Res.get("funds.withdrawal.receiverAmount", Res.getBaseCurrencyCode()) :
-                    Res.get("funds.withdrawal.senderAmount", Res.getBaseCurrencyCode()));
+                    Res.get("funds.withdrawal.receiverAmount") :
+                    Res.get("funds.withdrawal.senderAmount"));
         };
     }
 
