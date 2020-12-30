@@ -68,9 +68,13 @@ import java.io.OptionalDataException;
 import java.io.StreamCorruptedException;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Queue;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -421,11 +425,36 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
     @Override
     public void onMessage(NetworkEnvelope networkEnvelope, Connection connection) {
         checkArgument(connection.equals(this));
-
+        int accountAgeWitnessEntries = 0;
         if (networkEnvelope instanceof BundleOfEnvelopes) {
-            for (NetworkEnvelope current : ((BundleOfEnvelopes) networkEnvelope).getEnvelopes()) {
-                UserThread.execute(() -> messageListeners.forEach(e -> e.onMessage(current, connection)));
+            Map<String, List<NetworkEnvelope>> map = new HashMap<>();
+            Set<NetworkEnvelope> set = new HashSet<>();
+
+            List<NetworkEnvelope> networkEnvelopes = ((BundleOfEnvelopes) networkEnvelope).getEnvelopes();
+            for (NetworkEnvelope current : networkEnvelopes) {
+                String simpleName = current.getClass().getSimpleName();
+                boolean isAccountAgeWitness = false;
+                if (current instanceof AddPersistableNetworkPayloadMessage) {
+                    PersistableNetworkPayload persistableNetworkPayload = ((AddPersistableNetworkPayloadMessage) current).getPersistableNetworkPayload();
+                    simpleName = "AddPersistableNetworkPayloadMessage." + persistableNetworkPayload.getClass().getSimpleName();
+                    if (simpleName.equals("AddPersistableNetworkPayloadMessage.AccountAgeWitness")) {
+                        accountAgeWitnessEntries++;
+                        isAccountAgeWitness = true;
+                    }
+                }
+                map.putIfAbsent(simpleName, new ArrayList<>());
+                map.get(simpleName).add(current);
+                if (!isAccountAgeWitness || accountAgeWitnessEntries < 20) {
+                    set.add(current);
+                }
             }
+            map.forEach((key, value) -> log.info("BundleOfEnvelope with {} items of {}, from {}.",
+                    value.size(), key, connection.getPeersNodeAddressOptional()));
+
+            log.info("We forward {} items. All received items: {}", set.size(), networkEnvelopes.size());
+
+            set.forEach(envelope -> UserThread.execute(() ->
+                    messageListeners.forEach(listener -> listener.onMessage(envelope, connection))));
         } else {
             UserThread.execute(() -> messageListeners.forEach(e -> e.onMessage(networkEnvelope, connection)));
         }
