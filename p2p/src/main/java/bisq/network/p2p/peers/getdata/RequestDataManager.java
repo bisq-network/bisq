@@ -57,9 +57,9 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
     private static final long RETRY_DELAY_SEC = 10;
     private static final long CLEANUP_TIMER = 120;
     // How many seeds we request the PreliminaryGetDataRequest from
-    private static int NUM_SEEDS_FOR_PRELIMINARY_REQUEST = 16;
+    private static int NUM_SEEDS_FOR_PRELIMINARY_REQUEST = 2;
     // how many seeds additional to the first responding PreliminaryGetDataRequest seed we request the GetUpdatedDataRequest from
-    private static int NUM_ADDITIONAL_SEEDS_FOR_UPDATE_REQUEST = 16;
+    private static int NUM_ADDITIONAL_SEEDS_FOR_UPDATE_REQUEST = 1;
     private boolean isPreliminaryDataRequest = true;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
