@@ -31,6 +31,7 @@ import bisq.network.p2p.storage.P2PDataStorage;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
+import bisq.common.app.Version;
 import bisq.common.proto.network.NetworkEnvelope;
 
 import javax.inject.Inject;
@@ -56,9 +57,9 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
     private static final long RETRY_DELAY_SEC = 10;
     private static final long CLEANUP_TIMER = 120;
     // How many seeds we request the PreliminaryGetDataRequest from
-    private static int NUM_SEEDS_FOR_PRELIMINARY_REQUEST = 2;
+    private static int NUM_SEEDS_FOR_PRELIMINARY_REQUEST = 16;
     // how many seeds additional to the first responding PreliminaryGetDataRequest seed we request the GetUpdatedDataRequest from
-    private static int NUM_ADDITIONAL_SEEDS_FOR_UPDATE_REQUEST = 1;
+    private static int NUM_ADDITIONAL_SEEDS_FOR_UPDATE_REQUEST = 16;
     private boolean isPreliminaryDataRequest = true;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -261,6 +262,11 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
                 if (peerManager.isSeedNode(connection))
                     connection.setPeerType(Connection.PeerType.SEED_NODE);
 
+                GetDataRequest getDataRequest = (GetDataRequest) networkEnvelope;
+                if (getDataRequest.getVersion() == null || !Version.isNewVersion(getDataRequest.getVersion(), "1.5.0")) {
+                    connection.shutDown(CloseConnectionReason.MANDATORY_CAPABILITIES_NOT_SUPPORTED);
+                    return;
+                }
                 final String uid = connection.getUid();
                 if (!getDataRequestHandlers.containsKey(uid)) {
                     GetDataRequestHandler getDataRequestHandler = new GetDataRequestHandler(networkNode, dataStorage,
@@ -284,7 +290,7 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
                                 }
                             });
                     getDataRequestHandlers.put(uid, getDataRequestHandler);
-                    getDataRequestHandler.handle((GetDataRequest) networkEnvelope, connection);
+                    getDataRequestHandler.handle(getDataRequest, connection);
                 } else {
                     log.warn("We have already a GetDataRequestHandler for that connection started. " +
                             "We start a cleanup timer if the handler has not closed by itself in between 2 minutes.");
