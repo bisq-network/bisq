@@ -31,6 +31,7 @@ import bisq.network.p2p.storage.P2PDataStorage;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
+import bisq.common.app.Version;
 import bisq.common.proto.network.NetworkEnvelope;
 
 import javax.inject.Inject;
@@ -258,6 +259,12 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
     public void onMessage(NetworkEnvelope networkEnvelope, Connection connection) {
         if (networkEnvelope instanceof GetDataRequest) {
             if (!stopped) {
+                GetDataRequest getDataRequest = (GetDataRequest) networkEnvelope;
+                if (getDataRequest.getVersion() == null || !Version.isNewVersion(getDataRequest.getVersion(), "1.5.0")) {
+                    connection.shutDown(CloseConnectionReason.MANDATORY_CAPABILITIES_NOT_SUPPORTED);
+                    return;
+                }
+
                 if (peerManager.isSeedNode(connection))
                     connection.setPeerType(Connection.PeerType.SEED_NODE);
 
@@ -284,7 +291,7 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
                                 }
                             });
                     getDataRequestHandlers.put(uid, getDataRequestHandler);
-                    getDataRequestHandler.handle((GetDataRequest) networkEnvelope, connection);
+                    getDataRequestHandler.handle(getDataRequest, connection);
                 } else {
                     log.warn("We have already a GetDataRequestHandler for that connection started. " +
                             "We start a cleanup timer if the handler has not closed by itself in between 2 minutes.");
