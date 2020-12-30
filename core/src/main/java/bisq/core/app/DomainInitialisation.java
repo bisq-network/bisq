@@ -25,6 +25,7 @@ import bisq.core.btc.Balances;
 import bisq.core.dao.DaoSetup;
 import bisq.core.dao.governance.voteresult.VoteResultException;
 import bisq.core.dao.governance.voteresult.VoteResultService;
+import bisq.core.dao.state.DaoStateSnapshotService;
 import bisq.core.filter.FilterManager;
 import bisq.core.notifications.MobileNotificationService;
 import bisq.core.notifications.alerts.DisputeMsgEvents;
@@ -33,6 +34,7 @@ import bisq.core.notifications.alerts.TradeEvents;
 import bisq.core.notifications.alerts.market.MarketAlerts;
 import bisq.core.notifications.alerts.price.PriceAlert;
 import bisq.core.offer.OpenOfferManager;
+import bisq.core.offer.TriggerPriceService;
 import bisq.core.payment.RevolutAccount;
 import bisq.core.payment.TradeLimits;
 import bisq.core.provider.fee.FeeService;
@@ -104,6 +106,8 @@ public class DomainInitialisation {
     private final PriceAlert priceAlert;
     private final MarketAlerts marketAlerts;
     private final User user;
+    private final DaoStateSnapshotService daoStateSnapshotService;
+    private final TriggerPriceService triggerPriceService;
 
     @Inject
     public DomainInitialisation(ClockWatcher clockWatcher,
@@ -138,7 +142,9 @@ public class DomainInitialisation {
                                 DisputeMsgEvents disputeMsgEvents,
                                 PriceAlert priceAlert,
                                 MarketAlerts marketAlerts,
-                                User user) {
+                                User user,
+                                DaoStateSnapshotService daoStateSnapshotService,
+                                TriggerPriceService triggerPriceService) {
         this.clockWatcher = clockWatcher;
         this.tradeLimits = tradeLimits;
         this.arbitrationManager = arbitrationManager;
@@ -172,6 +178,8 @@ public class DomainInitialisation {
         this.priceAlert = priceAlert;
         this.marketAlerts = marketAlerts;
         this.user = user;
+        this.daoStateSnapshotService = daoStateSnapshotService;
+        this.triggerPriceService = triggerPriceService;
     }
 
     public void initDomainServices(Consumer<String> rejectedTxErrorMessageHandler,
@@ -180,7 +188,8 @@ public class DomainInitialisation {
                                    Consumer<String> daoWarnMessageHandler,
                                    Consumer<String> filterWarningHandler,
                                    Consumer<VoteResultException> voteResultExceptionHandler,
-                                   Consumer<List<RevolutAccount>> revolutAccountsUpdateHandler) {
+                                   Consumer<List<RevolutAccount>> revolutAccountsUpdateHandler,
+                                   Runnable daoRequiresRestartHandler) {
         clockWatcher.start();
 
         tradeLimits.onAllServicesInitialized();
@@ -222,6 +231,8 @@ public class DomainInitialisation {
                 if (daoWarnMessageHandler != null)
                     daoWarnMessageHandler.accept(warningMessage);
             });
+
+            daoStateSnapshotService.setDaoRequiresRestartHandler(daoRequiresRestartHandler);
         }
 
         tradeStatisticsManager.onAllServicesInitialized();
@@ -247,6 +258,7 @@ public class DomainInitialisation {
         disputeMsgEvents.onAllServicesInitialized();
         priceAlert.onAllServicesInitialized();
         marketAlerts.onAllServicesInitialized();
+        triggerPriceService.onAllServicesInitialized();
 
         if (revolutAccountsUpdateHandler != null) {
             revolutAccountsUpdateHandler.accept(user.getPaymentAccountsAsObservable().stream()

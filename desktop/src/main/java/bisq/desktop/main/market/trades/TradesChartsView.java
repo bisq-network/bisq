@@ -378,7 +378,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         int reportColumns = tableColumns.size() + 1;
 
         boolean showAllTradeCurrencies = model.showAllTradeCurrenciesProperty.get();
-        CSVEntryConverter<TradeStatistics3ListItem> headerConverter = transactionsListItem -> {
+        CSVEntryConverter<TradeStatistics3ListItem> headerConverter = item -> {
             String[] columns = new String[reportColumns];
             columns[0] = "Epoch time in ms";
             for (int i = 0; i < tableColumns.size(); i++) {

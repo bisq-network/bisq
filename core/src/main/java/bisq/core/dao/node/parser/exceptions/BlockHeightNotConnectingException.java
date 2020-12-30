@@ -24,7 +24,7 @@ import lombok.Getter;
 @Getter
 public class BlockHeightNotConnectingException extends Exception {
 
-    private RawBlock rawBlock;
+    private final RawBlock rawBlock;
 
     public BlockHeightNotConnectingException(RawBlock rawBlock) {
         this.rawBlock = rawBlock;

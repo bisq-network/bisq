@@ -87,7 +87,7 @@ class TakeOfferDataModel extends OfferDataModel {
     private final User user;
     private final FeeService feeService;
     private final FilterManager filterManager;
-    private final Preferences preferences;
+    final Preferences preferences;
     private final TxFeeEstimationService txFeeEstimationService;
     private final PriceFeedService priceFeedService;
     private final AccountAgeWitnessService accountAgeWitnessService;
@@ -500,8 +500,16 @@ class TakeOfferDataModel extends OfferDataModel {
         }
     }
 
-    private boolean isBuyOffer() {
+    boolean isBuyOffer() {
         return getDirection() == OfferPayload.Direction.BUY;
+    }
+
+    boolean isSellOffer() {
+        return getDirection() == OfferPayload.Direction.SELL;
+    }
+
+    boolean isCryptoCurrency() {
+        return CurrencyUtil.isCryptoCurrency(getCurrencyCode());
     }
 
     @Nullable

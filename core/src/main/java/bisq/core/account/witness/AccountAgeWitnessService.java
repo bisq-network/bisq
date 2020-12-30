@@ -74,6 +74,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -139,8 +140,13 @@ public class AccountAgeWitnessService {
     private final FilterManager filterManager;
     @Getter
     private final AccountAgeWitnessUtils accountAgeWitnessUtils;
-    @Getter
+
     private final Map<P2PDataStorage.ByteArray, AccountAgeWitness> accountAgeWitnessMap = new HashMap<>();
+
+    // The accountAgeWitnessMap is very large (70k items) and access is a bit expensive. We usually only access less
+    // than 100 items, those who have offers online. So we use a cache for a fast lookup and only if
+    // not found there we use the accountAgeWitnessMap and put then the new item into our cache.
+    private final Map<P2PDataStorage.ByteArray, AccountAgeWitness> accountAgeWitnessCache = new ConcurrentHashMap<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -235,8 +241,17 @@ public class AccountAgeWitnessService {
 
     public void publishMyAccountAgeWitness(PaymentAccountPayload paymentAccountPayload) {
         AccountAgeWitness accountAgeWitness = getMyWitness(paymentAccountPayload);
-        if (!accountAgeWitnessMap.containsKey(accountAgeWitness.getHashAsByteArray()))
+        P2PDataStorage.ByteArray hash = accountAgeWitness.getHashAsByteArray();
+
+        // We use first our fast lookup cache. If its in accountAgeWitnessCache it is also in accountAgeWitnessMap
+        // and we do not publish.
+        if (accountAgeWitnessCache.containsKey(hash)) {
+            return;
+        }
+
+        if (!accountAgeWitnessMap.containsKey(hash)) {
             p2PService.addPersistableNetworkPayload(accountAgeWitness, false);
+        }
     }
 
     public byte[] getPeerAccountAgeWitnessHash(Trade trade) {
@@ -286,12 +301,21 @@ public class AccountAgeWitnessService {
     private Optional<AccountAgeWitness> getWitnessByHash(byte[] hash) {
         P2PDataStorage.ByteArray hashAsByteArray = new P2PDataStorage.ByteArray(hash);
 
-        final boolean containsKey = accountAgeWitnessMap.containsKey(hashAsByteArray);
-        if (!containsKey)
-            log.debug("hash not found in accountAgeWitnessMap");
+        // First we look up in our fast lookup cache
+        if (accountAgeWitnessCache.containsKey(hashAsByteArray)) {
+            return Optional.of(accountAgeWitnessCache.get(hashAsByteArray));
+        }
 
-        return accountAgeWitnessMap.containsKey(hashAsByteArray) ?
-                Optional.of(accountAgeWitnessMap.get(hashAsByteArray)) : Optional.empty();
+        if (accountAgeWitnessMap.containsKey(hashAsByteArray)) {
+            AccountAgeWitness accountAgeWitness = accountAgeWitnessMap.get(hashAsByteArray);
+
+            // We add it to our fast lookup cache
+            accountAgeWitnessCache.put(hashAsByteArray, accountAgeWitness);
+
+            return Optional.of(accountAgeWitness);
+        }
+
+        return Optional.empty();
     }
 
     private Optional<AccountAgeWitness> getWitnessByHashAsHex(String hashAsHex) {
@@ -658,16 +682,20 @@ public class AccountAgeWitnessService {
     }
 
     public String arbitratorSignOrphanWitness(AccountAgeWitness accountAgeWitness,
-                                              ECKey key,
+                                              ECKey ecKey,
                                               long time) {
-        // Find AccountAgeWitness as signedwitness
-        var signedWitness = signedWitnessService.getSignedWitnessMap().values().stream()
-                .filter(sw -> Arrays.equals(sw.getAccountAgeWitnessHash(), accountAgeWitness.getHash()))
+        // TODO Is not found signedWitness considered an error case?
+        //  Previous code version was throwing an exception in case no signedWitness was found...
+
+        // signAndPublishAccountAgeWitness returns an empty string in success case and error otherwise
+        return signedWitnessService.getSignedWitnessSet(accountAgeWitness).stream()
                 .findAny()
-                .orElse(null);
-        checkNotNull(signedWitness);
-        return signedWitnessService.signAndPublishAccountAgeWitness(accountAgeWitness, key,
-                signedWitness.getWitnessOwnerPubKey(), time);
+                .map(SignedWitness::getWitnessOwnerPubKey)
+                .map(witnessOwnerPubKey ->
+                        signedWitnessService.signAndPublishAccountAgeWitness(accountAgeWitness, ecKey,
+                                witnessOwnerPubKey, time)
+                )
+                .orElse("No signedWitness found");
     }
 
     public String arbitratorSignOrphanPubKey(ECKey key,

@@ -67,6 +67,7 @@ public class WalletTest extends MethodTest {
 
         btcWalletTest.testInitialBtcBalances(testInfo);
         btcWalletTest.testFundAlicesBtcWallet(testInfo);
+        btcWalletTest.testAliceSendBTCToBob(testInfo);
     }
 
     @Test

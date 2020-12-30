@@ -87,9 +87,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 @Slf4j
 class TxOutputParser {
-    private static int ACTIVATE_HARD_FORK_1_HEIGHT_MAINNET = 605000;
-    private static int ACTIVATE_HARD_FORK_1_HEIGHT_TESTNET = 1583054;
-    private static int ACTIVATE_HARD_FORK_1_HEIGHT_REGTEST = 1;
+    private static final int ACTIVATE_HARD_FORK_1_HEIGHT_MAINNET = 605000;
+    private static final int ACTIVATE_HARD_FORK_1_HEIGHT_TESTNET = 1583054;
+    private static final int ACTIVATE_HARD_FORK_1_HEIGHT_REGTEST = 1;
 
     private final DaoStateService daoStateService;
     // Setters

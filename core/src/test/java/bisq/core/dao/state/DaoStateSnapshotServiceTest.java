@@ -17,7 +17,6 @@
 
 package bisq.core.dao.state;
 
-import bisq.core.dao.governance.period.CycleService;
 import bisq.core.dao.monitoring.DaoStateMonitoringService;
 import bisq.core.dao.state.storage.DaoStateStorageService;
 
@@ -37,9 +36,9 @@ public class DaoStateSnapshotServiceTest {
     public void setup() {
         daoStateSnapshotService = new DaoStateSnapshotService(mock(DaoStateService.class),
                 mock(GenesisTxInfo.class),
-                mock(CycleService.class),
                 mock(DaoStateStorageService.class),
-                mock(DaoStateMonitoringService.class));
+                mock(DaoStateMonitoringService.class),
+                null);
     }
 
     @Test

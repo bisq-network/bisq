@@ -41,8 +41,6 @@ import java.util.function.Consumer;
 
 import lombok.extern.slf4j.Slf4j;
 
-import javax.annotation.Nullable;
-
 import static bisq.core.btc.model.AddressEntry.Context.TRADE_PAYOUT;
 import static java.lang.String.format;
 
@@ -85,6 +83,8 @@ class CoreTradesService {
                    String paymentAccountId,
                    String takerFeeCurrencyCode,
                    Consumer<Trade> resultHandler) {
+        coreWalletsService.verifyWalletsAreAvailable();
+        coreWalletsService.verifyEncryptedWalletIsUnlocked();
 
         offerUtil.maybeSetFeePaymentCurrencyPreference(takerFeeCurrencyCode);
 
@@ -149,6 +149,9 @@ class CoreTradesService {
     }
 
     void keepFunds(String tradeId) {
+        coreWalletsService.verifyWalletsAreAvailable();
+        coreWalletsService.verifyEncryptedWalletIsUnlocked();
+
         verifyTradeIsNotClosed(tradeId);
         var trade = getOpenTrade(tradeId).orElseThrow(() ->
                 new IllegalArgumentException(format("trade with id '%s' not found", tradeId)));
@@ -156,8 +159,10 @@ class CoreTradesService {
         tradeManager.onTradeCompleted(trade);
     }
 
-    void withdrawFunds(String tradeId, String toAddress, @Nullable String memo) {
-        // An encrypted wallet must be unlocked for this operation.
+    void withdrawFunds(String tradeId, String toAddress, String memo) {
+        coreWalletsService.verifyWalletsAreAvailable();
+        coreWalletsService.verifyEncryptedWalletIsUnlocked();
+
         verifyTradeIsNotClosed(tradeId);
         var trade = getOpenTrade(tradeId).orElseThrow(() ->
                 new IllegalArgumentException(format("trade with id '%s' not found", tradeId)));
@@ -172,21 +177,21 @@ class CoreTradesService {
         var receiverAmount = amount.subtract(fee);
 
         log.info(format("Withdrawing funds received from trade %s:"
-                        + "%n From %s%n To %s%n Amt %s%n Tx Fee %s%n Receiver Amt %s",
+                        + "%n From %s%n To %s%n Amt %s%n Tx Fee %s%n Receiver Amt %s%n Memo %s%n",
                 tradeId,
                 fromAddressEntry.getAddressString(),
                 toAddress,
                 amount.toFriendlyString(),
                 fee.toFriendlyString(),
-                receiverAmount.toFriendlyString()));
-
+                receiverAmount.toFriendlyString(),
+                memo));
         tradeManager.onWithdrawRequest(
                 toAddress,
                 amount,
                 fee,
                 coreWalletsService.getKey(),
                 trade,
-                memo,
+                memo.isEmpty() ? null : memo,
                 () -> {
                 },
                 (errorMessage, throwable) -> {
@@ -196,10 +201,14 @@ class CoreTradesService {
     }
 
     String getTradeRole(String tradeId) {
+        coreWalletsService.verifyWalletsAreAvailable();
+        coreWalletsService.verifyEncryptedWalletIsUnlocked();
         return tradeUtil.getRole(getTrade(tradeId));
     }
 
     Trade getTrade(String tradeId) {
+        coreWalletsService.verifyWalletsAreAvailable();
+        coreWalletsService.verifyEncryptedWalletIsUnlocked();
         return getOpenTrade(tradeId).orElseGet(() ->
                 getClosedTrade(tradeId).orElseThrow(() ->
                         new IllegalArgumentException(format("trade with id '%s' not found", tradeId))

@@ -40,7 +40,7 @@ enum JsonTxType {
     IRREGULAR("Irregular");
 
     @Getter
-    private String displayString;
+    private final String displayString;
 
     JsonTxType(String displayString) {
         this.displayString = displayString;

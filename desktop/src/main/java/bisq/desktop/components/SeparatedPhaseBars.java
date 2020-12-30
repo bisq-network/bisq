@@ -43,6 +43,8 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class SeparatedPhaseBars extends VBox {
+    // Last day for creating github compensation request issue, as decided by general consensus
+    private static final double LAST_COMP_REQ_GH_ISSUE = (double) 18 / 25;
     private double labelMinWidth = 150;
     private double breakMinWidth = 20;
     private int totalDuration;
@@ -68,11 +70,14 @@ public class SeparatedPhaseBars extends VBox {
             item.setTitleLabel(titleLabel);
             titlesBars.getChildren().addAll(titleLabel);
 
-            ProgressBar progressBar = new JFXProgressBar();
+            JFXProgressBar progressBar = new JFXProgressBar();
             progressBar.setMinHeight(9);
             progressBar.setMaxHeight(9);
             progressBar.progressProperty().bind(item.progressProperty);
             progressBar.setOpacity(item.isShowBlocks() ? 1 : 0.25);
+            if (item.phase.name().startsWith("PROPOSAL")) {
+                progressBar.setSecondaryProgress(LAST_COMP_REQ_GH_ISSUE);
+            }
             progressBars.getChildren().add(progressBar);
             item.setProgressBar(progressBar);
         });
@@ -141,6 +146,9 @@ public class SeparatedPhaseBars extends VBox {
         private Label titleLabel;
         @Setter
         private ProgressBar progressBar;
+        @Setter
+        private int indicatorBlock;
+        private ProgressBar indicatorBar;
 
         public SeparatedPhaseBarsItem(DaoPhase.Phase phase, boolean showBlocks) {
             this.phase = phase;
@@ -160,5 +168,6 @@ public class SeparatedPhaseBars extends VBox {
             lastBlockProperty.set(lastBlock);
             this.duration = duration;
         }
+
     }
 }

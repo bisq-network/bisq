@@ -247,7 +247,7 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
                 Coin receiverAmount = ParsingUtils.parseToCoin(amountInputTextField.getText(), bsqFormatter);
                 try {
                     Transaction preparedSendTx = bsqWalletService.getPreparedSendBsqTx(receiversAddressString, receiverAmount);
-                    Transaction txWithBtcFee = btcWalletService.completePreparedSendBsqTx(preparedSendTx, true);
+                    Transaction txWithBtcFee = btcWalletService.completePreparedSendBsqTx(preparedSendTx);
                     Transaction signedTx = bsqWalletService.signTx(txWithBtcFee);
                     Coin miningFee = signedTx.getFee();
                     int txVsize = signedTx.getVsize();
@@ -305,7 +305,7 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
                 Coin receiverAmount = bsqFormatter.parseToBTC(btcAmountInputTextField.getText());
                 try {
                     Transaction preparedSendTx = bsqWalletService.getPreparedSendBtcTx(receiversAddressString, receiverAmount);
-                    Transaction txWithBtcFee = btcWalletService.completePreparedSendBsqTx(preparedSendTx, true);
+                    Transaction txWithBtcFee = btcWalletService.completePreparedSendBsqTx(preparedSendTx);
                     Transaction signedTx = bsqWalletService.signTx(txWithBtcFee);
                     Coin miningFee = signedTx.getFee();
 

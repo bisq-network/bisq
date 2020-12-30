@@ -21,6 +21,7 @@ import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.InfoInputTextField;
 import bisq.desktop.components.InputTextField;
+import bisq.desktop.main.PriceUtil;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.WebCamWindow;
 import bisq.desktop.util.FormBuilder;
@@ -33,7 +34,6 @@ import bisq.desktop.util.validation.PercentageNumberValidator;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
-import bisq.core.monetary.Altcoin;
 import bisq.core.notifications.MobileMessage;
 import bisq.core.notifications.MobileNotificationService;
 import bisq.core.notifications.alerts.DisputeMsgEvents;
@@ -693,6 +693,7 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
                 currencyComboBox.getSelectionModel().select(optionalTradeCurrency.get());
                 onSelectedTradeCurrency();
 
+                priceAlertHighInputTextField.setText(PriceUtil.formatMarketPrice(priceAlertFilter.getHigh(), currencyCode));
                 priceAlertHighInputTextField.setText(FormattingUtils.formatMarketPrice(priceAlertFilter.getHigh() / 10000d, currencyCode));
                 priceAlertLowInputTextField.setText(FormattingUtils.formatMarketPrice(priceAlertFilter.getLow() / 10000d, currencyCode));
             } else {
@@ -742,37 +743,13 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
     }
 
     private long getPriceAsLong(InputTextField inputTextField) {
-        try {
-            String inputValue = inputTextField.getText();
-            if (inputValue != null && !inputValue.isEmpty() && selectedPriceAlertTradeCurrency != null) {
-                double priceAsDouble = ParsingUtils.parseNumberStringToDouble(inputValue);
-                String currencyCode = selectedPriceAlertTradeCurrency;
-                int precision = CurrencyUtil.isCryptoCurrency(currencyCode) ?
-                        Altcoin.SMALLEST_UNIT_EXPONENT : 2;
-                // We want to use the converted value not the inout value as we apply the converted value at focus out.
-                // E.g. if input is 5555.5555 it will be rounded to  5555.55 and we use that as the value for comparing
-                // low and high price...
-                String stringValue = FormattingUtils.formatRoundedDoubleWithPrecision(priceAsDouble, precision);
-                return ParsingUtils.parsePriceStringToLong(currencyCode, stringValue, precision);
-            } else {
-                return 0;
-            }
-        } catch (Throwable ignore) {
-            return 0;
-        }
+        return PriceUtil.getMarketPriceAsLong(inputTextField.getText(), selectedPriceAlertTradeCurrency);
     }
 
     private void applyPriceFormatting(InputTextField inputTextField) {
         try {
-            String inputValue = inputTextField.getText();
-            if (inputValue != null && !inputValue.isEmpty() && selectedPriceAlertTradeCurrency != null) {
-                double priceAsDouble = ParsingUtils.parseNumberStringToDouble(inputValue);
-                String currencyCode = selectedPriceAlertTradeCurrency;
-                int precision = CurrencyUtil.isCryptoCurrency(currencyCode) ?
-                        Altcoin.SMALLEST_UNIT_EXPONENT : 2;
-                String stringValue = FormattingUtils.formatRoundedDoubleWithPrecision(priceAsDouble, precision);
-                inputTextField.setText(stringValue);
-            }
+            String reformattedPrice = PriceUtil.reformatMarketPrice(inputTextField.getText(), selectedPriceAlertTradeCurrency);
+            inputTextField.setText(reformattedPrice);
         } catch (Throwable ignore) {
             updatePriceAlertFields();
         }

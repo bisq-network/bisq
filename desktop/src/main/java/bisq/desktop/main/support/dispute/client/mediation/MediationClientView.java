@@ -35,15 +35,20 @@ import bisq.core.support.dispute.mediation.MediationManager;
 import bisq.core.support.dispute.mediation.MediationSession;
 import bisq.core.support.dispute.mediation.mediator.MediatorManager;
 import bisq.core.support.dispute.refund.refundagent.RefundAgentManager;
+import bisq.core.trade.Contract;
 import bisq.core.trade.TradeManager;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.CoinFormatter;
+
+import bisq.network.p2p.NodeAddress;
 
 import bisq.common.config.Config;
 import bisq.common.crypto.KeyRing;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+
+import javafx.scene.control.TableColumn;
 
 @FxmlView
 public class MediationClientView extends DisputeClientView {
@@ -102,5 +107,16 @@ public class MediationClientView extends DisputeClientView {
                 .actionButtonText(Res.get("shared.yes"))
                 .onAction(this::reOpenDispute)
                 .show();
+    }
+
+    @Override
+    protected NodeAddress getAgentNodeAddress(Contract contract) {
+        return contract.getMediatorNodeAddress();
+    }
+
+    @Override
+    protected void maybeAddAgentColumn() {
+        TableColumn<Dispute, Dispute> agentColumn = getAgentColumn();
+        tableView.getColumns().add(agentColumn);
     }
 }

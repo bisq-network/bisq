@@ -51,6 +51,7 @@ import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
 import bisq.common.app.Log;
 import bisq.common.app.Version;
+import bisq.common.config.BaseCurrencyNetwork;
 import bisq.common.config.Config;
 import bisq.common.util.InvalidVersionException;
 import bisq.common.util.Utilities;
@@ -182,6 +183,9 @@ public class BisqSetup {
     private Runnable qubesOSInfoHandler;
     @Setter
     @Nullable
+    private Runnable daoRequiresRestartHandler;
+    @Setter
+    @Nullable
     private Consumer<String> downGradePreventionHandler;
 
     @Getter
@@ -270,7 +274,8 @@ public class BisqSetup {
 
     public void start() {
         // If user tried to downgrade we require a shutdown
-        if (hasDowngraded(downGradePreventionHandler)) {
+        if (Config.baseCurrencyNetwork() == BaseCurrencyNetwork.BTC_MAINNET &&
+                hasDowngraded(downGradePreventionHandler)) {
             return;
         }
 
@@ -443,7 +448,8 @@ public class BisqSetup {
                 daoWarnMessageHandler,
                 filterWarningHandler,
                 voteResultExceptionHandler,
-                revolutAccountsUpdateHandler);
+                revolutAccountsUpdateHandler,
+                daoRequiresRestartHandler);
 
         if (walletsSetup.downloadPercentageProperty().get() == 1) {
             checkForLockedUpFunds();
