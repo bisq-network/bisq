@@ -28,6 +28,7 @@ import bisq.network.p2p.peers.BanList;
 import bisq.network.p2p.peers.getdata.messages.GetDataRequest;
 import bisq.network.p2p.peers.getdata.messages.GetDataResponse;
 import bisq.network.p2p.peers.keepalive.messages.KeepAliveMessage;
+import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.messages.AddDataMessage;
 import bisq.network.p2p.storage.messages.AddPersistableNetworkPayloadMessage;
 import bisq.network.p2p.storage.payload.CapabilityRequiringPayload;
@@ -68,9 +69,13 @@ import java.io.OptionalDataException;
 import java.io.StreamCorruptedException;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Queue;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -421,14 +426,38 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
     @Override
     public void onMessage(NetworkEnvelope networkEnvelope, Connection connection) {
         checkArgument(connection.equals(this));
-
         if (networkEnvelope instanceof BundleOfEnvelopes) {
-            for (NetworkEnvelope current : ((BundleOfEnvelopes) networkEnvelope).getEnvelopes()) {
-                UserThread.execute(() -> messageListeners.forEach(e -> e.onMessage(current, connection)));
-            }
+            onBundleOfEnvelopes((BundleOfEnvelopes) networkEnvelope, connection);
         } else {
             UserThread.execute(() -> messageListeners.forEach(e -> e.onMessage(networkEnvelope, connection)));
         }
+    }
+
+    private void onBundleOfEnvelopes(BundleOfEnvelopes networkEnvelope, Connection connection) {
+        Map<P2PDataStorage.ByteArray, Set<NetworkEnvelope>> itemsByHash = new HashMap<>();
+        Set<NetworkEnvelope> envelopesToProcess = new HashSet<>();
+        List<NetworkEnvelope> networkEnvelopes = networkEnvelope.getEnvelopes();
+        for (NetworkEnvelope current : networkEnvelopes) {
+            if (current instanceof AddPersistableNetworkPayloadMessage) {
+                PersistableNetworkPayload persistableNetworkPayload = ((AddPersistableNetworkPayloadMessage) current).getPersistableNetworkPayload();
+                byte[] hash = persistableNetworkPayload.getHash();
+                String itemName = persistableNetworkPayload.getClass().getSimpleName();
+                P2PDataStorage.ByteArray byteArray = new P2PDataStorage.ByteArray(hash);
+                itemsByHash.putIfAbsent(byteArray, new HashSet<>());
+                Set<NetworkEnvelope> envelopesByHash = itemsByHash.get(byteArray);
+                if (!envelopesByHash.contains(current)) {
+                    envelopesByHash.add(current);
+                    envelopesToProcess.add(current);
+                } else {
+                    log.debug("We got duplicated items for {}. We ignore the duplicates. Hash: {}",
+                            itemName, Utilities.encodeToHex(hash));
+                }
+            } else {
+                envelopesToProcess.add(current);
+            }
+        }
+        envelopesToProcess.forEach(envelope -> UserThread.execute(() ->
+                messageListeners.forEach(listener -> listener.onMessage(envelope, connection))));
     }
 
 
@@ -718,7 +747,6 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                                 lastReadTimeStamp, now, elapsed);
                         Thread.sleep(20);
                     }
-
                     // Reading the protobuffer message from the inputStream
                     protobuf.NetworkEnvelope proto = protobuf.NetworkEnvelope.parseDelimitedFrom(protoInputStream);
 

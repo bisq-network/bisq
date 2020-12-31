@@ -78,7 +78,12 @@ public class AppendOnlyDataStoreService {
 
     public Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> getMap() {
         return services.stream()
-                .flatMap(service -> service.getMap().entrySet().stream())
+                .flatMap(service -> {
+                    Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> map = service instanceof HistoricalDataStoreService ?
+                            ((HistoricalDataStoreService) service).getMapOfAllData() :
+                            service.getMap();
+                    return map.entrySet().stream();
+                })
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
