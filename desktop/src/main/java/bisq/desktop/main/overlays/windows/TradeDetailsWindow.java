@@ -32,6 +32,7 @@ import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.payment.payload.PaymentAccountPayload;
+import bisq.core.support.dispute.agent.DisputeAgentLookupMap;
 import bisq.core.support.dispute.arbitration.ArbitrationManager;
 import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
@@ -346,6 +347,7 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
                 textArea.setText(trade.getContractAsJson());
                 String data = "Contract as json:\n";
                 data += trade.getContractAsJson();
+                data += "\n\nOther detail data:";
                 data += "\n\nBuyerMultiSigPubKeyHex: " + Utils.HEX.encode(contract.getBuyerMultiSigPubKey());
                 data += "\nSellerMultiSigPubKeyHex: " + Utils.HEX.encode(contract.getSellerMultiSigPubKey());
                 if (CurrencyUtil.isFiatCurrency(offer.getCurrencyCode())) {
@@ -357,6 +359,9 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
                     String depositTxAsHex = Utils.HEX.encode(depositTx.bitcoinSerialize(true));
                     data += "\n\nRaw deposit transaction as hex:\n" + depositTxAsHex;
                 }
+
+                data += "\n\nSelected mediator: " + DisputeAgentLookupMap.getKeyBaseUserName(contract.getMediatorNodeAddress().getFullAddress());
+                data += "\nSelected arbitrator (refund agent): " + DisputeAgentLookupMap.getKeyBaseUserName(contract.getRefundAgentNodeAddress().getFullAddress());
 
                 textArea.setText(data);
                 textArea.setPrefHeight(50);

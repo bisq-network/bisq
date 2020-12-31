@@ -1331,6 +1331,7 @@ message OpenOffer {
     NodeAddress arbitrator_node_address = 3;
     NodeAddress mediator_node_address = 4;
     NodeAddress refund_agent_node_address = 5;
+    int64 trigger_price = 6;
 }
 
 message Tradable {
@@ -1642,6 +1643,7 @@ message UserPayload {
     repeated MarketAlertFilter market_alert_filters = 13;
     repeated RefundAgent accepted_refund_agents = 14;
     RefundAgent registered_refund_agent = 15;
+    map<string, string> cookie = 16;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////

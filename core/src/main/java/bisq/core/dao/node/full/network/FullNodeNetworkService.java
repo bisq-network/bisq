@@ -136,51 +136,62 @@ public class FullNodeNetworkService implements MessageListener, PeerManager.List
     @Override
     public void onMessage(NetworkEnvelope networkEnvelope, Connection connection) {
         if (networkEnvelope instanceof GetBlocksRequest) {
-            // We received a GetBlocksRequest from a liteNode
-            if (!stopped) {
-                final String uid = connection.getUid();
-                if (!getBlocksRequestHandlers.containsKey(uid)) {
-                    GetBlocksRequestHandler requestHandler = new GetBlocksRequestHandler(networkNode,
-                            daoStateService,
-                            new GetBlocksRequestHandler.Listener() {
-                                @Override
-                                public void onComplete() {
-                                    getBlocksRequestHandlers.remove(uid);
-                                }
-
-                                @Override
-                                public void onFault(String errorMessage, @Nullable Connection connection) {
-                                    getBlocksRequestHandlers.remove(uid);
-                                    if (!stopped) {
-                                        log.trace("GetDataRequestHandler failed.\n\tConnection={}\n\t" +
-                                                "ErrorMessage={}", connection, errorMessage);
-                                        peerManager.handleConnectionFault(connection);
-                                    } else {
-                                        log.warn("We have stopped already. We ignore that getDataRequestHandler.handle.onFault call.");
-                                    }
-                                }
-                            });
-                    getBlocksRequestHandlers.put(uid, requestHandler);
-                    requestHandler.onGetBlocksRequest((GetBlocksRequest) networkEnvelope, connection);
-                } else {
-                    log.warn("We have already a GetDataRequestHandler for that connection started. " +
-                            "We start a cleanup timer if the handler has not closed by itself in between 2 minutes.");
-
-                    UserThread.runAfter(() -> {
-                        if (getBlocksRequestHandlers.containsKey(uid)) {
-                            GetBlocksRequestHandler handler = getBlocksRequestHandlers.get(uid);
-                            handler.stop();
-                            getBlocksRequestHandlers.remove(uid);
-                        }
-                    }, CLEANUP_TIMER);
-                }
-            } else {
-                log.warn("We have stopped already. We ignore that onMessage call.");
-            }
+            handleGetBlocksRequest((GetBlocksRequest) networkEnvelope, connection);
         } else if (networkEnvelope instanceof RepublishGovernanceDataRequest) {
-            log.warn("We received a RepublishGovernanceDataRequest and re-published all proposalPayloads and " +
-                    "blindVotePayloads to the P2P network.");
-            missingDataRequestService.reRepublishAllGovernanceData();
+            handleRepublishGovernanceDataRequest();
         }
+    }
+
+    private void handleGetBlocksRequest(GetBlocksRequest getBlocksRequest, Connection connection) {
+        if (stopped) {
+            log.warn("We have stopped already. We ignore that onMessage call.");
+            return;
+        }
+
+        String uid = connection.getUid();
+        if (getBlocksRequestHandlers.containsKey(uid)) {
+            log.warn("We have already a GetDataRequestHandler for that connection started. " +
+                    "We start a cleanup timer if the handler has not closed by itself in between 2 minutes.");
+
+            UserThread.runAfter(() -> {
+                if (getBlocksRequestHandlers.containsKey(uid)) {
+                    GetBlocksRequestHandler handler = getBlocksRequestHandlers.get(uid);
+                    handler.stop();
+                    getBlocksRequestHandlers.remove(uid);
+                }
+            }, CLEANUP_TIMER);
+            return;
+        }
+
+        GetBlocksRequestHandler requestHandler = new GetBlocksRequestHandler(networkNode,
+                daoStateService,
+                new GetBlocksRequestHandler.Listener() {
+                    @Override
+                    public void onComplete() {
+                        getBlocksRequestHandlers.remove(uid);
+                    }
+
+                    @Override
+                    public void onFault(String errorMessage, @Nullable Connection connection) {
+                        getBlocksRequestHandlers.remove(uid);
+                        if (!stopped) {
+                            log.trace("GetDataRequestHandler failed.\n\tConnection={}\n\t" +
+                                    "ErrorMessage={}", connection, errorMessage);
+                            if (connection != null) {
+                                peerManager.handleConnectionFault(connection);
+                            }
+                        } else {
+                            log.warn("We have stopped already. We ignore that getDataRequestHandler.handle.onFault call.");
+                        }
+                    }
+                });
+        getBlocksRequestHandlers.put(uid, requestHandler);
+        requestHandler.onGetBlocksRequest(getBlocksRequest, connection);
+    }
+
+    private void handleRepublishGovernanceDataRequest() {
+        log.warn("We received a RepublishGovernanceDataRequest and re-published all proposalPayloads and " +
+                "blindVotePayloads to the P2P network.");
+        missingDataRequestService.reRepublishAllGovernanceData();
     }
 }

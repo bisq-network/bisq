@@ -27,7 +27,8 @@ import com.google.common.collect.ImmutableList;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 import javax.annotation.Nullable;
 
@@ -36,7 +37,8 @@ import javax.annotation.Nullable;
  * After parsing it will get cloned to the immutable Tx.
  * We don't need to implement the ProtoBuffer methods as it is not persisted or sent over the wire.
  */
-@Data
+@Getter
+@Setter
 public class TempTx extends BaseTx {
     static TempTx fromRawTx(RawTx rawTx) {
         return new TempTx(rawTx.getTxVersion(),

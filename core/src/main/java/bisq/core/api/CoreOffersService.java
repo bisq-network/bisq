@@ -182,9 +182,11 @@ class CoreOffersService {
                             double buyerSecurityDeposit,
                             boolean useSavingsWallet,
                             Consumer<Transaction> resultHandler) {
+        // TODO add support for triggerPrice parameter. If value is 0 it is interpreted as not used. Its an optional value
         openOfferManager.placeOffer(offer,
                 buyerSecurityDeposit,
                 useSavingsWallet,
+                0,
                 resultHandler::accept,
                 log::error);
 

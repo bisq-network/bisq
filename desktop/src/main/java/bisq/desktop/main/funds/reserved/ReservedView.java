@@ -179,7 +179,7 @@ public class ReservedView extends ActivatableView<VBox, Void> {
         exportButton.setOnAction(event -> {
             ObservableList<TableColumn<ReservedListItem, ?>> tableColumns = tableView.getColumns();
             int reportColumns = tableColumns.size();
-            CSVEntryConverter<ReservedListItem> headerConverter = transactionsListItem -> {
+            CSVEntryConverter<ReservedListItem> headerConverter = item -> {
                 String[] columns = new String[reportColumns];
                 for (int i = 0; i < columns.length; i++)
                     columns[i] = ((AutoTooltipLabel) tableColumns.get(i).getGraphic()).getText();

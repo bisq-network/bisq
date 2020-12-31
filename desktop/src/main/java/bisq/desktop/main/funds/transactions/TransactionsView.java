@@ -212,7 +212,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
         exportButton.setOnAction(event -> {
             final ObservableList<TableColumn<TransactionsListItem, ?>> tableColumns = tableView.getColumns();
             final int reportColumns = tableColumns.size() - 1;    // CSV report excludes the last column (an icon)
-            CSVEntryConverter<TransactionsListItem> headerConverter = transactionsListItem -> {
+            CSVEntryConverter<TransactionsListItem> headerConverter = item -> {
                 String[] columns = new String[reportColumns];
                 for (int i = 0; i < columns.length; i++)
                     columns[i] = ((AutoTooltipLabel) tableColumns.get(i).getGraphic()).getText();

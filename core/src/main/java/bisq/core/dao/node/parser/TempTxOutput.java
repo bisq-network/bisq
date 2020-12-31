@@ -24,7 +24,8 @@ import bisq.core.dao.state.model.blockchain.TxOutputType;
 
 import java.util.Objects;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 import javax.annotation.Nullable;
 
@@ -32,7 +33,8 @@ import javax.annotation.Nullable;
  * Contains mutable BSQ specific data (TxOutputType) and used only during tx parsing.
  * Will get converted to immutable TxOutput after tx parsing is completed.
  */
-@Data
+@Getter
+@Setter
 public class TempTxOutput extends BaseTxOutput {
     static TempTxOutput fromRawTxOutput(RawTxOutput txOutput) {
         return new TempTxOutput(txOutput.getIndex(),
@@ -78,6 +80,10 @@ public class TempTxOutput extends BaseTxOutput {
         this.unlockBlockHeight = unlockBlockHeight;
     }
 
+    public boolean isOpReturnOutput() {
+        // We do not check for pubKeyScript.scriptType.NULL_DATA because that is only set if dumpBlockchainData is true
+        return getOpReturnData() != null;
+    }
 
     @Override
     public String toString() {
@@ -87,12 +93,6 @@ public class TempTxOutput extends BaseTxOutput {
                 "\n     unlockBlockHeight=" + unlockBlockHeight +
                 "\n} " + super.toString();
     }
-
-    public boolean isOpReturnOutput() {
-        // We do not check for pubKeyScript.scriptType.NULL_DATA because that is only set if dumpBlockchainData is true
-        return getOpReturnData() != null;
-    }
-
 
     // Enums must not be used directly for hashCode or equals as it delivers the Object.hashCode (internal address)!
     // The equals and hashCode methods cannot be overwritten in Enums.

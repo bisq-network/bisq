@@ -631,7 +631,7 @@ public class DaoFacade implements DaoSetupService {
     }
 
     public int getNumIssuanceTransactions(IssuanceType issuanceType) {
-        return daoStateService.getIssuanceSet(issuanceType).size();
+        return daoStateService.getIssuanceSetForType(issuanceType).size();
     }
 
     public Set<Tx> getBurntFeeTxs() {

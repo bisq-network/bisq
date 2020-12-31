@@ -514,4 +514,8 @@ public class User implements PersistedDataHost {
     private boolean paymentAccountExists(PaymentAccount paymentAccount) {
         return getPaymentAccountsAsObservable().stream().anyMatch(e -> e.equals(paymentAccount));
     }
+
+    public Cookie getCookie() {
+        return userPayload.getCookie();
+    }
 }
