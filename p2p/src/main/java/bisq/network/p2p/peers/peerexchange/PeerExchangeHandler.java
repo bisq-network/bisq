@@ -48,7 +48,7 @@ import javax.annotation.Nullable;
 @Slf4j
 class PeerExchangeHandler implements MessageListener {
     // We want to keep timeout short here
-    private static final long TIMEOUT = 300;
+    private static final long TIMEOUT = 90;
     private static final int DELAY_MS = 500;
 
 
