@@ -124,7 +124,8 @@ public class CleanupMailboxMessages {
         if (peersPubKeyRing != null &&
                 !message.getSignaturePubKey().equals(peersPubKeyRing.getSignaturePubKey())) {
             isValid = false;
-            log.error("SignaturePubKey in message does not match the SignaturePubKey we have set for our trading peer.");
+            // We iterate over all trades so it is expected that the msg which are not assigned to that trade fails.
+            log.debug("SignaturePubKey in message does not match the SignaturePubKey we have set for our trading peer.");
         }
         return isValid;
     }

@@ -944,7 +944,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         if (entriesToRemoveWithPayloadHash.isEmpty())
             return;
 
-        log.info("Remove {} expired data entries", entriesToRemoveWithPayloadHash.size());
+        log.debug("Remove {} expired data entries", entriesToRemoveWithPayloadHash.size());
 
         ArrayList<ProtectedStorageEntry> entriesForSignal = new ArrayList<>(entriesToRemoveWithPayloadHash.size());
         entriesToRemoveWithPayloadHash.forEach(entryToRemoveWithPayloadHash -> {
