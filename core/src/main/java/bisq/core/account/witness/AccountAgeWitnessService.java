@@ -64,6 +64,8 @@ import com.google.common.annotations.VisibleForTesting;
 
 import java.security.PublicKey;
 
+import java.time.Clock;
+
 import java.util.Arrays;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -136,6 +138,7 @@ public class AccountAgeWitnessService {
     private final SignedWitnessService signedWitnessService;
     private final ChargeBackRisk chargeBackRisk;
     private final AccountAgeWitnessStorageService accountAgeWitnessStorageService;
+    private final Clock clock;
     private final FilterManager filterManager;
     @Getter
     private final AccountAgeWitnessUtils accountAgeWitnessUtils;
@@ -156,6 +159,7 @@ public class AccountAgeWitnessService {
                                     ChargeBackRisk chargeBackRisk,
                                     AccountAgeWitnessStorageService accountAgeWitnessStorageService,
                                     AppendOnlyDataStoreService appendOnlyDataStoreService,
+                                    Clock clock,
                                     FilterManager filterManager) {
         this.keyRing = keyRing;
         this.p2PService = p2PService;
@@ -163,6 +167,7 @@ public class AccountAgeWitnessService {
         this.signedWitnessService = signedWitnessService;
         this.chargeBackRisk = chargeBackRisk;
         this.accountAgeWitnessStorageService = accountAgeWitnessStorageService;
+        this.clock = clock;
         this.filterManager = filterManager;
 
         accountAgeWitnessUtils = new AccountAgeWitnessUtils(
@@ -213,13 +218,18 @@ public class AccountAgeWitnessService {
     private void republishAllFiatAccounts() {
         if (user.getPaymentAccounts() != null)
             user.getPaymentAccounts().stream()
-                    .filter(e -> !(e instanceof AssetAccount))
-                    .forEach(e -> {
-                        // We delay with a random interval of 20-60 sec to ensure to be better connected and don't
-                        // stress the P2P network with publishing all at once at startup time.
-                        final int delayInSec = 20 + new Random().nextInt(40);
-                        UserThread.runAfter(() -> p2PService.addPersistableNetworkPayload(getMyWitness(
-                                e.getPaymentAccountPayload()), true), delayInSec);
+                    .filter(account -> !(account instanceof AssetAccount))
+                    .forEach(account -> {
+                        AccountAgeWitness myWitness = getMyWitness(account.getPaymentAccountPayload());
+                        // We only publish if the date of our witness is inside the date tolerance.
+                        // It would be rejected otherwise from the peers.
+                        if (myWitness.isDateInTolerance(clock)) {
+                            // We delay with a random interval of 20-60 sec to ensure to be better connected and don't
+                            // stress the P2P network with publishing all at once at startup time.
+                            int delayInSec = 20 + new Random().nextInt(40);
+                            UserThread.runAfter(() ->
+                                    p2PService.addPersistableNetworkPayload(myWitness, true), delayInSec);
+                        }
                     });
     }
 
