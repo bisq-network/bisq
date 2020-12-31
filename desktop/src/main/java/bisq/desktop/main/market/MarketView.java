@@ -36,10 +36,9 @@ import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.offer.OfferPayload;
 import bisq.core.trade.statistics.TradeStatistics3;
+import bisq.core.trade.statistics.TradeStatistics3StorageService;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.CoinFormatter;
-
-import bisq.network.p2p.P2PService;
 
 import bisq.common.util.Utilities;
 
@@ -71,7 +70,7 @@ public class MarketView extends ActivatableView<TabPane, Void> {
     @FXML
     Tab offerBookTab, tradesTab, spreadTab;
     private final ViewLoader viewLoader;
-    private final P2PService p2PService;
+    private final TradeStatistics3StorageService tradeStatistics3StorageService;
     private final OfferBook offerBook;
     private final CoinFormatter formatter;
     private final Navigation navigation;
@@ -83,12 +82,12 @@ public class MarketView extends ActivatableView<TabPane, Void> {
 
     @Inject
     public MarketView(CachingViewLoader viewLoader,
-                      P2PService p2PService,
+                      TradeStatistics3StorageService tradeStatistics3StorageService,
                       OfferBook offerBook,
                       @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter,
                       Navigation navigation) {
         this.viewLoader = viewLoader;
-        this.p2PService = p2PService;
+        this.tradeStatistics3StorageService = tradeStatistics3StorageService;
         this.offerBook = offerBook;
         this.formatter = formatter;
         this.navigation = navigation;
@@ -181,7 +180,7 @@ public class MarketView extends ActivatableView<TabPane, Void> {
         // all items of both traders in case the referral ID was only set by one trader.
         // If both traders had set it the tradeStatistics is only delivered once.
         // If both traders used a different referral ID then we would get 2 objects.
-        List<String> list = p2PService.getP2PDataStorage().getAppendOnlyDataStoreMap().values().stream()
+        List<String> list = tradeStatistics3StorageService.getMapOfAllData().values().stream()
                 .filter(e -> e instanceof TradeStatistics3)
                 .map(e -> (TradeStatistics3) e)
                 .filter(tradeStatistics3 -> tradeStatistics3.getExtraDataMap() != null)

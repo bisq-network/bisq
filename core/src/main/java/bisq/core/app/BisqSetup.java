@@ -18,6 +18,7 @@
 package bisq.core.app;
 
 import bisq.core.account.sign.SignedWitness;
+import bisq.core.account.sign.SignedWitnessStorageService;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.alert.Alert;
 import bisq.core.alert.AlertManager;
@@ -124,6 +125,7 @@ public class BisqSetup {
     private final WalletsSetup walletsSetup;
     private final BtcWalletService btcWalletService;
     private final P2PService p2PService;
+    private final SignedWitnessStorageService signedWitnessStorageService;
     private final TradeManager tradeManager;
     private final OpenOfferManager openOfferManager;
     private final Preferences preferences;
@@ -205,6 +207,7 @@ public class BisqSetup {
                      WalletsSetup walletsSetup,
                      BtcWalletService btcWalletService,
                      P2PService p2PService,
+                     SignedWitnessStorageService signedWitnessStorageService,
                      TradeManager tradeManager,
                      OpenOfferManager openOfferManager,
                      Preferences preferences,
@@ -225,6 +228,7 @@ public class BisqSetup {
         this.walletsSetup = walletsSetup;
         this.btcWalletService = btcWalletService;
         this.p2PService = p2PService;
+        this.signedWitnessStorageService = signedWitnessStorageService;
         this.tradeManager = tradeManager;
         this.openOfferManager = openOfferManager;
         this.preferences = preferences;
@@ -652,7 +656,7 @@ public class BisqSetup {
 
     private void checkSigningState(AccountAgeWitnessService.SignState state,
                                    String key, Consumer<String> displayHandler) {
-        boolean signingStateFound = p2PService.getP2PDataStorage().getAppendOnlyDataStoreMap().values().stream()
+        boolean signingStateFound = signedWitnessStorageService.getMap().values().stream()
                 .anyMatch(payload -> isSignedWitnessOfMineWithState(payload, state));
 
         maybeTriggerDisplayHandler(key, displayHandler, signingStateFound);
