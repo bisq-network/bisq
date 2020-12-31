@@ -28,6 +28,7 @@ import bisq.network.p2p.peers.BanList;
 import bisq.network.p2p.peers.getdata.messages.GetDataRequest;
 import bisq.network.p2p.peers.getdata.messages.GetDataResponse;
 import bisq.network.p2p.peers.keepalive.messages.KeepAliveMessage;
+import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.messages.AddDataMessage;
 import bisq.network.p2p.storage.messages.AddPersistableNetworkPayloadMessage;
 import bisq.network.p2p.storage.payload.CapabilityRequiringPayload;
@@ -425,39 +426,38 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
     @Override
     public void onMessage(NetworkEnvelope networkEnvelope, Connection connection) {
         checkArgument(connection.equals(this));
-        int accountAgeWitnessEntries = 0;
         if (networkEnvelope instanceof BundleOfEnvelopes) {
-            Map<String, List<NetworkEnvelope>> map = new HashMap<>();
-            Set<NetworkEnvelope> set = new HashSet<>();
-
-            List<NetworkEnvelope> networkEnvelopes = ((BundleOfEnvelopes) networkEnvelope).getEnvelopes();
-            for (NetworkEnvelope current : networkEnvelopes) {
-                String simpleName = current.getClass().getSimpleName();
-                boolean isAccountAgeWitness = false;
-                if (current instanceof AddPersistableNetworkPayloadMessage) {
-                    PersistableNetworkPayload persistableNetworkPayload = ((AddPersistableNetworkPayloadMessage) current).getPersistableNetworkPayload();
-                    simpleName = "AddPersistableNetworkPayloadMessage." + persistableNetworkPayload.getClass().getSimpleName();
-                    if (simpleName.equals("AddPersistableNetworkPayloadMessage.AccountAgeWitness")) {
-                        accountAgeWitnessEntries++;
-                        isAccountAgeWitness = true;
-                    }
-                }
-                map.putIfAbsent(simpleName, new ArrayList<>());
-                map.get(simpleName).add(current);
-                if (!isAccountAgeWitness || accountAgeWitnessEntries < 20) {
-                    set.add(current);
-                }
-            }
-            map.forEach((key, value) -> log.info("BundleOfEnvelope with {} items of {}, from {}.",
-                    value.size(), key, connection.getPeersNodeAddressOptional()));
-
-            log.info("We forward {} items. All received items: {}", set.size(), networkEnvelopes.size());
-
-            set.forEach(envelope -> UserThread.execute(() ->
-                    messageListeners.forEach(listener -> listener.onMessage(envelope, connection))));
+            onBundleOfEnvelopes((BundleOfEnvelopes) networkEnvelope, connection);
         } else {
             UserThread.execute(() -> messageListeners.forEach(e -> e.onMessage(networkEnvelope, connection)));
         }
+    }
+
+    private void onBundleOfEnvelopes(BundleOfEnvelopes networkEnvelope, Connection connection) {
+        Map<P2PDataStorage.ByteArray, Set<NetworkEnvelope>> itemsByHash = new HashMap<>();
+        Set<NetworkEnvelope> envelopesToProcess = new HashSet<>();
+        List<NetworkEnvelope> networkEnvelopes = networkEnvelope.getEnvelopes();
+        for (NetworkEnvelope current : networkEnvelopes) {
+            if (current instanceof AddPersistableNetworkPayloadMessage) {
+                PersistableNetworkPayload persistableNetworkPayload = ((AddPersistableNetworkPayloadMessage) current).getPersistableNetworkPayload();
+                byte[] hash = persistableNetworkPayload.getHash();
+                String itemName = persistableNetworkPayload.getClass().getSimpleName();
+                P2PDataStorage.ByteArray byteArray = new P2PDataStorage.ByteArray(hash);
+                itemsByHash.putIfAbsent(byteArray, new HashSet<>());
+                Set<NetworkEnvelope> envelopesByHash = itemsByHash.get(byteArray);
+                if (!envelopesByHash.contains(current)) {
+                    envelopesByHash.add(current);
+                    envelopesToProcess.add(current);
+                } else {
+                    log.warn("We got duplicated items for {}. We ignore the duplicates. Hash: {}",
+                            itemName, Utilities.encodeToHex(hash));
+                }
+            } else {
+                envelopesToProcess.add(current);
+            }
+        }
+        envelopesToProcess.forEach(envelope -> UserThread.execute(() ->
+                messageListeners.forEach(listener -> listener.onMessage(envelope, connection))));
     }
 
 
@@ -747,7 +747,6 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                                 lastReadTimeStamp, now, elapsed);
                         Thread.sleep(20);
                     }
-
                     // Reading the protobuffer message from the inputStream
                     protobuf.NetworkEnvelope proto = protobuf.NetworkEnvelope.parseDelimitedFrom(protoInputStream);
 
