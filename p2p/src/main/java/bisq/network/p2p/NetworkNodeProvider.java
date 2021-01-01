@@ -23,6 +23,7 @@ import bisq.network.p2p.network.NetworkFilter;
 import bisq.network.p2p.network.NetworkNode;
 import bisq.network.p2p.network.NewTor;
 import bisq.network.p2p.network.RunningTor;
+import bisq.network.p2p.network.TorMode;
 import bisq.network.p2p.network.TorNetworkNode;
 
 import bisq.common.config.Config;
@@ -54,13 +55,32 @@ public class NetworkNodeProvider implements Provider<NetworkNode> {
                                @Nullable @Named(Config.TOR_CONTROL_COOKIE_FILE) File cookieFile,
                                @Named(Config.TOR_STREAM_ISOLATION) boolean streamIsolation,
                                @Named(Config.TOR_CONTROL_USE_SAFE_COOKIE_AUTH) boolean useSafeCookieAuthentication) {
-        networkNode = useLocalhostForP2P ?
-                new LocalhostNetworkNode(port, networkProtoResolver, networkFilter) :
-                new TorNetworkNode(port, networkProtoResolver, streamIsolation,
-                        controlPort != Config.UNSPECIFIED_PORT ?
-                                new RunningTor(torDir, controlPort, password, cookieFile, useSafeCookieAuthentication) :
-                                new NewTor(torDir, torrcFile, torrcOptions, bridgeAddressProvider.getBridgeAddresses()),
-                        networkFilter);
+        if (useLocalhostForP2P) {
+            networkNode = new LocalhostNetworkNode(port, networkProtoResolver, networkFilter);
+        } else {
+            TorMode torMode = getTorMode(bridgeAddressProvider,
+                    torDir,
+                    torrcFile,
+                    torrcOptions,
+                    controlPort,
+                    password,
+                    cookieFile,
+                    useSafeCookieAuthentication);
+            networkNode = new TorNetworkNode(port, networkProtoResolver, streamIsolation, torMode, networkFilter);
+        }
+    }
+
+    private TorMode getTorMode(BridgeAddressProvider bridgeAddressProvider,
+                               File torDir,
+                               @Nullable File torrcFile,
+                               String torrcOptions,
+                               int controlPort,
+                               String password,
+                               @Nullable File cookieFile,
+                               boolean useSafeCookieAuthentication) {
+        return controlPort != Config.UNSPECIFIED_PORT ?
+                new RunningTor(torDir, controlPort, password, cookieFile, useSafeCookieAuthentication) :
+                new NewTor(torDir, torrcFile, torrcOptions, bridgeAddressProvider.getBridgeAddresses());
     }
 
     @Override
