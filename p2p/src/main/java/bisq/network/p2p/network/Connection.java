@@ -259,8 +259,6 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
         }
 
         try {
-            String peersNodeAddress = peersNodeAddressOptional.map(NodeAddress::toString).orElse("null");
-
             if (networkEnvelope instanceof PrefixedSealedAndSignedMessage && peersNodeAddressOptional.isPresent()) {
                 setPeerType(Connection.PeerType.DIRECT_MSG_PEER);
 
@@ -268,7 +266,8 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                                 "Sending direct message to peer" +
                                 "Write object to outputStream to peer: {} (uid={})\ntruncated message={} / size={}" +
                                 "\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n",
-                        peersNodeAddress, uid, Utilities.toTruncatedString(networkEnvelope), -1);
+                        peersNodeAddressOptional.map(NodeAddress::toString).orElse("null"),
+                        uid, Utilities.toTruncatedString(networkEnvelope), -1);
             } else if (networkEnvelope instanceof GetDataResponse && ((GetDataResponse) networkEnvelope).isGetUpdatedDataResponse()) {
                 setPeerType(Connection.PeerType.PEER);
             }
