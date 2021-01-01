@@ -73,6 +73,7 @@ class CorePaymentAccountsService {
 
     String getPaymentAccountFormAsString(String paymentMethodId) {
         File jsonForm = getPaymentAccountForm(paymentMethodId);
+        jsonForm.deleteOnExit(); // If just asking for a string, delete the form file.
         return paymentAccountForm.toJsonString(jsonForm);
     }
 

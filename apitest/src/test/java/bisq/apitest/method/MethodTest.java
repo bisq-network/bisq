@@ -133,7 +133,7 @@ public class MethodTest extends ApiTestCase {
         }
     }
 
-    private static void doPostStartup(boolean registerDisputeAgents,
+    protected static void doPostStartup(boolean registerDisputeAgents,
                                       boolean generateBtcBlock,
                                       Enum<?>... supportingApps) {
         if (registerDisputeAgents) {
