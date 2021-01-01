@@ -38,13 +38,10 @@ import org.junit.Test;
 public class LocalhostNetworkNodeTest {
     private static final Logger log = LoggerFactory.getLogger(LocalhostNetworkNodeTest.class);
 
-
-
-
     @Test
     public void testMessage() throws InterruptedException, IOException {
         CountDownLatch msgLatch = new CountDownLatch(2);
-        LocalhostNetworkNode node1 = new LocalhostNetworkNode(9001, TestUtils.getNetworkProtoResolver());
+        LocalhostNetworkNode node1 = new LocalhostNetworkNode(9001, TestUtils.getNetworkProtoResolver(), null);
         node1.addMessageListener((message, connection) -> {
             log.debug("onMessage node1 " + message);
             msgLatch.countDown();
@@ -72,7 +69,7 @@ public class LocalhostNetworkNodeTest {
             }
         });
 
-        LocalhostNetworkNode node2 = new LocalhostNetworkNode(9002, TestUtils.getNetworkProtoResolver());
+        LocalhostNetworkNode node2 = new LocalhostNetworkNode(9002, TestUtils.getNetworkProtoResolver(), null);
         node2.addMessageListener((message, connection) -> {
             log.debug("onMessage node2 " + message);
             msgLatch.countDown();
