@@ -69,6 +69,7 @@ public class ProposalService implements HashMapChangedListener, AppendOnlyDataSt
         DaoStateListener, DaoSetupService {
     private final P2PService p2PService;
     private final PeriodService periodService;
+    private final ProposalStorageService proposalStorageService;
     private final DaoStateService daoStateService;
     private final ProposalValidatorProvider validatorProvider;
 
@@ -100,6 +101,7 @@ public class ProposalService implements HashMapChangedListener, AppendOnlyDataSt
                            @Named(Config.DAO_ACTIVATED) boolean daoActivated) {
         this.p2PService = p2PService;
         this.periodService = periodService;
+        this.proposalStorageService = proposalStorageService;
         this.daoStateService = daoStateService;
         this.validatorProvider = validatorProvider;
 
@@ -217,7 +219,7 @@ public class ProposalService implements HashMapChangedListener, AppendOnlyDataSt
     }
 
     private void fillListFromAppendOnlyDataStore() {
-        p2PService.getP2PDataStorage().getAppendOnlyDataStoreMap().values().forEach(e -> onAppendOnlyDataAdded(e, false));
+        proposalStorageService.getMap().values().forEach(e -> onAppendOnlyDataAdded(e, false));
     }
 
     private void maybePublishToAppendOnlyDataStore() {
