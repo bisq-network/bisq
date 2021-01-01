@@ -32,10 +32,10 @@ import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.proto.network.NetworkEnvelope;
+import bisq.common.proto.network.NetworkPayload;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Utilities;
 
-import com.google.common.collect.Streams;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -43,7 +43,6 @@ import com.google.common.util.concurrent.SettableFuture;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -232,20 +231,15 @@ class RequestDataHandler implements MessageListener {
     private void logContents(GetDataResponse getDataResponse) {
         Set<ProtectedStorageEntry> dataSet = getDataResponse.getDataSet();
         Set<PersistableNetworkPayload> persistableNetworkPayloadSet = getDataResponse.getPersistableNetworkPayloadSet();
-        Map<String, Tuple2<AtomicInteger, Integer>> numPayloadsByClassName = new HashMap<>();
-        Streams.concat(dataSet.stream().map(ProtectedStorageEntry::getProtectedStoragePayload).filter(Objects::nonNull),
-                persistableNetworkPayloadSet.stream())
-                .forEach(data -> {
-                    String className = data.getClass().getSimpleName();
-                    // The data.toProtoMessage().getSerializedSize() call is not cheap, so want to avoid to call it on
-                    // each object. As most objects of the same data type are expected to have a similar size,
-                    // we only take the first and multiply later to get the total size.
-                    // This is sufficient for the informational purpose of that log.
-                    numPayloadsByClassName.putIfAbsent(className, new Tuple2<>(new AtomicInteger(0),
-                            data.toProtoMessage().getSerializedSize()));
-                    numPayloadsByClassName.get(className).first.getAndIncrement();
-
-                });
+        Map<String, Tuple2<AtomicInteger, AtomicInteger>> numPayloadsByClassName = new HashMap<>();
+        dataSet.forEach(protectedStorageEntry -> {
+            String className = protectedStorageEntry.getProtectedStoragePayload().getClass().getSimpleName();
+            addDetails(numPayloadsByClassName, protectedStorageEntry, className);
+        });
+        persistableNetworkPayloadSet.forEach(persistableNetworkPayload -> {
+            String className = persistableNetworkPayload.getClass().getSimpleName();
+            addDetails(numPayloadsByClassName, persistableNetworkPayload, className);
+        });
         StringBuilder sb = new StringBuilder();
         String sep = System.lineSeparator();
         sb.append(sep).append("#################################################################").append(sep);
@@ -256,11 +250,19 @@ class RequestDataHandler implements MessageListener {
         numPayloadsByClassName.forEach((key, value) -> sb.append(key)
                 .append(": ")
                 .append(value.first.get())
-                .append(" / ≈")
-                .append(Utilities.readableFileSize(value.second * value.first.get()))
+                .append(" / ")
+                .append(Utilities.readableFileSize(value.second.get()))
                 .append(sep));
         sb.append("#################################################################");
         log.info(sb.toString());
+    }
+
+    private void addDetails(Map<String, Tuple2<AtomicInteger, AtomicInteger>> numPayloadsByClassName,
+                            NetworkPayload networkPayload, String className) {
+        numPayloadsByClassName.putIfAbsent(className, new Tuple2<>(new AtomicInteger(0),
+                new AtomicInteger(0)));
+        numPayloadsByClassName.get(className).first.getAndIncrement();
+        numPayloadsByClassName.get(className).second.getAndAdd(networkPayload.toProtoMessage().getSerializedSize());
     }
 
     @SuppressWarnings("UnusedParameters")
