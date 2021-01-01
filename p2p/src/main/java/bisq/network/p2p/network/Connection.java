@@ -842,10 +842,8 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
 
                         if (CloseConnectionReason.PEER_BANNED.name().equals(proto.getCloseConnectionMessage().getReason())) {
                             log.warn("We got shut down because we are banned by the other peer. (InputHandler.run CloseConnectionMessage)");
-                            shutDown(CloseConnectionReason.PEER_BANNED);
-                        } else {
-                            shutDown(CloseConnectionReason.CLOSE_REQUESTED_BY_PEER);
                         }
+                        shutDown(CloseConnectionReason.CLOSE_REQUESTED_BY_PEER);
                         return;
                     } else if (!stopped) {
                         // We don't want to get the activity ts updated by ping/pong msg
