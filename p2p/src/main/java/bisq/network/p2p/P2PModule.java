@@ -22,7 +22,6 @@ import bisq.network.http.HttpClient;
 import bisq.network.http.HttpClientImpl;
 import bisq.network.p2p.network.Connection;
 import bisq.network.p2p.network.NetworkNode;
-import bisq.network.p2p.peers.BanList;
 import bisq.network.p2p.peers.Broadcaster;
 import bisq.network.p2p.peers.PeerManager;
 import bisq.network.p2p.peers.getdata.RequestDataManager;
@@ -68,7 +67,6 @@ public class P2PModule extends AppModule {
         bind(PeerExchangeManager.class).in(Singleton.class);
         bind(KeepAliveManager.class).in(Singleton.class);
         bind(Broadcaster.class).in(Singleton.class);
-        bind(BanList.class).in(Singleton.class);
         bind(NetworkNode.class).toProvider(NetworkNodeProvider.class).in(Singleton.class);
         bind(Socks5ProxyProvider.class).in(Singleton.class);
         bind(HttpClient.class).to(HttpClientImpl.class);

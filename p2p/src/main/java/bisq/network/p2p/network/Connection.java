@@ -24,7 +24,6 @@ import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.PrefixedSealedAndSignedMessage;
 import bisq.network.p2p.SendersNodeAddressMessage;
 import bisq.network.p2p.SupportedCapabilitiesMessage;
-import bisq.network.p2p.peers.BanList;
 import bisq.network.p2p.peers.getdata.messages.GetDataRequest;
 import bisq.network.p2p.peers.getdata.messages.GetDataResponse;
 import bisq.network.p2p.peers.keepalive.messages.KeepAliveMessage;
@@ -141,6 +140,8 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
     private final Socket socket;
     // private final MessageListener messageListener;
     private final ConnectionListener connectionListener;
+    @Nullable
+    private final NetworkFilter networkFilter;
     @Getter
     private final String uid;
     private final ExecutorService singleThreadExecutor = Executors.newSingleThreadExecutor(runnable -> new Thread(runnable, "Connection.java executor-service"));
@@ -184,9 +185,11 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                MessageListener messageListener,
                ConnectionListener connectionListener,
                @Nullable NodeAddress peersNodeAddress,
-               NetworkProtoResolver networkProtoResolver) {
+               NetworkProtoResolver networkProtoResolver,
+               @Nullable NetworkFilter networkFilter) {
         this.socket = socket;
         this.connectionListener = connectionListener;
+        this.networkFilter = networkFilter;
         uid = UUID.randomUUID().toString();
         statistic = new Statistic();
 
@@ -209,9 +212,12 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
             // We create a thread for handling inputStream data
             singleThreadExecutor.submit(this);
 
-            if (peersNodeAddress != null)
+            if (peersNodeAddress != null) {
                 setPeersNodeAddress(peersNodeAddress);
-
+                if (networkFilter != null && networkFilter.isPeerBanned(peersNodeAddress)) {
+                    reportInvalidRequest(RuleViolation.PEER_BANNED);
+                }
+            }
             UserThread.execute(() -> connectionListener.onConnection(this));
         } catch (Throwable e) {
             handleException(e);
@@ -484,12 +490,8 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
         }
 
         peersNodeAddressProperty.set(peerNodeAddress);
-
-        if (BanList.isBanned(peerNodeAddress)) {
-            log.warn("We detected a connection to a banned peer. We will close that connection. (setPeersNodeAddress)");
-            reportInvalidRequest(RuleViolation.PEER_BANNED);
-        }
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
@@ -880,6 +882,10 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                                     // and we could not send the CloseConnectionMessage.
                                     // We check for a banned peer inside setPeersNodeAddress() and shut down if banned.
                                     setPeersNodeAddress(senderNodeAddress);
+                                }
+
+                                if (networkFilter != null && networkFilter.isPeerBanned(senderNodeAddress)) {
+                                    reportInvalidRequest(RuleViolation.PEER_BANNED);
                                 }
                             }
                         }

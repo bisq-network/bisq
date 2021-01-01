@@ -69,6 +69,8 @@ public abstract class NetworkNode implements MessageListener {
 
     final int servicePort;
     private final NetworkProtoResolver networkProtoResolver;
+    @Nullable
+    private final NetworkFilter networkFilter;
 
     private final CopyOnWriteArraySet<InboundConnection> inBoundConnections = new CopyOnWriteArraySet<>();
     private final CopyOnWriteArraySet<MessageListener> messageListeners = new CopyOnWriteArraySet<>();
@@ -87,9 +89,12 @@ public abstract class NetworkNode implements MessageListener {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    NetworkNode(int servicePort, NetworkProtoResolver networkProtoResolver) {
+    NetworkNode(int servicePort,
+                NetworkProtoResolver networkProtoResolver,
+                @Nullable NetworkFilter networkFilter) {
         this.servicePort = servicePort;
         this.networkProtoResolver = networkProtoResolver;
+        this.networkFilter = networkFilter;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -190,7 +195,8 @@ public abstract class NetworkNode implements MessageListener {
                                 NetworkNode.this,
                                 connectionListener,
                                 peersNodeAddress,
-                                networkProtoResolver);
+                                networkProtoResolver,
+                                networkFilter);
 
                         if (log.isDebugEnabled()) {
                             log.debug("\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" +
@@ -457,7 +463,8 @@ public abstract class NetworkNode implements MessageListener {
         server = new Server(serverSocket,
                 NetworkNode.this,
                 connectionListener,
-                networkProtoResolver);
+                networkProtoResolver,
+                networkFilter);
         executorService.submit(server);
     }
 

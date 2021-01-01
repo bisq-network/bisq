@@ -17,8 +17,6 @@
 
 package bisq.network.p2p;
 
-import bisq.network.p2p.peers.BanList;
-
 import bisq.common.UserThread;
 import bisq.common.app.Log;
 import bisq.common.app.Version;
@@ -137,10 +135,11 @@ public class DummySeedNode {
                     checkArgument(arg.contains(":") && arg.split(":").length > 1 && arg.split(":")[1].length() > 3,
                             "Wrong program argument " + arg);
                     List<String> list = Arrays.asList(arg.split(","));
+                    Set<NodeAddress> bannedPeers = new HashSet<>();
                     list.forEach(e -> {
                         checkArgument(e.contains(":") && e.split(":").length == 2 && e.split(":")[1].length() == 4,
                                 "Wrong program argument " + e);
-                        BanList.add(new NodeAddress(e));
+                        bannedPeers.add(new NodeAddress(e));
                     });
                     log.debug("From processArgs: ignoreList=" + list);
                 } else if (arg.startsWith(HELP)) {

@@ -19,6 +19,7 @@ package bisq.core.filter;
 
 import bisq.core.btc.nodes.BtcNodes;
 import bisq.core.locale.Res;
+import bisq.core.network.CoreNetworkFilter;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.provider.ProvidersRepository;
@@ -96,6 +97,7 @@ public class FilterManager {
     private final Preferences preferences;
     private final ConfigFileEditor configFileEditor;
     private final ProvidersRepository providersRepository;
+    private final CoreNetworkFilter coreNetworkFilter;
     private final boolean ignoreDevMsg;
     private final ObjectProperty<Filter> filterProperty = new SimpleObjectProperty<>();
     private final List<Listener> listeners = new CopyOnWriteArrayList<>();
@@ -115,6 +117,7 @@ public class FilterManager {
                          Preferences preferences,
                          Config config,
                          ProvidersRepository providersRepository,
+                         CoreNetworkFilter coreNetworkFilter,
                          @Named(Config.IGNORE_DEV_MSG) boolean ignoreDevMsg,
                          @Named(Config.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         this.p2PService = p2PService;
@@ -123,6 +126,7 @@ public class FilterManager {
         this.preferences = preferences;
         this.configFileEditor = new ConfigFileEditor(config.configFile);
         this.providersRepository = providersRepository;
+        this.coreNetworkFilter = coreNetworkFilter;
         this.ignoreDevMsg = ignoreDevMsg;
 
         publicKeys = useDevPrivilegeKeys ?

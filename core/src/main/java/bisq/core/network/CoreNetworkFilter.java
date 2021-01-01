@@ -15,37 +15,35 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p.peers;
+package bisq.core.network;
 
 import bisq.network.p2p.NodeAddress;
+import bisq.network.p2p.network.NetworkFilter;
 
 import bisq.common.config.Config;
 
+import javax.inject.Inject;
 import javax.inject.Named;
 
-import javax.inject.Inject;
-
-import org.apache.commons.lang3.StringUtils;
-
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Set;
 
-public class BanList {
-    private static List<NodeAddress> list = new ArrayList<>();
+import lombok.extern.slf4j.Slf4j;
 
-    public static void add(NodeAddress onionAddress) {
-        list.add(onionAddress);
-    }
+@Slf4j
+public class CoreNetworkFilter implements NetworkFilter {
+    private final Set<NodeAddress> bannedPeersFromOptions = new HashSet<>();
 
-    public static boolean isBanned(NodeAddress nodeAddress) {
-        return list.contains(nodeAddress);
-    }
-
+    /**
+     * @param banList  List of banned peers from program argument
+     */
     @Inject
-    public BanList(@Named(Config.BAN_LIST) List<String> banList) {
-        if (!banList.isEmpty())
-            BanList.list = banList.stream().map(NodeAddress::new).collect(Collectors.toList());
+    public CoreNetworkFilter(@Named(Config.BAN_LIST) List<String> banList) {
+        banList.stream().map(NodeAddress::new).forEach(bannedPeersFromOptions::add);
+    }
+
+    public boolean isPeerBanned(NodeAddress nodeAddress) {
+        return bannedPeersFromOptions.contains(nodeAddress);
     }
 }
