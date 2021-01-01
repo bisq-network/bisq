@@ -449,7 +449,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                     envelopesByHash.add(current);
                     envelopesToProcess.add(current);
                 } else {
-                    log.warn("We got duplicated items for {}. We ignore the duplicates. Hash: {}",
+                    log.debug("We got duplicated items for {}. We ignore the duplicates. Hash: {}",
                             itemName, Utilities.encodeToHex(hash));
                 }
             } else {

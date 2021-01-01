@@ -36,6 +36,9 @@ import bisq.common.config.BaseCurrencyNetwork;
 import bisq.common.config.Config;
 import bisq.common.handlers.ResultHandler;
 
+import com.google.inject.Key;
+import com.google.inject.name.Names;
+
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -139,7 +142,11 @@ public class SeedNodeMain extends ExecutableForAppWithP2p {
 
             @Override
             public void onHiddenServicePublished() {
-                startShutDownInterval(SeedNodeMain.this);
+                boolean preventPeriodicShutdownAtSeedNode = injector.getInstance(Key.get(boolean.class,
+                        Names.named(Config.PREVENT_PERIODIC_SHUTDOWN_AT_SEED_NODE)));
+                if (!preventPeriodicShutdownAtSeedNode) {
+                    startShutDownInterval(SeedNodeMain.this);
+                }
                 UserThread.runAfter(() -> setupConnectionLossCheck(), 60);
             }
 

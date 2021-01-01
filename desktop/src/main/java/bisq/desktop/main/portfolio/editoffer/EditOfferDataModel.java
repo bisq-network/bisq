@@ -170,7 +170,10 @@ class EditOfferDataModel extends MutableOfferDataModel {
         setPrice(offer.getPrice());
         setVolume(offer.getVolume());
         setUseMarketBasedPrice(offer.isUseMarketBasedPrice());
-        if (offer.isUseMarketBasedPrice()) setMarketPriceMargin(offer.getMarketPriceMargin());
+        setTriggerPrice(openOffer.getTriggerPrice());
+        if (offer.isUseMarketBasedPrice()) {
+            setMarketPriceMargin(offer.getMarketPriceMargin());
+        }
     }
 
     public void onStartEditOffer(ErrorMessageHandler errorMessageHandler) {
@@ -227,7 +230,7 @@ class EditOfferDataModel extends MutableOfferDataModel {
         editedOffer.setPriceFeedService(priceFeedService);
         editedOffer.setState(Offer.State.AVAILABLE);
 
-        openOfferManager.editOpenOfferPublish(editedOffer, initialState, () -> {
+        openOfferManager.editOpenOfferPublish(editedOffer, triggerPrice, initialState, () -> {
             openOffer = null;
             resultHandler.handleResult();
         }, errorMessageHandler);

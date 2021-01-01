@@ -17,6 +17,8 @@
 
 package bisq.apitest.scenario;
 
+import java.io.File;
+
 import lombok.extern.slf4j.Slf4j;
 
 import org.junit.jupiter.api.AfterAll;
@@ -30,10 +32,12 @@ import static bisq.apitest.Scaffold.BitcoinCoreApp.bitcoind;
 import static bisq.apitest.config.BisqAppConfig.alicedaemon;
 import static bisq.apitest.config.BisqAppConfig.arbdaemon;
 import static bisq.apitest.config.BisqAppConfig.seednode;
+import static bisq.apitest.method.CallRateMeteringInterceptorTest.buildInterceptorConfigFile;
 import static org.junit.jupiter.api.Assertions.fail;
 
 
 
+import bisq.apitest.method.CallRateMeteringInterceptorTest;
 import bisq.apitest.method.GetVersionTest;
 import bisq.apitest.method.MethodTest;
 import bisq.apitest.method.RegisterDisputeAgentsTest;
@@ -46,7 +50,11 @@ public class StartupTest extends MethodTest {
     @BeforeAll
     public static void setUp() {
         try {
-            setUpScaffold(bitcoind, seednode, arbdaemon, alicedaemon);
+            File callRateMeteringConfigFile = buildInterceptorConfigFile();
+            startSupportingApps(callRateMeteringConfigFile,
+                    false,
+                    false,
+                    bitcoind, seednode, arbdaemon, alicedaemon);
         } catch (Exception ex) {
             fail(ex);
         }
@@ -54,13 +62,27 @@ public class StartupTest extends MethodTest {
 
     @Test
     @Order(1)
+    public void testCallRateMeteringInterceptor() {
+        CallRateMeteringInterceptorTest test = new CallRateMeteringInterceptorTest();
+        test.testGetVersionCall1IsAllowed();
+        test.sleep200Milliseconds();
+        test.testGetVersionCall2ShouldThrowException();
+        test.sleep200Milliseconds();
+        test.testGetVersionCall3ShouldThrowException();
+        test.sleep200Milliseconds();
+        test.testGetVersionCall4IsAllowed();
+        sleep(1000); // Wait 1 second before calling getversion in next test.
+    }
+
+    @Test
+    @Order(2)
     public void testGetVersion() {
         GetVersionTest test = new GetVersionTest();
         test.testGetVersion();
     }
 
     @Test
-    @Order(2)
+    @Order(3)
     public void testRegisterDisputeAgents() {
         RegisterDisputeAgentsTest test = new RegisterDisputeAgentsTest();
         test.testRegisterArbitratorShouldThrowException();

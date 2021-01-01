@@ -31,6 +31,7 @@ import bisq.proto.grpc.GetPaymentAccountFormRequest;
 import bisq.proto.grpc.GetPaymentAccountsRequest;
 import bisq.proto.grpc.GetPaymentMethodsRequest;
 import bisq.proto.grpc.GetTradeRequest;
+import bisq.proto.grpc.GetTransactionRequest;
 import bisq.proto.grpc.GetTxFeeRateRequest;
 import bisq.proto.grpc.GetUnusedBsqAddressRequest;
 import bisq.proto.grpc.GetVersionRequest;
@@ -40,9 +41,11 @@ import bisq.proto.grpc.OfferInfo;
 import bisq.proto.grpc.RegisterDisputeAgentRequest;
 import bisq.proto.grpc.RemoveWalletPasswordRequest;
 import bisq.proto.grpc.SendBsqRequest;
+import bisq.proto.grpc.SendBtcRequest;
 import bisq.proto.grpc.SetTxFeeRatePreferenceRequest;
 import bisq.proto.grpc.SetWalletPasswordRequest;
 import bisq.proto.grpc.TakeOfferRequest;
+import bisq.proto.grpc.TxInfo;
 import bisq.proto.grpc.UnlockWalletRequest;
 import bisq.proto.grpc.UnsetTxFeeRatePreferenceRequest;
 import bisq.proto.grpc.WithdrawFundsRequest;
@@ -110,9 +113,11 @@ public class CliMain {
         getfundingaddresses,
         getunusedbsqaddress,
         sendbsq,
+        sendbtc,
         gettxfeerate,
         settxfeerate,
         unsettxfeerate,
+        gettransaction,
         lockwallet,
         unlockwallet,
         removewalletpassword,
@@ -259,19 +264,56 @@ public class CliMain {
                         throw new IllegalArgumentException("no bsq amount specified");
 
                     var amount = nonOptionArgs.get(2);
+                    verifyStringIsValidDecimal(amount);
 
-                    try {
-                        Double.parseDouble(amount);
-                    } catch (NumberFormatException e) {
-                        throw new IllegalArgumentException(format("'%s' is not a number", amount));
-                    }
+                    var txFeeRate = nonOptionArgs.size() == 4 ? nonOptionArgs.get(3) : "";
+                    if (!txFeeRate.isEmpty())
+                        verifyStringIsValidLong(txFeeRate);
 
                     var request = SendBsqRequest.newBuilder()
                             .setAddress(address)
                             .setAmount(amount)
+                            .setTxFeeRate(txFeeRate)
                             .build();
-                    walletsService.sendBsq(request);
-                    out.printf("%s BSQ sent to %s%n", amount, address);
+                    var reply = walletsService.sendBsq(request);
+                    TxInfo txInfo = reply.getTxInfo();
+                    out.printf("%s bsq sent to %s in tx %s%n",
+                            amount,
+                            address,
+                            txInfo.getTxId());
+                    return;
+                }
+                case sendbtc: {
+                    if (nonOptionArgs.size() < 2)
+                        throw new IllegalArgumentException("no btc address specified");
+
+                    var address = nonOptionArgs.get(1);
+
+                    if (nonOptionArgs.size() < 3)
+                        throw new IllegalArgumentException("no btc amount specified");
+
+                    var amount = nonOptionArgs.get(2);
+                    verifyStringIsValidDecimal(amount);
+
+                    // TODO Find a better way to handle the two optional parameters.
+                    var txFeeRate = nonOptionArgs.size() >= 4 ? nonOptionArgs.get(3) : "";
+                    if (!txFeeRate.isEmpty())
+                        verifyStringIsValidLong(txFeeRate);
+
+                    var memo = nonOptionArgs.size() == 5 ? nonOptionArgs.get(4) : "";
+
+                    var request = SendBtcRequest.newBuilder()
+                            .setAddress(address)
+                            .setAmount(amount)
+                            .setTxFeeRate(txFeeRate)
+                            .setMemo(memo)
+                            .build();
+                    var reply = walletsService.sendBtc(request);
+                    TxInfo txInfo = reply.getTxInfo();
+                    out.printf("%s btc sent to %s in tx %s%n",
+                            amount,
+                            address,
+                            txInfo.getTxId());
                     return;
                 }
                 case gettxfeerate: {
@@ -284,13 +326,7 @@ public class CliMain {
                     if (nonOptionArgs.size() < 2)
                         throw new IllegalArgumentException("no tx fee rate specified");
 
-                    long txFeeRate;
-                    try {
-                        txFeeRate = Long.parseLong(nonOptionArgs.get(2));
-                    } catch (NumberFormatException e) {
-                        throw new IllegalArgumentException(format("'%s' is not a number", nonOptionArgs.get(2)));
-                    }
-
+                    var txFeeRate = toLong(nonOptionArgs.get(2));
                     var request = SetTxFeeRatePreferenceRequest.newBuilder()
                             .setTxFeeRatePreference(txFeeRate)
                             .build();
@@ -302,6 +338,18 @@ public class CliMain {
                     var request = UnsetTxFeeRatePreferenceRequest.newBuilder().build();
                     var reply = walletsService.unsetTxFeeRatePreference(request);
                     out.println(formatTxFeeRateInfo(reply.getTxFeeRateInfo()));
+                    return;
+                }
+                case gettransaction: {
+                    if (nonOptionArgs.size() < 2)
+                        throw new IllegalArgumentException("no tx id specified");
+
+                    var txId = nonOptionArgs.get(1);
+                    var request = GetTransactionRequest.newBuilder()
+                            .setTxId(txId)
+                            .build();
+                    var reply = walletsService.getTransaction(request);
+                    out.println(TransactionFormat.format(reply.getTxInfo()));
                     return;
                 }
                 case createoffer: {
@@ -413,7 +461,7 @@ public class CliMain {
                     return;
                 }
                 case gettrade: {
-                    // TODO make short-id a valid argument
+                    // TODO make short-id a valid argument?
                     if (nonOptionArgs.size() < 2)
                         throw new IllegalArgumentException("incorrect parameter count, "
                                 + " expecting trade id [,showcontract = true|false]");
@@ -472,16 +520,21 @@ public class CliMain {
                 case withdrawfunds: {
                     if (nonOptionArgs.size() < 3)
                         throw new IllegalArgumentException("incorrect parameter count, "
-                                + " expecting trade id, bitcoin wallet address");
+                                + " expecting trade id, bitcoin wallet address [,\"memo\"]");
 
                     var tradeId = nonOptionArgs.get(1);
                     var address = nonOptionArgs.get(2);
+                    // A multi-word memo must be double quoted.
+                    var memo = nonOptionArgs.size() == 4
+                            ? nonOptionArgs.get(3)
+                            : "";
                     var request = WithdrawFundsRequest.newBuilder()
                             .setTradeId(tradeId)
                             .setAddress(address)
+                            .setMemo(memo)
                             .build();
                     tradesService.withdrawFunds(request);
-                    out.printf("funds from trade %s sent to btc address %s%n", tradeId, address);
+                    out.printf("trade %s funds sent to btc address %s%n", tradeId, address);
                     return;
                 }
                 case getpaymentmethods: {
@@ -560,12 +613,7 @@ public class CliMain {
                     if (nonOptionArgs.size() < 3)
                         throw new IllegalArgumentException("no unlock timeout specified");
 
-                    long timeout;
-                    try {
-                        timeout = Long.parseLong(nonOptionArgs.get(2));
-                    } catch (NumberFormatException e) {
-                        throw new IllegalArgumentException(format("'%s' is not a number", nonOptionArgs.get(2)));
-                    }
+                    var timeout = toLong(nonOptionArgs.get(2));
                     var request = UnlockWalletRequest.newBuilder()
                             .setPassword(nonOptionArgs.get(1))
                             .setTimeout(timeout).build();
@@ -627,6 +675,30 @@ public class CliMain {
         return Method.valueOf(methodName.toLowerCase());
     }
 
+    private static void verifyStringIsValidDecimal(String param) {
+        try {
+            Double.parseDouble(param);
+        } catch (NumberFormatException ex) {
+            throw new IllegalArgumentException(format("'%s' is not a number", param));
+        }
+    }
+
+    private static void verifyStringIsValidLong(String param) {
+        try {
+            Long.parseLong(param);
+        } catch (NumberFormatException ex) {
+            throw new IllegalArgumentException(format("'%s' is not a number", param));
+        }
+    }
+
+    private static long toLong(String param) {
+        try {
+            return Long.parseLong(param);
+        } catch (NumberFormatException ex) {
+            throw new IllegalArgumentException(format("'%s' is not a number", param));
+        }
+    }
+
     private static File saveFileToDisk(String prefix,
                                        @SuppressWarnings("SameParameterValue") String suffix,
                                        String text) {
@@ -655,18 +727,20 @@ public class CliMain {
             stream.println();
             parser.printHelpOn(stream);
             stream.println();
-            String rowFormat = "%-22s%-50s%s%n";
+            String rowFormat = "%-24s%-52s%s%n";
             stream.format(rowFormat, "Method", "Params", "Description");
             stream.format(rowFormat, "------", "------", "------------");
             stream.format(rowFormat, "getversion", "", "Get server version");
-            stream.format(rowFormat, "getbalance [,currency code = bsq|btc]", "", "Get server wallet balances");
+            stream.format(rowFormat, "getbalance", "[currency code = bsq|btc]", "Get server wallet balances");
             stream.format(rowFormat, "getaddressbalance", "address", "Get server wallet address balance");
             stream.format(rowFormat, "getfundingaddresses", "", "Get BTC funding addresses");
             stream.format(rowFormat, "getunusedbsqaddress", "", "Get unused BSQ address");
-            stream.format(rowFormat, "sendbsq", "address, amount", "Send BSQ");
+            stream.format(rowFormat, "sendbsq", "address, amount [,tx fee rate (sats/byte)]", "Send BSQ");
+            stream.format(rowFormat, "sendbtc", "address, amount [,tx fee rate (sats/byte), \"memo\"]", "Send BTC");
             stream.format(rowFormat, "gettxfeerate", "", "Get current tx fee rate in sats/byte");
             stream.format(rowFormat, "settxfeerate", "satoshis (per byte)", "Set custom tx fee rate in sats/byte");
             stream.format(rowFormat, "unsettxfeerate", "", "Unset custom tx fee rate");
+            stream.format(rowFormat, "gettransaction", "transaction id", "Get transaction with id");
             stream.format(rowFormat, "createoffer", "payment acct id, buy | sell, currency code, \\", "Create and place an offer");
             stream.format(rowFormat, "", "amount (btc), min amount, use mkt based price, \\", "");
             stream.format(rowFormat, "", "fixed price (btc) | mkt price margin (%), security deposit (%) \\", "");
@@ -674,12 +748,13 @@ public class CliMain {
             stream.format(rowFormat, "canceloffer", "offer id", "Cancel offer with id");
             stream.format(rowFormat, "getoffer", "offer id", "Get current offer with id");
             stream.format(rowFormat, "getoffers", "buy | sell, currency code", "Get current offers");
-            stream.format(rowFormat, "takeoffer", "offer id, [,taker fee currency code = bsq|btc]", "Take offer with id");
+            stream.format(rowFormat, "takeoffer", "offer id [,taker fee currency code = bsq|btc]", "Take offer with id");
             stream.format(rowFormat, "gettrade", "trade id [,showcontract = true|false]", "Get trade summary or full contract");
             stream.format(rowFormat, "confirmpaymentstarted", "trade id", "Confirm payment started");
             stream.format(rowFormat, "confirmpaymentreceived", "trade id", "Confirm payment received");
             stream.format(rowFormat, "keepfunds", "trade id", "Keep received funds in Bisq wallet");
-            stream.format(rowFormat, "withdrawfunds", "trade id, bitcoin wallet address", "Withdraw received funds to external wallet address");
+            stream.format(rowFormat, "withdrawfunds", "trade id, bitcoin wallet address  [,\"memo\"]",
+                    "Withdraw received funds to external wallet address");
             stream.format(rowFormat, "getpaymentmethods", "", "Get list of supported payment account method ids");
             stream.format(rowFormat, "getpaymentacctform", "payment method id", "Get a new payment account form");
             stream.format(rowFormat, "createpaymentacct", "path to payment account form", "Create a new payment account");

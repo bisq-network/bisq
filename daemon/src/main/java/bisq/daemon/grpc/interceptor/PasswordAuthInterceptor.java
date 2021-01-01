@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.daemon.grpc;
+package bisq.daemon.grpc.interceptor;
 
 import bisq.common.config.Config;
 
@@ -38,7 +38,7 @@ import static java.lang.String.format;
  *
  * @see bisq.common.config.Config#apiPassword
  */
-class PasswordAuthInterceptor implements ServerInterceptor {
+public class PasswordAuthInterceptor implements ServerInterceptor {
 
     private static final String PASSWORD_KEY = "password";
 
@@ -50,7 +50,8 @@ class PasswordAuthInterceptor implements ServerInterceptor {
     }
 
     @Override
-    public <ReqT, RespT> ServerCall.Listener<ReqT> interceptCall(ServerCall<ReqT, RespT> serverCall, Metadata headers,
+    public <ReqT, RespT> ServerCall.Listener<ReqT> interceptCall(ServerCall<ReqT, RespT> serverCall,
+                                                                 Metadata headers,
                                                                  ServerCallHandler<ReqT, RespT> serverCallHandler) {
         var actualPasswordValue = headers.get(Key.of(PASSWORD_KEY, ASCII_STRING_MARSHALLER));
 

@@ -126,7 +126,7 @@ public class DisplayUtils {
         return formatVolume(volume, FIAT_VOLUME_FORMAT, true);
     }
 
-    static String formatAverageVolumeWithCode(Volume volume) {
+    public static String formatAverageVolumeWithCode(Volume volume) {
         return formatVolume(volume, FIAT_VOLUME_FORMAT.minDecimals(2), true);
     }
 
@@ -257,15 +257,15 @@ public class DisplayUtils {
     public static String getFeeWithFiatAmount(Coin makerFeeAsCoin,
                                               Optional<Volume> optionalFeeInFiat,
                                               CoinFormatter formatter) {
-        String fee = makerFeeAsCoin != null ? formatter.formatCoinWithCode(makerFeeAsCoin) : Res.get("shared.na");
-        String feeInFiatAsString;
+        String feeInBtc = makerFeeAsCoin != null ? formatter.formatCoinWithCode(makerFeeAsCoin) : Res.get("shared.na");
         if (optionalFeeInFiat != null && optionalFeeInFiat.isPresent()) {
-            feeInFiatAsString = formatAverageVolumeWithCode(optionalFeeInFiat.get());
+            String feeInFiat = formatAverageVolumeWithCode(optionalFeeInFiat.get());
+            return Res.get("feeOptionWindow.fee", feeInBtc, feeInFiat);
         } else {
-            feeInFiatAsString = Res.get("shared.na");
+            return feeInBtc;
         }
-        return Res.get("feeOptionWindow.fee", fee, feeInFiatAsString);
     }
+
 
     /**
      * Converts to a coin with max. 4 decimal places. Last place gets rounded.

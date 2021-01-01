@@ -73,6 +73,10 @@ public class Broadcaster implements BroadcastHandler.ResultHandler {
         }
     }
 
+    public void flush() {
+        maybeBroadcastBundle();
+    }
+
     private void doShutDown() {
         broadcastHandlers.forEach(BroadcastHandler::cancel);
         if (timer != null) {

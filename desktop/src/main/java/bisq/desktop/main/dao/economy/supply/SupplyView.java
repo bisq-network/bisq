@@ -61,8 +61,6 @@ import javafx.collections.ListChangeListener;
 
 import javafx.util.StringConverter;
 
-import java.text.DecimalFormat;
-
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -72,6 +70,8 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAdjuster;
 import java.time.temporal.TemporalAdjusters;
+
+import java.text.DecimalFormat;
 
 import java.util.Comparator;
 import java.util.HashMap;
@@ -630,10 +630,10 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
                         .toLocalDate()
                         .with(ADJUSTERS.get(MONTH)));
 
-        Stream<Issuance> bsqByCompensation = daoStateService.getIssuanceSet(IssuanceType.COMPENSATION).stream()
+        Stream<Issuance> bsqByCompensation = daoStateService.getIssuanceSetForType(IssuanceType.COMPENSATION).stream()
                 .sorted(Comparator.comparing(Issuance::getChainHeight));
 
-        Stream<Issuance> bsqByReimbursement = daoStateService.getIssuanceSet(IssuanceType.REIMBURSEMENT).stream()
+        Stream<Issuance> bsqByReimbursement = daoStateService.getIssuanceSetForType(IssuanceType.REIMBURSEMENT).stream()
                 .sorted(Comparator.comparing(Issuance::getChainHeight));
 
         Map<LocalDate, List<Issuance>> bsqAddedByVote = Stream.concat(bsqByCompensation, bsqByReimbursement)

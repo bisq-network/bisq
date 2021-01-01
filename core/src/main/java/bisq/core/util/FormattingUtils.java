@@ -171,7 +171,7 @@ public class FormattingUtils {
             return formatMarketPrice(price, 8);
     }
 
-    private static String formatMarketPrice(double price, int precision) {
+    public static String formatMarketPrice(double price, int precision) {
         return formatRoundedDoubleWithPrecision(price, precision);
     }
 

@@ -96,6 +96,10 @@ public class ApiTestCase {
         scaffold.tearDown();
     }
 
+    protected static String getEnumArrayAsString(Enum<?>[] supportingApps) {
+        return stream(supportingApps).map(Enum::name).collect(Collectors.joining(","));
+    }
+
     protected static GrpcStubs grpcStubs(BisqAppConfig bisqAppConfig) {
         if (grpcStubsCache.containsKey(bisqAppConfig)) {
             return grpcStubsCache.get(bisqAppConfig);

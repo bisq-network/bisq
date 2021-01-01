@@ -30,11 +30,16 @@ import javax.annotation.concurrent.Immutable;
 @EqualsAndHashCode
 @Immutable
 public final class RawTransactionInput implements NetworkPayload, PersistablePayload {
-    // Payload
-    public final long index;
-    public final byte[] parentTransaction;
+    public final long index;                // Index of spending txo
+    public final byte[] parentTransaction;  // Spending tx (fromTx)
     public final long value;
 
+    /**
+     * Holds the relevant data for the connected output for a tx input.
+     * @param index  the index of the parentTransaction
+     * @param parentTransaction  the spending output tx, not the parent tx of the input
+     * @param value  the number of satoshis being spent
+     */
     public RawTransactionInput(long index, byte[] parentTransaction, long value) {
         this.index = index;
         this.parentTransaction = parentTransaction;

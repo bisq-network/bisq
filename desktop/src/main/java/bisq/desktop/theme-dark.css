@@ -527,3 +527,7 @@
 .jfx-date-picker .left-button, .jfx-date-picker .right-button{
     -fx-background-color: derive(-bs-color-gray-0, -10%);
 }
+
+.progress-bar > .secondary-bar {
+    -fx-background-color: -bs-color-gray-0;
+}

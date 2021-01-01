@@ -1,6 +1,7 @@
 package bisq.apitest.method.wallet;
 
 import bisq.proto.grpc.BtcBalanceInfo;
+import bisq.proto.grpc.TxInfo;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -16,10 +17,14 @@ import static bisq.apitest.Scaffold.BitcoinCoreApp.bitcoind;
 import static bisq.apitest.config.BisqAppConfig.alicedaemon;
 import static bisq.apitest.config.BisqAppConfig.bobdaemon;
 import static bisq.apitest.config.BisqAppConfig.seednode;
+import static bisq.apitest.method.wallet.WalletTestUtil.INITIAL_BTC_BALANCES;
+import static bisq.apitest.method.wallet.WalletTestUtil.verifyBtcBalances;
 import static bisq.cli.TableFormat.formatAddressBalanceTbl;
 import static bisq.cli.TableFormat.formatBtcBalanceInfoTbl;
 import static java.util.Collections.singletonList;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 
 
@@ -31,13 +36,7 @@ import bisq.apitest.method.MethodTest;
 @TestMethodOrder(OrderAnnotation.class)
 public class BtcWalletTest extends MethodTest {
 
-    // All api tests depend on the DAO / regtest environment, and Bob & Alice's wallets
-    // are initialized with 10 BTC during the scaffolding setup.
-    private static final bisq.core.api.model.BtcBalanceInfo INITIAL_BTC_BALANCES =
-            bisq.core.api.model.BtcBalanceInfo.valueOf(1000000000,
-                    0,
-                    1000000000,
-                    0);
+    private static final String TX_MEMO = "tx memo";
 
     @BeforeAll
     public static void setUp() {
@@ -55,10 +54,10 @@ public class BtcWalletTest extends MethodTest {
         // Bob & Alice's regtest Bisq wallets were initialized with 10 BTC.
 
         BtcBalanceInfo alicesBalances = getBtcBalances(alicedaemon);
-        log.info("{} Alice's BTC Balances:\n{}", testName(testInfo), formatBtcBalanceInfoTbl(alicesBalances));
+        log.debug("{} Alice's BTC Balances:\n{}", testName(testInfo), formatBtcBalanceInfoTbl(alicesBalances));
 
         BtcBalanceInfo bobsBalances = getBtcBalances(bobdaemon);
-        log.info("{} Bob's BTC Balances:\n{}", testName(testInfo), formatBtcBalanceInfoTbl(bobsBalances));
+        log.debug("{} Bob's BTC Balances:\n{}", testName(testInfo), formatBtcBalanceInfoTbl(bobsBalances));
 
         assertEquals(INITIAL_BTC_BALANCES.getAvailableBalance(), alicesBalances.getAvailableBalance());
         assertEquals(INITIAL_BTC_BALANCES.getAvailableBalance(), bobsBalances.getAvailableBalance());
@@ -69,13 +68,13 @@ public class BtcWalletTest extends MethodTest {
     public void testFundAlicesBtcWallet(final TestInfo testInfo) {
         String newAddress = getUnusedBtcAddress(alicedaemon);
         bitcoinCli.sendToAddress(newAddress, "2.5");
-        genBtcBlocksThenWait(1, 1500);
+        genBtcBlocksThenWait(1, 1000);
 
         BtcBalanceInfo btcBalanceInfo = getBtcBalances(alicedaemon);
         // New balance is 12.5 BTC
         assertEquals(1250000000, btcBalanceInfo.getAvailableBalance());
 
-        log.info("{} -> Alice's Funded Address Balance -> \n{}",
+        log.debug("{} -> Alice's Funded Address Balance -> \n{}",
                 testName(testInfo),
                 formatAddressBalanceTbl(singletonList(getAddressBalance(alicedaemon, newAddress))));
 
@@ -87,21 +86,57 @@ public class BtcWalletTest extends MethodTest {
                         1250000000,
                         0);
         verifyBtcBalances(alicesExpectedBalances, btcBalanceInfo);
-        log.info("{} -> Alice's BTC Balances After Sending 2.5 BTC -> \n{}",
+        log.debug("{} -> Alice's BTC Balances After Sending 2.5 BTC -> \n{}",
                 testName(testInfo),
                 formatBtcBalanceInfoTbl(btcBalanceInfo));
+    }
+
+    @Test
+    @Order(3)
+    public void testAliceSendBTCToBob(TestInfo testInfo) {
+        String bobsBtcAddress = getUnusedBtcAddress(bobdaemon);
+        log.debug("Sending 5.5 BTC From Alice to Bob @ {}", bobsBtcAddress);
+
+        TxInfo txInfo = sendBtc(alicedaemon,
+                bobsBtcAddress,
+                "5.50",
+                "100",
+                TX_MEMO);
+        assertTrue(txInfo.getIsPending());
+
+        // Note that the memo is not set on the tx yet.
+        assertTrue(txInfo.getMemo().isEmpty());
+        genBtcBlocksThenWait(1, 1000);
+
+        // Fetch the tx and check for confirmation and memo.
+        txInfo = getTransaction(alicedaemon, txInfo.getTxId());
+        assertFalse(txInfo.getIsPending());
+        assertEquals(TX_MEMO, txInfo.getMemo());
+
+        BtcBalanceInfo alicesBalances = getBtcBalances(alicedaemon);
+        log.debug("{} Alice's BTC Balances:\n{}",
+                testName(testInfo),
+                formatBtcBalanceInfoTbl(alicesBalances));
+        bisq.core.api.model.BtcBalanceInfo alicesExpectedBalances =
+                bisq.core.api.model.BtcBalanceInfo.valueOf(700000000,
+                        0,
+                        700000000,
+                        0);
+        verifyBtcBalances(alicesExpectedBalances, alicesBalances);
+
+        BtcBalanceInfo bobsBalances = getBtcBalances(bobdaemon);
+        log.debug("{} Bob's BTC Balances:\n{}",
+                testName(testInfo),
+                formatBtcBalanceInfoTbl(bobsBalances));
+        // The sendbtc tx weight and size randomly varies between two distinct values
+        // (876 wu, 219 bytes, OR 880 wu, 220 bytes) from test run to test run, hence
+        // the assertion of an available balance range [1549978000, 1549978100].
+        assertTrue(bobsBalances.getAvailableBalance() >= 1549978000);
+        assertTrue(bobsBalances.getAvailableBalance() <= 1549978100);
     }
 
     @AfterAll
     public static void tearDown() {
         tearDownScaffold();
-    }
-
-    private void verifyBtcBalances(bisq.core.api.model.BtcBalanceInfo expected,
-                                   BtcBalanceInfo actual) {
-        assertEquals(expected.getAvailableBalance(), actual.getAvailableBalance());
-        assertEquals(expected.getReservedBalance(), actual.getReservedBalance());
-        assertEquals(expected.getTotalAvailableBalance(), actual.getTotalAvailableBalance());
-        assertEquals(expected.getLockedBalance(), actual.getLockedBalance());
     }
 }

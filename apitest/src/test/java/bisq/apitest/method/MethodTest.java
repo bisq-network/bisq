@@ -39,6 +39,7 @@ import bisq.proto.grpc.GetPaymentAccountFormRequest;
 import bisq.proto.grpc.GetPaymentAccountsRequest;
 import bisq.proto.grpc.GetPaymentMethodsRequest;
 import bisq.proto.grpc.GetTradeRequest;
+import bisq.proto.grpc.GetTransactionRequest;
 import bisq.proto.grpc.GetTxFeeRateRequest;
 import bisq.proto.grpc.GetUnusedBsqAddressRequest;
 import bisq.proto.grpc.KeepFundsRequest;
@@ -48,10 +49,12 @@ import bisq.proto.grpc.OfferInfo;
 import bisq.proto.grpc.RegisterDisputeAgentRequest;
 import bisq.proto.grpc.RemoveWalletPasswordRequest;
 import bisq.proto.grpc.SendBsqRequest;
+import bisq.proto.grpc.SendBtcRequest;
 import bisq.proto.grpc.SetTxFeeRatePreferenceRequest;
 import bisq.proto.grpc.SetWalletPasswordRequest;
 import bisq.proto.grpc.TakeOfferRequest;
 import bisq.proto.grpc.TradeInfo;
+import bisq.proto.grpc.TxInfo;
 import bisq.proto.grpc.UnlockWalletRequest;
 import bisq.proto.grpc.UnsetTxFeeRatePreferenceRequest;
 import bisq.proto.grpc.WithdrawFundsRequest;
@@ -64,6 +67,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 
 import java.util.List;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static bisq.apitest.config.BisqAppConfig.alicedaemon;
@@ -96,35 +100,60 @@ public class MethodTest extends ApiTestCase {
 
     private static final CoreProtoResolver CORE_PROTO_RESOLVER = new CoreProtoResolver();
 
+    private static final Function<Enum<?>[], String> toNameList = (enums) ->
+            stream(enums).map(Enum::name).collect(Collectors.joining(","));
+
+    public static void startSupportingApps(File callRateMeteringConfigFile,
+                                           boolean registerDisputeAgents,
+                                           boolean generateBtcBlock,
+                                           Enum<?>... supportingApps) {
+        try {
+            setUpScaffold(new String[]{
+                    "--supportingApps", toNameList.apply(supportingApps),
+                    "--callRateMeteringConfigPath", callRateMeteringConfigFile.getAbsolutePath(),
+                    "--enableBisqDebugging", "false"
+            });
+            doPostStartup(registerDisputeAgents, generateBtcBlock, supportingApps);
+        } catch (Exception ex) {
+            fail(ex);
+        }
+    }
+
     public static void startSupportingApps(boolean registerDisputeAgents,
                                            boolean generateBtcBlock,
                                            Enum<?>... supportingApps) {
         try {
-            // To run Bisq apps in debug mode, use the other setUpScaffold method:
-            // setUpScaffold(new String[]{"--supportingApps", "bitcoind,seednode,arbdaemon,alicedaemon,bobdaemon",
-            //                            "--enableBisqDebugging", "true"});
-            setUpScaffold(supportingApps);
-            if (registerDisputeAgents) {
-                registerDisputeAgents(arbdaemon);
-            }
-
-            if (stream(supportingApps).map(Enum::name).anyMatch(name -> name.equals(alicedaemon.name()))) {
-                aliceStubs = grpcStubs(alicedaemon);
-                alicesDummyAcct = getDefaultPerfectDummyPaymentAccount(alicedaemon);
-            }
-
-            if (stream(supportingApps).map(Enum::name).anyMatch(name -> name.equals(bobdaemon.name()))) {
-                bobStubs = grpcStubs(bobdaemon);
-                bobsDummyAcct = getDefaultPerfectDummyPaymentAccount(bobdaemon);
-            }
-
-            // Generate 1 regtest block for alice's and/or bob's wallet to
-            // show 10 BTC balance, and allow time for daemons parse the new block.
-            if (generateBtcBlock)
-                genBtcBlocksThenWait(1, 1500);
+            setUpScaffold(new String[]{
+                    "--supportingApps", toNameList.apply(supportingApps),
+                    "--enableBisqDebugging", "false"
+            });
+            doPostStartup(registerDisputeAgents, generateBtcBlock, supportingApps);
         } catch (Exception ex) {
             fail(ex);
         }
+    }
+
+    protected static void doPostStartup(boolean registerDisputeAgents,
+                                      boolean generateBtcBlock,
+                                      Enum<?>... supportingApps) {
+        if (registerDisputeAgents) {
+            registerDisputeAgents(arbdaemon);
+        }
+
+        if (stream(supportingApps).map(Enum::name).anyMatch(name -> name.equals(alicedaemon.name()))) {
+            aliceStubs = grpcStubs(alicedaemon);
+            alicesDummyAcct = getDefaultPerfectDummyPaymentAccount(alicedaemon);
+        }
+
+        if (stream(supportingApps).map(Enum::name).anyMatch(name -> name.equals(bobdaemon.name()))) {
+            bobStubs = grpcStubs(bobdaemon);
+            bobsDummyAcct = getDefaultPerfectDummyPaymentAccount(bobdaemon);
+        }
+
+        // Generate 1 regtest block for alice's and/or bob's wallet to
+        // show 10 BTC balance, and allow time for daemons parse the new block.
+        if (generateBtcBlock)
+            genBtcBlocksThenWait(1, 1500);
     }
 
     // Convenience methods for building gRPC request objects
@@ -160,8 +189,26 @@ public class MethodTest extends ApiTestCase {
         return GetUnusedBsqAddressRequest.newBuilder().build();
     }
 
-    protected final SendBsqRequest createSendBsqRequest(String address, String amount) {
-        return SendBsqRequest.newBuilder().setAddress(address).setAmount(amount).build();
+    protected final SendBsqRequest createSendBsqRequest(String address,
+                                                        String amount,
+                                                        String txFeeRate) {
+        return SendBsqRequest.newBuilder()
+                .setAddress(address)
+                .setAmount(amount)
+                .setTxFeeRate(txFeeRate)
+                .build();
+    }
+
+    protected final SendBtcRequest createSendBtcRequest(String address,
+                                                        String amount,
+                                                        String txFeeRate,
+                                                        String memo) {
+        return SendBtcRequest.newBuilder()
+                .setAddress(address)
+                .setAmount(amount)
+                .setTxFeeRate(txFeeRate)
+                .setMemo(memo)
+                .build();
     }
 
     protected final GetFundingAddressesRequest createGetFundingAddressesRequest() {
@@ -208,10 +255,13 @@ public class MethodTest extends ApiTestCase {
                 .build();
     }
 
-    protected final WithdrawFundsRequest createWithdrawFundsRequest(String tradeId, String address) {
+    protected final WithdrawFundsRequest createWithdrawFundsRequest(String tradeId,
+                                                                    String address,
+                                                                    String memo) {
         return WithdrawFundsRequest.newBuilder()
                 .setTradeId(tradeId)
                 .setAddress(address)
+                .setMemo(memo)
                 .build();
     }
 
@@ -247,9 +297,36 @@ public class MethodTest extends ApiTestCase {
         return grpcStubs(bisqAppConfig).walletsService.getUnusedBsqAddress(createGetUnusedBsqAddressRequest()).getAddress();
     }
 
-    protected final void sendBsq(BisqAppConfig bisqAppConfig, String address, String amount) {
+    protected final TxInfo sendBsq(BisqAppConfig bisqAppConfig,
+                                   String address,
+                                   String amount) {
+        return sendBsq(bisqAppConfig, address, amount, "");
+    }
+
+    protected final TxInfo sendBsq(BisqAppConfig bisqAppConfig,
+                                   String address,
+                                   String amount,
+                                   String txFeeRate) {
         //noinspection ResultOfMethodCallIgnored
-        grpcStubs(bisqAppConfig).walletsService.sendBsq(createSendBsqRequest(address, amount));
+        return grpcStubs(bisqAppConfig).walletsService.sendBsq(createSendBsqRequest(address,
+                amount,
+                txFeeRate))
+                .getTxInfo();
+    }
+
+    protected final TxInfo sendBtc(BisqAppConfig bisqAppConfig, String address, String amount) {
+        return sendBtc(bisqAppConfig, address, amount, "", "");
+    }
+
+    protected final TxInfo sendBtc(BisqAppConfig bisqAppConfig,
+                                   String address,
+                                   String amount,
+                                   String txFeeRate,
+                                   String memo) {
+        //noinspection ResultOfMethodCallIgnored
+        return grpcStubs(bisqAppConfig).walletsService.sendBtc(
+                createSendBtcRequest(address, amount, txFeeRate, memo))
+                .getTxInfo();
     }
 
     protected final String getUnusedBtcAddress(BisqAppConfig bisqAppConfig) {
@@ -354,8 +431,11 @@ public class MethodTest extends ApiTestCase {
     }
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
-    protected final void withdrawFunds(BisqAppConfig bisqAppConfig, String tradeId, String address) {
-        var req = createWithdrawFundsRequest(tradeId, address);
+    protected final void withdrawFunds(BisqAppConfig bisqAppConfig,
+                                       String tradeId,
+                                       String address,
+                                       String memo) {
+        var req = createWithdrawFundsRequest(tradeId, address, memo);
         grpcStubs(bisqAppConfig).tradesService.withdrawFunds(req);
     }
 
@@ -377,6 +457,11 @@ public class MethodTest extends ApiTestCase {
         var req = UnsetTxFeeRatePreferenceRequest.newBuilder().build();
         return TxFeeRateInfo.fromProto(
                 grpcStubs(bisqAppConfig).walletsService.unsetTxFeeRatePreference(req).getTxFeeRateInfo());
+    }
+
+    protected final TxInfo getTransaction(BisqAppConfig bisqAppConfig, String txId) {
+        var req = GetTransactionRequest.newBuilder().setTxId(txId).build();
+        return grpcStubs(bisqAppConfig).walletsService.getTransaction(req).getTxInfo();
     }
 
     // Static conveniences for test methods and test case fixture setups.

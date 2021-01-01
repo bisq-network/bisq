@@ -66,18 +66,19 @@ public class TradeFormat {
                 ? String.format(headersFormat, counterCurrencyCode, baseCurrencyCode, baseCurrencyCode, baseCurrencyCode)
                 : String.format(headersFormat, counterCurrencyCode, baseCurrencyCode, baseCurrencyCode);
 
-        String colDataFormat = "%-" + shortIdColWidth + "s"   // left justify
-                + "  %-" + (roleColWidth + COL_HEADER_DELIMITER.length()) + "s" // left justify
-                + "%" + (COL_HEADER_PRICE.length() - 1) + "s"               // right justify
-                + "%" + (COL_HEADER_TRADE_AMOUNT.length() + 1) + "s" // right justify
-                + "%" + (COL_HEADER_TRADE_TX_FEE.length() + 1) + "s" // right justify
-                + takerFeeHeader.get()  // right justify
-                + "  %-" + COL_HEADER_TRADE_DEPOSIT_PUBLISHED.length() + "s" // left justify
-                + "  %-" + COL_HEADER_TRADE_DEPOSIT_CONFIRMED.length() + "s" // left justify
-                + "  %-" + COL_HEADER_TRADE_FIAT_SENT.length() + "s" // left justify
-                + "  %-" + COL_HEADER_TRADE_FIAT_RECEIVED.length() + "s" // left justify
-                + "  %-" + COL_HEADER_TRADE_PAYOUT_PUBLISHED.length() + "s" // left justify
-                + "  %-" + COL_HEADER_TRADE_WITHDRAWN.length() + "s"; // left justify
+
+        String colDataFormat = "%-" + shortIdColWidth + "s"                 // lt justify
+                + "  %-" + (roleColWidth + COL_HEADER_DELIMITER.length()) + "s" // left
+                + "%" + (COL_HEADER_PRICE.length() - 1) + "s"               // rt justify
+                + "%" + (COL_HEADER_TRADE_AMOUNT.length() + 1) + "s"        // rt justify
+                + "%" + (COL_HEADER_TRADE_TX_FEE.length() + 1) + "s"        // rt justify
+                + takerFeeHeader.get()                                      // rt justify
+                + "  %-" + COL_HEADER_TRADE_DEPOSIT_PUBLISHED.length() + "s" // lt justify
+                + "  %-" + COL_HEADER_TRADE_DEPOSIT_CONFIRMED.length() + "s" // lt justify
+                + "  %-" + COL_HEADER_TRADE_FIAT_SENT.length() + "s"        // lt justify
+                + "  %-" + COL_HEADER_TRADE_FIAT_RECEIVED.length() + "s"    // lt justify
+                + "  %-" + COL_HEADER_TRADE_PAYOUT_PUBLISHED.length() + "s" // lt justify
+                + "  %-" + COL_HEADER_TRADE_WITHDRAWN.length() + "s";       // lt justify
 
         return headerLine +
                 (isTaker

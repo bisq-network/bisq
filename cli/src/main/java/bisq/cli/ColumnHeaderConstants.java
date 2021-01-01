@@ -59,6 +59,16 @@ class ColumnHeaderConstants {
     static final String COL_HEADER_TRADE_SHORT_ID = "ID";
     static final String COL_HEADER_TRADE_TX_FEE = "Tx Fee(%-3s)";
     static final String COL_HEADER_TRADE_TAKER_FEE = "Taker Fee(%-3s)";
+    static final String COL_HEADER_TRADE_WITHDRAWAL_TX_ID = "Withdrawal TX ID";
+
+    static final String COL_HEADER_TX_ID = "Tx ID";
+    static final String COL_HEADER_TX_INPUT_SUM = "Tx Inputs (BTC)";
+    static final String COL_HEADER_TX_OUTPUT_SUM = "Tx Outputs (BTC)";
+    static final String COL_HEADER_TX_FEE = "Tx Fee (BTC)";
+    static final String COL_HEADER_TX_SIZE = "Tx Size (Bytes)";
+    static final String COL_HEADER_TX_IS_CONFIRMED = "Is Confirmed";
+    static final String COL_HEADER_TX_MEMO = "Memo";
+
     static final String COL_HEADER_VOLUME = padEnd("%-3s(min - max)", 15, ' ');
     static final String COL_HEADER_UUID = padEnd("ID", 52, ' ');
 }
