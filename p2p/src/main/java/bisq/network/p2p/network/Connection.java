@@ -242,6 +242,13 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
         log.debug(">> Send networkEnvelope of type: {}", networkEnvelope.getClass().getSimpleName());
 
         if (!stopped) {
+            if (networkFilter != null &&
+                    peersNodeAddressOptional.isPresent() &&
+                    networkFilter.isPeerBanned(peersNodeAddressOptional.get())) {
+                reportInvalidRequest(RuleViolation.PEER_BANNED);
+                return;
+            }
+
             if (noCapabilityRequiredOrCapabilityIsSupported(networkEnvelope)) {
                 try {
                     String peersNodeAddress = peersNodeAddressOptional.map(NodeAddress::toString).orElse("null");
@@ -740,6 +747,13 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                         return;
                     }
 
+                    if (networkFilter != null &&
+                            peersNodeAddressOptional.isPresent() &&
+                            networkFilter.isPeerBanned(peersNodeAddressOptional.get())) {
+                        reportInvalidRequest(RuleViolation.PEER_BANNED);
+                        return;
+                    }
+
                     // Throttle inbound network_messages
                     long now = System.currentTimeMillis();
                     long elapsed = now - lastReadTimeStamp;
@@ -843,7 +857,8 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                                 "connection={}", proto.getCloseConnectionMessage().getReason(), this);
 
                         if (CloseConnectionReason.PEER_BANNED.name().equals(proto.getCloseConnectionMessage().getReason())) {
-                            log.warn("We got shut down because we are banned by the other peer. (InputHandler.run CloseConnectionMessage)");
+                            log.warn("We got shut down because we are banned by the other peer. " +
+                                    "(InputHandler.run CloseConnectionMessage). Peer: {}", getPeersNodeAddressOptional());
                         }
                         shutDown(CloseConnectionReason.CLOSE_REQUESTED_BY_PEER);
                         return;
