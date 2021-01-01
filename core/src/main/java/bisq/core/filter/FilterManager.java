@@ -19,7 +19,6 @@ package bisq.core.filter;
 
 import bisq.core.btc.nodes.BtcNodes;
 import bisq.core.locale.Res;
-import bisq.core.network.CoreNetworkFilter;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.provider.ProvidersRepository;
@@ -29,6 +28,7 @@ import bisq.core.user.User;
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.P2PServiceListener;
+import bisq.network.p2p.network.NetworkFilter;
 import bisq.network.p2p.storage.HashMapChangedListener;
 import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 
@@ -97,7 +97,6 @@ public class FilterManager {
     private final Preferences preferences;
     private final ConfigFileEditor configFileEditor;
     private final ProvidersRepository providersRepository;
-    private final CoreNetworkFilter coreNetworkFilter;
     private final boolean ignoreDevMsg;
     private final ObjectProperty<Filter> filterProperty = new SimpleObjectProperty<>();
     private final List<Listener> listeners = new CopyOnWriteArrayList<>();
@@ -117,7 +116,7 @@ public class FilterManager {
                          Preferences preferences,
                          Config config,
                          ProvidersRepository providersRepository,
-                         CoreNetworkFilter coreNetworkFilter,
+                         NetworkFilter networkFilter,
                          @Named(Config.IGNORE_DEV_MSG) boolean ignoreDevMsg,
                          @Named(Config.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         this.p2PService = p2PService;
@@ -126,7 +125,6 @@ public class FilterManager {
         this.preferences = preferences;
         this.configFileEditor = new ConfigFileEditor(config.configFile);
         this.providersRepository = providersRepository;
-        this.coreNetworkFilter = coreNetworkFilter;
         this.ignoreDevMsg = ignoreDevMsg;
 
         publicKeys = useDevPrivilegeKeys ?
@@ -135,6 +133,7 @@ public class FilterManager {
                         "029340c3e7d4bb0f9e651b5f590b434fecb6175aeaa57145c7804ff05d210e534f",
                         "034dc7530bf66ffd9580aa98031ea9a18ac2d269f7c56c0e71eca06105b9ed69f9");
 
+        networkFilter.setBannedNodeFunction(this::isNodeAddressBannedFromNetwork);
     }
 
 
@@ -399,6 +398,12 @@ public class FilterManager {
     public boolean isNodeAddressBanned(NodeAddress nodeAddress) {
         return getFilter() != null &&
                 getFilter().getBannedNodeAddress().stream()
+                        .anyMatch(e -> e.equals(nodeAddress.getFullAddress()));
+    }
+
+    public boolean isNodeAddressBannedFromNetwork(NodeAddress nodeAddress) {
+        return getFilter() != null &&
+                getFilter().getNodeAddressesBannedFromNetwork().stream()
                         .anyMatch(e -> e.equals(nodeAddress.getFullAddress()));
     }
 

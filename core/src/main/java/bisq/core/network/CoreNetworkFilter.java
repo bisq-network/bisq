@@ -28,12 +28,14 @@ import javax.inject.Named;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class CoreNetworkFilter implements NetworkFilter {
     private final Set<NodeAddress> bannedPeersFromOptions = new HashSet<>();
+    private Function<NodeAddress, Boolean> bannedNodeFunction;
 
     /**
      * @param banList  List of banned peers from program argument
@@ -43,7 +45,14 @@ public class CoreNetworkFilter implements NetworkFilter {
         banList.stream().map(NodeAddress::new).forEach(bannedPeersFromOptions::add);
     }
 
+    @Override
+    public void setBannedNodeFunction(Function<NodeAddress, Boolean> bannedNodeFunction) {
+        this.bannedNodeFunction = bannedNodeFunction;
+    }
+
+    @Override
     public boolean isPeerBanned(NodeAddress nodeAddress) {
-        return bannedPeersFromOptions.contains(nodeAddress);
+        return bannedPeersFromOptions.contains(nodeAddress) ||
+                bannedNodeFunction != null && bannedNodeFunction.apply(nodeAddress);
     }
 }

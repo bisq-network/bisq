@@ -19,6 +19,10 @@ package bisq.network.p2p.network;
 
 import bisq.network.p2p.NodeAddress;
 
+import java.util.function.Function;
+
 public interface NetworkFilter {
     boolean isPeerBanned(NodeAddress nodeAddress);
+
+    void setBannedNodeFunction(Function<NodeAddress, Boolean> isNodeAddressBanned);
 }

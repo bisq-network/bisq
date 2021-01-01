@@ -886,6 +886,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
 
                                 if (networkFilter != null && networkFilter.isPeerBanned(senderNodeAddress)) {
                                     reportInvalidRequest(RuleViolation.PEER_BANNED);
+                                    return;
                                 }
                             }
                         }
