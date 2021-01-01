@@ -32,7 +32,7 @@ public enum InventoryItem {
     // Percentage deviation
     OfferPayload("OfferPayload",
             true,
-            new DeviationByPercentage(0.8, 1.2, 0.9, 1.1), 5),
+            new DeviationByPercentage(0.5, 1.5, 0.75, 1.25), 10),
     MailboxStoragePayload("MailboxStoragePayload",
             true,
             new DeviationByPercentage(0.9, 1.1, 0.95, 1.05), 2),
