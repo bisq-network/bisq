@@ -253,7 +253,7 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
             // in different graphs
             takeOfferView = (TakeOfferView) view;
             takeOfferView.initWithData(offer);
-            takeOfferPane = ((TakeOfferView) view).getRoot();
+            takeOfferPane = takeOfferView.getRoot();
             takeOfferTab = new Tab(getTakeOfferTabName());
             takeOfferTab.setClosable(true);
             // close handler from close on take offer action
