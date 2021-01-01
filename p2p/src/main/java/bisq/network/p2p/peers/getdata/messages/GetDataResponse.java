@@ -27,8 +27,8 @@ import bisq.common.app.Capabilities;
 import bisq.common.app.Version;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.network.NetworkProtoResolver;
+import bisq.common.util.Utilities;
 
-import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -107,24 +107,18 @@ public final class GetDataResponse extends NetworkEnvelope implements SupportedC
         protobuf.NetworkEnvelope proto = getNetworkEnvelopeBuilder()
                 .setGetDataResponse(builder)
                 .build();
-        log.info("Sending a GetDataResponse with {} kB", proto.getSerializedSize() / 1000d);
+        log.info("Sending a GetDataResponse with {}", Utilities.readableFileSize(proto.getSerializedSize()));
         return proto;
     }
 
     public static GetDataResponse fromProto(protobuf.GetDataResponse proto,
                                             NetworkProtoResolver resolver,
                                             int messageVersion) {
-        log.info("Received a GetDataResponse with {} kB", proto.getSerializedSize() / 1000d);
-        Set<ProtectedStorageEntry> dataSet = new HashSet<>(
-                proto.getDataSetList().stream()
-                        .map(entry -> (ProtectedStorageEntry) resolver.fromProto(entry))
-                        .collect(Collectors.toSet()));
-
-        Set<PersistableNetworkPayload> persistableNetworkPayloadSet = new HashSet<>(
-                proto.getPersistableNetworkPayloadItemsList().stream()
-                                .map(e -> (PersistableNetworkPayload) resolver.fromProto(e))
-                                .collect(Collectors.toSet()));
-
+        log.info("Received a GetDataResponse with {}", Utilities.readableFileSize(proto.getSerializedSize()));
+        Set<ProtectedStorageEntry> dataSet = proto.getDataSetList().stream()
+                .map(entry -> (ProtectedStorageEntry) resolver.fromProto(entry)).collect(Collectors.toSet());
+        Set<PersistableNetworkPayload> persistableNetworkPayloadSet = proto.getPersistableNetworkPayloadItemsList().stream()
+                .map(e -> (PersistableNetworkPayload) resolver.fromProto(e)).collect(Collectors.toSet());
         return new GetDataResponse(dataSet,
                 persistableNetworkPayloadSet,
                 proto.getRequestNonce(),
