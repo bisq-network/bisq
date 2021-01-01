@@ -78,6 +78,9 @@ public class InputTextField extends JFXTextField {
             if (newValue != null) {
                 resetValidation();
                 if (!newValue.isValid) {
+                    if (!newValue.errorMessageEquals(oldValue)) {  // avoid blinking
+                        validate();  // ensure that the new error message replaces the old one
+                    }
                     if (this.errorMessage != null) {
                         jfxValidationWrapper.applyErrorMessage(this.errorMessage);
                     } else {
