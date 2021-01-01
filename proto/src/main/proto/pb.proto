@@ -677,6 +677,7 @@ message Filter {
     repeated string bannedPrivilegedDevPubKeys = 23;
     bool disable_auto_conf = 24;
     repeated string banned_auto_conf_explorers = 25;
+    repeated string node_addresses_banned_from_network = 26;
 }
 
 // Deprecated

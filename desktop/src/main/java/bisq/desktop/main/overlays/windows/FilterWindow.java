@@ -37,8 +37,6 @@ import javax.inject.Named;
 
 import org.apache.commons.lang3.StringUtils;
 
-import javafx.collections.FXCollections;
-
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
@@ -51,7 +49,11 @@ import javafx.scene.layout.Region;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 
+import javafx.collections.FXCollections;
+
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -124,6 +126,8 @@ public class FilterWindow extends Overlay<FilterWindow> {
                 Res.get("filterWindow.offers"));
         InputTextField nodesTF = addTopLabelInputTextField(gridPane, ++rowIndex,
                 Res.get("filterWindow.onions")).second;
+        InputTextField bannedFromNetworkTF = addTopLabelInputTextField(gridPane, ++rowIndex,
+                Res.get("filterWindow.bannedFromNetwork")).second;
         nodesTF.setPromptText("E.g. zqnzx6o3nifef5df.onion:9999"); // Do not translate
         InputTextField paymentAccountFilterTF = addTopLabelInputTextField(gridPane, ++rowIndex,
                 Res.get("filterWindow.accounts")).second;
@@ -170,6 +174,7 @@ public class FilterWindow extends Overlay<FilterWindow> {
         if (filter != null) {
             setupFieldFromList(offerIdsTF, filter.getBannedOfferIds());
             setupFieldFromList(nodesTF, filter.getBannedNodeAddress());
+            setupFieldFromList(bannedFromNetworkTF, filter.getNodeAddressesBannedFromNetwork());
             setupFieldFromPaymentAccountFiltersList(paymentAccountFilterTF, filter.getBannedPaymentAccounts());
             setupFieldFromList(bannedCurrenciesTF, filter.getBannedCurrencies());
             setupFieldFromList(bannedPaymentMethodsTF, filter.getBannedPaymentMethods());
@@ -221,7 +226,8 @@ public class FilterWindow extends Overlay<FilterWindow> {
                         signerPubKeyAsHex,
                         readAsList(bannedPrivilegedDevPubKeysTF),
                         disableAutoConfCheckBox.isSelected(),
-                        readAsList(autoConfExplorersTF)
+                        readAsList(autoConfExplorersTF),
+                        new HashSet<>(readAsList(bannedFromNetworkTF))
                 );
 
                 // We remove first the old filter
@@ -270,7 +276,7 @@ public class FilterWindow extends Overlay<FilterWindow> {
         hide();
     }
 
-    private void setupFieldFromList(InputTextField field, List<String> values) {
+    private void setupFieldFromList(InputTextField field, Collection<String> values) {
         if (values != null)
             field.setText(String.join(", ", values));
     }
