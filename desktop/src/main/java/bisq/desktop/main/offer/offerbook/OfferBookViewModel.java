@@ -87,6 +87,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
@@ -338,6 +339,14 @@ class OfferBookViewModel extends ActivatableViewModel {
 
     ObservableList<PaymentMethod> getPaymentMethods() {
         ObservableList<PaymentMethod> list = FXCollections.observableArrayList(PaymentMethod.getPaymentMethods());
+        if (preferences.isHideNonAccountPaymentMethods() && user.getPaymentAccounts() != null) {
+            Set<PaymentMethod> supportedPaymentMethods = user.getPaymentAccounts().stream()
+                    .map(PaymentAccount::getPaymentMethod).collect(Collectors.toSet());
+            if (!supportedPaymentMethods.isEmpty()) {
+                list = FXCollections.observableArrayList(supportedPaymentMethods);
+            }
+        }
+
         list.sort(Comparator.naturalOrder());
         list.add(0, PaymentMethod.getDummyPaymentMethod(GUIUtil.SHOW_ALL_FLAG));
         return list;

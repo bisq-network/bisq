@@ -487,6 +487,11 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         });
     }
 
+    public void setHideNonAccountPaymentMethods(boolean hideNonAccountPaymentMethods) {
+        prefPayload.setHideNonAccountPaymentMethods(hideNonAccountPaymentMethods);
+        requestPersistence();
+    }
+
     private void requestPersistence() {
         if (initialReadDone)
             persistenceManager.requestPersistence();
@@ -1074,5 +1079,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         void setBsqAverageTrimThreshold(double bsqAverageTrimThreshold);
 
         void setAutoConfirmSettings(AutoConfirmSettings autoConfirmSettings);
+
+        void setHideNonAccountPaymentMethods(boolean hideNonAccountPaymentMethods);
     }
 }
