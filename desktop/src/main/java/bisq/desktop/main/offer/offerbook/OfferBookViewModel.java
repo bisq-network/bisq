@@ -281,10 +281,17 @@ class OfferBookViewModel extends ActivatableViewModel {
             return;
 
         showAllPaymentMethods = isShowAllEntry(paymentMethod.getId());
-        if (!showAllPaymentMethods)
+        if (!showAllPaymentMethods) {
             this.selectedPaymentMethod = paymentMethod;
-        else
+
+            // If we select TransferWise we switch to show all currencies as TransferWise supports
+            // sending to most currencies.
+            if (paymentMethod.getId().equals(PaymentMethod.TRANSFERWISE_ID)) {
+                onSetTradeCurrency(new CryptoCurrency(GUIUtil.SHOW_ALL_FLAG, ""));
+            }
+        } else {
             this.selectedPaymentMethod = PaymentMethod.getDummyPaymentMethod(GUIUtil.SHOW_ALL_FLAG);
+        }
 
         applyFilterPredicate();
     }
