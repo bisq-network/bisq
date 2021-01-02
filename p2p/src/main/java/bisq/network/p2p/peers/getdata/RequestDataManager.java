@@ -375,7 +375,7 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
                                             listener.onNoPeersAvailable();
                                     }
 
-                                    restart();
+                                    requestFromNonSeedNodePeers();
                                 } else {
                                     log.info("We could not connect to seed node {} but we have other connection attempts open.", nodeAddress.getFullAddress());
                                 }
@@ -404,6 +404,18 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Utils
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void requestFromNonSeedNodePeers() {
+        List<NodeAddress> list = getFilteredNonSeedNodeList(getSortedNodeAddresses(peerManager.getReportedPeers()), new ArrayList<>());
+        List<NodeAddress> filteredPersistedPeers = getFilteredNonSeedNodeList(getSortedNodeAddresses(peerManager.getPersistedPeers()), list);
+        list.addAll(filteredPersistedPeers);
+
+        if (!list.isEmpty()) {
+            NodeAddress nextCandidate = list.get(0);
+            list.remove(nextCandidate);
+            requestData(nextCandidate, list);
+        }
+    }
 
     private void restart() {
         if (retryTimer == null) {
