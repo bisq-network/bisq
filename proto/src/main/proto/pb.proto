@@ -1614,6 +1614,7 @@ message PreferencesPayload {
     bool tac_accepted_v120 = 55;
     repeated AutoConfirmSettings auto_confirm_settings = 56;
     double bsq_average_trim_threshold = 57;
+    bool hide_non_account_payment_methods = 58;
 }
 
 message AutoConfirmSettings {
