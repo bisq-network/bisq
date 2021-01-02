@@ -131,6 +131,8 @@ public final class PreferencesPayload implements PersistableEnvelope {
 
     // Added in 1.5.5
     private boolean hideNonAccountPaymentMethods;
+    private boolean showOffersMatchingMyAccounts;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -195,7 +197,8 @@ public final class PreferencesPayload implements PersistableEnvelope {
                 .addAllAutoConfirmSettings(autoConfirmSettingsList.stream()
                         .map(autoConfirmSettings -> ((protobuf.AutoConfirmSettings) autoConfirmSettings.toProtoMessage()))
                         .collect(Collectors.toList()))
-                .setHideNonAccountPaymentMethods(hideNonAccountPaymentMethods);
+                .setHideNonAccountPaymentMethods(hideNonAccountPaymentMethods)
+                .setShowOffersMatchingMyAccounts(showOffersMatchingMyAccounts);
 
         Optional.ofNullable(backupDirectory).ifPresent(builder::setBackupDirectory);
         Optional.ofNullable(preferredTradeCurrency).ifPresent(e -> builder.setPreferredTradeCurrency((protobuf.TradeCurrency) e.toProtoMessage()));
@@ -290,7 +293,8 @@ public final class PreferencesPayload implements PersistableEnvelope {
                         new ArrayList<>(proto.getAutoConfirmSettingsList().stream()
                                 .map(AutoConfirmSettings::fromProto)
                                 .collect(Collectors.toList())),
-                proto.getHideNonAccountPaymentMethods()
+                proto.getHideNonAccountPaymentMethods(),
+                proto.getShowOffersMatchingMyAccounts()
         );
     }
 }

@@ -78,16 +78,19 @@ import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import javafx.collections.SetChangeListener;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 
 import java.text.DecimalFormat;
 
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
@@ -126,11 +129,15 @@ class OfferBookViewModel extends ActivatableViewModel {
 
     private boolean isTabSelected;
     final BooleanProperty showAllTradeCurrenciesProperty = new SimpleBooleanProperty(true);
+    final BooleanProperty disableMatchToggle = new SimpleBooleanProperty();
     final IntegerProperty maxPlacesForAmount = new SimpleIntegerProperty();
     final IntegerProperty maxPlacesForVolume = new SimpleIntegerProperty();
     final IntegerProperty maxPlacesForPrice = new SimpleIntegerProperty();
     final IntegerProperty maxPlacesForMarketPriceMargin = new SimpleIntegerProperty();
     boolean showAllPaymentMethods = true;
+    boolean useOffersMatchingMyAccountsFilter;
+    private final Map<String, Boolean> myInsufficientTradeLimitCache = new HashMap<>();
+    private final Map<String, Boolean> insufficientCounterpartyTradeLimitCache = new HashMap<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -206,6 +213,10 @@ class OfferBookViewModel extends ActivatableViewModel {
 
             highestMarketPriceMarginOffer.ifPresent(offerBookListItem -> maxPlacesForMarketPriceMargin.set(formatMarketPriceMargin(offerBookListItem.getOffer(), false).length()));
         };
+
+        // If our accounts have changed we reset our myInsufficientTradeLimitCache as it depends on account data
+        user.getPaymentAccountsAsObservable().addListener((SetChangeListener<PaymentAccount>) c ->
+                myInsufficientTradeLimitCache.clear());
     }
 
     @Override
@@ -223,10 +234,13 @@ class OfferBookViewModel extends ActivatableViewModel {
         }
         tradeCurrencyCode.set(selectedTradeCurrency.getCode());
 
+        disableMatchToggle.set(user.getPaymentAccounts() == null || user.getPaymentAccounts().isEmpty());
+        useOffersMatchingMyAccountsFilter = !disableMatchToggle.get() && isShowOffersMatchingMyAccounts();
+
         fillAllTradeCurrencies();
         preferences.getTradeCurrenciesAsObservable().addListener(tradeCurrencyListChangeListener);
         offerBook.fillOfferBookListItems();
-        applyFilterPredicate();
+        filterOffers();
         setMarketPriceFeedCurrency();
 
         priceUtil.recalculateBsq30DayAveragePrice();
@@ -237,6 +251,7 @@ class OfferBookViewModel extends ActivatableViewModel {
         filteredItems.removeListener(filterItemsListener);
         preferences.getTradeCurrenciesAsObservable().removeListener(tradeCurrencyListChangeListener);
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
@@ -268,7 +283,7 @@ class OfferBookViewModel extends ActivatableViewModel {
             }
 
             setMarketPriceFeedCurrency();
-            applyFilterPredicate();
+            filterOffers();
 
             if (direction == OfferPayload.Direction.BUY)
                 preferences.setBuyScreenCurrencyCode(code);
@@ -294,16 +309,27 @@ class OfferBookViewModel extends ActivatableViewModel {
             this.selectedPaymentMethod = getShowAllEntryForPaymentMethod();
         }
 
-        applyFilterPredicate();
+        filterOffers();
     }
 
     void onRemoveOpenOffer(Offer offer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         openOfferManager.removeOffer(offer, resultHandler, errorMessageHandler);
     }
 
+    void onShowOffersMatchingMyAccounts(boolean isSelected) {
+        useOffersMatchingMyAccountsFilter = isSelected;
+        preferences.setShowOffersMatchingMyAccounts(useOffersMatchingMyAccountsFilter);
+        filterOffers();
+    }
+
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    boolean isShowOffersMatchingMyAccounts() {
+        return preferences.isShowOffersMatchingMyAccounts();
+    }
 
     SortedList<OfferBookListItem> getOfferList() {
         return sortedItems;
@@ -561,8 +587,15 @@ class OfferBookViewModel extends ActivatableViewModel {
     // Filters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void applyFilterPredicate() {
-        filteredItems.setPredicate(offerBookListItem -> {
+    private void filterOffers() {
+        Predicate<OfferBookListItem> predicate = useOffersMatchingMyAccountsFilter ?
+                getCurrencyAndMethodPredicate().and(getOffersMatchingMyAccountsPredicate()) :
+                getCurrencyAndMethodPredicate();
+        filteredItems.setPredicate(predicate);
+    }
+
+    private Predicate<OfferBookListItem> getCurrencyAndMethodPredicate() {
+        return offerBookListItem -> {
             Offer offer = offerBookListItem.getOffer();
             boolean directionResult = offer.getDirection() != direction;
             boolean currencyResult = (showAllTradeCurrenciesProperty.get()) ||
@@ -571,7 +604,37 @@ class OfferBookViewModel extends ActivatableViewModel {
                     offer.getPaymentMethod().equals(selectedPaymentMethod);
             boolean notMyOfferOrShowMyOffersActivated = !isMyOffer(offerBookListItem.getOffer()) || preferences.isShowOwnOffersInOfferBook();
             return directionResult && currencyResult && paymentMethodResult && notMyOfferOrShowMyOffersActivated;
-        });
+        };
+    }
+
+    private Predicate<OfferBookListItem> getOffersMatchingMyAccountsPredicate() {
+        // This code duplicates code in the view at the button column. We need there the different results for
+        // display in popups so we cannot replace that with the predicate. Any change need to be applied in both
+        // places.
+        return offerBookListItem -> {
+            Offer offer = offerBookListItem.getOffer();
+            boolean isPaymentAccountValidForOffer = isAnyPaymentAccountValidForOffer(offer);
+            boolean isInsufficientCounterpartyTradeLimit = isInsufficientCounterpartyTradeLimit(offer);
+            boolean hasSameProtocolVersion = hasSameProtocolVersion(offer);
+            boolean isIgnored = isIgnored(offer);
+            boolean isOfferBanned = isOfferBanned(offer);
+            boolean isCurrencyBanned = isCurrencyBanned(offer);
+            boolean isPaymentMethodBanned = isPaymentMethodBanned(offer);
+            boolean isNodeAddressBanned = isNodeAddressBanned(offer);
+            boolean requireUpdateToNewVersion = requireUpdateToNewVersion();
+            boolean isMyInsufficientTradeLimit = isMyInsufficientTradeLimit(offer);
+            boolean isTradable = isPaymentAccountValidForOffer &&
+                    !isInsufficientCounterpartyTradeLimit &&
+                    hasSameProtocolVersion &&
+                    !isIgnored &&
+                    !isOfferBanned &&
+                    !isCurrencyBanned &&
+                    !isPaymentMethodBanned &&
+                    !isNodeAddressBanned &&
+                    !requireUpdateToNewVersion &&
+                    !isMyInsufficientTradeLimit;
+            return isTradable;
+        };
     }
 
     boolean isIgnored(Offer offer) {
@@ -599,13 +662,28 @@ class OfferBookViewModel extends ActivatableViewModel {
         return filterManager.requireUpdateToNewVersionForTrading();
     }
 
+    // This call is a bit expensive so we cache results
     boolean isInsufficientCounterpartyTradeLimit(Offer offer) {
-        return CurrencyUtil.isFiatCurrency(offer.getCurrencyCode()) &&
-                !accountAgeWitnessService.verifyPeersTradeAmount(offer, offer.getAmount(), errorMessage -> {
-                });
+        String offerId = offer.getId();
+        if (insufficientCounterpartyTradeLimitCache.containsKey(offerId)) {
+            return insufficientCounterpartyTradeLimitCache.get(offerId);
+        }
+
+        boolean result = CurrencyUtil.isFiatCurrency(offer.getCurrencyCode()) &&
+                !accountAgeWitnessService.verifyPeersTradeAmount(offer, offer.getAmount(),
+                        errorMessage -> {
+                        });
+        insufficientCounterpartyTradeLimitCache.put(offerId, result);
+        return result;
     }
 
+    // This call is a bit expensive so we cache results
     boolean isMyInsufficientTradeLimit(Offer offer) {
+        String offerId = offer.getId();
+        if (myInsufficientTradeLimitCache.containsKey(offerId)) {
+            return myInsufficientTradeLimitCache.get(offerId);
+        }
+
         Optional<PaymentAccount> accountOptional = getMostMaturePaymentAccountForOffer(offer);
         long myTradeLimit = accountOptional
                 .map(paymentAccount -> accountAgeWitnessService.getMyTradeLimit(paymentAccount,
@@ -616,9 +694,11 @@ class OfferBookViewModel extends ActivatableViewModel {
                 accountOptional.isPresent() ? accountOptional.get().getAccountName() : "null",
                 Coin.valueOf(myTradeLimit).toFriendlyString(),
                 Coin.valueOf(offerMinAmount).toFriendlyString());
-        return CurrencyUtil.isFiatCurrency(offer.getCurrencyCode()) &&
+        boolean result = CurrencyUtil.isFiatCurrency(offer.getCurrencyCode()) &&
                 accountOptional.isPresent() &&
                 myTradeLimit < offerMinAmount;
+        myInsufficientTradeLimitCache.put(offerId, result);
+        return result;
     }
 
     boolean hasSameProtocolVersion(Offer offer) {

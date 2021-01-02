@@ -1615,6 +1615,7 @@ message PreferencesPayload {
     repeated AutoConfirmSettings auto_confirm_settings = 56;
     double bsq_average_trim_threshold = 57;
     bool hide_non_account_payment_methods = 58;
+    bool show_offers_matching_my_accounts = 59;
 }
 
 message AutoConfirmSettings {
