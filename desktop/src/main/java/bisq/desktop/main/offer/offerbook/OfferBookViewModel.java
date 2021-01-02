@@ -122,7 +122,7 @@ class OfferBookViewModel extends ActivatableViewModel {
 
     // If id is empty string we ignore filter (display all methods)
 
-    PaymentMethod selectedPaymentMethod = PaymentMethod.getDummyPaymentMethod(GUIUtil.SHOW_ALL_FLAG);
+    PaymentMethod selectedPaymentMethod = getShowAllEntryForPaymentMethod();
 
     private boolean isTabSelected;
     final BooleanProperty showAllTradeCurrenciesProperty = new SimpleBooleanProperty(true);
@@ -213,7 +213,7 @@ class OfferBookViewModel extends ActivatableViewModel {
         filteredItems.addListener(filterItemsListener);
 
         String code = direction == OfferPayload.Direction.BUY ? preferences.getBuyScreenCurrencyCode() : preferences.getSellScreenCurrencyCode();
-        if (code != null && !code.equals(GUIUtil.SHOW_ALL_FLAG) && !code.isEmpty() &&
+        if (code != null && !code.isEmpty() && !isShowAllEntry(code) &&
                 CurrencyUtil.getTradeCurrency(code).isPresent()) {
             showAllTradeCurrenciesProperty.set(false);
             selectedTradeCurrency = CurrencyUtil.getTradeCurrency(code).get();
@@ -288,10 +288,10 @@ class OfferBookViewModel extends ActivatableViewModel {
             // If we select TransferWise we switch to show all currencies as TransferWise supports
             // sending to most currencies.
             if (paymentMethod.getId().equals(PaymentMethod.TRANSFERWISE_ID)) {
-                onSetTradeCurrency(new CryptoCurrency(GUIUtil.SHOW_ALL_FLAG, ""));
+                onSetTradeCurrency(getShowAllEntryForCurrency());
             }
         } else {
-            this.selectedPaymentMethod = PaymentMethod.getDummyPaymentMethod(GUIUtil.SHOW_ALL_FLAG);
+            this.selectedPaymentMethod = getShowAllEntryForPaymentMethod();
         }
 
         applyFilterPredicate();
@@ -348,7 +348,7 @@ class OfferBookViewModel extends ActivatableViewModel {
         }
 
         list.sort(Comparator.naturalOrder());
-        list.add(0, PaymentMethod.getDummyPaymentMethod(GUIUtil.SHOW_ALL_FLAG));
+        list.add(0, getShowAllEntryForPaymentMethod());
         return list;
     }
 
@@ -528,10 +528,11 @@ class OfferBookViewModel extends ActivatableViewModel {
     private void fillAllTradeCurrencies() {
         allTradeCurrencies.clear();
         // Used for ignoring filter (show all)
-        allTradeCurrencies.add(new CryptoCurrency(GUIUtil.SHOW_ALL_FLAG, ""));
+        allTradeCurrencies.add(getShowAllEntryForCurrency());
         allTradeCurrencies.addAll(preferences.getTradeCurrenciesAsObservable());
-        allTradeCurrencies.add(new CryptoCurrency(GUIUtil.EDIT_FLAG, ""));
+        allTradeCurrencies.add(getEditEntryForCurrency());
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Checks
@@ -645,11 +646,11 @@ class OfferBookViewModel extends ActivatableViewModel {
 
     public boolean hasSelectionAccountSigning() {
         if (showAllTradeCurrenciesProperty.get()) {
-            if (!selectedPaymentMethod.getId().equals(GUIUtil.SHOW_ALL_FLAG)) {
+            if (!isShowAllEntry(selectedPaymentMethod.getId())) {
                 return PaymentMethod.hasChargebackRisk(selectedPaymentMethod);
             }
         } else {
-            if (selectedPaymentMethod.getId().equals(GUIUtil.SHOW_ALL_FLAG))
+            if (isShowAllEntry(selectedPaymentMethod.getId()))
                 return CurrencyUtil.getMatureMarketCurrencies().stream()
                         .anyMatch(c -> c.getCode().equals(selectedTradeCurrency.getCode()));
             else
@@ -674,5 +675,17 @@ class OfferBookViewModel extends ActivatableViewModel {
     public String formatDepositString(Coin deposit, long amount) {
         var percentage = FormattingUtils.formatToRoundedPercentWithSymbol(deposit.getValue() / (double) amount);
         return btcFormatter.formatCoin(deposit) + " (" + percentage + ")";
+    }
+
+    private TradeCurrency getShowAllEntryForCurrency() {
+        return new CryptoCurrency(GUIUtil.SHOW_ALL_FLAG, "");
+    }
+
+    private TradeCurrency getEditEntryForCurrency() {
+        return new CryptoCurrency(GUIUtil.EDIT_FLAG, "");
+    }
+
+    private PaymentMethod getShowAllEntryForPaymentMethod() {
+        return PaymentMethod.getDummyPaymentMethod(GUIUtil.SHOW_ALL_FLAG);
     }
 }
