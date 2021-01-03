@@ -637,8 +637,6 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                 if (openOffer.getState() == OpenOffer.State.AVAILABLE) {
                     Offer offer = openOffer.getOffer();
                     if (preferences.getIgnoreTradersList().stream().noneMatch(fullAddress -> fullAddress.equals(peer.getFullAddress()))) {
-                        availabilityResult = AvailabilityResult.AVAILABLE;
-
                         mediatorNodeAddress = DisputeAgentSelection.getLeastUsedMediator(tradeStatisticsManager, mediatorManager).getNodeAddress();
                         openOffer.setMediatorNodeAddress(mediatorNodeAddress);
 
@@ -650,6 +648,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                             // in trade price between the peers. Also here poor connectivity might cause market price API connection
                             // losses and therefore an outdated market price.
                             offer.checkTradePriceTolerance(request.getTakersTradePrice());
+                            availabilityResult = AvailabilityResult.AVAILABLE;
                         } catch (TradePriceOutOfToleranceException e) {
                             log.warn("Trade price check failed because takers price is outside out tolerance.");
                             availabilityResult = AvailabilityResult.PRICE_OUT_OF_TOLERANCE;
@@ -674,7 +673,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
             if (btcWalletService.isUnconfirmedTransactionsLimitHit() || bsqWalletService.isUnconfirmedTransactionsLimitHit()) {
                 errorMessage = Res.get("shared.unconfirmedTransactionsLimitReached");
                 log.warn(errorMessage);
-                availabilityResult = AvailabilityResult.UNKNOWN_FAILURE;
+                availabilityResult = AvailabilityResult.UNCONF_TX_LIMIT_HIT;
             }
 
             OfferAvailabilityResponse offerAvailabilityResponse = new OfferAvailabilityResponse(request.offerId,
