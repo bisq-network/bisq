@@ -73,6 +73,7 @@ public class SignedWitnessService {
     private final KeyRing keyRing;
     private final P2PService p2PService;
     private final ArbitratorManager arbitratorManager;
+    private final SignedWitnessStorageService signedWitnessStorageService;
     private final User user;
     private final FilterManager filterManager;
 
@@ -109,6 +110,7 @@ public class SignedWitnessService {
         this.keyRing = keyRing;
         this.p2PService = p2PService;
         this.arbitratorManager = arbitratorManager;
+        this.signedWitnessStorageService = signedWitnessStorageService;
         this.user = user;
         this.filterManager = filterManager;
 
@@ -128,7 +130,7 @@ public class SignedWitnessService {
         });
 
         // At startup the P2PDataStorage initializes earlier, otherwise we get the listener called.
-        p2PService.getP2PDataStorage().getAppendOnlyDataStoreMap().values().forEach(e -> {
+        signedWitnessStorageService.getMap().values().forEach(e -> {
             if (e instanceof SignedWitness)
                 addToMap((SignedWitness) e);
         });

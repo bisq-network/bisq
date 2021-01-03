@@ -20,6 +20,7 @@ package bisq.network.p2p.storage.persistence;
 import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 
+import bisq.common.app.DevEnv;
 import bisq.common.app.Version;
 import bisq.common.persistence.PersistenceManager;
 
@@ -109,15 +110,11 @@ public abstract class HistoricalDataStoreService<T extends PersistableNetworkPay
     // MapStoreService
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    // TODO optimize so that callers to AppendOnlyDataStoreService are not invoking that often getMap
-    // ProposalService is one of the main callers and could avoid it by using the ProposalStoreService directly
-    // instead of AppendOnlyDataStoreService
-
-    // By default we return the live data only. This method should not be used by domain clients but rather the
-    // custom methods getMapOfAllData, getMapOfLiveData or getMapSinceVersion
     @Override
     public Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> getMap() {
-        return store.getMap();
+        DevEnv.logErrorAndThrowIfDevMode("HistoricalDataStoreService.getMap should not be used by domain " +
+                "clients but rather the custom methods getMapOfAllData, getMapOfLiveData or getMapSinceVersion");
+        return getMapOfAllData();
     }
 
     @Override
