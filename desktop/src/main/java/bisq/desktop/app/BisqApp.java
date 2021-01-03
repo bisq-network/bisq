@@ -38,7 +38,10 @@ import bisq.core.dao.governance.voteresult.MissingDataRequestService;
 import bisq.core.locale.Res;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
+import bisq.core.user.Cookie;
+import bisq.core.user.CookieKey;
 import bisq.core.user.Preferences;
+import bisq.core.user.User;
 
 import bisq.common.app.DevEnv;
 import bisq.common.app.Log;
@@ -64,6 +67,8 @@ import javafx.scene.Scene;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.StackPane;
+
+import javafx.geometry.BoundingBox;
 
 import java.awt.GraphicsEnvironment;
 import java.awt.Rectangle;
@@ -102,6 +107,7 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
     private boolean popupOpened;
     private Scene scene;
     private boolean shutDownRequested;
+    private MainView mainView;
 
     public BisqApp() {
         shutDownHandler = this::stop;
@@ -126,7 +132,7 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
 
     public void startApplication(Runnable onApplicationStartedHandler) {
         try {
-            MainView mainView = loadMainView(injector);
+            mainView = loadMainView(injector);
             mainView.setOnApplicationStartedHandler(onApplicationStartedHandler);
             scene = createAndConfigScene(mainView, injector);
             setupStage(scene);
@@ -256,8 +262,45 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
         stage.setMinHeight(MIN_WINDOW_HEIGHT);
         stage.getIcons().add(ImageUtil.getApplicationIconImage());
 
+        User user = injector.getInstance(User.class);
+        layoutStageFromPersistedData(stage, user);
+        addStageLayoutListeners(stage, user);
+
         // make the UI visible
         stage.show();
+    }
+
+    private void layoutStageFromPersistedData(Stage stage, User user) {
+        Cookie cookie = user.getCookie();
+        cookie.getAsOptionalDouble(CookieKey.STAGE_X).flatMap(x ->
+                cookie.getAsOptionalDouble(CookieKey.STAGE_Y).flatMap(y ->
+                        cookie.getAsOptionalDouble(CookieKey.STAGE_W).flatMap(w ->
+                                cookie.getAsOptionalDouble(CookieKey.STAGE_H).map(h -> new BoundingBox(x, y, w, h)))))
+                .ifPresent(stageBoundingBox -> {
+                    stage.setX(stageBoundingBox.getMinX());
+                    stage.setY(stageBoundingBox.getMinY());
+                    stage.setWidth(stageBoundingBox.getWidth());
+                    stage.setHeight(stageBoundingBox.getHeight());
+                });
+    }
+
+    private void addStageLayoutListeners(Stage stage, User user) {
+        stage.widthProperty().addListener((observable, oldValue, newValue) -> {
+            user.getCookie().putAsDouble(CookieKey.STAGE_W, (double) newValue);
+            user.requestPersistence();
+        });
+        stage.heightProperty().addListener((observable, oldValue, newValue) -> {
+            user.getCookie().putAsDouble(CookieKey.STAGE_H, (double) newValue);
+            user.requestPersistence();
+        });
+        stage.xProperty().addListener((observable, oldValue, newValue) -> {
+            user.getCookie().putAsDouble(CookieKey.STAGE_X, (double) newValue);
+            user.requestPersistence();
+        });
+        stage.yProperty().addListener((observable, oldValue, newValue) -> {
+            user.getCookie().putAsDouble(CookieKey.STAGE_Y, (double) newValue);
+            user.requestPersistence();
+        });
     }
 
     private MainView loadMainView(Injector injector) {

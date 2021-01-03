@@ -727,11 +727,11 @@ public class CliMain {
             stream.println();
             parser.printHelpOn(stream);
             stream.println();
-            String rowFormat = "%-22s%-50s%s%n";
+            String rowFormat = "%-24s%-52s%s%n";
             stream.format(rowFormat, "Method", "Params", "Description");
             stream.format(rowFormat, "------", "------", "------------");
             stream.format(rowFormat, "getversion", "", "Get server version");
-            stream.format(rowFormat, "getbalance [,currency code = bsq|btc]", "", "Get server wallet balances");
+            stream.format(rowFormat, "getbalance", "[currency code = bsq|btc]", "Get server wallet balances");
             stream.format(rowFormat, "getaddressbalance", "address", "Get server wallet address balance");
             stream.format(rowFormat, "getfundingaddresses", "", "Get BTC funding addresses");
             stream.format(rowFormat, "getunusedbsqaddress", "", "Get unused BSQ address");
@@ -748,7 +748,7 @@ public class CliMain {
             stream.format(rowFormat, "canceloffer", "offer id", "Cancel offer with id");
             stream.format(rowFormat, "getoffer", "offer id", "Get current offer with id");
             stream.format(rowFormat, "getoffers", "buy | sell, currency code", "Get current offers");
-            stream.format(rowFormat, "takeoffer", "offer id, [,taker fee currency code = bsq|btc]", "Take offer with id");
+            stream.format(rowFormat, "takeoffer", "offer id [,taker fee currency code = bsq|btc]", "Take offer with id");
             stream.format(rowFormat, "gettrade", "trade id [,showcontract = true|false]", "Get trade summary or full contract");
             stream.format(rowFormat, "confirmpaymentstarted", "trade id", "Confirm payment started");
             stream.format(rowFormat, "confirmpaymentreceived", "trade id", "Confirm payment received");

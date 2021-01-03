@@ -33,7 +33,7 @@ import static bisq.apitest.config.BisqAppConfig.alicedaemon;
 import static java.lang.String.format;
 import static java.lang.System.getProperty;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 
 
@@ -176,7 +176,6 @@ public class AbstractPaymentAccountTest extends MethodTest {
             tmpJsonForm = File.createTempFile("temp_acct_form_",
                     ".json",
                     Paths.get(getProperty("java.io.tmpdir")).toFile());
-            tmpJsonForm.deleteOnExit();
             JsonWriter writer = new JsonWriter(new OutputStreamWriter(new FileOutputStream(tmpJsonForm), UTF_8));
             writer.beginObject();
 
@@ -199,6 +198,7 @@ public class AbstractPaymentAccountTest extends MethodTest {
             log.error("", ex);
             fail(format("Could not write json file from form entries %s", COMPLETED_FORM_MAP));
         }
+        tmpJsonForm.deleteOnExit();
         return tmpJsonForm;
     }
 }

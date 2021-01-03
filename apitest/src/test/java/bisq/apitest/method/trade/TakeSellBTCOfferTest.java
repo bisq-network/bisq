@@ -90,7 +90,7 @@ public class TakeSellBTCOfferTest extends AbstractTradeTest {
 
             logTrade(log, testInfo, "Bob's view after taking offer and sending deposit", trade);
 
-            genBtcBlocksThenWait(1, 2250);
+            genBtcBlocksThenWait(1, 1000);
             trade = getTrade(bobdaemon, trade.getTradeId());
             EXPECTED_PROTOCOL_STATUS.setState(DEPOSIT_CONFIRMED_IN_BLOCK_CHAIN)
                     .setPhase(DEPOSIT_CONFIRMED)
@@ -143,7 +143,7 @@ public class TakeSellBTCOfferTest extends AbstractTradeTest {
     @Test
     @Order(4)
     public void testBobsBtcWithdrawalToExternalAddress(final TestInfo testInfo) {
-        genBtcBlocksThenWait(1, 2250);
+        genBtcBlocksThenWait(1, 1000);
 
         var trade = getTrade(bobdaemon, tradeId);
         logTrade(log, testInfo, "Bob's view before withdrawing funds to external wallet", trade);
@@ -151,7 +151,7 @@ public class TakeSellBTCOfferTest extends AbstractTradeTest {
         String toAddress = bitcoinCli.getNewBtcAddress();
         withdrawFunds(bobdaemon, tradeId, toAddress, WITHDRAWAL_TX_MEMO);
 
-        genBtcBlocksThenWait(1, 2250);
+        genBtcBlocksThenWait(1, 1000);
 
         trade = getTrade(bobdaemon, tradeId);
         EXPECTED_PROTOCOL_STATUS.setState(WITHDRAW_COMPLETED)
