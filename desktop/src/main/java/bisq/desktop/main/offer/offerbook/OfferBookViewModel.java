@@ -215,8 +215,10 @@ class OfferBookViewModel extends ActivatableViewModel {
         };
 
         // If our accounts have changed we reset our myInsufficientTradeLimitCache as it depends on account data
-        user.getPaymentAccountsAsObservable().addListener((SetChangeListener<PaymentAccount>) c ->
-                myInsufficientTradeLimitCache.clear());
+        if (user != null) {
+            user.getPaymentAccountsAsObservable().addListener((SetChangeListener<PaymentAccount>) c ->
+                    myInsufficientTradeLimitCache.clear());
+        }
     }
 
     @Override
@@ -234,7 +236,9 @@ class OfferBookViewModel extends ActivatableViewModel {
         }
         tradeCurrencyCode.set(selectedTradeCurrency.getCode());
 
-        disableMatchToggle.set(user.getPaymentAccounts() == null || user.getPaymentAccounts().isEmpty());
+        if (user != null) {
+            disableMatchToggle.set(user.getPaymentAccounts() == null || user.getPaymentAccounts().isEmpty());
+        }
         useOffersMatchingMyAccountsFilter = !disableMatchToggle.get() && isShowOffersMatchingMyAccounts();
 
         fillAllTradeCurrencies();
