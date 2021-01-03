@@ -653,7 +653,7 @@ message RefundAgent {
 }
 
 message Filter {
-    repeated string banned_node_address = 1;
+    repeated string node_addresses_banned_from_trading = 1;
     repeated string banned_offer_ids = 2;
     repeated PaymentAccountFilter banned_payment_accounts = 3;
     string signature_as_base64 = 4;

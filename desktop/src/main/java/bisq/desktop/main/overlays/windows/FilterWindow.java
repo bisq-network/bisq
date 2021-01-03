@@ -124,11 +124,11 @@ public class FilterWindow extends Overlay<FilterWindow> {
 
         InputTextField offerIdsTF = addInputTextField(gridPane, ++rowIndex,
                 Res.get("filterWindow.offers"));
-        InputTextField nodesTF = addTopLabelInputTextField(gridPane, ++rowIndex,
+        InputTextField bannedFromTradingTF = addTopLabelInputTextField(gridPane, ++rowIndex,
                 Res.get("filterWindow.onions")).second;
         InputTextField bannedFromNetworkTF = addTopLabelInputTextField(gridPane, ++rowIndex,
                 Res.get("filterWindow.bannedFromNetwork")).second;
-        nodesTF.setPromptText("E.g. zqnzx6o3nifef5df.onion:9999"); // Do not translate
+        bannedFromTradingTF.setPromptText("E.g. zqnzx6o3nifef5df.onion:9999"); // Do not translate
         InputTextField paymentAccountFilterTF = addTopLabelInputTextField(gridPane, ++rowIndex,
                 Res.get("filterWindow.accounts")).second;
         GridPane.setHalignment(paymentAccountFilterTF, HPos.RIGHT);
@@ -175,7 +175,7 @@ public class FilterWindow extends Overlay<FilterWindow> {
         Filter filter = filterManager.getDevFilter();
         if (filter != null) {
             setupFieldFromList(offerIdsTF, filter.getBannedOfferIds());
-            setupFieldFromList(nodesTF, filter.getBannedNodeAddress());
+            setupFieldFromList(bannedFromTradingTF, filter.getNodeAddressesBannedFromTrading());
             setupFieldFromList(bannedFromNetworkTF, filter.getNodeAddressesBannedFromNetwork());
             setupFieldFromPaymentAccountFiltersList(paymentAccountFilterTF, filter.getBannedPaymentAccounts());
             setupFieldFromList(bannedCurrenciesTF, filter.getBannedCurrencies());
@@ -209,7 +209,7 @@ public class FilterWindow extends Overlay<FilterWindow> {
                 String signerPubKeyAsHex = filterManager.getSignerPubKeyAsHex(privKeyString);
                 Filter newFilter = new Filter(
                         readAsList(offerIdsTF),
-                        readAsList(nodesTF),
+                        readAsList(bannedFromTradingTF),
                         readAsPaymentAccountFiltersList(paymentAccountFilterTF),
                         readAsList(bannedCurrenciesTF),
                         readAsList(bannedPaymentMethodsTF),
