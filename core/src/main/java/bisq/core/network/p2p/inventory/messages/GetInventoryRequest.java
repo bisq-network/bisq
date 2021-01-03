@@ -21,11 +21,11 @@ package bisq.core.network.p2p.inventory.messages;
 import bisq.common.app.Version;
 import bisq.common.proto.network.NetworkEnvelope;
 
-import lombok.EqualsAndHashCode;
-import lombok.Value;
+import lombok.Getter;
+import lombok.ToString;
 
-@Value
-@EqualsAndHashCode(callSuper = false)
+@Getter
+@ToString
 public class GetInventoryRequest extends NetworkEnvelope {
     private final String version;
 
