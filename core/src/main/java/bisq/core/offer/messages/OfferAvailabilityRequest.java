@@ -42,13 +42,16 @@ public final class OfferAvailabilityRequest extends OfferMessage implements Supp
     private final long takersTradePrice;
     @Nullable
     private final Capabilities supportedCapabilities;
+    private final boolean isApiUser;
 
     public OfferAvailabilityRequest(String offerId,
                                     PubKeyRing pubKeyRing,
-                                    long takersTradePrice) {
+                                    long takersTradePrice,
+                                    boolean isApiUser) {
         this(offerId,
                 pubKeyRing,
                 takersTradePrice,
+                isApiUser,
                 Capabilities.app,
                 Version.getP2PMessageVersion(),
                 UUID.randomUUID().toString());
@@ -62,12 +65,14 @@ public final class OfferAvailabilityRequest extends OfferMessage implements Supp
     private OfferAvailabilityRequest(String offerId,
                                      PubKeyRing pubKeyRing,
                                      long takersTradePrice,
+                                     boolean isApiUser,
                                      @Nullable Capabilities supportedCapabilities,
                                      int messageVersion,
                                      @Nullable String uid) {
         super(messageVersion, offerId, uid);
         this.pubKeyRing = pubKeyRing;
         this.takersTradePrice = takersTradePrice;
+        this.isApiUser = isApiUser;
         this.supportedCapabilities = supportedCapabilities;
     }
 
@@ -76,7 +81,8 @@ public final class OfferAvailabilityRequest extends OfferMessage implements Supp
         final protobuf.OfferAvailabilityRequest.Builder builder = protobuf.OfferAvailabilityRequest.newBuilder()
                 .setOfferId(offerId)
                 .setPubKeyRing(pubKeyRing.toProtoMessage())
-                .setTakersTradePrice(takersTradePrice);
+                .setTakersTradePrice(takersTradePrice)
+                .setIsApiUser(isApiUser);
 
         Optional.ofNullable(supportedCapabilities).ifPresent(e -> builder.addAllSupportedCapabilities(Capabilities.toIntList(supportedCapabilities)));
         Optional.ofNullable(uid).ifPresent(e -> builder.setUid(uid));
@@ -90,6 +96,7 @@ public final class OfferAvailabilityRequest extends OfferMessage implements Supp
         return new OfferAvailabilityRequest(proto.getOfferId(),
                 PubKeyRing.fromProto(proto.getPubKeyRing()),
                 proto.getTakersTradePrice(),
+                proto.getIsApiUser(),
                 Capabilities.fromIntList(proto.getSupportedCapabilitiesList()),
                 messageVersion,
                 proto.getUid().isEmpty() ? null : proto.getUid());
