@@ -777,6 +777,11 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         requestPersistence();
     }
 
+    public void setDenyApiTaker(boolean value) {
+        prefPayload.setDenyApiTaker(value);
+        requestPersistence();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getter
@@ -1088,5 +1093,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         void setHideNonAccountPaymentMethods(boolean hideNonAccountPaymentMethods);
 
         void setShowOffersMatchingMyAccounts(boolean value);
+
+        void setDenyApiTaker(boolean value);
     }
 }
