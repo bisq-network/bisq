@@ -22,6 +22,7 @@ import bisq.core.monetary.Price;
 import bisq.core.offer.CreateOfferService;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferBookService;
+import bisq.core.offer.OfferFilter;
 import bisq.core.offer.OfferUtil;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.payment.PaymentAccount;
@@ -58,20 +59,24 @@ class CoreOffersService {
     private final OpenOfferManager openOfferManager;
     private final OfferUtil offerUtil;
     private final User user;
+    private final OfferFilter offerFilter;
 
     @Inject
     public CoreOffersService(CreateOfferService createOfferService,
                              OfferBookService offerBookService,
                              OpenOfferManager openOfferManager,
                              OfferUtil offerUtil,
-                             User user) {
+                             User user,
+                             OfferFilter offerFilter) {
         this.createOfferService = createOfferService;
         this.offerBookService = offerBookService;
         this.openOfferManager = openOfferManager;
         this.offerUtil = offerUtil;
         this.user = user;
+        this.offerFilter = offerFilter;
     }
 
+    // TODO should we add a check for offerFilter.canTakeOffer?
     Offer getOffer(String id) {
         return offerBookService.getOffers().stream()
                 .filter(o -> o.getId().equals(id))
@@ -79,6 +84,8 @@ class CoreOffersService {
                         new IllegalStateException(format("offer with id '%s' not found", id)));
     }
 
+    // TODO returns all offers also those which cannot be taken. Should we use the filter from
+    //  getOffersAvailableForTaker here and remove the getOffersAvailableForTaker method?
     List<Offer> getOffers(String direction, String currencyCode) {
         List<Offer> offers = offerBookService.getOffers().stream()
                 .filter(o -> {
@@ -97,6 +104,12 @@ class CoreOffersService {
             offers.sort(Comparator.comparing(Offer::getPrice));
 
         return offers;
+    }
+
+    List<Offer> getOffersAvailableForTaker(String direction, String currencyCode, boolean isApiUser) {
+        return getOffers(direction, currencyCode).stream()
+                .filter(offer -> offerFilter.canTakeOffer(offer, isApiUser).isValid())
+                .collect(Collectors.toList());
     }
 
     // Create and place new offer.
