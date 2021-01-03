@@ -262,6 +262,9 @@ class RequestDataHandler implements MessageListener {
         numPayloadsByClassName.putIfAbsent(className, new Tuple2<>(new AtomicInteger(0),
                 new AtomicInteger(0)));
         numPayloadsByClassName.get(className).first.getAndIncrement();
+        // toProtoMessage().getSerializedSize() is not very cheap. For about 1500 objects it takes about 20 ms
+        // I think its justified to get accurate metrics but if it turns out to be a performance issue we might need
+        // to remove it and use some more rough estimation by taking only the size of one data type and multiply it.
         numPayloadsByClassName.get(className).second.getAndAdd(networkPayload.toProtoMessage().getSerializedSize());
     }
 
