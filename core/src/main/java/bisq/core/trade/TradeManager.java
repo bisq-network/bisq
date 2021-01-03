@@ -373,6 +373,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void checkOfferAvailability(Offer offer,
+                                       boolean isApiUser,
                                        ResultHandler resultHandler,
                                        ErrorMessageHandler errorMessageHandler) {
         if (btcWalletService.isUnconfirmedTransactionsLimitHit() ||
@@ -383,7 +384,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
             return;
         }
 
-        offer.checkOfferAvailability(getOfferAvailabilityModel(offer), resultHandler, errorMessageHandler);
+        offer.checkOfferAvailability(getOfferAvailabilityModel(offer, isApiUser), resultHandler, errorMessageHandler);
     }
 
     // First we check if offer is still available then we create the trade with the protocol
@@ -396,12 +397,13 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                             Offer offer,
                             String paymentAccountId,
                             boolean useSavingsWallet,
+                            boolean isApiUser,
                             TradeResultHandler tradeResultHandler,
                             ErrorMessageHandler errorMessageHandler) {
 
         checkArgument(!wasOfferAlreadyUsedInTrade(offer.getId()));
 
-        OfferAvailabilityModel model = getOfferAvailabilityModel(offer);
+        OfferAvailabilityModel model = getOfferAvailabilityModel(offer, isApiUser);
         offer.checkOfferAvailability(model,
                 () -> {
                     if (offer.getState() == Offer.State.AVAILABLE) {
@@ -464,14 +466,15 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                 processModelServiceProvider.getKeyRing().getPubKeyRing());
     }
 
-    private OfferAvailabilityModel getOfferAvailabilityModel(Offer offer) {
+    private OfferAvailabilityModel getOfferAvailabilityModel(Offer offer, boolean isApiUser) {
         return new OfferAvailabilityModel(
                 offer,
                 keyRing.getPubKeyRing(),
                 p2PService,
                 user,
                 mediatorManager,
-                tradeStatisticsManager);
+                tradeStatisticsManager,
+                isApiUser);
     }
 
 

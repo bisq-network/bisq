@@ -171,6 +171,7 @@ class TakeOfferDataModel extends OfferDataModel {
 
         if (canTakeOffer()) {
             tradeManager.checkOfferAvailability(offer,
+                    false,
                     () -> {
                     },
                     errorMessage -> new Popup().warning(errorMessage).show());
@@ -319,7 +320,8 @@ class TakeOfferDataModel extends OfferDataModel {
                     offer,
                     paymentAccount.getId(),
                     useSavingsWallet,
-                    tradeResultHandler::handleResult,
+                    false,
+                    tradeResultHandler,
                     errorMessage -> {
                         log.warn(errorMessage);
                         new Popup().warning(errorMessage).show();

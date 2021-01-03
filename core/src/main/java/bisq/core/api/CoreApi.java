@@ -202,6 +202,7 @@ public class CoreApi {
         coreTradesService.takeOffer(offer,
                 paymentAccountId,
                 takerFeeCurrencyCode,
+                true,
                 resultHandler);
     }
 

@@ -66,19 +66,24 @@ public class OfferAvailabilityModel implements Model {
     @Getter
     private NodeAddress selectedRefundAgent;
 
+    // Added in v1.5.5
+    @Getter
+    private final boolean isApiUser;
 
     public OfferAvailabilityModel(Offer offer,
                                   PubKeyRing pubKeyRing,
                                   P2PService p2PService,
                                   User user,
                                   MediatorManager mediatorManager,
-                                  TradeStatisticsManager tradeStatisticsManager) {
+                                  TradeStatisticsManager tradeStatisticsManager,
+                                  boolean isApiUser) {
         this.offer = offer;
         this.pubKeyRing = pubKeyRing;
         this.p2PService = p2PService;
         this.user = user;
         this.mediatorManager = mediatorManager;
         this.tradeStatisticsManager = tradeStatisticsManager;
+        this.isApiUser = isApiUser;
     }
 
     public NodeAddress getPeerNodeAddress() {

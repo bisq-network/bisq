@@ -82,6 +82,7 @@ class CoreTradesService {
     void takeOffer(Offer offer,
                    String paymentAccountId,
                    String takerFeeCurrencyCode,
+                   boolean isApiUser,
                    Consumer<Trade> resultHandler) {
         coreWalletsService.verifyWalletsAreAvailable();
         coreWalletsService.verifyEncryptedWalletIsUnlocked();
@@ -108,6 +109,7 @@ class CoreTradesService {
                 offer,
                 paymentAccountId,
                 useSavingsWallet,
+                isApiUser,
                 resultHandler::accept,
                 errorMessage -> {
                     log.error(errorMessage);
