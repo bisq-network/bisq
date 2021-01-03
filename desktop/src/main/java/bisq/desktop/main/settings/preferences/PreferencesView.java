@@ -120,7 +120,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     private ComboBox<TradeCurrency> preferredTradeCurrencyComboBox;
 
     private ToggleButton showOwnOffersInOfferBook, useAnimations, useDarkMode, sortMarketCurrenciesNumerically,
-            avoidStandbyMode, useCustomFee, autoConfirmXmrToggle, hideNonAccountPaymentMethodsToggle;
+            avoidStandbyMode, useCustomFee, autoConfirmXmrToggle, hideNonAccountPaymentMethodsToggle, denyApiTakerToggle;
     private int gridRow = 0;
     private int displayCurrenciesGridRowIndex = 0;
     private InputTextField transactionFeeInputTextField, ignoreTradersListInputTextField, ignoreDustThresholdInputTextField,
@@ -603,7 +603,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     }
 
     private void initializeDisplayOptions() {
-        TitledGroupBg titledGroupBg = addTitledGroupBg(root, ++gridRow, 6, Res.get("setting.preferences.displayOptions"), Layout.GROUP_DISTANCE);
+        TitledGroupBg titledGroupBg = addTitledGroupBg(root, ++gridRow, 7, Res.get("setting.preferences.displayOptions"), Layout.GROUP_DISTANCE);
         GridPane.setColumnSpan(titledGroupBg, 1);
 
         showOwnOffersInOfferBook = addSlideToggleButton(root, gridRow, Res.get("setting.preferences.showOwnOffers"), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
@@ -611,6 +611,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         useDarkMode = addSlideToggleButton(root, ++gridRow, Res.get("setting.preferences.useDarkMode"));
         sortMarketCurrenciesNumerically = addSlideToggleButton(root, ++gridRow, Res.get("setting.preferences.sortWithNumOffers"));
         hideNonAccountPaymentMethodsToggle = addSlideToggleButton(root, ++gridRow, Res.get("setting.preferences.onlyShowPaymentMethodsFromAccount"));
+        denyApiTakerToggle = addSlideToggleButton(root, ++gridRow, Res.get("setting.preferences.denyApiTaker"));
         resetDontShowAgainButton = addButton(root, ++gridRow, Res.get("setting.preferences.resetAllFlags"), 0);
         resetDontShowAgainButton.getStyleClass().add("compact-button");
         resetDontShowAgainButton.setMaxWidth(Double.MAX_VALUE);
@@ -950,6 +951,9 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         hideNonAccountPaymentMethodsToggle.setOnAction(e -> preferences.setHideNonAccountPaymentMethods(hideNonAccountPaymentMethodsToggle.isSelected()));
         hideNonAccountPaymentMethodsToggle.setDisable(disableToggle);
 
+        denyApiTakerToggle.setSelected(preferences.isDenyApiTaker());
+        denyApiTakerToggle.setOnAction(e -> preferences.setDenyApiTaker(denyApiTakerToggle.isSelected()));
+
         resetDontShowAgainButton.setOnAction(e -> preferences.resetDontShowAgain());
 
         editCustomBtcExplorer.setOnAction(e -> {
@@ -1128,6 +1132,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         useDarkMode.setOnAction(null);
         sortMarketCurrenciesNumerically.setOnAction(null);
         hideNonAccountPaymentMethodsToggle.setOnAction(null);
+        denyApiTakerToggle.setOnAction(null);
         showOwnOffersInOfferBook.setOnAction(null);
         resetDontShowAgainButton.setOnAction(null);
         if (displayStandbyModeFeature) {
