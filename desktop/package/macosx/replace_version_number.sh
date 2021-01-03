@@ -1,9 +1,9 @@
 #!/bin/bash
 
-cd $(dirname $0)/../../../
+cd $(dirname $0)/../../../.
 
-oldVersion=1.5.2
-newVersion=1.5.3
+oldVersion=1.5.3
+newVersion=1.5.4
 
 find . -type f \( -name "finalize.sh" \
 -o -name "create_app.sh" \

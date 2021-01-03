@@ -2,7 +2,7 @@
 
 cd ../../
 
-version="1.5.3-SNAPSHOT"
+version="1.5.4-SNAPSHOT"
 
 target_dir="releases/$version"
 
