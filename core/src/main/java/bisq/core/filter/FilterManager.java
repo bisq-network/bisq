@@ -397,7 +397,7 @@ public class FilterManager {
 
     public boolean isNodeAddressBanned(NodeAddress nodeAddress) {
         return getFilter() != null &&
-                getFilter().getBannedNodeAddress().stream()
+                getFilter().getNodeAddressesBannedFromTrading().stream()
                         .anyMatch(e -> e.equals(nodeAddress.getFullAddress()));
     }
 

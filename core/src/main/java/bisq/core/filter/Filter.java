@@ -48,10 +48,7 @@ import javax.annotation.Nullable;
 @Value
 public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
     private final List<String> bannedOfferIds;
-
-    // Those banned nodes cannot trade but still can access the network
-    private final List<String> bannedNodeAddress;
-
+    private final List<String> nodeAddressesBannedFromTrading;
     private final List<String> bannedAutoConfExplorers;
     private final List<PaymentAccountFilter> bannedPaymentAccounts;
     private final List<String> bannedCurrencies;
@@ -96,14 +93,12 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
     private final boolean disableAutoConf;
 
     // added at v1.5.5
-    // In contrast to bannedNodeAddress those addresses cannot access the network but are rejected immediately.
-    // Should be only used in case of dos attacks
     private final Set<String> nodeAddressesBannedFromNetwork;
 
     // After we have created the signature from the filter data we clone it and apply the signature
     static Filter cloneWithSig(Filter filter, String signatureAsBase64) {
         return new Filter(filter.getBannedOfferIds(),
-                filter.getBannedNodeAddress(),
+                filter.getNodeAddressesBannedFromTrading(),
                 filter.getBannedPaymentAccounts(),
                 filter.getBannedCurrencies(),
                 filter.getBannedPaymentMethods(),
@@ -133,7 +128,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
     // Used for signature verification as we created the sig without the signatureAsBase64 field we set it to null again
     static Filter cloneWithoutSig(Filter filter) {
         return new Filter(filter.getBannedOfferIds(),
-                filter.getBannedNodeAddress(),
+                filter.getNodeAddressesBannedFromTrading(),
                 filter.getBannedPaymentAccounts(),
                 filter.getBannedCurrencies(),
                 filter.getBannedPaymentMethods(),
@@ -161,7 +156,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
     }
 
     public Filter(List<String> bannedOfferIds,
-                  List<String> bannedNodeAddress,
+                  List<String> nodeAddressesBannedFromTrading,
                   List<PaymentAccountFilter> bannedPaymentAccounts,
                   List<String> bannedCurrencies,
                   List<String> bannedPaymentMethods,
@@ -184,7 +179,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                   List<String> bannedAutoConfExplorers,
                   Set<String> nodeAddressesBannedFromNetwork) {
         this(bannedOfferIds,
-                bannedNodeAddress,
+                nodeAddressesBannedFromTrading,
                 bannedPaymentAccounts,
                 bannedCurrencies,
                 bannedPaymentMethods,
@@ -218,7 +213,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
 
     @VisibleForTesting
     public Filter(List<String> bannedOfferIds,
-                  List<String> bannedNodeAddress,
+                  List<String> nodeAddressesBannedFromTrading,
                   List<PaymentAccountFilter> bannedPaymentAccounts,
                   List<String> bannedCurrencies,
                   List<String> bannedPaymentMethods,
@@ -244,7 +239,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                   List<String> bannedAutoConfExplorers,
                   Set<String> nodeAddressesBannedFromNetwork) {
         this.bannedOfferIds = bannedOfferIds;
-        this.bannedNodeAddress = bannedNodeAddress;
+        this.nodeAddressesBannedFromTrading = nodeAddressesBannedFromTrading;
         this.bannedPaymentAccounts = bannedPaymentAccounts;
         this.bannedCurrencies = bannedCurrencies;
         this.bannedPaymentMethods = bannedPaymentMethods;
@@ -285,7 +280,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                 .collect(Collectors.toList());
 
         protobuf.Filter.Builder builder = protobuf.Filter.newBuilder().addAllBannedOfferIds(bannedOfferIds)
-                .addAllBannedNodeAddress(bannedNodeAddress)
+                .addAllNodeAddressesBannedFromTrading(nodeAddressesBannedFromTrading)
                 .addAllBannedPaymentAccounts(paymentAccountFilterList)
                 .addAllBannedCurrencies(bannedCurrencies)
                 .addAllBannedPaymentMethods(bannedPaymentMethods)
@@ -322,7 +317,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
 
 
         return new Filter(ProtoUtil.protocolStringListToList(proto.getBannedOfferIdsList()),
-                ProtoUtil.protocolStringListToList(proto.getBannedNodeAddressList()),
+                ProtoUtil.protocolStringListToList(proto.getNodeAddressesBannedFromTradingList()),
                 bannedPaymentAccountsList,
                 ProtoUtil.protocolStringListToList(proto.getBannedCurrenciesList()),
                 ProtoUtil.protocolStringListToList(proto.getBannedPaymentMethodsList()),
@@ -364,7 +359,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
     public String toString() {
         return "Filter{" +
                 "\n     bannedOfferIds=" + bannedOfferIds +
-                ",\n     bannedNodeAddress=" + bannedNodeAddress +
+                ",\n     nodeAddressesBannedFromTrading=" + nodeAddressesBannedFromTrading +
                 ",\n     bannedAutoConfExplorers=" + bannedAutoConfExplorers +
                 ",\n     bannedPaymentAccounts=" + bannedPaymentAccounts +
                 ",\n     bannedCurrencies=" + bannedCurrencies +
