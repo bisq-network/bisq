@@ -186,6 +186,9 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
     @JsonExclude
     private transient final Date dateObj;
 
+    @JsonExclude
+    private transient Volume volume = null;
+
     public TradeStatistics3(String currency,
                             long price,
                             long amount,
@@ -359,12 +362,15 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
     }
 
     public Volume getTradeVolume() {
-        if (getTradePrice().getMonetary() instanceof Altcoin) {
-            return new Volume(new AltcoinExchangeRate((Altcoin) getTradePrice().getMonetary()).coinToAltcoin(getTradeAmount()));
-        } else {
-            Volume volume = new Volume(new ExchangeRate((Fiat) getTradePrice().getMonetary()).coinToFiat(getTradeAmount()));
-            return VolumeUtil.getRoundedFiatVolume(volume);
+        if (volume == null) {
+            if (getTradePrice().getMonetary() instanceof Altcoin) {
+                volume = new Volume(new AltcoinExchangeRate((Altcoin) getTradePrice().getMonetary()).coinToAltcoin(getTradeAmount()));
+            } else {
+                Volume exactVolume = new Volume(new ExchangeRate((Fiat) getTradePrice().getMonetary()).coinToFiat(getTradeAmount()));
+                volume = VolumeUtil.getRoundedFiatVolume(exactVolume);
+            }
         }
+        return volume;
     }
 
     public boolean isValid() {
