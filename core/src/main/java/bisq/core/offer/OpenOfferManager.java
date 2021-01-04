@@ -720,7 +720,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     }
 
     private boolean apiUserDeniedByOffer(OfferAvailabilityRequest request, OpenOffer openOffer) {
-        return openOffer.getOffer().getDenyApiTaker() && request.isApiUser();
+        return openOffer.getOffer().getDenyApiTaker() && request.isTakerApiUser();
     }
 
     private void sendAckMessage(OfferAvailabilityRequest message,

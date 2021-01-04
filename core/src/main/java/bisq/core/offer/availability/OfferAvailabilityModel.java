@@ -68,7 +68,7 @@ public class OfferAvailabilityModel implements Model {
 
     // Added in v1.5.5
     @Getter
-    private final boolean isApiUser;
+    private final boolean isTakerApiUser;
 
     public OfferAvailabilityModel(Offer offer,
                                   PubKeyRing pubKeyRing,
@@ -76,14 +76,14 @@ public class OfferAvailabilityModel implements Model {
                                   User user,
                                   MediatorManager mediatorManager,
                                   TradeStatisticsManager tradeStatisticsManager,
-                                  boolean isApiUser) {
+                                  boolean isTakerApiUser) {
         this.offer = offer;
         this.pubKeyRing = pubKeyRing;
         this.p2PService = p2PService;
         this.user = user;
         this.mediatorManager = mediatorManager;
         this.tradeStatisticsManager = tradeStatisticsManager;
-        this.isApiUser = isApiUser;
+        this.isTakerApiUser = isTakerApiUser;
     }
 
     public NodeAddress getPeerNodeAddress() {

@@ -40,7 +40,7 @@ public class SendOfferAvailabilityRequest extends Task<OfferAvailabilityModel> {
             runInterceptHook();
 
             OfferAvailabilityRequest message = new OfferAvailabilityRequest(model.getOffer().getId(),
-                    model.getPubKeyRing(), model.getTakersTradePrice(), model.isApiUser());
+                    model.getPubKeyRing(), model.getTakersTradePrice(), model.isTakerApiUser());
             log.info("Send {} with offerId {} and uid {} to peer {}",
                     message.getClass().getSimpleName(), message.getOfferId(),
                     message.getUid(), model.getPeerNodeAddress());

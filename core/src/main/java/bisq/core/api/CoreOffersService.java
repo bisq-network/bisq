@@ -106,9 +106,9 @@ class CoreOffersService {
         return offers;
     }
 
-    List<Offer> getOffersAvailableForTaker(String direction, String currencyCode, boolean isApiUser) {
+    List<Offer> getOffersAvailableForTaker(String direction, String currencyCode, boolean isTakerApiUser) {
         return getOffers(direction, currencyCode).stream()
-                .filter(offer -> offerFilter.canTakeOffer(offer, isApiUser).isValid())
+                .filter(offer -> offerFilter.canTakeOffer(offer, isTakerApiUser).isValid())
                 .collect(Collectors.toList());
     }
 
