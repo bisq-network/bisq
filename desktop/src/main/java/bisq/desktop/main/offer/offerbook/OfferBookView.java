@@ -624,9 +624,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
             case VALID:
                 break;
             case API_DISABLED:
-            case DENIED_API_TAKER:
                 DevEnv.logErrorAndThrowIfDevMode("We are in desktop and in the taker position " +
-                        "viewing offers, so it cannot be that we got denied for the offer as we are not an API user.");
+                        "viewing offers, so it cannot be that we got that result as we are not an API user.");
                 break;
             case HAS_NO_PAYMENT_ACCOUNT_VALID_FOR_OFFER:
                 openPopupForMissingAccountSetup(Res.get("offerbook.warning.noMatchingAccount.headline"),

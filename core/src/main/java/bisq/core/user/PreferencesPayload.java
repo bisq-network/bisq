@@ -132,7 +132,6 @@ public final class PreferencesPayload implements PersistableEnvelope {
     // Added in 1.5.5
     private boolean hideNonAccountPaymentMethods;
     private boolean showOffersMatchingMyAccounts;
-
     private boolean denyApiTaker;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
