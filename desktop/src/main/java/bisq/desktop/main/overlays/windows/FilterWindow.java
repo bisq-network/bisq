@@ -169,6 +169,8 @@ public class FilterWindow extends Overlay<FilterWindow> {
                 Res.get("filterWindow.bannedPrivilegedDevPubKeys")).second;
         InputTextField autoConfExplorersTF = addTopLabelInputTextField(gridPane, ++rowIndex,
                 Res.get("filterWindow.autoConfExplorers")).second;
+        CheckBox disableApiCheckBox = addLabelCheckBox(gridPane, ++rowIndex,
+                Res.get("filterWindow.disableApi"));
 
         Filter filter = filterManager.getDevFilter();
         if (filter != null) {
@@ -194,6 +196,7 @@ public class FilterWindow extends Overlay<FilterWindow> {
             disableAutoConfCheckBox.setSelected(filter.isDisableAutoConf());
             disableDaoBelowVersionTF.setText(filter.getDisableDaoBelowVersion());
             disableTradeBelowVersionTF.setText(filter.getDisableTradeBelowVersion());
+            disableApiCheckBox.setSelected(filter.isDisableApi());
         }
 
         Button removeFilterMessageButton = new AutoTooltipButton(Res.get("filterWindow.remove"));
@@ -227,7 +230,8 @@ public class FilterWindow extends Overlay<FilterWindow> {
                         readAsList(bannedPrivilegedDevPubKeysTF),
                         disableAutoConfCheckBox.isSelected(),
                         readAsList(autoConfExplorersTF),
-                        new HashSet<>(readAsList(bannedFromNetworkTF))
+                        new HashSet<>(readAsList(bannedFromNetworkTF)),
+                        disableApiCheckBox.isSelected()
                 );
 
                 // We remove first the old filter
