@@ -119,6 +119,7 @@ public class Config {
     public static final String ALLOW_FAULTY_DELAYED_TXS = "allowFaultyDelayedTxs";
     public static final String API_PASSWORD = "apiPassword";
     public static final String API_PORT = "apiPort";
+    public static final String PREVENT_PERIODIC_SHUTDOWN_AT_SEED_NODE = "preventPeriodicShutdownAtSeedNode";
 
     // Default values for certain options
     public static final int UNSPECIFIED_PORT = -1;
@@ -205,6 +206,7 @@ public class Config {
     public final boolean allowFaultyDelayedTxs;
     public final String apiPassword;
     public final int apiPort;
+    public final boolean preventPeriodicShutdownAtSeedNode;
 
     // Properties derived from options but not exposed as options themselves
     public final File torDir;
@@ -639,6 +641,13 @@ public class Config {
                         .ofType(Integer.class)
                         .defaultsTo(9998);
 
+        ArgumentAcceptingOptionSpec<Boolean> preventPeriodicShutdownAtSeedNodeOpt =
+                parser.accepts(PREVENT_PERIODIC_SHUTDOWN_AT_SEED_NODE,
+                        "Prevents periodic shutdown at seed nodes")
+                        .withRequiredArg()
+                        .ofType(boolean.class)
+                        .defaultsTo(false);
+
         try {
             CompositeOptionSet options = new CompositeOptionSet();
 
@@ -754,6 +763,7 @@ public class Config {
             this.allowFaultyDelayedTxs = options.valueOf(allowFaultyDelayedTxsOpt);
             this.apiPassword = options.valueOf(apiPasswordOpt);
             this.apiPort = options.valueOf(apiPortOpt);
+            this.preventPeriodicShutdownAtSeedNode = options.valueOf(preventPeriodicShutdownAtSeedNodeOpt);
         } catch (OptionException ex) {
             throw new ConfigException("problem parsing option '%s': %s",
                     ex.options().get(0),
