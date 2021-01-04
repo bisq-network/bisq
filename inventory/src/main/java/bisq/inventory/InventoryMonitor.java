@@ -257,6 +257,7 @@ public class InventoryMonitor implements SetupListener {
         CoreNetworkProtoResolver networkProtoResolver = new CoreNetworkProtoResolver(Clock.systemDefaultZone());
         return new NetworkNodeProvider(networkProtoResolver,
                 ArrayList::new,
+                null,
                 useLocalhostForP2P,
                 9999,
                 torDir,

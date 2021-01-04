@@ -87,9 +87,12 @@ public class TorNetworkNode extends NetworkNode {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public TorNetworkNode(int servicePort, NetworkProtoResolver networkProtoResolver, boolean useStreamIsolation,
-                          TorMode torMode) {
-        super(servicePort, networkProtoResolver);
+    public TorNetworkNode(int servicePort,
+                          NetworkProtoResolver networkProtoResolver,
+                          boolean useStreamIsolation,
+                          TorMode torMode,
+                          @Nullable NetworkFilter networkFilter) {
+        super(servicePort, networkProtoResolver, networkFilter);
         this.torMode = torMode;
         this.streamIsolation = useStreamIsolation;
         createExecutorService();
