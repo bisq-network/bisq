@@ -125,6 +125,7 @@ public class FeeReceiverSelectorTest {
                 null,
                 false,
                 Lists.newArrayList(),
-                new HashSet<>());
+                new HashSet<>(),
+                false);
     }
 }
