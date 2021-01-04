@@ -52,6 +52,7 @@ import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.monetary.Price;
 import bisq.core.offer.Offer;
+import bisq.core.offer.OfferFilter;
 import bisq.core.offer.OfferPayload;
 import bisq.core.offer.OfferRestrictions;
 import bisq.core.payment.PaymentAccount;
@@ -62,6 +63,7 @@ import bisq.core.util.coin.CoinFormatter;
 
 import bisq.network.p2p.NodeAddress;
 
+import bisq.common.app.DevEnv;
 import bisq.common.config.Config;
 import bisq.common.util.Tuple3;
 
@@ -617,51 +619,61 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         }
     }
 
-    private void onShowInfo(Offer offer,
-                            boolean isPaymentAccountValidForOffer,
-                            boolean isInsufficientCounterpartyTradeLimit,
-                            boolean hasSameProtocolVersion,
-                            boolean isIgnored,
-                            boolean isOfferBanned,
-                            boolean isCurrencyBanned,
-                            boolean isPaymentMethodBanned,
-                            boolean isNodeAddressBanned,
-                            boolean requireUpdateToNewVersion,
-                            boolean isInsufficientTradeLimit) {
-        if (!isPaymentAccountValidForOffer) {
-            openPopupForMissingAccountSetup(Res.get("offerbook.warning.noMatchingAccount.headline"),
-                    Res.get("offerbook.warning.noMatchingAccount.msg"),
-                    FiatAccountsView.class,
-                    "navigation.account");
-        } else if (isInsufficientCounterpartyTradeLimit) {
-            new Popup().warning(Res.get("offerbook.warning.counterpartyTradeRestrictions")).show();
-        } else if (!hasSameProtocolVersion) {
-            new Popup().warning(Res.get("offerbook.warning.wrongTradeProtocol")).show();
-        } else if (isIgnored) {
-            new Popup().warning(Res.get("offerbook.warning.userIgnored")).show();
-        } else if (isOfferBanned) {
-            new Popup().warning(Res.get("offerbook.warning.offerBlocked")).show();
-        } else if (isCurrencyBanned) {
-            new Popup().warning(Res.get("offerbook.warning.currencyBanned")).show();
-        } else if (isPaymentMethodBanned) {
-            new Popup().warning(Res.get("offerbook.warning.paymentMethodBanned")).show();
-        } else if (isNodeAddressBanned) {
-            new Popup().warning(Res.get("offerbook.warning.nodeBlocked")).show();
-        } else if (requireUpdateToNewVersion) {
-            new Popup().warning(Res.get("offerbook.warning.requireUpdateToNewVersion")).show();
-        } else if (isInsufficientTradeLimit) {
-            final Optional<PaymentAccount> account = model.getMostMaturePaymentAccountForOffer(offer);
-            if (account.isPresent()) {
-                final long tradeLimit = model.accountAgeWitnessService.getMyTradeLimit(account.get(),
-                        offer.getCurrencyCode(), offer.getMirroredDirection());
-                new Popup()
-                        .warning(Res.get("popup.warning.tradeLimitDueAccountAgeRestriction.buyer",
-                                formatter.formatCoinWithCode(Coin.valueOf(tradeLimit)),
-                                Res.get("offerbook.warning.newVersionAnnouncement")))
-                        .show();
-            } else {
-                log.warn("We don't found a payment account but got called the isInsufficientTradeLimit case. That must not happen.");
-            }
+    private void onShowInfo(Offer offer, OfferFilter.Result result) {
+        switch (result) {
+            case VALID:
+                break;
+            case API_DISABLED:
+                DevEnv.logErrorAndThrowIfDevMode("We are in desktop and in the taker position " +
+                        "viewing offers, so it cannot be that we got that result as we are not an API user.");
+                break;
+            case HAS_NO_PAYMENT_ACCOUNT_VALID_FOR_OFFER:
+                openPopupForMissingAccountSetup(Res.get("offerbook.warning.noMatchingAccount.headline"),
+                        Res.get("offerbook.warning.noMatchingAccount.msg"),
+                        FiatAccountsView.class,
+                        "navigation.account");
+                break;
+            case HAS_NOT_SAME_PROTOCOL_VERSION:
+                new Popup().warning(Res.get("offerbook.warning.wrongTradeProtocol")).show();
+                break;
+            case IS_IGNORED:
+                new Popup().warning(Res.get("offerbook.warning.userIgnored")).show();
+                break;
+            case IS_OFFER_BANNED:
+                new Popup().warning(Res.get("offerbook.warning.offerBlocked")).show();
+                break;
+            case IS_CURRENCY_BANNED:
+                new Popup().warning(Res.get("offerbook.warning.currencyBanned")).show();
+                break;
+            case IS_PAYMENT_METHOD_BANNED:
+                new Popup().warning(Res.get("offerbook.warning.paymentMethodBanned")).show();
+                break;
+            case IS_NODE_ADDRESS_BANNED:
+                new Popup().warning(Res.get("offerbook.warning.nodeBlocked")).show();
+                break;
+            case REQUIRE_UPDATE_TO_NEW_VERSION:
+                new Popup().warning(Res.get("offerbook.warning.requireUpdateToNewVersion")).show();
+                break;
+            case IS_INSUFFICIENT_COUNTERPARTY_TRADE_LIMIT:
+                new Popup().warning(Res.get("offerbook.warning.counterpartyTradeRestrictions")).show();
+                break;
+            case IS_MY_INSUFFICIENT_TRADE_LIMIT:
+                Optional<PaymentAccount> account = model.getMostMaturePaymentAccountForOffer(offer);
+                if (account.isPresent()) {
+                    long tradeLimit = model.accountAgeWitnessService.getMyTradeLimit(account.get(),
+                            offer.getCurrencyCode(), offer.getMirroredDirection());
+                    new Popup()
+                            .warning(Res.get("popup.warning.tradeLimitDueAccountAgeRestriction.buyer",
+                                    formatter.formatCoinWithCode(Coin.valueOf(tradeLimit)),
+                                    Res.get("offerbook.warning.newVersionAnnouncement")))
+                            .show();
+                } else {
+                    DevEnv.logErrorAndThrowIfDevMode("We don't found a payment account but got called the " +
+                            "isInsufficientTradeLimit case.");
+                }
+                break;
+            default:
+                break;
         }
     }
 
@@ -1015,11 +1027,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                         return new TableCell<>() {
                             final ImageView iconView = new ImageView();
                             final AutoTooltipButton button = new AutoTooltipButton();
-                            boolean isTradable, isPaymentAccountValidForOffer,
-                                    isInsufficientCounterpartyTradeLimit,
-                                    hasSameProtocolVersion, isIgnored, isOfferBanned, isCurrencyBanned,
-                                    isPaymentMethodBanned, isNodeAddressBanned, isMyInsufficientTradeLimit,
-                                    requireUpdateToNewVersion;
+                            OfferFilter.Result canTakeOfferResult = null;
 
                             {
                                 button.setGraphic(iconView);
@@ -1034,37 +1042,14 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
                                 TableRow<OfferBookListItem> tableRow = getTableRow();
                                 if (item != null && !empty) {
-                                    final Offer offer = item.getOffer();
+                                    Offer offer = item.getOffer();
                                     boolean myOffer = model.isMyOffer(offer);
+
                                     if (tableRow != null) {
-                                        // this code is duplicated in model.getOffersMatchingMyAccountsPredicate but as
-                                        // we want to pass the results for displaying relevant info in popups we
-                                        // cannot simply replace it with the predicate. If there are any changes we
-                                        // need to maintain both.
-                                        isPaymentAccountValidForOffer = model.isAnyPaymentAccountValidForOffer(offer);
-                                        isInsufficientCounterpartyTradeLimit = model.isInsufficientCounterpartyTradeLimit(offer);
-                                        hasSameProtocolVersion = model.hasSameProtocolVersion(offer);
-                                        isIgnored = model.isIgnored(offer);
-                                        isOfferBanned = model.isOfferBanned(offer);
-                                        isCurrencyBanned = model.isCurrencyBanned(offer);
-                                        isPaymentMethodBanned = model.isPaymentMethodBanned(offer);
-                                        isNodeAddressBanned = model.isNodeAddressBanned(offer);
-                                        requireUpdateToNewVersion = model.requireUpdateToNewVersion();
-                                        isMyInsufficientTradeLimit = model.isMyInsufficientTradeLimit(offer);
-                                        isTradable = isPaymentAccountValidForOffer &&
-                                                !isInsufficientCounterpartyTradeLimit &&
-                                                hasSameProtocolVersion &&
-                                                !isIgnored &&
-                                                !isOfferBanned &&
-                                                !isCurrencyBanned &&
-                                                !isPaymentMethodBanned &&
-                                                !isNodeAddressBanned &&
-                                                !requireUpdateToNewVersion &&
-                                                !isMyInsufficientTradeLimit;
+                                        canTakeOfferResult = model.offerFilter.canTakeOffer(offer, false);
+                                        tableRow.setOpacity(canTakeOfferResult.isValid() || myOffer ? 1 : 0.4);
 
-                                        tableRow.setOpacity(isTradable || myOffer ? 1 : 0.4);
-
-                                        if (isTradable) {
+                                        if (canTakeOfferResult.isValid()) {
                                             // set first row button as default
                                             button.setDefaultButton(getIndex() == 0);
                                             tableRow.setOnMousePressed(null);
@@ -1073,17 +1058,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                             tableRow.setOnMousePressed(e -> {
                                                 // ugly hack to get the icon clickable when deactivated
                                                 if (!(e.getTarget() instanceof ImageView || e.getTarget() instanceof Canvas))
-                                                    onShowInfo(offer,
-                                                            isPaymentAccountValidForOffer,
-                                                            isInsufficientCounterpartyTradeLimit,
-                                                            hasSameProtocolVersion,
-                                                            isIgnored,
-                                                            isOfferBanned,
-                                                            isCurrencyBanned,
-                                                            isPaymentMethodBanned,
-                                                            isNodeAddressBanned,
-                                                            requireUpdateToNewVersion,
-                                                            isMyInsufficientTradeLimit);
+                                                    onShowInfo(offer, canTakeOfferResult);
                                             });
                                         }
                                     }
@@ -1113,18 +1088,15 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                         button.setOnAction(e -> onTakeOffer(offer));
                                     }
 
-                                    if (!myOffer && !isTradable)
-                                        button.setOnAction(e -> onShowInfo(offer,
-                                                isPaymentAccountValidForOffer,
-                                                isInsufficientCounterpartyTradeLimit,
-                                                hasSameProtocolVersion,
-                                                isIgnored,
-                                                isOfferBanned,
-                                                isCurrencyBanned,
-                                                isPaymentMethodBanned,
-                                                isNodeAddressBanned,
-                                                requireUpdateToNewVersion,
-                                                isMyInsufficientTradeLimit));
+                                    if (!myOffer) {
+                                        if (canTakeOfferResult == null) {
+                                            canTakeOfferResult = model.offerFilter.canTakeOffer(offer, false);
+                                        }
+
+                                        if (!canTakeOfferResult.isValid()) {
+                                            button.setOnAction(e -> onShowInfo(offer, canTakeOfferResult));
+                                        }
+                                    }
 
                                     button.updateText(title);
                                     setPadding(new Insets(0, 15, 0, 0));

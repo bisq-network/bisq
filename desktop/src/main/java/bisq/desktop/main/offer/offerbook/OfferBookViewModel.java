@@ -28,7 +28,6 @@ import bisq.desktop.util.GUIUtil;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.btc.setup.WalletsSetup;
-import bisq.core.filter.FilterManager;
 import bisq.core.locale.BankUtil;
 import bisq.core.locale.CountryUtil;
 import bisq.core.locale.CryptoCurrency;
@@ -39,6 +38,7 @@ import bisq.core.locale.TradeCurrency;
 import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
+import bisq.core.offer.OfferFilter;
 import bisq.core.offer.OfferPayload;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.payment.PaymentAccount;
@@ -56,7 +56,6 @@ import bisq.core.util.coin.CoinFormatter;
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
 
-import bisq.common.app.Version;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
 
@@ -78,14 +77,12 @@ import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
-import javafx.collections.SetChangeListener;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 
 import java.text.DecimalFormat;
 
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -105,10 +102,10 @@ class OfferBookViewModel extends ActivatableViewModel {
     private final P2PService p2PService;
     final PriceFeedService priceFeedService;
     private final ClosedTradableManager closedTradableManager;
-    private final FilterManager filterManager;
     final AccountAgeWitnessService accountAgeWitnessService;
     private final Navigation navigation;
     private final PriceUtil priceUtil;
+    final OfferFilter offerFilter;
     private final CoinFormatter btcFormatter;
     private final BsqFormatter bsqFormatter;
 
@@ -136,8 +133,6 @@ class OfferBookViewModel extends ActivatableViewModel {
     final IntegerProperty maxPlacesForMarketPriceMargin = new SimpleIntegerProperty();
     boolean showAllPaymentMethods = true;
     boolean useOffersMatchingMyAccountsFilter;
-    private final Map<String, Boolean> myInsufficientTradeLimitCache = new HashMap<>();
-    private final Map<String, Boolean> insufficientCounterpartyTradeLimitCache = new HashMap<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -153,10 +148,10 @@ class OfferBookViewModel extends ActivatableViewModel {
                               P2PService p2PService,
                               PriceFeedService priceFeedService,
                               ClosedTradableManager closedTradableManager,
-                              FilterManager filterManager,
                               AccountAgeWitnessService accountAgeWitnessService,
                               Navigation navigation,
                               PriceUtil priceUtil,
+                              OfferFilter offerFilter,
                               @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
                               BsqFormatter bsqFormatter) {
         super();
@@ -169,10 +164,10 @@ class OfferBookViewModel extends ActivatableViewModel {
         this.p2PService = p2PService;
         this.priceFeedService = priceFeedService;
         this.closedTradableManager = closedTradableManager;
-        this.filterManager = filterManager;
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.navigation = navigation;
         this.priceUtil = priceUtil;
+        this.offerFilter = offerFilter;
         this.btcFormatter = btcFormatter;
         this.bsqFormatter = bsqFormatter;
 
@@ -213,12 +208,6 @@ class OfferBookViewModel extends ActivatableViewModel {
 
             highestMarketPriceMarginOffer.ifPresent(offerBookListItem -> maxPlacesForMarketPriceMargin.set(formatMarketPriceMargin(offerBookListItem.getOffer(), false).length()));
         };
-
-        // If our accounts have changed we reset our myInsufficientTradeLimitCache as it depends on account data
-        if (user != null) {
-            user.getPaymentAccountsAsObservable().addListener((SetChangeListener<PaymentAccount>) c ->
-                    myInsufficientTradeLimitCache.clear());
-        }
     }
 
     @Override
@@ -568,11 +557,6 @@ class OfferBookViewModel extends ActivatableViewModel {
     // Checks
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    boolean isAnyPaymentAccountValidForOffer(Offer offer) {
-        return user.getPaymentAccounts() != null &&
-                PaymentAccountUtil.isAnyTakerPaymentAccountValidForOffer(offer, user.getPaymentAccounts());
-    }
-
     boolean hasPaymentAccountForCurrency() {
         return (showAllTradeCurrenciesProperty.get() &&
                 user.getPaymentAccounts() != null &&
@@ -615,98 +599,11 @@ class OfferBookViewModel extends ActivatableViewModel {
         // This code duplicates code in the view at the button column. We need there the different results for
         // display in popups so we cannot replace that with the predicate. Any change need to be applied in both
         // places.
-        return offerBookListItem -> {
-            Offer offer = offerBookListItem.getOffer();
-            boolean isPaymentAccountValidForOffer = isAnyPaymentAccountValidForOffer(offer);
-            boolean isInsufficientCounterpartyTradeLimit = isInsufficientCounterpartyTradeLimit(offer);
-            boolean hasSameProtocolVersion = hasSameProtocolVersion(offer);
-            boolean isIgnored = isIgnored(offer);
-            boolean isOfferBanned = isOfferBanned(offer);
-            boolean isCurrencyBanned = isCurrencyBanned(offer);
-            boolean isPaymentMethodBanned = isPaymentMethodBanned(offer);
-            boolean isNodeAddressBanned = isNodeAddressBanned(offer);
-            boolean requireUpdateToNewVersion = requireUpdateToNewVersion();
-            boolean isMyInsufficientTradeLimit = isMyInsufficientTradeLimit(offer);
-            boolean isTradable = isPaymentAccountValidForOffer &&
-                    !isInsufficientCounterpartyTradeLimit &&
-                    hasSameProtocolVersion &&
-                    !isIgnored &&
-                    !isOfferBanned &&
-                    !isCurrencyBanned &&
-                    !isPaymentMethodBanned &&
-                    !isNodeAddressBanned &&
-                    !requireUpdateToNewVersion &&
-                    !isMyInsufficientTradeLimit;
-            return isTradable;
-        };
-    }
-
-    boolean isIgnored(Offer offer) {
-        return preferences.getIgnoreTradersList().stream()
-                .anyMatch(i -> i.equals(offer.getMakerNodeAddress().getFullAddress()));
+        return offerBookListItem -> offerFilter.canTakeOffer(offerBookListItem.getOffer(), false).isValid();
     }
 
     boolean isOfferBanned(Offer offer) {
-        return filterManager.isOfferIdBanned(offer.getId());
-    }
-
-    boolean isCurrencyBanned(Offer offer) {
-        return filterManager.isCurrencyBanned(offer.getCurrencyCode());
-    }
-
-    boolean isPaymentMethodBanned(Offer offer) {
-        return filterManager.isPaymentMethodBanned(offer.getPaymentMethod());
-    }
-
-    boolean isNodeAddressBanned(Offer offer) {
-        return filterManager.isNodeAddressBanned(offer.getMakerNodeAddress());
-    }
-
-    boolean requireUpdateToNewVersion() {
-        return filterManager.requireUpdateToNewVersionForTrading();
-    }
-
-    // This call is a bit expensive so we cache results
-    boolean isInsufficientCounterpartyTradeLimit(Offer offer) {
-        String offerId = offer.getId();
-        if (insufficientCounterpartyTradeLimitCache.containsKey(offerId)) {
-            return insufficientCounterpartyTradeLimitCache.get(offerId);
-        }
-
-        boolean result = CurrencyUtil.isFiatCurrency(offer.getCurrencyCode()) &&
-                !accountAgeWitnessService.verifyPeersTradeAmount(offer, offer.getAmount(),
-                        errorMessage -> {
-                        });
-        insufficientCounterpartyTradeLimitCache.put(offerId, result);
-        return result;
-    }
-
-    // This call is a bit expensive so we cache results
-    boolean isMyInsufficientTradeLimit(Offer offer) {
-        String offerId = offer.getId();
-        if (myInsufficientTradeLimitCache.containsKey(offerId)) {
-            return myInsufficientTradeLimitCache.get(offerId);
-        }
-
-        Optional<PaymentAccount> accountOptional = getMostMaturePaymentAccountForOffer(offer);
-        long myTradeLimit = accountOptional
-                .map(paymentAccount -> accountAgeWitnessService.getMyTradeLimit(paymentAccount,
-                        offer.getCurrencyCode(), offer.getMirroredDirection()))
-                .orElse(0L);
-        long offerMinAmount = offer.getMinAmount().value;
-        log.debug("isInsufficientTradeLimit accountOptional={}, myTradeLimit={}, offerMinAmount={}, ",
-                accountOptional.isPresent() ? accountOptional.get().getAccountName() : "null",
-                Coin.valueOf(myTradeLimit).toFriendlyString(),
-                Coin.valueOf(offerMinAmount).toFriendlyString());
-        boolean result = CurrencyUtil.isFiatCurrency(offer.getCurrencyCode()) &&
-                accountOptional.isPresent() &&
-                myTradeLimit < offerMinAmount;
-        myInsufficientTradeLimitCache.put(offerId, result);
-        return result;
-    }
-
-    boolean hasSameProtocolVersion(Offer offer) {
-        return offer.getProtocolVersion() == Version.TRADE_PROTOCOL_VERSION;
+        return offerFilter.isOfferBanned(offer);
     }
 
     private boolean isShowAllEntry(String id) {
