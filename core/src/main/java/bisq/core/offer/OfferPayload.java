@@ -88,7 +88,6 @@ public final class OfferPayload implements ProtectedStoragePayload, ExpirablePay
     // If maker is seller and has xmrAutoConf enabled it is set to "1" otherwise it is not set
     public static final String XMR_AUTO_CONF = "xmrAutoConf";
     public static final String XMR_AUTO_CONF_ENABLED_VALUE = "1";
-    public static final String DENY_API_TAKER = "denyApiTaker"; // Use boolean value as "0"/"1"
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

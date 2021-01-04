@@ -99,7 +99,7 @@ public class OfferFilter {
         if (isTakerApiUser && filterManager.getFilter() != null && filterManager.getFilter().isDisableApi()) {
             return Result.API_DISABLED;
         }
-        if (isTakerApiUser && offer.getDenyApiTaker()) {
+        if (isTakerApiUser && preferences.isDenyApiTaker()) {
             return Result.DENIED_API_TAKER;
         }
         if (!isAnyPaymentAccountValidForOffer(offer)) {

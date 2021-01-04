@@ -372,20 +372,6 @@ public class Offer implements NetworkPayload, PersistablePayload {
             return "";
     }
 
-    public boolean getDenyApiTaker() {
-        if (getExtraDataMap() != null && getExtraDataMap().containsKey(OfferPayload.DENY_API_TAKER)) {
-            return getExtraDataMap().get(OfferPayload.DENY_API_TAKER).equals("1");
-        } else {
-            return false;
-        }
-    }
-
-    public void setDenyApiTaker(boolean value) {
-        if (getExtraDataMap() != null) {
-            getExtraDataMap().put(OfferPayload.DENY_API_TAKER, value ? "1" : "0");
-        }
-    }
-
     public String getPaymentMethodNameWithCountryCode() {
         String method = this.getPaymentMethod().getShortName();
         String methodCountryCode = this.getCountryCode();

@@ -634,7 +634,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
             NodeAddress refundAgentNodeAddress = null;
             if (openOfferOptional.isPresent()) {
                 OpenOffer openOffer = openOfferOptional.get();
-                if (!apiUserDeniedByOffer(request, openOffer)) {
+                if (!apiUserDeniedByOffer(request)) {
                     if (openOffer.getState() == OpenOffer.State.AVAILABLE) {
                         Offer offer = openOffer.getOffer();
                         if (preferences.getIgnoreTradersList().stream().noneMatch(fullAddress -> fullAddress.equals(peer.getFullAddress()))) {
@@ -719,8 +719,8 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         }
     }
 
-    private boolean apiUserDeniedByOffer(OfferAvailabilityRequest request, OpenOffer openOffer) {
-        return openOffer.getOffer().getDenyApiTaker() && request.isTakerApiUser();
+    private boolean apiUserDeniedByOffer(OfferAvailabilityRequest request) {
+        return preferences.isDenyApiTaker() && request.isTakerApiUser();
     }
 
     private void sendAckMessage(OfferAvailabilityRequest message,
