@@ -915,6 +915,8 @@ enum AvailabilityResult {
     USER_IGNORED = 8;
     MISSING_MANDATORY_CAPABILITY = 9;
     NO_REFUND_AGENTS = 10;
+    UNCONF_TX_LIMIT_HIT = 11;
+    MAKER_DENIED_API_USER = 12;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
