@@ -27,12 +27,7 @@ import javafx.scene.layout.Region;
 
 import javafx.util.StringConverter;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class VolumeBar extends Group {
-    private static final Logger log = LoggerFactory.getLogger(VolumeBar.class);
-
     private String seriesStyleClass;
     private String dataStyleClass;
     private final StringConverter<Number> volumeStringConverter;

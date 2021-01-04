@@ -65,6 +65,7 @@ import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
@@ -291,8 +292,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
         long accumulatedVolume = 0;
         long accumulatedAmount = 0;
         long numTrades = set.size();
-        ObservableList<Long> tradePrices = FXCollections.observableArrayList();
-
+        List<Long> tradePrices = new ArrayList<>();
         for (TradeStatistics3 item : set) {
             long tradePriceAsLong = item.getTradePrice().getValue();
             // Previously a check was done which inverted the low and high for cryptocurrencies.
@@ -301,9 +301,9 @@ class TradesChartsViewModel extends ActivatableViewModel {
 
             accumulatedVolume += item.getTradeVolume().getValue();
             accumulatedAmount += item.getTradeAmount().getValue();
-            tradePrices.add(item.getTradePrice().getValue());
+            tradePrices.add(tradePriceAsLong);
         }
-        FXCollections.sort(tradePrices);
+        Collections.sort(tradePrices);
 
         List<TradeStatistics3> list = new ArrayList<>(set);
         ObservableList<TradeStatistics3> obsList = FXCollections.observableArrayList(list);
