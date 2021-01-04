@@ -1617,6 +1617,7 @@ message PreferencesPayload {
     double bsq_average_trim_threshold = 57;
     bool hide_non_account_payment_methods = 58;
     bool show_offers_matching_my_accounts = 59;
+    bool deny_api_taker = 60;
 }
 
 message AutoConfirmSettings {
