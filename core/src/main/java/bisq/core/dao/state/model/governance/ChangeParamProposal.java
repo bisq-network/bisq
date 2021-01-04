@@ -29,14 +29,14 @@ import java.util.Date;
 import java.util.Map;
 import java.util.Objects;
 
-import lombok.Value;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.concurrent.Immutable;
 
 @Immutable
 @Slf4j
-@Value
+@Getter
 public final class ChangeParamProposal extends Proposal implements ImmutableDaoStateModel {
     private final Param param;
     private final String paramValue;
