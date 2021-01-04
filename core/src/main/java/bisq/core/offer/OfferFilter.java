@@ -70,6 +70,7 @@ public class OfferFilter {
 
     public enum Result {
         VALID(true),
+        API_DISABLED,
         DENIED_API_TAKER,
         HAS_NO_PAYMENT_ACCOUNT_VALID_FOR_OFFER,
         HAS_NOT_SAME_PROTOCOL_VERSION,
@@ -94,8 +95,11 @@ public class OfferFilter {
         }
     }
 
-    public Result canTakeOffer(Offer offer, boolean isApiUser) {
-        if (isApiUser && offer.getDenyApiTaker()) {
+    public Result canTakeOffer(Offer offer, boolean isTakerApiUser) {
+        if (isTakerApiUser && filterManager.getFilter() != null && filterManager.getFilter().isDisableApi()) {
+            return Result.API_DISABLED;
+        }
+        if (isTakerApiUser && offer.getDenyApiTaker()) {
             return Result.DENIED_API_TAKER;
         }
         if (!isAnyPaymentAccountValidForOffer(offer)) {

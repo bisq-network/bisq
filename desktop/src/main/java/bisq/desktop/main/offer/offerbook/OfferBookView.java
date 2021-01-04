@@ -623,6 +623,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         switch (result) {
             case VALID:
                 break;
+            case API_DISABLED:
             case DENIED_API_TAKER:
                 DevEnv.logErrorAndThrowIfDevMode("We are in desktop and in the taker position " +
                         "viewing offers, so it cannot be that we got denied for the offer as we are not an API user.");
