@@ -324,11 +324,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                 currencyComboBox.getSelectionModel().select(SHOW_ALL);
             model.onSetTradeCurrency(currencyComboBox.getSelectionModel().getSelectedItem());
         });
+        updateCurrencyComboBoxFromModel();
 
-        if (model.showAllTradeCurrenciesProperty.get())
-            currencyComboBox.getSelectionModel().select(SHOW_ALL);
-        else
-            currencyComboBox.getSelectionModel().select(model.getSelectedTradeCurrency());
         currencyComboBox.getEditor().setText(new CurrencyStringConverter(currencyComboBox).toString(currencyComboBox.getSelectionModel().getSelectedItem()));
 
         volumeColumn.sortableProperty().bind(model.showAllTradeCurrenciesProperty.not());
@@ -359,6 +356,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
             if (paymentMethodComboBox.getEditor().getText().isEmpty())
                 paymentMethodComboBox.getSelectionModel().select(SHOW_ALL);
             model.onSetPaymentMethod(paymentMethodComboBox.getSelectionModel().getSelectedItem());
+            updateCurrencyComboBoxFromModel();
             updateSigningStateColumn();
         });
 
@@ -403,6 +401,14 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         nrOfOffersLabel.setText(Res.get("offerbook.nrOffers", model.getOfferList().size()));
 
         model.priceFeedService.updateCounterProperty().addListener(priceFeedUpdateCounterListener);
+    }
+
+    private void updateCurrencyComboBoxFromModel() {
+        if (model.showAllTradeCurrenciesProperty.get()) {
+            currencyComboBox.getSelectionModel().select(SHOW_ALL);
+        } else {
+            currencyComboBox.getSelectionModel().select(model.getSelectedTradeCurrency());
+        }
     }
 
     private void updateSigningStateColumn() {
