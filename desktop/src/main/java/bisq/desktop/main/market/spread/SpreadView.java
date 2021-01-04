@@ -95,7 +95,8 @@ public class SpreadView extends ActivatableViewAndModel<GridPane, SpreadViewMode
         tableView.getColumns().add(spreadColumn);
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
-        currencyColumn.setComparator(Comparator.comparing(o -> CurrencyUtil.getNameByCode(o.currencyCode)));
+        currencyColumn.setComparator(Comparator.comparing(o ->
+                model.isIncludePaymentMethod() ? o.currencyCode : CurrencyUtil.getNameByCode(o.currencyCode)));
         numberOfOffersColumn.setComparator(Comparator.comparingInt(o3 -> o3.numberOfOffers));
         numberOfBuyOffersColumn.setComparator(Comparator.comparingInt(o3 -> o3.numberOfBuyOffers));
         numberOfSellOffersColumn.setComparator(Comparator.comparingInt(o2 -> o2.numberOfSellOffers));
@@ -139,7 +140,7 @@ public class SpreadView extends ActivatableViewAndModel<GridPane, SpreadViewMode
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private TableColumn<SpreadItem, SpreadItem> getCurrencyColumn() {
-        TableColumn<SpreadItem, SpreadItem> column = new AutoTooltipTableColumn<>(Res.get("shared.currency")) {
+        TableColumn<SpreadItem, SpreadItem> column = new AutoTooltipTableColumn<>(model.getKeyColumnName()) {
             {
                 setMinWidth(160);
             }
@@ -156,7 +157,10 @@ public class SpreadView extends ActivatableViewAndModel<GridPane, SpreadViewMode
                             public void updateItem(final SpreadItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty)
-                                    setText(CurrencyUtil.getNameAndCode(item.currencyCode));
+                                    if (model.isIncludePaymentMethod())
+                                        setText(item.currencyCode);
+                                    else
+                                        setText(CurrencyUtil.getNameAndCode(item.currencyCode));
                                 else
                                     setText("");
                             }
