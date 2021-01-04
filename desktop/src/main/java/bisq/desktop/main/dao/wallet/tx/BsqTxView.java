@@ -20,6 +20,7 @@ package bisq.desktop.main.dao.wallet.tx;
 import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AddressWithIconAndDirection;
+import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.AutoTooltipTableColumn;
 import bisq.desktop.components.ExternalHyperlink;
@@ -49,11 +50,15 @@ import bisq.common.app.DevEnv;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 
+import com.googlecode.jcsv.writer.CSVEntryConverter;
+
 import javax.inject.Inject;
 
 import de.jensd.fx.fontawesome.AwesomeIcon;
 
 import com.jfoenix.controls.JFXProgressBar;
+
+import javafx.stage.Stage;
 
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
@@ -64,6 +69,7 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 
 import javafx.geometry.Insets;
@@ -88,6 +94,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
         BsqWalletService.WalletTransactionsChangeListener {
 
     private TableView<BsqTxListItem> tableView;
+    private AutoTooltipButton exportButton;
 
     private final DaoFacade daoFacade;
     private final DaoStateService daoStateService;
@@ -156,10 +163,14 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
         chainHeightLabel = FormBuilder.addLabel(root, ++gridRow, "");
         chainHeightLabel.setId("num-offers");
         chainHeightLabel.setPadding(new Insets(-5, 0, -10, 5));
+        exportButton = new AutoTooltipButton();
+        exportButton.updateText(Res.get("shared.exportCSV"));
 
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
         HBox hBox = new HBox();
         hBox.setSpacing(10);
-        hBox.getChildren().addAll(chainHeightLabel, chainSyncIndicator);
+        hBox.getChildren().addAll(chainHeightLabel, chainSyncIndicator, spacer, exportButton);
 
         VBox vBox = new VBox();
         vBox.setSpacing(10);
@@ -199,6 +210,44 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
             updateAnyChainHeightTimer = UserThread.runPeriodically(this::onUpdateAnyChainHeight, 100, TimeUnit.MILLISECONDS);
         }
         onUpdateAnyChainHeight();
+
+        exportButton.setOnAction(event -> {
+            ObservableList<TableColumn<BsqTxListItem, ?>> tableColumns = tableView.getColumns();
+            int reportColumns = tableColumns.size() - 1;    // CSV report excludes the last column (an icon)
+            CSVEntryConverter<BsqTxListItem> headerConverter = item -> {
+                String[] columns = new String[8];
+                int i = 0;
+                columns[i] = ((AutoTooltipLabel) tableColumns.get(i).getGraphic()).getText();
+                i++;
+                columns[i] = ((AutoTooltipLabel) tableColumns.get(i).getGraphic()).getText();
+                i++;
+                columns[2] = Res.get("shared.details");
+                columns[3] = Res.get("shared.address");
+                columns[4] = Res.get("funds.tx.receivedFunds");
+                i++;
+                columns[5] = ((AutoTooltipLabel) tableColumns.get(i).getGraphic()).getText();
+                i++;
+                columns[6] = ((AutoTooltipLabel) tableColumns.get(i).getGraphic()).getText();
+                i++;
+                columns[7] = ((AutoTooltipLabel) tableColumns.get(i).getGraphic()).getText();
+                return columns;
+            };
+            CSVEntryConverter<BsqTxListItem> contentConverter = item -> {
+                String[] columns = new String[8];
+                columns[0] = item.getDateAsString();
+                columns[1] = item.getTxId();
+                columns[2] = item.getDirection();
+                columns[3] = item.getAddress();
+                columns[4] = String.valueOf(item.isReceived());
+                columns[5] = item.getAmountAsString();
+                columns[6] = String.valueOf(item.getConfirmations());
+                columns[7] = item.getTxType().name();
+                return columns;
+            };
+
+            GUIUtil.exportCSV("BSQ_transactions.csv", headerConverter, contentConverter,
+                    new BsqTxListItem(), sortedList, (Stage) root.getScene().getWindow());
+        });
     }
 
     @Override
@@ -209,6 +258,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
         bsqWalletService.removeBsqBalanceListener(this);
         btcWalletService.getChainHeightProperty().removeListener(walletChainHeightListener);
         daoFacade.removeBsqStateListener(this);
+        exportButton.setOnAction(null);
 
         observableList.forEach(BsqTxListItem::cleanup);
 
@@ -368,7 +418,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                                 super.updateItem(item, empty);
 
                                 if (item != null && !empty) {
-                                    setText(DisplayUtils.formatDateTime(item.getDate()));
+                                    setText(item.getDateAsString());
                                 } else {
                                     setText("");
                                 }
@@ -522,7 +572,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
 
                             if (item.getConfirmations() > 0) {
                                 if (isValidType(txType))
-                                    bsqAmount = bsqFormatter.formatCoin(item.getAmount());
+                                    bsqAmount = item.getAmountAsString();
                                 else if (item.isWithdrawalToBTCWallet())
                                     bsqAmount = bsqFormatter.formatBSQSatoshis(0L);
                             }
