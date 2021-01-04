@@ -22,6 +22,7 @@ import bisq.desktop.common.view.ActivatableViewAndModel;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipLabel;
+import bisq.desktop.components.AutoTooltipSlideToggleButton;
 import bisq.desktop.components.AutoTooltipTableColumn;
 import bisq.desktop.components.AutocompleteComboBox;
 import bisq.desktop.components.ColoredDecimalPlacesWithZerosText;
@@ -126,6 +127,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private AutocompleteComboBox<TradeCurrency> currencyComboBox;
     private AutocompleteComboBox<PaymentMethod> paymentMethodComboBox;
     private AutoTooltipButton createOfferButton;
+    private AutoTooltipSlideToggleButton matchingOffersToggle;
     private AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem> amountColumn, volumeColumn, marketColumn,
             priceColumn, paymentMethodColumn, depositColumn, signingStateColumn, avatarColumn;
     private TableView<OfferBookListItem> tableView;
@@ -174,21 +176,31 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         hBox.setSpacing(35);
         hBox.setPadding(new Insets(10, 0, 0, 0));
 
-        final Tuple3<VBox, Label, AutocompleteComboBox<TradeCurrency>> currencyBoxTuple = FormBuilder.addTopLabelAutocompleteComboBox(
+        Tuple3<VBox, Label, AutocompleteComboBox<TradeCurrency>> currencyBoxTuple = FormBuilder.addTopLabelAutocompleteComboBox(
                 Res.get("offerbook.filterByCurrency"));
-        final Tuple3<VBox, Label, AutocompleteComboBox<PaymentMethod>> paymentBoxTuple = FormBuilder.addTopLabelAutocompleteComboBox(
+        currencyComboBox = currencyBoxTuple.third;
+        currencyComboBox.setPrefWidth(270);
+
+        Tuple3<VBox, Label, AutocompleteComboBox<PaymentMethod>> paymentBoxTuple = FormBuilder.addTopLabelAutocompleteComboBox(
                 Res.get("offerbook.filterByPaymentMethod"));
+        paymentMethodComboBox = paymentBoxTuple.third;
+        paymentMethodComboBox.setCellFactory(GUIUtil.getPaymentMethodCellFactory());
+        paymentMethodComboBox.setPrefWidth(270);
+
+        matchingOffersToggle = new AutoTooltipSlideToggleButton();
+        matchingOffersToggle.setText(Res.get("offerbook.matchingOffers"));
+        HBox.setMargin(matchingOffersToggle, new Insets(7, 0, -9, -15));
+
+        hBox.getChildren().addAll(currencyBoxTuple.first, paymentBoxTuple.first, matchingOffersToggle);
+        AnchorPane.setLeftAnchor(hBox, 0d);
+        AnchorPane.setTopAnchor(hBox, 0d);
+        AnchorPane.setBottomAnchor(hBox, 0d);
 
         createOfferButton = new AutoTooltipButton();
         createOfferButton.setMinHeight(40);
         createOfferButton.setGraphicTextGap(10);
         AnchorPane.setRightAnchor(createOfferButton, 0d);
         AnchorPane.setBottomAnchor(createOfferButton, 0d);
-
-        hBox.getChildren().addAll(currencyBoxTuple.first, paymentBoxTuple.first, createOfferButton);
-        AnchorPane.setLeftAnchor(hBox, 0d);
-        AnchorPane.setTopAnchor(hBox, 0d);
-        AnchorPane.setBottomAnchor(hBox, 0d);
 
         AnchorPane anchorPane = new AnchorPane();
         anchorPane.getChildren().addAll(hBox, createOfferButton);
@@ -198,11 +210,6 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         GridPane.setColumnSpan(anchorPane, 2);
         GridPane.setMargin(anchorPane, new Insets(Layout.FIRST_ROW_DISTANCE, 0, 0, 0));
         root.getChildren().add(anchorPane);
-
-        currencyComboBox = currencyBoxTuple.third;
-
-        paymentMethodComboBox = paymentBoxTuple.third;
-        paymentMethodComboBox.setCellFactory(GUIUtil.getPaymentMethodCellFactory());
 
         tableView = new TableView<>();
 
@@ -328,6 +335,10 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
         currencyComboBox.getEditor().setText(new CurrencyStringConverter(currencyComboBox).toString(currencyComboBox.getSelectionModel().getSelectedItem()));
 
+        matchingOffersToggle.setSelected(model.useOffersMatchingMyAccountsFilter);
+        matchingOffersToggle.disableProperty().bind(model.disableMatchToggle);
+        matchingOffersToggle.setOnAction(e -> model.onShowOffersMatchingMyAccounts(matchingOffersToggle.isSelected()));
+
         volumeColumn.sortableProperty().bind(model.showAllTradeCurrenciesProperty.not());
         model.getOfferList().comparatorProperty().bind(tableView.comparatorProperty());
 
@@ -424,6 +435,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     @Override
     protected void deactivate() {
         createOfferButton.setOnAction(null);
+        matchingOffersToggle.setOnAction(null);
+        matchingOffersToggle.disableProperty().unbind();
         model.getOfferList().comparatorProperty().unbind();
 
         volumeColumn.sortableProperty().unbind();
@@ -1024,6 +1037,10 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                     final Offer offer = item.getOffer();
                                     boolean myOffer = model.isMyOffer(offer);
                                     if (tableRow != null) {
+                                        // this code is duplicated in model.getOffersMatchingMyAccountsPredicate but as
+                                        // we want to pass the results for displaying relevant info in popups we
+                                        // cannot simply replace it with the predicate. If there are any changes we
+                                        // need to maintain both.
                                         isPaymentAccountValidForOffer = model.isAnyPaymentAccountValidForOffer(offer);
                                         isInsufficientCounterpartyTradeLimit = model.isInsufficientCounterpartyTradeLimit(offer);
                                         hasSameProtocolVersion = model.hasSameProtocolVersion(offer);
