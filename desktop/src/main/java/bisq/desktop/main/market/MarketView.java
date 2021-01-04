@@ -26,6 +26,7 @@ import bisq.desktop.common.view.ViewLoader;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.market.offerbook.OfferBookChartView;
 import bisq.desktop.main.market.spread.SpreadView;
+import bisq.desktop.main.market.spread.SpreadViewPaymentMethod;
 import bisq.desktop.main.market.trades.TradesChartsView;
 import bisq.desktop.main.offer.offerbook.OfferBook;
 import bisq.desktop.main.offer.offerbook.OfferBookListItem;
@@ -69,7 +70,7 @@ import java.util.stream.Collectors;
 @FxmlView
 public class MarketView extends ActivatableView<TabPane, Void> {
     @FXML
-    Tab offerBookTab, tradesTab, spreadTab;
+    Tab offerBookTab, tradesTab, spreadTab, spreadTabPaymentMethod;
     private final ViewLoader viewLoader;
     private final P2PService p2PService;
     private final OfferBook offerBook;
@@ -97,7 +98,8 @@ public class MarketView extends ActivatableView<TabPane, Void> {
     @Override
     public void initialize() {
         offerBookTab.setText(Res.get("market.tabs.offerBook").toUpperCase());
-        spreadTab.setText(Res.get("market.tabs.spread").toUpperCase());
+        spreadTab.setText(Res.get("market.tabs.spreadCurrency").toUpperCase());
+        spreadTabPaymentMethod.setText(Res.get("market.tabs.spreadPayment").toUpperCase());
         tradesTab.setText(Res.get("market.tabs.trades").toUpperCase());
 
         navigationListener = viewPath -> {
@@ -112,6 +114,8 @@ public class MarketView extends ActivatableView<TabPane, Void> {
                 navigation.navigateTo(MainView.class, MarketView.class, TradesChartsView.class);
             else if (newValue == spreadTab)
                 navigation.navigateTo(MainView.class, MarketView.class, SpreadView.class);
+            else if (newValue == spreadTabPaymentMethod)
+                navigation.navigateTo(MainView.class, MarketView.class, SpreadViewPaymentMethod.class);
         };
 
         keyEventEventHandler = keyEvent -> {
@@ -140,8 +144,10 @@ public class MarketView extends ActivatableView<TabPane, Void> {
             navigation.navigateTo(MainView.class, MarketView.class, OfferBookChartView.class);
         else if (root.getSelectionModel().getSelectedItem() == tradesTab)
             navigation.navigateTo(MainView.class, MarketView.class, TradesChartsView.class);
-        else
+        else if (root.getSelectionModel().getSelectedItem() == spreadTab)
             navigation.navigateTo(MainView.class, MarketView.class, SpreadView.class);
+        else
+            navigation.navigateTo(MainView.class, MarketView.class, SpreadViewPaymentMethod.class);
 
         if (root.getScene() != null) {
             scene = root.getScene();
@@ -165,6 +171,7 @@ public class MarketView extends ActivatableView<TabPane, Void> {
 
         if (view instanceof OfferBookChartView) tab = offerBookTab;
         else if (view instanceof TradesChartsView) tab = tradesTab;
+        else if (view instanceof SpreadViewPaymentMethod) tab = spreadTabPaymentMethod;
         else if (view instanceof SpreadView) tab = spreadTab;
         else throw new IllegalArgumentException("Navigation to " + viewClass + " is not supported");
 
