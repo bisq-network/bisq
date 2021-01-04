@@ -112,15 +112,6 @@ public class CoreApi {
         return coreOffersService.getOffers(direction, currencyCode);
     }
 
-    /**
-     * @param direction     The offer direction
-     * @param currencyCode  The offer currency
-     * @return Returns the offers which can be taken
-     */
-    List<Offer> getOffersAvailableForTaker(String direction, String currencyCode) {
-        return coreOffersService.getOffersAvailableForTaker(direction, currencyCode, true);
-    }
-
     public void createAnPlaceOffer(String currencyCode,
                                    String directionAsString,
                                    String priceAsString,

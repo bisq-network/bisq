@@ -76,16 +76,14 @@ class CoreOffersService {
         this.offerFilter = offerFilter;
     }
 
-    // TODO should we add a check for offerFilter.canTakeOffer?
     Offer getOffer(String id) {
         return offerBookService.getOffers().stream()
                 .filter(o -> o.getId().equals(id))
+                .filter(o -> offerFilter.canTakeOffer(o, true).isValid())
                 .findAny().orElseThrow(() ->
                         new IllegalStateException(format("offer with id '%s' not found", id)));
     }
 
-    // TODO returns all offers also those which cannot be taken. Should we use the filter from
-    //  getOffersAvailableForTaker here and remove the getOffersAvailableForTaker method?
     List<Offer> getOffers(String direction, String currencyCode) {
         List<Offer> offers = offerBookService.getOffers().stream()
                 .filter(o -> {
@@ -94,6 +92,7 @@ class CoreOffersService {
                             .equalsIgnoreCase(currencyCode);
                     return offerOfWantedDirection && offerInWantedCurrency;
                 })
+                .filter(offer -> offerFilter.canTakeOffer(offer, true).isValid())
                 .collect(Collectors.toList());
 
         // A buyer probably wants to see sell orders in price ascending order.
@@ -104,12 +103,6 @@ class CoreOffersService {
             offers.sort(Comparator.comparing(Offer::getPrice));
 
         return offers;
-    }
-
-    List<Offer> getOffersAvailableForTaker(String direction, String currencyCode, boolean isTakerApiUser) {
-        return getOffers(direction, currencyCode).stream()
-                .filter(offer -> offerFilter.canTakeOffer(offer, isTakerApiUser).isValid())
-                .collect(Collectors.toList());
     }
 
     // Create and place new offer.
