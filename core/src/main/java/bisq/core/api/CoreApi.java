@@ -108,8 +108,16 @@ public class CoreApi {
         return coreOffersService.getOffer(id);
     }
 
+    public Offer getMyOffer(String id) {
+        return coreOffersService.getMyOffer(id);
+    }
+
     public List<Offer> getOffers(String direction, String currencyCode) {
         return coreOffersService.getOffers(direction, currencyCode);
+    }
+
+    public List<Offer> getMyOffers(String direction, String currencyCode) {
+        return coreOffersService.getMyOffers(direction, currencyCode);
     }
 
     public void createAnPlaceOffer(String currencyCode,

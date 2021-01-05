@@ -27,6 +27,8 @@ import bisq.core.offer.OpenOfferManager;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.user.User;
 
+import bisq.common.crypto.KeyRing;
+
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.utils.Fiat;
@@ -53,6 +55,7 @@ import static java.lang.String.format;
 @Slf4j
 class CoreOffersService {
 
+    private final KeyRing keyRing;
     private final CreateOfferService createOfferService;
     private final OfferBookService offerBookService;
     private final OpenOfferManager openOfferManager;
@@ -60,11 +63,13 @@ class CoreOffersService {
     private final User user;
 
     @Inject
-    public CoreOffersService(CreateOfferService createOfferService,
+    public CoreOffersService(KeyRing keyRing,
+                             CreateOfferService createOfferService,
                              OfferBookService offerBookService,
                              OpenOfferManager openOfferManager,
                              OfferUtil offerUtil,
                              User user) {
+        this.keyRing = keyRing;
         this.createOfferService = createOfferService;
         this.offerBookService = offerBookService;
         this.openOfferManager = openOfferManager;
@@ -79,23 +84,28 @@ class CoreOffersService {
                         new IllegalStateException(format("offer with id '%s' not found", id)));
     }
 
+    Offer getMyOffer(String id) {
+        return offerBookService.getOffers().stream()
+                .filter(o -> o.getId().equals(id))
+                .filter(o -> o.isMyOffer(keyRing))
+                .findAny().orElseThrow(() ->
+                        new IllegalStateException(format("offer with id '%s' not found", id)));
+    }
+
     List<Offer> getOffers(String direction, String currencyCode) {
         List<Offer> offers = offerBookService.getOffers().stream()
-                .filter(o -> {
-                    var offerOfWantedDirection = o.getDirection().name().equalsIgnoreCase(direction);
-                    var offerInWantedCurrency = o.getOfferPayload().getCounterCurrencyCode()
-                            .equalsIgnoreCase(currencyCode);
-                    return offerOfWantedDirection && offerInWantedCurrency;
-                })
+                .filter(o -> offerMatchesDirectionAndCurrency(o, direction, currencyCode))
                 .collect(Collectors.toList());
+        sortOffers(offers, direction);
+        return offers;
+    }
 
-        // A buyer probably wants to see sell orders in price ascending order.
-        // A seller probably wants to see buy orders in price descending order.
-        if (direction.equalsIgnoreCase(BUY.name()))
-            offers.sort(Comparator.comparing(Offer::getPrice).reversed());
-        else
-            offers.sort(Comparator.comparing(Offer::getPrice));
-
+    List<Offer> getMyOffers(String direction, String currencyCode) {
+        List<Offer> offers = offerBookService.getOffers().stream()
+                .filter(o -> o.isMyOffer(keyRing))
+                .filter(o -> offerMatchesDirectionAndCurrency(o, direction, currencyCode))
+                .collect(Collectors.toList());
+        sortOffers(offers, direction);
         return offers;
     }
 
@@ -192,6 +202,24 @@ class CoreOffersService {
 
         if (offer.getErrorMessage() != null)
             throw new IllegalStateException(offer.getErrorMessage());
+    }
+
+    private boolean offerMatchesDirectionAndCurrency(Offer offer,
+                                                     String direction,
+                                                     String currencyCode) {
+        var offerOfWantedDirection = offer.getDirection().name().equalsIgnoreCase(direction);
+        var offerInWantedCurrency = offer.getOfferPayload().getCounterCurrencyCode()
+                .equalsIgnoreCase(currencyCode);
+        return offerOfWantedDirection && offerInWantedCurrency;
+    }
+
+    private void sortOffers(List<Offer> offers, String direction) {
+        // A buyer probably wants to see sell orders in price ascending order.
+        // A seller probably wants to see buy orders in price descending order.
+        if (direction.equalsIgnoreCase(BUY.name()))
+            offers.sort(Comparator.comparing(Offer::getPrice).reversed());
+        else
+            offers.sort(Comparator.comparing(Offer::getPrice));
     }
 
     private long priceStringToLong(String priceAsString, String currencyCode) {

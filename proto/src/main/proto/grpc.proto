@@ -47,7 +47,11 @@ message RegisterDisputeAgentReply {
 service Offers {
     rpc GetOffer (GetOfferRequest) returns (GetOfferReply) {
     }
+    rpc GetMyOffer (GetMyOfferRequest) returns (GetMyOfferReply) {
+    }
     rpc GetOffers (GetOffersRequest) returns (GetOffersReply) {
+    }
+    rpc GetMyOffers (GetMyOffersRequest) returns (GetMyOffersReply) {
     }
     rpc CreateOffer (CreateOfferRequest) returns (CreateOfferReply) {
     }
@@ -62,12 +66,30 @@ message GetOfferRequest {
 message GetOfferReply {
     OfferInfo offer = 1;
 }
+
+message GetMyOfferRequest {
+    string id = 1;
+}
+
+message GetMyOfferReply {
+    OfferInfo offer = 1;
+}
+
 message GetOffersRequest {
     string direction = 1;
     string currencyCode = 2;
 }
 
 message GetOffersReply {
+    repeated OfferInfo offers = 1;
+}
+
+message GetMyOffersRequest {
+    string direction = 1;
+    string currencyCode = 2;
+}
+
+message GetMyOffersReply {
     repeated OfferInfo offers = 1;
 }
 
