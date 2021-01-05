@@ -18,13 +18,12 @@
 package bisq.apitest.method.offer;
 
 import bisq.core.monetary.Altcoin;
+import bisq.core.payment.PaymentAccount;
 
 import bisq.proto.grpc.CreateOfferRequest;
 import bisq.proto.grpc.GetMyOffersRequest;
 import bisq.proto.grpc.GetOffersRequest;
 import bisq.proto.grpc.OfferInfo;
-
-import protobuf.PaymentAccount;
 
 import org.bitcoinj.utils.Fiat;
 
@@ -137,10 +136,6 @@ public abstract class AbstractOfferTest extends MethodTest {
             fail(format("No %s offers found for currency %s", direction, currencyCode));
 
         return offerInfoList.get(offerInfoList.size() - 1);
-    }
-
-    protected final int getOpenOffersCount(GrpcStubs grpcStubs, String direction, String currencyCode) {
-        return getOffersSortedByDate(grpcStubs, direction, currencyCode).size();
     }
 
     protected final List<OfferInfo> getOffersSortedByDate(GrpcStubs grpcStubs,
