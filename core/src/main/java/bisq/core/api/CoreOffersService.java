@@ -22,7 +22,6 @@ import bisq.core.monetary.Price;
 import bisq.core.offer.CreateOfferService;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferBookService;
-import bisq.core.offer.OfferFilter;
 import bisq.core.offer.OfferUtil;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.payment.PaymentAccount;
@@ -59,27 +58,23 @@ class CoreOffersService {
     private final OpenOfferManager openOfferManager;
     private final OfferUtil offerUtil;
     private final User user;
-    private final OfferFilter offerFilter;
 
     @Inject
     public CoreOffersService(CreateOfferService createOfferService,
                              OfferBookService offerBookService,
                              OpenOfferManager openOfferManager,
                              OfferUtil offerUtil,
-                             User user,
-                             OfferFilter offerFilter) {
+                             User user) {
         this.createOfferService = createOfferService;
         this.offerBookService = offerBookService;
         this.openOfferManager = openOfferManager;
         this.offerUtil = offerUtil;
         this.user = user;
-        this.offerFilter = offerFilter;
     }
 
     Offer getOffer(String id) {
         return offerBookService.getOffers().stream()
                 .filter(o -> o.getId().equals(id))
-                .filter(o -> offerFilter.canTakeOffer(o, true).isValid())
                 .findAny().orElseThrow(() ->
                         new IllegalStateException(format("offer with id '%s' not found", id)));
     }
@@ -92,7 +87,6 @@ class CoreOffersService {
                             .equalsIgnoreCase(currencyCode);
                     return offerOfWantedDirection && offerInWantedCurrency;
                 })
-                .filter(offer -> offerFilter.canTakeOffer(offer, true).isValid())
                 .collect(Collectors.toList());
 
         // A buyer probably wants to see sell orders in price ascending order.
