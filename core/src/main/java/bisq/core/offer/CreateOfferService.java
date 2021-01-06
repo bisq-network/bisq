@@ -146,7 +146,7 @@ public class CreateOfferService {
                 amount.value,
                 minAmount.value,
                 useMarketBasedPrice,
-                (useMarketBasedPrice == true ? marketPriceMargin : price.getValue()),
+                (useMarketBasedPrice ? marketPriceMargin : price.getValue()),
                 buyerSecurityDepositAsDouble);
 
         long creationTime = new Date().getTime();
