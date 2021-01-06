@@ -484,7 +484,6 @@ public final class PeerManager implements ConnectionListener, PersistedDataHost 
     boolean checkMaxConnections() {
         Set<Connection> allConnections = new HashSet<>(networkNode.getAllConnections());
         int size = allConnections.size();
-        peakNumConnections = Math.max(peakNumConnections, size);
         log.info("We have {} connections open. Our limit is {}", size, maxConnections);
 
         if (size <= maxConnections) {
@@ -552,15 +551,16 @@ public final class PeerManager implements ConnectionListener, PersistedDataHost 
 
         if (!candidates.isEmpty()) {
             Connection connection = candidates.remove(0);
-            log.info("checkMaxConnections: Num candidates for shut down={}. We close oldest connection: {}", candidates.size(), connection);
-            log.debug("We are going to shut down the oldest connection.\n\tconnection={}", connection.toString());
+            log.info("checkMaxConnections: Num candidates for shut down={}. We close oldest connection to peer {}",
+                    candidates.size(), connection.getPeersNodeAddressOptional());
             if (!connection.isStopped()) {
-                connection.shutDown(CloseConnectionReason.TOO_MANY_CONNECTIONS_OPEN, () -> UserThread.runAfter(this::checkMaxConnections, 100, TimeUnit.MILLISECONDS));
+                connection.shutDown(CloseConnectionReason.TOO_MANY_CONNECTIONS_OPEN,
+                        () -> UserThread.runAfter(this::checkMaxConnections, 100, TimeUnit.MILLISECONDS));
                 return true;
             }
         }
 
-        log.info("No candidates found to remove.\n\t" +
+        log.info("No candidates found to remove. " +
                 "size={}, allConnections={}", size, allConnections);
         return false;
     }
@@ -568,13 +568,14 @@ public final class PeerManager implements ConnectionListener, PersistedDataHost 
     private void removeAnonymousPeers() {
         networkNode.getAllConnections().stream()
                 .filter(connection -> !connection.hasPeersNodeAddress())
-                .forEach(connection -> UserThread.runAfter(() -> {
+                .filter(connection -> connection.getConnectionState().getPeerType() == PeerType.PEER)
+                .forEach(connection -> UserThread.runAfter(() -> { // todo we keep a potentially dead connection in memory for too long...
                     // We give 240 seconds delay and check again if still no address is set
                     // Keep the delay long as we don't want to disconnect a peer in case we are a seed node just
                     // because he needs longer for the HS publishing
-                    if (!connection.hasPeersNodeAddress() && !connection.isStopped()) {
-                        log.debug("We close the connection as the peer address is still unknown.\n\t" +
-                                "connection={}", connection);
+                    if (!connection.isStopped() && !connection.hasPeersNodeAddress()) {
+                        log.info("removeAnonymousPeers: We close the connection as the peer address is still unknown. " +
+                                "Peer: {}", connection.getPeersNodeAddressOptional());
                         connection.shutDown(CloseConnectionReason.UNKNOWN_PEER_ADDRESS);
                     }
                 }, REMOVE_ANONYMOUS_PEER_SEC));
