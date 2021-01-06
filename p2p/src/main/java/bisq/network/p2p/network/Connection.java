@@ -227,6 +227,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
 
     // Called from various threads
     public void sendMessage(NetworkEnvelope networkEnvelope) {
+        long ts = System.currentTimeMillis();
         log.debug(">> Send networkEnvelope of type: {}", networkEnvelope.getClass().getSimpleName());
 
         if (stopped) {
@@ -245,7 +246,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
             log.debug("Capability for networkEnvelope is required but not supported");
             return;
         }
-
+        int networkEnvelopeSize = networkEnvelope.toProtoNetworkEnvelope().getSerializedSize();
         try {
             // Throttle outbound network_messages
             long now = System.currentTimeMillis();
@@ -261,7 +262,9 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                     synchronized (lock) {
                         // check if current envelope fits size
                         // - no? create new envelope
-                        if (queueOfBundles.isEmpty() || queueOfBundles.element().toProtoNetworkEnvelope().getSerializedSize() + networkEnvelope.toProtoNetworkEnvelope().getSerializedSize() > MAX_PERMITTED_MESSAGE_SIZE * 0.9) {
+
+                        int size = !queueOfBundles.isEmpty() ? queueOfBundles.element().toProtoNetworkEnvelope().getSerializedSize() + networkEnvelopeSize : 0;
+                        if (queueOfBundles.isEmpty() || size > MAX_PERMITTED_MESSAGE_SIZE * 0.9) {
                             // - no? create a bucket
                             queueOfBundles.add(new BundleOfEnvelopes());
 
@@ -273,12 +276,19 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                                     synchronized (lock) {
                                         BundleOfEnvelopes bundle = queueOfBundles.poll();
                                         if (bundle != null && !stopped) {
-                                            NetworkEnvelope envelope = bundle.getEnvelopes().size() == 1 ?
-                                                    bundle.getEnvelopes().get(0) :
-                                                    bundle;
+                                            NetworkEnvelope envelope;
+                                            int msgSize;
+                                            if (bundle.getEnvelopes().size() == 1) {
+                                                envelope = bundle.getEnvelopes().get(0);
+                                                msgSize = envelope.toProtoNetworkEnvelope().getSerializedSize();
+                                            } else {
+                                                envelope = bundle;
+                                                msgSize = networkEnvelopeSize;
+                                            }
                                             try {
                                                 protoOutputStream.writeEnvelope(envelope);
                                                 UserThread.execute(() -> messageListeners.forEach(e -> e.onMessageSent(envelope, this)));
+                                                UserThread.execute(() -> connectionStatistics.addSendMsgMetrics(System.currentTimeMillis() - ts, msgSize));
                                             } catch (Throwable t) {
                                                 log.error("Sending envelope of class {} to address {} " +
                                                                 "failed due {}",
@@ -307,6 +317,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
             if (!stopped) {
                 protoOutputStream.writeEnvelope(networkEnvelope);
                 UserThread.execute(() -> messageListeners.forEach(e -> e.onMessageSent(networkEnvelope, this)));
+                UserThread.execute(() -> connectionStatistics.addSendMsgMetrics(System.currentTimeMillis() - ts, networkEnvelopeSize));
             }
         } catch (Throwable t) {
             handleException(t);
@@ -725,6 +736,28 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                         return;
                     }
 
+                    // Blocking read from the inputStream
+                    protobuf.NetworkEnvelope proto = protobuf.NetworkEnvelope.parseDelimitedFrom(protoInputStream);
+
+                    long ts = System.currentTimeMillis();
+
+                    if (socket != null &&
+                            socket.isClosed()) {
+                        log.warn("Socket is null or closed socket={}", socket);
+                        shutDown(CloseConnectionReason.SOCKET_CLOSED);
+                        return;
+                    }
+
+                    if (proto == null) {
+                        if (protoInputStream.read() == -1) {
+                            log.warn("proto is null because protoInputStream.read()=-1 (EOF). That is expected if client got stopped without proper shutdown.");
+                        } else {
+                            log.warn("proto is null. protoInputStream.read()=" + protoInputStream.read());
+                        }
+                        shutDown(CloseConnectionReason.NO_PROTO_BUFFER_ENV);
+                        return;
+                    }
+
                     if (networkFilter != null &&
                             peersNodeAddressOptional.isPresent() &&
                             networkFilter.isPeerBanned(peersNodeAddressOptional.get())) {
@@ -741,45 +774,11 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                                 lastReadTimeStamp, now, elapsed);
                         Thread.sleep(20);
                     }
-                    // Reading the protobuffer message from the inputStream
-                    protobuf.NetworkEnvelope proto = protobuf.NetworkEnvelope.parseDelimitedFrom(protoInputStream);
-
-                    if (proto == null) {
-                        if (protoInputStream.read() == -1)
-                            log.debug("proto is null because protoInputStream.read()=-1 (EOF). That is expected if client got stopped without proper shutdown.");
-                        else
-                            log.warn("proto is null. protoInputStream.read()=" + protoInputStream.read());
-                        shutDown(CloseConnectionReason.NO_PROTO_BUFFER_ENV);
-                        return;
-                    }
 
                     NetworkEnvelope networkEnvelope = networkProtoResolver.fromProto(proto);
                     lastReadTimeStamp = now;
                     log.debug("<< Received networkEnvelope of type: {}", networkEnvelope.getClass().getSimpleName());
                     int size = proto.getSerializedSize();
-                    // We comment out that part as only debug and trace log level is used. For debugging purposes
-                    // we leave the code though.
-                        /*if (networkEnvelope instanceof Pong || networkEnvelope instanceof RefreshOfferMessage) {
-                            // We only log Pong and RefreshOfferMsg when in dev environment (trace)
-                            log.trace("\n\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n" +
-                                            "New data arrived at inputHandler of connection {}.\n" +
-                                            "Received object (truncated)={} / size={}"
-                                            + "\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n",
-                                    connection,
-                                    Utilities.toTruncatedString(proto.toString()),
-                                    size);
-                        } else {
-                            // We want to log all incoming network_messages (except Pong and RefreshOfferMsg)
-                            // so we log before the data type checks
-                            //log.info("size={}; object={}", size, Utilities.toTruncatedString(rawInputObject.toString(), 100));
-                            log.debug("\n\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n" +
-                                            "New data arrived at inputHandler of connection {}.\n" +
-                                            "Received object (truncated)={} / size={}"
-                                            + "\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n",
-                                    connection,
-                                    Utilities.toTruncatedString(proto.toString()),
-                                    size);
-                        }*/
 
                     // We want to track the size of each object even if it is invalid data
                     statistic.addReceivedBytes(size);
@@ -880,8 +879,8 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                                 }
                             }
                         }
-
                         onMessage(networkEnvelope, this);
+                        UserThread.execute(() -> connectionStatistics.addReceivedMsgMetrics(System.currentTimeMillis() - ts, size));
                     }
                 } catch (InvalidClassException e) {
                     log.error(e.getMessage());

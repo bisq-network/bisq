@@ -39,6 +39,14 @@ public class ConnectionStatistics implements MessageListener {
     private final long connectionCreationTimeStamp;
     @Getter
     private long lastMessageTimestamp;
+    @Getter
+    private long timeOnSendMsg = 0;
+    @Getter
+    private long timeOnReceivedMsg = 0;
+    @Getter
+    private int sentBytes = 0;
+    @Getter
+    private int receivedBytes = 0;
 
     public ConnectionStatistics(Connection connection, ConnectionState connectionState) {
         this.connection = connection;
@@ -57,12 +65,8 @@ public class ConnectionStatistics implements MessageListener {
         String ls = System.lineSeparator();
         long now = System.currentTimeMillis();
         String conInstance = connection instanceof InboundConnection ? "Inbound" : "Outbound";
-        String age = connectionCreationTimeStamp > 0 ?
-                Utilities.formatDurationAsWords(now - connectionCreationTimeStamp) :
-                "N/A";
-        String lastMsg = lastMessageTimestamp > 0 ?
-                Utilities.formatDurationAsWords(now - lastMessageTimestamp) :
-                "N/A";
+        String age = Utilities.formatDurationAsWords(now - connectionCreationTimeStamp);
+        String lastMsg = Utilities.formatDurationAsWords(now - lastMessageTimestamp);
         String peer = connection.getPeersNodeAddressOptional()
                 .map(NodeAddress::getFullAddress)
                 .orElse("[address not known yet]");
@@ -73,17 +77,20 @@ public class ConnectionStatistics implements MessageListener {
                         "Direction: %s" + ls +
                         "UID: %s" + ls +
                         "Last message sent/received: %s" + ls +
-                        "Sent data: %s;" + ls +
-                        "Received data: %s;",
+                        "Sent data: %s %s" + ls +
+                        "Received data: %s %s" + ls +
+                        "CPU time spent on sending messages: %s" + ls +
+                        "CPU time spent on receiving messages: %s",
                 age,
-                connectionState.isSeedNode() ? "[Seed node] " : "",
-                peer,
+                connectionState.isSeedNode() ? "[Seed node] " : "", peer,
                 connectionState.getPeerType().name(),
                 conInstance,
                 connection.getUid(),
                 lastMsg,
-                sentDataMap.toString(),
-                receivedDataMap.toString());
+                Utilities.readableFileSize(sentBytes), sentDataMap.toString(),
+                Utilities.readableFileSize(receivedBytes), receivedDataMap.toString(),
+                Utilities.formatDurationAsWords(timeOnSendMsg),
+                Utilities.formatDurationAsWords(timeOnReceivedMsg));
     }
 
     @Override
@@ -115,5 +122,15 @@ public class ConnectionStatistics implements MessageListener {
         String key = networkEnvelope.getClass().getSimpleName();
         map.putIfAbsent(key, 0);
         map.put(key, map.get(key) + 1);
+    }
+
+    public void addSendMsgMetrics(long timeSpent, int bytes) {
+        this.timeOnSendMsg += timeSpent;
+        this.sentBytes += bytes;
+    }
+
+    public void addReceivedMsgMetrics(long timeSpent, int bytes) {
+        this.timeOnReceivedMsg += timeSpent;
+        this.receivedBytes += bytes;
     }
 }
