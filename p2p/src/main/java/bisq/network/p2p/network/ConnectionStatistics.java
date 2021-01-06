@@ -18,6 +18,8 @@
 package bisq.network.p2p.network;
 
 import bisq.network.p2p.BundleOfEnvelopes;
+import bisq.network.p2p.InitialDataRequest;
+import bisq.network.p2p.InitialDataResponse;
 import bisq.network.p2p.NodeAddress;
 
 import bisq.common.proto.network.NetworkEnvelope;
@@ -25,6 +27,7 @@ import bisq.common.util.Utilities;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -35,6 +38,7 @@ public class ConnectionStatistics implements MessageListener {
     private final ConnectionState connectionState;
     private final Map<String, Integer> sentDataMap = new HashMap<>();
     private final Map<String, Integer> receivedDataMap = new HashMap<>();
+    private final Map<String, Long> rrtMap = new HashMap<>();
     @Getter
     private final long connectionCreationTimeStamp;
     @Getter
@@ -70,23 +74,48 @@ public class ConnectionStatistics implements MessageListener {
         String peer = connection.getPeersNodeAddressOptional()
                 .map(NodeAddress::getFullAddress)
                 .orElse("[address not known yet]");
+
+        // For seeds its processing time, for peers rrt
+        String rrt = rrtMap.entrySet().stream()
+                .map(e -> {
+                    long value = e.getValue();
+                    // Value is current milli as long we don't have the response
+                    if (value < connectionCreationTimeStamp) {
+                        String key = e.getKey().replace("Request", "Request/Response");
+                        return key + ": " + Utilities.formatDurationAsWords(value);
+                    } else {
+                        // we don't want to show pending requests
+                        return e.getKey() + " awaiting response... ";
+                    }
+                })
+                .collect(Collectors.toList())
+                .toString();
+        log.error(rrt);
+        if (rrt.equals("[]")) {
+            rrt = "";
+        } else {
+            rrt = "Time for response: " + rrt + ls;
+        }
+        boolean seedNode = connectionState.isSeedNode();
         return String.format(
                 "Age: %s" + ls +
                         "Peer: %s%s " + ls +
                         "Type: %s " + ls +
                         "Direction: %s" + ls +
                         "UID: %s" + ls +
-                        "Last message sent/received: %s" + ls +
-                        "Sent data: %s %s" + ls +
-                        "Received data: %s %s" + ls +
+                        "Time since last message: %s" + ls +
+                        "%s" +
+                        "Sent data: %s; %s" + ls +
+                        "Received data: %s; %s" + ls +
                         "CPU time spent on sending messages: %s" + ls +
                         "CPU time spent on receiving messages: %s",
                 age,
-                connectionState.isSeedNode() ? "[Seed node] " : "", peer,
+                seedNode ? "[Seed node] " : "", peer,
                 connectionState.getPeerType().name(),
                 conInstance,
                 connection.getUid(),
                 lastMsg,
+                rrt,
                 Utilities.readableFileSize(sentBytes), sentDataMap.toString(),
                 Utilities.readableFileSize(receivedBytes), receivedDataMap.toString(),
                 Utilities.formatDurationAsWords(timeOnSendMsg),
@@ -122,6 +151,15 @@ public class ConnectionStatistics implements MessageListener {
         String key = networkEnvelope.getClass().getSimpleName();
         map.putIfAbsent(key, 0);
         map.put(key, map.get(key) + 1);
+
+        if (networkEnvelope instanceof InitialDataRequest) {
+            rrtMap.putIfAbsent(key, System.currentTimeMillis());
+        } else if (networkEnvelope instanceof InitialDataResponse) {
+            String associatedRequest = ((InitialDataResponse) networkEnvelope).associatedRequest().getSimpleName();
+            if (rrtMap.containsKey(associatedRequest)) {
+                rrtMap.put(associatedRequest, System.currentTimeMillis() - rrtMap.get(associatedRequest));
+            }
+        }
     }
 
     public void addSendMsgMetrics(long timeSpent, int bytes) {

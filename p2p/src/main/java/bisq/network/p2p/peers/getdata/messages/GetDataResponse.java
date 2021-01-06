@@ -18,6 +18,7 @@
 package bisq.network.p2p.peers.getdata.messages;
 
 import bisq.network.p2p.ExtendedDataSizePermission;
+import bisq.network.p2p.InitialDataRequest;
 import bisq.network.p2p.InitialDataResponse;
 import bisq.network.p2p.SupportedCapabilitiesMessage;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
@@ -124,8 +125,8 @@ public final class GetDataResponse extends NetworkEnvelope implements SupportedC
 
         Set<PersistableNetworkPayload> persistableNetworkPayloadSet = new HashSet<>(
                 proto.getPersistableNetworkPayloadItemsList().stream()
-                                .map(e -> (PersistableNetworkPayload) resolver.fromProto(e))
-                                .collect(Collectors.toSet()));
+                        .map(e -> (PersistableNetworkPayload) resolver.fromProto(e))
+                        .collect(Collectors.toSet()));
 
         return new GetDataResponse(dataSet,
                 persistableNetworkPayloadSet,
@@ -133,5 +134,10 @@ public final class GetDataResponse extends NetworkEnvelope implements SupportedC
                 proto.getIsGetUpdatedDataResponse(),
                 Capabilities.fromIntList(proto.getSupportedCapabilitiesList()),
                 messageVersion);
+    }
+
+    @Override
+    public Class<? extends InitialDataRequest> associatedRequest() {
+        return isGetUpdatedDataResponse ? GetUpdatedDataRequest.class : PreliminaryGetDataRequest.class;
     }
 }
