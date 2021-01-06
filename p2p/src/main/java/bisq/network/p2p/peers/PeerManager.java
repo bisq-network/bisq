@@ -738,7 +738,7 @@ public final class PeerManager implements ConnectionListener, PersistedDataHost 
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public int getMaxConnections() {
-        return maxConnectionsAbsolute;
+        return maxConnections;
     }
 
 
