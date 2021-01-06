@@ -812,7 +812,7 @@ public final class PeerManager implements ConnectionListener, PersistedDataHost 
                 .forEach(e -> sb.append(ls).append("Connection ")
                         .append(counter.incrementAndGet()).append(ls)
                         .append(e.getConnectionStatistics().getInfo()).append(ls));
-        log.error(sb.toString());
+        log.info(sb.toString());
     }
 
     private void printConnectedPeers() {
