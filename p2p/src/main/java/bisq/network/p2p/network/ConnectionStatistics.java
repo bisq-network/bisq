@@ -90,7 +90,6 @@ public class ConnectionStatistics implements MessageListener {
                 })
                 .collect(Collectors.toList())
                 .toString();
-        log.error(rrt);
         if (rrt.equals("[]")) {
             rrt = "";
         } else {
