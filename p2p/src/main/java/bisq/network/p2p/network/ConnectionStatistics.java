@@ -81,7 +81,9 @@ public class ConnectionStatistics implements MessageListener {
                           Connection connection) {
         lastMessageTimestamp = System.currentTimeMillis();
         if (networkEnvelope instanceof BundleOfEnvelopes) {
-            ((BundleOfEnvelopes) networkEnvelope).getEnvelopes().forEach(e -> addToMap(networkEnvelope, receivedDataMap));
+            ((BundleOfEnvelopes) networkEnvelope).getEnvelopes().forEach(e -> addToMap(e, receivedDataMap));
+            // We want to track also number of BundleOfEnvelopes
+            addToMap(networkEnvelope, receivedDataMap);
         } else {
             addToMap(networkEnvelope, receivedDataMap);
         }
@@ -91,7 +93,9 @@ public class ConnectionStatistics implements MessageListener {
     public void onMessageSent(NetworkEnvelope networkEnvelope, Connection connection) {
         lastMessageTimestamp = System.currentTimeMillis();
         if (networkEnvelope instanceof BundleOfEnvelopes) {
-            ((BundleOfEnvelopes) networkEnvelope).getEnvelopes().forEach(e -> addToMap(networkEnvelope, sentDataMap));
+            ((BundleOfEnvelopes) networkEnvelope).getEnvelopes().forEach(e -> addToMap(e, sentDataMap));
+            // We want to track also number of BundleOfEnvelopes
+            addToMap(networkEnvelope, sentDataMap);
         } else {
             addToMap(networkEnvelope, sentDataMap);
         }
