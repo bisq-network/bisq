@@ -259,9 +259,6 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
     public void onMessage(NetworkEnvelope networkEnvelope, Connection connection) {
         if (networkEnvelope instanceof GetDataRequest) {
             if (!stopped) {
-                if (peerManager.isSeedNode(connection))
-                    connection.setPeerType(Connection.PeerType.SEED_NODE);
-
                 GetDataRequest getDataRequest = (GetDataRequest) networkEnvelope;
                 if (getDataRequest.getVersion() == null || !Version.isNewVersion(getDataRequest.getVersion(), "1.5.0")) {
                     connection.shutDown(CloseConnectionReason.MANDATORY_CAPABILITIES_NOT_SUPPORTED);
