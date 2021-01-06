@@ -29,11 +29,13 @@ import java.util.concurrent.TimeUnit;
 
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Holds state of connection. Data is applied from message handlers which are called on UserThread, so that class
  * is in a single threaded context.
  */
+@Slf4j
 public class ConnectionState implements MessageListener {
     // We protect the INITIAL_DATA_EXCHANGE PeerType for max. 4 minutes in case not all expected initialDataRequests
     // and initialDataResponses have not been all sent/received. In case the PeerManager need to close connections
@@ -41,6 +43,11 @@ public class ConnectionState implements MessageListener {
     // used to set priorities for closing connections.
     private static final long PEER_RESET_TIMER_DELAY_SEC = TimeUnit.MINUTES.toSeconds(4);
     private static final long COMPLETED_TIMER_DELAY_SEC = 2;
+
+    // Number of expected requests in standard case. Can be different according to network conditions.
+    // Is different for LiteDaoNodes and FullDaoNodes
+    @Setter
+    private static int expectedRequests = 6;
 
     private final Connection connection;
     @Getter
@@ -59,17 +66,14 @@ public class ConnectionState implements MessageListener {
     @Getter
     private boolean isSeedNode;
 
-
-    // Number of expected requests in standard case. Can be different according to network conditions.
-    // IS different for LiteDaoNodes and FullDaoNodes
-    @Setter
-    private int expectedRequests = 6;
     private Timer peerTypeResetDueTimeoutTimer, initialDataExchangeCompletedTimer;
 
     public ConnectionState(Connection connection) {
         this.connection = connection;
-        connection.addMessageListener(this);
+
         connectionCreationTimeStamp = System.currentTimeMillis();
+
+        connection.addMessageListener(this);
     }
 
     public void shutDown() {
@@ -147,5 +151,20 @@ public class ConnectionState implements MessageListener {
             initialDataExchangeCompletedTimer.stop();
             initialDataExchangeCompletedTimer = null;
         }
+    }
+
+
+    @Override
+    public String toString() {
+        return "ConnectionState{" +
+                "\n     connection=" + connection +
+                ",\n     connectionCreationTimeStamp=" + connectionCreationTimeStamp +
+                ",\n     peerType=" + peerType +
+                ",\n     numInitialDataRequests=" + numInitialDataRequests +
+                ",\n     numInitialDataResponses=" + numInitialDataResponses +
+                ",\n     lastInitialDataMsgTimeStamp=" + lastInitialDataMsgTimeStamp +
+                ",\n     isSeedNode=" + isSeedNode +
+                ",\n     expectedRequests=" + expectedRequests +
+                "\n}";
     }
 }
