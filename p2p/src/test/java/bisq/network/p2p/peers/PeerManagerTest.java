@@ -159,7 +159,7 @@ public class PeerManagerTest {
         assertEquals(maxConnectionsNonDirect + 1, node.getNetworkNode().getAllConnections().size());
         List<Connection> sortedPeerConnections = node.getNetworkNode().getAllConnections().stream()
                 .filter(e -> e.getPeerType() != PeerType.DIRECT_MSG_PEER &&
-                        e.getPeerType() != PeerType.INITIAL_DATA_REQUEST)
+                        e.getPeerType() != PeerType.INITIAL_DATA_EXCHANGE)
                 .sorted(Comparator.comparingLong(o -> o.getStatistic().getLastActivityTimestamp()))
                 .collect(Collectors.toList());
         Connection oldestConnection = sortedPeerConnections.remove(0);

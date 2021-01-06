@@ -536,7 +536,7 @@ public final class PeerManager implements ConnectionListener, PersistedDataHost 
                         "of type DIRECT_MSG_PEER or INITIAL_DATA_REQUEST.", maxConnectionsNonDirect);
                 candidates = allConnections.stream()
                         .filter(e -> e.getPeerType() != PeerType.DIRECT_MSG_PEER &&
-                                e.getPeerType() != PeerType.INITIAL_DATA_REQUEST)
+                                e.getPeerType() != PeerType.INITIAL_DATA_EXCHANGE)
                         .collect(Collectors.toList());
 
                 if (candidates.isEmpty()) {

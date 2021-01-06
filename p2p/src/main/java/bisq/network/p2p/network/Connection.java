@@ -861,7 +861,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                             statistic.updateLastActivityTimestamp();
 
                         if (networkEnvelope instanceof GetDataRequest)
-                            setPeerType(PeerType.INITIAL_DATA_REQUEST);
+                            setPeerType(PeerType.INITIAL_DATA_EXCHANGE);
 
                         // First a seed node gets a message from a peer (PreliminaryDataRequest using
                         // AnonymousMessage interface) which does not have its hidden service

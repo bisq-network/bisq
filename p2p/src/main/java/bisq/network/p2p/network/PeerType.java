@@ -21,5 +21,5 @@ public enum PeerType {
     SEED_NODE,
     PEER,
     DIRECT_MSG_PEER,
-    INITIAL_DATA_REQUEST
+    INITIAL_DATA_EXCHANGE
 }
