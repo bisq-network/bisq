@@ -566,6 +566,10 @@ public class Utilities {
         duration = StringUtils.replacePattern(duration, "^0 minutes, ", "");
         duration = StringUtils.replacePattern(duration, "^0 seconds, ", "");
 
-        return duration.trim();
+        String result = duration.trim();
+        if (result.isEmpty()) {
+            result = "0.000 seconds";
+        }
+        return result;
     }
 }
