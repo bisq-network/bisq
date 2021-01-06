@@ -535,8 +535,7 @@ public final class PeerManager implements ConnectionListener, PersistedDataHost 
                         "Lets try to remove any connection which is not " +
                         "of type DIRECT_MSG_PEER or INITIAL_DATA_REQUEST.", maxConnectionsNonDirect);
                 candidates = allConnections.stream()
-                        .filter(e -> e.getConnectionState().getPeerType() != PeerType.DIRECT_MSG_PEER &&
-                                e.getConnectionState().getPeerType() != PeerType.INITIAL_DATA_EXCHANGE)
+                        .filter(e -> e.getConnectionState().getPeerType() == PeerType.INITIAL_DATA_EXCHANGE)
                         .sorted(Comparator.comparingLong(o -> o.getConnectionState().getLastInitialDataMsgTimeStamp()))
                         .collect(Collectors.toList());
 
