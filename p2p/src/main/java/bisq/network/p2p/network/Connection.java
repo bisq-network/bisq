@@ -136,6 +136,8 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
     // holder of state shared between InputHandler and Connection
     @Getter
     private final Statistic statistic;
+    @Getter
+    private final ConnectionState connectionState;
 
     // set in init
     private SynchronizedProtoOutputStream protoOutputStream;
@@ -185,6 +187,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
 
         this.networkProtoResolver = networkProtoResolver;
         init(peersNodeAddress);
+        connectionState = new ConnectionState(this);
     }
 
     private void init(@Nullable NodeAddress peersNodeAddress) {
@@ -512,6 +515,9 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
     public void shutDown(CloseConnectionReason closeConnectionReason, @Nullable Runnable shutDownCompleteHandler) {
         log.debug("shutDown: nodeAddressOpt={}, closeConnectionReason={}",
                 this.peersNodeAddressOptional.orElse(null), closeConnectionReason);
+
+        connectionState.shutDown();
+
         if (!stopped) {
             String peersNodeAddress = peersNodeAddressOptional.map(NodeAddress::toString).orElse("null");
             log.debug("\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" +
@@ -605,7 +611,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
     public String toString() {
         return "Connection{" +
                 "peerAddress=" + peersNodeAddressOptional +
-                ", peerType=" + peerType +
+                ", connectionState=" + connectionState +
                 ", connectionType=" + (this instanceof InboundConnection ? "InboundConnection" : "OutboundConnection") +
                 ", uid='" + uid + '\'' +
                 '}';
@@ -620,7 +626,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
 
         return "Connection{" +
                 "peerAddress=" + peersNodeAddressOptional +
-                ", peerType=" + peerType +
+                ", connectionState=" + connectionState +
                 ", portInfo=" + portInfo +
                 ", uid='" + uid + '\'' +
                 ", ruleViolation=" + ruleViolation +
