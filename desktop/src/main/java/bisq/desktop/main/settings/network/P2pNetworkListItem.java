@@ -114,11 +114,13 @@ public class P2pNetworkListItem {
         ConnectionState connectionState = connection.getConnectionState();
         if (connectionState.getPeerType() == PeerType.DIRECT_MSG_PEER) {
             peerType.set(Res.get("settings.net.directPeer"));
-        } else if (connectionState.getPeerType() == PeerType.INITIAL_DATA_EXCHANGE) {
-            peerType.set(Res.get("settings.net.initialDataExchange",
-                    connectionState.isSeedNode() ? Res.get("settings.net.seedNode") : Res.get("settings.net.peer")));
         } else {
-            peerType.set(Res.get("settings.net.peer"));
+            String peerOrSeed = connectionState.isSeedNode() ? Res.get("settings.net.seedNode") : Res.get("settings.net.peer");
+            if (connectionState.getPeerType() == PeerType.INITIAL_DATA_EXCHANGE) {
+                peerType.set(Res.get("settings.net.initialDataExchange", peerOrSeed));
+            } else {
+                peerType.set(peerOrSeed);
+            }
         }
     }
 
