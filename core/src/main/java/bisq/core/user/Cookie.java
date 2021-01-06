@@ -47,7 +47,12 @@ public class Cookie extends HashMap<CookieKey, String> {
 
     public Map<String, String> toProtoMessage() {
         Map<String, String> protoMap = new HashMap<>();
-        this.forEach((key, value) -> protoMap.put(key.name(), value));
+        this.forEach((key, value) -> {
+            if (key != null) {
+                String name = key.name();
+                protoMap.put(name, value);
+            }
+        });
         return protoMap;
     }
 
