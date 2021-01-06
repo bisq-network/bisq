@@ -291,6 +291,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                                                     bundle;
                                             try {
                                                 protoOutputStream.writeEnvelope(envelope);
+                                                UserThread.execute(() -> messageListeners.forEach(e -> e.onMessageSent(networkEnvelope, this)));
                                             } catch (Throwable t) {
                                                 log.error("Sending envelope of class {} to address {} " +
                                                                 "failed due {}",
@@ -318,6 +319,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
 
             if (!stopped) {
                 protoOutputStream.writeEnvelope(networkEnvelope);
+                UserThread.execute(() -> messageListeners.forEach(e -> e.onMessageSent(networkEnvelope, this)));
             }
         } catch (Throwable t) {
             handleException(t);
