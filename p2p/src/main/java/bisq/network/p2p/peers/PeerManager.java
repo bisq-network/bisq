@@ -205,9 +205,7 @@ public final class PeerManager implements ConnectionListener, PersistedDataHost 
 
     @Override
     public void onConnection(Connection connection) {
-        if (isSeedNode(connection)) {
-            connection.setPeerType(PeerType.SEED_NODE);
-        }
+        connection.getConnectionState().setSeedNode(isSeedNode(connection));
 
         doHouseKeeping();
 
@@ -504,7 +502,7 @@ public final class PeerManager implements ConnectionListener, PersistedDataHost 
                 "Lets try first to remove the inbound connections of type PEER.");
         List<Connection> candidates = allConnections.stream()
                 .filter(e -> e instanceof InboundConnection)
-                .filter(e -> e.getPeerType() == PeerType.PEER)
+                .filter(e -> e.getConnectionState().getPeerType() == PeerType.PEER)
                 .collect(Collectors.toList());
 
         if (candidates.isEmpty()) {
@@ -519,7 +517,7 @@ public final class PeerManager implements ConnectionListener, PersistedDataHost 
             log.info("We have exceeded maxConnectionsPeer limit of {}. " +
                     "Lets try to remove ANY connection of type PEER.", maxConnectionsPeer);
             candidates = allConnections.stream()
-                    .filter(e -> e.getPeerType() == PeerType.PEER)
+                    .filter(e -> e.getConnectionState().getPeerType() == PeerType.PEER)
                     .collect(Collectors.toList());
 
             if (candidates.isEmpty()) {
@@ -535,8 +533,8 @@ public final class PeerManager implements ConnectionListener, PersistedDataHost 
                         "Lets try to remove any connection which is not " +
                         "of type DIRECT_MSG_PEER or INITIAL_DATA_REQUEST.", maxConnectionsNonDirect);
                 candidates = allConnections.stream()
-                        .filter(e -> e.getPeerType() != PeerType.DIRECT_MSG_PEER &&
-                                e.getPeerType() != PeerType.INITIAL_DATA_EXCHANGE)
+                        .filter(e -> e.getConnectionState().getPeerType() != PeerType.DIRECT_MSG_PEER &&
+                                e.getConnectionState().getPeerType() != PeerType.INITIAL_DATA_EXCHANGE)
                         .collect(Collectors.toList());
 
                 if (candidates.isEmpty()) {
@@ -819,7 +817,7 @@ public final class PeerManager implements ConnectionListener, PersistedDataHost 
             StringBuilder result = new StringBuilder("\n\n------------------------------------------------------------\n" +
                     "Connected peers for node " + networkNode.getNodeAddress() + ":");
             networkNode.getConfirmedConnections().forEach(e -> result.append("\n")
-                    .append(e.getPeersNodeAddressOptional()).append(" ").append(e.getPeerType()));
+                    .append(e.getPeersNodeAddressOptional()).append(" ").append(e.getConnectionState().getPeerType()));
             result.append("\n------------------------------------------------------------\n");
             log.debug(result.toString());
         }

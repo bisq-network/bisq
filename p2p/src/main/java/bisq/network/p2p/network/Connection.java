@@ -21,11 +21,8 @@ import bisq.network.p2p.BundleOfEnvelopes;
 import bisq.network.p2p.CloseConnectionMessage;
 import bisq.network.p2p.ExtendedDataSizePermission;
 import bisq.network.p2p.NodeAddress;
-import bisq.network.p2p.PrefixedSealedAndSignedMessage;
 import bisq.network.p2p.SendersNodeAddressMessage;
 import bisq.network.p2p.SupportedCapabilitiesMessage;
-import bisq.network.p2p.peers.getdata.messages.GetDataRequest;
-import bisq.network.p2p.peers.getdata.messages.GetDataResponse;
 import bisq.network.p2p.peers.keepalive.messages.KeepAliveMessage;
 import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.messages.AddDataMessage;
@@ -148,9 +145,6 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
     @Getter
     private volatile boolean stopped;
 
-    // Use Peer as default, in case of other types they will set it as soon as possible.
-    @Getter
-    private PeerType peerType = PeerType.PEER;
     @Getter
     private final ObjectProperty<NodeAddress> peersNodeAddressProperty = new SimpleObjectProperty<>();
     private final List<Long> messageTimeStamps = new ArrayList<>();
@@ -250,19 +244,6 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
         }
 
         try {
-            if (networkEnvelope instanceof PrefixedSealedAndSignedMessage && peersNodeAddressOptional.isPresent()) {
-                setPeerType(PeerType.DIRECT_MSG_PEER);
-
-                log.debug("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n" +
-                                "Sending direct message to peer" +
-                                "Write object to outputStream to peer: {} (uid={})\ntruncated message={} / size={}" +
-                                "\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n",
-                        peersNodeAddressOptional.map(NodeAddress::toString).orElse("null"),
-                        uid, Utilities.toTruncatedString(networkEnvelope), -1);
-            } else if (networkEnvelope instanceof GetDataResponse && ((GetDataResponse) networkEnvelope).isGetUpdatedDataResponse()) {
-                setPeerType(PeerType.PEER);
-            }
-
             // Throttle outbound network_messages
             long now = System.currentTimeMillis();
             long elapsed = now - lastSendTimeStamp;
@@ -473,11 +454,6 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Setters
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public void setPeerType(PeerType peerType) {
-        log.debug("setPeerType: peerType={}, nodeAddressOpt={}", peerType.toString(), peersNodeAddressOptional);
-        this.peerType = peerType;
-    }
 
     private void setPeersNodeAddress(NodeAddress peerNodeAddress) {
         checkNotNull(peerNodeAddress, "peerAddress must not be null");
@@ -866,9 +842,6 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                         if (!(networkEnvelope instanceof KeepAliveMessage))
                             statistic.updateLastActivityTimestamp();
 
-                        if (networkEnvelope instanceof GetDataRequest)
-                            setPeerType(PeerType.INITIAL_DATA_EXCHANGE);
-
                         // First a seed node gets a message from a peer (PreliminaryDataRequest using
                         // AnonymousMessage interface) which does not have its hidden service
                         // published, so it does not know its address. As the IncomingConnection does not have the
@@ -904,9 +877,6 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                                 }
                             }
                         }
-
-                        if (networkEnvelope instanceof PrefixedSealedAndSignedMessage)
-                            setPeerType(PeerType.DIRECT_MSG_PEER);
 
                         onMessage(networkEnvelope, this);
                     }

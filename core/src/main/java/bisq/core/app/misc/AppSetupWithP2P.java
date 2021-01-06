@@ -121,7 +121,7 @@ public class AppSetupWithP2P extends AppSetup {
             public void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection) {
                 // We only check at seed nodes as they are running the latest version
                 // Other disconnects might be caused by peers running an older version
-                if (connection.getPeerType() == PeerType.SEED_NODE &&
+                if (connection.getConnectionState().getPeerType() == PeerType.SEED_NODE &&
                         closeConnectionReason == CloseConnectionReason.RULE_VIOLATION) {
                     log.warn("RULE_VIOLATION onDisconnect closeConnectionReason=" + closeConnectionReason);
                     log.warn("RULE_VIOLATION onDisconnect connection={}", connection);

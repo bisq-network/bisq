@@ -110,9 +110,9 @@ public class P2pNetworkListItem {
     }
 
     public void updatePeerType() {
-        if (connection.getPeerType() == PeerType.SEED_NODE)
+        if (connection.getConnectionState().getPeerType() == PeerType.SEED_NODE)
             peerType.set(Res.get("settings.net.seedNode"));
-        else if (connection.getPeerType() == PeerType.DIRECT_MSG_PEER)
+        else if (connection.getConnectionState().getPeerType() == PeerType.DIRECT_MSG_PEER)
             peerType.set(Res.get("settings.net.directPeer"));
         else
             peerType.set(Res.get("settings.net.peer"));

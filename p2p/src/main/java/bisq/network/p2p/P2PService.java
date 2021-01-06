@@ -25,7 +25,6 @@ import bisq.network.p2p.network.Connection;
 import bisq.network.p2p.network.ConnectionListener;
 import bisq.network.p2p.network.MessageListener;
 import bisq.network.p2p.network.NetworkNode;
-import bisq.network.p2p.network.PeerType;
 import bisq.network.p2p.network.SetupListener;
 import bisq.network.p2p.peers.BroadcastHandler;
 import bisq.network.p2p.peers.Broadcaster;
@@ -426,7 +425,6 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     public void onMessage(NetworkEnvelope networkEnvelope, Connection connection) {
         if (networkEnvelope instanceof PrefixedSealedAndSignedMessage) {
             PrefixedSealedAndSignedMessage sealedMsg = (PrefixedSealedAndSignedMessage) networkEnvelope;
-            connection.setPeerType(PeerType.DIRECT_MSG_PEER);
             try {
                 DecryptedMessageWithPubKey decryptedMsg = encryptionService.decryptAndVerify(sealedMsg.getSealedAndSigned());
                 connection.maybeHandleSupportedCapabilitiesMessage(decryptedMsg.getNetworkEnvelope());

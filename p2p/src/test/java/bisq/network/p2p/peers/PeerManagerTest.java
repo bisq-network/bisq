@@ -80,7 +80,7 @@ public class PeerManagerTest {
         assertEquals(3, node.getNetworkNode().getAllConnections().size());
         List<Connection> inboundSortedPeerConnections = node.getNetworkNode().getAllConnections().stream()
                 .filter(e -> e instanceof InboundConnection)
-                .filter(e -> e.getPeerType() == PeerType.PEER)
+                .filter(e -> e.getConnectionState().getPeerType() == PeerType.PEER)
                 .sorted(Comparator.comparingLong(o -> o.getStatistic().getLastActivityTimestamp()))
                 .collect(Collectors.toList());
         Connection oldestConnection = inboundSortedPeerConnections.remove(0);
@@ -119,7 +119,7 @@ public class PeerManagerTest {
         }
         assertEquals(maxConnectionsPeer + 1, node.getNetworkNode().getAllConnections().size());
         List<Connection> sortedPeerConnections = node.getNetworkNode().getAllConnections().stream()
-                .filter(e -> e.getPeerType() == PeerType.PEER)
+                .filter(e -> e.getConnectionState().getPeerType() == PeerType.PEER)
                 .sorted(Comparator.comparingLong(o -> o.getStatistic().getLastActivityTimestamp()))
                 .collect(Collectors.toList());
         Connection oldestConnection = sortedPeerConnections.remove(0);
@@ -158,8 +158,8 @@ public class PeerManagerTest {
         }
         assertEquals(maxConnectionsNonDirect + 1, node.getNetworkNode().getAllConnections().size());
         List<Connection> sortedPeerConnections = node.getNetworkNode().getAllConnections().stream()
-                .filter(e -> e.getPeerType() != PeerType.DIRECT_MSG_PEER &&
-                        e.getPeerType() != PeerType.INITIAL_DATA_EXCHANGE)
+                .filter(e -> e.getConnectionState().getPeerType() != PeerType.DIRECT_MSG_PEER &&
+                        e.getConnectionState().getPeerType() != PeerType.INITIAL_DATA_EXCHANGE)
                 .sorted(Comparator.comparingLong(o -> o.getStatistic().getLastActivityTimestamp()))
                 .collect(Collectors.toList());
         Connection oldestConnection = sortedPeerConnections.remove(0);
