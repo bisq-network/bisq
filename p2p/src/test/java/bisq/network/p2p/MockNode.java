@@ -19,6 +19,7 @@ package bisq.network.p2p;
 
 import bisq.network.p2p.network.Connection;
 import bisq.network.p2p.network.ConnectionState;
+import bisq.network.p2p.network.ConnectionStatistics;
 import bisq.network.p2p.network.InboundConnection;
 import bisq.network.p2p.network.NetworkNode;
 import bisq.network.p2p.network.OutboundConnection;
@@ -71,9 +72,15 @@ public class MockNode {
 
     public void addInboundConnection(PeerType peerType) {
         InboundConnection inboundConnection = mock(InboundConnection.class);
+
+        ConnectionStatistics connectionStatistics = mock(ConnectionStatistics.class);
+        when(connectionStatistics.getConnectionCreationTimeStamp()).thenReturn(0L);
+        when(inboundConnection.getConnectionStatistics()).thenReturn(connectionStatistics);
+
         ConnectionState connectionState = mock(ConnectionState.class);
         when(connectionState.getPeerType()).thenReturn(peerType);
         when(inboundConnection.getConnectionState()).thenReturn(connectionState);
+
         Statistic statistic = mock(Statistic.class);
         long lastActivityTimestamp = System.currentTimeMillis();
         when(statistic.getLastActivityTimestamp()).thenReturn(lastActivityTimestamp);
@@ -84,9 +91,15 @@ public class MockNode {
 
     public void addOutboundConnection(PeerType peerType) {
         OutboundConnection outboundConnection = mock(OutboundConnection.class);
+
+        ConnectionStatistics connectionStatistics = mock(ConnectionStatistics.class);
+        when(connectionStatistics.getConnectionCreationTimeStamp()).thenReturn(0L);
+        when(outboundConnection.getConnectionStatistics()).thenReturn(connectionStatistics);
+
         ConnectionState connectionState = mock(ConnectionState.class);
         when(connectionState.getPeerType()).thenReturn(peerType);
         when(outboundConnection.getConnectionState()).thenReturn(connectionState);
+
         Statistic statistic = mock(Statistic.class);
         long lastActivityTimestamp = System.currentTimeMillis();
         when(statistic.getLastActivityTimestamp()).thenReturn(lastActivityTimestamp);
