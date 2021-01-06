@@ -56,8 +56,8 @@ public class ConnectionStatistics implements MessageListener {
     public String getInfo() {
         String ls = System.lineSeparator();
         long now = System.currentTimeMillis();
-        String conInstance = connection instanceof InboundConnection ? "Inbound" : "Outbound";
-        return String.format("%s connection to %s%s " +
+        String conInstance = connection instanceof InboundConnection ? "Inbound connection from" : "Outbound connection to";
+        return String.format("%s %s%s " +
                         "of type %s " +
                         "was creation %s sec. ago (on %s) " +
                         "with UID %s." + ls +
@@ -66,7 +66,7 @@ public class ConnectionStatistics implements MessageListener {
                         "Received data: %s;",
                 conInstance,
                 connectionState.isSeedNode() ? "seed node " : "",
-                connection.getPeersNodeAddressOptional().map(NodeAddress::getFullAddress).orElse("N/A"),
+                connection.getPeersNodeAddressOptional().map(NodeAddress::getFullAddress).orElse("[address not known yet]"),
                 connectionState.getPeerType().name(),
                 (now - connectionCreationTimeStamp) / 1000,
                 new Date(connectionCreationTimeStamp),
