@@ -54,6 +54,7 @@ import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import lombok.Getter;
@@ -81,6 +82,7 @@ public final class PeerManager implements ConnectionListener, PersistedDataHost 
     // Age of what we consider connected peers still as live peers
     private static final long MAX_AGE_LIVE_PEERS = TimeUnit.MINUTES.toMillis(30);
     private static final boolean PRINT_REPORTED_PEERS_DETAILS = true;
+    private Timer printStatisticsTimer;
     private boolean shutDownRequested;
 
 
@@ -171,13 +173,22 @@ public final class PeerManager implements ConnectionListener, PersistedDataHost 
             }
         };
         clockWatcher.addListener(clockWatcherListener);
+
+        printStatisticsTimer = UserThread.runPeriodically(this::printStatistics, TimeUnit.MINUTES.toSeconds(1));
     }
 
     public void shutDown() {
         shutDownRequested = true;
+
         networkNode.removeConnectionListener(this);
         clockWatcher.removeListener(clockWatcherListener);
+
         stopCheckMaxConnectionsTimer();
+
+        if (printStatisticsTimer != null) {
+            printStatisticsTimer.stop();
+            printStatisticsTimer = null;
+        }
     }
 
 
@@ -790,6 +801,18 @@ public final class PeerManager implements ConnectionListener, PersistedDataHost 
             checkMaxConnectionsTimer.stop();
             checkMaxConnectionsTimer = null;
         }
+    }
+
+    private void printStatistics() {
+        String ls = System.lineSeparator();
+        StringBuilder sb = new StringBuilder("Connection statistics: " + ls);
+        AtomicInteger counter = new AtomicInteger();
+        networkNode.getAllConnections().stream()
+                .sorted(Comparator.comparingLong(o -> o.getStatistic().getLastActivityTimestamp()))
+                .forEach(e -> sb.append("Connection ")
+                        .append(counter.incrementAndGet()).append(": ")
+                        .append(e.getConnectionStatistics().getInfo()).append(ls));
+        log.error(sb.toString());
     }
 
     private void printConnectedPeers() {

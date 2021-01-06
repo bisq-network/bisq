@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.network;
 
+import bisq.network.p2p.BundleOfEnvelopes;
 import bisq.network.p2p.InitialDataRequest;
 import bisq.network.p2p.InitialDataResponse;
 import bisq.network.p2p.PrefixedSealedAndSignedMessage;
@@ -50,9 +51,6 @@ public class ConnectionState implements MessageListener {
     private static int expectedRequests = 6;
 
     private final Connection connection;
-    @Getter
-    private final long connectionCreationTimeStamp;
-
 
     @Getter
     private PeerType peerType = PeerType.PEER;
@@ -71,8 +69,6 @@ public class ConnectionState implements MessageListener {
     public ConnectionState(Connection connection) {
         this.connection = connection;
 
-        connectionCreationTimeStamp = System.currentTimeMillis();
-
         connection.addMessageListener(this);
     }
 
@@ -83,12 +79,20 @@ public class ConnectionState implements MessageListener {
 
     @Override
     public void onMessage(NetworkEnvelope networkEnvelope, Connection connection) {
-        onMessageSentOrReceived(networkEnvelope);
+        if (networkEnvelope instanceof BundleOfEnvelopes) {
+            ((BundleOfEnvelopes) networkEnvelope).getEnvelopes().forEach(this::onMessageSentOrReceived);
+        } else {
+            onMessageSentOrReceived(networkEnvelope);
+        }
     }
 
     @Override
     public void onMessageSent(NetworkEnvelope networkEnvelope, Connection connection) {
-        onMessageSentOrReceived(networkEnvelope);
+        if (networkEnvelope instanceof BundleOfEnvelopes) {
+            ((BundleOfEnvelopes) networkEnvelope).getEnvelopes().forEach(this::onMessageSentOrReceived);
+        } else {
+            onMessageSentOrReceived(networkEnvelope);
+        }
     }
 
     private void onMessageSentOrReceived(NetworkEnvelope networkEnvelope) {
@@ -120,11 +124,9 @@ public class ConnectionState implements MessageListener {
     }
 
     private void maybeResetInitialDataExchangeType() {
-        boolean standardInitialDataExchangeCompleted = expectedRequests == numInitialDataRequests &&
-                numInitialDataResponses == numInitialDataRequests;
-        if (standardInitialDataExchangeCompleted) {
-            // We have send and received the expected messages for initial data requests. We delay a bit the reset
-            // to give the clients time for processing the response.
+        if (numInitialDataResponses >= expectedRequests) {
+            // We have received the expected messages from initial data requests. We delay a bit the reset
+            // to give time for processing the response.
             if (initialDataExchangeCompletedTimer == null) {
                 initialDataExchangeCompletedTimer = UserThread.runAfter(this::resetInitialDataExchangeType, COMPLETED_TIMER_DELAY_SEC);
             }
@@ -140,6 +142,9 @@ public class ConnectionState implements MessageListener {
 
         stopTimer();
         peerType = PeerType.PEER;
+        log.info("We have changed the peerType from INITIAL_DATA_EXCHANGE to PEER as we have received all " +
+                        "expected initial data responses at connection with peer {}/{}.",
+                connection.getPeersNodeAddressOptional(), connection.getUid());
     }
 
     private void stopTimer() {
@@ -153,12 +158,9 @@ public class ConnectionState implements MessageListener {
         }
     }
 
-
     @Override
     public String toString() {
         return "ConnectionState{" +
-                "\n     connection=" + connection +
-                ",\n     connectionCreationTimeStamp=" + connectionCreationTimeStamp +
                 ",\n     peerType=" + peerType +
                 ",\n     numInitialDataRequests=" + numInitialDataRequests +
                 ",\n     numInitialDataResponses=" + numInitialDataResponses +

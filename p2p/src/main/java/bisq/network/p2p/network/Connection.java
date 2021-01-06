@@ -135,6 +135,8 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
     private final Statistic statistic;
     @Getter
     private final ConnectionState connectionState;
+    @Getter
+    private final ConnectionStatistics connectionStatistics;
 
     // set in init
     private SynchronizedProtoOutputStream protoOutputStream;
@@ -182,6 +184,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
         this.networkProtoResolver = networkProtoResolver;
         init(peersNodeAddress);
         connectionState = new ConnectionState(this);
+        connectionStatistics = new ConnectionStatistics(this, connectionState);
     }
 
     private void init(@Nullable NodeAddress peersNodeAddress) {
@@ -275,7 +278,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                                                     bundle;
                                             try {
                                                 protoOutputStream.writeEnvelope(envelope);
-                                                UserThread.execute(() -> messageListeners.forEach(e -> e.onMessageSent(networkEnvelope, this)));
+                                                UserThread.execute(() -> messageListeners.forEach(e -> e.onMessageSent(envelope, this)));
                                             } catch (Throwable t) {
                                                 log.error("Sending envelope of class {} to address {} " +
                                                                 "failed due {}",
