@@ -21,6 +21,7 @@ import bisq.network.p2p.BundleOfEnvelopes;
 import bisq.network.p2p.NodeAddress;
 
 import bisq.common.proto.network.NetworkEnvelope;
+import bisq.common.util.Utilities;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -57,21 +58,24 @@ public class ConnectionStatistics implements MessageListener {
         String ls = System.lineSeparator();
         long now = System.currentTimeMillis();
         String conInstance = connection instanceof InboundConnection ? "Inbound connection from" : "Outbound connection to";
+        String age = connectionCreationTimeStamp > 0 ? Utilities.formatDurationAsWords(now - connectionCreationTimeStamp, true, true) :
+                "N/A";
         return String.format("%s %s%s " +
                         "of type %s " +
-                        "was creation %s sec. ago (on %s) " +
+                        "was creation on %s " +
                         "with UID %s." + ls +
-                        "Last message sent/received %s sec. ago." + ls +
+                        "Connection age: %s" + ls +
+                        "Last message sent/received %s ms ago." + ls +
                         "Sent data: %s;" + ls +
                         "Received data: %s;",
                 conInstance,
                 connectionState.isSeedNode() ? "seed node " : "",
                 connection.getPeersNodeAddressOptional().map(NodeAddress::getFullAddress).orElse("[address not known yet]"),
                 connectionState.getPeerType().name(),
-                (now - connectionCreationTimeStamp) / 1000,
-                new Date(connectionCreationTimeStamp),
+                connectionCreationTimeStamp > 0 ? new Date(connectionCreationTimeStamp) : "N/A",
                 connection.getUid(),
-                (now - lastMessageTimestamp) / 1000,
+                age,
+                lastMessageTimestamp > 0 ? now - lastMessageTimestamp : "N/A",
                 sentDataMap.toString(),
                 receivedDataMap.toString());
     }
