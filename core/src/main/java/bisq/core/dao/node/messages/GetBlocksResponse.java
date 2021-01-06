@@ -21,6 +21,7 @@ import bisq.core.dao.node.full.RawBlock;
 
 import bisq.network.p2p.DirectMessage;
 import bisq.network.p2p.ExtendedDataSizePermission;
+import bisq.network.p2p.InitialDataResponse;
 
 import bisq.common.app.Version;
 import bisq.common.proto.network.NetworkEnvelope;
@@ -36,7 +37,8 @@ import lombok.extern.slf4j.Slf4j;
 @EqualsAndHashCode(callSuper = true)
 @Getter
 @Slf4j
-public final class GetBlocksResponse extends NetworkEnvelope implements DirectMessage, ExtendedDataSizePermission {
+public final class GetBlocksResponse extends NetworkEnvelope implements DirectMessage,
+        ExtendedDataSizePermission, InitialDataResponse {
     private final List<RawBlock> blocks;
     private final int requestNonce;
 

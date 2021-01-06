@@ -18,6 +18,7 @@
 package bisq.core.dao.monitoring.network.messages;
 
 import bisq.network.p2p.DirectMessage;
+import bisq.network.p2p.InitialDataRequest;
 import bisq.network.p2p.storage.payload.CapabilityRequiringPayload;
 
 import bisq.common.app.Capabilities;
@@ -29,7 +30,8 @@ import lombok.Getter;
 
 @EqualsAndHashCode(callSuper = true)
 @Getter
-public abstract class GetStateHashesRequest extends NetworkEnvelope implements DirectMessage, CapabilityRequiringPayload {
+public abstract class GetStateHashesRequest extends NetworkEnvelope implements DirectMessage,
+        CapabilityRequiringPayload, InitialDataRequest {
     protected final int height;
     protected final int nonce;
 

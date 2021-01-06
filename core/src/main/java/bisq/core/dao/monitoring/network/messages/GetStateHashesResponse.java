@@ -21,6 +21,7 @@ import bisq.core.dao.monitoring.model.StateHash;
 
 import bisq.network.p2p.DirectMessage;
 import bisq.network.p2p.ExtendedDataSizePermission;
+import bisq.network.p2p.InitialDataResponse;
 
 import bisq.common.proto.network.NetworkEnvelope;
 
@@ -31,7 +32,8 @@ import lombok.Getter;
 
 @EqualsAndHashCode(callSuper = true)
 @Getter
-public abstract class GetStateHashesResponse<T extends StateHash> extends NetworkEnvelope implements DirectMessage, ExtendedDataSizePermission {
+public abstract class GetStateHashesResponse<T extends StateHash> extends NetworkEnvelope implements DirectMessage,
+        ExtendedDataSizePermission, InitialDataResponse {
     protected final List<T> stateHashes;
     protected final int requestNonce;
 

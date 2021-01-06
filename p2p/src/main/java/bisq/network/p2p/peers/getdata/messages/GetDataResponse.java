@@ -18,6 +18,7 @@
 package bisq.network.p2p.peers.getdata.messages;
 
 import bisq.network.p2p.ExtendedDataSizePermission;
+import bisq.network.p2p.InitialDataResponse;
 import bisq.network.p2p.SupportedCapabilitiesMessage;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import bisq.network.p2p.storage.payload.ProtectedMailboxStorageEntry;
@@ -41,7 +42,8 @@ import org.jetbrains.annotations.NotNull;
 @Slf4j
 @EqualsAndHashCode(callSuper = true)
 @Value
-public final class GetDataResponse extends NetworkEnvelope implements SupportedCapabilitiesMessage, ExtendedDataSizePermission {
+public final class GetDataResponse extends NetworkEnvelope implements SupportedCapabilitiesMessage,
+        ExtendedDataSizePermission, InitialDataResponse {
     // Set of ProtectedStorageEntry objects
     private final Set<ProtectedStorageEntry> dataSet;
 
