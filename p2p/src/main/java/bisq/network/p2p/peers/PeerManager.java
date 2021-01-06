@@ -503,6 +503,7 @@ public final class PeerManager implements ConnectionListener, PersistedDataHost 
         List<Connection> candidates = allConnections.stream()
                 .filter(e -> e instanceof InboundConnection)
                 .filter(e -> e.getConnectionState().getPeerType() == PeerType.PEER)
+                .sorted(Comparator.comparingLong(o -> o.getStatistic().getLastActivityTimestamp()))
                 .collect(Collectors.toList());
 
         if (candidates.isEmpty()) {
@@ -515,9 +516,10 @@ public final class PeerManager implements ConnectionListener, PersistedDataHost 
             }
 
             log.info("We have exceeded maxConnectionsPeer limit of {}. " +
-                    "Lets try to remove ANY connection of type PEER.", maxConnectionsPeer);
+                    "Lets try to remove outbound connection of type PEER.", maxConnectionsPeer);
             candidates = allConnections.stream()
                     .filter(e -> e.getConnectionState().getPeerType() == PeerType.PEER)
+                    .sorted(Comparator.comparingLong(o -> o.getStatistic().getLastActivityTimestamp()))
                     .collect(Collectors.toList());
 
             if (candidates.isEmpty()) {
@@ -535,6 +537,7 @@ public final class PeerManager implements ConnectionListener, PersistedDataHost 
                 candidates = allConnections.stream()
                         .filter(e -> e.getConnectionState().getPeerType() != PeerType.DIRECT_MSG_PEER &&
                                 e.getConnectionState().getPeerType() != PeerType.INITIAL_DATA_EXCHANGE)
+                        .sorted(Comparator.comparingLong(o -> o.getConnectionState().getLastInitialDataExchangeMessageTimeStamp()))
                         .collect(Collectors.toList());
 
                 if (candidates.isEmpty()) {
@@ -547,24 +550,26 @@ public final class PeerManager implements ConnectionListener, PersistedDataHost 
                     }
 
                     log.info("We reached abs. max. connections. Lets try to remove ANY connection.");
-                    candidates = new ArrayList<>(allConnections);
+                    candidates = allConnections.stream()
+                            .sorted(Comparator.comparingLong(o -> o.getStatistic().getLastActivityTimestamp()))
+                            .collect(Collectors.toList());
                 }
             }
         }
 
         if (!candidates.isEmpty()) {
-            candidates.sort(Comparator.comparingLong(o -> o.getStatistic().getLastActivityTimestamp()));
             Connection connection = candidates.remove(0);
             log.info("checkMaxConnections: Num candidates for shut down={}. We close oldest connection: {}", candidates.size(), connection);
             log.debug("We are going to shut down the oldest connection.\n\tconnection={}", connection.toString());
-            if (!connection.isStopped())
+            if (!connection.isStopped()) {
                 connection.shutDown(CloseConnectionReason.TOO_MANY_CONNECTIONS_OPEN, () -> UserThread.runAfter(this::checkMaxConnections, 100, TimeUnit.MILLISECONDS));
-            return true;
-        } else {
-            log.info("No candidates found to remove.\n\t" +
-                    "size={}, allConnections={}", size, allConnections);
-            return false;
+                return true;
+            }
         }
+
+        log.info("No candidates found to remove.\n\t" +
+                "size={}, allConnections={}", size, allConnections);
+        return false;
     }
 
     private void removeAnonymousPeers() {
