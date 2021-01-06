@@ -141,7 +141,7 @@ public class PeerManagerTest {
     @Test
     public void testCheckMaxConnectionsNonDirectLimitNotExceeded() {
         for (int i = 0; i < maxConnectionsNonDirect; i++) {
-            node.addOutboundConnection(PeerType.SEED_NODE);
+            node.addOutboundConnection(PeerType.INITIAL_DATA_EXCHANGE);
         }
         assertEquals(maxConnectionsNonDirect, node.getNetworkNode().getAllConnections().size());
 
@@ -181,7 +181,7 @@ public class PeerManagerTest {
     @Test
     public void testCheckMaxConnectionsExceededWithOutboundSeeds() {
         for (int i = 0; i < 3; i++) {
-            node.addOutboundConnection(PeerType.SEED_NODE);
+            node.addOutboundConnection(PeerType.INITIAL_DATA_EXCHANGE);
         }
         assertEquals(3, node.getNetworkNode().getAllConnections().size());
 

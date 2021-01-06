@@ -18,8 +18,10 @@
 package bisq.network.p2p.network;
 
 public enum PeerType {
-    SEED_NODE,
+    // PEER is default type
     PEER,
-    DIRECT_MSG_PEER,
-    INITIAL_DATA_EXCHANGE
+    // If connection was used for initial data request/response. Those are marked with the InitialDataExchangeMessage interface
+    INITIAL_DATA_EXCHANGE,
+    // If a PrefixedSealedAndSignedMessage was sent (usually a trade message). Expects that node address is known.
+    DIRECT_MSG_PEER
 }
