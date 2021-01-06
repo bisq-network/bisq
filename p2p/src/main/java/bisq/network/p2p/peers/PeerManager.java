@@ -808,9 +808,9 @@ public final class PeerManager implements ConnectionListener, PersistedDataHost 
         StringBuilder sb = new StringBuilder("Connection statistics: " + ls);
         AtomicInteger counter = new AtomicInteger();
         networkNode.getAllConnections().stream()
-                .sorted(Comparator.comparingLong(o -> o.getStatistic().getLastActivityTimestamp()))
+                .sorted(Comparator.comparingLong(o -> o.getConnectionStatistics().getConnectionCreationTimeStamp()))
                 .forEach(e -> sb.append(ls).append("Connection ")
-                        .append(counter.incrementAndGet()).append(": ")
+                        .append(counter.incrementAndGet()).append(ls)
                         .append(e.getConnectionStatistics().getInfo()).append(ls));
         log.error(sb.toString());
     }

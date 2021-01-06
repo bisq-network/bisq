@@ -43,7 +43,7 @@ public class ConnectionState implements MessageListener {
     // if it exceeds its limits the connectionCreationTimeStamp and lastInitialDataExchangeMessageTimeStamp can be
     // used to set priorities for closing connections.
     private static final long PEER_RESET_TIMER_DELAY_SEC = TimeUnit.MINUTES.toSeconds(4);
-    private static final long COMPLETED_TIMER_DELAY_SEC = 2;
+    private static final long COMPLETED_TIMER_DELAY_SEC = 10;
 
     // Number of expected requests in standard case. Can be different according to network conditions.
     // Is different for LiteDaoNodes and FullDaoNodes
@@ -126,7 +126,9 @@ public class ConnectionState implements MessageListener {
     private void maybeResetInitialDataExchangeType() {
         if (numInitialDataResponses >= expectedRequests) {
             // We have received the expected messages from initial data requests. We delay a bit the reset
-            // to give time for processing the response.
+            // to give time for processing the response and more tolerance to edge cases where we expect more responses.
+            // Reset to PEER does not mean disconnection as well, but just that this connection has lower priority and
+            // runs higher risk for getting disconnected.
             if (initialDataExchangeCompletedTimer == null) {
                 initialDataExchangeCompletedTimer = UserThread.runAfter(this::resetInitialDataExchangeType, COMPLETED_TIMER_DELAY_SEC);
             }

@@ -534,7 +534,7 @@ public class Utilities {
     }
 
     // Substitute for FormattingUtils if there is no dependency to core
-    public static String formatDurationAsWords(long durationMillis, boolean showSeconds, boolean showZeroValues) {
+    public static String formatDurationAsWords(long durationMillis) {
         String format = "";
         String second = "second";
         String minute = "minute";
@@ -549,11 +549,7 @@ public class Utilities {
             format = "d\' " + days + ", \'";
         }
 
-        if (showSeconds) {
-            format += "H\' " + hours + ", \'m\' " + minutes + ", \'s\' " + seconds + "\'";
-        } else {
-            format += "H\' " + hours + ", \'m\' " + minutes + "\'";
-        }
+        format += "H\' " + hours + ", \'m\' " + minutes + ", \'s\'.\'S\' " + seconds + "\'";
 
         String duration = durationMillis > 0 ? DurationFormatUtils.formatDuration(durationMillis, format) : "";
 
@@ -562,15 +558,14 @@ public class Utilities {
         duration = StringUtils.replacePattern(duration, "^1 " + hours + "|\\b1 " + hours, "1 " + hour);
         duration = StringUtils.replacePattern(duration, "^1 " + days + "|\\b1 " + days, "1 " + day);
 
-        if (!showZeroValues) {
-            duration = duration.replace(", 0 seconds", "");
-            duration = duration.replace(", 0 minutes", "");
-            duration = duration.replace(", 0 hours", "");
-            duration = StringUtils.replacePattern(duration, "^0 days, ", "");
-            duration = StringUtils.replacePattern(duration, "^0 hours, ", "");
-            duration = StringUtils.replacePattern(duration, "^0 minutes, ", "");
-            duration = StringUtils.replacePattern(duration, "^0 seconds, ", "");
-        }
+        duration = duration.replace(", 0 seconds", "");
+        duration = duration.replace(", 0 minutes", "");
+        duration = duration.replace(", 0 hours", "");
+        duration = StringUtils.replacePattern(duration, "^0 days, ", "");
+        duration = StringUtils.replacePattern(duration, "^0 hours, ", "");
+        duration = StringUtils.replacePattern(duration, "^0 minutes, ", "");
+        duration = StringUtils.replacePattern(duration, "^0 seconds, ", "");
+
         return duration.trim();
     }
 }

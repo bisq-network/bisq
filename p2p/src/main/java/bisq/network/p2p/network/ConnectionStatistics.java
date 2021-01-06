@@ -23,7 +23,6 @@ import bisq.network.p2p.NodeAddress;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.util.Utilities;
 
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -57,25 +56,32 @@ public class ConnectionStatistics implements MessageListener {
     public String getInfo() {
         String ls = System.lineSeparator();
         long now = System.currentTimeMillis();
-        String conInstance = connection instanceof InboundConnection ? "Inbound connection from" : "Outbound connection to";
-        String age = connectionCreationTimeStamp > 0 ? Utilities.formatDurationAsWords(now - connectionCreationTimeStamp, true, true) :
+        String conInstance = connection instanceof InboundConnection ? "Inbound" : "Outbound";
+        String age = connectionCreationTimeStamp > 0 ?
+                Utilities.formatDurationAsWords(now - connectionCreationTimeStamp) :
                 "N/A";
-        return String.format("%s %s%s " +
-                        "of type %s " +
-                        "was creation on %s " +
-                        "with UID %s." + ls +
-                        "Connection age: %s" + ls +
-                        "Last message sent/received %s ms ago." + ls +
+        String lastMsg = lastMessageTimestamp > 0 ?
+                Utilities.formatDurationAsWords(now - lastMessageTimestamp) :
+                "N/A";
+        String peer = connection.getPeersNodeAddressOptional()
+                .map(NodeAddress::getFullAddress)
+                .orElse("[address not known yet]");
+        return String.format(
+                "Age: %s" + ls +
+                        "Peer: %s%s " + ls +
+                        "Type: %s " + ls +
+                        "Direction: %s" + ls +
+                        "UID: %s" + ls +
+                        "Last message sent/received: %s" + ls +
                         "Sent data: %s;" + ls +
                         "Received data: %s;",
-                conInstance,
-                connectionState.isSeedNode() ? "seed node " : "",
-                connection.getPeersNodeAddressOptional().map(NodeAddress::getFullAddress).orElse("[address not known yet]"),
-                connectionState.getPeerType().name(),
-                connectionCreationTimeStamp > 0 ? new Date(connectionCreationTimeStamp) : "N/A",
-                connection.getUid(),
                 age,
-                lastMessageTimestamp > 0 ? now - lastMessageTimestamp : "N/A",
+                connectionState.isSeedNode() ? "[Seed node] " : "",
+                peer,
+                connectionState.getPeerType().name(),
+                conInstance,
+                connection.getUid(),
+                lastMsg,
                 sentDataMap.toString(),
                 receivedDataMap.toString());
     }
