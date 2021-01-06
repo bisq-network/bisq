@@ -174,7 +174,7 @@ public final class PeerManager implements ConnectionListener, PersistedDataHost 
         };
         clockWatcher.addListener(clockWatcherListener);
 
-        printStatisticsTimer = UserThread.runPeriodically(this::printStatistics, TimeUnit.MINUTES.toSeconds(1));
+        printStatisticsTimer = UserThread.runPeriodically(this::printStatistics, TimeUnit.MINUTES.toSeconds(5));
     }
 
     public void shutDown() {
