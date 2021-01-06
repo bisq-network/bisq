@@ -296,7 +296,7 @@ public final class PeerManager implements ConnectionListener, PersistedDataHost 
 
     public boolean isSeedNode(Connection connection) {
         return connection.getPeersNodeAddressOptional().isPresent() &&
-                seedNodeAddresses.contains(connection.getPeersNodeAddressOptional().get());
+                isSeedNode(connection.getPeersNodeAddressOptional().get());
     }
 
     public boolean isSelf(NodeAddress nodeAddress) {
