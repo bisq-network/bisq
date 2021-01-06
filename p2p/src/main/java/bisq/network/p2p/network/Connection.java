@@ -103,18 +103,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class Connection implements HasCapabilities, Runnable, MessageListener {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Enums
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public enum PeerType {
-        SEED_NODE,
-        PEER,
-        DIRECT_MSG_PEER,
-        INITIAL_DATA_REQUEST
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
     // Static
     ///////////////////////////////////////////////////////////////////////////////////////////
 
@@ -260,7 +248,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
 
         try {
             if (networkEnvelope instanceof PrefixedSealedAndSignedMessage && peersNodeAddressOptional.isPresent()) {
-                setPeerType(Connection.PeerType.DIRECT_MSG_PEER);
+                setPeerType(PeerType.DIRECT_MSG_PEER);
 
                 log.debug("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n" +
                                 "Sending direct message to peer" +
@@ -269,7 +257,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                         peersNodeAddressOptional.map(NodeAddress::toString).orElse("null"),
                         uid, Utilities.toTruncatedString(networkEnvelope), -1);
             } else if (networkEnvelope instanceof GetDataResponse && ((GetDataResponse) networkEnvelope).isGetUpdatedDataResponse()) {
-                setPeerType(Connection.PeerType.PEER);
+                setPeerType(PeerType.PEER);
             }
 
             // Throttle outbound network_messages
@@ -910,7 +898,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                         }
 
                         if (networkEnvelope instanceof PrefixedSealedAndSignedMessage)
-                            setPeerType(Connection.PeerType.DIRECT_MSG_PEER);
+                            setPeerType(PeerType.DIRECT_MSG_PEER);
 
                         onMessage(networkEnvelope, this);
                     }

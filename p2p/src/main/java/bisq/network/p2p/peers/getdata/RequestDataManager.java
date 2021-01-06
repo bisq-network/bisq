@@ -23,6 +23,7 @@ import bisq.network.p2p.network.Connection;
 import bisq.network.p2p.network.ConnectionListener;
 import bisq.network.p2p.network.MessageListener;
 import bisq.network.p2p.network.NetworkNode;
+import bisq.network.p2p.network.PeerType;
 import bisq.network.p2p.peers.PeerManager;
 import bisq.network.p2p.peers.getdata.messages.GetDataRequest;
 import bisq.network.p2p.peers.peerexchange.Peer;
@@ -260,7 +261,7 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
         if (networkEnvelope instanceof GetDataRequest) {
             if (!stopped) {
                 if (peerManager.isSeedNode(connection))
-                    connection.setPeerType(Connection.PeerType.SEED_NODE);
+                    connection.setPeerType(PeerType.SEED_NODE);
 
                 GetDataRequest getDataRequest = (GetDataRequest) networkEnvelope;
                 if (getDataRequest.getVersion() == null || !Version.isNewVersion(getDataRequest.getVersion(), "1.5.0")) {

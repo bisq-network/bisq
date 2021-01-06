@@ -27,6 +27,7 @@ import bisq.network.p2p.P2PServiceListener;
 import bisq.network.p2p.network.CloseConnectionReason;
 import bisq.network.p2p.network.Connection;
 import bisq.network.p2p.network.ConnectionListener;
+import bisq.network.p2p.network.PeerType;
 import bisq.network.p2p.peers.PeerManager;
 import bisq.network.p2p.storage.P2PDataStorage;
 
@@ -120,7 +121,7 @@ public class AppSetupWithP2P extends AppSetup {
             public void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection) {
                 // We only check at seed nodes as they are running the latest version
                 // Other disconnects might be caused by peers running an older version
-                if (connection.getPeerType() == Connection.PeerType.SEED_NODE &&
+                if (connection.getPeerType() == PeerType.SEED_NODE &&
                         closeConnectionReason == CloseConnectionReason.RULE_VIOLATION) {
                     log.warn("RULE_VIOLATION onDisconnect closeConnectionReason=" + closeConnectionReason);
                     log.warn("RULE_VIOLATION onDisconnect connection={}", connection);

@@ -21,6 +21,7 @@ import bisq.network.p2p.network.Connection;
 import bisq.network.p2p.network.InboundConnection;
 import bisq.network.p2p.network.NetworkNode;
 import bisq.network.p2p.network.OutboundConnection;
+import bisq.network.p2p.network.PeerType;
 import bisq.network.p2p.network.Statistic;
 import bisq.network.p2p.peers.PeerManager;
 import bisq.network.p2p.peers.peerexchange.PeerList;
@@ -67,7 +68,7 @@ public class MockNode {
         when(networkNode.getAllConnections()).thenReturn(connections);
     }
 
-    public void addInboundConnection(Connection.PeerType peerType) {
+    public void addInboundConnection(PeerType peerType) {
         InboundConnection inboundConnection = mock(InboundConnection.class);
         when(inboundConnection.getPeerType()).thenReturn(peerType);
         Statistic statistic = mock(Statistic.class);
@@ -78,7 +79,7 @@ public class MockNode {
         connections.add(inboundConnection);
     }
 
-    public void addOutboundConnection(Connection.PeerType peerType) {
+    public void addOutboundConnection(PeerType peerType) {
         OutboundConnection outboundConnection = mock(OutboundConnection.class);
         when(outboundConnection.getPeerType()).thenReturn(peerType);
         Statistic statistic = mock(Statistic.class);

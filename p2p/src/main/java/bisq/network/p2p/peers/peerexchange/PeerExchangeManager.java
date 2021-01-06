@@ -23,6 +23,7 @@ import bisq.network.p2p.network.Connection;
 import bisq.network.p2p.network.ConnectionListener;
 import bisq.network.p2p.network.MessageListener;
 import bisq.network.p2p.network.NetworkNode;
+import bisq.network.p2p.network.PeerType;
 import bisq.network.p2p.peers.PeerManager;
 import bisq.network.p2p.peers.peerexchange.messages.GetPeersRequest;
 import bisq.network.p2p.seed.SeedNodeRepository;
@@ -195,7 +196,7 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener,
         if (networkEnvelope instanceof GetPeersRequest) {
             if (!stopped) {
                 if (peerManager.isSeedNode(connection))
-                    connection.setPeerType(Connection.PeerType.SEED_NODE);
+                    connection.setPeerType(PeerType.SEED_NODE);
 
                 GetPeersRequestHandler getPeersRequestHandler = new GetPeersRequestHandler(networkNode,
                         peerManager,

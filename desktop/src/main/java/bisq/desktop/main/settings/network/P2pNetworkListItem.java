@@ -24,6 +24,7 @@ import bisq.core.util.FormattingUtils;
 
 import bisq.network.p2p.network.Connection;
 import bisq.network.p2p.network.OutboundConnection;
+import bisq.network.p2p.network.PeerType;
 import bisq.network.p2p.network.Statistic;
 
 import bisq.common.ClockWatcher;
@@ -109,9 +110,9 @@ public class P2pNetworkListItem {
     }
 
     public void updatePeerType() {
-        if (connection.getPeerType() == Connection.PeerType.SEED_NODE)
+        if (connection.getPeerType() == PeerType.SEED_NODE)
             peerType.set(Res.get("settings.net.seedNode"));
-        else if (connection.getPeerType() == Connection.PeerType.DIRECT_MSG_PEER)
+        else if (connection.getPeerType() == PeerType.DIRECT_MSG_PEER)
             peerType.set(Res.get("settings.net.directPeer"));
         else
             peerType.set(Res.get("settings.net.peer"));

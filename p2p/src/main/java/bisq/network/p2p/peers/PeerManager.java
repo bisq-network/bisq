@@ -23,6 +23,7 @@ import bisq.network.p2p.network.Connection;
 import bisq.network.p2p.network.ConnectionListener;
 import bisq.network.p2p.network.InboundConnection;
 import bisq.network.p2p.network.NetworkNode;
+import bisq.network.p2p.network.PeerType;
 import bisq.network.p2p.network.RuleViolation;
 import bisq.network.p2p.peers.peerexchange.Peer;
 import bisq.network.p2p.peers.peerexchange.PeerList;
@@ -205,7 +206,7 @@ public final class PeerManager implements ConnectionListener, PersistedDataHost 
     @Override
     public void onConnection(Connection connection) {
         if (isSeedNode(connection)) {
-            connection.setPeerType(Connection.PeerType.SEED_NODE);
+            connection.setPeerType(PeerType.SEED_NODE);
         }
 
         doHouseKeeping();
@@ -503,7 +504,7 @@ public final class PeerManager implements ConnectionListener, PersistedDataHost 
                 "Lets try first to remove the inbound connections of type PEER.");
         List<Connection> candidates = allConnections.stream()
                 .filter(e -> e instanceof InboundConnection)
-                .filter(e -> e.getPeerType() == Connection.PeerType.PEER)
+                .filter(e -> e.getPeerType() == PeerType.PEER)
                 .collect(Collectors.toList());
 
         if (candidates.isEmpty()) {
@@ -518,7 +519,7 @@ public final class PeerManager implements ConnectionListener, PersistedDataHost 
             log.info("We have exceeded maxConnectionsPeer limit of {}. " +
                     "Lets try to remove ANY connection of type PEER.", maxConnectionsPeer);
             candidates = allConnections.stream()
-                    .filter(e -> e.getPeerType() == Connection.PeerType.PEER)
+                    .filter(e -> e.getPeerType() == PeerType.PEER)
                     .collect(Collectors.toList());
 
             if (candidates.isEmpty()) {
@@ -534,8 +535,8 @@ public final class PeerManager implements ConnectionListener, PersistedDataHost 
                         "Lets try to remove any connection which is not " +
                         "of type DIRECT_MSG_PEER or INITIAL_DATA_REQUEST.", maxConnectionsNonDirect);
                 candidates = allConnections.stream()
-                        .filter(e -> e.getPeerType() != Connection.PeerType.DIRECT_MSG_PEER &&
-                                e.getPeerType() != Connection.PeerType.INITIAL_DATA_REQUEST)
+                        .filter(e -> e.getPeerType() != PeerType.DIRECT_MSG_PEER &&
+                                e.getPeerType() != PeerType.INITIAL_DATA_REQUEST)
                         .collect(Collectors.toList());
 
                 if (candidates.isEmpty()) {

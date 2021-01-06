@@ -22,6 +22,7 @@ import bisq.network.p2p.network.CloseConnectionReason;
 import bisq.network.p2p.network.Connection;
 import bisq.network.p2p.network.MessageListener;
 import bisq.network.p2p.network.NetworkNode;
+import bisq.network.p2p.network.PeerType;
 import bisq.network.p2p.peers.PeerManager;
 import bisq.network.p2p.peers.peerexchange.messages.GetPeersRequest;
 import bisq.network.p2p.peers.peerexchange.messages.GetPeersResponse;
@@ -167,7 +168,7 @@ class PeerExchangeHandler implements MessageListener {
             if (!stopped) {
                 GetPeersResponse getPeersResponse = (GetPeersResponse) networkEnvelope;
                 if (peerManager.isSeedNode(connection))
-                    connection.setPeerType(Connection.PeerType.SEED_NODE);
+                    connection.setPeerType(PeerType.SEED_NODE);
 
                 // Check if the response is for our request
                 if (getPeersResponse.getRequestNonce() == nonce) {
