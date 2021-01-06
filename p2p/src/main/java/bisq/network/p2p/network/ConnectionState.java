@@ -54,7 +54,7 @@ public class ConnectionState implements MessageListener {
     @Getter
     private int numInitialDataResponses = 0;
     @Getter
-    private long lastInitialDataExchangeMessageTimeStamp;
+    private long lastInitialDataMsgTimeStamp;
     @Setter
     @Getter
     private boolean isSeedNode;
@@ -108,7 +108,7 @@ public class ConnectionState implements MessageListener {
         }
 
         peerType = PeerType.INITIAL_DATA_EXCHANGE;
-        lastInitialDataExchangeMessageTimeStamp = System.currentTimeMillis();
+        lastInitialDataMsgTimeStamp = System.currentTimeMillis();
         maybeResetInitialDataExchangeType();
         if (peerTypeResetDueTimeoutTimer == null) {
             peerTypeResetDueTimeoutTimer = UserThread.runAfter(this::resetInitialDataExchangeType, PEER_RESET_TIMER_DELAY_SEC);

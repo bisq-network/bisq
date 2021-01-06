@@ -537,7 +537,7 @@ public final class PeerManager implements ConnectionListener, PersistedDataHost 
                 candidates = allConnections.stream()
                         .filter(e -> e.getConnectionState().getPeerType() != PeerType.DIRECT_MSG_PEER &&
                                 e.getConnectionState().getPeerType() != PeerType.INITIAL_DATA_EXCHANGE)
-                        .sorted(Comparator.comparingLong(o -> o.getConnectionState().getLastInitialDataExchangeMessageTimeStamp()))
+                        .sorted(Comparator.comparingLong(o -> o.getConnectionState().getLastInitialDataMsgTimeStamp()))
                         .collect(Collectors.toList());
 
                 if (candidates.isEmpty()) {
