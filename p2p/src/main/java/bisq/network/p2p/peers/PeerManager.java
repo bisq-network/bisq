@@ -474,7 +474,6 @@ public final class PeerManager implements ConnectionListener, PersistedDataHost 
                     peakNumConnections = Math.max(peakNumConnections, size);
 
                     removeAnonymousPeers();
-                    removeSuperfluousSeedNodes();
                     removeTooOldReportedPeers();
                     removeTooOldPersistedPeers();
                     checkMaxConnections();
@@ -586,24 +585,6 @@ public final class PeerManager implements ConnectionListener, PersistedDataHost 
                 }, REMOVE_ANONYMOUS_PEER_SEC));
     }
 
-    private void removeSuperfluousSeedNodes() {
-        if (allowDisconnectSeedNodes) {
-            if (networkNode.getConfirmedConnections().size() > disconnectFromSeedNode) {
-                List<Connection> seedNodes = networkNode.getConfirmedConnections().stream()
-                        .filter(this::isSeedNode)
-                        .collect(Collectors.toList());
-
-                if (!seedNodes.isEmpty()) {
-                    seedNodes.sort(Comparator.comparingLong(o -> o.getStatistic().getLastActivityTimestamp()));
-                    log.debug("Number of seed node connections to disconnect. Current size=" + seedNodes.size());
-                    Connection connection = seedNodes.get(0);
-                    log.debug("We are going to shut down the oldest connection.\n\tconnection={}", connection.toString());
-                    connection.shutDown(CloseConnectionReason.TOO_MANY_SEED_NODES_CONNECTED,
-                            () -> UserThread.runAfter(this::removeSuperfluousSeedNodes, 200, TimeUnit.MILLISECONDS));
-                }
-            }
-        }
-    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Reported peers
