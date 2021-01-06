@@ -19,6 +19,8 @@ package bisq.core.dao.monitoring.network.messages;
 
 import bisq.core.dao.monitoring.model.BlindVoteStateHash;
 
+import bisq.network.p2p.InitialDataRequest;
+
 import bisq.common.app.Version;
 import bisq.common.proto.network.NetworkEnvelope;
 
@@ -66,5 +68,10 @@ public final class GetBlindVoteStateHashesResponse extends GetStateHashesRespons
                         .collect(Collectors.toList()),
                 proto.getRequestNonce(),
                 messageVersion);
+    }
+
+    @Override
+    public Class<? extends InitialDataRequest> associatedRequest() {
+        return GetBlindVoteStateHashesRequest.class;
     }
 }
