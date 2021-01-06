@@ -154,12 +154,12 @@ public class PeerManagerTest {
     @Test
     public void testCheckMaxConnectionsNonDirectLimitExceeded() throws InterruptedException {
         for (int i = 0; i < maxConnectionsNonDirect + 1; i++) {
-            node.addOutboundConnection(PeerType.PEER);
+            node.addOutboundConnection(PeerType.INITIAL_DATA_EXCHANGE);
         }
         assertEquals(maxConnectionsNonDirect + 1, node.getNetworkNode().getAllConnections().size());
         List<Connection> sortedPeerConnections = node.getNetworkNode().getAllConnections().stream()
-                .filter(e -> e.getConnectionState().getPeerType() != PeerType.DIRECT_MSG_PEER &&
-                        e.getConnectionState().getPeerType() != PeerType.INITIAL_DATA_EXCHANGE)
+                .filter(e -> e.getConnectionState().getPeerType() != PeerType.PEER)
+                .filter(e -> e.getConnectionState().getPeerType() == PeerType.INITIAL_DATA_EXCHANGE)
                 .sorted(Comparator.comparingLong(o -> o.getStatistic().getLastActivityTimestamp()))
                 .collect(Collectors.toList());
         Connection oldestConnection = sortedPeerConnections.remove(0);

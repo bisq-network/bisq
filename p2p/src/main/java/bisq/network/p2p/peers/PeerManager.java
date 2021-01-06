@@ -57,7 +57,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
@@ -124,14 +123,11 @@ public final class PeerManager implements ConnectionListener, PersistedDataHost 
 
     @Getter
     private int minConnections;
-    private int disconnectFromSeedNode;
     private int outBoundPeerTrigger;
     private int initialDataExchangeTrigger;
     private int maxConnectionsAbsolute;
     @Getter
     private int peakNumConnections;
-    @Setter
-    private boolean allowDisconnectSeedNodes;
     @Getter
     private int numAllConnectionsLostEvents;
 
@@ -531,8 +527,7 @@ public final class PeerManager implements ConnectionListener, PersistedDataHost 
                 }
 
                 log.info("We have exceeded initialDataExchangeTrigger of {} " +
-                        "Lets try to remove any connection which is not " +
-                        "of type DIRECT_MSG_PEER or INITIAL_DATA_REQUEST.", initialDataExchangeTrigger);
+                        "Lets try to remove the oldest INITIAL_DATA_EXCHANGE connection.", initialDataExchangeTrigger);
                 candidates = allConnections.stream()
                         .filter(e -> e.getConnectionState().getPeerType() == PeerType.INITIAL_DATA_EXCHANGE)
                         .sorted(Comparator.comparingLong(o -> o.getConnectionState().getLastInitialDataMsgTimeStamp()))
@@ -745,7 +740,6 @@ public final class PeerManager implements ConnectionListener, PersistedDataHost 
     private void setConnectionLimits(int maxConnections) {
         this.maxConnections = maxConnections;                                                     // app node 12; seedNode 20
         minConnections = Math.max(1, (int) Math.round(maxConnections * 0.7));                     // app node  8; seedNode 14
-        disconnectFromSeedNode = maxConnections;                                                  // app node 12; seedNode 20
         outBoundPeerTrigger = Math.max(4, (int) Math.round(maxConnections * 1.3));                // app node 16; seedNode 26
         initialDataExchangeTrigger = Math.max(8, (int) Math.round(maxConnections * 1.7));         // app node 20; seedNode 34
         maxConnectionsAbsolute = Math.max(12, (int) Math.round(maxConnections * 2.5));            // app node 30; seedNode 50
