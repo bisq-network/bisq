@@ -772,6 +772,16 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         requestPersistence();
     }
 
+    public void setShowOffersMatchingMyAccounts(boolean value) {
+        prefPayload.setShowOffersMatchingMyAccounts(value);
+        requestPersistence();
+    }
+
+    public void setDenyApiTaker(boolean value) {
+        prefPayload.setDenyApiTaker(value);
+        requestPersistence();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getter
@@ -1081,5 +1091,9 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         void setAutoConfirmSettings(AutoConfirmSettings autoConfirmSettings);
 
         void setHideNonAccountPaymentMethods(boolean hideNonAccountPaymentMethods);
+
+        void setShowOffersMatchingMyAccounts(boolean value);
+
+        void setDenyApiTaker(boolean value);
     }
 }

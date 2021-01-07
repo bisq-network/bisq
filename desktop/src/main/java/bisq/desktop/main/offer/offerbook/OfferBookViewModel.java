@@ -28,7 +28,6 @@ import bisq.desktop.util.GUIUtil;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.btc.setup.WalletsSetup;
-import bisq.core.filter.FilterManager;
 import bisq.core.locale.BankUtil;
 import bisq.core.locale.CountryUtil;
 import bisq.core.locale.CryptoCurrency;
@@ -39,6 +38,7 @@ import bisq.core.locale.TradeCurrency;
 import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
+import bisq.core.offer.OfferFilter;
 import bisq.core.offer.OfferPayload;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.payment.PaymentAccount;
@@ -56,7 +56,6 @@ import bisq.core.util.coin.CoinFormatter;
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
 
-import bisq.common.app.Version;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
 
@@ -88,6 +87,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
@@ -102,10 +102,10 @@ class OfferBookViewModel extends ActivatableViewModel {
     private final P2PService p2PService;
     final PriceFeedService priceFeedService;
     private final ClosedTradableManager closedTradableManager;
-    private final FilterManager filterManager;
     final AccountAgeWitnessService accountAgeWitnessService;
     private final Navigation navigation;
     private final PriceUtil priceUtil;
+    final OfferFilter offerFilter;
     private final CoinFormatter btcFormatter;
     private final BsqFormatter bsqFormatter;
 
@@ -122,15 +122,17 @@ class OfferBookViewModel extends ActivatableViewModel {
 
     // If id is empty string we ignore filter (display all methods)
 
-    PaymentMethod selectedPaymentMethod = PaymentMethod.getDummyPaymentMethod(GUIUtil.SHOW_ALL_FLAG);
+    PaymentMethod selectedPaymentMethod = getShowAllEntryForPaymentMethod();
 
     private boolean isTabSelected;
     final BooleanProperty showAllTradeCurrenciesProperty = new SimpleBooleanProperty(true);
+    final BooleanProperty disableMatchToggle = new SimpleBooleanProperty();
     final IntegerProperty maxPlacesForAmount = new SimpleIntegerProperty();
     final IntegerProperty maxPlacesForVolume = new SimpleIntegerProperty();
     final IntegerProperty maxPlacesForPrice = new SimpleIntegerProperty();
     final IntegerProperty maxPlacesForMarketPriceMargin = new SimpleIntegerProperty();
     boolean showAllPaymentMethods = true;
+    boolean useOffersMatchingMyAccountsFilter;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -146,10 +148,10 @@ class OfferBookViewModel extends ActivatableViewModel {
                               P2PService p2PService,
                               PriceFeedService priceFeedService,
                               ClosedTradableManager closedTradableManager,
-                              FilterManager filterManager,
                               AccountAgeWitnessService accountAgeWitnessService,
                               Navigation navigation,
                               PriceUtil priceUtil,
+                              OfferFilter offerFilter,
                               @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
                               BsqFormatter bsqFormatter) {
         super();
@@ -162,10 +164,10 @@ class OfferBookViewModel extends ActivatableViewModel {
         this.p2PService = p2PService;
         this.priceFeedService = priceFeedService;
         this.closedTradableManager = closedTradableManager;
-        this.filterManager = filterManager;
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.navigation = navigation;
         this.priceUtil = priceUtil;
+        this.offerFilter = offerFilter;
         this.btcFormatter = btcFormatter;
         this.bsqFormatter = bsqFormatter;
 
@@ -213,7 +215,7 @@ class OfferBookViewModel extends ActivatableViewModel {
         filteredItems.addListener(filterItemsListener);
 
         String code = direction == OfferPayload.Direction.BUY ? preferences.getBuyScreenCurrencyCode() : preferences.getSellScreenCurrencyCode();
-        if (code != null && !code.equals(GUIUtil.SHOW_ALL_FLAG) && !code.isEmpty() &&
+        if (code != null && !code.isEmpty() && !isShowAllEntry(code) &&
                 CurrencyUtil.getTradeCurrency(code).isPresent()) {
             showAllTradeCurrenciesProperty.set(false);
             selectedTradeCurrency = CurrencyUtil.getTradeCurrency(code).get();
@@ -223,10 +225,15 @@ class OfferBookViewModel extends ActivatableViewModel {
         }
         tradeCurrencyCode.set(selectedTradeCurrency.getCode());
 
+        if (user != null) {
+            disableMatchToggle.set(user.getPaymentAccounts() == null || user.getPaymentAccounts().isEmpty());
+        }
+        useOffersMatchingMyAccountsFilter = !disableMatchToggle.get() && isShowOffersMatchingMyAccounts();
+
         fillAllTradeCurrencies();
         preferences.getTradeCurrenciesAsObservable().addListener(tradeCurrencyListChangeListener);
         offerBook.fillOfferBookListItems();
-        applyFilterPredicate();
+        filterOffers();
         setMarketPriceFeedCurrency();
 
         priceUtil.recalculateBsq30DayAveragePrice();
@@ -237,6 +244,7 @@ class OfferBookViewModel extends ActivatableViewModel {
         filteredItems.removeListener(filterItemsListener);
         preferences.getTradeCurrenciesAsObservable().removeListener(tradeCurrencyListChangeListener);
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
@@ -268,7 +276,7 @@ class OfferBookViewModel extends ActivatableViewModel {
             }
 
             setMarketPriceFeedCurrency();
-            applyFilterPredicate();
+            filterOffers();
 
             if (direction == OfferPayload.Direction.BUY)
                 preferences.setBuyScreenCurrencyCode(code);
@@ -288,22 +296,33 @@ class OfferBookViewModel extends ActivatableViewModel {
             // If we select TransferWise we switch to show all currencies as TransferWise supports
             // sending to most currencies.
             if (paymentMethod.getId().equals(PaymentMethod.TRANSFERWISE_ID)) {
-                onSetTradeCurrency(new CryptoCurrency(GUIUtil.SHOW_ALL_FLAG, ""));
+                onSetTradeCurrency(getShowAllEntryForCurrency());
             }
         } else {
-            this.selectedPaymentMethod = PaymentMethod.getDummyPaymentMethod(GUIUtil.SHOW_ALL_FLAG);
+            this.selectedPaymentMethod = getShowAllEntryForPaymentMethod();
         }
 
-        applyFilterPredicate();
+        filterOffers();
     }
 
     void onRemoveOpenOffer(Offer offer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         openOfferManager.removeOffer(offer, resultHandler, errorMessageHandler);
     }
 
+    void onShowOffersMatchingMyAccounts(boolean isSelected) {
+        useOffersMatchingMyAccountsFilter = isSelected;
+        preferences.setShowOffersMatchingMyAccounts(useOffersMatchingMyAccountsFilter);
+        filterOffers();
+    }
+
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    boolean isShowOffersMatchingMyAccounts() {
+        return preferences.isShowOffersMatchingMyAccounts();
+    }
 
     SortedList<OfferBookListItem> getOfferList() {
         return sortedItems;
@@ -348,7 +367,7 @@ class OfferBookViewModel extends ActivatableViewModel {
         }
 
         list.sort(Comparator.naturalOrder());
-        list.add(0, PaymentMethod.getDummyPaymentMethod(GUIUtil.SHOW_ALL_FLAG));
+        list.add(0, getShowAllEntryForPaymentMethod());
         return list;
     }
 
@@ -528,19 +547,15 @@ class OfferBookViewModel extends ActivatableViewModel {
     private void fillAllTradeCurrencies() {
         allTradeCurrencies.clear();
         // Used for ignoring filter (show all)
-        allTradeCurrencies.add(new CryptoCurrency(GUIUtil.SHOW_ALL_FLAG, ""));
+        allTradeCurrencies.add(getShowAllEntryForCurrency());
         allTradeCurrencies.addAll(preferences.getTradeCurrenciesAsObservable());
-        allTradeCurrencies.add(new CryptoCurrency(GUIUtil.EDIT_FLAG, ""));
+        allTradeCurrencies.add(getEditEntryForCurrency());
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Checks
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    boolean isAnyPaymentAccountValidForOffer(Offer offer) {
-        return user.getPaymentAccounts() != null &&
-                PaymentAccountUtil.isAnyTakerPaymentAccountValidForOffer(offer, user.getPaymentAccounts());
-    }
 
     boolean hasPaymentAccountForCurrency() {
         return (showAllTradeCurrenciesProperty.get() &&
@@ -560,8 +575,15 @@ class OfferBookViewModel extends ActivatableViewModel {
     // Filters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void applyFilterPredicate() {
-        filteredItems.setPredicate(offerBookListItem -> {
+    private void filterOffers() {
+        Predicate<OfferBookListItem> predicate = useOffersMatchingMyAccountsFilter ?
+                getCurrencyAndMethodPredicate().and(getOffersMatchingMyAccountsPredicate()) :
+                getCurrencyAndMethodPredicate();
+        filteredItems.setPredicate(predicate);
+    }
+
+    private Predicate<OfferBookListItem> getCurrencyAndMethodPredicate() {
+        return offerBookListItem -> {
             Offer offer = offerBookListItem.getOffer();
             boolean directionResult = offer.getDirection() != direction;
             boolean currencyResult = (showAllTradeCurrenciesProperty.get()) ||
@@ -570,58 +592,18 @@ class OfferBookViewModel extends ActivatableViewModel {
                     offer.getPaymentMethod().equals(selectedPaymentMethod);
             boolean notMyOfferOrShowMyOffersActivated = !isMyOffer(offerBookListItem.getOffer()) || preferences.isShowOwnOffersInOfferBook();
             return directionResult && currencyResult && paymentMethodResult && notMyOfferOrShowMyOffersActivated;
-        });
+        };
     }
 
-    boolean isIgnored(Offer offer) {
-        return preferences.getIgnoreTradersList().stream()
-                .anyMatch(i -> i.equals(offer.getMakerNodeAddress().getFullAddress()));
+    private Predicate<OfferBookListItem> getOffersMatchingMyAccountsPredicate() {
+        // This code duplicates code in the view at the button column. We need there the different results for
+        // display in popups so we cannot replace that with the predicate. Any change need to be applied in both
+        // places.
+        return offerBookListItem -> offerFilter.canTakeOffer(offerBookListItem.getOffer(), false).isValid();
     }
 
     boolean isOfferBanned(Offer offer) {
-        return filterManager.isOfferIdBanned(offer.getId());
-    }
-
-    boolean isCurrencyBanned(Offer offer) {
-        return filterManager.isCurrencyBanned(offer.getCurrencyCode());
-    }
-
-    boolean isPaymentMethodBanned(Offer offer) {
-        return filterManager.isPaymentMethodBanned(offer.getPaymentMethod());
-    }
-
-    boolean isNodeAddressBanned(Offer offer) {
-        return filterManager.isNodeAddressBanned(offer.getMakerNodeAddress());
-    }
-
-    boolean requireUpdateToNewVersion() {
-        return filterManager.requireUpdateToNewVersionForTrading();
-    }
-
-    boolean isInsufficientCounterpartyTradeLimit(Offer offer) {
-        return CurrencyUtil.isFiatCurrency(offer.getCurrencyCode()) &&
-                !accountAgeWitnessService.verifyPeersTradeAmount(offer, offer.getAmount(), errorMessage -> {
-                });
-    }
-
-    boolean isMyInsufficientTradeLimit(Offer offer) {
-        Optional<PaymentAccount> accountOptional = getMostMaturePaymentAccountForOffer(offer);
-        long myTradeLimit = accountOptional
-                .map(paymentAccount -> accountAgeWitnessService.getMyTradeLimit(paymentAccount,
-                        offer.getCurrencyCode(), offer.getMirroredDirection()))
-                .orElse(0L);
-        long offerMinAmount = offer.getMinAmount().value;
-        log.debug("isInsufficientTradeLimit accountOptional={}, myTradeLimit={}, offerMinAmount={}, ",
-                accountOptional.isPresent() ? accountOptional.get().getAccountName() : "null",
-                Coin.valueOf(myTradeLimit).toFriendlyString(),
-                Coin.valueOf(offerMinAmount).toFriendlyString());
-        return CurrencyUtil.isFiatCurrency(offer.getCurrencyCode()) &&
-                accountOptional.isPresent() &&
-                myTradeLimit < offerMinAmount;
-    }
-
-    boolean hasSameProtocolVersion(Offer offer) {
-        return offer.getProtocolVersion() == Version.TRADE_PROTOCOL_VERSION;
+        return offerFilter.isOfferBanned(offer);
     }
 
     private boolean isShowAllEntry(String id) {
@@ -645,11 +627,11 @@ class OfferBookViewModel extends ActivatableViewModel {
 
     public boolean hasSelectionAccountSigning() {
         if (showAllTradeCurrenciesProperty.get()) {
-            if (!selectedPaymentMethod.getId().equals(GUIUtil.SHOW_ALL_FLAG)) {
+            if (!isShowAllEntry(selectedPaymentMethod.getId())) {
                 return PaymentMethod.hasChargebackRisk(selectedPaymentMethod);
             }
         } else {
-            if (selectedPaymentMethod.getId().equals(GUIUtil.SHOW_ALL_FLAG))
+            if (isShowAllEntry(selectedPaymentMethod.getId()))
                 return CurrencyUtil.getMatureMarketCurrencies().stream()
                         .anyMatch(c -> c.getCode().equals(selectedTradeCurrency.getCode()));
             else
@@ -674,5 +656,17 @@ class OfferBookViewModel extends ActivatableViewModel {
     public String formatDepositString(Coin deposit, long amount) {
         var percentage = FormattingUtils.formatToRoundedPercentWithSymbol(deposit.getValue() / (double) amount);
         return btcFormatter.formatCoin(deposit) + " (" + percentage + ")";
+    }
+
+    private TradeCurrency getShowAllEntryForCurrency() {
+        return new CryptoCurrency(GUIUtil.SHOW_ALL_FLAG, "");
+    }
+
+    private TradeCurrency getEditEntryForCurrency() {
+        return new CryptoCurrency(GUIUtil.EDIT_FLAG, "");
+    }
+
+    private PaymentMethod getShowAllEntryForPaymentMethod() {
+        return PaymentMethod.getDummyPaymentMethod(GUIUtil.SHOW_ALL_FLAG);
     }
 }

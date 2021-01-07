@@ -108,6 +108,7 @@ class CoreTradesService {
                 offer,
                 paymentAccountId,
                 useSavingsWallet,
+                true,
                 resultHandler::accept,
                 errorMessage -> {
                     log.error(errorMessage);
