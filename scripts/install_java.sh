@@ -10,11 +10,11 @@
 #     echo 'export JAVA_HOME=/Library/Java/JavaVirtualMachines/<ENTER_NEW_JDK>/Contents/Home' >>~/.bash_profile
 #     echo 'export PATH=$JAVA_HOME/bin:$PATH' >>~/.bash_profile
 #     source ~/.bash_profile
-
+set -e
 
 unameOut="$(uname -s)"
 case "${unameOut}" in
-    Linux*)     
+    Linux*)
         JAVA_HOME=/usr/lib/jvm/openjdk-10.0.2
         JDK_FILENAME=openjdk-10.0.2_linux-x64_bin.tar.gz
         JDK_URL=https://download.java.net/java/GA/jdk10/10.0.2/19aef61b38124481863b1413dce1855f/13/openjdk-10.0.2_linux-x64_bin.tar.gz
@@ -27,7 +27,7 @@ case "${unameOut}" in
         osInfo[/etc/SuSE-release]=zypp
         osInfo[/etc/debian_version]=apt-get
 
-        for f in ${!osInfo[@]}
+        for f in "${!osInfo[@]}"
         do
             if [[ -f $f ]]; then
                 PACKAGE_MANAGER=${osInfo[$f]}
@@ -74,9 +74,10 @@ case "${unameOut}" in
         fi
 
         echo export JAVA_HOME=$JAVA_HOME >>~/.bash_profile
-        echo export PATH=$JAVA_HOME/bin:$PATH >>~/.bash_profile
-        source ~/.bash_profile
+        echo export PATH=$JAVA_HOME/bin:"$PATH" >>~/.bash_profile
+        source "$HOME/.bash_profile"
         ;;
-    *)          machine="UNKNOWN:${unameOut}"
+    *)
 esac
 java -version
+
