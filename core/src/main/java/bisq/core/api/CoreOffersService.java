@@ -40,6 +40,7 @@ import java.math.BigDecimal;
 import java.util.Comparator;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
@@ -51,9 +52,13 @@ import static bisq.core.locale.CurrencyUtil.isCryptoCurrency;
 import static bisq.core.offer.OfferPayload.Direction;
 import static bisq.core.offer.OfferPayload.Direction.BUY;
 import static java.lang.String.format;
+import static java.util.Comparator.comparing;
 
 @Slf4j
 class CoreOffersService {
+
+    private final Supplier<Comparator<Offer>> priceComparator = () -> comparing(Offer::getPrice);
+    private final Supplier<Comparator<Offer>> reversePriceComparator = () -> comparing(Offer::getPrice).reversed();
 
     private final KeyRing keyRing;
     private final CreateOfferService createOfferService;
@@ -93,20 +98,18 @@ class CoreOffersService {
     }
 
     List<Offer> getOffers(String direction, String currencyCode) {
-        List<Offer> offers = offerBookService.getOffers().stream()
+        return offerBookService.getOffers().stream()
                 .filter(o -> offerMatchesDirectionAndCurrency(o, direction, currencyCode))
+                .sorted(priceComparator(direction))
                 .collect(Collectors.toList());
-        sortOffers(offers, direction);
-        return offers;
     }
 
     List<Offer> getMyOffers(String direction, String currencyCode) {
-        List<Offer> offers = offerBookService.getOffers().stream()
+        return offerBookService.getOffers().stream()
                 .filter(o -> o.isMyOffer(keyRing))
                 .filter(o -> offerMatchesDirectionAndCurrency(o, direction, currencyCode))
+                .sorted(priceComparator(direction))
                 .collect(Collectors.toList());
-        sortOffers(offers, direction);
-        return offers;
     }
 
     // Create and place new offer.
@@ -213,13 +216,12 @@ class CoreOffersService {
         return offerOfWantedDirection && offerInWantedCurrency;
     }
 
-    private void sortOffers(List<Offer> offers, String direction) {
+    private Comparator<Offer> priceComparator(String direction) {
         // A buyer probably wants to see sell orders in price ascending order.
         // A seller probably wants to see buy orders in price descending order.
-        if (direction.equalsIgnoreCase(BUY.name()))
-            offers.sort(Comparator.comparing(Offer::getPrice).reversed());
-        else
-            offers.sort(Comparator.comparing(Offer::getPrice));
+        return direction.equalsIgnoreCase(BUY.name())
+                ? reversePriceComparator.get()
+                : priceComparator.get();
     }
 
     private long priceStringToLong(String priceAsString, String currencyCode) {
