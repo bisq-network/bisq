@@ -25,6 +25,8 @@ import bisq.proto.grpc.CreatePaymentAccountRequest;
 import bisq.proto.grpc.GetAddressBalanceRequest;
 import bisq.proto.grpc.GetBalancesRequest;
 import bisq.proto.grpc.GetFundingAddressesRequest;
+import bisq.proto.grpc.GetMyOfferRequest;
+import bisq.proto.grpc.GetMyOffersRequest;
 import bisq.proto.grpc.GetOfferRequest;
 import bisq.proto.grpc.GetOffersRequest;
 import bisq.proto.grpc.GetPaymentAccountFormRequest;
@@ -96,7 +98,9 @@ public class CliMain {
         createoffer,
         canceloffer,
         getoffer,
+        getmyoffer,
         getoffers,
+        getmyoffers,
         takeoffer,
         gettrade,
         confirmpaymentstarted,
@@ -418,6 +422,19 @@ public class CliMain {
                             reply.getOffer().getCounterCurrencyCode()));
                     return;
                 }
+                case getmyoffer: {
+                    if (nonOptionArgs.size() < 2)
+                        throw new IllegalArgumentException("incorrect parameter count, expecting offer id");
+
+                    var offerId = nonOptionArgs.get(1);
+                    var request = GetMyOfferRequest.newBuilder()
+                            .setId(offerId)
+                            .build();
+                    var reply = offersService.getMyOffer(request);
+                    out.println(formatOfferTable(singletonList(reply.getOffer()),
+                            reply.getOffer().getCounterCurrencyCode()));
+                    return;
+                }
                 case getoffers: {
                     if (nonOptionArgs.size() < 3)
                         throw new IllegalArgumentException("incorrect parameter count,"
@@ -431,6 +448,28 @@ public class CliMain {
                             .setCurrencyCode(currencyCode)
                             .build();
                     var reply = offersService.getOffers(request);
+
+                    List<OfferInfo> offers = reply.getOffersList();
+                    if (offers.isEmpty())
+                        out.printf("no %s %s offers found%n", direction, currencyCode);
+                    else
+                        out.println(formatOfferTable(reply.getOffersList(), currencyCode));
+
+                    return;
+                }
+                case getmyoffers: {
+                    if (nonOptionArgs.size() < 3)
+                        throw new IllegalArgumentException("incorrect parameter count,"
+                                + " expecting direction (buy|sell), currency code");
+
+                    var direction = nonOptionArgs.get(1);
+                    var currencyCode = nonOptionArgs.get(2);
+
+                    var request = GetMyOffersRequest.newBuilder()
+                            .setDirection(direction)
+                            .setCurrencyCode(currencyCode)
+                            .build();
+                    var reply = offersService.getMyOffers(request);
 
                     List<OfferInfo> offers = reply.getOffersList();
                     if (offers.isEmpty())
@@ -727,11 +766,11 @@ public class CliMain {
             stream.println();
             parser.printHelpOn(stream);
             stream.println();
-            String rowFormat = "%-22s%-50s%s%n";
+            String rowFormat = "%-24s%-52s%s%n";
             stream.format(rowFormat, "Method", "Params", "Description");
             stream.format(rowFormat, "------", "------", "------------");
             stream.format(rowFormat, "getversion", "", "Get server version");
-            stream.format(rowFormat, "getbalance [,currency code = bsq|btc]", "", "Get server wallet balances");
+            stream.format(rowFormat, "getbalance", "[currency code = bsq|btc]", "Get server wallet balances");
             stream.format(rowFormat, "getaddressbalance", "address", "Get server wallet address balance");
             stream.format(rowFormat, "getfundingaddresses", "", "Get BTC funding addresses");
             stream.format(rowFormat, "getunusedbsqaddress", "", "Get unused BSQ address");
@@ -747,8 +786,10 @@ public class CliMain {
             stream.format(rowFormat, "", "[,maker fee currency code = bsq|btc]", "");
             stream.format(rowFormat, "canceloffer", "offer id", "Cancel offer with id");
             stream.format(rowFormat, "getoffer", "offer id", "Get current offer with id");
+            stream.format(rowFormat, "getmyoffer", "offer id", "Get my current offer with id");
             stream.format(rowFormat, "getoffers", "buy | sell, currency code", "Get current offers");
-            stream.format(rowFormat, "takeoffer", "offer id, [,taker fee currency code = bsq|btc]", "Take offer with id");
+            stream.format(rowFormat, "getmyoffers", "buy | sell, currency code", "Get my current offers");
+            stream.format(rowFormat, "takeoffer", "offer id [,taker fee currency code = bsq|btc]", "Take offer with id");
             stream.format(rowFormat, "gettrade", "trade id [,showcontract = true|false]", "Get trade summary or full contract");
             stream.format(rowFormat, "confirmpaymentstarted", "trade id", "Confirm payment started");
             stream.format(rowFormat, "confirmpaymentreceived", "trade id", "Confirm payment received");

@@ -28,12 +28,13 @@ import bisq.network.p2p.peers.getdata.messages.GetDataResponse;
 import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
-import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.network.NetworkPayload;
+import bisq.common.util.Tuple2;
+import bisq.common.util.Utilities;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -41,10 +42,10 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -134,7 +135,7 @@ class RequestDataHandler implements MessageListener {
                                 handleFault(errorMessage, nodeAddress, CloseConnectionReason.SEND_MSG_TIMEOUT);
                             } else {
                                 log.trace("We have stopped already. We ignore that timeoutTimer.run call. " +
-                                        "Might be caused by an previous networkNode.sendMessage.onFailure.");
+                                        "Might be caused by a previous networkNode.sendMessage.onFailure.");
                             }
                         },
                         TIMEOUT);
@@ -152,7 +153,7 @@ class RequestDataHandler implements MessageListener {
                         log.trace("Send {} to {} succeeded.", getDataRequest, nodeAddress);
                     } else {
                         log.trace("We have stopped already. We ignore that networkNode.sendMessage.onSuccess call." +
-                                "Might be caused by an previous timeout.");
+                                "Might be caused by a previous timeout.");
                     }
                 }
 
@@ -166,7 +167,7 @@ class RequestDataHandler implements MessageListener {
                         handleFault(errorMessage, nodeAddress, CloseConnectionReason.SEND_MSG_FAILURE);
                     } else {
                         log.trace("We have stopped already. We ignore that networkNode.sendMessage.onFailure call. " +
-                                "Might be caused by an previous timeout.");
+                                "Might be caused by a previous timeout.");
                     }
                 }
             }, MoreExecutors.directExecutor());
@@ -187,10 +188,7 @@ class RequestDataHandler implements MessageListener {
                 if (!stopped) {
                     long ts1 = System.currentTimeMillis();
                     GetDataResponse getDataResponse = (GetDataResponse) networkEnvelope;
-                    final Set<ProtectedStorageEntry> dataSet = getDataResponse.getDataSet();
-                    Set<PersistableNetworkPayload> persistableNetworkPayloadSet = getDataResponse.getPersistableNetworkPayloadSet();
-                    logContents(networkEnvelope, dataSet, persistableNetworkPayloadSet);
-
+                    logContents(getDataResponse);
                     if (getDataResponse.getRequestNonce() == nonce) {
                         stopTimeoutTimer();
                         if (!connection.getPeersNodeAddressOptional().isPresent()) {
@@ -230,35 +228,18 @@ class RequestDataHandler implements MessageListener {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void logContents(NetworkEnvelope networkEnvelope,
-                             Set<ProtectedStorageEntry> dataSet,
-                             Set<PersistableNetworkPayload> persistableNetworkPayloadSet) {
-        Map<String, Set<NetworkPayload>> payloadByClassName = new HashMap<>();
-        dataSet.forEach(e -> {
-            ProtectedStoragePayload protectedStoragePayload = e.getProtectedStoragePayload();
-            if (protectedStoragePayload == null) {
-                log.warn("StoragePayload was null: {}", networkEnvelope.toString());
-                return;
-            }
-
-            // For logging different data types
-            String className = protectedStoragePayload.getClass().getSimpleName();
-            if (!payloadByClassName.containsKey(className))
-                payloadByClassName.put(className, new HashSet<>());
-
-            payloadByClassName.get(className).add(protectedStoragePayload);
+    private void logContents(GetDataResponse getDataResponse) {
+        Set<ProtectedStorageEntry> dataSet = getDataResponse.getDataSet();
+        Set<PersistableNetworkPayload> persistableNetworkPayloadSet = getDataResponse.getPersistableNetworkPayloadSet();
+        Map<String, Tuple2<AtomicInteger, AtomicInteger>> numPayloadsByClassName = new HashMap<>();
+        dataSet.forEach(protectedStorageEntry -> {
+            String className = protectedStorageEntry.getProtectedStoragePayload().getClass().getSimpleName();
+            addDetails(numPayloadsByClassName, protectedStorageEntry, className);
         });
-
         persistableNetworkPayloadSet.forEach(persistableNetworkPayload -> {
-            // For logging different data types
             String className = persistableNetworkPayload.getClass().getSimpleName();
-            if (!payloadByClassName.containsKey(className))
-                payloadByClassName.put(className, new HashSet<>());
-
-            payloadByClassName.get(className).add(persistableNetworkPayload);
+            addDetails(numPayloadsByClassName, persistableNetworkPayload, className);
         });
-
-        // Log different data types
         StringBuilder sb = new StringBuilder();
         String sep = System.lineSeparator();
         sb.append(sep).append("#################################################################").append(sep);
@@ -266,12 +247,25 @@ class RequestDataHandler implements MessageListener {
         int items = dataSet.size() + persistableNetworkPayloadSet.size();
         sb.append("Received ").append(items).append(" instances from a ")
                 .append(getDataRequestType).append(sep);
-        payloadByClassName.forEach((key, value) -> sb.append(key)
+        numPayloadsByClassName.forEach((key, value) -> sb.append(key)
                 .append(": ")
-                .append(value.size())
+                .append(value.first.get())
+                .append(" / ")
+                .append(Utilities.readableFileSize(value.second.get()))
                 .append(sep));
         sb.append("#################################################################");
         log.info(sb.toString());
+    }
+
+    private void addDetails(Map<String, Tuple2<AtomicInteger, AtomicInteger>> numPayloadsByClassName,
+                            NetworkPayload networkPayload, String className) {
+        numPayloadsByClassName.putIfAbsent(className, new Tuple2<>(new AtomicInteger(0),
+                new AtomicInteger(0)));
+        numPayloadsByClassName.get(className).first.getAndIncrement();
+        // toProtoMessage().getSerializedSize() is not very cheap. For about 1500 objects it takes about 20 ms
+        // I think its justified to get accurate metrics but if it turns out to be a performance issue we might need
+        // to remove it and use some more rough estimation by taking only the size of one data type and multiply it.
+        numPayloadsByClassName.get(className).second.getAndAdd(networkPayload.toProtoMessage().getSerializedSize());
     }
 
     @SuppressWarnings("UnusedParameters")

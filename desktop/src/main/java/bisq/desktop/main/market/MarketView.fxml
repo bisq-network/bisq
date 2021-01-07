@@ -32,6 +32,7 @@
                     AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"/>
     </Tab>
     <Tab fx:id="spreadTab" closable="false"/>
+    <Tab fx:id="spreadTabPaymentMethod" closable="false"/>
     <Tab fx:id="tradesTab" closable="false">
         <ScrollPane fitToWidth="true" hbarPolicy="NEVER"
                     AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"

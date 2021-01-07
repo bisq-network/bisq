@@ -47,6 +47,8 @@ public class CoreNetworkCapabilities {
         if (config.daoActivated) {
             maybeApplyDaoFullMode(config);
         }
+
+        log.info(Capabilities.app.prettyPrint());
     }
 
     public static void maybeApplyDaoFullMode(Config config) {
@@ -54,12 +56,10 @@ public class CoreNetworkCapabilities {
         // bit later than we call that method so we have to add DAO_FULL_NODE Capability at preferences as well to
         // be sure it is set in both cases.
         if (config.fullDaoNode) {
-            log.info("Set Capability.DAO_FULL_NODE");
             Capabilities.app.addAll(Capability.DAO_FULL_NODE);
         } else {
             // A lite node has the capability to receive bsq blocks. We do not want to send BSQ blocks to full nodes
             // as they ignore them anyway.
-            log.info("Set Capability.RECEIVE_BSQ_BLOCK");
             Capabilities.app.addAll(Capability.RECEIVE_BSQ_BLOCK);
         }
     }

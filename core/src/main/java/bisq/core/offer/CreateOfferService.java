@@ -110,7 +110,7 @@ public class CreateOfferService {
                                    double buyerSecurityDepositAsDouble,
                                    PaymentAccount paymentAccount) {
 
-        log.info("offerId={}, \n" +
+        log.info("create and get offer with offerId={}, \n" +
                         "currencyCode={}, \n" +
                         "direction={}, \n" +
                         "price={}, \n" +
@@ -118,14 +118,21 @@ public class CreateOfferService {
                         "marketPriceMargin={}, \n" +
                         "amount={}, \n" +
                         "minAmount={}, \n" +
-                        "buyerSecurityDeposit={}, \n" +
-                        offerId, currencyCode, direction, price.getValue(), useMarketBasedPrice, marketPriceMargin,
-                amount.value, minAmount.value, buyerSecurityDepositAsDouble);
+                        "buyerSecurityDeposit={}",
+                offerId,
+                currencyCode,
+                direction,
+                price.getValue(),
+                useMarketBasedPrice,
+                marketPriceMargin,
+                amount.value,
+                minAmount.value,
+                buyerSecurityDepositAsDouble);
 
-        // prints our param list for dev testing api
-        log.info("{} " +
-                        "{} " +
-                        "{} " +
+        // Log an approximate api CLI 'createoffer' dev/test param list.
+        log.info("cli's createoffer positional option names: paymentAccountId direction currencyCode amount minAmount"
+                + " useMarketBasedPrice fixedPrice|marketPriceMargin buyerSecurityDeposit");
+        log.info("cli's createoffer positional option values: {} " +
                         "{} " +
                         "{} " +
                         "{} " +
@@ -133,8 +140,14 @@ public class CreateOfferService {
                         "{} " +
                         "{} " +
                         "{}",
-                offerId, currencyCode, direction.name(), price.getValue(), useMarketBasedPrice, marketPriceMargin,
-                amount.value, minAmount.value, buyerSecurityDepositAsDouble, paymentAccount.getId());
+                paymentAccount.getId(),
+                direction.name(),
+                currencyCode,
+                amount.value,
+                minAmount.value,
+                useMarketBasedPrice,
+                (useMarketBasedPrice ? marketPriceMargin : price.getValue()),
+                buyerSecurityDepositAsDouble);
 
         long creationTime = new Date().getTime();
         NodeAddress makerAddress = p2PService.getAddress();

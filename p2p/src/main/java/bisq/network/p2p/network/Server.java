@@ -31,12 +31,16 @@ import java.util.concurrent.CopyOnWriteArraySet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.jetbrains.annotations.Nullable;
+
 // Runs in UserThread
 class Server implements Runnable {
     private static final Logger log = LoggerFactory.getLogger(Server.class);
 
     private final MessageListener messageListener;
     private final ConnectionListener connectionListener;
+    @Nullable
+    private final NetworkFilter networkFilter;
 
     // accessed from different threads
     private final ServerSocket serverSocket;
@@ -48,11 +52,13 @@ class Server implements Runnable {
     public Server(ServerSocket serverSocket,
                   MessageListener messageListener,
                   ConnectionListener connectionListener,
-                  NetworkProtoResolver networkProtoResolver) {
+                  NetworkProtoResolver networkProtoResolver,
+                  @Nullable NetworkFilter networkFilter) {
         this.networkProtoResolver = networkProtoResolver;
         this.serverSocket = serverSocket;
         this.messageListener = messageListener;
         this.connectionListener = connectionListener;
+        this.networkFilter = networkFilter;
     }
 
     @Override
@@ -69,7 +75,8 @@ class Server implements Runnable {
                         InboundConnection connection = new InboundConnection(socket,
                                 messageListener,
                                 connectionListener,
-                                networkProtoResolver);
+                                networkProtoResolver,
+                                networkFilter);
 
                         log.debug("\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" +
                                 "Server created new inbound connection:"

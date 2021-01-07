@@ -158,6 +158,7 @@ message OfferAvailabilityRequest {
     int64 takers_trade_price = 3;
     repeated int32 supported_capabilities = 4;
     string uid = 5;
+    bool is_taker_api_user = 6;
 }
 
 message OfferAvailabilityResponse {
@@ -652,7 +653,7 @@ message RefundAgent {
 }
 
 message Filter {
-    repeated string banned_node_address = 1;
+    repeated string node_addresses_banned_from_trading = 1;
     repeated string banned_offer_ids = 2;
     repeated PaymentAccountFilter banned_payment_accounts = 3;
     string signature_as_base64 = 4;
@@ -677,6 +678,8 @@ message Filter {
     repeated string bannedPrivilegedDevPubKeys = 23;
     bool disable_auto_conf = 24;
     repeated string banned_auto_conf_explorers = 25;
+    repeated string node_addresses_banned_from_network = 26;
+    bool disable_api = 27;
 }
 
 // Deprecated
@@ -912,6 +915,8 @@ enum AvailabilityResult {
     USER_IGNORED = 8;
     MISSING_MANDATORY_CAPABILITY = 9;
     NO_REFUND_AGENTS = 10;
+    UNCONF_TX_LIMIT_HIT = 11;
+    MAKER_DENIED_API_USER = 12;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -1331,6 +1336,7 @@ message OpenOffer {
     NodeAddress arbitrator_node_address = 3;
     NodeAddress mediator_node_address = 4;
     NodeAddress refund_agent_node_address = 5;
+    int64 trigger_price = 6;
 }
 
 message Tradable {
@@ -1612,6 +1618,9 @@ message PreferencesPayload {
     bool tac_accepted_v120 = 55;
     repeated AutoConfirmSettings auto_confirm_settings = 56;
     double bsq_average_trim_threshold = 57;
+    bool hide_non_account_payment_methods = 58;
+    bool show_offers_matching_my_accounts = 59;
+    bool deny_api_taker = 60;
 }
 
 message AutoConfirmSettings {
@@ -1642,6 +1651,7 @@ message UserPayload {
     repeated MarketAlertFilter market_alert_filters = 13;
     repeated RefundAgent accepted_refund_agents = 14;
     RefundAgent registered_refund_agent = 15;
+    map<string, string> cookie = 16;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////

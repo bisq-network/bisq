@@ -17,6 +17,8 @@
 
 package bisq.apitest.method.trade;
 
+import bisq.core.payment.PaymentAccount;
+
 import bisq.proto.grpc.BtcBalanceInfo;
 
 import io.grpc.StatusRuntimeException;
@@ -58,7 +60,8 @@ public class TakeSellBTCOfferTest extends AbstractTradeTest {
     @Order(1)
     public void testTakeAlicesSellOffer(final TestInfo testInfo) {
         try {
-            var alicesOffer = createAliceOffer(alicesDummyAcct,
+            PaymentAccount alicesUsdAccount = createDummyF2FAccount(alicedaemon, "US");
+            var alicesOffer = createAliceOffer(alicesUsdAccount,
                     "sell",
                     "usd",
                     12500000,
@@ -70,9 +73,11 @@ public class TakeSellBTCOfferTest extends AbstractTradeTest {
             // Wait times vary;  my logs show >= 2 second delay, but taking sell offers
             // seems to require more time to prepare.
             sleep(3000); // TODO loop instead of hard code wait time
-            assertEquals(1, getOpenOffersCount(bobStubs, "sell", "usd"));
+            var alicesUsdOffers = getMyOffersSortedByDate(aliceStubs, "sell", "usd");
+            assertEquals(1, alicesUsdOffers.size());
 
-            var trade = takeAlicesOffer(offerId, bobsDummyAcct.getId(), TRADE_FEE_CURRENCY_CODE);
+            PaymentAccount bobsUsdAccount = createDummyF2FAccount(bobdaemon, "US");
+            var trade = takeAlicesOffer(offerId, bobsUsdAccount.getId(), TRADE_FEE_CURRENCY_CODE);
             assertNotNull(trade);
             assertEquals(offerId, trade.getTradeId());
             assertTrue(trade.getIsCurrencyForTakerFeeBtc());
@@ -80,7 +85,8 @@ public class TakeSellBTCOfferTest extends AbstractTradeTest {
             tradeId = trade.getTradeId();
 
             genBtcBlocksThenWait(1, 4000);
-            assertEquals(0, getOpenOffersCount(bobStubs, "sell", "usd"));
+            var takeableUsdOffers = getOffersSortedByDate(bobStubs, "sell", "usd");
+            assertEquals(0, takeableUsdOffers.size());
 
             trade = getTrade(bobdaemon, trade.getTradeId());
             EXPECTED_PROTOCOL_STATUS.setState(BUYER_RECEIVED_DEPOSIT_TX_PUBLISHED_MSG)
@@ -90,7 +96,7 @@ public class TakeSellBTCOfferTest extends AbstractTradeTest {
 
             logTrade(log, testInfo, "Bob's view after taking offer and sending deposit", trade);
 
-            genBtcBlocksThenWait(1, 2250);
+            genBtcBlocksThenWait(1, 1000);
             trade = getTrade(bobdaemon, trade.getTradeId());
             EXPECTED_PROTOCOL_STATUS.setState(DEPOSIT_CONFIRMED_IN_BLOCK_CHAIN)
                     .setPhase(DEPOSIT_CONFIRMED)
@@ -143,7 +149,7 @@ public class TakeSellBTCOfferTest extends AbstractTradeTest {
     @Test
     @Order(4)
     public void testBobsBtcWithdrawalToExternalAddress(final TestInfo testInfo) {
-        genBtcBlocksThenWait(1, 2250);
+        genBtcBlocksThenWait(1, 1000);
 
         var trade = getTrade(bobdaemon, tradeId);
         logTrade(log, testInfo, "Bob's view before withdrawing funds to external wallet", trade);
@@ -151,7 +157,7 @@ public class TakeSellBTCOfferTest extends AbstractTradeTest {
         String toAddress = bitcoinCli.getNewBtcAddress();
         withdrawFunds(bobdaemon, tradeId, toAddress, WITHDRAWAL_TX_MEMO);
 
-        genBtcBlocksThenWait(1, 2250);
+        genBtcBlocksThenWait(1, 1000);
 
         trade = getTrade(bobdaemon, tradeId);
         EXPECTED_PROTOCOL_STATUS.setState(WITHDRAW_COMPLETED)

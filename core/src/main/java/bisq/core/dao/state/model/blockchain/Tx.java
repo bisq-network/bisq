@@ -29,7 +29,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import lombok.Value;
+import lombok.Getter;
 
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
@@ -39,7 +39,7 @@ import javax.annotation.concurrent.Immutable;
  * Gets persisted.
  */
 @Immutable
-@Value
+@Getter
 public final class Tx extends BaseTx implements PersistablePayload, ImmutableDaoStateModel {
     // Created after parsing of a tx is completed. We store only the immutable tx in the block.
     public static Tx fromTempTx(TempTx tempTx) {

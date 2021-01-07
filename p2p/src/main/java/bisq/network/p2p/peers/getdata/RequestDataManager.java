@@ -31,6 +31,7 @@ import bisq.network.p2p.storage.P2PDataStorage;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
+import bisq.common.app.Version;
 import bisq.common.proto.network.NetworkEnvelope;
 
 import javax.inject.Inject;
@@ -261,6 +262,11 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
                 if (peerManager.isSeedNode(connection))
                     connection.setPeerType(Connection.PeerType.SEED_NODE);
 
+                GetDataRequest getDataRequest = (GetDataRequest) networkEnvelope;
+                if (getDataRequest.getVersion() == null || !Version.isNewVersion(getDataRequest.getVersion(), "1.5.0")) {
+                    connection.shutDown(CloseConnectionReason.MANDATORY_CAPABILITIES_NOT_SUPPORTED);
+                    return;
+                }
                 final String uid = connection.getUid();
                 if (!getDataRequestHandlers.containsKey(uid)) {
                     GetDataRequestHandler getDataRequestHandler = new GetDataRequestHandler(networkNode, dataStorage,
@@ -284,7 +290,7 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
                                 }
                             });
                     getDataRequestHandlers.put(uid, getDataRequestHandler);
-                    getDataRequestHandler.handle((GetDataRequest) networkEnvelope, connection);
+                    getDataRequestHandler.handle(getDataRequest, connection);
                 } else {
                     log.warn("We have already a GetDataRequestHandler for that connection started. " +
                             "We start a cleanup timer if the handler has not closed by itself in between 2 minutes.");
@@ -369,7 +375,7 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
                                             listener.onNoPeersAvailable();
                                     }
 
-                                    restart();
+                                    requestFromNonSeedNodePeers();
                                 } else {
                                     log.info("We could not connect to seed node {} but we have other connection attempts open.", nodeAddress.getFullAddress());
                                 }
@@ -398,6 +404,18 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Utils
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void requestFromNonSeedNodePeers() {
+        List<NodeAddress> list = getFilteredNonSeedNodeList(getSortedNodeAddresses(peerManager.getReportedPeers()), new ArrayList<>());
+        List<NodeAddress> filteredPersistedPeers = getFilteredNonSeedNodeList(getSortedNodeAddresses(peerManager.getPersistedPeers()), list);
+        list.addAll(filteredPersistedPeers);
+
+        if (!list.isEmpty()) {
+            NodeAddress nextCandidate = list.get(0);
+            list.remove(nextCandidate);
+            requestData(nextCandidate, list);
+        }
+    }
 
     private void restart() {
         if (retryTimer == null) {

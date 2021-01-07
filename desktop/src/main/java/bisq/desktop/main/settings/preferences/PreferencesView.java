@@ -45,8 +45,11 @@ import bisq.core.locale.FiatCurrency;
 import bisq.core.locale.LanguageUtil;
 import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
+import bisq.core.payment.PaymentAccount;
+import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.user.Preferences;
+import bisq.core.user.User;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.ParsingUtils;
 import bisq.core.util.coin.CoinFormatter;
@@ -100,13 +103,16 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static bisq.desktop.util.FormBuilder.*;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @FxmlView
 public class PreferencesView extends ActivatableViewAndModel<GridPane, PreferencesViewModel> {
+    private final User user;
     private final CoinFormatter formatter;
     private TextField btcExplorerTextField, bsqExplorerTextField;
     private ComboBox<String> userLanguageComboBox;
@@ -114,7 +120,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     private ComboBox<TradeCurrency> preferredTradeCurrencyComboBox;
 
     private ToggleButton showOwnOffersInOfferBook, useAnimations, useDarkMode, sortMarketCurrenciesNumerically,
-            avoidStandbyMode, useCustomFee, autoConfirmXmrToggle;
+            avoidStandbyMode, useCustomFee, autoConfirmXmrToggle, hideNonAccountPaymentMethodsToggle, denyApiTakerToggle;
     private int gridRow = 0;
     private int displayCurrenciesGridRowIndex = 0;
     private InputTextField transactionFeeInputTextField, ignoreTradersListInputTextField, ignoreDustThresholdInputTextField,
@@ -171,12 +177,14 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
                            FilterManager filterManager,
                            DaoFacade daoFacade,
                            Config config,
+                           User user,
                            @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter,
                            @Named(Config.RPC_USER) String rpcUser,
                            @Named(Config.RPC_PASSWORD) String rpcPassword,
                            @Named(Config.RPC_BLOCK_NOTIFICATION_PORT) int rpcBlockNotificationPort,
                            @Named(Config.STORAGE_DIR) File storageDir) {
         super(model);
+        this.user = user;
         this.formatter = formatter;
         this.preferences = preferences;
         this.feeService = feeService;
@@ -595,14 +603,15 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     }
 
     private void initializeDisplayOptions() {
-        TitledGroupBg titledGroupBg = addTitledGroupBg(root, ++gridRow, 5, Res.get("setting.preferences.displayOptions"), Layout.GROUP_DISTANCE);
+        TitledGroupBg titledGroupBg = addTitledGroupBg(root, ++gridRow, 7, Res.get("setting.preferences.displayOptions"), Layout.GROUP_DISTANCE);
         GridPane.setColumnSpan(titledGroupBg, 1);
 
         showOwnOffersInOfferBook = addSlideToggleButton(root, gridRow, Res.get("setting.preferences.showOwnOffers"), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         useAnimations = addSlideToggleButton(root, ++gridRow, Res.get("setting.preferences.useAnimations"));
         useDarkMode = addSlideToggleButton(root, ++gridRow, Res.get("setting.preferences.useDarkMode"));
-        // useStickyMarketPriceCheckBox = addLabelCheckBox(root, ++gridRow, "Use sticky market price:", "").second;
         sortMarketCurrenciesNumerically = addSlideToggleButton(root, ++gridRow, Res.get("setting.preferences.sortWithNumOffers"));
+        hideNonAccountPaymentMethodsToggle = addSlideToggleButton(root, ++gridRow, Res.get("setting.preferences.onlyShowPaymentMethodsFromAccount"));
+        denyApiTakerToggle = addSlideToggleButton(root, ++gridRow, Res.get("setting.preferences.denyApiTaker"));
         resetDontShowAgainButton = addButton(root, ++gridRow, Res.get("setting.preferences.resetAllFlags"), 0);
         resetDontShowAgainButton.getStyleClass().add("compact-button");
         resetDontShowAgainButton.setMaxWidth(Double.MAX_VALUE);
@@ -932,6 +941,19 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         sortMarketCurrenciesNumerically.setSelected(preferences.isSortMarketCurrenciesNumerically());
         sortMarketCurrenciesNumerically.setOnAction(e -> preferences.setSortMarketCurrenciesNumerically(sortMarketCurrenciesNumerically.isSelected()));
 
+        boolean disableToggle = false;
+        if (user.getPaymentAccounts() != null) {
+            Set<PaymentMethod> supportedPaymentMethods = user.getPaymentAccounts().stream()
+                    .map(PaymentAccount::getPaymentMethod).collect(Collectors.toSet());
+            disableToggle = supportedPaymentMethods.isEmpty();
+        }
+        hideNonAccountPaymentMethodsToggle.setSelected(preferences.isHideNonAccountPaymentMethods() && !disableToggle);
+        hideNonAccountPaymentMethodsToggle.setOnAction(e -> preferences.setHideNonAccountPaymentMethods(hideNonAccountPaymentMethodsToggle.isSelected()));
+        hideNonAccountPaymentMethodsToggle.setDisable(disableToggle);
+
+        denyApiTakerToggle.setSelected(preferences.isDenyApiTaker());
+        denyApiTakerToggle.setOnAction(e -> preferences.setDenyApiTaker(denyApiTakerToggle.isSelected()));
+
         resetDontShowAgainButton.setOnAction(e -> preferences.resetDontShowAgain());
 
         editCustomBtcExplorer.setOnAction(e -> {
@@ -1108,8 +1130,9 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     private void deactivateDisplayPreferences() {
         useAnimations.setOnAction(null);
         useDarkMode.setOnAction(null);
-        // useStickyMarketPriceCheckBox.setOnAction(null);
         sortMarketCurrenciesNumerically.setOnAction(null);
+        hideNonAccountPaymentMethodsToggle.setOnAction(null);
+        denyApiTakerToggle.setOnAction(null);
         showOwnOffersInOfferBook.setOnAction(null);
         resetDontShowAgainButton.setOnAction(null);
         if (displayStandbyModeFeature) {

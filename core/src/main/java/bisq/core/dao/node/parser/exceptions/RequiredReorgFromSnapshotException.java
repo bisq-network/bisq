@@ -24,7 +24,7 @@ import lombok.Getter;
 @Getter
 public class RequiredReorgFromSnapshotException extends Exception {
 
-    private RawBlock rawBlock;
+    private final RawBlock rawBlock;
 
     public RequiredReorgFromSnapshotException(RawBlock rawBlock) {
         this.rawBlock = rawBlock;

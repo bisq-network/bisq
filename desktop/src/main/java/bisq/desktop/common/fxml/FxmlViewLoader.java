@@ -23,8 +23,12 @@ import bisq.desktop.common.view.View;
 import bisq.desktop.common.view.ViewFactory;
 import bisq.desktop.common.view.ViewLoader;
 
+import bisq.common.util.Utilities;
+
 import javax.inject.Inject;
 import javax.inject.Singleton;
+
+import com.google.common.base.Joiner;
 
 import javafx.fxml.FXMLLoader;
 
@@ -36,8 +40,11 @@ import java.util.ResourceBundle;
 
 import java.lang.annotation.Annotation;
 
+import lombok.extern.slf4j.Slf4j;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 
+@Slf4j
 @Singleton
 public class FxmlViewLoader implements ViewLoader {
 
@@ -107,7 +114,17 @@ public class FxmlViewLoader implements ViewLoader {
                         "does not implement [%s] as expected.", controller.getClass(), fxmlUrl, View.class);
             return (View) controller;
         } catch (IOException ex) {
-            throw new ViewfxException(ex, "Failed to load view from FXML file at [%s]", fxmlUrl);
+            Throwable cause = ex.getCause();
+            if (cause != null) {
+                cause.printStackTrace();
+                log.error(cause.toString());
+                // We want to show stackTrace in error popup
+                String stackTrace = Utilities.toTruncatedString(Joiner.on("\n").join(cause.getStackTrace()), 800, false);
+                throw new ViewfxException(cause, "%s at loading view class\nStack trace:\n%s",
+                        cause.getClass().getSimpleName(), stackTrace);
+            } else {
+                throw new ViewfxException(ex, "Failed to load view from FXML file at [%s]", fxmlUrl);
+            }
         }
     }
 
@@ -122,8 +139,7 @@ public class FxmlViewLoader implements ViewLoader {
         }
         try {
             return annotationType.getDeclaredMethod(attributeName).getDefaultValue();
-        }
-        catch (Exception ex) {
+        } catch (Exception ex) {
             return null;
         }
     }

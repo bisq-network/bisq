@@ -901,20 +901,26 @@ public class FormBuilder {
                                                              String buttonTitle,
                                                              String checkBoxTitle,
                                                              double top) {
-        Button button = new AutoTooltipButton(buttonTitle);
-        button.setDefaultButton(true);
-        CheckBox checkBox = new AutoTooltipCheckBox(checkBoxTitle);
-        HBox.setMargin(checkBox, new Insets(6, 0, 0, 0));
+        final Tuple3<Button, CheckBox, HBox> tuple = addButtonCheckBoxWithBox(gridPane, rowIndex, buttonTitle, checkBoxTitle, top);
+        return new Tuple2<>(tuple.first, tuple.second);
+    }
 
-        HBox hBox = new HBox();
-        hBox.setSpacing(20);
+    public static Tuple3<Button, CheckBox, HBox> addButtonCheckBoxWithBox(GridPane gridPane,
+                                                             int rowIndex,
+                                                             String buttonTitle,
+                                                             String checkBoxTitle,
+                                                             double top) {
+        Button button = new AutoTooltipButton(buttonTitle);
+        CheckBox checkBox = new AutoTooltipCheckBox(checkBoxTitle);
+
+        HBox hBox = new HBox(20);
+        hBox.setAlignment(Pos.CENTER_LEFT);
         hBox.getChildren().addAll(button, checkBox);
         GridPane.setRowIndex(hBox, rowIndex);
-        GridPane.setColumnIndex(hBox, 1);
         hBox.setPadding(new Insets(top, 0, 0, 0));
         gridPane.getChildren().add(hBox);
 
-        return new Tuple2<>(button, checkBox);
+        return new Tuple3<>(button, checkBox, hBox);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -1221,8 +1227,7 @@ public class FormBuilder {
             int rowIndex,
             String titleTextfield,
             String titleCombobox
-            )
-    {
+    ) {
         return addTopLabelTextFieldAutocompleteComboBox(gridPane, rowIndex, titleTextfield, titleCombobox, 0);
     }
 
@@ -1232,8 +1237,7 @@ public class FormBuilder {
             String titleTextfield,
             String titleCombobox,
             double top
-            )
-    {
+    ) {
         HBox hBox = new HBox();
         hBox.setSpacing(10);
 
@@ -2143,6 +2147,14 @@ public class FormBuilder {
 
     public static Button getIconButton(GlyphIcons icon, String styleClass) {
         return getIconButton(icon, styleClass, "2em");
+    }
+
+    public static Button getRegularIconButton(GlyphIcons icon) {
+        return getIconButton(icon, "highlight", "1.6em");
+    }
+
+    public static Button getRegularIconButton(GlyphIcons icon, String styleClass) {
+        return getIconButton(icon, styleClass, "1.6em");
     }
 
     public static Button getIconButton(GlyphIcons icon, String styleClass, String iconSize) {

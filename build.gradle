@@ -28,7 +28,7 @@ configure(subprojects) {
 
     ext { // in alphabetical order
         bcVersion = '1.63'
-        bitcoinjVersion = 'dcf8af0'
+        bitcoinjVersion = '2a80db4'
         btcdCli4jVersion = '27b94333'
         codecVersion = '1.13'
         easybindVersion = '1.0.3'
@@ -386,7 +386,7 @@ configure(project(':desktop')) {
     apply plugin: 'witness'
     apply from: '../gradle/witness/gradle-witness.gradle'
 
-    version = '1.5.1-SNAPSHOT'
+    version = '1.5.4-SNAPSHOT'
 
     mainClassName = 'bisq.desktop.app.BisqAppMain'
 

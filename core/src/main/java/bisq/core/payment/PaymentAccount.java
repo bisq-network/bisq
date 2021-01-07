@@ -97,12 +97,25 @@ public abstract class PaymentAccount implements PersistablePayload {
     }
 
     public static PaymentAccount fromProto(protobuf.PaymentAccount proto, CoreProtoResolver coreProtoResolver) {
-        PaymentAccount account = PaymentAccountFactory.getPaymentAccount(PaymentMethod.getPaymentMethodById(proto.getPaymentMethod().getId()));
+        String paymentMethodId = proto.getPaymentMethod().getId();
+        List<TradeCurrency> tradeCurrencies = proto.getTradeCurrenciesList().stream()
+                .map(TradeCurrency::fromProto)
+                .collect(Collectors.toList());
+
+        // We need to remove NGN for Transferwise
+        Optional<TradeCurrency> ngnTwOptional = tradeCurrencies.stream()
+                .filter(e -> paymentMethodId.equals(PaymentMethod.TRANSFERWISE_ID))
+                .filter(e -> e.getCode().equals("NGN"))
+                .findAny();
+        // We cannot remove it in the stream as it would cause a concurrentModificationException
+        ngnTwOptional.ifPresent(tradeCurrencies::remove);
+
+        PaymentAccount account = PaymentAccountFactory.getPaymentAccount(PaymentMethod.getPaymentMethodById(paymentMethodId));
         account.getTradeCurrencies().clear();
         account.setId(proto.getId());
         account.setCreationDate(proto.getCreationDate());
         account.setAccountName(proto.getAccountName());
-        account.getTradeCurrencies().addAll(proto.getTradeCurrenciesList().stream().map(TradeCurrency::fromProto).collect(Collectors.toList()));
+        account.getTradeCurrencies().addAll(tradeCurrencies);
         account.setPaymentAccountPayload(coreProtoResolver.fromProto(proto.getPaymentAccountPayload()));
 
         if (proto.hasSelectedTradeCurrency())

@@ -19,6 +19,7 @@ package bisq.desktop.components;
 
 import bisq.desktop.components.controlsfx.control.PopOver;
 
+import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 
 import javafx.scene.Node;
@@ -30,23 +31,18 @@ import javafx.beans.property.StringProperty;
 
 import lombok.Getter;
 
-import static bisq.desktop.util.FormBuilder.getIcon;
+import javax.annotation.Nullable;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 public class InfoInputTextField extends AnchorPane {
-
     private final StringProperty text = new SimpleStringProperty();
-
     @Getter
     private final InputTextField inputTextField;
-    @Getter
-    private final Label infoIcon;
-    @Getter
-    private final Label warningIcon;
-    @Getter
-    private final Label privacyIcon;
-
-    private Label currentIcon;
-    private PopOverWrapper popoverWrapper = new PopOverWrapper();
+    private final Label icon;
+    private final PopOverWrapper popoverWrapper = new PopOverWrapper();
+    @Nullable
+    private Node node;
 
     public InfoInputTextField() {
         this(0);
@@ -56,79 +52,67 @@ public class InfoInputTextField extends AnchorPane {
         super();
 
         inputTextField = new InputTextField(inputLineExtension);
-
-        infoIcon = getIcon(AwesomeIcon.INFO_SIGN);
-        infoIcon.setLayoutY(3);
-        infoIcon.getStyleClass().addAll("icon", "info");
-
-        warningIcon = getIcon(AwesomeIcon.WARNING_SIGN);
-        warningIcon.setLayoutY(3);
-        warningIcon.getStyleClass().addAll("icon", "warning");
-
-        privacyIcon = getIcon(AwesomeIcon.EYE_CLOSE);
-        privacyIcon.setLayoutY(3);
-        privacyIcon.getStyleClass().addAll("icon", "info");
-
-        AnchorPane.setLeftAnchor(infoIcon, 7.0);
-        AnchorPane.setLeftAnchor(warningIcon, 7.0);
-        AnchorPane.setLeftAnchor(privacyIcon, 7.0);
         AnchorPane.setRightAnchor(inputTextField, 0.0);
         AnchorPane.setLeftAnchor(inputTextField, 0.0);
 
-        hideIcons();
+        icon = new Label();
+        icon.setLayoutY(3);
+        AnchorPane.setLeftAnchor(icon, 7.0);
+        icon.setOnMouseEntered(e -> {
+            if (node != null) {
+                popoverWrapper.showPopOver(() -> checkNotNull(createPopOver()));
+            }
+        });
+        icon.setOnMouseExited(e -> {
+            if (node != null) {
+                popoverWrapper.hidePopOver();
+            }
+        });
 
-        getChildren().addAll(inputTextField, infoIcon, warningIcon, privacyIcon);
+        hideIcon();
+
+        getChildren().addAll(inputTextField, icon);
     }
 
-
-    private void hideIcons() {
-        infoIcon.setManaged(false);
-        infoIcon.setVisible(false);
-        warningIcon.setManaged(false);
-        warningIcon.setVisible(false);
-        privacyIcon.setManaged(false);
-        privacyIcon.setVisible(false);
-    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Public
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void setContentForInfoPopOver(Node node) {
-        currentIcon = infoIcon;
-
-        hideIcons();
-        setActionHandlers(node);
+        setContentForPopOver(node, AwesomeIcon.INFO_SIGN);
     }
 
     public void setContentForWarningPopOver(Node node) {
-        currentIcon = warningIcon;
-
-        hideIcons();
-        setActionHandlers(node);
+        setContentForPopOver(node, AwesomeIcon.WARNING_SIGN, "warning");
     }
 
     public void setContentForPrivacyPopOver(Node node) {
-        currentIcon = privacyIcon;
-
-        hideIcons();
-        setActionHandlers(node);
+        setContentForPopOver(node, AwesomeIcon.EYE_CLOSE);
     }
 
-    public void hideInfoContent() {
-        currentIcon = null;
-        hideIcons();
+    public void setContentForPopOver(Node node, AwesomeIcon awesomeIcon) {
+        setContentForPopOver(node, awesomeIcon, null);
+    }
+
+    public void setContentForPopOver(Node node, AwesomeIcon awesomeIcon, @Nullable String style) {
+        this.node = node;
+        AwesomeDude.setIcon(icon, awesomeIcon);
+        icon.getStyleClass().addAll("icon", style == null ? "info" : style);
+        icon.setManaged(true);
+        icon.setVisible(true);
+    }
+
+    public void hideIcon() {
+        icon.setManaged(false);
+        icon.setVisible(false);
     }
 
     public void setIconsRightAligned() {
-        AnchorPane.clearConstraints(infoIcon);
-        AnchorPane.clearConstraints(warningIcon);
-        AnchorPane.clearConstraints(privacyIcon);
+        AnchorPane.clearConstraints(icon);
         AnchorPane.clearConstraints(inputTextField);
 
-        AnchorPane.setRightAnchor(infoIcon, 7.0);
-        AnchorPane.setRightAnchor(warningIcon, 7.0);
-        AnchorPane.setRightAnchor(privacyIcon, 7.0);
+        AnchorPane.setRightAnchor(icon, 7.0);
         AnchorPane.setLeftAnchor(inputTextField, 0.0);
         AnchorPane.setRightAnchor(inputTextField, 0.0);
     }
@@ -146,7 +130,7 @@ public class InfoInputTextField extends AnchorPane {
         return text.get();
     }
 
-    public final StringProperty textProperty() {
+    public StringProperty textProperty() {
         return text;
     }
 
@@ -155,28 +139,18 @@ public class InfoInputTextField extends AnchorPane {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void setActionHandlers(Node node) {
-
-        if (node != null) {
-            currentIcon.setManaged(true);
-            currentIcon.setVisible(true);
-
-            // As we don't use binding here we need to recreate it on mouse over to reflect the current state
-            currentIcon.setOnMouseEntered(e -> popoverWrapper.showPopOver(() -> createPopOver(node)));
-            currentIcon.setOnMouseExited(e -> popoverWrapper.hidePopOver());
+    private PopOver createPopOver() {
+        if (node == null) {
+            return null;
         }
-    }
 
-    private PopOver createPopOver(Node node) {
         node.getStyleClass().add("default-text");
-
         PopOver popover = new PopOver(node);
-        if (currentIcon.getScene() != null) {
+        if (icon.getScene() != null) {
             popover.setDetachable(false);
             popover.setArrowLocation(PopOver.ArrowLocation.LEFT_TOP);
             popover.setArrowIndent(5);
-
-            popover.show(currentIcon, -17);
+            popover.show(icon, -17);
         }
         return popover;
     }

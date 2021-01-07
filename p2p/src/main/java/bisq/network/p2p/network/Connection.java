@@ -24,10 +24,10 @@ import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.PrefixedSealedAndSignedMessage;
 import bisq.network.p2p.SendersNodeAddressMessage;
 import bisq.network.p2p.SupportedCapabilitiesMessage;
-import bisq.network.p2p.peers.BanList;
 import bisq.network.p2p.peers.getdata.messages.GetDataRequest;
 import bisq.network.p2p.peers.getdata.messages.GetDataResponse;
 import bisq.network.p2p.peers.keepalive.messages.KeepAliveMessage;
+import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.messages.AddDataMessage;
 import bisq.network.p2p.storage.messages.AddPersistableNetworkPayloadMessage;
 import bisq.network.p2p.storage.payload.CapabilityRequiringPayload;
@@ -68,9 +68,13 @@ import java.io.OptionalDataException;
 import java.io.StreamCorruptedException;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Queue;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -136,6 +140,8 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
     private final Socket socket;
     // private final MessageListener messageListener;
     private final ConnectionListener connectionListener;
+    @Nullable
+    private final NetworkFilter networkFilter;
     @Getter
     private final String uid;
     private final ExecutorService singleThreadExecutor = Executors.newSingleThreadExecutor(runnable -> new Thread(runnable, "Connection.java executor-service"));
@@ -179,9 +185,11 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                MessageListener messageListener,
                ConnectionListener connectionListener,
                @Nullable NodeAddress peersNodeAddress,
-               NetworkProtoResolver networkProtoResolver) {
+               NetworkProtoResolver networkProtoResolver,
+               @Nullable NetworkFilter networkFilter) {
         this.socket = socket;
         this.connectionListener = connectionListener;
+        this.networkFilter = networkFilter;
         uid = UUID.randomUUID().toString();
         statistic = new Statistic();
 
@@ -204,9 +212,12 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
             // We create a thread for handling inputStream data
             singleThreadExecutor.submit(this);
 
-            if (peersNodeAddress != null)
+            if (peersNodeAddress != null) {
                 setPeersNodeAddress(peersNodeAddress);
-
+                if (networkFilter != null && networkFilter.isPeerBanned(peersNodeAddress)) {
+                    reportInvalidRequest(RuleViolation.PEER_BANNED);
+                }
+            }
             UserThread.execute(() -> connectionListener.onConnection(this));
         } catch (Throwable e) {
             handleException(e);
@@ -230,88 +241,98 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
     public void sendMessage(NetworkEnvelope networkEnvelope) {
         log.debug(">> Send networkEnvelope of type: {}", networkEnvelope.getClass().getSimpleName());
 
-        if (!stopped) {
-            if (noCapabilityRequiredOrCapabilityIsSupported(networkEnvelope)) {
-                try {
-                    String peersNodeAddress = peersNodeAddressOptional.map(NodeAddress::toString).orElse("null");
+        if (stopped) {
+            log.debug("called sendMessage but was already stopped");
+            return;
+        }
 
-                    if (networkEnvelope instanceof PrefixedSealedAndSignedMessage && peersNodeAddressOptional.isPresent()) {
-                        setPeerType(Connection.PeerType.DIRECT_MSG_PEER);
+        if (networkFilter != null &&
+                peersNodeAddressOptional.isPresent() &&
+                networkFilter.isPeerBanned(peersNodeAddressOptional.get())) {
+            reportInvalidRequest(RuleViolation.PEER_BANNED);
+            return;
+        }
 
-                        log.debug("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n" +
-                                        "Sending direct message to peer" +
-                                        "Write object to outputStream to peer: {} (uid={})\ntruncated message={} / size={}" +
-                                        "\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n",
-                                peersNodeAddress, uid, Utilities.toTruncatedString(networkEnvelope), -1);
-                    } else if (networkEnvelope instanceof GetDataResponse && ((GetDataResponse) networkEnvelope).isGetUpdatedDataResponse()) {
-                        setPeerType(Connection.PeerType.PEER);
-                    }
+        if (!noCapabilityRequiredOrCapabilityIsSupported(networkEnvelope)) {
+            log.debug("Capability for networkEnvelope is required but not supported");
+            return;
+        }
 
-                    // Throttle outbound network_messages
-                    long now = System.currentTimeMillis();
-                    long elapsed = now - lastSendTimeStamp;
-                    if (elapsed < getSendMsgThrottleTrigger()) {
-                        log.debug("We got 2 sendMessage requests in less than {} ms. We set the thread to sleep " +
-                                        "for {} ms to avoid flooding our peer. lastSendTimeStamp={}, now={}, elapsed={}, networkEnvelope={}",
-                                getSendMsgThrottleTrigger(), getSendMsgThrottleSleep(), lastSendTimeStamp, now, elapsed,
-                                networkEnvelope.getClass().getSimpleName());
+        try {
+            if (networkEnvelope instanceof PrefixedSealedAndSignedMessage && peersNodeAddressOptional.isPresent()) {
+                setPeerType(Connection.PeerType.DIRECT_MSG_PEER);
 
-                        // check if BundleOfEnvelopes is supported
-                        if (getCapabilities().containsAll(new Capabilities(Capability.BUNDLE_OF_ENVELOPES))) {
-                            synchronized (lock) {
-                                // check if current envelope fits size
-                                // - no? create new envelope
-                                if (queueOfBundles.isEmpty() || queueOfBundles.element().toProtoNetworkEnvelope().getSerializedSize() + networkEnvelope.toProtoNetworkEnvelope().getSerializedSize() > MAX_PERMITTED_MESSAGE_SIZE * 0.9) {
-                                    // - no? create a bucket
-                                    queueOfBundles.add(new BundleOfEnvelopes());
+                log.debug("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n" +
+                                "Sending direct message to peer" +
+                                "Write object to outputStream to peer: {} (uid={})\ntruncated message={} / size={}" +
+                                "\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n",
+                        peersNodeAddressOptional.map(NodeAddress::toString).orElse("null"),
+                        uid, Utilities.toTruncatedString(networkEnvelope), -1);
+            } else if (networkEnvelope instanceof GetDataResponse && ((GetDataResponse) networkEnvelope).isGetUpdatedDataResponse()) {
+                setPeerType(Connection.PeerType.PEER);
+            }
 
-                                    // - and schedule it for sending
-                                    lastSendTimeStamp += getSendMsgThrottleSleep();
+            // Throttle outbound network_messages
+            long now = System.currentTimeMillis();
+            long elapsed = now - lastSendTimeStamp;
+            if (elapsed < getSendMsgThrottleTrigger()) {
+                log.debug("We got 2 sendMessage requests in less than {} ms. We set the thread to sleep " +
+                                "for {} ms to avoid flooding our peer. lastSendTimeStamp={}, now={}, elapsed={}, networkEnvelope={}",
+                        getSendMsgThrottleTrigger(), getSendMsgThrottleSleep(), lastSendTimeStamp, now, elapsed,
+                        networkEnvelope.getClass().getSimpleName());
 
-                                    bundleSender.schedule(() -> {
-                                        if (!stopped) {
-                                            synchronized (lock) {
-                                                BundleOfEnvelopes bundle = queueOfBundles.poll();
-                                                if (bundle != null && !stopped) {
-                                                    NetworkEnvelope envelope = bundle.getEnvelopes().size() == 1 ?
-                                                            bundle.getEnvelopes().get(0) :
-                                                            bundle;
-                                                    try {
-                                                        protoOutputStream.writeEnvelope(envelope);
-                                                    } catch (Throwable t) {
-                                                        log.error("Sending envelope of class {} to address {} " +
-                                                                        "failed due {}",
-                                                                envelope.getClass().getSimpleName(),
-                                                                this.getPeersNodeAddressOptional(),
-                                                                t.toString());
-                                                        log.error("envelope: {}", envelope);
-                                                    }
-                                                }
+                // check if BundleOfEnvelopes is supported
+                if (getCapabilities().containsAll(new Capabilities(Capability.BUNDLE_OF_ENVELOPES))) {
+                    synchronized (lock) {
+                        // check if current envelope fits size
+                        // - no? create new envelope
+                        if (queueOfBundles.isEmpty() || queueOfBundles.element().toProtoNetworkEnvelope().getSerializedSize() + networkEnvelope.toProtoNetworkEnvelope().getSerializedSize() > MAX_PERMITTED_MESSAGE_SIZE * 0.9) {
+                            // - no? create a bucket
+                            queueOfBundles.add(new BundleOfEnvelopes());
+
+                            // - and schedule it for sending
+                            lastSendTimeStamp += getSendMsgThrottleSleep();
+
+                            bundleSender.schedule(() -> {
+                                if (!stopped) {
+                                    synchronized (lock) {
+                                        BundleOfEnvelopes bundle = queueOfBundles.poll();
+                                        if (bundle != null && !stopped) {
+                                            NetworkEnvelope envelope = bundle.getEnvelopes().size() == 1 ?
+                                                    bundle.getEnvelopes().get(0) :
+                                                    bundle;
+                                            try {
+                                                protoOutputStream.writeEnvelope(envelope);
+                                            } catch (Throwable t) {
+                                                log.error("Sending envelope of class {} to address {} " +
+                                                                "failed due {}",
+                                                        envelope.getClass().getSimpleName(),
+                                                        this.getPeersNodeAddressOptional(),
+                                                        t.toString());
+                                                log.error("envelope: {}", envelope);
                                             }
                                         }
-                                    }, lastSendTimeStamp - now, TimeUnit.MILLISECONDS);
+                                    }
                                 }
-
-                                // - yes? add to bucket
-                                queueOfBundles.element().add(networkEnvelope);
-                            }
-                            return;
+                            }, lastSendTimeStamp - now, TimeUnit.MILLISECONDS);
                         }
 
-                        Thread.sleep(getSendMsgThrottleSleep());
+                        // - yes? add to bucket
+                        queueOfBundles.element().add(networkEnvelope);
                     }
-
-                    lastSendTimeStamp = now;
-
-                    if (!stopped) {
-                        protoOutputStream.writeEnvelope(networkEnvelope);
-                    }
-                } catch (Throwable t) {
-                    handleException(t);
+                    return;
                 }
+
+                Thread.sleep(getSendMsgThrottleSleep());
             }
-        } else {
-            log.debug("called sendMessage but was already stopped");
+
+            lastSendTimeStamp = now;
+
+            if (!stopped) {
+                protoOutputStream.writeEnvelope(networkEnvelope);
+            }
+        } catch (Throwable t) {
+            handleException(t);
         }
     }
 
@@ -421,14 +442,38 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
     @Override
     public void onMessage(NetworkEnvelope networkEnvelope, Connection connection) {
         checkArgument(connection.equals(this));
-
         if (networkEnvelope instanceof BundleOfEnvelopes) {
-            for (NetworkEnvelope current : ((BundleOfEnvelopes) networkEnvelope).getEnvelopes()) {
-                UserThread.execute(() -> messageListeners.forEach(e -> e.onMessage(current, connection)));
-            }
+            onBundleOfEnvelopes((BundleOfEnvelopes) networkEnvelope, connection);
         } else {
             UserThread.execute(() -> messageListeners.forEach(e -> e.onMessage(networkEnvelope, connection)));
         }
+    }
+
+    private void onBundleOfEnvelopes(BundleOfEnvelopes networkEnvelope, Connection connection) {
+        Map<P2PDataStorage.ByteArray, Set<NetworkEnvelope>> itemsByHash = new HashMap<>();
+        Set<NetworkEnvelope> envelopesToProcess = new HashSet<>();
+        List<NetworkEnvelope> networkEnvelopes = networkEnvelope.getEnvelopes();
+        for (NetworkEnvelope current : networkEnvelopes) {
+            if (current instanceof AddPersistableNetworkPayloadMessage) {
+                PersistableNetworkPayload persistableNetworkPayload = ((AddPersistableNetworkPayloadMessage) current).getPersistableNetworkPayload();
+                byte[] hash = persistableNetworkPayload.getHash();
+                String itemName = persistableNetworkPayload.getClass().getSimpleName();
+                P2PDataStorage.ByteArray byteArray = new P2PDataStorage.ByteArray(hash);
+                itemsByHash.putIfAbsent(byteArray, new HashSet<>());
+                Set<NetworkEnvelope> envelopesByHash = itemsByHash.get(byteArray);
+                if (!envelopesByHash.contains(current)) {
+                    envelopesByHash.add(current);
+                    envelopesToProcess.add(current);
+                } else {
+                    log.debug("We got duplicated items for {}. We ignore the duplicates. Hash: {}",
+                            itemName, Utilities.encodeToHex(hash));
+                }
+            } else {
+                envelopesToProcess.add(current);
+            }
+        }
+        envelopesToProcess.forEach(envelope -> UserThread.execute(() ->
+                messageListeners.forEach(listener -> listener.onMessage(envelope, connection))));
     }
 
 
@@ -455,12 +500,8 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
         }
 
         peersNodeAddressProperty.set(peerNodeAddress);
-
-        if (BanList.isBanned(peerNodeAddress)) {
-            log.warn("We detected a connection to a banned peer. We will close that connection. (setPeersNodeAddress)");
-            reportInvalidRequest(RuleViolation.PEER_BANNED);
-        }
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
@@ -709,6 +750,13 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                         return;
                     }
 
+                    if (networkFilter != null &&
+                            peersNodeAddressOptional.isPresent() &&
+                            networkFilter.isPeerBanned(peersNodeAddressOptional.get())) {
+                        reportInvalidRequest(RuleViolation.PEER_BANNED);
+                        return;
+                    }
+
                     // Throttle inbound network_messages
                     long now = System.currentTimeMillis();
                     long elapsed = now - lastReadTimeStamp;
@@ -718,7 +766,6 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                                 lastReadTimeStamp, now, elapsed);
                         Thread.sleep(20);
                     }
-
                     // Reading the protobuffer message from the inputStream
                     protobuf.NetworkEnvelope proto = protobuf.NetworkEnvelope.parseDelimitedFrom(protoInputStream);
 
@@ -813,11 +860,10 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                                 "connection={}", proto.getCloseConnectionMessage().getReason(), this);
 
                         if (CloseConnectionReason.PEER_BANNED.name().equals(proto.getCloseConnectionMessage().getReason())) {
-                            log.warn("We got shut down because we are banned by the other peer. (InputHandler.run CloseConnectionMessage)");
-                            shutDown(CloseConnectionReason.PEER_BANNED);
-                        } else {
-                            shutDown(CloseConnectionReason.CLOSE_REQUESTED_BY_PEER);
+                            log.warn("We got shut down because we are banned by the other peer. " +
+                                    "(InputHandler.run CloseConnectionMessage). Peer: {}", getPeersNodeAddressOptional());
                         }
+                        shutDown(CloseConnectionReason.CLOSE_REQUESTED_BY_PEER);
                         return;
                     } else if (!stopped) {
                         // We don't want to get the activity ts updated by ping/pong msg
@@ -854,6 +900,11 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                                     // and we could not send the CloseConnectionMessage.
                                     // We check for a banned peer inside setPeersNodeAddress() and shut down if banned.
                                     setPeersNodeAddress(senderNodeAddress);
+                                }
+
+                                if (networkFilter != null && networkFilter.isPeerBanned(senderNodeAddress)) {
+                                    reportInvalidRequest(RuleViolation.PEER_BANNED);
+                                    return;
                                 }
                             }
                         }

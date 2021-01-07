@@ -18,6 +18,7 @@
 package bisq.desktop.main.portfolio.editoffer;
 
 import bisq.desktop.Navigation;
+import bisq.desktop.main.PriceUtil;
 import bisq.desktop.main.offer.MutableOfferViewModel;
 import bisq.desktop.util.validation.AltcoinValidator;
 import bisq.desktop.util.validation.BsqValidator;
@@ -79,7 +80,17 @@ class EditOfferViewModel extends MutableOfferViewModel<EditOfferDataModel> {
     @Override
     public void activate() {
         super.activate();
+
         dataModel.populateData();
+
+        long triggerPriceAsLong = dataModel.getTriggerPrice();
+        dataModel.setTriggerPrice(triggerPriceAsLong);
+        if (triggerPriceAsLong > 0) {
+            triggerPrice.set(PriceUtil.formatMarketPrice(triggerPriceAsLong, dataModel.getCurrencyCode()));
+        } else {
+            triggerPrice.set("");
+        }
+        onTriggerPriceTextFieldChanged();
     }
 
     public void applyOpenOffer(OpenOffer openOffer) {
