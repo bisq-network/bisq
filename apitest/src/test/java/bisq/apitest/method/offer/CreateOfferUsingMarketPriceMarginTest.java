@@ -17,7 +17,7 @@
 
 package bisq.apitest.method.offer;
 
-import bisq.core.btc.wallet.Restrictions;
+import bisq.core.payment.PaymentAccount;
 
 import bisq.proto.grpc.CreateOfferRequest;
 import bisq.proto.grpc.OfferInfo;
@@ -32,8 +32,10 @@ import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 
+import static bisq.apitest.config.BisqAppConfig.alicedaemon;
 import static bisq.common.util.MathUtils.scaleDownByPowerOf10;
 import static bisq.common.util.MathUtils.scaleUpByPowerOf10;
+import static bisq.core.btc.wallet.Restrictions.getDefaultBuyerSecurityDepositAsPercent;
 import static java.lang.Math.abs;
 import static java.lang.String.format;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -55,9 +57,10 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractOfferTest {
     @Test
     @Order(1)
     public void testCreateUSDBTCBuyOffer5PctPriceMargin() {
+        PaymentAccount usdAccount = createDummyF2FAccount(alicedaemon, "US");
         double priceMarginPctInput = 5.00;
         var req = CreateOfferRequest.newBuilder()
-                .setPaymentAccountId(alicesDummyAcct.getId())
+                .setPaymentAccountId(usdAccount.getId())
                 .setDirection("buy")
                 .setCurrencyCode("usd")
                 .setAmount(10000000)
@@ -65,7 +68,7 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractOfferTest {
                 .setUseMarketBasedPrice(true)
                 .setMarketPriceMargin(priceMarginPctInput)
                 .setPrice("0")
-                .setBuyerSecurityDeposit(Restrictions.getDefaultBuyerSecurityDepositAsPercent())
+                .setBuyerSecurityDeposit(getDefaultBuyerSecurityDepositAsPercent())
                 .setMakerFeeCurrencyCode(MAKER_FEE_CURRENCY_CODE)
                 .build();
         var newOffer = aliceStubs.offersService.createOffer(req).getOffer();
@@ -76,19 +79,19 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractOfferTest {
         assertEquals(10000000, newOffer.getAmount());
         assertEquals(10000000, newOffer.getMinAmount());
         assertEquals(1500000, newOffer.getBuyerSecurityDeposit());
-        assertEquals(alicesDummyAcct.getId(), newOffer.getPaymentAccountId());
+        assertEquals(usdAccount.getId(), newOffer.getPaymentAccountId());
         assertEquals("BTC", newOffer.getBaseCurrencyCode());
         assertEquals("USD", newOffer.getCounterCurrencyCode());
         assertTrue(newOffer.getIsCurrencyForMakerFeeBtc());
 
-        newOffer = getOffer(newOfferId);
+        newOffer = getMyOffer(newOfferId);
         assertEquals(newOfferId, newOffer.getId());
         assertEquals("BUY", newOffer.getDirection());
         assertTrue(newOffer.getUseMarketBasedPrice());
         assertEquals(10000000, newOffer.getAmount());
         assertEquals(10000000, newOffer.getMinAmount());
         assertEquals(1500000, newOffer.getBuyerSecurityDeposit());
-        assertEquals(alicesDummyAcct.getId(), newOffer.getPaymentAccountId());
+        assertEquals(usdAccount.getId(), newOffer.getPaymentAccountId());
         assertEquals("BTC", newOffer.getBaseCurrencyCode());
         assertEquals("USD", newOffer.getCounterCurrencyCode());
         assertTrue(newOffer.getIsCurrencyForMakerFeeBtc());
@@ -99,9 +102,10 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractOfferTest {
     @Test
     @Order(2)
     public void testCreateNZDBTCBuyOfferMinus2PctPriceMargin() {
+        PaymentAccount nzdAccount = createDummyF2FAccount(alicedaemon, "NZ");
         double priceMarginPctInput = -2.00;
         var req = CreateOfferRequest.newBuilder()
-                .setPaymentAccountId(alicesDummyAcct.getId())
+                .setPaymentAccountId(nzdAccount.getId())
                 .setDirection("buy")
                 .setCurrencyCode("nzd")
                 .setAmount(10000000)
@@ -109,7 +113,7 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractOfferTest {
                 .setUseMarketBasedPrice(true)
                 .setMarketPriceMargin(priceMarginPctInput)
                 .setPrice("0")
-                .setBuyerSecurityDeposit(Restrictions.getDefaultBuyerSecurityDepositAsPercent())
+                .setBuyerSecurityDeposit(getDefaultBuyerSecurityDepositAsPercent())
                 .setMakerFeeCurrencyCode(MAKER_FEE_CURRENCY_CODE)
                 .build();
         var newOffer = aliceStubs.offersService.createOffer(req).getOffer();
@@ -120,19 +124,19 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractOfferTest {
         assertEquals(10000000, newOffer.getAmount());
         assertEquals(10000000, newOffer.getMinAmount());
         assertEquals(1500000, newOffer.getBuyerSecurityDeposit());
-        assertEquals(alicesDummyAcct.getId(), newOffer.getPaymentAccountId());
+        assertEquals(nzdAccount.getId(), newOffer.getPaymentAccountId());
         assertEquals("BTC", newOffer.getBaseCurrencyCode());
         assertEquals("NZD", newOffer.getCounterCurrencyCode());
         assertTrue(newOffer.getIsCurrencyForMakerFeeBtc());
 
-        newOffer = getOffer(newOfferId);
+        newOffer = getMyOffer(newOfferId);
         assertEquals(newOfferId, newOffer.getId());
         assertEquals("BUY", newOffer.getDirection());
         assertTrue(newOffer.getUseMarketBasedPrice());
         assertEquals(10000000, newOffer.getAmount());
         assertEquals(10000000, newOffer.getMinAmount());
         assertEquals(1500000, newOffer.getBuyerSecurityDeposit());
-        assertEquals(alicesDummyAcct.getId(), newOffer.getPaymentAccountId());
+        assertEquals(nzdAccount.getId(), newOffer.getPaymentAccountId());
         assertEquals("BTC", newOffer.getBaseCurrencyCode());
         assertEquals("NZD", newOffer.getCounterCurrencyCode());
         assertTrue(newOffer.getIsCurrencyForMakerFeeBtc());
@@ -143,9 +147,10 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractOfferTest {
     @Test
     @Order(3)
     public void testCreateGBPBTCSellOfferMinus1Point5PctPriceMargin() {
+        PaymentAccount gbpAccount = createDummyF2FAccount(alicedaemon, "GB");
         double priceMarginPctInput = -1.5;
         var req = CreateOfferRequest.newBuilder()
-                .setPaymentAccountId(alicesDummyAcct.getId())
+                .setPaymentAccountId(gbpAccount.getId())
                 .setDirection("sell")
                 .setCurrencyCode("gbp")
                 .setAmount(10000000)
@@ -153,7 +158,7 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractOfferTest {
                 .setUseMarketBasedPrice(true)
                 .setMarketPriceMargin(priceMarginPctInput)
                 .setPrice("0")
-                .setBuyerSecurityDeposit(Restrictions.getDefaultBuyerSecurityDepositAsPercent())
+                .setBuyerSecurityDeposit(getDefaultBuyerSecurityDepositAsPercent())
                 .setMakerFeeCurrencyCode(MAKER_FEE_CURRENCY_CODE)
                 .build();
         var newOffer = aliceStubs.offersService.createOffer(req).getOffer();
@@ -165,19 +170,19 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractOfferTest {
         assertEquals(10000000, newOffer.getAmount());
         assertEquals(10000000, newOffer.getMinAmount());
         assertEquals(1500000, newOffer.getBuyerSecurityDeposit());
-        assertEquals(alicesDummyAcct.getId(), newOffer.getPaymentAccountId());
+        assertEquals(gbpAccount.getId(), newOffer.getPaymentAccountId());
         assertEquals("BTC", newOffer.getBaseCurrencyCode());
         assertEquals("GBP", newOffer.getCounterCurrencyCode());
         assertTrue(newOffer.getIsCurrencyForMakerFeeBtc());
 
-        newOffer = getOffer(newOfferId);
+        newOffer = getMyOffer(newOfferId);
         assertEquals(newOfferId, newOffer.getId());
         assertEquals("SELL", newOffer.getDirection());
         assertTrue(newOffer.getUseMarketBasedPrice());
         assertEquals(10000000, newOffer.getAmount());
         assertEquals(10000000, newOffer.getMinAmount());
         assertEquals(1500000, newOffer.getBuyerSecurityDeposit());
-        assertEquals(alicesDummyAcct.getId(), newOffer.getPaymentAccountId());
+        assertEquals(gbpAccount.getId(), newOffer.getPaymentAccountId());
         assertEquals("BTC", newOffer.getBaseCurrencyCode());
         assertEquals("GBP", newOffer.getCounterCurrencyCode());
         assertTrue(newOffer.getIsCurrencyForMakerFeeBtc());
@@ -188,9 +193,10 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractOfferTest {
     @Test
     @Order(4)
     public void testCreateBRLBTCSellOffer6Point55PctPriceMargin() {
+        PaymentAccount brlAccount = createDummyF2FAccount(alicedaemon, "BR");
         double priceMarginPctInput = 6.55;
         var req = CreateOfferRequest.newBuilder()
-                .setPaymentAccountId(alicesDummyAcct.getId())
+                .setPaymentAccountId(brlAccount.getId())
                 .setDirection("sell")
                 .setCurrencyCode("brl")
                 .setAmount(10000000)
@@ -198,7 +204,7 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractOfferTest {
                 .setUseMarketBasedPrice(true)
                 .setMarketPriceMargin(priceMarginPctInput)
                 .setPrice("0")
-                .setBuyerSecurityDeposit(Restrictions.getDefaultBuyerSecurityDepositAsPercent())
+                .setBuyerSecurityDeposit(getDefaultBuyerSecurityDepositAsPercent())
                 .setMakerFeeCurrencyCode(MAKER_FEE_CURRENCY_CODE)
                 .build();
         var newOffer = aliceStubs.offersService.createOffer(req).getOffer();
@@ -210,19 +216,19 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractOfferTest {
         assertEquals(10000000, newOffer.getAmount());
         assertEquals(10000000, newOffer.getMinAmount());
         assertEquals(1500000, newOffer.getBuyerSecurityDeposit());
-        assertEquals(alicesDummyAcct.getId(), newOffer.getPaymentAccountId());
+        assertEquals(brlAccount.getId(), newOffer.getPaymentAccountId());
         assertEquals("BTC", newOffer.getBaseCurrencyCode());
         assertEquals("BRL", newOffer.getCounterCurrencyCode());
         assertTrue(newOffer.getIsCurrencyForMakerFeeBtc());
 
-        newOffer = getOffer(newOfferId);
+        newOffer = getMyOffer(newOfferId);
         assertEquals(newOfferId, newOffer.getId());
         assertEquals("SELL", newOffer.getDirection());
         assertTrue(newOffer.getUseMarketBasedPrice());
         assertEquals(10000000, newOffer.getAmount());
         assertEquals(10000000, newOffer.getMinAmount());
         assertEquals(1500000, newOffer.getBuyerSecurityDeposit());
-        assertEquals(alicesDummyAcct.getId(), newOffer.getPaymentAccountId());
+        assertEquals(brlAccount.getId(), newOffer.getPaymentAccountId());
         assertEquals("BTC", newOffer.getBaseCurrencyCode());
         assertEquals("BRL", newOffer.getCounterCurrencyCode());
         assertTrue(newOffer.getIsCurrencyForMakerFeeBtc());

@@ -17,6 +17,8 @@
 
 package bisq.apitest.method.trade;
 
+import bisq.core.payment.PaymentAccount;
+
 import bisq.proto.grpc.BtcBalanceInfo;
 
 import io.grpc.StatusRuntimeException;
@@ -59,7 +61,8 @@ public class TakeBuyBTCOfferTest extends AbstractTradeTest {
     @Order(1)
     public void testTakeAlicesBuyOffer(final TestInfo testInfo) {
         try {
-            var alicesOffer = createAliceOffer(alicesDummyAcct,
+            PaymentAccount alicesUsdAccount = createDummyF2FAccount(alicedaemon, "US");
+            var alicesOffer = createAliceOffer(alicesUsdAccount,
                     "buy",
                     "usd",
                     12500000,
@@ -70,9 +73,11 @@ public class TakeBuyBTCOfferTest extends AbstractTradeTest {
             // Wait for Alice's AddToOfferBook task.
             // Wait times vary;  my logs show >= 2 second delay.
             sleep(3000); // TODO loop instead of hard code wait time
-            assertEquals(1, getOpenOffersCount(aliceStubs, "buy", "usd"));
+            var alicesUsdOffers = getMyOffersSortedByDate(aliceStubs, "buy", "usd");
+            assertEquals(1, alicesUsdOffers.size());
 
-            var trade = takeAlicesOffer(offerId, bobsDummyAcct.getId(), TRADE_FEE_CURRENCY_CODE);
+            PaymentAccount bobsUsdAccount = createDummyF2FAccount(bobdaemon, "US");
+            var trade = takeAlicesOffer(offerId, bobsUsdAccount.getId(), TRADE_FEE_CURRENCY_CODE);
             assertNotNull(trade);
             assertEquals(offerId, trade.getTradeId());
             assertFalse(trade.getIsCurrencyForTakerFeeBtc());
@@ -80,7 +85,8 @@ public class TakeBuyBTCOfferTest extends AbstractTradeTest {
             tradeId = trade.getTradeId();
 
             genBtcBlocksThenWait(1, 1000);
-            assertEquals(0, getOpenOffersCount(aliceStubs, "buy", "usd"));
+            alicesUsdOffers = getMyOffersSortedByDate(aliceStubs, "buy", "usd");
+            assertEquals(0, alicesUsdOffers.size());
 
             trade = getTrade(bobdaemon, trade.getTradeId());
             EXPECTED_PROTOCOL_STATUS.setState(SELLER_PUBLISHED_DEPOSIT_TX)
