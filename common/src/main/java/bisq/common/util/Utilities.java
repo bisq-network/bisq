@@ -76,9 +76,6 @@ import javax.annotation.Nullable;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
-import static java.awt.Desktop.Action;
-import static java.awt.Desktop.getDesktop;
-import static java.awt.Desktop.isDesktopSupported;
 
 @Slf4j
 public class Utilities {
@@ -292,37 +289,13 @@ public class Utilities {
     }
 
     public static void openURI(URI uri) throws IOException {
-        if (!isLinux()
-                && isDesktopSupported()
-                && getDesktop().isSupported(Action.BROWSE)) {
-            getDesktop().browse(uri);
-        } else {
-            // Maybe Application.HostServices works in those cases?
-            // HostServices hostServices = getHostServices();
-            // hostServices.showDocument(uri.toString());
-
-            // On Linux Desktop is poorly implemented.
-            // See https://stackoverflow.com/questions/18004150/desktop-api-is-not-supported-on-the-current-platform
-            if (!DesktopUtil.browse(uri))
-                throw new IOException("Failed to open URI: " + uri.toString());
-        }
+        if (!DesktopUtil.browse(uri))
+            throw new IOException("Failed to open URI: " + uri.toString());
     }
 
     public static void openFile(File file) throws IOException {
-        if (!isLinux()
-                && isDesktopSupported()
-                && getDesktop().isSupported(Action.OPEN)) {
-            getDesktop().open(file);
-        } else {
-            // Maybe Application.HostServices works in those cases?
-            // HostServices hostServices = getHostServices();
-            // hostServices.showDocument(uri.toString());
-
-            // On Linux Desktop is poorly implemented.
-            // See https://stackoverflow.com/questions/18004150/desktop-api-is-not-supported-on-the-current-platform
-            if (!DesktopUtil.open(file))
-                throw new IOException("Failed to open file: " + file.toString());
-        }
+        if (!DesktopUtil.open(file))
+            throw new IOException("Failed to open file: " + file.toString());
     }
 
     public static String getDownloadOfHomeDir() {
