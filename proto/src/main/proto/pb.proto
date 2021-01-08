@@ -577,6 +577,10 @@ message MailboxMessageList {
     repeated MailboxItem mailbox_item = 1;
 }
 
+message IgnoredMailboxMap {
+    map<string, uint64> data = 1;
+}
+
 message MailboxItem {
     ProtectedMailboxStorageEntry protected_mailbox_storage_entry = 1;
     DecryptedMessageWithPubKey decrypted_message_with_pub_key = 2;
@@ -1215,6 +1219,7 @@ message PersistableEnvelope {
         RefundDisputeList refund_dispute_list = 30;
         TradeStatistics3Store trade_statistics3_store = 31;
         MailboxMessageList mailbox_message_list = 32;
+        IgnoredMailboxMap ignored_mailbox_map = 33;
     }
 }
 

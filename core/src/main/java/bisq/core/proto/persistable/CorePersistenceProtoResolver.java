@@ -44,6 +44,7 @@ import bisq.core.user.PreferencesPayload;
 import bisq.core.user.UserPayload;
 
 import bisq.network.p2p.MailboxMessageList;
+import bisq.network.p2p.mailbox.IgnoredMailboxMap;
 import bisq.network.p2p.peers.peerexchange.PeerList;
 import bisq.network.p2p.storage.persistence.SequenceNumberMap;
 
@@ -132,7 +133,8 @@ public class CorePersistenceProtoResolver extends CoreProtoResolver implements P
                     return TradeStatistics3Store.fromProto(proto.getTradeStatistics3Store());
                 case MAILBOX_MESSAGE_LIST:
                     return MailboxMessageList.fromProto(proto.getMailboxMessageList(), networkProtoResolver);
-
+                case IGNORED_MAILBOX_MAP:
+                    return IgnoredMailboxMap.fromProto(proto.getIgnoredMailboxMap());
                 default:
                     throw new ProtobufferRuntimeException("Unknown proto message case(PB.PersistableEnvelope). " +
                             "messageCase=" + proto.getMessageCase() + "; proto raw data=" + proto.toString());

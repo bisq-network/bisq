@@ -19,6 +19,7 @@ package bisq.network.p2p;
 
 import bisq.network.Socks5ProxyProvider;
 import bisq.network.crypto.EncryptionService;
+import bisq.network.p2p.mailbox.IgnoredMailboxService;
 import bisq.network.p2p.messaging.DecryptedMailboxListener;
 import bisq.network.p2p.network.CloseConnectionReason;
 import bisq.network.p2p.network.Connection;
@@ -50,6 +51,7 @@ import bisq.common.app.Capability;
 import bisq.common.crypto.CryptoException;
 import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.PubKeyRing;
+import bisq.common.crypto.SealedAndSigned;
 import bisq.common.persistence.PersistenceManager;
 import bisq.common.proto.ProtobufferException;
 import bisq.common.proto.network.NetworkEnvelope;
@@ -110,6 +112,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
     private final SeedNodeRepository seedNodeRepository;
     private final EncryptionService encryptionService;
+    private final IgnoredMailboxService ignoredMailboxService;
     private final PersistenceManager<MailboxMessageList> persistenceManager;
     private final KeyRing keyRing;
 
@@ -158,6 +161,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                       SeedNodeRepository seedNodeRepository,
                       Socks5ProxyProvider socks5ProxyProvider,
                       EncryptionService encryptionService,
+                      IgnoredMailboxService ignoredMailboxService,
                       PersistenceManager<MailboxMessageList> persistenceManager,
                       KeyRing keyRing) {
         this.networkNode = networkNode;
@@ -170,6 +174,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         this.seedNodeRepository = seedNodeRepository;
         this.socks5ProxyProvider = socks5ProxyProvider;
         this.encryptionService = encryptionService;
+        this.ignoredMailboxService = ignoredMailboxService;
         this.persistenceManager = persistenceManager;
         this.keyRing = keyRing;
 
@@ -513,15 +518,23 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
     @Nullable
     private MailboxItem decryptProtectedMailboxStorageEntry(ProtectedMailboxStorageEntry protectedMailboxStorageEntry) {
+        PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage = protectedMailboxStorageEntry
+                .getMailboxStoragePayload()
+                .getPrefixedSealedAndSignedMessage();
+        SealedAndSigned sealedAndSigned = prefixedSealedAndSignedMessage.getSealedAndSigned();
+        String uid = prefixedSealedAndSignedMessage.getUid();
+        if (ignoredMailboxService.isIgnored(uid)) {
+            // We had persisted a past failed decryption attempt on that message so we don't try again and return early
+            return null;
+        }
         try {
-            DecryptedMessageWithPubKey decryptedMessageWithPubKey = encryptionService.decryptAndVerify(protectedMailboxStorageEntry
-                    .getMailboxStoragePayload()
-                    .getPrefixedSealedAndSignedMessage()
-                    .getSealedAndSigned());
+            DecryptedMessageWithPubKey decryptedMessageWithPubKey = encryptionService.decryptAndVerify(sealedAndSigned);
             checkArgument(decryptedMessageWithPubKey.getNetworkEnvelope() instanceof MailboxMessage);
             return new MailboxItem(protectedMailboxStorageEntry, decryptedMessageWithPubKey);
         } catch (CryptoException ignore) {
             // Expected if message was not intended for us
+            // We persist those entries so at the next startup we do not need to try to decrypt it anymore
+            ignoredMailboxService.ignore(uid, protectedMailboxStorageEntry.getCreationTimeStamp());
         } catch (ProtobufferException e) {
             log.error(e.toString());
             e.getStackTrace();

@@ -53,6 +53,8 @@ import javax.annotation.Nullable;
 @EqualsAndHashCode
 @Slf4j
 public final class MailboxStoragePayload implements ProtectedStoragePayload, ExpirablePayload, AddOncePayload {
+    public static final long TTL = TimeUnit.DAYS.toMillis(15);
+
     private final PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage;
     private PublicKey senderPubKeyForAddOperation;
     private final byte[] senderPubKeyForAddOperationBytes;
@@ -118,6 +120,6 @@ public final class MailboxStoragePayload implements ProtectedStoragePayload, Exp
 
     @Override
     public long getTTL() {
-        return TimeUnit.DAYS.toMillis(15);
+        return TTL;
     }
 }
