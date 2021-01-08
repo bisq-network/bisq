@@ -21,12 +21,15 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 
 import java.text.DateFormat;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
 import java.util.Date;
+import java.util.Locale;
 import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
@@ -104,6 +107,24 @@ public class DisplayUtils {
             formattedVolume = FormattingUtils.fillUpPlacesWithEmptyStrings(formattedVolume, maxNumberOfDigits);
         }
         return formattedVolume;
+    }
+
+    public static String formatLargeFiat(double value, String currency) {
+        if (value <= 0) {
+            return "0";
+        }
+        NumberFormat numberFormat = DecimalFormat.getInstance(Locale.US);
+        numberFormat.setGroupingUsed(true);
+        return numberFormat.format(value) + " " + currency;
+    }
+
+    public static String formatLargeFiatWithUnitPostFix(double value, String currency) {
+        if (value <= 0) {
+            return "0";
+        }
+        String[] units = new String[]{"", "K", "M", "B"};
+        int digitGroups = (int) (Math.log10(value) / Math.log10(1000));
+        return new DecimalFormat("#,##0.###").format(value / Math.pow(1000, digitGroups)) + units[digitGroups] + " " + currency;
     }
 
     public static String formatVolume(Volume volume) {
