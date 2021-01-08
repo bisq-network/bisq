@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.function.Predicate;
 
 import static java.util.Arrays.stream;
+import static java.util.stream.IntStream.range;
 
 class NegativeNumberOptions {
 
@@ -35,13 +36,13 @@ class NegativeNumberOptions {
     String[] removeNegativeNumberOptions(String[] args) {
         // Cache any negative number params that will be rejected by the parser.
         // This should be called before command line parsing.
-        for (int i = 1; i < args.length; i++) {
-            // Start at i=1;  args[0] is the method name.
+        int skipped = getIndexOfMethodInArgs(args);
+        for (int i = skipped; i < args.length; i++) {
             if (isNegativeNumber.test(args[i])) {
                 String param = args[i];
-                negativeNumberParams.put(i - 1, new BigDecimal(param).toString());
+                negativeNumberParams.put(i - skipped, new BigDecimal(param).toString());
                 // Substitute a zero placeholder at the index containing the
-                // negative number option value.
+                // negative number positional option value.
                 args[i] = "0";
             }
         }
@@ -80,4 +81,17 @@ class NegativeNumberOptions {
         }
         return false;
     };
+
+    private int getIndexOfMethodInArgs(String[] args) {
+        // The first argument that does not start with '-' or '--' is the method name.
+        // Skip over the --password=xyz [--host=s --port=n] options.
+        int skipped = range(0, args.length)
+                .filter(i -> !args[i].startsWith("-"))
+                .findFirst()
+                .orElse(-1);
+        if (skipped >= 0)
+            return skipped;
+        else
+            throw new IllegalArgumentException("required --password option not found");
+    }
 }
