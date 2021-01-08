@@ -50,6 +50,9 @@ import org.bitcoinj.utils.Fiat;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
@@ -71,6 +74,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayload, PersistableNetworkPayload,
         CapabilityRequiringPayload, DateSortedTruncatablePayload {
 
+    @JsonExclude
+    private transient static final ZoneId ZONE_ID = ZoneId.systemDefault();
 
     public static TradeStatistics3 from(Trade trade,
                                         @Nullable String referralId,
@@ -188,6 +193,8 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
 
     @JsonExclude
     private transient Volume volume = null;
+    @JsonExclude
+    private transient LocalDateTime localDateTime;
 
     public TradeStatistics3(String currency,
                             long price,
@@ -331,6 +338,13 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
         return dateObj;
     }
 
+    public LocalDateTime getLocalDateTime() {
+        if (localDateTime == null) {
+            localDateTime = dateObj.toInstant().atZone(ZONE_ID).toLocalDateTime();
+        }
+        return localDateTime;
+    }
+
     public long getDateAsLong() {
         return date;
     }
@@ -353,8 +367,13 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
         }
     }
 
+    private transient Price priceObj;
+
     public Price getTradePrice() {
-        return Price.valueOf(currency, price);
+        if (priceObj == null) {
+            priceObj = Price.valueOf(currency, price);
+        }
+        return priceObj;
     }
 
     public Coin getTradeAmount() {
