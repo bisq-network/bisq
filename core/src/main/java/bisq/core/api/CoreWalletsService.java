@@ -56,6 +56,7 @@ import org.bitcoinj.crypto.KeyCrypterScrypt;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.inject.Singleton;
 
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -83,6 +84,7 @@ import static bisq.core.util.ParsingUtils.parseToCoin;
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
+@Singleton
 @Slf4j
 class CoreWalletsService {
 

@@ -32,6 +32,7 @@ import bisq.common.crypto.KeyRing;
 import org.bitcoinj.core.ECKey;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import java.util.Date;
 import java.util.List;
@@ -49,6 +50,7 @@ import static java.lang.String.format;
 import static java.net.InetAddress.getLoopbackAddress;
 import static java.util.Arrays.asList;
 
+@Singleton
 @Slf4j
 class CoreDisputeAgentsService {
 
