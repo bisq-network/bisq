@@ -22,6 +22,7 @@ import bisq.core.monetary.Price;
 import bisq.core.offer.CreateOfferService;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferBookService;
+import bisq.core.offer.OfferFilter;
 import bisq.core.offer.OfferUtil;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.payment.PaymentAccount;
@@ -34,6 +35,7 @@ import org.bitcoinj.core.Transaction;
 import org.bitcoinj.utils.Fiat;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import java.math.BigDecimal;
 
@@ -54,6 +56,7 @@ import static bisq.core.offer.OfferPayload.Direction.BUY;
 import static java.lang.String.format;
 import static java.util.Comparator.comparing;
 
+@Singleton
 @Slf4j
 class CoreOffersService {
 
@@ -63,28 +66,35 @@ class CoreOffersService {
     private final KeyRing keyRing;
     private final CreateOfferService createOfferService;
     private final OfferBookService offerBookService;
+    private final OfferFilter offerFilter;
     private final OpenOfferManager openOfferManager;
     private final OfferUtil offerUtil;
     private final User user;
+    private final boolean isApiUser;
 
     @Inject
-    public CoreOffersService(KeyRing keyRing,
+    public CoreOffersService(CoreContext coreContext,
+                             KeyRing keyRing,
                              CreateOfferService createOfferService,
                              OfferBookService offerBookService,
+                             OfferFilter offerFilter,
                              OpenOfferManager openOfferManager,
                              OfferUtil offerUtil,
                              User user) {
         this.keyRing = keyRing;
         this.createOfferService = createOfferService;
         this.offerBookService = offerBookService;
+        this.offerFilter = offerFilter;
         this.openOfferManager = openOfferManager;
         this.offerUtil = offerUtil;
         this.user = user;
+        this.isApiUser = coreContext.isApiUser();
     }
 
     Offer getOffer(String id) {
         return offerBookService.getOffers().stream()
                 .filter(o -> o.getId().equals(id))
+                .filter(o -> offerFilter.canTakeOffer(o, isApiUser).isValid())
                 .findAny().orElseThrow(() ->
                         new IllegalStateException(format("offer with id '%s' not found", id)));
     }
@@ -100,6 +110,7 @@ class CoreOffersService {
     List<Offer> getOffers(String direction, String currencyCode) {
         return offerBookService.getOffers().stream()
                 .filter(o -> offerMatchesDirectionAndCurrency(o, direction, currencyCode))
+                .filter(o -> offerFilter.canTakeOffer(o, isApiUser).isValid())
                 .sorted(priceComparator(direction))
                 .collect(Collectors.toList());
     }
