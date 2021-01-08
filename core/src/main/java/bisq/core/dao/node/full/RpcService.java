@@ -48,6 +48,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 import java.math.BigDecimal;
 
 import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -62,6 +63,13 @@ import org.jetbrains.annotations.NotNull;
  */
 @Slf4j
 public class RpcService {
+    // The BSQ tx with the following ID has 1 segwit (P2WPKH) BSQ input and 1 segwit (P2WPKH)
+    // BTC input, but with null pubKey already recorded in the DaoState for both inputs. Thus
+    // we must make a special case for it, as it was mined prior to the BSQ segwit upgrade.
+    private static final Set<String> BSQ_TXS_DISALLOWING_SEGWIT_PUB_KEYS = Set.of(
+            "d1f45e55be6101b1b75e6bf9fc5e5341c6ab420647be7555863bbbddd84e92f3" // in mainnet block 660384, 2020-12-07
+    );
+
     private final String rpcUser;
     private final String rpcPassword;
     private final String rpcHost;
@@ -246,8 +254,10 @@ public class RpcService {
                     // To maintain backwards compatibility when serializing and hashing the DAO state,
                     // segwit pubKeys are only extracted for the first input, as this will always be a
                     // BSQ input. Later inputs might be segwit BTC, which would have had a null pubKey
-                    // recorded in the DAO state prior to the segwit upgrade of the RPC client.
-                    String pubKeyAsHex = extractPubKeyAsHex(rawInput, rawInput == rawDtoTx.getVIn().get(0));
+                    // recorded in the DAO state prior to the segwit upgrade of the RPC client. Spurious
+                    // segwit BSQ inputs in txs mined prior to the upgrade also require exclusion.
+                    String pubKeyAsHex = extractPubKeyAsHex(rawInput, rawInput == rawDtoTx.getVIn().get(0) &&
+                            !BSQ_TXS_DISALLOWING_SEGWIT_PUB_KEYS.contains(txId));
                     if (pubKeyAsHex == null) {
                         log.debug("pubKeyAsHex is not set as we received a not supported sigScript. " +
                                         "txId={}, asm={}, txInWitness={}",
