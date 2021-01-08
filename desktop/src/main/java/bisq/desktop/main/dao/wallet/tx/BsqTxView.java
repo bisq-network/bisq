@@ -213,7 +213,6 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
 
         exportButton.setOnAction(event -> {
             ObservableList<TableColumn<BsqTxListItem, ?>> tableColumns = tableView.getColumns();
-            int reportColumns = tableColumns.size() - 1;    // CSV report excludes the last column (an icon)
             CSVEntryConverter<BsqTxListItem> headerConverter = item -> {
                 String[] columns = new String[8];
                 int i = 0;
