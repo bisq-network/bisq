@@ -83,6 +83,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
     private static final int TAB_INDEX = 2;
     private static final ZoneId ZONE_ID = ZoneId.systemDefault();
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Enum
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -116,7 +117,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
     final int maxTicks = 90;
     private int selectedTabIndex;
     final Map<TickUnit, Map<Long, Long>> usdPriceMapsPerTickUnit = new HashMap<>();
-
+    private boolean fillTradeCurrenciesOnActiavetCalled;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -150,7 +151,10 @@ class TradesChartsViewModel extends ActivatableViewModel {
     @Override
     protected void activate() {
         tradeStatisticsManager.getObservableTradeStatisticsSet().addListener(setChangeListener);
-        fillTradeCurrencies();
+        if (!fillTradeCurrenciesOnActiavetCalled) {
+            fillTradeCurrencies();
+            fillTradeCurrenciesOnActiavetCalled = true;
+        }
         buildUsdPricesPerDay();
         updateChartData();
         syncPriceFeedCurrency();
@@ -284,8 +288,9 @@ class TradesChartsViewModel extends ActivatableViewModel {
     }
 
     private void updateChartData() {
+        String currencyCode = getCurrencyCode();
         tradeStatisticsByCurrency.setAll(tradeStatisticsManager.getObservableTradeStatisticsSet().stream()
-                .filter(e -> showAllTradeCurrenciesProperty.get() || e.getCurrency().equals(getCurrencyCode()))
+                .filter(e -> showAllTradeCurrenciesProperty.get() || e.getCurrency().equals(currencyCode))
                 .collect(Collectors.toList()));
 
         // Generate date range and create sets for all ticks
