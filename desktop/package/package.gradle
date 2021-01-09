@@ -54,7 +54,7 @@ task getJavaBinariesDownloadURLs {
         println "Created temp root folder " + tempRootDir
 
         File binariesFolderPath = new File(tempRootDir, "binaries")
-        binariesFolderPath.mkdirs();
+        binariesFolderPath.mkdirs()
         ext.binariesFolderPath = binariesFolderPath
 
         // TODO Extend script logic to alternatively allow a local (separate, v14+) JDK for jpackage
@@ -110,12 +110,12 @@ task retrieveAndExtractJavaBinaries {
     dependsOn 'getJavaBinariesDownloadURLs'
 
     doLast {
-        File tempRootDir = getJavaBinariesDownloadURLs.property("tempRootDir")
+        File tempRootDir = getJavaBinariesDownloadURLs.property("tempRootDir") as File
 
         // Folder where the jpackage JDK archive will be downloaded and extracted
         String jdkForJpackageDirName = "jdk-jpackage"
         File jdkForJpackageDir = new File(tempRootDir, jdkForJpackageDirName)
-        jdkForJpackageDir.mkdirs();
+        jdkForJpackageDir.mkdirs()
 
         String jdkForJpackageArchiveURL = getJavaBinariesDownloadURLs.property('jdk15Binary_DownloadURL')
         String jdkForJpackageArchiveHash = getJavaBinariesDownloadURLs.property('jdk15Binary_SHA256Hash')
@@ -186,11 +186,11 @@ task packageInstallers {
         String licenseFilePath = "${rootProject.projectDir}/LICENSE"
         File binariesFolderPath = file(getJavaBinariesDownloadURLs.property('binariesFolderPath'))
 
-        File tempRootDir = getJavaBinariesDownloadURLs.property("tempRootDir")
+        File tempRootDir = getJavaBinariesDownloadURLs.property("tempRootDir") as File
         // The jpackateTempDir stores temp files used by jpackage for building the installers
         // It can be inspected in order to troubleshoot the packaging process
         File jpackateTempDir = new File(tempRootDir, "jpackage-temp")
-        jpackateTempDir.mkdirs();
+        jpackateTempDir.mkdirs()
 
         // ALL contents of this folder will be included in the resulting installers
         // However, the fat jar is the only one we need
@@ -269,7 +269,7 @@ task packageInstallers {
             if (ant.properties['macos-sign-check'] == 'y') {
                 // Create a temp folder to extract the macos-specific dylibs that need to be signed
                 File tempDylibFolderPath = new File(tempRootDir, "dylibs-to-sign")
-                tempDylibFolderPath.mkdirs();
+                tempDylibFolderPath.mkdirs()
 
                 // Dylibs relevant for signing (paths relative to the tempDylibFolderPath)
                 String dylibsToSign = (
@@ -443,8 +443,8 @@ task packageInstallers {
                 " --type deb")
 
             // Clean jpackage temp folder, needs to be empty for the next packaging step (rpm)
-            jpackateTempDir.deleteDir();
-            jpackateTempDir.mkdirs();
+            jpackateTempDir.deleteDir()
+            jpackateTempDir.mkdirs()
 
             // Package rpm
             executeCmd(jPackageFilePath + commonOpts + linuxOpts +
@@ -477,11 +477,11 @@ def executeCmd(String cmd) {
     def process = commands.execute(null, project.rootDir)
     def result
     if (process.waitFor() == 0) {
-        result = process.text;
+        result = process.text
         println "Command output (stdout):\n${result}"
     } else {
-        result = process.err.text;
+        result = process.err.text
         println "Command output (stderr):\n${result}"
     }
-    return result;
+    return result
 }
