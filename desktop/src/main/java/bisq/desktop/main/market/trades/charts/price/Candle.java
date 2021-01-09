@@ -58,15 +58,10 @@ import javafx.scene.shape.Line;
 
 import javafx.util.StringConverter;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
  * Candle node used for drawing a candle
  */
 public class Candle extends Group {
-    private static final Logger log = LoggerFactory.getLogger(Candle.class);
-
     private String seriesStyleClass;
     private String dataStyleClass;
     private final CandleTooltip candleTooltip;

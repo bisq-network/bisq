@@ -115,7 +115,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
     TickUnit tickUnit;
     final int maxTicks = 90;
     private int selectedTabIndex;
-    Map<TickUnit, Map<Long, Long>> usdPriceMapsPerTickUnit = new HashMap<>();
+    final Map<TickUnit, Map<Long, Long>> usdPriceMapsPerTickUnit = new HashMap<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
