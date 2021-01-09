@@ -142,8 +142,8 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         }
     }
 
-    private final CoinFormatter coinFormatter;
     private final User user;
+    private final CoinFormatter coinFormatter;
 
     private VolumeChart volumeChart, volumeInUsdChart;
     private CandleStickChart priceChart;
@@ -177,7 +177,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
     private Subscription currencySelectionSubscriber;
 
     private final StringProperty priceColumnLabel = new SimpleStringProperty();
-    private NumberAxis priceAxisX, priceAxisY, volumeAxisY, volumeAxisX, volumeInUsdAxisY, volumeInUsdAxisX;
+    private NumberAxis priceAxisX, priceAxisY, volumeAxisY, volumeAxisX, volumeInUsdAxisX;
     private XYChart.Series<Number, Number> priceSeries;
     private final XYChart.Series<Number, Number> volumeSeries = new XYChart.Series<>();
     private final XYChart.Series<Number, Number> volumeInUsdSeries = new XYChart.Series<>();
@@ -192,11 +192,11 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
     @SuppressWarnings("WeakerAccess")
     @Inject
     public TradesChartsView(TradesChartsViewModel model,
-                            @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter coinFormatter,
-                            User user) {
+                            User user,
+                            @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter coinFormatter) {
         super(model);
-        this.coinFormatter = coinFormatter;
         this.user = user;
+        this.coinFormatter = coinFormatter;
     }
 
     @Override
@@ -275,6 +275,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
 
                         tableView.getColumns().remove(marketColumn);
                     }
+
                     layout();
                     return null;
                 });
@@ -325,10 +326,11 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         });
 
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
-        tableView.setItems(sortedList);
-        priceChart.setAnimated(model.preferences.isUseAnimations());
-        volumeChart.setAnimated(model.preferences.isUseAnimations());
-        volumeInUsdChart.setAnimated(model.preferences.isUseAnimations());
+
+        boolean useAnimations = model.preferences.isUseAnimations();
+        priceChart.setAnimated(useAnimations);
+        volumeChart.setAnimated(useAnimations);
+        volumeInUsdChart.setAnimated(useAnimations);
         priceAxisX.setTickLabelFormatter(getTimeAxisStringConverter());
         volumeAxisX.setTickLabelFormatter(getTimeAxisStringConverter());
         volumeInUsdAxisX.setTickLabelFormatter(getTimeAxisStringConverter());
@@ -355,6 +357,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         });
 
         fillList();
+        tableView.setItems(sortedList);
         layout();
     }
 
@@ -368,7 +371,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         model.tradeStatisticsByCurrency.removeListener(tradeStatisticsByCurrencyListener);
 
         priceAxisY.labelProperty().unbind();
-        priceColumn.textProperty().removeListener(priceColumnLabelListener);
+        priceColumnLabel.removeListener(priceColumnLabelListener);
 
         currencySelectionSubscriber.unsubscribe();
 
@@ -528,7 +531,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         volumeChart = getVolumeChart(volumeAxisX, volumeAxisY, volumeSeries, "BTC");
 
         volumeInUsdAxisX = new NumberAxis(0, model.maxTicks + 1, 1);
-        volumeInUsdAxisY = new NumberAxis();
+        NumberAxis volumeInUsdAxisY = new NumberAxis();
         volumeInUsdChart = getVolumeChart(volumeInUsdAxisX, volumeInUsdAxisY, volumeInUsdSeries, "USD");
         volumeInUsdChart.setVisible(false);
         volumeInUsdChart.setManaged(false);
@@ -902,19 +905,36 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
     }
 
     private void layout() {
-        UserThread.runAfter(() -> {
-            double available;
-            if (root.getParent() instanceof Pane) {
-                available = ((Pane) root.getParent()).getHeight();
-            } else {
-                available = root.getHeight();
-            }
+        double available;
+        if (root.getParent() instanceof Pane) {
+            available = ((Pane) root.getParent()).getHeight();
+        } else {
+            available = root.getHeight();
+        }
+        if (available == 0) {
+            UserThread.execute(this::layout);
+            return;
+        }
 
-            available = available - volumeChartPane.getHeight() - toolBox.getHeight() - footer.getHeight() - 60;
-            if (priceChart.isManaged()) {
-                available = available - priceChartPane.getHeight();
+        available = available - volumeChartPane.getHeight() - toolBox.getHeight() - footer.getHeight() - 60;
+
+        if (!model.showAllTradeCurrenciesProperty.get()) {
+            double priceChartPaneHeight = priceChartPane.getHeight();
+            if (priceChartPaneHeight == 0) {
+                UserThread.execute(this::layout);
+                return;
             }
-            tableView.setPrefHeight(available);
-        }, 100, TimeUnit.MILLISECONDS);
+            available -= priceChartPaneHeight;
+        } else {
+            // If rendering is not done we get the height which is smaller than the volumeChart max Height so we
+            // delay to next render frame.
+            // Using runAfter does not work well as filling the table list and creating the chart can be a bit slow and
+            // its hard to estimate correct delay.
+            if (volumeChartPane.getHeight() < volumeChart.getMaxHeight()) {
+                UserThread.execute(this::layout);
+                return;
+            }
+        }
+        tableView.setPrefHeight(available);
     }
 }
