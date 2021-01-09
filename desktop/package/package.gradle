@@ -284,7 +284,6 @@ task packageInstallers {
                         " libprism_sw.dylib" +
                         " org/bridj/lib/darwin_universal/libbridj.dylib" +
                         " META-INF/native/libio_grpc_netty_shaded_netty_tcnative_osx_x86_64.jnilib" +
-                        " lib/x86_64/darwin/libscrypt.dylib" +
                         " com/github/sarxos/webcam/ds/buildin/lib/darwin_universal/libOpenIMAJGrabber.dylib"
                 )
 
@@ -297,6 +296,11 @@ task packageInstallers {
                 executeCmd("cd ${tempDylibFolderPath} &&" +
                         " codesign -vvv --options runtime --deep --force --sign \"${envVariableSigningID}\"" +
                         dylibsToSign)
+
+                // Verify signature
+                executeCmd("cd ${tempDylibFolderPath} &&" +
+                        " codesign -vvv --deep --strict " + dylibsToSign)
+
                 // Replace unsigned files in jar file
                 executeCmd("cd ${tempDylibFolderPath} &&" +
                         " jar uf ${fatJarFolderPath}/${mainJarName}" +
@@ -382,13 +386,13 @@ task packageInstallers {
                 // Response:
                 //  No errors uploading '[PATH_TO_BISQ_REPO]/bisq/desktop/build/temp-620637000/binaries/Bisq-1.1.1.dmg'.
                 //  RequestUUID = ea8bba77-97b7-4c15-a53f-8bbccf627190
-                def requestUUID = uploadForNotarizationOutput.split('RequestUUID = ')[1]
+                def requestUUID = uploadForNotarizationOutput.split('RequestUUID = ')[1].trim()
                 println "Extracted RequestUUID: " + requestUUID
 
                 // Every 1 minute, check the status
                 def notarizationEndedInSuccess = false
                 def notarizationEndedInFailure = false
-                while (!notarizationEndedInSuccess || !notarizationEndedInFailure)
+                while (!(notarizationEndedInSuccess || notarizationEndedInFailure))
                 {
                     println "Current time is:"
                     executeCmd('date')
@@ -402,8 +406,8 @@ task packageInstallers {
                             " --username '${envVariableAcUsername}'" +
                             " --password '@keychain:AC_PASSWORD'")
 
-                    notarizationEndedInSuccess = checkNotarizationStatusOutput.contains('Status: success')
-                    notarizationEndedInFailure = checkNotarizationStatusOutput.contains('Error')
+                    notarizationEndedInSuccess = checkNotarizationStatusOutput.contains('success')
+                    notarizationEndedInFailure = checkNotarizationStatusOutput.contains('invalid')
                 }
 
                 if (notarizationEndedInFailure) {
