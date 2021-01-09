@@ -45,6 +45,16 @@ public class Cookie extends HashMap<CookieKey, String> {
         }
     }
 
+    public void putAsBoolean(CookieKey key, boolean value) {
+        put(key, value ? "1" : "0");
+    }
+
+    public Optional<Boolean> getAsOptionalBoolean(CookieKey key) {
+        return containsKey(key) ?
+                Optional.of(get(key).equals("1")) :
+                Optional.empty();
+    }
+
     public Map<String, String> toProtoMessage() {
         Map<String, String> protoMap = new HashMap<>();
         this.forEach((key, value) -> {
