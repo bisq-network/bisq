@@ -372,11 +372,10 @@ class TradesChartsViewModel extends ActivatableViewModel {
         Collections.sort(tradePrices);
 
         List<TradeStatistics3> list = new ArrayList<>(set);
-        ObservableList<TradeStatistics3> obsList = FXCollections.observableArrayList(list);
-        obsList.sort(Comparator.comparingLong(TradeStatistics3::getDateAsLong));
-        if (obsList.size() > 0) {
-            open = obsList.get(0).getTradePrice().getValue();
-            close = obsList.get(obsList.size() - 1).getTradePrice().getValue();
+        list.sort(Comparator.comparingLong(TradeStatistics3::getDateAsLong));
+        if (list.size() > 0) {
+            open = list.get(0).getTradePrice().getValue();
+            close = list.get(list.size() - 1).getTradePrice().getValue();
         }
 
         long averagePrice;
