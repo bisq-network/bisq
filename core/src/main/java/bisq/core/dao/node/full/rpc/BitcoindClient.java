@@ -17,9 +17,13 @@
 
 package bisq.core.dao.node.full.rpc;
 
+import bisq.core.dao.node.full.rpc.dto.NetworkInfo;
 import bisq.core.dao.node.full.rpc.dto.RawBlock;
 
 import bisq.network.http.HttpException;
+
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -55,6 +59,12 @@ public interface BitcoindClient {
 
     @JsonRpcMethod("getblockhash")
     String getBlockHash(Integer blockHeight) throws IOException, HttpException;
+
+    @JsonRpcMethod("getbestblockhash")
+    String getBestBlockHash() throws IOException, HttpException;
+
+    @JsonRpcMethod("getnetworkinfo")
+    NetworkInfo getNetworkInfo() throws IOException, HttpException;
 
     static Builder builder() {
         return new Builder();
@@ -106,7 +116,10 @@ public interface BitcoindClient {
                     Base64.getEncoder().encodeToString(userPass.getBytes(StandardCharsets.US_ASCII)));
 
             var httpClient = new JsonRpcHttpClient(
-                    new URL("http", rpcHost, rpcPort, "", urlStreamHandler), headers) {
+                    new ObjectMapper()
+                            .configure(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_USING_DEFAULT_VALUE, true),
+                    new URL("http", rpcHost, rpcPort, "", urlStreamHandler),
+                    headers) {
                 @Override
                 public Object invoke(String methodName,
                                      Object argument,

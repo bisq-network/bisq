@@ -57,6 +57,7 @@ public class BitcoindClientTest {
     private static final String TEST_BLOCK_VERBOSITY_0 = readFromResourcesUnPrettified("getblock-result-verbosity-0.txt");
     private static final String TEST_BLOCK_VERBOSITY_1 = readFromResourcesUnPrettified("getblock-result-verbosity-1.json");
     private static final String TEST_BLOCK_VERBOSITY_2 = readFromResourcesUnPrettified("getblock-result-verbosity-2.json");
+    private static final String TEST_NETWORK_INFO = readFromResourcesUnPrettified("getnetworkinfo-result.json");
 
     private BitcoindClient client;
     private int mockResponseCode = 200;
@@ -130,6 +131,15 @@ public class BitcoindClientTest {
         assertEquals(expectedRequest, mockOutputStream.toString(UTF_8));
     }
 
+    @Test
+    public void testGetBestBlockHash() throws Exception {
+        var expectedRequest = toJson("{'id':'987654321','jsonrpc':'2.0','method':'getbestblockhash'}");
+        mockResponse = toJsonIS("{'result':'" + TEST_BLOCK_HASH + "','error':null,'id':'123456789'}");
+
+        assertEquals(TEST_BLOCK_HASH, client.getBestBlockHash());
+        assertEquals(expectedRequest, mockOutputStream.toString(UTF_8));
+    }
+
     @Test(expected = JsonRpcClientException.class)
     public void testGetBlockHash_heightOutOfRange() throws Exception {
         mockResponseCode = 500;
@@ -184,6 +194,19 @@ public class BitcoindClientTest {
         client.getBlock("foo", 2);
     }
 
+    @Test
+    public void testGetNetworkInfo() throws Exception {
+        var expectedRequest = toJson("{'id':'987654321','jsonrpc':'2.0','method':'getnetworkinfo'}");
+        mockResponse = toJsonIS("{'result':" + TEST_NETWORK_INFO + ",'error':null,'id':'123456789'}");
+
+        var networkInfo = client.getNetworkInfo();
+        var networkInfoRoundTripped = new ObjectMapper().writeValueAsString(networkInfo);
+        var expectedNetworkInfoStr = TEST_NETWORK_INFO.replace("MY_CUSTOM_SERVICE", "UNKNOWN");
+
+        assertEquals(expectedNetworkInfoStr, networkInfoRoundTripped);
+        assertEquals(expectedRequest, mockOutputStream.toString(UTF_8));
+    }
+
     private static String toJson(String json) {
         return json.replace("'", "\"").replace("\\\"", "'");
     }
@@ -197,7 +220,7 @@ public class BitcoindClientTest {
             var path = Paths.get(BitcoindClientTest.class.getResource(resourceName).toURI());
             return new String(Files.readAllBytes(path), Charsets.UTF_8).replaceAll("(\\s+\\B|\\B\\s+|\\v)", "");
         } catch (Exception e) {
-            return null;
+            return "";
         }
     }
 
