@@ -132,6 +132,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
         this.navigation = navigation;
 
         setChangeListener = change -> {
+            updateSelectedTradeStatistics(getCurrencyCode());
             updateChartData();
             fillTradeCurrencies();
         };
@@ -156,6 +157,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
             fillTradeCurrenciesOnActiavetCalled = true;
         }
         buildUsdPricesPerDay();
+        updateSelectedTradeStatistics(getCurrencyCode());
         updateChartData();
         syncPriceFeedCurrency();
         setMarketPriceFeedCurrency();
@@ -172,25 +174,26 @@ class TradesChartsViewModel extends ActivatableViewModel {
 
     void onSetTradeCurrency(TradeCurrency tradeCurrency) {
         if (tradeCurrency != null) {
-            final String code = tradeCurrency.getCode();
+            String code = tradeCurrency.getCode();
 
             if (isEditEntry(code)) {
                 navigation.navigateTo(MainView.class, SettingsView.class, PreferencesView.class);
-            } else {
-                boolean showAllEntry = isShowAllEntry(code);
-                showAllTradeCurrenciesProperty.set(showAllEntry);
-                if (!showAllEntry) {
-                    selectedTradeCurrencyProperty.set(tradeCurrency);
-                }
-                preferences.setTradeChartsScreenCurrencyCode(code);
-
-                updateChartData();
-
-                if (showAllEntry)
-                    priceFeedService.setCurrencyCode(GlobalSettings.getDefaultTradeCurrency().getCode());
-                else
-                    priceFeedService.setCurrencyCode(code);
+                return;
             }
+
+            boolean showAllEntry = isShowAllEntry(code);
+            showAllTradeCurrenciesProperty.set(showAllEntry);
+            if (showAllEntry) {
+                priceFeedService.setCurrencyCode(GlobalSettings.getDefaultTradeCurrency().getCode());
+            } else {
+                selectedTradeCurrencyProperty.set(tradeCurrency);
+                priceFeedService.setCurrencyCode(code);
+
+            }
+            preferences.setTradeChartsScreenCurrencyCode(code);
+
+            updateSelectedTradeStatistics(getCurrencyCode());
+            updateChartData();
         }
     }
 
@@ -288,11 +291,6 @@ class TradesChartsViewModel extends ActivatableViewModel {
     }
 
     private void updateChartData() {
-        String currencyCode = getCurrencyCode();
-        selectedTradeStatistics.setAll(tradeStatisticsManager.getObservableTradeStatisticsSet().stream()
-                .filter(e -> showAllTradeCurrenciesProperty.get() || e.getCurrency().equals(currencyCode))
-                .collect(Collectors.toList()));
-
         // Generate date range and create sets for all ticks
         itemsPerInterval = new HashMap<>();
         Date time = new Date();
@@ -342,6 +340,12 @@ class TradesChartsViewModel extends ActivatableViewModel {
 
         volumeInUsdItems.setAll(candleDataList.stream()
                 .map(candleData -> new XYChart.Data<Number, Number>(candleData.tick, candleData.volumeInUsd, candleData))
+                .collect(Collectors.toList()));
+    }
+
+    private void updateSelectedTradeStatistics(String currencyCode) {
+        selectedTradeStatistics.setAll(tradeStatisticsManager.getObservableTradeStatisticsSet().stream()
+                .filter(e -> showAllTradeCurrenciesProperty.get() || e.getCurrency().equals(currencyCode))
                 .collect(Collectors.toList()));
     }
 
