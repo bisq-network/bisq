@@ -107,7 +107,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
     final BooleanProperty showAllTradeCurrenciesProperty = new SimpleBooleanProperty(false);
     private final CurrencyList currencyListItems;
     private final CurrencyListItem showAllCurrencyListItem = new CurrencyListItem(new CryptoCurrency(GUIUtil.SHOW_ALL_FLAG, ""), -1);
-    final ObservableList<TradeStatistics3> tradeStatisticsByCurrency = FXCollections.observableArrayList();
+    final ObservableList<TradeStatistics3> selectedTradeStatistics = FXCollections.observableArrayList();
     final ObservableList<XYChart.Data<Number, Number>> priceItems = FXCollections.observableArrayList();
     final ObservableList<XYChart.Data<Number, Number>> volumeItems = FXCollections.observableArrayList();
     final ObservableList<XYChart.Data<Number, Number>> volumeInUsdItems = FXCollections.observableArrayList();
@@ -289,7 +289,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
 
     private void updateChartData() {
         String currencyCode = getCurrencyCode();
-        tradeStatisticsByCurrency.setAll(tradeStatisticsManager.getObservableTradeStatisticsSet().stream()
+        selectedTradeStatistics.setAll(tradeStatisticsManager.getObservableTradeStatisticsSet().stream()
                 .filter(e -> showAllTradeCurrenciesProperty.get() || e.getCurrency().equals(currencyCode))
                 .collect(Collectors.toList()));
 
@@ -305,7 +305,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
         }
 
         // Get all entries for the defined time interval
-        tradeStatisticsByCurrency.forEach(tradeStatistics -> {
+        selectedTradeStatistics.forEach(tradeStatistics -> {
             for (long i = maxTicks; i > 0; --i) {
                 Pair<Date, Set<TradeStatistics3>> pair = itemsPerInterval.get(i);
                 if (tradeStatistics.getDate().after(pair.getKey())) {

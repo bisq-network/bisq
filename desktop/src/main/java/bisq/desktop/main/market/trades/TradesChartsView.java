@@ -241,7 +241,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
             layoutChart();
         };
         tradeStatisticsByCurrencyListener = c -> nrOfTradeStatisticsLabel.setText(Res.get("market.trades.nrOfTrades",
-                model.tradeStatisticsByCurrency.size()));
+                model.selectedTradeStatistics.size()));
         parentHeightListener = (observable, oldValue, newValue) -> layout();
 
         priceColumnLabelListener = (o, oldVal, newVal) -> priceColumn.setGraphic(new AutoTooltipLabel(newVal));
@@ -318,7 +318,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         toggleGroup.selectedToggleProperty().addListener(timeUnitChangeListener);
         priceAxisY.widthProperty().addListener(priceAxisYWidthListener);
         volumeAxisY.widthProperty().addListener(volumeAxisYWidthListener);
-        model.tradeStatisticsByCurrency.addListener(tradeStatisticsByCurrencyListener);
+        model.selectedTradeStatistics.addListener(tradeStatisticsByCurrencyListener);
 
         priceAxisY.labelProperty().bind(priceColumnLabel);
         priceColumnLabel.addListener(priceColumnLabelListener);
@@ -335,7 +335,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         volumeAxisX.setTickLabelFormatter(getTimeAxisStringConverter());
         volumeInUsdAxisX.setTickLabelFormatter(getTimeAxisStringConverter());
 
-        nrOfTradeStatisticsLabel.setText(Res.get("market.trades.nrOfTrades", model.tradeStatisticsByCurrency.size()));
+        nrOfTradeStatisticsLabel.setText(Res.get("market.trades.nrOfTrades", model.selectedTradeStatistics.size()));
 
         exportLink.setOnAction(e -> exportToCsv());
         UserThread.runAfter(this::updateChartData, 100, TimeUnit.MILLISECONDS);
@@ -368,7 +368,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         toggleGroup.selectedToggleProperty().removeListener(timeUnitChangeListener);
         priceAxisY.widthProperty().removeListener(priceAxisYWidthListener);
         volumeAxisY.widthProperty().removeListener(volumeAxisYWidthListener);
-        model.tradeStatisticsByCurrency.removeListener(tradeStatisticsByCurrencyListener);
+        model.selectedTradeStatistics.removeListener(tradeStatisticsByCurrencyListener);
 
         priceAxisY.labelProperty().unbind();
         priceColumnLabel.removeListener(priceColumnLabelListener);
@@ -397,7 +397,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
 
     private void fillList() {
         ObservableList<TradeStatistics3ListItem> tradeStatistics3ListItems = FXCollections.observableList(
-                model.tradeStatisticsByCurrency.stream()
+                model.selectedTradeStatistics.stream()
                         .map(tradeStatistics -> new TradeStatistics3ListItem(tradeStatistics,
                                 coinFormatter,
                                 model.showAllTradeCurrenciesProperty.get()))
