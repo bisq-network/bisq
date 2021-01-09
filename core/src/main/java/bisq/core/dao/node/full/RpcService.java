@@ -26,6 +26,8 @@ import bisq.core.dao.state.model.blockchain.ScriptType;
 import bisq.core.dao.state.model.blockchain.TxInput;
 import bisq.core.user.Preferences;
 
+import bisq.network.http.HttpException;
+
 import bisq.common.UserThread;
 import bisq.common.config.Config;
 import bisq.common.handlers.ResultHandler;
@@ -38,17 +40,24 @@ import com.google.inject.Inject;
 import javax.inject.Named;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Range;
+import com.google.common.primitives.Chars;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 
+import java.io.IOException;
+
 import java.math.BigDecimal;
 
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -69,6 +78,7 @@ public class RpcService {
     private static final Set<String> BSQ_TXS_DISALLOWING_SEGWIT_PUB_KEYS = Set.of(
             "d1f45e55be6101b1b75e6bf9fc5e5341c6ab420647be7555863bbbddd84e92f3" // in mainnet block 660384, 2020-12-07
     );
+    private static final Range<Integer> SUPPORTED_NODE_VERSION_RANGE = Range.closedOpen(180000, 210000);
 
     private final String rpcUser;
     private final String rpcPassword;
@@ -143,12 +153,13 @@ public class RpcService {
                         .rpcUser(rpcUser)
                         .rpcPassword(rpcPassword)
                         .build();
+                checkNodeVersionAndHealth();
+
                 daemon = new BitcoindDaemon(rpcBlockHost, rpcBlockPort, throwable -> {
                     log.error(throwable.toString());
                     throwable.printStackTrace();
                     UserThread.execute(() -> errorHandler.accept(new RpcException(throwable)));
                 });
-                // TODO: Client should ping or request network info from bitcoind to make sure it is up.
 
                 log.info("Setup took {} ms", System.currentTimeMillis() - startTs);
             } catch (Throwable e) {
@@ -168,6 +179,35 @@ public class RpcService {
                 UserThread.execute(() -> errorHandler.accept(throwable));
             }
         }, MoreExecutors.directExecutor());
+    }
+
+    private String decodeNodeVersion(Integer encodedVersion) {
+        var paddedEncodedVersion = Strings.padStart(encodedVersion.toString(), 8, '0');
+
+        return Lists.partition(Chars.asList(paddedEncodedVersion.toCharArray()), 2).stream()
+                .map(chars -> new String(Chars.toArray(chars)).replaceAll("^0", ""))
+                .collect(Collectors.joining("."))
+                .replaceAll("\\.0$", "");
+    }
+
+    private void checkNodeVersionAndHealth() throws IOException, HttpException {
+        var networkInfo = client.getNetworkInfo();
+        var nodeVersion = decodeNodeVersion(networkInfo.getVersion());
+
+        if (SUPPORTED_NODE_VERSION_RANGE.contains(networkInfo.getVersion())) {
+            log.info("Got Bitcoin Core version: {}", nodeVersion);
+        } else {
+            log.warn("Server version mismatch - client optimized for '[{} .. {})', node responded with '{}'",
+                    decodeNodeVersion(SUPPORTED_NODE_VERSION_RANGE.lowerEndpoint()),
+                    decodeNodeVersion(SUPPORTED_NODE_VERSION_RANGE.upperEndpoint()), nodeVersion);
+        }
+
+        var bestRawBlock = client.getBlock(client.getBestBlockHash(), 1);
+        long currentTime = System.currentTimeMillis() / 1000;
+        if ((currentTime - bestRawBlock.getTime()) > TimeUnit.HOURS.toSeconds(6)) {
+            log.warn("Last available block was mined >{} hours ago; please check your network connection",
+                    ((currentTime - bestRawBlock.getTime()) / 3600));
+        }
     }
 
     void addNewDtoBlockHandler(Consumer<RawBlock> dtoBlockHandler,

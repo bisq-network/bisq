@@ -17,14 +17,18 @@
 
 package bisq.core.dao.node.full.rpc.dto;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.annotation.JsonValue;
 
 import java.util.List;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Data
@@ -63,4 +67,18 @@ public class RawBlock {
     private String previousBlockHash;
     @JsonProperty("nextblockhash")
     private String nextBlockHash;
+
+    @JsonCreator
+    public static Summarized summarized(String hex) {
+        var result = new Summarized();
+        result.setHex(hex);
+        return result;
+    }
+
+    @Data
+    @EqualsAndHashCode(callSuper = true)
+    public static class Summarized extends RawBlock {
+        @Getter(onMethod_ = @JsonValue)
+        private String hex;
+    }
 }

@@ -17,6 +17,9 @@
 
 package bisq.core.dao.node.full.rpc;
 
+import bisq.core.dao.node.full.rpc.dto.RawBlock;
+import bisq.core.dao.node.full.rpc.dto.RawTransaction;
+
 import bisq.network.http.HttpException;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -36,7 +39,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -149,13 +151,11 @@ public class BitcoindClientTest {
     }
 
     @Test
-    @Ignore // TODO: Allow serialization/deserialization between RawBlock (with special field) and Json string
     public void testGetBlock_verbosity_0() throws Exception {
         doTestGetBlock(0, "\"" + TEST_BLOCK_VERBOSITY_0 + "\"");
     }
 
     @Test
-    @Ignore // TODO: Allow serialization/deserialization between RawTransaction (with special field) and Json string
     public void testGetBlock_verbosity_1() throws Exception {
         doTestGetBlock(1, TEST_BLOCK_VERBOSITY_1);
     }
@@ -172,6 +172,10 @@ public class BitcoindClientTest {
 
         var block = client.getBlock(TEST_BLOCK_HASH, verbosity);
         var blockJsonRoundTripped = new ObjectMapper().writeValueAsString(block);
+
+        assertEquals(verbosity == 0, block instanceof RawBlock.Summarized);
+        assertEquals(verbosity == 1, block.getTx() != null &&
+                block.getTx().stream().allMatch(tx -> tx instanceof RawTransaction.Summarized));
 
         assertEquals(blockJson, blockJsonRoundTripped);
         assertEquals(expectedRequest, mockOutputStream.toString(UTF_8));

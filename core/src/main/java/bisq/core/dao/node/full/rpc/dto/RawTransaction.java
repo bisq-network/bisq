@@ -17,10 +17,12 @@
 
 package bisq.core.dao.node.full.rpc.dto;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.annotation.JsonValue;
 
 import java.util.List;
 
@@ -56,4 +58,19 @@ public class RawTransaction {
     private Long blockTime;
     private Long time;
     private String hex;
+
+    @JsonCreator
+    public static Summarized summarized(String hex) {
+        var result = new Summarized();
+        result.setHex(hex);
+        return result;
+    }
+
+    public static class Summarized extends RawTransaction {
+        @Override
+        @JsonValue
+        public String getHex() {
+            return super.getHex();
+        }
+    }
 }
