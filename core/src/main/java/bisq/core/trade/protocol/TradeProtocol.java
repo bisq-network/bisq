@@ -146,7 +146,7 @@ public abstract class TradeProtocol implements DecryptedDirectMessageListener, D
             // We only remove here if we have already completed the trade.
             // Otherwise removal is done after successfully applied the task runner.
             if (trade.isWithdrawn()) {
-                processModel.getP2PService().removeMailboxMsg(decryptedMessageWithPubKey);
+                processModel.getP2PService().getMailboxMessageService().removeMailboxMsg(decryptedMessageWithPubKey);
                 log.info("Remove {} from the P2P network.", tradeMessage.getClass().getSimpleName());
                 return;
             }
@@ -160,7 +160,7 @@ public abstract class TradeProtocol implements DecryptedDirectMessageListener, D
                 onAckMessage((AckMessage) networkEnvelope, peer);
             }
             // In any case we remove the msg
-            processModel.getP2PService().removeMailboxMsg(decryptedMessageWithPubKey);
+            processModel.getP2PService().getMailboxMessageService().removeMailboxMsg(decryptedMessageWithPubKey);
             log.info("Remove {} from the P2P network.", networkEnvelope.getClass().getSimpleName());
         }
     }
@@ -173,7 +173,7 @@ public abstract class TradeProtocol implements DecryptedDirectMessageListener, D
             PublicKey sigPubKey = processModel.getTradingPeer().getPubKeyRing().getSignaturePubKey();
             // We reconstruct the DecryptedMessageWithPubKey from the message and the peers signature pubKey
             DecryptedMessageWithPubKey decryptedMessageWithPubKey = new DecryptedMessageWithPubKey(tradeMessage, sigPubKey);
-            processModel.getP2PService().removeMailboxMsg(decryptedMessageWithPubKey);
+            processModel.getP2PService().getMailboxMessageService().removeMailboxMsg(decryptedMessageWithPubKey);
             log.info("Remove {} from the P2P network.", tradeMessage.getClass().getSimpleName());
         }
     }

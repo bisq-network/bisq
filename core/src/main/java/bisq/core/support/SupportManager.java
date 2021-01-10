@@ -177,7 +177,7 @@ public abstract class SupportManager {
             requestPersistence();
 
             if (decryptedMessageWithPubKey != null)
-                p2PService.removeMailboxMsg(decryptedMessageWithPubKey);
+                p2PService.getMailboxMessageService().removeMailboxMsg(decryptedMessageWithPubKey);
         }
     }
 
@@ -314,7 +314,7 @@ public abstract class SupportManager {
             log.debug("decryptedMessageWithPubKey.message " + networkEnvelope);
             if (networkEnvelope instanceof SupportMessage) {
                 dispatchMessage((SupportMessage) networkEnvelope);
-                p2PService.removeMailboxMsg(decryptedMessageWithPubKey);
+                p2PService.getMailboxMessageService().removeMailboxMsg(decryptedMessageWithPubKey);
             } else if (networkEnvelope instanceof AckMessage) {
                 onAckMessage((AckMessage) networkEnvelope, decryptedMessageWithPubKey);
             }

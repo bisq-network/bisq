@@ -105,7 +105,7 @@ public class CleanupMailboxMessages {
     private void removeEntryFromMailbox(DecryptedMessageWithPubKey decryptedMessageWithPubKey, Trade trade) {
         log.info("We found a pending mailbox message ({}) for trade {}. As the trade is closed we remove the mailbox message.",
                 decryptedMessageWithPubKey.getNetworkEnvelope().getClass().getSimpleName(), trade.getId());
-        p2PService.removeMailboxMsg(decryptedMessageWithPubKey);
+        mailboxMessageService.removeMailboxMsg(decryptedMessageWithPubKey);
     }
 
     private boolean isMyMessage(TradeMessage message, Trade trade) {

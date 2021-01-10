@@ -509,11 +509,6 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
     }
 
-    public void removeMailboxMsg(DecryptedMessageWithPubKey decryptedMessageWithPubKey) {
-        //todo
-        mailboxMessageService.removeMailboxMsg(decryptedMessageWithPubKey);
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Data storage
