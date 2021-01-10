@@ -24,31 +24,70 @@ import bisq.common.proto.ProtobufferException;
 import bisq.common.proto.network.NetworkProtoResolver;
 import bisq.common.proto.persistable.PersistablePayload;
 
+import java.time.Clock;
+
+import java.util.Optional;
+
 import lombok.Value;
+
+import javax.annotation.Nullable;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 @Value
 public class MailboxItem implements PersistablePayload {
     private final ProtectedMailboxStorageEntry protectedMailboxStorageEntry;
+    @Nullable
     private final DecryptedMessageWithPubKey decryptedMessageWithPubKey;
 
     public MailboxItem(ProtectedMailboxStorageEntry protectedMailboxStorageEntry,
-                       DecryptedMessageWithPubKey decryptedMessageWithPubKey) {
+                       @Nullable DecryptedMessageWithPubKey decryptedMessageWithPubKey) {
         this.protectedMailboxStorageEntry = protectedMailboxStorageEntry;
         this.decryptedMessageWithPubKey = decryptedMessageWithPubKey;
     }
 
     @Override
     public protobuf.MailboxItem toProtoMessage() {
-        return protobuf.MailboxItem.newBuilder()
-                .setProtectedMailboxStorageEntry(protectedMailboxStorageEntry.toProtoMessage())
-                .setDecryptedMessageWithPubKey(decryptedMessageWithPubKey.toProtoMessage())
+        protobuf.MailboxItem.Builder builder = protobuf.MailboxItem.newBuilder()
+                .setProtectedMailboxStorageEntry(protectedMailboxStorageEntry.toProtoMessage());
+
+        Optional.ofNullable(decryptedMessageWithPubKey).ifPresent(decryptedMessageWithPubKey ->
+                builder.setDecryptedMessageWithPubKey(decryptedMessageWithPubKey.toProtoMessage()));
+
+        return builder
                 .build();
     }
 
     public static MailboxItem fromProto(protobuf.MailboxItem proto, NetworkProtoResolver networkProtoResolver)
             throws ProtobufferException {
+
+        DecryptedMessageWithPubKey decryptedMessageWithPubKey = proto.hasDecryptedMessageWithPubKey() ?
+                DecryptedMessageWithPubKey.fromProto(proto.getDecryptedMessageWithPubKey(), networkProtoResolver) :
+                null;
+
         return new MailboxItem(ProtectedMailboxStorageEntry.fromProto(proto.getProtectedMailboxStorageEntry(),
                 networkProtoResolver),
-                DecryptedMessageWithPubKey.fromProto(proto.getDecryptedMessageWithPubKey(), networkProtoResolver));
+                decryptedMessageWithPubKey);
+    }
+
+    public boolean isMine() {
+        return decryptedMessageWithPubKey != null;
+    }
+
+    public String getUid() {
+        if (decryptedMessageWithPubKey != null) {
+            // We use uid from mailboxMessage in case its ours as we have the at removeMailboxMsg only the
+            // decryptedMessageWithPubKey available which contains the mailboxMessage.
+            MailboxMessage mailboxMessage = (MailboxMessage) checkNotNull(decryptedMessageWithPubKey).getNetworkEnvelope();
+            return mailboxMessage.getUid();
+        } else {
+            // If its not our mailbox msg we take the uid from the prefixedSealedAndSignedMessage instead.
+            // Those will never be removed via removeMailboxMsg but we clean up expired entries at startup.
+            return protectedMailboxStorageEntry.getMailboxStoragePayload().getPrefixedSealedAndSignedMessage().getUid();
+        }
+    }
+
+    public boolean isExpired(Clock clock) {
+        return protectedMailboxStorageEntry.isExpired(clock);
     }
 }
