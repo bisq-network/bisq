@@ -127,7 +127,7 @@ public class PrivateNotificationManager {
                     UUID.randomUUID().toString());
             log.info("Send {} to peer {}. uid={}",
                     message.getClass().getSimpleName(), peersNodeAddress, message.getUid());
-            p2PService.sendEncryptedMailboxMessage(peersNodeAddress,
+            mailboxMessageService.sendEncryptedMailboxMessage(peersNodeAddress,
                     pubKeyRing,
                     message,
                     sendMailboxMessageListener);

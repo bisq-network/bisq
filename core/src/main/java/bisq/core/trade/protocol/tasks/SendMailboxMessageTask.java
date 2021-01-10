@@ -54,7 +54,7 @@ public abstract class SendMailboxMessageTask extends TradeTask {
             log.info("Send {} to peer {}. tradeId={}, uid={}",
                     message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
 
-            processModel.getP2PService().sendEncryptedMailboxMessage(
+            processModel.getP2PService().getMailboxMessageService().sendEncryptedMailboxMessage(
                     peersNodeAddress,
                     processModel.getTradingPeer().getPubKeyRing(),
                     message,

@@ -27,6 +27,7 @@ import bisq.network.p2p.DecryptedMessageWithPubKey;
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.SendMailboxMessageListener;
+import bisq.network.p2p.mailbox.MailboxMessageService;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
@@ -49,6 +50,7 @@ public abstract class SupportManager {
     protected final Map<String, Timer> delayMsgMap = new HashMap<>();
     private final CopyOnWriteArraySet<DecryptedMessageWithPubKey> decryptedMailboxMessageWithPubKeys = new CopyOnWriteArraySet<>();
     private final CopyOnWriteArraySet<DecryptedMessageWithPubKey> decryptedDirectMessageWithPubKeys = new CopyOnWriteArraySet<>();
+    protected final MailboxMessageService mailboxMessageService;
     private boolean allServicesInitialized;
 
 
@@ -58,6 +60,8 @@ public abstract class SupportManager {
 
     public SupportManager(P2PService p2PService, WalletsSetup walletsSetup) {
         this.p2PService = p2PService;
+        mailboxMessageService = p2PService.getMailboxMessageService();
+
         this.walletsSetup = walletsSetup;
 
         // We get first the message handler called then the onBootstrapped
@@ -67,7 +71,7 @@ public abstract class SupportManager {
             decryptedDirectMessageWithPubKeys.add(decryptedMessageWithPubKey);
             tryApplyMessages();
         });
-        p2PService.getMailboxMessageService().addDecryptedMailboxListener((decryptedMessageWithPubKey, senderAddress) -> {
+        mailboxMessageService.addDecryptedMailboxListener((decryptedMessageWithPubKey, senderAddress) -> {
             // As decryptedMailboxMessageWithPubKeys is a CopyOnWriteArraySet we do not need to check if it was
             // already stored
             decryptedMailboxMessageWithPubKeys.add(decryptedMessageWithPubKey);
@@ -177,7 +181,7 @@ public abstract class SupportManager {
             requestPersistence();
 
             if (decryptedMessageWithPubKey != null)
-                p2PService.getMailboxMessageService().removeMailboxMsg(decryptedMessageWithPubKey);
+                mailboxMessageService.removeMailboxMsg(decryptedMessageWithPubKey);
         }
     }
 
@@ -195,7 +199,7 @@ public abstract class SupportManager {
             log.info("Send {} to peer {}. tradeId={}, uid={}",
                     message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
 
-            p2PService.sendEncryptedMailboxMessage(peersNodeAddress,
+            mailboxMessageService.sendEncryptedMailboxMessage(peersNodeAddress,
                     receiverPubKeyRing,
                     message,
                     new SendMailboxMessageListener() {
@@ -243,7 +247,7 @@ public abstract class SupportManager {
         final NodeAddress peersNodeAddress = supportMessage.getSenderNodeAddress();
         log.info("Send AckMessage for {} to peer {}. tradeId={}, uid={}",
                 ackMessage.getSourceMsgClassName(), peersNodeAddress, tradeId, uid);
-        p2PService.sendEncryptedMailboxMessage(
+        mailboxMessageService.sendEncryptedMailboxMessage(
                 peersNodeAddress,
                 peersPubKeyRing,
                 ackMessage,
@@ -314,7 +318,7 @@ public abstract class SupportManager {
             log.debug("decryptedMessageWithPubKey.message " + networkEnvelope);
             if (networkEnvelope instanceof SupportMessage) {
                 dispatchMessage((SupportMessage) networkEnvelope);
-                p2PService.getMailboxMessageService().removeMailboxMsg(decryptedMessageWithPubKey);
+                mailboxMessageService.removeMailboxMsg(decryptedMessageWithPubKey);
             } else if (networkEnvelope instanceof AckMessage) {
                 onAckMessage((AckMessage) networkEnvelope, decryptedMessageWithPubKey);
             }

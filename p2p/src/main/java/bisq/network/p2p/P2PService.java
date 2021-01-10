@@ -479,13 +479,6 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     // MailboxMessages
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void sendEncryptedMailboxMessage(NodeAddress peer, PubKeyRing peersPubKeyRing,
-                                            NetworkEnvelope message,
-                                            SendMailboxMessageListener sendMailboxMessageListener) {
-        //todo
-        mailboxMessageService.sendEncryptedMailboxMessage(peer, peersPubKeyRing, message, sendMailboxMessageListener);
-    }
-
     private boolean capabilityRequiredAndCapabilityNotSupported(NodeAddress peersNodeAddress, NetworkEnvelope message) {
         if (!(message instanceof CapabilityRequiringPayload))
             return false;

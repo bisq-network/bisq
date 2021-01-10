@@ -269,7 +269,7 @@ public abstract class TradeProtocol implements DecryptedDirectMessageListener, D
                 processModel.getTempTradingPeerNodeAddress();
         log.info("Send AckMessage for {} to peer {}. tradeId={}, sourceUid={}",
                 ackMessage.getSourceMsgClassName(), peer, tradeId, sourceUid);
-        processModel.getP2PService().sendEncryptedMailboxMessage(
+        processModel.getP2PService().getMailboxMessageService().sendEncryptedMailboxMessage(
                 peer,
                 peersPubKeyRing,
                 ackMessage,
