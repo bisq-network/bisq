@@ -20,7 +20,6 @@ package bisq.network.p2p;
 import bisq.network.Socks5ProxyProvider;
 import bisq.network.crypto.EncryptionService;
 import bisq.network.p2p.mailbox.MailboxMessageService;
-import bisq.network.p2p.messaging.DecryptedMailboxListener;
 import bisq.network.p2p.network.CloseConnectionReason;
 import bisq.network.p2p.network.Connection;
 import bisq.network.p2p.network.ConnectionListener;
@@ -577,11 +576,6 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
     public void removeDecryptedDirectMessageListener(DecryptedDirectMessageListener listener) {
         decryptedDirectMessageListeners.remove(listener);
-    }
-
-    public void addDecryptedMailboxListener(DecryptedMailboxListener listener) {
-        //todo
-        mailboxMessageService.addDecryptedMailboxListener(listener);
     }
 
     public void addP2PServiceListener(P2PServiceListener listener) {

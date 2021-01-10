@@ -67,7 +67,7 @@ public abstract class SupportManager {
             decryptedDirectMessageWithPubKeys.add(decryptedMessageWithPubKey);
             tryApplyMessages();
         });
-        p2PService.addDecryptedMailboxListener((decryptedMessageWithPubKey, senderAddress) -> {
+        p2PService.getMailboxMessageService().addDecryptedMailboxListener((decryptedMessageWithPubKey, senderAddress) -> {
             // As decryptedMailboxMessageWithPubKeys is a CopyOnWriteArraySet we do not need to check if it was
             // already stored
             decryptedMailboxMessageWithPubKeys.add(decryptedMessageWithPubKey);

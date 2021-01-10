@@ -21,6 +21,7 @@ import bisq.network.p2p.DecryptedMessageWithPubKey;
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.SendMailboxMessageListener;
+import bisq.network.p2p.mailbox.MailboxMessageService;
 
 import bisq.common.app.DevEnv;
 import bisq.common.config.Config;
@@ -55,6 +56,7 @@ public class PrivateNotificationManager {
     private static final Logger log = LoggerFactory.getLogger(PrivateNotificationManager.class);
 
     private final P2PService p2PService;
+    private final MailboxMessageService mailboxMessageService;
     private final KeyRing keyRing;
     private final ObjectProperty<PrivateNotificationPayload> privateNotificationMessageProperty = new SimpleObjectProperty<>();
 
@@ -71,15 +73,17 @@ public class PrivateNotificationManager {
 
     @Inject
     public PrivateNotificationManager(P2PService p2PService,
+                                      MailboxMessageService mailboxMessageService,
                                       KeyRing keyRing,
                                       @Named(Config.IGNORE_DEV_MSG) boolean ignoreDevMsg,
                                       @Named(Config.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         this.p2PService = p2PService;
+        this.mailboxMessageService = mailboxMessageService;
         this.keyRing = keyRing;
 
         if (!ignoreDevMsg) {
             this.p2PService.addDecryptedDirectMessageListener(this::handleMessage);
-            this.p2PService.addDecryptedMailboxListener(this::handleMessage);
+            this.mailboxMessageService.addDecryptedMailboxListener(this::handleMessage);
         }
         pubKeyAsHex = useDevPrivilegeKeys ?
                 DevEnv.DEV_PRIVILEGE_PUB_KEY :

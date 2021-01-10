@@ -85,7 +85,7 @@ public abstract class TradeProtocol implements DecryptedDirectMessageListener, D
         // from the TradeManager, but as we are close to a release I dont want to risk a bigger
         // change and leave that for a later PR
         UserThread.runAfter(() -> {
-            processModel.getP2PService().addDecryptedMailboxListener(this);
+            processModel.getP2PService().getMailboxMessageService().addDecryptedMailboxListener(this);
             processModel.getP2PService().getMailboxMessageService().getMailBoxMessages()
                     .forEach(this::handleDecryptedMessageWithPubKey);
         }, 100, TimeUnit.MILLISECONDS);
