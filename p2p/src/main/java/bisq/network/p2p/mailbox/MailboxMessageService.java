@@ -245,7 +245,7 @@ public class MailboxMessageService implements SetupListener, RequestDataManager.
         }
     }
 
-    public Set<DecryptedMessageWithPubKey> getMailBoxMessages() {
+    public Set<DecryptedMessageWithPubKey> getMyMailBoxMessages() {
         return mailboxItemsByUid.values().stream()
                 .filter(list -> !list.isEmpty())
                 .map(list -> list.get(0))

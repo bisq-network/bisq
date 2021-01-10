@@ -79,7 +79,7 @@ public class CleanupMailboxMessages {
     }
 
     private void cleanupMailboxMessages(List<Trade> trades) {
-        mailboxMessageService.getMailBoxMessages()
+        mailboxMessageService.getMyMailBoxMessages()
                 .forEach(message -> handleDecryptedMessageWithPubKey(message, trades));
     }
 
