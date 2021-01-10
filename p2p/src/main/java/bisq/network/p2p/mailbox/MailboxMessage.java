@@ -15,8 +15,12 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p;
+package bisq.network.p2p.mailbox;
 
+
+import bisq.network.p2p.DirectMessage;
+import bisq.network.p2p.NodeAddress;
+import bisq.network.p2p.UidMessage;
 
 public interface MailboxMessage extends DirectMessage, UidMessage {
     NodeAddress getSenderNodeAddress();

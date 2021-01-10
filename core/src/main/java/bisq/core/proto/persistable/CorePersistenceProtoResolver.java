@@ -43,8 +43,8 @@ import bisq.core.trade.statistics.TradeStatistics3Store;
 import bisq.core.user.PreferencesPayload;
 import bisq.core.user.UserPayload;
 
-import bisq.network.p2p.MailboxMessageList;
 import bisq.network.p2p.mailbox.IgnoredMailboxMap;
+import bisq.network.p2p.mailbox.MailboxMessageList;
 import bisq.network.p2p.peers.peerexchange.PeerList;
 import bisq.network.p2p.storage.persistence.SequenceNumberMap;
 

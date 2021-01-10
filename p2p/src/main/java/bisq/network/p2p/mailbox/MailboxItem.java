@@ -15,8 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p;
+package bisq.network.p2p.mailbox;
 
+import bisq.network.p2p.DecryptedMessageWithPubKey;
 import bisq.network.p2p.storage.payload.ProtectedMailboxStorageEntry;
 
 import bisq.common.proto.ProtobufferException;

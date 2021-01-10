@@ -17,6 +17,8 @@
 
 package bisq.network.p2p;
 
+import bisq.network.p2p.mailbox.MailboxMessage;
+
 import bisq.common.app.Version;
 import bisq.common.crypto.SealedAndSigned;
 import bisq.common.proto.network.NetworkEnvelope;

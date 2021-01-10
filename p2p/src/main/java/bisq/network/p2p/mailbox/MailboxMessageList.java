@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p;
+package bisq.network.p2p.mailbox;
 
 import bisq.common.proto.ProtobufferException;
 import bisq.common.proto.network.NetworkProtoResolver;
@@ -35,7 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 @EqualsAndHashCode(callSuper = true)
 public class MailboxMessageList extends PersistableList<MailboxItem> {
 
-    MailboxMessageList() {
+    public MailboxMessageList() {
         super();
     }
 

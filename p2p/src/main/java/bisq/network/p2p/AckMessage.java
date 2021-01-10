@@ -17,6 +17,7 @@
 
 package bisq.network.p2p;
 
+import bisq.network.p2p.mailbox.MailboxMessage;
 import bisq.network.p2p.storage.payload.ExpirablePayload;
 
 import bisq.common.app.Version;

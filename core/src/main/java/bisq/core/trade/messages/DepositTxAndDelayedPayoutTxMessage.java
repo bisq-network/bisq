@@ -17,8 +17,8 @@
 
 package bisq.core.trade.messages;
 
-import bisq.network.p2p.MailboxMessage;
 import bisq.network.p2p.NodeAddress;
+import bisq.network.p2p.mailbox.MailboxMessage;
 
 import bisq.common.app.Version;
 import bisq.common.util.Utilities;
