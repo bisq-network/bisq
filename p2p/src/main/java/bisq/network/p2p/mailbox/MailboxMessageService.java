@@ -65,6 +65,8 @@ import com.google.common.util.concurrent.SettableFuture;
 
 import java.security.PublicKey;
 
+import java.time.Clock;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -97,6 +99,7 @@ public class MailboxMessageService implements SetupListener, RequestDataManager.
     private final IgnoredMailboxService ignoredMailboxService;
     private final PersistenceManager<MailboxMessageList> persistenceManager;
     private final KeyRing keyRing;
+    private final Clock clock;
     private final NetworkNode networkNode;
     private final PeerManager peerManager;
     private final P2PDataStorage p2PDataStorage;
@@ -115,7 +118,8 @@ public class MailboxMessageService implements SetupListener, RequestDataManager.
                                  EncryptionService encryptionService,
                                  IgnoredMailboxService ignoredMailboxService,
                                  PersistenceManager<MailboxMessageList> persistenceManager,
-                                 KeyRing keyRing) {
+                                 KeyRing keyRing,
+                                 Clock clock) {
         this.networkNode = networkNode;
         this.peerManager = peerManager;
         this.p2PDataStorage = p2PDataStorage;
@@ -125,6 +129,7 @@ public class MailboxMessageService implements SetupListener, RequestDataManager.
         this.ignoredMailboxService = ignoredMailboxService;
         this.persistenceManager = persistenceManager;
         this.keyRing = keyRing;
+        this.clock = clock;
 
         this.requestDataManager.addListener(this);
 
@@ -139,6 +144,15 @@ public class MailboxMessageService implements SetupListener, RequestDataManager.
     @Override
     public void readPersisted(Runnable completeHandler) {
         persistenceManager.readPersisted(persisted -> {
+                    persisted.stream()
+                            .filter(e -> !e.isExpired(clock))
+                            .forEach(mailboxItem -> {
+                                String uid = mailboxItem.getUid();
+                                mailboxItemsByUid.putIfAbsent(uid, new ArrayList<>());
+                                mailboxItemsByUid.get(uid).add(mailboxItem);
+                                mailboxMessageList.add(mailboxItem);
+                            });
+
                     persisted.forEach(mailboxItem -> {
                         DecryptedMessageWithPubKey decryptedMessageWithPubKey = mailboxItem.getDecryptedMessageWithPubKey();
                         MailboxMessage mailboxMessage = (MailboxMessage) decryptedMessageWithPubKey.getNetworkEnvelope();
