@@ -31,6 +31,7 @@ import bisq.network.p2p.DecryptedMessageWithPubKey;
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.SendMailboxMessageListener;
 import bisq.network.p2p.mailbox.MailboxMessage;
+import bisq.network.p2p.mailbox.MailboxMessageService;
 import bisq.network.p2p.messaging.DecryptedMailboxListener;
 
 import bisq.common.Timer;
@@ -79,14 +80,15 @@ public abstract class TradeProtocol implements DecryptedDirectMessageListener, D
             processModel.getP2PService().addDecryptedDirectMessageListener(this);
         }
 
+        MailboxMessageService mailboxMessageService = processModel.getP2PService().getMailboxMessageService();
         // We delay a bit here as the trade gets updated from the wallet to update the trade
         // state (deposit confirmed) and that happens after our method is called.
         // TODO To fix that in a better way we would need to change the order of some routines
         // from the TradeManager, but as we are close to a release I dont want to risk a bigger
         // change and leave that for a later PR
         UserThread.runAfter(() -> {
-            processModel.getP2PService().getMailboxMessageService().addDecryptedMailboxListener(this);
-            processModel.getP2PService().getMailboxMessageService().getMailBoxMessages()
+            mailboxMessageService.addDecryptedMailboxListener(this);
+            mailboxMessageService.getMailBoxMessages()
                     .forEach(this::handleDecryptedMessageWithPubKey);
         }, 100, TimeUnit.MILLISECONDS);
     }

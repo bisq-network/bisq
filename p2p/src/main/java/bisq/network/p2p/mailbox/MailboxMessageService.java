@@ -158,7 +158,8 @@ public class MailboxMessageService implements SetupListener, RequestDataManager.
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void sendEncryptedMailboxMessage(NodeAddress peer, PubKeyRing peersPubKeyRing,
+    public void sendEncryptedMailboxMessage(NodeAddress peer,
+                                            PubKeyRing peersPubKeyRing,
                                             NetworkEnvelope message,
                                             SendMailboxMessageListener sendMailboxMessageListener) {
         if (peersPubKeyRing == null) {
@@ -198,7 +199,7 @@ public class MailboxMessageService implements SetupListener, RequestDataManager.
             SettableFuture<Connection> future = networkNode.sendMessage(peer, prefixedSealedAndSignedMessage);
             Futures.addCallback(future, new FutureCallback<>() {
                 @Override
-                public void onSuccess(@org.jetbrains.annotations.Nullable Connection connection) {
+                public void onSuccess(@Nullable Connection connection) {
                     sendMailboxMessageListener.onArrived();
                 }
 
@@ -477,7 +478,7 @@ public class MailboxMessageService implements SetupListener, RequestDataManager.
                     keyRing.getSignatureKeyPair(),
                     receiversPubKey);
 
-            P2PDataStorage.ByteArray hashOfPayload = p2PDataStorage.get32ByteHashAsByteArray(mailboxStoragePayload);
+            P2PDataStorage.ByteArray hashOfPayload = P2PDataStorage.get32ByteHashAsByteArray(mailboxStoragePayload);
             if (p2PDataStorage.getMap().containsKey(hashOfPayload)) {
                 boolean result = p2PDataStorage.remove(updatedEntry, networkNode.getNodeAddress());
                 if (result) {

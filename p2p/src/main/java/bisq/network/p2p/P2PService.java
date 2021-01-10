@@ -424,10 +424,6 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         }
 
         try {
-            log.debug("\n\nEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE\n" +
-                    "Encrypt message:\nmessage={}"
-                    + "\nEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE\n", message);
-
             // Prefix is not needed for direct messages but as old code is doing the verification we still need to
             // send it if peer has not updated.
             PrefixedSealedAndSignedMessage sealedMsg = getPrefixedSealedAndSignedMessage(peersNodeAddress,
@@ -473,11 +469,6 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                 addressPrefixHash,
                 UUID.randomUUID().toString());
     }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // MailboxMessages
-    ///////////////////////////////////////////////////////////////////////////////////////////
 
     private boolean capabilityRequiredAndCapabilityNotSupported(NodeAddress peersNodeAddress, NetworkEnvelope message) {
         if (!(message instanceof CapabilityRequiringPayload))

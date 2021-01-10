@@ -180,8 +180,9 @@ public abstract class SupportManager {
                     });
             requestPersistence();
 
-            if (decryptedMessageWithPubKey != null)
+            if (decryptedMessageWithPubKey != null) {
                 mailboxMessageService.removeMailboxMsg(decryptedMessageWithPubKey);
+            }
         }
     }
 
