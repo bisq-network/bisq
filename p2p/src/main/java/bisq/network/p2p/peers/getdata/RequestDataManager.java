@@ -73,9 +73,11 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
 
         void onDataReceived();
 
-        void onNoPeersAvailable();
+        default void onNoPeersAvailable() {
+        }
 
-        void onNoSeedNodeAvailable();
+        default void onNoSeedNodeAvailable() {
+        }
     }
 
 
