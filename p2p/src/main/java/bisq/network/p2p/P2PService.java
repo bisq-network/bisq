@@ -90,6 +90,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
     private final EncryptionService encryptionService;
     private final KeyRing keyRing;
+    @Getter
     private final MailboxMessageService mailboxMessageService;
 
     private final NetworkNode networkNode;
@@ -646,10 +647,5 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                 .filter(e -> e.getPeersNodeAddressOptional().get().equals(peer))
                 .map(Connection::getCapabilities)
                 .findAny();
-    }
-
-    public Set<DecryptedMessageWithPubKey> getMailBoxMessages() {
-        //todo
-        return mailboxMessageService.getMailBoxMessages();
     }
 }
