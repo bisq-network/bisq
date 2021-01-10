@@ -346,7 +346,7 @@ public class MailboxMessageService implements SetupListener, RequestDataManager.
         checkArgument(protectedMailboxStorageEntries.size() == 1);
         var decryptedEntries = new ArrayList<>(getDecryptedEntries(protectedMailboxStorageEntries));
         if (decryptedEntries.size() == 1) {
-            processMailboxItem(decryptedEntries.get(0));
+            handleMailboxItem(decryptedEntries.get(0));
         }
     }
 
@@ -365,7 +365,7 @@ public class MailboxMessageService implements SetupListener, RequestDataManager.
 
         Futures.addCallback(future, new FutureCallback<>() {
             public void onSuccess(Set<MailboxItem> decryptedMailboxMessageWithEntries) {
-                UserThread.execute(() -> decryptedMailboxMessageWithEntries.forEach(e -> processMailboxItem(e)));
+                UserThread.execute(() -> decryptedMailboxMessageWithEntries.forEach(e -> handleMailboxItem(e)));
             }
 
             public void onFailure(@NotNull Throwable throwable) {
@@ -409,7 +409,7 @@ public class MailboxMessageService implements SetupListener, RequestDataManager.
         return null;
     }
 
-    private void processMailboxItem(MailboxItem mailboxItem) {
+    private void handleMailboxItem(MailboxItem mailboxItem) {
         DecryptedMessageWithPubKey decryptedMessageWithPubKey = mailboxItem.getDecryptedMessageWithPubKey();
         MailboxMessage mailboxMessage = (MailboxMessage) decryptedMessageWithPubKey.getNetworkEnvelope();
         String uid = mailboxMessage.getUid();
