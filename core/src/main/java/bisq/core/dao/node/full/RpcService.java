@@ -155,8 +155,8 @@ public class RpcService {
                 nodeConfig.setProperty("node.bitcoind.rpc.port", Integer.toString(rpcPort));
                 nodeConfig.setProperty("node.bitcoind.notification.block.port", Integer.toString(rpcBlockPort));
                 nodeConfig.setProperty("node.bitcoind.notification.block.host", rpcBlockHost);
-                nodeConfig.setProperty("node.bitcoind.notification.alert.port", Integer.toString(bisq.network.p2p.Utils.findFreeSystemPort()));
-                nodeConfig.setProperty("node.bitcoind.notification.wallet.port", Integer.toString(bisq.network.p2p.Utils.findFreeSystemPort()));
+                nodeConfig.setProperty("node.bitcoind.notification.alert.port", Integer.toString(bisq.network.utils.Utils.findFreeSystemPort()));
+                nodeConfig.setProperty("node.bitcoind.notification.wallet.port", Integer.toString(bisq.network.utils.Utils.findFreeSystemPort()));
 
                 nodeConfig.setProperty("node.bitcoind.http.auth_scheme", "Basic");
                 BtcdClientImpl client = new BtcdClientImpl(httpProvider, nodeConfig);
