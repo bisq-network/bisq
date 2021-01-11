@@ -68,7 +68,6 @@ import javafx.beans.property.SimpleIntegerProperty;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
 
@@ -427,8 +426,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
             // send it if peer has not updated.
             PrefixedSealedAndSignedMessage sealedMsg = new PrefixedSealedAndSignedMessage(
                     networkNode.getNodeAddress(),
-                    encryptionService.encryptAndSign(pubKeyRing, message),
-                    UUID.randomUUID().toString());
+                    encryptionService.encryptAndSign(pubKeyRing, message));
 
             SettableFuture<Connection> future = networkNode.sendMessage(peersNodeAddress, sealedMsg);
             Futures.addCallback(future, new FutureCallback<>() {

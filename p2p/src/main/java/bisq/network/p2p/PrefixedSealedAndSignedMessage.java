@@ -25,6 +25,8 @@ import bisq.common.proto.network.NetworkEnvelope;
 
 import com.google.protobuf.ByteString;
 
+import java.util.UUID;
+
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 
@@ -43,9 +45,12 @@ public final class PrefixedSealedAndSignedMessage extends NetworkEnvelope implem
     private final String uid;
 
     public PrefixedSealedAndSignedMessage(NodeAddress senderNodeAddress,
-                                          SealedAndSigned sealedAndSigned,
-                                          String uid) {
-        this(senderNodeAddress, sealedAndSigned, new byte[0], uid, Version.getP2PMessageVersion());
+                                          SealedAndSigned sealedAndSigned) {
+        this(senderNodeAddress,
+                sealedAndSigned,
+                new byte[0],
+                UUID.randomUUID().toString(),
+                Version.getP2PMessageVersion());
     }
 
 

@@ -73,7 +73,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
-import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.stream.Collectors;
 
@@ -203,8 +202,7 @@ public class MailboxMessageService implements SetupListener, RequestDataManager.
         try {
             PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage = new PrefixedSealedAndSignedMessage(
                     networkNode.getNodeAddress(),
-                    encryptionService.encryptAndSign(peersPubKeyRing, message),
-                    UUID.randomUUID().toString());
+                    encryptionService.encryptAndSign(peersPubKeyRing, message));
             SettableFuture<Connection> future = networkNode.sendMessage(peer, prefixedSealedAndSignedMessage);
             Futures.addCallback(future, new FutureCallback<>() {
                 @Override
