@@ -86,6 +86,18 @@ import javax.annotation.Nullable;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
+/**
+ * Responsible for handling of mailbox messages.
+ * We store mailbox messages locally to cause less load at initial data requests (using excluded keys) and to get better
+ * resilience in case processing failed. In such cases it would be re-applied after restart.
+ *
+ * We use a map with the uid of the decrypted mailboxMessage if it was our own mailbox message or of the uid of the
+ * prefixedSealedAndSignedMessage if it was a foreign one. It would be better to use the hash of the payload but that
+ * would require a large refactoring in the trade protocol. We call the remove method after a message got processed and pass
+ * the tradeMessage to the remove method. We do not have the outer envelope which would be needed for the hash and
+ * we do not want to pass around that to all trade methods just for that use case. So we use the uid as lookup to get
+ * the mailboxItem containing the data we need for removal.
+ */
 @Singleton
 @Slf4j
 public class MailboxMessageService implements SetupListener, RequestDataManager.Listener, HashMapChangedListener,
@@ -241,7 +253,8 @@ public class MailboxMessageService implements SetupListener, RequestDataManager.
     }
 
     /**
-     * The DecryptedMessageWithPubKey has been applied and we remove it from our local storage and from the network
+     * The DecryptedMessageWithPubKey has been applied and we remove it from our local storage and from the network.
+     *
      * @param decryptedMessageWithPubKey The DecryptedMessageWithPubKey to be removed
      */
     public void removeMailboxMsg(DecryptedMessageWithPubKey decryptedMessageWithPubKey) {
