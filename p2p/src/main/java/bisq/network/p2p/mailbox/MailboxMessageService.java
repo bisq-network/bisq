@@ -154,15 +154,6 @@ public class MailboxMessageService implements SetupListener, RequestDataManager.
                                 mailboxMessageList.add(mailboxItem);
                             });
 
-                    persisted.forEach(mailboxItem -> {
-                        DecryptedMessageWithPubKey decryptedMessageWithPubKey = mailboxItem.getDecryptedMessageWithPubKey();
-                        MailboxMessage mailboxMessage = (MailboxMessage) decryptedMessageWithPubKey.getNetworkEnvelope();
-                        String uid = mailboxMessage.getUid();
-                        mailboxItemsByUid.putIfAbsent(uid, new ArrayList<>());
-                        mailboxItemsByUid.get(uid).add(mailboxItem);
-                        mailboxMessageList.add(mailboxItem);
-                    });
-
                     completeHandler.run();
                 },
                 completeHandler);
