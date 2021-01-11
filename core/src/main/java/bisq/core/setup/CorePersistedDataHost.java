@@ -39,6 +39,7 @@ import bisq.network.p2p.mailbox.IgnoredMailboxService;
 import bisq.network.p2p.mailbox.MailboxMessageService;
 import bisq.network.p2p.peers.PeerManager;
 import bisq.network.p2p.storage.P2PDataStorage;
+import bisq.network.p2p.storage.RemovedPayloadsStorageService;
 
 import bisq.common.config.Config;
 import bisq.common.proto.persistable.PersistedDataHost;
@@ -70,6 +71,7 @@ public class CorePersistedDataHost {
         persistedDataHosts.add(injector.getInstance(PeerManager.class));
         persistedDataHosts.add(injector.getInstance(MailboxMessageService.class));
         persistedDataHosts.add(injector.getInstance(IgnoredMailboxService.class));
+        persistedDataHosts.add(injector.getInstance(RemovedPayloadsStorageService.class));
 
         if (injector.getInstance(Config.class).daoActivated) {
             persistedDataHosts.add(injector.getInstance(BallotListService.class));

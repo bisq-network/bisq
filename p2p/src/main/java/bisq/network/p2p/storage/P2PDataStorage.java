@@ -133,8 +133,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
     @Getter
     private final Map<ByteArray, ProtectedStorageEntry> map = new ConcurrentHashMap<>();
-    //todo
-    private final Set<ByteArray> removedAddOncePayloads = new HashSet<>();
     private final Set<HashMapChangedListener> hashMapChangedListeners = new CopyOnWriteArraySet<>();
     private Timer removeExpiredEntriesTimer;
 
@@ -144,6 +142,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
     final SequenceNumberMap sequenceNumberMap = new SequenceNumberMap();
 
     private final Set<AppendOnlyDataStoreListener> appendOnlyDataStoreListeners = new CopyOnWriteArraySet<>();
+    private final RemovedPayloadsStorageService removedPayloadsStorageService;
     private final Clock clock;
 
     /// The maximum number of items that must exist in the SequenceNumberMap before it is scheduled for a purge
@@ -165,6 +164,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                           ProtectedDataStoreService protectedDataStoreService,
                           ResourceDataStoreService resourceDataStoreService,
                           PersistenceManager<SequenceNumberMap> persistenceManager,
+                          RemovedPayloadsStorageService removedPayloadsStorageService,
                           Clock clock,
                           @Named("MAX_SEQUENCE_NUMBER_MAP_SIZE_BEFORE_PURGE") int maxSequenceNumberBeforePurge) {
         this.broadcaster = broadcaster;
@@ -172,6 +172,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         this.protectedDataStoreService = protectedDataStoreService;
         this.resourceDataStoreService = resourceDataStoreService;
         this.persistenceManager = persistenceManager;
+        this.removedPayloadsStorageService = removedPayloadsStorageService;
         this.clock = clock;
         this.maxSequenceNumberMapSizeBeforePurge = maxSequenceNumberBeforePurge;
 
@@ -770,7 +771,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
     public boolean addOncePayloadGotAlreadyRemoved(ProtectedStoragePayload protectedStoragePayload,
                                                    ByteArray hashOfPayload) {
-        return protectedStoragePayload instanceof AddOncePayload && removedAddOncePayloads.contains(hashOfPayload);
+        return protectedStoragePayload instanceof AddOncePayload && removedPayloadsStorageService.wasRemoved(hashOfPayload);
     }
 
     /**
@@ -853,8 +854,9 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         requestPersistence();
 
         // Update that we have seen this AddOncePayload so the next time it is seen it fails verification
-        if (protectedStoragePayload instanceof AddOncePayload)
-            removedAddOncePayloads.add(hashOfPayload);
+        if (protectedStoragePayload instanceof AddOncePayload) {
+            removedPayloadsStorageService.addHash(hashOfPayload);
+        }
 
         if (storedEntry != null) {
             // Valid remove entry, do the remove and signal listeners
