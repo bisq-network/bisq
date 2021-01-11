@@ -35,13 +35,12 @@ import bisq.network.p2p.seed.SeedNodeRepository;
 import bisq.network.p2p.storage.HashMapChangedListener;
 import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.messages.AddDataMessage;
-import bisq.network.p2p.storage.payload.CapabilityRequiringPayload;
 import bisq.network.p2p.storage.payload.MailboxStoragePayload;
 import bisq.network.p2p.storage.payload.ProtectedMailboxStorageEntry;
 import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
+import bisq.network.utils.CapabilityUtils;
 
 import bisq.common.UserThread;
-import bisq.common.app.Capabilities;
 import bisq.common.crypto.CryptoException;
 import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.PubKeyRing;
@@ -72,7 +71,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
@@ -196,7 +194,7 @@ public class MailboxMessageService implements SetupListener, RequestDataManager.
             return;
         }
 
-        if (capabilityRequiredAndCapabilityNotSupported(peer, message)) {
+        if (CapabilityUtils.capabilityRequiredAndCapabilityNotSupported(peer, message, peerManager)) {
             sendMailboxMessageListener.onFault("We did not send the EncryptedMailboxMessage " +
                     "because the peer does not support the capability.");
             return;
@@ -575,29 +573,5 @@ public class MailboxMessageService implements SetupListener, RequestDataManager.
 
     private void requestPersistence() {
         persistenceManager.requestPersistence();
-    }
-
-    // TODO avoid code duplication
-    private boolean capabilityRequiredAndCapabilityNotSupported(NodeAddress peersNodeAddress, NetworkEnvelope message) {
-        if (!(message instanceof CapabilityRequiringPayload))
-            return false;
-
-        // We might have multiple entries of the same peer without the supportedCapabilities field set if we received
-        // it from old versions, so we filter those.
-        Optional<Capabilities> optionalCapabilities = peerManager.findPeersCapabilities(peersNodeAddress);
-        if (optionalCapabilities.isPresent()) {
-            boolean result = optionalCapabilities.get().containsAll(((CapabilityRequiringPayload) message).getRequiredCapabilities());
-
-            if (!result)
-                log.warn("We don't send the message because the peer does not support the required capability. " +
-                        "peersNodeAddress={}", peersNodeAddress);
-
-            return !result;
-        }
-
-        log.warn("We don't have the peer in our persisted peers so we don't know their capabilities. " +
-                "We decide to not sent the msg. peersNodeAddress={}", peersNodeAddress);
-        return true;
-
     }
 }
