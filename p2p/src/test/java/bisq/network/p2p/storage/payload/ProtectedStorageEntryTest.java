@@ -67,7 +67,10 @@ public class ProtectedStorageEntryTest {
         when(prefixedSealedAndSignedMessageMock.toProtoNetworkEnvelope()).thenReturn(networkEnvelopeMock);
 
         return new MailboxStoragePayload(
-                prefixedSealedAndSignedMessageMock, payloadSenderPubKeyForAddOperation, payloadOwnerPubKey);
+                prefixedSealedAndSignedMessageMock,
+                payloadSenderPubKeyForAddOperation,
+                payloadOwnerPubKey,
+                MailboxStoragePayload.TTL);
     }
 
     @Before

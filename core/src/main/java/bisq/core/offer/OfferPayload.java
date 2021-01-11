@@ -55,6 +55,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Getter
 @Slf4j
 public final class OfferPayload implements ProtectedStoragePayload, ExpirablePayload, RequiresOwnerIsOnlinePayload {
+    public static final long TTL = TimeUnit.MINUTES.toMillis(9);
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Enum
@@ -373,7 +374,7 @@ public final class OfferPayload implements ProtectedStoragePayload, ExpirablePay
 
     @Override
     public long getTTL() {
-        return TimeUnit.MINUTES.toMillis(9);
+        return TTL;
     }
 
     @Override

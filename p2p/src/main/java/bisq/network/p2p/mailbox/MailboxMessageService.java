@@ -35,6 +35,7 @@ import bisq.network.p2p.seed.SeedNodeRepository;
 import bisq.network.p2p.storage.HashMapChangedListener;
 import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.messages.AddDataMessage;
+import bisq.network.p2p.storage.payload.ExpirablePayload;
 import bisq.network.p2p.storage.payload.MailboxStoragePayload;
 import bisq.network.p2p.storage.payload.ProtectedMailboxStorageEntry;
 import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
@@ -213,9 +214,21 @@ public class MailboxMessageService implements SetupListener, RequestDataManager.
                 @Override
                 public void onFailure(@NotNull Throwable throwable) {
                     PublicKey receiverStoragePublicKey = peersPubKeyRing.getSignaturePubKey();
+
+                    long ttl;
+                    if (message instanceof ExpirablePayload) {
+                        ttl = ((ExpirablePayload) message).getTTL();
+                        log.trace("We take TTL from {}. ttl={}", message.getClass().getSimpleName(), ttl);
+                    } else {
+                        ttl = MailboxStoragePayload.TTL;
+                        log.trace("Message is not of type ExpirablePayload. " +
+                                        "We use the default TTL from MailboxStoragePayload. ttl={}; message={}",
+                                ttl, message.getClass().getSimpleName());
+                    }
                     addMailboxData(new MailboxStoragePayload(prefixedSealedAndSignedMessage,
                                     keyRing.getSignatureKeyPair().getPublic(),
-                                    receiverStoragePublicKey),
+                                    receiverStoragePublicKey,
+                                    ttl),
                             receiverStoragePublicKey,
                             sendMailboxMessageListener);
                 }

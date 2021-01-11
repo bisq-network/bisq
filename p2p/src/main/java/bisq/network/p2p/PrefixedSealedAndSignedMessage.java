@@ -44,8 +44,7 @@ public final class PrefixedSealedAndSignedMessage extends NetworkEnvelope implem
 
     private final String uid;
 
-    public PrefixedSealedAndSignedMessage(NodeAddress senderNodeAddress,
-                                          SealedAndSigned sealedAndSigned) {
+    public PrefixedSealedAndSignedMessage(NodeAddress senderNodeAddress, SealedAndSigned sealedAndSigned) {
         this(senderNodeAddress,
                 sealedAndSigned,
                 new byte[0],
