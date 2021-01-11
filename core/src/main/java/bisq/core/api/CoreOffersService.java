@@ -24,6 +24,7 @@ import bisq.core.offer.Offer;
 import bisq.core.offer.OfferBookService;
 import bisq.core.offer.OfferFilter;
 import bisq.core.offer.OfferUtil;
+import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.user.User;
@@ -123,6 +124,13 @@ class CoreOffersService {
                 .collect(Collectors.toList());
     }
 
+    OpenOffer getMyOpenOffer(String id) {
+        return openOfferManager.getOpenOfferById(id)
+                .filter(open -> open.getOffer().isMyOffer(keyRing))
+                .orElseThrow(() ->
+                        new IllegalStateException(format("openoffer with id '%s' not found", id)));
+    }
+
     // Create and place new offer.
     void createAndPlaceOffer(String currencyCode,
                              String directionAsString,
@@ -132,6 +140,7 @@ class CoreOffersService {
                              long amountAsLong,
                              long minAmountAsLong,
                              double buyerSecurityDeposit,
+                             long triggerPrice,
                              String paymentAccountId,
                              String makerFeeCurrencyCode,
                              Consumer<Offer> resultHandler) {
@@ -163,6 +172,7 @@ class CoreOffersService {
         //noinspection ConstantConditions
         placeOffer(offer,
                 buyerSecurityDeposit,
+                triggerPrice,
                 useSavingsWallet,
                 transaction -> resultHandler.accept(offer));
     }
@@ -204,13 +214,13 @@ class CoreOffersService {
 
     private void placeOffer(Offer offer,
                             double buyerSecurityDeposit,
+                            long triggerPrice,
                             boolean useSavingsWallet,
                             Consumer<Transaction> resultHandler) {
-        // TODO add support for triggerPrice parameter. If value is 0 it is interpreted as not used. Its an optional value
         openOfferManager.placeOffer(offer,
                 buyerSecurityDeposit,
                 useSavingsWallet,
-                0,
+                triggerPrice,
                 resultHandler::accept,
                 log::error);
 

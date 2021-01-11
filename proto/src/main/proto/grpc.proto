@@ -102,8 +102,9 @@ message CreateOfferRequest {
     uint64 amount = 6;
     uint64 minAmount = 7;
     double buyerSecurityDeposit = 8;
-    string paymentAccountId = 9;
-    string makerFeeCurrencyCode = 10;
+    uint64 triggerPrice = 9;
+    string paymentAccountId = 10;
+    string makerFeeCurrencyCode = 11;
 }
 
 message CreateOfferReply {
@@ -128,14 +129,15 @@ message OfferInfo {
     uint64 volume = 8;
     uint64 minVolume = 9;
     uint64 buyerSecurityDeposit = 10;
-    bool isCurrencyForMakerFeeBtc = 11;
-    string paymentAccountId = 12;
-    string paymentMethodId = 13;
-    string paymentMethodShortName = 14;
-    string baseCurrencyCode = 15;
-    string counterCurrencyCode = 16;
-    uint64 date = 17;
-    string state = 18;
+    uint64 triggerPrice = 11;
+    bool isCurrencyForMakerFeeBtc = 12;
+    string paymentAccountId = 13;
+    string paymentMethodId = 14;
+    string paymentMethodShortName = 15;
+    string baseCurrencyCode = 16;
+    string counterCurrencyCode = 17;
+    uint64 date = 18;
+    string state = 19;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////

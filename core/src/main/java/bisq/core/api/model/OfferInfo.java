@@ -46,8 +46,9 @@ public class OfferInfo implements Payload {
     private final long volume;
     private final long minVolume;
     private final long buyerSecurityDeposit;
+    private final long triggerPrice;
     private final boolean isCurrencyForMakerFeeBtc;
-    private final String paymentAccountId;   // only used when creating offer
+    private final String paymentAccountId;
     private final String paymentMethodId;
     private final String paymentMethodShortName;
     // For fiat offer the baseCurrencyCode is BTC and the counterCurrencyCode is the fiat currency
@@ -68,6 +69,7 @@ public class OfferInfo implements Payload {
         this.volume = builder.volume;
         this.minVolume = builder.minVolume;
         this.buyerSecurityDeposit = builder.buyerSecurityDeposit;
+        this.triggerPrice = builder.triggerPrice;
         this.isCurrencyForMakerFeeBtc = builder.isCurrencyForMakerFeeBtc;
         this.paymentAccountId = builder.paymentAccountId;
         this.paymentMethodId = builder.paymentMethodId;
@@ -79,6 +81,16 @@ public class OfferInfo implements Payload {
     }
 
     public static OfferInfo toOfferInfo(Offer offer) {
+        return getOfferInfoBuilder(offer).build();
+    }
+
+    public static OfferInfo toOfferInfo(Offer offer, long triggerPrice) {
+        // The Offer does not have a triggerPrice attribute, so we get
+        // the base OfferInfoBuilder, then add the OpenOffer's triggerPrice.
+        return getOfferInfoBuilder(offer).withTriggerPrice(triggerPrice).build();
+    }
+
+    private static OfferInfo.OfferInfoBuilder getOfferInfoBuilder(Offer offer) {
         return new OfferInfo.OfferInfoBuilder()
                 .withId(offer.getId())
                 .withDirection(offer.getDirection().name())
@@ -97,8 +109,7 @@ public class OfferInfo implements Payload {
                 .withBaseCurrencyCode(offer.getOfferPayload().getBaseCurrencyCode())
                 .withCounterCurrencyCode(offer.getOfferPayload().getCounterCurrencyCode())
                 .withDate(offer.getDate().getTime())
-                .withState(offer.getState().name())
-                .build();
+                .withState(offer.getState().name());
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -118,6 +129,7 @@ public class OfferInfo implements Payload {
                 .setVolume(volume)
                 .setMinVolume(minVolume)
                 .setBuyerSecurityDeposit(buyerSecurityDeposit)
+                .setTriggerPrice(triggerPrice)
                 .setIsCurrencyForMakerFeeBtc(isCurrencyForMakerFeeBtc)
                 .setPaymentAccountId(paymentAccountId)
                 .setPaymentMethodId(paymentMethodId)
@@ -142,6 +154,7 @@ public class OfferInfo implements Payload {
                 .withVolume(proto.getVolume())
                 .withMinVolume(proto.getMinVolume())
                 .withBuyerSecurityDeposit(proto.getBuyerSecurityDeposit())
+                .withTriggerPrice(proto.getTriggerPrice())
                 .withIsCurrencyForMakerFeeBtc(proto.getIsCurrencyForMakerFeeBtc())
                 .withPaymentAccountId(proto.getPaymentAccountId())
                 .withPaymentMethodId(proto.getPaymentMethodId())
@@ -170,6 +183,7 @@ public class OfferInfo implements Payload {
         private long volume;
         private long minVolume;
         private long buyerSecurityDeposit;
+        private long triggerPrice;
         private boolean isCurrencyForMakerFeeBtc;
         private String paymentAccountId;
         private String paymentMethodId;
@@ -226,6 +240,11 @@ public class OfferInfo implements Payload {
 
         public OfferInfoBuilder withBuyerSecurityDeposit(long buyerSecurityDeposit) {
             this.buyerSecurityDeposit = buyerSecurityDeposit;
+            return this;
+        }
+
+        public OfferInfoBuilder withTriggerPrice(long triggerPrice) {
+            this.triggerPrice = triggerPrice;
             return this;
         }
 
