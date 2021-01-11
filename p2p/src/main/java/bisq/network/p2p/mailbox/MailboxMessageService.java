@@ -535,7 +535,7 @@ public class MailboxMessageService implements SetupListener, RequestDataManager.
                     // We only republish in case we have not received a remove message for that mailbox message
                     ProtectedStoragePayload protectedStoragePayload = protectedStorageEntry.getProtectedStoragePayload();
                     P2PDataStorage.ByteArray hashOfPayload = P2PDataStorage.get32ByteHashAsByteArray(protectedStoragePayload);
-                    return !p2PDataStorage.addOncePayloadGotAlreadyRemoved(protectedStoragePayload, hashOfPayload);
+                    return !p2PDataStorage.hasAlreadyRemovedAddOncePayload(protectedStoragePayload, hashOfPayload);
                 })
                 .forEach(storageEntry -> p2PDataStorage.addProtectedStorageEntry(storageEntry, networkNode.getNodeAddress(), null));
     }
