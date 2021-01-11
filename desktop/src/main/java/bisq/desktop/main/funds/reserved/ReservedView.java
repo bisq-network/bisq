@@ -161,6 +161,7 @@ public class ReservedView extends ActivatableView<VBox, Void> {
         tradeListChangeListener = c -> updateList();
 
         HBox.setHgrow(spacer, Priority.ALWAYS);
+        numItems.setId("num-offers");
         numItems.setPadding(new Insets(-5, 0, 0, 10));
         exportButton.updateText(Res.get("shared.exportCSV"));
     }
