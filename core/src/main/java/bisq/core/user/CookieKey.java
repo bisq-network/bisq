@@ -22,5 +22,6 @@ public enum CookieKey {
     STAGE_X,
     STAGE_Y,
     STAGE_W,
-    STAGE_H
+    STAGE_H,
+    TRADE_STAT_CHART_USE_USD
 }

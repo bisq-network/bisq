@@ -18,6 +18,7 @@
 package bisq.desktop.main.market.trades.charts.volume;
 
 import bisq.desktop.main.market.trades.charts.CandleData;
+import bisq.desktop.util.DisplayUtils;
 
 import bisq.core.locale.Res;
 
@@ -27,12 +28,7 @@ import javafx.scene.layout.Region;
 
 import javafx.util.StringConverter;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class VolumeBar extends Group {
-    private static final Logger log = LoggerFactory.getLogger(VolumeBar.class);
-
     private String seriesStyleClass;
     private String dataStyleClass;
     private final StringConverter<Number> volumeStringConverter;
@@ -60,8 +56,9 @@ public class VolumeBar extends Group {
 
     public void update(double height, double candleWidth, CandleData candleData) {
         bar.resizeRelocate(-candleWidth / 2, 0, candleWidth, height);
-        String vol = volumeStringConverter.toString(candleData.accumulatedAmount);
-        tooltip.setText(Res.get("market.trades.tooltip.volumeBar", vol, candleData.numTrades, candleData.date));
+        String volumeInBtc = volumeStringConverter.toString(candleData.accumulatedAmount);
+        String volumeInUsd = DisplayUtils.formatLargeFiat(candleData.volumeInUsd, "USD");
+        tooltip.setText(Res.get("market.trades.tooltip.volumeBar", volumeInBtc, volumeInUsd, candleData.numTrades, candleData.date));
     }
 
     private void updateStyleClasses() {

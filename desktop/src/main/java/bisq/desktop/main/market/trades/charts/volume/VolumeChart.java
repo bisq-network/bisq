@@ -53,9 +53,9 @@ public class VolumeChart extends XYChart<Number, Number> {
         }
         for (int seriesIndex = 0; seriesIndex < getData().size(); seriesIndex++) {
             XYChart.Series<Number, Number> series = getData().get(seriesIndex);
-            Iterator<XYChart.Data<Number, Number>> iter = getDisplayedDataIterator(series);
-            while (iter.hasNext()) {
-                XYChart.Data<Number, Number> item = iter.next();
+            Iterator<XYChart.Data<Number, Number>> iterator = getDisplayedDataIterator(series);
+            while (iterator.hasNext()) {
+                XYChart.Data<Number, Number> item = iterator.next();
                 double x = getXAxis().getDisplayPosition(getCurrentDisplayedXValue(item));
                 double y = getYAxis().getDisplayPosition(getCurrentDisplayedYValue(item));
                 Node itemNode = item.getNode();
