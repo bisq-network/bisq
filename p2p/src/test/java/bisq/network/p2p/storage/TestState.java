@@ -35,6 +35,7 @@ import bisq.network.p2p.storage.payload.ProtectedMailboxStorageEntry;
 import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreListener;
 import bisq.network.p2p.storage.persistence.ProtectedDataStoreService;
+import bisq.network.p2p.storage.persistence.RemovedPayloadsStorageService;
 import bisq.network.p2p.storage.persistence.ResourceDataStoreService;
 import bisq.network.p2p.storage.persistence.SequenceNumberMap;
 
@@ -72,10 +73,12 @@ public class TestState {
     private final PersistenceManager<SequenceNumberMap> mockSeqNrPersistenceManager;
     private final ProtectedDataStoreService protectedDataStoreService;
     final ClockFake clockFake;
+    private RemovedPayloadsStorageService removedPayloadsStorageService;
 
     TestState() {
         this.mockBroadcaster = mock(Broadcaster.class);
         this.mockSeqNrPersistenceManager = mock(PersistenceManager.class);
+        this.removedPayloadsStorageService = mock(RemovedPayloadsStorageService.class);
         this.clockFake = new ClockFake();
         this.protectedDataStoreService = new ProtectedDataStoreService();
 
@@ -84,6 +87,7 @@ public class TestState {
                 new AppendOnlyDataStoreServiceFake(),
                 this.protectedDataStoreService, mock(ResourceDataStoreService.class),
                 this.mockSeqNrPersistenceManager,
+                removedPayloadsStorageService,
                 this.clockFake,
                 MAX_SEQUENCE_NUMBER_MAP_SIZE_BEFORE_PURGE);
 
@@ -97,7 +101,8 @@ public class TestState {
                 this.mockSeqNrPersistenceManager,
                 this.clockFake,
                 this.hashMapChangedListener,
-                this.appendOnlyDataStoreListener);
+                this.appendOnlyDataStoreListener,
+                removedPayloadsStorageService);
 
         when(this.mockSeqNrPersistenceManager.getPersisted())
                 .thenReturn(this.mockedStorage.sequenceNumberMap);
@@ -110,13 +115,15 @@ public class TestState {
      * not running the entire storage code paths.
      */
     void simulateRestart() {
+        this.removedPayloadsStorageService = mock(RemovedPayloadsStorageService.class);
         this.mockedStorage = createP2PDataStorageForTest(
                 this.mockBroadcaster,
                 this.protectedDataStoreService,
                 this.mockSeqNrPersistenceManager,
                 this.clockFake,
                 this.hashMapChangedListener,
-                this.appendOnlyDataStoreListener);
+                this.appendOnlyDataStoreListener,
+                removedPayloadsStorageService);
 
         when(this.mockSeqNrPersistenceManager.getPersisted())
                 .thenReturn(this.mockedStorage.sequenceNumberMap);
@@ -128,13 +135,18 @@ public class TestState {
             PersistenceManager<SequenceNumberMap> sequenceNrMapPersistenceManager,
             ClockFake clock,
             HashMapChangedListener hashMapChangedListener,
-            AppendOnlyDataStoreListener appendOnlyDataStoreListener) {
+            AppendOnlyDataStoreListener appendOnlyDataStoreListener,
+            RemovedPayloadsStorageService removedPayloadsStorageService) {
 
         P2PDataStorage p2PDataStorage = new P2PDataStorage(mock(NetworkNode.class),
                 broadcaster,
                 new AppendOnlyDataStoreServiceFake(),
-                protectedDataStoreService, mock(ResourceDataStoreService.class),
-                sequenceNrMapPersistenceManager, clock, MAX_SEQUENCE_NUMBER_MAP_SIZE_BEFORE_PURGE);
+                protectedDataStoreService,
+                mock(ResourceDataStoreService.class),
+                sequenceNrMapPersistenceManager,
+                removedPayloadsStorageService,
+                clock,
+                MAX_SEQUENCE_NUMBER_MAP_SIZE_BEFORE_PURGE);
 
         // Currently TestState only supports reading ProtectedStorageEntries off disk.
         p2PDataStorage.readFromResourcesSync("unused");
