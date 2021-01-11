@@ -283,8 +283,7 @@ public class MailboxMessageService implements SetupListener, RequestDataManager.
         }
     }
 
-    //todo rename
-    public Set<DecryptedMessageWithPubKey> getMyMailBoxMessages() {
+    public Set<DecryptedMessageWithPubKey> getMyDecryptedMessages() {
         log.trace("getMyMailBoxMessages mailboxItemsByUid={}", mailboxItemsByUid);
         return mailboxItemsByUid.values().stream()
                 .filter(MailboxItem::isMine)
