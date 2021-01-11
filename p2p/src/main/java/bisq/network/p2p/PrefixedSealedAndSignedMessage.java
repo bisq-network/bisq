@@ -44,9 +44,8 @@ public final class PrefixedSealedAndSignedMessage extends NetworkEnvelope implem
 
     public PrefixedSealedAndSignedMessage(NodeAddress senderNodeAddress,
                                           SealedAndSigned sealedAndSigned,
-                                          byte[] addressPrefixHash,
                                           String uid) {
-        this(senderNodeAddress, sealedAndSigned, addressPrefixHash, uid, Version.getP2PMessageVersion());
+        this(senderNodeAddress, sealedAndSigned, new byte[0], uid, Version.getP2PMessageVersion());
     }
 
 

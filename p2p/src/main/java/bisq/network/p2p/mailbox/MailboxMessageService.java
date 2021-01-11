@@ -43,7 +43,6 @@ import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 
 import bisq.common.UserThread;
 import bisq.common.app.Capabilities;
-import bisq.common.app.Capability;
 import bisq.common.crypto.CryptoException;
 import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.PubKeyRing;
@@ -199,8 +198,10 @@ public class MailboxMessageService implements SetupListener, RequestDataManager.
                     "Encrypt message:\nmessage={}"
                     + "\nEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE\n", message);
 
-            PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage = getPrefixedSealedAndSignedMessage(peer,
-                    peersPubKeyRing, message);
+            PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage = new PrefixedSealedAndSignedMessage(
+                    networkNode.getNodeAddress(),
+                    encryptionService.encryptAndSign(peersPubKeyRing, message),
+                    UUID.randomUUID().toString());
 
             log.debug("sendEncryptedMailboxMessage msg={},  peersNodeAddress={}", message, peer);
             SettableFuture<Connection> future = networkNode.sendMessage(peer, prefixedSealedAndSignedMessage);
@@ -542,25 +543,6 @@ public class MailboxMessageService implements SetupListener, RequestDataManager.
 
     private void requestPersistence() {
         persistenceManager.requestPersistence();
-    }
-
-    // TODO avoid code duplication
-    private PrefixedSealedAndSignedMessage getPrefixedSealedAndSignedMessage(NodeAddress peersNodeAddress,
-                                                                             PubKeyRing pubKeyRing,
-                                                                             NetworkEnvelope message) throws CryptoException {
-        byte[] addressPrefixHash;
-        if (peerManager.peerHasCapability(peersNodeAddress, Capability.NO_ADDRESS_PRE_FIX)) {
-            // The peer has an updated version so we do not need to send the prefix.
-            // We cannot use null as not updated nodes would get a nullPointer at protobuf serialisation.
-            addressPrefixHash = new byte[0];
-        } else {
-            addressPrefixHash = peersNodeAddress.getAddressPrefixHash();
-        }
-        return new PrefixedSealedAndSignedMessage(
-                networkNode.getNodeAddress(),
-                encryptionService.encryptAndSign(pubKeyRing, message),
-                addressPrefixHash,
-                UUID.randomUUID().toString());
     }
 
     // TODO avoid code duplication
