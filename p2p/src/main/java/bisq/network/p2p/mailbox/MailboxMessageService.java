@@ -105,6 +105,8 @@ public class MailboxMessageService implements SetupListener, RequestDataManager.
     private final RequestDataManager requestDataManager;
     private final Set<DecryptedMailboxListener> decryptedMailboxListeners = new CopyOnWriteArraySet<>();
     private final MailboxMessageList mailboxMessageList = new MailboxMessageList();
+
+    // TODO why we use a List as value?
     private final Map<String, List<MailboxItem>> mailboxItemsByUid = new HashMap<>();
     private boolean isBootstrapped;
 
@@ -261,7 +263,8 @@ public class MailboxMessageService implements SetupListener, RequestDataManager.
     public Set<DecryptedMessageWithPubKey> getMyMailBoxMessages() {
         return mailboxItemsByUid.values().stream()
                 .filter(list -> !list.isEmpty())
-                .map(list -> list.get(0))
+                .map(list -> list.get(0)) // TODO
+                .filter(MailboxItem::isMine)
                 .map(MailboxItem::getDecryptedMessageWithPubKey)
                 .collect(Collectors.toSet());
     }
