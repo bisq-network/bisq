@@ -125,7 +125,7 @@ public class TableFormat {
                 + padEnd(COL_HEADER_PAYMENT_METHOD, paymentMethodColWidth, ' ') + COL_HEADER_DELIMITER
                 + COL_HEADER_CREATION_DATE + COL_HEADER_DELIMITER
                 + COL_HEADER_UUID.trim() + "%n";
-        String headerLine = format(headersFormat, fiatCurrency, fiatCurrency);
+        String headerLine = format(headersFormat, fiatCurrency.toUpperCase(), fiatCurrency.toUpperCase());
 
         String colDataFormat = "%-" + (COL_HEADER_DIRECTION.length() + COL_HEADER_DELIMITER.length()) + "s" // left
                 + "%" + (COL_HEADER_PRICE.length() - 1) + "s" // rt justify to end of hdr
