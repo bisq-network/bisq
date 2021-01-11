@@ -73,7 +73,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
@@ -378,12 +377,10 @@ public class MailboxMessageService implements SetupListener, RequestDataManager.
         Set<MailboxItem> decryptedMailboxMessageWithEntries = new HashSet<>();
         protectedMailboxStorageEntries.stream()
                 .map(this::decryptProtectedMailboxStorageEntry)
-                .filter(Objects::nonNull)
                 .forEach(decryptedMailboxMessageWithEntries::add);
         return decryptedMailboxMessageWithEntries;
     }
 
-    @Nullable
     private MailboxItem decryptProtectedMailboxStorageEntry(ProtectedMailboxStorageEntry protectedMailboxStorageEntry) {
         PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage = protectedMailboxStorageEntry
                 .getMailboxStoragePayload()
@@ -392,7 +389,8 @@ public class MailboxMessageService implements SetupListener, RequestDataManager.
         String uid = prefixedSealedAndSignedMessage.getUid();
         if (ignoredMailboxService.isIgnored(uid)) {
             // We had persisted a past failed decryption attempt on that message so we don't try again and return early
-            return null;
+            return new MailboxItem(protectedMailboxStorageEntry, null);
+
         }
         try {
             DecryptedMessageWithPubKey decryptedMessageWithPubKey = encryptionService.decryptAndVerify(sealedAndSigned);
@@ -406,18 +404,25 @@ public class MailboxMessageService implements SetupListener, RequestDataManager.
             log.error(e.toString());
             e.getStackTrace();
         }
-        return null;
+        return new MailboxItem(protectedMailboxStorageEntry, null);
+
     }
 
     private void handleMailboxItem(MailboxItem mailboxItem) {
-        DecryptedMessageWithPubKey decryptedMessageWithPubKey = mailboxItem.getDecryptedMessageWithPubKey();
-        MailboxMessage mailboxMessage = (MailboxMessage) decryptedMessageWithPubKey.getNetworkEnvelope();
-        String uid = mailboxMessage.getUid();
+        String uid = mailboxItem.getUid();
         mailboxItemsByUid.putIfAbsent(uid, new ArrayList<>());
         mailboxItemsByUid.get(uid).add(mailboxItem);
         mailboxMessageList.add(mailboxItem);
         requestPersistence();
 
+        if (mailboxItem.isMine()) {
+            processMyMailboxItem(mailboxItem, uid);
+        }
+    }
+
+    private void processMyMailboxItem(MailboxItem mailboxItem, String uid) {
+        DecryptedMessageWithPubKey decryptedMessageWithPubKey = checkNotNull(mailboxItem.getDecryptedMessageWithPubKey());
+        MailboxMessage mailboxMessage = (MailboxMessage) decryptedMessageWithPubKey.getNetworkEnvelope();
         NodeAddress sender = mailboxMessage.getSenderNodeAddress();
         log.info("Received a {} mailbox message with uid {} and senderAddress {}",
                 mailboxMessage.getClass().getSimpleName(), uid, sender);
