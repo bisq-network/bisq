@@ -39,7 +39,6 @@ import bisq.network.p2p.storage.payload.CapabilityRequiringPayload;
 import bisq.network.p2p.storage.payload.MailboxStoragePayload;
 import bisq.network.p2p.storage.payload.ProtectedMailboxStorageEntry;
 import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
-import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 
 import bisq.common.UserThread;
 import bisq.common.app.Capabilities;
@@ -105,9 +104,8 @@ public class MailboxMessageService implements SetupListener, RequestDataManager.
     private final RequestDataManager requestDataManager;
     private final Set<DecryptedMailboxListener> decryptedMailboxListeners = new CopyOnWriteArraySet<>();
     private final MailboxMessageList mailboxMessageList = new MailboxMessageList();
+    private final Map<String, MailboxItem> mailboxItemsByUid = new HashMap<>();
 
-    // TODO why we use a List as value?
-    private final Map<String, List<MailboxItem>> mailboxItemsByUid = new HashMap<>();
     private boolean isBootstrapped;
 
     @Inject
@@ -133,6 +131,7 @@ public class MailboxMessageService implements SetupListener, RequestDataManager.
         this.clock = clock;
 
         this.requestDataManager.addListener(this);
+        networkNode.addSetupListener(this);
 
         this.persistenceManager.initialize(mailboxMessageList, PersistenceManager.Source.PRIVATE);
     }
@@ -147,13 +146,23 @@ public class MailboxMessageService implements SetupListener, RequestDataManager.
         persistenceManager.readPersisted(persisted -> {
                     persisted.stream()
                             .filter(e -> !e.isExpired(clock))
+                            .filter(e -> !mailboxItemsByUid.containsKey(e.getUid()))
                             .forEach(mailboxItem -> {
                                 String uid = mailboxItem.getUid();
-                                mailboxItemsByUid.putIfAbsent(uid, new ArrayList<>());
-                                mailboxItemsByUid.get(uid).add(mailboxItem);
+                                mailboxItemsByUid.put(uid, mailboxItem);
                                 mailboxMessageList.add(mailboxItem);
-                            });
+                                log.trace("readPersisted uid={}\nhash={}\nmailboxItemsByUid={}",
+                                        uid,
+                                        P2PDataStorage.get32ByteHashAsByteArray(mailboxItem.getProtectedMailboxStorageEntry().getProtectedStoragePayload()),
+                                        mailboxItemsByUid);
 
+                                // We add it to our map so that it get added to the excluded key set we send for
+                                // the initial data requests. So that helps to lower the load for mailbox messages at
+                                // initial data requests.
+                                //todo check if listeners are called too early
+                                p2PDataStorage.addProtectedMailboxStorageEntryToMap(mailboxItem.getProtectedMailboxStorageEntry());
+                            });
+                    requestPersistence();
                     completeHandler.run();
                 },
                 completeHandler);
@@ -194,16 +203,10 @@ public class MailboxMessageService implements SetupListener, RequestDataManager.
         }
 
         try {
-            log.debug("\n\nEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE\n" +
-                    "Encrypt message:\nmessage={}"
-                    + "\nEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE\n", message);
-
             PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage = new PrefixedSealedAndSignedMessage(
                     networkNode.getNodeAddress(),
                     encryptionService.encryptAndSign(peersPubKeyRing, message),
                     UUID.randomUUID().toString());
-
-            log.debug("sendEncryptedMailboxMessage msg={},  peersNodeAddress={}", message, peer);
             SettableFuture<Connection> future = networkNode.sendMessage(peer, prefixedSealedAndSignedMessage);
             Futures.addCallback(future, new FutureCallback<>() {
                 @Override
@@ -228,24 +231,29 @@ public class MailboxMessageService implements SetupListener, RequestDataManager.
         }
     }
 
+    /**
+     * The DecryptedMessageWithPubKey has been applied and we remove it from our local storage and from the network
+     * @param decryptedMessageWithPubKey The DecryptedMessageWithPubKey to be removed
+     */
     public void removeMailboxMsg(DecryptedMessageWithPubKey decryptedMessageWithPubKey) {
         if (isBootstrapped) {
             // We need to delay a bit to not get a ConcurrentModificationException as we might iterate over
-            // mailboxItemsByUid while getting called.
+            // mailboxMessageList while getting called.
             UserThread.execute(() -> {
                 MailboxMessage mailboxMessage = (MailboxMessage) decryptedMessageWithPubKey.getNetworkEnvelope();
                 String uid = mailboxMessage.getUid();
-                if (mailboxItemsByUid.containsKey(uid)) {
-                    List<MailboxItem> list = mailboxItemsByUid.get(uid);
-                    // In case we have not been bootstrapped when we tried to remove the message at the time when we
-                    // received the message, we remove it now.
-                    list.forEach(mailboxItem -> {
-                        removeMailboxEntryFromNetwork(mailboxItem.getProtectedMailboxStorageEntry());
-                        mailboxMessageList.remove(mailboxItem);
-                    });
-                    mailboxItemsByUid.remove(uid);
-                    requestPersistence();
-                }
+
+                // We called removeMailboxEntryFromNetwork at processMyMailboxItem,
+                // but in case we have not been bootstrapped at that moment it did not get removed from the network.
+                // So to be sure it gets removed we try to remove it now again.
+                // In case it was removed earlier it will return early anyway inside the p2pDataStorage.
+                removeMailboxEntryFromNetwork(mailboxItemsByUid.get(uid).getProtectedMailboxStorageEntry());
+
+                // We will get called the onRemoved handler which triggers removeMailboxItemFromMap as well.
+                // But as we use the uid from the decrypted data which is not available at onRemoved we need to
+                // call removeMailboxItemFromMap here. The onRemoved only removes foreign mailBoxMessages.
+                log.trace("removeMailboxMsg uid={}", uid);
+                removeMailboxItemFromLocalStore(uid);
             });
         } else {
             // In case the network was not ready yet we try again later
@@ -253,10 +261,10 @@ public class MailboxMessageService implements SetupListener, RequestDataManager.
         }
     }
 
+    //todo rename
     public Set<DecryptedMessageWithPubKey> getMyMailBoxMessages() {
+        log.trace("getMyMailBoxMessages mailboxItemsByUid={}", mailboxItemsByUid);
         return mailboxItemsByUid.values().stream()
-                .filter(list -> !list.isEmpty())
-                .map(list -> list.get(0)) // TODO
                 .filter(MailboxItem::isMine)
                 .map(MailboxItem::getDecryptedMessageWithPubKey)
                 .collect(Collectors.toSet());
@@ -331,16 +339,15 @@ public class MailboxMessageService implements SetupListener, RequestDataManager.
 
     @Override
     public void onRemoved(Collection<ProtectedStorageEntry> protectedStorageEntries) {
+        log.trace("onRemoved");
+        // We can only remove the foreign mailbox messages as for our own we use the uid from the decrypted
+        // payload which is not available here. But own mailbox messages get removed anyway after processing
+        // at the removeMailboxMsg method.
         protectedStorageEntries.stream()
                 .filter(protectedStorageEntry -> protectedStorageEntry instanceof ProtectedMailboxStorageEntry)
                 .map(protectedStorageEntry -> (ProtectedMailboxStorageEntry) protectedStorageEntry)
-                .forEach(protectedMailboxStorageEntry -> {
-                    // We can only remove the foreign mailbox messages as for our own we use the uid from the decrypted
-                    // payload which is not available here. But own mailbox messages get removed anyway after processing.
-                    String uid = protectedMailboxStorageEntry.getMailboxStoragePayload().getPrefixedSealedAndSignedMessage().getUid();
-                    mailboxItemsByUid.remove(uid);
-                    requestPersistence();
-                });
+                .map(e -> e.getMailboxStoragePayload().getPrefixedSealedAndSignedMessage().getUid())
+                .forEach(uid -> removeMailboxItemFromLocalStore(uid));
     }
 
 
@@ -422,11 +429,21 @@ public class MailboxMessageService implements SetupListener, RequestDataManager.
 
     private void handleMailboxItem(MailboxItem mailboxItem) {
         String uid = mailboxItem.getUid();
-        mailboxItemsByUid.putIfAbsent(uid, new ArrayList<>());
-        mailboxItemsByUid.get(uid).add(mailboxItem);
-        mailboxMessageList.add(mailboxItem);
-        requestPersistence();
+        if (!mailboxItemsByUid.containsKey(uid)) {
+            mailboxItemsByUid.put(uid, mailboxItem);
+            mailboxMessageList.add(mailboxItem);
+            log.trace("handleMailboxItem uid={}\nhash={}\nmailboxMessageList={}",
+                    uid,
+                    P2PDataStorage.get32ByteHashAsByteArray(mailboxItem.getProtectedMailboxStorageEntry().getProtectedStoragePayload()),
+                    mailboxItemsByUid);
 
+            requestPersistence();
+        }
+
+        // In case we had the item already stored we still prefer to apply it again to the domain.
+        // Clients need to deal with the case that they get called multiple times with the same mailbox message.
+        // This happens also because peer republish certain trade messages for higher resilience. Those messages
+        // will be different mailbox messages instances but have the same internal content.
         if (mailboxItem.isMine()) {
             processMyMailboxItem(mailboxItem, uid);
         }
@@ -443,9 +460,12 @@ public class MailboxMessageService implements SetupListener, RequestDataManager.
         if (isBootstrapped) {
             // After we notified our listeners we remove the data immediately from the network.
             // In case the client has not been ready it need to take it via getMailBoxMessages.
+            // We do not remove the data from our local map at that moment. This has to be called explicitely from the
+            // client after processing. In case processing fails for some reason we still have the local data which can
+            // be applied after restart, but the network got cleaned from pending mailbox messages.
             removeMailboxEntryFromNetwork(mailboxItem.getProtectedMailboxStorageEntry());
         } else {
-            log.info("We are not bootstrapped yet, so we remove later once the message got processed.");
+            log.info("We are not bootstrapped yet, so we remove later once the mailBoxMessage got processed.");
         }
     }
 
@@ -527,18 +547,30 @@ public class MailboxMessageService implements SetupListener, RequestDataManager.
     }
 
     private void republishMailBoxMessages() {
+        log.trace("republishMailBoxMessages mailboxItemsByUid={}", mailboxItemsByUid);
+
+        // In addProtectedStorageEntry we break early if we have already received a remove message for that entry.
         mailboxItemsByUid.values().stream()
-                .filter(list -> !list.isEmpty())
-                .flatMap(Collection::stream)
                 .filter(e -> !e.isExpired(clock))
                 .map(MailboxItem::getProtectedMailboxStorageEntry)
-                .filter(protectedStorageEntry -> {
-                    // We only republish in case we have not received a remove message for that mailbox message
-                    ProtectedStoragePayload protectedStoragePayload = protectedStorageEntry.getProtectedStoragePayload();
-                    P2PDataStorage.ByteArray hashOfPayload = P2PDataStorage.get32ByteHashAsByteArray(protectedStoragePayload);
-                    return !p2PDataStorage.hasAlreadyRemovedAddOncePayload(protectedStoragePayload, hashOfPayload);
-                })
-                .forEach(storageEntry -> p2PDataStorage.addProtectedStorageEntry(storageEntry, networkNode.getNodeAddress(), null));
+                .forEach(protectedMailboxStorageEntry ->
+                        p2PDataStorage.addProtectedStorageEntry(protectedMailboxStorageEntry,
+                                networkNode.getNodeAddress(),
+                                null));
+    }
+
+    private void removeMailboxItemFromLocalStore(String uid) {
+        if (mailboxItemsByUid.containsKey(uid)) {
+            MailboxItem mailboxItem = mailboxItemsByUid.get(uid);
+            mailboxItemsByUid.remove(uid);
+            mailboxMessageList.remove(mailboxItem);
+            log.trace("removeMailboxItemFromMap uid={}\nhash={}\nmailboxItemsByUid={}",
+                    uid,
+                    P2PDataStorage.get32ByteHashAsByteArray(mailboxItem.getProtectedMailboxStorageEntry().getProtectedStoragePayload()),
+                    mailboxItemsByUid
+            );
+            requestPersistence();
+        }
     }
 
     private void requestPersistence() {
