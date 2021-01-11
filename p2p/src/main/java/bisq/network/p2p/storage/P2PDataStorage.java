@@ -51,7 +51,7 @@ import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreService;
 import bisq.network.p2p.storage.persistence.HistoricalDataStoreService;
 import bisq.network.p2p.storage.persistence.PersistableNetworkPayloadStore;
 import bisq.network.p2p.storage.persistence.ProtectedDataStoreService;
-import bisq.network.p2p.storage.persistence.RemovedPayloadsStorageService;
+import bisq.network.p2p.storage.persistence.RemovedPayloadsService;
 import bisq.network.p2p.storage.persistence.ResourceDataStoreService;
 import bisq.network.p2p.storage.persistence.SequenceNumberMap;
 
@@ -143,7 +143,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
     final SequenceNumberMap sequenceNumberMap = new SequenceNumberMap();
 
     private final Set<AppendOnlyDataStoreListener> appendOnlyDataStoreListeners = new CopyOnWriteArraySet<>();
-    private final RemovedPayloadsStorageService removedPayloadsStorageService;
+    private final RemovedPayloadsService removedPayloadsService;
     private final Clock clock;
 
     /// The maximum number of items that must exist in the SequenceNumberMap before it is scheduled for a purge
@@ -165,7 +165,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                           ProtectedDataStoreService protectedDataStoreService,
                           ResourceDataStoreService resourceDataStoreService,
                           PersistenceManager<SequenceNumberMap> persistenceManager,
-                          RemovedPayloadsStorageService removedPayloadsStorageService,
+                          RemovedPayloadsService removedPayloadsService,
                           Clock clock,
                           @Named("MAX_SEQUENCE_NUMBER_MAP_SIZE_BEFORE_PURGE") int maxSequenceNumberBeforePurge) {
         this.broadcaster = broadcaster;
@@ -173,7 +173,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         this.protectedDataStoreService = protectedDataStoreService;
         this.resourceDataStoreService = resourceDataStoreService;
         this.persistenceManager = persistenceManager;
-        this.removedPayloadsStorageService = removedPayloadsStorageService;
+        this.removedPayloadsService = removedPayloadsService;
         this.clock = clock;
         this.maxSequenceNumberMapSizeBeforePurge = maxSequenceNumberBeforePurge;
 
@@ -772,7 +772,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
     public boolean hasAlreadyRemovedAddOncePayload(ProtectedStoragePayload protectedStoragePayload,
                                                    ByteArray hashOfPayload) {
-        return protectedStoragePayload instanceof AddOncePayload && removedPayloadsStorageService.wasRemoved(hashOfPayload);
+        return protectedStoragePayload instanceof AddOncePayload && removedPayloadsService.wasRemoved(hashOfPayload);
     }
 
     /**
@@ -856,7 +856,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
         // Update that we have seen this AddOncePayload so the next time it is seen it fails verification
         if (protectedStoragePayload instanceof AddOncePayload) {
-            removedPayloadsStorageService.addHash(hashOfPayload);
+            removedPayloadsService.addHash(hashOfPayload);
         }
 
         if (storedEntry != null) {

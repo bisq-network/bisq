@@ -30,12 +30,12 @@ import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j
-public class RemovedPayloadsStorageService implements PersistedDataHost {
+public class RemovedPayloadsService implements PersistedDataHost {
     private final PersistenceManager<RemovedPayloadsMap> persistenceManager;
     private final RemovedPayloadsMap removedPayloadsMap = new RemovedPayloadsMap();
 
     @Inject
-    public RemovedPayloadsStorageService(PersistenceManager<RemovedPayloadsMap> persistenceManager) {
+    public RemovedPayloadsService(PersistenceManager<RemovedPayloadsMap> persistenceManager) {
         this.persistenceManager = persistenceManager;
 
         this.persistenceManager.initialize(removedPayloadsMap, PersistenceManager.Source.PRIVATE_LOW_PRIO);
