@@ -46,7 +46,7 @@ import bisq.core.user.UserPayload;
 import bisq.network.p2p.mailbox.IgnoredMailboxMap;
 import bisq.network.p2p.mailbox.MailboxMessageList;
 import bisq.network.p2p.peers.peerexchange.PeerList;
-import bisq.network.p2p.storage.RemovedPayloadsMap;
+import bisq.network.p2p.storage.persistence.RemovedPayloadsMap;
 import bisq.network.p2p.storage.persistence.SequenceNumberMap;
 
 import bisq.common.proto.ProtobufferRuntimeException;

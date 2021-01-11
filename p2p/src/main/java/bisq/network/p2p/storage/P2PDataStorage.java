@@ -51,6 +51,7 @@ import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreService;
 import bisq.network.p2p.storage.persistence.HistoricalDataStoreService;
 import bisq.network.p2p.storage.persistence.PersistableNetworkPayloadStore;
 import bisq.network.p2p.storage.persistence.ProtectedDataStoreService;
+import bisq.network.p2p.storage.persistence.RemovedPayloadsStorageService;
 import bisq.network.p2p.storage.persistence.ResourceDataStoreService;
 import bisq.network.p2p.storage.persistence.SequenceNumberMap;
 

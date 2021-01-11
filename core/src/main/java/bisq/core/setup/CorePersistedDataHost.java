@@ -39,7 +39,7 @@ import bisq.network.p2p.mailbox.IgnoredMailboxService;
 import bisq.network.p2p.mailbox.MailboxMessageService;
 import bisq.network.p2p.peers.PeerManager;
 import bisq.network.p2p.storage.P2PDataStorage;
-import bisq.network.p2p.storage.RemovedPayloadsStorageService;
+import bisq.network.p2p.storage.persistence.RemovedPayloadsStorageService;
 
 import bisq.common.config.Config;
 import bisq.common.proto.persistable.PersistedDataHost;

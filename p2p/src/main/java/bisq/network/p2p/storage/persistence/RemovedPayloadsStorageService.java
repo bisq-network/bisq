@@ -15,8 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p.storage;
+package bisq.network.p2p.storage.persistence;
 
+import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.payload.MailboxStoragePayload;
 
 import bisq.common.persistence.PersistenceManager;
