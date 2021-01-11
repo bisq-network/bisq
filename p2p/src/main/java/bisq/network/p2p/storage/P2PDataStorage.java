@@ -711,8 +711,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         ProtectedStoragePayload protectedStoragePayload = protectedStorageEntry.getProtectedStoragePayload();
         ByteArray hashOfPayload = get32ByteHashAsByteArray(protectedStoragePayload);
 
-        if (protectedStoragePayload instanceof AddOncePayload &&
-                removedAddOncePayloads.contains(hashOfPayload)) {
+        if (addOncePayloadGotAlreadyRemoved(protectedStoragePayload, hashOfPayload)) {
             log.warn("We have already removed that AddOncePayload by a previous removeDataMessage. " +
                     "We ignore that message. ProtectedStoragePayload: {}", protectedStoragePayload.toString());
             return false;
@@ -767,6 +766,11 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
             protectedDataStoreService.put(hashOfPayload, protectedStorageEntry);
 
         return true;
+    }
+
+    public boolean addOncePayloadGotAlreadyRemoved(ProtectedStoragePayload protectedStoragePayload,
+                                                   ByteArray hashOfPayload) {
+        return protectedStoragePayload instanceof AddOncePayload && removedAddOncePayloads.contains(hashOfPayload);
     }
 
     /**

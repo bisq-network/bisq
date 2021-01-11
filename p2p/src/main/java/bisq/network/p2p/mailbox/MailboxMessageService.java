@@ -39,6 +39,7 @@ import bisq.network.p2p.storage.payload.CapabilityRequiringPayload;
 import bisq.network.p2p.storage.payload.MailboxStoragePayload;
 import bisq.network.p2p.storage.payload.ProtectedMailboxStorageEntry;
 import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
+import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 
 import bisq.common.UserThread;
 import bisq.common.app.Capabilities;
@@ -275,6 +276,7 @@ public class MailboxMessageService implements SetupListener, RequestDataManager.
             isBootstrapped = true;
             // As we do not expect a updated data request response we start here with addHashMapChangedListenerAndApply
             addHashMapChangedListenerAndApply();
+            UserThread.runAfter(this::republishMailBoxMessages, 20);
         }
     }
 
@@ -298,6 +300,7 @@ public class MailboxMessageService implements SetupListener, RequestDataManager.
             // Only now we start listening and processing. The p2PDataStorage is our cache for data we have received
             // after the hidden service was ready.
             addHashMapChangedListenerAndApply();
+            UserThread.runAfter(this::republishMailBoxMessages, 20);
         }
     }
 
@@ -323,6 +326,20 @@ public class MailboxMessageService implements SetupListener, RequestDataManager.
         } else if (entries.size() == 1) {
             processSingleMailboxEntry(entries);
         }
+    }
+
+    @Override
+    public void onRemoved(Collection<ProtectedStorageEntry> protectedStorageEntries) {
+        protectedStorageEntries.stream()
+                .filter(protectedStorageEntry -> protectedStorageEntry instanceof ProtectedMailboxStorageEntry)
+                .map(protectedStorageEntry -> (ProtectedMailboxStorageEntry) protectedStorageEntry)
+                .forEach(protectedMailboxStorageEntry -> {
+                    // We can only remove the foreign mailbox messages as for our own we use the uid from the decrypted
+                    // payload which is not available here. But own mailbox messages get removed anyway after processing.
+                    String uid = protectedMailboxStorageEntry.getMailboxStoragePayload().getPrefixedSealedAndSignedMessage().getUid();
+                    mailboxItemsByUid.remove(uid);
+                    requestPersistence();
+                });
     }
 
 
@@ -506,6 +523,21 @@ public class MailboxMessageService implements SetupListener, RequestDataManager.
             e.printStackTrace();
             log.error("Could not remove ProtectedMailboxStorageEntry from network. Error: {}", e.toString());
         }
+    }
+
+    private void republishMailBoxMessages() {
+        mailboxItemsByUid.values().stream()
+                .filter(list -> !list.isEmpty())
+                .flatMap(Collection::stream)
+                .filter(e -> !e.isExpired(clock))
+                .map(MailboxItem::getProtectedMailboxStorageEntry)
+                .filter(protectedStorageEntry -> {
+                    // We only republish in case we have not received a remove message for that mailbox message
+                    ProtectedStoragePayload protectedStoragePayload = protectedStorageEntry.getProtectedStoragePayload();
+                    P2PDataStorage.ByteArray hashOfPayload = P2PDataStorage.get32ByteHashAsByteArray(protectedStoragePayload);
+                    return !p2PDataStorage.addOncePayloadGotAlreadyRemoved(protectedStoragePayload, hashOfPayload);
+                })
+                .forEach(storageEntry -> p2PDataStorage.addProtectedStorageEntry(storageEntry, networkNode.getNodeAddress(), null));
     }
 
     private void requestPersistence() {
