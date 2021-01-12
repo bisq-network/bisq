@@ -67,7 +67,7 @@ public class PrivateNotificationManager {
 
     private ECKey privateNotificationSigningKey;
     @Nullable
-    private DecryptedMessageWithPubKey decryptedMessageWithPubKey;
+    private PrivateNotificationMessage privateNotificationMessage;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -94,10 +94,9 @@ public class PrivateNotificationManager {
     }
 
     private void handleMessage(DecryptedMessageWithPubKey decryptedMessageWithPubKey, NodeAddress senderNodeAddress) {
-        this.decryptedMessageWithPubKey = decryptedMessageWithPubKey;
         NetworkEnvelope networkEnvelope = decryptedMessageWithPubKey.getNetworkEnvelope();
         if (networkEnvelope instanceof PrivateNotificationMessage) {
-            PrivateNotificationMessage privateNotificationMessage = (PrivateNotificationMessage) networkEnvelope;
+            privateNotificationMessage = (PrivateNotificationMessage) networkEnvelope;
             log.info("Received PrivateNotificationMessage from {} with uid={}",
                     senderNodeAddress, privateNotificationMessage.getUid());
             if (privateNotificationMessage.getSenderNodeAddress().equals(senderNodeAddress)) {
@@ -143,8 +142,8 @@ public class PrivateNotificationManager {
     }
 
     public void removePrivateNotification() {
-        if (decryptedMessageWithPubKey != null) {
-            mailboxMessageService.removeMailboxMsg(decryptedMessageWithPubKey);
+        if (privateNotificationMessage != null) {
+            mailboxMessageService.removeMailboxMsg(privateNotificationMessage);
         }
     }
 
