@@ -39,6 +39,10 @@ public class RegisterDisputeAgentOptionParser extends AbstractMethodOptionParser
     public RegisterDisputeAgentOptionParser parse() {
         super.parse();
 
+        // Short circuit opt validation if user just wants help.
+        if (options.has(helpOpt))
+            return this;
+
         if (!options.has(disputeAgentTypeOpt))
             throw new IllegalArgumentException("no dispute agent type specified");
 

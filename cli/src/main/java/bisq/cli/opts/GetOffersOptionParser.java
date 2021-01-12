@@ -39,6 +39,10 @@ public class GetOffersOptionParser extends AbstractMethodOptionParser implements
     public GetOffersOptionParser parse() {
         super.parse();
 
+        // Short circuit opt validation if user just wants help.
+        if (options.has(helpOpt))
+            return this;
+
         if (!options.has(directionOpt))
             throw new IllegalArgumentException("no direction (buy|sell) specified");
 

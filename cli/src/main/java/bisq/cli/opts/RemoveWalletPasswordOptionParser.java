@@ -35,6 +35,10 @@ public class RemoveWalletPasswordOptionParser extends AbstractMethodOptionParser
     public RemoveWalletPasswordOptionParser parse() {
         super.parse();
 
+        // Short circuit opt validation if user just wants help.
+        if (options.has(helpOpt))
+            return this;
+
         if (!options.has(passwordOpt))
             throw new IllegalArgumentException("no password specified");
 

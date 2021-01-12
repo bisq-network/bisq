@@ -35,6 +35,10 @@ public class GetAddressBalanceOptionParser extends AbstractMethodOptionParser im
     public GetAddressBalanceOptionParser parse() {
         super.parse();
 
+        // Short circuit opt validation if user just wants help.
+        if (options.has(helpOpt))
+            return this;
+
         if (!options.has(addressOpt))
             throw new IllegalArgumentException("no address specified");
 

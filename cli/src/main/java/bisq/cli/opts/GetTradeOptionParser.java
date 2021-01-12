@@ -40,6 +40,10 @@ public class GetTradeOptionParser extends AbstractMethodOptionParser implements 
     public GetTradeOptionParser parse() {
         super.parse();
 
+        // Short circuit opt validation if user just wants help.
+        if (options.has(helpOpt))
+            return this;
+
         if (!options.has(tradeIdOpt))
             throw new IllegalArgumentException("no trade id specified");
 

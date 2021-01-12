@@ -35,6 +35,10 @@ public class GetTransactionOptionParser extends AbstractMethodOptionParser imple
     public GetTransactionOptionParser parse() {
         super.parse();
 
+        // Short circuit opt validation if user just wants help.
+        if (options.has(helpOpt))
+            return this;
+
         if (!options.has(txIdOpt))
             throw new IllegalArgumentException("no tx id specified");
 

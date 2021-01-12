@@ -35,6 +35,10 @@ public class SetTxFeeRateOptionParser extends AbstractMethodOptionParser impleme
     public SetTxFeeRateOptionParser parse() {
         super.parse();
 
+        // Short circuit opt validation if user just wants help.
+        if (options.has(helpOpt))
+            return this;
+
         if (!options.has(feeRateOpt))
             throw new IllegalArgumentException("no tx fee rate specified");
 

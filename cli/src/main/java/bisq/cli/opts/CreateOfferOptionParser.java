@@ -70,6 +70,10 @@ public class CreateOfferOptionParser extends AbstractMethodOptionParser implemen
     public CreateOfferOptionParser parse() {
         super.parse();
 
+        // Short circuit opt validation if user just wants help.
+        if (options.has(helpOpt))
+            return this;
+
         if (!options.has(paymentAccountIdOpt))
             throw new IllegalArgumentException("no payment account id specified");
 

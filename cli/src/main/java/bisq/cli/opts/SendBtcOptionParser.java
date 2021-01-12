@@ -47,6 +47,10 @@ public class SendBtcOptionParser extends AbstractMethodOptionParser implements M
     public SendBtcOptionParser parse() {
         super.parse();
 
+        // Short circuit opt validation if user just wants help.
+        if (options.has(helpOpt))
+            return this;
+
         if (!options.has(addressOpt))
             throw new IllegalArgumentException("no btc address specified");
 

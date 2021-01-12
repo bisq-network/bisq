@@ -43,6 +43,10 @@ public class TakeOfferOptionParser extends AbstractMethodOptionParser implements
     public TakeOfferOptionParser parse() {
         super.parse();
 
+        // Short circuit opt validation if user just wants help.
+        if (options.has(helpOpt))
+            return this;
+
         if (!options.has(offerIdOpt))
             throw new IllegalArgumentException("no offer id specified");
 

@@ -35,6 +35,10 @@ public class GetPaymentAcctFormOptionParser extends AbstractMethodOptionParser i
     public GetPaymentAcctFormOptionParser parse() {
         super.parse();
 
+        // Short circuit opt validation if user just wants help.
+        if (options.has(helpOpt))
+            return this;
+
         if (!options.has(paymentMethodIdOpt))
             throw new IllegalArgumentException("no payment method id specified");
 

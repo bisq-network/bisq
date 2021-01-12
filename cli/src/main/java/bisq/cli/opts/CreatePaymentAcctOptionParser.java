@@ -39,6 +39,10 @@ public class CreatePaymentAcctOptionParser extends AbstractMethodOptionParser im
     public CreatePaymentAcctOptionParser parse() {
         super.parse();
 
+        // Short circuit opt validation if user just wants help.
+        if (options.has(helpOpt))
+            return this;
+
         if (!options.has(paymentAcctFormPathOpt))
             throw new IllegalArgumentException("no path to json payment account form specified");
 
