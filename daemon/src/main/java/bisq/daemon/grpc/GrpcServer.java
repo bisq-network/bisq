@@ -47,6 +47,7 @@ public class GrpcServer {
     public GrpcServer(Config config,
                       PasswordAuthInterceptor passwordAuthInterceptor,
                       GrpcDisputeAgentsService disputeAgentsService,
+                      GrpcHelpService helpService,
                       GrpcOffersService offersService,
                       GrpcPaymentAccountsService paymentAccountsService,
                       GrpcPriceService priceService,
@@ -57,6 +58,7 @@ public class GrpcServer {
         this.server = ServerBuilder.forPort(config.apiPort)
                 .executor(UserThread.getExecutor())
                 .addService(disputeAgentsService)
+                .addService(helpService)
                 .addService(offersService)
                 .addService(paymentAccountsService)
                 .addService(priceService)
