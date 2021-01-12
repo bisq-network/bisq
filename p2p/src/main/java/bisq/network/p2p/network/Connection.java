@@ -473,11 +473,10 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
         checkNotNull(peerNodeAddress, "peerAddress must not be null");
         peersNodeAddressOptional = Optional.of(peerNodeAddress);
 
-        String peersNodeAddress = getPeersNodeAddressOptional().isPresent() ? getPeersNodeAddressOptional().get().getFullAddress() : "";
         if (this instanceof InboundConnection) {
             log.debug("\n\n############################################################\n" +
                     "We got the peers node address set.\n" +
-                    "peersNodeAddress= " + peersNodeAddress +
+                    "peersNodeAddress= " + peerNodeAddress.getFullAddress() +
                     "\nconnection.uid=" + getUid() +
                     "\n############################################################\n");
         }
@@ -859,24 +858,22 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                         // 4. DirectMessage (implements SendersNodeAddressMessage)
                         if (networkEnvelope instanceof SendersNodeAddressMessage) {
                             NodeAddress senderNodeAddress = ((SendersNodeAddressMessage) networkEnvelope).getSenderNodeAddress();
-                            if (senderNodeAddress != null) {
-                                Optional<NodeAddress> peersNodeAddressOptional = getPeersNodeAddressOptional();
-                                if (peersNodeAddressOptional.isPresent()) {
-                                    // If we have already the peers address we check again if it matches our stored one
-                                    checkArgument(peersNodeAddressOptional.get().equals(senderNodeAddress),
-                                            "senderNodeAddress not matching connections peer address.\n\t" +
-                                                    "message=" + networkEnvelope);
-                                } else {
-                                    // We must not shut down a banned peer at that moment as it would trigger a connection termination
-                                    // and we could not send the CloseConnectionMessage.
-                                    // We check for a banned peer inside setPeersNodeAddress() and shut down if banned.
-                                    setPeersNodeAddress(senderNodeAddress);
-                                }
+                            checkNotNull(senderNodeAddress,
+                                    "senderNodeAddress must not be null at SendersNodeAddressMessage " +
+                                            networkEnvelope.getClass().getSimpleName());
+                            Optional<NodeAddress> existingAddressOptional = getPeersNodeAddressOptional();
+                            if (existingAddressOptional.isPresent()) {
+                                // If we have already the peers address we check again if it matches our stored one
+                                checkArgument(existingAddressOptional.get().equals(senderNodeAddress),
+                                        "senderNodeAddress not matching connections peer address.\n\t" +
+                                                "message=" + networkEnvelope);
+                            } else {
+                                setPeersNodeAddress(senderNodeAddress);
+                            }
 
-                                if (networkFilter != null && networkFilter.isPeerBanned(senderNodeAddress)) {
-                                    reportInvalidRequest(RuleViolation.PEER_BANNED);
-                                    return;
-                                }
+                            if (networkFilter != null && networkFilter.isPeerBanned(senderNodeAddress)) {
+                                reportInvalidRequest(RuleViolation.PEER_BANNED);
+                                return;
                             }
                         }
                         onMessage(networkEnvelope, this);
