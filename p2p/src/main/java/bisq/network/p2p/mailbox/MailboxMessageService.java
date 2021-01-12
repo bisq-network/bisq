@@ -261,18 +261,6 @@ public class MailboxMessageService implements SetupListener, RequestDataManager.
     }
 
     /**
-     * The DecryptedMessageWithPubKey has been applied and we remove it from our local storage and from the network.
-     *
-     * @param decryptedMessageWithPubKey The DecryptedMessageWithPubKey to be removed
-     */
-    public void removeMailboxMsg(DecryptedMessageWithPubKey decryptedMessageWithPubKey) {
-        NetworkEnvelope networkEnvelope = decryptedMessageWithPubKey.getNetworkEnvelope();
-        if (networkEnvelope instanceof MailboxMessage) {
-            removeMailboxMsg((MailboxMessage) networkEnvelope);
-        }
-    }
-
-    /**
      * The mailboxMessage has been applied and we remove it from our local storage and from the network.
      *
      * @param mailboxMessage The MailboxMessage to be removed

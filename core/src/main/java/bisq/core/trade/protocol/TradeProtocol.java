@@ -138,30 +138,31 @@ public abstract class TradeProtocol implements DecryptedDirectMessageListener, D
     protected void handleDecryptedMessageWithPubKey(DecryptedMessageWithPubKey decryptedMessageWithPubKey,
                                                     NodeAddress peer) {
         NetworkEnvelope networkEnvelope = decryptedMessageWithPubKey.getNetworkEnvelope();
-        if (networkEnvelope instanceof TradeMessage &&
-                isMyMessage((TradeMessage) networkEnvelope) &&
-                isPubKeyValid(decryptedMessageWithPubKey)) {
+        if (networkEnvelope instanceof MailboxMessage && networkEnvelope instanceof TradeMessage) {
             TradeMessage tradeMessage = (TradeMessage) networkEnvelope;
-
-            // We only remove here if we have already completed the trade.
-            // Otherwise removal is done after successfully applied the task runner.
-            if (trade.isWithdrawn()) {
-                processModel.getP2PService().getMailboxMessageService().removeMailboxMsg(decryptedMessageWithPubKey);
-                log.info("Remove {} from the P2P network.", tradeMessage.getClass().getSimpleName());
-                return;
+            if (isMyMessage(tradeMessage) && isPubKeyValid(decryptedMessageWithPubKey)) {
+                // We only remove here if we have already completed the trade.
+                // Otherwise removal is done after successfully applied the task runner.
+                if (trade.isWithdrawn()) {
+                    MailboxMessage mailboxMessage = (MailboxMessage) tradeMessage;
+                    processModel.getP2PService().getMailboxMessageService().removeMailboxMsg(mailboxMessage);
+                    log.info("Remove {} from the P2P network as trade is already completed.",
+                            tradeMessage.getClass().getSimpleName());
+                    return;
+                }
+                onMailboxMessage(tradeMessage, peer);
             }
-
-            onMailboxMessage(tradeMessage, peer);
-        } else if (networkEnvelope instanceof AckMessage &&
-                isMyMessage((AckMessage) networkEnvelope) &&
-                isPubKeyValid(decryptedMessageWithPubKey)) {
-            if (!trade.isWithdrawn()) {
-                // We only apply the msg if we have not already completed the trade
-                onAckMessage((AckMessage) networkEnvelope, peer);
+        } else if (networkEnvelope instanceof AckMessage) {
+            AckMessage ackMessage = (AckMessage) networkEnvelope;
+            if (isMyMessage(ackMessage) && isPubKeyValid(decryptedMessageWithPubKey)) {
+                if (!trade.isWithdrawn()) {
+                    // We only apply the msg if we have not already completed the trade
+                    onAckMessage(ackMessage, peer);
+                }
+                // In any case we remove the msg
+                processModel.getP2PService().getMailboxMessageService().removeMailboxMsg(ackMessage);
+                log.info("Remove {} from the P2P network.", ackMessage.getClass().getSimpleName());
             }
-            // In any case we remove the msg
-            processModel.getP2PService().getMailboxMessageService().removeMailboxMsg(decryptedMessageWithPubKey);
-            log.info("Remove {} from the P2P network.", networkEnvelope.getClass().getSimpleName());
         }
     }
 
