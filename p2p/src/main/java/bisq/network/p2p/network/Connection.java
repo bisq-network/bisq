@@ -182,9 +182,9 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
         addMessageListener(messageListener);
 
         this.networkProtoResolver = networkProtoResolver;
-        init(peersNodeAddress);
         connectionState = new ConnectionState(this);
         connectionStatistics = new ConnectionStatistics(this, connectionState);
+        init(peersNodeAddress);
     }
 
     private void init(@Nullable NodeAddress peersNodeAddress) {
