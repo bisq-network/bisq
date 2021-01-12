@@ -96,7 +96,7 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
     }
 
     @Override
-    public void dispatchMessage(SupportMessage message) {
+    public void onSupportMessage(SupportMessage message) {
         if (canProcessMessage(message)) {
             log.info("Received {} with tradeId {} and uid {}",
                     message.getClass().getSimpleName(), message.getTradeId(), message.getUid());

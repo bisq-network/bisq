@@ -139,7 +139,7 @@ public class TraderChatManager extends SupportManager {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void dispatchMessage(SupportMessage message) {
+    public void onSupportMessage(SupportMessage message) {
         if (canProcessMessage(message)) {
             log.info("Received {} with tradeId {} and uid {}",
                     message.getClass().getSimpleName(), message.getTradeId(), message.getUid());

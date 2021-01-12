@@ -84,7 +84,7 @@ public abstract class SupportManager {
     // Abstract methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    protected abstract void dispatchMessage(SupportMessage networkEnvelope);
+    protected abstract void onSupportMessage(SupportMessage networkEnvelope);
 
     public abstract NodeAddress getPeerNodeAddress(ChatMessage message);
 
@@ -302,7 +302,7 @@ public abstract class SupportManager {
         decryptedDirectMessageWithPubKeys.forEach(decryptedMessageWithPubKey -> {
             NetworkEnvelope networkEnvelope = decryptedMessageWithPubKey.getNetworkEnvelope();
             if (networkEnvelope instanceof SupportMessage) {
-                dispatchMessage((SupportMessage) networkEnvelope);
+                onSupportMessage((SupportMessage) networkEnvelope);
             } else if (networkEnvelope instanceof AckMessage) {
                 onAckMessage((AckMessage) networkEnvelope);
             }
@@ -314,7 +314,7 @@ public abstract class SupportManager {
             log.debug("decryptedMessageWithPubKey.message " + networkEnvelope);
             if (networkEnvelope instanceof SupportMessage) {
                 SupportMessage supportMessage = (SupportMessage) networkEnvelope;
-                dispatchMessage(supportMessage);
+                onSupportMessage(supportMessage);
                 mailboxMessageService.removeMailboxMsg(supportMessage);
             } else if (networkEnvelope instanceof AckMessage) {
                 AckMessage ackMessage = (AckMessage) networkEnvelope;
