@@ -41,6 +41,7 @@ import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 import bisq.network.utils.CapabilityUtils;
 
 import bisq.common.UserThread;
+import bisq.common.config.Config;
 import bisq.common.crypto.CryptoException;
 import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.PubKeyRing;
@@ -52,6 +53,7 @@ import bisq.common.proto.persistable.PersistedDataHost;
 import bisq.common.util.Utilities;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.inject.Singleton;
 
 import com.google.common.util.concurrent.FutureCallback;
@@ -106,15 +108,17 @@ public class MailboxMessageService implements SetupListener, RequestDataManager.
         PersistedDataHost {
     private static final long REPUBLISH_DELAY_SEC = TimeUnit.MINUTES.toSeconds(2);
 
+    private final NetworkNode networkNode;
+    private final PeerManager peerManager;
+    private final P2PDataStorage p2PDataStorage;
+    private final RequestDataManager requestDataManager;
     private final EncryptionService encryptionService;
     private final IgnoredMailboxService ignoredMailboxService;
     private final PersistenceManager<MailboxMessageList> persistenceManager;
     private final KeyRing keyRing;
     private final Clock clock;
-    private final NetworkNode networkNode;
-    private final PeerManager peerManager;
-    private final P2PDataStorage p2PDataStorage;
-    private final RequestDataManager requestDataManager;
+    private final boolean republishMailboxEntries;
+
     private final Set<DecryptedMailboxListener> decryptedMailboxListeners = new CopyOnWriteArraySet<>();
     private final MailboxMessageList mailboxMessageList = new MailboxMessageList();
     private final Map<String, MailboxItem> mailboxItemsByUid = new HashMap<>();
@@ -130,7 +134,8 @@ public class MailboxMessageService implements SetupListener, RequestDataManager.
                                  IgnoredMailboxService ignoredMailboxService,
                                  PersistenceManager<MailboxMessageList> persistenceManager,
                                  KeyRing keyRing,
-                                 Clock clock) {
+                                 Clock clock,
+                                 @Named(Config.REPUBLISH_MAILBOX_ENTRIES) boolean republishMailboxEntries) {
         this.networkNode = networkNode;
         this.peerManager = peerManager;
         this.p2PDataStorage = p2PDataStorage;
@@ -140,9 +145,10 @@ public class MailboxMessageService implements SetupListener, RequestDataManager.
         this.persistenceManager = persistenceManager;
         this.keyRing = keyRing;
         this.clock = clock;
+        this.republishMailboxEntries = republishMailboxEntries;
 
         this.requestDataManager.addListener(this);
-        networkNode.addSetupListener(this);
+        this.networkNode.addSetupListener(this);
 
         this.persistenceManager.initialize(mailboxMessageList, PersistenceManager.Source.PRIVATE);
     }
@@ -307,7 +313,7 @@ public class MailboxMessageService implements SetupListener, RequestDataManager.
             isBootstrapped = true;
             // As we do not expect a updated data request response we start here with addHashMapChangedListenerAndApply
             addHashMapChangedListenerAndApply();
-            UserThread.runAfter(this::maybeRepublishMailBoxMessages, REPUBLISH_DELAY_SEC);
+            maybeRepublishMailBoxMessages();
         }
     }
 
@@ -331,7 +337,7 @@ public class MailboxMessageService implements SetupListener, RequestDataManager.
             // Only now we start listening and processing. The p2PDataStorage is our cache for data we have received
             // after the hidden service was ready.
             addHashMapChangedListenerAndApply();
-            UserThread.runAfter(this::maybeRepublishMailBoxMessages, REPUBLISH_DELAY_SEC);
+            maybeRepublishMailBoxMessages();
         }
     }
 
@@ -567,19 +573,23 @@ public class MailboxMessageService implements SetupListener, RequestDataManager.
     }
 
     private void maybeRepublishMailBoxMessages() {
-        // We only do the republishing at seed nodes to avoid that the network gets too much traffic
+        // We only do the republishing if option is set (default is false) to avoid that the network gets too much traffic.
         // 1000 mailbox messages are about 3 MB, so that would cause quite some load if all nodes would do that.
-        if (!peerManager.isSeedNode(networkNode.getNodeAddress())) {
+        // We enable it on one v2 and one v3 seed node so we gain some resilience without causing much load. In
+        // emergency case we can enable it on demand at any node.
+        if (!republishMailboxEntries) {
             return;
         }
+        log.info("We will republish our persisted mailbox messages after a delay of {} sec.", REPUBLISH_DELAY_SEC);
 
         log.trace("## republishMailBoxMessages mailboxItemsByUid={}", mailboxItemsByUid);
-
-        // In addProtectedStorageEntry we break early if we have already received a remove message for that entry.
-        republishInChunks(mailboxItemsByUid.values().stream()
-                .filter(e -> !e.isExpired(clock))
-                .map(MailboxItem::getProtectedMailboxStorageEntry)
-                .collect(Collectors.toCollection(ArrayDeque::new)));
+        UserThread.runAfter(() -> {
+            // In addProtectedStorageEntry we break early if we have already received a remove message for that entry.
+            republishInChunks(mailboxItemsByUid.values().stream()
+                    .filter(e -> !e.isExpired(clock))
+                    .map(MailboxItem::getProtectedMailboxStorageEntry)
+                    .collect(Collectors.toCollection(ArrayDeque::new)));
+        }, REPUBLISH_DELAY_SEC);
     }
 
     // We republish buckets of 50 items which is about 200 kb. With 20 connections at a seed node that results in
@@ -587,9 +597,10 @@ public class MailboxMessageService implements SetupListener, RequestDataManager.
     // additional resilience and as a backup in case all seed nodes would fail to prevent that mailbox messages would
     // get lost. A long delay for republishing is preferred over too much network load.
     private void republishInChunks(Queue<ProtectedMailboxStorageEntry> queue) {
-        log.info("republishInChunks queue size: {}", queue.size());
+        int chunkSize = 50;
+        log.info("Republish a bucket of {} persisted mailbox messages out of {}.", chunkSize, queue.size());
         int i = 0;
-        while (!queue.isEmpty() && i < 50) {
+        while (!queue.isEmpty() && i < chunkSize) {
             ProtectedMailboxStorageEntry protectedMailboxStorageEntry = queue.poll();
             i++;
             // Broadcaster will accumulate messages in a BundleOfEnvelopes

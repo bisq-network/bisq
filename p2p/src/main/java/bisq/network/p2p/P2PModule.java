@@ -92,5 +92,6 @@ public class P2PModule extends AppModule {
         bindConstant().annotatedWith(named(TOR_CONTROL_USE_SAFE_COOKIE_AUTH)).to(config.useTorControlSafeCookieAuth);
         bindConstant().annotatedWith(named(TOR_STREAM_ISOLATION)).to(config.torStreamIsolation);
         bindConstant().annotatedWith(named("MAX_SEQUENCE_NUMBER_MAP_SIZE_BEFORE_PURGE")).to(1000);
+        bind(Boolean.class).annotatedWith(named(REPUBLISH_MAILBOX_ENTRIES)).toInstance(config.republishMailboxEntries);
     }
 }
