@@ -21,6 +21,7 @@ import bisq.core.btc.model.AddressEntry;
 import bisq.core.network.MessageState;
 import bisq.core.trade.Trade;
 import bisq.core.trade.messages.CounterCurrencyTransferStartedMessage;
+import bisq.core.trade.messages.TradeMailboxMessage;
 import bisq.core.trade.messages.TradeMessage;
 import bisq.core.trade.protocol.tasks.SendMailboxMessageTask;
 
@@ -57,7 +58,7 @@ public class BuyerSendCounterCurrencyTransferStartedMessage extends SendMailboxM
     }
 
     @Override
-    protected TradeMessage getMessage(String tradeId) {
+    protected TradeMailboxMessage getMessage(String tradeId) {
         if (message == null) {
             AddressEntry payoutAddressEntry = processModel.getBtcWalletService().getOrCreateAddressEntry(tradeId,
                     AddressEntry.Context.TRADE_PAYOUT);

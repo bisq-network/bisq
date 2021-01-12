@@ -20,6 +20,7 @@ package bisq.core.trade.protocol.tasks.seller;
 import bisq.core.network.MessageState;
 import bisq.core.trade.Trade;
 import bisq.core.trade.messages.DepositTxAndDelayedPayoutTxMessage;
+import bisq.core.trade.messages.TradeMailboxMessage;
 import bisq.core.trade.messages.TradeMessage;
 import bisq.core.trade.protocol.tasks.SendMailboxMessageTask;
 
@@ -56,7 +57,7 @@ public class SellerSendsDepositTxAndDelayedPayoutTxMessage extends SendMailboxMe
     }
 
     @Override
-    protected TradeMessage getMessage(String tradeId) {
+    protected TradeMailboxMessage getMessage(String tradeId) {
         if (message == null) {
             // We do not use a real unique ID here as we want to be able to re-send the exact same message in case the
             // peer does not respond with an ACK msg in a certain time interval. To avoid that we get dangling mailbox

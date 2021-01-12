@@ -19,7 +19,7 @@ package bisq.core.trade.protocol.tasks.arbitration;
 
 import bisq.core.trade.Trade;
 import bisq.core.trade.messages.PeerPublishedDelayedPayoutTxMessage;
-import bisq.core.trade.messages.TradeMessage;
+import bisq.core.trade.messages.TradeMailboxMessage;
 import bisq.core.trade.protocol.tasks.SendMailboxMessageTask;
 
 import bisq.common.taskrunner.TaskRunner;
@@ -36,7 +36,7 @@ public class SendPeerPublishedDelayedPayoutTxMessage extends SendMailboxMessageT
     }
 
     @Override
-    protected TradeMessage getMessage(String id) {
+    protected TradeMailboxMessage getMessage(String id) {
         return new PeerPublishedDelayedPayoutTxMessage(UUID.randomUUID().toString(),
                 trade.getId(),
                 trade.getTradingPeerNodeAddress());
