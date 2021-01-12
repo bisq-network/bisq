@@ -68,9 +68,11 @@ public final class GetPeersResponse extends NetworkEnvelope implements PeerExcha
 
     @Override
     public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
-        final protobuf.GetPeersResponse.Builder builder = protobuf.GetPeersResponse.newBuilder()
+        // We clone to avoid ConcurrentModificationExceptions
+        Set<Peer> clone = new HashSet<>(reportedPeers);
+        protobuf.GetPeersResponse.Builder builder = protobuf.GetPeersResponse.newBuilder()
                 .setRequestNonce(requestNonce)
-                .addAllReportedPeers(reportedPeers.stream()
+                .addAllReportedPeers(clone.stream()
                         .map(Peer::toProtoMessage)
                         .collect(Collectors.toList()));
 
