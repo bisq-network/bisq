@@ -34,7 +34,6 @@ import bisq.network.p2p.peers.getdata.RequestDataManager;
 import bisq.network.p2p.storage.HashMapChangedListener;
 import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.messages.AddDataMessage;
-import bisq.network.p2p.storage.payload.ExpirablePayload;
 import bisq.network.p2p.storage.payload.MailboxStoragePayload;
 import bisq.network.p2p.storage.payload.ProtectedMailboxStorageEntry;
 import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
@@ -193,7 +192,7 @@ public class MailboxMessageService implements SetupListener, RequestDataManager.
 
     public void sendEncryptedMailboxMessage(NodeAddress peer,
                                             PubKeyRing peersPubKeyRing,
-                                            NetworkEnvelope message,
+                                            MailboxMessage mailboxMessage,
                                             SendMailboxMessageListener sendMailboxMessageListener) {
         if (peersPubKeyRing == null) {
             log.debug("sendEncryptedMailboxMessage: peersPubKeyRing is null. We ignore the call.");
@@ -214,7 +213,8 @@ public class MailboxMessageService implements SetupListener, RequestDataManager.
             return;
         }
 
-        if (CapabilityUtils.capabilityRequiredAndCapabilityNotSupported(peer, message, peerManager)) {
+        NetworkEnvelope networkEnvelope = (NetworkEnvelope) mailboxMessage;
+        if (CapabilityUtils.capabilityRequiredAndCapabilityNotSupported(peer, networkEnvelope, peerManager)) {
             sendMailboxMessageListener.onFault("We did not send the EncryptedMailboxMessage " +
                     "because the peer does not support the capability.");
             return;
@@ -223,7 +223,7 @@ public class MailboxMessageService implements SetupListener, RequestDataManager.
         try {
             PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage = new PrefixedSealedAndSignedMessage(
                     networkNode.getNodeAddress(),
-                    encryptionService.encryptAndSign(peersPubKeyRing, message));
+                    encryptionService.encryptAndSign(peersPubKeyRing, networkEnvelope));
             SettableFuture<Connection> future = networkNode.sendMessage(peer, prefixedSealedAndSignedMessage);
             Futures.addCallback(future, new FutureCallback<>() {
                 @Override
@@ -234,17 +234,8 @@ public class MailboxMessageService implements SetupListener, RequestDataManager.
                 @Override
                 public void onFailure(@NotNull Throwable throwable) {
                     PublicKey receiverStoragePublicKey = peersPubKeyRing.getSignaturePubKey();
-
-                    long ttl;
-                    if (message instanceof ExpirablePayload) {
-                        ttl = ((ExpirablePayload) message).getTTL();
-                        log.trace("## We take TTL from {}. ttl={}", message.getClass().getSimpleName(), ttl);
-                    } else {
-                        ttl = MailboxStoragePayload.TTL;
-                        log.trace("## Message is not of type ExpirablePayload. " +
-                                        "We use the default TTL from MailboxStoragePayload. ttl={}; message={}",
-                                ttl, message.getClass().getSimpleName());
-                    }
+                    long ttl = mailboxMessage.getTTL();
+                    log.trace("## We take TTL from {}. ttl={}", mailboxMessage.getClass().getSimpleName(), ttl);
                     addMailboxData(new MailboxStoragePayload(prefixedSealedAndSignedMessage,
                                     keyRing.getSignatureKeyPair().getPublic(),
                                     receiverStoragePublicKey,
@@ -583,7 +574,7 @@ public class MailboxMessageService implements SetupListener, RequestDataManager.
         }
         log.info("We will republish our persisted mailbox messages after a delay of {} sec.", REPUBLISH_DELAY_SEC);
 
-        log.trace("## republishMailBoxMessages mailboxItemsByUid={}", mailboxItemsByUid);
+        log.trace("## republishMailBoxMessages mailboxItemsByUid={}", mailboxItemsByUid.keySet());
         UserThread.runAfter(() -> {
             // In addProtectedStorageEntry we break early if we have already received a remove message for that entry.
             republishInChunks(mailboxItemsByUid.values().stream()
@@ -622,7 +613,7 @@ public class MailboxMessageService implements SetupListener, RequestDataManager.
         log.trace("## removeMailboxItemFromMap uid={}\nhash={}\nmailboxItemsByUid={}",
                 uid,
                 P2PDataStorage.get32ByteHashAsByteArray(mailboxItem.getProtectedMailboxStorageEntry().getProtectedStoragePayload()),
-                mailboxItemsByUid
+                mailboxItemsByUid.keySet()
         );
         requestPersistence();
     }
