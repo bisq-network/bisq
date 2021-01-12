@@ -87,7 +87,7 @@ public abstract class TradeProtocol implements DecryptedDirectMessageListener, D
         UserThread.runAfter(() -> {
             mailboxMessageService.addDecryptedMailboxListener(this);
             mailboxMessageService.getMyDecryptedMessages()
-                    .forEach(this::handleDecryptedMessageWithPubKey);
+                    .forEach(this::handleDecryptedMailboxMessageWithPubKey);
         }, 100, TimeUnit.MILLISECONDS);
     }
 
@@ -126,17 +126,17 @@ public abstract class TradeProtocol implements DecryptedDirectMessageListener, D
 
     @Override
     public void onMailboxMessageAdded(DecryptedMessageWithPubKey message, NodeAddress peer) {
-        handleDecryptedMessageWithPubKey(message, peer);
+        handleDecryptedMailboxMessageWithPubKey(message, peer);
     }
 
-    private void handleDecryptedMessageWithPubKey(DecryptedMessageWithPubKey decryptedMessageWithPubKey) {
+    private void handleDecryptedMailboxMessageWithPubKey(DecryptedMessageWithPubKey decryptedMessageWithPubKey) {
         MailboxMessage mailboxMessage = (MailboxMessage) decryptedMessageWithPubKey.getNetworkEnvelope();
         NodeAddress senderNodeAddress = mailboxMessage.getSenderNodeAddress();
-        handleDecryptedMessageWithPubKey(decryptedMessageWithPubKey, senderNodeAddress);
+        handleDecryptedMailboxMessageWithPubKey(decryptedMessageWithPubKey, senderNodeAddress);
     }
 
-    protected void handleDecryptedMessageWithPubKey(DecryptedMessageWithPubKey decryptedMessageWithPubKey,
-                                                    NodeAddress peer) {
+    protected void handleDecryptedMailboxMessageWithPubKey(DecryptedMessageWithPubKey decryptedMessageWithPubKey,
+                                                           NodeAddress peer) {
         NetworkEnvelope networkEnvelope = decryptedMessageWithPubKey.getNetworkEnvelope();
         if (networkEnvelope instanceof MailboxMessage && networkEnvelope instanceof TradeMessage) {
             TradeMessage tradeMessage = (TradeMessage) networkEnvelope;
