@@ -21,11 +21,8 @@ import bisq.network.p2p.BundleOfEnvelopes;
 import bisq.network.p2p.CloseConnectionMessage;
 import bisq.network.p2p.ExtendedDataSizePermission;
 import bisq.network.p2p.NodeAddress;
-import bisq.network.p2p.PrefixedSealedAndSignedMessage;
 import bisq.network.p2p.SendersNodeAddressMessage;
 import bisq.network.p2p.SupportedCapabilitiesMessage;
-import bisq.network.p2p.peers.getdata.messages.GetDataRequest;
-import bisq.network.p2p.peers.getdata.messages.GetDataResponse;
 import bisq.network.p2p.peers.keepalive.messages.KeepAliveMessage;
 import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.messages.AddDataMessage;
@@ -103,18 +100,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class Connection implements HasCapabilities, Runnable, MessageListener {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Enums
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public enum PeerType {
-        SEED_NODE,
-        PEER,
-        DIRECT_MSG_PEER,
-        INITIAL_DATA_REQUEST
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
     // Static
     ///////////////////////////////////////////////////////////////////////////////////////////
 
@@ -148,6 +133,10 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
     // holder of state shared between InputHandler and Connection
     @Getter
     private final Statistic statistic;
+    @Getter
+    private final ConnectionState connectionState;
+    @Getter
+    private final ConnectionStatistics connectionStatistics;
 
     // set in init
     private SynchronizedProtoOutputStream protoOutputStream;
@@ -158,9 +147,6 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
     @Getter
     private volatile boolean stopped;
 
-    // Use Peer as default, in case of other types they will set it as soon as possible.
-    @Getter
-    private PeerType peerType = PeerType.PEER;
     @Getter
     private final ObjectProperty<NodeAddress> peersNodeAddressProperty = new SimpleObjectProperty<>();
     private final List<Long> messageTimeStamps = new ArrayList<>();
@@ -196,6 +182,8 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
         addMessageListener(messageListener);
 
         this.networkProtoResolver = networkProtoResolver;
+        connectionState = new ConnectionState(this);
+        connectionStatistics = new ConnectionStatistics(this, connectionState);
         init(peersNodeAddress);
     }
 
@@ -239,6 +227,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
 
     // Called from various threads
     public void sendMessage(NetworkEnvelope networkEnvelope) {
+        long ts = System.currentTimeMillis();
         log.debug(">> Send networkEnvelope of type: {}", networkEnvelope.getClass().getSimpleName());
 
         if (stopped) {
@@ -257,21 +246,8 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
             log.debug("Capability for networkEnvelope is required but not supported");
             return;
         }
-
+        int networkEnvelopeSize = networkEnvelope.toProtoNetworkEnvelope().getSerializedSize();
         try {
-            if (networkEnvelope instanceof PrefixedSealedAndSignedMessage && peersNodeAddressOptional.isPresent()) {
-                setPeerType(Connection.PeerType.DIRECT_MSG_PEER);
-
-                log.debug("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n" +
-                                "Sending direct message to peer" +
-                                "Write object to outputStream to peer: {} (uid={})\ntruncated message={} / size={}" +
-                                "\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n",
-                        peersNodeAddressOptional.map(NodeAddress::toString).orElse("null"),
-                        uid, Utilities.toTruncatedString(networkEnvelope), -1);
-            } else if (networkEnvelope instanceof GetDataResponse && ((GetDataResponse) networkEnvelope).isGetUpdatedDataResponse()) {
-                setPeerType(Connection.PeerType.PEER);
-            }
-
             // Throttle outbound network_messages
             long now = System.currentTimeMillis();
             long elapsed = now - lastSendTimeStamp;
@@ -286,7 +262,9 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                     synchronized (lock) {
                         // check if current envelope fits size
                         // - no? create new envelope
-                        if (queueOfBundles.isEmpty() || queueOfBundles.element().toProtoNetworkEnvelope().getSerializedSize() + networkEnvelope.toProtoNetworkEnvelope().getSerializedSize() > MAX_PERMITTED_MESSAGE_SIZE * 0.9) {
+
+                        int size = !queueOfBundles.isEmpty() ? queueOfBundles.element().toProtoNetworkEnvelope().getSerializedSize() + networkEnvelopeSize : 0;
+                        if (queueOfBundles.isEmpty() || size > MAX_PERMITTED_MESSAGE_SIZE * 0.9) {
                             // - no? create a bucket
                             queueOfBundles.add(new BundleOfEnvelopes());
 
@@ -298,11 +276,19 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                                     synchronized (lock) {
                                         BundleOfEnvelopes bundle = queueOfBundles.poll();
                                         if (bundle != null && !stopped) {
-                                            NetworkEnvelope envelope = bundle.getEnvelopes().size() == 1 ?
-                                                    bundle.getEnvelopes().get(0) :
-                                                    bundle;
+                                            NetworkEnvelope envelope;
+                                            int msgSize;
+                                            if (bundle.getEnvelopes().size() == 1) {
+                                                envelope = bundle.getEnvelopes().get(0);
+                                                msgSize = envelope.toProtoNetworkEnvelope().getSerializedSize();
+                                            } else {
+                                                envelope = bundle;
+                                                msgSize = networkEnvelopeSize;
+                                            }
                                             try {
                                                 protoOutputStream.writeEnvelope(envelope);
+                                                UserThread.execute(() -> messageListeners.forEach(e -> e.onMessageSent(envelope, this)));
+                                                UserThread.execute(() -> connectionStatistics.addSendMsgMetrics(System.currentTimeMillis() - ts, msgSize));
                                             } catch (Throwable t) {
                                                 log.error("Sending envelope of class {} to address {} " +
                                                                 "failed due {}",
@@ -330,6 +316,8 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
 
             if (!stopped) {
                 protoOutputStream.writeEnvelope(networkEnvelope);
+                UserThread.execute(() -> messageListeners.forEach(e -> e.onMessageSent(networkEnvelope, this)));
+                UserThread.execute(() -> connectionStatistics.addSendMsgMetrics(System.currentTimeMillis() - ts, networkEnvelopeSize));
             }
         } catch (Throwable t) {
             handleException(t);
@@ -481,11 +469,6 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
     // Setters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void setPeerType(PeerType peerType) {
-        log.debug("setPeerType: peerType={}, nodeAddressOpt={}", peerType.toString(), peersNodeAddressOptional);
-        this.peerType = peerType;
-    }
-
     private void setPeersNodeAddress(NodeAddress peerNodeAddress) {
         checkNotNull(peerNodeAddress, "peerAddress must not be null");
         peersNodeAddressOptional = Optional.of(peerNodeAddress);
@@ -522,6 +505,9 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
     public void shutDown(CloseConnectionReason closeConnectionReason, @Nullable Runnable shutDownCompleteHandler) {
         log.debug("shutDown: nodeAddressOpt={}, closeConnectionReason={}",
                 this.peersNodeAddressOptional.orElse(null), closeConnectionReason);
+
+        connectionState.shutDown();
+
         if (!stopped) {
             String peersNodeAddress = peersNodeAddressOptional.map(NodeAddress::toString).orElse("null");
             log.debug("\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" +
@@ -615,7 +601,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
     public String toString() {
         return "Connection{" +
                 "peerAddress=" + peersNodeAddressOptional +
-                ", peerType=" + peerType +
+                ", connectionState=" + connectionState +
                 ", connectionType=" + (this instanceof InboundConnection ? "InboundConnection" : "OutboundConnection") +
                 ", uid='" + uid + '\'' +
                 '}';
@@ -630,7 +616,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
 
         return "Connection{" +
                 "peerAddress=" + peersNodeAddressOptional +
-                ", peerType=" + peerType +
+                ", connectionState=" + connectionState +
                 ", portInfo=" + portInfo +
                 ", uid='" + uid + '\'' +
                 ", ruleViolation=" + ruleViolation +
@@ -750,6 +736,28 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                         return;
                     }
 
+                    // Blocking read from the inputStream
+                    protobuf.NetworkEnvelope proto = protobuf.NetworkEnvelope.parseDelimitedFrom(protoInputStream);
+
+                    long ts = System.currentTimeMillis();
+
+                    if (socket != null &&
+                            socket.isClosed()) {
+                        log.warn("Socket is null or closed socket={}", socket);
+                        shutDown(CloseConnectionReason.SOCKET_CLOSED);
+                        return;
+                    }
+
+                    if (proto == null) {
+                        if (protoInputStream.read() == -1) {
+                            log.warn("proto is null because protoInputStream.read()=-1 (EOF). That is expected if client got stopped without proper shutdown.");
+                        } else {
+                            log.warn("proto is null. protoInputStream.read()=" + protoInputStream.read());
+                        }
+                        shutDown(CloseConnectionReason.NO_PROTO_BUFFER_ENV);
+                        return;
+                    }
+
                     if (networkFilter != null &&
                             peersNodeAddressOptional.isPresent() &&
                             networkFilter.isPeerBanned(peersNodeAddressOptional.get())) {
@@ -766,45 +774,11 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                                 lastReadTimeStamp, now, elapsed);
                         Thread.sleep(20);
                     }
-                    // Reading the protobuffer message from the inputStream
-                    protobuf.NetworkEnvelope proto = protobuf.NetworkEnvelope.parseDelimitedFrom(protoInputStream);
-
-                    if (proto == null) {
-                        if (protoInputStream.read() == -1)
-                            log.debug("proto is null because protoInputStream.read()=-1 (EOF). That is expected if client got stopped without proper shutdown.");
-                        else
-                            log.warn("proto is null. protoInputStream.read()=" + protoInputStream.read());
-                        shutDown(CloseConnectionReason.NO_PROTO_BUFFER_ENV);
-                        return;
-                    }
 
                     NetworkEnvelope networkEnvelope = networkProtoResolver.fromProto(proto);
                     lastReadTimeStamp = now;
                     log.debug("<< Received networkEnvelope of type: {}", networkEnvelope.getClass().getSimpleName());
                     int size = proto.getSerializedSize();
-                    // We comment out that part as only debug and trace log level is used. For debugging purposes
-                    // we leave the code though.
-                        /*if (networkEnvelope instanceof Pong || networkEnvelope instanceof RefreshOfferMessage) {
-                            // We only log Pong and RefreshOfferMsg when in dev environment (trace)
-                            log.trace("\n\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n" +
-                                            "New data arrived at inputHandler of connection {}.\n" +
-                                            "Received object (truncated)={} / size={}"
-                                            + "\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n",
-                                    connection,
-                                    Utilities.toTruncatedString(proto.toString()),
-                                    size);
-                        } else {
-                            // We want to log all incoming network_messages (except Pong and RefreshOfferMsg)
-                            // so we log before the data type checks
-                            //log.info("size={}; object={}", size, Utilities.toTruncatedString(rawInputObject.toString(), 100));
-                            log.debug("\n\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n" +
-                                            "New data arrived at inputHandler of connection {}.\n" +
-                                            "Received object (truncated)={} / size={}"
-                                            + "\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n",
-                                    connection,
-                                    Utilities.toTruncatedString(proto.toString()),
-                                    size);
-                        }*/
 
                     // We want to track the size of each object even if it is invalid data
                     statistic.addReceivedBytes(size);
@@ -870,9 +844,6 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                         if (!(networkEnvelope instanceof KeepAliveMessage))
                             statistic.updateLastActivityTimestamp();
 
-                        if (networkEnvelope instanceof GetDataRequest)
-                            setPeerType(PeerType.INITIAL_DATA_REQUEST);
-
                         // First a seed node gets a message from a peer (PreliminaryDataRequest using
                         // AnonymousMessage interface) which does not have its hidden service
                         // published, so it does not know its address. As the IncomingConnection does not have the
@@ -908,11 +879,8 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                                 }
                             }
                         }
-
-                        if (networkEnvelope instanceof PrefixedSealedAndSignedMessage)
-                            setPeerType(Connection.PeerType.DIRECT_MSG_PEER);
-
                         onMessage(networkEnvelope, this);
+                        UserThread.execute(() -> connectionStatistics.addReceivedMsgMetrics(System.currentTimeMillis() - ts, size));
                     }
                 } catch (InvalidClassException e) {
                     log.error(e.getMessage());

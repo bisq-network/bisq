@@ -15,8 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p;
+package bisq.network.p2p.network;
 
-// Marker interface for messages with higher allowed data size
-public interface ExtendedDataSizePermission {
+public enum PeerType {
+    // PEER is default type
+    PEER,
+    // If connection was used for initial data request/response. Those are marked with the InitialDataExchangeMessage interface
+    INITIAL_DATA_EXCHANGE,
+    // If a PrefixedSealedAndSignedMessage was sent (usually a trade message). Expects that node address is known.
+    DIRECT_MSG_PEER
 }

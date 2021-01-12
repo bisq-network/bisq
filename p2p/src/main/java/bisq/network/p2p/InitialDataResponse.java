@@ -17,6 +17,7 @@
 
 package bisq.network.p2p;
 
-// Marker interface for messages with higher allowed data size
-public interface ExtendedDataSizePermission {
+// Marker interface for initial data response
+public interface InitialDataResponse {
+    Class<? extends InitialDataRequest> associatedRequest();
 }

@@ -19,6 +19,8 @@ package bisq.core.dao.monitoring.network.messages;
 
 import bisq.core.dao.monitoring.model.DaoStateHash;
 
+import bisq.network.p2p.InitialDataRequest;
+
 import bisq.common.app.Version;
 import bisq.common.proto.network.NetworkEnvelope;
 
@@ -66,5 +68,10 @@ public final class GetDaoStateHashesResponse extends GetStateHashesResponse<DaoS
                         .collect(Collectors.toList()),
                 proto.getRequestNonce(),
                 messageVersion);
+    }
+
+    @Override
+    public Class<? extends InitialDataRequest> associatedRequest() {
+        return GetDaoStateHashesRequest.class;
     }
 }

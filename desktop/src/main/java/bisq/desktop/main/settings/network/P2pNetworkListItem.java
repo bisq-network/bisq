@@ -23,7 +23,9 @@ import bisq.core.locale.Res;
 import bisq.core.util.FormattingUtils;
 
 import bisq.network.p2p.network.Connection;
+import bisq.network.p2p.network.ConnectionState;
 import bisq.network.p2p.network.OutboundConnection;
+import bisq.network.p2p.network.PeerType;
 import bisq.network.p2p.network.Statistic;
 
 import bisq.common.ClockWatcher;
@@ -109,12 +111,17 @@ public class P2pNetworkListItem {
     }
 
     public void updatePeerType() {
-        if (connection.getPeerType() == Connection.PeerType.SEED_NODE)
-            peerType.set(Res.get("settings.net.seedNode"));
-        else if (connection.getPeerType() == Connection.PeerType.DIRECT_MSG_PEER)
+        ConnectionState connectionState = connection.getConnectionState();
+        if (connectionState.getPeerType() == PeerType.DIRECT_MSG_PEER) {
             peerType.set(Res.get("settings.net.directPeer"));
-        else
-            peerType.set(Res.get("settings.net.peer"));
+        } else {
+            String peerOrSeed = connectionState.isSeedNode() ? Res.get("settings.net.seedNode") : Res.get("settings.net.peer");
+            if (connectionState.getPeerType() == PeerType.INITIAL_DATA_EXCHANGE) {
+                peerType.set(Res.get("settings.net.initialDataExchange", peerOrSeed));
+            } else {
+                peerType.set(peerOrSeed);
+            }
+        }
     }
 
     public String getCreationDate() {
