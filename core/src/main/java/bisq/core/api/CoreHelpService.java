@@ -31,7 +31,7 @@ import static java.lang.System.out;
 @Slf4j
 class CoreHelpService {
 
-    private static final String PARAM_DESCRIPTION_FORMAT = "%-4s%-26s%-28s%s";
+    private static final String PARAM_DESCRIPTION_FORMAT = "%-30s%-28s%s";
 
     private final String exampleCliBase;
     private final String examplePaymentAccountId;
@@ -88,9 +88,9 @@ class CoreHelpService {
                 + "Usage: -m=takeoffer -o=offer-id -p=payment-acct-id [-c=taker-fee-currency-code = bsq|btc]" + "\n"
                 + "\n"
                 + "Parameters:" + "\n"
-                + requiredParamDesc(1, "-o=offer-id", "The ID of the offer being taken.") + "\n"
-                + requiredParamDesc(2, "-i=payment-acct-id", "The ID of the payment account to be used in the trade.") + "\n"
-                + optionalParamDesc(3, "-c=taker-fee-currency-code", "BTC", "The Bisq trade taker fee currency (BSQ or BTC).") + "\n"
+                + requiredParamDesc("-o=offer-id", "The ID of the offer being taken.") + "\n"
+                + requiredParamDesc("-i=payment-acct-id", "The ID of the payment account to be used in the trade.") + "\n"
+                + optionalParamDesc("-c=taker-fee-currency-code", "BTC", "The Bisq trade taker fee currency (BSQ or BTC).") + "\n"
                 + "\n"
                 + "Example:" + "\n"
                 + exampleDescription + "\n"
@@ -107,21 +107,17 @@ class CoreHelpService {
                 + "\n" + "Example: " + exampleCliBase + " -m=" + methodName;
     }
 
-    private String requiredParamDesc(int paramNum,
-                                     String paramName,
+    private String requiredParamDesc(String paramName,
                                      String description) {
-        return paramDesc(paramNum + ".",
-                paramName,
+        return paramDesc(paramName,
                 "(required)",
                 description);
     }
 
-    private String optionalParamDesc(int paramNum,
-                                     String paramName,
+    private String optionalParamDesc(String paramName,
                                      String defaultParamValue,
                                      String description) {
-        return paramDesc(paramNum + ".",
-                paramName,
+        return paramDesc(paramName,
                 "(optional, default=" + defaultParamValue + ")",
                 description);
     }
