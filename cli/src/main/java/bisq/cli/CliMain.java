@@ -106,6 +106,7 @@ import bisq.cli.opts.SendBsqOptionParser;
 import bisq.cli.opts.SendBtcOptionParser;
 import bisq.cli.opts.SetTxFeeRateOptionParser;
 import bisq.cli.opts.SetWalletPasswordOptionParser;
+import bisq.cli.opts.SimpleMethodOptionParser;
 import bisq.cli.opts.TakeOfferOptionParser;
 import bisq.cli.opts.UnlockWalletOptionParser;
 import bisq.cli.opts.WithdrawFundsOptionParser;
@@ -189,7 +190,10 @@ public class CliMain {
         try {
             switch (method) {
                 case getversion: {
-                    // TODO supply method help even though no opts parser is needed.
+                    if (new SimpleMethodOptionParser(args).parse().isForHelp()) {
+                        out.println(getMethodHelp(helpService, method));
+                        return;
+                    }
                     var request = GetVersionRequest.newBuilder().build();
                     var version = versionService.getVersion(request).getVersion();
                     out.println(version);
@@ -234,14 +238,20 @@ public class CliMain {
                     return;
                 }
                 case getfundingaddresses: {
-                    // TODO supply method help even though no opts parser is needed.
+                    if (new SimpleMethodOptionParser(args).parse().isForHelp()) {
+                        out.println(getMethodHelp(helpService, method));
+                        return;
+                    }
                     var request = GetFundingAddressesRequest.newBuilder().build();
                     var reply = walletsService.getFundingAddresses(request);
                     out.println(formatAddressBalanceTbl(reply.getAddressBalanceInfoList()));
                     return;
                 }
                 case getunusedbsqaddress: {
-                    // TODO supply method help even though no opts parser is needed.
+                    if (new SimpleMethodOptionParser(args).parse().isForHelp()) {
+                        out.println(getMethodHelp(helpService, method));
+                        return;
+                    }
                     var request = GetUnusedBsqAddressRequest.newBuilder().build();
                     var reply = walletsService.getUnusedBsqAddress(request);
                     out.println(reply.getAddress());
@@ -304,7 +314,10 @@ public class CliMain {
                     return;
                 }
                 case gettxfeerate: {
-                    // TODO supply method help even though no opts parser is needed.
+                    if (new SimpleMethodOptionParser(args).parse().isForHelp()) {
+                        out.println(getMethodHelp(helpService, method));
+                        return;
+                    }
                     var request = GetTxFeeRateRequest.newBuilder().build();
                     var reply = walletsService.getTxFeeRate(request);
                     out.println(formatTxFeeRateInfo(reply.getTxFeeRateInfo()));
@@ -325,7 +338,10 @@ public class CliMain {
                     return;
                 }
                 case unsettxfeerate: {
-                    // TODO supply method help even though no opts parser is needed.
+                    if (new SimpleMethodOptionParser(args).parse().isForHelp()) {
+                        out.println(getMethodHelp(helpService, method));
+                        return;
+                    }
                     var request = UnsetTxFeeRatePreferenceRequest.newBuilder().build();
                     var reply = walletsService.unsetTxFeeRatePreference(request);
                     out.println(formatTxFeeRateInfo(reply.getTxFeeRateInfo()));
@@ -567,7 +583,10 @@ public class CliMain {
                     return;
                 }
                 case getpaymentmethods: {
-                    // TODO supply method help even though no opts parser is needed.
+                    if (new SimpleMethodOptionParser(args).parse().isForHelp()) {
+                        out.println(getMethodHelp(helpService, method));
+                        return;
+                    }
                     var request = GetPaymentMethodsRequest.newBuilder().build();
                     var reply = paymentAccountsService.getPaymentMethods(request);
                     reply.getPaymentMethodsList().forEach(p -> out.println(p.getId()));
@@ -617,7 +636,10 @@ public class CliMain {
                     return;
                 }
                 case getpaymentaccts: {
-                    // TODO supply method help even though no opts parser is needed.
+                    if (new SimpleMethodOptionParser(args).parse().isForHelp()) {
+                        out.println(getMethodHelp(helpService, method));
+                        return;
+                    }
                     var request = GetPaymentAccountsRequest.newBuilder().build();
                     var reply = paymentAccountsService.getPaymentAccounts(request);
 
@@ -630,7 +652,10 @@ public class CliMain {
                     return;
                 }
                 case lockwallet: {
-                    // TODO supply method help even though no opts parser is needed.
+                    if (new SimpleMethodOptionParser(args).parse().isForHelp()) {
+                        out.println(getMethodHelp(helpService, method));
+                        return;
+                    }
                     var request = LockWalletRequest.newBuilder().build();
                     walletsService.lockWallet(request);
                     out.println("wallet locked");
