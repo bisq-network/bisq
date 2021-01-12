@@ -290,7 +290,7 @@ public class MailboxMessageService implements SetupListener, RequestDataManager.
         }
     }
 
-    public Set<DecryptedMessageWithPubKey> getMyDecryptedMessages() {
+    public Set<DecryptedMessageWithPubKey> getMyDecryptedMailboxMessages() {
         return mailboxItemsByUid.values().stream()
                 .filter(MailboxItem::isMine)
                 .map(MailboxItem::getDecryptedMessageWithPubKey)
