@@ -40,8 +40,6 @@ import bisq.common.crypto.PubKeyRing;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.taskrunner.Task;
 
-import java.security.PublicKey;
-
 import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
@@ -168,14 +166,8 @@ public abstract class TradeProtocol implements DecryptedDirectMessageListener, D
     }
 
     public void removeMailboxMessageAfterProcessing(TradeMessage tradeMessage) {
-        if (tradeMessage instanceof MailboxMessage &&
-                processModel.getTradingPeer() != null &&
-                processModel.getTradingPeer().getPubKeyRing() != null &&
-                processModel.getTradingPeer().getPubKeyRing().getSignaturePubKey() != null) {
-            PublicKey sigPubKey = processModel.getTradingPeer().getPubKeyRing().getSignaturePubKey();
-            // We reconstruct the DecryptedMessageWithPubKey from the message and the peers signature pubKey
-            DecryptedMessageWithPubKey decryptedMessageWithPubKey = new DecryptedMessageWithPubKey(tradeMessage, sigPubKey);
-            processModel.getP2PService().getMailboxMessageService().removeMailboxMsg(decryptedMessageWithPubKey);
+        if (tradeMessage instanceof MailboxMessage) {
+            processModel.getP2PService().getMailboxMessageService().removeMailboxMsg((MailboxMessage) tradeMessage);
             log.info("Remove {} from the P2P network.", tradeMessage.getClass().getSimpleName());
         }
     }
