@@ -442,6 +442,12 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
         Set<NetworkEnvelope> envelopesToProcess = new HashSet<>();
         List<NetworkEnvelope> networkEnvelopes = bundleOfEnvelopes.getEnvelopes();
         for (NetworkEnvelope networkEnvelope : networkEnvelopes) {
+            // If SendersNodeAddressMessage we do some verifications and apply if successful, otherwise we return false.
+            if (networkEnvelope instanceof SendersNodeAddressMessage &&
+                    !processSendersNodeAddressMessage((SendersNodeAddressMessage) networkEnvelope)) {
+                continue;
+            }
+
             if (networkEnvelope instanceof AddPersistableNetworkPayloadMessage) {
                 PersistableNetworkPayload persistableNetworkPayload = ((AddPersistableNetworkPayloadMessage) networkEnvelope).getPersistableNetworkPayload();
                 byte[] hash = persistableNetworkPayload.getHash();
@@ -705,6 +711,29 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
         shutDown(closeConnectionReason);
     }
 
+    private boolean processSendersNodeAddressMessage(SendersNodeAddressMessage sendersNodeAddressMessage) {
+        NodeAddress senderNodeAddress = sendersNodeAddressMessage.getSenderNodeAddress();
+        checkNotNull(senderNodeAddress,
+                "senderNodeAddress must not be null at SendersNodeAddressMessage " +
+                        sendersNodeAddressMessage.getClass().getSimpleName());
+        Optional<NodeAddress> existingAddressOptional = getPeersNodeAddressOptional();
+        if (existingAddressOptional.isPresent()) {
+            // If we have already the peers address we check again if it matches our stored one
+            checkArgument(existingAddressOptional.get().equals(senderNodeAddress),
+                    "senderNodeAddress not matching connections peer address.\n\t" +
+                            "message=" + sendersNodeAddressMessage);
+        } else {
+            setPeersNodeAddress(senderNodeAddress);
+        }
+
+        if (networkFilter != null && networkFilter.isPeerBanned(senderNodeAddress)) {
+            reportInvalidRequest(RuleViolation.PEER_BANNED);
+            return false;
+        }
+
+        return true;
+    }
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // InputHandler
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -843,26 +872,13 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                         if (!(networkEnvelope instanceof KeepAliveMessage))
                             statistic.updateLastActivityTimestamp();
 
-                        if (networkEnvelope instanceof SendersNodeAddressMessage) {
-                            NodeAddress senderNodeAddress = ((SendersNodeAddressMessage) networkEnvelope).getSenderNodeAddress();
-                            checkNotNull(senderNodeAddress,
-                                    "senderNodeAddress must not be null at SendersNodeAddressMessage " +
-                                            networkEnvelope.getClass().getSimpleName());
-                            Optional<NodeAddress> existingAddressOptional = getPeersNodeAddressOptional();
-                            if (existingAddressOptional.isPresent()) {
-                                // If we have already the peers address we check again if it matches our stored one
-                                checkArgument(existingAddressOptional.get().equals(senderNodeAddress),
-                                        "senderNodeAddress not matching connections peer address.\n\t" +
-                                                "message=" + networkEnvelope);
-                            } else {
-                                setPeersNodeAddress(senderNodeAddress);
-                            }
-
-                            if (networkFilter != null && networkFilter.isPeerBanned(senderNodeAddress)) {
-                                reportInvalidRequest(RuleViolation.PEER_BANNED);
-                                return;
-                            }
+                        // If SendersNodeAddressMessage we do some verifications and apply if successful,
+                        // otherwise we return false.
+                        if (networkEnvelope instanceof SendersNodeAddressMessage &&
+                                !processSendersNodeAddressMessage((SendersNodeAddressMessage) networkEnvelope)) {
+                            return;
                         }
+
                         onMessage(networkEnvelope, this);
                         UserThread.execute(() -> connectionStatistics.addReceivedMsgMetrics(System.currentTimeMillis() - ts, size));
                     }
