@@ -57,7 +57,7 @@ public class SellerSendsDepositTxAndDelayedPayoutTxMessage extends SendMailboxMe
     }
 
     @Override
-    protected TradeMailboxMessage getMessage(String tradeId) {
+    protected TradeMailboxMessage getTradeMailboxMessage(String tradeId) {
         if (message == null) {
             // We do not use a real unique ID here as we want to be able to re-send the exact same message in case the
             // peer does not respond with an ACK msg in a certain time interval. To avoid that we get dangling mailbox

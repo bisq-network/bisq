@@ -41,7 +41,7 @@ public class SendMediatedPayoutTxPublishedMessage extends SendMailboxMessageTask
     }
 
     @Override
-    protected TradeMailboxMessage getMessage(String id) {
+    protected TradeMailboxMessage getTradeMailboxMessage(String id) {
         Transaction payoutTx = checkNotNull(trade.getPayoutTx(), "trade.getPayoutTx() must not be null");
         return new MediatedPayoutTxPublishedMessage(
                 id,

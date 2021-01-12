@@ -34,7 +34,7 @@ public abstract class SendMailboxMessageTask extends TradeTask {
         super(taskHandler, trade);
     }
 
-    protected abstract TradeMailboxMessage getMessage(String id);
+    protected abstract TradeMailboxMessage getTradeMailboxMessage(String id);
 
     protected abstract void setStateSent();
 
@@ -49,7 +49,7 @@ public abstract class SendMailboxMessageTask extends TradeTask {
         try {
             runInterceptHook();
             String id = processModel.getOfferId();
-            TradeMailboxMessage message = getMessage(id);
+            TradeMailboxMessage message = getTradeMailboxMessage(id);
             setStateSent();
             NodeAddress peersNodeAddress = trade.getTradingPeerNodeAddress();
             log.info("Send {} to peer {}. tradeId={}, uid={}",

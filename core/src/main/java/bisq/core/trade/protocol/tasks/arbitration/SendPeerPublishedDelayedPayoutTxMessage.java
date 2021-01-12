@@ -36,7 +36,7 @@ public class SendPeerPublishedDelayedPayoutTxMessage extends SendMailboxMessageT
     }
 
     @Override
-    protected TradeMailboxMessage getMessage(String id) {
+    protected TradeMailboxMessage getTradeMailboxMessage(String id) {
         return new PeerPublishedDelayedPayoutTxMessage(UUID.randomUUID().toString(),
                 trade.getId(),
                 trade.getTradingPeerNodeAddress());

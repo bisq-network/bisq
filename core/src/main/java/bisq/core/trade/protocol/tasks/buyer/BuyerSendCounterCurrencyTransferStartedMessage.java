@@ -58,7 +58,7 @@ public class BuyerSendCounterCurrencyTransferStartedMessage extends SendMailboxM
     }
 
     @Override
-    protected TradeMailboxMessage getMessage(String tradeId) {
+    protected TradeMailboxMessage getTradeMailboxMessage(String tradeId) {
         if (message == null) {
             AddressEntry payoutAddressEntry = processModel.getBtcWalletService().getOrCreateAddressEntry(tradeId,
                     AddressEntry.Context.TRADE_PAYOUT);
