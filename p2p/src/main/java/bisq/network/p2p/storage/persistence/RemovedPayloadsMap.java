@@ -66,4 +66,11 @@ public class RemovedPayloadsMap implements PersistableEnvelope {
                         Map.Entry::getValue));
         return new RemovedPayloadsMap(dateByHashes);
     }
+
+    @Override
+    public String toString() {
+        return "RemovedPayloadsMap{" +
+                "\n     dateByHashes=" + dateByHashes +
+                "\n}";
+    }
 }
