@@ -247,7 +247,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         ProtectedStoragePayload protectedStoragePayload = protectedStorageEntry.getProtectedStoragePayload();
         ByteArray hashOfPayload = get32ByteHashAsByteArray(protectedStoragePayload);
         map.put(hashOfPayload, protectedStorageEntry);
-        log.trace("addProtectedMailboxStorageEntryToMap hashOfPayload={}, map={}", hashOfPayload, printMap());
+        log.trace("## addProtectedMailboxStorageEntryToMap hashOfPayload={}, map={}", hashOfPayload, printMap());
     }
 
 
@@ -280,14 +280,14 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
         Map<ByteArray, PersistableNetworkPayload> mapForDataRequest = getMapForDataRequest();
         Set<byte[]> excludedKeys = getKeysAsByteSet(mapForDataRequest);
-        log.trace("getKnownPayloadHashes map of PersistableNetworkPayloads={}, excludedKeys={}",
+        log.trace("## getKnownPayloadHashes map of PersistableNetworkPayloads={}, excludedKeys={}",
                 printPersistableNetworkPayloadMap(mapForDataRequest),
-                excludedKeys.stream().map(e -> Utilities.encodeToHex(e)).toArray());
+                excludedKeys.stream().map(Utilities::encodeToHex).toArray());
 
         Set<byte[]> excludedKeysFromProtectedStorageEntryMap = getKeysAsByteSet(map);
-        log.trace("getKnownPayloadHashes map of ProtectedStorageEntrys={}, excludedKeys={}",
+        log.trace("## getKnownPayloadHashes map of ProtectedStorageEntrys={}, excludedKeys={}",
                 printMap(),
-                excludedKeysFromProtectedStorageEntryMap.stream().map(e -> Utilities.encodeToHex(e)).toArray());
+                excludedKeysFromProtectedStorageEntryMap.stream().map(Utilities::encodeToHex).toArray());
 
         excludedKeys.addAll(excludedKeysFromProtectedStorageEntryMap);
         return excludedKeys;
@@ -322,7 +322,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         log.info("{} PersistableNetworkPayload entries remained after filtered by excluded keys. " +
                         "Original map had {} entries.",
                 filteredPersistableNetworkPayloads.size(), mapForDataResponse.size());
-        log.trace("buildGetDataResponse filteredPersistableNetworkPayloadHashes={}",
+        log.trace("## buildGetDataResponse filteredPersistableNetworkPayloadHashes={}",
                 filteredPersistableNetworkPayloads.stream()
                         .map(e -> Utilities.encodeToHex(e.getHash()))
                         .toArray());
@@ -338,7 +338,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         log.info("{} ProtectedStorageEntry entries remained after filtered by excluded keys. " +
                         "Original map had {} entries.",
                 filteredProtectedStorageEntries.size(), map.size());
-        log.trace("buildGetDataResponse filteredProtectedStorageEntryHashes={}",
+        log.trace("## buildGetDataResponse filteredProtectedStorageEntryHashes={}",
                 filteredProtectedStorageEntries.stream()
                         .map(e -> get32ByteHashAsByteArray((e.getProtectedStoragePayload())))
                         .toArray());
@@ -667,7 +667,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                                                  boolean allowBroadcast,
                                                  boolean reBroadcast,
                                                  boolean checkDate) {
-        log.trace("addPersistableNetworkPayload payload={}", payload);
+        log.debug("addPersistableNetworkPayload payload={}", payload);
 
         // Payload hash size does not match expectation for that type of message.
         if (!payload.verifyHashSize()) {
@@ -680,7 +680,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
         // Store already knows about this payload. Ignore it unless the caller specifically requests a republish.
         if (payloadHashAlreadyInStore && !reBroadcast) {
-            log.trace("addPersistableNetworkPayload failed due to duplicate payload");
+            log.debug("addPersistableNetworkPayload failed due to duplicate payload");
             return false;
         }
 
@@ -720,20 +720,21 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         }
     }
 
-    /**
-     * Adds a ProtectedStorageEntry to the local P2P data storage. If it does not already exist locally, it will be
-     * broadcast to the P2P network.
-     *
-     * @param protectedStorageEntry ProtectedStorageEntry to add to the network
-     * @param sender local NodeAddress, if available
-     * @param listener optional listener that can be used to receive events on broadcast
-     * @return <code>true</code> if the ProtectedStorageEntry was added to the local P2P data storage and broadcast
-     */
-    public boolean addProtectedStorageEntry(ProtectedStorageEntry protectedStorageEntry, @Nullable NodeAddress sender,
+    public boolean addProtectedStorageEntry(ProtectedStorageEntry protectedStorageEntry,
+                                            @Nullable NodeAddress sender,
                                             @Nullable BroadcastHandler.Listener listener) {
         return addProtectedStorageEntry(protectedStorageEntry, sender, listener, true);
     }
 
+    /**
+     * Adds a ProtectedStorageEntry to the local P2P data storage and broadcast if all checks have been successful.
+     *
+     * @param protectedStorageEntry ProtectedStorageEntry to add to the network
+     * @param sender Senders nodeAddress, if available
+     * @param listener optional listener that can be used to receive events on broadcast
+     * @param allowBroadcast Flag to allow broadcast
+     * @return <code>true</code> if the ProtectedStorageEntry was added to the local P2P data storage
+     */
     private boolean addProtectedStorageEntry(ProtectedStorageEntry protectedStorageEntry,
                                              @Nullable NodeAddress sender,
                                              @Nullable BroadcastHandler.Listener listener,
@@ -741,27 +742,27 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         ProtectedStoragePayload protectedStoragePayload = protectedStorageEntry.getProtectedStoragePayload();
         ByteArray hashOfPayload = get32ByteHashAsByteArray(protectedStoragePayload);
 
-        log.trace("call addProtectedStorageEntry hash={}, map={}", hashOfPayload, printMap());
+        log.trace("## call addProtectedStorageEntry hash={}, map={}", hashOfPayload, printMap());
+
+        // We do that check early as it is a very common case for returning, so we return early
+        // If we have seen a more recent operation for this payload and we have a payload locally, ignore it
+        ProtectedStorageEntry storedEntry = map.get(hashOfPayload);
+        if (storedEntry != null && !hasSequenceNrIncreased(protectedStorageEntry.getSequenceNumber(), hashOfPayload)) {
+            log.trace("## hasSequenceNrIncreased is false. hash={}", hashOfPayload);
+            return false;
+        }
 
         if (hasAlreadyRemovedAddOncePayload(protectedStoragePayload, hashOfPayload)) {
-            log.warn("We have already removed that AddOncePayload by a previous removeDataMessage. " +
+            log.trace("## We have already removed that AddOncePayload by a previous removeDataMessage. " +
                     "We ignore that message. ProtectedStoragePayload: {}", protectedStoragePayload.toString());
             return false;
         }
 
-        // To avoid that expired data get stored and broadcast we check early for expire date.
+        // To avoid that expired data get stored and broadcast we check for expire date.
         if (protectedStorageEntry.isExpired(clock)) {
             String peer = sender != null ? sender.getFullAddress() : "sender is null";
-            log.debug("We received an expired protectedStorageEntry from peer {}. ProtectedStoragePayload={}",
+            log.trace("## We received an expired protectedStorageEntry from peer {}. ProtectedStoragePayload={}",
                     peer, protectedStorageEntry.getProtectedStoragePayload().getClass().getSimpleName());
-            return false;
-        }
-
-        ProtectedStorageEntry storedEntry = map.get(hashOfPayload);
-
-        // If we have seen a more recent operation for this payload and we have a payload locally, ignore it
-        if (storedEntry != null &&
-                !hasSequenceNrIncreased(protectedStorageEntry.getSequenceNumber(), hashOfPayload)) {
             return false;
         }
 
@@ -770,16 +771,21 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         MapValue sequenceNumberMapValue = sequenceNumberMap.get(hashOfPayload);
         if (sequenceNumberMapValue != null &&
                 protectedStorageEntry.getSequenceNumber() < sequenceNumberMapValue.sequenceNr) {
+            log.trace("## sequenceNr too low hash={}", hashOfPayload);
             return false;
         }
 
         // Verify the ProtectedStorageEntry is well formed and valid for the add operation
-        if (!protectedStorageEntry.isValidForAddOperation())
+        if (!protectedStorageEntry.isValidForAddOperation()) {
+            log.trace("## !isValidForAddOperation hash={}", hashOfPayload);
             return false;
+        }
 
         // If we have already seen an Entry with the same hash, verify the metadata is equal
-        if (storedEntry != null && !protectedStorageEntry.matchesRelevantPubKey(storedEntry))
+        if (storedEntry != null && !protectedStorageEntry.matchesRelevantPubKey(storedEntry)) {
+            log.trace("## !matchesRelevantPubKey hash={}", hashOfPayload);
             return false;
+        }
 
         // This is an updated entry. Record it and signal listeners.
         map.put(hashOfPayload, protectedStorageEntry);
@@ -789,18 +795,44 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         sequenceNumberMap.put(hashOfPayload, new MapValue(protectedStorageEntry.getSequenceNumber(), this.clock.millis()));
         requestPersistence();
 
-        log.trace("ProtectedStorageEntry added to map. hash={}, map={}", hashOfPayload, printMap());
+        log.trace("## ProtectedStorageEntry added to map. hash={}, map={}", hashOfPayload, printMap());
 
         // Optionally, broadcast the add/update depending on the calling environment
         if (allowBroadcast) {
             broadcaster.broadcast(new AddDataMessage(protectedStorageEntry), sender, listener);
-            log.trace("broadcasted ProtectedStorageEntry. hash={}", hashOfPayload);
+            log.trace("## broadcasted ProtectedStorageEntry. hash={}", hashOfPayload);
         }
         // Persist ProtectedStorageEntries carrying PersistablePayload payloads
         if (protectedStoragePayload instanceof PersistablePayload)
             protectedDataStoreService.put(hashOfPayload, protectedStorageEntry);
 
         return true;
+    }
+
+    /**
+     * We do not do all checks as it is used for republishing existing mailbox messages from seed nodes which
+     * only got stored if they had been valid when we received them.
+     *
+     * @param protectedMailboxStorageEntry ProtectedMailboxStorageEntry to add to the network
+     * @param sender Senders nodeAddress, if available
+     * @param listener optional listener that can be used to receive events on broadcast
+     */
+    public void republishExistingProtectedMailboxStorageEntry(ProtectedMailboxStorageEntry protectedMailboxStorageEntry,
+                                                              @Nullable NodeAddress sender,
+                                                              @Nullable BroadcastHandler.Listener listener) {
+        ProtectedStoragePayload protectedStoragePayload = protectedMailboxStorageEntry.getProtectedStoragePayload();
+        ByteArray hashOfPayload = get32ByteHashAsByteArray(protectedStoragePayload);
+
+        log.trace("## call republishProtectedStorageEntry hash={}, map={}", hashOfPayload, printMap());
+
+        if (hasAlreadyRemovedAddOncePayload(protectedStoragePayload, hashOfPayload)) {
+            log.trace("## We have already removed that AddOncePayload by a previous removeDataMessage. " +
+                    "We ignore that message. ProtectedStoragePayload: {}", protectedStoragePayload.toString());
+            return;
+        }
+
+        broadcaster.broadcast(new AddDataMessage(protectedMailboxStorageEntry), sender, listener);
+        log.trace("## broadcasted ProtectedStorageEntry. hash={}", hashOfPayload);
     }
 
     public boolean hasAlreadyRemovedAddOncePayload(ProtectedStoragePayload protectedStoragePayload,
@@ -991,9 +1023,9 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
             ByteArray hashOfPayload = entry.getKey();
             ProtectedStorageEntry protectedStorageEntry = entry.getValue();
 
-            log.trace("removeFromMapAndDataStore: hashOfPayload={}, map before remove={}", hashOfPayload, printMap());
+            log.trace("## removeFromMapAndDataStore: hashOfPayload={}, map before remove={}", hashOfPayload, printMap());
             map.remove(hashOfPayload);
-            log.trace("removeFromMapAndDataStore: map after remove={}", printMap());
+            log.trace("## removeFromMapAndDataStore: map after remove={}", printMap());
 
             // We inform listeners even the entry was not found in our map
             removedProtectedStorageEntries.add(protectedStorageEntry);
@@ -1013,7 +1045,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         if (sequenceNumberMap.containsKey(hashOfData)) {
             int storedSequenceNumber = sequenceNumberMap.get(hashOfData).sequenceNr;
             if (newSequenceNumber > storedSequenceNumber) {
-                /*log.trace("Sequence number has increased (>). sequenceNumber = "
+                /*log.debug("Sequence number has increased (>). sequenceNumber = "
                         + newSequenceNumber + " / storedSequenceNumber=" + storedSequenceNumber + " / hashOfData=" + hashOfData.toString());*/
                 return true;
             } else if (newSequenceNumber == storedSequenceNumber) {
@@ -1025,7 +1057,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                     msg = "Sequence number is equal to the stored one. sequenceNumber = "
                             + newSequenceNumber + " / storedSequenceNumber=" + storedSequenceNumber;
                 }
-                log.trace(msg);
+                log.debug(msg);
                 return false;
             } else {
                 log.debug("Sequence number is invalid. sequenceNumber = "
@@ -1087,7 +1119,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                         .append(Utilities.toTruncatedString(protectedStoragePayload));
             });
             sb.append("\n------------------------------------------------------------\n");
-            log.trace(sb.toString());
+            log.debug(sb.toString());
             //log.debug("Data set " + info + " operation: size=" + map.values().size());
         }
     }
