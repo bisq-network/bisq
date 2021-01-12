@@ -47,29 +47,58 @@ class CoreHelpService {
     public String getMethodHelp(String methodName) {
         switch (methodName) {
             case "getversion":
-                return getNoArgMethodHelp(methodName, "Returns the server version.");
+                return noArgMethodHelp(methodName, "Returns the server version.");
             case "getfundingaddresses":
-                return getNoArgMethodHelp(methodName, "Returns a list of receiving BTC addresses.");
+                return noArgMethodHelp(methodName, "Returns a list of receiving BTC addresses.");
             case "getunusedbsqaddress":
-                return getNoArgMethodHelp(methodName, "Returns an unused BSQ receiving address.");
+                return noArgMethodHelp(methodName, "Returns an unused BSQ receiving address.");
             case "gettxfeerate":
-                return getNoArgMethodHelp(methodName,
+                return noArgMethodHelp(methodName,
                         "Returns the most recent bitcoin network transaction fee the Bisq server could find.");
             case "unsettxfeerate":
-                return getNoArgMethodHelp(methodName, "Unsets the tx fee rate user preference.");
+                return noArgMethodHelp(methodName, "Unsets the tx fee rate user preference.");
             case "getpaymentmethods":
-                return getNoArgMethodHelp(methodName, "Returns a list of currently supported fiat payment methods.");
+                return noArgMethodHelp(methodName, "Returns a list of currently supported fiat payment methods.");
             case "getpaymentaccts":
-                return getNoArgMethodHelp(methodName, "Returns a list of fiat payment accounts.");
+                return noArgMethodHelp(methodName, "Returns a list of fiat payment accounts.");
             case "lockwallet":
-                return getNoArgMethodHelp(methodName,
+                return noArgMethodHelp(methodName,
                         "Locks an unlocked wallet before an unlockwallet timeout expires.");
+            case "takeoffer":
+                return takeOfferHelp();
             default:
-                throw new IllegalStateException("No help found for method " + methodName);
+                throw new IllegalStateException("no help found for -m=" + methodName);
         }
     }
 
-    private String getNoArgMethodHelp(String methodName, String description) {
+    private String takeOfferHelp() {
+        String exampleDescription = format("To take an offer with ID %s using matching"
+                        + " payment account with ID %s, paying the Bisq trading fee in BSQ:",
+                exampleOfferId,
+                examplePaymentAccountId);
+        String exampleCommand = format("%s -m=takeoffer  -o=%s  -p=%s  -c=bsq",
+                exampleCliBase,
+                exampleOfferId,
+                examplePaymentAccountId);
+        return "takeoffer" + "\n"
+                + "\n"
+                + "Takes an existing offer for a matching payment method."
+                + "  The Bisq trade fee can be paid in BSQ or BTC." + "\n"
+                + "\n"
+                + "Usage: -m=takeoffer -o=offer-id -p=payment-acct-id [-c=taker-fee-currency-code = bsq|btc]" + "\n"
+                + "\n"
+                + "Parameters:" + "\n"
+                + requiredParamDesc(1, "-o=offer-id", "The ID of the offer being taken.") + "\n"
+                + requiredParamDesc(2, "-i=payment-acct-id", "The ID of the payment account to be used in the trade.") + "\n"
+                + optionalParamDesc(3, "-c=taker-fee-currency-code", "BTC", "The Bisq trade taker fee currency (BSQ or BTC).") + "\n"
+                + "\n"
+                + "Example:" + "\n"
+                + exampleDescription + "\n"
+                + exampleCommand + "\n"
+                + "\n";
+    }
+
+    private String noArgMethodHelp(String methodName, String description) {
         return methodName + "\n"
                 + "\n" + description
                 + "\n"
@@ -101,9 +130,11 @@ class CoreHelpService {
         return format(PARAM_DESCRIPTION_FORMAT, parameterDescriptors);
     }
 
+    // Main method is for viewing help text without running the server.
     public static void main(String[] args) {
         CoreHelpService coreHelpService = new CoreHelpService();
-        // out.println(coreHelpService.getMethodHelp("takeoffer"));
-        out.println(coreHelpService.getMethodHelp("createoffer"));
+        // out.println(coreHelpService.getMethodHelp("getversion"));
+        out.println(coreHelpService.getMethodHelp("takeoffer"));
+        // out.println(coreHelpService.getMethodHelp("createoffer"));
     }
 }
