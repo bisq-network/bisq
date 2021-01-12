@@ -493,51 +493,52 @@ public class MailboxMessageService implements SetupListener, RequestDataManager.
     private void addMailboxData(MailboxStoragePayload expirableMailboxStoragePayload,
                                 PublicKey receiversPublicKey,
                                 SendMailboxMessageListener sendMailboxMessageListener) {
-        if (isBootstrapped) {
-            if (!networkNode.getAllConnections().isEmpty()) {
-                try {
-                    ProtectedMailboxStorageEntry protectedMailboxStorageEntry = p2PDataStorage.getMailboxDataWithSignedSeqNr(
-                            expirableMailboxStoragePayload,
-                            keyRing.getSignatureKeyPair(),
-                            receiversPublicKey);
-
-                    BroadcastHandler.Listener listener = new BroadcastHandler.Listener() {
-                        @Override
-                        public void onSufficientlyBroadcast(List<Broadcaster.BroadcastRequest> broadcastRequests) {
-                            broadcastRequests.stream()
-                                    .filter(broadcastRequest -> broadcastRequest.getMessage() instanceof AddDataMessage)
-                                    .filter(broadcastRequest -> {
-                                        AddDataMessage addDataMessage = (AddDataMessage) broadcastRequest.getMessage();
-                                        return addDataMessage.getProtectedStorageEntry().equals(protectedMailboxStorageEntry);
-                                    })
-                                    .forEach(e -> sendMailboxMessageListener.onStoredInMailbox());
-                        }
-
-                        @Override
-                        public void onNotSufficientlyBroadcast(int numOfCompletedBroadcasts, int numOfFailedBroadcast) {
-                            sendMailboxMessageListener.onFault("Message was not sufficiently broadcast.\n" +
-                                    "numOfCompletedBroadcasts: " + numOfCompletedBroadcasts + ".\n" +
-                                    "numOfFailedBroadcast=" + numOfFailedBroadcast);
-                        }
-                    };
-                    boolean result = p2PDataStorage.addProtectedStorageEntry(protectedMailboxStorageEntry, networkNode.getNodeAddress(), listener);
-                    if (!result) {
-                        sendMailboxMessageListener.onFault("Data already exists in our local database");
-
-                        // This should only fail if there are concurrent calls to addProtectedStorageEntry with the
-                        // same ProtectedMailboxStorageEntry. This is an unexpected use case so if it happens we
-                        // want to see it, but it is not worth throwing an exception.
-                        log.error("Unexpected state: adding mailbox message that already exists.");
-                    }
-                } catch (CryptoException e) {
-                    log.error("Signing at getMailboxDataWithSignedSeqNr failed.");
-                }
-            } else {
-                sendMailboxMessageListener.onFault("There are no P2P network nodes connected. " +
-                        "Please check your internet connection.");
-            }
-        } else {
+        if (!isBootstrapped) {
             throw new NetworkNotReadyException();
+        }
+
+        if (networkNode.getAllConnections().isEmpty()) {
+            sendMailboxMessageListener.onFault("There are no P2P network nodes connected. " +
+                    "Please check your internet connection.");
+            return;
+        }
+
+        try {
+            ProtectedMailboxStorageEntry protectedMailboxStorageEntry = p2PDataStorage.getMailboxDataWithSignedSeqNr(
+                    expirableMailboxStoragePayload,
+                    keyRing.getSignatureKeyPair(),
+                    receiversPublicKey);
+
+            BroadcastHandler.Listener listener = new BroadcastHandler.Listener() {
+                @Override
+                public void onSufficientlyBroadcast(List<Broadcaster.BroadcastRequest> broadcastRequests) {
+                    broadcastRequests.stream()
+                            .filter(broadcastRequest -> broadcastRequest.getMessage() instanceof AddDataMessage)
+                            .filter(broadcastRequest -> {
+                                AddDataMessage addDataMessage = (AddDataMessage) broadcastRequest.getMessage();
+                                return addDataMessage.getProtectedStorageEntry().equals(protectedMailboxStorageEntry);
+                            })
+                            .forEach(e -> sendMailboxMessageListener.onStoredInMailbox());
+                }
+
+                @Override
+                public void onNotSufficientlyBroadcast(int numOfCompletedBroadcasts, int numOfFailedBroadcast) {
+                    sendMailboxMessageListener.onFault("Message was not sufficiently broadcast.\n" +
+                            "numOfCompletedBroadcasts: " + numOfCompletedBroadcasts + ".\n" +
+                            "numOfFailedBroadcast=" + numOfFailedBroadcast);
+                }
+            };
+            boolean result = p2PDataStorage.addProtectedStorageEntry(protectedMailboxStorageEntry, networkNode.getNodeAddress(), listener);
+            if (!result) {
+                sendMailboxMessageListener.onFault("Data already exists in our local database");
+
+                // This should only fail if there are concurrent calls to addProtectedStorageEntry with the
+                // same ProtectedMailboxStorageEntry. This is an unexpected use case so if it happens we
+                // want to see it, but it is not worth throwing an exception.
+                log.error("Unexpected state: adding mailbox message that already exists.");
+            }
+        } catch (CryptoException e) {
+            log.error("Signing at getMailboxDataWithSignedSeqNr failed.");
         }
     }
 
