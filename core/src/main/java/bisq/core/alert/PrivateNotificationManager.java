@@ -50,6 +50,8 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
+
 import static org.bitcoinj.core.Utils.HEX;
 
 public class PrivateNotificationManager {
@@ -64,6 +66,7 @@ public class PrivateNotificationManager {
     private final String pubKeyAsHex;
 
     private ECKey privateNotificationSigningKey;
+    @Nullable
     private DecryptedMessageWithPubKey decryptedMessageWithPubKey;
 
 
@@ -116,8 +119,11 @@ public class PrivateNotificationManager {
         return privateNotificationMessageProperty;
     }
 
-    public boolean sendPrivateNotificationMessageIfKeyIsValid(PrivateNotificationPayload privateNotification, PubKeyRing pubKeyRing, NodeAddress peersNodeAddress,
-                                                              String privKeyString, SendMailboxMessageListener sendMailboxMessageListener) {
+    public boolean sendPrivateNotificationMessageIfKeyIsValid(PrivateNotificationPayload privateNotification,
+                                                              PubKeyRing pubKeyRing,
+                                                              NodeAddress peersNodeAddress,
+                                                              String privKeyString,
+                                                              SendMailboxMessageListener sendMailboxMessageListener) {
         boolean isKeyValid = isKeyValid(privKeyString);
         if (isKeyValid) {
             signAndAddSignatureToPrivateNotificationMessage(privateNotification);
@@ -137,7 +143,9 @@ public class PrivateNotificationManager {
     }
 
     public void removePrivateNotification() {
-        mailboxMessageService.removeMailboxMsg(decryptedMessageWithPubKey);
+        if (decryptedMessageWithPubKey != null) {
+            mailboxMessageService.removeMailboxMsg(decryptedMessageWithPubKey);
+        }
     }
 
     private boolean isKeyValid(String privKeyString) {
