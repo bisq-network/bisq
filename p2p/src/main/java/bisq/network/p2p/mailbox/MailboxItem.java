@@ -32,8 +32,6 @@ import lombok.Value;
 
 import javax.annotation.Nullable;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 @Value
 public class MailboxItem implements PersistablePayload {
     private final ProtectedMailboxStorageEntry protectedMailboxStorageEntry;
@@ -78,7 +76,7 @@ public class MailboxItem implements PersistablePayload {
         if (decryptedMessageWithPubKey != null) {
             // We use uid from mailboxMessage in case its ours as we have the at removeMailboxMsg only the
             // decryptedMessageWithPubKey available which contains the mailboxMessage.
-            MailboxMessage mailboxMessage = (MailboxMessage) checkNotNull(decryptedMessageWithPubKey).getNetworkEnvelope();
+            MailboxMessage mailboxMessage = (MailboxMessage) decryptedMessageWithPubKey.getNetworkEnvelope();
             return mailboxMessage.getUid();
         } else {
             // If its not our mailbox msg we take the uid from the prefixedSealedAndSignedMessage instead.

@@ -430,7 +430,6 @@ public class MailboxMessageService implements SetupListener, RequestDataManager.
         if (ignoredMailboxService.isIgnored(uid)) {
             // We had persisted a past failed decryption attempt on that message so we don't try again and return early
             return new MailboxItem(protectedMailboxStorageEntry, null);
-
         }
         try {
             DecryptedMessageWithPubKey decryptedMessageWithPubKey = encryptionService.decryptAndVerify(sealedAndSigned);
@@ -445,7 +444,6 @@ public class MailboxMessageService implements SetupListener, RequestDataManager.
             e.getStackTrace();
         }
         return new MailboxItem(protectedMailboxStorageEntry, null);
-
     }
 
     private void handleMailboxItem(MailboxItem mailboxItem) {
