@@ -62,6 +62,7 @@ public class CoreApi {
     @Getter
     private final Config config;
     private final CoreDisputeAgentsService coreDisputeAgentsService;
+    private final CoreHelpService coreHelpService;
     private final CoreOffersService coreOffersService;
     private final CorePaymentAccountsService paymentAccountsService;
     private final CorePriceService corePriceService;
@@ -72,7 +73,7 @@ public class CoreApi {
     @Inject
     public CoreApi(Config config,
                    CoreDisputeAgentsService coreDisputeAgentsService,
-                   CoreOffersService coreOffersService,
+                   CoreHelpService coreHelpService, CoreOffersService coreOffersService,
                    CorePaymentAccountsService paymentAccountsService,
                    CorePriceService corePriceService,
                    CoreTradesService coreTradesService,
@@ -80,6 +81,7 @@ public class CoreApi {
                    TradeStatisticsManager tradeStatisticsManager) {
         this.config = config;
         this.coreDisputeAgentsService = coreDisputeAgentsService;
+        this.coreHelpService = coreHelpService;
         this.coreOffersService = coreOffersService;
         this.paymentAccountsService = paymentAccountsService;
         this.coreTradesService = coreTradesService;
@@ -99,6 +101,14 @@ public class CoreApi {
 
     public void registerDisputeAgent(String disputeAgentType, String registrationKey) {
         coreDisputeAgentsService.registerDisputeAgent(disputeAgentType, registrationKey);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Help
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public String getMethodHelp(String methodName) {
+        return coreHelpService.getMethodHelp(methodName);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
