@@ -104,7 +104,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Slf4j
 public class MailboxMessageService implements SetupListener, RequestDataManager.Listener, HashMapChangedListener,
         PersistedDataHost {
-    private static final long REPUBLISH_DELAY_SEC = TimeUnit.SECONDS.toSeconds(2);
+    private static final long REPUBLISH_DELAY_SEC = TimeUnit.MINUTES.toSeconds(2);
 
     private final EncryptionService encryptionService;
     private final IgnoredMailboxService ignoredMailboxService;
