@@ -18,7 +18,6 @@
 package bisq.core.trade.messages;
 
 import bisq.network.p2p.NodeAddress;
-import bisq.network.p2p.mailbox.MailboxMessage;
 
 import lombok.EqualsAndHashCode;
 import lombok.Value;
@@ -32,7 +31,7 @@ import lombok.Value;
 @SuppressWarnings("ALL")
 @EqualsAndHashCode(callSuper = true)
 @Value
-public class RefreshTradeStateRequest extends TradeMessage implements MailboxMessage {
+public class RefreshTradeStateRequest extends TradeMailboxMessage {
     private final NodeAddress senderNodeAddress;
 
 

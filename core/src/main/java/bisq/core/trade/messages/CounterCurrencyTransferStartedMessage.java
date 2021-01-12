@@ -18,7 +18,6 @@
 package bisq.core.trade.messages;
 
 import bisq.network.p2p.NodeAddress;
-import bisq.network.p2p.mailbox.MailboxMessage;
 
 import bisq.common.app.Version;
 import bisq.common.proto.ProtoUtil;
@@ -35,7 +34,7 @@ import javax.annotation.Nullable;
 
 @EqualsAndHashCode(callSuper = true)
 @Value
-public final class CounterCurrencyTransferStartedMessage extends TradeMessage implements MailboxMessage {
+public final class CounterCurrencyTransferStartedMessage extends TradeMailboxMessage {
     private final String buyerPayoutAddress;
     private final NodeAddress senderNodeAddress;
     private final byte[] buyerSignature;

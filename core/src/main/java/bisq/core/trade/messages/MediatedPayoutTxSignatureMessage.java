@@ -18,7 +18,6 @@
 package bisq.core.trade.messages;
 
 import bisq.network.p2p.NodeAddress;
-import bisq.network.p2p.mailbox.MailboxMessage;
 
 import bisq.common.app.Version;
 import bisq.common.util.Utilities;
@@ -32,7 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Value
 @EqualsAndHashCode(callSuper = true)
-public class MediatedPayoutTxSignatureMessage extends TradeMessage implements MailboxMessage {
+public class MediatedPayoutTxSignatureMessage extends TradeMailboxMessage {
     private final byte[] txSignature;
     private final NodeAddress senderNodeAddress;
 
