@@ -159,8 +159,7 @@ public abstract class SupportManager {
             sendAckMessage(chatMessage, receiverPubKeyRing, true, null);
     }
 
-    private void onAckMessage(AckMessage ackMessage,
-                              @Nullable DecryptedMessageWithPubKey decryptedMessageWithPubKey) {
+    private void onAckMessage(AckMessage ackMessage) {
         if (ackMessage.getSourceType() == getAckMessageSourceType()) {
             if (ackMessage.isSuccess()) {
                 log.info("Received AckMessage for {} with tradeId {} and uid {}",
@@ -179,10 +178,6 @@ public abstract class SupportManager {
                             msg.setAckError(ackMessage.getErrorMessage());
                     });
             requestPersistence();
-
-            if (decryptedMessageWithPubKey != null) {
-                mailboxMessageService.removeMailboxMsg(decryptedMessageWithPubKey);
-            }
         }
     }
 
@@ -309,7 +304,7 @@ public abstract class SupportManager {
             if (networkEnvelope instanceof SupportMessage) {
                 dispatchMessage((SupportMessage) networkEnvelope);
             } else if (networkEnvelope instanceof AckMessage) {
-                onAckMessage((AckMessage) networkEnvelope, null);
+                onAckMessage((AckMessage) networkEnvelope);
             }
         });
         decryptedDirectMessageWithPubKeys.clear();
@@ -318,10 +313,13 @@ public abstract class SupportManager {
             NetworkEnvelope networkEnvelope = decryptedMessageWithPubKey.getNetworkEnvelope();
             log.debug("decryptedMessageWithPubKey.message " + networkEnvelope);
             if (networkEnvelope instanceof SupportMessage) {
-                dispatchMessage((SupportMessage) networkEnvelope);
-                mailboxMessageService.removeMailboxMsg(decryptedMessageWithPubKey);
+                SupportMessage supportMessage = (SupportMessage) networkEnvelope;
+                dispatchMessage(supportMessage);
+                mailboxMessageService.removeMailboxMsg(supportMessage);
             } else if (networkEnvelope instanceof AckMessage) {
-                onAckMessage((AckMessage) networkEnvelope, decryptedMessageWithPubKey);
+                AckMessage ackMessage = (AckMessage) networkEnvelope;
+                onAckMessage(ackMessage);
+                mailboxMessageService.removeMailboxMsg(ackMessage);
             }
         });
         decryptedMailboxMessageWithPubKeys.clear();
