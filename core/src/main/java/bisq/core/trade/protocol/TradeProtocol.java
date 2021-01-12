@@ -384,21 +384,15 @@ public abstract class TradeProtocol implements DecryptedDirectMessageListener, D
 
     private boolean isMyMessage(NetworkEnvelope message) {
         if (message instanceof TradeMessage) {
-            return isMyMessage((TradeMessage) message);
+            TradeMessage tradeMessage = (TradeMessage) message;
+            return tradeMessage.getTradeId().equals(trade.getId());
         } else if (message instanceof AckMessage) {
-            return isMyMessage((AckMessage) message);
+            AckMessage ackMessage = (AckMessage) message;
+            return ackMessage.getSourceType() == AckMessageSourceType.TRADE_MESSAGE &&
+                    ackMessage.getSourceId().equals(trade.getId());
         } else {
             return false;
         }
-    }
-
-    private boolean isMyMessage(TradeMessage message) {
-        return message.getTradeId().equals(trade.getId());
-    }
-
-    private boolean isMyMessage(AckMessage ackMessage) {
-        return ackMessage.getSourceType() == AckMessageSourceType.TRADE_MESSAGE &&
-                ackMessage.getSourceId().equals(trade.getId());
     }
 
     private void cleanup() {
