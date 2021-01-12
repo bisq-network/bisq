@@ -266,11 +266,22 @@ public class MailboxMessageService implements SetupListener, RequestDataManager.
      * @param decryptedMessageWithPubKey The DecryptedMessageWithPubKey to be removed
      */
     public void removeMailboxMsg(DecryptedMessageWithPubKey decryptedMessageWithPubKey) {
+        NetworkEnvelope networkEnvelope = decryptedMessageWithPubKey.getNetworkEnvelope();
+        if (networkEnvelope instanceof MailboxMessage) {
+            removeMailboxMsg((MailboxMessage) networkEnvelope);
+        }
+    }
+
+    /**
+     * The mailboxMessage has been applied and we remove it from our local storage and from the network.
+     *
+     * @param mailboxMessage The MailboxMessage to be removed
+     */
+    public void removeMailboxMsg(MailboxMessage mailboxMessage) {
         if (isBootstrapped) {
             // We need to delay a bit to not get a ConcurrentModificationException as we might iterate over
             // mailboxMessageList while getting called.
             UserThread.execute(() -> {
-                MailboxMessage mailboxMessage = (MailboxMessage) decryptedMessageWithPubKey.getNetworkEnvelope();
                 String uid = mailboxMessage.getUid();
 
                 // We called removeMailboxEntryFromNetwork at processMyMailboxItem,
@@ -287,7 +298,7 @@ public class MailboxMessageService implements SetupListener, RequestDataManager.
             });
         } else {
             // In case the network was not ready yet we try again later
-            UserThread.runAfter(() -> removeMailboxMsg(decryptedMessageWithPubKey), 30);
+            UserThread.runAfter(() -> removeMailboxMsg(mailboxMessage), 30);
         }
     }
 
