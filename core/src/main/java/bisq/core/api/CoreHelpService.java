@@ -47,17 +47,35 @@ class CoreHelpService {
     public String getMethodHelp(String methodName) {
         switch (methodName) {
             case "getversion":
-                return getVersionHelp();
+                return getNoArgMethodHelp(methodName, "Returns the server version.");
+            case "getfundingaddresses":
+                return getNoArgMethodHelp(methodName, "Returns a list of receiving BTC addresses.");
+            case "getunusedbsqaddress":
+                return getNoArgMethodHelp(methodName, "Returns an unused BSQ receiving address.");
+            case "gettxfeerate":
+                return getNoArgMethodHelp(methodName,
+                        "Returns the most recent bitcoin network transaction fee the Bisq server could find.");
+            case "unsettxfeerate":
+                return getNoArgMethodHelp(methodName, "Unsets the tx fee rate user preference.");
+            case "getpaymentmethods":
+                return getNoArgMethodHelp(methodName, "Returns a list of currently supported fiat payment methods.");
+            case "getpaymentaccts":
+                return getNoArgMethodHelp(methodName, "Returns a list of fiat payment accounts.");
+            case "lockwallet":
+                return getNoArgMethodHelp(methodName,
+                        "Locks an unlocked wallet before an unlockwallet timeout expires.");
             default:
                 throw new IllegalStateException("No help found for method " + methodName);
         }
     }
 
-    private String getVersionHelp() {
-        return "getversion" + "\n"
-                + "\n" + "Returns the server version."
+    private String getNoArgMethodHelp(String methodName, String description) {
+        return methodName + "\n"
+                + "\n" + description
                 + "\n"
-                + "\n" + "Usage: getversion";
+                + "\n" + "Usage: " + "-m=" + methodName
+                + "\n"
+                + "\n" + "Example: " + exampleCliBase + " -m=" + methodName;
     }
 
     private String requiredParamDesc(int paramNum,
