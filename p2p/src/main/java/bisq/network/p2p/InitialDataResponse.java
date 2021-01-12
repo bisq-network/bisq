@@ -15,14 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.user;
+package bisq.network.p2p;
 
-// Used for persistence of Cookie. Entries must not be changes or removed. Only adding entries is permitted.
-public enum CookieKey {
-    STAGE_X,
-    STAGE_Y,
-    STAGE_W,
-    STAGE_H,
-    TRADE_STAT_CHART_USE_USD,
-    CLEAN_TOR_DIR_AT_RESTART
+// Marker interface for initial data response
+public interface InitialDataResponse {
+    Class<? extends InitialDataRequest> associatedRequest();
 }

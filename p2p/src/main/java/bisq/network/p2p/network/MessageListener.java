@@ -21,4 +21,7 @@ import bisq.common.proto.network.NetworkEnvelope;
 
 public interface MessageListener {
     void onMessage(NetworkEnvelope networkEnvelope, Connection connection);
+
+    default void onMessageSent(NetworkEnvelope networkEnvelope, Connection connection) {
+    }
 }

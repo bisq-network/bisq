@@ -15,14 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.user;
+package bisq.network.p2p.network;
 
-// Used for persistence of Cookie. Entries must not be changes or removed. Only adding entries is permitted.
-public enum CookieKey {
-    STAGE_X,
-    STAGE_Y,
-    STAGE_W,
-    STAGE_H,
-    TRADE_STAT_CHART_USE_USD,
-    CLEAN_TOR_DIR_AT_RESTART
+public enum PeerType {
+    // PEER is default type
+    PEER,
+    // If connection was used for initial data request/response. Those are marked with the InitialDataExchangeMessage interface
+    INITIAL_DATA_EXCHANGE,
+    // If a PrefixedSealedAndSignedMessage was sent (usually a trade message). Expects that node address is known.
+    DIRECT_MSG_PEER
 }

@@ -283,9 +283,6 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
             return;
         }
 
-        // In case we would have had an earlier request and had set allowDisconnectSeedNodes to true we un-do that
-        // if we get a repeated request.
-        peerManager.setAllowDisconnectSeedNodes(false);
         RequestBlocksHandler requestBlocksHandler = new RequestBlocksHandler(networkNode,
                 peerManager,
                 peersNodeAddress,
@@ -304,9 +301,6 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
 
                             listeners.forEach(listener -> listener.onRequestedBlocksReceived(getBlocksResponse,
                                     () -> {
-                                        // After we received the blocks we allow to disconnect seed nodes.
-                                        // We delay 20 seconds to allow multiple requests to finish.
-                                        UserThread.runAfter(() -> peerManager.setAllowDisconnectSeedNodes(true), 20);
                                     }));
                         } else {
                             log.warn("We got a response which is already obsolete because we received a " +
@@ -324,9 +318,6 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
                         requestBlocksHandlerMap.remove(key);
 
                         listeners.forEach(listener -> listener.onFault(errorMessage, connection));
-
-                        // We allow now to disconnect from that seed.
-                        peerManager.setAllowDisconnectSeedNodes(true);
 
                         tryWithNewSeedNode(startBlockHeight);
                     }

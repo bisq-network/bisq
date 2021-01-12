@@ -108,14 +108,14 @@ public class CandleStickChart extends XYChart<Number, Number> {
         // update candle positions
         for (int seriesIndex = 0; seriesIndex < getData().size(); seriesIndex++) {
             XYChart.Series<Number, Number> series = getData().get(seriesIndex);
-            Iterator<XYChart.Data<Number, Number>> iter = getDisplayedDataIterator(series);
+            Iterator<XYChart.Data<Number, Number>> iterator = getDisplayedDataIterator(series);
             Path seriesPath = null;
             if (series.getNode() instanceof Path) {
                 seriesPath = (Path) series.getNode();
                 seriesPath.getElements().clear();
             }
-            while (iter.hasNext()) {
-                XYChart.Data<Number, Number> item = iter.next();
+            while (iterator.hasNext()) {
+                XYChart.Data<Number, Number> item = iterator.next();
                 double x = getXAxis().getDisplayPosition(getCurrentDisplayedXValue(item));
                 double y = getYAxis().getDisplayPosition(getCurrentDisplayedYValue(item));
                 Node itemNode = item.getNode();

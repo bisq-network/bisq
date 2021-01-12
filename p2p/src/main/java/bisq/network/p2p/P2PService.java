@@ -430,7 +430,6 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     public void onMessage(NetworkEnvelope networkEnvelope, Connection connection) {
         if (networkEnvelope instanceof PrefixedSealedAndSignedMessage) {
             PrefixedSealedAndSignedMessage sealedMsg = (PrefixedSealedAndSignedMessage) networkEnvelope;
-            connection.setPeerType(Connection.PeerType.DIRECT_MSG_PEER);
             try {
                 DecryptedMessageWithPubKey decryptedMsg = encryptionService.decryptAndVerify(sealedMsg.getSealedAndSigned());
                 connection.maybeHandleSupportedCapabilitiesMessage(decryptedMsg.getNetworkEnvelope());

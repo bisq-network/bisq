@@ -21,6 +21,9 @@ import bisq.core.app.TorSetup;
 import bisq.core.app.misc.ExecutableForAppWithP2p;
 import bisq.core.app.misc.ModuleForAppWithP2p;
 import bisq.core.dao.state.DaoStateSnapshotService;
+import bisq.core.user.Cookie;
+import bisq.core.user.CookieKey;
+import bisq.core.user.User;
 
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.P2PServiceListener;
@@ -112,6 +115,16 @@ public class SeedNodeMain extends ExecutableForAppWithP2p {
 
     @Override
     protected void startApplication() {
+        Cookie cookie = injector.getInstance(User.class).getCookie();
+        cookie.getAsOptionalBoolean(CookieKey.CLEAN_TOR_DIR_AT_RESTART).ifPresent(wasCleanTorDirSet -> {
+            if (wasCleanTorDirSet) {
+                injector.getInstance(TorSetup.class).cleanupTorFiles(() -> {
+                    log.info("Tor directory reset");
+                    cookie.remove(CookieKey.CLEAN_TOR_DIR_AT_RESTART);
+                }, log::error);
+            }
+        });
+
         seedNode.startApplication();
 
         injector.getInstance(P2PService.class).addP2PServiceListener(new P2PServiceListener() {
@@ -175,11 +188,10 @@ public class SeedNodeMain extends ExecutableForAppWithP2p {
 
         checkConnectionLossTime = UserThread.runPeriodically(() -> {
             if (injector.getInstance(PeerManager.class).getNumAllConnectionsLostEvents() > 1) {
-                // Removing cache files help in case the node got flagged from Tor's dos protection
-                injector.getInstance(TorSetup.class).cleanupTorFiles(() -> {
-                    log.info("Tor directory reset");
-                    shutDown(this);
-                }, log::error);
+                // We set a flag to clear tor cache files at re-start. We cannot clear it now as Tor is used and
+                // that can cause problems.
+                injector.getInstance(User.class).getCookie().putAsBoolean(CookieKey.CLEAN_TOR_DIR_AT_RESTART, true);
+                shutDown(this);
             }
         }, CHECK_CONNECTION_LOSS_SEC);
 

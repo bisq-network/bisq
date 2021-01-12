@@ -151,6 +151,10 @@ public class TorNetworkNode extends NetworkNode {
     }
 
     public void shutDown(@Nullable Runnable shutDownCompleteHandler) {
+        if (allShutDown != null) {
+            log.warn("We got called shutDown again and ignore it.");
+            return;
+        }
         // this one is executed synchronously
         BooleanProperty networkNodeShutDown = networkNodeShutDown();
         // this one is committed as a thread to the executor
@@ -184,6 +188,7 @@ public class TorNetworkNode extends NetworkNode {
             if (tor != null) {
                 log.info("Tor has been created already so we can shut it down.");
                 tor.shutdown();
+                tor = null;
                 log.info("Tor shut down completed");
             } else {
                 log.info("Tor has not been created yet. We cancel the torStartupFuture.");

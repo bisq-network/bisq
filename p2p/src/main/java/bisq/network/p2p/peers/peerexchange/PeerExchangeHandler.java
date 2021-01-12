@@ -166,9 +166,6 @@ class PeerExchangeHandler implements MessageListener {
         if (networkEnvelope instanceof GetPeersResponse) {
             if (!stopped) {
                 GetPeersResponse getPeersResponse = (GetPeersResponse) networkEnvelope;
-                if (peerManager.isSeedNode(connection))
-                    connection.setPeerType(Connection.PeerType.SEED_NODE);
-
                 // Check if the response is for our request
                 if (getPeersResponse.getRequestNonce() == nonce) {
                     peerManager.addToReportedPeers(getPeersResponse.getReportedPeers(),
