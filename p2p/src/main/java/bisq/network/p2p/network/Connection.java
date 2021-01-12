@@ -437,27 +437,27 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
         }
     }
 
-    private void onBundleOfEnvelopes(BundleOfEnvelopes networkEnvelope, Connection connection) {
+    private void onBundleOfEnvelopes(BundleOfEnvelopes bundleOfEnvelopes, Connection connection) {
         Map<P2PDataStorage.ByteArray, Set<NetworkEnvelope>> itemsByHash = new HashMap<>();
         Set<NetworkEnvelope> envelopesToProcess = new HashSet<>();
-        List<NetworkEnvelope> networkEnvelopes = networkEnvelope.getEnvelopes();
-        for (NetworkEnvelope current : networkEnvelopes) {
-            if (current instanceof AddPersistableNetworkPayloadMessage) {
-                PersistableNetworkPayload persistableNetworkPayload = ((AddPersistableNetworkPayloadMessage) current).getPersistableNetworkPayload();
+        List<NetworkEnvelope> networkEnvelopes = bundleOfEnvelopes.getEnvelopes();
+        for (NetworkEnvelope networkEnvelope : networkEnvelopes) {
+            if (networkEnvelope instanceof AddPersistableNetworkPayloadMessage) {
+                PersistableNetworkPayload persistableNetworkPayload = ((AddPersistableNetworkPayloadMessage) networkEnvelope).getPersistableNetworkPayload();
                 byte[] hash = persistableNetworkPayload.getHash();
                 String itemName = persistableNetworkPayload.getClass().getSimpleName();
                 P2PDataStorage.ByteArray byteArray = new P2PDataStorage.ByteArray(hash);
                 itemsByHash.putIfAbsent(byteArray, new HashSet<>());
                 Set<NetworkEnvelope> envelopesByHash = itemsByHash.get(byteArray);
-                if (!envelopesByHash.contains(current)) {
-                    envelopesByHash.add(current);
-                    envelopesToProcess.add(current);
+                if (!envelopesByHash.contains(networkEnvelope)) {
+                    envelopesByHash.add(networkEnvelope);
+                    envelopesToProcess.add(networkEnvelope);
                 } else {
                     log.debug("We got duplicated items for {}. We ignore the duplicates. Hash: {}",
                             itemName, Utilities.encodeToHex(hash));
                 }
             } else {
-                envelopesToProcess.add(current);
+                envelopesToProcess.add(networkEnvelope);
             }
         }
         envelopesToProcess.forEach(envelope -> UserThread.execute(() ->
