@@ -23,12 +23,16 @@ import bisq.network.p2p.mailbox.MailboxMessage;
 import bisq.common.app.Version;
 import bisq.common.proto.network.NetworkEnvelope;
 
+import java.util.concurrent.TimeUnit;
+
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 
 @EqualsAndHashCode(callSuper = true)
 @Value
 public class PrivateNotificationMessage extends NetworkEnvelope implements MailboxMessage {
+    public static final long TTL = TimeUnit.DAYS.toMillis(30);
+
     private final PrivateNotificationPayload privateNotificationPayload;
     private final NodeAddress senderNodeAddress;
     private final String uid;
@@ -69,5 +73,10 @@ public class PrivateNotificationMessage extends NetworkEnvelope implements Mailb
                 NodeAddress.fromProto(proto.getSenderNodeAddress()),
                 proto.getUid(),
                 messageVersion);
+    }
+
+    @Override
+    public long getTTL() {
+        return TTL;
     }
 }

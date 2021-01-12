@@ -26,6 +26,7 @@ import bisq.common.proto.network.NetworkEnvelope;
 import com.google.protobuf.ByteString;
 
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import lombok.EqualsAndHashCode;
 import lombok.Value;
@@ -35,6 +36,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @EqualsAndHashCode(callSuper = true)
 @Value
 public final class PrefixedSealedAndSignedMessage extends NetworkEnvelope implements MailboxMessage, SendersNodeAddressMessage {
+    public static final long TTL = TimeUnit.DAYS.toMillis(15);
+
     private final NodeAddress senderNodeAddress;
     private final SealedAndSigned sealedAndSigned;
 
@@ -99,5 +102,10 @@ public final class PrefixedSealedAndSignedMessage extends NetworkEnvelope implem
                 proto.getAddressPrefixHash().toByteArray(),
                 proto.getUid(),
                 -1);
+    }
+
+    @Override
+    public long getTTL() {
+        return TTL;
     }
 }

@@ -39,6 +39,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import java.lang.ref.WeakReference;
@@ -61,6 +62,8 @@ import javax.annotation.Nullable;
 @Getter
 @Slf4j
 public final class ChatMessage extends SupportMessage {
+    public static final long TTL = TimeUnit.DAYS.toMillis(7);
+
     public interface Listener {
         void onMessageStateChanged();
     }
@@ -337,6 +340,11 @@ public final class ChatMessage extends SupportMessage {
 
         ChatMessage resultChatMessage = disputeResult.getChatMessage();
         return resultChatMessage != null && resultChatMessage.getUid().equals(uid);
+    }
+
+    @Override
+    public long getTTL() {
+        return TTL;
     }
 
     private void notifyChangeListener() {
