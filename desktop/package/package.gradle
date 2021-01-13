@@ -258,6 +258,12 @@ task packageInstallers {
             // TODO How does the current package/windows/Bisq.iss play into this?
 
             executeCmd(jPackageFilePath + commonOpts + windowsOpts + " --type exe")
+
+            // In addition to the groovy quotes around the string, the entire Windows command must also be surrounded
+            // by quotes, plus each path inside the command has to be escaped as well
+            // Reason for this is that the path to the called executable contains spaces
+            // See https://stackoverflow.com/questions/6376113/how-do-i-use-spaces-in-the-command-prompt/6378038#6378038
+            executeCmd("\"\"C:\\Program Files (x86)\\Windows Kits\\10\\App Certification Kit\\signtool.exe\" sign /v /fd SHA256 /a \"${binariesFolderPath}/Bisq-${appVersion}.exe\"\"")
         } else if (Os.isFamily(Os.FAMILY_MAC)) {
             // See https://docs.oracle.com/en/java/javase/14/jpackage/override-jpackage-resources.html
             // for details of "--resource-dir"
