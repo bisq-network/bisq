@@ -187,10 +187,10 @@ task packageInstallers {
         File binariesFolderPath = file(getJavaBinariesDownloadURLs.property('binariesFolderPath'))
 
         File tempRootDir = getJavaBinariesDownloadURLs.property("tempRootDir") as File
-        // The jpackateTempDir stores temp files used by jpackage for building the installers
+        // The jpackageTempDir stores temp files used by jpackage for building the installers
         // It can be inspected in order to troubleshoot the packaging process
-        File jpackateTempDir = new File(tempRootDir, "jpackage-temp")
-        jpackateTempDir.mkdirs()
+        File jpackageTempDir = new File(tempRootDir, "jpackage-temp")
+        jpackageTempDir.mkdirs()
 
         // ALL contents of this folder will be included in the resulting installers
         // However, the fat jar is the only one we need
@@ -224,7 +224,7 @@ task packageInstallers {
                 " --app-version ${appVersion}" +
                 " --copyright \"© 2020 Bisq\"" +
                 " --vendor Bisq" +
-                " --temp \"${jpackateTempDir}\"" +
+                " --temp \"${jpackageTempDir}\"" +
 
                 // Options for creating the application image
                 " --input ${fatJarFolderPath}" +
@@ -260,7 +260,7 @@ task packageInstallers {
             executeCmd(jPackageFilePath + commonOpts + windowsOpts + " --type exe")
 
             // In addition to the groovy quotes around the string, the entire Windows command must also be surrounded
-            // by quotes, plus each path inside the command has to be escaped as well
+            // by quotes, plus each path inside the command has to be quoted as well
             // Reason for this is that the path to the called executable contains spaces
             // See https://stackoverflow.com/questions/6376113/how-do-i-use-spaces-in-the-command-prompt/6378038#6378038
             executeCmd("\"\"C:\\Program Files (x86)\\Windows Kits\\10\\App Certification Kit\\signtool.exe\" sign /v /fd SHA256 /a \"${binariesFolderPath}/Bisq-${appVersion}.exe\"\"")
@@ -326,7 +326,7 @@ task packageInstallers {
                         " --app-version ${appVersion}" +
                         " --copyright \"© 2020 Bisq\"" +
                         " --vendor Bisq" +
-                        " --temp \"${jpackateTempDir}\"" +
+                        " --temp \"${jpackageTempDir}\"" +
                         " --input ${fatJarFolderPath}" +
                         " --main-jar ${mainJarName}" +
                         " --main-class bisq.desktop.app.BisqAppMain" +
@@ -368,7 +368,7 @@ task packageInstallers {
                         " --app-version ${appVersion}" +
                         " --copyright \"© 2020 Bisq\"" +
                         " --vendor Bisq" +
-                        " --temp \"${jpackateTempDir}\"" +
+                        " --temp \"${jpackageTempDir}\"" +
                         " --app-image ${bisqAppImageFullPath}" +
                         " --license-file \"${licenseFilePath}\"" +
                         " --mac-sign" +
@@ -462,8 +462,8 @@ task packageInstallers {
                 " --type deb")
 
             // Clean jpackage temp folder, needs to be empty for the next packaging step (rpm)
-            jpackateTempDir.deleteDir()
-            jpackateTempDir.mkdirs()
+            jpackageTempDir.deleteDir()
+            jpackageTempDir.mkdirs()
 
             // Package rpm
             executeCmd(jPackageFilePath + commonOpts + linuxOpts +
