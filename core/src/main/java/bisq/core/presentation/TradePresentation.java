@@ -40,8 +40,6 @@ public class TradePresentation {
             long numPendingTrades = (long) newValue;
             if (numPendingTrades > 0)
                 this.numPendingTrades.set(String.valueOf(numPendingTrades));
-            if (numPendingTrades > 9)
-                this.numPendingTrades.set("★");
 
             showPendingTradesNotification.set(numPendingTrades > 0);
         });

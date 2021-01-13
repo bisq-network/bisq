@@ -17,20 +17,28 @@
 
 package bisq.core.dao.state;
 
-import bisq.core.dao.governance.period.CycleService;
 import bisq.core.dao.monitoring.DaoStateMonitoringService;
 import bisq.core.dao.monitoring.model.DaoStateHash;
 import bisq.core.dao.state.model.DaoState;
 import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.dao.state.storage.DaoStateStorageService;
 
+import bisq.common.config.Config;
+
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import com.google.common.annotations.VisibleForTesting;
 
+import java.io.File;
+import java.io.IOException;
+
 import java.util.LinkedList;
 
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+
+import javax.annotation.Nullable;
 
 /**
  * Manages periodical snapshots of the DaoState.
@@ -45,13 +53,16 @@ public class DaoStateSnapshotService {
 
     private final DaoStateService daoStateService;
     private final GenesisTxInfo genesisTxInfo;
-    private final CycleService cycleService;
     private final DaoStateStorageService daoStateStorageService;
     private final DaoStateMonitoringService daoStateMonitoringService;
+    private final File storageDir;
 
     private DaoState daoStateSnapshotCandidate;
     private LinkedList<DaoStateHash> daoStateHashChainSnapshotCandidate = new LinkedList<>();
     private int chainHeightOfLastApplySnapshot;
+    @Setter
+    @Nullable
+    private Runnable daoRequiresRestartHandler;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -61,14 +72,14 @@ public class DaoStateSnapshotService {
     @Inject
     public DaoStateSnapshotService(DaoStateService daoStateService,
                                    GenesisTxInfo genesisTxInfo,
-                                   CycleService cycleService,
                                    DaoStateStorageService daoStateStorageService,
-                                   DaoStateMonitoringService daoStateMonitoringService) {
+                                   DaoStateMonitoringService daoStateMonitoringService,
+                                   @Named(Config.STORAGE_DIR) File storageDir) {
         this.daoStateService = daoStateService;
         this.genesisTxInfo = genesisTxInfo;
-        this.cycleService = cycleService;
         this.daoStateStorageService = daoStateStorageService;
         this.daoStateMonitoringService = daoStateMonitoringService;
+        this.storageDir = storageDir;
     }
 
 
@@ -128,15 +139,19 @@ public class DaoStateSnapshotService {
                     } else {
                         // The reorg might have been caused by the previous parsing which might contains a range of
                         // blocks.
-                        log.warn("We applied already a snapshot with chainHeight {}. We will reset the daoState and " +
-                                "start over from the genesis transaction again.", chainHeightOfLastApplySnapshot);
-                        applyEmptySnapshot();
+                        log.warn("We applied already a snapshot with chainHeight {}. " +
+                                        "We remove all dao store files and shutdown. After a restart resource files will " +
+                                        "be applied if available.",
+                                chainHeightOfLastApplySnapshot);
+                        resyncDaoStateFromResources();
                     }
                 }
             } else if (fromReorg) {
-                log.info("We got a reorg and we want to apply the snapshot but it is empty. That is expected in the first blocks until the " +
-                        "first snapshot has been created. We use our applySnapshot method and restart from the genesis tx");
-                applyEmptySnapshot();
+                log.info("We got a reorg and we want to apply the snapshot but it is empty. " +
+                        "That is expected in the first blocks until the first snapshot has been created. " +
+                        "We remove all dao store files and shutdown. " +
+                        "After a restart resource files will be applied if available.");
+                resyncDaoStateFromResources();
             }
         } else {
             log.info("Try to apply snapshot but no stored snapshot available. That is expected at first blocks.");
@@ -152,16 +167,17 @@ public class DaoStateSnapshotService {
         return heightOfLastBlock >= genesisTxInfo.getGenesisBlockHeight();
     }
 
-    private void applyEmptySnapshot() {
-        DaoState emptyDaoState = new DaoState();
-        int genesisBlockHeight = genesisTxInfo.getGenesisBlockHeight();
-        emptyDaoState.setChainHeight(genesisBlockHeight);
-        chainHeightOfLastApplySnapshot = genesisBlockHeight;
-        daoStateService.applySnapshot(emptyDaoState);
-        // In case we apply an empty snapshot we need to trigger the cycleService.addFirstCycle method
-        cycleService.addFirstCycle();
+    private void resyncDaoStateFromResources() {
+        log.info("resyncDaoStateFromResources called");
+        try {
+            daoStateStorageService.resyncDaoStateFromResources(storageDir);
 
-        daoStateMonitoringService.applySnapshot(new LinkedList<>());
+            if (daoRequiresRestartHandler != null) {
+                daoRequiresRestartHandler.run();
+            }
+        } catch (IOException e) {
+            log.error("Error at resyncDaoStateFromResources: {}", e.toString());
+        }
     }
 
     @VisibleForTesting

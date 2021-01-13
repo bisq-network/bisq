@@ -48,6 +48,8 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.locale.CryptoCurrency;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
+import bisq.core.offer.OpenOffer;
+import bisq.core.offer.OpenOfferManager;
 import bisq.core.payment.AliPayAccount;
 import bisq.core.payment.CryptoCurrencyAccount;
 import bisq.core.payment.RevolutAccount;
@@ -70,6 +72,7 @@ import bisq.common.app.DevEnv;
 import bisq.common.app.Version;
 import bisq.common.config.Config;
 import bisq.common.file.CorruptedStorageFileHandler;
+import bisq.common.util.Tuple2;
 
 import com.google.inject.Inject;
 
@@ -86,6 +89,7 @@ import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 
 import java.util.ArrayList;
@@ -115,6 +119,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
     private final SettingsPresentation settingsPresentation;
     private final P2PService p2PService;
     private final TradeManager tradeManager;
+    private final OpenOfferManager openOfferManager;
     @Getter
     private final Preferences preferences;
     private final PrivateNotificationManager privateNotificationManager;
@@ -160,6 +165,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
                          SettingsPresentation settingsPresentation,
                          P2PService p2PService,
                          TradeManager tradeManager,
+                         OpenOfferManager openOfferManager,
                          Preferences preferences,
                          PrivateNotificationManager privateNotificationManager,
                          WalletPasswordWindow walletPasswordWindow,
@@ -184,6 +190,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
         this.settingsPresentation = settingsPresentation;
         this.p2PService = p2PService;
         this.tradeManager = tradeManager;
+        this.openOfferManager = openOfferManager;
         this.preferences = preferences;
         this.privateNotificationManager = privateNotificationManager;
         this.walletPasswordWindow = walletPasswordWindow;
@@ -345,7 +352,6 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
         bisqSetup.setDisplayPrivateNotificationHandler(privateNotification ->
                 new Popup().headLine(Res.get("popup.privateNotification.headline"))
                         .attention(privateNotification.getMessage())
-                        .setHeadlineStyle("-fx-text-fill: -bs-error-red;  -fx-font-weight: bold;  -fx-font-size: 16;")
                         .onClose(privateNotificationManager::removePrivateNotification)
                         .useIUnderstandButton()
                         .show());
@@ -358,8 +364,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
                         .show());
         bisqSetup.setDisplayLocalhostHandler(key -> {
             if (!DevEnv.isDevMode()) {
-                Popup popup = new Popup().backgroundInfo(Res.get("popup.bitcoinLocalhostNode.msg") +
-                        Res.get("popup.bitcoinLocalhostNode.additionalRequirements"))
+                Popup popup = new Popup().backgroundInfo(Res.get("popup.bitcoinLocalhostNode.msg"))
                         .dontShowAgainId(key);
                 popup.setDisplayOrderPriority(5);
                 popupQueue.add(popup);
@@ -410,6 +415,11 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
                     .show();
         });
 
+        bisqSetup.setDaoRequiresRestartHandler(() -> new Popup().warning("popup.warn.daoRequiresRestart")
+                .useShutDownButton()
+                .hideCloseButton()
+                .show());
+
         corruptedStorageFileHandler.getFiles().ifPresent(files -> new Popup()
                 .warning(Res.get("popup.warning.incompatibleDB", files.toString(), config.appDataDir))
                 .useShutDownButton()
@@ -432,6 +442,17 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
                 this.footerVersionInfo.setValue("v" + Version.VERSION);
             }
         });
+
+        if (p2PService.isBootstrapped()) {
+            setupInvalidOpenOffersHandler();
+        } else {
+            p2PService.addP2PServiceListener(new BootstrapListener() {
+                @Override
+                public void onUpdatedDataReceived() {
+                    setupInvalidOpenOffersHandler();
+                }
+            });
+        }
     }
 
     private void showRevolutAccountUpdateWindow(List<RevolutAccount> revolutAccountList) {
@@ -571,6 +592,34 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
         } else {
             combinedSyncProgress.set(daoPresentation.getBsqSyncProgress().doubleValue());
         }
+    }
+
+    private void setupInvalidOpenOffersHandler() {
+        openOfferManager.getInvalidOffers().addListener((ListChangeListener<Tuple2<OpenOffer, String>>) c -> {
+            c.next();
+            if (c.wasAdded()) {
+                handleInvalidOpenOffers(c.getAddedSubList());
+            }
+        });
+        handleInvalidOpenOffers(openOfferManager.getInvalidOffers());
+    }
+
+    private void handleInvalidOpenOffers(List<? extends Tuple2<OpenOffer, String>> list) {
+        list.forEach(tuple2 -> {
+            String errorMsg = tuple2.second;
+            OpenOffer openOffer = tuple2.first;
+            new Popup().warning(errorMsg)
+                    .width(1000)
+                    .actionButtonText(Res.get("shared.removeOffer"))
+                    .onAction(() -> {
+                        openOfferManager.removeOpenOffer(openOffer, () -> {
+                            log.info("Invalid open offer with ID {} was successfully removed.", openOffer.getId());
+                        }, log::error);
+
+                    })
+                    .hideCloseButton()
+                    .show();
+        });
     }
 
 

@@ -99,6 +99,7 @@ import bisq.core.util.validation.InputValidator;
 import bisq.common.config.Config;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple3;
+import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Coin;
 
@@ -362,7 +363,8 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
 
         Tuple3<Label, ListView<PaymentAccount>, VBox> tuple = addTopLabelListView(root, gridRow, Res.get("account.fiat.yourFiatAccounts"), Layout.FIRST_ROW_DISTANCE);
         paymentAccountsListView = tuple.second;
-        paymentAccountsListView.setMinHeight(2 * Layout.LIST_ROW_HEIGHT + 14);
+        int prefNumRows = Math.min(4, Math.max(2, model.dataModel.getNumPaymentAccounts()));
+        paymentAccountsListView.setMinHeight(prefNumRows * Layout.LIST_ROW_HEIGHT + 28);
         setPaymentAccountsCellFactory();
 
         Tuple3<Button, Button, Button> tuple3 = add3ButtonsAfterGroup(root, ++gridRow, Res.get("shared.addNewAccount"),
@@ -384,6 +386,7 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
         paymentMethodComboBox.setPrefWidth(250);
         List<PaymentMethod> list = PaymentMethod.getPaymentMethods().stream()
                 .filter(paymentMethod -> !paymentMethod.isAsset())
+                .sorted()
                 .collect(Collectors.toList());
         paymentMethodComboBox.setItems(FXCollections.observableArrayList(list));
         paymentMethodComboBox.setConverter(new StringConverter<>() {
@@ -537,6 +540,15 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
     private void removeAccountRows() {
         FormBuilder.removeRowsFromGridPane(root, 2, gridRow);
         gridRow = 1;
+    }
+
+    @Override
+    protected void copyAccount() {
+        var selectedAccount = paymentAccountsListView.getSelectionModel().getSelectedItem();
+        if (selectedAccount == null) {
+            return;
+        }
+        Utilities.copyToClipboard(accountAgeWitnessService.getSignInfoFromAccount(selectedAccount));
     }
 
 }

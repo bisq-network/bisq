@@ -42,6 +42,7 @@ import bisq.core.util.coin.CoinFormatter;
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
 import bisq.common.config.Config;
+import bisq.common.util.Tuple3;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
@@ -66,9 +67,9 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
-import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 
 import org.fxmisc.easybind.EasyBind;
@@ -198,17 +199,15 @@ public class DepositView extends ActivatableView<VBox, Void> {
         addressTextField.setManaged(false);
         amountTextField.setManaged(false);
 
-        generateNewAddressButton = addButton(gridPane, ++gridRow, Res.get("funds.deposit.generateAddress"), -20);
-        GridPane.setColumnIndex(generateNewAddressButton, 0);
-        GridPane.setHalignment(generateNewAddressButton, HPos.LEFT);
-
-        generateNewAddressSegwitCheckbox = addCheckBox(gridPane, gridRow,
-                Res.get("funds.deposit.generateAddressSegwit"), 0);
+        Tuple3<Button, CheckBox, HBox> buttonCheckBoxHBox = addButtonCheckBoxWithBox(gridPane, ++gridRow,
+                Res.get("funds.deposit.generateAddress"),
+                Res.get("funds.deposit.generateAddressSegwit"),
+                15);
+        buttonCheckBoxHBox.third.setSpacing(25);
+        generateNewAddressButton = buttonCheckBoxHBox.first;
+        generateNewAddressSegwitCheckbox = buttonCheckBoxHBox.second;
         generateNewAddressSegwitCheckbox.setAllowIndeterminate(false);
         generateNewAddressSegwitCheckbox.setSelected(true);
-        GridPane.setColumnIndex(generateNewAddressSegwitCheckbox, 0);
-        GridPane.setHalignment(generateNewAddressSegwitCheckbox, HPos.LEFT);
-        GridPane.setMargin(generateNewAddressSegwitCheckbox, new Insets(15, 0, 0, 250));
 
         generateNewAddressButton.setOnAction(event -> {
             boolean segwit = generateNewAddressSegwitCheckbox.isSelected();

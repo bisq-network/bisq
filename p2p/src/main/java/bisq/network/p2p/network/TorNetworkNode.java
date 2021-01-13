@@ -184,7 +184,9 @@ public class TorNetworkNode extends NetworkNode {
                 log.info("Tor shut down completed");
             } else {
                 log.info("Tor has not been created yet. We cancel the torStartupFuture.");
-                torStartupFuture.cancel(true);
+                if (torStartupFuture != null) {
+                    torStartupFuture.cancel(true);
+                }
                 log.info("torStartupFuture cancelled");
             }
         } catch (Throwable e) {
@@ -278,7 +280,6 @@ public class TorNetworkNode extends NetworkNode {
                     }
                     return null;
                 });
-                log.info("It will take some time for the HS to be reachable (~40 seconds). You will be notified about this");
             } catch (TorCtlException e) {
                 String msg = e.getCause() != null ? e.getCause().toString() : e.toString();
                 log.error("Tor node creation failed: {}", msg);

@@ -1039,6 +1039,7 @@ public abstract class Trade implements Tradable, Model {
         return offer.getOfferFeePaymentTxId() == null ||
                 getTakerFeeTxId() == null ||
                 getDepositTxId() == null ||
+                getDepositTx() == null ||
                 getDelayedPayoutTxBytes() == null;
     }
 

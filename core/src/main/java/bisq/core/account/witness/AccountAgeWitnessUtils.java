@@ -30,6 +30,7 @@ import bisq.common.crypto.PubKeyRing;
 import bisq.common.util.Utilities;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Optional;
 import java.util.Stack;
 
@@ -67,12 +68,11 @@ public class AccountAgeWitnessUtils {
     }
 
     private void logChild(SignedWitness sigWit, String initString, Stack<P2PDataStorage.ByteArray> excluded) {
-        var allSig = signedWitnessService.getSignedWitnessMap();
         log.info("{}AEW: {} PKH: {} time: {}", initString,
                 Utilities.bytesAsHexString(sigWit.getAccountAgeWitnessHash()).substring(0, 7),
                 Utilities.bytesAsHexString(Hash.getRipemd160hash(sigWit.getWitnessOwnerPubKey())).substring(0, 7),
                 sigWit.getDate());
-        allSig.values().forEach(w -> {
+        signedWitnessService.getSignedWitnessMapValues().forEach(w -> {
             if (!excluded.contains(new P2PDataStorage.ByteArray(w.getWitnessOwnerPubKey())) &&
                     Arrays.equals(w.getSignerPubKey(), sigWit.getWitnessOwnerPubKey())) {
                 excluded.push(new P2PDataStorage.ByteArray(w.getWitnessOwnerPubKey()));
@@ -85,10 +85,10 @@ public class AccountAgeWitnessUtils {
     // Log signers per
     public void logSigners() {
         log.info("Signers per AEW");
-        var allSig = signedWitnessService.getSignedWitnessMap();
-        allSig.values().forEach(w -> {
+        Collection<SignedWitness> signedWitnessMapValues = signedWitnessService.getSignedWitnessMapValues();
+        signedWitnessMapValues.forEach(w -> {
                     log.info("AEW {}", Utilities.bytesAsHexString(w.getAccountAgeWitnessHash()));
-                    allSig.values().forEach(ww -> {
+                    signedWitnessMapValues.forEach(ww -> {
                         if (Arrays.equals(w.getSignerPubKey(), ww.getWitnessOwnerPubKey())) {
                             log.info("  {}", Utilities.bytesAsHexString(ww.getAccountAgeWitnessHash()));
                         }
@@ -123,7 +123,7 @@ public class AccountAgeWitnessUtils {
 
         AccountAgeWitnessService.SignState signState =
                 accountAgeWitnessService.getSignState(accountAgeWitness.get());
-        return signState.name() + " " + signState.getPresentation() +
+        return signState.name() + " " + signState.getDisplayString() +
                 "\n" + accountAgeWitness.toString();
     }
 

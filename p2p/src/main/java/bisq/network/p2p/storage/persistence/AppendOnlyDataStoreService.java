@@ -55,6 +55,10 @@ public class AppendOnlyDataStoreService {
     }
 
     public void readFromResources(String postFix, Runnable completeHandler) {
+        if (services.isEmpty()) {
+            completeHandler.run();
+            return;
+        }
         AtomicInteger remaining = new AtomicInteger(services.size());
         services.forEach(service -> {
             service.readFromResources(postFix, () -> {
@@ -74,7 +78,12 @@ public class AppendOnlyDataStoreService {
 
     public Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> getMap() {
         return services.stream()
-                .flatMap(service -> service.getMap().entrySet().stream())
+                .flatMap(service -> {
+                    Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> map = service instanceof HistoricalDataStoreService ?
+                            ((HistoricalDataStoreService) service).getMapOfAllData() :
+                            service.getMap();
+                    return map.entrySet().stream();
+                })
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 

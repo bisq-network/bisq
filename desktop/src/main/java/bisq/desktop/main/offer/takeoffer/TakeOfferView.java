@@ -37,6 +37,7 @@ import bisq.desktop.main.dao.wallet.receive.BsqReceiveView;
 import bisq.desktop.main.funds.FundsView;
 import bisq.desktop.main.funds.withdrawal.WithdrawalView;
 import bisq.desktop.main.offer.OfferView;
+import bisq.desktop.main.offer.OfferViewUtil;
 import bisq.desktop.main.overlays.notifications.Notification;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
@@ -347,13 +348,12 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             takeOfferButton.setId("buy-button-big");
             takeOfferButton.updateText(Res.get("takeOffer.takeOfferButton", Res.get("shared.buy")));
             nextButton.setId("buy-button");
-            priceAsPercentageDescription.setText(Res.get("shared.aboveInPercent"));
         } else {
             takeOfferButton.setId("sell-button-big");
             nextButton.setId("sell-button");
             takeOfferButton.updateText(Res.get("takeOffer.takeOfferButton", Res.get("shared.sell")));
-            priceAsPercentageDescription.setText(Res.get("shared.belowInPercent"));
         }
+        priceAsPercentageDescription.setText(model.getPercentagePriceDescription());
 
         boolean showComboBox = model.getPossiblePaymentAccounts().size() > 1;
         paymentAccountsComboBox.setVisible(showComboBox);
@@ -383,8 +383,10 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         addressTextField.setPaymentLabel(model.getPaymentLabel());
         addressTextField.setAddress(model.dataModel.getAddressEntry().getAddressString());
 
-        if (CurrencyUtil.isFiatCurrency(offer.getCurrencyCode()))
-            volumeInfoTextField.setContentForPrivacyPopOver(createPopoverLabel(Res.get("offerbook.info.roundedFiatVolume")));
+        if (CurrencyUtil.isFiatCurrency(offer.getCurrencyCode())) {
+            Label popOverLabel = OfferViewUtil.createPopOverLabel(Res.get("offerbook.info.roundedFiatVolume"));
+            volumeInfoTextField.setContentForPrivacyPopOver(popOverLabel);
+        }
 
         if (offer.getPrice() == null)
             new Popup().warning(Res.get("takeOffer.noPriceFeedAvailable"))
@@ -396,21 +398,12 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         this.closeHandler = closeHandler;
     }
 
-    // called form parent as the view does not get notified when the tab is closed
+    // Called from parent as the view does not get notified when the tab is closed
     public void onClose() {
         Coin balance = model.dataModel.getBalance().get();
         if (balance != null && balance.isPositive() && !model.takeOfferCompleted.get() && !DevEnv.isDevMode()) {
             model.dataModel.swapTradeToSavings();
-            new Popup().information(Res.get("takeOffer.alreadyFunded.movedFunds"))
-                    .actionButtonTextWithGoTo("navigation.funds.availableForWithdrawal")
-                    .onAction(() -> navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class))
-                    .show();
         }
-
-        // TODO need other implementation as it is displayed also if there are old funds in the wallet
-        /*
-        if (model.dataModel.getIsWalletFunded().get())
-            new Popup<>().warning("You have already funds paid in.\nIn the <Funds/Open for withdrawal> section you can withdraw those funds.").show();*/
     }
 
     public void onTabSelected(boolean isSelected) {
@@ -1034,14 +1027,17 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         fundingHBox.getChildren().add(cancelButton2);
 
         cancelButton2.setOnAction(e -> {
-            if (model.dataModel.getIsBtcWalletFunded().get()) {
-                new Popup().warning(Res.get("takeOffer.alreadyFunded.askCancel"))
+            String key = "CreateOfferCancelAndFunded";
+            if (model.dataModel.getIsBtcWalletFunded().get() &&
+                    model.dataModel.preferences.showAgain(key)) {
+                new Popup().backgroundInfo(Res.get("takeOffer.alreadyFunded.askCancel"))
                         .closeButtonText(Res.get("shared.no"))
                         .actionButtonText(Res.get("shared.yesCancel"))
                         .onAction(() -> {
                             model.dataModel.swapTradeToSavings();
-                            close();
+                            close(false);
                         })
+                        .dontShowAgainId(key)
                         .show();
             } else {
                 close(false);
@@ -1127,8 +1123,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         priceAsPercentageTextField = priceAsPercentageTuple.second;
         priceAsPercentageLabel = priceAsPercentageTuple.third;
 
-        Tuple2<Label, VBox> priceAsPercentageInputBoxTuple = getTradeInputBox(priceAsPercentageValueCurrencyBox,
-                Res.get("shared.distanceInPercent"));
+        Tuple2<Label, VBox> priceAsPercentageInputBoxTuple = getTradeInputBox(priceAsPercentageValueCurrencyBox, "");
         priceAsPercentageDescription = priceAsPercentageInputBoxTuple.first;
 
         getSmallIconForLabel(MaterialDesignIcon.CHART_LINE, priceAsPercentageDescription, "small-icon-label");
@@ -1277,14 +1272,6 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                 model.getTotalToPayInfo());
 
         return infoGridPane;
-    }
-
-    private Label createPopoverLabel(String text) {
-        final Label label = new Label(text);
-        label.setPrefWidth(300);
-        label.setWrapText(true);
-        label.setPadding(new Insets(10));
-        return label;
     }
 
     private void addPayInfoEntry(GridPane infoGridPane, int row, String labelText, String value) {

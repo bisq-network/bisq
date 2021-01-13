@@ -88,6 +88,8 @@ import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import lombok.Getter;
+
 import javax.annotation.Nullable;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -129,6 +131,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     boolean isTabSelected;
     protected double marketPriceMargin = 0;
     private Coin txFeeFromFeeService = Coin.ZERO;
+    @Getter
     private boolean marketPriceAvailable;
     private int feeTxVsize = TxFeeEstimationService.TYPICAL_TX_WITH_1_INPUT_VSIZE;
     protected boolean allowAmountUpdate = true;
@@ -137,6 +140,9 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     private final Predicate<ObjectProperty<Coin>> isNonZeroAmount = (c) -> c.get() != null && !c.get().isZero();
     private final Predicate<ObjectProperty<Price>> isNonZeroPrice = (p) -> p.get() != null && !p.get().isZero();
     private final Predicate<ObjectProperty<Volume>> isNonZeroVolume = (v) -> v.get() != null && !v.get().isZero();
+    @Getter
+    protected long triggerPrice;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -315,6 +321,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
         openOfferManager.placeOffer(offer,
                 buyerSecurityDeposit.get(),
                 useSavingsWallet,
+                triggerPrice,
                 resultHandler,
                 log::error);
     }
@@ -467,6 +474,14 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
         return direction;
     }
 
+    boolean isSellOffer() {
+        return direction == OfferPayload.Direction.SELL;
+    }
+
+    boolean isBuyOffer() {
+        return direction == OfferPayload.Direction.BUY;
+    }
+
     AddressEntry getAddressEntry() {
         return addressEntry;
     }
@@ -595,10 +610,6 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
         return isBuyOffer() ? getBuyerSecurityDepositAsCoin() : getSellerSecurityDepositAsCoin();
     }
 
-    boolean isBuyOffer() {
-        return offerUtil.isBuyOffer(getDirection());
-    }
-
     public Coin getTxFee() {
         if (isCurrencyForMakerFeeBtc())
             return txFeeFromFeeService;
@@ -666,6 +677,18 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
 
     public ReadOnlyStringProperty getTradeCurrencyCode() {
         return tradeCurrencyCode;
+    }
+
+    public String getCurrencyCode() {
+        return tradeCurrencyCode.get();
+    }
+
+    boolean isCryptoCurrency() {
+        return CurrencyUtil.isCryptoCurrency(tradeCurrencyCode.get());
+    }
+
+    boolean isFiatCurrency() {
+        return CurrencyUtil.isFiatCurrency(tradeCurrencyCode.get());
     }
 
     ReadOnlyBooleanProperty getUseMarketBasedPrice() {
@@ -750,5 +773,9 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
 
     public boolean isMinBuyerSecurityDeposit() {
         return !getBuyerSecurityDepositAsCoin().isGreaterThan(Restrictions.getMinBuyerSecurityDepositAsCoin());
+    }
+
+    public void setTriggerPrice(long triggerPrice) {
+        this.triggerPrice = triggerPrice;
     }
 }

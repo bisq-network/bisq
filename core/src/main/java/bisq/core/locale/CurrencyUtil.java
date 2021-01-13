@@ -42,6 +42,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -53,7 +54,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class CurrencyUtil {
-
     public static void setup() {
         setBaseCurrencyCode(Config.baseCurrencyNetwork().getCurrencyCode());
     }
@@ -61,6 +61,14 @@ public class CurrencyUtil {
     private static final AssetRegistry assetRegistry = new AssetRegistry();
 
     private static String baseCurrencyCode = "BTC";
+
+    // Calls to isFiatCurrency and isCryptoCurrency are very frequent so we use a cache of the results.
+    // The main improvement was already achieved with using memoize for the source maps, but
+    // the caching still reduces performance costs by about 20% for isCryptoCurrency (1752 ms vs 2121 ms) and about 50%
+    // for isFiatCurrency calls (1777 ms vs 3467 ms).
+    // See: https://github.com/bisq-network/bisq/pull/4955#issuecomment-745302802
+    private static final Map<String, Boolean> isFiatCurrencyMap = new ConcurrentHashMap<>();
+    private static final Map<String, Boolean> isCryptoCurrencyMap = new ConcurrentHashMap<>();
 
     private static Supplier<Map<String, FiatCurrency>> fiatCurrencyMapSupplier = Suppliers.memoize(
             CurrencyUtil::createFiatCurrencyMap)::get;
@@ -293,7 +301,6 @@ public class CurrencyUtil {
                 new FiatCurrency("MAD"),
                 new FiatCurrency("NPR"),
                 new FiatCurrency("NZD"),
-                new FiatCurrency("NGN"),
                 new FiatCurrency("NOK"),
                 new FiatCurrency("PKR"),
                 new FiatCurrency("PEN"),
@@ -391,12 +398,25 @@ public class CurrencyUtil {
     }
 
     public static boolean isFiatCurrency(String currencyCode) {
+        if (currencyCode != null && isFiatCurrencyMap.containsKey(currencyCode)) {
+            return isFiatCurrencyMap.get(currencyCode);
+        }
+
         try {
-            return currencyCode != null
+            boolean isFiatCurrency = currencyCode != null
                     && !currencyCode.isEmpty()
                     && !isCryptoCurrency(currencyCode)
                     && Currency.getInstance(currencyCode) != null;
+
+            if (currencyCode != null) {
+                isFiatCurrencyMap.put(currencyCode, isFiatCurrency);
+            }
+
+            return isFiatCurrency;
         } catch (Throwable t) {
+            if (currencyCode != null) {
+                isFiatCurrencyMap.put(currencyCode, false);
+            }
             return false;
         }
     }
@@ -417,28 +437,37 @@ public class CurrencyUtil {
      * contains 3 entries (CryptoCurrency, Fiat, Undefined).
      */
     public static boolean isCryptoCurrency(String currencyCode) {
-        // Some tests call that method with null values. Should be fixed in the tests but to not break them return false.
-        if (currencyCode == null)
-            return false;
+        if (currencyCode != null && isCryptoCurrencyMap.containsKey(currencyCode)) {
+            return isCryptoCurrencyMap.get(currencyCode);
+        }
 
-        // BTC is not part of our assetRegistry so treat it extra here. Other old base currencies (LTC, DOGE, DASH)
-        // are not supported anymore so we can ignore that case.
-        if (currencyCode.equals("BTC"))
-            return true;
+        boolean isCryptoCurrency;
+        if (currencyCode == null) {
+            // Some tests call that method with null values. Should be fixed in the tests but to not break them return false.
+            isCryptoCurrency = false;
+        } else if (currencyCode.equals("BTC")) {
+            // BTC is not part of our assetRegistry so treat it extra here. Other old base currencies (LTC, DOGE, DASH)
+            // are not supported anymore so we can ignore that case.
+            isCryptoCurrency = true;
+        } else if (getCryptoCurrency(currencyCode).isPresent()) {
+            // If we find the code in our assetRegistry we return true.
+            // It might be that an asset was removed from the assetsRegistry, we deal with such cases below by checking if
+            // it is a fiat currency
+            isCryptoCurrency = true;
+        } else if (!getFiatCurrency(currencyCode).isPresent()) {
+            // In case the code is from a removed asset we cross check if there exist a fiat currency with that code,
+            // if we don't find a fiat currency we treat it as a crypto currency.
+            isCryptoCurrency = true;
+        } else {
+            // If we would have found a fiat currency we return false
+            isCryptoCurrency = false;
+        }
 
-        // If we find the code in our assetRegistry we return true.
-        // It might be that an asset was removed from the assetsRegistry, we deal with such cases below by checking if
-        // it is a fiat currency
-        if (getCryptoCurrency(currencyCode).isPresent())
-            return true;
+        if (currencyCode != null) {
+            isCryptoCurrencyMap.put(currencyCode, isCryptoCurrency);
+        }
 
-        // In case the code is from a removed asset we cross check if there exist a fiat currency with that code,
-        // if we don't find a fiat currency we treat it as a crypto currency.
-        if (!getFiatCurrency(currencyCode).isPresent())
-            return true;
-
-        // If we would have found a fiat currency we return false
-        return false;
+        return isCryptoCurrency;
     }
 
     public static Optional<CryptoCurrency> getCryptoCurrency(String currencyCode) {
@@ -527,7 +556,9 @@ public class CurrencyUtil {
         return new CryptoCurrency(asset.getTickerSymbol(), asset.getName(), asset instanceof Token);
     }
 
-    private static boolean isNotBsqOrBsqTradingActivated(Asset asset, BaseCurrencyNetwork baseCurrencyNetwork, boolean daoTradingActivated) {
+    private static boolean isNotBsqOrBsqTradingActivated(Asset asset,
+                                                         BaseCurrencyNetwork baseCurrencyNetwork,
+                                                         boolean daoTradingActivated) {
         return !(asset instanceof BSQ) ||
                 daoTradingActivated && assetMatchesNetwork(asset, baseCurrencyNetwork);
     }
@@ -582,7 +613,8 @@ public class CurrencyUtil {
     }
 
     // Excludes all assets which got removed by DAO voting
-    public static List<CryptoCurrency> getActiveSortedCryptoCurrencies(AssetService assetService, FilterManager filterManager) {
+    public static List<CryptoCurrency> getActiveSortedCryptoCurrencies(AssetService assetService,
+                                                                       FilterManager filterManager) {
         return getAllSortedCryptoCurrencies().stream()
                 .filter(e -> e.getCode().equals("BSQ") || assetService.isActive(e.getCode()))
                 .filter(e -> !filterManager.isCurrencyBanned(e.getCode()))

@@ -44,6 +44,7 @@ import bisq.core.support.dispute.DisputeList;
 import bisq.core.support.dispute.DisputeManager;
 import bisq.core.support.dispute.DisputeResult;
 import bisq.core.support.dispute.DisputeSession;
+import bisq.core.support.dispute.agent.DisputeAgentLookupMap;
 import bisq.core.support.dispute.mediation.mediator.MediatorManager;
 import bisq.core.support.dispute.refund.refundagent.RefundAgentManager;
 import bisq.core.support.messages.ChatMessage;
@@ -910,6 +911,8 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
         TableColumn<Dispute, Dispute> roleColumn = getRoleColumn();
         tableView.getColumns().add(roleColumn);
 
+        maybeAddAgentColumn();
+
         stateColumn = getStateColumn();
         tableView.getColumns().add(stateColumn);
 
@@ -921,6 +924,15 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
 
         dateColumn.setSortType(TableColumn.SortType.DESCENDING);
         tableView.getSortOrder().add(dateColumn);
+    }
+
+    protected void maybeAddAgentColumn() {
+        // Only relevant client views will impl it
+    }
+
+    // Relevant client views will override that
+    protected NodeAddress getAgentNodeAddress(Contract contract) {
+        return null;
     }
 
     private TableColumn<Dispute, Dispute> getSelectColumn() {
@@ -1076,7 +1088,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
     private TableColumn<Dispute, Dispute> getBuyerOnionAddressColumn() {
         TableColumn<Dispute, Dispute> column = new AutoTooltipTableColumn<>(Res.get("support.buyerAddress")) {
             {
-                setMinWidth(190);
+                setMinWidth(160);
             }
         };
         column.setCellValueFactory((dispute) -> new ReadOnlyObjectWrapper<>(dispute.getValue()));
@@ -1102,7 +1114,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
     private TableColumn<Dispute, Dispute> getSellerOnionAddressColumn() {
         TableColumn<Dispute, Dispute> column = new AutoTooltipTableColumn<>(Res.get("support.sellerAddress")) {
             {
-                setMinWidth(190);
+                setMinWidth(160);
             }
         };
         column.setCellValueFactory((dispute) -> new ReadOnlyObjectWrapper<>(dispute.getValue()));
@@ -1206,6 +1218,40 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
                                         setText(item.isDisputeOpenerIsBuyer() ? Res.get("support.buyerOfferer") : Res.get("support.sellerOfferer"));
                                     else
                                         setText(item.isDisputeOpenerIsBuyer() ? Res.get("support.buyerTaker") : Res.get("support.sellerTaker"));
+                                } else {
+                                    setText("");
+                                }
+                            }
+                        };
+                    }
+                });
+        return column;
+    }
+
+    protected TableColumn<Dispute, Dispute> getAgentColumn() {
+        TableColumn<Dispute, Dispute> column = new AutoTooltipTableColumn<>(Res.get("support.agent")) {
+            {
+                setMinWidth(70);
+            }
+        };
+        column.setCellValueFactory((dispute) -> new ReadOnlyObjectWrapper<>(dispute.getValue()));
+        column.setCellFactory(
+                new Callback<>() {
+                    @Override
+                    public TableCell<Dispute, Dispute> call(TableColumn<Dispute, Dispute> column) {
+                        return new TableCell<>() {
+                            @Override
+                            public void updateItem(final Dispute item, boolean empty) {
+                                super.updateItem(item, empty);
+                                if (item != null && !empty) {
+                                    NodeAddress agentNodeAddress = getAgentNodeAddress(item.getContract());
+                                    if (agentNodeAddress == null) {
+                                        setText(Res.get("shared.na"));
+                                        return;
+                                    }
+
+                                    String keyBaseUserName = DisputeAgentLookupMap.getKeyBaseUserName(agentNodeAddress.getFullAddress());
+                                    setText(keyBaseUserName);
                                 } else {
                                     setText("");
                                 }

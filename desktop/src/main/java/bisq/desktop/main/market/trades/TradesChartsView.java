@@ -33,7 +33,6 @@ import bisq.desktop.util.GUIUtil;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.monetary.Price;
-import bisq.core.monetary.Volume;
 import bisq.core.trade.statistics.TradeStatistics3;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.CoinFormatter;
@@ -54,6 +53,7 @@ import com.jfoenix.controls.JFXTabPane;
 
 import javafx.stage.Stage;
 
+import javafx.scene.Node;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.ComboBox;
@@ -72,7 +72,6 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import javafx.scene.Node;
 import javafx.scene.text.Text;
 
 import javafx.geometry.Insets;
@@ -379,7 +378,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         int reportColumns = tableColumns.size() + 1;
 
         boolean showAllTradeCurrencies = model.showAllTradeCurrenciesProperty.get();
-        CSVEntryConverter<TradeStatistics3ListItem> headerConverter = transactionsListItem -> {
+        CSVEntryConverter<TradeStatistics3ListItem> headerConverter = item -> {
             String[] columns = new String[reportColumns];
             columns[0] = "Epoch time in ms";
             for (int i = 0; i < tableColumns.size(); i++) {
@@ -741,7 +740,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                         };
                     }
                 });
-        marketColumn.setComparator(Comparator.comparing(TradeStatistics3ListItem::getDate));
+        marketColumn.setComparator(Comparator.comparing(TradeStatistics3ListItem::getMarket));
         tableView.getColumns().add(marketColumn);
 
         // price
@@ -814,11 +813,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                         };
                     }
                 });
-        volumeColumn.setComparator((o1, o2) -> {
-            final Volume tradeVolume1 = o1.getTradeVolume();
-            final Volume tradeVolume2 = o2.getTradeVolume();
-            return tradeVolume1.compareTo(tradeVolume2);
-        });
+        volumeColumn.setComparator(Comparator.comparing(TradeStatistics3ListItem::getTradeVolume));
         tableView.getColumns().add(volumeColumn);
 
         // paymentMethod

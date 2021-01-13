@@ -33,7 +33,7 @@ configure(subprojects) {
 
     ext { // in alphabetical order
         bcVersion = '1.63'
-        bitcoinjVersion = 'dcf8af0'
+        bitcoinjVersion = '2a80db4'
         btcdCli4jVersion = '27b94333'
         codecVersion = '1.13'
         easybindVersion = '1.0.3'
@@ -392,7 +392,7 @@ configure(project(':desktop')) {
     apply from: '../gradle/witness/gradle-witness.gradle'
     apply from: 'package/package.gradle'
 
-    version = '1.5.1-SNAPSHOT'
+    version = '1.5.4-SNAPSHOT'
 
     jar.manifest.attributes(
         "Implementation-Title": project.name,
@@ -602,6 +602,12 @@ configure(project(':daemon')) {
         compileOnly "org.projectlombok:lombok:$lombokVersion"
         compileOnly "javax.annotation:javax.annotation-api:$javaxAnnotationVersion"
         annotationProcessor "org.projectlombok:lombok:$lombokVersion"
+
+        testCompile "org.junit.jupiter:junit-jupiter-api:$jupiterVersion"
+        testCompile "org.junit.jupiter:junit-jupiter-params:$jupiterVersion"
+        testCompileOnly "org.projectlombok:lombok:$lombokVersion"
+        testAnnotationProcessor "org.projectlombok:lombok:$lombokVersion"
+        testRuntime("org.junit.jupiter:junit-jupiter-engine:$jupiterVersion")
     }
 }
 

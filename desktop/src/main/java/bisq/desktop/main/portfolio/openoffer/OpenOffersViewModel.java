@@ -19,6 +19,7 @@ package bisq.desktop.main.portfolio.openoffer;
 
 import bisq.desktop.common.model.ActivatableWithDataModel;
 import bisq.desktop.common.model.ViewModel;
+import bisq.desktop.main.PriceUtil;
 import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.GUIUtil;
 
@@ -27,8 +28,8 @@ import bisq.core.locale.Res;
 import bisq.core.monetary.Price;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OpenOffer;
-import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.FormattingUtils;
+import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.coin.CoinFormatter;
 
 import bisq.network.p2p.P2PService;
@@ -46,6 +47,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 class OpenOffersViewModel extends ActivatableWithDataModel<OpenOffersDataModel> implements ViewModel {
     private final P2PService p2PService;
+    private final PriceUtil priceUtil;
     private final CoinFormatter btcFormatter;
     private final BsqFormatter bsqFormatter;
 
@@ -53,20 +55,31 @@ class OpenOffersViewModel extends ActivatableWithDataModel<OpenOffersDataModel> 
     @Inject
     public OpenOffersViewModel(OpenOffersDataModel dataModel,
                                P2PService p2PService,
+                               PriceUtil priceUtil,
                                @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
                                BsqFormatter bsqFormatter) {
         super(dataModel);
 
         this.p2PService = p2PService;
+        this.priceUtil = priceUtil;
         this.btcFormatter = btcFormatter;
         this.bsqFormatter = bsqFormatter;
     }
 
-    void onActivateOpenOffer(OpenOffer openOffer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+    @Override
+    protected void activate() {
+        priceUtil.recalculateBsq30DayAveragePrice();
+    }
+
+    void onActivateOpenOffer(OpenOffer openOffer,
+                             ResultHandler resultHandler,
+                             ErrorMessageHandler errorMessageHandler) {
         dataModel.onActivateOpenOffer(openOffer, resultHandler, errorMessageHandler);
     }
 
-    void onDeactivateOpenOffer(OpenOffer openOffer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+    void onDeactivateOpenOffer(OpenOffer openOffer,
+                               ResultHandler resultHandler,
+                               ErrorMessageHandler errorMessageHandler) {
         dataModel.onDeactivateOpenOffer(openOffer, resultHandler, errorMessageHandler);
     }
 
@@ -78,7 +91,7 @@ class OpenOffersViewModel extends ActivatableWithDataModel<OpenOffersDataModel> 
         return dataModel.getList();
     }
 
-    String getTradeId(OpenOfferListItem item) {
+    String getOfferId(OpenOfferListItem item) {
         return item.getOffer().getShortId();
     }
 
@@ -100,14 +113,15 @@ class OpenOffersViewModel extends ActivatableWithDataModel<OpenOffersDataModel> 
     }
 
     String getPriceDeviation(OpenOfferListItem item) {
-        if ((item == null))
-            return "";
         Offer offer = item.getOffer();
-        if (offer.isUseMarketBasedPrice()) {
-            return FormattingUtils.formatPercentagePrice(offer.getMarketPriceMargin());
-        } else {
-            return Res.get("shared.na");
-        }
+        return priceUtil.getMarketBasedPrice(offer, offer.getMirroredDirection())
+                .map(FormattingUtils::formatPercentagePrice)
+                .orElse("");
+    }
+
+    Double getPriceDeviationAsDouble(OpenOfferListItem item) {
+        Offer offer = item.getOffer();
+        return priceUtil.getMarketBasedPrice(offer, offer.getMirroredDirection()).orElse(0d);
     }
 
     String getVolume(OpenOfferListItem item) {
@@ -156,5 +170,19 @@ class OpenOffersViewModel extends ActivatableWithDataModel<OpenOffersDataModel> 
         return offer.isCurrencyForMakerFeeBtc() ?
                 btcFormatter.formatCoinWithCode(offer.getMakerFee()) :
                 bsqFormatter.formatCoinWithCode(offer.getMakerFee());
+    }
+
+    String getTriggerPrice(OpenOfferListItem item) {
+        if ((item == null)) {
+            return "";
+        }
+
+        Offer offer = item.getOffer();
+        long triggerPrice = item.getOpenOffer().getTriggerPrice();
+        if (!offer.isUseMarketBasedPrice() || triggerPrice <= 0) {
+            return Res.get("shared.na");
+        } else {
+            return PriceUtil.formatMarketPrice(triggerPrice, offer.getCurrencyCode());
+        }
     }
 }

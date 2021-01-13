@@ -51,6 +51,7 @@ import bisq.common.crypto.PubKeyRing;
 import bisq.common.crypto.Sig;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.util.MathUtils;
+import bisq.common.util.Tuple2;
 import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Coin;
@@ -63,6 +64,8 @@ import com.google.common.annotations.VisibleForTesting;
 
 import java.security.PublicKey;
 
+import java.time.Clock;
+
 import java.util.Arrays;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -73,6 +76,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -102,12 +106,12 @@ public class AccountAgeWitnessService {
         PEER_SIGNER(Res.get("offerbook.timeSinceSigning.info.signer")),
         BANNED(Res.get("offerbook.timeSinceSigning.info.banned"));
 
-        private String presentation;
+        private String displayString;
         private String hash = "";
         private long daysUntilLimitLifted = 0;
 
-        SignState(String presentation) {
-            this.presentation = presentation;
+        SignState(String displayString) {
+            this.displayString = displayString;
         }
 
         public SignState addHash(String hash) {
@@ -120,11 +124,11 @@ public class AccountAgeWitnessService {
             return this;
         }
 
-        public String getPresentation() {
+        public String getDisplayString() {
             if (!hash.isEmpty()) { // Only showing in DEBUG mode
-                return presentation + " " + hash;
+                return displayString + " " + hash;
             }
-            return String.format(presentation, daysUntilLimitLifted);
+            return String.format(displayString, daysUntilLimitLifted);
         }
 
     }
@@ -134,12 +138,18 @@ public class AccountAgeWitnessService {
     private final User user;
     private final SignedWitnessService signedWitnessService;
     private final ChargeBackRisk chargeBackRisk;
+    private final AccountAgeWitnessStorageService accountAgeWitnessStorageService;
+    private final Clock clock;
     private final FilterManager filterManager;
     @Getter
     private final AccountAgeWitnessUtils accountAgeWitnessUtils;
 
-    @Getter
     private final Map<P2PDataStorage.ByteArray, AccountAgeWitness> accountAgeWitnessMap = new HashMap<>();
+
+    // The accountAgeWitnessMap is very large (70k items) and access is a bit expensive. We usually only access less
+    // than 100 items, those who have offers online. So we use a cache for a fast lookup and only if
+    // not found there we use the accountAgeWitnessMap and put then the new item into our cache.
+    private final Map<P2PDataStorage.ByteArray, AccountAgeWitness> accountAgeWitnessCache = new ConcurrentHashMap<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -155,12 +165,15 @@ public class AccountAgeWitnessService {
                                     ChargeBackRisk chargeBackRisk,
                                     AccountAgeWitnessStorageService accountAgeWitnessStorageService,
                                     AppendOnlyDataStoreService appendOnlyDataStoreService,
+                                    Clock clock,
                                     FilterManager filterManager) {
         this.keyRing = keyRing;
         this.p2PService = p2PService;
         this.user = user;
         this.signedWitnessService = signedWitnessService;
         this.chargeBackRisk = chargeBackRisk;
+        this.accountAgeWitnessStorageService = accountAgeWitnessStorageService;
+        this.clock = clock;
         this.filterManager = filterManager;
 
         accountAgeWitnessUtils = new AccountAgeWitnessUtils(
@@ -184,10 +197,10 @@ public class AccountAgeWitnessService {
         });
 
         // At startup the P2PDataStorage initializes earlier, otherwise we get the listener called.
-        p2PService.getP2PDataStorage().getAppendOnlyDataStoreMap().values().forEach(e -> {
-            if (e instanceof AccountAgeWitness)
-                addToMap((AccountAgeWitness) e);
-        });
+        accountAgeWitnessStorageService.getMapOfAllData().values().stream()
+                .filter(e -> e instanceof AccountAgeWitness)
+                .map(e -> (AccountAgeWitness) e)
+                .forEach(this::addToMap);
 
         if (p2PService.isBootstrapped()) {
             onBootStrapped();
@@ -211,13 +224,18 @@ public class AccountAgeWitnessService {
     private void republishAllFiatAccounts() {
         if (user.getPaymentAccounts() != null)
             user.getPaymentAccounts().stream()
-                    .filter(e -> !(e instanceof AssetAccount))
-                    .forEach(e -> {
-                        // We delay with a random interval of 20-60 sec to ensure to be better connected and don't
-                        // stress the P2P network with publishing all at once at startup time.
-                        final int delayInSec = 20 + new Random().nextInt(40);
-                        UserThread.runAfter(() -> p2PService.addPersistableNetworkPayload(getMyWitness(
-                                e.getPaymentAccountPayload()), true), delayInSec);
+                    .filter(account -> !(account instanceof AssetAccount))
+                    .forEach(account -> {
+                        AccountAgeWitness myWitness = getMyWitness(account.getPaymentAccountPayload());
+                        // We only publish if the date of our witness is inside the date tolerance.
+                        // It would be rejected otherwise from the peers.
+                        if (myWitness.isDateInTolerance(clock)) {
+                            // We delay with a random interval of 20-60 sec to ensure to be better connected and don't
+                            // stress the P2P network with publishing all at once at startup time.
+                            int delayInSec = 20 + new Random().nextInt(40);
+                            UserThread.runAfter(() ->
+                                    p2PService.addPersistableNetworkPayload(myWitness, true), delayInSec);
+                        }
                     });
     }
 
@@ -233,8 +251,17 @@ public class AccountAgeWitnessService {
 
     public void publishMyAccountAgeWitness(PaymentAccountPayload paymentAccountPayload) {
         AccountAgeWitness accountAgeWitness = getMyWitness(paymentAccountPayload);
-        if (!accountAgeWitnessMap.containsKey(accountAgeWitness.getHashAsByteArray()))
+        P2PDataStorage.ByteArray hash = accountAgeWitness.getHashAsByteArray();
+
+        // We use first our fast lookup cache. If its in accountAgeWitnessCache it is also in accountAgeWitnessMap
+        // and we do not publish.
+        if (accountAgeWitnessCache.containsKey(hash)) {
+            return;
+        }
+
+        if (!accountAgeWitnessMap.containsKey(hash)) {
             p2PService.addPersistableNetworkPayload(accountAgeWitness, false);
+        }
     }
 
     public byte[] getPeerAccountAgeWitnessHash(Trade trade) {
@@ -265,7 +292,7 @@ public class AccountAgeWitnessService {
         return getWitnessByHash(hash);
     }
 
-    private Optional<AccountAgeWitness> findWitness(Offer offer) {
+    public Optional<AccountAgeWitness> findWitness(Offer offer) {
         final Optional<String> accountAgeWitnessHash = offer.getAccountAgeWitnessHashAsHex();
         return accountAgeWitnessHash.isPresent() ?
                 getWitnessByHashAsHex(accountAgeWitnessHash.get()) :
@@ -284,12 +311,21 @@ public class AccountAgeWitnessService {
     private Optional<AccountAgeWitness> getWitnessByHash(byte[] hash) {
         P2PDataStorage.ByteArray hashAsByteArray = new P2PDataStorage.ByteArray(hash);
 
-        final boolean containsKey = accountAgeWitnessMap.containsKey(hashAsByteArray);
-        if (!containsKey)
-            log.debug("hash not found in accountAgeWitnessMap");
+        // First we look up in our fast lookup cache
+        if (accountAgeWitnessCache.containsKey(hashAsByteArray)) {
+            return Optional.of(accountAgeWitnessCache.get(hashAsByteArray));
+        }
 
-        return accountAgeWitnessMap.containsKey(hashAsByteArray) ?
-                Optional.of(accountAgeWitnessMap.get(hashAsByteArray)) : Optional.empty();
+        if (accountAgeWitnessMap.containsKey(hashAsByteArray)) {
+            AccountAgeWitness accountAgeWitness = accountAgeWitnessMap.get(hashAsByteArray);
+
+            // We add it to our fast lookup cache
+            accountAgeWitnessCache.put(hashAsByteArray, accountAgeWitness);
+
+            return Optional.of(accountAgeWitness);
+        }
+
+        return Optional.empty();
     }
 
     private Optional<AccountAgeWitness> getWitnessByHashAsHex(String hashAsHex) {
@@ -613,7 +649,10 @@ public class AccountAgeWitnessService {
         if (!result) {
             String msg = "The peers trade limit is less than the traded amount.\n" +
                     "tradeAmount=" + tradeAmount.toFriendlyString() +
-                    "\nPeers trade limit=" + Coin.valueOf(peersCurrentTradeLimit).toFriendlyString();
+                    "\nPeers trade limit=" + Coin.valueOf(peersCurrentTradeLimit).toFriendlyString() +
+                    "\nOffer ID=" + offer.getShortId() +
+                    "\nPaymentMethod=" + offer.getPaymentMethod().getId() +
+                    "\nCurrencyCode=" + offer.getCurrencyCode();
             log.warn(msg);
             errorMessageHandler.handleErrorMessage(msg);
         }
@@ -653,16 +692,20 @@ public class AccountAgeWitnessService {
     }
 
     public String arbitratorSignOrphanWitness(AccountAgeWitness accountAgeWitness,
-                                              ECKey key,
+                                              ECKey ecKey,
                                               long time) {
-        // Find AccountAgeWitness as signedwitness
-        var signedWitness = signedWitnessService.getSignedWitnessMap().values().stream()
-                .filter(sw -> Arrays.equals(sw.getAccountAgeWitnessHash(), accountAgeWitness.getHash()))
+        // TODO Is not found signedWitness considered an error case?
+        //  Previous code version was throwing an exception in case no signedWitness was found...
+
+        // signAndPublishAccountAgeWitness returns an empty string in success case and error otherwise
+        return signedWitnessService.getSignedWitnessSet(accountAgeWitness).stream()
                 .findAny()
-                .orElse(null);
-        checkNotNull(signedWitness);
-        return signedWitnessService.signAndPublishAccountAgeWitness(accountAgeWitness, key,
-                signedWitness.getWitnessOwnerPubKey(), time);
+                .map(SignedWitness::getWitnessOwnerPubKey)
+                .map(witnessOwnerPubKey ->
+                        signedWitnessService.signAndPublishAccountAgeWitness(accountAgeWitness, ecKey,
+                                witnessOwnerPubKey, time)
+                )
+                .orElse("No signedWitness found");
     }
 
     public String arbitratorSignOrphanPubKey(ECKey key,
@@ -876,5 +919,30 @@ public class AccountAgeWitnessService {
         return accountIsSigner(myWitness) &&
                 !peerHasSignedWitness(trade) &&
                 tradeAmountIsSufficient(trade.getTradeAmount());
+    }
+
+    public String getSignInfoFromAccount(PaymentAccount paymentAccount) {
+        var pubKey = keyRing.getSignatureKeyPair().getPublic();
+        var witness = getMyWitness(paymentAccount.getPaymentAccountPayload());
+        return Utilities.bytesAsHexString(witness.getHash()) + "," + Utilities.bytesAsHexString(pubKey.getEncoded());
+    }
+
+    public Tuple2<AccountAgeWitness, byte[]> getSignInfoFromString(String signInfo) {
+        var parts = signInfo.split(",");
+        if (parts.length != 2) {
+            return null;
+        }
+        byte[] pubKeyHash;
+        Optional<AccountAgeWitness> accountAgeWitness;
+        try {
+            var accountAgeWitnessHash = Utilities.decodeFromHex(parts[0]);
+            pubKeyHash = Utilities.decodeFromHex(parts[1]);
+            accountAgeWitness = getWitnessByHash(accountAgeWitnessHash);
+            return accountAgeWitness
+                    .map(ageWitness -> new Tuple2<>(ageWitness, pubKeyHash))
+                    .orElse(null);
+        } catch (Exception e) {
+            return null;
+        }
     }
 }

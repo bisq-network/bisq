@@ -371,7 +371,7 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
             if (this.isInConflictWithSeedNode)
                 log.warn("Conflict with seed nodes: {}", conflictMsg);
             else if (this.isInConflictWithNonSeedNode)
-                log.info("Conflict with non-seed nodes: {}", conflictMsg);
+                log.debug("Conflict with non-seed nodes: {}", conflictMsg);
         }
 
 

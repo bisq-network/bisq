@@ -33,15 +33,20 @@ import bisq.core.support.dispute.mediation.mediator.MediatorManager;
 import bisq.core.support.dispute.refund.RefundManager;
 import bisq.core.support.dispute.refund.RefundSession;
 import bisq.core.support.dispute.refund.refundagent.RefundAgentManager;
+import bisq.core.trade.Contract;
 import bisq.core.trade.TradeManager;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.CoinFormatter;
+
+import bisq.network.p2p.NodeAddress;
 
 import bisq.common.config.Config;
 import bisq.common.crypto.KeyRing;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+
+import javafx.scene.control.TableColumn;
 
 @FxmlView
 public class RefundClientView extends DisputeClientView {
@@ -72,5 +77,16 @@ public class RefundClientView extends DisputeClientView {
     @Override
     protected DisputeSession getConcreteDisputeChatSession(Dispute dispute) {
         return new RefundSession(dispute, disputeManager.isTrader(dispute));
+    }
+
+    @Override
+    protected NodeAddress getAgentNodeAddress(Contract contract) {
+        return contract.getRefundAgentNodeAddress();
+    }
+
+    @Override
+    protected void maybeAddAgentColumn() {
+        TableColumn<Dispute, Dispute> agentColumn = getAgentColumn();
+        tableView.getColumns().add(agentColumn);
     }
 }

@@ -65,9 +65,12 @@ import org.junit.jupiter.api.TestMethodOrder;
 
 import static bisq.apitest.Scaffold.BitcoinCoreApp.bitcoind;
 import static bisq.apitest.config.BisqAppConfig.alicedaemon;
-import static bisq.core.locale.CurrencyUtil.*;
+import static bisq.core.locale.CurrencyUtil.getAllAdvancedCashCurrencies;
+import static bisq.core.locale.CurrencyUtil.getAllMoneyGramCurrencies;
+import static bisq.core.locale.CurrencyUtil.getAllRevolutCurrencies;
+import static bisq.core.locale.CurrencyUtil.getAllUpholdCurrencies;
 import static bisq.core.payment.payload.PaymentMethod.*;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 
@@ -746,7 +749,10 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         String jsonString = getCompletedFormAsJsonString();
         TransferwiseAccount paymentAccount = (TransferwiseAccount) createPaymentAccount(alicedaemon, jsonString);
         verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
-        verifyAccountTradeCurrencies(getAllTransferwiseCurrencies(), paymentAccount);
+        // As per commit 88f26f93241af698ae689bf081205d0f9dc929fa
+        // Do not autofill all currencies by default but keep all unselected.
+        // verifyAccountTradeCurrencies(getAllTransferwiseCurrencies(), paymentAccount);
+        assertEquals(0, paymentAccount.getTradeCurrencies().size());
         verifyCommonFormEntries(paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_EMAIL), paymentAccount.getEmail());
         log.debug("Deserialized {}: {}", paymentAccount.getClass().getSimpleName(), paymentAccount);

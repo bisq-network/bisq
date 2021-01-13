@@ -8,9 +8,9 @@ import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
-import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.ParsingUtils;
+import bisq.core.util.coin.CoinFormatter;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Monetary;
@@ -81,7 +81,7 @@ public class DisplayUtils {
         durationMillis = Math.max(0, durationMillis);
         String day = Res.get("time.day").toLowerCase();
         String days = Res.get("time.days");
-        String format = " d\' " + days + "\'";
+        String format = " d' " + days + "'";
         return StringUtils.strip(StringUtils.replaceOnce(DurationFormatUtils.formatDuration(durationMillis, format), " 1 " + days, " 1 " + day));
     }
 
@@ -126,7 +126,7 @@ public class DisplayUtils {
         return formatVolume(volume, FIAT_VOLUME_FORMAT, true);
     }
 
-    static String formatAverageVolumeWithCode(Volume volume) {
+    public static String formatAverageVolumeWithCode(Volume volume) {
         return formatVolume(volume, FIAT_VOLUME_FORMAT.minDecimals(2), true);
     }
 
@@ -167,12 +167,12 @@ public class DisplayUtils {
         if (CurrencyUtil.isFiatCurrency(currencyCode)) {
             String code = Res.getBaseCurrencyCode();
             return isMyOffer ?
-                    Res.get("formatter.youAreAsMaker", Res.get("shared.buying"), code, Res.get("shared.selling"), code) :
-                    Res.get("formatter.youAreAsTaker", Res.get("shared.buying"), code, Res.get("shared.selling"), code);
+                    Res.get("formatter.youAreAsMaker", Res.get("shared.buyer"), code, Res.get("shared.seller"), code) :
+                    Res.get("formatter.youAreAsTaker", Res.get("shared.buyer"), code, Res.get("shared.seller"), code);
         } else {
             return isMyOffer ?
-                    Res.get("formatter.youAreAsMaker", Res.get("shared.selling"), currencyCode, Res.get("shared.buying"), currencyCode) :
-                    Res.get("formatter.youAreAsTaker", Res.get("shared.selling"), currencyCode, Res.get("shared.buying"), currencyCode);
+                    Res.get("formatter.youAreAsMaker", Res.get("shared.seller"), currencyCode, Res.get("shared.buyer"), currencyCode) :
+                    Res.get("formatter.youAreAsTaker", Res.get("shared.seller"), currencyCode, Res.get("shared.buyer"), currencyCode);
         }
     }
 
@@ -180,12 +180,12 @@ public class DisplayUtils {
         if (CurrencyUtil.isFiatCurrency(currencyCode)) {
             String code = Res.getBaseCurrencyCode();
             return isMyOffer ?
-                    Res.get("formatter.youAreAsMaker", Res.get("shared.selling"), code, Res.get("shared.buying"), code) :
-                    Res.get("formatter.youAreAsTaker", Res.get("shared.selling"), code, Res.get("shared.buying"), code);
+                    Res.get("formatter.youAreAsMaker", Res.get("shared.seller"), code, Res.get("shared.buyer"), code) :
+                    Res.get("formatter.youAreAsTaker", Res.get("shared.seller"), code, Res.get("shared.buyer"), code);
         } else {
             return isMyOffer ?
-                    Res.get("formatter.youAreAsMaker", Res.get("shared.buying"), currencyCode, Res.get("shared.selling"), currencyCode) :
-                    Res.get("formatter.youAreAsTaker", Res.get("shared.buying"), currencyCode, Res.get("shared.selling"), currencyCode);
+                    Res.get("formatter.youAreAsMaker", Res.get("shared.buyer"), currencyCode, Res.get("shared.seller"), currencyCode) :
+                    Res.get("formatter.youAreAsTaker", Res.get("shared.buyer"), currencyCode, Res.get("shared.seller"), currencyCode);
         }
     }
 
@@ -257,15 +257,15 @@ public class DisplayUtils {
     public static String getFeeWithFiatAmount(Coin makerFeeAsCoin,
                                               Optional<Volume> optionalFeeInFiat,
                                               CoinFormatter formatter) {
-        String fee = makerFeeAsCoin != null ? formatter.formatCoinWithCode(makerFeeAsCoin) : Res.get("shared.na");
-        String feeInFiatAsString;
+        String feeInBtc = makerFeeAsCoin != null ? formatter.formatCoinWithCode(makerFeeAsCoin) : Res.get("shared.na");
         if (optionalFeeInFiat != null && optionalFeeInFiat.isPresent()) {
-            feeInFiatAsString = formatAverageVolumeWithCode(optionalFeeInFiat.get());
+            String feeInFiat = formatAverageVolumeWithCode(optionalFeeInFiat.get());
+            return Res.get("feeOptionWindow.fee", feeInBtc, feeInFiat);
         } else {
-            feeInFiatAsString = Res.get("shared.na");
+            return feeInBtc;
         }
-        return Res.get("feeOptionWindow.fee", fee, feeInFiatAsString);
     }
+
 
     /**
      * Converts to a coin with max. 4 decimal places. Last place gets rounded.

@@ -19,12 +19,12 @@ package bisq.desktop.main.funds.reserved;
 
 import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
+import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.ExternalHyperlink;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
 import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
-import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.btc.listeners.BalanceListener;
@@ -43,6 +43,8 @@ import bisq.core.util.coin.CoinFormatter;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 
+import com.googlecode.jcsv.writer.CSVEntryConverter;
+
 import javax.inject.Inject;
 import javax.inject.Named;
 
@@ -50,11 +52,19 @@ import de.jensd.fx.fontawesome.AwesomeIcon;
 
 import javafx.fxml.FXML;
 
+import javafx.stage.Stage;
+
+import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.Tooltip;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+
+import javafx.geometry.Insets;
 
 import javafx.beans.property.ReadOnlyObjectWrapper;
 
@@ -77,6 +87,12 @@ public class ReservedView extends ActivatableView<VBox, Void> {
     TableView<ReservedListItem> tableView;
     @FXML
     TableColumn<ReservedListItem, ReservedListItem> dateColumn, detailsColumn, addressColumn, balanceColumn;
+    @FXML
+    Label numItems;
+    @FXML
+    Region spacer;
+    @FXML
+    AutoTooltipButton exportButton;
 
     private final BtcWalletService btcWalletService;
     private final TradeManager tradeManager;
@@ -97,8 +113,13 @@ public class ReservedView extends ActivatableView<VBox, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private ReservedView(BtcWalletService btcWalletService, TradeManager tradeManager, OpenOfferManager openOfferManager, Preferences preferences,
-                         @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter, OfferDetailsWindow offerDetailsWindow, TradeDetailsWindow tradeDetailsWindow) {
+    private ReservedView(BtcWalletService btcWalletService,
+                         TradeManager tradeManager,
+                         OpenOfferManager openOfferManager,
+                         Preferences preferences,
+                         @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter,
+                         OfferDetailsWindow offerDetailsWindow,
+                         TradeDetailsWindow tradeDetailsWindow) {
         this.btcWalletService = btcWalletService;
         this.tradeManager = tradeManager;
         this.openOfferManager = openOfferManager;
@@ -138,6 +159,10 @@ public class ReservedView extends ActivatableView<VBox, Void> {
         };
         openOfferListChangeListener = c -> updateList();
         tradeListChangeListener = c -> updateList();
+
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+        numItems.setPadding(new Insets(-5, 0, 0, 10));
+        exportButton.updateText(Res.get("shared.exportCSV"));
     }
 
     @Override
@@ -149,6 +174,33 @@ public class ReservedView extends ActivatableView<VBox, Void> {
         updateList();
 
         btcWalletService.addBalanceListener(balanceListener);
+
+        numItems.setText(Res.get("shared.numItemsLabel", sortedList.size()));
+        exportButton.setOnAction(event -> {
+            ObservableList<TableColumn<ReservedListItem, ?>> tableColumns = tableView.getColumns();
+            int reportColumns = tableColumns.size();
+            CSVEntryConverter<ReservedListItem> headerConverter = item -> {
+                String[] columns = new String[reportColumns];
+                for (int i = 0; i < columns.length; i++)
+                    columns[i] = ((AutoTooltipLabel) tableColumns.get(i).getGraphic()).getText();
+                return columns;
+            };
+            CSVEntryConverter<ReservedListItem> contentConverter = item -> {
+                String[] columns = new String[reportColumns];
+                columns[0] = item.getDateAsString();
+                columns[1] = item.getDetails();
+                columns[2] = item.getAddressString();
+                columns[3] = item.getBalanceString();
+                return columns;
+            };
+
+            GUIUtil.exportCSV("reservedInOffersFunds.csv",
+                    headerConverter,
+                    contentConverter,
+                    new ReservedListItem(),
+                    sortedList,
+                    (Stage) root.getScene().getWindow());
+        });
     }
 
     @Override
@@ -158,6 +210,7 @@ public class ReservedView extends ActivatableView<VBox, Void> {
         sortedList.comparatorProperty().unbind();
         observableList.forEach(ReservedListItem::cleanup);
         btcWalletService.removeBalanceListener(balanceListener);
+        exportButton.setOnAction(null);
     }
 
 
@@ -226,9 +279,9 @@ public class ReservedView extends ActivatableView<VBox, Void> {
                     public void updateItem(final ReservedListItem item, boolean empty) {
                         super.updateItem(item, empty);
                         if (item != null && !empty) {
-                            if (getTradable(item).isPresent())
-                                setGraphic(new AutoTooltipLabel(DisplayUtils.formatDateTime(getTradable(item).get().getDate())));
-                            else
+                            if (getTradable(item).isPresent()) {
+                                setGraphic(new AutoTooltipLabel(item.getDateAsString()));
+                            } else
                                 setGraphic(new AutoTooltipLabel(Res.get("shared.noDateAvailable")));
                         } else {
                             setGraphic(null);
@@ -257,13 +310,12 @@ public class ReservedView extends ActivatableView<VBox, Void> {
                         if (item != null && !empty) {
                             Optional<Tradable> tradableOptional = getTradable(item);
                             if (tradableOptional.isPresent()) {
-                                field = new HyperlinkWithIcon(Res.get("funds.reserved.reserved", item.getOpenOffer().getShortId()),
-                                        AwesomeIcon.INFO_SIGN);
+                                field = new HyperlinkWithIcon(item.getDetails(), AwesomeIcon.INFO_SIGN);
                                 field.setOnAction(event -> openDetailPopup(item));
                                 field.setTooltip(new Tooltip(Res.get("tooltip.openPopupForDetails")));
                                 setGraphic(field);
                             } else {
-                                setGraphic(new AutoTooltipLabel(Res.get("shared.noDetailsAvailable")));
+                                setGraphic(new AutoTooltipLabel(item.getDetails()));
                             }
 
                         } else {

@@ -20,6 +20,7 @@ package bisq.desktop.main.offer;
 import bisq.desktop.Navigation;
 import bisq.desktop.common.model.ActivatableWithDataModel;
 import bisq.desktop.main.MainView;
+import bisq.desktop.main.PriceUtil;
 import bisq.desktop.main.funds.FundsView;
 import bisq.desktop.main.funds.deposit.DepositView;
 import bisq.desktop.main.overlays.popups.Popup;
@@ -87,11 +88,13 @@ import javafx.beans.value.ChangeListener;
 
 import javafx.util.Callback;
 
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+
+import lombok.extern.slf4j.Slf4j;
 
 import static javafx.beans.binding.Bindings.createStringBinding;
 
+@Slf4j
 public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> extends ActivatableWithDataModel<M> {
     private final BtcValidator btcValidator;
     private final BsqValidator bsqValidator;
@@ -122,6 +125,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
     // The domain (dataModel) uses always the same price model (otherCurrencyBTC)
     // If we would change the price representation in the domain we would not be backward compatible
     public final StringProperty price = new SimpleStringProperty();
+    public final StringProperty triggerPrice = new SimpleStringProperty("");
     final StringProperty tradeFee = new SimpleStringProperty();
     final StringProperty tradeFeeInBtcWithFiat = new SimpleStringProperty();
     final StringProperty tradeFeeInBsqWithFiat = new SimpleStringProperty();
@@ -141,6 +145,8 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
     final StringProperty errorMessage = new SimpleStringProperty();
     final StringProperty tradeCurrencyCode = new SimpleStringProperty();
     final StringProperty waitingForFundsText = new SimpleStringProperty("");
+    final StringProperty triggerPriceDescription = new SimpleStringProperty("");
+    final StringProperty percentagePriceDescription = new SimpleStringProperty("");
 
     final BooleanProperty isPlaceOfferButtonDisabled = new SimpleBooleanProperty(true);
     final BooleanProperty cancelButtonDisabled = new SimpleBooleanProperty();
@@ -154,6 +160,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
     final ObjectProperty<InputValidator.ValidationResult> amountValidationResult = new SimpleObjectProperty<>();
     final ObjectProperty<InputValidator.ValidationResult> minAmountValidationResult = new SimpleObjectProperty<>();
     final ObjectProperty<InputValidator.ValidationResult> priceValidationResult = new SimpleObjectProperty<>();
+    final ObjectProperty<InputValidator.ValidationResult> triggerPriceValidationResult = new SimpleObjectProperty<>(new InputValidator.ValidationResult(true));
     final ObjectProperty<InputValidator.ValidationResult> volumeValidationResult = new SimpleObjectProperty<>();
     final ObjectProperty<InputValidator.ValidationResult> buyerSecurityDepositValidationResult = new SimpleObjectProperty<>();
 
@@ -275,12 +282,15 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
         totalToPay.bind(createStringBinding(() -> btcFormatter.formatCoinWithCode(dataModel.totalToPayAsCoinProperty().get()),
                 dataModel.totalToPayAsCoinProperty()));
 
-
         tradeAmount.bind(createStringBinding(() -> btcFormatter.formatCoinWithCode(dataModel.getAmount().get()),
                 dataModel.getAmount()));
 
-
         tradeCurrencyCode.bind(dataModel.getTradeCurrencyCode());
+
+        triggerPriceDescription.bind(createStringBinding(this::getTriggerPriceDescriptionLabel,
+                dataModel.getTradeCurrencyCode()));
+        percentagePriceDescription.bind(createStringBinding(this::getPercentagePriceDescription,
+                dataModel.getTradeCurrencyCode()));
     }
 
     private void removeBindings() {
@@ -289,6 +299,8 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
         tradeCurrencyCode.unbind();
         volumeDescriptionLabel.unbind();
         volumePromptLabel.unbind();
+        triggerPriceDescription.unbind();
+        percentagePriceDescription.unbind();
     }
 
     private void createListeners() {
@@ -489,54 +501,27 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
     }
 
     private void applyMakerFee() {
-        Coin makerFeeAsCoin = dataModel.getMakerFee();
-        if (makerFeeAsCoin != null) {
-            isTradeFeeVisible.setValue(true);
-
-            tradeFee.set(getFormatterForMakerFee().formatCoin(makerFeeAsCoin));
-
-            Coin makerFeeInBtc = dataModel.getMakerFeeInBtc();
-            Optional<Volume> optionalBtcFeeInFiat = offerUtil.getFeeInUserFiatCurrency(makerFeeInBtc,
-                    true,
-                    bsqFormatter);
-            String btcFeeWithFiatAmount = DisplayUtils.getFeeWithFiatAmount(makerFeeInBtc, optionalBtcFeeInFiat, btcFormatter);
-            if (DevEnv.isDaoActivated()) {
-                tradeFeeInBtcWithFiat.set(btcFeeWithFiatAmount);
-            } else {
-                tradeFeeInBtcWithFiat.set(btcFormatter.formatCoinWithCode(makerFeeAsCoin));
-            }
-
-            Coin makerFeeInBsq = dataModel.getMakerFeeInBsq();
-            Optional<Volume> optionalBsqFeeInFiat = offerUtil.getFeeInUserFiatCurrency(makerFeeInBsq,
-                    false,
-                    bsqFormatter);
-            String bsqFeeWithFiatAmount = DisplayUtils.getFeeWithFiatAmount(makerFeeInBsq,
-                    optionalBsqFeeInFiat,
-                    bsqFormatter);
-            if (DevEnv.isDaoActivated()) {
-                tradeFeeInBsqWithFiat.set(bsqFeeWithFiatAmount);
-            } else {
-                // Before DAO is enabled we show fee as fiat and % in second line
-                String feeInFiatAsString;
-                if (optionalBtcFeeInFiat != null && optionalBtcFeeInFiat.isPresent()) {
-                    feeInFiatAsString = DisplayUtils.formatVolumeWithCode(optionalBtcFeeInFiat.get());
-                } else {
-                    feeInFiatAsString = Res.get("shared.na");
-                }
-
-                double amountAsDouble = (double) dataModel.getAmount().get().value;
-                double makerFeeInBtcAsDouble = (double) makerFeeInBtc.value;
-                double percent = makerFeeInBtcAsDouble / amountAsDouble;
-
-                tradeFeeInBsqWithFiat.set(Res.get("createOffer.tradeFee.fiatAndPercent",
-                        feeInFiatAsString,
-                        FormattingUtils.formatToPercentWithSymbol(percent)));
-            }
-        }
         tradeFeeCurrencyCode.set(dataModel.isCurrencyForMakerFeeBtc() ? Res.getBaseCurrencyCode() : "BSQ");
         tradeFeeDescription.set(DevEnv.isDaoActivated() ? Res.get("createOffer.tradeFee.descriptionBSQEnabled") :
                 Res.get("createOffer.tradeFee.descriptionBTCOnly"));
+
+        Coin makerFeeAsCoin = dataModel.getMakerFee();
+        if (makerFeeAsCoin == null) {
+            return;
+        }
+
+        isTradeFeeVisible.setValue(true);
+        tradeFee.set(getFormatterForMakerFee().formatCoin(makerFeeAsCoin));
+        tradeFeeInBtcWithFiat.set(FeeUtil.getTradeFeeWithFiatEquivalent(offerUtil,
+                dataModel.getMakerFeeInBtc(),
+                true,
+                btcFormatter));
+        tradeFeeInBsqWithFiat.set(FeeUtil.getTradeFeeWithFiatEquivalent(offerUtil,
+                dataModel.getMakerFeeInBsq(),
+                false,
+                bsqFormatter));
     }
+
 
     private void updateMarketPriceAvailable() {
         marketPrice = priceFeedService.getMarketPrice(dataModel.getTradeCurrencyCode().get());
@@ -794,12 +779,49 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
         }
     }
 
+    void onFocusOutTriggerPriceTextField(boolean oldValue, boolean newValue) {
+        if (oldValue && !newValue) {
+            onTriggerPriceTextFieldChanged();
+        }
+    }
+
+    public void onTriggerPriceTextFieldChanged() {
+        String triggerPriceAsString = triggerPrice.get();
+
+        // Error field does not update if there was an error and then another different error
+        // if not reset here. Not clear why...
+        triggerPriceValidationResult.set(new InputValidator.ValidationResult(true));
+
+        InputValidator.ValidationResult result = PriceUtil.isTriggerPriceValid(triggerPriceAsString,
+                dataModel.getPrice().get(),
+                dataModel.isSellOffer(),
+                dataModel.isFiatCurrency());
+        triggerPriceValidationResult.set(result);
+        updateButtonDisableState();
+        if (result.isValid) {
+            // In case of 0 or empty string we set the string to empty string and data value to 0
+            long triggerPriceAsLong = PriceUtil.getMarketPriceAsLong(triggerPriceAsString, dataModel.getCurrencyCode());
+            dataModel.setTriggerPrice(triggerPriceAsLong);
+            if (dataModel.getTriggerPrice() == 0) {
+                triggerPrice.set("");
+            } else {
+                triggerPrice.set(PriceUtil.formatMarketPrice(dataModel.getTriggerPrice(), dataModel.getCurrencyCode()));
+            }
+        }
+    }
+
+    void onFixPriceToggleChange(boolean fixedPriceSelected) {
+        updateButtonDisableState();
+        if (!fixedPriceSelected) {
+            onTriggerPriceTextFieldChanged();
+        }
+    }
+
     void onFocusOutPriceTextField(boolean oldValue, boolean newValue) {
         if (oldValue && !newValue) {
             InputValidator.ValidationResult result = isPriceInputValid(price.get());
-            boolean isValid = result.isValid;
             priceValidationResult.set(result);
-            if (isValid) {
+            if (result.isValid) {
                 setPriceToModel();
                 ignorePriceStringListener = true;
                 if (dataModel.getPrice().get() != null)
@@ -833,8 +855,11 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
             marketPriceMargin.set(FormattingUtils.formatRoundedDoubleWithPrecision(dataModel.getMarketPriceMargin() * 100, 2));
         }
 
-        // We want to trigger a recalculation of the volume
-        UserThread.execute(() -> onFocusOutVolumeTextField(true, false));
+        // We want to trigger a recalculation of the volume, as well as update trigger price validation
+        UserThread.execute(() -> {
+            onFocusOutVolumeTextField(true, false);
+            onTriggerPriceTextFieldChanged();
+        });
     }
 
     void onFocusOutVolumeTextField(boolean oldValue, boolean newValue) {
@@ -985,15 +1010,23 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
         return btcFormatter.formatCoinWithCode(dataModel.getSecurityDeposit());
     }
 
+
     public String getTradeFee() {
-        //TODO use last bisq market price to estimate BSQ val
-        final Coin makerFeeAsCoin = dataModel.getMakerFee();
-        final String makerFee = getFormatterForMakerFee().formatCoinWithCode(makerFeeAsCoin);
-        if (dataModel.isCurrencyForMakerFeeBtc())
-            return makerFee + GUIUtil.getPercentageOfTradeAmount(makerFeeAsCoin, dataModel.getAmount().get(),
+        if (dataModel.isCurrencyForMakerFeeBtc()) {
+            return FeeUtil.getTradeFeeWithFiatEquivalentAndPercentage(offerUtil,
+                    dataModel.getMakerFeeInBtc(),
+                    dataModel.getAmount().get(),
+                    true,
+                    btcFormatter,
                     FeeService.getMinMakerFee(dataModel.isCurrencyForMakerFeeBtc()));
-        else
-            return makerFee + " (" + Res.get("shared.tradingFeeInBsqInfo", btcFormatter.formatCoinWithCode(makerFeeAsCoin)) + ")";
+        } else {
+            // For BSQ we use the fiat equivalent only. Calculating the % value would require to
+            // calculate the BTC value of the BSQ fee and use that...
+            return FeeUtil.getTradeFeeWithFiatEquivalent(offerUtil,
+                    dataModel.getMakerFeeInBsq(),
+                    false,
+                    bsqFormatter);
+        }
     }
 
     public String getMakerFeePercentage() {
@@ -1025,10 +1058,13 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
     }
 
     public String getTxFee() {
-        Coin txFeeAsCoin = dataModel.getTxFee();
-        return btcFormatter.formatCoinWithCode(txFeeAsCoin) +
-                GUIUtil.getPercentageOfTradeAmount(txFeeAsCoin, dataModel.getAmount().get(), Coin.ZERO);
-
+        return FeeUtil.getTradeFeeWithFiatEquivalentAndPercentage(offerUtil,
+                dataModel.getTxFee(),
+                dataModel.getAmount().get(),
+                true,
+                btcFormatter,
+                Coin.ZERO
+        );
     }
 
     public String getTxFeePercentage() {
@@ -1065,6 +1101,33 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
     public M getDataModel() {
         return dataModel;
     }
+
+    String getTriggerPriceDescriptionLabel() {
+        String details;
+        if (dataModel.isBuyOffer()) {
+            details = dataModel.isCryptoCurrency() ?
+                    Res.get("account.notifications.marketAlert.message.msg.below") :
+                    Res.get("account.notifications.marketAlert.message.msg.above");
+        } else {
+            details = dataModel.isCryptoCurrency() ?
+                    Res.get("account.notifications.marketAlert.message.msg.above") :
+                    Res.get("account.notifications.marketAlert.message.msg.below");
+        }
+        return Res.get("createOffer.triggerPrice.label", details);
+    }
+
+    String getPercentagePriceDescription() {
+        if (dataModel.isBuyOffer()) {
+            return dataModel.isCryptoCurrency() ?
+                    Res.get("shared.aboveInPercent") :
+                    Res.get("shared.belowInPercent");
+        } else {
+            return dataModel.isCryptoCurrency() ?
+                    Res.get("shared.belowInPercent") :
+                    Res.get("shared.aboveInPercent");
+        }
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Utils
@@ -1209,8 +1272,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
         }
     }
 
-    private void updateButtonDisableState() {
-        log.debug("updateButtonDisableState");
+    void updateButtonDisableState() {
         boolean inputDataValid = isBtcInputValid(amount.get()).isValid &&
                 isBtcInputValid(minAmount.get()).isValid &&
                 isPriceInputValid(price.get()).isValid &&
@@ -1219,6 +1281,10 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
                 isVolumeInputValid(volume.get()).isValid &&
                 isVolumeInputValid(DisplayUtils.formatVolume(dataModel.getMinVolume().get())).isValid &&
                 dataModel.isMinAmountLessOrEqualAmount();
+
+        if (dataModel.useMarketBasedPrice.get() && dataModel.isMarketPriceAvailable()) {
+            inputDataValid = inputDataValid && triggerPriceValidationResult.get().isValid;
+        }
 
         // validating the percentage deposit value only makes sense if it is actually used
         if (!dataModel.isMinBuyerSecurityDeposit()) {

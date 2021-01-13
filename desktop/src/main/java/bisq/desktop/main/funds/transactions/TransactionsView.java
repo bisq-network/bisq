@@ -42,13 +42,7 @@ import bisq.network.p2p.P2PService;
 import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.TransactionConfidence;
-import org.bitcoinj.core.listeners.TransactionConfidenceEventListener;
-import org.bitcoinj.wallet.listeners.KeyChainEventListener;
-import org.bitcoinj.wallet.listeners.ScriptsChangeEventListener;
 import org.bitcoinj.wallet.listeners.WalletChangeEventListener;
-import org.bitcoinj.wallet.listeners.WalletCoinsReceivedEventListener;
-import org.bitcoinj.wallet.listeners.WalletCoinsSentEventListener;
-import org.bitcoinj.wallet.listeners.WalletReorganizeEventListener;
 
 import com.googlecode.jcsv.writer.CSVEntryConverter;
 
@@ -62,13 +56,19 @@ import javafx.stage.Stage;
 
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.Tooltip;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+
+import javafx.geometry.Insets;
 
 import javafx.beans.property.ReadOnlyObjectWrapper;
 
@@ -86,10 +86,15 @@ import javax.annotation.Nullable;
 @FxmlView
 public class TransactionsView extends ActivatableView<VBox, Void> {
 
+
     @FXML
     TableView<TransactionsListItem> tableView;
     @FXML
     TableColumn<TransactionsListItem, TransactionsListItem> dateColumn, detailsColumn, addressColumn, transactionColumn, amountColumn, memoColumn, confidenceColumn, revertTxColumn;
+    @FXML
+    Label numItems;
+    @FXML
+    Region spacer;
     @FXML
     AutoTooltipButton exportButton;
 
@@ -155,14 +160,17 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
 
         dateColumn.setComparator(Comparator.comparing(TransactionsListItem::getDate));
         detailsColumn.setComparator((o1, o2) -> {
-            String id1 = o1.getTradable() != null ? o1.getTradable().getId() : o1.getDetails();
-            String id2 = o2.getTradable() != null ? o2.getTradable().getId() : o2.getDetails();
+            String id1 = !o1.getDetails().isEmpty() ? o1.getDetails() :
+                    o1.getTradable() != null ? o1.getTradable().getId() : o1.getTxId();
+            String id2 = !o2.getDetails().isEmpty() ? o2.getDetails() :
+                    o2.getTradable() != null ? o2.getTradable().getId() : o2.getTxId();
             return id1.compareTo(id2);
         });
-        addressColumn.setComparator(Comparator.comparing(TransactionsListItem::getAddressString));
+        addressColumn.setComparator(Comparator.comparing(item -> item.getDirection() + item.getAddressString()));
         transactionColumn.setComparator(Comparator.comparing(TransactionsListItem::getTxId));
         amountColumn.setComparator(Comparator.comparing(TransactionsListItem::getAmountAsCoin));
         confidenceColumn.setComparator(Comparator.comparingDouble(item -> item.getTxConfidenceIndicator().getProgress()));
+        memoColumn.setComparator(Comparator.comparing(TransactionsListItem::getMemo));
 
         dateColumn.setSortType(TableColumn.SortType.DESCENDING);
         tableView.getSortOrder().add(dateColumn);
@@ -183,6 +191,8 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
             }
         };
 
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+        numItems.setPadding(new Insets(-5, 0, 0, 10));
         exportButton.updateText(Res.get("shared.exportCSV"));
     }
 
@@ -198,10 +208,11 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
         if (scene != null)
             scene.addEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
 
+        numItems.setText(Res.get("shared.numItemsLabel", sortedDisplayedTransactions.size()));
         exportButton.setOnAction(event -> {
             final ObservableList<TableColumn<TransactionsListItem, ?>> tableColumns = tableView.getColumns();
-            final int reportColumns = tableColumns.size()-1;    // CSV report excludes the last column (an icon)
-            CSVEntryConverter<TransactionsListItem> headerConverter = transactionsListItem -> {
+            final int reportColumns = tableColumns.size() - 1;    // CSV report excludes the last column (an icon)
+            CSVEntryConverter<TransactionsListItem> headerConverter = item -> {
                 String[] columns = new String[reportColumns];
                 for (int i = 0; i < columns.length; i++)
                     columns[i] = ((AutoTooltipLabel) tableColumns.get(i).getGraphic()).getText();
@@ -428,7 +439,6 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
     private void setMemoColumnCellFactory() {
         memoColumn.setCellValueFactory((addressListItem) ->
                 new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
-
         memoColumn.setCellFactory(
                 new Callback<>() {
 

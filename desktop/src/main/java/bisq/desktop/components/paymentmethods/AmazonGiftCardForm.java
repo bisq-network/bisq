@@ -69,7 +69,6 @@ public class AmazonGiftCardForm extends PaymentMethodForm {
     public void addTradeCurrency() {
         addTradeCurrencyComboBox();
         currencyComboBox.setItems(FXCollections.observableArrayList(CurrencyUtil.getAllAmazonGiftCardCurrencies()));
-        currencyComboBox.getSelectionModel().select(0);
     }
 
     @Override

@@ -24,7 +24,7 @@ import lombok.Getter;
 @Getter
 public class BlockHashNotConnectingException extends Exception {
 
-    private RawBlock rawBlock;
+    private final RawBlock rawBlock;
 
     public BlockHashNotConnectingException(RawBlock rawBlock) {
         this.rawBlock = rawBlock;

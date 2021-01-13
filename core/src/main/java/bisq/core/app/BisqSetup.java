@@ -27,6 +27,7 @@ import bisq.core.btc.nodes.LocalBitcoinNode;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletsManager;
+import bisq.core.btc.wallet.http.MemPoolSpaceTxBroadcaster;
 import bisq.core.dao.governance.voteresult.VoteResultException;
 import bisq.core.dao.state.unconfirmed.UnconfirmedBsqChangeOutputListService;
 import bisq.core.locale.Res;
@@ -41,6 +42,7 @@ import bisq.core.user.User;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.CoinFormatter;
 
+import bisq.network.Socks5ProxyProvider;
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 
@@ -49,6 +51,7 @@ import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
 import bisq.common.app.Log;
 import bisq.common.app.Version;
+import bisq.common.config.BaseCurrencyNetwork;
 import bisq.common.config.Config;
 import bisq.common.util.InvalidVersionException;
 import bisq.common.util.Utilities;
@@ -180,6 +183,9 @@ public class BisqSetup {
     private Runnable qubesOSInfoHandler;
     @Setter
     @Nullable
+    private Runnable daoRequiresRestartHandler;
+    @Setter
+    @Nullable
     private Consumer<String> downGradePreventionHandler;
 
     @Getter
@@ -210,7 +216,8 @@ public class BisqSetup {
                      TorSetup torSetup,
                      @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter,
                      LocalBitcoinNode localBitcoinNode,
-                     AppStartupState appStartupState) {
+                     AppStartupState appStartupState,
+                     Socks5ProxyProvider socks5ProxyProvider) {
         this.domainInitialisation = domainInitialisation;
         this.p2PNetworkSetup = p2PNetworkSetup;
         this.walletAppSetup = walletAppSetup;
@@ -230,6 +237,8 @@ public class BisqSetup {
         this.formatter = formatter;
         this.localBitcoinNode = localBitcoinNode;
         this.appStartupState = appStartupState;
+
+        MemPoolSpaceTxBroadcaster.init(socks5ProxyProvider, preferences, localBitcoinNode);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -265,7 +274,8 @@ public class BisqSetup {
 
     public void start() {
         // If user tried to downgrade we require a shutdown
-        if (hasDowngraded(downGradePreventionHandler)) {
+        if (Config.baseCurrencyNetwork() == BaseCurrencyNetwork.BTC_MAINNET &&
+                hasDowngraded(downGradePreventionHandler)) {
             return;
         }
 
@@ -438,7 +448,8 @@ public class BisqSetup {
                 daoWarnMessageHandler,
                 filterWarningHandler,
                 voteResultExceptionHandler,
-                revolutAccountsUpdateHandler);
+                revolutAccountsUpdateHandler,
+                daoRequiresRestartHandler);
 
         if (walletsSetup.downloadPercentageProperty().get() == 1) {
             checkForLockedUpFunds();

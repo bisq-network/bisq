@@ -177,7 +177,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         networkNode.addMessageListener(this);
         networkNode.addConnectionListener(this);
 
-        this.persistenceManager.initialize(sequenceNumberMap, PersistenceManager.Source.PRIVATE);
+        this.persistenceManager.initialize(sequenceNumberMap, PersistenceManager.Source.PRIVATE_LOW_PRIO);
     }
 
 
@@ -209,13 +209,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         BooleanProperty protectedDataStoreServiceReady = new SimpleBooleanProperty();
         BooleanProperty resourceDataStoreServiceReady = new SimpleBooleanProperty();
 
-        appendOnlyDataStoreService.readFromResources(postFix, () -> appendOnlyDataStoreServiceReady.set(true));
-        protectedDataStoreService.readFromResources(postFix, () -> {
-            map.putAll(protectedDataStoreService.getMap());
-            protectedDataStoreServiceReady.set(true);
-        });
-        resourceDataStoreService.readFromResources(postFix, () -> resourceDataStoreServiceReady.set(true));
-
         readFromResourcesCompleteBinding = EasyBind.combine(appendOnlyDataStoreServiceReady,
                 protectedDataStoreServiceReady,
                 resourceDataStoreServiceReady,
@@ -225,6 +218,13 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                 completeHandler.run();
             }
         });
+
+        appendOnlyDataStoreService.readFromResources(postFix, () -> appendOnlyDataStoreServiceReady.set(true));
+        protectedDataStoreService.readFromResources(postFix, () -> {
+            map.putAll(protectedDataStoreService.getMap());
+            protectedDataStoreServiceReady.set(true);
+        });
+        resourceDataStoreService.readFromResources(postFix, () -> resourceDataStoreServiceReady.set(true));
     }
 
     // Uses synchronous execution on the userThread. Only used by tests. The async methods should be used by app code.
@@ -944,7 +944,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         if (entriesToRemoveWithPayloadHash.isEmpty())
             return;
 
-        log.info("Remove {} expired data entries", entriesToRemoveWithPayloadHash.size());
+        log.debug("Remove {} expired data entries", entriesToRemoveWithPayloadHash.size());
 
         ArrayList<ProtectedStorageEntry> entriesForSignal = new ArrayList<>(entriesToRemoveWithPayloadHash.size());
         entriesToRemoveWithPayloadHash.forEach(entryToRemoveWithPayloadHash -> {

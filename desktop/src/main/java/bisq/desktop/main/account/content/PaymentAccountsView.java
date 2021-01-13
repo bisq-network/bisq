@@ -9,14 +9,12 @@ import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.ImageUtil;
 
-import bisq.core.account.sign.SignedWitnessService;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.Res;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentMethod;
 
 import bisq.common.UserThread;
-import bisq.common.app.DevEnv;
 import bisq.common.util.Utilities;
 
 import org.apache.commons.lang3.StringUtils;
@@ -64,6 +62,8 @@ public abstract class PaymentAccountsView<R extends Node, M extends ActivatableW
                 accountAgeWitnessService.getAccountAgeWitnessUtils().logSigners();
             } else if (Utilities.isCtrlShiftPressed(KeyCode.U, event)) {
                 accountAgeWitnessService.getAccountAgeWitnessUtils().logUnsignedSignerPubKeys();
+            } else if (Utilities.isCtrlShiftPressed(KeyCode.C, event)) {
+                copyAccount();
             }
         };
 
@@ -144,7 +144,7 @@ public abstract class PaymentAccountsView<R extends Node, M extends ActivatableW
                                         accountAgeWitnessService.getSignState(accountAgeWitnessService.getMyWitness(
                                                 item.paymentAccountPayload));
 
-                                String info = StringUtils.capitalize(signState.getPresentation());
+                                String info = StringUtils.capitalize(signState.getDisplayString());
                                 label.setIcon(GUIUtil.getIconForSignState(signState), info);
                             } else {
                                 label.hideIcon();
@@ -176,4 +176,7 @@ public abstract class PaymentAccountsView<R extends Node, M extends ActivatableW
     protected abstract void buildForm();
 
     protected abstract void onSelectAccount(PaymentAccount paymentAccount);
+
+    protected void copyAccount() {
+    }
 }

@@ -49,6 +49,7 @@ import bisq.network.p2p.DecryptedMessageWithPubKey;
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.SendDirectMessageListener;
+import bisq.network.p2p.peers.Broadcaster;
 import bisq.network.p2p.peers.PeerManager;
 
 import bisq.common.Timer;
@@ -63,11 +64,13 @@ import bisq.common.handlers.ResultHandler;
 import bisq.common.persistence.PersistenceManager;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.persistable.PersistedDataHost;
+import bisq.common.util.Tuple2;
 
 import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
 
+import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
 import java.util.ArrayList;
@@ -81,6 +84,8 @@ import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import lombok.Getter;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -113,11 +118,14 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     private final RefundAgentManager refundAgentManager;
     private final DaoFacade daoFacade;
     private final FilterManager filterManager;
+    private final Broadcaster broadcaster;
     private final PersistenceManager<TradableList<OpenOffer>> persistenceManager;
     private final Map<String, OpenOffer> offersToBeEdited = new HashMap<>();
     private final TradableList<OpenOffer> openOffers = new TradableList<>();
     private boolean stopped;
     private Timer periodicRepublishOffersTimer, periodicRefreshOffersTimer, retryRepublishOffersTimer;
+    @Getter
+    private final ObservableList<Tuple2<OpenOffer, String>> invalidOffers = FXCollections.observableArrayList();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -142,6 +150,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                             RefundAgentManager refundAgentManager,
                             DaoFacade daoFacade,
                             FilterManager filterManager,
+                            Broadcaster broadcaster,
                             PersistenceManager<TradableList<OpenOffer>> persistenceManager) {
         this.createOfferService = createOfferService;
         this.keyRing = keyRing;
@@ -160,6 +169,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         this.refundAgentManager = refundAgentManager;
         this.daoFacade = daoFacade;
         this.filterManager = filterManager;
+        this.broadcaster = broadcaster;
         this.persistenceManager = persistenceManager;
 
         this.persistenceManager.initialize(openOffers, "OpenOffers", PersistenceManager.Source.PRIVATE);
@@ -190,6 +200,10 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         }
 
         cleanUpAddressEntries();
+
+        openOffers.stream()
+                .forEach(openOffer -> OfferUtil.getInvalidMakerFeeTxErrorMessage(openOffer.getOffer(), btcWalletService)
+                        .ifPresent(errorMsg -> invalidOffers.add(new Tuple2<>(openOffer, errorMsg))));
     }
 
     private void cleanUpAddressEntries() {
@@ -202,10 +216,6 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                             e.getOfferId(), openOffers.size());
                     btcWalletService.resetAddressEntriesForOpenOffer(e.getOfferId());
                 });
-    }
-
-    private void shutDown() {
-        shutDown(null);
     }
 
     public void shutDown(@Nullable Runnable completeHandler) {
@@ -225,8 +235,17 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
             UserThread.execute(() -> openOffers.forEach(
                     openOffer -> offerBookService.removeOfferAtShutDown(openOffer.getOffer().getOfferPayload())
             ));
-            if (completeHandler != null)
-                UserThread.runAfter(completeHandler, size * 200 + 500, TimeUnit.MILLISECONDS);
+
+            // Force broadcaster to send out immediately, otherwise we could have a 2 sec delay until the
+            // bundled messages sent out.
+            broadcaster.flush();
+
+            if (completeHandler != null) {
+                // For typical number of offers we are tolerant with delay to give enough time to broadcast.
+                // If number of offers is very high we limit to 3 sec. to not delay other shutdown routines.
+                int delay = Math.min(3000, size * 200 + 500);
+                UserThread.runAfter(completeHandler, delay, TimeUnit.MILLISECONDS);
+            }
         } else {
             if (completeHandler != null)
                 completeHandler.run();
@@ -344,6 +363,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     public void placeOffer(Offer offer,
                            double buyerSecurityDeposit,
                            boolean useSavingsWallet,
+                           long triggerPrice,
                            TransactionResultHandler resultHandler,
                            ErrorMessageHandler errorMessageHandler) {
         checkNotNull(offer.getMakerFee(), "makerFee must not be null");
@@ -368,7 +388,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         PlaceOfferProtocol placeOfferProtocol = new PlaceOfferProtocol(
                 model,
                 transaction -> {
-                    OpenOffer openOffer = new OpenOffer(offer);
+                    OpenOffer openOffer = new OpenOffer(offer, triggerPrice);
                     openOffers.add(openOffer);
                     requestPersistence();
                     resultHandler.handleResult(transaction);
@@ -472,6 +492,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     }
 
     public void editOpenOfferPublish(Offer editedOffer,
+                                     long triggerPrice,
                                      OpenOffer.State originalState,
                                      ResultHandler resultHandler,
                                      ErrorMessageHandler errorMessageHandler) {
@@ -484,7 +505,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
             openOffer.setState(OpenOffer.State.CANCELED);
             openOffers.remove(openOffer);
 
-            OpenOffer editedOpenOffer = new OpenOffer(editedOffer);
+            OpenOffer editedOpenOffer = new OpenOffer(editedOffer, triggerPrice);
             editedOpenOffer.setState(originalState);
 
             openOffers.add(editedOpenOffer);
@@ -841,7 +862,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                 updatedOffer.setPriceFeedService(priceFeedService);
                 updatedOffer.setState(originalOfferState);
 
-                OpenOffer updatedOpenOffer = new OpenOffer(updatedOffer);
+                OpenOffer updatedOpenOffer = new OpenOffer(updatedOffer, originalOpenOffer.getTriggerPrice());
                 updatedOpenOffer.setState(originalOpenOfferState);
                 openOffers.add(updatedOpenOffer);
                 requestPersistence();
@@ -857,41 +878,53 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void republishOffers() {
-        int size = openOffers.size();
-        final ArrayList<OpenOffer> openOffersList = new ArrayList<>(openOffers.getList());
-        if (!stopped) {
-            stopPeriodicRefreshOffersTimer();
-            for (int i = 0; i < size; i++) {
-                // we delay to avoid reaching throttle limits
+        if (stopped) {
+            return;
+        }
 
-                long delay = 700;
-                final long minDelay = (i + 1) * delay;
-                final long maxDelay = (i + 2) * delay;
-                final OpenOffer openOffer = openOffersList.get(i);
-                UserThread.runAfterRandomDelay(() -> {
-                    if (openOffers.contains(openOffer)) {
-                        String id = openOffer.getId();
-                        if (id != null && !openOffer.isDeactivated())
-                            republishOffer(openOffer);
-                    }
+        stopPeriodicRefreshOffersTimer();
 
-                }, minDelay, maxDelay, TimeUnit.MILLISECONDS);
-            }
+        List<OpenOffer> openOffersList = new ArrayList<>(openOffers.getList());
+        processListForRepublishOffers(openOffersList);
+    }
+
+    private void processListForRepublishOffers(List<OpenOffer> list) {
+        if (list.isEmpty()) {
+            return;
+        }
+
+        OpenOffer openOffer = list.remove(0);
+        if (openOffers.contains(openOffer) && !openOffer.isDeactivated()) {
+            // TODO It is not clear yet if it is better for the node and the network to send out all add offer
+            //  messages in one go or to spread it over a delay. With power users who have 100-200 offers that can have
+            //  some significant impact to user experience and the network
+            republishOffer(openOffer, () -> processListForRepublishOffers(list));
+
+           /* republishOffer(openOffer,
+                    () -> UserThread.runAfter(() -> processListForRepublishOffers(list),
+                            30, TimeUnit.MILLISECONDS));*/
         } else {
-            log.debug("We have stopped already. We ignore that republishOffers call.");
+            // If the offer was removed in the meantime or if its deactivated we skip and call
+            // processListForRepublishOffers again with the list where we removed the offer already.
+            processListForRepublishOffers(list);
         }
     }
 
     private void republishOffer(OpenOffer openOffer) {
+        republishOffer(openOffer, null);
+    }
+
+    private void republishOffer(OpenOffer openOffer, @Nullable Runnable completeHandler) {
         offerBookService.addOffer(openOffer.getOffer(),
                 () -> {
                     if (!stopped) {
-                        log.debug("Successfully added offer to P2P network.");
                         // Refresh means we send only the data needed to refresh the TTL (hash, signature and sequence no.)
-                        if (periodicRefreshOffersTimer == null)
+                        if (periodicRefreshOffersTimer == null) {
                             startPeriodicRefreshOffersTimer();
-                    } else {
-                        log.debug("We have stopped already. We ignore that offerBookService.republishOffers.onSuccess call.");
+                        }
+                        if (completeHandler != null) {
+                            completeHandler.run();
+                        }
                     }
                 },
                 errorMessage -> {
@@ -900,26 +933,25 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                         stopRetryRepublishOffersTimer();
                         retryRepublishOffersTimer = UserThread.runAfter(OpenOfferManager.this::republishOffers,
                                 RETRY_REPUBLISH_DELAY_SEC);
-                    } else {
-                        log.debug("We have stopped already. We ignore that offerBookService.republishOffers.onFault call.");
+
+                        if (completeHandler != null) {
+                            completeHandler.run();
+                        }
                     }
                 });
     }
 
     private void startPeriodicRepublishOffersTimer() {
         stopped = false;
-        if (periodicRepublishOffersTimer == null)
+        if (periodicRepublishOffersTimer == null) {
             periodicRepublishOffersTimer = UserThread.runPeriodically(() -> {
                         if (!stopped) {
                             republishOffers();
-                        } else {
-                            log.debug("We have stopped already. We ignore that periodicRepublishOffersTimer.run call.");
                         }
                     },
                     REPUBLISH_INTERVAL_MS,
                     TimeUnit.MILLISECONDS);
-        else
-            log.trace("periodicRepublishOffersTimer already stated");
+        }
     }
 
     private void startPeriodicRefreshOffersTimer() {

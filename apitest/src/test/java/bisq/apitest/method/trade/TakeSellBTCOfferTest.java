@@ -52,6 +52,8 @@ public class TakeSellBTCOfferTest extends AbstractTradeTest {
     // Maker and Taker fees are in BTC.
     private static final String TRADE_FEE_CURRENCY_CODE = "btc";
 
+    private static final String WITHDRAWAL_TX_MEMO = "Bob's trade withdrawal";
+
     @Test
     @Order(1)
     public void testTakeAlicesSellOffer(final TestInfo testInfo) {
@@ -147,7 +149,7 @@ public class TakeSellBTCOfferTest extends AbstractTradeTest {
         logTrade(log, testInfo, "Bob's view before withdrawing funds to external wallet", trade);
 
         String toAddress = bitcoinCli.getNewBtcAddress();
-        withdrawFunds(bobdaemon, tradeId, toAddress);
+        withdrawFunds(bobdaemon, tradeId, toAddress, WITHDRAWAL_TX_MEMO);
 
         genBtcBlocksThenWait(1, 2250);
 
@@ -158,7 +160,7 @@ public class TakeSellBTCOfferTest extends AbstractTradeTest {
         verifyExpectedProtocolStatus(trade);
         logTrade(log, testInfo, "Bob's view after withdrawing funds to external wallet", trade);
         BtcBalanceInfo currentBalance = getBtcBalances(bobdaemon);
-        log.info("{} Bob's current available balance: {} BTC",
+        log.debug("{} Bob's current available balance: {} BTC",
                 testName(testInfo),
                 formatSatoshis(currentBalance.getAvailableBalance()));
     }
