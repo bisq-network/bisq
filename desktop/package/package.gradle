@@ -196,10 +196,15 @@ task packageInstallers {
         // However, the fat jar is the only one we need
         // Therefore, this location should point to a folder that ONLY contains the fat jar
         // If later we will need to include other non-jar resources, we can do that by adding --resource-dir to the jpackage opts
-        String fatJarFolderPath = "${project(':desktop').buildDir}/libs"
-        // Delete application jar file as it is not needed
-        delete("${fatJarFolderPath}/desktop-${version}.jar")
-        String mainJarName = file(fatJarFolderPath).list()[0]
+        String fatJarFolderPath = "${project(':desktop').buildDir}/libs/fatJar"
+        String mainJarName = shadowJar.getArchiveFileName().get()
+
+        delete(fatJarFolderPath)
+        mkdir(fatJarFolderPath)
+        copy {
+            from "${project(':desktop').buildDir}/libs/${mainJarName}"
+            into fatJarFolderPath
+        }
 
         // TODO For non-modular applications: use jlink to create a custom runtime containing only the modules required
 
