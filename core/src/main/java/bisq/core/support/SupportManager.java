@@ -311,7 +311,7 @@ public abstract class SupportManager {
 
         decryptedMailboxMessageWithPubKeys.forEach(decryptedMessageWithPubKey -> {
             NetworkEnvelope networkEnvelope = decryptedMessageWithPubKey.getNetworkEnvelope();
-            log.debug("decryptedMessageWithPubKey.message " + networkEnvelope);
+            log.trace("## decryptedMessageWithPubKey message={}", networkEnvelope.getClass().getSimpleName());
             if (networkEnvelope instanceof SupportMessage) {
                 SupportMessage supportMessage = (SupportMessage) networkEnvelope;
                 onSupportMessage(supportMessage);
