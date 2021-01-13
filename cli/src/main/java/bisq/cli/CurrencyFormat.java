@@ -43,6 +43,8 @@ public class CurrencyFormat {
     static final BigDecimal BSQ_SATOSHI_DIVISOR = new BigDecimal(100);
     static final DecimalFormat BSQ_FORMAT = new DecimalFormat("###,###,###,##0.00");
 
+    static final BigDecimal SECURITY_DEPOSIT_MULTIPLICAND = new BigDecimal("0.01");
+
     @SuppressWarnings("BigDecimalMethodWithoutRoundingCalled")
     public static String formatSatoshis(long sats) {
         return BTC_FORMAT.format(BigDecimal.valueOf(sats).divide(SATOSHI_DIVISOR));
@@ -96,6 +98,15 @@ public class CurrencyFormat {
             return new BigDecimal(btc).multiply(SATOSHI_DIVISOR).longValue();
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException(format("'%s' is not a number", btc));
+        }
+    }
+
+    static double toSecurityDepositAsPct(String securityDepositInput) {
+        try {
+            return new BigDecimal(securityDepositInput)
+                    .multiply(SECURITY_DEPOSIT_MULTIPLICAND).doubleValue();
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException(format("'%s' is not a number", securityDepositInput));
         }
     }
 

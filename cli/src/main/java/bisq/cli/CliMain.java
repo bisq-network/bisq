@@ -78,6 +78,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import static bisq.cli.CurrencyFormat.formatTxFeeRateInfo;
 import static bisq.cli.CurrencyFormat.toSatoshis;
+import static bisq.cli.CurrencyFormat.toSecurityDepositAsPct;
 import static bisq.cli.NegativeNumberOptions.hasNegativeNumberOptions;
 import static bisq.cli.TableFormat.*;
 import static java.lang.String.format;
@@ -376,7 +377,7 @@ public class CliMain {
                     else
                         fixedPrice = nonOptionArgs.get(7);
 
-                    var securityDeposit = new BigDecimal(nonOptionArgs.get(8));
+                    var securityDeposit = toSecurityDepositAsPct(nonOptionArgs.get(8));
                     var makerFeeCurrencyCode = nonOptionArgs.size() == 10
                             ? nonOptionArgs.get(9)
                             : "btc";
@@ -389,7 +390,7 @@ public class CliMain {
                             .setUseMarketBasedPrice(useMarketBasedPrice)
                             .setPrice(fixedPrice)
                             .setMarketPriceMargin(marketPriceMargin.doubleValue())
-                            .setBuyerSecurityDeposit(securityDeposit.doubleValue())
+                            .setBuyerSecurityDeposit(securityDeposit)
                             .setPaymentAccountId(paymentAcctId)
                             .setMakerFeeCurrencyCode(makerFeeCurrencyCode)
                             .build();
