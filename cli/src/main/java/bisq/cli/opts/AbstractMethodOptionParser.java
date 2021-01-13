@@ -21,6 +21,8 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
+import java.util.List;
+
 import lombok.Getter;
 
 abstract class AbstractMethodOptionParser implements MethodOpts {
@@ -36,6 +38,8 @@ abstract class AbstractMethodOptionParser implements MethodOpts {
 
     @Getter
     protected OptionSet options;
+    @Getter
+    protected List<String> nonOptionArguments;
 
     protected AbstractMethodOptionParser(String[] args) {
         this.args = args;
@@ -43,6 +47,7 @@ abstract class AbstractMethodOptionParser implements MethodOpts {
 
     public AbstractMethodOptionParser parse() {
         options = parser.parse(new ArgumentList(args).getMethodArguments());
+        nonOptionArguments = (List<String>) options.nonOptionArguments();
         return this;
     }
 

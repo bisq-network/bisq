@@ -85,7 +85,6 @@ import static java.lang.System.err;
 import static java.lang.System.exit;
 import static java.lang.System.out;
 import static java.util.Collections.singletonList;
-import static joptsimple.internal.Strings.EMPTY;
 
 
 
@@ -145,21 +144,22 @@ public class CliMain {
         var passwordOpt = parser.accepts("password", "rpc server password")
                 .withRequiredArg();
 
-        var methodOpt = parser.accepts("m", "rpc method")
-                .withRequiredArg()
-                .defaultsTo(EMPTY);
-
-        // Parse the CLI opts host, port, password, and help.  The help opt may
-        // indicate the user is asking for method level help, and will be excluded
+        // Parse the CLI opts host, port, password, method name, and help.  The help opt
+        // may indicate the user is asking for method level help, and will be excluded
         // from the parsed options if a method opt is present in String[] args.
         OptionSet options = parser.parse(new ArgumentList(args).getCLIArguments());
+        var nonOptionArgs = (List<String>) options.nonOptionArguments();
 
-        if (options.has(helpOpt)) {
-            printHelp(parser, out);
-            return;
+        // If neither the help opt nor a method name is present, print CLI level help
+        // to stderr and throw an exception.
+        if (!options.has(helpOpt) && nonOptionArgs.isEmpty()) {
+            printHelp(parser, err);
+            throw new IllegalArgumentException("no method specified");
         }
 
-        if (!options.has(methodOpt)) {
+        // If the help opt is present, but not a method name, print CLI level help
+        // to stdout.
+        if (options.has(helpOpt) && nonOptionArgs.isEmpty()) {
             printHelp(parser, out);
             return;
         }
@@ -170,7 +170,7 @@ public class CliMain {
         if (password == null)
             throw new IllegalArgumentException("missing required 'password' option");
 
-        var methodName = options.valueOf(methodOpt);
+        var methodName = nonOptionArgs.get(0);
         Method method;
         try {
             method = getMethodFromCmd(methodName);

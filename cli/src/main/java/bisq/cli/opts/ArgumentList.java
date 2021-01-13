@@ -36,11 +36,13 @@ public class ArgumentList {
                     || o.startsWith("--port") || o.startsWith("-port")
                     || o.startsWith("--host") || o.startsWith("-host");
 
-    private final Predicate<String> isMethodNameOpt = (o) ->
-            o.startsWith("--m") || o.startsWith("-m");
 
-    private final Predicate<String> isHelpOpt = (o) ->
-            o.startsWith("--help") || o.startsWith("-help");
+    // The method name is the only positional option in a command, and easy to identify.
+    // If the positional argument does not match a Method, or there are more than one
+    // positional arguments, the parser and/or CLI will fail as expected.
+    private final Predicate<String> isMethodNameOpt = (o) -> !o.startsWith("-");
+
+    private final Predicate<String> isHelpOpt = (o) -> o.startsWith("--help") || o.startsWith("-help");
 
     private final String[] arguments;
     private int currentIndex;
@@ -50,12 +52,13 @@ public class ArgumentList {
     }
 
     /**
-     * Returns only the CLI and method name args (--password, --host, --port, --help, -m)
-     * contained in the original String[] args; excludes the method specific arguments.
+     * Returns only the CLI connection & authentication, and method name args
+     * (--password, --host, --port, --help, method name) contained in the original
+     * String[] args; excludes the method specific arguments.
      *
-     * If String[] args contains both a method name (-m) and a help argument
-     * (--help, -help), it is assumed the user wants method help, not CLI help, and
-     * the help argument is not included in the returned String[].
+     * If String[] args contains both a method name (the only positional opt) and a help
+     * argument (--help, -help), it is assumed the user wants method help, not CLI help,
+     * and the help argument is not included in the returned String[].
      */
     public String[] getCLIArguments() {
         List<String> prunedArguments = new ArrayList<>();
@@ -78,7 +81,8 @@ public class ArgumentList {
             next();
         }
 
-        // Add the saved CLI help argument if the method name argument (-m) was not found.
+        // Include the saved CLI help argument if the positional method name argument
+        // was not found.
         if (!methodNameArgument.isPresent() && helpArgument.isPresent())
             prunedArguments.add(helpArgument.get());
 
@@ -87,8 +91,8 @@ public class ArgumentList {
 
     /**
      * Returns only the method args contained in the original String[] args;  excludes the
-     * CLI connection & auth opts (--password, --host, --port), plus the method name
-     * arg (-m).
+     * CLI connection & authentication opts (--password, --host, --port), plus the
+     * positional method name arg.
      */
     public String[] getMethodArguments() {
         List<String> prunedArguments = new ArrayList<>();

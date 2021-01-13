@@ -67,7 +67,7 @@ class CoreHelpService {
             case "takeoffer":
                 return takeOfferHelp();
             default:
-                throw new IllegalStateException("no help found for -m=" + methodName);
+                throw new IllegalStateException("no help found for " + methodName);
         }
     }
 
@@ -76,7 +76,7 @@ class CoreHelpService {
                         + " payment account with ID %s, paying the Bisq trading fee in BSQ:",
                 exampleOfferId,
                 examplePaymentAccountId);
-        String exampleCommand = format("%s -m=takeoffer  -o=%s  -p=%s  -c=bsq",
+        String exampleCommand = format("%s takeoffer  -o=%s  -p=%s  -c=bsq",
                 exampleCliBase,
                 exampleOfferId,
                 examplePaymentAccountId);
@@ -85,7 +85,7 @@ class CoreHelpService {
                 + "Takes an existing offer for a matching payment method."
                 + "  The Bisq trade fee can be paid in BSQ or BTC." + "\n"
                 + "\n"
-                + "Usage: -m=takeoffer -o=offer-id -p=payment-acct-id [-c=taker-fee-currency-code = bsq|btc]" + "\n"
+                + "Usage: takeoffer -o=offer-id -p=payment-acct-id [-c=taker-fee-currency-code = bsq|btc]" + "\n"
                 + "\n"
                 + "Parameters:" + "\n"
                 + requiredParamDesc("-o=offer-id", "The ID of the offer being taken.") + "\n"
@@ -102,9 +102,9 @@ class CoreHelpService {
         return methodName + "\n"
                 + "\n" + description
                 + "\n"
-                + "\n" + "Usage: " + "-m=" + methodName
+                + "\n" + "Usage: " + methodName
                 + "\n"
-                + "\n" + "Example: " + exampleCliBase + " -m=" + methodName;
+                + "\n" + "Example: " + exampleCliBase + " " + methodName;
     }
 
     private String requiredParamDesc(String paramName,
