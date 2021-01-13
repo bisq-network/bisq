@@ -20,20 +20,19 @@ package bisq.core.api;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-
-import static java.lang.Thread.currentThread;
 
 @Singleton
 @Slf4j
-class CoreContext {
+public class CoreContext {
+
+    @Getter
+    @Setter
+    private boolean isApiUser;
 
     @Inject
     public CoreContext() {
-    }
-
-    public boolean isApiUser() {
-        String threadName = currentThread().getName();
-        return threadName.equals("BisqDaemonMain") || threadName.contains("grpc");
     }
 }
