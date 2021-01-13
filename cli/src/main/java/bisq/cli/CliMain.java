@@ -386,7 +386,6 @@ public class CliMain {
                             .setPrice(fixedPrice)
                             .setMarketPriceMargin(marketPriceMargin.doubleValue())
                             .setBuyerSecurityDeposit(securityDeposit)
-                            .setTriggerPrice(0) // TODO Support optional trigger price.
                             .setPaymentAccountId(paymentAcctId)
                             .setMakerFeeCurrencyCode(makerFeeCurrencyCode)
                             .build();
