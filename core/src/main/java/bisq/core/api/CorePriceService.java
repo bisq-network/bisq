@@ -21,6 +21,7 @@ import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -28,7 +29,7 @@ import static bisq.common.util.MathUtils.roundDouble;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
-
+@Singleton
 @Slf4j
 class CorePriceService {
 

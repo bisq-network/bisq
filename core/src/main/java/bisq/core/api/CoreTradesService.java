@@ -35,6 +35,7 @@ import bisq.core.util.validation.BtcAddressValidator;
 import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -44,6 +45,7 @@ import lombok.extern.slf4j.Slf4j;
 import static bisq.core.btc.model.AddressEntry.Context.TRADE_PAYOUT;
 import static java.lang.String.format;
 
+@Singleton
 @Slf4j
 class CoreTradesService {
 
@@ -59,9 +61,11 @@ class CoreTradesService {
     private final TradeManager tradeManager;
     private final TradeUtil tradeUtil;
     private final User user;
+    private final boolean isApiUser;
 
     @Inject
-    public CoreTradesService(CoreWalletsService coreWalletsService,
+    public CoreTradesService(CoreContext coreContext,
+                             CoreWalletsService coreWalletsService,
                              BtcWalletService btcWalletService,
                              OfferUtil offerUtil,
                              ClosedTradableManager closedTradableManager,
@@ -77,6 +81,7 @@ class CoreTradesService {
         this.tradeManager = tradeManager;
         this.tradeUtil = tradeUtil;
         this.user = user;
+        this.isApiUser = coreContext.isApiUser();
     }
 
     void takeOffer(Offer offer,
@@ -108,7 +113,7 @@ class CoreTradesService {
                 offer,
                 paymentAccountId,
                 useSavingsWallet,
-                true,
+                isApiUser,
                 resultHandler::accept,
                 errorMessage -> {
                     log.error(errorMessage);
