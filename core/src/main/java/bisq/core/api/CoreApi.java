@@ -24,6 +24,7 @@ import bisq.core.btc.wallet.TxBroadcaster;
 import bisq.core.monetary.Price;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
+import bisq.core.offer.OpenOffer;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.trade.Trade;
@@ -120,6 +121,10 @@ public class CoreApi {
         return coreOffersService.getMyOffers(direction, currencyCode);
     }
 
+    public OpenOffer getMyOpenOffer(String id) {
+        return coreOffersService.getMyOpenOffer(id);
+    }
+
     public void createAnPlaceOffer(String currencyCode,
                                    String directionAsString,
                                    String priceAsString,
@@ -128,6 +133,7 @@ public class CoreApi {
                                    long amountAsLong,
                                    long minAmountAsLong,
                                    double buyerSecurityDeposit,
+                                   long triggerPrice,
                                    String paymentAccountId,
                                    String makerFeeCurrencyCode,
                                    Consumer<Offer> resultHandler) {
@@ -139,6 +145,7 @@ public class CoreApi {
                 amountAsLong,
                 minAmountAsLong,
                 buyerSecurityDeposit,
+                triggerPrice,
                 paymentAccountId,
                 makerFeeCurrencyCode,
                 resultHandler);

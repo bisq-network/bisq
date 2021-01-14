@@ -20,6 +20,7 @@ package bisq.daemon.grpc;
 import bisq.core.api.CoreApi;
 import bisq.core.api.model.OfferInfo;
 import bisq.core.offer.Offer;
+import bisq.core.offer.OpenOffer;
 
 import bisq.proto.grpc.CancelOfferReply;
 import bisq.proto.grpc.CancelOfferRequest;
@@ -78,8 +79,9 @@ class GrpcOffersService extends OffersGrpc.OffersImplBase {
                            StreamObserver<GetMyOfferReply> responseObserver) {
         try {
             Offer offer = coreApi.getMyOffer(req.getId());
+            OpenOffer openOffer = coreApi.getMyOpenOffer(req.getId());
             var reply = GetMyOfferReply.newBuilder()
-                    .setOffer(toOfferInfo(offer).toProtoMessage())
+                    .setOffer(toOfferInfo(offer, openOffer.getTriggerPrice()).toProtoMessage())
                     .build();
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
@@ -139,6 +141,7 @@ class GrpcOffersService extends OffersGrpc.OffersImplBase {
                     req.getAmount(),
                     req.getMinAmount(),
                     req.getBuyerSecurityDeposit(),
+                    req.getTriggerPrice(),
                     req.getPaymentAccountId(),
                     req.getMakerFeeCurrencyCode(),
                     offer -> {
