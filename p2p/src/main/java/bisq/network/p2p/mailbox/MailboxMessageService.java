@@ -158,7 +158,7 @@ public class MailboxMessageService implements SetupListener, RequestDataManager.
         this.requestDataManager.addListener(this);
         this.networkNode.addSetupListener(this);
 
-        this.persistenceManager.initialize(mailboxMessageList, PersistenceManager.Source.PRIVATE);
+        this.persistenceManager.initialize(mailboxMessageList, PersistenceManager.Source.PRIVATE_LOW_PRIO);
     }
 
 
