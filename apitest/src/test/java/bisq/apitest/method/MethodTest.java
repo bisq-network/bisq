@@ -35,6 +35,7 @@ import bisq.proto.grpc.CreatePaymentAccountRequest;
 import bisq.proto.grpc.GetAddressBalanceRequest;
 import bisq.proto.grpc.GetBalancesRequest;
 import bisq.proto.grpc.GetFundingAddressesRequest;
+import bisq.proto.grpc.GetMethodHelpRequest;
 import bisq.proto.grpc.GetMyOfferRequest;
 import bisq.proto.grpc.GetOfferRequest;
 import bisq.proto.grpc.GetPaymentAccountFormRequest;
@@ -271,6 +272,10 @@ public class MethodTest extends ApiTestCase {
                 .build();
     }
 
+    protected final GetMethodHelpRequest createGetMethodHelpRequest(String methodName) {
+        return GetMethodHelpRequest.newBuilder().setMethodName(methodName).build();
+    }
+
     // Convenience methods for calling frequently used & thoroughly tested gRPC services.
     protected final BalancesInfo getBalances(BisqAppConfig bisqAppConfig, String currencyCode) {
         return grpcStubs(bisqAppConfig).walletsService.getBalances(
@@ -488,6 +493,11 @@ public class MethodTest extends ApiTestCase {
                 "}\n";
         F2FAccount f2FAccount = (F2FAccount) createPaymentAccount(bisqAppConfig, f2fAccountJsonString);
         return f2FAccount;
+    }
+
+    protected final String getMethodHelp(BisqAppConfig bisqAppConfig, String methodName) {
+        var req = createGetMethodHelpRequest(methodName);
+        return grpcStubs(bisqAppConfig).helpService.getMethodHelp(req).getMethodHelp();
     }
 
     // Static conveniences for test methods and test case fixture setups.
