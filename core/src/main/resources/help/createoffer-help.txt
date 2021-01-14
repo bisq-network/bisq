@@ -1,0 +1,64 @@
+createoffer
+
+NAME
+----
+createoffer - create offer to buy or sell BTC
+
+SYNOPSIS
+--------
+createoffer
+		--payment-account=<payment-acct-id>
+		--direction=<buy|sell>
+		--currency-code=<eur|usd>
+		--market-price-margin=<percent> | --fixed-price=<btc-price>
+		--amount=<btc-amount>
+		--min-amount=<btc-amount>
+		--security-deposit=<percent>
+		[--fee-currency=<bsq|btc>]
+
+DESCRIPTION
+-----------
+Create and place an offer to buy or sell BTC using a fiat account.
+
+OPTIONS
+-------
+--payment-account
+		The ID of the fiat payment account used to send or receive funds during the trade.
+
+--direction
+		The direction of the trade (BUY or SELL).
+
+--currency-code
+		The three letter code for the fiat used to buy or sell BTC, e.g., EUR, USD, BRL, ...
+
+--market-price-margin
+		The % above or below market BTC price, e.g., 1.00 (1%).
+		If --market-price-margin is not present, --fixed-price must be.
+
+--fixed-price
+		The fixed BTC price in fiat used to buy or sell BTC, e.g., 34000 (USD).
+		If --fixed-price is not present, --market-price-margin must be.
+
+--amount
+		The amount of BTC to buy or sell, e.g., 0.125.
+
+--min-amount
+		The minimum amount of BTC to buy or sell, e.g., 0.006.
+		If --min-amount is not present, it defaults to the --amount value.
+
+--security-deposit
+		The percentage of the BTC amount being traded for the security deposit, e.g., 60.0 (60%).
+
+--fee-currency
+		The wallet currency used to pay the Bisq trade maker fee (BSQ|BTC).  Default is BTC
+
+EXAMPLES
+--------
+To create a BUY 0.125 BTC with EUR offer
+	at the current market price,
+	using a payment account with ID 7413d263-225a-4f1b-837a-1e3094dc0d77,
+	putting up a 30 percent security deposit,
+	and paying the Bisq maker trading fee in BSQ:
+$ ./bisq-cli --password=xyz --port=9998 createoffer --payment-account=7413d263-225a-4f1b-837a-1e3094dc0d77 --direction=buy --currency-code=eur --amount=0.125 --market-price-margin=0.00 --security-deposit=30.0 --fee-currency=bsq
+
+ (TODO another 3 examples: selling @ mkt price, buying a fixed price, selling at fixed price...)

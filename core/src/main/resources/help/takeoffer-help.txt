@@ -1,0 +1,35 @@
+takeoffer
+
+NAME
+----
+takeoffer - take an offer to buy or sell BTC
+
+SYNOPSIS
+--------
+takeoffer
+		--offer-id=<offer-id>
+		--payment-account=<payment-acct-id>
+		--fee-currency=<eur|usd>
+
+DESCRIPTION
+-----------
+Take an existing offer using a matching payment method.  The Bisq trade fee can be paid in BSQ or BTC.
+
+OPTIONS
+-------
+--offer-id
+		The ID of the buy or sell offer to take.
+
+--payment-account
+		The ID of the fiat payment account used to send or receive funds during the trade.
+		The payment account's payment method must match that of the offer.
+
+--fee-currency
+		The wallet currency used to pay the Bisq trade taker fee (BSQ|BTC).  Default is BTC
+
+EXAMPLES
+--------
+To take an offer with ID 83e8b2e2-51b6-4f39-a748-3ebd29c22aea
+	using a payment account with ID fe20cdbd-22be-4b8a-a4b6-d2608ff09d6e,
+	and paying the Bisq trading fee in BSQ:
+$ ./bisq-cli --password=xyz --port=9998 takeoffer -offer-id=83e8b2e2-51b6-4f39-a748-3ebd29c22aea -payment-account=fe20cdbd-22be-4b8a-a4b6-d2608ff09d6e -fee-currency=bsq
