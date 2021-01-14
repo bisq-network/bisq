@@ -448,7 +448,7 @@ task packageInstallers {
 
             // Package deb
             executeCmd(jPackageFilePath + commonOpts + linuxOpts +
-                " --linux-deb-maintainer contact@bisq.network" +
+                " --linux-deb-maintainer noreply@bisq.network" +
                 " --type deb")
 
             // Clean jpackage temp folder, needs to be empty for the next packaging step (rpm)
