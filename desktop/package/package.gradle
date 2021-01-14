@@ -216,14 +216,18 @@ task packageInstallers {
         String appVersion = version.replaceAll("-SNAPSHOT", "")
         println "Packaging Bisq version ${appVersion}"
 
+        String appDescription = 'A decentralized bitcoin exchange network.'
+        String appCopyright = '© 2021 Bisq'
+        String appNameAndVendor = 'Bisq'
+
         String commonOpts = (
                 // Generic options
                 " --dest \"${binariesFolderPath}\"" +
-                " --name Bisq" +
-                " --description \"A decentralized bitcoin exchange network.\"" +
+                " --name ${appNameAndVendor}" +
+                " --description \"${appDescription}\"" +
                 " --app-version ${appVersion}" +
-                " --copyright \"© 2020 Bisq\"" +
-                " --vendor Bisq" +
+                " --copyright \"${appCopyright}\"" +
+                " --vendor ${appNameAndVendor}" +
                 " --temp \"${jpackageTempDir}\"" +
 
                 // Options for creating the application image
@@ -317,19 +321,7 @@ task packageInstallers {
                 // macOS step 2: Build app-image using the shadow jar above (containing signed dylibs)
                 // NOTE: licensing file cannot be added at this point only when creating the dmg later
                 executeCmd(jPackageFilePath +
-                        " --dest \"${binariesFolderPath}\"" +
-                        " --name Bisq" +
-                        " --description \"A decentralized bitcoin exchange network.\"" +
-                        " --app-version ${appVersion}" +
-                        " --copyright \"© 2020 Bisq\"" +
-                        " --vendor Bisq" +
-                        " --temp \"${jpackageTempDir}\"" +
-                        " --input ${fatJarFolderPath}" +
-                        " --main-jar ${mainJarName}" +
-                        " --main-class bisq.desktop.app.BisqAppMain" +
-                        " --java-options -Xss1280k" +
-                        " --java-options -XX:MaxRAM=4g" +
-                        " --java-options -Djava.net.preferIPv4Stack=true" +
+                        commonOpts +
                         macOpts +
                         " --type app-image")
 
@@ -360,14 +352,13 @@ task packageInstallers {
                 // macOS step 4: Package the app-image into a dmg bundle
                 executeCmd(jPackageFilePath +
                         " --dest \"${binariesFolderPath}\"" +
-                        " --name Bisq" +
-                        " --description \"A decentralized bitcoin exchange network.\"" +
+                        " --name ${appNameAndVendor}" +
+                        " --description \"${appDescription}\"" +
                         " --app-version ${appVersion}" +
-                        " --copyright \"© 2020 Bisq\"" +
-                        " --vendor Bisq" +
+                        " --copyright \"${appCopyright}\"" +
+                        " --vendor ${appNameAndVendor}" +
                         " --temp \"${jpackageTempDir}\"" +
                         " --app-image ${bisqAppImageFullPath}" +
-                        " --license-file \"${licenseFilePath}\"" +
                         " --mac-sign" +
                         macOpts +
                         " --type dmg")
