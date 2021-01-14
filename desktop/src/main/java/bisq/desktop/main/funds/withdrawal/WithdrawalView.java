@@ -25,6 +25,7 @@ import bisq.desktop.components.ExternalHyperlink;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.main.overlays.windows.TxDetails;
 import bisq.desktop.main.overlays.windows.WalletPasswordWindow;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
@@ -39,6 +40,7 @@ import bisq.core.btc.wallet.Restrictions;
 import bisq.core.locale.Res;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
+import bisq.core.user.DontShowAgainLookup;
 import bisq.core.user.Preferences;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.ParsingUtils;
@@ -383,6 +385,12 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                                     @Override
                                     public void onSuccess(@javax.annotation.Nullable Transaction transaction) {
                                         if (transaction != null) {
+                                            String key = "showTransactionSent";
+                                            if (DontShowAgainLookup.showAgain(key)) {
+                                                new TxDetails(transaction.getTxId().toString(), withdrawToTextField.getText(), formatter.formatCoinWithCode(sendersAmount))
+                                                        .dontShowAgainId(key)
+                                                        .show();
+                                            }
                                             log.debug("onWithdraw onSuccess tx ID:{}", transaction.getTxId().toString());
                                         } else {
                                             log.error("onWithdraw transaction is null");

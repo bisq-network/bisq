@@ -27,6 +27,7 @@ import bisq.desktop.main.dao.wallet.BsqBalanceUtil;
 import bisq.desktop.main.funds.FundsView;
 import bisq.desktop.main.funds.deposit.DepositView;
 import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.main.overlays.windows.TxDetailsBsq;
 import bisq.desktop.main.overlays.windows.WalletPasswordWindow;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
@@ -45,6 +46,7 @@ import bisq.core.btc.wallet.TxBroadcaster;
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.dao.state.model.blockchain.TxType;
 import bisq.core.locale.Res;
+import bisq.core.user.DontShowAgainLookup;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.coin.CoinFormatter;
@@ -260,8 +262,12 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
                             bsqFormatter,
                             btcFormatter,
                             () -> {
+                                receiversAddressInputTextField.setValidator(null);
                                 receiversAddressInputTextField.setText("");
+                                receiversAddressInputTextField.setValidator(bsqAddressValidator);
+                                amountInputTextField.setValidator(null);
                                 amountInputTextField.setText("");
+                                amountInputTextField.setValidator(bsqValidator);
                             });
                 } catch (BsqChangeBelowDustException e) {
                     String msg = Res.get("popup.warning.bsqChangeBelowDustException", bsqFormatter.formatCoinWithCode(e.getOutputValue()));
@@ -373,6 +379,12 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
                         @Override
                         public void onSuccess(Transaction transaction) {
                             log.debug("Successfully sent tx with id {}", txWithBtcFee.getTxId().toString());
+                            String key = "showTransactionSentBsq";
+                            if (DontShowAgainLookup.showAgain(key)) {
+                                new TxDetailsBsq(txWithBtcFee.getTxId().toString(), address, amountFormatter.formatCoinWithCode(receiverAmount))
+                                        .dontShowAgainId(key)
+                                        .show();
+                            }
                         }
 
                         @Override
