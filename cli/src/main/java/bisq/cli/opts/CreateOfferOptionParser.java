@@ -50,7 +50,7 @@ public class CreateOfferOptionParser extends AbstractMethodOptionParser implemen
 
     final OptionSpec<String> mktPriceMarginOpt = parser.accepts(OPT_MKT_PRICE_MARGIN, "market btc price margin (%)")
             .withOptionalArg()
-            .defaultsTo(EMPTY);
+            .defaultsTo("0.00");
 
     final OptionSpec<String> fixedPriceOpt = parser.accepts(OPT_FIXED_PRICE, "fixed btc price")
             .withOptionalArg()
@@ -119,7 +119,7 @@ public class CreateOfferOptionParser extends AbstractMethodOptionParser implemen
 
     @SuppressWarnings("unused")
     public String getMktPriceMargin() {
-        return isUsingMktPriceMargin() ? options.valueOf(mktPriceMarginOpt) : "";
+        return isUsingMktPriceMargin() ? options.valueOf(mktPriceMarginOpt) : "0.00";
     }
 
     public BigDecimal getMktPriceMarginAsBigDecimal() {
@@ -127,7 +127,7 @@ public class CreateOfferOptionParser extends AbstractMethodOptionParser implemen
     }
 
     public String getFixedPrice() {
-        return options.has(fixedPriceOpt) ? options.valueOf(fixedPriceOpt) : "";
+        return options.has(fixedPriceOpt) ? options.valueOf(fixedPriceOpt) : "0.00";
     }
 
     public String getSecurityDeposit() {
