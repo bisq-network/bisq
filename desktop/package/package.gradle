@@ -234,13 +234,10 @@ task packageInstallers {
                 " --main-class bisq.desktop.app.BisqAppMain" +
                 " --java-options -Xss1280k" +
                 " --java-options -XX:MaxRAM=4g" +
-                " --java-options -Djava.net.preferIPv4Stack=true" +
+                " --java-options -Djava.net.preferIPv4Stack=true"
                 // Warning: this will cause guice reflection exceptions and lead to issues with the guice internal cache
                 // resulting in the UI not loading
 //              " --java-options -Djdk.module.illegalAccess=deny" +
-
-                // Options for creating the application package
-                " --license-file \"${licenseFilePath}\""
         )
 
         if (Os.isFamily(Os.FAMILY_WINDOWS)) {
