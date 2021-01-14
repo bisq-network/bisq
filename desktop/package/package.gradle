@@ -379,8 +379,10 @@ task packageInstallers {
                 // See https://developer.apple.com/documentation/xcode/notarizing_macos_software_before_distribution/customizing_the_notarization_workflow#3087734
                 String envVariableAcUsername = "$System.env.BISQ_PACKAGE_NOTARIZATION_AC_USERNAME"
                 String envVariableAscProvider = "$System.env.BISQ_PACKAGE_NOTARIZATION_ASC_PROVIDER"
+                // e.g. network.bisq.CAT is used when binaries are built by @ripcurlx
+                String envVariablePrimaryBundleId = "$System.env.BISQ_PRIMARY_BUNDLE_ID"
                 def uploadForNotarizationOutput = executeCmd("xcrun altool --notarize-app" +
-                        " --primary-bundle-id 'network.bisq.CAT'" +
+                        " --primary-bundle-id '${envVariablePrimaryBundleId}'" +
                         " --username '${envVariableAcUsername}'" +
                         " --password '@keychain:AC_PASSWORD'" +
                         " --asc-provider '${envVariableAscProvider}'" +
