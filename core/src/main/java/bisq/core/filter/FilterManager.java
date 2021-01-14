@@ -490,19 +490,13 @@ public class FilterManager {
         if (currentFilter != null) {
             if (currentFilter.getCreationDate() > newFilter.getCreationDate()) {
                 log.warn("We received a new filter from the network but the creation date is older than the " +
-                                "filter we have already. We ignore the new filter.\n" +
-                                "New filer={}\n" +
-                                "Old filter={}",
-                        newFilter, filterProperty.get());
+                        "filter we have already. We ignore the new filter.");
 
                 addToInvalidFilters(newFilter);
                 return;
             } else {
                 log.warn("We received a new filter from the network and the creation date is newer than the " +
-                                "filter we have already. We ignore the old filter.\n" +
-                                "New filer={}\n" +
-                                "Old filter={}",
-                        newFilter, filterProperty.get());
+                        "filter we have already. We ignore the old filter.");
                 addToInvalidFilters(currentFilter);
             }
 
