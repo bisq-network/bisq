@@ -83,7 +83,7 @@ public class TacWindow extends Overlay<TacWindow> {
 
                 "6. The user confirms that they have read and agreed to the rules regarding the dispute process:\n" +
                 "    - You must complete trades within the maximum duration specified for each payment method.\n" +
-                "    - DO NOT use any additional notice in the \"reason for payment\" text like bitcoin, BTC, Bisq or the trade ID. Leave the field empty.\n" +
+                "    - Leave the \"reason for payment\" field empty. DO NOT put the trade ID or any other text like 'bitcoin', 'BTC', or 'Bisq'.\n" +
                 "    - If the bank of the fiat sender charges fees, the sender (" + Res.getBaseCurrencyCode() + " buyer) has to cover the fees.\n" +
                 "    - You must cooperate with the mediator during the mediation process, and respond to each mediator message within 48 hours.\n" +
                 "    - If either (or both) traders do not accept the mediator's suggested payout, traders can open a refund request from an arbitrator after 10 days in case of altcoin trades\n" +
