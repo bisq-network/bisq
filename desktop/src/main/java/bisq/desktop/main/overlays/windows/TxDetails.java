@@ -22,8 +22,8 @@ import bisq.desktop.main.overlays.Overlay;
 
 import bisq.core.locale.Res;
 
-import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Region;
 
 import static bisq.desktop.util.FormBuilder.*;
 
@@ -58,7 +58,9 @@ public class TxDetails extends Overlay<TxDetails> {
     protected void addContent() {
         GridPane.setColumnSpan(
                 addMultilineLabel(gridPane, ++rowIndex, note, 0), 2);
-        gridPane.add(new Label(""), 0, ++rowIndex);  // spacer
+        Region spacer = new Region();
+        spacer.setMinHeight(20);
+        gridPane.add(spacer, 0, ++rowIndex);
         addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("shared.amount"), amount);
         addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("txDetailsWindow.sentTo"), address);
         txIdTextField = addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("txDetailsWindow.txId"), txId).second;

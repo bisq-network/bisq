@@ -262,8 +262,12 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
                             bsqFormatter,
                             btcFormatter,
                             () -> {
+                                receiversAddressInputTextField.setValidator(null);
                                 receiversAddressInputTextField.setText("");
+                                receiversAddressInputTextField.setValidator(bsqAddressValidator);
+                                amountInputTextField.setValidator(null);
                                 amountInputTextField.setText("");
+                                amountInputTextField.setValidator(bsqValidator);
                             });
                 } catch (BsqChangeBelowDustException e) {
                     String msg = Res.get("popup.warning.bsqChangeBelowDustException", bsqFormatter.formatCoinWithCode(e.getOutputValue()));
