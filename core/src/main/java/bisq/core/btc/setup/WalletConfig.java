@@ -456,8 +456,7 @@ public class WalletConfig extends AbstractIdleService {
         } else {
             // proxy case (tor).
             Proxy proxy = new Proxy(Proxy.Type.SOCKS,
-                    new InetSocketAddress(socks5Proxy.getInetAddress().getHostName(),
-                            socks5Proxy.getPort()));
+                    new InetSocketAddress(socks5Proxy.getInetAddress(), socks5Proxy.getPort()));
 
             ProxySocketFactory proxySocketFactory = new ProxySocketFactory(proxy);
             // We don't use tor mode if we have a local node running
