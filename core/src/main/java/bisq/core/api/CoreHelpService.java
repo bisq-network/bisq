@@ -40,10 +40,6 @@ class CoreHelpService {
     }
 
     public String getMethodHelp(String methodName) {
-        return getHelpText(methodName);
-    }
-
-    private String getHelpText(String methodName) {
         String resourceFile = "/help" + separator + methodName + "-" + "help.txt";
         try {
             return readHelpFile(resourceFile);
