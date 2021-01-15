@@ -40,21 +40,7 @@ class CoreHelpService {
     }
 
     public String getMethodHelp(String methodName) {
-        switch (methodName) {
-            case "createoffer":
-            case "getfundingaddresses":
-            case "getpaymentaccts":
-            case "getpaymentmethods":
-            case "gettxfeerate":
-            case "getunusedbsqaddress":
-            case "getversion":
-            case "lockwallet":
-            case "takeoffer":
-            case "unsettxfeerate":
-                return getHelpText(methodName);
-            default:
-                throw new IllegalStateException("no help found for " + methodName);
-        }
+        return getHelpText(methodName);
     }
 
     private String getHelpText(String methodName) {
@@ -63,7 +49,7 @@ class CoreHelpService {
             return readHelpFile(resourceFile);
         } catch (NullPointerException ex) {
             log.error("", ex);
-            throw new IllegalStateException(format("could not find %s help doc", methodName));
+            throw new IllegalStateException(format("no help found for api method %s", methodName));
         } catch (IOException ex) {
             log.error("", ex);
             throw new IllegalStateException(format("could not read %s help doc", methodName));
@@ -87,7 +73,7 @@ class CoreHelpService {
     @SuppressWarnings("CommentedOutCode")
     public static void main(String[] args) {
         CoreHelpService coreHelpService = new CoreHelpService();
-        // out.println(coreHelpService.getMethodHelp("getversion"));
+        out.println(coreHelpService.getMethodHelp("getversion"));
         // out.println(coreHelpService.getMethodHelp("getfundingaddresses"));
         // out.println(coreHelpService.getMethodHelp("getfundingaddresses"));
         // out.println(coreHelpService.getMethodHelp("getunusedbsqaddress"));
@@ -96,8 +82,10 @@ class CoreHelpService {
         // out.println(coreHelpService.getMethodHelp("getpaymentaccts"));
         // out.println(coreHelpService.getMethodHelp("lockwallet"));
         // out.println(coreHelpService.getMethodHelp("gettxfeerate"));
-        out.println(coreHelpService.getMethodHelp("createoffer"));
+        // out.println(coreHelpService.getMethodHelp("createoffer"));
         // out.println(coreHelpService.getMethodHelp("takeoffer"));
         // out.println(coreHelpService.getMethodHelp("garbage"));
+        // out.println(coreHelpService.getMethodHelp(""));
+        // out.println(coreHelpService.getMethodHelp(null));
     }
 }
