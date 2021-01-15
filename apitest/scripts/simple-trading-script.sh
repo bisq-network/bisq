@@ -71,7 +71,7 @@ printdate "ALICE ${ALICE_ROLE}: Fiat Acct ID: ${ALICE_ACCT_ID}"
 printbreak
 
 printdate_sameline "BOB CLI:"
-getpaymentaccts ${BOB_PORT}
+getpaymentaccts "$BOB_PORT"
 
 BOB_ACCT_ID=$(getdummyacctid "$BOB_PORT")
 printdate "Bob's Fiat Acct ID: ${BOB_ACCT_ID}"
@@ -201,10 +201,10 @@ printbreak
 # Get balances after trade completion.
 printdate "Bob & Alice's balances after trade:"
 printdate_sameline "ALICE CLI:"
-printbalances $ALICE_PORT
+printbalances "$ALICE_PORT"
 printbreak
 printdate_sameline "BOB CLI:"
-printbalances $BOB_PORT
+printbalances "$BOB_PORT"
 printbreak
 
 exit 0

@@ -77,11 +77,11 @@ parseopts() {
 	local OPTIND o d c f m a
 	while getopts "d:c:f:m:a:" o; do
 		case "${o}" in
-		    d) d=$(echo ${OPTARG} | tr '[:lower:]' '[:upper:]')
+		    d) d=$(echo "${OPTARG}" | tr '[:lower:]' '[:upper:]')
 		        ((d == "BUY" || d == "SELL")) || usage
 		        export DIRECTION=${d}
 		        ;;
-		    c) c=$(echo ${OPTARG} | tr '[:lower:]' '[:upper:]')
+		    c) c=$(echo "${OPTARG}"| tr '[:lower:]' '[:upper:]')
 		        export CURRENCY_CODE=${c}
 		    	;;
 		    f) f=${OPTARG}
@@ -111,7 +111,7 @@ parseopts() {
 		usage
 	fi
 
-    if [ $DIRECTION = "SELL" ]
+    if [ "$DIRECTION" = "SELL" ]
     then
         export BOB_ROLE="(taker/buyer)"
         export ALICE_ROLE="(maker/seller)"
@@ -134,9 +134,9 @@ printscriptparams() {
 checkbitcoindrunning() {
     # There may be a '+' char in the path and we have to escape it for pgrep.
     if [[ ${APP_HOME} == *"+"* ]]; then
-        ESCAPED_APP_HOME=$(escapepluschar ${APP_HOME})
+        ESCAPED_APP_HOME=$(escapepluschar "${APP_HOME}")
     else
-        ESCAPED_APP_HOME=${APP_HOME}
+        ESCAPED_APP_HOME="${APP_HOME}"
     fi
     if pgrep -f "bitcoind -datadir=${ESCAPED_APP_HOME}/apitest/build/resources/main/Bitcoin-regtest" > /dev/null ; then
         printdate "The regtest bitcoind node is running on host."
@@ -151,6 +151,8 @@ registerdisputeagents() {
     REG_KEY="6ac43ea1df2a290c1c8391736aa42e4339c5cb4f110ff0257a13b63211977b7a"
     SILENT=$(./bisq-cli --password=xyz --port=9997 registerdisputeagent --dispute-agent-type=mediator --registration-key=${REG_KEY})
     SILENT=$(./bisq-cli --password=xyz --port=9997 registerdisputeagent --dispute-agent-type=refundagent --registration-key=${REG_KEY})
+    # Do something with $SILENT to keep codacy happy.
+    echo "$SILENT"  > /dev/null
 }
 
 
@@ -226,10 +228,13 @@ getbtcoreaddress() {
 genbtcblocks() {
 	NUM_BLOCKS=$1
 	SECONDS_BETWEEN_BLOCKS=$2
-	CMD="bitcoin-cli -regtest -rpcport=19443 -rpcuser=apitest -rpcpassword=apitest generatetoaddress 1 "
-	CMD+="$(getbtcoreaddress)"
-	printdate "$CMD"
-	for i in $(seq -f "%02g" 1 ${NUM_BLOCKS})
+	ADDR_PARAM="$(getbtcoreaddress)"
+	CMD_PREFIX="bitcoin-cli -regtest -rpcport=19443 -rpcuser=apitest -rpcpassword=apitest generatetoaddress 1"
+	# Print the generatetoaddress command with double quoted address param, to make it cut & pastable from the console.
+	printdate "$CMD_PREFIX \"$ADDR_PARAM\""
+	# Now create the full generatetoaddress command to be run now.
+    CMD="$CMD_PREFIX $ADDR_PARAM"
+	for i in $(seq -f "%02g" 1 "$NUM_BLOCKS")
 	do
         NEW_BLOCK_HASH=$(genbtcblock "$CMD")
         printdate "Block Hash #$i:${NEW_BLOCK_HASH}"
@@ -254,7 +259,7 @@ readYesOrNo() {
 	question=$1
 	echo -n "$question  Yes or No: "
 	read answer
-	answer=$(echo $answer | tr [a-z] [A-Z])
+	answer=$(echo "$answer" | tr [a-z] [A-Z])
 	if [ "$answer" = "Y" ]
 	then
 		echo You answered yes: "$answer"
