@@ -7,7 +7,7 @@ export ALICE_PORT=9998
 export BOB_PORT=9999
 
 printdate() {
-	echo "[`date`]  $@"
+	echo "[$(date)]  $@"
 }
 
 printdate "Started ${APP_HOME}/${APP_BASE_NAME}."
@@ -21,9 +21,9 @@ checksetup() {
         echo ""
         echo "Register dispute agents in the arbitration daemon after it initializes."
         echo "./bisq-cli --password=xyz --port=9997 registerdisputeagent --dispute-agent-type=mediator \
-#           --registration-key=6ac43ea1df2a290c1c8391736aa42e4339c5cb4f110ff0257a13b63211977b7a"
+            --registration-key=6ac43ea1df2a290c1c8391736aa42e4339c5cb4f110ff0257a13b63211977b7a"
         echo "./bisq-cli --password=xyz --port=9997 registerdisputeagent --dispute-agent-type=refundagent \
-#           --registration-key=6ac43ea1df2a290c1c8391736aa42e4339c5cb4f110ff0257a13b63211977b7a"
+            --registration-key=6ac43ea1df2a290c1c8391736aa42e4339c5cb4f110ff0257a13b63211977b7a"
         exit 1;
     }
     printdate "Checking ${APP_HOME} for some expected directories and files."
@@ -164,30 +164,30 @@ printcmd() {
 }
 
 printdate_sameline() {
-	echo -n "[`date`]  $@ "
+	echo -n "[$(date)]  $@ "
 }
 
 sleeptraced() {
   PERIOD=$1
   printdate "sleeping for $PERIOD"
-  sleep $PERIOD
+  sleep "$PERIOD"
 }
 
 printbalances() {
     PORT=$1
     printcmd "${CLI_BASE} --port=${PORT} getbalance"
-    $CLI_BASE --port=${PORT} getbalance
+    $CLI_BASE --port="$PORT" getbalance
 }
 
 getpaymentaccts() {
     PORT=$1
     printcmd "${CLI_BASE} --port=${PORT} getpaymentaccts"
-    $CLI_BASE --port=${PORT} getpaymentaccts
+    $CLI_BASE --port="$PORT" getpaymentaccts
 }
 
 getdummyacctid() {
 	PORT=$1
-	PAYMENT_ACCTS=$(${CLI_BASE} --port=${PORT} getpaymentaccts)
+	PAYMENT_ACCTS=$(${CLI_BASE} --port="$PORT" getpaymentaccts)
 	DUMMY_ACCT_1=$(echo -e "${PAYMENT_ACCTS}" | sed -n '2p')
 	DUMMY_ACCT_2=$(echo -e "${PAYMENT_ACCTS}" | sed -n '3p')
 	if [[ "$DUMMY_ACCT_1=" == *"PerfectMoney dummy"* ]]; then
@@ -195,7 +195,7 @@ getdummyacctid() {
 	else
 		DUMMY_ACCT=$DUMMY_ACCT_2
 	fi
-	ACCT_ID=$(echo -e $DUMMY_ACCT | awk '{print $NF}')
+	ACCT_ID=$(echo -e "$DUMMY_ACCT" | awk '{print $NF}')
 	echo "${ACCT_ID}"
 }
 
@@ -213,30 +213,39 @@ createoffer() {
     fi
 
 	OFFER_DETAIL=$(echo -e "${OFFER_DESC}" | sed -n '2p')
-	NEW_OFFER_ID=$(echo -e ${OFFER_DETAIL} | awk '{print $NF}')
+	NEW_OFFER_ID=$(echo -e "${OFFER_DETAIL}" | awk '{print $NF}')
 	echo "${NEW_OFFER_ID}"
+}
+
+getbtcoreaddress() {
+    CMD="bitcoin-cli -regtest  -rpcport=19443 -rpcuser=apitest -rpcpassword=apitest getnewaddress"
+    NEW_ADDRESS=$(${CMD})
+    echo "${NEW_ADDRESS}"
 }
 
 genbtcblocks() {
 	NUM_BLOCKS=$1
 	SECONDS_BETWEEN_BLOCKS=$2
+	CMD="bitcoin-cli -regtest -rpcport=19443 -rpcuser=apitest -rpcpassword=apitest generatetoaddress 1 "
+	CMD+="$(getbtcoreaddress)"
+	printdate "$CMD"
 	for i in $(seq -f "%02g" 1 ${NUM_BLOCKS})
 	do
-        genbtcblock
-        sleep ${SECONDS_BETWEEN_BLOCKS}
+        NEW_BLOCK_HASH=$(genbtcblock "$CMD")
+        printdate "Block Hash #$i:${NEW_BLOCK_HASH}"
+        sleep "$SECONDS_BETWEEN_BLOCKS"
 	done
 }
 
 genbtcblock() {
-    # TODO use bitcoin-cli to get new address; cannot assume same address exists on other regtest bitcoin-core hosts.
-    CMD='bitcoin-cli -regtest -rpcport=19443 -rpcuser=apitest -rpcpassword=apitest generatetoaddress 1 "2N5J6MyjAsWnashimGiNwoRzUXThsQzRmbv"'
-    printcmd "$CMD"
-    bitcoin-cli -regtest -rpcport=19443 -rpcuser=apitest -rpcpassword=apitest generatetoaddress 1 "2N5J6MyjAsWnashimGiNwoRzUXThsQzRmbv"
+    CMD=$1
+    NEW_BLOCK_HASH=$(${CMD} | sed -n '2p')
+    echo "$NEW_BLOCK_HASH"
 }
 
 escapepluschar() {
  	STRING=$1
-	NEW_STRING=$(sed 's/+/\\&/g' <<< ${STRING})
+	NEW_STRING=$(echo "${STRING//+/\\+}")
     echo "${NEW_STRING}"
 }
 
@@ -245,12 +254,12 @@ readYesOrNo() {
 	question=$1
 	echo -n "$question  Yes or No: "
 	read answer
-	answer=`echo $answer | tr [a-z] [A-Z]`
-	if [ $answer = Y ]
+	answer=$(echo $answer | tr [a-z] [A-Z])
+	if [ "$answer" = "Y" ]
 	then
-		echo You answered yes: $answer
+		echo You answered yes: "$answer"
 	else
-		echo You answered no: $answer
+		echo You answered no: "$answer"
 	fi
 	return 0
 }

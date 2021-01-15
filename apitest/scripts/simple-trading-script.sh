@@ -36,43 +36,44 @@
 #
 #       `apitest/scripts/simple-trading-script.sh -d sell -c usd -f 23000 -a 0.125`
 
-APP_BASE_NAME=`basename "$0"`
-APP_HOME="`pwd -P`"
+
+APP_BASE_NAME=$(basename "$0")
+APP_HOME=$(pwd -P)
 APITEST_SCRIPTS_HOME="${APP_HOME}/apitest/scripts"
 
 # Source the env and some helper functions.
-. ${APITEST_SCRIPTS_HOME}/trading-script-env.sh
+. "${APITEST_SCRIPTS_HOME}/trading-script-env.sh"
 
 checksetup
 parseopts "$@"
 
 printdate "Started ${APP_BASE_NAME} with parameters:"
 printscriptparams
+printbreak
 
 registerdisputeagents
 
 # Get balances.
 printdate "Bob & Alice's balances before trade:"
 printdate_sameline "ALICE CLI:"
-printbalances $ALICE_PORT
+printbalances "$ALICE_PORT"
 printbreak
 
 printdate_sameline "BOB CLI:"
-printbalances $BOB_PORT
+printbalances "$BOB_PORT"
 printbreak
 
 printdate_sameline "ALICE CLI:"
-getpaymentaccts ${ALICE_PORT}
+getpaymentaccts "$ALICE_PORT"
 
-ALICE_ACCT_ID=$(getdummyacctid ${ALICE_PORT})
+ALICE_ACCT_ID=$(getdummyacctid "$ALICE_PORT")
 printdate "ALICE ${ALICE_ROLE}: Fiat Acct ID: ${ALICE_ACCT_ID}"
 printbreak
-
 
 printdate_sameline "BOB CLI:"
 getpaymentaccts ${BOB_PORT}
 
-BOB_ACCT_ID=$(getdummyacctid ${BOB_PORT})
+BOB_ACCT_ID=$(getdummyacctid "$BOB_PORT")
 printdate "Bob's Fiat Acct ID: ${BOB_ACCT_ID}"
 printbreak
 
@@ -130,7 +131,7 @@ printbreak
 sleeptraced 6
 
 # Send payment sent and received messages.
-if [ $DIRECTION = "BUY" ]
+if [ "${DIRECTION}" = "BUY" ]
 then
     PAYER="ALICE ${ALICE_ROLE}"
     PAYER_PORT=${ALICE_PORT}
@@ -179,7 +180,7 @@ printbreak
 sleeptraced 3
 
 # Complete the trade on the seller side.
-if [ $DIRECTION = "BUY" ]
+if [ "${DIRECTION}" = "BUY" ]
 then
 	printdate "BOB ${BOB_ROLE}:  Closing trade by keeping funds in Bisq wallet."
     CMD="$CLI_BASE --port=${BOB_PORT} keepfunds --trade-id=${OFFER_ID}"
