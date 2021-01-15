@@ -296,19 +296,21 @@ public class MailboxMessageService implements SetupListener, RequestDataManager.
             // mailboxMessageList while getting called.
             UserThread.execute(() -> {
                 String uid = mailboxMessage.getUid();
-                if (mailboxItemsByUid.containsKey(uid)) {
-                    // We called removeMailboxEntryFromNetwork at processMyMailboxItem,
-                    // but in case we have not been bootstrapped at that moment it did not get removed from the network.
-                    // So to be sure it gets removed we try to remove it now again.
-                    // In case it was removed earlier it will return early anyway inside the p2pDataStorage.
-                    removeMailboxEntryFromNetwork(mailboxItemsByUid.get(uid).getProtectedMailboxStorageEntry());
-
-                    // We will get called the onRemoved handler which triggers removeMailboxItemFromMap as well.
-                    // But as we use the uid from the decrypted data which is not available at onRemoved we need to
-                    // call removeMailboxItemFromMap here. The onRemoved only removes foreign mailBoxMessages.
-                    log.trace("## removeMailboxMsg uid={}", uid);
-                    removeMailboxItemFromLocalStore(uid);
+                if (!mailboxItemsByUid.containsKey(uid)) {
+                    return;
                 }
+
+                // We called removeMailboxEntryFromNetwork at processMyMailboxItem,
+                // but in case we have not been bootstrapped at that moment it did not get removed from the network.
+                // So to be sure it gets removed we try to remove it now again.
+                // In case it was removed earlier it will return early anyway inside the p2pDataStorage.
+                removeMailboxEntryFromNetwork(mailboxItemsByUid.get(uid).getProtectedMailboxStorageEntry());
+
+                // We will get called the onRemoved handler which triggers removeMailboxItemFromMap as well.
+                // But as we use the uid from the decrypted data which is not available at onRemoved we need to
+                // call removeMailboxItemFromMap here. The onRemoved only removes foreign mailBoxMessages.
+                log.trace("## removeMailboxMsg uid={}", uid);
+                removeMailboxItemFromLocalStore(uid);
             });
         } else {
             // In case the network was not ready yet we try again later
