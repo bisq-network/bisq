@@ -113,11 +113,11 @@ parseopts() {
 
     if [ $DIRECTION = "SELL" ]
     then
-        export BOB_ROLE="Bob (taker/buyer)"
-        export ALICE_ROLE="Alice (maker/seller)"
+        export BOB_ROLE="(taker/buyer)"
+        export ALICE_ROLE="(maker/seller)"
     else
-        export BOB_ROLE="Bob (taker/seller)"
-        export ALICE_ROLE="Alice (maker/buyer)"
+        export BOB_ROLE="(taker/seller)"
+        export ALICE_ROLE="(maker/buyer)"
     fi
 }
 
