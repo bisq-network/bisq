@@ -74,7 +74,7 @@ printdate_sameline "BOB CLI:"
 getpaymentaccts "$BOB_PORT"
 
 BOB_ACCT_ID=$(getdummyacctid "$BOB_PORT")
-printdate "Bob's Fiat Acct ID: ${BOB_ACCT_ID}"
+printdate "BOB ${BOB_ROLE}: Fiat Acct ID: ${BOB_ACCT_ID}"
 printbreak
 
 printdate "ALICE ${ALICE_ROLE}:  Creating ${DIRECTION} ${CURRENCY_CODE} offer with payment acct ${ALICE_ACCT_ID}."
