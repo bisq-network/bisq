@@ -806,10 +806,10 @@ public class CliMain {
             stream.println();
             stream.format(rowFormat, getunusedbsqaddress.name(), "", "Get unused BSQ address");
             stream.println();
-            stream.format(rowFormat, sendbsq.name(), "--address=<btc-address> --amount=<btc-amount>  \\", "Send BSQ");
+            stream.format(rowFormat, sendbsq.name(), "--address=<bsq-address> --amount=<bsq-amount>  \\", "Send BSQ");
             stream.format(rowFormat, "", "[--tx-fee-rate=<sats/byte>]", "");
             stream.println();
-            stream.format(rowFormat, sendbtc.name(), "--address=<bsq-address> --amount=<bsq-amount> \\", "Send BTC");
+            stream.format(rowFormat, sendbtc.name(), "--address=<btc-address> --amount=<btc-amount> \\", "Send BTC");
             stream.format(rowFormat, "", "[--tx-fee-rate=<sats/byte>]", "");
             stream.println();
             stream.format(rowFormat, gettxfeerate.name(), "", "Get current tx fee rate in sats/byte");
