@@ -1,0 +1,17 @@
+getpaymentmethods
+
+NAME
+----
+getpaymentmethods - list fiat payment methods
+
+SYNOPSIS
+--------
+getpaymentmethods
+
+DESCRIPTION
+-----------
+Returns a list of currently supported fiat payment method IDs.
+
+EXAMPLES
+--------
+$ ./bisq-cli --password=xyz --port=9998 getpaymentmethods

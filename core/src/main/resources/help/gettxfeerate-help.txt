@@ -1,0 +1,17 @@
+gettxfeerate
+
+NAME
+----
+gettxfeerate - get transaction fee rate
+
+SYNOPSIS
+--------
+gettxfeerate
+
+DESCRIPTION
+-----------
+Returns the most recent bitcoin network transaction fee the Bisq server could find.
+
+EXAMPLES
+--------
+$ ./bisq-cli --password=xyz --port=9998 gettxfeerate

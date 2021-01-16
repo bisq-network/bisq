@@ -1,0 +1,17 @@
+lockwallet
+
+NAME
+----
+lockwallet - lock Bisq wallet
+
+SYNOPSIS
+--------
+lockwallet
+
+DESCRIPTION
+-----------
+Locks an unlocked wallet before an unlockwallet timeout expires.
+
+EXAMPLES
+--------
+$ ./bisq-cli --password=xyz --port=9998 lockwallet
