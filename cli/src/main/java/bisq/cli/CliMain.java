@@ -811,6 +811,7 @@ public class CliMain {
             stream.println();
             stream.format(rowFormat, sendbtc.name(), "--address=<btc-address> --amount=<btc-amount> \\", "Send BTC");
             stream.format(rowFormat, "", "[--tx-fee-rate=<sats/byte>]", "");
+            stream.format(rowFormat, "", "[--memo=<\"memo\">]", "");
             stream.println();
             stream.format(rowFormat, gettxfeerate.name(), "", "Get current tx fee rate in sats/byte");
             stream.println();
