@@ -73,7 +73,8 @@ public class CoreApi {
     @Inject
     public CoreApi(Config config,
                    CoreDisputeAgentsService coreDisputeAgentsService,
-                   CoreHelpService coreHelpService, CoreOffersService coreOffersService,
+                   CoreHelpService coreHelpService,
+                   CoreOffersService coreOffersService,
                    CorePaymentAccountsService paymentAccountsService,
                    CorePriceService corePriceService,
                    CoreTradesService coreTradesService,
