@@ -15,23 +15,14 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p;
+package bisq.network.p2p.mailbox;
 
-import java.net.ServerSocket;
 
-import java.io.IOException;
+import bisq.network.p2p.DirectMessage;
+import bisq.network.p2p.NodeAddress;
+import bisq.network.p2p.UidMessage;
+import bisq.network.p2p.storage.payload.ExpirablePayload;
 
-import java.util.Random;
-
-public class Utils {
-    public static int findFreeSystemPort() {
-        try {
-            ServerSocket server = new ServerSocket(0);
-            int port = server.getLocalPort();
-            server.close();
-            return port;
-        } catch (IOException ignored) {
-            return new Random().nextInt(10000) + 50000;
-        }
-    }
+public interface MailboxMessage extends DirectMessage, UidMessage, ExpirablePayload {
+    NodeAddress getSenderNodeAddress();
 }

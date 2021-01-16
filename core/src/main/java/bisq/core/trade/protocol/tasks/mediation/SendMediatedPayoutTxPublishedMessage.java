@@ -20,7 +20,7 @@ package bisq.core.trade.protocol.tasks.mediation;
 import bisq.core.support.dispute.mediation.MediationResultState;
 import bisq.core.trade.Trade;
 import bisq.core.trade.messages.MediatedPayoutTxPublishedMessage;
-import bisq.core.trade.messages.TradeMessage;
+import bisq.core.trade.messages.TradeMailboxMessage;
 import bisq.core.trade.protocol.tasks.SendMailboxMessageTask;
 
 import bisq.common.taskrunner.TaskRunner;
@@ -41,7 +41,7 @@ public class SendMediatedPayoutTxPublishedMessage extends SendMailboxMessageTask
     }
 
     @Override
-    protected TradeMessage getMessage(String id) {
+    protected TradeMailboxMessage getTradeMailboxMessage(String id) {
         Transaction payoutTx = checkNotNull(trade.getPayoutTx(), "trade.getPayoutTx() must not be null");
         return new MediatedPayoutTxPublishedMessage(
                 id,

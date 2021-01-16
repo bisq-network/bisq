@@ -117,7 +117,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
     final int maxTicks = 90;
     private int selectedTabIndex;
     final Map<TickUnit, Map<Long, Long>> usdPriceMapsPerTickUnit = new HashMap<>();
-    private boolean fillTradeCurrenciesOnActiavetCalled;
+    private boolean fillTradeCurrenciesOnActivateCalled;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -152,9 +152,9 @@ class TradesChartsViewModel extends ActivatableViewModel {
     @Override
     protected void activate() {
         tradeStatisticsManager.getObservableTradeStatisticsSet().addListener(setChangeListener);
-        if (!fillTradeCurrenciesOnActiavetCalled) {
+        if (!fillTradeCurrenciesOnActivateCalled) {
             fillTradeCurrencies();
-            fillTradeCurrenciesOnActiavetCalled = true;
+            fillTradeCurrenciesOnActivateCalled = true;
         }
         buildUsdPricesPerDay();
         updateSelectedTradeStatistics(getCurrencyCode());

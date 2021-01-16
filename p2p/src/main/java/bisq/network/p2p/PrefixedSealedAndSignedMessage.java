@@ -17,11 +17,16 @@
 
 package bisq.network.p2p;
 
+import bisq.network.p2p.mailbox.MailboxMessage;
+
 import bisq.common.app.Version;
 import bisq.common.crypto.SealedAndSigned;
 import bisq.common.proto.network.NetworkEnvelope;
 
 import com.google.protobuf.ByteString;
+
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import lombok.EqualsAndHashCode;
 import lombok.Value;
@@ -31,6 +36,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @EqualsAndHashCode(callSuper = true)
 @Value
 public final class PrefixedSealedAndSignedMessage extends NetworkEnvelope implements MailboxMessage, SendersNodeAddressMessage {
+    public static final long TTL = TimeUnit.DAYS.toMillis(15);
+
     private final NodeAddress senderNodeAddress;
     private final SealedAndSigned sealedAndSigned;
 
@@ -40,11 +47,12 @@ public final class PrefixedSealedAndSignedMessage extends NetworkEnvelope implem
 
     private final String uid;
 
-    public PrefixedSealedAndSignedMessage(NodeAddress senderNodeAddress,
-                                          SealedAndSigned sealedAndSigned,
-                                          byte[] addressPrefixHash,
-                                          String uid) {
-        this(senderNodeAddress, sealedAndSigned, addressPrefixHash, uid, Version.getP2PMessageVersion());
+    public PrefixedSealedAndSignedMessage(NodeAddress senderNodeAddress, SealedAndSigned sealedAndSigned) {
+        this(senderNodeAddress,
+                sealedAndSigned,
+                new byte[0],
+                UUID.randomUUID().toString(),
+                Version.getP2PMessageVersion());
     }
 
 
@@ -94,5 +102,10 @@ public final class PrefixedSealedAndSignedMessage extends NetworkEnvelope implem
                 proto.getAddressPrefixHash().toByteArray(),
                 proto.getUid(),
                 -1);
+    }
+
+    @Override
+    public long getTTL() {
+        return TTL;
     }
 }

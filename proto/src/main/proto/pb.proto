@@ -577,6 +577,10 @@ message MailboxMessageList {
     repeated MailboxItem mailbox_item = 1;
 }
 
+message RemovedPayloadsMap {
+    map<string, uint64> date_by_hashes = 1;
+}
+
 message IgnoredMailboxMap {
     map<string, uint64> data = 1;
 }
@@ -1220,6 +1224,7 @@ message PersistableEnvelope {
         TradeStatistics3Store trade_statistics3_store = 31;
         MailboxMessageList mailbox_message_list = 32;
         IgnoredMailboxMap ignored_mailbox_map = 33;
+        RemovedPayloadsMap removed_payloads_map = 34;
     }
 }
 

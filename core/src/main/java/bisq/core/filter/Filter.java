@@ -47,6 +47,8 @@ import javax.annotation.Nullable;
 @Slf4j
 @Value
 public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
+    public static final long TTL = TimeUnit.DAYS.toMillis(180);
+
     private final List<String> bannedOfferIds;
     private final List<String> nodeAddressesBannedFromTrading;
     private final List<String> bannedAutoConfExplorers;
@@ -361,7 +363,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
 
     @Override
     public long getTTL() {
-        return TimeUnit.DAYS.toMillis(180);
+        return TTL;
     }
 
     @Override

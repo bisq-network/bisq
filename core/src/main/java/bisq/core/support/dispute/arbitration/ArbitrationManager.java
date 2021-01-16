@@ -112,7 +112,7 @@ public final class ArbitrationManager extends DisputeManager<ArbitrationDisputeL
     }
 
     @Override
-    public void dispatchMessage(SupportMessage message) {
+    public void onSupportMessage(SupportMessage message) {
         if (canProcessMessage(message)) {
             log.info("Received {} with tradeId {} and uid {}",
                     message.getClass().getSimpleName(), message.getTradeId(), message.getUid());
@@ -393,7 +393,7 @@ public final class ArbitrationManager extends DisputeManager<ArbitrationDisputeL
                 getSupportType());
         log.info("Send {} to peer {}. tradeId={}, uid={}",
                 message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
-        p2PService.sendEncryptedMailboxMessage(peersNodeAddress,
+        mailboxMessageService.sendEncryptedMailboxMessage(peersNodeAddress,
                 peersPubKeyRing,
                 message,
                 new SendMailboxMessageListener() {

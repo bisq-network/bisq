@@ -483,7 +483,7 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
                     openNewDisputeMessage.getUid(),
                     chatMessage.getUid());
 
-            p2PService.sendEncryptedMailboxMessage(agentNodeAddress,
+            mailboxMessageService.sendEncryptedMailboxMessage(agentNodeAddress,
                     dispute.getAgentPubKeyRing(),
                     openNewDisputeMessage,
                     new SendMailboxMessageListener() {
@@ -629,7 +629,7 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
                 peerOpenedDisputeMessage.getTradeId(), peerOpenedDisputeMessage.getUid(),
                 chatMessage.getUid());
 
-        p2PService.sendEncryptedMailboxMessage(peersNodeAddress,
+        mailboxMessageService.sendEncryptedMailboxMessage(peersNodeAddress,
                 peersPubKeyRing,
                 peerOpenedDisputeMessage,
                 new SendMailboxMessageListener() {
@@ -711,7 +711,7 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
         log.info("Send {} to peer {}. tradeId={}, disputeResultMessage.uid={}, chatMessage.uid={}",
                 disputeResultMessage.getClass().getSimpleName(), peersNodeAddress, disputeResultMessage.getTradeId(),
                 disputeResultMessage.getUid(), chatMessage.getUid());
-        p2PService.sendEncryptedMailboxMessage(peersNodeAddress,
+        mailboxMessageService.sendEncryptedMailboxMessage(peersNodeAddress,
                 dispute.getTraderPubKeyRing(),
                 disputeResultMessage,
                 new SendMailboxMessageListener() {

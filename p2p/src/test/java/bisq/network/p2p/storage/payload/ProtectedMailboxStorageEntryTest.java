@@ -35,7 +35,8 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class ProtectedMailboxStorageEntryTest {
 
@@ -51,7 +52,10 @@ public class ProtectedMailboxStorageEntryTest {
         when(prefixedSealedAndSignedMessageMock.toProtoNetworkEnvelope()).thenReturn(networkEnvelopeMock);
 
         return new MailboxStoragePayload(
-                prefixedSealedAndSignedMessageMock, payloadSenderPubKeyForAddOperation, payloadOwnerPubKey);
+                prefixedSealedAndSignedMessageMock,
+                payloadSenderPubKeyForAddOperation,
+                payloadOwnerPubKey,
+                MailboxStoragePayload.TTL);
     }
 
     private static ProtectedMailboxStorageEntry buildProtectedMailboxStorageEntry(
