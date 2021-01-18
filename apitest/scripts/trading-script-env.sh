@@ -6,6 +6,25 @@ export CLI_BASE="./bisq-cli --password=xyz"
 export ALICE_PORT=9998
 export BOB_PORT=9999
 
+commandalert() {
+    # Used in a script function when it needs to fail early with an error message, & pass the error code to the caller.
+    # usage: commandalert <$?> <msg-prefix>
+    if [ "$1" -ne 0 ]
+    then
+        printdate "Error: $2 did not complete successfully." >&2
+        exit $1
+    fi
+}
+
+exitoncommandalert() {
+    # Used in a parent script when you need it to fail immediately, with no error message.
+    # usage: exitoncommandalert <$?>
+    if [ "$1" -ne 0 ]
+    then
+        exit $1
+    fi
+}
+
 printdate() {
 	echo "[$(date)]  $@"
 }
@@ -155,7 +174,6 @@ registerdisputeagents() {
     echo "$SILENT"  > /dev/null
 }
 
-
 printbreak() {
 	echo ""
 	echo ""
@@ -204,15 +222,14 @@ getdummyacctid() {
 createoffer() {
     CREATE_OFFER_CMD=$1
     OFFER_DESC=$($CREATE_OFFER_CMD)
-    if [[ "$OFFER_DESC" != "Buy/Sell"* ]]; then
-        echo "=========================================================="
-        echo "Error: ${OFFER_DESC}"
-        echo "=========================================================="
-    else
-        OFFER_DETAIL=$(echo -e "${OFFER_DESC}" | sed -n '2p')
-        NEW_OFFER_ID=$(echo -e "${OFFER_DETAIL}" | awk '{print $NF}')
-        echo "${NEW_OFFER_ID}"
-    fi
+
+    # If the CLI command exited with an error, print the CLI error, and
+    # return from this function now, passing the error status code to the caller.
+    commandalert $? "Create offer command"
+
+    OFFER_DETAIL=$(echo -e "${OFFER_DESC}" | sed -n '2p')
+    NEW_OFFER_ID=$(echo -e "${OFFER_DETAIL}" | awk '{print $NF}')
+    echo "${NEW_OFFER_ID}"
 }
 
 getbtcoreaddress() {

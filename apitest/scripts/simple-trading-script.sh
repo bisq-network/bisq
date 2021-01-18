@@ -94,6 +94,7 @@ printdate_sameline "ALICE CLI:"
 printcmd "$CMD"
 
 OFFER_ID=$(createoffer "${CMD}")
+exitoncommandalert $?
 printdate "ALICE ${ALICE_ROLE}:  Created offer with id: ${OFFER_ID}."
 printbreak
 sleeptraced 10
@@ -120,6 +121,9 @@ CMD="$CLI_BASE --port=${BOB_PORT} takeoffer --offer-id=${OFFER_ID} --payment-acc
 printdate_sameline "BOB CLI:"
 printcmd "$CMD"
 TRADE=$($CMD)
+# Will exit if takeoffer cmd fails.
+commandalert $? "Take offer command"
+
 echo "${TRADE}"
 printbreak
 sleeptraced 10
@@ -154,6 +158,9 @@ CMD="$CLI_BASE --port=${PAYER_PORT} confirmpaymentstarted --trade-id=${OFFER_ID}
 printdate_sameline "${PAYER_CLI}:"
 printcmd "$CMD"
 SENT_MSG=$($CMD)
+# Will exit if confirmpaymentstarted cmd fails.
+commandalert $? "The confirmpaymentstarted command"
+
 printdate "${SENT_MSG}"
 printbreak
 
@@ -168,6 +175,7 @@ CMD="$CLI_BASE --port=${PAYEE_PORT} confirmpaymentreceived --trade-id=${OFFER_ID
 printdate_sameline "${PAYEE_CLI}:"
 printcmd "$CMD"
 RCVD_MSG=$($CMD)
+commandalert $? "The confirmpaymentreceived command"
 printdate "${RCVD_MSG}"
 printbreak
 sleeptraced 4
@@ -193,6 +201,7 @@ else
     printcmd "$CMD"
 fi
 KEEP_FUNDS_MSG=$($CMD)
+commandalert $? "The keepfunds command"
 printdate "${KEEP_FUNDS_MSG}"
 sleeptraced 5
 printbreak
