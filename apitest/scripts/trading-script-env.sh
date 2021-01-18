@@ -188,35 +188,31 @@ getpaymentaccts() {
 }
 
 getdummyacctid() {
-	PORT=$1
-	PAYMENT_ACCTS=$(${CLI_BASE} --port="$PORT" getpaymentaccts)
-	DUMMY_ACCT_1=$(echo -e "${PAYMENT_ACCTS}" | sed -n '2p')
-	DUMMY_ACCT_2=$(echo -e "${PAYMENT_ACCTS}" | sed -n '3p')
-	if [[ "$DUMMY_ACCT_1=" == *"PerfectMoney dummy"* ]]; then
-		DUMMY_ACCT=$DUMMY_ACCT_1
-	else
-		DUMMY_ACCT=$DUMMY_ACCT_2
-	fi
-	ACCT_ID=$(echo -e "$DUMMY_ACCT" | awk '{print $NF}')
-	echo "${ACCT_ID}"
+    PORT=$1
+    PAYMENT_ACCTS=$(${CLI_BASE} --port="$PORT" getpaymentaccts)
+    DUMMY_ACCT_1=$(echo -e "${PAYMENT_ACCTS}" | sed -n '2p')
+    DUMMY_ACCT_2=$(echo -e "${PAYMENT_ACCTS}" | sed -n '3p')
+    if [[ "$DUMMY_ACCT_1=" == *"PerfectMoney dummy"* ]]; then
+        DUMMY_ACCT=$DUMMY_ACCT_1
+    else
+        DUMMY_ACCT=$DUMMY_ACCT_2
+    fi
+    ACCT_ID=$(echo -e "$DUMMY_ACCT" | awk '{print $NF}')
+    echo "${ACCT_ID}"
 }
 
 createoffer() {
- 	CREATE_OFFER_CMD=$1
+    CREATE_OFFER_CMD=$1
     OFFER_DESC=$($CREATE_OFFER_CMD)
-
-    ### This is an effort to handling any createoffer error.  If error, should echo Error, and the calling script
-    ### should sleep awhile then exit 1.
-	if [[ "$OFFER_DESC" != "Buy/Sell"* ]]; then
-	    echo "=========================================================="
+    if [[ "$OFFER_DESC" != "Buy/Sell"* ]]; then
+        echo "=========================================================="
         echo "Error: ${OFFER_DESC}"
         echo "=========================================================="
-        sleep 5
+    else
+        OFFER_DETAIL=$(echo -e "${OFFER_DESC}" | sed -n '2p')
+        NEW_OFFER_ID=$(echo -e "${OFFER_DETAIL}" | awk '{print $NF}')
+        echo "${NEW_OFFER_ID}"
     fi
-
-	OFFER_DETAIL=$(echo -e "${OFFER_DESC}" | sed -n '2p')
-	NEW_OFFER_ID=$(echo -e "${OFFER_DETAIL}" | awk '{print $NF}')
-	echo "${NEW_OFFER_ID}"
 }
 
 getbtcoreaddress() {
@@ -249,8 +245,8 @@ genbtcblock() {
 }
 
 escapepluschar() {
- 	STRING=$1
-	NEW_STRING=$(echo "${STRING//+/\\+}")
+    STRING=$1
+    NEW_STRING=$(echo "${STRING//+/\\+}")
     echo "${NEW_STRING}"
 }
 
