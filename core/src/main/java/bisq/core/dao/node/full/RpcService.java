@@ -56,7 +56,6 @@ import java.io.IOException;
 import java.math.BigDecimal;
 
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -72,12 +71,9 @@ import org.jetbrains.annotations.NotNull;
  */
 @Slf4j
 public class RpcService {
-    // The BSQ tx with the following ID has 1 segwit (P2WPKH) BSQ input and 1 segwit (P2WPKH)
-    // BTC input, but with null pubKey already recorded in the DaoState for both inputs. Thus
-    // we must make a special case for it, as it was mined prior to the BSQ segwit upgrade.
-    private static final Set<String> BSQ_TXS_DISALLOWING_SEGWIT_PUB_KEYS = Set.of(
-            "d1f45e55be6101b1b75e6bf9fc5e5341c6ab420647be7555863bbbddd84e92f3" // in mainnet block 660384, 2020-12-07
-    );
+    private static final int ACTIVATE_HARD_FORK_2_HEIGHT_MAINNET = 672646;
+    private static final int ACTIVATE_HARD_FORK_2_HEIGHT_TESTNET = 1906689;
+    private static final int ACTIVATE_HARD_FORK_2_HEIGHT_REGTEST = 1;
     private static final Range<Integer> SUPPORTED_NODE_VERSION_RANGE = Range.closedOpen(180000, 210000);
 
     private final String rpcUser;
@@ -287,17 +283,17 @@ public class RpcService {
         long blockTime = rawDtoBlock.getTime() * 1000; // We convert block time from sec to ms
         int blockHeight = rawDtoBlock.getHeight();
         String blockHash = rawDtoBlock.getHash();
+
+        // Extracting pubKeys for segwit (P2WPKH) inputs, instead of just P2PKH inputs as
+        // originally, changes the DAO state and thus represents a hard fork. We disallow
+        // it until the fork activates, which is determined by block height.
+        boolean allowSegwit = blockHeight >= getActivateHardFork2Height();
+
         final List<TxInput> txInputs = rawDtoTx.getVIn()
                 .stream()
                 .filter(rawInput -> rawInput != null && rawInput.getVOut() != null && rawInput.getTxId() != null)
                 .map(rawInput -> {
-                    // To maintain backwards compatibility when serializing and hashing the DAO state,
-                    // segwit pubKeys are only extracted for the first input, as this will always be a
-                    // BSQ input. Later inputs might be segwit BTC, which would have had a null pubKey
-                    // recorded in the DAO state prior to the segwit upgrade of the RPC client. Spurious
-                    // segwit BSQ inputs in txs mined prior to the upgrade also require exclusion.
-                    String pubKeyAsHex = extractPubKeyAsHex(rawInput, rawInput == rawDtoTx.getVIn().get(0) &&
-                            !BSQ_TXS_DISALLOWING_SEGWIT_PUB_KEYS.contains(txId));
+                    String pubKeyAsHex = extractPubKeyAsHex(rawInput, allowSegwit);
                     if (pubKeyAsHex == null) {
                         log.debug("pubKeyAsHex is not set as we received a not supported sigScript. " +
                                         "txId={}, asm={}, txInWitness={}",
@@ -350,6 +346,12 @@ public class RpcService {
                 blockTime,
                 ImmutableList.copyOf(txInputs),
                 ImmutableList.copyOf(txOutputs));
+    }
+
+    private static int getActivateHardFork2Height() {
+        return Config.baseCurrencyNetwork().isMainnet() ? ACTIVATE_HARD_FORK_2_HEIGHT_MAINNET :
+                Config.baseCurrencyNetwork().isTestnet() ? ACTIVATE_HARD_FORK_2_HEIGHT_TESTNET :
+                        ACTIVATE_HARD_FORK_2_HEIGHT_REGTEST;
     }
 
     @VisibleForTesting
