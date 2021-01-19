@@ -20,9 +20,18 @@ package bisq.core.support.dispute.messages;
 import bisq.core.support.SupportType;
 import bisq.core.support.messages.SupportMessage;
 
+import java.util.concurrent.TimeUnit;
+
 public abstract class DisputeMessage extends SupportMessage {
+    public static final long TTL = TimeUnit.DAYS.toMillis(15);
 
     public DisputeMessage(int messageVersion, String uid, SupportType supportType) {
         super(messageVersion, uid, supportType);
     }
+
+    @Override
+    public long getTTL() {
+        return TTL;
+    }
+
 }

@@ -18,7 +18,7 @@
 package bisq.network.p2p.network;
 
 import bisq.network.p2p.NodeAddress;
-import bisq.network.p2p.Utils;
+import bisq.network.utils.Utils;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;

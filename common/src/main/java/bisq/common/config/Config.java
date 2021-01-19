@@ -120,6 +120,7 @@ public class Config {
     public static final String API_PASSWORD = "apiPassword";
     public static final String API_PORT = "apiPort";
     public static final String PREVENT_PERIODIC_SHUTDOWN_AT_SEED_NODE = "preventPeriodicShutdownAtSeedNode";
+    public static final String REPUBLISH_MAILBOX_ENTRIES = "republishMailboxEntries";
 
     // Default values for certain options
     public static final int UNSPECIFIED_PORT = -1;
@@ -207,6 +208,7 @@ public class Config {
     public final String apiPassword;
     public final int apiPort;
     public final boolean preventPeriodicShutdownAtSeedNode;
+    public final boolean republishMailboxEntries;
 
     // Properties derived from options but not exposed as options themselves
     public final File torDir;
@@ -648,6 +650,13 @@ public class Config {
                         .ofType(boolean.class)
                         .defaultsTo(false);
 
+        ArgumentAcceptingOptionSpec<Boolean> republishMailboxEntriesOpt =
+                parser.accepts(REPUBLISH_MAILBOX_ENTRIES,
+                        "Republish mailbox messages at startup")
+                        .withRequiredArg()
+                        .ofType(boolean.class)
+                        .defaultsTo(false);
+
         try {
             CompositeOptionSet options = new CompositeOptionSet();
 
@@ -764,6 +773,7 @@ public class Config {
             this.apiPassword = options.valueOf(apiPasswordOpt);
             this.apiPort = options.valueOf(apiPortOpt);
             this.preventPeriodicShutdownAtSeedNode = options.valueOf(preventPeriodicShutdownAtSeedNodeOpt);
+            this.republishMailboxEntries = options.valueOf(republishMailboxEntriesOpt);
         } catch (OptionException ex) {
             throw new ConfigException("problem parsing option '%s': %s",
                     ex.options().get(0),

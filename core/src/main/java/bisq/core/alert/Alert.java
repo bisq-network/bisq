@@ -47,6 +47,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @ToString
 @Slf4j
 public final class Alert implements ProtectedStoragePayload, ExpirablePayload {
+    public static final long TTL = TimeUnit.DAYS.toMillis(90);
+
     private final String message;
     private final boolean isUpdateInfo;
     private final String version;
@@ -131,7 +133,7 @@ public final class Alert implements ProtectedStoragePayload, ExpirablePayload {
 
     @Override
     public long getTTL() {
-        return TimeUnit.DAYS.toMillis(90);
+        return TTL;
     }
 
     public void setSigAndPubKey(String signatureAsBase64, PublicKey ownerPubKey) {

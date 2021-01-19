@@ -376,7 +376,7 @@ public abstract class NetworkNode implements MessageListener {
     // SetupListener
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    void addSetupListener(SetupListener setupListener) {
+    public void addSetupListener(SetupListener setupListener) {
         boolean isNewEntry = setupListeners.add(setupListener);
         if (!isNewEntry)
             log.warn("Try to add a setupListener which was already added.");

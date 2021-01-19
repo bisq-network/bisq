@@ -41,8 +41,6 @@ import java.time.Clock;
 import java.io.File;
 import java.io.IOException;
 
-import java.util.UUID;
-
 import lombok.extern.slf4j.Slf4j;
 
 import org.junit.Before;
@@ -69,10 +67,9 @@ public class AddDataMessageTest {
     @Test
     public void toProtoBuf() throws Exception {
         SealedAndSigned sealedAndSigned = new SealedAndSigned(RandomUtils.nextBytes(10), RandomUtils.nextBytes(10), RandomUtils.nextBytes(10), keyRing1.getPubKeyRing().getSignaturePubKey());
-        PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage = new PrefixedSealedAndSignedMessage(new NodeAddress("host", 1000), sealedAndSigned, RandomUtils.nextBytes(10),
-                UUID.randomUUID().toString());
+        PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage = new PrefixedSealedAndSignedMessage(new NodeAddress("host", 1000), sealedAndSigned);
         MailboxStoragePayload mailboxStoragePayload = new MailboxStoragePayload(prefixedSealedAndSignedMessage,
-                keyRing1.getPubKeyRing().getSignaturePubKey(), keyRing1.getPubKeyRing().getSignaturePubKey());
+                keyRing1.getPubKeyRing().getSignaturePubKey(), keyRing1.getPubKeyRing().getSignaturePubKey(), MailboxStoragePayload.TTL);
         ProtectedStorageEntry protectedStorageEntry = new ProtectedMailboxStorageEntry(mailboxStoragePayload,
                 keyRing1.getSignatureKeyPair().getPublic(), 1, RandomUtils.nextBytes(10), keyRing1.getPubKeyRing().getSignaturePubKey(), Clock.systemDefaultZone());
         AddDataMessage dataMessage1 = new AddDataMessage(protectedStorageEntry);

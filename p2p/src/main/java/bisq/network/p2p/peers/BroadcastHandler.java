@@ -44,7 +44,7 @@ import org.jetbrains.annotations.NotNull;
 
 @Slf4j
 public class BroadcastHandler implements PeerManager.Listener {
-    private static final long BASE_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(60);
+    private static final long BASE_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(120);
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

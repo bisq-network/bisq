@@ -21,7 +21,7 @@ import bisq.core.account.sign.SignedWitness;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.trade.Trade;
 import bisq.core.trade.messages.PayoutTxPublishedMessage;
-import bisq.core.trade.messages.TradeMessage;
+import bisq.core.trade.messages.TradeMailboxMessage;
 import bisq.core.trade.protocol.tasks.SendMailboxMessageTask;
 
 import bisq.common.taskrunner.TaskRunner;
@@ -43,7 +43,7 @@ public class SellerSendPayoutTxPublishedMessage extends SendMailboxMessageTask {
     }
 
     @Override
-    protected TradeMessage getMessage(String id) {
+    protected TradeMailboxMessage getTradeMailboxMessage(String id) {
         Transaction payoutTx = checkNotNull(trade.getPayoutTx(), "trade.getPayoutTx() must not be null");
 
         AccountAgeWitnessService accountAgeWitnessService = processModel.getAccountAgeWitnessService();

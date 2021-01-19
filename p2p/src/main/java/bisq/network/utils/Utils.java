@@ -15,16 +15,23 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p.network;
+package bisq.network.utils;
 
-public interface SetupListener {
-    void onTorNodeReady();
+import java.net.ServerSocket;
 
-    void onHiddenServicePublished();
+import java.io.IOException;
 
-    default void onSetupFailed(Throwable throwable) {
-    }
+import java.util.Random;
 
-    default void onRequestCustomBridges() {
+public class Utils {
+    public static int findFreeSystemPort() {
+        try {
+            ServerSocket server = new ServerSocket(0);
+            int port = server.getLocalPort();
+            server.close();
+            return port;
+        } catch (IOException ignored) {
+            return new Random().nextInt(10000) + 50000;
+        }
     }
 }

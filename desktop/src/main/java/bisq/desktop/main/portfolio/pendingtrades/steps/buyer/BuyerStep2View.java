@@ -218,13 +218,6 @@ public class BuyerStep2View extends TradeStepView {
                 Layout.COMPACT_FIRST_ROW_AND_GROUP_DISTANCE).second;
         field.setCopyWithoutCurrencyPostFix(true);
 
-        if (!(paymentAccountPayload instanceof AssetsAccountPayload) &&
-                !(paymentAccountPayload instanceof F2FAccountPayload)) {
-            addTopLabelTextFieldWithCopyIcon(gridPane, gridRow, 1,
-                    Res.get("shared.reasonForPayment"), model.dataModel.getReference(),
-                    Layout.COMPACT_FIRST_ROW_AND_GROUP_DISTANCE);
-        }
-
         switch (paymentMethodId) {
             case PaymentMethod.UPHOLD_ID:
                 gridRow = UpholdForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
@@ -534,32 +527,18 @@ public class BuyerStep2View extends TradeStepView {
     private void showPopup() {
         PaymentAccountPayload paymentAccountPayload = model.dataModel.getSellersPaymentAccountPayload();
         if (paymentAccountPayload != null) {
-            String paymentDetailsForTradePopup = paymentAccountPayload.getPaymentDetailsForTradePopup();
             String message = Res.get("portfolio.pending.step2.confReached");
-            String copyPaste = Res.get("portfolio.pending.step2_buyer.copyPaste");
             String refTextWarn = Res.get("portfolio.pending.step2_buyer.refTextWarn");
-            String accountDetails = Res.get("portfolio.pending.step2_buyer.accountDetails");
-            String tradeId = Res.get("portfolio.pending.step2_buyer.tradeId");
-            String assign = Res.get("portfolio.pending.step2_buyer.assign");
             String fees = Res.get("portfolio.pending.step2_buyer.fees");
             String id = trade.getShortId();
-            String paddedId = " " + id + " ";
             String amount = DisplayUtils.formatVolumeWithCode(trade.getTradeVolume());
             if (paymentAccountPayload instanceof AssetsAccountPayload) {
                 message += Res.get("portfolio.pending.step2_buyer.altcoin",
                         getCurrencyName(trade),
-                        amount) +
-                        accountDetails +
-                        paymentDetailsForTradePopup + "\n\n" +
-                        copyPaste;
+                        amount);
             } else if (paymentAccountPayload instanceof CashDepositAccountPayload) {
                 message += Res.get("portfolio.pending.step2_buyer.cash",
                         amount) +
-                        accountDetails +
-                        paymentDetailsForTradePopup + ".\n\n" +
-                        copyPaste + "\n\n" +
-                        tradeId + paddedId +
-                        assign +
                         refTextWarn + "\n\n" +
                         fees + "\n\n" +
                         Res.get("portfolio.pending.step2_buyer.cash.extra");
@@ -568,60 +547,28 @@ public class BuyerStep2View extends TradeStepView {
                 final String extra = Res.get("portfolio.pending.step2_buyer.westernUnion.extra", email);
                 message += Res.get("portfolio.pending.step2_buyer.westernUnion",
                         amount) +
-                        accountDetails +
-                        paymentDetailsForTradePopup + ".\n\n" +
-                        copyPaste + "\n\n" +
                         extra;
             } else if (paymentAccountPayload instanceof MoneyGramAccountPayload) {
                 final String email = ((MoneyGramAccountPayload) paymentAccountPayload).getEmail();
                 final String extra = Res.get("portfolio.pending.step2_buyer.moneyGram.extra", email);
                 message += Res.get("portfolio.pending.step2_buyer.moneyGram",
                         amount) +
-                        accountDetails +
-                        paymentDetailsForTradePopup + ".\n\n" +
-                        copyPaste + "\n\n" +
                         extra;
             } else if (paymentAccountPayload instanceof USPostalMoneyOrderAccountPayload) {
                 message += Res.get("portfolio.pending.step2_buyer.postal", amount) +
-                        accountDetails +
-                        paymentDetailsForTradePopup + ".\n\n" +
-                        copyPaste + "\n\n" +
-                        tradeId + paddedId +
-                        assign +
                         refTextWarn;
             } else if (paymentAccountPayload instanceof F2FAccountPayload) {
-                message += Res.get("portfolio.pending.step2_buyer.f2f", amount) +
-                        accountDetails +
-                        paymentDetailsForTradePopup + "\n\n" +
-                        copyPaste;
-            } else if (paymentAccountPayload instanceof HalCashAccountPayload) {
-                message += Res.get("portfolio.pending.step2_buyer.bank", amount) +
-                        accountDetails +
-                        paymentDetailsForTradePopup + ".\n\n" +
-                        copyPaste;
+                message += Res.get("portfolio.pending.step2_buyer.f2f", amount);
             } else if (paymentAccountPayload instanceof FasterPaymentsAccountPayload) {
-                message += Res.get("portfolio.pending.step2_buyer.bank", amount) +
-                        accountDetails +
-                        paymentDetailsForTradePopup + ".\n\n" +
+                message += Res.get("portfolio.pending.step2_buyer.pay", amount) +
                         Res.get("portfolio.pending.step2_buyer.fasterPaymentsHolderNameInfo") + "\n\n" +
-                        copyPaste + "\n\n" +
-                        tradeId + paddedId +
-                        assign +
                         refTextWarn + "\n\n" +
                         fees;
             } else if (paymentAccountPayload instanceof AmazonGiftCardAccountPayload) {
-                message += Res.get("portfolio.pending.step2_buyer.amazonGiftCard",
-                        amount) +
-                        accountDetails +
-                        paymentDetailsForTradePopup + ".\n\n" +
-                        copyPaste;
+                message += Res.get("portfolio.pending.step2_buyer.amazonGiftCard", amount) +
+                        refTextWarn;
             } else {
-                message += Res.get("portfolio.pending.step2_buyer.bank", amount) +
-                        accountDetails +
-                        paymentDetailsForTradePopup + ".\n\n" +
-                        copyPaste + "\n\n" +
-                        tradeId + paddedId +
-                        assign +
+                message += Res.get("portfolio.pending.step2_buyer.pay", amount) +
                         refTextWarn + "\n\n" +
                         fees;
             }

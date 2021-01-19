@@ -658,10 +658,12 @@ tree-table-view:focused {
     -fx-padding: 0 11 0 11;
     -fx-border-width: 0 1 0 0;
     -fx-border-color: -bs-rd-nav-primary-border;
+    -fx-min-width: 410;
 }
 
 .nav-secondary {
     -fx-padding: 0 11 0 11;
+    -fx-min-width: 296;
 }
 
 .nav-price-balance {

@@ -56,6 +56,9 @@ import javax.annotation.concurrent.Immutable;
 @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
 public class TempProposalPayload implements ProcessOncePersistableNetworkPayload, ProtectedStoragePayload,
         ExpirablePayload, PersistablePayload {
+    // We keep data 2 months to be safe if we increase durations of cycle. Also give a bit more resilience in case
+    // of any issues with the append-only data store
+    public static final long TTL = TimeUnit.DAYS.toMillis(60);
 
     protected final Proposal proposal;
     protected final byte[] ownerPubKeyEncoded;
@@ -124,8 +127,6 @@ public class TempProposalPayload implements ProcessOncePersistableNetworkPayload
 
     @Override
     public long getTTL() {
-        // We keep data 2 months to be safe if we increase durations of cycle. Also give a bit more resilience in case
-        // of any issues with the append-only data store
-        return TimeUnit.DAYS.toMillis(60);
+        return TTL;
     }
 }

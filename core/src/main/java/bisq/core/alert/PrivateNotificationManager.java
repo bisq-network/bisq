@@ -21,6 +21,7 @@ import bisq.network.p2p.DecryptedMessageWithPubKey;
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.SendMailboxMessageListener;
+import bisq.network.p2p.mailbox.MailboxMessageService;
 
 import bisq.common.app.DevEnv;
 import bisq.common.config.Config;
@@ -49,12 +50,15 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
+
 import static org.bitcoinj.core.Utils.HEX;
 
 public class PrivateNotificationManager {
     private static final Logger log = LoggerFactory.getLogger(PrivateNotificationManager.class);
 
     private final P2PService p2PService;
+    private final MailboxMessageService mailboxMessageService;
     private final KeyRing keyRing;
     private final ObjectProperty<PrivateNotificationPayload> privateNotificationMessageProperty = new SimpleObjectProperty<>();
 
@@ -62,7 +66,8 @@ public class PrivateNotificationManager {
     private final String pubKeyAsHex;
 
     private ECKey privateNotificationSigningKey;
-    private DecryptedMessageWithPubKey decryptedMessageWithPubKey;
+    @Nullable
+    private PrivateNotificationMessage privateNotificationMessage;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -71,15 +76,17 @@ public class PrivateNotificationManager {
 
     @Inject
     public PrivateNotificationManager(P2PService p2PService,
+                                      MailboxMessageService mailboxMessageService,
                                       KeyRing keyRing,
                                       @Named(Config.IGNORE_DEV_MSG) boolean ignoreDevMsg,
                                       @Named(Config.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         this.p2PService = p2PService;
+        this.mailboxMessageService = mailboxMessageService;
         this.keyRing = keyRing;
 
         if (!ignoreDevMsg) {
             this.p2PService.addDecryptedDirectMessageListener(this::handleMessage);
-            this.p2PService.addDecryptedMailboxListener(this::handleMessage);
+            this.mailboxMessageService.addDecryptedMailboxListener(this::handleMessage);
         }
         pubKeyAsHex = useDevPrivilegeKeys ?
                 DevEnv.DEV_PRIVILEGE_PUB_KEY :
@@ -87,10 +94,9 @@ public class PrivateNotificationManager {
     }
 
     private void handleMessage(DecryptedMessageWithPubKey decryptedMessageWithPubKey, NodeAddress senderNodeAddress) {
-        this.decryptedMessageWithPubKey = decryptedMessageWithPubKey;
         NetworkEnvelope networkEnvelope = decryptedMessageWithPubKey.getNetworkEnvelope();
         if (networkEnvelope instanceof PrivateNotificationMessage) {
-            PrivateNotificationMessage privateNotificationMessage = (PrivateNotificationMessage) networkEnvelope;
+            privateNotificationMessage = (PrivateNotificationMessage) networkEnvelope;
             log.info("Received PrivateNotificationMessage from {} with uid={}",
                     senderNodeAddress, privateNotificationMessage.getUid());
             if (privateNotificationMessage.getSenderNodeAddress().equals(senderNodeAddress)) {
@@ -112,8 +118,11 @@ public class PrivateNotificationManager {
         return privateNotificationMessageProperty;
     }
 
-    public boolean sendPrivateNotificationMessageIfKeyIsValid(PrivateNotificationPayload privateNotification, PubKeyRing pubKeyRing, NodeAddress peersNodeAddress,
-                                                              String privKeyString, SendMailboxMessageListener sendMailboxMessageListener) {
+    public boolean sendPrivateNotificationMessageIfKeyIsValid(PrivateNotificationPayload privateNotification,
+                                                              PubKeyRing pubKeyRing,
+                                                              NodeAddress peersNodeAddress,
+                                                              String privKeyString,
+                                                              SendMailboxMessageListener sendMailboxMessageListener) {
         boolean isKeyValid = isKeyValid(privKeyString);
         if (isKeyValid) {
             signAndAddSignatureToPrivateNotificationMessage(privateNotification);
@@ -123,7 +132,7 @@ public class PrivateNotificationManager {
                     UUID.randomUUID().toString());
             log.info("Send {} to peer {}. uid={}",
                     message.getClass().getSimpleName(), peersNodeAddress, message.getUid());
-            p2PService.sendEncryptedMailboxMessage(peersNodeAddress,
+            mailboxMessageService.sendEncryptedMailboxMessage(peersNodeAddress,
                     pubKeyRing,
                     message,
                     sendMailboxMessageListener);
@@ -133,7 +142,9 @@ public class PrivateNotificationManager {
     }
 
     public void removePrivateNotification() {
-        p2PService.removeMailboxMsg(decryptedMessageWithPubKey);
+        if (privateNotificationMessage != null) {
+            mailboxMessageService.removeMailboxMsg(privateNotificationMessage);
+        }
     }
 
     private boolean isKeyValid(String privKeyString) {

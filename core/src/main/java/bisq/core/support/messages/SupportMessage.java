@@ -19,8 +19,8 @@ package bisq.core.support.messages;
 
 import bisq.core.support.SupportType;
 
-import bisq.network.p2p.MailboxMessage;
 import bisq.network.p2p.UidMessage;
+import bisq.network.p2p.mailbox.MailboxMessage;
 
 import bisq.common.proto.network.NetworkEnvelope;
 

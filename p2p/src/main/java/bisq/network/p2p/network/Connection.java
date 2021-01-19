@@ -437,27 +437,33 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
         }
     }
 
-    private void onBundleOfEnvelopes(BundleOfEnvelopes networkEnvelope, Connection connection) {
+    private void onBundleOfEnvelopes(BundleOfEnvelopes bundleOfEnvelopes, Connection connection) {
         Map<P2PDataStorage.ByteArray, Set<NetworkEnvelope>> itemsByHash = new HashMap<>();
         Set<NetworkEnvelope> envelopesToProcess = new HashSet<>();
-        List<NetworkEnvelope> networkEnvelopes = networkEnvelope.getEnvelopes();
-        for (NetworkEnvelope current : networkEnvelopes) {
-            if (current instanceof AddPersistableNetworkPayloadMessage) {
-                PersistableNetworkPayload persistableNetworkPayload = ((AddPersistableNetworkPayloadMessage) current).getPersistableNetworkPayload();
+        List<NetworkEnvelope> networkEnvelopes = bundleOfEnvelopes.getEnvelopes();
+        for (NetworkEnvelope networkEnvelope : networkEnvelopes) {
+            // If SendersNodeAddressMessage we do some verifications and apply if successful, otherwise we return false.
+            if (networkEnvelope instanceof SendersNodeAddressMessage &&
+                    !processSendersNodeAddressMessage((SendersNodeAddressMessage) networkEnvelope)) {
+                continue;
+            }
+
+            if (networkEnvelope instanceof AddPersistableNetworkPayloadMessage) {
+                PersistableNetworkPayload persistableNetworkPayload = ((AddPersistableNetworkPayloadMessage) networkEnvelope).getPersistableNetworkPayload();
                 byte[] hash = persistableNetworkPayload.getHash();
                 String itemName = persistableNetworkPayload.getClass().getSimpleName();
                 P2PDataStorage.ByteArray byteArray = new P2PDataStorage.ByteArray(hash);
                 itemsByHash.putIfAbsent(byteArray, new HashSet<>());
                 Set<NetworkEnvelope> envelopesByHash = itemsByHash.get(byteArray);
-                if (!envelopesByHash.contains(current)) {
-                    envelopesByHash.add(current);
-                    envelopesToProcess.add(current);
+                if (!envelopesByHash.contains(networkEnvelope)) {
+                    envelopesByHash.add(networkEnvelope);
+                    envelopesToProcess.add(networkEnvelope);
                 } else {
                     log.debug("We got duplicated items for {}. We ignore the duplicates. Hash: {}",
                             itemName, Utilities.encodeToHex(hash));
                 }
             } else {
-                envelopesToProcess.add(current);
+                envelopesToProcess.add(networkEnvelope);
             }
         }
         envelopesToProcess.forEach(envelope -> UserThread.execute(() ->
@@ -473,11 +479,10 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
         checkNotNull(peerNodeAddress, "peerAddress must not be null");
         peersNodeAddressOptional = Optional.of(peerNodeAddress);
 
-        String peersNodeAddress = getPeersNodeAddressOptional().isPresent() ? getPeersNodeAddressOptional().get().getFullAddress() : "";
         if (this instanceof InboundConnection) {
             log.debug("\n\n############################################################\n" +
                     "We got the peers node address set.\n" +
-                    "peersNodeAddress= " + peersNodeAddress +
+                    "peersNodeAddress= " + peerNodeAddress.getFullAddress() +
                     "\nconnection.uid=" + getUid() +
                     "\n############################################################\n");
         }
@@ -706,6 +711,29 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
         shutDown(closeConnectionReason);
     }
 
+    private boolean processSendersNodeAddressMessage(SendersNodeAddressMessage sendersNodeAddressMessage) {
+        NodeAddress senderNodeAddress = sendersNodeAddressMessage.getSenderNodeAddress();
+        checkNotNull(senderNodeAddress,
+                "senderNodeAddress must not be null at SendersNodeAddressMessage " +
+                        sendersNodeAddressMessage.getClass().getSimpleName());
+        Optional<NodeAddress> existingAddressOptional = getPeersNodeAddressOptional();
+        if (existingAddressOptional.isPresent()) {
+            // If we have already the peers address we check again if it matches our stored one
+            checkArgument(existingAddressOptional.get().equals(senderNodeAddress),
+                    "senderNodeAddress not matching connections peer address.\n\t" +
+                            "message=" + sendersNodeAddressMessage);
+        } else {
+            setPeersNodeAddress(senderNodeAddress);
+        }
+
+        if (networkFilter != null && networkFilter.isPeerBanned(senderNodeAddress)) {
+            reportInvalidRequest(RuleViolation.PEER_BANNED);
+            return false;
+        }
+
+        return true;
+    }
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // InputHandler
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -844,41 +872,13 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                         if (!(networkEnvelope instanceof KeepAliveMessage))
                             statistic.updateLastActivityTimestamp();
 
-                        // First a seed node gets a message from a peer (PreliminaryDataRequest using
-                        // AnonymousMessage interface) which does not have its hidden service
-                        // published, so it does not know its address. As the IncomingConnection does not have the
-                        // peersNodeAddress set that connection cannot be used for outgoing network_messages until we
-                        // get the address set.
-                        // At the data update message (DataRequest using SendersNodeAddressMessage interface)
-                        // after the HS is published we get the peer's address set.
-
-                        // There are only those network_messages used for new connections to a peer:
-                        // 1. PreliminaryDataRequest
-                        // 2. DataRequest (implements SendersNodeAddressMessage)
-                        // 3. GetPeersRequest (implements SendersNodeAddressMessage)
-                        // 4. DirectMessage (implements SendersNodeAddressMessage)
-                        if (networkEnvelope instanceof SendersNodeAddressMessage) {
-                            NodeAddress senderNodeAddress = ((SendersNodeAddressMessage) networkEnvelope).getSenderNodeAddress();
-                            if (senderNodeAddress != null) {
-                                Optional<NodeAddress> peersNodeAddressOptional = getPeersNodeAddressOptional();
-                                if (peersNodeAddressOptional.isPresent()) {
-                                    // If we have already the peers address we check again if it matches our stored one
-                                    checkArgument(peersNodeAddressOptional.get().equals(senderNodeAddress),
-                                            "senderNodeAddress not matching connections peer address.\n\t" +
-                                                    "message=" + networkEnvelope);
-                                } else {
-                                    // We must not shut down a banned peer at that moment as it would trigger a connection termination
-                                    // and we could not send the CloseConnectionMessage.
-                                    // We check for a banned peer inside setPeersNodeAddress() and shut down if banned.
-                                    setPeersNodeAddress(senderNodeAddress);
-                                }
-
-                                if (networkFilter != null && networkFilter.isPeerBanned(senderNodeAddress)) {
-                                    reportInvalidRequest(RuleViolation.PEER_BANNED);
-                                    return;
-                                }
-                            }
+                        // If SendersNodeAddressMessage we do some verifications and apply if successful,
+                        // otherwise we return false.
+                        if (networkEnvelope instanceof SendersNodeAddressMessage &&
+                                !processSendersNodeAddressMessage((SendersNodeAddressMessage) networkEnvelope)) {
+                            return;
                         }
+
                         onMessage(networkEnvelope, this);
                         UserThread.execute(() -> connectionStatistics.addReceivedMsgMetrics(System.currentTimeMillis() - ts, size));
                     }

@@ -61,7 +61,7 @@ public class SendMediatedPayoutSignatureMessage extends TradeTask {
 
             trade.setMediationResultState(MediationResultState.SIG_MSG_SENT);
             processModel.getTradeManager().requestPersistence();
-            p2PService.sendEncryptedMailboxMessage(peersNodeAddress,
+            p2PService.getMailboxMessageService().sendEncryptedMailboxMessage(peersNodeAddress,
                     peersPubKeyRing,
                     message,
                     new SendMailboxMessageListener() {

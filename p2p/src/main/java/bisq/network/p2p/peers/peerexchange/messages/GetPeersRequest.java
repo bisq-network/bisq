@@ -77,10 +77,12 @@ public final class GetPeersRequest extends NetworkEnvelope implements PeerExchan
 
     @Override
     public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
-        final protobuf.GetPeersRequest.Builder builder = protobuf.GetPeersRequest.newBuilder()
+        // We clone to avoid ConcurrentModificationExceptions
+        Set<Peer> clone = new HashSet<>(reportedPeers);
+        protobuf.GetPeersRequest.Builder builder = protobuf.GetPeersRequest.newBuilder()
                 .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
                 .setNonce(nonce)
-                .addAllReportedPeers(reportedPeers.stream()
+                .addAllReportedPeers(clone.stream()
                         .map(Peer::toProtoMessage)
                         .collect(Collectors.toList()));
 
