@@ -71,7 +71,7 @@ public class CashByMailForm extends PaymentMethodForm {
     }
 
     private void addCurrenciesGrid(boolean isEditable) {
-        FlowPane flowPane = FormBuilder.addTopLabelFlowPane(gridPane, ++gridRow,
+        FlowPane flowPane = addTopLabelFlowPane(gridPane, ++gridRow,
                 Res.get("payment.supportedCurrenciesForReceiver"), 20, 20).second;
 
         if (isEditable) {
@@ -88,7 +88,7 @@ public class CashByMailForm extends PaymentMethodForm {
     public void addFormForAddAccount() {
         gridRowFrom = gridRow + 1;
 
-        contactField = FormBuilder.addInputTextField(gridPane, ++gridRow,
+        contactField = addInputTextField(gridPane, ++gridRow,
                 Res.get("payment.cashByMail.contact"));
         contactField.setPromptText(Res.get("payment.cashByMail.contact.prompt"));
         contactField.setValidator(inputValidator);

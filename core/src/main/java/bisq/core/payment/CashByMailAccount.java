@@ -23,7 +23,9 @@ import bisq.core.payment.payload.PaymentMethod;
 
 public final class CashByMailAccount extends PaymentAccount {
 
-    public CashByMailAccount() { super(PaymentMethod.CASH_BY_MAIL); }
+    public CashByMailAccount() {
+        super(PaymentMethod.CASH_BY_MAIL);
+    }
 
     @Override
     protected PaymentAccountPayload createPayload() {

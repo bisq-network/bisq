@@ -20,7 +20,6 @@ package bisq.desktop.main.portfolio.pendingtrades.steps.seller;
 import bisq.desktop.components.BusyAnimation;
 import bisq.desktop.components.InfoTextField;
 import bisq.desktop.components.TextFieldWithCopyIcon;
-import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.components.indicator.TxConfidenceIndicator;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.portfolio.pendingtrades.PendingTradesViewModel;
@@ -41,7 +40,6 @@ import bisq.core.payment.payload.F2FAccountPayload;
 import bisq.core.payment.payload.HalCashAccountPayload;
 import bisq.core.payment.payload.MoneyGramAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
-import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.payment.payload.SepaAccountPayload;
 import bisq.core.payment.payload.SepaInstantAccountPayload;
 import bisq.core.payment.payload.USPostalMoneyOrderAccountPayload;
@@ -196,7 +194,7 @@ public class SellerStep3View extends TradeStepView {
 
         addTradeInfoBlock();
 
-        TitledGroupBg titledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 3,
+        addTitledGroupBg(gridPane, ++gridRow, 3,
                 Res.get("portfolio.pending.step3_seller.confirmPaymentReceipt"), Layout.COMPACT_GROUP_DISTANCE);
 
         TextFieldWithCopyIcon field = addTopLabelTextFieldWithCopyIcon(gridPane, gridRow,
@@ -208,7 +206,6 @@ public class SellerStep3View extends TradeStepView {
         String peersPaymentDetails = "";
         String myTitle = "";
         String peersTitle = "";
-        boolean isBlockChain = false;
         String currencyName = getCurrencyName(trade);
         Contract contract = trade.getContract();
         if (contract != null) {
@@ -227,7 +224,6 @@ public class SellerStep3View extends TradeStepView {
                 peersPaymentDetails = ((AssetsAccountPayload) peersPaymentAccountPayload).getAddress();
                 myTitle = Res.get("portfolio.pending.step3_seller.yourAddress", currencyName);
                 peersTitle = Res.get("portfolio.pending.step3_seller.buyersAddress", currencyName);
-                isBlockChain = true;
             } else {
                 if (myPaymentDetails.isEmpty()) {
                     // Not expected

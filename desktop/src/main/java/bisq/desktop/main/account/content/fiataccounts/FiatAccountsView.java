@@ -97,7 +97,6 @@ import bisq.core.payment.WesternUnionAccount;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.CoinFormatter;
-import bisq.core.util.validation.InputValidator;
 
 import bisq.common.config.Config;
 import bisq.common.util.Tuple2;
