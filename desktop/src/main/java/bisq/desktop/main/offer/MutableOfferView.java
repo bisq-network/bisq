@@ -235,8 +235,9 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
             addListeners();
             addSubscriptions();
 
-            if (waitingForFundsSpinner != null)
-                waitingForFundsSpinner.play();
+            // temporarily disabled due to high CPU usage (per issue #4649)
+            // if (waitingForFundsSpinner != null)
+            //     waitingForFundsSpinner.play();
 
             amountDescriptionLabel.setText(model.getAmountDescription());
             addressTextField.setAddress(model.getAddressAsString());
@@ -275,8 +276,9 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
             removeListeners();
             removeSubscriptions();
 
-            if (waitingForFundsSpinner != null)
-                waitingForFundsSpinner.stop();
+            // temporarily disabled due to high CPU usage (per issue #4649)
+            //if (waitingForFundsSpinner != null)
+            //    waitingForFundsSpinner.stop();
         }
     }
 
@@ -436,7 +438,8 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
                     .show();
         }
 
-        waitingForFundsSpinner.play();
+        // temporarily disabled due to high CPU usage (per issue #4649)
+        // waitingForFundsSpinner.play();
 
         payFundsTitledGroupBg.setVisible(true);
         totalToPayTextField.setVisible(true);
@@ -654,11 +657,12 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
     private void addSubscriptions() {
         isWaitingForFundsSubscription = EasyBind.subscribe(model.isWaitingForFunds, isWaitingForFunds -> {
 
-            if (isWaitingForFunds) {
-                waitingForFundsSpinner.play();
-            } else {
-                waitingForFundsSpinner.stop();
-            }
+            // temporarily disabled due to high CPU usage (per issue #4649)
+            //if (isWaitingForFunds) {
+            //    waitingForFundsSpinner.play();
+            //} else {
+            //    waitingForFundsSpinner.stop();
+            //}
 
             waitingForFundsLabel.setVisible(isWaitingForFunds);
             waitingForFundsLabel.setManaged(isWaitingForFunds);

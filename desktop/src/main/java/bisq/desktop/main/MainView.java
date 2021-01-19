@@ -688,10 +688,11 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
         setLeftAnchor(btcInfoLabel, 10d);
         setBottomAnchor(btcInfoLabel, 7d);
 
-        ProgressBar blockchainSyncIndicator = new JFXProgressBar(-1);
-        blockchainSyncIndicator.setPrefWidth(80);
-        blockchainSyncIndicator.setMaxHeight(10);
-        blockchainSyncIndicator.progressProperty().bind(model.getCombinedSyncProgress());
+        // temporarily disabled due to high CPU usage (per issue #4649)
+        //ProgressBar blockchainSyncIndicator = new JFXProgressBar(-1);
+        //blockchainSyncIndicator.setPrefWidth(80);
+        //blockchainSyncIndicator.setMaxHeight(10);
+        //blockchainSyncIndicator.progressProperty().bind(model.getCombinedSyncProgress());
 
         model.getWalletServiceErrorMsg().addListener((ov, oldValue, newValue) -> {
             if (newValue != null) {
@@ -708,12 +709,13 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
             }
         });
 
-        model.getCombinedSyncProgress().addListener((ov, oldValue, newValue) -> {
-            if ((double) newValue >= 1) {
-                blockchainSyncIndicator.setVisible(false);
-                blockchainSyncIndicator.setManaged(false);
-            }
-        });
+        // temporarily disabled due to high CPU usage (per issue #4649)
+        //model.getCombinedSyncProgress().addListener((ov, oldValue, newValue) -> {
+        //    if ((double) newValue >= 1) {
+        //        blockchainSyncIndicator.setVisible(false);
+        //        blockchainSyncIndicator.setManaged(false);
+        //    }
+        //});
 
         // version
         Label versionLabel = new AutoTooltipLabel();
@@ -737,7 +739,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
         versionBox.setSpacing(10);
         versionBox.setAlignment(Pos.CENTER);
         versionBox.setAlignment(Pos.BASELINE_CENTER);
-        versionBox.getChildren().addAll(versionLabel, blockchainSyncIndicator);
+        versionBox.getChildren().addAll(versionLabel); //blockchainSyncIndicator removed per issue #4649
         setLeftAnchor(versionBox, 10d);
         setRightAnchor(versionBox, 10d);
         setBottomAnchor(versionBox, 7d);
