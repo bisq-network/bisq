@@ -273,8 +273,8 @@ public class CoreNetworkProtoResolver extends CoreProtoResolver implements Netwo
                     return Filter.fromProto(proto.getFilter());
                 case MAILBOX_STORAGE_PAYLOAD:
                     return MailboxStoragePayload.fromProto(proto.getMailboxStoragePayload());
-                case OFFER_PAYLOAD:
-                    return FeeTxOfferPayload.fromProto(proto.getOfferPayload());
+                case FEE_TX_OFFER_PAYLOAD:
+                    return FeeTxOfferPayload.fromProto(proto.getFeeTxOfferPayload());
                 case TEMP_PROPOSAL_PAYLOAD:
                     return TempProposalPayload.fromProto(proto.getTempProposalPayload());
                 default:

@@ -134,7 +134,7 @@ public final class Contract implements NetworkPayload {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public static Contract fromProto(protobuf.Contract proto, CoreProtoResolver coreProtoResolver) {
-        return new Contract(FeeTxOfferPayload.fromProto(proto.getOfferPayload()),
+        return new Contract(FeeTxOfferPayload.fromProto(proto.getFeeTxOfferPayload()),
                 proto.getTradeAmount(),
                 proto.getTradePrice(),
                 proto.getTakerFeeTxId(),
@@ -159,7 +159,7 @@ public final class Contract implements NetworkPayload {
     @Override
     public protobuf.Contract toProtoMessage() {
         return protobuf.Contract.newBuilder()
-                .setOfferPayload(offerPayload.toProtoMessage().getOfferPayload())
+                .setFeeTxOfferPayload(offerPayload.toProtoMessage().getFeeTxOfferPayload())
                 .setTradeAmount(tradeAmount)
                 .setTradePrice(tradePrice)
                 .setTakerFeeTxId(takerFeeTxID)

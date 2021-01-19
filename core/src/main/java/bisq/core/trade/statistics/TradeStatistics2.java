@@ -215,7 +215,7 @@ public final class TradeStatistics2 implements ProcessOncePersistableNetworkPayl
 
     private protobuf.TradeStatistics2.Builder getBuilder() {
         final protobuf.TradeStatistics2.Builder builder = protobuf.TradeStatistics2.newBuilder()
-                .setDirection(OfferPayload.Direction.toProtoMessage(direction))
+                .setDirection(FeeTxOfferPayload.toProtoMessage(direction))
                 .setBaseCurrency(baseCurrency)
                 .setCounterCurrency(counterCurrency)
                 .setPaymentMethodId(offerPaymentMethod)
@@ -245,7 +245,7 @@ public final class TradeStatistics2 implements ProcessOncePersistableNetworkPayl
 
     public static TradeStatistics2 fromProto(protobuf.TradeStatistics2 proto) {
         return new TradeStatistics2(
-                OfferPayload.Direction.fromProto(proto.getDirection()),
+                FeeTxOfferPayload.fromProto(proto.getDirection()),
                 proto.getBaseCurrency(),
                 proto.getCounterCurrency(),
                 proto.getPaymentMethodId(),

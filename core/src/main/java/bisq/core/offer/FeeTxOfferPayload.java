@@ -224,12 +224,12 @@ public final class FeeTxOfferPayload extends OfferPayload {
 
     @Override
     public protobuf.StoragePayload toProtoMessage() {
-        protobuf.OfferPayload.Builder builder = protobuf.OfferPayload.newBuilder()
+        protobuf.FeeTxOfferPayload.Builder builder = protobuf.FeeTxOfferPayload.newBuilder()
                 .setId(id)
                 .setDate(date)
                 .setOwnerNodeAddress(ownerNodeAddress.toProtoMessage())
                 .setPubKeyRing(pubKeyRing.toProtoMessage())
-                .setDirection(Direction.toProtoMessage(direction))
+                .setDirection(toProtoMessage(direction))
                 .setPrice(price)
                 .setMarketPriceMargin(marketPriceMargin)
                 .setUseMarketBasedPrice(useMarketBasedPrice)
@@ -271,10 +271,10 @@ public final class FeeTxOfferPayload extends OfferPayload {
         Optional.ofNullable(hashOfChallenge).ifPresent(builder::setHashOfChallenge);
         Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraData);
 
-        return protobuf.StoragePayload.newBuilder().setOfferPayload(builder).build();
+        return protobuf.StoragePayload.newBuilder().setFeeTxOfferPayload(builder).build();
     }
 
-    public static FeeTxOfferPayload fromProto(protobuf.OfferPayload proto) {
+    public static FeeTxOfferPayload fromProto(protobuf.FeeTxOfferPayload proto) {
         checkArgument(!proto.getOfferFeePaymentTxId().isEmpty(), "OfferFeePaymentTxId must be set in PB.OfferPayload");
         List<String> acceptedBankIds = proto.getAcceptedBankIdsList().isEmpty() ?
                 null : new ArrayList<>(proto.getAcceptedBankIdsList());
@@ -288,7 +288,7 @@ public final class FeeTxOfferPayload extends OfferPayload {
                 proto.getDate(),
                 NodeAddress.fromProto(proto.getOwnerNodeAddress()),
                 PubKeyRing.fromProto(proto.getPubKeyRing()),
-                Direction.fromProto(proto.getDirection()),
+                fromProto(proto.getDirection()),
                 proto.getPrice(),
                 proto.getMarketPriceMargin(),
                 proto.getUseMarketBasedPrice(),
@@ -328,6 +328,13 @@ public final class FeeTxOfferPayload extends OfferPayload {
                 proto.getProtocolVersion());
     }
 
+    public static Direction fromProto(protobuf.FeeTxOfferPayload.Direction direction) {
+        return ProtoUtil.enumFromProto(Direction.class, direction.name());
+    }
+
+    public static protobuf.FeeTxOfferPayload.Direction toProtoMessage(Direction direction) {
+        return protobuf.FeeTxOfferPayload.Direction.valueOf(direction.name());
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API

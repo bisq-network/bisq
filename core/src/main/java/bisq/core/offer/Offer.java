@@ -131,11 +131,12 @@ public class Offer implements NetworkPayload, PersistablePayload {
 
     @Override
     public protobuf.Offer toProtoMessage() {
-        return protobuf.Offer.newBuilder().setOfferPayload(offerPayload.toProtoMessage().getOfferPayload()).build();
+        return protobuf.Offer.newBuilder().setFeeTxOfferPayload(offerPayload.toProtoMessage().getFeeTxOfferPayload())
+                .build();
     }
 
     public static Offer fromProto(protobuf.Offer proto) {
-        return new Offer(OfferPayload.fromProto(proto.getOfferPayload()));
+        return new Offer(FeeTxOfferPayload.fromProto(proto.getFeeTxOfferPayload()));
     }
 
 

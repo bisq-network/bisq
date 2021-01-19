@@ -22,7 +22,6 @@ import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 import bisq.network.p2p.storage.payload.RequiresOwnerIsOnlinePayload;
 
 import bisq.common.crypto.PubKeyRing;
-import bisq.common.proto.ProtoUtil;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -41,15 +40,7 @@ public abstract class OfferPayload implements ProtectedStoragePayload, Expirable
 
     public enum Direction {
         BUY,
-        SELL;
-
-        public static OfferPayload.Direction fromProto(protobuf.OfferPayload.Direction direction) {
-            return ProtoUtil.enumFromProto(OfferPayload.Direction.class, direction.name());
-        }
-
-        public static protobuf.OfferPayload.Direction toProtoMessage(Direction direction) {
-            return protobuf.OfferPayload.Direction.valueOf(direction.name());
-        }
+        SELL
     }
 
     // Keys for extra map
@@ -76,10 +67,6 @@ public abstract class OfferPayload implements ProtectedStoragePayload, Expirable
 
     @Override
     abstract public protobuf.StoragePayload toProtoMessage();
-
-    public static OfferPayload fromProto(protobuf.OfferPayload proto) {
-        return FeeTxOfferPayload.fromProto(proto);
-    }
 
     abstract public long getAmount();
 
