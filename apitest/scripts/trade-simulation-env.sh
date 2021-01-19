@@ -120,12 +120,12 @@ parseopts() {
 
 parselimitorderopts() {
     usage() {
-        echo "Usage: $0 [-l limit-price] [-d buy|sell] [-c <country-code>] [-f <fixed-price> || -m <margin-from-price>] [-a <amount in btc>]" 1>&2
+        echo "Usage: $0 [-l limit-price] [-d buy|sell] [-c <country-code>] [-f <fixed-price> || -m <margin-from-price>] [-a <amount in btc>] [-w <price-poll-interval(s)>]" 1>&2
         exit 1;
     }
 
-    local OPTIND o l d c f m a
-    while getopts "l:d:c:f:m:a:" o; do
+    local OPTIND o l d c f m a w
+    while getopts "l:d:c:f:m:a:w:" o; do
         case "${o}" in
             l) l=${OPTARG}
                 export LIMIT_PRICE=${l}
@@ -145,6 +145,9 @@ parselimitorderopts() {
                ;;
             a) a=${OPTARG}
                export AMOUNT=${a}
+               ;;
+            w) w=${OPTARG}
+               export WAIT=${w}
                ;;
             *) usage ;;
         esac
@@ -166,6 +169,13 @@ parselimitorderopts() {
     if [ -n "${f}" ] && [ -n "${m}" ]; then
         printdate "Must use margin-from-price param (-m) or fixed-price param (-f), not both."
         usage
+    fi
+
+    if [ -z "${w}" ]; then
+        WAIT=120
+    elif [ "$w" -lt 20 ]; then
+        printdate "The -w <price-poll-interval(s)> option is too low, minimum allowed is 20s.  Using default 120s."
+        WAIT=120
     fi
 }
 
@@ -201,5 +211,9 @@ printscriptparams() {
 
     if [ -n "${ALICE_ROLE+1}" ]; then
         echo "	ALICE_ROLE = ${ALICE_ROLE}"
+    fi
+
+    if [ -n "${WAIT+1}" ]; then
+        echo "	WAIT = ${WAIT}"
     fi
 }
