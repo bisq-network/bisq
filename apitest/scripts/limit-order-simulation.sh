@@ -16,7 +16,7 @@ printbreak
 
 editpaymentaccountform "$COUNTRY_CODE"
 exitoncommandalert $?
-cat ${APITEST_SCRIPTS_HOME}/${F2F_ACCT_FORM}
+cat "${APITEST_SCRIPTS_HOME}/${F2F_ACCT_FORM}"
 printbreak
 
 # Create F2F payment accounts for $COUNTRY_CODE, and get the $CURRENCY_CODE.
@@ -60,7 +60,7 @@ while : ; do
         break
     fi
 
-    CURRENT_PRICE=$(getcurrentprice ${CURRENCY_CODE})
+    CURRENT_PRICE=$(getcurrentprice "${CURRENCY_CODE}")
     printdate "Current Price: ${CURRENT_PRICE} ${CURRENCY_CODE}"
 
     if [ "$DIRECTION" = "BUY" ] && [ "$CURRENT_PRICE" -le "$LIMIT_PRICE" ]; then

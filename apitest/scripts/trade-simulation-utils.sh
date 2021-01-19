@@ -29,7 +29,7 @@ commandalert() {
     if [ "$1" -ne 0 ]
     then
         printdate "Error: $2" >&2
-        exit $1
+        exit "$1"
     fi
 }
 
@@ -39,7 +39,7 @@ exitoncommandalert() {
     # usage: exitoncommandalert <$?>
     if [ "$1" -ne 0 ]
     then
-        exit $1
+        exit "$1"
     fi
 }
 
@@ -113,7 +113,7 @@ getpaymentaccountform() {
 }
 
 editpaymentaccountform() {
-    FORM_PATH=$1
+    COUNTRY_CODE=$1
     CMD="python3 ${APITEST_SCRIPTS_HOME}/editf2faccountform.py $COUNTRY_CODE"
     CMD_OUTPUT=$(${CMD})
     commandalert $? "Could not edit payment account form."
@@ -146,7 +146,7 @@ createpaymentacct() {
 getpaymentaccounts() {
     PORT=$1
     printcmd "${CLI_BASE} --port=${PORT} getpaymentaccts"
-    CMD="$CLI_BASE --port="$PORT" getpaymentaccts"
+    CMD="$CLI_BASE --port=$PORT getpaymentaccts"
     CMD_OUTPUT=$(${CMD})
     commandalert $? "Could not get payment accounts."
     echo "${CMD_OUTPUT}"

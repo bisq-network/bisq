@@ -1,4 +1,4 @@
-import sys, json, requests
+import sys, requests
 
 # Returns the current BTC price for the given currency_code from a cleartext price service.
 
