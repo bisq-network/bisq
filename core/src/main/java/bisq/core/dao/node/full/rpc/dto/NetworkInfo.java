@@ -34,8 +34,8 @@ import lombok.RequiredArgsConstructor;
 @NoArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({"version", "subversion", "protocolversion", "localservices", "localservicesnames", "localrelay",
-        "timeoffset", "networkactive", "connections", "networks", "relayfee", "incrementalfee", "localaddresses",
-        "warnings"})
+        "timeoffset", "networkactive", "connections", "connections_in", "connections_out", "networks", "relayfee",
+        "incrementalfee", "localaddresses", "warnings"})
 public class NetworkInfo {
     private Integer version;
     @JsonProperty("subversion")
@@ -53,6 +53,10 @@ public class NetworkInfo {
     @JsonProperty("networkactive")
     private Boolean networkActive;
     private Integer connections;
+    @JsonProperty("connections_in")
+    private Integer connectionsIn;
+    @JsonProperty("connections_out")
+    private Integer connectionsOut;
     private List<Network> networks;
     @JsonProperty("relayfee")
     private Double relayFee;

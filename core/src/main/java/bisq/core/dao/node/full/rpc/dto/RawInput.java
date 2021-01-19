@@ -31,15 +31,15 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
-@JsonPropertyOrder({"txid", "vout", "scriptSig", "txinwitness", "coinbase", "sequence"})
+@JsonPropertyOrder({"txid", "vout", "coinbase", "scriptSig", "txinwitness", "sequence"})
 public class RawInput {
     @JsonProperty("txid")
     private String txId;
     @JsonProperty("vout")
     private Integer vOut;
+    private String coinbase;
     private SignatureScript scriptSig;
     @JsonProperty("txinwitness")
     private List<String> txInWitness;
-    private String coinbase;
     private Long sequence;
 }
