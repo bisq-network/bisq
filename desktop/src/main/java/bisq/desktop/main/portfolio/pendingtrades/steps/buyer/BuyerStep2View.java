@@ -218,13 +218,6 @@ public class BuyerStep2View extends TradeStepView {
                 Layout.COMPACT_FIRST_ROW_AND_GROUP_DISTANCE).second;
         field.setCopyWithoutCurrencyPostFix(true);
 
-        if (!(paymentAccountPayload instanceof AssetsAccountPayload) &&
-                !(paymentAccountPayload instanceof F2FAccountPayload)) {
-            addTopLabelTextFieldWithCopyIcon(gridPane, gridRow, 1,
-                    Res.get("shared.reasonForPayment"), model.dataModel.getReference(),
-                    Layout.COMPACT_FIRST_ROW_AND_GROUP_DISTANCE);
-        }
-
         switch (paymentMethodId) {
             case PaymentMethod.UPHOLD_ID:
                 gridRow = UpholdForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
@@ -539,11 +532,8 @@ public class BuyerStep2View extends TradeStepView {
             String copyPaste = Res.get("portfolio.pending.step2_buyer.copyPaste");
             String refTextWarn = Res.get("portfolio.pending.step2_buyer.refTextWarn");
             String accountDetails = Res.get("portfolio.pending.step2_buyer.accountDetails");
-            String tradeId = Res.get("portfolio.pending.step2_buyer.tradeId");
-            String assign = Res.get("portfolio.pending.step2_buyer.assign");
             String fees = Res.get("portfolio.pending.step2_buyer.fees");
             String id = trade.getShortId();
-            String paddedId = " " + id + " ";
             String amount = DisplayUtils.formatVolumeWithCode(trade.getTradeVolume());
             if (paymentAccountPayload instanceof AssetsAccountPayload) {
                 message += Res.get("portfolio.pending.step2_buyer.altcoin",
@@ -558,8 +548,6 @@ public class BuyerStep2View extends TradeStepView {
                         accountDetails +
                         paymentDetailsForTradePopup + ".\n\n" +
                         copyPaste + "\n\n" +
-                        tradeId + paddedId +
-                        assign +
                         refTextWarn + "\n\n" +
                         fees + "\n\n" +
                         Res.get("portfolio.pending.step2_buyer.cash.extra");
@@ -586,8 +574,6 @@ public class BuyerStep2View extends TradeStepView {
                         accountDetails +
                         paymentDetailsForTradePopup + ".\n\n" +
                         copyPaste + "\n\n" +
-                        tradeId + paddedId +
-                        assign +
                         refTextWarn;
             } else if (paymentAccountPayload instanceof F2FAccountPayload) {
                 message += Res.get("portfolio.pending.step2_buyer.f2f", amount) +
@@ -605,8 +591,6 @@ public class BuyerStep2View extends TradeStepView {
                         paymentDetailsForTradePopup + ".\n\n" +
                         Res.get("portfolio.pending.step2_buyer.fasterPaymentsHolderNameInfo") + "\n\n" +
                         copyPaste + "\n\n" +
-                        tradeId + paddedId +
-                        assign +
                         refTextWarn + "\n\n" +
                         fees;
             } else if (paymentAccountPayload instanceof AmazonGiftCardAccountPayload) {
@@ -620,8 +604,6 @@ public class BuyerStep2View extends TradeStepView {
                         accountDetails +
                         paymentDetailsForTradePopup + ".\n\n" +
                         copyPaste + "\n\n" +
-                        tradeId + paddedId +
-                        assign +
                         refTextWarn + "\n\n" +
                         fees;
             }
