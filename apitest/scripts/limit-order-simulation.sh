@@ -1,5 +1,39 @@
 #! /bin/bash
 
+# Demonstrates a way to create a limit order (offer) using the API CLI with a local regtest bitcoin node.
+#
+# A country code argument is used to create a country based face to face payment account for the simulated offer.
+#
+# Prerequisites:
+#
+#  - Linux or OSX with bash, Java 10, or Java 11-12 (JDK language compatibility 10), and bitcoin-core (v0.19, v0.20).
+#
+#  - Bisq must be fully built with apitest dao setup files installed.
+#    Build command:  `./gradlew clean build :apitest:installDaoSetup`
+#
+#  - All supporting nodes must be run locally, in dev/dao/regtest mode:
+#           bitcoind, seednode, arbdaemon, alicedaemon, bobdaemon
+#
+#    These should be run using the apitest harness.  From the root project dir, run:
+#    `$ ./bisq-apitest --apiPassword=xyz --supportingApps=bitcoind,seednode,arbdaemon,alicedaemon,bobdaemon --shutdownAfterTests=false`
+#
+#  - Only regtest btc can be bought or sold with the test payment account.
+#
+# Usage:
+#
+#  This script must be run from the root of the project, e.g.:
+#
+#     `$ apitest/scripts/limit-order-simulation.sh -l 40000 -d buy -c fr -m 3.00 -a 0.125`
+#
+#  Script options:  -l <limit-price> -d <direction> -c <country-code> -m <mkt-price-margin(%)> - f <fixed-price> -a <amount(btc)>
+#
+# Example:
+#
+#    Create a sell/eur offer to sell 0.125 btc at a fixed-price of 38,000 euros, using a France face to face
+#    payment account, when the BTC market price rises to or above 40,000 EUR:
+#
+#       `$ apitest/scripts/limit-order-simulation.sh -l 40000 -d sell -c fr -m 0.00 -a 0.125`
+
 APP_HOME=$(pwd -P)
 APITEST_SCRIPTS_HOME="${APP_HOME}/apitest/scripts"
 
