@@ -23,6 +23,7 @@ import bisq.desktop.components.paymentmethods.AdvancedCashForm;
 import bisq.desktop.components.paymentmethods.AliPayForm;
 import bisq.desktop.components.paymentmethods.AmazonGiftCardForm;
 import bisq.desktop.components.paymentmethods.AustraliaPayidForm;
+import bisq.desktop.components.paymentmethods.CashByMailForm;
 import bisq.desktop.components.paymentmethods.CashDepositForm;
 import bisq.desktop.components.paymentmethods.ChaseQuickPayForm;
 import bisq.desktop.components.paymentmethods.ClearXchangeForm;
@@ -75,12 +76,14 @@ import bisq.desktop.util.validation.TransferwiseValidator;
 import bisq.desktop.util.validation.USPostalMoneyOrderValidator;
 import bisq.desktop.util.validation.UpholdValidator;
 import bisq.desktop.util.validation.WeChatPayValidator;
+import bisq.desktop.util.validation.LengthValidator;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.Res;
 import bisq.core.offer.OfferRestrictions;
 import bisq.core.payment.AmazonGiftCardAccount;
 import bisq.core.payment.AustraliaPayid;
+import bisq.core.payment.CashByMailAccount;
 import bisq.core.payment.CashDepositAccount;
 import bisq.core.payment.ClearXchangeAccount;
 import bisq.core.payment.F2FAccount;
@@ -133,7 +136,7 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
 
     private final IBANValidator ibanValidator;
     private final BICValidator bicValidator;
-    private final InputValidator inputValidator;
+    private final LengthValidator inputValidator;
     private final UpholdValidator upholdValidator;
     private final MoneyBeamValidator moneyBeamValidator;
     private final PopmoneyValidator popmoneyValidator;
@@ -164,7 +167,7 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
     public FiatAccountsView(FiatAccountsViewModel model,
                             IBANValidator ibanValidator,
                             BICValidator bicValidator,
-                            InputValidator inputValidator,
+                            LengthValidator inputValidator,
                             UpholdValidator upholdValidator,
                             MoneyBeamValidator moneyBeamValidator,
                             PopmoneyValidator popmoneyValidator,
@@ -191,6 +194,8 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
         this.ibanValidator = ibanValidator;
         this.bicValidator = bicValidator;
         this.inputValidator = inputValidator;
+        this.inputValidator.setMaxLength(100); // restrict general field entry length
+        this.inputValidator.setMinLength(2);
         this.upholdValidator = upholdValidator;
         this.moneyBeamValidator = moneyBeamValidator;
         this.popmoneyValidator = popmoneyValidator;
@@ -241,6 +246,14 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
                     .width(700)
                     .closeButtonText(Res.get("payment.f2f.info.openURL"))
                     .onClose(() -> GUIUtil.openWebPage("https://docs.bisq.network/trading-rules.html#f2f-trading"))
+                    .actionButtonText(Res.get("shared.iUnderstand"))
+                    .onAction(() -> doSaveNewAccount(paymentAccount))
+                    .show();
+        } else if (paymentAccount instanceof CashByMailAccount) {
+            // CashByMail has no chargeback risk so we don't show the text from payment.limits.info.
+            new Popup().information(Res.get("payment.cashByMail.info"))
+                    .width(700)
+                    .closeButtonText(Res.get("shared.cancel"))
                     .actionButtonText(Res.get("shared.iUnderstand"))
                     .onAction(() -> doSaveNewAccount(paymentAccount))
                     .show();
@@ -504,6 +517,8 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
                 return new WesternUnionForm(paymentAccount, accountAgeWitnessService, inputValidator, root, gridRow, formatter);
             case PaymentMethod.CASH_DEPOSIT_ID:
                 return new CashDepositForm(paymentAccount, accountAgeWitnessService, inputValidator, root, gridRow, formatter);
+            case PaymentMethod.CASH_BY_MAIL_ID:
+                return new CashByMailForm(paymentAccount, accountAgeWitnessService, inputValidator, root, gridRow, formatter);
             case PaymentMethod.HAL_CASH_ID:
                 return new HalCashForm(paymentAccount, accountAgeWitnessService, halCashValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.F2F_ID:

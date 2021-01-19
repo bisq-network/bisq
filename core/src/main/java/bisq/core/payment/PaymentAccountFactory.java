@@ -74,6 +74,8 @@ public class PaymentAccountFactory {
                 return new HalCashAccount();
             case PaymentMethod.F2F_ID:
                 return new F2FAccount();
+            case PaymentMethod.CASH_BY_MAIL_ID:
+                return new CashByMailAccount();
             case PaymentMethod.PROMPT_PAY_ID:
                 return new PromptPayAccount();
             case PaymentMethod.ADVANCED_CASH_ID:
