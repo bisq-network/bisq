@@ -11,7 +11,7 @@ getmyoffer
 
 DESCRIPTION
 -----------
-List one of your existing offer's details.
+List one of your existing offers' details.
 
 OPTIONS
 -------
