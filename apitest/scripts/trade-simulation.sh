@@ -97,6 +97,8 @@ printdate "ALICE F2F payment-account-id = ${ALICE_ACCT_ID}, currency-code = ${AL
 printbreak
 
 printdate "ALICE ${ALICE_ROLE}:  Creating ${DIRECTION} ${ALICE_ACCT_CURRENCY_CODE} offer with payment acct ${ALICE_ACCT_ID}."
+CURRENT_PRICE=$(getcurrentprice "$ALICE_ACCT_CURRENCY_CODE")
+printdate "Current Market Price: $CURRENT_PRICE $ALICE_ACCT_CURRENCY_CODE"
 CMD="$CLI_BASE --port=${ALICE_PORT} createoffer"
 CMD+=" --payment-account=${ALICE_ACCT_ID}"
 CMD+=" --direction=${DIRECTION}"
