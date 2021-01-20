@@ -27,7 +27,7 @@ OPTIONS
 --tx-fee-rate
         An optional transaction fee rate (sats/byte) for the transaction.  The user is
         responsible for choosing a fee rate that will be accepted by the network in a
-        reasonable amount of time, and the fee rate must be greater than 0.
+        reasonable amount of time, and the fee rate must be greater than 1 sat/byte.
 
 --memo
 		An optional memo to be saved with the send btc transaction.
