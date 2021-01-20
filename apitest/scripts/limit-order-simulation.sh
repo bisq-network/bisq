@@ -25,7 +25,7 @@
 #
 #     `$ apitest/scripts/limit-order-simulation.sh -l 40000 -d buy -c fr -m 3.00 -a 0.125`
 #
-#  Script options:  -l <limit-price> -d <direction> -c <country-code> -m <mkt-price-margin(%)> - f <fixed-price> -a <amount(btc)> [-w <price-poll-interval(s)>]
+#  Script options:  -l <limit-price> -d <direction> -c <country-code> (-m <mkt-price-margin(%)> || -f <fixed-price>) -a <amount(btc)> [-w <price-poll-interval(s)>]
 #
 # Example:
 #
