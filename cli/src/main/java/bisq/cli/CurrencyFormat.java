@@ -77,6 +77,11 @@ public class CurrencyFormat {
                 : formatOfferVolume(volume);
     }
 
+    static String formatMarketPrice(double price) {
+        NUMBER_FORMAT.setMinimumFractionDigits(4);
+        return NUMBER_FORMAT.format(price);
+    }
+
     static String formatOfferPrice(long price) {
         NUMBER_FORMAT.setMaximumFractionDigits(4);
         NUMBER_FORMAT.setMinimumFractionDigits(4);

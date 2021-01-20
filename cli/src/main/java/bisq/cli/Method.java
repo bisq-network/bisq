@@ -28,6 +28,7 @@ public enum Method {
     createpaymentacct,
     getaddressbalance,
     getbalance,
+    getbtcprice,
     getfundingaddresses,
     getmyoffer,
     getmyoffers,
