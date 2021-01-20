@@ -11,8 +11,8 @@ getoffer
 
 DESCRIPTION
 -----------
-List an existing offer's details.  The offer cannot be one of your own, and be
-available for the taking, or it will not be viewable.
+List an existing offer's details.  The offer must not be one of your own.
+The offer must be available to take with one of your matching payment accounts.
 
 OPTIONS
 -------
