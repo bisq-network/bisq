@@ -58,7 +58,7 @@ registerdisputeagents() {
 
 getbtcoreaddress() {
     CMD="bitcoin-cli -regtest  -rpcport=19443 -rpcuser=apitest -rpcpassword=apitest getnewaddress"
-    NEW_ADDRESS=$(${CMD})
+    NEW_ADDRESS=$($CMD)
     echo "${NEW_ADDRESS}"
 }
 
@@ -81,7 +81,7 @@ genbtcblocks() {
 
 genbtcblock() {
     CMD="$1"
-    NEW_BLOCK_HASH=$(${CMD} | sed -n '2p')
+    NEW_BLOCK_HASH=$($CMD | sed -n '2p')
     echo "$NEW_BLOCK_HASH"
 }
 
@@ -99,7 +99,7 @@ printbalances() {
 
 getpaymentaccountmethods() {
     CMD="$1"
-    CMD_OUTPUT=$(${CMD})
+    CMD_OUTPUT=$($CMD)
     commandalert $? "Could not get payment method ids."
     printdate "Payment Method IDs:"
     echo "${CMD_OUTPUT}"
@@ -107,7 +107,7 @@ getpaymentaccountmethods() {
 
 getpaymentaccountform() {
     CMD="$1"
-    CMD_OUTPUT=$(${CMD})
+    CMD_OUTPUT=$($CMD)
     commandalert $? "Could not get new payment account form."
     echo "${CMD_OUTPUT}"
 }
@@ -115,7 +115,7 @@ getpaymentaccountform() {
 editpaymentaccountform() {
     COUNTRY_CODE="$1"
     CMD="python3 ${APITEST_SCRIPTS_HOME}/editf2faccountform.py $COUNTRY_CODE"
-    CMD_OUTPUT=$(${CMD})
+    CMD_OUTPUT=$($CMD)
     commandalert $? "Could not edit payment account form."
     printdate "Saved payment account form as ${F2F_ACCT_FORM}."
 }
@@ -138,7 +138,7 @@ getnewpaymentacctcurrency() {
 
 createpaymentacct() {
     CMD="$1"
-    CMD_OUTPUT=$(${CMD})
+    CMD_OUTPUT=$($CMD)
     commandalert $? "Could not create new payment account."
     echo "${CMD_OUTPUT}"
 }
@@ -147,7 +147,7 @@ getpaymentaccounts() {
     PORT="$1"
     printcmd "${CLI_BASE} --port=${PORT} getpaymentaccts"
     CMD="$CLI_BASE --port=$PORT getpaymentaccts"
-    CMD_OUTPUT=$(${CMD})
+    CMD_OUTPUT=$($CMD)
     commandalert $? "Could not get payment accounts."
     echo "${CMD_OUTPUT}"
 }
@@ -168,7 +168,7 @@ createoffer() {
 getcurrentprice() {
     CURRENCY_CODE="$1"
     CMD="python3 ${APITEST_SCRIPTS_HOME}/getmktprice.py ${CURRENCY_CODE}"
-    PRICE=$(${CMD})
+    PRICE=$($CMD)
     echo "${PRICE}"
 }
 
