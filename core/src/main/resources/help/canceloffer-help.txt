@@ -11,7 +11,8 @@ canceloffer
 
 DESCRIPTION
 -----------
-Cancel an existing offer.  The offer will be removed from other Bisq users' offer views.
+Cancel an existing offer.  The offer will be removed from other Bisq users' offer views,
+and paid transaction fees will be forfeited.
 
 OPTIONS
 -------
