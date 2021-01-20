@@ -17,17 +17,17 @@
 
 package bisq.core.api;
 
-import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import java.util.function.Consumer;
+
 import lombok.extern.slf4j.Slf4j;
 
 import static bisq.common.util.MathUtils.roundDouble;
 import static java.lang.String.format;
-import static java.util.Objects.requireNonNull;
 
 @Singleton
 @Slf4j
@@ -40,15 +40,25 @@ class CorePriceService {
         this.priceFeedService = priceFeedService;
     }
 
-    public double getMarketPrice(String currencyCode) {
+    public void getMarketPrice(String currencyCode, Consumer<Double> resultHandler) {
         if (!priceFeedService.hasPrices())
             throw new IllegalStateException("price feed service has no prices");
 
-        MarketPrice marketPrice = priceFeedService.getMarketPrice(currencyCode.toUpperCase());
-        if (requireNonNull(marketPrice).isPriceAvailable()) {
-            return roundDouble(marketPrice.getPrice(), 4);
-        } else {
-            throw new IllegalStateException(format("'%s' price is not available", currencyCode));
-        }
+        priceFeedService.setCurrencyCode(currencyCode.toUpperCase());
+
+        priceFeedService.requestPriceFeed(price -> {
+                    if (price > 0) {
+                        log.info("{} price feed request returned {}", priceFeedService.getCurrencyCode(), price);
+                        resultHandler.accept(roundDouble(price, 4));
+                    } else {
+                        throw new IllegalStateException(format("%s price is not available",
+                                priceFeedService.getCurrencyCode()));
+                    }
+                },
+                (errorMessage, throwable) -> {
+                    log.error(errorMessage, throwable);
+                    throw new IllegalStateException(format("%s price feed request failed",
+                            priceFeedService.getCurrencyCode()));
+                });
     }
 }

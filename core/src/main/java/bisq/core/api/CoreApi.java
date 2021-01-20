@@ -213,8 +213,8 @@ public class CoreApi {
     // Prices
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public double getMarketPrice(String currencyCode) {
-        return corePriceService.getMarketPrice(currencyCode);
+    public void getMarketPrice(String currencyCode, Consumer<Double> resultHandler) {
+        corePriceService.getMarketPrice(currencyCode, resultHandler);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
