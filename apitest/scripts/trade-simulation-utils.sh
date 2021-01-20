@@ -18,7 +18,7 @@ printcmd() {
 }
 
 sleeptraced() {
-    PERIOD=$1
+    PERIOD="$1"
     printdate "sleeping for $PERIOD"
     sleep "$PERIOD"
 }
@@ -63,8 +63,8 @@ getbtcoreaddress() {
 }
 
 genbtcblocks() {
-	NUM_BLOCKS=$1
-	SECONDS_BETWEEN_BLOCKS=$2
+	NUM_BLOCKS="$1"
+	SECONDS_BETWEEN_BLOCKS="$2"
 	ADDR_PARAM="$(getbtcoreaddress)"
 	CMD_PREFIX="bitcoin-cli -regtest -rpcport=19443 -rpcuser=apitest -rpcpassword=apitest generatetoaddress 1"
 	# Print the generatetoaddress command with double quoted address param, to make it cut & pastable from the console.
@@ -80,25 +80,25 @@ genbtcblocks() {
 }
 
 genbtcblock() {
-    CMD=$1
+    CMD="$1"
     NEW_BLOCK_HASH=$(${CMD} | sed -n '2p')
     echo "$NEW_BLOCK_HASH"
 }
 
 escapepluschar() {
-    STRING=$1
+    STRING="$1"
     NEW_STRING=$(echo "${STRING//+/\\+}")
     echo "${NEW_STRING}"
 }
 
 printbalances() {
-    PORT=$1
+    PORT="$1"
     printcmd "${CLI_BASE} --port=${PORT} getbalance"
     $CLI_BASE --port="$PORT" getbalance
 }
 
 getpaymentaccountmethods() {
-    CMD=$1
+    CMD="$1"
     CMD_OUTPUT=$(${CMD})
     commandalert $? "Could not get payment method ids."
     printdate "Payment Method IDs:"
@@ -106,14 +106,14 @@ getpaymentaccountmethods() {
 }
 
 getpaymentaccountform() {
-    CMD=$1
+    CMD="$1"
     CMD_OUTPUT=$(${CMD})
     commandalert $? "Could not get new payment account form."
     echo "${CMD_OUTPUT}"
 }
 
 editpaymentaccountform() {
-    COUNTRY_CODE=$1
+    COUNTRY_CODE="$1"
     CMD="python3 ${APITEST_SCRIPTS_HOME}/editf2faccountform.py $COUNTRY_CODE"
     CMD_OUTPUT=$(${CMD})
     commandalert $? "Could not edit payment account form."
@@ -121,14 +121,14 @@ editpaymentaccountform() {
 }
 
 getnewpaymentacctid() {
-    CREATE_PAYMENT_ACCT_OUTPUT=$1
+    CREATE_PAYMENT_ACCT_OUTPUT="$1"
     PAYMENT_ACCT_DETAIL=$(echo -e "${CREATE_PAYMENT_ACCT_OUTPUT}" | sed -n '3p')
     ACCT_ID=$(echo -e "$PAYMENT_ACCT_DETAIL" | awk '{print $NF}')
     echo "${ACCT_ID}"
 }
 
 getnewpaymentacctcurrency() {
-    CREATE_PAYMENT_ACCT_OUTPUT=$1
+    CREATE_PAYMENT_ACCT_OUTPUT="$1"
     PAYMENT_ACCT_DETAIL=$(echo -e "${CREATE_PAYMENT_ACCT_OUTPUT}" | sed -n '3p')
     # This is brittle; it requires the account name field to have N words,
     # e.g, "Face to Face Payment Account" as defined in editf2faccountform.py.
@@ -137,14 +137,14 @@ getnewpaymentacctcurrency() {
 }
 
 createpaymentacct() {
-    CMD=$1
+    CMD="$1"
     CMD_OUTPUT=$(${CMD})
     commandalert $? "Could not create new payment account."
     echo "${CMD_OUTPUT}"
 }
 
 getpaymentaccounts() {
-    PORT=$1
+    PORT="$1"
     printcmd "${CLI_BASE} --port=${PORT} getpaymentaccts"
     CMD="$CLI_BASE --port=$PORT getpaymentaccts"
     CMD_OUTPUT=$(${CMD})
@@ -153,7 +153,7 @@ getpaymentaccounts() {
 }
 
 createoffer() {
-    CREATE_OFFER_CMD=$1
+    CREATE_OFFER_CMD="$1"
     OFFER_DESC=$($CREATE_OFFER_CMD)
 
     # If the CLI command exited with an error, print the CLI error, and
@@ -166,7 +166,7 @@ createoffer() {
 }
 
 getcurrentprice() {
-    CURRENCY_CODE=$1
+    CURRENCY_CODE="$1"
     CMD="python3 ${APITEST_SCRIPTS_HOME}/getmktprice.py ${CURRENCY_CODE}"
     PRICE=$(${CMD})
     echo "${PRICE}"
