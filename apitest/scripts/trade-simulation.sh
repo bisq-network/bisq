@@ -97,8 +97,9 @@ printdate "ALICE F2F payment-account-id = ${ALICE_ACCT_ID}, currency-code = ${AL
 printbreak
 
 printdate "ALICE ${ALICE_ROLE}:  Creating ${DIRECTION} ${ALICE_ACCT_CURRENCY_CODE} offer with payment acct ${ALICE_ACCT_ID}."
-CURRENT_PRICE=$(getcurrentprice "$ALICE_ACCT_CURRENCY_CODE")
-printdate "Current Market Price: $CURRENT_PRICE $ALICE_ACCT_CURRENCY_CODE"
+CURRENT_PRICE=$(getcurrentprice "$ALICE_PORT" "$ALICE_ACCT_CURRENCY_CODE")
+exitoncommandalert $?
+printdate "Current Market Price: $CURRENT_PRICE"
 CMD="$CLI_BASE --port=${ALICE_PORT} createoffer"
 CMD+=" --payment-account=${ALICE_ACCT_ID}"
 CMD+=" --direction=${DIRECTION}"
@@ -116,7 +117,17 @@ OFFER_ID=$(createoffer "${CMD}")
 exitoncommandalert $?
 printdate "ALICE ${ALICE_ROLE}:  Created offer with id: ${OFFER_ID}."
 printbreak
-sleeptraced 10
+sleeptraced 3
+
+# Show Alice's new offer.
+printdate "ALICE ${ALICE_ROLE}:  Looking at her new ${DIRECTION} ${CURRENCY_CODE} offer."
+CMD="$CLI_BASE --port=${ALICE_PORT} getmyoffer --offer-id=${OFFER_ID}"
+printdate "ALICE CLI: ${CMD}"
+OFFER=$($CMD)
+exitoncommandalert $?
+echo "${OFFER}"
+printbreak
+sleeptraced 7
 
 # Generate some btc blocks.
 printdate "Generating btc blocks after publishing Alice's offer."

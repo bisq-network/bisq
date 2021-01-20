@@ -166,9 +166,14 @@ createoffer() {
 }
 
 getcurrentprice() {
-    CURRENCY_CODE="$1"
-    CMD="python3 ${APITEST_SCRIPTS_HOME}/getmktprice.py ${CURRENCY_CODE}"
-    PRICE=$($CMD)
-    echo "${PRICE}"
+    PORT="$1"
+    CURRENCY_CODE="$2"
+    CMD="$CLI_BASE --port=$PORT getbtcprice --currency-code=$CURRENCY_CODE"
+    CMD_OUTPUT=$($CMD)
+    commandalert $? "Could not get current market $CURRENCY_CODE price."
+    FLOOR=$(echo $CMD_OUTPUT| cut -d'.' -f 1)
+    commandalert $? "Could not get the floor of the current market $CURRENCY_CODE price."
+    INTEGER=$(echo $FLOOR | tr -cd '[[:digit:]]')
+    commandalert $? "Could not convert the current market $CURRENCY_CODE price string to an integer."
+    echo "$INTEGER"
 }
-

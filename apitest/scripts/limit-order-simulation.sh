@@ -93,8 +93,9 @@ while : ; do
         break
     fi
 
-    CURRENT_PRICE=$(getcurrentprice "${CURRENCY_CODE}")
-    printdate "Current Price: ${CURRENT_PRICE} ${CURRENCY_CODE}"
+    CURRENT_PRICE=$(getcurrentprice "$ALICE_PORT" "$CURRENCY_CODE")
+    exitoncommandalert $?
+    printdate "Current Market Price: $CURRENT_PRICE"
 
     if [ "$DIRECTION" = "BUY" ] && [ "$CURRENT_PRICE" -le "$LIMIT_PRICE" ]; then
         printdate "Limit price reached."
@@ -129,7 +130,17 @@ OFFER_ID=$(createoffer "${CMD}")
 exitoncommandalert $?
 printdate "ALICE: Created offer with id: ${OFFER_ID}."
 printbreak
-sleeptraced 10
+sleeptraced 3
+
+# Show Alice's new offer.
+printdate "ALICE:  Looking at her new ${DIRECTION} ${CURRENCY_CODE} offer."
+CMD="$CLI_BASE --port=${ALICE_PORT} getmyoffer --offer-id=${OFFER_ID}"
+printdate "ALICE CLI: ${CMD}"
+OFFER=$($CMD)
+exitoncommandalert $?
+echo "${OFFER}"
+printbreak
+sleeptraced 7
 
 # Generate some btc blocks.
 printdate "Generating btc blocks after publishing Alice's offer."
