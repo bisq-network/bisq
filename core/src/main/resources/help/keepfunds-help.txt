@@ -15,7 +15,7 @@ A BTC buyer completes the final step in the trade protocol by keeping received B
 Bisq wallet.  This step may not seem necessary from the buyer's perspective, but it is
 necessary for correct transition of a trade's state to CLOSED, within the Bisq server.
 
-The alternative way to close out the trade is to sen the received BTC to an external
+The alternative way to close out the trade is to send the received BTC to an external
 BTC wallet, using the withdrawfunds command.
 
 OPTIONS
