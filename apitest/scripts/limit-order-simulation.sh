@@ -37,9 +37,8 @@
 APP_HOME=$(pwd -P)
 APITEST_SCRIPTS_HOME="${APP_HOME}/apitest/scripts"
 
-# Source the env and some helper functions.
-. "${APITEST_SCRIPTS_HOME}/trade-simulation-env.sh"
-. "${APITEST_SCRIPTS_HOME}/trade-simulation-utils.sh"
+source "${APITEST_SCRIPTS_HOME}/trade-simulation-env.sh"
+source "${APITEST_SCRIPTS_HOME}/trade-simulation-utils.sh"
 
 checksetup
 parselimitorderopts "$@"

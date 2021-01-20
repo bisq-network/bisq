@@ -2,7 +2,7 @@
 
 # This file must be sourced by the main driver.
 
-. "${APITEST_SCRIPTS_HOME}/trade-simulation-env.sh"
+source "${APITEST_SCRIPTS_HOME}/trade-simulation-env.sh"
 
 printdate() {
     echo "[$(date)] $@"
