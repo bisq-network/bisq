@@ -27,6 +27,7 @@ import java.util.function.Consumer;
 import lombok.extern.slf4j.Slf4j;
 
 import static bisq.common.util.MathUtils.roundDouble;
+import static bisq.core.locale.CurrencyUtil.isFiatCurrency;
 import static java.lang.String.format;
 
 @Singleton
@@ -41,24 +42,28 @@ class CorePriceService {
     }
 
     public void getMarketPrice(String currencyCode, Consumer<Double> resultHandler) {
+        String upperCaseCurrencyCode = currencyCode.toUpperCase();
+
+        if (!isFiatCurrency(upperCaseCurrencyCode))
+            throw new IllegalStateException(format("%s is not a valid currency code", upperCaseCurrencyCode));
+
         if (!priceFeedService.hasPrices())
             throw new IllegalStateException("price feed service has no prices");
 
-        priceFeedService.setCurrencyCode(currencyCode.toUpperCase());
+        try {
+            priceFeedService.setCurrencyCode(upperCaseCurrencyCode);
+        } catch (Throwable throwable) {
+            log.warn("Could not set currency code in PriceFeedService", throwable);
+        }
 
         priceFeedService.requestPriceFeed(price -> {
                     if (price > 0) {
-                        log.info("{} price feed request returned {}", priceFeedService.getCurrencyCode(), price);
+                        log.info("{} price feed request returned {}", upperCaseCurrencyCode, price);
                         resultHandler.accept(roundDouble(price, 4));
                     } else {
-                        throw new IllegalStateException(format("%s price is not available",
-                                priceFeedService.getCurrencyCode()));
+                        throw new IllegalStateException(format("%s price is not available", upperCaseCurrencyCode));
                     }
                 },
-                (errorMessage, throwable) -> {
-                    log.error(errorMessage, throwable);
-                    throw new IllegalStateException(format("%s price feed request failed",
-                            priceFeedService.getCurrencyCode()));
-                });
+                (errorMessage, throwable) -> log.warn(errorMessage, throwable));
     }
 }
