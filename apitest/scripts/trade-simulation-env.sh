@@ -2,11 +2,11 @@
 
 # This file must be sourced by the main driver.
 
-CLI_BASE="./bisq-cli --password=xyz"
-ARBITRATOR_PORT=9997
-ALICE_PORT=9998
-BOB_PORT=9999
-F2F_ACCT_FORM="f2f-acct.json"
+export CLI_BASE="./bisq-cli --password=xyz"
+export ARBITRATOR_PORT=9997
+export ALICE_PORT=9998
+export BOB_PORT=9999
+export F2F_ACCT_FORM="f2f-acct.json"
 
 checksetup() {
     apitestusage() {
