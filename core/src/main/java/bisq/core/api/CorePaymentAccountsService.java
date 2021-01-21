@@ -108,7 +108,7 @@ class CorePaymentAccountsService {
             throw new IllegalArgumentException("api does not currently support " + currencyCode + " accounts");
 
         // Validate the BSQ address string but ignore the return value.
-        coreWalletsService.getValidBsqLegacyAddress(address);
+        coreWalletsService.getValidBsqAddress(address);
 
         var cryptoCurrencyAccount = tradeInstant
                 ? (InstantCryptoCurrencyAccount) PaymentAccountFactory.getPaymentAccount(PaymentMethod.BLOCK_CHAINS_INSTANT)

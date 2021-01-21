@@ -5,9 +5,9 @@ import bisq.core.btc.exceptions.TransactionVerificationException;
 import bisq.core.btc.exceptions.WalletException;
 import bisq.core.btc.model.BsqTransferModel;
 
+import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.InsufficientMoneyException;
-import org.bitcoinj.core.LegacyAddress;
 import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
@@ -32,7 +32,7 @@ public class BsqTransferService {
         this.btcWalletService = btcWalletService;
     }
 
-    public BsqTransferModel getBsqTransferModel(LegacyAddress address,
+    public BsqTransferModel getBsqTransferModel(Address address,
                                                 Coin receiverAmount,
                                                 Coin txFeePerVbyte)
             throws TransactionVerificationException,
