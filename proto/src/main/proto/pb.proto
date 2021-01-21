@@ -532,6 +532,7 @@ message StoragePayload {
         FeeTxOfferPayload fee_tx_offer_payload = 7;
         TempProposalPayload temp_proposal_payload = 8;
         RefundAgent refund_agent = 9;
+        AtomicOfferPayload atomic_offer_payload = 10;
     }
 }
 
@@ -795,6 +796,27 @@ message SignedWitness {
     bytes witness_owner_pub_key = 5;
     int64 date = 6;
     int64 trade_amount = 7;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+// No fee tx offer payload
+///////////////////////////////////////////////////////////////////////////////////////////
+
+enum Direction {
+    DIRECTION_ERROR = 0;
+    BUY = 1;
+    SELL = 2;
+}
+
+message AtomicOfferPayload {
+    string id = 1;
+    int64 date = 2;
+    NodeAddress owner_node_address = 3;
+    PubKeyRing pub_key_ring = 4;
+    Direction direction = 5;
+    int64 price = 6;
+    int64 amount = 7;
+    int64 min_amount = 8;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -1335,7 +1357,10 @@ message Offer {
         MAKER_OFFLINE = 6;
     }
 
-    FeeTxOfferPayload fee_tx_offer_payload = 1;
+    oneof message {
+        FeeTxOfferPayload fee_tx_offer_payload = 1;
+        AtomicOfferPayload atomic_offer_payload = 2;
+    }
 }
 
 message OpenOffer {
