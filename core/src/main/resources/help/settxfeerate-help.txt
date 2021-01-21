@@ -1,0 +1,19 @@
+settxfeerate
+
+NAME
+----
+settxfeerate - set custom transaction fee rate preference
+
+SYNOPSIS
+--------
+settxfeerate
+        --tx-fee-rate=<sats/byte>
+
+DESCRIPTION
+-----------
+Sets the user's custom transaction fee rate preference.
+
+EXAMPLES
+--------
+Set custom transaction fee rate to 25 sats/byte:
+$ ./bisq-cli --password=xyz --port=9998 settxfeerate --tx-fee-rate=25

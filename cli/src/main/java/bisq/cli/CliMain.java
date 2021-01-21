@@ -40,6 +40,7 @@ import bisq.proto.grpc.GetUnusedBsqAddressRequest;
 import bisq.proto.grpc.GetVersionRequest;
 import bisq.proto.grpc.KeepFundsRequest;
 import bisq.proto.grpc.LockWalletRequest;
+import bisq.proto.grpc.MarketPriceRequest;
 import bisq.proto.grpc.OfferInfo;
 import bisq.proto.grpc.RegisterDisputeAgentRequest;
 import bisq.proto.grpc.RemoveWalletPasswordRequest;
@@ -75,6 +76,7 @@ import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.cli.CurrencyFormat.formatMarketPrice;
 import static bisq.cli.CurrencyFormat.formatTxFeeRateInfo;
 import static bisq.cli.CurrencyFormat.toSatoshis;
 import static bisq.cli.CurrencyFormat.toSecurityDepositAsPct;
@@ -98,6 +100,7 @@ import bisq.cli.opts.CancelOfferOptionParser;
 import bisq.cli.opts.CreateOfferOptionParser;
 import bisq.cli.opts.CreatePaymentAcctOptionParser;
 import bisq.cli.opts.GetAddressBalanceOptionParser;
+import bisq.cli.opts.GetBTCMarketPriceOptionParser;
 import bisq.cli.opts.GetBalanceOptionParser;
 import bisq.cli.opts.GetOfferOptionParser;
 import bisq.cli.opts.GetOffersOptionParser;
@@ -189,6 +192,7 @@ public class CliMain {
         var helpService = grpcStubs.helpService;
         var offersService = grpcStubs.offersService;
         var paymentAccountsService = grpcStubs.paymentAccountsService;
+        var priceService = grpcStubs.priceService;
         var tradesService = grpcStubs.tradesService;
         var versionService = grpcStubs.versionService;
         var walletsService = grpcStubs.walletsService;
@@ -241,6 +245,20 @@ public class CliMain {
                             .setAddress(address).build();
                     var reply = walletsService.getAddressBalance(request);
                     out.println(formatAddressBalanceTbl(singletonList(reply.getAddressBalanceInfo())));
+                    return;
+                }
+                case getbtcprice: {
+                    var opts = new GetBTCMarketPriceOptionParser(args).parse();
+                    if (opts.isForHelp()) {
+                        out.println(getMethodHelp(helpService, method));
+                        return;
+                    }
+                    var currencyCode = opts.getCurrencyCode();
+                    var request = MarketPriceRequest.newBuilder()
+                            .setCurrencyCode(currencyCode)
+                            .build();
+                    var reply = priceService.getMarketPrice(request);
+                    out.println(formatMarketPrice(reply.getPrice()));
                     return;
                 }
                 case getfundingaddresses: {
@@ -802,15 +820,18 @@ public class CliMain {
             stream.println();
             stream.format(rowFormat, getaddressbalance.name(), "--address=<btc-address>", "Get server wallet address balance");
             stream.println();
+            stream.format(rowFormat, getbtcprice.name(), "--currency-code=<currency-code>", "Get current market btc price");
+            stream.println();
             stream.format(rowFormat, getfundingaddresses.name(), "", "Get BTC funding addresses");
             stream.println();
             stream.format(rowFormat, getunusedbsqaddress.name(), "", "Get unused BSQ address");
             stream.println();
-            stream.format(rowFormat, sendbsq.name(), "--address=<btc-address> --amount=<btc-amount>  \\", "Send BSQ");
+            stream.format(rowFormat, sendbsq.name(), "--address=<bsq-address> --amount=<bsq-amount>  \\", "Send BSQ");
             stream.format(rowFormat, "", "[--tx-fee-rate=<sats/byte>]", "");
             stream.println();
-            stream.format(rowFormat, sendbtc.name(), "--address=<bsq-address> --amount=<bsq-amount> \\", "Send BTC");
+            stream.format(rowFormat, sendbtc.name(), "--address=<btc-address> --amount=<btc-amount> \\", "Send BTC");
             stream.format(rowFormat, "", "[--tx-fee-rate=<sats/byte>]", "");
+            stream.format(rowFormat, "", "[--memo=<\"memo\">]", "");
             stream.println();
             stream.format(rowFormat, gettxfeerate.name(), "", "Get current tx fee rate in sats/byte");
             stream.println();

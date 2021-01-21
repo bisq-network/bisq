@@ -73,7 +73,8 @@ public class CoreApi {
     @Inject
     public CoreApi(Config config,
                    CoreDisputeAgentsService coreDisputeAgentsService,
-                   CoreHelpService coreHelpService, CoreOffersService coreOffersService,
+                   CoreHelpService coreHelpService,
+                   CoreOffersService coreOffersService,
                    CorePaymentAccountsService paymentAccountsService,
                    CorePriceService corePriceService,
                    CoreTradesService coreTradesService,
@@ -212,8 +213,8 @@ public class CoreApi {
     // Prices
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public double getMarketPrice(String currencyCode) {
-        return corePriceService.getMarketPrice(currencyCode);
+    public void getMarketPrice(String currencyCode, Consumer<Double> resultHandler) {
+        corePriceService.getMarketPrice(currencyCode, resultHandler);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

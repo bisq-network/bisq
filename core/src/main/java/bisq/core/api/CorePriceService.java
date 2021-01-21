@@ -17,17 +17,18 @@
 
 package bisq.core.api;
 
-import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import java.util.function.Consumer;
+
 import lombok.extern.slf4j.Slf4j;
 
 import static bisq.common.util.MathUtils.roundDouble;
+import static bisq.core.locale.CurrencyUtil.isFiatCurrency;
 import static java.lang.String.format;
-import static java.util.Objects.requireNonNull;
 
 @Singleton
 @Slf4j
@@ -40,15 +41,29 @@ class CorePriceService {
         this.priceFeedService = priceFeedService;
     }
 
-    public double getMarketPrice(String currencyCode) {
+    public void getMarketPrice(String currencyCode, Consumer<Double> resultHandler) {
+        String upperCaseCurrencyCode = currencyCode.toUpperCase();
+
+        if (!isFiatCurrency(upperCaseCurrencyCode))
+            throw new IllegalStateException(format("%s is not a valid currency code", upperCaseCurrencyCode));
+
         if (!priceFeedService.hasPrices())
             throw new IllegalStateException("price feed service has no prices");
 
-        MarketPrice marketPrice = priceFeedService.getMarketPrice(currencyCode.toUpperCase());
-        if (requireNonNull(marketPrice).isPriceAvailable()) {
-            return roundDouble(marketPrice.getPrice(), 4);
-        } else {
-            throw new IllegalStateException(format("'%s' price is not available", currencyCode));
+        try {
+            priceFeedService.setCurrencyCode(upperCaseCurrencyCode);
+        } catch (Throwable throwable) {
+            log.warn("Could not set currency code in PriceFeedService", throwable);
         }
+
+        priceFeedService.requestPriceFeed(price -> {
+                    if (price > 0) {
+                        log.info("{} price feed request returned {}", upperCaseCurrencyCode, price);
+                        resultHandler.accept(roundDouble(price, 4));
+                    } else {
+                        throw new IllegalStateException(format("%s price is not available", upperCaseCurrencyCode));
+                    }
+                },
+                (errorMessage, throwable) -> log.warn(errorMessage, throwable));
     }
 }

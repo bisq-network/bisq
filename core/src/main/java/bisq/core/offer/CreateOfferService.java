@@ -129,26 +129,6 @@ public class CreateOfferService {
                 minAmount.value,
                 buyerSecurityDepositAsDouble);
 
-        // Log an approximate api CLI 'createoffer' dev/test param list.
-        log.info("cli's createoffer positional option names: paymentAccountId direction currencyCode amount minAmount"
-                + " useMarketBasedPrice fixedPrice|marketPriceMargin buyerSecurityDeposit");
-        log.info("cli's createoffer positional option values: {} " +
-                        "{} " +
-                        "{} " +
-                        "{} " +
-                        "{} " +
-                        "{} " +
-                        "{} " +
-                        "{}",
-                paymentAccount.getId(),
-                direction.name(),
-                currencyCode,
-                amount.value,
-                minAmount.value,
-                useMarketBasedPrice,
-                (useMarketBasedPrice ? marketPriceMargin : price.getValue()),
-                buyerSecurityDepositAsDouble);
-
         long creationTime = new Date().getTime();
         NodeAddress makerAddress = p2PService.getAddress();
         boolean useMarketBasedPriceValue = useMarketBasedPrice &&

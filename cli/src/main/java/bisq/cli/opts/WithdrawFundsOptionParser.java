@@ -27,7 +27,7 @@ import static joptsimple.internal.Strings.EMPTY;
 
 public class WithdrawFundsOptionParser extends AbstractMethodOptionParser implements MethodOpts {
 
-    final OptionSpec<String> tradeIdOpt = parser.accepts(OPT_TRADE_ID, "id of trade to get")
+    final OptionSpec<String> tradeIdOpt = parser.accepts(OPT_TRADE_ID, "id of trade")
             .withRequiredArg()
             .defaultsTo(EMPTY);
 
