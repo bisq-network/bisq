@@ -29,7 +29,7 @@ import lombok.NoArgsConstructor;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonPropertyOrder({"asm", "hex"})
-public class SignatureScript {
+public class DtoSignatureScript {
     private String asm;
     private String hex;
 }

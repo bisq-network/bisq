@@ -17,6 +17,7 @@
 
 package bisq.core.dao.state.model.blockchain;
 
+import bisq.core.dao.node.full.rpc.dto.DtoPubKeyScript;
 import bisq.core.dao.state.model.ImmutableDaoStateModel;
 
 import bisq.common.proto.persistable.PersistablePayload;
@@ -43,7 +44,7 @@ public class PubKeyScript implements PersistablePayload, ImmutableDaoStateModel 
     private final String asm;
     private final String hex;
 
-    public PubKeyScript(bisq.core.dao.node.full.rpc.dto.PubKeyScript scriptPubKey) {
+    public PubKeyScript(DtoPubKeyScript scriptPubKey) {
         this(scriptPubKey.getReqSigs() != null ? scriptPubKey.getReqSigs() : 0,
                 scriptPubKey.getType(),
                 scriptPubKey.getAddresses() != null ? ImmutableList.copyOf(scriptPubKey.getAddresses()) : null,

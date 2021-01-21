@@ -17,8 +17,8 @@
 
 package bisq.core.dao.node.full.rpc;
 
-import bisq.core.dao.node.full.rpc.dto.RawBlock;
-import bisq.core.dao.node.full.rpc.dto.RawTransaction;
+import bisq.core.dao.node.full.rpc.dto.RawDtoBlock;
+import bisq.core.dao.node.full.rpc.dto.RawDtoTransaction;
 
 import bisq.network.http.HttpException;
 
@@ -173,9 +173,9 @@ public class BitcoindClientTest {
         var block = client.getBlock(TEST_BLOCK_HASH, verbosity);
         var blockJsonRoundTripped = new ObjectMapper().writeValueAsString(block);
 
-        assertEquals(verbosity == 0, block instanceof RawBlock.Summarized);
+        assertEquals(verbosity == 0, block instanceof RawDtoBlock.Summarized);
         assertEquals(verbosity == 1, block.getTx() != null &&
-                block.getTx().stream().allMatch(tx -> tx instanceof RawTransaction.Summarized));
+                block.getTx().stream().allMatch(tx -> tx instanceof RawDtoTransaction.Summarized));
 
         assertEquals(blockJson, blockJsonRoundTripped);
         assertEquals(expectedRequest, mockOutputStream.toString(UTF_8));

@@ -38,7 +38,7 @@ import lombok.NoArgsConstructor;
 @JsonPropertyOrder({"hash", "confirmations", "strippedsize", "size", "weight", "height", "version", "versionHex",
         "merkleroot", "tx", "time", "mediantime", "nonce", "bits", "difficulty", "chainwork", "nTx",
         "previousblockhash", "nextblockhash"})
-public class RawBlock {
+public class RawDtoBlock {
     private String hash;
     private Integer confirmations;
     @JsonProperty("strippedsize")
@@ -50,7 +50,7 @@ public class RawBlock {
     private String versionHex;
     @JsonProperty("merkleroot")
     private String merkleRoot;
-    private List<RawTransaction> tx;
+    private List<RawDtoTransaction> tx;
     private Long time;
     @JsonProperty("mediantime")
     private Long medianTime;
@@ -77,7 +77,7 @@ public class RawBlock {
 
     @Data
     @EqualsAndHashCode(callSuper = true)
-    public static class Summarized extends RawBlock {
+    public static class Summarized extends RawDtoBlock {
         @Getter(onMethod_ = @JsonValue)
         private String hex;
     }

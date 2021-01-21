@@ -17,8 +17,8 @@
 
 package bisq.core.dao.node.full.rpc;
 
-import bisq.core.dao.node.full.rpc.dto.NetworkInfo;
-import bisq.core.dao.node.full.rpc.dto.RawBlock;
+import bisq.core.dao.node.full.rpc.dto.DtoNetworkInfo;
+import bisq.core.dao.node.full.rpc.dto.RawDtoBlock;
 
 import bisq.network.http.HttpException;
 
@@ -52,7 +52,7 @@ import com.googlecode.jsonrpc4j.RequestIDGenerator;
 
 public interface BitcoindClient {
     @JsonRpcMethod("getblock")
-    RawBlock getBlock(String headerHash, int verbosity) throws IOException, HttpException;
+    RawDtoBlock getBlock(String headerHash, int verbosity) throws IOException, HttpException;
 
     @JsonRpcMethod("getblockcount")
     Integer getBlockCount() throws IOException, HttpException;
@@ -64,7 +64,7 @@ public interface BitcoindClient {
     String getBestBlockHash() throws IOException, HttpException;
 
     @JsonRpcMethod("getnetworkinfo")
-    NetworkInfo getNetworkInfo() throws IOException, HttpException;
+    DtoNetworkInfo getNetworkInfo() throws IOException, HttpException;
 
     static Builder builder() {
         return new Builder();

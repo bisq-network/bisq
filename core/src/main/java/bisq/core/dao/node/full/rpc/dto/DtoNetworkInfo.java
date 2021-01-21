@@ -36,7 +36,7 @@ import lombok.RequiredArgsConstructor;
 @JsonPropertyOrder({"version", "subversion", "protocolversion", "localservices", "localservicesnames", "localrelay",
         "timeoffset", "networkactive", "connections", "connections_in", "connections_out", "networks", "relayfee",
         "incrementalfee", "localaddresses", "warnings"})
-public class NetworkInfo {
+public class DtoNetworkInfo {
     private Integer version;
     @JsonProperty("subversion")
     private String subVersion;

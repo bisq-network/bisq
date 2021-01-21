@@ -17,8 +17,8 @@
 
 package bisq.core.dao.node.full;
 
-import bisq.core.dao.node.full.rpc.dto.RawInput;
-import bisq.core.dao.node.full.rpc.dto.SignatureScript;
+import bisq.core.dao.node.full.rpc.dto.RawDtoInput;
+import bisq.core.dao.node.full.rpc.dto.DtoSignatureScript;
 
 import java.util.List;
 
@@ -52,7 +52,7 @@ public class RpcServiceTest {
 
     @Test
     public void testExtractPubKeyAsHex_coinbase() {
-        checkExtractPubKeyAsHexReturnsNull(new RawInput());
+        checkExtractPubKeyAsHexReturnsNull(new RawDtoInput());
     }
 
     @Test
@@ -124,14 +124,14 @@ public class RpcServiceTest {
         checkExtractPubKeyAsHexReturnsNull(input);
     }
 
-    private static void checkExtractPubKeyAsHexReturnsNull(RawInput input) {
+    private static void checkExtractPubKeyAsHexReturnsNull(RawDtoInput input) {
         assertNull(RpcService.extractPubKeyAsHex(input, true));
         assertNull(RpcService.extractPubKeyAsHex(input, false));
     }
 
-    private static RawInput rawInput(String asm, String... txInWitness) {
-        var input = new RawInput();
-        var scriptSig = new SignatureScript();
+    private static RawDtoInput rawInput(String asm, String... txInWitness) {
+        var input = new RawDtoInput();
+        var scriptSig = new DtoSignatureScript();
         scriptSig.setAsm(asm);
         input.setScriptSig(scriptSig);
         input.setTxInWitness(txInWitness.length > 0 ? List.of(txInWitness) : null);

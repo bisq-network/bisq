@@ -17,10 +17,12 @@
 
 package bisq.core.dao.node.full.rpc.dto;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.annotation.JsonValue;
 
 import java.util.List;
 
@@ -31,15 +33,44 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
-@JsonPropertyOrder({"txid", "vout", "coinbase", "scriptSig", "txinwitness", "sequence"})
-public class RawInput {
+@JsonPropertyOrder({"txid", "hash", "version", "size", "vsize", "weight", "locktime", "vin", "vout", "hex"})
+public class RawDtoTransaction {
+    @JsonProperty("in_active_chain")
+    private Boolean inActiveChain;
     @JsonProperty("txid")
     private String txId;
+    private String hash;
+    private Integer version;
+    private Integer size;
+    @JsonProperty("vsize")
+    private Integer vSize;
+    private Integer weight;
+    @JsonProperty("locktime")
+    private Long lockTime;
+    @JsonProperty("vin")
+    private List<RawDtoInput> vIn;
     @JsonProperty("vout")
-    private Integer vOut;
-    private String coinbase;
-    private SignatureScript scriptSig;
-    @JsonProperty("txinwitness")
-    private List<String> txInWitness;
-    private Long sequence;
+    private List<RawDtoOutput> vOut;
+    @JsonProperty("blockhash")
+    private String blockHash;
+    private Integer confirmations;
+    @JsonProperty("blocktime")
+    private Long blockTime;
+    private Long time;
+    private String hex;
+
+    @JsonCreator
+    public static Summarized summarized(String hex) {
+        var result = new Summarized();
+        result.setHex(hex);
+        return result;
+    }
+
+    public static class Summarized extends RawDtoTransaction {
+        @Override
+        @JsonValue
+        public String getHex() {
+            return super.getHex();
+        }
+    }
 }

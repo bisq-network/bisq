@@ -19,8 +19,10 @@ package bisq.core.dao.node.full;
 
 import bisq.core.dao.node.full.rpc.BitcoindClient;
 import bisq.core.dao.node.full.rpc.BitcoindDaemon;
-import bisq.core.dao.node.full.rpc.dto.RawInput;
-import bisq.core.dao.node.full.rpc.dto.RawTransaction;
+import bisq.core.dao.node.full.rpc.dto.DtoPubKeyScript;
+import bisq.core.dao.node.full.rpc.dto.RawDtoBlock;
+import bisq.core.dao.node.full.rpc.dto.RawDtoInput;
+import bisq.core.dao.node.full.rpc.dto.RawDtoTransaction;
 import bisq.core.dao.state.model.blockchain.PubKeyScript;
 import bisq.core.dao.state.model.blockchain.ScriptType;
 import bisq.core.dao.state.model.blockchain.TxInput;
@@ -266,7 +268,7 @@ public class RpcService {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private static RawBlock getBlockFromRawDtoBlock(bisq.core.dao.node.full.rpc.dto.RawBlock rawDtoBlock) { //NOPMD
+    private static RawBlock getBlockFromRawDtoBlock(RawDtoBlock rawDtoBlock) {
         List<RawTx> txList = rawDtoBlock.getTx().stream()
                 .map(e -> getTxFromRawTransaction(e, rawDtoBlock))
                 .collect(Collectors.toList());
@@ -277,8 +279,8 @@ public class RpcService {
                 ImmutableList.copyOf(txList));
     }
 
-    private static RawTx getTxFromRawTransaction(RawTransaction rawDtoTx,
-                                                 bisq.core.dao.node.full.rpc.dto.RawBlock rawDtoBlock) { //NOPMD
+    private static RawTx getTxFromRawTransaction(RawDtoTransaction rawDtoTx,
+                                                 RawDtoBlock rawDtoBlock) {
         String txId = rawDtoTx.getTxId();
         long blockTime = rawDtoBlock.getTime() * 1000; // We convert block time from sec to ms
         int blockHeight = rawDtoBlock.getHeight();
@@ -308,7 +310,7 @@ public class RpcService {
                 .filter(e -> e != null && e.getN() != null && e.getValue() != null && e.getScriptPubKey() != null)
                 .map(rawDtoTxOutput -> {
                             byte[] opReturnData = null;
-                            bisq.core.dao.node.full.rpc.dto.PubKeyScript scriptPubKey = rawDtoTxOutput.getScriptPubKey();
+                            DtoPubKeyScript scriptPubKey = rawDtoTxOutput.getScriptPubKey();
                             if (ScriptType.NULL_DATA.equals(scriptPubKey.getType()) && scriptPubKey.getAsm() != null) {
                                 String[] chunks = scriptPubKey.getAsm().split(" ");
                                 // We get on testnet a lot of "OP_RETURN 0" data, so we filter those away
@@ -355,7 +357,7 @@ public class RpcService {
     }
 
     @VisibleForTesting
-    static String extractPubKeyAsHex(RawInput rawInput, boolean allowSegwit) {
+    static String extractPubKeyAsHex(RawDtoInput rawInput, boolean allowSegwit) {
         // We only allow inputs with a single SIGHASH_ALL signature. That is, multisig or
         // signing of only some of the tx inputs/outputs is intentionally disallowed...
         if (rawInput.getScriptSig() == null) {
