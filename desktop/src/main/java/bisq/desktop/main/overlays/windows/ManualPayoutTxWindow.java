@@ -24,6 +24,7 @@ import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.validation.LengthValidator;
+import bisq.desktop.util.validation.PercentageNumberValidator;
 
 import bisq.core.btc.exceptions.TransactionVerificationException;
 import bisq.core.btc.exceptions.TxBroadcastException;
@@ -120,6 +121,7 @@ public class ManualPayoutTxWindow extends Overlay<ManualPayoutTxWindow> {
     InputTextField buyerPayoutAmount;
     InputTextField sellerPayoutAmount;
     InputTextField txFee;
+    InputTextField txFeePct;
     InputTextField buyerAddressString;
     InputTextField sellerAddressString;
     InputTextField buyerPubKeyAsHex;
@@ -317,7 +319,13 @@ public class ManualPayoutTxWindow extends Overlay<ManualPayoutTxWindow> {
         sellerPayoutAmount = addInputTextField(inputsGridPane, rowIndexA, "sellerPayoutAmount");
         txFee = addInputTextField(inputsGridPane, rowIndexA, "Tx fee");
         txFee.setEditable(false);
-        HBox hBox = new HBox(12, buyerPayoutAmount, sellerPayoutAmount, txFee);
+        txFeePct = addInputTextField(inputsGridPane, rowIndexA, "Tx fee %");
+        txFeePct.setEditable(false);
+        PercentageNumberValidator validator = new PercentageNumberValidator();
+        validator.setMaxValue(10D);
+        txFeePct.setValidator(validator);
+
+        HBox hBox = new HBox(12, buyerPayoutAmount, sellerPayoutAmount, txFee, txFeePct);
         hBox.setAlignment(Pos.BASELINE_LEFT);
         hBox.setPrefWidth(800);
         inputsGridPane.add(hBox, 0, ++rowIndexA);
@@ -519,7 +527,8 @@ public class ManualPayoutTxWindow extends Overlay<ManualPayoutTxWindow> {
                 buyerAddressString.getText().length() > 0 &&
                 sellerAddressString.getText().length() > 0 &&
                 buyerPubKeyAsHex.getText().length() == HEX_PUBKEY_LENGTH &&
-                sellerPubKeyAsHex.getText().length() == HEX_PUBKEY_LENGTH);
+                sellerPubKeyAsHex.getText().length() == HEX_PUBKEY_LENGTH &&
+                txFeePct.getValidator().validate(txFeePct.getText()).isValid);
     }
 
     private boolean validateInputFieldsAndSignatures() {
@@ -530,7 +539,7 @@ public class ManualPayoutTxWindow extends Overlay<ManualPayoutTxWindow> {
 
     private Coin getInputFieldAsCoin(InputTextField inputTextField) {
         try {
-            return Coin.parseCoin(inputTextField.getText());
+            return Coin.parseCoin(inputTextField.getText().trim());
         } catch (RuntimeException ignore) {
         }
         return Coin.ZERO;
@@ -544,6 +553,8 @@ public class ManualPayoutTxWindow extends Overlay<ManualPayoutTxWindow> {
                     .subtract(getInputFieldAsCoin(buyerPayoutAmount))
                     .subtract(getInputFieldAsCoin(sellerPayoutAmount));
             txFee.setText(txFeeValue.toPlainString());
+            double feePercent = (double) txFeeValue.value / getInputFieldAsCoin(amountInMultisig).value;
+            txFeePct.setText(String.format("%.2f", feePercent * 100));
         }
     }
 
@@ -717,7 +728,7 @@ public class ManualPayoutTxWindow extends Overlay<ManualPayoutTxWindow> {
                     TxBroadcaster.Callback callback = new TxBroadcaster.Callback() {
                         @Override
                         public void onSuccess(@Nullable Transaction result) {
-                            log.error("onSuccess");
+                            log.info("onSuccess");
                             UserThread.execute(() -> {
                                 String txId = result != null ? result.getTxId().toString() : "null";
                                 new Popup().information("Transaction successfully published. Transaction ID: " + txId).show();
