@@ -964,6 +964,7 @@ message PaymentAccountPayload {
         TransferwiseAccountPayload Transferwise_account_payload = 29;
         AustraliaPayidPayload australia_payid_payload = 30;
         AmazonGiftCardAccountPayload amazon_gift_card_account_payload = 31;
+        CashByMailAccountPayload cash_by_mail_account_payload = 32;
     }
     map<string, string> exclude_from_json_data = 15;
 }
@@ -1162,6 +1163,12 @@ message USPostalMoneyOrderAccountPayload {
 message F2FAccountPayload {
     string contact = 1;
     string city = 2;
+    string extra_info = 3;
+}
+
+message CashByMailAccountPayload {
+    string postal_address = 1;
+    string contact = 2;
     string extra_info = 3;
 }
 
