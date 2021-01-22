@@ -212,23 +212,18 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
         onUpdateAnyChainHeight();
 
         exportButton.setOnAction(event -> {
-            ObservableList<TableColumn<BsqTxListItem, ?>> tableColumns = tableView.getColumns();
             CSVEntryConverter<BsqTxListItem> headerConverter = item -> {
+                ObservableList<TableColumn<BsqTxListItem, ?>> tableColumns = tableView.getColumns();
                 String[] columns = new String[8];
-                int i = 0;
-                columns[i] = ((AutoTooltipLabel) tableColumns.get(i).getGraphic()).getText();
-                i++;
-                columns[i] = ((AutoTooltipLabel) tableColumns.get(i).getGraphic()).getText();
-                i++;
+                columns[0] = ((AutoTooltipLabel) tableColumns.get(0).getGraphic()).getText();
+                columns[1] = ((AutoTooltipLabel) tableColumns.get(1).getGraphic()).getText();
+                // Table col 2 (information is split up into 3 different ones for cvs)
                 columns[2] = Res.get("shared.details");
                 columns[3] = Res.get("shared.address");
                 columns[4] = Res.get("funds.tx.receivedFunds");
-                i++;
-                columns[5] = ((AutoTooltipLabel) tableColumns.get(i).getGraphic()).getText();
-                i++;
-                columns[6] = ((AutoTooltipLabel) tableColumns.get(i).getGraphic()).getText();
-                i++;
-                columns[7] = ((AutoTooltipLabel) tableColumns.get(i).getGraphic()).getText();
+                columns[5] = ((AutoTooltipLabel) tableColumns.get(3).getGraphic()).getText();
+                columns[6] = ((AutoTooltipLabel) tableColumns.get(4).getGraphic()).getText();
+                columns[7] = ((AutoTooltipLabel) tableColumns.get(5).getGraphic()).getText();
                 return columns;
             };
             CSVEntryConverter<BsqTxListItem> contentConverter = item -> {

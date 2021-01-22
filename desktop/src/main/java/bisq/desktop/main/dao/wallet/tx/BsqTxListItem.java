@@ -96,7 +96,7 @@ class BsqTxListItem extends TxConfidenceListItem {
             direction = "";
         }
 
-        String sendToAddress = null;
+        String sendToAddress = "";
         for (TransactionOutput output : transaction.getOutputs()) {
             if (!bsqWalletService.isTransactionOutputMine(output) &&
                     !btcWalletService.isTransactionOutputMine(output) &&
