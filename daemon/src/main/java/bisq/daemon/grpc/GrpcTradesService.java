@@ -35,13 +35,25 @@ import bisq.proto.grpc.TradesGrpc;
 import bisq.proto.grpc.WithdrawFundsReply;
 import bisq.proto.grpc.WithdrawFundsRequest;
 
+import io.grpc.ServerInterceptor;
 import io.grpc.stub.StreamObserver;
 
 import javax.inject.Inject;
 
+import java.util.HashMap;
+import java.util.Optional;
+
 import lombok.extern.slf4j.Slf4j;
 
 import static bisq.core.api.model.TradeInfo.toTradeInfo;
+import static bisq.daemon.grpc.interceptor.GrpcServiceRateMeteringConfig.getCustomRateMeteringInterceptor;
+import static java.util.concurrent.TimeUnit.MINUTES;
+import static java.util.concurrent.TimeUnit.SECONDS;
+
+
+
+import bisq.daemon.grpc.interceptor.CallRateMeteringInterceptor;
+import bisq.daemon.grpc.interceptor.GrpcCallRateMeter;
 
 @Slf4j
 class GrpcTradesService extends TradesGrpc.TradesImplBase {
@@ -141,5 +153,26 @@ class GrpcTradesService extends TradesGrpc.TradesImplBase {
         } catch (Throwable cause) {
             exceptionHandler.handleException(cause, responseObserver);
         }
+    }
+
+    final ServerInterceptor[] interceptors() {
+        Optional<ServerInterceptor> rateMeteringInterceptor = rateMeteringInterceptor();
+        return rateMeteringInterceptor.map(serverInterceptor ->
+                new ServerInterceptor[]{serverInterceptor}).orElseGet(() -> new ServerInterceptor[0]);
+    }
+
+    final Optional<ServerInterceptor> rateMeteringInterceptor() {
+        CallRateMeteringInterceptor defaultCallRateMeteringInterceptor =
+                new CallRateMeteringInterceptor(new HashMap<>() {{
+                    put("getTrade", new GrpcCallRateMeter(1, SECONDS));
+                    put("takeOffer", new GrpcCallRateMeter(1, MINUTES));
+                    put("confirmPaymentStarted", new GrpcCallRateMeter(1, MINUTES));
+                    put("confirmPaymentReceived", new GrpcCallRateMeter(1, MINUTES));
+                    put("keepFunds", new GrpcCallRateMeter(1, MINUTES));
+                    put("withdrawFunds", new GrpcCallRateMeter(1, MINUTES));
+                }});
+
+        return getCustomRateMeteringInterceptor(coreApi.getConfig().appDataDir, this.getClass())
+                .or(() -> Optional.of(defaultCallRateMeteringInterceptor));
     }
 }

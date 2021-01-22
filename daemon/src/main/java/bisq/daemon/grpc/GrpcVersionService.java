@@ -74,13 +74,12 @@ public class GrpcVersionService extends GetVersionGrpc.GetVersionImplBase {
     }
 
     final Optional<ServerInterceptor> rateMeteringInterceptor() {
-        @SuppressWarnings("unused")  // Defined as a usage example.
         CallRateMeteringInterceptor defaultCallRateMeteringInterceptor =
                 new CallRateMeteringInterceptor(new HashMap<>() {{
-                    put("getVersion", new GrpcCallRateMeter(100, SECONDS));
+                    put("getVersion", new GrpcCallRateMeter(1, SECONDS));
                 }});
 
         return getCustomRateMeteringInterceptor(coreApi.getConfig().appDataDir, this.getClass())
-                .or(Optional::empty /* Optional.of(defaultCallRateMeteringInterceptor) */);
+                .or(() -> Optional.of(defaultCallRateMeteringInterceptor));
     }
 }
