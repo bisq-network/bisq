@@ -189,7 +189,7 @@ public abstract class Overlay<T extends Overlay<T>> {
     protected Timer centerTime;
     protected Type type = Type.Undefined;
 
-    protected int maxChar = 1800;
+    protected int maxChar = 2200;
 
     private T cast() {
         //noinspection unchecked
