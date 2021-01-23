@@ -152,10 +152,6 @@ public final class Alert implements ProtectedStoragePayload, ExpirablePayload {
         ownerPubKeyBytes = Sig.getPublicKeyBytes(ownerPubKey);
     }
 
-    public boolean isSoftwareUpdateNotification() {
-        return (isUpdateInfo || isPreReleaseInfo);
-    }
-
     public boolean isNewVersion(Preferences preferences) {
         // regular release: always notify user
         // pre-release: if user has set preference to receive pre-release notification
@@ -166,9 +162,13 @@ public final class Alert implements ProtectedStoragePayload, ExpirablePayload {
         return false;
     }
 
+    public boolean isSoftwareUpdateNotification() {
+        return (isUpdateInfo || isPreReleaseInfo);
+    }
+
     public boolean canShowPopup(Preferences preferences) {
         // only show popup if its version is newer than current
-        // and only if user has not checked "don't show again"?
+        // and only if user has not checked "don't show again"
         return isNewVersion(preferences) && preferences.showAgain(showAgainKey());
     }
 
