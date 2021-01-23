@@ -251,7 +251,7 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
         } else if (paymentAccount instanceof CashByMailAccount) {
             // CashByMail has no chargeback risk so we don't show the text from payment.limits.info.
             new Popup().information(Res.get("payment.cashByMail.info"))
-                    .width(700)
+                    .width(850)
                     .closeButtonText(Res.get("shared.cancel"))
                     .actionButtonText(Res.get("shared.iUnderstand"))
                     .onAction(() -> doSaveNewAccount(paymentAccount))
