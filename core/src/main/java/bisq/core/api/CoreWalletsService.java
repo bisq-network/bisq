@@ -581,7 +581,8 @@ class CoreWalletsService {
         if (btcWalletService.getAesKey() == null || bsqWalletService.getAesKey() == null) {
             KeyParameter aesKey = new KeyParameter(tempAesKey.getKey());
             walletsManager.setAesKey(aesKey);
-            walletsSetup.getWalletConfig().maybeAddSegwitKeychain(walletsSetup.getWalletConfig().btcWallet(), aesKey);
+            walletsSetup.getWalletConfig().maybeAddSegwitKeychain(walletsSetup.getWalletConfig().btcWallet(), aesKey, false);
+            walletsSetup.getWalletConfig().maybeAddSegwitKeychain(walletsSetup.getWalletConfig().bsqWallet(), aesKey, true);
         }
     }
 

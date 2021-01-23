@@ -42,7 +42,6 @@ import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.BlockChain;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.InsufficientMoneyException;
-import org.bitcoinj.core.LegacyAddress;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.Transaction;
@@ -50,6 +49,7 @@ import org.bitcoinj.core.TransactionConfidence;
 import org.bitcoinj.core.TransactionInput;
 import org.bitcoinj.core.TransactionOutPoint;
 import org.bitcoinj.core.TransactionOutput;
+import org.bitcoinj.script.Script;
 import org.bitcoinj.script.ScriptException;
 import org.bitcoinj.wallet.CoinSelection;
 import org.bitcoinj.wallet.CoinSelector;
@@ -807,12 +807,13 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
     // Addresses
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private LegacyAddress getChangeAddress() {
+    private Address getChangeAddress() {
         return getUnusedAddress();
     }
 
-    public LegacyAddress getUnusedAddress() {
-        return (LegacyAddress) wallet.getIssuedReceiveAddresses().stream()
+    public Address getUnusedAddress() {
+        return wallet.getIssuedReceiveAddresses().stream()
+                .filter(address -> Script.ScriptType.P2WPKH.equals(address.getOutputScriptType()))
                 .filter(this::isAddressUnused)
                 .findAny()
                 .orElse(wallet.freshReceiveAddress());

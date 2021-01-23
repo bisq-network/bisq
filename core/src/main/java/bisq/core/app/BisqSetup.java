@@ -424,7 +424,9 @@ public class BisqSetup {
                 requestWalletPasswordHandler.accept(aesKey -> {
                     walletsManager.setAesKey(aesKey);
                     walletsSetup.getWalletConfig().maybeAddSegwitKeychain(walletsSetup.getWalletConfig().btcWallet(),
-                            aesKey);
+                            aesKey, false);
+                    walletsSetup.getWalletConfig().maybeAddSegwitKeychain(walletsSetup.getWalletConfig().bsqWallet(),
+                            aesKey, true);
                     if (getResyncSpvSemaphore()) {
                         if (showFirstPopupIfResyncSPVRequestedHandler != null)
                             showFirstPopupIfResyncSPVRequestedHandler.run();
