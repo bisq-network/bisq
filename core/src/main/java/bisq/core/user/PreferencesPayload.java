@@ -133,6 +133,7 @@ public final class PreferencesPayload implements PersistableEnvelope {
     private boolean hideNonAccountPaymentMethods;
     private boolean showOffersMatchingMyAccounts;
     private boolean denyApiTaker;
+    private boolean notifyOnPreRelease;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -199,7 +200,8 @@ public final class PreferencesPayload implements PersistableEnvelope {
                         .collect(Collectors.toList()))
                 .setHideNonAccountPaymentMethods(hideNonAccountPaymentMethods)
                 .setShowOffersMatchingMyAccounts(showOffersMatchingMyAccounts)
-                .setDenyApiTaker(denyApiTaker);
+                .setDenyApiTaker(denyApiTaker)
+                .setNotifyOnPreRelease(notifyOnPreRelease);
 
         Optional.ofNullable(backupDirectory).ifPresent(builder::setBackupDirectory);
         Optional.ofNullable(preferredTradeCurrency).ifPresent(e -> builder.setPreferredTradeCurrency((protobuf.TradeCurrency) e.toProtoMessage()));
@@ -296,7 +298,8 @@ public final class PreferencesPayload implements PersistableEnvelope {
                                 .collect(Collectors.toList())),
                 proto.getHideNonAccountPaymentMethods(),
                 proto.getShowOffersMatchingMyAccounts(),
-                proto.getDenyApiTaker()
+                proto.getDenyApiTaker(),
+                proto.getNotifyOnPreRelease()
         );
     }
 }

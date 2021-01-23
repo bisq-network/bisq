@@ -17,6 +17,8 @@
 
 package bisq.core.alert;
 
+import bisq.core.user.Preferences;
+
 import bisq.network.p2p.storage.payload.ExpirablePayload;
 import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 
@@ -51,6 +53,7 @@ public final class Alert implements ProtectedStoragePayload, ExpirablePayload {
 
     private final String message;
     private final boolean isUpdateInfo;
+    private final boolean isPreReleaseInfo;
     private final String version;
 
     @Nullable
@@ -68,9 +71,11 @@ public final class Alert implements ProtectedStoragePayload, ExpirablePayload {
 
     public Alert(String message,
                  boolean isUpdateInfo,
+                 boolean isPreReleaseInfo,
                  String version) {
         this.message = message;
         this.isUpdateInfo = isUpdateInfo;
+        this.isPreReleaseInfo = isPreReleaseInfo;
         this.version = version;
     }
 
@@ -82,12 +87,14 @@ public final class Alert implements ProtectedStoragePayload, ExpirablePayload {
     @SuppressWarnings("NullableProblems")
     public Alert(String message,
                  boolean isUpdateInfo,
+                 boolean isPreReleaseInfo,
                  String version,
                  byte[] ownerPubKeyBytes,
                  String signatureAsBase64,
                  Map<String, String> extraDataMap) {
         this.message = message;
         this.isUpdateInfo = isUpdateInfo;
+        this.isPreReleaseInfo = isPreReleaseInfo;
         this.version = version;
         this.ownerPubKeyBytes = ownerPubKeyBytes;
         this.signatureAsBase64 = signatureAsBase64;
@@ -103,6 +110,7 @@ public final class Alert implements ProtectedStoragePayload, ExpirablePayload {
         protobuf.Alert.Builder builder = protobuf.Alert.newBuilder()
                 .setMessage(message)
                 .setIsUpdateInfo(isUpdateInfo)
+                .setIsPreReleaseInfo(isPreReleaseInfo)
                 .setVersion(version)
                 .setOwnerPubKeyBytes(ByteString.copyFrom(ownerPubKeyBytes))
                 .setSignatureAsBase64(signatureAsBase64);
@@ -119,6 +127,7 @@ public final class Alert implements ProtectedStoragePayload, ExpirablePayload {
 
         return new Alert(proto.getMessage(),
                 proto.getIsUpdateInfo(),
+                proto.getIsPreReleaseInfo(),
                 proto.getVersion(),
                 proto.getOwnerPubKeyBytes().toByteArray(),
                 proto.getSignatureAsBase64(),
@@ -143,7 +152,28 @@ public final class Alert implements ProtectedStoragePayload, ExpirablePayload {
         ownerPubKeyBytes = Sig.getPublicKeyBytes(ownerPubKey);
     }
 
-    public boolean isNewVersion() {
-        return Version.isNewVersion(version);
+    public boolean isSoftwareUpdateNotification() {
+        return (isUpdateInfo || isPreReleaseInfo);
     }
+
+    public boolean isNewVersion(Preferences preferences) {
+        // regular release: always notify user
+        // pre-release: if user has set preference to receive pre-release notification
+        if (isUpdateInfo ||
+                (isPreReleaseInfo && preferences.isNotifyOnPreRelease())) {
+            return Version.isNewVersion(version);
+        }
+        return false;
+    }
+
+    public boolean canShowPopup(Preferences preferences) {
+        // only show popup if its version is newer than current
+        // and only if user has not checked "don't show again"?
+        return isNewVersion(preferences) && preferences.showAgain(showAgainKey());
+    }
+
+    public String showAgainKey() {
+        return "Update_" + version;
+    }
+
 }

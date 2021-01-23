@@ -620,6 +620,7 @@ message Alert {
     string signature_as_base64 = 4;
     bytes owner_pub_key_bytes = 5;
     map<string, string> extra_data = 6;
+    bool is_pre_release_info = 7;
 }
 
 message Arbitrator {
@@ -1638,6 +1639,7 @@ message PreferencesPayload {
     bool hide_non_account_payment_methods = 58;
     bool show_offers_matching_my_accounts = 59;
     bool deny_api_taker = 60;
+    bool notify_on_pre_release = 61;
 }
 
 message AutoConfirmSettings {
