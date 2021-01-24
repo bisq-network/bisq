@@ -94,7 +94,7 @@ class DesktopUtil {
                 return true;
             }
         } catch (IOException e) {
-            log.warn("Error running command. {}", e);
+            log.warn("Error running command. {}", e.toString());
             return false;
         }
     }
