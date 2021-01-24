@@ -22,6 +22,7 @@ import bisq.desktop.util.Layout;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
+import bisq.core.locale.TradeCurrency;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.CashByMailAccount;
 import bisq.core.payment.payload.PaymentAccountPayload;
@@ -32,8 +33,9 @@ import bisq.core.util.validation.InputValidator;
 import com.jfoenix.controls.JFXTextArea;
 
 import javafx.scene.control.TextArea;
-import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.GridPane;
+
+import javafx.collections.FXCollections;
 
 import static bisq.desktop.util.FormBuilder.*;
 
@@ -69,23 +71,12 @@ public class CashByMailForm extends PaymentMethodForm {
         this.cashByMailAccount = (CashByMailAccount) paymentAccount;
     }
 
-    private void addCurrenciesGrid(boolean isEditable) {
-        FlowPane flowPane = addTopLabelFlowPane(gridPane, ++gridRow,
-                Res.get("payment.supportedCurrenciesForReceiver"), 20, 20).second;
-
-        if (isEditable) {
-            flowPane.setId("flow-pane-checkboxes-bg");
-        } else {
-            flowPane.setId("flow-pane-checkboxes-non-editable-bg");
-        }
-
-        CurrencyUtil.getMainFiatCurrencies().forEach(currency ->
-                fillUpFlowPaneWithCurrencies(isEditable, flowPane, currency, paymentAccount));
-    }
-
     @Override
     public void addFormForAddAccount() {
         gridRowFrom = gridRow + 1;
+
+        addTradeCurrencyComboBox();
+        currencyComboBox.setItems(FXCollections.observableArrayList(CurrencyUtil.getAllSortedFiatCurrencies()));
 
         contactField = addInputTextField(gridPane, ++gridRow,
                 Res.get("payment.cashByMail.contact"));
@@ -113,8 +104,6 @@ public class CashByMailForm extends PaymentMethodForm {
             updateFromInputs();
         });
 
-        addCurrenciesGrid(true);
-
         addLimitations(false);
         addAccountNameTextFieldWithAutoFillToggleButton();
     }
@@ -131,6 +120,11 @@ public class CashByMailForm extends PaymentMethodForm {
                 cashByMailAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
                 Res.get(cashByMailAccount.getPaymentMethod().getId()));
+
+        TradeCurrency tradeCurrency = paymentAccount.getSingleTradeCurrency();
+        String nameAndCode = tradeCurrency != null ? tradeCurrency.getNameAndCode() : "";
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"), nameAndCode);
+
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.f2f.contact"),
                 cashByMailAccount.getContact());
         TextArea textArea = addCompactTopLabelTextArea(gridPane, ++gridRow, Res.get("payment.postal.address"), "").second;
@@ -143,8 +137,6 @@ public class CashByMailForm extends PaymentMethodForm {
         textAreaExtra.setMinHeight(70);
         textAreaExtra.setEditable(false);
 
-        addCurrenciesGrid(false);
-
         addLimitations(true);
     }
 
@@ -153,6 +145,6 @@ public class CashByMailForm extends PaymentMethodForm {
         allInputsValid.set(isAccountNameValid()
                 && !postalAddressTextArea.getText().isEmpty()
                 && inputValidator.validate(cashByMailAccount.getContact()).isValid
-                && paymentAccount.getTradeCurrencies().size() > 0);
+                && paymentAccount.getSingleTradeCurrency() != null);
     }
 }
