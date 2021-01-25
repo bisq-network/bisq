@@ -394,7 +394,7 @@ public class DaoStateService implements DaoSetupService {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // BurntFee
+    // BurntFee (trade fee and fee burned at proof of burn)
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public long getBurntFee(String txId) {
@@ -405,8 +405,16 @@ public class DaoStateService implements DaoSetupService {
         return getBurntFee(txId) > 0;
     }
 
-    public long getTotalBurntFee() {
-        return getUnorderedTxStream().mapToLong(Tx::getBurntFee).sum();
+    public long getTotalBurntTradeFee() {
+        return getUnorderedTxStream()
+                .filter(tx -> TxOutputType.PROOF_OF_BURN_OP_RETURN_OUTPUT != tx.getLastTxOutput().getTxOutputType())
+                .mapToLong(Tx::getBurntFee).sum();
+    }
+
+    public long getTotalProofOfBurnAmount() {
+        return getUnorderedTxStream()
+                .filter(tx -> TxOutputType.PROOF_OF_BURN_OP_RETURN_OUTPUT == tx.getLastTxOutput().getTxOutputType())
+                .mapToLong(Tx::getBurntFee).sum();
     }
 
     public Set<Tx> getBurntFeeTxs() {

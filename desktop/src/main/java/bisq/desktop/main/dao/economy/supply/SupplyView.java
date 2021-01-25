@@ -105,8 +105,8 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
 
     private int gridRow = 0;
     private TextField genesisIssueAmountTextField, compRequestIssueAmountTextField, reimbursementAmountTextField,
-            totalBurntFeeAmountTextField, totalLockedUpAmountTextField, totalUnlockingAmountTextField,
-            totalUnlockedAmountTextField, totalConfiscatedAmountTextField, totalAmountOfInvalidatedBsqTextField;
+            totalBurntTradeFeeTextField, totalLockedUpAmountTextField, totalUnlockingAmountTextField,
+            totalUnlockedAmountTextField, totalConfiscatedAmountTextField, totalProofOfBurnAmountTextField;
     private XYChart.Series<Number, Number> seriesBSQIssuedMonthly, seriesBSQBurntMonthly, seriesBSQBurntDaily,
             seriesBSQBurntDailyMA;
 
@@ -256,10 +256,10 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
     private void createSupplyReducedInformation() {
         addTitledGroupBg(root, ++gridRow, 3, Res.get("dao.factsAndFigures.supply.burnt"), Layout.GROUP_DISTANCE);
 
-        totalBurntFeeAmountTextField = addTopLabelReadOnlyTextField(root, gridRow,
+        totalBurntTradeFeeTextField = addTopLabelReadOnlyTextField(root, gridRow,
                 Res.get("dao.factsAndFigures.supply.burntAmount"), Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
-        totalAmountOfInvalidatedBsqTextField = addTopLabelReadOnlyTextField(root, gridRow, 1,
-                Res.get("dao.factsAndFigures.supply.invalidTxs"), Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
+        totalProofOfBurnAmountTextField = addTopLabelReadOnlyTextField(root, gridRow, 1,
+                Res.get("dao.factsAndFigures.supply.proofOfBurnAmount"), Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
 
         var buttonTitle = Res.get("dao.factsAndFigures.supply.burntZoomToInliers");
         zoomToInliersSlide = addSlideToggleButton(root, ++gridRow, buttonTitle);
@@ -289,8 +289,8 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
 
     // chart #1 (top)
     private Node createBSQIssuedVsBurntChart(
-        XYChart.Series<Number, Number> seriesBSQIssuedMonthly,
-        XYChart.Series<Number, Number> seriesBSQBurntMonthly
+            XYChart.Series<Number, Number> seriesBSQIssuedMonthly,
+            XYChart.Series<Number, Number> seriesBSQBurntMonthly
     ) {
         xAxisChart1 = new NumberAxis();
         configureAxis(xAxisChart1);
@@ -348,7 +348,7 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
                 yAxisBSQBurntDaily, chartMaxNumberOfTicks, chartPercentToTrim, chartHowManyStdDevsConstituteOutlier);
     }
 
-    public static List<Number> getListXMinMax (List<XYChart.Data<Number, Number>> bsqList) {
+    public static List<Number> getListXMinMax(List<XYChart.Data<Number, Number>> bsqList) {
         long min = Long.MAX_VALUE, max = 0;
         for (XYChart.Data<Number, ?> data : bsqList) {
             min = Math.min(data.getXValue().longValue(), min);
@@ -374,16 +374,16 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
     // grab the axis tick mark label (text object) and add a CSS class.
     private void addTickMarkLabelCssClass(NumberAxis axis, String cssClass) {
         axis.getChildrenUnmodifiable().addListener((ListChangeListener<Node>) c -> {
-                while (c.next()) {
-                    if (c.wasAdded()) {
-                        for (Node mark : c.getAddedSubList()) {
-                            if (mark instanceof Text) {
-                                mark.getStyleClass().add(cssClass);
-                            }
+            while (c.next()) {
+                if (c.wasAdded()) {
+                    for (Node mark : c.getAddedSubList()) {
+                        if (mark instanceof Text) {
+                            mark.getStyleClass().add(cssClass);
                         }
                     }
                 }
-            });
+            }
+        });
     }
 
     // rounds the tick timestamp to the nearest month
@@ -393,8 +393,8 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
             public String toString(Number timestamp) {
                 double tsd = timestamp.doubleValue();
                 if ((chart1XBounds.size() == 2) &&
-                    ((tsd - monthDurationAvg / 2 < chart1XBounds.get(0).doubleValue()) ||
-                     (tsd + monthDurationAvg / 2 > chart1XBounds.get(1).doubleValue()))) {
+                        ((tsd - monthDurationAvg / 2 < chart1XBounds.get(0).doubleValue()) ||
+                                (tsd + monthDurationAvg / 2 > chart1XBounds.get(1).doubleValue()))) {
                     return "";
                 }
                 LocalDateTime localDateTime = LocalDateTime.ofEpochSecond(timestamp.longValue(),
@@ -477,20 +477,21 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
         Coin issuedAmountFromReimbursementRequests = Coin.valueOf(daoFacade.getTotalIssuedAmount(IssuanceType.REIMBURSEMENT));
         reimbursementAmountTextField.setText(bsqFormatter.formatAmountWithGroupSeparatorAndCode(issuedAmountFromReimbursementRequests));
 
-        Coin totalBurntFee = Coin.valueOf(daoFacade.getTotalBurntFee());
+        Coin totalBurntTradeFee = Coin.valueOf(daoFacade.getTotalBurntTradeFee());
+        Coin totalProofOfBurnAmount = Coin.valueOf(daoFacade.getTotalProofOfBurnAmount());
         Coin totalLockedUpAmount = Coin.valueOf(daoFacade.getTotalLockupAmount());
         Coin totalUnlockingAmount = Coin.valueOf(daoFacade.getTotalAmountOfUnLockingTxOutputs());
         Coin totalUnlockedAmount = Coin.valueOf(daoFacade.getTotalAmountOfUnLockedTxOutputs());
         Coin totalConfiscatedAmount = Coin.valueOf(daoFacade.getTotalAmountOfConfiscatedTxOutputs());
-        Coin totalAmountOfInvalidatedBsq = Coin.valueOf(daoFacade.getTotalAmountOfInvalidatedBsq());
 
-        totalBurntFeeAmountTextField.setText("-" + bsqFormatter.formatAmountWithGroupSeparatorAndCode(totalBurntFee));
+        String minusSign = totalBurntTradeFee.isPositive() ? "-" : "";
+        totalBurntTradeFeeTextField.setText(minusSign + bsqFormatter.formatAmountWithGroupSeparatorAndCode(totalBurntTradeFee));
+        minusSign = totalProofOfBurnAmount.isPositive() ? "-" : "";
+        totalProofOfBurnAmountTextField.setText(minusSign + bsqFormatter.formatAmountWithGroupSeparatorAndCode(totalProofOfBurnAmount));
         totalLockedUpAmountTextField.setText(bsqFormatter.formatAmountWithGroupSeparatorAndCode(totalLockedUpAmount));
         totalUnlockingAmountTextField.setText(bsqFormatter.formatAmountWithGroupSeparatorAndCode(totalUnlockingAmount));
         totalUnlockedAmountTextField.setText(bsqFormatter.formatAmountWithGroupSeparatorAndCode(totalUnlockedAmount));
         totalConfiscatedAmountTextField.setText(bsqFormatter.formatAmountWithGroupSeparatorAndCode(totalConfiscatedAmount));
-        String minusSign = totalAmountOfInvalidatedBsq.isPositive() ? "-" : "";
-        totalAmountOfInvalidatedBsqTextField.setText(minusSign + bsqFormatter.formatAmountWithGroupSeparatorAndCode(totalAmountOfInvalidatedBsq));
 
         updateChartSeries();
     }
@@ -506,7 +507,7 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
         List<Number> xMinMaxI = updateBSQIssuedMonthly();
 
         chart1XBounds = List.of(Math.min(xMinMaxB.get(0).doubleValue(), xMinMaxI.get(0).doubleValue()) - monthDurationAvg,
-                                Math.max(xMinMaxB.get(1).doubleValue(), xMinMaxI.get(1).doubleValue()) + monthDurationAvg);
+                Math.max(xMinMaxB.get(1).doubleValue(), xMinMaxI.get(1).doubleValue()) + monthDurationAvg);
         xAxisChart1.setAutoRanging(false);
         xAxisChart1.setLowerBound(chart1XBounds.get(0).doubleValue());
         xAxisChart1.setUpperBound(chart1XBounds.get(1).doubleValue());
