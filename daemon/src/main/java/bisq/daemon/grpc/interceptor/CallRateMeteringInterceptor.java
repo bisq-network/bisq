@@ -25,6 +25,7 @@ import io.grpc.StatusRuntimeException;
 
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -123,5 +124,11 @@ public final class CallRateMeteringInterceptor implements ServerInterceptor {
                 "serviceCallRateMeters {" + "\n\t\t" +
                 rateMetersString + "\n\t" + "}" + "\n"
                 + "}";
+    }
+
+    public static CallRateMeteringInterceptor valueOf(Map<String, GrpcCallRateMeter> rateMeters) {
+        return new CallRateMeteringInterceptor(new HashMap<>() {{
+            putAll(rateMeters);
+        }});
     }
 }

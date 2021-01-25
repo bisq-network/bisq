@@ -162,17 +162,16 @@ class GrpcTradesService extends TradesGrpc.TradesImplBase {
     }
 
     final Optional<ServerInterceptor> rateMeteringInterceptor() {
-        CallRateMeteringInterceptor defaultCallRateMeteringInterceptor =
-                new CallRateMeteringInterceptor(new HashMap<>() {{
-                    put("getTrade", new GrpcCallRateMeter(1, SECONDS));
-                    put("takeOffer", new GrpcCallRateMeter(1, MINUTES));
-                    put("confirmPaymentStarted", new GrpcCallRateMeter(1, MINUTES));
-                    put("confirmPaymentReceived", new GrpcCallRateMeter(1, MINUTES));
-                    put("keepFunds", new GrpcCallRateMeter(1, MINUTES));
-                    put("withdrawFunds", new GrpcCallRateMeter(1, MINUTES));
-                }});
-
         return getCustomRateMeteringInterceptor(coreApi.getConfig().appDataDir, this.getClass())
-                .or(() -> Optional.of(defaultCallRateMeteringInterceptor));
+                .or(() -> Optional.of(CallRateMeteringInterceptor.valueOf(
+                        new HashMap<>() {{
+                            put("getTrade", new GrpcCallRateMeter(1, SECONDS));
+                            put("takeOffer", new GrpcCallRateMeter(1, MINUTES));
+                            put("confirmPaymentStarted", new GrpcCallRateMeter(1, MINUTES));
+                            put("confirmPaymentReceived", new GrpcCallRateMeter(1, MINUTES));
+                            put("keepFunds", new GrpcCallRateMeter(1, MINUTES));
+                            put("withdrawFunds", new GrpcCallRateMeter(1, MINUTES));
+                        }}
+                )));
     }
 }

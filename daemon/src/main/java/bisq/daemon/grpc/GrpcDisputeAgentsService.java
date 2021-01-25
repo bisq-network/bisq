@@ -56,14 +56,13 @@ class GrpcDisputeAgentsService extends DisputeAgentsGrpc.DisputeAgentsImplBase {
     }
 
     final Optional<ServerInterceptor> rateMeteringInterceptor() {
-        CallRateMeteringInterceptor defaultCallRateMeteringInterceptor =
-                new CallRateMeteringInterceptor(new HashMap<>() {{
-                    // You can only register mainnet dispute agents in the UI.
-                    // Do not limit devs' ability to register test agents.
-                    put("registerDisputeAgent", new GrpcCallRateMeter(1, SECONDS));
-                }});
-
         return getCustomRateMeteringInterceptor(coreApi.getConfig().appDataDir, this.getClass())
-                .or(() -> Optional.of(defaultCallRateMeteringInterceptor));
+                .or(() -> Optional.of(CallRateMeteringInterceptor.valueOf(
+                        new HashMap<>() {{
+                            // You can only register mainnet dispute agents in the UI.
+                            // Do not limit devs' ability to register test agents.
+                            put("registerDisputeAgent", new GrpcCallRateMeter(1, SECONDS));
+                        }}
+                )));
     }
 }

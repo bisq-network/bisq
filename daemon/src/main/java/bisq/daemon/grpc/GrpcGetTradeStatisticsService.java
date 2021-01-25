@@ -58,12 +58,11 @@ class GrpcGetTradeStatisticsService extends GetTradeStatisticsGrpc.GetTradeStati
     }
 
     final Optional<ServerInterceptor> rateMeteringInterceptor() {
-        CallRateMeteringInterceptor defaultCallRateMeteringInterceptor =
-                new CallRateMeteringInterceptor(new HashMap<>() {{
-                    put("getTradeStatistics", new GrpcCallRateMeter(1, SECONDS));
-                }});
-
         return getCustomRateMeteringInterceptor(coreApi.getConfig().appDataDir, this.getClass())
-                .or(() -> Optional.of(defaultCallRateMeteringInterceptor));
+                .or(() -> Optional.of(CallRateMeteringInterceptor.valueOf(
+                        new HashMap<>() {{
+                            put("getTradeStatistics", new GrpcCallRateMeter(1, SECONDS));
+                        }}
+                )));
     }
 }

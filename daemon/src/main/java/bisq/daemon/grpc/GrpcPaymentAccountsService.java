@@ -130,15 +130,14 @@ class GrpcPaymentAccountsService extends PaymentAccountsGrpc.PaymentAccountsImpl
     }
 
     final Optional<ServerInterceptor> rateMeteringInterceptor() {
-        CallRateMeteringInterceptor defaultCallRateMeteringInterceptor =
-                new CallRateMeteringInterceptor(new HashMap<>() {{
-                    put("createPaymentAccount", new GrpcCallRateMeter(1, MINUTES));
-                    put("getPaymentAccounts", new GrpcCallRateMeter(1, SECONDS));
-                    put("getPaymentMethods", new GrpcCallRateMeter(1, SECONDS));
-                    put("getPaymentAccountForm", new GrpcCallRateMeter(1, SECONDS));
-                }});
-
         return getCustomRateMeteringInterceptor(coreApi.getConfig().appDataDir, this.getClass())
-                .or(() -> Optional.of(defaultCallRateMeteringInterceptor));
+                .or(() -> Optional.of(CallRateMeteringInterceptor.valueOf(
+                        new HashMap<>() {{
+                            put("createPaymentAccount", new GrpcCallRateMeter(1, MINUTES));
+                            put("getPaymentAccounts", new GrpcCallRateMeter(1, SECONDS));
+                            put("getPaymentMethods", new GrpcCallRateMeter(1, SECONDS));
+                            put("getPaymentAccountForm", new GrpcCallRateMeter(1, SECONDS));
+                        }}
+                )));
     }
 }

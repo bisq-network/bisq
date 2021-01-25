@@ -349,29 +349,28 @@ class GrpcWalletsService extends WalletsGrpc.WalletsImplBase {
     }
 
     final Optional<ServerInterceptor> rateMeteringInterceptor() {
-        CallRateMeteringInterceptor defaultCallRateMeteringInterceptor =
-                new CallRateMeteringInterceptor(new HashMap<>() {{
-                    put("getBalances", new GrpcCallRateMeter(1, SECONDS));
-                    put("getAddressBalance", new GrpcCallRateMeter(1, SECONDS));
-                    put("getFundingAddresses", new GrpcCallRateMeter(1, SECONDS));
-                    put("getUnusedBsqAddress", new GrpcCallRateMeter(1, SECONDS));
-                    put("sendBsq", new GrpcCallRateMeter(1, MINUTES));
-                    put("sendBtc", new GrpcCallRateMeter(1, MINUTES));
-                    put("getTxFeeRate", new GrpcCallRateMeter(1, SECONDS));
-                    put("setTxFeeRatePreference", new GrpcCallRateMeter(1, SECONDS));
-                    put("unsetTxFeeRatePreference", new GrpcCallRateMeter(1, SECONDS));
-                    put("getTransaction", new GrpcCallRateMeter(1, SECONDS));
-
-                    // Trying to set or remove a wallet password several times before the 1st attempt has time to
-                    // persist the change to disk may corrupt the wallet, so allow only 1 attempt per 5 seconds.
-                    put("setWalletPassword", new GrpcCallRateMeter(1, SECONDS, 5));
-                    put("removeWalletPassword", new GrpcCallRateMeter(1, SECONDS, 5));
-
-                    put("lockWallet", new GrpcCallRateMeter(1, SECONDS));
-                    put("unlockWallet", new GrpcCallRateMeter(1, SECONDS));
-                }});
-
         return getCustomRateMeteringInterceptor(coreApi.getConfig().appDataDir, this.getClass())
-                .or(() -> Optional.of(defaultCallRateMeteringInterceptor));
+                .or(() -> Optional.of(CallRateMeteringInterceptor.valueOf(
+                        new HashMap<>() {{
+                            put("getBalances", new GrpcCallRateMeter(1, SECONDS));
+                            put("getAddressBalance", new GrpcCallRateMeter(1, SECONDS));
+                            put("getFundingAddresses", new GrpcCallRateMeter(1, SECONDS));
+                            put("getUnusedBsqAddress", new GrpcCallRateMeter(1, SECONDS));
+                            put("sendBsq", new GrpcCallRateMeter(1, MINUTES));
+                            put("sendBtc", new GrpcCallRateMeter(1, MINUTES));
+                            put("getTxFeeRate", new GrpcCallRateMeter(1, SECONDS));
+                            put("setTxFeeRatePreference", new GrpcCallRateMeter(1, SECONDS));
+                            put("unsetTxFeeRatePreference", new GrpcCallRateMeter(1, SECONDS));
+                            put("getTransaction", new GrpcCallRateMeter(1, SECONDS));
+
+                            // Trying to set or remove a wallet password several times before the 1st attempt has time to
+                            // persist the change to disk may corrupt the wallet, so allow only 1 attempt per 5 seconds.
+                            put("setWalletPassword", new GrpcCallRateMeter(1, SECONDS, 5));
+                            put("removeWalletPassword", new GrpcCallRateMeter(1, SECONDS, 5));
+
+                            put("lockWallet", new GrpcCallRateMeter(1, SECONDS));
+                            put("unlockWallet", new GrpcCallRateMeter(1, SECONDS));
+                        }}
+                )));
     }
 }

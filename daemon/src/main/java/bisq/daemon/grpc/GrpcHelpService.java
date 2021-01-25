@@ -73,12 +73,11 @@ class GrpcHelpService extends HelpGrpc.HelpImplBase {
     }
 
     final Optional<ServerInterceptor> rateMeteringInterceptor() {
-        CallRateMeteringInterceptor defaultCallRateMeteringInterceptor =
-                new CallRateMeteringInterceptor(new HashMap<>() {{
-                    put("getMethodHelp", new GrpcCallRateMeter(1, SECONDS));
-                }});
-
         return getCustomRateMeteringInterceptor(coreApi.getConfig().appDataDir, this.getClass())
-                .or(() -> Optional.of(defaultCallRateMeteringInterceptor));
+                .or(() -> Optional.of(CallRateMeteringInterceptor.valueOf(
+                        new HashMap<>() {{
+                            put("getMethodHelp", new GrpcCallRateMeter(1, SECONDS));
+                        }}
+                )));
     }
 }

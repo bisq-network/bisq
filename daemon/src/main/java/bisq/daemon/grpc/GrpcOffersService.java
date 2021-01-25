@@ -190,17 +190,16 @@ class GrpcOffersService extends OffersGrpc.OffersImplBase {
     }
 
     final Optional<ServerInterceptor> rateMeteringInterceptor() {
-        CallRateMeteringInterceptor defaultCallRateMeteringInterceptor =
-                new CallRateMeteringInterceptor(new HashMap<>() {{
-                    put("getOffer", new GrpcCallRateMeter(1, SECONDS));
-                    put("getMyOffer", new GrpcCallRateMeter(1, SECONDS));
-                    put("getOffers", new GrpcCallRateMeter(1, SECONDS));
-                    put("getMyOffers", new GrpcCallRateMeter(1, SECONDS));
-                    put("createOffer", new GrpcCallRateMeter(1, MINUTES));
-                    put("cancelOffer", new GrpcCallRateMeter(1, MINUTES));
-                }});
-
         return getCustomRateMeteringInterceptor(coreApi.getConfig().appDataDir, this.getClass())
-                .or(() -> Optional.of(defaultCallRateMeteringInterceptor));
+                .or(() -> Optional.of(CallRateMeteringInterceptor.valueOf(
+                        new HashMap<>() {{
+                            put("getOffer", new GrpcCallRateMeter(1, SECONDS));
+                            put("getMyOffer", new GrpcCallRateMeter(1, SECONDS));
+                            put("getOffers", new GrpcCallRateMeter(1, SECONDS));
+                            put("getMyOffers", new GrpcCallRateMeter(1, SECONDS));
+                            put("createOffer", new GrpcCallRateMeter(1, MINUTES));
+                            put("cancelOffer", new GrpcCallRateMeter(1, MINUTES));
+                        }}
+                )));
     }
 }
