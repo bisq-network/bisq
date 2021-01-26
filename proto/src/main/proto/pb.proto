@@ -1074,6 +1074,7 @@ message WesternUnionAccountPayload {
 
 message AmazonGiftCardAccountPayload {
     string email_or_mobile_nr = 1;
+    string country_code = 2;
 }
 
 message SepaAccountPayload {

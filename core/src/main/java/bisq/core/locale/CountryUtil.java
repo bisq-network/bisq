@@ -56,6 +56,16 @@ public class CountryUtil {
         return list;
     }
 
+    public static List<Country> getAllAmazonGiftCardCountries() {
+        List<Country> list = new ArrayList<>();
+        String[] codes = {"AU", "CA", "FR", "DE", "IT", "NL", "ES", "GB", "IN", "JP",
+                "SA", "SE", "SG", "TR", "US"};
+        populateCountryListByCodes(list, codes);
+        list.sort((a, b) -> a.name.compareTo(b.name));
+
+        return list;
+    }
+
     public static List<Country> getAllSepaInstantEuroCountries() {
         return getAllSepaEuroCountries();
     }
@@ -133,6 +143,8 @@ public class CountryUtil {
     }
 
     public static String getNameAndCode(String countryCode) {
+        if (countryCode.isEmpty())
+            return "";
         return getNameByCode(countryCode) + " (" + countryCode + ")";
     }
 
