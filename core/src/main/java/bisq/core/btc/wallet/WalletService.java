@@ -106,10 +106,10 @@ public abstract class WalletService {
     protected final Preferences preferences;
     protected final FeeService feeService;
     protected final NetworkParameters params;
-    protected final BisqWalletListener walletEventListener = new BisqWalletListener();
-    protected final CopyOnWriteArraySet<AddressConfidenceListener> addressConfidenceListeners = new CopyOnWriteArraySet<>();
-    protected final CopyOnWriteArraySet<TxConfidenceListener> txConfidenceListeners = new CopyOnWriteArraySet<>();
-    protected final CopyOnWriteArraySet<BalanceListener> balanceListeners = new CopyOnWriteArraySet<>();
+    private final BisqWalletListener walletEventListener = new BisqWalletListener();
+    private final CopyOnWriteArraySet<AddressConfidenceListener> addressConfidenceListeners = new CopyOnWriteArraySet<>();
+    private final CopyOnWriteArraySet<TxConfidenceListener> txConfidenceListeners = new CopyOnWriteArraySet<>();
+    private final CopyOnWriteArraySet<BalanceListener> balanceListeners = new CopyOnWriteArraySet<>();
     @Getter
     protected Wallet wallet;
     @Getter
@@ -138,9 +138,15 @@ public abstract class WalletService {
     // Lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    protected void addListenersToWallet() {
+        wallet.addCoinsReceivedEventListener(walletEventListener);
+        wallet.addCoinsSentEventListener(walletEventListener);
+        wallet.addReorganizeEventListener(walletEventListener);
+        wallet.addTransactionConfidenceEventListener(walletEventListener);
+    }
+
     public void shutDown() {
         if (wallet != null) {
-            //noinspection deprecation
             wallet.removeCoinsReceivedEventListener(walletEventListener);
             wallet.removeCoinsSentEventListener(walletEventListener);
             wallet.removeReorganizeEventListener(walletEventListener);
@@ -595,17 +601,13 @@ public abstract class WalletService {
         wallet.removeChangeEventListener(listener);
     }
 
-    @SuppressWarnings("deprecation")
     public void addNewBestBlockListener(NewBestBlockListener listener) {
-        //noinspection deprecation
         final BlockChain chain = walletsSetup.getChain();
         if (isWalletReady() && chain != null)
             chain.addNewBestBlockListener(listener);
     }
 
-    @SuppressWarnings("deprecation")
     public void removeNewBestBlockListener(NewBestBlockListener listener) {
-        //noinspection deprecation
         final BlockChain chain = walletsSetup.getChain();
         if (isWalletReady() && chain != null)
             chain.removeNewBestBlockListener(listener);
@@ -786,7 +788,6 @@ public abstract class WalletService {
     // bisqWalletEventListener
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @SuppressWarnings("deprecation")
     public class BisqWalletListener implements WalletCoinsReceivedEventListener, WalletCoinsSentEventListener, WalletReorganizeEventListener, TransactionConfidenceEventListener {
         @Override
         public void onCoinsReceived(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
