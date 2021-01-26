@@ -32,47 +32,75 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionConfidence;
 
+import com.google.common.base.Suppliers;
+
 import javafx.scene.control.Tooltip;
 
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.function.Supplier;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 class DepositListItem {
-    private final Logger log = LoggerFactory.getLogger(this.getClass());
-
     private final StringProperty balance = new SimpleStringProperty();
     private final BtcWalletService walletService;
     private Coin balanceAsCoin;
-    private final TxConfidenceIndicator txConfidenceIndicator;
-    private final Tooltip tooltip;
     private final String addressString;
     private String usage = "-";
     private TxConfidenceListener txConfidenceListener;
     private BalanceListener balanceListener;
     private int numTxOutputs = 0;
+    private final Supplier<LazyFields> lazyFieldsSupplier;
 
-    public DepositListItem(AddressEntry addressEntry, BtcWalletService walletService, CoinFormatter formatter) {
+    private static class LazyFields {
+        TxConfidenceIndicator txConfidenceIndicator;
+        Tooltip tooltip;
+    }
+
+    private LazyFields lazy() {
+        return lazyFieldsSupplier.get();
+    }
+
+    DepositListItem(AddressEntry addressEntry, BtcWalletService walletService, CoinFormatter formatter) {
         this.walletService = walletService;
 
         addressString = addressEntry.getAddressString();
 
-        // confidence
-        txConfidenceIndicator = new TxConfidenceIndicator();
-        txConfidenceIndicator.setId("funds-confidence");
-        tooltip = new Tooltip(Res.get("shared.notUsedYet"));
-        txConfidenceIndicator.setProgress(0);
-        txConfidenceIndicator.setTooltip(tooltip);
+        Address address = addressEntry.getAddress();
+        TransactionConfidence confidence = walletService.getConfidenceForAddress(address);
 
-        final Address address = addressEntry.getAddress();
+        // confidence
+        lazyFieldsSupplier = Suppliers.memoize(() -> new LazyFields() {{
+            txConfidenceIndicator = new TxConfidenceIndicator();
+            txConfidenceIndicator.setId("funds-confidence");
+            tooltip = new Tooltip(Res.get("shared.notUsedYet"));
+            txConfidenceIndicator.setProgress(0);
+            txConfidenceIndicator.setTooltip(tooltip);
+            if (confidence != null) {
+                GUIUtil.updateConfidence(confidence, tooltip, txConfidenceIndicator);
+            }
+        }});
+
+        if (confidence != null) {
+            txConfidenceListener = new TxConfidenceListener(confidence.getTransactionHash().toString()) {
+                @Override
+                public void onTransactionConfidenceChanged(TransactionConfidence confidence) {
+                    GUIUtil.updateConfidence(confidence, lazy().tooltip, lazy().txConfidenceIndicator);
+                }
+            };
+            walletService.addTxConfidenceListener(txConfidenceListener);
+        }
+
         balanceListener = new BalanceListener(address) {
             @Override
             public void onBalanceChanged(Coin balanceAsCoin, Transaction tx) {
                 DepositListItem.this.balanceAsCoin = balanceAsCoin;
                 DepositListItem.this.balance.set(formatter.formatCoin(balanceAsCoin));
-                GUIUtil.updateConfidence(walletService.getConfidenceForTxId(tx.getTxId().toString()), tooltip, txConfidenceIndicator);
+                var confidence = walletService.getConfidenceForTxId(tx.getTxId().toString());
+                GUIUtil.updateConfidence(confidence, lazy().tooltip, lazy().txConfidenceIndicator);
                 updateUsage(address);
             }
         };
@@ -82,19 +110,6 @@ class DepositListItem {
         balance.set(formatter.formatCoin(balanceAsCoin));
 
         updateUsage(address);
-
-        TransactionConfidence confidence = walletService.getConfidenceForAddress(address);
-        if (confidence != null) {
-            GUIUtil.updateConfidence(confidence, tooltip, txConfidenceIndicator);
-
-            txConfidenceListener = new TxConfidenceListener(confidence.getTransactionHash().toString()) {
-                @Override
-                public void onTransactionConfidenceChanged(TransactionConfidence confidence) {
-                    GUIUtil.updateConfidence(confidence, tooltip, txConfidenceIndicator);
-                }
-            };
-            walletService.addTxConfidenceListener(txConfidenceListener);
-        }
     }
 
     private void updateUsage(Address address) {
@@ -108,7 +123,7 @@ class DepositListItem {
     }
 
     public TxConfidenceIndicator getTxConfidenceIndicator() {
-        return txConfidenceIndicator;
+        return lazy().txConfidenceIndicator;
     }
 
     public String getAddressString() {
