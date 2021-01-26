@@ -51,6 +51,7 @@ class DepositListItem {
     private final String addressString;
     private String usage = "-";
     private TxConfidenceListener txConfidenceListener;
+    private BalanceListener balanceListener;
     private int numTxOutputs = 0;
 
     public DepositListItem(AddressEntry addressEntry, BtcWalletService walletService, CoinFormatter formatter) {
@@ -66,7 +67,7 @@ class DepositListItem {
         txConfidenceIndicator.setTooltip(tooltip);
 
         final Address address = addressEntry.getAddress();
-        walletService.addBalanceListener(new BalanceListener(address) {
+        balanceListener = new BalanceListener(address) {
             @Override
             public void onBalanceChanged(Coin balanceAsCoin, Transaction tx) {
                 DepositListItem.this.balanceAsCoin = balanceAsCoin;
@@ -74,7 +75,8 @@ class DepositListItem {
                 GUIUtil.updateConfidence(walletService.getConfidenceForTxId(tx.getTxId().toString()), tooltip, txConfidenceIndicator);
                 updateUsage(address);
             }
-        });
+        };
+        walletService.addBalanceListener(balanceListener);
 
         balanceAsCoin = walletService.getBalanceForAddress(address);
         balance.set(formatter.formatCoin(balanceAsCoin));
@@ -102,6 +104,7 @@ class DepositListItem {
 
     public void cleanup() {
         walletService.removeTxConfidenceListener(txConfidenceListener);
+        walletService.removeBalanceListener(balanceListener);
     }
 
     public TxConfidenceIndicator getTxConfidenceIndicator() {
