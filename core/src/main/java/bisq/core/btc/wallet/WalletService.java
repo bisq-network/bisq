@@ -72,6 +72,8 @@ import org.bitcoinj.wallet.listeners.WalletReorganizeEventListener;
 
 import javax.inject.Inject;
 
+import com.google.common.collect.ImmutableMultiset;
+import com.google.common.collect.Multiset;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -83,8 +85,10 @@ import org.bouncycastle.crypto.params.KeyParameter;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import lombok.Getter;
@@ -110,6 +114,8 @@ public abstract class WalletService {
     private final CopyOnWriteArraySet<AddressConfidenceListener> addressConfidenceListeners = new CopyOnWriteArraySet<>();
     private final CopyOnWriteArraySet<TxConfidenceListener> txConfidenceListeners = new CopyOnWriteArraySet<>();
     private final CopyOnWriteArraySet<BalanceListener> balanceListeners = new CopyOnWriteArraySet<>();
+    private final WalletChangeEventListener cacheInvalidationListener;
+    private final AtomicReference<Multiset<Address>> txOutputAddressCache = new AtomicReference<>();
     @Getter
     protected Wallet wallet;
     @Getter
@@ -131,6 +137,8 @@ public abstract class WalletService {
         this.feeService = feeService;
 
         params = walletsSetup.getParams();
+
+        cacheInvalidationListener = wallet -> txOutputAddressCache.set(null);
     }
 
 
@@ -143,6 +151,7 @@ public abstract class WalletService {
         wallet.addCoinsSentEventListener(walletEventListener);
         wallet.addReorganizeEventListener(walletEventListener);
         wallet.addTransactionConfidenceEventListener(walletEventListener);
+        wallet.addChangeEventListener(Threading.SAME_THREAD, cacheInvalidationListener);
     }
 
     public void shutDown() {
@@ -151,6 +160,7 @@ public abstract class WalletService {
             wallet.removeCoinsSentEventListener(walletEventListener);
             wallet.removeReorganizeEventListener(walletEventListener);
             wallet.removeTransactionConfidenceEventListener(walletEventListener);
+            wallet.removeChangeEventListener(cacheInvalidationListener);
         }
     }
 
@@ -496,16 +506,19 @@ public abstract class WalletService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public int getNumTxOutputsForAddress(Address address) {
-        List<TransactionOutput> transactionOutputs = new ArrayList<>();
-        wallet.getTransactions(false).forEach(t -> transactionOutputs.addAll(t.getOutputs()));
-        int outputs = 0;
-        for (TransactionOutput output : transactionOutputs) {
-            if (isOutputScriptConvertibleToAddress(output) &&
-                    address != null &&
-                    address.equals(getAddressFromOutput(output)))
-                outputs++;
-        }
-        return outputs;
+        return getTxOutputAddressMultiset().count(address);
+    }
+
+    private Multiset<Address> getTxOutputAddressMultiset() {
+        return txOutputAddressCache.updateAndGet(set -> set != null ? set : computeTxOutputAddressMultiset());
+    }
+
+    private Multiset<Address> computeTxOutputAddressMultiset() {
+        return wallet.getTransactions(false).stream()
+                .flatMap(t -> t.getOutputs().stream())
+                .map(WalletService::getAddressFromOutput)
+                .filter(Objects::nonNull)
+                .collect(ImmutableMultiset.toImmutableMultiset());
     }
 
     public boolean isAddressUnused(Address address) {
