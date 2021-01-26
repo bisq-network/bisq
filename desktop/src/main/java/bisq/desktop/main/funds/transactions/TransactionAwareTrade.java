@@ -36,12 +36,10 @@ import org.bitcoinj.core.TransactionOutput;
 import javafx.collections.ObservableList;
 
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-
 
 @Slf4j
 class TransactionAwareTrade implements TransactionAwareTradable {
@@ -65,32 +63,31 @@ class TransactionAwareTrade implements TransactionAwareTradable {
 
     @Override
     public boolean isRelatedToTransaction(Transaction transaction) {
-        String txId = transaction.getTxId().toString();
+        Sha256Hash hash = transaction.getTxId();
+        String txId = hash.toString();
 
         boolean isTakerOfferFeeTx = txId.equals(trade.getTakerFeeTxId());
         boolean isOfferFeeTx = isOfferFeeTx(txId);
-        boolean isDepositTx = isDepositTx(txId);
-        boolean isPayoutTx = isPayoutTx(txId);
+        boolean isDepositTx = isDepositTx(hash);
+        boolean isPayoutTx = isPayoutTx(hash);
         boolean isDisputedPayoutTx = isDisputedPayoutTx(txId);
-        boolean isDelayedPayoutTx = isDelayedPayoutTx(txId);
+        boolean isDelayedPayoutTx = transaction.getLockTime() != 0 && isDelayedPayoutTx(txId);
         boolean isRefundPayoutTx = isRefundPayoutTx(txId);
 
         return isTakerOfferFeeTx || isOfferFeeTx || isDepositTx || isPayoutTx ||
                 isDisputedPayoutTx || isDelayedPayoutTx || isRefundPayoutTx;
     }
 
-    private boolean isPayoutTx(String txId) {
+    private boolean isPayoutTx(Sha256Hash txId) {
         return Optional.ofNullable(trade.getPayoutTx())
                 .map(Transaction::getTxId)
-                .map(Sha256Hash::toString)
                 .map(hash -> hash.equals(txId))
                 .orElse(false);
     }
 
-    private boolean isDepositTx(String txId) {
+    private boolean isDepositTx(Sha256Hash txId) {
         return Optional.ofNullable(trade.getDepositTx())
                 .map(Transaction::getTxId)
-                .map(Sha256Hash::toString)
                 .map(hash -> hash.equals(txId))
                 .orElse(false);
     }
@@ -104,9 +101,11 @@ class TransactionAwareTrade implements TransactionAwareTradable {
 
     private boolean isDisputedPayoutTx(String txId) {
         String delegateId = trade.getId();
-
         ObservableList<Dispute> disputes = arbitrationManager.getDisputesAsObservableList();
-        return disputes.stream()
+
+        boolean isAnyDisputeRelatedToThis = arbitrationManager.getDisputedTradeIds().contains(trade.getId());
+
+        return isAnyDisputeRelatedToThis && disputes.stream()
                 .anyMatch(dispute -> {
                     String disputePayoutTxId = dispute.getDisputePayoutTxId();
                     boolean isDisputePayoutTx = txId.equals(disputePayoutTxId);
@@ -139,42 +138,37 @@ class TransactionAwareTrade implements TransactionAwareTradable {
                     if (parentTransaction == null) {
                         return false;
                     }
-                    return isDepositTx(parentTransaction.getTxId().toString());
+                    return isDepositTx(parentTransaction.getTxId());
                 });
     }
 
     private boolean isRefundPayoutTx(String txId) {
         String tradeId = trade.getId();
         ObservableList<Dispute> disputes = refundManager.getDisputesAsObservableList();
-        AtomicBoolean isRefundTx = new AtomicBoolean(false);
-        AtomicBoolean isDisputeRelatedToThis = new AtomicBoolean(false);
-        disputes.forEach(dispute -> {
-            String disputeTradeId = dispute.getTradeId();
-            isDisputeRelatedToThis.set(tradeId.equals(disputeTradeId));
-            if (isDisputeRelatedToThis.get()) {
-                Transaction tx = btcWalletService.getTransaction(txId);
-                if (tx != null) {
-                    tx.getOutputs().forEach(txo -> {
-                        if (btcWalletService.isTransactionOutputMine(txo)) {
-                            try {
-                                Address receiverAddress = txo.getScriptPubKey().getToAddress(btcWalletService.getParams());
-                                Contract contract = checkNotNull(trade.getContract());
-                                String myPayoutAddressString = contract.isMyRoleBuyer(pubKeyRing) ?
-                                        contract.getBuyerPayoutAddressString() :
-                                        contract.getSellerPayoutAddressString();
-                                if (receiverAddress != null && myPayoutAddressString.equals(receiverAddress.toString())) {
-                                    isRefundTx.set(true);
-                                }
-                            } catch (Throwable ignore) {
-                            }
 
+        boolean isAnyDisputeRelatedToThis = refundManager.getDisputedTradeIds().contains(tradeId);
+
+        if (isAnyDisputeRelatedToThis) {
+            Transaction tx = btcWalletService.getTransaction(txId);
+            if (tx != null) {
+                for (TransactionOutput txo : tx.getOutputs()) {
+                    if (btcWalletService.isTransactionOutputMine(txo)) {
+                        try {
+                            Address receiverAddress = txo.getScriptPubKey().getToAddress(btcWalletService.getParams());
+                            Contract contract = checkNotNull(trade.getContract());
+                            String myPayoutAddressString = contract.isMyRoleBuyer(pubKeyRing) ?
+                                    contract.getBuyerPayoutAddressString() :
+                                    contract.getSellerPayoutAddressString();
+                            if (receiverAddress != null && myPayoutAddressString.equals(receiverAddress.toString())) {
+                                return true;
+                            }
+                        } catch (RuntimeException ignore) {
                         }
-                    });
+                    }
                 }
             }
-        });
-
-        return isRefundTx.get() && isDisputeRelatedToThis.get();
+        }
+        return false;
     }
 
     @Override
