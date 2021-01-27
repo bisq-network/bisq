@@ -36,7 +36,7 @@ import bisq.core.dao.node.messages.NewBlockBroadcastMessage;
 import bisq.core.filter.Filter;
 import bisq.core.network.p2p.inventory.messages.GetInventoryRequest;
 import bisq.core.network.p2p.inventory.messages.GetInventoryResponse;
-import bisq.core.offer.OfferPayload;
+import bisq.core.offer.FeeTxOfferPayload;
 import bisq.core.offer.messages.OfferAvailabilityRequest;
 import bisq.core.offer.messages.OfferAvailabilityResponse;
 import bisq.core.proto.CoreProtoResolver;
@@ -274,7 +274,7 @@ public class CoreNetworkProtoResolver extends CoreProtoResolver implements Netwo
                 case MAILBOX_STORAGE_PAYLOAD:
                     return MailboxStoragePayload.fromProto(proto.getMailboxStoragePayload());
                 case OFFER_PAYLOAD:
-                    return OfferPayload.fromProto(proto.getOfferPayload());
+                    return FeeTxOfferPayload.fromProto(proto.getOfferPayload());
                 case TEMP_PROPOSAL_PAYLOAD:
                     return TempProposalPayload.fromProto(proto.getTempProposalPayload());
                 default:
