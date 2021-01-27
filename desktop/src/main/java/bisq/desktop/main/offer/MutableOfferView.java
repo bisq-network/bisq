@@ -117,6 +117,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import lombok.Setter;
+
 import org.jetbrains.annotations.NotNull;
 
 import static bisq.core.payment.payload.PaymentMethod.HAL_CASH_ID;
@@ -177,6 +179,9 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
             buyerSecurityDepositInfoInputTextField, triggerPriceInfoInputTextField;
     private AutoTooltipSlideToggleButton tradeFeeInBtcToggle, tradeFeeInBsqToggle;
     private Text xIcon, fakeXIcon;
+
+    @Setter
+    private OfferView.OfferActionHandler offerActionHandler;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -300,7 +305,10 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
         model.getDataModel().onTabSelected(isSelected);
     }
 
-    public void initWithData(OfferPayload.Direction direction, TradeCurrency tradeCurrency) {
+    public void initWithData(OfferPayload.Direction direction, TradeCurrency tradeCurrency,
+                             OfferView.OfferActionHandler offerActionHandler) {
+        this.offerActionHandler = offerActionHandler;
+
         boolean result = model.initWithData(direction, tradeCurrency);
 
         if (!result) {
@@ -525,6 +533,11 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
 
         PaymentAccount paymentAccount = paymentAccountsComboBox.getSelectionModel().getSelectedItem();
         if (paymentAccount != null) {
+            if (paymentAccount.getPaymentMethod() == PaymentMethod.ATOMIC) {
+                if (offerActionHandler != null)
+                    offerActionHandler.onCreateOffer(paymentAccount.getSelectedTradeCurrency());
+                return;
+            }
             maybeShowClearXchangeWarning(paymentAccount);
             maybeShowFasterPaymentsWarning(paymentAccount);
             maybeShowAccountWarning(paymentAccount, model.getDataModel().isBuyOffer());

@@ -188,7 +188,7 @@ public class CreateOfferService {
                 creationTime,
                 makerAddress,
                 pubKeyRing,
-                OfferPayloadI.Direction.valueOf(direction.name()),
+                direction,
                 priceAsLong,
                 marketPriceMarginParam,
                 useMarketBasedPriceValue,
@@ -227,8 +227,45 @@ public class CreateOfferService {
         return offer;
     }
 
+    public Offer createAndGetAtomicOffer(String offerId,
+                                         OfferPayloadI.Direction direction,
+                                         Coin amount,
+                                         Coin minAmount,
+                                         Price price,
+                                         PaymentAccount paymentAccount) {
+
+        log.info("offerId={}, \n" +
+                        "direction={}, \n" +
+                        "price={}, \n" +
+                        "amount={}, \n" +
+                        "minAmount={}, \n",
+                offerId,
+                direction,
+                price.getValue(),
+                amount.value,
+                minAmount.value);
+
+        long creationTime = new Date().getTime();
+        NodeAddress makerAddress = p2PService.getAddress();
+        var currencyCode = paymentAccount.getTradeCurrency().get().getCode();
+
+        offerUtil.validateBasicOfferData(paymentAccount, currencyCode);
+
+        OfferPayloadI atomicOfferPayload = new AtomicOfferPayload(offerId,
+                creationTime,
+                makerAddress,
+                pubKeyRing,
+                direction,
+                price.getValue(),
+                amount.getValue(),
+                minAmount.getValue(),
+                Version.VERSION,
+                Version.TRADE_PROTOCOL_VERSION);
+        return new Offer(atomicOfferPayload);
+    }
+
     public Tuple2<Coin, Integer> getEstimatedFeeAndTxVsize(Coin amount,
-                                                           OfferPayload.Direction direction,
+                                                           OfferPayloadI.Direction direction,
                                                            double buyerSecurityDeposit,
                                                            double sellerSecurityDeposit) {
         Coin reservedFundsForOffer = getReservedFundsForOffer(direction,
@@ -239,7 +276,7 @@ public class CreateOfferService {
                 offerUtil.getMakerFee(amount));
     }
 
-    public Coin getReservedFundsForOffer(OfferPayload.Direction direction,
+    public Coin getReservedFundsForOffer(OfferPayloadI.Direction direction,
                                          Coin amount,
                                          double buyerSecurityDeposit,
                                          double sellerSecurityDeposit) {
@@ -254,7 +291,7 @@ public class CreateOfferService {
         return reservedFundsForOffer;
     }
 
-    public Coin getSecurityDeposit(OfferPayload.Direction direction,
+    public Coin getSecurityDeposit(OfferPayloadI.Direction direction,
                                    Coin amount,
                                    double buyerSecurityDeposit,
                                    double sellerSecurityDeposit) {

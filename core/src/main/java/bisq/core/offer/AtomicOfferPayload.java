@@ -17,6 +17,8 @@
 
 package bisq.core.offer;
 
+import bisq.core.payment.payload.PaymentMethod;
+
 import bisq.network.p2p.NodeAddress;
 
 import bisq.common.crypto.PubKeyRing;
@@ -49,6 +51,11 @@ public final class AtomicOfferPayload extends OfferPayloadI {
     @JsonExclude
     private final PubKeyRing pubKeyRing;
     private final Direction direction;
+    private final long price;
+    private final long amount;
+    private final long minAmount;
+    private final String versionNr;
+    private final int protocolVersion;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -58,12 +65,22 @@ public final class AtomicOfferPayload extends OfferPayloadI {
                               long date,
                               NodeAddress ownerNodeAddress,
                               PubKeyRing pubKeyRing,
-                              Direction direction) {
+                              Direction direction,
+                              long price,
+                              long amount,
+                              long minAmount,
+                              String versionNr,
+                              int protocolVersion) {
         this.id = id;
         this.date = date;
         this.ownerNodeAddress = ownerNodeAddress;
         this.pubKeyRing = pubKeyRing;
         this.direction = direction;
+        this.price = price;
+        this.amount = amount;
+        this.minAmount = minAmount;
+        this.versionNr = versionNr;
+        this.protocolVersion = protocolVersion;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -84,7 +101,12 @@ public final class AtomicOfferPayload extends OfferPayloadI {
                 .setDate(date)
                 .setOwnerNodeAddress(ownerNodeAddress.toProtoMessage())
                 .setPubKeyRing(pubKeyRing.toProtoMessage())
-                .setDirection(toProtoMessage(direction));
+                .setDirection(toProtoMessage(direction))
+                .setPrice(price)
+                .setAmount(amount)
+                .setMinAmount(minAmount)
+                .setVersionNr(versionNr)
+                .setProtocolVersion(protocolVersion);
 
         return protobuf.StoragePayload.newBuilder().setAtomicOfferPayload(builder).build();
     }
@@ -94,23 +116,18 @@ public final class AtomicOfferPayload extends OfferPayloadI {
                 proto.getDate(),
                 NodeAddress.fromProto(proto.getOwnerNodeAddress()),
                 PubKeyRing.fromProto(proto.getPubKeyRing()),
-                fromProto(proto.getDirection()));
+                fromProto(proto.getDirection()),
+                proto.getPrice(),
+                proto.getAmount(),
+                proto.getMinAmount(),
+                proto.getVersionNr(),
+                proto.getProtocolVersion());
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public long getAmount() {
-        return 0;
-    }
-
-    @Override
-    public long getMinAmount() {
-        return 0;
-    }
 
     @Override
     public String getBaseCurrencyCode() {
@@ -160,22 +177,7 @@ public final class AtomicOfferPayload extends OfferPayloadI {
 
     @Override
     public String getPaymentMethodId() {
-        return null;
-    }
-
-    @Override
-    public long getPrice() {
-        return 0;
-    }
-
-    @Override
-    public int getProtocolVersion() {
-        return 0;
-    }
-
-    @Override
-    public String getVersionNr() {
-        return null;
+        return PaymentMethod.ATOMIC_ID;
     }
 
     @Override
@@ -202,6 +204,10 @@ public final class AtomicOfferPayload extends OfferPayloadI {
                 ",\n     ownerNodeAddress=" + ownerNodeAddress +
                 ",\n     pubKeyRing=" + pubKeyRing +
                 ",\n     direction=" + direction +
+                ",\n     amount=" + amount +
+                ",\n     minAmount=" + minAmount +
+                ",\n     versionNr='" + versionNr +
+                ",\n     protocolVersion=" + protocolVersion +
                 "\n}";
     }
 }

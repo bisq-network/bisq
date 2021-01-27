@@ -273,7 +273,7 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
             if (model.getDirectionLabel(item).contains(filterString)) {
                 return true;
             }
-            if (offer.getOfferFeePaymentTxId().contains(filterString)) {
+            if (offer.getOfferFeePaymentTxId() != null && offer.getOfferFeePaymentTxId().contains(filterString)) {
                 return true;
             }
 

@@ -22,6 +22,7 @@ import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.View;
 import bisq.desktop.common.view.ViewLoader;
 import bisq.desktop.main.MainView;
+import bisq.desktop.main.offer.createoffer.AtomicCreateOfferView;
 import bisq.desktop.main.offer.createoffer.CreateOfferView;
 import bisq.desktop.main.offer.offerbook.OfferBookView;
 import bisq.desktop.main.offer.takeoffer.TakeOfferView;
@@ -58,6 +59,7 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
 
     private OfferBookView offerBookView;
     private CreateOfferView createOfferView;
+    private AtomicCreateOfferView atomicCreateOfferView;
     private TakeOfferView takeOfferView;
     private AnchorPane createOfferPane, takeOfferPane;
     private Tab takeOfferTab, createOfferTab, offerBookTab;
@@ -76,6 +78,7 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
     private Navigation.Listener navigationListener;
     private ChangeListener<Tab> tabChangeListener;
     private ListChangeListener<Tab> tabListChangeListener;
+    private OfferView.OfferActionHandler offerActionHandler;
 
     protected OfferView(ViewLoader viewLoader,
                         Navigation navigation,
@@ -103,6 +106,8 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
             if (newValue != null) {
                 if (newValue.equals(createOfferTab) && createOfferView != null) {
                     createOfferView.onTabSelected(true);
+                } else if (newValue.equals(createOfferTab) && atomicCreateOfferView != null) {
+                    atomicCreateOfferView.onTabSelected(true);
                 } else if (newValue.equals(takeOfferTab) && takeOfferView != null) {
                     takeOfferView.onTabSelected(true);
                 } else if (newValue.equals(offerBookTab) && offerBookView != null) {
@@ -112,6 +117,8 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
             if (oldValue != null) {
                 if (oldValue.equals(createOfferTab) && createOfferView != null) {
                     createOfferView.onTabSelected(false);
+                } else if (oldValue.equals(createOfferTab) && atomicCreateOfferView != null) {
+                    atomicCreateOfferView.onTabSelected(false);
                 } else if (oldValue.equals(takeOfferTab) && takeOfferView != null) {
                     takeOfferView.onTabSelected(false);
                 } else if (oldValue.equals(offerBookTab) && offerBookView != null) {
@@ -127,6 +134,29 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
                     onCreateOfferViewRemoved();
                 else if (removedTabs.get(0).getContent().equals(takeOfferPane))
                     onTakeOfferViewRemoved();
+            }
+        };
+
+
+        offerActionHandler = new OfferActionHandler() {
+            @Override
+            public void onCreateOffer(TradeCurrency tradeCurrency) {
+                if (createOfferViewOpen) {
+                    root.getTabs().remove(createOfferTab);
+                }
+                if (canCreateOrTakeOffer()) {
+                    openCreateOffer(tradeCurrency);
+                }
+            }
+
+            @Override
+            public void onTakeOffer(Offer offer) {
+                if (takeOfferViewOpen) {
+                    root.getTabs().remove(takeOfferTab);
+                }
+                if (canCreateOrTakeOffer()) {
+                    openTakeOffer(offer);
+                }
             }
         };
     }
@@ -151,7 +181,10 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
         root.getTabs().removeListener(tabListChangeListener);
     }
 
-    private String getCreateOfferTabName() {
+    private String getCreateOfferTabName(Class viewClass) {
+        if (viewClass == AtomicCreateOfferView.class) {
+            return Res.get("offerbook.atomic.createOffer").toUpperCase();
+        }
         return Res.get("offerbook.createOffer").toUpperCase();
     }
 
@@ -174,28 +207,6 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
             tabPane.getTabs().add(offerBookTab);
             offerBookView = (OfferBookView) view;
             offerBookView.onTabSelected(true);
-
-            OfferActionHandler offerActionHandler = new OfferActionHandler() {
-                @Override
-                public void onCreateOffer(TradeCurrency tradeCurrency) {
-                    if (createOfferViewOpen) {
-                        tabPane.getTabs().remove(createOfferTab);
-                    }
-                    if (canCreateOrTakeOffer()) {
-                        openCreateOffer(tradeCurrency);
-                    }
-                }
-
-                @Override
-                public void onTakeOffer(Offer offer) {
-                    if (takeOfferViewOpen) {
-                        tabPane.getTabs().remove(takeOfferTab);
-                    }
-                    if (canCreateOrTakeOffer()) {
-                        openTakeOffer(offer);
-                    }
-                }
-            };
             offerBookView.setOfferActionHandler(offerActionHandler);
             offerBookView.setDirection(direction);
         } else if (viewClass == CreateOfferView.class && createOfferView == null) {
@@ -203,15 +214,29 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
             // CreateOffer and TakeOffer must not be cached by ViewLoader as we cannot use a view multiple times
             // in different graphs
             createOfferView = (CreateOfferView) view;
-            createOfferView.initWithData(direction, tradeCurrency);
+            createOfferView.initWithData(direction, tradeCurrency, offerActionHandler);
             createOfferPane = createOfferView.getRoot();
-            createOfferTab = new Tab(getCreateOfferTabName());
+            createOfferTab = new Tab(getCreateOfferTabName(viewClass));
             createOfferTab.setClosable(true);
             // close handler from close on create offer action
             createOfferView.setCloseHandler(() -> tabPane.getTabs().remove(createOfferTab));
             createOfferTab.setContent(createOfferPane);
             tabPane.getTabs().add(createOfferTab);
             tabPane.getSelectionModel().select(createOfferTab);
+            createOfferViewOpen = true;
+        } else if (viewClass == AtomicCreateOfferView.class && atomicCreateOfferView == null) {
+            view = viewLoader.load(viewClass);
+            atomicCreateOfferView = (AtomicCreateOfferView) view;
+            atomicCreateOfferView.initWithData(direction, tradeCurrency, offerActionHandler);
+            createOfferPane = atomicCreateOfferView.getRoot();
+            createOfferTab = new Tab(getCreateOfferTabName(viewClass));
+            createOfferTab.setClosable(true);
+            // close handler from close on create offer action
+            atomicCreateOfferView.setCloseHandler(() -> tabPane.getTabs().remove(createOfferTab));
+            createOfferTab.setContent(createOfferPane);
+            tabPane.getTabs().add(createOfferTab);
+            tabPane.getSelectionModel().select(createOfferTab);
+            createOfferViewOpen = true;
         } else if (viewClass == TakeOfferView.class && takeOfferView == null && offer != null) {
             view = viewLoader.load(viewClass);
             // CreateOffer and TakeOffer must not be cached by ViewLoader as we cannot use a view multiple times
@@ -260,6 +285,11 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
     private void openCreateOffer(TradeCurrency tradeCurrency) {
         OfferView.this.createOfferViewOpen = true;
         OfferView.this.tradeCurrency = tradeCurrency;
+        if (tradeCurrency.getCode().equals("BSQ")) {
+            OfferView.this.navigation.navigateTo(MainView.class, OfferView.this.getClass(),
+                    AtomicCreateOfferView.class);
+            return;
+        }
         OfferView.this.navigation.navigateTo(MainView.class, OfferView.this.getClass(), CreateOfferView.class);
     }
 
@@ -268,6 +298,9 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
         if (createOfferView != null) {
             createOfferView.onClose();
             createOfferView = null;
+        }
+        if (atomicCreateOfferView != null) {
+            atomicCreateOfferView = null;
         }
         offerBookView.enableCreateOfferButton();
 

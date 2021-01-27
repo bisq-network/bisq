@@ -805,6 +805,11 @@ message AtomicOfferPayload {
     NodeAddress owner_node_address = 3;
     PubKeyRing pub_key_ring = 4;
     OfferDirection direction = 5;
+    int64 price = 6;
+    int64 amount = 7;
+    int64 min_amount = 8;
+    string version_nr = 9;
+    int32 protocol_version = 10;
 }
 
 message AccountAgeWitness {

@@ -21,6 +21,7 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
+import bisq.core.offer.AtomicOfferPayload;
 import bisq.core.offer.Offer;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.proto.CoreProtoResolver;
@@ -1056,6 +1057,9 @@ public abstract class Trade implements Tradable, Model {
         return arbitratorBtcPubKey;
     }
 
+    public boolean isAtomic() {
+        return offer != null && offer.getOfferPayloadI() instanceof AtomicOfferPayload;
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private

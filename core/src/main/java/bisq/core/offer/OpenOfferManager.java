@@ -30,6 +30,8 @@ import bisq.core.offer.messages.OfferAvailabilityRequest;
 import bisq.core.offer.messages.OfferAvailabilityResponse;
 import bisq.core.offer.placeoffer.PlaceOfferModel;
 import bisq.core.offer.placeoffer.PlaceOfferProtocol;
+import bisq.core.offer.placeoffer.atomic.AtomicPlaceOfferModel;
+import bisq.core.offer.placeoffer.atomic.AtomicPlaceOfferProtocol;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 import bisq.core.support.dispute.mediation.mediator.MediatorManager;
@@ -93,6 +95,7 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMessageListener, PersistedDataHost {
@@ -407,6 +410,35 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                 errorMessageHandler
         );
         placeOfferProtocol.placeOffer();
+    }
+
+    public void placeAtomicOffer(Offer offer,
+                                 TransactionResultHandler resultHandler,
+                                 ErrorMessageHandler errorMessageHandler) {
+        checkArgument(offer.getOfferPayloadI() instanceof AtomicOfferPayload);
+        var atomicModel = new AtomicPlaceOfferModel(offer,
+                offerBookService,
+                tradeStatisticsManager,
+                daoFacade,
+                user,
+                filterManager);
+
+        var atomicPlaceOfferProtocol = new AtomicPlaceOfferProtocol(atomicModel,
+                transaction -> {
+                    OpenOffer openOffer = new OpenOffer(offer, 0);
+                    openOffers.add(openOffer);
+                    requestPersistence();
+                    resultHandler.handleResult(transaction);
+                    if (!stopped) {
+                        startPeriodicRepublishOffersTimer();
+                        startPeriodicRefreshOffersTimer();
+                    } else {
+                        log.debug("We have stopped already. We ignore that placeOfferProtocol.placeOffer.onResult call.");
+                    }
+                },
+                errorMessageHandler
+        );
+        atomicPlaceOfferProtocol.placeOffer();
     }
 
     // Remove from offerbook

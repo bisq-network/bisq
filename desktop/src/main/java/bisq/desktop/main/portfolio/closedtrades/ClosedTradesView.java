@@ -425,7 +425,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
             if (offer.getPaymentMethod().getDisplayString().contains(filterString)) {
                 return true;
             }
-            if (offer.getOfferFeePaymentTxId().contains(filterString)) {
+            if (offer.getOfferFeePaymentTxId() != null && offer.getOfferFeePaymentTxId().contains(filterString)) {
                 return true;
             }
 

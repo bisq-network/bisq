@@ -350,14 +350,18 @@ public class OfferUtil {
                                   PaymentAccount paymentAccount,
                                   String currencyCode,
                                   Coin makerFeeAsCoin) {
+        validateBasicOfferData(paymentAccount, currencyCode);
         checkNotNull(makerFeeAsCoin, "makerFee must not be null");
-        checkNotNull(p2PService.getAddress(), "Address must not be null");
         checkArgument(buyerSecurityDeposit <= getMaxBuyerSecurityDepositAsPercent(),
                 "securityDeposit must not exceed " +
                         getMaxBuyerSecurityDepositAsPercent());
         checkArgument(buyerSecurityDeposit >= getMinBuyerSecurityDepositAsPercent(),
                 "securityDeposit must not be less than " +
                         getMinBuyerSecurityDepositAsPercent());
+    }
+
+    public void validateBasicOfferData(PaymentAccount paymentAccount, String currencyCode) {
+        checkNotNull(p2PService.getAddress(), "Address must not be null");
         checkArgument(!filterManager.isCurrencyBanned(currencyCode),
                 Res.get("offerbook.warning.currencyBanned"));
         checkArgument(!filterManager.isPaymentMethodBanned(paymentAccount.getPaymentMethod()),

@@ -32,6 +32,7 @@ import bisq.core.btc.wallet.http.MemPoolSpaceTxBroadcaster;
 import bisq.core.dao.governance.voteresult.VoteResultException;
 import bisq.core.dao.state.unconfirmed.UnconfirmedBsqChangeOutputListService;
 import bisq.core.locale.Res;
+import bisq.core.offer.OfferPayload;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.payment.AmazonGiftCardAccount;
 import bisq.core.payment.PaymentAccount;
@@ -525,6 +526,9 @@ public class BisqSetup {
         // miner fee was too low and the transaction got removed from mempool and got out from our wallet after a
         // resync.
         openOfferManager.getObservableList().forEach(e -> {
+            if (!(e.getOffer().getOfferPayloadI() instanceof OfferPayload)) {
+                return;
+            }
             String offerFeePaymentTxId = e.getOffer().getOfferFeePaymentTxId();
             if (btcWalletService.getConfidenceForTxId(offerFeePaymentTxId) == null) {
                 String message = Res.get("popup.warning.openOfferWithInvalidMakerFeeTx",
