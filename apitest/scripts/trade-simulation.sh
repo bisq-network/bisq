@@ -86,18 +86,7 @@ printdate "ALICE $ALICE_ROLE:  Creating $DIRECTION $CURRENCY_CODE offer with pay
 CURRENT_PRICE=$(getcurrentprice "$ALICE_PORT" "$CURRENCY_CODE")
 exitoncommandalert $?
 printdate "Current Market Price: $CURRENT_PRICE"
-CMD="$CLI_BASE --port=$ALICE_PORT createoffer"
-CMD+=" --payment-account=$ALICE_ACCT_ID"
-CMD+=" --direction=$DIRECTION"
-CMD+=" --currency-code=$CURRENCY_CODE"
-CMD+=" --amount=$AMOUNT"
-if [ -z "$MKT_PRICE_MARGIN" ]; then
-    CMD+=" --fixed-price=$FIXED_PRICE"
-else
-    CMD+=" --market-price-margin=$MKT_PRICE_MARGIN"
-fi
-CMD+=" --security-deposit=15.0"
-CMD+=" --fee-currency=BSQ"
+CMD=$(gencreateoffercommand "$ALICE_PORT" "$ALICE_ACCT_ID")
 printdate "ALICE CLI: $CMD"
 OFFER_ID=$(createoffer "$CMD")
 exitoncommandalert $?

@@ -179,6 +179,24 @@ showcreatepaymentacctsteps() {
     printbreak
 }
 
+gencreateoffercommand() {
+    PORT="$1"
+    ACCT_ID="$2"
+    CMD="$CLI_BASE --port=$PORT createoffer"
+    CMD+=" --payment-account=$ACCT_ID"
+    CMD+=" --direction=$DIRECTION"
+    CMD+=" --currency-code=$CURRENCY_CODE"
+    CMD+=" --amount=$AMOUNT"
+    if [ -z "$MKT_PRICE_MARGIN" ]; then
+        CMD+=" --fixed-price=$FIXED_PRICE"
+    else
+        CMD+=" --market-price-margin=$MKT_PRICE_MARGIN"
+    fi
+    CMD+=" --security-deposit=15.0"
+    CMD+=" --fee-currency=BSQ"
+    echo "$CMD"
+}
+
 createoffer() {
     CREATE_OFFER_CMD="$1"
     OFFER_DESC=$($CREATE_OFFER_CMD)
