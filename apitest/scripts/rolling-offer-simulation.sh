@@ -79,12 +79,7 @@ printdate "Bob's F2F payment-account-id: $BOB_ACCT_ID, currency-code: $CURRENCY_
 exitoncommandalert $?
 printbreak
 
-DONE=0
 while : ; do
-    if [ "$DONE" -ne 0 ]; then
-        break
-    fi
-
     printdate "ALICE $ALICE_ROLE:  Creating $DIRECTION $CURRENCY_CODE offer with payment acct $ALICE_ACCT_ID."
     CURRENT_PRICE=$(getcurrentprice "$ALICE_PORT" "$CURRENCY_CODE")
     exitoncommandalert $?
