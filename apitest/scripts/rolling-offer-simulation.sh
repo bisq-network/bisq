@@ -113,7 +113,7 @@ while : ; do
     printbreak
     sleeptraced 3
 
-    RANDOM_WAIT=$(echo $((1 + $RANDOM % 10)))
+    RANDOM_WAIT=$(echo $[$RANDOM % 10 + 1])
     printdate "Bob will take Alice's offer in $RANDOM_WAIT seconds..."
     sleeptraced "$RANDOM_WAIT"
 
