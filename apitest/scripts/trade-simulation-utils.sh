@@ -221,6 +221,55 @@ getfirstofferid() {
     echo "$FIRST_OFFER_ID"
 }
 
+gettrade() {
+    GET_TRADE_CMD="$1"
+    TRADE_DESC=$($GET_TRADE_CMD)
+    commandalert $? "Could not get trade."
+    echo "$TRADE_DESC"
+}
+
+gettradedetail() {
+    TRADE_DESC="$1"
+    TRADE_DETAIL=$(echo -e "$TRADE_DESC" | sed -n '2p')
+    commandalert $? "Could not get trade detail (line 2 of gettrade output)."
+    echo "$TRADE_DETAIL"
+}
+
+istradedepositpublished() {
+    TRADE_DETAIL="$1"
+    ANSWER=$(echo -e "$TRADE_DETAIL" | awk '{print $10}')
+    commandalert $? "Could not parse istradedepositpublished (column 10 of trade detail)."
+    echo "$ANSWER"
+}
+
+istradedepositconfirmed() {
+    TRADE_DETAIL="$1"
+    ANSWER=$(echo -e "$TRADE_DETAIL" | awk '{print $11}')
+    commandalert $? "Could not parse istradedepositconfirmed (column 11 of trade detail)."
+    echo "$ANSWER"
+}
+
+istradepaymentsent() {
+    TRADE_DETAIL="$1"
+    ANSWER=$(echo -e "$TRADE_DETAIL" | awk '{print $12}')
+    commandalert $? "Could not parse istradepaymentsent (column 12 of trade detail)."
+    echo "$ANSWER"
+}
+
+istradepaymentreceived() {
+    TRADE_DETAIL="$1"
+    ANSWER=$(echo -e "$TRADE_DETAIL" | awk '{print $13}')
+    commandalert $? "Could not parse istradepaymentreceived (column 13 of trade detail)."
+    echo "$ANSWER"
+}
+
+istradepayoutpublished() {
+    TRADE_DETAIL="$1"
+    ANSWER=$(echo -e "$TRADE_DETAIL" | awk '{print $14}')
+    commandalert $? "Could not parse istradepayoutpublished (column 14 of trade detail)."
+    echo "$ANSWER"
+}
+
 # This is a large function that should be broken up if it ever makes sense to not treat a trade
 # execution simulation as an atomic operation.  But we are not testing api methods here, just
 # demonstrating how to use them to get through the trade protocol.  It should work for any trade
