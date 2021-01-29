@@ -86,7 +86,6 @@ import javafx.beans.property.SimpleIntegerProperty;
 import org.bouncycastle.crypto.params.KeyParameter;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -430,11 +429,14 @@ public abstract class WalletService {
         return null;
     }
 
+    @Nullable
     private TransactionConfidence getTransactionConfidence(Transaction tx, Address address) {
-        boolean matchesAddress = getOutputsWithConnectedOutputs(tx).stream()
-                .anyMatch(output -> address != null && address.equals(getAddressFromOutput(output)));
-
-        return matchesAddress ? getMostRecentConfidence(List.of(tx.getConfidence())) : null;
+        List<TransactionConfidence> transactionConfidenceList = getOutputsWithConnectedOutputs(tx).stream()
+                .filter(output -> address != null && address.equals(getAddressFromOutput(output)))
+                .flatMap(o -> Stream.ofNullable(o.getParentTransaction()))
+                .map(Transaction::getConfidence)
+                .collect(Collectors.toList());
+        return getMostRecentConfidence(transactionConfidenceList);
     }
 
 
@@ -458,7 +460,7 @@ public abstract class WalletService {
     }
 
     @Nullable
-    protected TransactionConfidence getMostRecentConfidence(List<TransactionConfidence> transactionConfidenceList) {
+    private TransactionConfidence getMostRecentConfidence(List<TransactionConfidence> transactionConfidenceList) {
         TransactionConfidence transactionConfidence = null;
         for (TransactionConfidence confidence : transactionConfidenceList) {
             if (confidence != null) {
@@ -839,10 +841,8 @@ public abstract class WalletService {
         @Override
         public void onTransactionConfidenceChanged(Wallet wallet, Transaction tx) {
             for (AddressConfidenceListener addressConfidenceListener : addressConfidenceListeners) {
-                TransactionConfidence transactionConfidence = getMostRecentConfidence(Collections.singletonList(
-                        getTransactionConfidence(tx, addressConfidenceListener.getAddress())
-                ));
-                addressConfidenceListener.onTransactionConfidenceChanged(transactionConfidence);
+                TransactionConfidence confidence = getTransactionConfidence(tx, addressConfidenceListener.getAddress());
+                addressConfidenceListener.onTransactionConfidenceChanged(confidence);
             }
             txConfidenceListeners.stream()
                     .filter(txConfidenceListener -> tx != null &&
