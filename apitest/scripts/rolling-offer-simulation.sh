@@ -105,13 +105,12 @@ while : ; do
     exitoncommandalert $?
     echo "$OFFER"
     printbreak
-    sleeptraced 5
+    sleeptraced 3
 
     # Generate some btc blocks.
     printdate "Generating btc blocks after publishing Alice's offer."
-    genbtcblocks 3 5
+    genbtcblocks 3 2
     printbreak
-    sleeptraced 3
 
     RANDOM_WAIT=$(echo $[$RANDOM % 10 + 1])
     printdate "Bob will take Alice's offer in $RANDOM_WAIT seconds..."
