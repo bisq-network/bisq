@@ -91,7 +91,9 @@ public class WalletsManager {
         return baseCurrencyWalletDetails + bsqWalletDetails;
     }
 
-    public void restoreSeedWords(@Nullable DeterministicSeed seed, ResultHandler resultHandler, ExceptionHandler exceptionHandler) {
+    public void restoreSeedWords(@Nullable DeterministicSeed seed,
+                                 ResultHandler resultHandler,
+                                 ExceptionHandler exceptionHandler) {
         walletsSetup.restoreSeedWords(seed, resultHandler, exceptionHandler);
     }
 
@@ -140,7 +142,15 @@ public class WalletsManager {
         tradeWalletService.setAesKey(aesKey);
     }
 
-    public DeterministicSeed getDecryptedSeed(KeyParameter aesKey, DeterministicSeed keyChainSeed, KeyCrypter keyCrypter) {
+    public void maybeAddSegwitKeychains(KeyParameter aesKey) {
+        var walletConfig = walletsSetup.getWalletConfig();
+        walletConfig.maybeAddSegwitKeychain(walletConfig.btcWallet(), aesKey, false);
+        walletConfig.maybeAddSegwitKeychain(walletConfig.bsqWallet(), aesKey, true);
+    }
+
+    public DeterministicSeed getDecryptedSeed(KeyParameter aesKey,
+                                              DeterministicSeed keyChainSeed,
+                                              KeyCrypter keyCrypter) {
         if (keyCrypter != null) {
             return keyChainSeed.decrypt(keyCrypter, "", aesKey);
         } else {

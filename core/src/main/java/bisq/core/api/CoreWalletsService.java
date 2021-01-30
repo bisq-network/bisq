@@ -31,7 +31,6 @@ import bisq.core.btc.exceptions.TransactionVerificationException;
 import bisq.core.btc.exceptions.WalletException;
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.model.BsqTransferModel;
-import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BsqTransferService;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
@@ -97,7 +96,6 @@ class CoreWalletsService {
     private final CoreContext coreContext;
     private final Balances balances;
     private final WalletsManager walletsManager;
-    private final WalletsSetup walletsSetup;
     private final BsqWalletService bsqWalletService;
     private final BsqTransferService bsqTransferService;
     private final BsqFormatter bsqFormatter;
@@ -119,7 +117,6 @@ class CoreWalletsService {
                               CoreContext coreContext,
                               Balances balances,
                               WalletsManager walletsManager,
-                              WalletsSetup walletsSetup,
                               BsqWalletService bsqWalletService,
                               BsqTransferService bsqTransferService,
                               BsqFormatter bsqFormatter,
@@ -131,7 +128,6 @@ class CoreWalletsService {
         this.coreContext = coreContext;
         this.balances = balances;
         this.walletsManager = walletsManager;
-        this.walletsSetup = walletsSetup;
         this.bsqWalletService = bsqWalletService;
         this.bsqTransferService = bsqTransferService;
         this.bsqFormatter = bsqFormatter;
@@ -581,8 +577,7 @@ class CoreWalletsService {
         if (btcWalletService.getAesKey() == null || bsqWalletService.getAesKey() == null) {
             KeyParameter aesKey = new KeyParameter(tempAesKey.getKey());
             walletsManager.setAesKey(aesKey);
-            walletsSetup.getWalletConfig().maybeAddSegwitKeychain(walletsSetup.getWalletConfig().btcWallet(), aesKey, false);
-            walletsSetup.getWalletConfig().maybeAddSegwitKeychain(walletsSetup.getWalletConfig().bsqWallet(), aesKey, true);
+            walletsManager.maybeAddSegwitKeychains(aesKey);
         }
     }
 
