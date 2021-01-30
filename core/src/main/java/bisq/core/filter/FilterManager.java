@@ -103,6 +103,7 @@ public class FilterManager {
     private final List<String> publicKeys;
     private ECKey filterSigningKey;
     private final Set<Filter> invalidFilters = new HashSet<>();
+    private Consumer<String> filterWarningHandler;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -151,6 +152,12 @@ public class FilterManager {
                 .filter(protectedStoragePayload -> protectedStoragePayload instanceof Filter)
                 .map(protectedStoragePayload -> (Filter) protectedStoragePayload)
                 .forEach(this::onFilterAddedFromNetwork);
+
+        // On mainNet we expect to have received a filter object, if not show a popup to the user to inform the
+        // Bisq devs.
+        if (Config.baseCurrencyNetwork().isMainnet() && getFilter() == null) {
+            filterWarningHandler.accept(Res.get("popup.warning.noFilter"));
+        }
 
         p2PService.addHashSetChangedListener(new HashMapChangedListener() {
             @Override
@@ -216,6 +223,8 @@ public class FilterManager {
     }
 
     public void setFilterWarningHandler(Consumer<String> filterWarningHandler) {
+        this.filterWarningHandler = filterWarningHandler;
+
         addListener(filter -> {
             if (filter != null && filterWarningHandler != null) {
                 if (filter.getSeedNodes() != null && !filter.getSeedNodes().isEmpty()) {
