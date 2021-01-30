@@ -449,7 +449,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     }
 
     static class CurrencyStringConverter extends StringConverter<TradeCurrency> {
-        private ComboBox<TradeCurrency> comboBox;
+        private final ComboBox<TradeCurrency> comboBox;
 
         CurrencyStringConverter(ComboBox<TradeCurrency> comboBox) {
             this.comboBox = comboBox;
@@ -493,7 +493,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     }
 
     static class PaymentMethodStringConverter extends StringConverter<PaymentMethod> {
-        private ComboBox<PaymentMethod> comboBox;
+        private final ComboBox<PaymentMethod> comboBox;
 
         PaymentMethodStringConverter(ComboBox<PaymentMethod> comboBox) {
             this.comboBox = comboBox;
@@ -1130,8 +1130,6 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
             @Override
             public TableCell<OfferBookListItem, OfferBookListItem> call(TableColumn<OfferBookListItem, OfferBookListItem> column) {
                 return new TableCell<>() {
-                    private HyperlinkWithIcon field;
-
                     @Override
                     public void updateItem(final OfferBookListItem item, boolean empty) {
                         super.updateItem(item, empty);
