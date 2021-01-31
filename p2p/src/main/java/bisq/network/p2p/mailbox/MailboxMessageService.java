@@ -112,7 +112,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 @Singleton
 @Slf4j
-public class MailboxMessageService implements SetupListener, RequestDataManager.Listener, HashMapChangedListener,
+public class MailboxMessageService implements SetupListener, HashMapChangedListener,
         PersistedDataHost {
     private static final long REPUBLISH_DELAY_SEC = TimeUnit.MINUTES.toSeconds(2);
 
@@ -155,7 +155,6 @@ public class MailboxMessageService implements SetupListener, RequestDataManager.
         this.clock = clock;
         this.republishMailboxEntries = republishMailboxEntries;
 
-        this.requestDataManager.addListener(this);
         this.networkNode.addSetupListener(this);
 
         this.persistenceManager.initialize(mailboxMessageList, PersistenceManager.Source.PRIVATE_LOW_PRIO);
@@ -224,6 +223,19 @@ public class MailboxMessageService implements SetupListener, RequestDataManager.
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    // We don't listen on requestDataManager directly as we require the correct
+    // order of execution. The p2pService is handling the correct order of execution and we get called
+    // directly from there.
+    public void onUpdatedDataReceived() {
+        if (!isBootstrapped) {
+            isBootstrapped = true;
+            // Only now we start listening and processing. The p2PDataStorage is our cache for data we have received
+            // after the hidden service was ready.
+            addHashMapChangedListenerAndApply();
+            maybeRepublishMailBoxMessages();
+        }
+    }
+
     public void sendEncryptedMailboxMessage(NodeAddress peer,
                                             PubKeyRing peersPubKeyRing,
                                             MailboxMessage mailboxMessage,
@@ -238,8 +250,9 @@ public class MailboxMessageService implements SetupListener, RequestDataManager.
                 "My node address must not be null at sendEncryptedMailboxMessage");
         checkArgument(!keyRing.getPubKeyRing().equals(peersPubKeyRing), "We got own keyring instead of that from peer");
 
-        if (!isBootstrapped)
+        if (!isBootstrapped) {
             throw new NetworkNotReadyException();
+        }
 
         if (networkNode.getAllConnections().isEmpty()) {
             sendMailboxMessageListener.onFault("There are no P2P network nodes connected. " +
@@ -346,30 +359,6 @@ public class MailboxMessageService implements SetupListener, RequestDataManager.
 
     @Override
     public void onHiddenServicePublished() {
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // RequestDataManager.Listener implementation
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public void onPreliminaryDataReceived() {
-    }
-
-    @Override
-    public void onUpdatedDataReceived() {
-        if (!isBootstrapped) {
-            isBootstrapped = true;
-            // Only now we start listening and processing. The p2PDataStorage is our cache for data we have received
-            // after the hidden service was ready.
-            addHashMapChangedListenerAndApply();
-            maybeRepublishMailBoxMessages();
-        }
-    }
-
-    @Override
-    public void onDataReceived() {
     }
 
 

@@ -147,7 +147,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
         this.networkNode.addConnectionListener(this);
         this.networkNode.addMessageListener(this);
-        this.requestDataManager.addListener(this);
+        this.requestDataManager.setListener(this);
 
         // We need to have both the initial data delivered and the hidden service published
         networkReadyBinding = EasyBind.combine(hiddenServicePublished, preliminaryDataReceived,
@@ -317,6 +317,11 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     public void onUpdatedDataReceived() {
         if (!isBootstrapped) {
             isBootstrapped = true;
+            // We don't use a listener at mailboxMessageService as we require the correct
+            // order of execution. The p2pServiceListeners must be called after
+            // mailboxMessageService.onUpdatedDataReceived.
+            mailboxMessageService.onUpdatedDataReceived();
+
             p2pServiceListeners.forEach(P2PServiceListener::onUpdatedDataReceived);
             p2PDataStorage.onBootstrapComplete();
         }
