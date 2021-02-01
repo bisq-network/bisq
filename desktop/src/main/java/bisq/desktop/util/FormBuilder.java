@@ -906,10 +906,10 @@ public class FormBuilder {
     }
 
     public static Tuple3<Button, CheckBox, HBox> addButtonCheckBoxWithBox(GridPane gridPane,
-                                                             int rowIndex,
-                                                             String buttonTitle,
-                                                             String checkBoxTitle,
-                                                             double top) {
+                                                                          int rowIndex,
+                                                                          String buttonTitle,
+                                                                          String checkBoxTitle,
+                                                                          double top) {
         Button button = new AutoTooltipButton(buttonTitle);
         CheckBox checkBox = new AutoTooltipCheckBox(checkBoxTitle);
 
@@ -1642,11 +1642,14 @@ public class FormBuilder {
 
 
     public static BalanceTextField addBalanceTextField(GridPane gridPane, int rowIndex, String title) {
+        return addBalanceTextField(gridPane, rowIndex, title, 20);
+    }
 
+    public static BalanceTextField addBalanceTextField(GridPane gridPane, int rowIndex, String title, double top) {
         BalanceTextField balanceTextField = new BalanceTextField(title);
         GridPane.setRowIndex(balanceTextField, rowIndex);
         GridPane.setColumnIndex(balanceTextField, 0);
-        GridPane.setMargin(balanceTextField, new Insets(20, 0, 0, 0));
+        GridPane.setMargin(balanceTextField, new Insets(top, 0, 0, 0));
         gridPane.getChildren().add(balanceTextField);
 
         return balanceTextField;
