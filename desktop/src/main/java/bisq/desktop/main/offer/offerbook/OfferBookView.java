@@ -176,7 +176,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         titledGroupBg.getStyleClass().add("last");
 
         HBox offerToolsBox = new HBox();
-        offerToolsBox.setAlignment(Pos.CENTER_LEFT);
+        offerToolsBox.setAlignment(Pos.BOTTOM_LEFT);
         offerToolsBox.setSpacing(10);
         offerToolsBox.setPadding(new Insets(10, 0, 0, 0));
 
