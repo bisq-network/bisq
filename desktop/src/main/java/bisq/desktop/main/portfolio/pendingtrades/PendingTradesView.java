@@ -576,6 +576,8 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                                     setGraphic(null);
                                     if (trade != null && listener != null) {
                                         trade.stateProperty().removeListener(listener);
+                                        trade = null;
+                                        listener = null;
                                     }
                                 }
                             }
