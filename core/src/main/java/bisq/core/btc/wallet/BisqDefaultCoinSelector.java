@@ -33,7 +33,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+
+import javax.annotation.Nullable;
 
 /**
  * Used from org.bitcoinj.wallet.DefaultCoinSelector but added selectOutput method and changed static methods to
@@ -48,6 +51,12 @@ import lombok.extern.slf4j.Slf4j;
 public abstract class BisqDefaultCoinSelector implements CoinSelector {
 
     protected final boolean permitForeignPendingTx;
+
+    // TransactionOutputs to be used as candidates in the select method.
+    // We reset the value to null just after we have applied it inside the select method.
+    @Nullable
+    @Setter
+    protected Set<TransactionOutput> utxoCandidates;
 
     public CoinSelection select(Coin target, Set<TransactionOutput> candidates) {
         return select(target, new ArrayList<>(candidates));
@@ -65,7 +74,16 @@ public abstract class BisqDefaultCoinSelector implements CoinSelector {
     public CoinSelection select(Coin target, List<TransactionOutput> candidates) {
         ArrayList<TransactionOutput> selected = new ArrayList<>();
         // Sort the inputs by age*value so we get the highest "coin days" spent.
-        ArrayList<TransactionOutput> sortedOutputs = new ArrayList<>(candidates);
+
+        ArrayList<TransactionOutput> sortedOutputs;
+        if (utxoCandidates != null) {
+            sortedOutputs = new ArrayList<>(utxoCandidates);
+            // We we reuse the selectors we reset the transactionOutputCandidates field
+            utxoCandidates = null;
+        } else {
+            sortedOutputs = new ArrayList<>(candidates);
+        }
+
         // If we spend all we don't need to sort
         if (!target.equals(NetworkParameters.MAX_MONEY))
             sortOutputs(sortedOutputs);
@@ -120,6 +138,7 @@ public abstract class BisqDefaultCoinSelector implements CoinSelector {
 
     abstract boolean isTxOutputSpendable(TransactionOutput output);
 
+    //TODO why it uses coin age and not try to minimize number of inputs as the highest priority?
     protected void sortOutputs(ArrayList<TransactionOutput> outputs) {
         Collections.sort(outputs, (a, b) -> {
             int depth1 = a.getParentTransactionDepthInBlocks();
