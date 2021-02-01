@@ -19,6 +19,7 @@ package bisq.core.btc.wallet;
 
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.TxOutputKey;
+import bisq.core.user.Preferences;
 
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionConfidence;
@@ -26,6 +27,7 @@ import org.bitcoinj.core.TransactionOutput;
 
 import javax.inject.Inject;
 
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -35,6 +37,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class NonBsqCoinSelector extends BisqDefaultCoinSelector {
     private DaoStateService daoStateService;
+    @Setter
+    private Preferences preferences;
 
     @Inject
     public NonBsqCoinSelector(DaoStateService daoStateService) {
@@ -60,9 +64,9 @@ public class NonBsqCoinSelector extends BisqDefaultCoinSelector {
         return !daoStateService.existsTxOutput(key) || daoStateService.isRejectedIssuanceOutput(key);
     }
 
-    // BTC utxo in the BSQ wallet are usually from rejected comp request so we don't expect dust attack utxos here.
+    // Prevent to use dust attack utxos
     @Override
     protected boolean isDustAttackUtxo(TransactionOutput output) {
-        return false;
+        return output.getValue().value < preferences.getIgnoreDustThreshold();
     }
 }
