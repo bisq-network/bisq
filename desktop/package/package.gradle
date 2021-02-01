@@ -208,8 +208,14 @@ task packageInstallers {
 
         // We convert the fat jar into a deterministic one by stripping out comments with date, etc.
         // jar file created from https://github.com/ManfredKarrer/tools
-        executeCmd("sdf")
         executeCmd("java -jar \"${project(':desktop').projectDir}/package/tools-1.0.jar\" ${fatJarFolderPath}/${mainJarName}")
+
+        // Store deterministic jar SHA-256
+        ant.checksum(file: "${fatJarFolderPath}/${mainJarName}", algorithm: 'SHA-256')
+        copy {
+            from "${fatJarFolderPath}/${mainJarName}.SHA-256"
+            into binariesFolderPath
+        }
 
         // TODO For non-modular applications: use jlink to create a custom runtime containing only the modules required
 
