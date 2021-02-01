@@ -28,7 +28,9 @@ import bisq.desktop.main.funds.FundsView;
 import bisq.desktop.main.funds.deposit.DepositView;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.TxDetailsBsq;
+import bisq.desktop.main.overlays.windows.TxInputSelectionWindow;
 import bisq.desktop.main.overlays.windows.WalletPasswordWindow;
+import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.BsqAddressValidator;
@@ -47,6 +49,7 @@ import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.dao.state.model.blockchain.TxType;
 import bisq.core.locale.Res;
 import bisq.core.user.DontShowAgainLookup;
+import bisq.core.user.Preferences;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.ParsingUtils;
 import bisq.core.util.coin.BsqFormatter;
@@ -58,10 +61,12 @@ import bisq.network.p2p.P2PService;
 
 import bisq.common.UserThread;
 import bisq.common.handlers.ResultHandler;
+import bisq.common.util.Tuple2;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.TransactionOutput;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -71,9 +76,14 @@ import javafx.scene.layout.GridPane;
 
 import javafx.beans.value.ChangeListener;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
-import static bisq.desktop.util.FormBuilder.addButtonAfterGroup;
+import javax.annotation.Nullable;
+
 import static bisq.desktop.util.FormBuilder.addInputTextField;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 
@@ -92,15 +102,20 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
     private final BtcValidator btcValidator;
     private final BsqAddressValidator bsqAddressValidator;
     private final BtcAddressValidator btcAddressValidator;
+    private final Preferences preferences;
     private final WalletPasswordWindow walletPasswordWindow;
 
     private int gridRow = 0;
     private InputTextField amountInputTextField, btcAmountInputTextField;
-    private Button sendBsqButton, sendBtcButton;
+    private Button sendBsqButton, sendBtcButton, bsqInputControlButton, btcInputControlButton;
     private InputTextField receiversAddressInputTextField, receiversBtcAddressInputTextField;
     private ChangeListener<Boolean> focusOutListener;
     private TitledGroupBg btcTitledGroupBg;
     private ChangeListener<String> inputTextFieldListener;
+    @Nullable
+    private Set<TransactionOutput> bsqUtxoCandidates;
+    @Nullable
+    private Set<TransactionOutput> btcUtxoCandidates;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -121,6 +136,7 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
                         BtcValidator btcValidator,
                         BsqAddressValidator bsqAddressValidator,
                         BtcAddressValidator btcAddressValidator,
+                        Preferences preferences,
                         WalletPasswordWindow walletPasswordWindow) {
         this.bsqWalletService = bsqWalletService;
         this.btcWalletService = btcWalletService;
@@ -135,6 +151,7 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
         this.btcValidator = btcValidator;
         this.bsqAddressValidator = bsqAddressValidator;
         this.btcAddressValidator = btcAddressValidator;
+        this.preferences = preferences;
         this.walletPasswordWindow = walletPasswordWindow;
     }
 
@@ -171,11 +188,16 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
 
         bsqWalletService.addBsqBalanceListener(this);
 
+        // We reset the input selection at active to have all inputs selected, otherwise the user
+        // might get confused if he had deselected inputs earlier and cannot spend the full balance.
+        bsqUtxoCandidates = null;
+        btcUtxoCandidates = null;
+
         onUpdateBalances();
     }
 
     private void onUpdateBalances() {
-        onUpdateBalances(bsqWalletService.getAvailableConfirmedBalance(),
+        onUpdateBalances(getSpendableBsqBalance(),
                 bsqWalletService.getAvailableNonBsqBalance(),
                 bsqWalletService.getUnverifiedBalance(),
                 bsqWalletService.getUnconfirmedChangeBalance(),
@@ -200,6 +222,11 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
         btcAmountInputTextField.textProperty().removeListener(inputTextFieldListener);
 
         bsqWalletService.removeBsqBalanceListener(this);
+
+        sendBsqButton.setOnAction(null);
+        btcInputControlButton.setOnAction(null);
+        sendBtcButton.setOnAction(null);
+        bsqInputControlButton.setOnAction(null);
     }
 
     @Override
@@ -210,16 +237,24 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
                                  Coin lockedForVotingBalance,
                                  Coin lockupBondsBalance,
                                  Coin unlockingBondsBalance) {
+        updateBsqValidator(availableConfirmedBalance);
+        updateBtcValidator(availableNonBsqBalance);
+
+        setSendBtcGroupVisibleState(availableNonBsqBalance.isPositive());
+    }
+
+    private void updateBsqValidator(Coin availableConfirmedBalance) {
         bsqValidator.setAvailableBalance(availableConfirmedBalance);
         boolean isValid = bsqAddressValidator.validate(receiversAddressInputTextField.getText()).isValid &&
                 bsqValidator.validate(amountInputTextField.getText()).isValid;
         sendBsqButton.setDisable(!isValid);
+    }
 
-        boolean isBtcValid = btcAddressValidator.validate(receiversBtcAddressInputTextField.getText()).isValid &&
+    private void updateBtcValidator(Coin availableConfirmedBalance) {
+        btcValidator.setMaxValue(availableConfirmedBalance);
+        boolean isValid = btcAddressValidator.validate(receiversBtcAddressInputTextField.getText()).isValid &&
                 btcValidator.validate(btcAmountInputTextField.getText()).isValid;
-        sendBtcButton.setDisable(!isBtcValid);
-
-        setSendBtcGroupVisibleState(availableNonBsqBalance.isPositive());
+        sendBtcButton.setDisable(!isValid);
     }
 
     private void addSendBsqGroup() {
@@ -240,9 +275,13 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
                 onUpdateBalances();
         };
 
-        sendBsqButton = addButtonAfterGroup(root, ++gridRow, Res.get("dao.wallet.send.send"));
+        Tuple2<Button, Button> tuple = FormBuilder.add2ButtonsAfterGroup(root, ++gridRow,
+                Res.get("dao.wallet.send.send"), Res.get("dao.wallet.send.inputControl"));
+        sendBsqButton = tuple.first;
+        bsqInputControlButton = tuple.second;
 
         sendBsqButton.setOnAction((event) -> onSendBsq());
+        bsqInputControlButton.setOnAction((event) -> onBsqInputControl());
     }
 
     private void onSendBsq() {
@@ -253,7 +292,8 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
         String receiversAddressString = bsqFormatter.getAddressFromBsqAddress(receiversAddressInputTextField.getText()).toString();
         Coin receiverAmount = ParsingUtils.parseToCoin(amountInputTextField.getText(), bsqFormatter);
         try {
-            Transaction preparedSendTx = bsqWalletService.getPreparedSendBsqTx(receiversAddressString, receiverAmount);
+            Transaction preparedSendTx = bsqWalletService.getPreparedSendBsqTx(receiversAddressString,
+                    receiverAmount, bsqUtxoCandidates);
             Transaction txWithBtcFee = btcWalletService.completePreparedSendBsqTx(preparedSendTx);
             Transaction signedTx = bsqWalletService.signTx(txWithBtcFee);
             Coin miningFee = signedTx.getFee();
@@ -282,16 +322,49 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
         }
     }
 
+    private void onBsqInputControl() {
+        List<TransactionOutput> unspentTransactionOutputs = bsqWalletService.getSpendableBsqTransactionOutputs();
+        if (bsqUtxoCandidates == null) {
+            bsqUtxoCandidates = new HashSet<>(unspentTransactionOutputs);
+        } else {
+            // If we had some selection stored we need to update to already spent entries
+            bsqUtxoCandidates = bsqUtxoCandidates.stream().
+                    filter(e -> unspentTransactionOutputs.contains(e)).
+                    collect(Collectors.toSet());
+        }
+        TxInputSelectionWindow txInputSelectionWindow = new TxInputSelectionWindow(unspentTransactionOutputs,
+                bsqUtxoCandidates,
+                preferences,
+                bsqFormatter);
+        txInputSelectionWindow.onAction(() -> setBsqUtxoCandidates(txInputSelectionWindow.getCandidates()))
+                .show();
+    }
+
+    private void setBsqUtxoCandidates(Set<TransactionOutput> candidates) {
+        this.bsqUtxoCandidates = candidates;
+        updateBsqValidator(getSpendableBsqBalance());
+        amountInputTextField.refreshValidation();
+    }
+
+    // We have used input selection it is the sum of our selected inputs, otherwise the availableConfirmedBalance
+    private Coin getSpendableBsqBalance() {
+        return bsqUtxoCandidates != null ?
+                Coin.valueOf(bsqUtxoCandidates.stream().mapToLong(e -> e.getValue().value).sum()) :
+                bsqWalletService.getAvailableConfirmedBalance();
+    }
+
     private void setSendBtcGroupVisibleState(boolean visible) {
         btcTitledGroupBg.setVisible(visible);
         receiversBtcAddressInputTextField.setVisible(visible);
         btcAmountInputTextField.setVisible(visible);
         sendBtcButton.setVisible(visible);
+        btcInputControlButton.setVisible(visible);
 
         btcTitledGroupBg.setManaged(visible);
         receiversBtcAddressInputTextField.setManaged(visible);
         btcAmountInputTextField.setManaged(visible);
         sendBtcButton.setManaged(visible);
+        btcInputControlButton.setManaged(visible);
     }
 
     private void addSendBtcGroup() {
@@ -306,43 +379,80 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
         btcAmountInputTextField.setValidator(btcValidator);
         GridPane.setColumnSpan(btcAmountInputTextField, 3);
 
-        sendBtcButton = addButtonAfterGroup(root, ++gridRow, Res.get("dao.wallet.send.sendBtc"));
+        Tuple2<Button, Button> tuple = FormBuilder.add2ButtonsAfterGroup(root, ++gridRow,
+                Res.get("dao.wallet.send.sendBtc"), Res.get("dao.wallet.send.inputControl"));
+        sendBtcButton = tuple.first;
+        btcInputControlButton = tuple.second;
 
-        sendBtcButton.setOnAction((event) -> {
-            if (GUIUtil.isReadyForTxBroadcastOrShowPopup(p2PService, walletsSetup)) {
-                String receiversAddressString = receiversBtcAddressInputTextField.getText();
-                Coin receiverAmount = bsqFormatter.parseToBTC(btcAmountInputTextField.getText());
-                try {
-                    Transaction preparedSendTx = bsqWalletService.getPreparedSendBtcTx(receiversAddressString, receiverAmount);
-                    Transaction txWithBtcFee = btcWalletService.completePreparedSendBsqTx(preparedSendTx);
-                    Transaction signedTx = bsqWalletService.signTx(txWithBtcFee);
-                    Coin miningFee = signedTx.getFee();
+        sendBtcButton.setOnAction((event) -> onSendBtc());
+        btcInputControlButton.setOnAction((event) -> onBtcInputControl());
+    }
 
-                    if (miningFee.getValue() >= receiverAmount.getValue())
-                        GUIUtil.showWantToBurnBTCPopup(miningFee, receiverAmount, btcFormatter);
-                    else {
-                        int txVsize = signedTx.getVsize();
-                        showPublishTxPopup(receiverAmount,
-                                txWithBtcFee,
-                                TxType.INVALID,
-                                miningFee,
-                                txVsize, receiversBtcAddressInputTextField.getText(),
-                                btcFormatter,
-                                btcFormatter,
-                                () -> {
-                                    receiversBtcAddressInputTextField.setText("");
-                                    btcAmountInputTextField.setText("");
-                                });
+    private void onBtcInputControl() {
+        List<TransactionOutput> unspentTransactionOutputs = bsqWalletService.getSpendableNonBsqTransactionOutputs();
+        if (btcUtxoCandidates == null) {
+            btcUtxoCandidates = new HashSet<>(unspentTransactionOutputs);
+        } else {
+            // If we had some selection stored we need to update to already spent entries
+            btcUtxoCandidates = btcUtxoCandidates.stream().
+                    filter(e -> unspentTransactionOutputs.contains(e)).
+                    collect(Collectors.toSet());
+        }
+        TxInputSelectionWindow txInputSelectionWindow = new TxInputSelectionWindow(unspentTransactionOutputs,
+                btcUtxoCandidates,
+                preferences,
+                btcFormatter);
+        txInputSelectionWindow.onAction(() -> setBtcUtxoCandidates(txInputSelectionWindow.getCandidates())).
+                show();
+    }
 
-                    }
-                } catch (BsqChangeBelowDustException e) {
-                    String msg = Res.get("popup.warning.btcChangeBelowDustException", btcFormatter.formatCoinWithCode(e.getOutputValue()));
-                    new Popup().warning(msg).show();
-                } catch (Throwable t) {
-                    handleError(t);
-                }
+    private void setBtcUtxoCandidates(Set<TransactionOutput> candidates) {
+        this.btcUtxoCandidates = candidates;
+        updateBtcValidator(getSpendableBtcBalance());
+        btcAmountInputTextField.refreshValidation();
+    }
+
+    private Coin getSpendableBtcBalance() {
+        return btcUtxoCandidates != null ?
+                Coin.valueOf(btcUtxoCandidates.stream().mapToLong(e -> e.getValue().value).sum()) :
+                bsqWalletService.getAvailableNonBsqBalance();
+    }
+
+    private void onSendBtc() {
+        if (!GUIUtil.isReadyForTxBroadcastOrShowPopup(p2PService, walletsSetup)) {
+            return;
+        }
+
+        String receiversAddressString = receiversBtcAddressInputTextField.getText();
+        Coin receiverAmount = bsqFormatter.parseToBTC(btcAmountInputTextField.getText());
+        try {
+            Transaction preparedSendTx = bsqWalletService.getPreparedSendBtcTx(receiversAddressString, receiverAmount, btcUtxoCandidates);
+            Transaction txWithBtcFee = btcWalletService.completePreparedSendBsqTx(preparedSendTx);
+            Transaction signedTx = bsqWalletService.signTx(txWithBtcFee);
+            Coin miningFee = signedTx.getFee();
+
+            if (miningFee.getValue() >= receiverAmount.getValue())
+                GUIUtil.showWantToBurnBTCPopup(miningFee, receiverAmount, btcFormatter);
+            else {
+                int txVsize = signedTx.getVsize();
+                showPublishTxPopup(receiverAmount,
+                        txWithBtcFee,
+                        TxType.INVALID,
+                        miningFee,
+                        txVsize, receiversBtcAddressInputTextField.getText(),
+                        btcFormatter,
+                        btcFormatter,
+                        () -> {
+                            receiversBtcAddressInputTextField.setText("");
+                            btcAmountInputTextField.setText("");
+                        });
             }
-        });
+        } catch (BsqChangeBelowDustException e) {
+            String msg = Res.get("popup.warning.btcChangeBelowDustException", btcFormatter.formatCoinWithCode(e.getOutputValue()));
+            new Popup().warning(msg).show();
+        } catch (Throwable t) {
+            handleError(t);
+        }
     }
 
     private void handleError(Throwable t) {
