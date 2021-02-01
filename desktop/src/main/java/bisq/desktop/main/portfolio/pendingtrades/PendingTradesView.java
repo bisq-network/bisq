@@ -584,6 +584,8 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
 
                             private void update() {
                                 HyperlinkWithIcon field;
+                                if (trade == null) return;
+
                                 if (isMaybeInvalidTrade(trade)) {
                                     field = new HyperlinkWithIcon(trade.getShortId());
                                     field.setIcon(FormBuilder.getMediumSizeIcon(MaterialDesignIcon.ALERT_CIRCLE_OUTLINE));
