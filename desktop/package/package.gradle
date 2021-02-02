@@ -272,7 +272,7 @@ task packageInstallers {
             executeCmd(jPackageFilePath + commonOpts + windowsOpts + " --type exe")
 
             // Set the necessary permissions before calling signtool
-            executeCmd("attrib -R \"${binariesFolderPath}/Bisq-${appVersion}.exe\"")
+            executeCmd("\"attrib -R \"${binariesFolderPath}/Bisq-${appVersion}.exe\"\"")
 
             // In addition to the groovy quotes around the string, the entire Windows command must also be surrounded
             // by quotes, plus each path inside the command has to be quoted as well
