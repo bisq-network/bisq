@@ -426,6 +426,10 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
 
         updateOfferElementsStyle();
 
+        if (triggerPriceInputTextField.getText().isEmpty()) {
+            triggerPriceVBox.setVisible(false);
+        }
+
         balanceTextField.setTargetAmount(model.getDataModel().totalToPayAsCoinProperty().get());
 
         if (!DevEnv.isDevMode()) {
