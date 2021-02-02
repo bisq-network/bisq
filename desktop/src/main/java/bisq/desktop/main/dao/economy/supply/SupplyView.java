@@ -607,7 +607,7 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
         var burntBsqXValues = sortedUpdatedBurntBsq.stream().map(XYChart.Data::getXValue);
         var burntBsqYValues = sortedUpdatedBurntBsq.stream().map(XYChart.Data::getYValue);
 
-        var maPeriod = 15;
+        var maPeriod = 60;
         var burntBsqMAYValues =
                 MovingAverageUtils.simpleMovingAverage(
                         burntBsqYValues,
