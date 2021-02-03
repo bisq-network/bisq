@@ -141,13 +141,12 @@ OFFER=$($CMD)
 exitoncommandalert $?
 echo "$OFFER"
 printbreak
-sleeptraced 7
+sleeptraced 4
 
 # Generate some btc blocks.
 printdate "Generating btc blocks after publishing Alice's offer."
 genbtcblocks 3 3
 printbreak
-sleeptraced 5
 
 # Show Alice's offer in Bob's CLI.
 printdate "BOB:  Looking at $DIRECTION $CURRENCY_CODE offers."

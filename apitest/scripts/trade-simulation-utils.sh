@@ -221,6 +221,274 @@ getfirstofferid() {
     echo "$FIRST_OFFER_ID"
 }
 
+gettrade() {
+    GET_TRADE_CMD="$1"
+    TRADE_DESC=$($GET_TRADE_CMD)
+    commandalert $? "Could not get trade."
+    echo "$TRADE_DESC"
+}
+
+gettradedetail() {
+    TRADE_DESC="$1"
+    # Get 2nd line of gettrade cmd output, and squeeze multi space delimiters into one space.
+    TRADE_DETAIL=$(echo "$TRADE_DESC" | sed -n '2p' | tr -s ' ')
+    commandalert $? "Could not get trade detail (line 2 of gettrade output)."
+    echo "$TRADE_DETAIL"
+}
+
+istradedepositpublished() {
+    TRADE_DETAIL="$1"
+    MAKER_OR_TAKER="$2"
+    if [ "$MAKER_OR_TAKER" = "MAKER" ]
+    then
+        ANSWER=$(echo "$TRADE_DETAIL" | awk '{print $9}')
+    else
+        ANSWER=$(echo "$TRADE_DETAIL" | awk '{print $10}')
+    fi
+    commandalert $? "Could not parse istradedepositpublished from trade detail."
+    echo "$ANSWER"
+}
+
+istradedepositconfirmed() {
+    TRADE_DETAIL="$1"
+    MAKER_OR_TAKER="$2"
+    if [ "$MAKER_OR_TAKER" = "MAKER" ]
+    then
+        ANSWER=$(echo "$TRADE_DETAIL" | awk '{print $10}')
+    else
+        ANSWER=$(echo "$TRADE_DETAIL" | awk '{print $11}')
+    fi
+    commandalert $? "Could not parse istradedepositconfirmed from trade detail."
+    echo "$ANSWER"
+}
+
+istradepaymentsent() {
+    TRADE_DETAIL="$1"
+    MAKER_OR_TAKER="$2"
+    if [ "$MAKER_OR_TAKER" = "MAKER" ]
+    then
+        ANSWER=$(echo "$TRADE_DETAIL" | awk '{print $11}')
+    else
+        ANSWER=$(echo "$TRADE_DETAIL" | awk '{print $12}')
+    fi
+    commandalert $? "Could not parse istradepaymentsent from trade detail."
+    echo "$ANSWER"
+}
+
+istradepaymentreceived() {
+    TRADE_DETAIL="$1"
+    MAKER_OR_TAKER="$2"
+    if [ "$MAKER_OR_TAKER" = "MAKER" ]
+    then
+        ANSWER=$(echo "$TRADE_DETAIL" | awk '{print $12}')
+    else
+        ANSWER=$(echo "$TRADE_DETAIL" | awk '{print $13}')
+    fi
+    commandalert $? "Could not parse istradepaymentreceived from trade detail."
+    echo "$ANSWER"
+}
+
+istradepayoutpublished() {
+    TRADE_DETAIL="$1"
+    MAKER_OR_TAKER="$2"
+    if [ "$MAKER_OR_TAKER" = "MAKER" ]
+    then
+        ANSWER=$(echo "$TRADE_DETAIL" | awk '{print $13}')
+    else
+        ANSWER=$(echo "$TRADE_DETAIL" | awk '{print $14}')
+    fi
+    commandalert $? "Could not parse istradepayoutpublished from trade detail."
+    echo "$ANSWER"
+}
+
+waitfortradedepositpublished() {
+    # Loops until Bob's trade deposit is published.  (Bob is always the trade taker.)
+    OFFER_ID="$1"
+    DONE=0
+    while : ; do
+        if [ "$DONE" -ne 0 ]; then
+            break
+        fi
+
+        printdate "BOB $BOB_ROLE:  Looking at his trade with id $OFFER_ID."
+        CMD="$CLI_BASE --port=$BOB_PORT gettrade --trade-id=$OFFER_ID"
+        printdate "BOB CLI: $CMD"
+        GETTRADE_CMD_OUTPUT=$(gettrade "$CMD")
+        exitoncommandalert $?
+        echo "$GETTRADE_CMD_OUTPUT"
+        printbreak
+
+        TRADE_DETAIL=$(gettradedetail "$GETTRADE_CMD_OUTPUT")
+        exitoncommandalert $?
+
+        IS_TRADE_DEPOSIT_PUBLISHED=$(istradedepositpublished "$TRADE_DETAIL" "TAKER")
+        exitoncommandalert $?
+
+        printdate "BOB $BOB_ROLE:  Has taker's trade deposit been published?  $IS_TRADE_DEPOSIT_PUBLISHED"
+        if [ "$IS_TRADE_DEPOSIT_PUBLISHED" = "YES" ]
+        then
+            DONE=1
+        else
+            RANDOM_WAIT=$(echo $[$RANDOM % 3 + 1])
+            sleeptraced "$RANDOM_WAIT"
+        fi
+        printbreak
+    done
+}
+
+waitfortradedepositconfirmed() {
+    # Loops until Bob's trade deposit is confirmed.  (Bob is always the trade taker.)
+    OFFER_ID="$1"
+    DONE=0
+    while : ; do
+        if [ "$DONE" -ne 0 ]; then
+            break
+        fi
+
+        printdate "BOB $BOB_ROLE:  Looking at his trade with id $OFFER_ID."
+        CMD="$CLI_BASE --port=$BOB_PORT gettrade --trade-id=$OFFER_ID"
+        printdate "BOB CLI: $CMD"
+        GETTRADE_CMD_OUTPUT=$(gettrade "$CMD")
+        exitoncommandalert $?
+        echo "$GETTRADE_CMD_OUTPUT"
+        printbreak
+
+        TRADE_DETAIL=$(gettradedetail "$GETTRADE_CMD_OUTPUT")
+        exitoncommandalert $?
+
+        IS_TRADE_DEPOSIT_CONFIRMED=$(istradedepositconfirmed "$TRADE_DETAIL" "TAKER")
+        exitoncommandalert $?
+        printdate "BOB $BOB_ROLE:  Has taker's trade deposit been confirmed?  $IS_TRADE_DEPOSIT_CONFIRMED"
+        printbreak
+
+        if [ "$IS_TRADE_DEPOSIT_CONFIRMED" = "YES" ]
+        then
+            DONE=1
+        else
+            printdate "Generating btc block while Bob waits for trade deposit to be confirmed."
+            genbtcblocks 1 0
+
+            RANDOM_WAIT=$(echo $[$RANDOM % 3 + 1])
+            sleeptraced "$RANDOM_WAIT"
+        fi
+    done
+}
+
+waitfortradepaymentsent() {
+    # Loops until buyer's trade payment has been sent.
+    PORT="$1"
+    SELLER="$2"
+    OFFER_ID="$3"
+    MAKER_OR_TAKER="$4"
+    DONE=0
+    while : ; do
+        if [ "$DONE" -ne 0 ]; then
+            break
+        fi
+
+        printdate "$SELLER:  Looking at trade with id $OFFER_ID."
+        CMD="$CLI_BASE --port=$PORT gettrade --trade-id=$OFFER_ID"
+        printdate "$SELLER CLI: $CMD"
+        GETTRADE_CMD_OUTPUT=$(gettrade "$CMD")
+        exitoncommandalert $?
+        echo "$GETTRADE_CMD_OUTPUT"
+        printbreak
+
+        TRADE_DETAIL=$(gettradedetail "$GETTRADE_CMD_OUTPUT")
+        exitoncommandalert $?
+
+        IS_TRADE_PAYMENT_SENT=$(istradepaymentsent "$TRADE_DETAIL" "$MAKER_OR_TAKER")
+        exitoncommandalert $?
+        printdate "$SELLER:  Has buyer's fiat payment been initiated?  $IS_TRADE_PAYMENT_SENT"
+        if [ "$IS_TRADE_PAYMENT_SENT" = "YES" ]
+        then
+            DONE=1
+        else
+            RANDOM_WAIT=$(echo $[$RANDOM % 3 + 1])
+            sleeptraced "$RANDOM_WAIT"
+        fi
+        printbreak
+    done
+}
+
+waitfortradepaymentreceived() {
+    # Loops until buyer's trade payment has been received.
+    PORT="$1"
+    SELLER="$2"
+    OFFER_ID="$3"
+    MAKER_OR_TAKER="$4"
+    DONE=0
+    while : ; do
+        if [ "$DONE" -ne 0 ]; then
+            break
+        fi
+
+        printdate "$SELLER:  Looking at trade with id $OFFER_ID."
+        CMD="$CLI_BASE --port=$PORT gettrade --trade-id=$OFFER_ID"
+        printdate "$SELLER CLI: $CMD"
+        GETTRADE_CMD_OUTPUT=$(gettrade "$CMD")
+        exitoncommandalert $?
+        echo "$GETTRADE_CMD_OUTPUT"
+        printbreak
+
+        TRADE_DETAIL=$(gettradedetail "$GETTRADE_CMD_OUTPUT")
+        exitoncommandalert $?
+
+        # When the seller receives a 'payment sent' message, it is assumed funds (fiat) have already been deposited.
+        # In a real trade, there is usually a delay between receipt of a 'payment sent' message, and the funds deposit,
+        # but we do not need to simulate that in this regtest script.
+        IS_TRADE_PAYMENT_SENT=$(istradepaymentreceived "$TRADE_DETAIL" "$MAKER_OR_TAKER")
+        exitoncommandalert $?
+        printdate "$SELLER:  Has buyer's payment been transferred to seller's fiat account?  $IS_TRADE_PAYMENT_SENT"
+        if [ "$IS_TRADE_PAYMENT_SENT" = "YES" ]
+        then
+            DONE=1
+        else
+            RANDOM_WAIT=$(echo $[$RANDOM % 3 + 1])
+            sleeptraced "$RANDOM_WAIT"
+        fi
+        printbreak
+    done
+}
+
+delayconfirmpaymentstarted() {
+    # Confirm payment started after a random delay.  This should be run in the background
+    # while the payee polls the trade status, waiting for the message before confirming
+    # payment has been received.
+    PAYER="$1"
+    PORT="$2"
+    OFFER_ID="$3"
+    RANDOM_WAIT=$(echo $[$RANDOM % 5 + 1])
+    printdate "$PAYER:  Sending fiat payment sent message to seller in $RANDOM_WAIT seconds..."
+    sleeptraced "$RANDOM_WAIT"
+    CMD="$CLI_BASE --port=$PORT confirmpaymentstarted --trade-id=$OFFER_ID"
+    printdate "$PAYER_CLI: $CMD"
+    SENT_MSG=$($CMD)
+    commandalert $? "Could not send confirmpaymentstarted message."
+    # Print the confirmpaymentstarted command's console output.
+    printdate "$SENT_MSG"
+    printbreak
+}
+
+delayconfirmpaymentreceived() {
+    # Confirm payment received after a random delay.  This should be run in the background
+    # while the payer polls the trade status, waiting for the confirmation from the seller
+    # that funds have been received.
+    PAYEE="$1"
+    PORT="$2"
+    OFFER_ID="$3"
+    RANDOM_WAIT=$(echo $[$RANDOM % 5 + 1])
+    printdate "$PAYEE:  Sending fiat payment sent message to seller in $RANDOM_WAIT seconds..."
+    sleeptraced "$RANDOM_WAIT"
+    CMD="$CLI_BASE --port=$PORT confirmpaymentreceived --trade-id=$OFFER_ID"
+    printdate "$PAYEE_CLI: $CMD"
+    RCVD_MSG=$($CMD)
+    commandalert $? "Could not send confirmpaymentstarted message."
+    # Print the confirmpaymentstarted command's console output.
+    printdate "$RCVD_MSG"
+    printbreak
+}
+
 # This is a large function that should be broken up if it ever makes sense to not treat a trade
 # execution simulation as an atomic operation.  But we are not testing api methods here, just
 # demonstrating how to use them to get through the trade protocol.  It should work for any trade
@@ -248,13 +516,9 @@ executetrade() {
     # Print the takeoffer command's console output.
     printdate "$TRADE"
     printbreak
-    sleeptraced 10
 
-    # Generate some btc blocks
-    printdate "Generating btc blocks after Bob takes Alice's offer."
-    genbtcblocks 3 3
-    printbreak
-    sleeptraced 5
+    waitfortradedepositpublished "$OFFER_ID"
+    waitfortradedepositconfirmed "$OFFER_ID"
 
     # Send payment sent and received messages.
     if [ "$DIRECTION" = "BUY" ]
@@ -274,38 +538,35 @@ executetrade() {
         PAYEE_CLI="ALICE CLI"
     fi
 
-    # Confirm payment started.
-    printdate "$PAYER:  Sending fiat payment sent msg."
-    CMD="$CLI_BASE --port=$PAYER_PORT confirmpaymentstarted --trade-id=$OFFER_ID"
-    printdate "$PAYER_CLI: $CMD"
-    SENT_MSG=$($CMD)
-    commandalert $? "Could not send confirmpaymentstarted message."
-    # Print the confirmpaymentstarted command's console output.
-    printdate "$SENT_MSG"
-    printbreak
+    # Asynchronously send a confirm payment started message after a random delay.
+    delayconfirmpaymentstarted "$PAYER" "$PAYER_PORT" "$OFFER_ID" &
 
-    sleeptraced 2
-    printdate "Generating btc blocks after fiat payment sent msg."
-    genbtcblocks 3 5
-    sleeptraced 2
-    printbreak
+    if [ "$DIRECTION" = "BUY" ]
+    then
+        # Bob waits for payment, polling status in taker specific trade detail.
+        waitfortradepaymentsent "$PAYEE_PORT" "$PAYEE" "$OFFER_ID" "TAKER"
+    else
+        # Alice waits for payment, polling status in maker specific trade detail.
+        waitfortradepaymentsent "$PAYEE_PORT" "$PAYEE" "$OFFER_ID" "MAKER"
+    fi
 
-    # Confirm payment received.
-    printdate "$PAYEE:  Sending fiat payment received msg."
-    CMD="$CLI_BASE --port=$PAYEE_PORT confirmpaymentreceived --trade-id=$OFFER_ID"
-    printdate "$PAYEE_CLI: $CMD"
-    RCVD_MSG=$($CMD)
-    commandalert $? "Could not send confirmpaymentreceived message."
-    # Print the confirmpaymentreceived command's console output.
-    printdate "$RCVD_MSG"
-    printbreak
-    sleeptraced 4
+
+    # Asynchronously send a confirm payment received message after a random delay.
+    delayconfirmpaymentreceived "$PAYEE" "$PAYEE_PORT" "$OFFER_ID" &
+
+    if [ "$DIRECTION" = "BUY" ]
+    then
+        # Alice waits for payment rcvd confirm from Bob, polling status in maker specific trade detail.
+        waitfortradepaymentreceived "$PAYER_PORT" "$PAYER" "$OFFER_ID" "MAKER"
+    else
+        # Bob waits for payment rcvd confirm from Alice, polling status in taker specific trade detail.
+        waitfortradepaymentreceived "$PAYER_PORT" "$PAYER" "$OFFER_ID" "TAKER"
+    fi
 
     # Generate some btc blocks
     printdate "Generating btc blocks after fiat transfer."
-    genbtcblocks 3 5
+    genbtcblocks 2 2
     printbreak
-    sleeptraced 3
 
     # Complete the trade on the seller side.
     if [ "$DIRECTION" = "BUY" ]
@@ -322,7 +583,7 @@ executetrade() {
     commandalert $? "Could close trade with keepfunds command."
     # Print the keepfunds command's console output.
     printdate "$KEEP_FUNDS_MSG"
-    sleeptraced 5
+    sleeptraced 3
     printbreak
 
     printdate "Trade $OFFER_ID complete."
