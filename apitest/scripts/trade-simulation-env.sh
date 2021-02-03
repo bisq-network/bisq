@@ -22,14 +22,14 @@ checksetup() {
             --registration-key=6ac43ea1df2a290c1c8391736aa42e4339c5cb4f110ff0257a13b63211977b7a"
         exit 1;
     }
-    printdate "Checking ${APP_HOME} for some expected directories and files."
-    if [ -d "${APP_HOME}/apitest" ]; then
+    printdate "Checking $APP_HOME for some expected directories and files."
+    if [ -d "$APP_HOME/apitest" ]; then
         printdate "Subproject apitest exists.";
     else
         printdate "Error:  Subproject apitest not found, maybe because you are not running the script from the project root dir."
         exit 1
     fi
-    if [ -f "${APP_HOME}/bisq-cli" ]; then
+    if [ -f "$APP_HOME/bisq-cli" ]; then
         printdate "The bisq-cli script exists.";
     else
         printdate "Error:  The bisq-cli script not found, maybe because you are not running the script from the project root dir."
@@ -181,12 +181,12 @@ parselimitorderopts() {
 
 checkbitcoindrunning() {
     # There may be a '+' char in the path and we have to escape it for pgrep.
-    if [[ ${APP_HOME} == *"+"* ]]; then
-        ESCAPED_APP_HOME=$(escapepluschar "${APP_HOME}")
+    if [[ $APP_HOME == *"+"* ]]; then
+        ESCAPED_APP_HOME=$(escapepluschar "$APP_HOME")
     else
-        ESCAPED_APP_HOME="${APP_HOME}"
+        ESCAPED_APP_HOME="$APP_HOME"
     fi
-    if pgrep -f "bitcoind -datadir=${ESCAPED_APP_HOME}/apitest/build/resources/main/Bitcoin-regtest" > /dev/null ; then
+    if pgrep -f "bitcoind -datadir=$ESCAPED_APP_HOME/apitest/build/resources/main/Bitcoin-regtest" > /dev/null ; then
         printdate "The regtest bitcoind node is running on host."
     else
         printdate "Error:  regtest bitcoind node is not running on host, exiting."
@@ -196,24 +196,24 @@ checkbitcoindrunning() {
 
 printscriptparams() {
     if [ -n "${LIMIT_PRICE+1}" ]; then
-        echo "	LIMIT_PRICE = ${LIMIT_PRICE}"
+        echo "	LIMIT_PRICE = $LIMIT_PRICE"
     fi
 
-    echo "	DIRECTION = ${DIRECTION}"
-    echo "	COUNTRY_CODE = ${COUNTRY_CODE}"
-    echo "	FIXED_PRICE = ${FIXED_PRICE}"
-    echo "	MKT_PRICE_MARGIN = ${MKT_PRICE_MARGIN}"
-    echo "	AMOUNT = ${AMOUNT}"
+    echo "	DIRECTION = $DIRECTION"
+    echo "	COUNTRY_CODE = $COUNTRY_CODE"
+    echo "	FIXED_PRICE = $FIXED_PRICE"
+    echo "	MKT_PRICE_MARGIN = $MKT_PRICE_MARGIN"
+    echo "	AMOUNT = $AMOUNT"
 
     if [ -n "${BOB_ROLE+1}" ]; then
-        echo "	BOB_ROLE = ${BOB_ROLE}"
+        echo "	BOB_ROLE = $BOB_ROLE"
     fi
 
     if [ -n "${ALICE_ROLE+1}" ]; then
-        echo "	ALICE_ROLE = ${ALICE_ROLE}"
+        echo "	ALICE_ROLE = $ALICE_ROLE"
     fi
 
     if [ -n "${WAIT+1}" ]; then
-        echo "	WAIT = ${WAIT}"
+        echo "	WAIT = $WAIT"
     fi
 }
