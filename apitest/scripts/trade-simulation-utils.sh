@@ -434,6 +434,9 @@ waitfortradepaymentreceived() {
         TRADE_DETAIL=$(gettradedetail "$GETTRADE_CMD_OUTPUT")
         exitoncommandalert $?
 
+        # When the seller receives a 'payment sent' message, it is assumed funds (fiat) have already been deposited.
+        # In a real trade, there is usually a delay between receipt of a 'payment sent' message, and the funds deposit,
+        # but we do not need to simulate that in this regtest script.
         IS_TRADE_PAYMENT_SENT=$(istradepaymentreceived "$TRADE_DETAIL" "$MAKER_OR_TAKER")
         exitoncommandalert $?
         printdate "$SELLER:  Has buyer's payment been transferred to seller's fiat account?  $IS_TRADE_PAYMENT_SENT"
