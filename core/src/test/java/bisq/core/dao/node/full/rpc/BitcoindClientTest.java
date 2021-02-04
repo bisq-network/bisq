@@ -20,8 +20,6 @@ package bisq.core.dao.node.full.rpc;
 import bisq.core.dao.node.full.rpc.dto.RawDtoBlock;
 import bisq.core.dao.node.full.rpc.dto.RawDtoTransaction;
 
-import bisq.network.http.HttpException;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.net.ConnectException;
@@ -50,6 +48,7 @@ import static org.mockito.Mockito.when;
 
 
 
+import com.googlecode.jsonrpc4j.HttpException;
 import com.googlecode.jsonrpc4j.JsonRpcClientException;
 import com.googlecode.jsonrpc4j.RequestIDGenerator;
 import kotlin.text.Charsets;
@@ -102,7 +101,7 @@ public class BitcoindClientTest {
 
     @Test
     public void testGetBlockCount() throws Exception {
-        var expectedRequest = toJson("{'id':'987654321','jsonrpc':'2.0','method':'getblockcount'}");
+        var expectedRequest = toJson("{'id':'987654321','jsonrpc':'2.0','method':'getblockcount','params':[]}");
         mockResponse = toJsonIS("{'result':'150','error':null,'id':'123456789'}");
 
         assertEquals((Integer) 150, client.getBlockCount());
@@ -135,7 +134,7 @@ public class BitcoindClientTest {
 
     @Test
     public void testGetBestBlockHash() throws Exception {
-        var expectedRequest = toJson("{'id':'987654321','jsonrpc':'2.0','method':'getbestblockhash'}");
+        var expectedRequest = toJson("{'id':'987654321','jsonrpc':'2.0','method':'getbestblockhash','params':[]}");
         mockResponse = toJsonIS("{'result':'" + TEST_BLOCK_HASH + "','error':null,'id':'123456789'}");
 
         assertEquals(TEST_BLOCK_HASH, client.getBestBlockHash());
@@ -200,7 +199,7 @@ public class BitcoindClientTest {
 
     @Test
     public void testGetNetworkInfo() throws Exception {
-        var expectedRequest = toJson("{'id':'987654321','jsonrpc':'2.0','method':'getnetworkinfo'}");
+        var expectedRequest = toJson("{'id':'987654321','jsonrpc':'2.0','method':'getnetworkinfo','params':[]}");
         mockResponse = toJsonIS("{'result':" + TEST_NETWORK_INFO + ",'error':null,'id':'123456789'}");
 
         var networkInfo = client.getNetworkInfo();

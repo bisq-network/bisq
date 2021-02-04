@@ -45,7 +45,7 @@ configure(subprojects) {
         httpclientVersion = '4.5.12'
         httpcoreVersion = '4.4.13'
         ioVersion = '2.6'
-        jacksonVersion = '2.8.10'
+        jacksonVersion = '2.12.1'
         javafxVersion = '11.0.2'
         javaxAnnotationVersion = '1.2'
         jcsvVersion = '1.4.0'
@@ -53,7 +53,7 @@ configure(subprojects) {
         jfoenixVersion = '9.0.6'
         joptVersion = '5.0.4'
         jsonsimpleVersion = '1.1.1'
-        jsonrpc4jVersion = '1.5.3'
+        jsonrpc4jVersion = '1.6.0.bisq.1'
         junitVersion = '4.12'
         jupiterVersion = '5.7.0'
         kotlinVersion = '1.3.41'
@@ -314,8 +314,9 @@ configure(project(':core')) {
             exclude(module: 'commons-codec')
         }
         compile "com.google.guava:guava:$guavaVersion"
-        compile("com.github.briandilley.jsonrpc4j:jsonrpc4j:$jsonrpc4jVersion") {
+        compile("com.github.bisq-network:jsonrpc4j:$jsonrpc4jVersion") {
             exclude(module: 'base64')
+            exclude(module: 'httpcore-nio')
         }
         compile "com.fasterxml.jackson.core:jackson-core:$jacksonVersion"
         compile "com.fasterxml.jackson.core:jackson-annotations:$jacksonVersion"

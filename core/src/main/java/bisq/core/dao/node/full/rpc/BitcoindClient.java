@@ -20,8 +20,6 @@ package bisq.core.dao.node.full.rpc;
 import bisq.core.dao.node.full.rpc.dto.DtoNetworkInfo;
 import bisq.core.dao.node.full.rpc.dto.RawDtoBlock;
 
-import bisq.network.http.HttpException;
-
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -33,13 +31,9 @@ import java.nio.charset.StandardCharsets;
 
 import java.io.IOException;
 
-
 import java.util.Base64;
 import java.util.Collections;
-import java.util.Map;
 import java.util.Optional;
-
-import java.lang.reflect.Type;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -52,19 +46,19 @@ import com.googlecode.jsonrpc4j.RequestIDGenerator;
 
 public interface BitcoindClient {
     @JsonRpcMethod("getblock")
-    RawDtoBlock getBlock(String headerHash, int verbosity) throws IOException, HttpException;
+    RawDtoBlock getBlock(String headerHash, int verbosity) throws IOException;
 
     @JsonRpcMethod("getblockcount")
-    Integer getBlockCount() throws IOException, HttpException;
+    Integer getBlockCount() throws IOException;
 
     @JsonRpcMethod("getblockhash")
-    String getBlockHash(Integer blockHeight) throws IOException, HttpException;
+    String getBlockHash(Integer blockHeight) throws IOException;
 
     @JsonRpcMethod("getbestblockhash")
-    String getBestBlockHash() throws IOException, HttpException;
+    String getBestBlockHash() throws IOException;
 
     @JsonRpcMethod("getnetworkinfo")
-    DtoNetworkInfo getNetworkInfo() throws IOException, HttpException;
+    DtoNetworkInfo getNetworkInfo() throws IOException;
 
     static Builder builder() {
         return new Builder();
@@ -120,24 +114,7 @@ public interface BitcoindClient {
                             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
                             .configure(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_USING_DEFAULT_VALUE, true),
                     new URL("http", rpcHost, rpcPort, "", urlStreamHandler),
-                    headers) {
-                @Override
-                public Object invoke(String methodName,
-                                     Object argument,
-                                     Type returnType,
-                                     Map<String, String> extraHeaders) throws Throwable {
-                    try {
-                        return super.invoke(methodName, argument, returnType, extraHeaders);
-                    } catch (RuntimeException e) {
-                        // Convert the following package-private exception into one that we can catch directly,
-                        // so that HTTP errors (such as authentication failure) can be handled more gracefully.
-                        if (e.getClass().getName().equals("com.googlecode.jsonrpc4j.HttpException")) {
-                            throw new HttpException(e.getMessage(), e.getCause());
-                        }
-                        throw e;
-                    }
-                }
-            };
+                    headers);
             Optional.ofNullable(requestIDGenerator).ifPresent(httpClient::setRequestIDGenerator);
             return ProxyUtil.createClientProxy(getClass().getClassLoader(), BitcoindClient.class, httpClient);
         }

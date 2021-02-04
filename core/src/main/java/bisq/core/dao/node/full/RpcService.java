@@ -28,8 +28,6 @@ import bisq.core.dao.state.model.blockchain.ScriptType;
 import bisq.core.dao.state.model.blockchain.TxInput;
 import bisq.core.user.Preferences;
 
-import bisq.network.http.HttpException;
-
 import bisq.common.UserThread;
 import bisq.common.config.Config;
 import bisq.common.handlers.ResultHandler;
@@ -188,7 +186,7 @@ public class RpcService {
                 .replaceAll("\\.0$", "");
     }
 
-    private void checkNodeVersionAndHealth() throws IOException, HttpException {
+    private void checkNodeVersionAndHealth() throws IOException {
         var networkInfo = client.getNetworkInfo();
         var nodeVersion = decodeNodeVersion(networkInfo.getVersion());
 

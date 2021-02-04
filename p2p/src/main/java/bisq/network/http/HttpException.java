@@ -21,15 +21,7 @@ import lombok.Getter;
 
 public class HttpException extends Exception {
     @Getter
-    private int responseCode;
-
-    public HttpException(String message) {
-        super(message);
-    }
-
-    public HttpException(String message, Throwable cause) {
-        super(message, cause);
-    }
+    private final int responseCode;
 
     public HttpException(String message, int responseCode) {
         super(message);
