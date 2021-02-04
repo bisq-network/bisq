@@ -18,12 +18,12 @@
 package bisq.apitest.method.offer;
 
 import bisq.core.monetary.Altcoin;
+import bisq.core.payment.PaymentAccount;
 
 import bisq.proto.grpc.CreateOfferRequest;
+import bisq.proto.grpc.GetMyOffersRequest;
 import bisq.proto.grpc.GetOffersRequest;
 import bisq.proto.grpc.OfferInfo;
-
-import protobuf.PaymentAccount;
 
 import org.bitcoinj.utils.Fiat;
 
@@ -121,6 +121,10 @@ public abstract class AbstractOfferTest extends MethodTest {
         return aliceStubs.offersService.getOffer(createGetOfferRequest(offerId)).getOffer();
     }
 
+    protected final OfferInfo getMyOffer(String offerId) {
+        return aliceStubs.offersService.getMyOffer(createGetMyOfferRequest(offerId)).getOffer();
+    }
+
     @SuppressWarnings("ResultOfMethodCallIgnored")
     protected final void cancelOffer(GrpcStubs grpcStubs, String offerId) {
         grpcStubs.offersService.cancelOffer(createCancelOfferRequest(offerId));
@@ -134,15 +138,23 @@ public abstract class AbstractOfferTest extends MethodTest {
         return offerInfoList.get(offerInfoList.size() - 1);
     }
 
-    protected final int getOpenOffersCount(GrpcStubs grpcStubs, String direction, String currencyCode) {
-        return getOffersSortedByDate(grpcStubs, direction, currencyCode).size();
-    }
-
-    protected final List<OfferInfo> getOffersSortedByDate(GrpcStubs grpcStubs, String direction, String currencyCode) {
+    protected final List<OfferInfo> getOffersSortedByDate(GrpcStubs grpcStubs,
+                                                          String direction,
+                                                          String currencyCode) {
         var req = GetOffersRequest.newBuilder()
                 .setDirection(direction)
                 .setCurrencyCode(currencyCode).build();
         var reply = grpcStubs.offersService.getOffers(req);
+        return sortOffersByDate(reply.getOffersList());
+    }
+
+    protected final List<OfferInfo> getMyOffersSortedByDate(GrpcStubs grpcStubs,
+                                                            String direction,
+                                                            String currencyCode) {
+        var req = GetMyOffersRequest.newBuilder()
+                .setDirection(direction)
+                .setCurrencyCode(currencyCode).build();
+        var reply = grpcStubs.offersService.getMyOffers(req);
         return sortOffersByDate(reply.getOffersList());
     }
 

@@ -1,0 +1,17 @@
+getversion
+
+NAME
+----
+getversion - get server version
+
+SYNOPSIS
+--------
+getversion
+
+DESCRIPTION
+-----------
+Returns the Bisq server version.
+
+EXAMPLES
+--------
+$ ./bisq-cli --password=xyz --port=9998 getversion

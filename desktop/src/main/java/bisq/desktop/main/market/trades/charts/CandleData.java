@@ -30,10 +30,11 @@ public class CandleData {
     public final long numTrades;
     public final boolean isBullish;
     public final String date;
+    public final long volumeInUsd;
 
     public CandleData(long tick, long open, long close, long high, long low, long average, long median,
                       long accumulatedAmount, long accumulatedVolume, long numTrades,
-                      boolean isBullish, String date) {
+                      boolean isBullish, String date, long volumeInUsd) {
         this.tick = tick;
         this.open = open;
         this.close = close;
@@ -46,5 +47,6 @@ public class CandleData {
         this.numTrades = numTrades;
         this.isBullish = isBullish;
         this.date = date;
+        this.volumeInUsd = volumeInUsd;
     }
 }

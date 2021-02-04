@@ -236,7 +236,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
         if (DevEnv.isDevMode()) {
             UserThread.runAfter(() -> {
                 amount.set("0.001");
-                price.set("70000");
+                price.set("210000");
                 minAmount.set(amount.get());
                 onFocusOutPriceAsPercentageTextField(true, false);
                 applyMakerFee();

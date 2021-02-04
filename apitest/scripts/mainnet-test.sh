@@ -27,7 +27,7 @@
   run ./bisq-cli --bogus getversion
   [ "$status" -eq 1 ]
   echo "actual output:  $output" >&2
-  [ "$output" = "Error: bogus is not a recognized option" ]
+  [ "$output" = "Error: missing required 'password' option" ]
 }
 
 @test "test missing required password option error" {
@@ -61,7 +61,7 @@
 }
 
 @test "test setwalletpassword \"a b c\"" {
-  run ./bisq-cli --password=xyz setwalletpassword "a b c"
+  run ./bisq-cli --password=xyz setwalletpassword --wallet-password="a b c"
   [ "$status" -eq 0 ]
   echo "actual output:  $output" >&2
   [ "$output" = "wallet encrypted" ]
@@ -76,7 +76,7 @@
 }
 
 @test "test unlockwallet without timeout arg" {
-  run ./bisq-cli --password=xyz unlockwallet "a b c"
+  run ./bisq-cli --password=xyz unlockwallet --wallet-password="a b c"
   [ "$status" -eq 1 ]
   echo "actual output:  $output" >&2
   [ "$output" = "Error: no unlock timeout specified" ]
@@ -84,7 +84,7 @@
 
 
 @test "test unlockwallet \"a b c\" 8" {
-  run ./bisq-cli --password=xyz unlockwallet "a b c" 8
+  run ./bisq-cli --password=xyz unlockwallet --wallet-password="a b c" --timeout=8
   [ "$status" -eq 0 ]
   echo "actual output:  $output" >&2
   [ "$output" = "wallet unlocked" ]
@@ -97,7 +97,7 @@
 }
 
 @test "test unlockwallet \"a b c\" 6" {
-  run ./bisq-cli --password=xyz unlockwallet "a b c" 6
+  run ./bisq-cli --password=xyz unlockwallet --wallet-password="a b c" --timeout=6
   [ "$status" -eq 0 ]
   echo "actual output:  $output" >&2
   [ "$output" = "wallet unlocked" ]
@@ -111,14 +111,14 @@
 }
 
 @test "test setwalletpassword incorrect old pwd error" {
-  run ./bisq-cli --password=xyz setwalletpassword "z z z"  "d e f"
+  run ./bisq-cli --password=xyz setwalletpassword --wallet-password="z z z"  --new-wallet-password="d e f"
   [ "$status" -eq 1 ]
   echo "actual output:  $output" >&2
   [ "$output" = "Error: incorrect old password" ]
 }
 
 @test "test setwalletpassword oldpwd newpwd" {
-  run ./bisq-cli --password=xyz setwalletpassword "a b c"  "d e f"
+  run ./bisq-cli --password=xyz setwalletpassword --wallet-password="a b c"  --new-wallet-password="d e f"
   [ "$status" -eq 0 ]
   echo "actual output:  $output" >&2
   [ "$output" = "wallet encrypted with new password" ]
@@ -133,7 +133,7 @@
 }
 
 @test "test removewalletpassword" {
-  run ./bisq-cli --password=xyz removewalletpassword "d e f"
+  run ./bisq-cli --password=xyz removewalletpassword --wallet-password="d e f"
   [ "$status" -eq 0 ]
   echo "actual output:  $output" >&2
   [ "$output" = "wallet decrypted" ]
@@ -163,7 +163,7 @@
 }
 
 @test "test getaddressbalance bogus address argument" {
-  run ./bisq-cli --password=xyz getaddressbalance bogus
+  run ./bisq-cli --password=xyz getaddressbalance --address=bogus
   [ "$status" -eq 1 ]
   echo "actual output:  $output" >&2
   [ "$output" = "Error: address bogus not found in wallet" ]
@@ -183,21 +183,21 @@
   run ./bisq-cli --password=xyz getoffers
   [ "$status" -eq 1 ]
   echo "actual output:  $output" >&2
-  [ "$output" = "Error: incorrect parameter count, expecting direction (buy|sell), currency code" ]
+  [ "$output" = "Error: no direction (buy|sell) specified" ]
 }
 
 @test "test getoffers sell eur check return status" {
-  run ./bisq-cli --password=xyz getoffers sell eur
+  run ./bisq-cli --password=xyz getoffers --direction=sell --currency-code=eur
   [ "$status" -eq 0 ]
 }
 
 @test "test getoffers buy eur check return status" {
-  run ./bisq-cli --password=xyz getoffers buy eur
+  run ./bisq-cli --password=xyz getoffers --direction=buy --currency-code=eur
   [ "$status" -eq 0 ]
 }
 
 @test "test getoffers sell gbp check return status" {
-  run ./bisq-cli --password=xyz getoffers sell gbp
+  run ./bisq-cli --password=xyz getoffers --direction=sell --currency-code=gbp
   [ "$status" -eq 0 ]
 }
 

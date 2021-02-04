@@ -21,6 +21,9 @@ import bisq.core.app.TorSetup;
 import bisq.core.app.misc.ExecutableForAppWithP2p;
 import bisq.core.app.misc.ModuleForAppWithP2p;
 import bisq.core.dao.state.DaoStateSnapshotService;
+import bisq.core.user.Cookie;
+import bisq.core.user.CookieKey;
+import bisq.core.user.User;
 
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.P2PServiceListener;
@@ -36,12 +39,15 @@ import bisq.common.config.BaseCurrencyNetwork;
 import bisq.common.config.Config;
 import bisq.common.handlers.ResultHandler;
 
+import com.google.inject.Key;
+import com.google.inject.name.Names;
+
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class SeedNodeMain extends ExecutableForAppWithP2p {
     private static final long CHECK_CONNECTION_LOSS_SEC = 30;
-    private static final String VERSION = "1.5.4";
+    private static final String VERSION = "1.5.5";
     private SeedNode seedNode;
     private Timer checkConnectionLossTime;
 
@@ -109,6 +115,16 @@ public class SeedNodeMain extends ExecutableForAppWithP2p {
 
     @Override
     protected void startApplication() {
+        Cookie cookie = injector.getInstance(User.class).getCookie();
+        cookie.getAsOptionalBoolean(CookieKey.CLEAN_TOR_DIR_AT_RESTART).ifPresent(wasCleanTorDirSet -> {
+            if (wasCleanTorDirSet) {
+                injector.getInstance(TorSetup.class).cleanupTorFiles(() -> {
+                    log.info("Tor directory reset");
+                    cookie.remove(CookieKey.CLEAN_TOR_DIR_AT_RESTART);
+                }, log::error);
+            }
+        });
+
         seedNode.startApplication();
 
         injector.getInstance(P2PService.class).addP2PServiceListener(new P2PServiceListener() {
@@ -139,7 +155,11 @@ public class SeedNodeMain extends ExecutableForAppWithP2p {
 
             @Override
             public void onHiddenServicePublished() {
-                startShutDownInterval(SeedNodeMain.this);
+                boolean preventPeriodicShutdownAtSeedNode = injector.getInstance(Key.get(boolean.class,
+                        Names.named(Config.PREVENT_PERIODIC_SHUTDOWN_AT_SEED_NODE)));
+                if (!preventPeriodicShutdownAtSeedNode) {
+                    startShutDownInterval(SeedNodeMain.this);
+                }
                 UserThread.runAfter(() -> setupConnectionLossCheck(), 60);
             }
 
@@ -168,11 +188,10 @@ public class SeedNodeMain extends ExecutableForAppWithP2p {
 
         checkConnectionLossTime = UserThread.runPeriodically(() -> {
             if (injector.getInstance(PeerManager.class).getNumAllConnectionsLostEvents() > 1) {
-                // Removing cache files help in case the node got flagged from Tor's dos protection
-                injector.getInstance(TorSetup.class).cleanupTorFiles(() -> {
-                    log.info("Tor directory reset");
-                    shutDown(this);
-                }, log::error);
+                // We set a flag to clear tor cache files at re-start. We cannot clear it now as Tor is used and
+                // that can cause problems.
+                injector.getInstance(User.class).getCookie().putAsBoolean(CookieKey.CLEAN_TOR_DIR_AT_RESTART, true);
+                shutDown(this);
             }
         }, CHECK_CONNECTION_LOSS_SEC);
 

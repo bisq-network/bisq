@@ -71,15 +71,16 @@ public class Statistic {
             totalReceivedBytesPerSec.set(((double) totalReceivedBytes.get()) / passed);
         }, 1);
 
-        // We log statistics every minute
+        // We log statistics every 5 minutes
         UserThread.runPeriodically(() -> {
-            log.info("Network statistics:\n" +
-                            "Bytes sent: {} kb;\n" +
-                            "Number of sent messages/Sent messages: {} / {};\n" +
-                            "Number of sent messages per sec: {};\n" +
-                            "Bytes received: {} kb\n" +
-                            "Number of received messages/Received messages: {} / {};\n" +
-                            "Number of received messages per sec: {};",
+            String ls = System.lineSeparator();
+            log.info("Accumulated network statistics:" + ls +
+                            "Bytes sent: {} kb;" + ls +
+                            "Number of sent messages/Sent messages: {} / {};" + ls +
+                            "Number of sent messages per sec: {};" + ls +
+                            "Bytes received: {} kb" + ls +
+                            "Number of received messages/Received messages: {} / {};" + ls +
+                            "Number of received messages per sec: {};" + ls,
                     totalSentBytes.get() / 1024d,
                     numTotalSentMessages.get(), totalSentMessages,
                     numTotalSentMessagesPerSec.get(),

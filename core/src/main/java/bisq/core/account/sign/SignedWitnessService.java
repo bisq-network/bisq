@@ -73,6 +73,7 @@ public class SignedWitnessService {
     private final KeyRing keyRing;
     private final P2PService p2PService;
     private final ArbitratorManager arbitratorManager;
+    private final SignedWitnessStorageService signedWitnessStorageService;
     private final User user;
     private final FilterManager filterManager;
 
@@ -81,6 +82,17 @@ public class SignedWitnessService {
     // This map keeps all SignedWitnesses with the same AccountAgeWitnessHash in a Set.
     // This avoids iterations over the signedWitnessMap for getting the set of such SignedWitnesses.
     private final Map<P2PDataStorage.ByteArray, Set<SignedWitness>> signedWitnessSetByAccountAgeWitnessHash = new HashMap<>();
+
+    // Iterating over all SignedWitnesses and do a byte array comparison is a bit expensive and
+    // it is called at filtering the offer book many times, so we use a lookup map for fast
+    // access to the set of SignedWitness which match the ownerPubKey.
+    private final Map<P2PDataStorage.ByteArray, Set<SignedWitness>> signedWitnessSetByOwnerPubKey = new HashMap<>();
+
+    // The signature verification calls are rather expensive and called at filtering the offer book many times,
+    // so we cache the results using the hash as key. The hash is created from the accountAgeWitnessHash and the
+    // signature.
+    private final Map<P2PDataStorage.ByteArray, Boolean> verifySignatureWithDSAKeyResultCache = new HashMap<>();
+    private final Map<P2PDataStorage.ByteArray, Boolean> verifySignatureWithECKeyResultCache = new HashMap<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -98,6 +110,7 @@ public class SignedWitnessService {
         this.keyRing = keyRing;
         this.p2PService = p2PService;
         this.arbitratorManager = arbitratorManager;
+        this.signedWitnessStorageService = signedWitnessStorageService;
         this.user = user;
         this.filterManager = filterManager;
 
@@ -117,7 +130,7 @@ public class SignedWitnessService {
         });
 
         // At startup the P2PDataStorage initializes earlier, otherwise we get the listener called.
-        p2PService.getP2PDataStorage().getAppendOnlyDataStoreMap().values().forEach(e -> {
+        signedWitnessStorageService.getMap().values().forEach(e -> {
             if (e instanceof SignedWitness)
                 addToMap((SignedWitness) e);
         });
@@ -322,32 +335,45 @@ public class SignedWitnessService {
     }
 
     private boolean verifySignatureWithECKey(SignedWitness signedWitness) {
+        P2PDataStorage.ByteArray hash = new P2PDataStorage.ByteArray(signedWitness.getHash());
+        if (verifySignatureWithECKeyResultCache.containsKey(hash)) {
+            return verifySignatureWithECKeyResultCache.get(hash);
+        }
         try {
             String message = Utilities.encodeToHex(signedWitness.getAccountAgeWitnessHash());
             String signatureBase64 = new String(signedWitness.getSignature(), Charsets.UTF_8);
             ECKey key = ECKey.fromPublicOnly(signedWitness.getSignerPubKey());
             if (arbitratorManager.isPublicKeyInList(Utilities.encodeToHex(key.getPubKey()))) {
                 key.verifyMessage(message, signatureBase64);
+                verifySignatureWithECKeyResultCache.put(hash, true);
                 return true;
             } else {
                 log.warn("Provided EC key is not in list of valid arbitrators.");
+                verifySignatureWithECKeyResultCache.put(hash, false);
                 return false;
             }
         } catch (SignatureException e) {
             log.warn("verifySignature signedWitness failed. signedWitness={}", signedWitness);
             log.warn("Caused by ", e);
+            verifySignatureWithECKeyResultCache.put(hash, false);
             return false;
         }
     }
 
     private boolean verifySignatureWithDSAKey(SignedWitness signedWitness) {
+        P2PDataStorage.ByteArray hash = new P2PDataStorage.ByteArray(signedWitness.getHash());
+        if (verifySignatureWithDSAKeyResultCache.containsKey(hash)) {
+            return verifySignatureWithDSAKeyResultCache.get(hash);
+        }
         try {
             PublicKey signaturePubKey = Sig.getPublicKeyFromBytes(signedWitness.getSignerPubKey());
             Sig.verify(signaturePubKey, signedWitness.getAccountAgeWitnessHash(), signedWitness.getSignature());
+            verifySignatureWithDSAKeyResultCache.put(hash, true);
             return true;
         } catch (CryptoException e) {
             log.warn("verifySignature signedWitness failed. signedWitness={}", signedWitness);
             log.warn("Caused by ", e);
+            verifySignatureWithDSAKeyResultCache.put(hash, false);
             return false;
         }
     }
@@ -393,10 +419,15 @@ public class SignedWitnessService {
     // witnessOwnerPubKey
     private Set<SignedWitness> getSignedWitnessSetByOwnerPubKey(byte[] ownerPubKey,
                                                                 Stack<P2PDataStorage.ByteArray> excluded) {
-        return getSignedWitnessMapValues().stream()
-                .filter(e -> Arrays.equals(e.getWitnessOwnerPubKey(), ownerPubKey))
-                .filter(e -> !excluded.contains(new P2PDataStorage.ByteArray(e.getSignerPubKey())))
-                .collect(Collectors.toSet());
+        P2PDataStorage.ByteArray key = new P2PDataStorage.ByteArray(ownerPubKey);
+        if (signedWitnessSetByOwnerPubKey.containsKey(key)) {
+            return signedWitnessSetByOwnerPubKey.get(key).stream()
+                    .filter(e -> !excluded.contains(new P2PDataStorage.ByteArray(e.getSignerPubKey())))
+                    .collect(Collectors.toSet());
+
+        } else {
+            return new HashSet<>();
+        }
     }
 
     public boolean isSignedAccountAgeWitness(AccountAgeWitness accountAgeWitness) {
@@ -498,6 +529,10 @@ public class SignedWitnessService {
         P2PDataStorage.ByteArray accountAgeWitnessHash = new P2PDataStorage.ByteArray(signedWitness.getAccountAgeWitnessHash());
         signedWitnessSetByAccountAgeWitnessHash.putIfAbsent(accountAgeWitnessHash, new HashSet<>());
         signedWitnessSetByAccountAgeWitnessHash.get(accountAgeWitnessHash).add(signedWitness);
+
+        P2PDataStorage.ByteArray ownerPubKey = new P2PDataStorage.ByteArray(signedWitness.getWitnessOwnerPubKey());
+        signedWitnessSetByOwnerPubKey.putIfAbsent(ownerPubKey, new HashSet<>());
+        signedWitnessSetByOwnerPubKey.get(ownerPubKey).add(signedWitness);
     }
 
     private void publishSignedWitness(SignedWitness signedWitness) {
@@ -524,6 +559,15 @@ public class SignedWitnessService {
             set.remove(signedWitness);
             if (set.isEmpty()) {
                 signedWitnessSetByAccountAgeWitnessHash.remove(accountAgeWitnessHash);
+            }
+        }
+
+        P2PDataStorage.ByteArray ownerPubKey = new P2PDataStorage.ByteArray(signedWitness.getWitnessOwnerPubKey());
+        if (signedWitnessSetByOwnerPubKey.containsKey(ownerPubKey)) {
+            Set<SignedWitness> set = signedWitnessSetByOwnerPubKey.get(ownerPubKey);
+            set.remove(signedWitness);
+            if (set.isEmpty()) {
+                signedWitnessSetByOwnerPubKey.remove(ownerPubKey);
             }
         }
     }

@@ -26,6 +26,7 @@ import bisq.core.payment.payload.AliPayAccountPayload;
 import bisq.core.payment.payload.AmazonGiftCardAccountPayload;
 import bisq.core.payment.payload.AustraliaPayidPayload;
 import bisq.core.payment.payload.CashAppAccountPayload;
+import bisq.core.payment.payload.CashByMailAccountPayload;
 import bisq.core.payment.payload.CashDepositAccountPayload;
 import bisq.core.payment.payload.ChaseQuickPayAccountPayload;
 import bisq.core.payment.payload.ClearXchangeAccountPayload;
@@ -146,6 +147,8 @@ public class CoreProtoResolver implements ProtoResolver {
                     return HalCashAccountPayload.fromProto(proto);
                 case U_S_POSTAL_MONEY_ORDER_ACCOUNT_PAYLOAD:
                     return USPostalMoneyOrderAccountPayload.fromProto(proto);
+                case CASH_BY_MAIL_ACCOUNT_PAYLOAD:
+                    return CashByMailAccountPayload.fromProto(proto);
                 case PROMPT_PAY_ACCOUNT_PAYLOAD:
                     return PromptPayAccountPayload.fromProto(proto);
                 case ADVANCED_CASH_ACCOUNT_PAYLOAD:

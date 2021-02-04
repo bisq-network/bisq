@@ -24,6 +24,7 @@ import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.user.User;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import java.io.File;
 
@@ -34,6 +35,7 @@ import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
+@Singleton
 @Slf4j
 class CorePaymentAccountsService {
 
@@ -73,6 +75,7 @@ class CorePaymentAccountsService {
 
     String getPaymentAccountFormAsString(String paymentMethodId) {
         File jsonForm = getPaymentAccountForm(paymentMethodId);
+        jsonForm.deleteOnExit(); // If just asking for a string, delete the form file.
         return paymentAccountForm.toJsonString(jsonForm);
     }
 

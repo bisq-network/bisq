@@ -236,6 +236,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
         searchBox.setSpacing(5);
         HBox.setHgrow(searchBoxSpacer, Priority.ALWAYS);
 
+        numItems.setId("num-offers");
         numItems.setPadding(new Insets(-5, 0, 0, 10));
         HBox.setHgrow(footerSpacer, Priority.ALWAYS);
         HBox.setMargin(exportButton, new Insets(0, 10, 0, 0));

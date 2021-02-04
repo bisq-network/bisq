@@ -1,0 +1,17 @@
+getfundingaddresses
+
+NAME
+----
+getfundingaddresses - list BTC receiving address
+
+SYNOPSIS
+--------
+getfundingaddresses
+
+DESCRIPTION
+-----------
+Returns a list of receiving BTC addresses.
+
+EXAMPLES
+--------
+$ ./bisq-cli --password=xyz --port=9998 getfundingaddresses

@@ -28,6 +28,7 @@ import com.google.protobuf.ByteString;
 
 import java.security.PublicKey;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -53,6 +54,11 @@ import javax.annotation.Nullable;
 @EqualsAndHashCode
 @Slf4j
 public final class MailboxStoragePayload implements ProtectedStoragePayload, ExpirablePayload, AddOncePayload {
+    public static final long TTL = TimeUnit.DAYS.toMillis(15);
+
+    // Added in 1.5.5
+    public static final String EXTRA_MAP_KEY_TTL = "ttl";
+
     private final PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage;
     private PublicKey senderPubKeyForAddOperation;
     private final byte[] senderPubKeyForAddOperationBytes;
@@ -61,18 +67,27 @@ public final class MailboxStoragePayload implements ProtectedStoragePayload, Exp
     // Should be only used in emergency case if we need to add data but do not want to break backward compatibility
     // at the P2P network storage checks. The hash of the object will be used to verify if the data is valid. Any new
     // field in a class would break that hash and therefore break the storage mechanism.
+
+    // We add optional TTL entry in v 1.5.5 so we can support different TTL for trade messages and for AckMessages
     @Nullable
     private Map<String, String> extraDataMap;
 
     public MailboxStoragePayload(PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage,
                                  @NotNull PublicKey senderPubKeyForAddOperation,
-                                 PublicKey ownerPubKey) {
+                                 PublicKey ownerPubKey,
+                                 long ttl) {
         this.prefixedSealedAndSignedMessage = prefixedSealedAndSignedMessage;
         this.senderPubKeyForAddOperation = senderPubKeyForAddOperation;
         this.ownerPubKey = ownerPubKey;
 
         senderPubKeyForAddOperationBytes = Sig.getPublicKeyBytes(senderPubKeyForAddOperation);
         ownerPubKeyBytes = Sig.getPublicKeyBytes(ownerPubKey);
+
+        // We do not permit longer TTL as the default one
+        if (ttl < TTL) {
+            extraDataMap = new HashMap<>();
+            extraDataMap.put(EXTRA_MAP_KEY_TTL, String.valueOf(ttl));
+        }
     }
 
 
@@ -118,6 +133,16 @@ public final class MailboxStoragePayload implements ProtectedStoragePayload, Exp
 
     @Override
     public long getTTL() {
-        return TimeUnit.DAYS.toMillis(15);
+        if (extraDataMap != null && extraDataMap.containsKey(EXTRA_MAP_KEY_TTL)) {
+            try {
+                long ttl = Long.parseLong(extraDataMap.get(EXTRA_MAP_KEY_TTL));
+                if (ttl < TTL) {
+                    return ttl;
+                }
+            } catch (Throwable ignore) {
+            }
+        }
+        // If not set in extraDataMap or value is invalid or too large we return default TTL
+        return TTL;
     }
 }

@@ -23,7 +23,7 @@ import bisq.desktop.main.offer.offerbook.OfferBookListItem;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.GUIUtil;
 
-import bisq.core.locale.CurrencyUtil;
+import bisq.core.locale.Res;
 import bisq.core.monetary.Altcoin;
 import bisq.core.monetary.Price;
 import bisq.core.offer.Offer;
@@ -60,6 +60,9 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import lombok.Getter;
+import lombok.Setter;
+
 class SpreadViewModel extends ActivatableViewModel {
 
     private final OfferBook offerBook;
@@ -69,7 +72,11 @@ class SpreadViewModel extends ActivatableViewModel {
     private final ListChangeListener<OfferBookListItem> listChangeListener;
     final ObservableList<SpreadItem> spreadItems = FXCollections.observableArrayList();
     final IntegerProperty maxPlacesForAmount = new SimpleIntegerProperty();
-
+    @Setter
+    @Getter
+    private boolean includePaymentMethod;
+    @Getter
+    private boolean expandedView;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -80,9 +87,18 @@ class SpreadViewModel extends ActivatableViewModel {
         this.offerBook = offerBook;
         this.priceFeedService = priceFeedService;
         this.formatter = formatter;
-
+        includePaymentMethod = false;
         offerBookListItems = offerBook.getOfferBookListItems();
         listChangeListener = c -> update(offerBookListItems);
+    }
+
+    public String getKeyColumnName() {
+        return includePaymentMethod ? Res.get("shared.paymentMethod") : Res.get("shared.currency");
+    }
+
+    public void setExpandedView(boolean expandedView) {
+        this.expandedView = expandedView;
+        update(offerBookListItems);
     }
 
     @Override
@@ -106,18 +122,24 @@ class SpreadViewModel extends ActivatableViewModel {
         Map<String, List<Offer>> offersByCurrencyMap = new HashMap<>();
         for (OfferBookListItem offerBookListItem : offerBookListItems) {
             Offer offer = offerBookListItem.getOffer();
-            String currencyCode = offer.getCurrencyCode();
-            if (!offersByCurrencyMap.containsKey(currencyCode))
-                offersByCurrencyMap.put(currencyCode, new ArrayList<>());
-            offersByCurrencyMap.get(currencyCode).add(offer);
+            String key = offer.getCurrencyCode();
+            if (includePaymentMethod) {
+                key = offer.getPaymentMethod().getShortName();
+                if (expandedView) {
+                    key += ":" + offer.getCurrencyCode();
+                }
+            }
+            if (!offersByCurrencyMap.containsKey(key))
+                offersByCurrencyMap.put(key, new ArrayList<>());
+            offersByCurrencyMap.get(key).add(offer);
         }
         spreadItems.clear();
 
         Coin totalAmount = null;
 
-        for (String currencyCode : offersByCurrencyMap.keySet()) {
-            List<Offer> offers = offersByCurrencyMap.get(currencyCode);
-            final boolean isFiatCurrency = CurrencyUtil.isFiatCurrency(currencyCode);
+        for (String key : offersByCurrencyMap.keySet()) {
+            List<Offer> offers = offersByCurrencyMap.get(key);
+            final boolean isFiatCurrency = (offers.size() > 0 && !offers.get(0).getPaymentMethod().isAsset());
 
             List<Offer> uniqueOffers = offers.stream().filter(distinctByKey(Offer::getId)).collect(Collectors.toList());
 
@@ -160,8 +182,9 @@ class SpreadViewModel extends ActivatableViewModel {
             double percentageValue = 0;
             Price bestSellOfferPrice = sellOffers.isEmpty() ? null : sellOffers.get(0).getPrice();
             Price bestBuyOfferPrice = buyOffers.isEmpty() ? null : buyOffers.get(0).getPrice();
-            if (bestBuyOfferPrice != null && bestSellOfferPrice != null) {
-                MarketPrice marketPrice = priceFeedService.getMarketPrice(currencyCode);
+            if (bestBuyOfferPrice != null && bestSellOfferPrice != null &&
+                    sellOffers.get(0).getCurrencyCode().equals(buyOffers.get(0).getCurrencyCode())) {
+                MarketPrice marketPrice = priceFeedService.getMarketPrice(sellOffers.get(0).getCurrencyCode());
 
                 // There have been some bug reports that an offer caused an overflow exception.
                 // We never found out which offer it was. So add here a try/catch to get better info if it
@@ -213,7 +236,7 @@ class SpreadViewModel extends ActivatableViewModel {
             }
 
             totalAmount = Coin.valueOf(offers.stream().mapToLong(offer -> offer.getAmount().getValue()).sum());
-            spreadItems.add(new SpreadItem(currencyCode, buyOffers.size(), sellOffers.size(),
+            spreadItems.add(new SpreadItem(key, buyOffers.size(), sellOffers.size(),
                     uniqueOffers.size(), spread, percentage, percentageValue, totalAmount));
         }
 

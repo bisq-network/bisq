@@ -22,22 +22,28 @@ import bisq.core.monetary.Price;
 import bisq.core.offer.CreateOfferService;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferBookService;
+import bisq.core.offer.OfferFilter;
 import bisq.core.offer.OfferUtil;
+import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.user.User;
+
+import bisq.common.crypto.KeyRing;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.utils.Fiat;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import java.math.BigDecimal;
 
 import java.util.Comparator;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
@@ -49,54 +55,80 @@ import static bisq.core.locale.CurrencyUtil.isCryptoCurrency;
 import static bisq.core.offer.OfferPayload.Direction;
 import static bisq.core.offer.OfferPayload.Direction.BUY;
 import static java.lang.String.format;
+import static java.util.Comparator.comparing;
 
+@Singleton
 @Slf4j
 class CoreOffersService {
 
+    private final Supplier<Comparator<Offer>> priceComparator = () -> comparing(Offer::getPrice);
+    private final Supplier<Comparator<Offer>> reversePriceComparator = () -> comparing(Offer::getPrice).reversed();
+
+    private final KeyRing keyRing;
     private final CreateOfferService createOfferService;
     private final OfferBookService offerBookService;
+    private final OfferFilter offerFilter;
     private final OpenOfferManager openOfferManager;
     private final OfferUtil offerUtil;
     private final User user;
+    private final boolean isApiUser;
 
     @Inject
-    public CoreOffersService(CreateOfferService createOfferService,
+    public CoreOffersService(CoreContext coreContext,
+                             KeyRing keyRing,
+                             CreateOfferService createOfferService,
                              OfferBookService offerBookService,
+                             OfferFilter offerFilter,
                              OpenOfferManager openOfferManager,
                              OfferUtil offerUtil,
                              User user) {
+        this.keyRing = keyRing;
         this.createOfferService = createOfferService;
         this.offerBookService = offerBookService;
+        this.offerFilter = offerFilter;
         this.openOfferManager = openOfferManager;
         this.offerUtil = offerUtil;
         this.user = user;
+        this.isApiUser = coreContext.isApiUser();
     }
 
     Offer getOffer(String id) {
         return offerBookService.getOffers().stream()
                 .filter(o -> o.getId().equals(id))
+                .filter(o -> offerFilter.canTakeOffer(o, isApiUser).isValid())
+                .findAny().orElseThrow(() ->
+                        new IllegalStateException(format("offer with id '%s' not found", id)));
+    }
+
+    Offer getMyOffer(String id) {
+        return offerBookService.getOffers().stream()
+                .filter(o -> o.getId().equals(id))
+                .filter(o -> o.isMyOffer(keyRing))
                 .findAny().orElseThrow(() ->
                         new IllegalStateException(format("offer with id '%s' not found", id)));
     }
 
     List<Offer> getOffers(String direction, String currencyCode) {
-        List<Offer> offers = offerBookService.getOffers().stream()
-                .filter(o -> {
-                    var offerOfWantedDirection = o.getDirection().name().equalsIgnoreCase(direction);
-                    var offerInWantedCurrency = o.getOfferPayload().getCounterCurrencyCode()
-                            .equalsIgnoreCase(currencyCode);
-                    return offerOfWantedDirection && offerInWantedCurrency;
-                })
+        return offerBookService.getOffers().stream()
+                .filter(o -> offerMatchesDirectionAndCurrency(o, direction, currencyCode))
+                .filter(o -> offerFilter.canTakeOffer(o, isApiUser).isValid())
+                .sorted(priceComparator(direction))
                 .collect(Collectors.toList());
+    }
 
-        // A buyer probably wants to see sell orders in price ascending order.
-        // A seller probably wants to see buy orders in price descending order.
-        if (direction.equalsIgnoreCase(BUY.name()))
-            offers.sort(Comparator.comparing(Offer::getPrice).reversed());
-        else
-            offers.sort(Comparator.comparing(Offer::getPrice));
+    List<Offer> getMyOffers(String direction, String currencyCode) {
+        return offerBookService.getOffers().stream()
+                .filter(o -> o.isMyOffer(keyRing))
+                .filter(o -> offerMatchesDirectionAndCurrency(o, direction, currencyCode))
+                .sorted(priceComparator(direction))
+                .collect(Collectors.toList());
+    }
 
-        return offers;
+    OpenOffer getMyOpenOffer(String id) {
+        return openOfferManager.getOpenOfferById(id)
+                .filter(open -> open.getOffer().isMyOffer(keyRing))
+                .orElseThrow(() ->
+                        new IllegalStateException(format("openoffer with id '%s' not found", id)));
     }
 
     // Create and place new offer.
@@ -108,6 +140,7 @@ class CoreOffersService {
                              long amountAsLong,
                              long minAmountAsLong,
                              double buyerSecurityDeposit,
+                             long triggerPrice,
                              String paymentAccountId,
                              String makerFeeCurrencyCode,
                              Consumer<Offer> resultHandler) {
@@ -139,6 +172,7 @@ class CoreOffersService {
         //noinspection ConstantConditions
         placeOffer(offer,
                 buyerSecurityDeposit,
+                triggerPrice,
                 useSavingsWallet,
                 transaction -> resultHandler.accept(offer));
     }
@@ -180,18 +214,35 @@ class CoreOffersService {
 
     private void placeOffer(Offer offer,
                             double buyerSecurityDeposit,
+                            long triggerPrice,
                             boolean useSavingsWallet,
                             Consumer<Transaction> resultHandler) {
-        // TODO add support for triggerPrice parameter. If value is 0 it is interpreted as not used. Its an optional value
         openOfferManager.placeOffer(offer,
                 buyerSecurityDeposit,
                 useSavingsWallet,
-                0,
+                triggerPrice,
                 resultHandler::accept,
                 log::error);
 
         if (offer.getErrorMessage() != null)
             throw new IllegalStateException(offer.getErrorMessage());
+    }
+
+    private boolean offerMatchesDirectionAndCurrency(Offer offer,
+                                                     String direction,
+                                                     String currencyCode) {
+        var offerOfWantedDirection = offer.getDirection().name().equalsIgnoreCase(direction);
+        var offerInWantedCurrency = offer.getOfferPayload().getCounterCurrencyCode()
+                .equalsIgnoreCase(currencyCode);
+        return offerOfWantedDirection && offerInWantedCurrency;
+    }
+
+    private Comparator<Offer> priceComparator(String direction) {
+        // A buyer probably wants to see sell orders in price ascending order.
+        // A seller probably wants to see buy orders in price descending order.
+        return direction.equalsIgnoreCase(BUY.name())
+                ? reversePriceComparator.get()
+                : priceComparator.get();
     }
 
     private long priceStringToLong(String priceAsString, String currencyCode) {

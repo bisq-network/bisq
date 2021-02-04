@@ -17,7 +17,6 @@
 
 package bisq.core.trade.messages;
 
-import bisq.network.p2p.MailboxMessage;
 import bisq.network.p2p.NodeAddress;
 
 import bisq.common.app.Version;
@@ -27,7 +26,7 @@ import lombok.Value;
 
 @EqualsAndHashCode(callSuper = true)
 @Value
-public final class PeerPublishedDelayedPayoutTxMessage extends TradeMessage implements MailboxMessage {
+public final class PeerPublishedDelayedPayoutTxMessage extends TradeMailboxMessage {
     private final NodeAddress senderNodeAddress;
 
     public PeerPublishedDelayedPayoutTxMessage(String uid,

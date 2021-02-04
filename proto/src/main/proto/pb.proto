@@ -158,6 +158,7 @@ message OfferAvailabilityRequest {
     int64 takers_trade_price = 3;
     repeated int32 supported_capabilities = 4;
     string uid = 5;
+    bool is_taker_api_user = 6;
 }
 
 message OfferAvailabilityResponse {
@@ -576,6 +577,14 @@ message MailboxMessageList {
     repeated MailboxItem mailbox_item = 1;
 }
 
+message RemovedPayloadsMap {
+    map<string, uint64> date_by_hashes = 1;
+}
+
+message IgnoredMailboxMap {
+    map<string, uint64> data = 1;
+}
+
 message MailboxItem {
     ProtectedMailboxStorageEntry protected_mailbox_storage_entry = 1;
     DecryptedMessageWithPubKey decrypted_message_with_pub_key = 2;
@@ -652,7 +661,7 @@ message RefundAgent {
 }
 
 message Filter {
-    repeated string banned_node_address = 1;
+    repeated string node_addresses_banned_from_trading = 1;
     repeated string banned_offer_ids = 2;
     repeated PaymentAccountFilter banned_payment_accounts = 3;
     string signature_as_base64 = 4;
@@ -677,6 +686,8 @@ message Filter {
     repeated string bannedPrivilegedDevPubKeys = 23;
     bool disable_auto_conf = 24;
     repeated string banned_auto_conf_explorers = 25;
+    repeated string node_addresses_banned_from_network = 26;
+    bool disable_api = 27;
 }
 
 // Deprecated
@@ -912,6 +923,8 @@ enum AvailabilityResult {
     USER_IGNORED = 8;
     MISSING_MANDATORY_CAPABILITY = 9;
     NO_REFUND_AGENTS = 10;
+    UNCONF_TX_LIMIT_HIT = 11;
+    MAKER_DENIED_API_USER = 12;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -951,6 +964,7 @@ message PaymentAccountPayload {
         TransferwiseAccountPayload Transferwise_account_payload = 29;
         AustraliaPayidPayload australia_payid_payload = 30;
         AmazonGiftCardAccountPayload amazon_gift_card_account_payload = 31;
+        CashByMailAccountPayload cash_by_mail_account_payload = 32;
     }
     map<string, string> exclude_from_json_data = 15;
 }
@@ -1152,6 +1166,12 @@ message F2FAccountPayload {
     string extra_info = 3;
 }
 
+message CashByMailAccountPayload {
+    string postal_address = 1;
+    string contact = 2;
+    string extra_info = 3;
+}
+
 message PromptPayAccountPayload {
     string prompt_pay_id = 1;
 }
@@ -1210,6 +1230,8 @@ message PersistableEnvelope {
         RefundDisputeList refund_dispute_list = 30;
         TradeStatistics3Store trade_statistics3_store = 31;
         MailboxMessageList mailbox_message_list = 32;
+        IgnoredMailboxMap ignored_mailbox_map = 33;
+        RemovedPayloadsMap removed_payloads_map = 34;
     }
 }
 
@@ -1613,6 +1635,9 @@ message PreferencesPayload {
     bool tac_accepted_v120 = 55;
     repeated AutoConfirmSettings auto_confirm_settings = 56;
     double bsq_average_trim_threshold = 57;
+    bool hide_non_account_payment_methods = 58;
+    bool show_offers_matching_my_accounts = 59;
+    bool deny_api_taker = 60;
 }
 
 message AutoConfirmSettings {

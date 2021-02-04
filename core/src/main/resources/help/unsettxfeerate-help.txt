@@ -1,0 +1,18 @@
+unsettxfeerate
+
+NAME
+----
+unsettxfeerate - unset transaction fee rate preference
+
+SYNOPSIS
+--------
+unsettxfeerate
+
+DESCRIPTION
+-----------
+Unsets (removes) the transaction fee rate user preference.
+
+EXAMPLES
+--------
+Remove the user's custom transaction fee rate preference:
+$ ./bisq-cli --password=xyz --port=9998 unsettxfeerate

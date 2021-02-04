@@ -18,7 +18,7 @@
 package bisq.network.p2p.network;
 
 import bisq.network.p2p.NodeAddress;
-import bisq.network.p2p.Utils;
+import bisq.network.utils.Utils;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
@@ -87,9 +87,12 @@ public class TorNetworkNode extends NetworkNode {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public TorNetworkNode(int servicePort, NetworkProtoResolver networkProtoResolver, boolean useStreamIsolation,
-                          TorMode torMode) {
-        super(servicePort, networkProtoResolver);
+    public TorNetworkNode(int servicePort,
+                          NetworkProtoResolver networkProtoResolver,
+                          boolean useStreamIsolation,
+                          TorMode torMode,
+                          @Nullable NetworkFilter networkFilter) {
+        super(servicePort, networkProtoResolver, networkFilter);
         this.torMode = torMode;
         this.streamIsolation = useStreamIsolation;
         createExecutorService();
@@ -148,6 +151,10 @@ public class TorNetworkNode extends NetworkNode {
     }
 
     public void shutDown(@Nullable Runnable shutDownCompleteHandler) {
+        if (allShutDown != null) {
+            log.warn("We got called shutDown again and ignore it.");
+            return;
+        }
         // this one is executed synchronously
         BooleanProperty networkNodeShutDown = networkNodeShutDown();
         // this one is committed as a thread to the executor
@@ -181,6 +188,7 @@ public class TorNetworkNode extends NetworkNode {
             if (tor != null) {
                 log.info("Tor has been created already so we can shut it down.");
                 tor.shutdown();
+                tor = null;
                 log.info("Tor shut down completed");
             } else {
                 log.info("Tor has not been created yet. We cancel the torStartupFuture.");

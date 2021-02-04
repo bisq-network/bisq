@@ -19,7 +19,6 @@ package bisq.core.trade.messages;
 
 import bisq.core.account.sign.SignedWitness;
 
-import bisq.network.p2p.MailboxMessage;
 import bisq.network.p2p.NodeAddress;
 
 import bisq.common.app.Version;
@@ -34,7 +33,7 @@ import lombok.Value;
 @SuppressWarnings("ALL")
 @EqualsAndHashCode(callSuper = true)
 @Value
-public class TraderSignedWitnessMessage extends TradeMessage implements MailboxMessage {
+public class TraderSignedWitnessMessage extends TradeMailboxMessage {
     private final NodeAddress senderNodeAddress;
     private final SignedWitness signedWitness;
 

@@ -45,10 +45,12 @@ class GrpcPriceService extends PriceGrpc.PriceImplBase {
     public void getMarketPrice(MarketPriceRequest req,
                                StreamObserver<MarketPriceReply> responseObserver) {
         try {
-            double price = coreApi.getMarketPrice(req.getCurrencyCode());
-            var reply = MarketPriceReply.newBuilder().setPrice(price).build();
-            responseObserver.onNext(reply);
-            responseObserver.onCompleted();
+            coreApi.getMarketPrice(req.getCurrencyCode(),
+                    price -> {
+                        var reply = MarketPriceReply.newBuilder().setPrice(price).build();
+                        responseObserver.onNext(reply);
+                        responseObserver.onCompleted();
+                    });
         } catch (Throwable cause) {
             exceptionHandler.handleException(cause, responseObserver);
         }

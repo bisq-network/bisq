@@ -35,9 +35,11 @@ import bisq.core.trade.failed.FailedTradesManager;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
 
-import bisq.network.p2p.P2PService;
+import bisq.network.p2p.mailbox.IgnoredMailboxService;
+import bisq.network.p2p.mailbox.MailboxMessageService;
 import bisq.network.p2p.peers.PeerManager;
 import bisq.network.p2p.storage.P2PDataStorage;
+import bisq.network.p2p.storage.persistence.RemovedPayloadsService;
 
 import bisq.common.config.Config;
 import bisq.common.proto.persistable.PersistedDataHost;
@@ -67,7 +69,9 @@ public class CorePersistedDataHost {
         persistedDataHosts.add(injector.getInstance(RefundDisputeListService.class));
         persistedDataHosts.add(injector.getInstance(P2PDataStorage.class));
         persistedDataHosts.add(injector.getInstance(PeerManager.class));
-        persistedDataHosts.add(injector.getInstance(P2PService.class));
+        persistedDataHosts.add(injector.getInstance(MailboxMessageService.class));
+        persistedDataHosts.add(injector.getInstance(IgnoredMailboxService.class));
+        persistedDataHosts.add(injector.getInstance(RemovedPayloadsService.class));
 
         if (injector.getInstance(Config.class).daoActivated) {
             persistedDataHosts.add(injector.getInstance(BallotListService.class));

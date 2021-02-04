@@ -183,6 +183,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
         selectToggleButton.setText(Res.get("shared.enabled"));
         selectToggleButton.setDisable(true);
 
+        numItems.setId("num-offers");
         numItems.setPadding(new Insets(-5, 0, 0, 10));
         HBox.setHgrow(footerSpacer, Priority.ALWAYS);
         HBox.setMargin(exportButton, new Insets(0, 10, 0, 0));

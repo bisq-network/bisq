@@ -20,11 +20,16 @@ package bisq.daemon.grpc;
 import bisq.core.api.CoreApi;
 import bisq.core.api.model.OfferInfo;
 import bisq.core.offer.Offer;
+import bisq.core.offer.OpenOffer;
 
 import bisq.proto.grpc.CancelOfferReply;
 import bisq.proto.grpc.CancelOfferRequest;
 import bisq.proto.grpc.CreateOfferReply;
 import bisq.proto.grpc.CreateOfferRequest;
+import bisq.proto.grpc.GetMyOfferReply;
+import bisq.proto.grpc.GetMyOfferRequest;
+import bisq.proto.grpc.GetMyOffersReply;
+import bisq.proto.grpc.GetMyOffersRequest;
 import bisq.proto.grpc.GetOfferReply;
 import bisq.proto.grpc.GetOfferRequest;
 import bisq.proto.grpc.GetOffersReply;
@@ -70,6 +75,22 @@ class GrpcOffersService extends OffersGrpc.OffersImplBase {
     }
 
     @Override
+    public void getMyOffer(GetMyOfferRequest req,
+                           StreamObserver<GetMyOfferReply> responseObserver) {
+        try {
+            Offer offer = coreApi.getMyOffer(req.getId());
+            OpenOffer openOffer = coreApi.getMyOpenOffer(req.getId());
+            var reply = GetMyOfferReply.newBuilder()
+                    .setOffer(toOfferInfo(offer, openOffer.getTriggerPrice()).toProtoMessage())
+                    .build();
+            responseObserver.onNext(reply);
+            responseObserver.onCompleted();
+        } catch (Throwable cause) {
+            exceptionHandler.handleException(cause, responseObserver);
+        }
+    }
+
+    @Override
     public void getOffers(GetOffersRequest req,
                           StreamObserver<GetOffersReply> responseObserver) {
         try {
@@ -77,6 +98,25 @@ class GrpcOffersService extends OffersGrpc.OffersImplBase {
                     .stream().map(OfferInfo::toOfferInfo)
                     .collect(Collectors.toList());
             var reply = GetOffersReply.newBuilder()
+                    .addAllOffers(result.stream()
+                            .map(OfferInfo::toProtoMessage)
+                            .collect(Collectors.toList()))
+                    .build();
+            responseObserver.onNext(reply);
+            responseObserver.onCompleted();
+        } catch (Throwable cause) {
+            exceptionHandler.handleException(cause, responseObserver);
+        }
+    }
+
+    @Override
+    public void getMyOffers(GetMyOffersRequest req,
+                            StreamObserver<GetMyOffersReply> responseObserver) {
+        try {
+            List<OfferInfo> result = coreApi.getMyOffers(req.getDirection(), req.getCurrencyCode())
+                    .stream().map(OfferInfo::toOfferInfo)
+                    .collect(Collectors.toList());
+            var reply = GetMyOffersReply.newBuilder()
                     .addAllOffers(result.stream()
                             .map(OfferInfo::toProtoMessage)
                             .collect(Collectors.toList()))
@@ -101,6 +141,7 @@ class GrpcOffersService extends OffersGrpc.OffersImplBase {
                     req.getAmount(),
                     req.getMinAmount(),
                     req.getBuyerSecurityDeposit(),
+                    req.getTriggerPrice(),
                     req.getPaymentAccountId(),
                     req.getMakerFeeCurrencyCode(),
                     offer -> {

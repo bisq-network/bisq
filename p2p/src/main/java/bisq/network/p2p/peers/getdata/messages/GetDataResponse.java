@@ -18,6 +18,8 @@
 package bisq.network.p2p.peers.getdata.messages;
 
 import bisq.network.p2p.ExtendedDataSizePermission;
+import bisq.network.p2p.InitialDataRequest;
+import bisq.network.p2p.InitialDataResponse;
 import bisq.network.p2p.SupportedCapabilitiesMessage;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import bisq.network.p2p.storage.payload.ProtectedMailboxStorageEntry;
@@ -27,8 +29,8 @@ import bisq.common.app.Capabilities;
 import bisq.common.app.Version;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.network.NetworkProtoResolver;
+import bisq.common.util.Utilities;
 
-import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -41,7 +43,8 @@ import org.jetbrains.annotations.NotNull;
 @Slf4j
 @EqualsAndHashCode(callSuper = true)
 @Value
-public final class GetDataResponse extends NetworkEnvelope implements SupportedCapabilitiesMessage, ExtendedDataSizePermission {
+public final class GetDataResponse extends NetworkEnvelope implements SupportedCapabilitiesMessage,
+        ExtendedDataSizePermission, InitialDataResponse {
     // Set of ProtectedStorageEntry objects
     private final Set<ProtectedStorageEntry> dataSet;
 
@@ -107,29 +110,28 @@ public final class GetDataResponse extends NetworkEnvelope implements SupportedC
         protobuf.NetworkEnvelope proto = getNetworkEnvelopeBuilder()
                 .setGetDataResponse(builder)
                 .build();
-        log.info("Sending a GetDataResponse with {} kB", proto.getSerializedSize() / 1000d);
+        log.info("Sending a GetDataResponse with {}", Utilities.readableFileSize(proto.getSerializedSize()));
         return proto;
     }
 
     public static GetDataResponse fromProto(protobuf.GetDataResponse proto,
                                             NetworkProtoResolver resolver,
                                             int messageVersion) {
-        log.info("Received a GetDataResponse with {} kB", proto.getSerializedSize() / 1000d);
-        Set<ProtectedStorageEntry> dataSet = new HashSet<>(
-                proto.getDataSetList().stream()
-                        .map(entry -> (ProtectedStorageEntry) resolver.fromProto(entry))
-                        .collect(Collectors.toSet()));
-
-        Set<PersistableNetworkPayload> persistableNetworkPayloadSet = new HashSet<>(
-                proto.getPersistableNetworkPayloadItemsList().stream()
-                                .map(e -> (PersistableNetworkPayload) resolver.fromProto(e))
-                                .collect(Collectors.toSet()));
-
+        log.info("Received a GetDataResponse with {}", Utilities.readableFileSize(proto.getSerializedSize()));
+        Set<ProtectedStorageEntry> dataSet = proto.getDataSetList().stream()
+                .map(entry -> (ProtectedStorageEntry) resolver.fromProto(entry)).collect(Collectors.toSet());
+        Set<PersistableNetworkPayload> persistableNetworkPayloadSet = proto.getPersistableNetworkPayloadItemsList().stream()
+                .map(e -> (PersistableNetworkPayload) resolver.fromProto(e)).collect(Collectors.toSet());
         return new GetDataResponse(dataSet,
                 persistableNetworkPayloadSet,
                 proto.getRequestNonce(),
                 proto.getIsGetUpdatedDataResponse(),
                 Capabilities.fromIntList(proto.getSupportedCapabilitiesList()),
                 messageVersion);
+    }
+
+    @Override
+    public Class<? extends InitialDataRequest> associatedRequest() {
+        return isGetUpdatedDataResponse ? GetUpdatedDataRequest.class : PreliminaryGetDataRequest.class;
     }
 }

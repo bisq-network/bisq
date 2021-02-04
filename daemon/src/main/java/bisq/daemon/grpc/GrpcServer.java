@@ -17,6 +17,8 @@
 
 package bisq.daemon.grpc;
 
+import bisq.core.api.CoreContext;
+
 import bisq.common.UserThread;
 import bisq.common.config.Config;
 
@@ -44,9 +46,11 @@ public class GrpcServer {
     private final Server server;
 
     @Inject
-    public GrpcServer(Config config,
+    public GrpcServer(CoreContext coreContext,
+                      Config config,
                       PasswordAuthInterceptor passwordAuthInterceptor,
                       GrpcDisputeAgentsService disputeAgentsService,
+                      GrpcHelpService helpService,
                       GrpcOffersService offersService,
                       GrpcPaymentAccountsService paymentAccountsService,
                       GrpcPriceService priceService,
@@ -57,6 +61,7 @@ public class GrpcServer {
         this.server = ServerBuilder.forPort(config.apiPort)
                 .executor(UserThread.getExecutor())
                 .addService(disputeAgentsService)
+                .addService(helpService)
                 .addService(offersService)
                 .addService(paymentAccountsService)
                 .addService(priceService)
@@ -66,6 +71,7 @@ public class GrpcServer {
                 .addService(walletsService)
                 .intercept(passwordAuthInterceptor)
                 .build();
+        coreContext.setApiUser(true);
     }
 
     public void start() {

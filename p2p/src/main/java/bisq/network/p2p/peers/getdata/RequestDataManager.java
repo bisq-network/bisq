@@ -51,6 +51,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.Nullable;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class RequestDataManager implements MessageListener, ConnectionListener, PeerManager.Listener {
@@ -73,9 +74,11 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
 
         void onDataReceived();
 
-        void onNoPeersAvailable();
+        default void onNoPeersAvailable() {
+        }
 
-        void onNoSeedNodeAvailable();
+        default void onNoSeedNodeAvailable() {
+        }
     }
 
 
@@ -87,6 +90,9 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
     private final P2PDataStorage dataStorage;
     private final PeerManager peerManager;
     private final List<NodeAddress> seedNodeAddresses;
+
+    // As we use Guice injection we cannot set the listener in our constructor but the P2PService calls the setListener
+    // in it's constructor so we can guarantee it is not null.
     private Listener listener;
 
     private final Map<NodeAddress, RequestDataHandler> handlerMap = new HashMap<>();
@@ -143,7 +149,9 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void addListener(Listener listener) {
+    // We only support one listener as P2PService will manage calls on other clients in the correct order of execution.
+    // The listener is set from the P2PService constructor so we can guarantee it is not null.
+    public void setListener(Listener listener) {
         this.listener = listener;
     }
 
@@ -259,9 +267,6 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
     public void onMessage(NetworkEnvelope networkEnvelope, Connection connection) {
         if (networkEnvelope instanceof GetDataRequest) {
             if (!stopped) {
-                if (peerManager.isSeedNode(connection))
-                    connection.setPeerType(Connection.PeerType.SEED_NODE);
-
                 GetDataRequest getDataRequest = (GetDataRequest) networkEnvelope;
                 if (getDataRequest.getVersion() == null || !Version.isNewVersion(getDataRequest.getVersion(), "1.5.0")) {
                     connection.shutDown(CloseConnectionReason.MANDATORY_CAPABILITIES_NOT_SUPPORTED);
@@ -333,16 +338,16 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
                                     // We delay because it can be that we get the HS published before we receive the
                                     // preliminary data and the onPreliminaryDataReceived call triggers the
                                     // dataUpdateRequested set to true, so we would also call the onUpdatedDataReceived.
-                                    UserThread.runAfter(listener::onPreliminaryDataReceived, 100, TimeUnit.MILLISECONDS);
+                                    UserThread.runAfter(checkNotNull(listener)::onPreliminaryDataReceived, 100, TimeUnit.MILLISECONDS);
                                 }
 
                                 // 2. Later we get a response from requestUpdatesData
                                 if (dataUpdateRequested) {
                                     dataUpdateRequested = false;
-                                    listener.onUpdatedDataReceived();
+                                    checkNotNull(listener).onUpdatedDataReceived();
                                 }
 
-                                listener.onDataReceived();
+                                checkNotNull(listener).onDataReceived();
                             }
 
                             @Override
@@ -369,13 +374,14 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
 
                                     // Notify listeners
                                     if (!nodeAddressOfPreliminaryDataRequest.isPresent()) {
-                                        if (peerManager.isSeedNode(nodeAddress))
-                                            listener.onNoSeedNodeAvailable();
-                                        else
-                                            listener.onNoPeersAvailable();
+                                        if (peerManager.isSeedNode(nodeAddress)) {
+                                            checkNotNull(listener).onNoSeedNodeAvailable();
+                                        } else {
+                                            checkNotNull(listener).onNoPeersAvailable();
+                                        }
                                     }
 
-                                    restart();
+                                    requestFromNonSeedNodePeers();
                                 } else {
                                     log.info("We could not connect to seed node {} but we have other connection attempts open.", nodeAddress.getFullAddress());
                                 }
@@ -404,6 +410,18 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Utils
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void requestFromNonSeedNodePeers() {
+        List<NodeAddress> list = getFilteredNonSeedNodeList(getSortedNodeAddresses(peerManager.getReportedPeers()), new ArrayList<>());
+        List<NodeAddress> filteredPersistedPeers = getFilteredNonSeedNodeList(getSortedNodeAddresses(peerManager.getPersistedPeers()), list);
+        list.addAll(filteredPersistedPeers);
+
+        if (!list.isEmpty()) {
+            NodeAddress nextCandidate = list.get(0);
+            list.remove(nextCandidate);
+            requestData(nextCandidate, list);
+        }
+    }
 
     private void restart() {
         if (retryTimer == null) {

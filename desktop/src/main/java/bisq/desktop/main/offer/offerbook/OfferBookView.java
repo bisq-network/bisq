@@ -22,6 +22,7 @@ import bisq.desktop.common.view.ActivatableViewAndModel;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipLabel;
+import bisq.desktop.components.AutoTooltipSlideToggleButton;
 import bisq.desktop.components.AutoTooltipTableColumn;
 import bisq.desktop.components.AutocompleteComboBox;
 import bisq.desktop.components.ColoredDecimalPlacesWithZerosText;
@@ -51,6 +52,7 @@ import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.monetary.Price;
 import bisq.core.offer.Offer;
+import bisq.core.offer.OfferFilter;
 import bisq.core.offer.OfferPayload;
 import bisq.core.offer.OfferRestrictions;
 import bisq.core.payment.PaymentAccount;
@@ -61,6 +63,7 @@ import bisq.core.util.coin.CoinFormatter;
 
 import bisq.network.p2p.NodeAddress;
 
+import bisq.common.app.DevEnv;
 import bisq.common.config.Config;
 import bisq.common.util.Tuple3;
 
@@ -82,10 +85,10 @@ import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 
@@ -110,6 +113,8 @@ import javafx.util.StringConverter;
 import java.util.Comparator;
 import java.util.Optional;
 
+import org.jetbrains.annotations.NotNull;
+
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 
 @FxmlView
@@ -126,6 +131,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private AutocompleteComboBox<TradeCurrency> currencyComboBox;
     private AutocompleteComboBox<PaymentMethod> paymentMethodComboBox;
     private AutoTooltipButton createOfferButton;
+    private AutoTooltipSlideToggleButton matchingOffersToggle;
     private AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem> amountColumn, volumeColumn, marketColumn,
             priceColumn, paymentMethodColumn, depositColumn, signingStateColumn, avatarColumn;
     private TableView<OfferBookListItem> tableView;
@@ -169,40 +175,39 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         final TitledGroupBg titledGroupBg = addTitledGroupBg(root, gridRow, 2, Res.get("offerbook.availableOffers"));
         titledGroupBg.getStyleClass().add("last");
 
-        HBox hBox = new HBox();
-        hBox.setAlignment(Pos.CENTER_LEFT);
-        hBox.setSpacing(35);
-        hBox.setPadding(new Insets(10, 0, 0, 0));
+        HBox offerToolsBox = new HBox();
+        offerToolsBox.setAlignment(Pos.BOTTOM_LEFT);
+        offerToolsBox.setSpacing(10);
+        offerToolsBox.setPadding(new Insets(10, 0, 0, 0));
 
-        final Tuple3<VBox, Label, AutocompleteComboBox<TradeCurrency>> currencyBoxTuple = FormBuilder.addTopLabelAutocompleteComboBox(
+        Tuple3<VBox, Label, AutocompleteComboBox<TradeCurrency>> currencyBoxTuple = FormBuilder.addTopLabelAutocompleteComboBox(
                 Res.get("offerbook.filterByCurrency"));
-        final Tuple3<VBox, Label, AutocompleteComboBox<PaymentMethod>> paymentBoxTuple = FormBuilder.addTopLabelAutocompleteComboBox(
+        currencyComboBox = currencyBoxTuple.third;
+        currencyComboBox.setPrefWidth(270);
+
+        Tuple3<VBox, Label, AutocompleteComboBox<PaymentMethod>> paymentBoxTuple = FormBuilder.addTopLabelAutocompleteComboBox(
                 Res.get("offerbook.filterByPaymentMethod"));
+        paymentMethodComboBox = paymentBoxTuple.third;
+        paymentMethodComboBox.setCellFactory(GUIUtil.getPaymentMethodCellFactory());
+        paymentMethodComboBox.setPrefWidth(270);
+
+        matchingOffersToggle = new AutoTooltipSlideToggleButton();
+        matchingOffersToggle.setText(Res.get("offerbook.matchingOffers"));
+        HBox.setMargin(matchingOffersToggle, new Insets(7, 0, -9, -15));
+
 
         createOfferButton = new AutoTooltipButton();
         createOfferButton.setMinHeight(40);
         createOfferButton.setGraphicTextGap(10);
-        AnchorPane.setRightAnchor(createOfferButton, 0d);
-        AnchorPane.setBottomAnchor(createOfferButton, 0d);
 
-        hBox.getChildren().addAll(currencyBoxTuple.first, paymentBoxTuple.first, createOfferButton);
-        AnchorPane.setLeftAnchor(hBox, 0d);
-        AnchorPane.setTopAnchor(hBox, 0d);
-        AnchorPane.setBottomAnchor(hBox, 0d);
+        offerToolsBox.getChildren().addAll(currencyBoxTuple.first, paymentBoxTuple.first,
+                matchingOffersToggle, getSpacer(), createOfferButton);
 
-        AnchorPane anchorPane = new AnchorPane();
-        anchorPane.getChildren().addAll(hBox, createOfferButton);
-
-        GridPane.setHgrow(anchorPane, Priority.ALWAYS);
-        GridPane.setRowIndex(anchorPane, gridRow);
-        GridPane.setColumnSpan(anchorPane, 2);
-        GridPane.setMargin(anchorPane, new Insets(Layout.FIRST_ROW_DISTANCE, 0, 0, 0));
-        root.getChildren().add(anchorPane);
-
-        currencyComboBox = currencyBoxTuple.third;
-
-        paymentMethodComboBox = paymentBoxTuple.third;
-        paymentMethodComboBox.setCellFactory(GUIUtil.getPaymentMethodCellFactory());
+        GridPane.setHgrow(offerToolsBox, Priority.ALWAYS);
+        GridPane.setRowIndex(offerToolsBox, gridRow);
+        GridPane.setColumnSpan(offerToolsBox, 2);
+        GridPane.setMargin(offerToolsBox, new Insets(Layout.FIRST_ROW_DISTANCE, 0, 0, 0));
+        root.getChildren().add(offerToolsBox);
 
         tableView = new TableView<>();
 
@@ -324,12 +329,13 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                 currencyComboBox.getSelectionModel().select(SHOW_ALL);
             model.onSetTradeCurrency(currencyComboBox.getSelectionModel().getSelectedItem());
         });
+        updateCurrencyComboBoxFromModel();
 
-        if (model.showAllTradeCurrenciesProperty.get())
-            currencyComboBox.getSelectionModel().select(SHOW_ALL);
-        else
-            currencyComboBox.getSelectionModel().select(model.getSelectedTradeCurrency());
         currencyComboBox.getEditor().setText(new CurrencyStringConverter(currencyComboBox).toString(currencyComboBox.getSelectionModel().getSelectedItem()));
+
+        matchingOffersToggle.setSelected(model.useOffersMatchingMyAccountsFilter);
+        matchingOffersToggle.disableProperty().bind(model.disableMatchToggle);
+        matchingOffersToggle.setOnAction(e -> model.onShowOffersMatchingMyAccounts(matchingOffersToggle.isSelected()));
 
         volumeColumn.sortableProperty().bind(model.showAllTradeCurrenciesProperty.not());
         model.getOfferList().comparatorProperty().bind(tableView.comparatorProperty());
@@ -359,6 +365,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
             if (paymentMethodComboBox.getEditor().getText().isEmpty())
                 paymentMethodComboBox.getSelectionModel().select(SHOW_ALL);
             model.onSetPaymentMethod(paymentMethodComboBox.getSelectionModel().getSelectedItem());
+            updateCurrencyComboBoxFromModel();
             updateSigningStateColumn();
         });
 
@@ -405,6 +412,14 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         model.priceFeedService.updateCounterProperty().addListener(priceFeedUpdateCounterListener);
     }
 
+    private void updateCurrencyComboBoxFromModel() {
+        if (model.showAllTradeCurrenciesProperty.get()) {
+            currencyComboBox.getSelectionModel().select(SHOW_ALL);
+        } else {
+            currencyComboBox.getSelectionModel().select(model.getSelectedTradeCurrency());
+        }
+    }
+
     private void updateSigningStateColumn() {
         if (model.hasSelectionAccountSigning()) {
             if (!tableView.getColumns().contains(signingStateColumn)) {
@@ -418,6 +433,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     @Override
     protected void deactivate() {
         createOfferButton.setOnAction(null);
+        matchingOffersToggle.setOnAction(null);
+        matchingOffersToggle.disableProperty().unbind();
         model.getOfferList().comparatorProperty().unbind();
 
         volumeColumn.sortableProperty().unbind();
@@ -432,7 +449,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     }
 
     static class CurrencyStringConverter extends StringConverter<TradeCurrency> {
-        private ComboBox<TradeCurrency> comboBox;
+        private final ComboBox<TradeCurrency> comboBox;
 
         CurrencyStringConverter(ComboBox<TradeCurrency> comboBox) {
             this.comboBox = comboBox;
@@ -476,7 +493,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     }
 
     static class PaymentMethodStringConverter extends StringConverter<PaymentMethod> {
-        private ComboBox<PaymentMethod> comboBox;
+        private final ComboBox<PaymentMethod> comboBox;
 
         PaymentMethodStringConverter(ComboBox<PaymentMethod> comboBox) {
             this.comboBox = comboBox;
@@ -598,51 +615,61 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         }
     }
 
-    private void onShowInfo(Offer offer,
-                            boolean isPaymentAccountValidForOffer,
-                            boolean isInsufficientCounterpartyTradeLimit,
-                            boolean hasSameProtocolVersion,
-                            boolean isIgnored,
-                            boolean isOfferBanned,
-                            boolean isCurrencyBanned,
-                            boolean isPaymentMethodBanned,
-                            boolean isNodeAddressBanned,
-                            boolean requireUpdateToNewVersion,
-                            boolean isInsufficientTradeLimit) {
-        if (!isPaymentAccountValidForOffer) {
-            openPopupForMissingAccountSetup(Res.get("offerbook.warning.noMatchingAccount.headline"),
-                    Res.get("offerbook.warning.noMatchingAccount.msg"),
-                    FiatAccountsView.class,
-                    "navigation.account");
-        } else if (isInsufficientCounterpartyTradeLimit) {
-            new Popup().warning(Res.get("offerbook.warning.counterpartyTradeRestrictions")).show();
-        } else if (!hasSameProtocolVersion) {
-            new Popup().warning(Res.get("offerbook.warning.wrongTradeProtocol")).show();
-        } else if (isIgnored) {
-            new Popup().warning(Res.get("offerbook.warning.userIgnored")).show();
-        } else if (isOfferBanned) {
-            new Popup().warning(Res.get("offerbook.warning.offerBlocked")).show();
-        } else if (isCurrencyBanned) {
-            new Popup().warning(Res.get("offerbook.warning.currencyBanned")).show();
-        } else if (isPaymentMethodBanned) {
-            new Popup().warning(Res.get("offerbook.warning.paymentMethodBanned")).show();
-        } else if (isNodeAddressBanned) {
-            new Popup().warning(Res.get("offerbook.warning.nodeBlocked")).show();
-        } else if (requireUpdateToNewVersion) {
-            new Popup().warning(Res.get("offerbook.warning.requireUpdateToNewVersion")).show();
-        } else if (isInsufficientTradeLimit) {
-            final Optional<PaymentAccount> account = model.getMostMaturePaymentAccountForOffer(offer);
-            if (account.isPresent()) {
-                final long tradeLimit = model.accountAgeWitnessService.getMyTradeLimit(account.get(),
-                        offer.getCurrencyCode(), offer.getMirroredDirection());
-                new Popup()
-                        .warning(Res.get("popup.warning.tradeLimitDueAccountAgeRestriction.buyer",
-                                formatter.formatCoinWithCode(Coin.valueOf(tradeLimit)),
-                                Res.get("offerbook.warning.newVersionAnnouncement")))
-                        .show();
-            } else {
-                log.warn("We don't found a payment account but got called the isInsufficientTradeLimit case. That must not happen.");
-            }
+    private void onShowInfo(Offer offer, OfferFilter.Result result) {
+        switch (result) {
+            case VALID:
+                break;
+            case API_DISABLED:
+                DevEnv.logErrorAndThrowIfDevMode("We are in desktop and in the taker position " +
+                        "viewing offers, so it cannot be that we got that result as we are not an API user.");
+                break;
+            case HAS_NO_PAYMENT_ACCOUNT_VALID_FOR_OFFER:
+                openPopupForMissingAccountSetup(Res.get("offerbook.warning.noMatchingAccount.headline"),
+                        Res.get("offerbook.warning.noMatchingAccount.msg"),
+                        FiatAccountsView.class,
+                        "navigation.account");
+                break;
+            case HAS_NOT_SAME_PROTOCOL_VERSION:
+                new Popup().warning(Res.get("offerbook.warning.wrongTradeProtocol")).show();
+                break;
+            case IS_IGNORED:
+                new Popup().warning(Res.get("offerbook.warning.userIgnored")).show();
+                break;
+            case IS_OFFER_BANNED:
+                new Popup().warning(Res.get("offerbook.warning.offerBlocked")).show();
+                break;
+            case IS_CURRENCY_BANNED:
+                new Popup().warning(Res.get("offerbook.warning.currencyBanned")).show();
+                break;
+            case IS_PAYMENT_METHOD_BANNED:
+                new Popup().warning(Res.get("offerbook.warning.paymentMethodBanned")).show();
+                break;
+            case IS_NODE_ADDRESS_BANNED:
+                new Popup().warning(Res.get("offerbook.warning.nodeBlocked")).show();
+                break;
+            case REQUIRE_UPDATE_TO_NEW_VERSION:
+                new Popup().warning(Res.get("offerbook.warning.requireUpdateToNewVersion")).show();
+                break;
+            case IS_INSUFFICIENT_COUNTERPARTY_TRADE_LIMIT:
+                new Popup().warning(Res.get("offerbook.warning.counterpartyTradeRestrictions")).show();
+                break;
+            case IS_MY_INSUFFICIENT_TRADE_LIMIT:
+                Optional<PaymentAccount> account = model.getMostMaturePaymentAccountForOffer(offer);
+                if (account.isPresent()) {
+                    long tradeLimit = model.accountAgeWitnessService.getMyTradeLimit(account.get(),
+                            offer.getCurrencyCode(), offer.getMirroredDirection());
+                    new Popup()
+                            .warning(Res.get("popup.warning.tradeLimitDueAccountAgeRestriction.buyer",
+                                    formatter.formatCoinWithCode(Coin.valueOf(tradeLimit)),
+                                    Res.get("offerbook.warning.newVersionAnnouncement")))
+                            .show();
+                } else {
+                    DevEnv.logErrorAndThrowIfDevMode("We don't found a payment account but got called the " +
+                            "isInsufficientTradeLimit case.");
+                }
+                break;
+            default:
+                break;
         }
     }
 
@@ -996,11 +1023,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                         return new TableCell<>() {
                             final ImageView iconView = new ImageView();
                             final AutoTooltipButton button = new AutoTooltipButton();
-                            boolean isTradable, isPaymentAccountValidForOffer,
-                                    isInsufficientCounterpartyTradeLimit,
-                                    hasSameProtocolVersion, isIgnored, isOfferBanned, isCurrencyBanned,
-                                    isPaymentMethodBanned, isNodeAddressBanned, isMyInsufficientTradeLimit,
-                                    requireUpdateToNewVersion;
+                            OfferFilter.Result canTakeOfferResult = null;
 
                             {
                                 button.setGraphic(iconView);
@@ -1015,33 +1038,14 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
                                 TableRow<OfferBookListItem> tableRow = getTableRow();
                                 if (item != null && !empty) {
-                                    final Offer offer = item.getOffer();
+                                    Offer offer = item.getOffer();
                                     boolean myOffer = model.isMyOffer(offer);
+
                                     if (tableRow != null) {
-                                        isPaymentAccountValidForOffer = model.isAnyPaymentAccountValidForOffer(offer);
-                                        isInsufficientCounterpartyTradeLimit = model.isInsufficientCounterpartyTradeLimit(offer);
-                                        hasSameProtocolVersion = model.hasSameProtocolVersion(offer);
-                                        isIgnored = model.isIgnored(offer);
-                                        isOfferBanned = model.isOfferBanned(offer);
-                                        isCurrencyBanned = model.isCurrencyBanned(offer);
-                                        isPaymentMethodBanned = model.isPaymentMethodBanned(offer);
-                                        isNodeAddressBanned = model.isNodeAddressBanned(offer);
-                                        requireUpdateToNewVersion = model.requireUpdateToNewVersion();
-                                        isMyInsufficientTradeLimit = model.isMyInsufficientTradeLimit(offer);
-                                        isTradable = isPaymentAccountValidForOffer &&
-                                                !isInsufficientCounterpartyTradeLimit &&
-                                                hasSameProtocolVersion &&
-                                                !isIgnored &&
-                                                !isOfferBanned &&
-                                                !isCurrencyBanned &&
-                                                !isPaymentMethodBanned &&
-                                                !isNodeAddressBanned &&
-                                                !requireUpdateToNewVersion &&
-                                                !isMyInsufficientTradeLimit;
+                                        canTakeOfferResult = model.offerFilter.canTakeOffer(offer, false);
+                                        tableRow.setOpacity(canTakeOfferResult.isValid() || myOffer ? 1 : 0.4);
 
-                                        tableRow.setOpacity(isTradable || myOffer ? 1 : 0.4);
-
-                                        if (isTradable) {
+                                        if (canTakeOfferResult.isValid()) {
                                             // set first row button as default
                                             button.setDefaultButton(getIndex() == 0);
                                             tableRow.setOnMousePressed(null);
@@ -1050,17 +1054,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                             tableRow.setOnMousePressed(e -> {
                                                 // ugly hack to get the icon clickable when deactivated
                                                 if (!(e.getTarget() instanceof ImageView || e.getTarget() instanceof Canvas))
-                                                    onShowInfo(offer,
-                                                            isPaymentAccountValidForOffer,
-                                                            isInsufficientCounterpartyTradeLimit,
-                                                            hasSameProtocolVersion,
-                                                            isIgnored,
-                                                            isOfferBanned,
-                                                            isCurrencyBanned,
-                                                            isPaymentMethodBanned,
-                                                            isNodeAddressBanned,
-                                                            requireUpdateToNewVersion,
-                                                            isMyInsufficientTradeLimit);
+                                                    onShowInfo(offer, canTakeOfferResult);
                                             });
                                         }
                                     }
@@ -1090,18 +1084,15 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                         button.setOnAction(e -> onTakeOffer(offer));
                                     }
 
-                                    if (!myOffer && !isTradable)
-                                        button.setOnAction(e -> onShowInfo(offer,
-                                                isPaymentAccountValidForOffer,
-                                                isInsufficientCounterpartyTradeLimit,
-                                                hasSameProtocolVersion,
-                                                isIgnored,
-                                                isOfferBanned,
-                                                isCurrencyBanned,
-                                                isPaymentMethodBanned,
-                                                isNodeAddressBanned,
-                                                requireUpdateToNewVersion,
-                                                isMyInsufficientTradeLimit));
+                                    if (!myOffer) {
+                                        if (canTakeOfferResult == null) {
+                                            canTakeOfferResult = model.offerFilter.canTakeOffer(offer, false);
+                                        }
+
+                                        if (!canTakeOfferResult.isValid()) {
+                                            button.setOnAction(e -> onShowInfo(offer, canTakeOfferResult));
+                                        }
+                                    }
 
                                     button.updateText(title);
                                     setPadding(new Insets(0, 15, 0, 0));
@@ -1139,8 +1130,6 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
             @Override
             public TableCell<OfferBookListItem, OfferBookListItem> call(TableColumn<OfferBookListItem, OfferBookListItem> column) {
                 return new TableCell<>() {
-                    private HyperlinkWithIcon field;
-
                     @Override
                     public void updateItem(final OfferBookListItem item, boolean empty) {
                         super.updateItem(item, empty);
@@ -1203,5 +1192,12 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                     }
                 });
         return column;
+    }
+
+    @NotNull
+    private Region getSpacer() {
+        final Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+        return spacer;
     }
 }

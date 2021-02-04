@@ -61,6 +61,11 @@ public class TxConfidenceListItem {
         updateConfidence(bsqWalletService.getConfidenceForTxId(txId), tooltip);
     }
 
+    protected TxConfidenceListItem() {
+        this.bsqWalletService = null;
+        this.txId = null;
+    }
+
     private void updateConfidence(TransactionConfidence confidence, Tooltip tooltip) {
         if (confidence != null) {
             GUIUtil.updateConfidence(confidence, tooltip, txConfidenceIndicator);

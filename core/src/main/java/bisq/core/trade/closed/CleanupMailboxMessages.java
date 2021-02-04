@@ -25,6 +25,8 @@ import bisq.network.p2p.AckMessageSourceType;
 import bisq.network.p2p.BootstrapListener;
 import bisq.network.p2p.DecryptedMessageWithPubKey;
 import bisq.network.p2p.P2PService;
+import bisq.network.p2p.mailbox.MailboxMessage;
+import bisq.network.p2p.mailbox.MailboxMessageService;
 
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.proto.network.NetworkEnvelope;
@@ -50,10 +52,12 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class CleanupMailboxMessages {
     private final P2PService p2PService;
+    private final MailboxMessageService mailboxMessageService;
 
     @Inject
-    public CleanupMailboxMessages(P2PService p2PService) {
+    public CleanupMailboxMessages(P2PService p2PService, MailboxMessageService mailboxMessageService) {
         this.p2PService = p2PService;
+        this.mailboxMessageService = mailboxMessageService;
     }
 
     public void handleTrades(List<Trade> trades) {
@@ -76,7 +80,7 @@ public class CleanupMailboxMessages {
     }
 
     private void cleanupMailboxMessages(List<Trade> trades) {
-        p2PService.getMailBoxMessages()
+        mailboxMessageService.getMyDecryptedMailboxMessages()
                 .forEach(message -> handleDecryptedMessageWithPubKey(message, trades));
     }
 
@@ -85,7 +89,8 @@ public class CleanupMailboxMessages {
         trades.stream()
                 .filter(trade -> isMessageForTrade(decryptedMessageWithPubKey, trade))
                 .filter(trade -> isPubKeyValid(decryptedMessageWithPubKey, trade))
-                .forEach(trade -> removeEntryFromMailbox(decryptedMessageWithPubKey, trade));
+                .filter(trade -> decryptedMessageWithPubKey.getNetworkEnvelope() instanceof MailboxMessage)
+                .forEach(trade -> removeEntryFromMailbox((MailboxMessage) decryptedMessageWithPubKey.getNetworkEnvelope(), trade));
     }
 
     private boolean isMessageForTrade(DecryptedMessageWithPubKey decryptedMessageWithPubKey, Trade trade) {
@@ -99,10 +104,11 @@ public class CleanupMailboxMessages {
         return false;
     }
 
-    private void removeEntryFromMailbox(DecryptedMessageWithPubKey decryptedMessageWithPubKey, Trade trade) {
-        log.info("We found a pending mailbox message ({}) for trade {}. As the trade is closed we remove the mailbox message.",
-                decryptedMessageWithPubKey.getNetworkEnvelope().getClass().getSimpleName(), trade.getId());
-        p2PService.removeMailboxMsg(decryptedMessageWithPubKey);
+    private void removeEntryFromMailbox(MailboxMessage mailboxMessage, Trade trade) {
+        log.info("We found a pending mailbox message ({}) for trade {}. " +
+                        "As the trade is closed we remove the mailbox message.",
+                mailboxMessage.getClass().getSimpleName(), trade.getId());
+        mailboxMessageService.removeMailboxMsg(mailboxMessage);
     }
 
     private boolean isMyMessage(TradeMessage message, Trade trade) {
@@ -114,15 +120,15 @@ public class CleanupMailboxMessages {
                 ackMessage.getSourceId().equals(trade.getId());
     }
 
-    private boolean isPubKeyValid(DecryptedMessageWithPubKey message, Trade trade) {
+    private boolean isPubKeyValid(DecryptedMessageWithPubKey decryptedMessageWithPubKey, Trade trade) {
         // We can only validate the peers pubKey if we have it already. If we are the taker we get it from the offer
         // Otherwise it depends on the state of the trade protocol if we have received the peers pubKeyRing already.
         PubKeyRing peersPubKeyRing = trade.getProcessModel().getTradingPeer().getPubKeyRing();
         boolean isValid = true;
         if (peersPubKeyRing != null &&
-                !message.getSignaturePubKey().equals(peersPubKeyRing.getSignaturePubKey())) {
+                !decryptedMessageWithPubKey.getSignaturePubKey().equals(peersPubKeyRing.getSignaturePubKey())) {
             isValid = false;
-            log.warn("SignaturePubKey in message does not match the SignaturePubKey we have set for our trading peer.");
+            log.warn("SignaturePubKey in decryptedMessageWithPubKey does not match the SignaturePubKey we have set for our trading peer.");
         }
         return isValid;
     }

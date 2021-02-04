@@ -38,6 +38,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 
 import bisq.apitest.method.CallRateMeteringInterceptorTest;
+import bisq.apitest.method.GetMethodHelpTest;
 import bisq.apitest.method.GetVersionTest;
 import bisq.apitest.method.MethodTest;
 import bisq.apitest.method.RegisterDisputeAgentsTest;
@@ -90,6 +91,13 @@ public class StartupTest extends MethodTest {
         test.testInvalidRegistrationKeyArgShouldThrowException();
         test.testRegisterMediator();
         test.testRegisterRefundAgent();
+    }
+
+    @Test
+    @Order(4)
+    public void testGetCreateOfferHelp() {
+        GetMethodHelpTest test = new GetMethodHelpTest();
+        test.testGetCreateOfferHelp();
     }
 
     @AfterAll

@@ -263,7 +263,8 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         addListeners();
 
         if (offerAvailabilityBusyAnimation != null && !model.showPayFundsScreenDisplayed.get()) {
-            offerAvailabilityBusyAnimation.play();
+            // temporarily disabled due to high CPU usage (per issue #4649)
+            //    offerAvailabilityBusyAnimation.play();
             offerAvailabilityLabel.setVisible(true);
             offerAvailabilityLabel.setManaged(true);
         } else {
@@ -272,7 +273,8 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         }
 
         if (waitingForFundsBusyAnimation != null && model.isWaitingForFunds.get()) {
-            waitingForFundsBusyAnimation.play();
+            // temporarily disabled due to high CPU usage (per issue #4649)
+            //    waitingForFundsBusyAnimation.play();
             waitingForFundsLabel.setVisible(true);
             waitingForFundsLabel.setManaged(true);
         } else {
@@ -528,7 +530,8 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
         cancelButton2.setVisible(true);
 
-        waitingForFundsBusyAnimation.play();
+        // temporarily disabled due to high CPU usage (per issue #4649)
+        //waitingForFundsBusyAnimation.play();
 
         payFundsTitledGroupBg.setVisible(true);
         totalToPayTextField.setVisible(true);
@@ -704,7 +707,8 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         });
 
         isWaitingForFundsSubscription = EasyBind.subscribe(model.isWaitingForFunds, isWaitingForFunds -> {
-            waitingForFundsBusyAnimation.play();
+            // temporarily disabled due to high CPU usage (per issue #4649)
+            //  waitingForFundsBusyAnimation.play();
             waitingForFundsLabel.setVisible(isWaitingForFunds);
             waitingForFundsLabel.setManaged(isWaitingForFunds);
         });

@@ -22,6 +22,7 @@ import bisq.core.app.TorSetup;
 import bisq.core.btc.BitcoinModule;
 import bisq.core.dao.DaoModule;
 import bisq.core.filter.FilterModule;
+import bisq.core.network.CoreNetworkFilter;
 import bisq.core.network.p2p.seed.DefaultSeedNodeRepository;
 import bisq.core.offer.OfferModule;
 import bisq.core.proto.network.CoreNetworkProtoResolver;
@@ -33,6 +34,7 @@ import bisq.core.user.User;
 import bisq.network.crypto.EncryptionServiceModule;
 import bisq.network.p2p.P2PModule;
 import bisq.network.p2p.network.BridgeAddressProvider;
+import bisq.network.p2p.network.NetworkFilter;
 import bisq.network.p2p.seed.SeedNodeRepository;
 
 import bisq.common.ClockWatcher;
@@ -73,6 +75,7 @@ public class ModuleForAppWithP2p extends AppModule {
         bind(TorSetup.class).in(Singleton.class);
 
         bind(SeedNodeRepository.class).to(DefaultSeedNodeRepository.class).in(Singleton.class);
+        bind(NetworkFilter.class).to(CoreNetworkFilter.class).in(Singleton.class);
 
         bind(File.class).annotatedWith(named(STORAGE_DIR)).toInstance(config.storageDir);
         bind(File.class).annotatedWith(named(KEY_STORAGE_DIR)).toInstance(config.keyStorageDir);
@@ -81,6 +84,7 @@ public class ModuleForAppWithP2p extends AppModule {
         bindConstant().annotatedWith(named(USE_DEV_MODE)).to(config.useDevMode);
         bindConstant().annotatedWith(named(USE_DEV_MODE_HEADER)).to(config.useDevModeHeader);
         bindConstant().annotatedWith(named(REFERRAL_ID)).to(config.referralId);
+        bindConstant().annotatedWith(named(PREVENT_PERIODIC_SHUTDOWN_AT_SEED_NODE)).to(config.preventPeriodicShutdownAtSeedNode);
 
         // ordering is used for shut down sequence
         install(new TradeModule(config));

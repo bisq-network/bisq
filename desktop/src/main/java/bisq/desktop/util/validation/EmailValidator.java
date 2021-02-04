@@ -45,7 +45,7 @@ public final class EmailValidator extends InputValidator {
 
     @Override
     public ValidationResult validate(String input) {
-        if (input == null || input.length() < 6) // shortest address is l@d.cc
+        if (input == null || input.length() < 6 || input.length() > 100) // shortest address is l@d.cc, max length 100
             return invalidAddress;
         String[] subStrings;
         String local, domain;

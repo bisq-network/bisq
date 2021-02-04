@@ -18,6 +18,7 @@
 package bisq.core.trade.protocol.tasks;
 
 import bisq.core.trade.Trade;
+import bisq.core.trade.messages.TradeMailboxMessage;
 import bisq.core.trade.messages.TradeMessage;
 
 import bisq.network.p2p.NodeAddress;
@@ -33,7 +34,7 @@ public abstract class SendMailboxMessageTask extends TradeTask {
         super(taskHandler, trade);
     }
 
-    protected abstract TradeMessage getMessage(String id);
+    protected abstract TradeMailboxMessage getTradeMailboxMessage(String id);
 
     protected abstract void setStateSent();
 
@@ -48,13 +49,13 @@ public abstract class SendMailboxMessageTask extends TradeTask {
         try {
             runInterceptHook();
             String id = processModel.getOfferId();
-            TradeMessage message = getMessage(id);
+            TradeMailboxMessage message = getTradeMailboxMessage(id);
             setStateSent();
             NodeAddress peersNodeAddress = trade.getTradingPeerNodeAddress();
             log.info("Send {} to peer {}. tradeId={}, uid={}",
                     message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
 
-            processModel.getP2PService().sendEncryptedMailboxMessage(
+            processModel.getP2PService().getMailboxMessageService().sendEncryptedMailboxMessage(
                     peersNodeAddress,
                     processModel.getTradingPeer().getPubKeyRing(),
                     message,

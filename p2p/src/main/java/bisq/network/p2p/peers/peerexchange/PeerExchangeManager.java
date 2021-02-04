@@ -194,9 +194,6 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener,
     public void onMessage(NetworkEnvelope networkEnvelope, Connection connection) {
         if (networkEnvelope instanceof GetPeersRequest) {
             if (!stopped) {
-                if (peerManager.isSeedNode(connection))
-                    connection.setPeerType(Connection.PeerType.SEED_NODE);
-
                 GetPeersRequestHandler getPeersRequestHandler = new GetPeersRequestHandler(networkNode,
                         peerManager,
                         new GetPeersRequestHandler.Listener() {

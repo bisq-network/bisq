@@ -634,47 +634,50 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
             NodeAddress refundAgentNodeAddress = null;
             if (openOfferOptional.isPresent()) {
                 OpenOffer openOffer = openOfferOptional.get();
-                if (openOffer.getState() == OpenOffer.State.AVAILABLE) {
-                    Offer offer = openOffer.getOffer();
-                    if (preferences.getIgnoreTradersList().stream().noneMatch(fullAddress -> fullAddress.equals(peer.getFullAddress()))) {
-                        availabilityResult = AvailabilityResult.AVAILABLE;
+                if (!apiUserDeniedByOffer(request)) {
+                    if (openOffer.getState() == OpenOffer.State.AVAILABLE) {
+                        Offer offer = openOffer.getOffer();
+                        if (preferences.getIgnoreTradersList().stream().noneMatch(fullAddress -> fullAddress.equals(peer.getFullAddress()))) {
+                            mediatorNodeAddress = DisputeAgentSelection.getLeastUsedMediator(tradeStatisticsManager, mediatorManager).getNodeAddress();
+                            openOffer.setMediatorNodeAddress(mediatorNodeAddress);
 
-                        mediatorNodeAddress = DisputeAgentSelection.getLeastUsedMediator(tradeStatisticsManager, mediatorManager).getNodeAddress();
-                        openOffer.setMediatorNodeAddress(mediatorNodeAddress);
+                            refundAgentNodeAddress = DisputeAgentSelection.getLeastUsedRefundAgent(tradeStatisticsManager, refundAgentManager).getNodeAddress();
+                            openOffer.setRefundAgentNodeAddress(refundAgentNodeAddress);
 
-                        refundAgentNodeAddress = DisputeAgentSelection.getLeastUsedRefundAgent(tradeStatisticsManager, refundAgentManager).getNodeAddress();
-                        openOffer.setRefundAgentNodeAddress(refundAgentNodeAddress);
-
-                        try {
-                            // Check also tradePrice to avoid failures after taker fee is paid caused by a too big difference
-                            // in trade price between the peers. Also here poor connectivity might cause market price API connection
-                            // losses and therefore an outdated market price.
-                            offer.checkTradePriceTolerance(request.getTakersTradePrice());
-                        } catch (TradePriceOutOfToleranceException e) {
-                            log.warn("Trade price check failed because takers price is outside out tolerance.");
-                            availabilityResult = AvailabilityResult.PRICE_OUT_OF_TOLERANCE;
-                        } catch (MarketPriceNotAvailableException e) {
-                            log.warn(e.getMessage());
-                            availabilityResult = AvailabilityResult.MARKET_PRICE_NOT_AVAILABLE;
-                        } catch (Throwable e) {
-                            log.warn("Trade price check failed. " + e.getMessage());
-                            availabilityResult = AvailabilityResult.UNKNOWN_FAILURE;
+                            try {
+                                // Check also tradePrice to avoid failures after taker fee is paid caused by a too big difference
+                                // in trade price between the peers. Also here poor connectivity might cause market price API connection
+                                // losses and therefore an outdated market price.
+                                offer.checkTradePriceTolerance(request.getTakersTradePrice());
+                                availabilityResult = AvailabilityResult.AVAILABLE;
+                            } catch (TradePriceOutOfToleranceException e) {
+                                log.warn("Trade price check failed because takers price is outside out tolerance.");
+                                availabilityResult = AvailabilityResult.PRICE_OUT_OF_TOLERANCE;
+                            } catch (MarketPriceNotAvailableException e) {
+                                log.warn(e.getMessage());
+                                availabilityResult = AvailabilityResult.MARKET_PRICE_NOT_AVAILABLE;
+                            } catch (Throwable e) {
+                                log.warn("Trade price check failed. " + e.getMessage());
+                                availabilityResult = AvailabilityResult.UNKNOWN_FAILURE;
+                            }
+                        } else {
+                            availabilityResult = AvailabilityResult.USER_IGNORED;
                         }
                     } else {
-                        availabilityResult = AvailabilityResult.USER_IGNORED;
+                        availabilityResult = AvailabilityResult.OFFER_TAKEN;
                     }
                 } else {
-                    availabilityResult = AvailabilityResult.OFFER_TAKEN;
+                    availabilityResult = AvailabilityResult.MAKER_DENIED_API_USER;
                 }
             } else {
-                log.warn("handleOfferAvailabilityRequest: openOffer not found. That should never happen.");
+                log.warn("handleOfferAvailabilityRequest: openOffer not found.");
                 availabilityResult = AvailabilityResult.OFFER_TAKEN;
             }
 
             if (btcWalletService.isUnconfirmedTransactionsLimitHit() || bsqWalletService.isUnconfirmedTransactionsLimitHit()) {
                 errorMessage = Res.get("shared.unconfirmedTransactionsLimitReached");
                 log.warn(errorMessage);
-                availabilityResult = AvailabilityResult.UNKNOWN_FAILURE;
+                availabilityResult = AvailabilityResult.UNCONF_TX_LIMIT_HIT;
             }
 
             OfferAvailabilityResponse offerAvailabilityResponse = new OfferAvailabilityResponse(request.offerId,
@@ -714,6 +717,10 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         } finally {
             sendAckMessage(request, peer, result, errorMessage);
         }
+    }
+
+    private boolean apiUserDeniedByOffer(OfferAvailabilityRequest request) {
+        return preferences.isDenyApiTaker() && request.isTakerApiUser();
     }
 
     private void sendAckMessage(OfferAvailabilityRequest message,

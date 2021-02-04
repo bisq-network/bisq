@@ -17,8 +17,6 @@
 
 package bisq.common.util;
 
-import java.awt.Desktop;
-
 import java.net.URI;
 
 import java.io.File;
@@ -27,17 +25,20 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import lombok.extern.slf4j.Slf4j;
+
 // Taken form https://stackoverflow.com/questions/18004150/desktop-api-is-not-supported-on-the-current-platform,
 // originally net.mightypork.rpack.utils.DesktopApi
+@Slf4j
 class DesktopUtil {
 
     public static boolean browse(URI uri) {
-        return openSystemSpecific(uri.toString()) || browseDESKTOP(uri);
+        return openSystemSpecific(uri.toString());
     }
 
 
     public static boolean open(File file) {
-        return openSystemSpecific(file.getPath()) || openDESKTOP(file);
+        return openSystemSpecific(file.getPath());
     }
 
 
@@ -45,7 +46,7 @@ class DesktopUtil {
         // you can try something like
         // runCommand("gimp", "%s", file.getPath())
         // based on user preferences.
-        return openSystemSpecific(file.getPath()) || editDESKTOP(file);
+        return openSystemSpecific(file.getPath());
     }
 
 
@@ -69,82 +70,10 @@ class DesktopUtil {
     }
 
 
-    private static boolean browseDESKTOP(URI uri) {
-
-        logOut("Trying to use Desktop.getDesktop().browse() with " + uri.toString());
-        try {
-            if (!Desktop.isDesktopSupported()) {
-                logErr("Platform is not supported.");
-                return false;
-            }
-
-            if (!Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
-                logErr("BROWSE is not supported.");
-                return false;
-            }
-
-            Desktop.getDesktop().browse(uri);
-
-            return true;
-        } catch (Throwable t) {
-            logErr("Error using desktop browse.", t);
-            return false;
-        }
-    }
-
-
-    private static boolean openDESKTOP(File file) {
-
-        logOut("Trying to use Desktop.getDesktop().open() with " + file.toString());
-        try {
-            if (!Desktop.isDesktopSupported()) {
-                logErr("Platform is not supported.");
-                return false;
-            }
-
-            if (!Desktop.getDesktop().isSupported(Desktop.Action.OPEN)) {
-                logErr("OPEN is not supported.");
-                return false;
-            }
-
-            Desktop.getDesktop().open(file);
-
-            return true;
-        } catch (Throwable t) {
-            logErr("Error using desktop open.", t);
-            return false;
-        }
-    }
-
-
-    private static boolean editDESKTOP(File file) {
-
-        logOut("Trying to use Desktop.getDesktop().edit() with " + file);
-        try {
-            if (!Desktop.isDesktopSupported()) {
-                logErr("Platform is not supported.");
-                return false;
-            }
-
-            if (!Desktop.getDesktop().isSupported(Desktop.Action.EDIT)) {
-                logErr("EDIT is not supported.");
-                return false;
-            }
-
-            Desktop.getDesktop().edit(file);
-
-            return true;
-        } catch (Throwable t) {
-            logErr("Error using desktop edit.", t);
-            return false;
-        }
-    }
-
-
     @SuppressWarnings("SameParameterValue")
     private static boolean runCommand(String command, String args, String file) {
 
-        logOut("Trying to exec:\n   cmd = " + command + "\n   args = " + args + "\n   %s = " + file);
+        log.info("Trying to exec: cmd = {} args = {} file = {}", command, args, file);
 
         String[] parts = prepareCommand(command, args, file);
 
@@ -155,17 +84,17 @@ class DesktopUtil {
             try {
                 int value = p.exitValue();
                 if (value == 0) {
-                    logErr("Process ended immediately.");
+                    log.warn("Process ended immediately.");
                 } else {
-                    logErr("Process crashed.");
+                    log.warn("Process crashed.");
                 }
                 return false;
             } catch (IllegalThreadStateException e) {
-                logErr("Process is running.");
+                log.info("Process is running.");
                 return true;
             }
         } catch (IOException e) {
-            logErr("Error running command.", e);
+            log.warn("Error running command. {}", e);
             return false;
         }
     }
@@ -185,19 +114,6 @@ class DesktopUtil {
         }
 
         return parts.toArray(new String[parts.size()]);
-    }
-
-    private static void logErr(String msg, Throwable t) {
-        System.err.println(msg);
-        t.printStackTrace();
-    }
-
-    private static void logErr(String msg) {
-        System.err.println(msg);
-    }
-
-    private static void logOut(String msg) {
-        System.out.println(msg);
     }
 
     public enum EnumOS {

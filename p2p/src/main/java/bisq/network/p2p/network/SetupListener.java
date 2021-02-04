@@ -22,7 +22,9 @@ public interface SetupListener {
 
     void onHiddenServicePublished();
 
-    void onSetupFailed(Throwable throwable);
+    default void onSetupFailed(Throwable throwable) {
+    }
 
-    void onRequestCustomBridges();
+    default void onRequestCustomBridges() {
+    }
 }

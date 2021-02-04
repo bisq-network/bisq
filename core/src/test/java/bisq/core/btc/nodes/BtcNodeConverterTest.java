@@ -27,7 +27,6 @@ import org.bitcoinj.core.PeerAddress;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 
 import java.net.InetAddress;
-import java.net.UnknownHostException;
 
 import org.junit.Test;
 
@@ -39,7 +38,7 @@ import static org.mockito.Mockito.when;
 
 public class BtcNodeConverterTest {
     @Test
-    public void testConvertOnionHost() throws UnknownHostException {
+    public void testConvertOnionHost() {
         BtcNode node = mock(BtcNode.class);
         when(node.getOnionAddress()).thenReturn("aaa.onion");
 
@@ -63,7 +62,7 @@ public class BtcNodeConverterTest {
         PeerAddress peerAddress = new BtcNodeConverter().convertClearNode(node);
         // noinspection ConstantConditions
         InetAddress inetAddress = peerAddress.getAddr();
-        assertEquals(ip, inetAddress.getHostName());
+        assertEquals(ip, inetAddress.getHostAddress());
     }
 
     @Test

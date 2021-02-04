@@ -144,7 +144,7 @@
                         <PropertyValueFactory property="receivedBytes"/>
                     </cellValueFactory>
                 </TableColumn>
-                <TableColumn fx:id="peerTypeColumn" minWidth="100" maxWidth="100">
+                <TableColumn fx:id="peerTypeColumn" minWidth="170" maxWidth="170">
                     <cellValueFactory>
                         <PropertyValueFactory property="peerType"/>
                     </cellValueFactory>

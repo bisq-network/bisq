@@ -19,6 +19,7 @@ package bisq.apitest.method;
 
 import bisq.core.api.model.PaymentAccountForm;
 import bisq.core.api.model.TxFeeRateInfo;
+import bisq.core.payment.F2FAccount;
 import bisq.core.proto.CoreProtoResolver;
 
 import bisq.common.util.Utilities;
@@ -34,6 +35,8 @@ import bisq.proto.grpc.CreatePaymentAccountRequest;
 import bisq.proto.grpc.GetAddressBalanceRequest;
 import bisq.proto.grpc.GetBalancesRequest;
 import bisq.proto.grpc.GetFundingAddressesRequest;
+import bisq.proto.grpc.GetMethodHelpRequest;
+import bisq.proto.grpc.GetMyOfferRequest;
 import bisq.proto.grpc.GetOfferRequest;
 import bisq.proto.grpc.GetPaymentAccountFormRequest;
 import bisq.proto.grpc.GetPaymentAccountsRequest;
@@ -133,9 +136,9 @@ public class MethodTest extends ApiTestCase {
         }
     }
 
-    private static void doPostStartup(boolean registerDisputeAgents,
-                                      boolean generateBtcBlock,
-                                      Enum<?>... supportingApps) {
+    protected static void doPostStartup(boolean registerDisputeAgents,
+                                        boolean generateBtcBlock,
+                                        Enum<?>... supportingApps) {
         if (registerDisputeAgents) {
             registerDisputeAgents(arbdaemon);
         }
@@ -223,6 +226,10 @@ public class MethodTest extends ApiTestCase {
         return GetOfferRequest.newBuilder().setId(offerId).build();
     }
 
+    protected final GetMyOfferRequest createGetMyOfferRequest(String offerId) {
+        return GetMyOfferRequest.newBuilder().setId(offerId).build();
+    }
+
     protected final CancelOfferRequest createCancelOfferRequest(String offerId) {
         return CancelOfferRequest.newBuilder().setId(offerId).build();
     }
@@ -263,6 +270,10 @@ public class MethodTest extends ApiTestCase {
                 .setAddress(address)
                 .setMemo(memo)
                 .build();
+    }
+
+    protected final GetMethodHelpRequest createGetMethodHelpRequest(String methodName) {
+        return GetMethodHelpRequest.newBuilder().setMethodName(methodName).build();
     }
 
     // Convenience methods for calling frequently used & thoroughly tested gRPC services.
@@ -401,6 +412,11 @@ public class MethodTest extends ApiTestCase {
         return grpcStubs(bisqAppConfig).offersService.getOffer(req).getOffer();
     }
 
+    protected final OfferInfo getMyOffer(BisqAppConfig bisqAppConfig, String offerId) {
+        var req = createGetMyOfferRequest(offerId);
+        return grpcStubs(bisqAppConfig).offersService.getMyOffer(req).getOffer();
+    }
+
     @SuppressWarnings("ResultOfMethodCallIgnored")
     protected final void cancelOffer(BisqAppConfig bisqAppConfig, String offerId) {
         var req = createCancelOfferRequest(offerId);
@@ -462,6 +478,26 @@ public class MethodTest extends ApiTestCase {
     protected final TxInfo getTransaction(BisqAppConfig bisqAppConfig, String txId) {
         var req = GetTransactionRequest.newBuilder().setTxId(txId).build();
         return grpcStubs(bisqAppConfig).walletsService.getTransaction(req).getTxInfo();
+    }
+
+    public bisq.core.payment.PaymentAccount createDummyF2FAccount(BisqAppConfig bisqAppConfig,
+                                                                  String countryCode) {
+        String f2fAccountJsonString = "{\n" +
+                "  \"_COMMENTS_\": \"This is a dummy account.\",\n" +
+                "  \"paymentMethodId\": \"F2F\",\n" +
+                "  \"accountName\": \"Dummy " + countryCode.toUpperCase() + " F2F Account\",\n" +
+                "  \"city\": \"Anytown\",\n" +
+                "  \"contact\": \"Morse Code\",\n" +
+                "  \"country\": \"" + countryCode.toUpperCase() + "\",\n" +
+                "  \"extraInfo\": \"Salt Lick #213\"\n" +
+                "}\n";
+        F2FAccount f2FAccount = (F2FAccount) createPaymentAccount(bisqAppConfig, f2fAccountJsonString);
+        return f2FAccount;
+    }
+
+    protected final String getMethodHelp(BisqAppConfig bisqAppConfig, String methodName) {
+        var req = createGetMethodHelpRequest(methodName);
+        return grpcStubs(bisqAppConfig).helpService.getMethodHelp(req).getMethodHelp();
     }
 
     // Static conveniences for test methods and test case fixture setups.

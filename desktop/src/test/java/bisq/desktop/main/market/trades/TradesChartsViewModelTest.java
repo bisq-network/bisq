@@ -167,7 +167,7 @@ public class TradesChartsViewModelTest {
                 null,
                 null));
 
-        CandleData candleData = model.getCandleData(model.roundToTick(now, TradesChartsViewModel.TickUnit.DAY).getTime(), set);
+        CandleData candleData = model.getCandleData(model.roundToTick(now, TradesChartsViewModel.TickUnit.DAY).getTime(), set, 0);
         assertEquals(open, candleData.open);
         assertEquals(close, candleData.close);
         assertEquals(high, candleData.high);

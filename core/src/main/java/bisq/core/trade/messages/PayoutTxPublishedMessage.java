@@ -19,7 +19,6 @@ package bisq.core.trade.messages;
 
 import bisq.core.account.sign.SignedWitness;
 
-import bisq.network.p2p.MailboxMessage;
 import bisq.network.p2p.NodeAddress;
 
 import bisq.common.app.Version;
@@ -40,7 +39,7 @@ import javax.annotation.Nullable;
 @Slf4j
 @EqualsAndHashCode(callSuper = true)
 @Value
-public final class PayoutTxPublishedMessage extends TradeMessage implements MailboxMessage {
+public final class PayoutTxPublishedMessage extends TradeMailboxMessage {
     private final byte[] payoutTx;
     private final NodeAddress senderNodeAddress;
 

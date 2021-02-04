@@ -53,6 +53,7 @@ import bisq.core.offer.OpenOfferManager;
 import bisq.core.payment.AliPayAccount;
 import bisq.core.payment.CryptoCurrencyAccount;
 import bisq.core.payment.RevolutAccount;
+import bisq.core.payment.payload.AssetsAccountPayload;
 import bisq.core.presentation.BalancePresentation;
 import bisq.core.presentation.SupportTicketsPresentation;
 import bisq.core.presentation.TradePresentation;
@@ -274,6 +275,26 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
         }
 
         getShowAppScreen().set(true);
+
+        // We only show the popup if the user has already set up any fiat account. For new users it is not a rule
+        // change and for altcoins its not relevant.
+        String key = "reasonForPaymentChange";
+        boolean hasFiatAccount = user.getPaymentAccounts() != null &&
+                user.getPaymentAccounts().stream()
+                        .filter(e -> !(e.getPaymentAccountPayload() instanceof AssetsAccountPayload))
+                        .findAny()
+                        .isPresent();
+        if (hasFiatAccount && DontShowAgainLookup.showAgain(key)) {
+            UserThread.runAfter(() -> {
+                new Popup().attention(Res.get("popup.attention.reasonForPaymentRuleChange")).
+                        dontShowAgainId(key)
+                        .closeButtonText(Res.get("shared.iUnderstand"))
+                        .show();
+            }, 1);
+        } else {
+            // If user add a fiat account later we don't show the popup as we assume it is a new user.
+            DontShowAgainLookup.dontShowAgain(key, true);
+        }
     }
 
 

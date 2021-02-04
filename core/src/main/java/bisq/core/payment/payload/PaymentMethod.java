@@ -95,6 +95,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
     public static final String TRANSFERWISE_ID = "TRANSFERWISE";
     public static final String AMAZON_GIFT_CARD_ID = "AMAZON_GIFT_CARD";
     public static final String BLOCK_CHAINS_INSTANT_ID = "BLOCK_CHAINS_INSTANT";
+    public static final String CASH_BY_MAIL_ID = "CASH_BY_MAIL";
 
     // Cannot be deleted as it would break old trade history entries
     @Deprecated
@@ -135,6 +136,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
     public static PaymentMethod TRANSFERWISE;
     public static PaymentMethod AMAZON_GIFT_CARD;
     public static PaymentMethod BLOCK_CHAINS_INSTANT;
+    public static PaymentMethod CASH_BY_MAIL;
 
     // Cannot be deleted as it would break old trade history entries
     @Deprecated
@@ -171,6 +173,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
 
             // Global
             CASH_DEPOSIT = new PaymentMethod(CASH_DEPOSIT_ID, 4 * DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
+            CASH_BY_MAIL = new PaymentMethod(CASH_BY_MAIL_ID, 8 * DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
             MONEY_GRAM = new PaymentMethod(MONEY_GRAM_ID, 4 * DAY, DEFAULT_TRADE_LIMIT_MID_RISK),
             WESTERN_UNION = new PaymentMethod(WESTERN_UNION_ID, 4 * DAY, DEFAULT_TRADE_LIMIT_MID_RISK),
             NATIONAL_BANK = new PaymentMethod(NATIONAL_BANK_ID, 4 * DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
@@ -185,7 +188,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
             REVOLUT = new PaymentMethod(REVOLUT_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
             PERFECT_MONEY = new PaymentMethod(PERFECT_MONEY_ID, DAY, DEFAULT_TRADE_LIMIT_LOW_RISK),
             ADVANCED_CASH = new PaymentMethod(ADVANCED_CASH_ID, DAY, DEFAULT_TRADE_LIMIT_VERY_LOW_RISK),
-            TRANSFERWISE = new PaymentMethod(TRANSFERWISE_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
+            TRANSFERWISE = new PaymentMethod(TRANSFERWISE_ID, 4 * DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
 
             // Japan
             JAPAN_BANK = new PaymentMethod(JAPAN_BANK_ID, DAY, DEFAULT_TRADE_LIMIT_LOW_RISK),

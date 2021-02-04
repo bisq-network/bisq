@@ -24,6 +24,7 @@ import bisq.core.btc.wallet.TxBroadcaster;
 import bisq.core.monetary.Price;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
+import bisq.core.offer.OpenOffer;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.trade.Trade;
@@ -61,6 +62,7 @@ public class CoreApi {
     @Getter
     private final Config config;
     private final CoreDisputeAgentsService coreDisputeAgentsService;
+    private final CoreHelpService coreHelpService;
     private final CoreOffersService coreOffersService;
     private final CorePaymentAccountsService paymentAccountsService;
     private final CorePriceService corePriceService;
@@ -71,6 +73,7 @@ public class CoreApi {
     @Inject
     public CoreApi(Config config,
                    CoreDisputeAgentsService coreDisputeAgentsService,
+                   CoreHelpService coreHelpService,
                    CoreOffersService coreOffersService,
                    CorePaymentAccountsService paymentAccountsService,
                    CorePriceService corePriceService,
@@ -79,6 +82,7 @@ public class CoreApi {
                    TradeStatisticsManager tradeStatisticsManager) {
         this.config = config;
         this.coreDisputeAgentsService = coreDisputeAgentsService;
+        this.coreHelpService = coreHelpService;
         this.coreOffersService = coreOffersService;
         this.paymentAccountsService = paymentAccountsService;
         this.coreTradesService = coreTradesService;
@@ -100,6 +104,15 @@ public class CoreApi {
         coreDisputeAgentsService.registerDisputeAgent(disputeAgentType, registrationKey);
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Help
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public String getMethodHelp(String methodName) {
+        return coreHelpService.getMethodHelp(methodName);
+    }
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Offers
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -108,8 +121,20 @@ public class CoreApi {
         return coreOffersService.getOffer(id);
     }
 
+    public Offer getMyOffer(String id) {
+        return coreOffersService.getMyOffer(id);
+    }
+
     public List<Offer> getOffers(String direction, String currencyCode) {
         return coreOffersService.getOffers(direction, currencyCode);
+    }
+
+    public List<Offer> getMyOffers(String direction, String currencyCode) {
+        return coreOffersService.getMyOffers(direction, currencyCode);
+    }
+
+    public OpenOffer getMyOpenOffer(String id) {
+        return coreOffersService.getMyOpenOffer(id);
     }
 
     public void createAnPlaceOffer(String currencyCode,
@@ -120,6 +145,7 @@ public class CoreApi {
                                    long amountAsLong,
                                    long minAmountAsLong,
                                    double buyerSecurityDeposit,
+                                   long triggerPrice,
                                    String paymentAccountId,
                                    String makerFeeCurrencyCode,
                                    Consumer<Offer> resultHandler) {
@@ -131,6 +157,7 @@ public class CoreApi {
                 amountAsLong,
                 minAmountAsLong,
                 buyerSecurityDeposit,
+                triggerPrice,
                 paymentAccountId,
                 makerFeeCurrencyCode,
                 resultHandler);
@@ -186,8 +213,8 @@ public class CoreApi {
     // Prices
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public double getMarketPrice(String currencyCode) {
-        return corePriceService.getMarketPrice(currencyCode);
+    public void getMarketPrice(String currencyCode, Consumer<Double> resultHandler) {
+        corePriceService.getMarketPrice(currencyCode, resultHandler);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

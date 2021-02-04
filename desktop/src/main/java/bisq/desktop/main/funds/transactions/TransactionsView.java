@@ -192,6 +192,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
         };
 
         HBox.setHgrow(spacer, Priority.ALWAYS);
+        numItems.setId("num-offers");
         numItems.setPadding(new Insets(-5, 0, 0, 10));
         exportButton.updateText(Res.get("shared.exportCSV"));
     }

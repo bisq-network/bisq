@@ -14,7 +14,6 @@ import org.bitcoinj.utils.Fiat;
 import org.bitcoinj.utils.MonetaryFormat;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.time.DateUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 
 import java.text.DateFormat;
@@ -24,6 +23,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
+import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -246,7 +246,7 @@ public class FormattingUtils {
         String minutes = Res.get("time.minutes");
         String seconds = Res.get("time.seconds");
 
-        if (durationMillis >= DateUtils.MILLIS_PER_DAY) {
+        if (durationMillis >= TimeUnit.DAYS.toMillis(1)) {
             format = "d\' " + days + ", \'";
         }
 

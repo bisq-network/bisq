@@ -20,7 +20,6 @@ package bisq.desktop.main.portfolio.pendingtrades.steps.seller;
 import bisq.desktop.components.BusyAnimation;
 import bisq.desktop.components.InfoTextField;
 import bisq.desktop.components.TextFieldWithCopyIcon;
-import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.components.indicator.TxConfidenceIndicator;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.portfolio.pendingtrades.PendingTradesViewModel;
@@ -35,12 +34,12 @@ import bisq.core.payment.PaymentAccountUtil;
 import bisq.core.payment.payload.AmazonGiftCardAccountPayload;
 import bisq.core.payment.payload.AssetsAccountPayload;
 import bisq.core.payment.payload.BankAccountPayload;
+import bisq.core.payment.payload.CashByMailAccountPayload;
 import bisq.core.payment.payload.CashDepositAccountPayload;
 import bisq.core.payment.payload.F2FAccountPayload;
 import bisq.core.payment.payload.HalCashAccountPayload;
 import bisq.core.payment.payload.MoneyGramAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
-import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.payment.payload.SepaAccountPayload;
 import bisq.core.payment.payload.SepaInstantAccountPayload;
 import bisq.core.payment.payload.USPostalMoneyOrderAccountPayload;
@@ -195,7 +194,7 @@ public class SellerStep3View extends TradeStepView {
 
         addTradeInfoBlock();
 
-        TitledGroupBg titledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 3,
+        addTitledGroupBg(gridPane, ++gridRow, 3,
                 Res.get("portfolio.pending.step3_seller.confirmPaymentReceipt"), Layout.COMPACT_GROUP_DISTANCE);
 
         TextFieldWithCopyIcon field = addTopLabelTextFieldWithCopyIcon(gridPane, gridRow,
@@ -207,7 +206,6 @@ public class SellerStep3View extends TradeStepView {
         String peersPaymentDetails = "";
         String myTitle = "";
         String peersTitle = "";
-        boolean isBlockChain = false;
         String currencyName = getCurrencyName(trade);
         Contract contract = trade.getContract();
         if (contract != null) {
@@ -226,7 +224,6 @@ public class SellerStep3View extends TradeStepView {
                 peersPaymentDetails = ((AssetsAccountPayload) peersPaymentAccountPayload).getAddress();
                 myTitle = Res.get("portfolio.pending.step3_seller.yourAddress", currencyName);
                 peersTitle = Res.get("portfolio.pending.step3_seller.buyersAddress", currencyName);
-                isBlockChain = true;
             } else {
                 if (myPaymentDetails.isEmpty()) {
                     // Not expected
@@ -236,13 +233,6 @@ public class SellerStep3View extends TradeStepView {
                 myTitle = Res.get("portfolio.pending.step3_seller.yourAccount");
                 peersTitle = Res.get("portfolio.pending.step3_seller.buyersAccount");
             }
-        }
-
-        if (!isBlockChain && !checkNotNull(trade.getOffer()).getPaymentMethod().equals(PaymentMethod.F2F)) {
-            addTopLabelTextFieldWithCopyIcon(
-                    gridPane, gridRow, 1, Res.get("shared.reasonForPayment"),
-                    model.dataModel.getReference(), Layout.COMPACT_FIRST_ROW_AND_GROUP_DISTANCE);
-            GridPane.setRowSpan(titledGroupBg, 4);
         }
 
         if (isXmrTrade()) {
@@ -368,12 +358,6 @@ public class SellerStep3View extends TradeStepView {
                 PaymentAccountPayload paymentAccountPayload = model.dataModel.getSellersPaymentAccountPayload();
                 String message = Res.get("portfolio.pending.step3_seller.onPaymentReceived.part1", getCurrencyName(trade));
                 if (!(paymentAccountPayload instanceof AssetsAccountPayload)) {
-                    if (!(paymentAccountPayload instanceof WesternUnionAccountPayload) &&
-                            !(paymentAccountPayload instanceof HalCashAccountPayload) &&
-                            !(paymentAccountPayload instanceof F2FAccountPayload)) {
-                        message += Res.get("portfolio.pending.step3_seller.onPaymentReceived.fiat", trade.getShortId());
-                    }
-
                     Optional<String> optionalHolderName = getOptionalHolderName();
                     if (optionalHolderName.isPresent()) {
                         message += Res.get("portfolio.pending.step3_seller.onPaymentReceived.name", optionalHolderName.get());
@@ -405,7 +389,6 @@ public class SellerStep3View extends TradeStepView {
         String tradeVolumeWithCode = DisplayUtils.formatVolumeWithCode(trade.getTradeVolume());
         String currencyName = getCurrencyName(trade);
         String part1 = Res.get("portfolio.pending.step3_seller.part", currencyName);
-        String id = trade.getShortId();
         if (paymentAccountPayload instanceof AssetsAccountPayload) {
             String address = ((AssetsAccountPayload) paymentAccountPayload).getAddress();
             String explorerOrWalletString = isXmrTrade() ?
@@ -414,12 +397,14 @@ public class SellerStep3View extends TradeStepView {
             message = Res.get("portfolio.pending.step3_seller.altcoin", part1, explorerOrWalletString, address, tradeVolumeWithCode, currencyName);
         } else {
             if (paymentAccountPayload instanceof USPostalMoneyOrderAccountPayload) {
-                message = Res.get("portfolio.pending.step3_seller.postal", part1, tradeVolumeWithCode, id);
+                message = Res.get("portfolio.pending.step3_seller.postal", part1, tradeVolumeWithCode);
+            } else if (paymentAccountPayload instanceof CashByMailAccountPayload) {
+                    message = Res.get("portfolio.pending.step3_seller.cashByMail", part1, tradeVolumeWithCode);
             } else if (!(paymentAccountPayload instanceof WesternUnionAccountPayload) &&
                     !(paymentAccountPayload instanceof HalCashAccountPayload) &&
                     !(paymentAccountPayload instanceof F2FAccountPayload) &&
                     !(paymentAccountPayload instanceof AmazonGiftCardAccountPayload)) {
-                message = Res.get("portfolio.pending.step3_seller.bank", currencyName, tradeVolumeWithCode, id);
+                message = Res.get("portfolio.pending.step3_seller.bank", currencyName, tradeVolumeWithCode);
             }
 
             String part = Res.get("portfolio.pending.step3_seller.openDispute");
@@ -447,7 +432,7 @@ public class SellerStep3View extends TradeStepView {
         }
         if (!DevEnv.isDevMode() && DontShowAgainLookup.showAgain(key)) {
             DontShowAgainLookup.dontShowAgain(key, true);
-            new Popup().headLine(Res.get("popup.attention.forTradeWithId", id))
+            new Popup().headLine(Res.get("popup.attention.forTradeWithId", trade.getShortId()))
                     .attention(message)
                     .show();
         }

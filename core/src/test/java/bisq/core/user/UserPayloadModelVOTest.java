@@ -25,6 +25,8 @@ import bisq.core.proto.CoreProtoResolver;
 
 import com.google.common.collect.Lists;
 
+import java.util.HashSet;
+
 import org.junit.Ignore;
 
 public class UserPayloadModelVOTest {
@@ -64,7 +66,9 @@ public class UserPayloadModelVOTest {
                 null,
                 null,
                 false,
-                Lists.newArrayList()));
+                Lists.newArrayList(),
+                new HashSet<>(),
+                false));
 
         vo.setRegisteredArbitrator(ArbitratorTest.getArbitratorMock());
         vo.setRegisteredMediator(MediatorTest.getMediatorMock());

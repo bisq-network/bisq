@@ -18,6 +18,7 @@
 package bisq.desktop.main.dao.wallet.tx;
 
 import bisq.desktop.components.TxConfidenceListItem;
+import bisq.desktop.util.DisplayUtils;
 
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
@@ -95,7 +96,7 @@ class BsqTxListItem extends TxConfidenceListItem {
             direction = "";
         }
 
-        String sendToAddress = null;
+        String sendToAddress = "";
         for (TransactionOutput output : transaction.getOutputs()) {
             if (!bsqWalletService.isTransactionOutputMine(output) &&
                     !btcWalletService.isTransactionOutputMine(output) &&
@@ -131,6 +132,17 @@ class BsqTxListItem extends TxConfidenceListItem {
             address = "";
     }
 
+    BsqTxListItem() {
+        this.daoFacade = null;
+        this.isBurnedBsqTx = false;
+        this.date = null;
+        this.withdrawalToBTCWallet = false;
+        this.address = null;
+        this.direction = null;
+        this.amount = null;
+        this.bsqFormatter = null;
+    }
+
     public TxType getTxType() {
         return daoFacade.getTx(txId)
                 .flatMap(tx -> daoFacade.getOptionalTxType(tx.getId()))
@@ -139,6 +151,14 @@ class BsqTxListItem extends TxConfidenceListItem {
 
     public boolean isWithdrawalToBTCWallet() {
         return withdrawalToBTCWallet;
+    }
+
+    public String getDateAsString() {
+        return DisplayUtils.formatDateTime(date);
+    }
+
+    public String getAmountAsString() {
+        return bsqFormatter.formatCoin(amount);
     }
 }
 

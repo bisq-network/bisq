@@ -1,0 +1,46 @@
+createpaymentacct
+
+NAME
+----
+createpaymentacct - create a payment account
+
+SYNOPSIS
+--------
+createpaymentacct
+		--payment-account-form=<path>
+
+DESCRIPTION
+-----------
+Create a Bisq trading account with a payment account form.
+
+The details of the payment account are defined in a manually edited json file generated
+by a getpaymentacctform command, e.g.,
+
+    {
+      "_COMMENTS_": [
+        "Do not manually edit the paymentMethodId field.",
+        "Edit the salt field only if you are recreating a payment account on a new installation and wish to preserve the account age."
+      ],
+      "paymentMethodId": "SEPA",
+      "accountName": "your accountname",
+      "bic": "your bic",
+      "country": "your country",
+      "holderName": "your holdername",
+      "iban": "your iban",
+      "salt": ""
+    }
+
+
+EXAMPLES
+--------
+To create a new SEPA payment account, find the payment-method-id for the getpaymentacctform command:
+$ ./bisq-cli --password=xyz --port=9998 getpaymentmethods
+
+Get a new, blank SEPA payment account form:
+$ ./bisq-cli --password=xyz --port=9998 getpaymentacctform --payment-method-id=SEPA
+
+The previous command created a json file named sepa_1610817857085.json.  The timestamp
+in the file name is to ensure each generated file is uniquely named (you can rename the file).
+
+Manually edit the json file, and pass the file's path to the createpaymentacct command:
+$ ./bisq-cli --password=xyz --port=9998 createpaymentacct --payment-account-form=sepa_1610817857085.json

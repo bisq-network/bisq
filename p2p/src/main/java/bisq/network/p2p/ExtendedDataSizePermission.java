@@ -17,6 +17,6 @@
 
 package bisq.network.p2p;
 
-// Market interface for messages with higher allowed data size
+// Marker interface for messages with higher allowed data size
 public interface ExtendedDataSizePermission {
 }

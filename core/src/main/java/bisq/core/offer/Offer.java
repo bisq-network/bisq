@@ -365,9 +365,11 @@ public class Offer implements NetworkPayload, PersistablePayload {
             return "";
     }
 
-    public String getF2FExtraInfo() {
+    public String getExtraInfo() {
         if (getExtraDataMap() != null && getExtraDataMap().containsKey(OfferPayload.F2F_EXTRA_INFO))
             return getExtraDataMap().get(OfferPayload.F2F_EXTRA_INFO);
+        else if (getExtraDataMap() != null && getExtraDataMap().containsKey(OfferPayload.CASH_BY_MAIL_EXTRA_INFO))
+            return getExtraDataMap().get(OfferPayload.CASH_BY_MAIL_EXTRA_INFO);
         else
             return "";
     }

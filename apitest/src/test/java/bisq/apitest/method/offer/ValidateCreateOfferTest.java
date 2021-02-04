@@ -17,7 +17,7 @@
 
 package bisq.apitest.method.offer;
 
-import bisq.core.btc.wallet.Restrictions;
+import bisq.core.payment.PaymentAccount;
 
 import bisq.proto.grpc.CreateOfferRequest;
 
@@ -31,6 +31,8 @@ import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 
+import static bisq.apitest.config.BisqAppConfig.alicedaemon;
+import static bisq.core.btc.wallet.Restrictions.getDefaultBuyerSecurityDepositAsPercent;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -42,8 +44,9 @@ public class ValidateCreateOfferTest extends AbstractOfferTest {
     @Test
     @Order(1)
     public void testAmtTooLargeShouldThrowException() {
+        PaymentAccount usdAccount = createDummyF2FAccount(alicedaemon, "US");
         var req = CreateOfferRequest.newBuilder()
-                .setPaymentAccountId(alicesDummyAcct.getId())
+                .setPaymentAccountId(usdAccount.getId())
                 .setDirection("buy")
                 .setCurrencyCode("usd")
                 .setAmount(100000000000L)
@@ -51,7 +54,7 @@ public class ValidateCreateOfferTest extends AbstractOfferTest {
                 .setUseMarketBasedPrice(false)
                 .setMarketPriceMargin(0.00)
                 .setPrice("10000.0000")
-                .setBuyerSecurityDeposit(Restrictions.getDefaultBuyerSecurityDepositAsPercent())
+                .setBuyerSecurityDeposit(getDefaultBuyerSecurityDepositAsPercent())
                 .setMakerFeeCurrencyCode("bsq")
                 .build();
         @SuppressWarnings("ResultOfMethodCallIgnored")

@@ -34,6 +34,12 @@ public class TradeStatistics3ListItem {
     private final TradeStatistics3 tradeStatistics3;
     private final CoinFormatter coinFormatter;
     private final boolean showAllTradeCurrencies;
+    private String dateString;
+    private String market;
+    private String priceString;
+    private String volumeString;
+    private String paymentMethodString;
+    private String amountString;
 
     public TradeStatistics3ListItem(@Nullable TradeStatistics3 tradeStatistics3,
                                     CoinFormatter coinFormatter,
@@ -44,31 +50,47 @@ public class TradeStatistics3ListItem {
     }
 
     public String getDateString() {
-        return tradeStatistics3 != null ? DisplayUtils.formatDateTime(tradeStatistics3.getDate()) : "";
+        if (dateString == null) {
+            dateString = tradeStatistics3 != null ? DisplayUtils.formatDateTime(tradeStatistics3.getDate()) : "";
+        }
+        return dateString;
     }
 
     public String getMarket() {
-        return tradeStatistics3 != null ? CurrencyUtil.getCurrencyPair(tradeStatistics3.getCurrency()) : "";
+        if (market == null) {
+            market = tradeStatistics3 != null ? CurrencyUtil.getCurrencyPair(tradeStatistics3.getCurrency()) : "";
+        }
+        return market;
     }
 
     public String getPriceString() {
-        return tradeStatistics3 != null ? FormattingUtils.formatPrice(tradeStatistics3.getTradePrice()) : "";
+        if (priceString == null) {
+            priceString = tradeStatistics3 != null ? FormattingUtils.formatPrice(tradeStatistics3.getTradePrice()) : "";
+        }
+        return priceString;
     }
 
     public String getVolumeString() {
-        if (tradeStatistics3 == null) {
-            return "";
+        if (volumeString == null) {
+            volumeString = tradeStatistics3 != null ? showAllTradeCurrencies ?
+                    DisplayUtils.formatVolumeWithCode(tradeStatistics3.getTradeVolume()) :
+                    DisplayUtils.formatVolume(tradeStatistics3.getTradeVolume())
+                    : "";
         }
-        return showAllTradeCurrencies ?
-                DisplayUtils.formatVolumeWithCode(tradeStatistics3.getTradeVolume()) :
-                DisplayUtils.formatVolume(tradeStatistics3.getTradeVolume());
+        return volumeString;
     }
 
     public String getPaymentMethodString() {
-        return tradeStatistics3 != null ? Res.get(tradeStatistics3.getPaymentMethod()) : "";
+        if (paymentMethodString == null) {
+            paymentMethodString = tradeStatistics3 != null ? Res.get(tradeStatistics3.getPaymentMethod()) : "";
+        }
+        return paymentMethodString;
     }
 
     public String getAmountString() {
-        return tradeStatistics3 != null ? coinFormatter.formatCoin(tradeStatistics3.getTradeAmount(), 4) : "";
+        if (amountString == null) {
+            amountString = tradeStatistics3 != null ? coinFormatter.formatCoin(tradeStatistics3.getTradeAmount(), 4) : "";
+        }
+        return amountString;
     }
 }

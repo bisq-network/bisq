@@ -487,6 +487,11 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         });
     }
 
+    public void setHideNonAccountPaymentMethods(boolean hideNonAccountPaymentMethods) {
+        prefPayload.setHideNonAccountPaymentMethods(hideNonAccountPaymentMethods);
+        requestPersistence();
+    }
+
     private void requestPersistence() {
         if (initialReadDone)
             persistenceManager.requestPersistence();
@@ -764,6 +769,16 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
     public void setIgnoreDustThreshold(int value) {
         prefPayload.setIgnoreDustThreshold(value);
+        requestPersistence();
+    }
+
+    public void setShowOffersMatchingMyAccounts(boolean value) {
+        prefPayload.setShowOffersMatchingMyAccounts(value);
+        requestPersistence();
+    }
+
+    public void setDenyApiTaker(boolean value) {
+        prefPayload.setDenyApiTaker(value);
         requestPersistence();
     }
 
@@ -1074,5 +1089,11 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         void setBsqAverageTrimThreshold(double bsqAverageTrimThreshold);
 
         void setAutoConfirmSettings(AutoConfirmSettings autoConfirmSettings);
+
+        void setHideNonAccountPaymentMethods(boolean hideNonAccountPaymentMethods);
+
+        void setShowOffersMatchingMyAccounts(boolean value);
+
+        void setDenyApiTaker(boolean value);
     }
 }

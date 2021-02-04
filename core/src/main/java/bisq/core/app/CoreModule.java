@@ -21,6 +21,7 @@ import bisq.core.alert.AlertModule;
 import bisq.core.btc.BitcoinModule;
 import bisq.core.dao.DaoModule;
 import bisq.core.filter.FilterModule;
+import bisq.core.network.CoreNetworkFilter;
 import bisq.core.network.p2p.seed.DefaultSeedNodeRepository;
 import bisq.core.offer.OfferModule;
 import bisq.core.presentation.CorePresentationModule;
@@ -35,6 +36,7 @@ import bisq.core.util.coin.ImmutableCoinFormatter;
 import bisq.network.crypto.EncryptionServiceModule;
 import bisq.network.p2p.P2PModule;
 import bisq.network.p2p.network.BridgeAddressProvider;
+import bisq.network.p2p.network.NetworkFilter;
 import bisq.network.p2p.seed.SeedNodeRepository;
 
 import bisq.common.app.AppModule;
@@ -43,6 +45,8 @@ import bisq.common.crypto.PubKeyRing;
 import bisq.common.crypto.PubKeyRingProvider;
 import bisq.common.proto.network.NetworkProtoResolver;
 import bisq.common.proto.persistable.PersistenceProtoResolver;
+
+import com.google.inject.Singleton;
 
 import java.io.File;
 
@@ -62,6 +66,7 @@ public class CoreModule extends AppModule {
         bind(BridgeAddressProvider.class).to(Preferences.class);
 
         bind(SeedNodeRepository.class).to(DefaultSeedNodeRepository.class);
+        bind(NetworkFilter.class).to(CoreNetworkFilter.class).in(Singleton.class);
 
         bind(File.class).annotatedWith(named(STORAGE_DIR)).toInstance(config.storageDir);
 
