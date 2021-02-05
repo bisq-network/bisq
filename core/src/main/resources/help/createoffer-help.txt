@@ -68,7 +68,7 @@ $ ./bisq-cli --password=xyz --port=9998 createoffer --payment-account=7413d263-2
     --security-deposit=30.0 \
     --fee-currency=bsq
 
-To create a SELL 0.006 BTC with USD offer
+To create a SELL 0.006 BTC for USD offer
 	at a fixed price of 40,000 USD,
 	using a payment account with ID 7413d263-225a-4f1b-837a-1e3094dc0d77,
 	putting up a 25 percent security deposit,
