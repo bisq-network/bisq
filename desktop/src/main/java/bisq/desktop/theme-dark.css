@@ -139,6 +139,9 @@
     /* dao chart colors */
     -bs-chart-dao-line1: -bs-color-green-5;
     -bs-chart-dao-line2: -bs-color-blue-2;
+    -bs-chart-dao-line3: -bs-turquoise;
+    -bs-chart-dao-line4: -bs-yellow;
+    -bs-chart-dao-line5: -bs-color-blue-0;
 
     /* Monero orange color code */
     -xmr-orange: #f26822;

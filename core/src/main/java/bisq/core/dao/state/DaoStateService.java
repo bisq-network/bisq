@@ -192,6 +192,10 @@ public class DaoStateService implements DaoSetupService {
         return getCycle(blockHeight).map(cycle -> cycle.getHeightOfLastBlock() + 1);
     }
 
+    public Optional<Integer> getStartHeightOfCurrentCycle(int blockHeight) {
+        return getCycle(blockHeight).map(cycle -> cycle.getHeightOfFirstBlock());
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Block
@@ -405,18 +409,19 @@ public class DaoStateService implements DaoSetupService {
         return getBurntFee(txId) > 0;
     }
 
-    public long getTotalBurntTradeFee() {
+    public Set<Tx> getTradeFeeTxs() {
         return getUnorderedTxStream()
-                .filter(tx -> TxOutputType.PROOF_OF_BURN_OP_RETURN_OUTPUT != tx.getLastTxOutput().getTxOutputType())
-                .mapToLong(Tx::getBurntFee).sum();
+                .filter(tx -> tx.getTxType() == TxType.PAY_TRADE_FEE)
+                .collect(Collectors.toSet());
     }
 
-    public long getTotalProofOfBurnAmount() {
+    public Set<Tx> getProofOfBurnTxs() {
         return getUnorderedTxStream()
-                .filter(tx -> TxOutputType.PROOF_OF_BURN_OP_RETURN_OUTPUT == tx.getLastTxOutput().getTxOutputType())
-                .mapToLong(Tx::getBurntFee).sum();
+                .filter(tx -> tx.getTxType() == TxType.PROOF_OF_BURN)
+                .collect(Collectors.toSet());
     }
 
+    // Any tx with burned BSQ
     public Set<Tx> getBurntFeeTxs() {
         return getUnorderedTxStream()
                 .filter(tx -> tx.getBurntFee() > 0)
