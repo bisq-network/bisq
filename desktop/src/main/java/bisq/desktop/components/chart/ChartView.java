@@ -38,6 +38,7 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 
 import javafx.beans.value.ChangeListener;
 
@@ -47,6 +48,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -70,7 +72,6 @@ public abstract class ChartView<T extends ChartModel> extends ActivatableView<VB
     private final HBox timelineLabels;
     private final List<Node> dividerNodes = new ArrayList<>();
     private final Double[] dividerPositions = new Double[]{0d, 1d};
-    private HBox legendBox;
     private boolean pressed;
     private double x;
     private ChangeListener<Number> widthListener;
@@ -91,24 +92,34 @@ public abstract class ChartView<T extends ChartModel> extends ActivatableView<VB
 
         chart = getChart();
 
-
         addSeries();
-        addLegend();
+
+        HBox legendBox1 = getLegendBox(getSeriesForLegend1());
+        Collection<XYChart.Series<Number, Number>> seriesForLegend2 = getSeriesForLegend2();
+        HBox legendBox2 = null;
+        if (seriesForLegend2 != null && !seriesForLegend2.isEmpty()) {
+            legendBox2 = getLegendBox(seriesForLegend2);
+        }
+
         timelineLabels = new HBox();
 
         VBox box = new VBox();
-        int paddingRight = 60;
-        VBox.setMargin(splitPane, new Insets(20, paddingRight, 0, 0));
-        VBox.setMargin(timelineLabels, new Insets(0, paddingRight, 0, 0));
-        VBox.setMargin(legendBox, new Insets(10, paddingRight, 0, 0));
-        box.getChildren().addAll(splitPane, timelineLabels, legendBox);
-
-        VBox vBox = new VBox();
-        vBox.setSpacing(10);
-        vBox.getChildren().addAll(chart, box);
-
+        int paddingRight = 89;
+        int paddingLeft = 15;
+        VBox.setMargin(splitPane, new Insets(0, paddingRight, 0, paddingLeft));
+        VBox.setMargin(timelineLabels, new Insets(0, paddingRight, 0, paddingLeft));
+        VBox.setMargin(legendBox1, new Insets(10, paddingRight, 0, paddingLeft));
+        box.getChildren().addAll(splitPane, timelineLabels, legendBox1);
+        if (legendBox2 != null) {
+            VBox.setMargin(legendBox2, new Insets(-20, paddingRight, 0, paddingLeft));
+            box.getChildren().add(legendBox2);
+        }
         root.getChildren().addAll(chart, box);
     }
+
+    protected abstract Collection<XYChart.Series<Number, Number>> getSeriesForLegend1();
+
+    protected abstract Collection<XYChart.Series<Number, Number>> getSeriesForLegend2();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -117,7 +128,7 @@ public abstract class ChartView<T extends ChartModel> extends ActivatableView<VB
 
     @Override
     public void initialize() {
-        center.setStyle("-fx-background-color: #dddddd");
+        center.setId("chart-navigation-center-pane");
 
         splitPane.setMinHeight(30);
         splitPane.setDividerPosition(0, dividerPositions[0]);
@@ -191,26 +202,25 @@ public abstract class ChartView<T extends ChartModel> extends ActivatableView<VB
 
     protected abstract void addSeries();
 
-    protected void addLegend() {
-        legendBox = new HBox();
-        legendBox.setSpacing(10);
-        Region spacer = new Region();
-        HBox.setHgrow(spacer, Priority.ALWAYS);
-        legendBox.getChildren().add(spacer);
-
-        chart.getData().forEach(series -> {
+    protected HBox getLegendBox(Collection<XYChart.Series<Number, Number>> data) {
+        HBox hBox = new HBox();
+        hBox.setSpacing(10);
+        data.forEach(series -> {
             AutoTooltipSlideToggleButton toggle = new AutoTooltipSlideToggleButton();
+            toggle.setMinWidth(200);
+            toggle.setAlignment(Pos.TOP_LEFT);
             String seriesName = series.getName();
             toggleBySeriesName.put(seriesName, toggle);
             toggle.setText(seriesName);
             toggle.setId("charts-legend-toggle" + seriesIndexMap.get(seriesName));
             toggle.setSelected(true);
             toggle.setOnAction(e -> onSelectToggle(series, toggle.isSelected()));
-            legendBox.getChildren().add(toggle);
+            hBox.getChildren().add(toggle);
         });
-        spacer = new Region();
+        Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
-        legendBox.getChildren().add(spacer);
+        hBox.getChildren().add(spacer);
+        return hBox;
     }
 
     private void onSelectToggle(XYChart.Series<Number, Number> series, boolean isSelected) {

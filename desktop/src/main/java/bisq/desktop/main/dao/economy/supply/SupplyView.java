@@ -58,8 +58,7 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
     private final BsqFormatter bsqFormatter;
 
     private TextField genesisIssueAmountTextField, compRequestIssueAmountTextField, reimbursementAmountTextField,
-            totalBurntBsqTradeFeeTextField, /*totalBurntBtcTradeFeeTextField, */
-            totalLockedUpAmountTextField, totalUnlockingAmountTextField,
+            totalBurntBsqTradeFeeTextField, totalLockedUpAmountTextField, totalUnlockingAmountTextField,
             totalUnlockedAmountTextField, totalConfiscatedAmountTextField, totalProofOfBurnAmountTextField;
     private int gridRow = 0;
     private long fromDate, toDate;
@@ -175,14 +174,6 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
 
         totalProofOfBurnAmountTextField = addTopLabelReadOnlyTextField(root, gridRow, 1,
                 Res.get("dao.factsAndFigures.supply.proofOfBurn"), Layout.COMPACT_FIRST_ROW_AND_COMPACT_GROUP_DISTANCE).second;
-
-       /* totalBurntBtcTradeFeeTextField = addTopLabelReadOnlyTextField(root, gridRow, 1,
-                Res.get("dao.factsAndFigures.supply.btcTradeFee"), Layout.COMPACT_FIRST_ROW_AND_COMPACT_GROUP_DISTANCE).second;
-
-        Tuple3<Label, TextField, VBox> tuple3 = addTopLabelReadOnlyTextField(root, ++gridRow,
-                Res.get("dao.factsAndFigures.supply.proofOfBurn"));
-        totalProofOfBurnAmountTextField = tuple3.second;
-        GridPane.setColumnSpan(tuple3.third, 2);*/
     }
 
     private void createLockedBsqFields() {
@@ -224,12 +215,8 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
         Coin totalBurntTradeFee = Coin.valueOf(daoEconomyDataProvider.getBsqTradeFeeAmount(fromDate, getToDate()));
         totalBurntBsqTradeFeeTextField.setText(bsqFormatter.formatAmountWithGroupSeparatorAndCode(totalBurntTradeFee));
 
-      /*  Coin totalBurntBtcTradeFee = Coin.valueOf(daoEconomyDataProvider.getBtcTradeFeeAmount(fromDate, getToDate()));
-        totalBurntBtcTradeFeeTextField.setText(bsqFormatter.formatAmountWithGroupSeparatorAndCode(totalBurntBtcTradeFee));
-*/
         Coin totalProofOfBurnAmount = Coin.valueOf(daoEconomyDataProvider.getProofOfBurnAmount(fromDate, getToDate()));
         totalProofOfBurnAmountTextField.setText(bsqFormatter.formatAmountWithGroupSeparatorAndCode(totalProofOfBurnAmount));
-
     }
 
     private void updateLockedTxData() {

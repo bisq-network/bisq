@@ -45,6 +45,7 @@ import java.time.Instant;
 
 import java.text.DecimalFormat;
 
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.function.Predicate;
@@ -57,7 +58,7 @@ public class DaoEconomyChartView extends ChartView<DaoEconomyChartModel> {
     private final BsqFormatter bsqFormatter;
 
     private XYChart.Series<Number, Number> seriesBsqTradeFee, seriesProofOfBurn, seriesCompensation,
-            seriesReimbursement/*, seriesBtcTradeFee*/;
+            seriesReimbursement, seriesTotalIssued, seriesTotalBurned;
     private ListChangeListener<Node> nodeListChangeListener;
 
     @Inject
@@ -76,10 +77,11 @@ public class DaoEconomyChartView extends ChartView<DaoEconomyChartModel> {
     public void initialize() {
         super.initialize();
 
-        // Turn off some series
+        // Turn off detail series
+        hideSeries(seriesBsqTradeFee);
+        hideSeries(seriesCompensation);
         hideSeries(seriesProofOfBurn);
         hideSeries(seriesReimbursement);
-        /* hideSeries(seriesBtcTradeFee);*/
 
         nodeListChangeListener = c -> {
             while (c.next()) {
@@ -171,50 +173,55 @@ public class DaoEconomyChartView extends ChartView<DaoEconomyChartModel> {
 
     @Override
     protected void addSeries() {
-        seriesBsqTradeFee = new XYChart.Series<>();
-        seriesBsqTradeFee.setName(Res.get("dao.factsAndFigures.supply.bsqTradeFee"));
-        seriesIndexMap.put(seriesBsqTradeFee.getName(), 0);
-        chart.getData().add(seriesBsqTradeFee);
+        seriesTotalIssued = new XYChart.Series<>();
+        seriesTotalIssued.setName(Res.get("dao.factsAndFigures.supply.totalIssued"));
+        seriesIndexMap.put(seriesTotalIssued.getName(), 0);
+        chart.getData().add(seriesTotalIssued);
 
-      /*  seriesBtcTradeFee = new XYChart.Series<>();
-        seriesBtcTradeFee.setName(Res.get("dao.factsAndFigures.supply.btcTradeFee"));
-        seriesIndexMap.put(seriesBtcTradeFee.getName(), 4);
-        chart.getData().add(seriesBtcTradeFee);*/
+        seriesTotalBurned = new XYChart.Series<>();
+        seriesTotalBurned.setName(Res.get("dao.factsAndFigures.supply.totalBurned"));
+        seriesIndexMap.put(seriesTotalBurned.getName(), 1);
+        chart.getData().add(seriesTotalBurned);
 
         seriesCompensation = new XYChart.Series<>();
         seriesCompensation.setName(Res.get("dao.factsAndFigures.supply.compReq"));
-        seriesIndexMap.put(seriesCompensation.getName(), 1);
+        seriesIndexMap.put(seriesCompensation.getName(), 2);
         chart.getData().add(seriesCompensation);
-
-        seriesProofOfBurn = new XYChart.Series<>();
-        seriesProofOfBurn.setName(Res.get("dao.factsAndFigures.supply.proofOfBurn"));
-        seriesIndexMap.put(seriesProofOfBurn.getName(), 2);
-        chart.getData().add(seriesProofOfBurn);
 
         seriesReimbursement = new XYChart.Series<>();
         seriesReimbursement.setName(Res.get("dao.factsAndFigures.supply.reimbursement"));
         seriesIndexMap.put(seriesReimbursement.getName(), 3);
         chart.getData().add(seriesReimbursement);
+
+        seriesBsqTradeFee = new XYChart.Series<>();
+        seriesBsqTradeFee.setName(Res.get("dao.factsAndFigures.supply.bsqTradeFee"));
+        seriesIndexMap.put(seriesBsqTradeFee.getName(), 4);
+        chart.getData().add(seriesBsqTradeFee);
+
+        seriesProofOfBurn = new XYChart.Series<>();
+        seriesProofOfBurn.setName(Res.get("dao.factsAndFigures.supply.proofOfBurn"));
+        seriesIndexMap.put(seriesProofOfBurn.getName(), 5);
+        chart.getData().add(seriesProofOfBurn);
+    }
+
+    @Override
+    protected Collection<XYChart.Series<Number, Number>> getSeriesForLegend1() {
+        return List.of(seriesTotalIssued, seriesCompensation, seriesReimbursement);
+    }
+
+    @Override
+    protected Collection<XYChart.Series<Number, Number>> getSeriesForLegend2() {
+        return List.of(seriesTotalBurned, seriesBsqTradeFee, seriesProofOfBurn);
     }
 
     @Override
     protected void initData() {
-        List<XYChart.Data<Number, Number>> bsqTradeFeeChartData = model.getBsqTradeFeeChartData(e -> true);
+        Predicate<Long> predicate = e -> true;
+        List<XYChart.Data<Number, Number>> bsqTradeFeeChartData = model.getBsqTradeFeeChartData(predicate);
         seriesBsqTradeFee.getData().setAll(bsqTradeFeeChartData);
 
-    /*    List<XYChart.Data<Number, Number>> btcTradeFeeChartData = model.getBtcTradeFeeChartData(e -> true);
-        seriesBtcTradeFee.getData().setAll(btcTradeFeeChartData);*/
-
-        List<XYChart.Data<Number, Number>> compensationRequestsChartData = model.getCompensationChartData(e -> true);
+        List<XYChart.Data<Number, Number>> compensationRequestsChartData = model.getCompensationChartData(predicate);
         seriesCompensation.getData().setAll(compensationRequestsChartData);
-
-        List<XYChart.Data<Number, Number>> proofOfBurnChartData = model.getProofOfBurnChartData(e -> true);
-        seriesProofOfBurn.getData().setAll(proofOfBurnChartData);
-
-        List<XYChart.Data<Number, Number>> reimbursementChartData = model.getReimbursementChartData(e -> true);
-        seriesReimbursement.getData().setAll(reimbursementChartData);
-
-        applyTooltip();
 
         // We don't need redundant data like reimbursementChartData as time value from compensationRequestsChartData
         // will cover it
@@ -222,33 +229,32 @@ public class DaoEconomyChartView extends ChartView<DaoEconomyChartModel> {
         xAxis.setLowerBound(model.getLowerBound().doubleValue());
         xAxis.setUpperBound(model.getUpperBound().doubleValue());
 
+        updateOtherSeries(predicate);
+        applyTooltip();
+
         UserThread.execute(this::setTimeLineLabels);
     }
 
     @Override
     protected void updateData(Predicate<Long> predicate) {
-        List<XYChart.Data<Number, Number>> tradeFeeChartData = model.getBsqTradeFeeChartData(predicate);
-        seriesBsqTradeFee.getData().setAll(tradeFeeChartData);
+        seriesBsqTradeFee.getData().setAll(model.getBsqTradeFeeChartData(predicate));
+        seriesCompensation.getData().setAll(model.getCompensationChartData(predicate));
 
-   /*     List<XYChart.Data<Number, Number>> btcTradeFeeChartData = model.getBtcTradeFeeChartData(predicate);
-        seriesBtcTradeFee.getData().setAll(btcTradeFeeChartData);*/
-
-        List<XYChart.Data<Number, Number>> compensationRequestsChartData = model.getCompensationChartData(predicate);
-        seriesCompensation.getData().setAll(compensationRequestsChartData);
-
-        List<XYChart.Data<Number, Number>> proofOfBurnChartData = model.getProofOfBurnChartData(predicate);
-        seriesProofOfBurn.getData().setAll(proofOfBurnChartData);
-
-        List<XYChart.Data<Number, Number>> reimbursementChartData = model.getReimbursementChartData(predicate);
-        seriesReimbursement.getData().setAll(reimbursementChartData);
-
+        updateOtherSeries(predicate);
         applyTooltip();
+    }
+
+    private void updateOtherSeries(Predicate<Long> predicate) {
+        seriesProofOfBurn.getData().setAll(model.getProofOfBurnChartData(predicate));
+        seriesReimbursement.getData().setAll(model.getReimbursementChartData(predicate));
+        seriesTotalIssued.getData().setAll(model.getTotalIssuedChartData(predicate));
+        seriesTotalBurned.getData().setAll(model.getTotalBurnedChartData(predicate));
     }
 
     @Override
     protected void applyTooltip() {
         chart.getData().forEach(series -> {
-            String format = series == seriesCompensation || series == seriesReimbursement ?
+            String format = series == seriesCompensation || series == seriesReimbursement || series == seriesTotalIssued ?
                     "dd MMM yyyy" :
                     "MMM yyyy";
             series.getData().forEach(data -> {

@@ -35,6 +35,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -100,17 +101,6 @@ public class DaoEconomyDataProvider {
      * @param fromDate      Epoch in millis
      * @param toDate        Epoch in millis
      */
-   /* public long getBtcTradeFeeAmount(long fromDate, long toDate) {
-        return getBurnedBtcByMonth(getPredicate(fromDate, toDate)).values()
-                .stream()
-                .mapToLong(e -> e)
-                .sum();
-    }*/
-
-    /**
-     * @param fromDate      Epoch in millis
-     * @param toDate        Epoch in millis
-     */
     public long getProofOfBurnAmount(long fromDate, long toDate) {
         return getBurnedBsqByMonth(daoStateService.getProofOfBurnTxs(), getPredicate(fromDate, toDate)).values().stream()
                 .mapToLong(e -> e)
@@ -147,48 +137,37 @@ public class DaoEconomyDataProvider {
     }
 
     public Map<Long, Long> getMergedCompensationMap(Predicate<Long> predicate) {
-        return getMergedMap(daoStateService.getIssuanceSetForType(IssuanceType.COMPENSATION),
-                DaoEconomyHistoricalData.COMPENSATIONS_BY_CYCLE_DATE,
-                predicate);
+        Map<Long, Long> issuedBsqByMonth = getIssuedBsqByMonth(daoStateService.getIssuanceSetForType(IssuanceType.COMPENSATION), predicate);
+        Map<Long, Long> historicalIssuanceByMonth = getHistoricalIssuanceByMonth(DaoEconomyHistoricalData.COMPENSATIONS_BY_CYCLE_DATE, predicate);
+        return getMergedMap(issuedBsqByMonth, historicalIssuanceByMonth, (daoDataValue, staticDataValue) -> staticDataValue);
     }
 
     public Map<Long, Long> getMergedReimbursementMap(Predicate<Long> predicate) {
-        return getMergedMap(daoStateService.getIssuanceSetForType(IssuanceType.REIMBURSEMENT),
-                DaoEconomyHistoricalData.REIMBURSEMENTS_BY_CYCLE_DATE,
-                predicate);
+        Map<Long, Long> issuedBsqByMonth = getIssuedBsqByMonth(daoStateService.getIssuanceSetForType(IssuanceType.REIMBURSEMENT), predicate);
+        Map<Long, Long> historicalIssuanceByMonth = getHistoricalIssuanceByMonth(DaoEconomyHistoricalData.REIMBURSEMENTS_BY_CYCLE_DATE, predicate);
+        return getMergedMap(issuedBsqByMonth, historicalIssuanceByMonth, (daoDataValue, staticDataValue) -> staticDataValue);
     }
 
-    private Map<Long, Long> getMergedMap(Set<Issuance> issuanceSet,
-                                         Map<Long, Long> historicalData,
-                                         Predicate<Long> predicate) {
+    public Map<Long, Long> getMergedMap(Map<Long, Long> map1,
+                                        Map<Long, Long> map2,
+                                        BinaryOperator<Long> mergeFunction) {
+        return Stream.concat(map1.entrySet().stream(),
+                map2.entrySet().stream())
+                .collect(Collectors.toMap(Map.Entry::getKey,
+                        Map.Entry::getValue,
+                        mergeFunction));
+    }
+
+    private Map<Long, Long> getHistoricalIssuanceByMonth(Map<Long, Long> historicalData, Predicate<Long> predicate) {
         // We did not use the reimbursement requests initially (but the compensation requests) because the limits
         // have been too low. Over time it got mixed in compensation requests and reimbursement requests.
         // To reflect that we use static data derived from the Github data. For new data we do not need that anymore
         // as we have clearly separated that now. In case we have duplicate data for a months we use the static data.
-        Map<Long, Long> historicalDataMap = historicalData.entrySet().stream()
+        return historicalData.entrySet().stream()
                 .filter(e -> predicate.test(e.getKey()))
                 .collect(Collectors.toMap(e -> toStartOfMonth(Instant.ofEpochSecond(e.getKey())),
                         Map.Entry::getValue));
-
-        // We merge both maps.
-        // If we have 2 values at same key we use the staticData as that include the daoData
-        return Stream.concat(getIssuedBsqByMonth(issuanceSet, predicate).entrySet().stream(),
-                historicalDataMap.entrySet().stream())
-                .collect(Collectors.toMap(Map.Entry::getKey,
-                        Map.Entry::getValue,
-                        (issuedBsqByMonthValue, staticDataValue) -> staticDataValue));
     }
-
-    // The resulting data are not very useful. We might drop that....
-   /* public Map<Long, Long> getBurnedBtcByMonth(Predicate<Long> predicate) {
-        Map<Long, Long> issuedBsqByMonth = getMergedReimbursementMap(predicate);
-        Map<Long, Long> burnedBsqByMonth = getBurnedBsqByMonth(daoStateService.getProofOfBurnTxs(), predicate);
-        return Stream.concat(issuedBsqByMonth.entrySet().stream(),
-                burnedBsqByMonth.entrySet().stream())
-                .collect(Collectors.toMap(Map.Entry::getKey,
-                        Map.Entry::getValue,
-                        (issued, burned) -> burned - issued));
-    }*/
 
     public static long toStartOfMonth(Instant instant) {
         return instant

@@ -56,11 +56,6 @@ public class DaoEconomyChartModel extends ChartModel {
         return toChartData(daoEconomyDataProvider.getBurnedBsqByMonth(daoStateService.getTradeFeeTxs(), predicate));
     }
 
-    // The resulting data are not very useful. It causes negative values if burn rate > issuance in selected timeframe
-   /* List<XYChart.Data<Number, Number>> getBtcTradeFeeChartData(Predicate<Long> predicate) {
-        return toChartData(daoEconomyDataProvider.getBurnedBtcByMonth(predicate));
-    }*/
-
     List<XYChart.Data<Number, Number>> getCompensationChartData(Predicate<Long> predicate) {
         return toChartData(daoEconomyDataProvider.getMergedCompensationMap(predicate));
     }
@@ -71,6 +66,20 @@ public class DaoEconomyChartModel extends ChartModel {
 
     List<XYChart.Data<Number, Number>> getReimbursementChartData(Predicate<Long> predicate) {
         return toChartData(daoEconomyDataProvider.getMergedReimbursementMap(predicate));
+    }
+
+    List<XYChart.Data<Number, Number>> getTotalIssuedChartData(Predicate<Long> predicate) {
+        Map<Long, Long> compensationMap = daoEconomyDataProvider.getMergedCompensationMap(predicate);
+        Map<Long, Long> reimbursementMap = daoEconomyDataProvider.getMergedReimbursementMap(predicate);
+        Map<Long, Long> sum = daoEconomyDataProvider.getMergedMap(compensationMap, reimbursementMap, Long::sum);
+        return toChartData(sum);
+    }
+
+    List<XYChart.Data<Number, Number>> getTotalBurnedChartData(Predicate<Long> predicate) {
+        Map<Long, Long> tradeFee = daoEconomyDataProvider.getBurnedBsqByMonth(daoStateService.getTradeFeeTxs(), predicate);
+        Map<Long, Long> proofOfBurn = daoEconomyDataProvider.getBurnedBsqByMonth(daoStateService.getProofOfBurnTxs(), predicate);
+        Map<Long, Long> sum = daoEconomyDataProvider.getMergedMap(tradeFee, proofOfBurn, Long::sum);
+        return toChartData(sum);
     }
 
     void initBounds(List<XYChart.Data<Number, Number>> tradeFeeChartData,
