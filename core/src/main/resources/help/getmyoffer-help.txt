@@ -21,5 +21,5 @@ OPTIONS
 EXAMPLES
 --------
 To view your offer with ID 83e8b2e2-51b6-4f39-a748-3ebd29c22aea:
-$ ./bisq-cli --password=xyz --port=9998 getmyoffer -offer-id=83e8b2e2-51b6-4f39-a748-3ebd29c22aea
+$ ./bisq-cli --password=xyz --port=9998 getmyoffer --offer-id=83e8b2e2-51b6-4f39-a748-3ebd29c22aea
 
