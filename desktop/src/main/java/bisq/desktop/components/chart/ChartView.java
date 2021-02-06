@@ -73,7 +73,7 @@ import lombok.extern.slf4j.Slf4j;
 import static bisq.desktop.util.FormBuilder.getTopLabelWithVBox;
 
 @Slf4j
-public abstract class ChartView<T extends ChartModel> extends ActivatableView<VBox, T> {
+public abstract class ChartView<T extends ChartViewModel> extends ActivatableView<VBox, T> {
     private final Pane center;
     private final SplitPane splitPane;
     protected final NumberAxis xAxis;
@@ -194,11 +194,11 @@ public abstract class ChartView<T extends ChartModel> extends ActivatableView<VB
         dividerNodes.forEach(node -> node.setOnMouseReleased(null));
     }
 
-    public void addListener(ChartModel.Listener listener) {
+    public void addListener(ChartViewModel.Listener listener) {
         model.addListener(listener);
     }
 
-    public void removeListener(ChartModel.Listener listener) {
+    public void removeListener(ChartViewModel.Listener listener) {
         model.removeListener(listener);
     }
 

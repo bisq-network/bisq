@@ -51,7 +51,7 @@ import java.util.function.Predicate;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class DaoDataChartView extends ChartView<DaoDataChartModel> {
+public class DaoChartView extends ChartView<DaoChartViewModel> {
     private static final DecimalFormat priceFormat = new DecimalFormat(",###");
     private final BsqFormatter bsqFormatter;
 
@@ -60,7 +60,7 @@ public class DaoDataChartView extends ChartView<DaoDataChartModel> {
     private ListChangeListener<Node> nodeListChangeListener;
 
     @Inject
-    public DaoDataChartView(DaoDataChartModel model, BsqFormatter bsqFormatter) {
+    public DaoChartView(DaoChartViewModel model, BsqFormatter bsqFormatter) {
         super(model);
 
         this.bsqFormatter = bsqFormatter;

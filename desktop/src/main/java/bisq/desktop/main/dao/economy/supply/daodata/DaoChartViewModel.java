@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.dao.economy.supply.daodata;
 
-import bisq.desktop.components.chart.ChartModel;
+import bisq.desktop.components.chart.ChartViewModel;
 
 import bisq.core.dao.state.DaoStateService;
 
@@ -38,59 +38,59 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class DaoDataChartModel extends ChartModel {
+public class DaoChartViewModel extends ChartViewModel {
     private final DaoStateService daoStateService;
-    private final DaoDataModel daoDataModel;
+    private final DaoChartDataModel daoChartDataModel;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public DaoDataChartModel(DaoStateService daoStateService, DaoDataModel daoDataModel) {
+    public DaoChartViewModel(DaoStateService daoStateService, DaoChartDataModel daoChartDataModel) {
         super();
 
         this.daoStateService = daoStateService;
-        this.daoDataModel = daoDataModel;
+        this.daoChartDataModel = daoChartDataModel;
     }
 
     @Override
     protected void applyTemporalAdjuster(TemporalAdjuster temporalAdjuster) {
-        daoDataModel.setTemporalAdjuster(temporalAdjuster);
+        daoChartDataModel.setTemporalAdjuster(temporalAdjuster);
     }
 
     @Override
     protected TemporalAdjuster getTemporalAdjuster() {
-        return daoDataModel.getTemporalAdjuster();
+        return daoChartDataModel.getTemporalAdjuster();
     }
 
     List<XYChart.Data<Number, Number>> getBsqTradeFeeChartData(Predicate<Long> predicate) {
-        return toChartData(daoDataModel.getBurnedBsqByMonth(daoStateService.getTradeFeeTxs(), predicate));
+        return toChartData(daoChartDataModel.getBurnedBsqByMonth(daoStateService.getTradeFeeTxs(), predicate));
     }
 
     List<XYChart.Data<Number, Number>> getCompensationChartData(Predicate<Long> predicate) {
-        return toChartData(daoDataModel.getMergedCompensationMap(predicate));
+        return toChartData(daoChartDataModel.getMergedCompensationMap(predicate));
     }
 
     List<XYChart.Data<Number, Number>> getProofOfBurnChartData(Predicate<Long> predicate) {
-        return toChartData(daoDataModel.getBurnedBsqByMonth(daoStateService.getProofOfBurnTxs(), predicate));
+        return toChartData(daoChartDataModel.getBurnedBsqByMonth(daoStateService.getProofOfBurnTxs(), predicate));
     }
 
     List<XYChart.Data<Number, Number>> getReimbursementChartData(Predicate<Long> predicate) {
-        return toChartData(daoDataModel.getMergedReimbursementMap(predicate));
+        return toChartData(daoChartDataModel.getMergedReimbursementMap(predicate));
     }
 
     List<XYChart.Data<Number, Number>> getTotalIssuedChartData(Predicate<Long> predicate) {
-        Map<Long, Long> compensationMap = daoDataModel.getMergedCompensationMap(predicate);
-        Map<Long, Long> reimbursementMap = daoDataModel.getMergedReimbursementMap(predicate);
-        Map<Long, Long> sum = daoDataModel.getMergedMap(compensationMap, reimbursementMap, Long::sum);
+        Map<Long, Long> compensationMap = daoChartDataModel.getMergedCompensationMap(predicate);
+        Map<Long, Long> reimbursementMap = daoChartDataModel.getMergedReimbursementMap(predicate);
+        Map<Long, Long> sum = daoChartDataModel.getMergedMap(compensationMap, reimbursementMap, Long::sum);
         return toChartData(sum);
     }
 
     List<XYChart.Data<Number, Number>> getTotalBurnedChartData(Predicate<Long> predicate) {
-        Map<Long, Long> tradeFee = daoDataModel.getBurnedBsqByMonth(daoStateService.getTradeFeeTxs(), predicate);
-        Map<Long, Long> proofOfBurn = daoDataModel.getBurnedBsqByMonth(daoStateService.getProofOfBurnTxs(), predicate);
-        Map<Long, Long> sum = daoDataModel.getMergedMap(tradeFee, proofOfBurn, Long::sum);
+        Map<Long, Long> tradeFee = daoChartDataModel.getBurnedBsqByMonth(daoStateService.getTradeFeeTxs(), predicate);
+        Map<Long, Long> proofOfBurn = daoChartDataModel.getBurnedBsqByMonth(daoStateService.getProofOfBurnTxs(), predicate);
+        Map<Long, Long> sum = daoChartDataModel.getMergedMap(tradeFee, proofOfBurn, Long::sum);
         return toChartData(sum);
     }
 
@@ -104,7 +104,7 @@ public class DaoDataChartModel extends ChartModel {
     }
 
     long toTimeInterval(Instant ofEpochSecond) {
-        return daoDataModel.toTimeInterval(ofEpochSecond);
+        return daoChartDataModel.toTimeInterval(ofEpochSecond);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

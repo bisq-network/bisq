@@ -30,7 +30,7 @@ import java.util.function.Predicate;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public abstract class ChartModel extends ActivatableViewModel {
+public abstract class ChartViewModel extends ActivatableViewModel {
     public interface Listener {
         /**
          * @param fromDate      Epoch date in millis for earliest data
@@ -44,7 +44,7 @@ public abstract class ChartModel extends ActivatableViewModel {
 
     private Predicate<Long> predicate = e -> true;
 
-    public ChartModel() {
+    public ChartViewModel() {
     }
 
 

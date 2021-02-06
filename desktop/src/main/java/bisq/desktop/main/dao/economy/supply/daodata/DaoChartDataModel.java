@@ -45,7 +45,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
-public class DaoDataModel {
+public class DaoChartDataModel {
     private final DaoStateService daoStateService;
     private final Function<Issuance, Long> blockTimeOfIssuanceFunction;
     private final TemporalAdjusterModel temporalAdjusterModel;
@@ -55,7 +55,7 @@ public class DaoDataModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public DaoDataModel(DaoStateService daoStateService, TemporalAdjusterModel temporalAdjusterModel) {
+    public DaoChartDataModel(DaoStateService daoStateService, TemporalAdjusterModel temporalAdjusterModel) {
         super();
         this.daoStateService = daoStateService;
 
