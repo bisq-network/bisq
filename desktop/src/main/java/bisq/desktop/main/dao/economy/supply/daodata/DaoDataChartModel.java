@@ -40,57 +40,57 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class DaoDataChartModel extends ChartModel {
     private final DaoStateService daoStateService;
-    private final DaoDataProvider daoDataProvider;
+    private final DaoDataModel daoDataModel;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public DaoDataChartModel(DaoStateService daoStateService, DaoDataProvider daoDataProvider) {
+    public DaoDataChartModel(DaoStateService daoStateService, DaoDataModel daoDataModel) {
         super();
 
         this.daoStateService = daoStateService;
-        this.daoDataProvider = daoDataProvider;
+        this.daoDataModel = daoDataModel;
     }
 
     @Override
     protected void applyTemporalAdjuster(TemporalAdjuster temporalAdjuster) {
-        daoDataProvider.setTemporalAdjuster(temporalAdjuster);
+        daoDataModel.setTemporalAdjuster(temporalAdjuster);
     }
 
     @Override
     protected TemporalAdjuster getTemporalAdjuster() {
-        return daoDataProvider.getTemporalAdjuster();
+        return daoDataModel.getTemporalAdjuster();
     }
 
     List<XYChart.Data<Number, Number>> getBsqTradeFeeChartData(Predicate<Long> predicate) {
-        return toChartData(daoDataProvider.getBurnedBsqByMonth(daoStateService.getTradeFeeTxs(), predicate));
+        return toChartData(daoDataModel.getBurnedBsqByMonth(daoStateService.getTradeFeeTxs(), predicate));
     }
 
     List<XYChart.Data<Number, Number>> getCompensationChartData(Predicate<Long> predicate) {
-        return toChartData(daoDataProvider.getMergedCompensationMap(predicate));
+        return toChartData(daoDataModel.getMergedCompensationMap(predicate));
     }
 
     List<XYChart.Data<Number, Number>> getProofOfBurnChartData(Predicate<Long> predicate) {
-        return toChartData(daoDataProvider.getBurnedBsqByMonth(daoStateService.getProofOfBurnTxs(), predicate));
+        return toChartData(daoDataModel.getBurnedBsqByMonth(daoStateService.getProofOfBurnTxs(), predicate));
     }
 
     List<XYChart.Data<Number, Number>> getReimbursementChartData(Predicate<Long> predicate) {
-        return toChartData(daoDataProvider.getMergedReimbursementMap(predicate));
+        return toChartData(daoDataModel.getMergedReimbursementMap(predicate));
     }
 
     List<XYChart.Data<Number, Number>> getTotalIssuedChartData(Predicate<Long> predicate) {
-        Map<Long, Long> compensationMap = daoDataProvider.getMergedCompensationMap(predicate);
-        Map<Long, Long> reimbursementMap = daoDataProvider.getMergedReimbursementMap(predicate);
-        Map<Long, Long> sum = daoDataProvider.getMergedMap(compensationMap, reimbursementMap, Long::sum);
+        Map<Long, Long> compensationMap = daoDataModel.getMergedCompensationMap(predicate);
+        Map<Long, Long> reimbursementMap = daoDataModel.getMergedReimbursementMap(predicate);
+        Map<Long, Long> sum = daoDataModel.getMergedMap(compensationMap, reimbursementMap, Long::sum);
         return toChartData(sum);
     }
 
     List<XYChart.Data<Number, Number>> getTotalBurnedChartData(Predicate<Long> predicate) {
-        Map<Long, Long> tradeFee = daoDataProvider.getBurnedBsqByMonth(daoStateService.getTradeFeeTxs(), predicate);
-        Map<Long, Long> proofOfBurn = daoDataProvider.getBurnedBsqByMonth(daoStateService.getProofOfBurnTxs(), predicate);
-        Map<Long, Long> sum = daoDataProvider.getMergedMap(tradeFee, proofOfBurn, Long::sum);
+        Map<Long, Long> tradeFee = daoDataModel.getBurnedBsqByMonth(daoStateService.getTradeFeeTxs(), predicate);
+        Map<Long, Long> proofOfBurn = daoDataModel.getBurnedBsqByMonth(daoStateService.getProofOfBurnTxs(), predicate);
+        Map<Long, Long> sum = daoDataModel.getMergedMap(tradeFee, proofOfBurn, Long::sum);
         return toChartData(sum);
     }
 
@@ -104,7 +104,7 @@ public class DaoDataChartModel extends ChartModel {
     }
 
     long toTimeInterval(Instant ofEpochSecond) {
-        return daoDataProvider.toTimeInterval(ofEpochSecond);
+        return daoDataModel.toTimeInterval(ofEpochSecond);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

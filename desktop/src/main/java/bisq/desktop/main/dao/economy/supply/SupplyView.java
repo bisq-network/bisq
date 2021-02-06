@@ -22,7 +22,7 @@ import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.components.chart.ChartModel;
 import bisq.desktop.main.dao.economy.supply.daodata.DaoDataChartView;
-import bisq.desktop.main.dao.economy.supply.daodata.DaoDataProvider;
+import bisq.desktop.main.dao.economy.supply.daodata.DaoDataModel;
 import bisq.desktop.util.Layout;
 
 import bisq.core.dao.DaoFacade;
@@ -53,7 +53,7 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
     private final DaoFacade daoFacade;
     private final DaoDataChartView daoDataChartView;
     // Shared model between SupplyView and RevenueChartModel
-    private final DaoDataProvider daoDataProvider;
+    private final DaoDataModel daoDataModel;
     private final BsqFormatter bsqFormatter;
 
     private TextField genesisIssueAmountTextField, compRequestIssueAmountTextField, reimbursementAmountTextField,
@@ -70,11 +70,11 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
     @Inject
     private SupplyView(DaoFacade daoFacade,
                        DaoDataChartView daoDataChartView,
-                       DaoDataProvider daoDataProvider,
+                       DaoDataModel daoDataModel,
                        BsqFormatter bsqFormatter) {
         this.daoFacade = daoFacade;
         this.daoDataChartView = daoDataChartView;
-        this.daoDataProvider = daoDataProvider;
+        this.daoDataModel = daoDataModel;
         this.bsqFormatter = bsqFormatter;
     }
 
@@ -204,16 +204,16 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
     private void updateEconomicsData() {
         // We use the supplyDataProvider to get the adjusted data with static historical data as well to use the same
         // monthly scoped data.
-        Coin issuedAmountFromCompRequests = Coin.valueOf(daoDataProvider.getCompensationAmount(fromDate, getToDate()));
+        Coin issuedAmountFromCompRequests = Coin.valueOf(daoDataModel.getCompensationAmount(fromDate, getToDate()));
         compRequestIssueAmountTextField.setText(bsqFormatter.formatAmountWithGroupSeparatorAndCode(issuedAmountFromCompRequests));
 
-        Coin issuedAmountFromReimbursementRequests = Coin.valueOf(daoDataProvider.getReimbursementAmount(fromDate, getToDate()));
+        Coin issuedAmountFromReimbursementRequests = Coin.valueOf(daoDataModel.getReimbursementAmount(fromDate, getToDate()));
         reimbursementAmountTextField.setText(bsqFormatter.formatAmountWithGroupSeparatorAndCode(issuedAmountFromReimbursementRequests));
 
-        Coin totalBurntTradeFee = Coin.valueOf(daoDataProvider.getBsqTradeFeeAmount(fromDate, getToDate()));
+        Coin totalBurntTradeFee = Coin.valueOf(daoDataModel.getBsqTradeFeeAmount(fromDate, getToDate()));
         totalBurntBsqTradeFeeTextField.setText(bsqFormatter.formatAmountWithGroupSeparatorAndCode(totalBurntTradeFee));
 
-        Coin totalProofOfBurnAmount = Coin.valueOf(daoDataProvider.getProofOfBurnAmount(fromDate, getToDate()));
+        Coin totalProofOfBurnAmount = Coin.valueOf(daoDataModel.getProofOfBurnAmount(fromDate, getToDate()));
         totalProofOfBurnAmountTextField.setText(bsqFormatter.formatAmountWithGroupSeparatorAndCode(totalProofOfBurnAmount));
     }
 
