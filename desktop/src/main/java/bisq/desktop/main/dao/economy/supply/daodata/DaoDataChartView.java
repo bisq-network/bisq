@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.dao.economy.supply.chart;
+package bisq.desktop.main.dao.economy.supply.daodata;
 
 import bisq.desktop.components.chart.ChartView;
 import bisq.desktop.util.DisplayUtils;
@@ -51,7 +51,7 @@ import java.util.function.Predicate;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class DaoEconomyChartView extends ChartView<DaoEconomyChartModel> {
+public class DaoDataChartView extends ChartView<DaoDataChartModel> {
     private static final DecimalFormat priceFormat = new DecimalFormat(",###");
     private final BsqFormatter bsqFormatter;
 
@@ -60,7 +60,7 @@ public class DaoEconomyChartView extends ChartView<DaoEconomyChartModel> {
     private ListChangeListener<Node> nodeListChangeListener;
 
     @Inject
-    public DaoEconomyChartView(DaoEconomyChartModel model, BsqFormatter bsqFormatter) {
+    public DaoDataChartView(DaoDataChartModel model, BsqFormatter bsqFormatter) {
         super(model);
 
         this.bsqFormatter = bsqFormatter;

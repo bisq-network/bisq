@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.dao.economy.supply;
+package bisq.desktop.main.dao.economy.supply.daodata;
 
 import bisq.desktop.components.chart.TemporalAdjusterUtil;
 
@@ -45,7 +45,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
-public class DaoEconomyDataProvider {
+public class DaoDataProvider {
     private final DaoStateService daoStateService;
     private final Function<Issuance, Long> blockTimeOfIssuanceFunction;
 
@@ -57,7 +57,7 @@ public class DaoEconomyDataProvider {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public DaoEconomyDataProvider(DaoStateService daoStateService) {
+    public DaoDataProvider(DaoStateService daoStateService) {
         super();
         this.daoStateService = daoStateService;
 
