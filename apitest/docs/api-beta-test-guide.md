@@ -272,7 +272,7 @@ fee, and the custom withdrawal transaction fee user preference in the UI’s set
 withdrawal transaction fee rates, and affords a third – as mentioned in the previous section -- withdrawal
 transaction fee option in the `sendbsq` and `sendbtc` commands.  The `sendbsq` and `sendbtc` commands'
 `--tx-fee-rate=<sats/byte>` options override both the default network fee rate, and your custom transaction fee
-setting during for the execution of those commands.
+setting for the execution of those commands.
 
 #### Using Default Network Transaction Fee
 
