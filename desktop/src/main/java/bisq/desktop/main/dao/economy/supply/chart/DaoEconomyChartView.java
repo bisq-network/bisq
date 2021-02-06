@@ -18,7 +18,6 @@
 package bisq.desktop.main.dao.economy.supply.chart;
 
 import bisq.desktop.components.chart.ChartView;
-import bisq.desktop.main.dao.economy.supply.DaoEconomyDataProvider;
 import bisq.desktop.util.DisplayUtils;
 
 import bisq.core.locale.Res;
@@ -32,7 +31,6 @@ import javafx.scene.Node;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
-import javafx.scene.control.Tooltip;
 import javafx.scene.text.Text;
 
 import javafx.geometry.Side;
@@ -145,8 +143,8 @@ public class DaoEconomyChartView extends ChartView<DaoEconomyChartModel> {
         return new StringConverter<>() {
             @Override
             public String toString(Number epochSeconds) {
-                Date date = new Date(DaoEconomyDataProvider.toStartOfMonth(Instant.ofEpochSecond(epochSeconds.longValue())) * 1000);
-                return DisplayUtils.formatDateAxis(date, "dd/MMM\nyyyy");
+                Date date = new Date(model.toTimeInterval(Instant.ofEpochSecond(epochSeconds.longValue())) * 1000);
+                return DisplayUtils.formatDateAxis(date, dateFormatPatters);
             }
 
             @Override
@@ -169,6 +167,11 @@ public class DaoEconomyChartView extends ChartView<DaoEconomyChartModel> {
                 return null;
             }
         };
+    }
+
+    @Override
+    protected String getTooltipValueConverter(Number value) {
+        return bsqFormatter.formatBSQSatoshisWithCode(value.longValue());
     }
 
     @Override
@@ -241,7 +244,9 @@ public class DaoEconomyChartView extends ChartView<DaoEconomyChartModel> {
         seriesCompensation.getData().setAll(model.getCompensationChartData(predicate));
 
         updateOtherSeries(predicate);
+
         applyTooltip();
+        applySeriesStyles();
     }
 
     private void updateOtherSeries(Predicate<Long> predicate) {
@@ -249,23 +254,5 @@ public class DaoEconomyChartView extends ChartView<DaoEconomyChartModel> {
         seriesReimbursement.getData().setAll(model.getReimbursementChartData(predicate));
         seriesTotalIssued.getData().setAll(model.getTotalIssuedChartData(predicate));
         seriesTotalBurned.getData().setAll(model.getTotalBurnedChartData(predicate));
-    }
-
-    @Override
-    protected void applyTooltip() {
-        chart.getData().forEach(series -> {
-            String format = series == seriesCompensation || series == seriesReimbursement || series == seriesTotalIssued ?
-                    "dd MMM yyyy" :
-                    "MMM yyyy";
-            series.getData().forEach(data -> {
-                String xValue = DisplayUtils.formatDateAxis(new Date(data.getXValue().longValue() * 1000), format);
-                String yValue = bsqFormatter.formatBSQSatoshisWithCode(data.getYValue().longValue());
-                Node node = data.getNode();
-                if (node == null) {
-                    return;
-                }
-                Tooltip.install(node, new Tooltip(Res.get("dao.factsAndFigures.supply.chart.tradeFee.toolTip", yValue, xValue)));
-            });
-        });
     }
 }

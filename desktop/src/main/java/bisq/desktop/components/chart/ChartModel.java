@@ -21,6 +21,8 @@ import bisq.desktop.common.model.ActivatableViewModel;
 
 import bisq.common.util.Tuple2;
 
+import java.time.temporal.TemporalAdjuster;
+
 import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -28,7 +30,7 @@ import java.util.function.Predicate;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class ChartModel extends ActivatableViewModel {
+public abstract class ChartModel extends ActivatableViewModel {
     public interface Listener {
         /**
          * @param fromDate      Epoch date in millis for earliest data
@@ -40,8 +42,11 @@ public class ChartModel extends ActivatableViewModel {
     protected Number lowerBound, upperBound;
     protected final Set<Listener> listeners = new HashSet<>();
 
+    private Predicate<Long> predicate = e -> true;
+
     public ChartModel() {
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Lifecycle
@@ -84,8 +89,17 @@ public class ChartModel extends ActivatableViewModel {
         return new Tuple2<>(fromDateSec, toDateSec);
     }
 
-    Predicate<Long> getPredicate(Tuple2<Double, Double> fromToTuple) {
-        return value -> value >= fromToTuple.first && value <= fromToTuple.second;
+    protected abstract void applyTemporalAdjuster(TemporalAdjuster temporalAdjuster);
+
+    protected abstract TemporalAdjuster getTemporalAdjuster();
+
+    Predicate<Long> getPredicate() {
+        return predicate;
+    }
+
+    Predicate<Long> setAndGetPredicate(Tuple2<Double, Double> fromToTuple) {
+        predicate = value -> value >= fromToTuple.first && value <= fromToTuple.second;
+        return predicate;
     }
 
     void notifyListeners(Tuple2<Double, Double> fromToTuple) {

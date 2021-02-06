@@ -44,8 +44,6 @@ import javafx.scene.layout.VBox;
 
 import javafx.geometry.Insets;
 
-import java.util.Date;
-
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 import static bisq.desktop.util.FormBuilder.addTopLabelReadOnlyTextField;
 
@@ -104,6 +102,7 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
     protected void deactivate() {
         daoEconomyChartView.removeListener(this);
         daoFacade.removeBsqStateListener(this);
+        daoEconomyChartView.deactivate();
     }
 
 
@@ -115,8 +114,6 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
     public void onDateFilterChanged(long fromDate, long toDate) {
         this.fromDate = fromDate;
         this.toDate = toDate;
-        log.error(new Date(fromDate).toString());
-        log.error(new Date(toDate).toString());
         updateEconomicsData();
     }
 

@@ -17,6 +17,8 @@
 
 package bisq.desktop.main.dao.economy.supply;
 
+import bisq.desktop.components.chart.TemporalAdjusterUtil;
+
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.Tx;
 import bisq.core.dao.state.model.governance.Issuance;
@@ -26,9 +28,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import java.time.Instant;
-import java.time.ZoneId;
 import java.time.temporal.TemporalAdjuster;
-import java.time.temporal.TemporalAdjusters;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -46,11 +46,10 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Singleton
 public class DaoEconomyDataProvider {
-    private static final ZoneId ZONE_ID = ZoneId.systemDefault();
-    private static final TemporalAdjuster FIRST_DAY_OF_MONTH = TemporalAdjusters.firstDayOfMonth();
-
     private final DaoStateService daoStateService;
-    private final Function<Integer, Long> blockHeightToEpochSeconds;
+    private final Function<Issuance, Long> blockTimeOfIssuanceFunction;
+
+    private TemporalAdjuster temporalAdjuster = TemporalAdjusterUtil.Interval.MONTH.getAdjuster();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -62,8 +61,23 @@ public class DaoEconomyDataProvider {
         super();
         this.daoStateService = daoStateService;
 
-        blockHeightToEpochSeconds = memoize(height ->
-                toStartOfMonth(Instant.ofEpochMilli(daoStateService.getBlockTime(height))));
+        blockTimeOfIssuanceFunction = memoize(issuance -> {
+            int height = daoStateService.getStartHeightOfCurrentCycle(issuance.getChainHeight()).orElse(0);
+            return daoStateService.getBlockTime(height);
+        });
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void setTemporalAdjuster(TemporalAdjuster temporalAdjuster) {
+        this.temporalAdjuster = temporalAdjuster;
+    }
+
+    public TemporalAdjuster getTemporalAdjuster() {
+        return temporalAdjuster;
     }
 
     /**
@@ -109,7 +123,7 @@ public class DaoEconomyDataProvider {
 
     public Map<Long, Long> getBurnedBsqByMonth(Collection<Tx> txs, Predicate<Long> predicate) {
         return txs.stream()
-                .collect(Collectors.groupingBy(tx -> toStartOfMonth(Instant.ofEpochMilli(tx.getTime()))))
+                .collect(Collectors.groupingBy(tx -> toTimeInterval(Instant.ofEpochMilli(tx.getTime()))))
                 .entrySet()
                 .stream()
                 .filter(entry -> predicate.test(entry.getKey()))
@@ -125,8 +139,8 @@ public class DaoEconomyDataProvider {
     // as adjuster would be more complicate (though could be done in future).
     public Map<Long, Long> getIssuedBsqByMonth(Set<Issuance> issuanceSet, Predicate<Long> predicate) {
         return issuanceSet.stream()
-                .collect(Collectors.groupingBy(blockHeightToEpochSeconds.compose(issuance ->
-                        daoStateService.getStartHeightOfCurrentCycle(issuance.getChainHeight()).orElse(0))))
+                .collect(Collectors.groupingBy(issuance ->
+                        toTimeInterval(Instant.ofEpochMilli(blockTimeOfIssuanceFunction.apply(issuance)))))
                 .entrySet()
                 .stream()
                 .filter(entry -> predicate.test(entry.getKey()))
@@ -165,18 +179,13 @@ public class DaoEconomyDataProvider {
         // as we have clearly separated that now. In case we have duplicate data for a months we use the static data.
         return historicalData.entrySet().stream()
                 .filter(e -> predicate.test(e.getKey()))
-                .collect(Collectors.toMap(e -> toStartOfMonth(Instant.ofEpochSecond(e.getKey())),
-                        Map.Entry::getValue));
+                .collect(Collectors.toMap(e -> toTimeInterval(Instant.ofEpochSecond(e.getKey())),
+                        Map.Entry::getValue,
+                        (a, b) -> a + b));
     }
 
-    public static long toStartOfMonth(Instant instant) {
-        return instant
-                .atZone(ZONE_ID)
-                .toLocalDate()
-                .with(FIRST_DAY_OF_MONTH)
-                .atStartOfDay(ZONE_ID)
-                .toInstant()
-                .getEpochSecond();
+    public long toTimeInterval(Instant instant) {
+        return TemporalAdjusterUtil.toTimeInterval(instant, temporalAdjuster);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

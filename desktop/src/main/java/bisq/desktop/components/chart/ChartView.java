@@ -19,6 +19,9 @@ package bisq.desktop.components.chart;
 
 import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.components.AutoTooltipSlideToggleButton;
+import bisq.desktop.components.AutoTooltipToggleButton;
+
+import bisq.core.locale.Res;
 
 import bisq.common.util.Tuple2;
 
@@ -29,8 +32,12 @@ import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.Label;
 import javafx.scene.control.SplitPane;
+import javafx.scene.control.Toggle;
+import javafx.scene.control.ToggleButton;
+import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.Tooltip;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
@@ -44,6 +51,8 @@ import javafx.beans.value.ChangeListener;
 
 import javafx.util.StringConverter;
 
+import java.time.temporal.TemporalAdjuster;
+
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 
@@ -54,11 +63,14 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import lombok.extern.slf4j.Slf4j;
+
+import static bisq.desktop.util.FormBuilder.getTopLabelWithVBox;
 
 @Slf4j
 public abstract class ChartView<T extends ChartModel> extends ActivatableView<VBox, T> {
@@ -72,28 +84,27 @@ public abstract class ChartView<T extends ChartModel> extends ActivatableView<VB
     private final HBox timelineLabels;
     private final List<Node> dividerNodes = new ArrayList<>();
     private final Double[] dividerPositions = new Double[]{0d, 1d};
+    private final ToggleGroup timeUnitToggleGroup = new ToggleGroup();
     private boolean pressed;
     private double x;
     private ChangeListener<Number> widthListener;
     private int maxSeriesSize;
+    private ChangeListener<Toggle> timeUnitChangeListener;
+    protected String dateFormatPatters = "dd MMM\nyyyy";
 
     public ChartView(T model) {
         super(model);
 
         root = new VBox();
-        Pane left = new Pane();
-        center = new Pane();
-        Pane right = new Pane();
-        splitPane = new SplitPane();
-        splitPane.getItems().addAll(left, center, right);
 
+        // time units
+        Pane timeIntervalBox = getTimeIntervalBox();
+
+        // chart
         xAxis = getXAxis();
         yAxis = getYAxis();
-
         chart = getChart();
-
         addSeries();
-
         HBox legendBox1 = getLegendBox(getSeriesForLegend1());
         Collection<XYChart.Series<Number, Number>> seriesForLegend2 = getSeriesForLegend2();
         HBox legendBox2 = null;
@@ -101,8 +112,15 @@ public abstract class ChartView<T extends ChartModel> extends ActivatableView<VB
             legendBox2 = getLegendBox(seriesForLegend2);
         }
 
+        // Time navigation
+        Pane left = new Pane();
+        center = new Pane();
+        Pane right = new Pane();
+        splitPane = new SplitPane();
+        splitPane.getItems().addAll(left, center, right);
         timelineLabels = new HBox();
 
+        // Container
         VBox box = new VBox();
         int paddingRight = 89;
         int paddingLeft = 15;
@@ -114,13 +132,8 @@ public abstract class ChartView<T extends ChartModel> extends ActivatableView<VB
             VBox.setMargin(legendBox2, new Insets(-20, paddingRight, 0, paddingLeft));
             box.getChildren().add(legendBox2);
         }
-        root.getChildren().addAll(chart, box);
+        root.getChildren().addAll(timeIntervalBox, chart, box);
     }
-
-    protected abstract Collection<XYChart.Series<Number, Number>> getSeriesForLegend1();
-
-    protected abstract Collection<XYChart.Series<Number, Number>> getSeriesForLegend2();
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Lifecycle
@@ -138,24 +151,37 @@ public abstract class ChartView<T extends ChartModel> extends ActivatableView<VB
             splitPane.setDividerPosition(0, dividerPositions[0]);
             splitPane.setDividerPosition(1, dividerPositions[1]);
         };
+
+        timeUnitChangeListener = (observable, oldValue, newValue) -> {
+            TemporalAdjusterUtil.Interval interval = (TemporalAdjusterUtil.Interval) newValue.getUserData();
+            applyTemporalAdjuster(interval.getAdjuster());
+        };
     }
 
     @Override
     public void activate() {
         root.widthProperty().addListener(widthListener);
+        timeUnitToggleGroup.selectedToggleProperty().addListener(timeUnitChangeListener);
+
         splitPane.setOnMousePressed(this::onMousePressedSplitPane);
         splitPane.setOnMouseDragged(this::onMouseDragged);
         center.setOnMousePressed(this::onMousePressedCenter);
         center.setOnMouseReleased(this::onMouseReleasedCenter);
 
         initData();
-
         initDividerMouseHandlers();
+        // Need to get called again here as otherwise styles are not applied correctly
+        applySeriesStyles();
+
+        TemporalAdjuster temporalAdjuster = model.getTemporalAdjuster();
+        applyTemporalAdjuster(temporalAdjuster);
+        findToggleByTemporalAdjuster(temporalAdjuster).ifPresent(timeUnitToggleGroup::selectToggle);
     }
 
     @Override
     public void deactivate() {
         root.widthProperty().removeListener(widthListener);
+        timeUnitToggleGroup.selectedToggleProperty().removeListener(timeUnitChangeListener);
         splitPane.setOnMousePressed(null);
         splitPane.setOnMouseDragged(null);
         center.setOnMousePressed(null);
@@ -175,6 +201,40 @@ public abstract class ChartView<T extends ChartModel> extends ActivatableView<VB
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Customisations
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    protected Pane getTimeIntervalBox() {
+        ToggleButton year = getToggleButton(Res.get("time.year"), TemporalAdjusterUtil.Interval.YEAR,
+                timeUnitToggleGroup, "toggle-left");
+        ToggleButton month = getToggleButton(Res.get("time.month"), TemporalAdjusterUtil.Interval.MONTH,
+                timeUnitToggleGroup, "toggle-center");
+        ToggleButton week = getToggleButton(Res.get("time.week"), TemporalAdjusterUtil.Interval.WEEK,
+                timeUnitToggleGroup, "toggle-center");
+        ToggleButton day = getToggleButton(Res.get("time.day"), TemporalAdjusterUtil.Interval.DAY,
+                timeUnitToggleGroup, "toggle-center");
+
+        HBox toggleBox = new HBox();
+        toggleBox.setSpacing(0);
+        toggleBox.setAlignment(Pos.CENTER_LEFT);
+        toggleBox.getChildren().addAll(year, month, week, day);
+
+        Tuple2<Label, VBox> topLabelWithVBox = getTopLabelWithVBox(Res.get("shared.interval"), toggleBox);
+        AnchorPane pane = new AnchorPane();
+        VBox vBox = topLabelWithVBox.second;
+        pane.getChildren().add(vBox);
+        AnchorPane.setRightAnchor(vBox, 90d);
+        return pane;
+    }
+
+    protected ToggleButton getToggleButton(String label,
+                                           TemporalAdjusterUtil.Interval interval,
+                                           ToggleGroup toggleGroup,
+                                           String style) {
+        ToggleButton toggleButton = new AutoTooltipToggleButton(label);
+        toggleButton.setUserData(interval);
+        toggleButton.setToggleGroup(toggleGroup);
+        toggleButton.setId(style);
+        return toggleButton;
+    }
 
     protected NumberAxis getXAxis() {
         NumberAxis xAxis;
@@ -214,7 +274,7 @@ public abstract class ChartView<T extends ChartModel> extends ActivatableView<VB
             toggle.setText(seriesName);
             toggle.setId("charts-legend-toggle" + seriesIndexMap.get(seriesName));
             toggle.setSelected(true);
-            toggle.setOnAction(e -> onSelectToggle(series, toggle.isSelected()));
+            toggle.setOnAction(e -> onSelectLegendToggle(series, toggle.isSelected()));
             hBox.getChildren().add(toggle);
         });
         Region spacer = new Region();
@@ -223,27 +283,32 @@ public abstract class ChartView<T extends ChartModel> extends ActivatableView<VB
         return hBox;
     }
 
-    private void onSelectToggle(XYChart.Series<Number, Number> series, boolean isSelected) {
+    protected abstract Collection<XYChart.Series<Number, Number>> getSeriesForLegend1();
+
+    protected abstract Collection<XYChart.Series<Number, Number>> getSeriesForLegend2();
+
+    private void onSelectLegendToggle(XYChart.Series<Number, Number> series, boolean isSelected) {
         if (isSelected) {
             chart.getData().add(series);
         } else {
             chart.getData().remove(series);
         }
         applySeriesStyles();
+        applyTooltip();
     }
 
     protected void hideSeries(XYChart.Series<Number, Number> series) {
         toggleBySeriesName.get(series.getName()).setSelected(false);
-        onSelectToggle(series, false);
+        onSelectLegendToggle(series, false);
     }
 
     protected StringConverter<Number> getTimeAxisStringConverter() {
         return new StringConverter<>() {
             @Override
             public String toString(Number value) {
-                DateFormat f = new SimpleDateFormat("YYYY-MM");
+                DateFormat format = new SimpleDateFormat(dateFormatPatters);
                 Date date = new Date(Math.round(value.doubleValue()) * 1000);
-                return f.format(date);
+                return format.format(date);
             }
 
             @Override
@@ -267,6 +332,30 @@ public abstract class ChartView<T extends ChartModel> extends ActivatableView<VB
         };
     }
 
+    protected void applyTemporalAdjuster(TemporalAdjuster temporalAdjuster) {
+        model.applyTemporalAdjuster(temporalAdjuster);
+        findToggleByTemporalAdjuster(temporalAdjuster)
+                .map(e -> (TemporalAdjusterUtil.Interval) e.getUserData())
+                .ifPresent(interval -> setDateFormatPatters(interval));
+
+        updateData(model.getPredicate());
+    }
+
+    private void setDateFormatPatters(TemporalAdjusterUtil.Interval interval) {
+        switch (interval) {
+            case YEAR:
+                dateFormatPatters = "yyyy";
+                break;
+            case MONTH:
+                dateFormatPatters = "MMM\nyyyy";
+                break;
+            default:
+                dateFormatPatters = "MMM dd\nyyyy";
+                break;
+        }
+
+    }
+
     protected abstract void initData();
 
     protected abstract void updateData(Predicate<Long> predicate);
@@ -274,18 +363,23 @@ public abstract class ChartView<T extends ChartModel> extends ActivatableView<VB
     protected void applyTooltip() {
         chart.getData().forEach(series -> {
             series.getData().forEach(data -> {
-                String xValue = getXAxis().getTickLabelFormatter().toString(data.getXValue());
-                String yValue = getYAxis().getTickLabelFormatter().toString(data.getYValue());
                 Node node = data.getNode();
-                Tooltip.install(node, new Tooltip(yValue + "\n" + xValue));
-
-                //Adding class on hover
-                node.setOnMouseEntered(event -> node.getStyleClass().add("onHover"));
-
-                //Removing class on exit
-                node.setOnMouseExited(event -> node.getStyleClass().remove("onHover"));
+                if (node == null) {
+                    return;
+                }
+                String xValue = getTooltipDateConverter(data.getXValue());
+                String yValue = getYAxisStringConverter().toString(data.getYValue());
+                Tooltip.install(node, new Tooltip(Res.get("dao.factsAndFigures.supply.chart.tradeFee.toolTip", yValue, xValue)));
             });
         });
+    }
+
+    protected String getTooltipDateConverter(Number date) {
+        return getTimeAxisStringConverter().toString(date).replace("\n", " ");
+    }
+
+    protected String getTooltipValueConverter(Number value) {
+        return getYAxisStringConverter().toString(value);
     }
 
     // Only called once when initial data are applied. We want the min. and max. values so we have the max. scale for
@@ -317,7 +411,7 @@ public abstract class ChartView<T extends ChartModel> extends ActivatableView<VB
 
     // The chart framework assigns the colored depending on the order it got added, but want to keep colors
     // the same so they match with the legend toggle.
-    private void applySeriesStyles() {
+    protected void applySeriesStyles() {
         for (int index = 0; index < chart.getData().size(); index++) {
             XYChart.Series<Number, Number> series = chart.getData().get(index);
             int staticIndex = seriesIndexMap.get(series.getName());
@@ -350,6 +444,12 @@ public abstract class ChartView<T extends ChartModel> extends ActivatableView<VB
         return maxSeriesSize;
     }
 
+    private Optional<Toggle> findToggleByTemporalAdjuster(TemporalAdjuster adjuster) {
+        return timeUnitToggleGroup.getToggles().stream()
+                .filter(toggle -> ((TemporalAdjusterUtil.Interval) toggle.getUserData()).getAdjuster().equals(adjuster))
+                .findAny();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Timeline navigation
@@ -371,8 +471,7 @@ public abstract class ChartView<T extends ChartModel> extends ActivatableView<VB
         dividerPositions[1] = rightPos;
         splitPane.setDividerPositions(leftPos, rightPos);
         Tuple2<Double, Double> fromToTuple = model.timelinePositionToEpochSeconds(leftPos, rightPos);
-        updateData(model.getPredicate(fromToTuple));
-        applySeriesStyles();
+        updateData(model.setAndGetPredicate(fromToTuple));
         model.notifyListeners(fromToTuple);
     }
 

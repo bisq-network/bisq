@@ -28,6 +28,9 @@ import javax.inject.Inject;
 
 import javafx.scene.chart.XYChart;
 
+import java.time.Instant;
+import java.time.temporal.TemporalAdjuster;
+
 import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
@@ -47,9 +50,19 @@ public class DaoEconomyChartModel extends ChartModel {
     @Inject
     public DaoEconomyChartModel(DaoStateService daoStateService, DaoEconomyDataProvider daoEconomyDataProvider) {
         super();
-        this.daoStateService = daoStateService;
 
+        this.daoStateService = daoStateService;
         this.daoEconomyDataProvider = daoEconomyDataProvider;
+    }
+
+    @Override
+    protected void applyTemporalAdjuster(TemporalAdjuster temporalAdjuster) {
+        daoEconomyDataProvider.setTemporalAdjuster(temporalAdjuster);
+    }
+
+    @Override
+    protected TemporalAdjuster getTemporalAdjuster() {
+        return daoEconomyDataProvider.getTemporalAdjuster();
     }
 
     List<XYChart.Data<Number, Number>> getBsqTradeFeeChartData(Predicate<Long> predicate) {
@@ -89,6 +102,10 @@ public class DaoEconomyChartModel extends ChartModel {
 
         lowerBound = Math.min(xMinMaxTradeFee.first, xMinMaxCompensationRequest.first);
         upperBound = Math.max(xMinMaxTradeFee.second, xMinMaxCompensationRequest.second);
+    }
+
+    long toTimeInterval(Instant ofEpochSecond) {
+        return daoEconomyDataProvider.toTimeInterval(ofEpochSecond);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

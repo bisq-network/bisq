@@ -102,16 +102,16 @@
     -bs-progress-bar-track: #e0e0e0;
     -bs-white: white;
     -bs-prompt-text: -fx-control-inner-background;
-    -bs-soft-red: #E74C3B;
-    -bs-turquoise-light: #00DCFF;
+    -bs-soft-red: #aa4c3b;
+    -bs-turquoise-light: #00dcdd;
 
     /* dao chart colors */
-    -bs-chart-dao-line1: -bs-color-green-3;
-    -bs-chart-dao-line2: -bs-color-blue-5;
+    -bs-chart-dao-line1: -bs-color-blue-5;
+    -bs-chart-dao-line2: -bs-color-green-3;
     -bs-chart-dao-line3: -bs-turquoise;
-    -bs-chart-dao-line4: -bs-yellow;
-    -bs-chart-dao-line5: -bs-soft-red;
-    -bs-chart-dao-line6: -bs-turquoise-light;
+    -bs-chart-dao-line4: -bs-turquoise-light;
+    -bs-chart-dao-line5: -bs-yellow;
+    -bs-chart-dao-line6: -bs-soft-red;
 
     /* Monero orange color code */
     -xmr-orange: #f26822;
