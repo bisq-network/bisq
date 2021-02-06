@@ -93,7 +93,7 @@ public abstract class ChartModel extends ActivatableViewModel {
 
     protected abstract TemporalAdjuster getTemporalAdjuster();
 
-    Predicate<Long> getPredicate() {
+    public Predicate<Long> getPredicate() {
         return predicate;
     }
 

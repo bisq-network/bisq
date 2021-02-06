@@ -175,36 +175,41 @@ public class DaoEconomyChartView extends ChartView<DaoEconomyChartModel> {
     }
 
     @Override
-    protected void addSeries() {
+    protected void initSeries() {
         seriesTotalIssued = new XYChart.Series<>();
         seriesTotalIssued.setName(Res.get("dao.factsAndFigures.supply.totalIssued"));
-        seriesIndexMap.put(seriesTotalIssued.getName(), 0);
-        chart.getData().add(seriesTotalIssued);
+        seriesIndexMap.put(getSeriesId(seriesTotalIssued), 0);
 
         seriesTotalBurned = new XYChart.Series<>();
         seriesTotalBurned.setName(Res.get("dao.factsAndFigures.supply.totalBurned"));
-        seriesIndexMap.put(seriesTotalBurned.getName(), 1);
-        chart.getData().add(seriesTotalBurned);
+        seriesIndexMap.put(getSeriesId(seriesTotalBurned), 1);
 
         seriesCompensation = new XYChart.Series<>();
         seriesCompensation.setName(Res.get("dao.factsAndFigures.supply.compReq"));
-        seriesIndexMap.put(seriesCompensation.getName(), 2);
-        chart.getData().add(seriesCompensation);
+        seriesIndexMap.put(getSeriesId(seriesCompensation), 2);
 
         seriesReimbursement = new XYChart.Series<>();
         seriesReimbursement.setName(Res.get("dao.factsAndFigures.supply.reimbursement"));
-        seriesIndexMap.put(seriesReimbursement.getName(), 3);
-        chart.getData().add(seriesReimbursement);
+        seriesIndexMap.put(getSeriesId(seriesReimbursement), 3);
 
         seriesBsqTradeFee = new XYChart.Series<>();
         seriesBsqTradeFee.setName(Res.get("dao.factsAndFigures.supply.bsqTradeFee"));
-        seriesIndexMap.put(seriesBsqTradeFee.getName(), 4);
-        chart.getData().add(seriesBsqTradeFee);
+        seriesIndexMap.put(getSeriesId(seriesBsqTradeFee), 4);
 
         seriesProofOfBurn = new XYChart.Series<>();
         seriesProofOfBurn.setName(Res.get("dao.factsAndFigures.supply.proofOfBurn"));
-        seriesIndexMap.put(seriesProofOfBurn.getName(), 5);
-        chart.getData().add(seriesProofOfBurn);
+        seriesIndexMap.put(getSeriesId(seriesProofOfBurn), 5);
+    }
+
+    @Override
+    protected void addActiveSeries() {
+        addSeries(seriesTotalIssued);
+        addSeries(seriesTotalBurned);
+    }
+
+    private void addSeries(XYChart.Series<Number, Number> series) {
+        activeSeries.add(getSeriesId(series));
+        chart.getData().add(series);
     }
 
     @Override
@@ -233,15 +238,18 @@ public class DaoEconomyChartView extends ChartView<DaoEconomyChartModel> {
         xAxis.setUpperBound(model.getUpperBound().doubleValue());
 
         updateOtherSeries(predicate);
-        applyTooltip();
 
         UserThread.execute(this::setTimeLineLabels);
     }
 
     @Override
     protected void updateData(Predicate<Long> predicate) {
-        seriesBsqTradeFee.getData().setAll(model.getBsqTradeFeeChartData(predicate));
-        seriesCompensation.getData().setAll(model.getCompensationChartData(predicate));
+        if (activeSeries.contains(getSeriesId(seriesBsqTradeFee))) {
+            seriesBsqTradeFee.getData().setAll(model.getBsqTradeFeeChartData(predicate));
+        }
+        if (activeSeries.contains(getSeriesId(seriesCompensation))) {
+            seriesCompensation.getData().setAll(model.getCompensationChartData(predicate));
+        }
 
         updateOtherSeries(predicate);
 
@@ -249,10 +257,36 @@ public class DaoEconomyChartView extends ChartView<DaoEconomyChartModel> {
         applySeriesStyles();
     }
 
+    @Override
+    protected void activateSeries(XYChart.Series<Number, Number> series) {
+        super.activateSeries(series);
+        if (getSeriesId(series).equals(getSeriesId(seriesBsqTradeFee))) {
+            seriesBsqTradeFee.getData().setAll(model.getBsqTradeFeeChartData(model.getPredicate()));
+        } else if (getSeriesId(series).equals(getSeriesId(seriesCompensation))) {
+            seriesCompensation.getData().setAll(model.getCompensationChartData(model.getPredicate()));
+        } else if (getSeriesId(series).equals(getSeriesId(seriesProofOfBurn))) {
+            seriesProofOfBurn.getData().setAll(model.getProofOfBurnChartData(model.getPredicate()));
+        } else if (getSeriesId(series).equals(getSeriesId(seriesReimbursement))) {
+            seriesReimbursement.getData().setAll(model.getReimbursementChartData(model.getPredicate()));
+        } else if (getSeriesId(series).equals(getSeriesId(seriesTotalIssued))) {
+            seriesTotalIssued.getData().setAll(model.getTotalIssuedChartData(model.getPredicate()));
+        } else if (getSeriesId(series).equals(getSeriesId(seriesTotalBurned))) {
+            seriesTotalBurned.getData().setAll(model.getTotalBurnedChartData(model.getPredicate()));
+        }
+    }
+
     private void updateOtherSeries(Predicate<Long> predicate) {
-        seriesProofOfBurn.getData().setAll(model.getProofOfBurnChartData(predicate));
-        seriesReimbursement.getData().setAll(model.getReimbursementChartData(predicate));
-        seriesTotalIssued.getData().setAll(model.getTotalIssuedChartData(predicate));
-        seriesTotalBurned.getData().setAll(model.getTotalBurnedChartData(predicate));
+        if (activeSeries.contains(getSeriesId(seriesProofOfBurn))) {
+            seriesProofOfBurn.getData().setAll(model.getProofOfBurnChartData(predicate));
+        }
+        if (activeSeries.contains(getSeriesId(seriesReimbursement))) {
+            seriesReimbursement.getData().setAll(model.getReimbursementChartData(predicate));
+        }
+        if (activeSeries.contains(getSeriesId(seriesTotalIssued))) {
+            seriesTotalIssued.getData().setAll(model.getTotalIssuedChartData(predicate));
+        }
+        if (activeSeries.contains(getSeriesId(seriesTotalBurned))) {
+            seriesTotalBurned.getData().setAll(model.getTotalBurnedChartData(predicate));
+        }
     }
 }

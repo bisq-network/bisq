@@ -85,6 +85,7 @@ public abstract class ChartView<T extends ChartModel> extends ActivatableView<VB
     private final List<Node> dividerNodes = new ArrayList<>();
     private final Double[] dividerPositions = new Double[]{0d, 1d};
     private final ToggleGroup timeUnitToggleGroup = new ToggleGroup();
+    protected final Set<String> activeSeries = new HashSet<>();
     private boolean pressed;
     private double x;
     private ChangeListener<Number> widthListener;
@@ -104,7 +105,8 @@ public abstract class ChartView<T extends ChartModel> extends ActivatableView<VB
         xAxis = getXAxis();
         yAxis = getYAxis();
         chart = getChart();
-        addSeries();
+        initSeries();
+        addActiveSeries();
         HBox legendBox1 = getLegendBox(getSeriesForLegend1());
         Collection<XYChart.Series<Number, Number>> seriesForLegend2 = getSeriesForLegend2();
         HBox legendBox2 = null;
@@ -134,6 +136,8 @@ public abstract class ChartView<T extends ChartModel> extends ActivatableView<VB
         }
         root.getChildren().addAll(timeIntervalBox, chart, box);
     }
+
+    protected abstract void addActiveSeries();
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Lifecycle
@@ -260,7 +264,7 @@ public abstract class ChartView<T extends ChartModel> extends ActivatableView<VB
         return chart;
     }
 
-    protected abstract void addSeries();
+    protected abstract void initSeries();
 
     protected HBox getLegendBox(Collection<XYChart.Series<Number, Number>> data) {
         HBox hBox = new HBox();
@@ -269,7 +273,7 @@ public abstract class ChartView<T extends ChartModel> extends ActivatableView<VB
             AutoTooltipSlideToggleButton toggle = new AutoTooltipSlideToggleButton();
             toggle.setMinWidth(200);
             toggle.setAlignment(Pos.TOP_LEFT);
-            String seriesName = series.getName();
+            String seriesName = getSeriesId(series);
             toggleBySeriesName.put(seriesName, toggle);
             toggle.setText(seriesName);
             toggle.setId("charts-legend-toggle" + seriesIndexMap.get(seriesName));
@@ -289,16 +293,22 @@ public abstract class ChartView<T extends ChartModel> extends ActivatableView<VB
 
     private void onSelectLegendToggle(XYChart.Series<Number, Number> series, boolean isSelected) {
         if (isSelected) {
-            chart.getData().add(series);
+            activateSeries(series);
         } else {
             chart.getData().remove(series);
+            activeSeries.remove(getSeriesId(series));
         }
         applySeriesStyles();
         applyTooltip();
     }
 
+    protected void activateSeries(XYChart.Series<Number, Number> series) {
+        chart.getData().add(series);
+        activeSeries.add(getSeriesId(series));
+    }
+
     protected void hideSeries(XYChart.Series<Number, Number> series) {
-        toggleBySeriesName.get(series.getName()).setSelected(false);
+        toggleBySeriesName.get(getSeriesId(series)).setSelected(false);
         onSelectLegendToggle(series, false);
     }
 
@@ -336,7 +346,7 @@ public abstract class ChartView<T extends ChartModel> extends ActivatableView<VB
         model.applyTemporalAdjuster(temporalAdjuster);
         findToggleByTemporalAdjuster(temporalAdjuster)
                 .map(e -> (TemporalAdjusterUtil.Interval) e.getUserData())
-                .ifPresent(interval -> setDateFormatPatters(interval));
+                .ifPresent(this::setDateFormatPatters);
 
         updateData(model.getPredicate());
     }
@@ -414,7 +424,7 @@ public abstract class ChartView<T extends ChartModel> extends ActivatableView<VB
     protected void applySeriesStyles() {
         for (int index = 0; index < chart.getData().size(); index++) {
             XYChart.Series<Number, Number> series = chart.getData().get(index);
-            int staticIndex = seriesIndexMap.get(series.getName());
+            int staticIndex = seriesIndexMap.get(getSeriesId(series));
             Set<Node> lines = getNodesForStyle(series.getNode(), ".default-color%d.chart-series-line");
             Stream<Node> symbols = series.getData().stream().map(XYChart.Data::getNode)
                     .flatMap(node -> getNodesForStyle(node, ".default-color%d.chart-line-symbol").stream());
@@ -450,6 +460,10 @@ public abstract class ChartView<T extends ChartModel> extends ActivatableView<VB
                 .findAny();
     }
 
+    // We use the name as id as there is no other suitable data inside series
+    protected String getSeriesId(XYChart.Series<Number, Number> series) {
+        return series.getName();
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Timeline navigation
