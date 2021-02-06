@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.dao.economy.supply.daodata;
 
-import bisq.desktop.components.chart.TemporalAdjusterUtil;
+import bisq.desktop.components.chart.TemporalAdjusterModel;
 
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.Tx;
@@ -48,16 +48,14 @@ import lombok.extern.slf4j.Slf4j;
 public class DaoDataModel {
     private final DaoStateService daoStateService;
     private final Function<Issuance, Long> blockTimeOfIssuanceFunction;
-
-    private TemporalAdjuster temporalAdjuster = TemporalAdjusterUtil.Interval.MONTH.getAdjuster();
-
+    private final TemporalAdjusterModel temporalAdjusterModel;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public DaoDataModel(DaoStateService daoStateService) {
+    public DaoDataModel(DaoStateService daoStateService, TemporalAdjusterModel temporalAdjusterModel) {
         super();
         this.daoStateService = daoStateService;
 
@@ -65,6 +63,7 @@ public class DaoDataModel {
             int height = daoStateService.getStartHeightOfCurrentCycle(issuance.getChainHeight()).orElse(0);
             return daoStateService.getBlockTime(height);
         });
+        this.temporalAdjusterModel = temporalAdjusterModel;
     }
 
 
@@ -73,11 +72,11 @@ public class DaoDataModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void setTemporalAdjuster(TemporalAdjuster temporalAdjuster) {
-        this.temporalAdjuster = temporalAdjuster;
+        temporalAdjusterModel.setTemporalAdjuster(temporalAdjuster);
     }
 
     public TemporalAdjuster getTemporalAdjuster() {
-        return temporalAdjuster;
+        return temporalAdjusterModel.getTemporalAdjuster();
     }
 
     /**
@@ -85,7 +84,7 @@ public class DaoDataModel {
      * @param toDate        Epoch in millis
      */
     public long getCompensationAmount(long fromDate, long toDate) {
-        return getMergedCompensationMap(getPredicate(fromDate, toDate)).values().stream()
+        return getMergedCompensationMap(temporalAdjusterModel.getPredicate(fromDate, toDate)).values().stream()
                 .mapToLong(e -> e)
                 .sum();
     }
@@ -95,7 +94,7 @@ public class DaoDataModel {
      * @param toDate        Epoch in millis
      */
     public long getReimbursementAmount(long fromDate, long toDate) {
-        return getMergedReimbursementMap(getPredicate(fromDate, toDate)).values().stream()
+        return getMergedReimbursementMap(temporalAdjusterModel.getPredicate(fromDate, toDate)).values().stream()
                 .mapToLong(e -> e)
                 .sum();
     }
@@ -105,7 +104,7 @@ public class DaoDataModel {
      * @param toDate        Epoch in millis
      */
     public long getBsqTradeFeeAmount(long fromDate, long toDate) {
-        return getBurnedBsqByMonth(daoStateService.getTradeFeeTxs(), getPredicate(fromDate, toDate)).values()
+        return getBurnedBsqByMonth(daoStateService.getTradeFeeTxs(), temporalAdjusterModel.getPredicate(fromDate, toDate)).values()
                 .stream()
                 .mapToLong(e -> e)
                 .sum();
@@ -116,7 +115,7 @@ public class DaoDataModel {
      * @param toDate        Epoch in millis
      */
     public long getProofOfBurnAmount(long fromDate, long toDate) {
-        return getBurnedBsqByMonth(daoStateService.getProofOfBurnTxs(), getPredicate(fromDate, toDate)).values().stream()
+        return getBurnedBsqByMonth(daoStateService.getProofOfBurnTxs(), temporalAdjusterModel.getPredicate(fromDate, toDate)).values().stream()
                 .mapToLong(e -> e)
                 .sum();
     }
@@ -185,16 +184,12 @@ public class DaoDataModel {
     }
 
     public long toTimeInterval(Instant instant) {
-        return TemporalAdjusterUtil.toTimeInterval(instant, temporalAdjuster);
+        return temporalAdjusterModel.toTimeInterval(instant);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Utils
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private static Predicate<Long> getPredicate(long fromDate, long toDate) {
-        return value -> value >= fromDate / 1000 && value <= toDate / 1000;
-    }
 
     private static <T, R> Function<T, R> memoize(Function<T, R> fn) {
         Map<T, R> map = new ConcurrentHashMap<>();

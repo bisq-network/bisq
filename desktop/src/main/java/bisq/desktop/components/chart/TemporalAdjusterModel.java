@@ -22,9 +22,15 @@ import java.time.ZoneId;
 import java.time.temporal.TemporalAdjuster;
 import java.time.temporal.TemporalAdjusters;
 
-import lombok.Getter;
+import java.util.function.Predicate;
 
-public class TemporalAdjusterUtil {
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+public class TemporalAdjusterModel {
+    private static final ZoneId ZONE_ID = ZoneId.systemDefault();
+
     public enum Interval {
         YEAR(TemporalAdjusters.firstDayOfYear()),
         MONTH(TemporalAdjusters.firstDayOfMonth()),
@@ -39,9 +45,21 @@ public class TemporalAdjusterUtil {
         }
     }
 
-    private static final ZoneId ZONE_ID = ZoneId.systemDefault();
+    protected TemporalAdjuster temporalAdjuster = Interval.MONTH.getAdjuster();
 
-    public static long toTimeInterval(Instant instant, TemporalAdjuster temporalAdjuster) {
+    public void setTemporalAdjuster(TemporalAdjuster temporalAdjuster) {
+        this.temporalAdjuster = temporalAdjuster;
+    }
+
+    public TemporalAdjuster getTemporalAdjuster() {
+        return temporalAdjuster;
+    }
+
+    public long toTimeInterval(Instant instant) {
+        return toTimeInterval(instant, temporalAdjuster);
+    }
+
+    public long toTimeInterval(Instant instant, TemporalAdjuster temporalAdjuster) {
         return instant
                 .atZone(ZONE_ID)
                 .toLocalDate()
@@ -49,5 +67,9 @@ public class TemporalAdjusterUtil {
                 .atStartOfDay(ZONE_ID)
                 .toInstant()
                 .getEpochSecond();
+    }
+
+    public Predicate<Long> getPredicate(long fromDate, long toDate) {
+        return value -> value >= fromDate / 1000 && value <= toDate / 1000;
     }
 }

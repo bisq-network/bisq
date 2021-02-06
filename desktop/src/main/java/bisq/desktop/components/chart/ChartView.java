@@ -157,7 +157,7 @@ public abstract class ChartView<T extends ChartModel> extends ActivatableView<VB
         };
 
         timeUnitChangeListener = (observable, oldValue, newValue) -> {
-            TemporalAdjusterUtil.Interval interval = (TemporalAdjusterUtil.Interval) newValue.getUserData();
+            TemporalAdjusterModel.Interval interval = (TemporalAdjusterModel.Interval) newValue.getUserData();
             applyTemporalAdjuster(interval.getAdjuster());
         };
     }
@@ -207,13 +207,13 @@ public abstract class ChartView<T extends ChartModel> extends ActivatableView<VB
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     protected Pane getTimeIntervalBox() {
-        ToggleButton year = getToggleButton(Res.get("time.year"), TemporalAdjusterUtil.Interval.YEAR,
+        ToggleButton year = getToggleButton(Res.get("time.year"), TemporalAdjusterModel.Interval.YEAR,
                 timeUnitToggleGroup, "toggle-left");
-        ToggleButton month = getToggleButton(Res.get("time.month"), TemporalAdjusterUtil.Interval.MONTH,
+        ToggleButton month = getToggleButton(Res.get("time.month"), TemporalAdjusterModel.Interval.MONTH,
                 timeUnitToggleGroup, "toggle-center");
-        ToggleButton week = getToggleButton(Res.get("time.week"), TemporalAdjusterUtil.Interval.WEEK,
+        ToggleButton week = getToggleButton(Res.get("time.week"), TemporalAdjusterModel.Interval.WEEK,
                 timeUnitToggleGroup, "toggle-center");
-        ToggleButton day = getToggleButton(Res.get("time.day"), TemporalAdjusterUtil.Interval.DAY,
+        ToggleButton day = getToggleButton(Res.get("time.day"), TemporalAdjusterModel.Interval.DAY,
                 timeUnitToggleGroup, "toggle-center");
 
         HBox toggleBox = new HBox();
@@ -230,7 +230,7 @@ public abstract class ChartView<T extends ChartModel> extends ActivatableView<VB
     }
 
     protected ToggleButton getToggleButton(String label,
-                                           TemporalAdjusterUtil.Interval interval,
+                                           TemporalAdjusterModel.Interval interval,
                                            ToggleGroup toggleGroup,
                                            String style) {
         ToggleButton toggleButton = new AutoTooltipToggleButton(label);
@@ -345,13 +345,13 @@ public abstract class ChartView<T extends ChartModel> extends ActivatableView<VB
     protected void applyTemporalAdjuster(TemporalAdjuster temporalAdjuster) {
         model.applyTemporalAdjuster(temporalAdjuster);
         findToggleByTemporalAdjuster(temporalAdjuster)
-                .map(e -> (TemporalAdjusterUtil.Interval) e.getUserData())
+                .map(e -> (TemporalAdjusterModel.Interval) e.getUserData())
                 .ifPresent(this::setDateFormatPatters);
 
         updateData(model.getPredicate());
     }
 
-    private void setDateFormatPatters(TemporalAdjusterUtil.Interval interval) {
+    private void setDateFormatPatters(TemporalAdjusterModel.Interval interval) {
         switch (interval) {
             case YEAR:
                 dateFormatPatters = "yyyy";
@@ -456,7 +456,7 @@ public abstract class ChartView<T extends ChartModel> extends ActivatableView<VB
 
     private Optional<Toggle> findToggleByTemporalAdjuster(TemporalAdjuster adjuster) {
         return timeUnitToggleGroup.getToggles().stream()
-                .filter(toggle -> ((TemporalAdjusterUtil.Interval) toggle.getUserData()).getAdjuster().equals(adjuster))
+                .filter(toggle -> ((TemporalAdjusterModel.Interval) toggle.getUserData()).getAdjuster().equals(adjuster))
                 .findAny();
     }
 
