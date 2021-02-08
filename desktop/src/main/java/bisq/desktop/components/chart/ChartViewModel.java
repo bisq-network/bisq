@@ -17,96 +17,227 @@
 
 package bisq.desktop.components.chart;
 
-import bisq.desktop.common.model.ActivatableViewModel;
+import bisq.desktop.common.model.ActivatableWithDataModel;
+import bisq.desktop.util.DisplayUtils;
 
 import bisq.common.util.Tuple2;
 
+import javafx.scene.chart.XYChart;
+
+import javafx.util.StringConverter;
+
 import java.time.temporal.TemporalAdjuster;
 
-import java.util.HashSet;
-import java.util.Set;
-import java.util.function.Predicate;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public abstract class ChartViewModel extends ActivatableViewModel {
-    public interface Listener {
-        /**
-         * @param fromDate      Epoch date in millis for earliest data
-         * @param toDate        Epoch date in millis for latest data
-         */
-        void onDateFilterChanged(long fromDate, long toDate);
+public abstract class ChartViewModel<T extends ChartDataModel> extends ActivatableWithDataModel<T> {
+    private final static double LEFT_TIMELINE_SNAP_VALUE = 0.01;
+    private final static double RIGHT_TIMELINE_SNAP_VALUE = 0.99;
+
+    @Getter
+    private final Double[] dividerPositions = new Double[]{0d, 1d};
+    @Getter
+    protected Number lowerBound;
+    @Getter
+    protected Number upperBound;
+    @Getter
+    protected String dateFormatPatters = "dd MMM\nyyyy";
+
+    public ChartViewModel(T dataModel) {
+        super(dataModel);
     }
-
-    protected Number lowerBound, upperBound;
-    protected final Set<Listener> listeners = new HashSet<>();
-
-    private Predicate<Long> predicate = e -> true;
-
-    public ChartViewModel() {
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Lifecycle
-    ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public void activate() {
-    }
-
-    @Override
-    public void deactivate() {
+        dividerPositions[0] = 0d;
+        dividerPositions[1] = 1d;
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // API
+    // TimerInterval/TemporalAdjuster
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void addListener(Listener listener) {
-        listeners.add(listener);
+    protected void applyTemporalAdjuster(TemporalAdjuster temporalAdjuster) {
+        dataModel.setTemporalAdjuster(temporalAdjuster);
     }
 
-    public void removeListener(Listener listener) {
-        listeners.remove(listener);
+    void setDateFormatPattern(TemporalAdjusterModel.Interval interval) {
+        switch (interval) {
+            case YEAR:
+                dateFormatPatters = "yyyy";
+                break;
+            case MONTH:
+                dateFormatPatters = "MMM\nyyyy";
+                break;
+            default:
+                dateFormatPatters = "MMM dd\nyyyy";
+                break;
+        }
     }
 
-    public Number getLowerBound() {
-        return lowerBound;
+    protected TemporalAdjuster getTemporalAdjuster() {
+        return dataModel.getTemporalAdjuster();
     }
 
-    public Number getUpperBound() {
-        return upperBound;
-    }
 
-    Tuple2<Double, Double> timelinePositionToEpochSeconds(double leftPos, double rightPos) {
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // TimelineNavigation
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    void onTimelineNavigationChanged(double leftPos, double rightPos) {
+        long from, to;
+
+        // We need to snap into the 0 and 1 values once we are close as otherwise once navigation has been used we
+        // would not get back to exact 0 or 1. Not clear why but might be rounding issues from values at x positions of
+        // drag operations.
+        if (leftPos < LEFT_TIMELINE_SNAP_VALUE) {
+            leftPos = 0;
+        }
+        if (rightPos > RIGHT_TIMELINE_SNAP_VALUE) {
+            rightPos = 1;
+        }
+        dividerPositions[0] = leftPos;
+        dividerPositions[1] = rightPos;
+
         long lowerBoundAsLong = lowerBound.longValue();
         long totalRange = upperBound.longValue() - lowerBoundAsLong;
-        double fromDateSec = lowerBoundAsLong + totalRange * leftPos;
-        double toDateSec = lowerBoundAsLong + totalRange * rightPos;
-        return new Tuple2<>(fromDateSec, toDateSec);
+
+        // TODO find better solution
+        // The TemporalAdjusters map dates to the lower bound (e.g. 1.1.2016) but our from date is the date of
+        // the first data entry so if we filter by that we would exclude the first year data in case YEAR was selected
+        // A trade with data 3.May.2016 gets mapped to 1.1.2016 and our from date will be April 2016, so we would
+        // filter that. It is a bit tricky to sync the TemporalAdjusters with our date filter. To include at least in
+        // the case when we have not set the date filter (left =0 / right =1) we set from date to epoch time 0 and
+        // to date to one year ahead to be sure we include all.
+
+        if (leftPos == 0) {
+            from = 0;
+        } else {
+            from = (long) (lowerBoundAsLong + totalRange * leftPos);
+        }
+        if (rightPos == 1) {
+            to = new Date().getTime() / 1000 + TimeUnit.DAYS.toSeconds(365);
+        } else {
+            to = (long) (lowerBoundAsLong + totalRange * rightPos);
+        }
+
+        dataModel.setDateFilter(from, to);
     }
 
-    protected abstract void applyTemporalAdjuster(TemporalAdjuster temporalAdjuster);
-
-    protected abstract TemporalAdjuster getTemporalAdjuster();
-
-    public Predicate<Long> getPredicate() {
-        return predicate;
+    void onTimelineMouseDrag(double leftPos, double rightPos) {
+        // Limit drag operation if we have hit a boundary
+        if (leftPos > LEFT_TIMELINE_SNAP_VALUE) {
+            dividerPositions[1] = rightPos;
+        }
+        if (rightPos < RIGHT_TIMELINE_SNAP_VALUE) {
+            dividerPositions[0] = leftPos;
+        }
     }
 
-    Predicate<Long> setAndGetPredicate(Tuple2<Double, Double> fromToTuple) {
-        predicate = value -> value >= fromToTuple.first && value <= fromToTuple.second;
-        return predicate;
+    void initBounds(List<XYChart.Data<Number, Number>> data1,
+                    List<XYChart.Data<Number, Number>> data2) {
+        Tuple2<Double, Double> xMinMaxTradeFee = getMinMax(data1);
+        Tuple2<Double, Double> xMinMaxCompensationRequest = getMinMax(data2);
+
+        lowerBound = Math.min(xMinMaxTradeFee.first, xMinMaxCompensationRequest.first);
+        upperBound = Math.max(xMinMaxTradeFee.second, xMinMaxCompensationRequest.second);
     }
 
-    void notifyListeners(Tuple2<Double, Double> fromToTuple) {
-        // We use millis for our listeners
-        long first = fromToTuple.first.longValue() * 1000;
-        long second = fromToTuple.second.longValue() * 1000;
-        listeners.forEach(l -> l.onDateFilterChanged(first, second));
+    void initBounds(List<XYChart.Data<Number, Number>> data) {
+        Tuple2<Double, Double> xMinMaxTradeFee = getMinMax(data);
+        lowerBound = xMinMaxTradeFee.first;
+        upperBound = xMinMaxTradeFee.second;
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Chart
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    StringConverter<Number> getTimeAxisStringConverter() {
+        return new StringConverter<>() {
+            @Override
+            public String toString(Number epochSeconds) {
+                Date date = new Date(epochSeconds.longValue() * 1000);
+                return DisplayUtils.formatDateAxis(date, getDateFormatPatters());
+            }
+
+            @Override
+            public Number fromString(String string) {
+                return 0;
+            }
+        };
+    }
+
+    protected StringConverter<Number> getYAxisStringConverter() {
+        return new StringConverter<>() {
+            @Override
+            public String toString(Number value) {
+                return String.valueOf(value);
+            }
+
+            @Override
+            public Number fromString(String string) {
+                return null;
+            }
+        };
+    }
+
+    String getTooltipDateConverter(Number date) {
+        return getTimeAxisStringConverter().toString(date).replace("\n", " ");
+    }
+
+    protected String getTooltipValueConverter(Number value) {
+        return getYAxisStringConverter().toString(value);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Data
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    protected void invalidateCache() {
+        dataModel.invalidateCache();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Utils
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    protected List<XYChart.Data<Number, Number>> toChartData(Map<Long, Long> map) {
+        return map.entrySet().stream()
+                .map(entry -> new XYChart.Data<Number, Number>(entry.getKey(), entry.getValue()))
+                .collect(Collectors.toList());
+    }
+
+    protected List<XYChart.Data<Number, Number>> toChartDoubleData(Map<Long, Double> map) {
+        return map.entrySet().stream()
+                .map(entry -> new XYChart.Data<Number, Number>(entry.getKey(), entry.getValue()))
+                .collect(Collectors.toList());
+    }
+
+    protected List<XYChart.Data<Number, Number>> toChartLongData(Map<Long, Long> map) {
+        return map.entrySet().stream()
+                .map(entry -> new XYChart.Data<Number, Number>(entry.getKey(), entry.getValue()))
+                .collect(Collectors.toList());
+    }
+
+    private Tuple2<Double, Double> getMinMax(List<XYChart.Data<Number, Number>> chartData) {
+        long min = Long.MAX_VALUE, max = 0;
+        for (XYChart.Data<Number, ?> data : chartData) {
+            min = Math.min(data.getXValue().longValue(), min);
+            max = Math.max(data.getXValue().longValue(), max);
+        }
+        return new Tuple2<>((double) min, (double) max);
+    }
 }

@@ -20,9 +20,7 @@ package bisq.desktop.main.dao.economy.supply;
 import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.TitledGroupBg;
-import bisq.desktop.components.chart.ChartViewModel;
-import bisq.desktop.main.dao.economy.supply.daodata.DaoChartDataModel;
-import bisq.desktop.main.dao.economy.supply.daodata.DaoChartView;
+import bisq.desktop.main.dao.economy.supply.dao.DaoChartView;
 import bisq.desktop.util.Layout;
 
 import bisq.core.dao.DaoFacade;
@@ -49,18 +47,15 @@ import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 import static bisq.desktop.util.FormBuilder.addTopLabelReadOnlyTextField;
 
 @FxmlView
-public class SupplyView extends ActivatableView<GridPane, Void> implements DaoStateListener, ChartViewModel.Listener {
+public class SupplyView extends ActivatableView<GridPane, Void> implements DaoStateListener {
     private final DaoFacade daoFacade;
     private final DaoChartView daoChartView;
-    // Shared model between SupplyView and RevenueChartModel
-    private final DaoChartDataModel daoChartDataModel;
     private final BsqFormatter bsqFormatter;
 
     private TextField genesisIssueAmountTextField, compRequestIssueAmountTextField, reimbursementAmountTextField,
             totalBurntBsqTradeFeeTextField, totalLockedUpAmountTextField, totalUnlockingAmountTextField,
             totalUnlockedAmountTextField, totalConfiscatedAmountTextField, totalProofOfBurnAmountTextField;
     private int gridRow = 0;
-    private long fromDate, toDate;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -70,19 +65,15 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
     @Inject
     private SupplyView(DaoFacade daoFacade,
                        DaoChartView daoChartView,
-                       DaoChartDataModel daoChartDataModel,
                        BsqFormatter bsqFormatter) {
         this.daoFacade = daoFacade;
         this.daoChartView = daoChartView;
-        this.daoChartDataModel = daoChartDataModel;
         this.bsqFormatter = bsqFormatter;
     }
 
     @Override
     public void initialize() {
-        daoFacade.getTx(daoFacade.getGenesisTxId()).ifPresent(tx -> fromDate = tx.getTime());
-
-        createChart();
+        createDaoChart();
         createIssuedAndBurnedFields();
         createLockedBsqFields();
     }
@@ -94,28 +85,12 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
 
         updateWithBsqBlockChainData();
 
-        daoChartView.activate();
-        daoChartView.addListener(this);
         daoFacade.addBsqStateListener(this);
     }
 
     @Override
     protected void deactivate() {
-        daoChartView.removeListener(this);
         daoFacade.removeBsqStateListener(this);
-        daoChartView.deactivate();
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // ChartModel.Listener
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public void onDateFilterChanged(long fromDate, long toDate) {
-        this.fromDate = fromDate;
-        this.toDate = toDate;
-        updateEconomicsData();
     }
 
 
@@ -132,13 +107,15 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
     // Build UI
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void createChart() {
-        addTitledGroupBg(root, gridRow, 2, Res.get("dao.factsAndFigures.supply.issuedVsBurnt"));
+    private void createDaoChart() {
+        TitledGroupBg titledGroupBg = addTitledGroupBg(root, gridRow, 2, Res.get("dao.factsAndFigures.supply.issuedVsBurnt"));
+        titledGroupBg.getStyleClass().add("last"); // hides separator as we add a second TitledGroupBg
+
         daoChartView.initialize();
+        VBox chartContainer = daoChartView.getRoot();
 
         AnchorPane chartPane = new AnchorPane();
         chartPane.getStyleClass().add("chart-pane");
-        VBox chartContainer = daoChartView.getRoot();
         AnchorPane.setTopAnchor(chartContainer, 15d);
         AnchorPane.setBottomAnchor(chartContainer, 10d);
         AnchorPane.setLeftAnchor(chartContainer, 25d);
@@ -148,15 +125,15 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
         GridPane.setMargin(chartPane, new Insets(Layout.FIRST_ROW_DISTANCE, 0, 0, 0));
         chartPane.getChildren().add(chartContainer);
 
-        this.root.getChildren().add(chartPane);
+        root.getChildren().add(chartPane);
     }
 
     private void createIssuedAndBurnedFields() {
-        TitledGroupBg titledGroupBg = addTitledGroupBg(root, ++gridRow, 3, Res.get("dao.factsAndFigures.supply.issued"), Layout.GROUP_DISTANCE);
+        TitledGroupBg titledGroupBg = addTitledGroupBg(root, ++gridRow, 3, Res.get("dao.factsAndFigures.supply.issued"), Layout.FLOATING_LABEL_DISTANCE);
         titledGroupBg.getStyleClass().add("last"); // hides separator as we add a second TitledGroupBg
 
         Tuple3<Label, TextField, VBox> genesisAmountTuple = addTopLabelReadOnlyTextField(root, gridRow,
-                Res.get("dao.factsAndFigures.supply.genesisIssueAmount"), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+                Res.get("dao.factsAndFigures.supply.genesisIssueAmount"), Layout.COMPACT_FIRST_ROW_AND_COMPACT_GROUP_DISTANCE);
         genesisIssueAmountTextField = genesisAmountTuple.second;
         GridPane.setColumnSpan(genesisAmountTuple.third, 2);
 
@@ -204,16 +181,16 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
     private void updateEconomicsData() {
         // We use the supplyDataProvider to get the adjusted data with static historical data as well to use the same
         // monthly scoped data.
-        Coin issuedAmountFromCompRequests = Coin.valueOf(daoChartDataModel.getCompensationAmount(fromDate, getToDate()));
+        Coin issuedAmountFromCompRequests = Coin.valueOf(daoChartView.getCompensationAmount());
         compRequestIssueAmountTextField.setText(bsqFormatter.formatAmountWithGroupSeparatorAndCode(issuedAmountFromCompRequests));
 
-        Coin issuedAmountFromReimbursementRequests = Coin.valueOf(daoChartDataModel.getReimbursementAmount(fromDate, getToDate()));
+        Coin issuedAmountFromReimbursementRequests = Coin.valueOf(daoChartView.getReimbursementAmount());
         reimbursementAmountTextField.setText(bsqFormatter.formatAmountWithGroupSeparatorAndCode(issuedAmountFromReimbursementRequests));
 
-        Coin totalBurntTradeFee = Coin.valueOf(daoChartDataModel.getBsqTradeFeeAmount(fromDate, getToDate()));
+        Coin totalBurntTradeFee = Coin.valueOf(daoChartView.getBsqTradeFeeAmount());
         totalBurntBsqTradeFeeTextField.setText(bsqFormatter.formatAmountWithGroupSeparatorAndCode(totalBurntTradeFee));
 
-        Coin totalProofOfBurnAmount = Coin.valueOf(daoChartDataModel.getProofOfBurnAmount(fromDate, getToDate()));
+        Coin totalProofOfBurnAmount = Coin.valueOf(daoChartView.getProofOfBurnAmount());
         totalProofOfBurnAmountTextField.setText(bsqFormatter.formatAmountWithGroupSeparatorAndCode(totalProofOfBurnAmount));
     }
 
@@ -229,9 +206,5 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
 
         Coin totalConfiscatedAmount = Coin.valueOf(daoFacade.getTotalAmountOfConfiscatedTxOutputs());
         totalConfiscatedAmountTextField.setText(bsqFormatter.formatAmountWithGroupSeparatorAndCode(totalConfiscatedAmount));
-    }
-
-    private long getToDate() {
-        return toDate > 0 ? toDate : System.currentTimeMillis();
     }
 }

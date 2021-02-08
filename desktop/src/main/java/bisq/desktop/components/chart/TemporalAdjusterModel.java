@@ -17,12 +17,11 @@
 
 package bisq.desktop.components.chart;
 
+import java.time.DayOfWeek;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.temporal.TemporalAdjuster;
 import java.time.temporal.TemporalAdjusters;
-
-import java.util.function.Predicate;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -34,7 +33,7 @@ public class TemporalAdjusterModel {
     public enum Interval {
         YEAR(TemporalAdjusters.firstDayOfYear()),
         MONTH(TemporalAdjusters.firstDayOfMonth()),
-        WEEK(TemporalAdjusters.ofDateAdjuster(date -> date.plusWeeks(1))),
+        WEEK(TemporalAdjusters.next(DayOfWeek.MONDAY)),
         DAY(TemporalAdjusters.ofDateAdjuster(d -> d));
 
         @Getter
@@ -67,9 +66,5 @@ public class TemporalAdjusterModel {
                 .atStartOfDay(ZONE_ID)
                 .toInstant()
                 .getEpochSecond();
-    }
-
-    public Predicate<Long> getPredicate(long fromDate, long toDate) {
-        return value -> value >= fromDate / 1000 && value <= toDate / 1000;
     }
 }

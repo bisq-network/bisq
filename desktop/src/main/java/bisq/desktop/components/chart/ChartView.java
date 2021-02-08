@@ -17,12 +17,13 @@
 
 package bisq.desktop.components.chart;
 
-import bisq.desktop.common.view.ActivatableView;
+import bisq.desktop.common.view.ActivatableViewAndModel;
 import bisq.desktop.components.AutoTooltipSlideToggleButton;
 import bisq.desktop.components.AutoTooltipToggleButton;
 
 import bisq.core.locale.Res;
 
+import bisq.common.UserThread;
 import bisq.common.util.Tuple2;
 
 import javafx.scene.Node;
@@ -43,101 +44,78 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.geometry.Side;
 
 import javafx.beans.value.ChangeListener;
+
+import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableList;
 
 import javafx.util.StringConverter;
 
 import java.time.temporal.TemporalAdjuster;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Predicate;
 import java.util.stream.Stream;
 
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+
+import javax.annotation.Nullable;
 
 import static bisq.desktop.util.FormBuilder.getTopLabelWithVBox;
 
 @Slf4j
-public abstract class ChartView<T extends ChartViewModel> extends ActivatableView<VBox, T> {
-    private final Pane center;
-    private final SplitPane splitPane;
-    protected final NumberAxis xAxis;
-    protected final NumberAxis yAxis;
-    protected final XYChart<Number, Number> chart;
+public abstract class ChartView<T extends ChartViewModel<? extends ChartDataModel>> extends ActivatableViewAndModel<VBox, T> {
+    private Pane center;
+    private SplitPane timelineNavigation;
+    protected NumberAxis xAxis;
+    protected NumberAxis yAxis;
+    protected LineChart<Number, Number> chart;
+    private HBox timelineLabels;
+    private final ToggleGroup timeIntervalToggleGroup = new ToggleGroup();
+
+    protected final Set<XYChart.Series<Number, Number>> activeSeries = new HashSet<>();
     protected final Map<String, Integer> seriesIndexMap = new HashMap<>();
-    protected final Map<String, AutoTooltipSlideToggleButton> toggleBySeriesName = new HashMap<>();
-    private final HBox timelineLabels;
+    protected final Map<String, AutoTooltipSlideToggleButton> legendToggleBySeriesName = new HashMap<>();
+
     private final List<Node> dividerNodes = new ArrayList<>();
-    private final Double[] dividerPositions = new Double[]{0d, 1d};
-    private final ToggleGroup timeUnitToggleGroup = new ToggleGroup();
-    protected final Set<String> activeSeries = new HashSet<>();
+
+    private ChangeListener<Number> widthListener;
+    private ChangeListener<Toggle> timeIntervalChangeListener;
+    private ListChangeListener<Node> nodeListChangeListener;
+    private int maxSeriesSize;
     private boolean pressed;
     private double x;
-    private ChangeListener<Number> widthListener;
-    private int maxSeriesSize;
-    private ChangeListener<Toggle> timeUnitChangeListener;
-    protected String dateFormatPatters = "dd MMM\nyyyy";
+
+    @Setter
+    protected boolean isRadioButtonBehaviour;
+    @Setter
+    private int maxDataPointsForShowingSymbols = 100;
+    private HBox legendBox2;
+    private ChangeListener<Number> yAxisWidthListener;
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Constructor
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public ChartView(T model) {
         super(model);
 
         root = new VBox();
-
-        // time units
-        Pane timeIntervalBox = getTimeIntervalBox();
-
-        // chart
-        xAxis = getXAxis();
-        yAxis = getYAxis();
-        chart = getChart();
-        initSeries();
-        addActiveSeries();
-        HBox legendBox1 = getLegendBox(getSeriesForLegend1());
-        Collection<XYChart.Series<Number, Number>> seriesForLegend2 = getSeriesForLegend2();
-        HBox legendBox2 = null;
-        if (seriesForLegend2 != null && !seriesForLegend2.isEmpty()) {
-            legendBox2 = getLegendBox(seriesForLegend2);
-        }
-
-        // Time navigation
-        Pane left = new Pane();
-        center = new Pane();
-        Pane right = new Pane();
-        splitPane = new SplitPane();
-        splitPane.getItems().addAll(left, center, right);
-        timelineLabels = new HBox();
-
-        // Container
-        VBox box = new VBox();
-        int paddingRight = 89;
-        int paddingLeft = 15;
-        VBox.setMargin(splitPane, new Insets(0, paddingRight, 0, paddingLeft));
-        VBox.setMargin(timelineLabels, new Insets(0, paddingRight, 0, paddingLeft));
-        VBox.setMargin(legendBox1, new Insets(10, paddingRight, 0, paddingLeft));
-        box.getChildren().addAll(splitPane, timelineLabels, legendBox1);
-        if (legendBox2 != null) {
-            VBox.setMargin(legendBox2, new Insets(-20, paddingRight, 0, paddingLeft));
-            box.getChildren().add(legendBox2);
-        }
-        root.getChildren().addAll(timeIntervalBox, chart, box);
     }
-
-    protected abstract void addActiveSeries();
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Lifecycle
@@ -145,76 +123,163 @@ public abstract class ChartView<T extends ChartViewModel> extends ActivatableVie
 
     @Override
     public void initialize() {
-        center.setId("chart-navigation-center-pane");
+        // We need to call prepareInitialize as we are not using FXMLLoader
+        prepareInitialize();
 
-        splitPane.setMinHeight(30);
-        splitPane.setDividerPosition(0, dividerPositions[0]);
-        splitPane.setDividerPosition(1, dividerPositions[1]);
+        maxSeriesSize = 0;
+        pressed = false;
+        x = 0;
 
-        widthListener = (observable, oldValue, newValue) -> {
-            splitPane.setDividerPosition(0, dividerPositions[0]);
-            splitPane.setDividerPosition(1, dividerPositions[1]);
+        // Series
+        createSeries();
+
+        // Time interval
+        Pane timeIntervalBox = getTimeIntervalBox();
+
+        // chart
+        xAxis = getXAxis();
+        yAxis = getYAxis();
+        chart = getChart();
+
+        // Timeline navigation
+        addTimelineNavigation();
+
+        // Legend
+        HBox legendBox1 = initLegendsAndGetLegendBox(getSeriesForLegend1());
+
+        Collection<XYChart.Series<Number, Number>> seriesForLegend2 = getSeriesForLegend2();
+        if (seriesForLegend2 != null && !seriesForLegend2.isEmpty()) {
+            legendBox2 = initLegendsAndGetLegendBox(seriesForLegend2);
+        }
+
+        // Set active series/legends
+        defineAndAddActiveSeries();
+
+        // Put all together
+        VBox timelineNavigationBox = new VBox();
+
+        double paddingLeft = 15;
+        double paddingRight = 89;
+        // Y-axis width depends on data so we register a listener to get correct value
+        yAxisWidthListener = (observable, oldValue, newValue) -> {
+            double width = newValue.doubleValue();
+            if (width > 0) {
+                double paddingRight1 = width + 14;
+                VBox.setMargin(timelineNavigation, new Insets(0, paddingRight1, 0, paddingLeft));
+                VBox.setMargin(timelineLabels, new Insets(0, paddingRight1, 0, paddingLeft));
+                VBox.setMargin(legendBox1, new Insets(10, paddingRight1, 0, paddingLeft));
+                if (legendBox2 != null) {
+                    VBox.setMargin(legendBox2, new Insets(-20, paddingRight1, 0, paddingLeft));
+                }
+
+                if (model.getDividerPositions()[0] == 0 && model.getDividerPositions()[1] == 1) {
+                    resetTimeNavigation();
+                }
+            }
         };
 
-        timeUnitChangeListener = (observable, oldValue, newValue) -> {
-            TemporalAdjusterModel.Interval interval = (TemporalAdjusterModel.Interval) newValue.getUserData();
-            applyTemporalAdjuster(interval.getAdjuster());
+        VBox.setMargin(timelineNavigation, new Insets(0, paddingRight, 0, paddingLeft));
+        VBox.setMargin(timelineLabels, new Insets(0, paddingRight, 0, paddingLeft));
+        VBox.setMargin(legendBox1, new Insets(10, paddingRight, 0, paddingLeft));
+        timelineNavigationBox.getChildren().addAll(timelineNavigation, timelineLabels, legendBox1);
+        if (legendBox2 != null) {
+            VBox.setMargin(legendBox2, new Insets(-20, paddingRight, 0, paddingLeft));
+            timelineNavigationBox.getChildren().add(legendBox2);
+        }
+        root.getChildren().addAll(timeIntervalBox, chart, timelineNavigationBox);
+
+        // Listeners
+        widthListener = (observable, oldValue, newValue) -> {
+            timelineNavigation.setDividerPosition(0, model.getDividerPositions()[0]);
+            timelineNavigation.setDividerPosition(1, model.getDividerPositions()[1]);
+        };
+
+        timeIntervalChangeListener = (observable, oldValue, newValue) -> {
+            if (newValue != null) {
+                onTimeIntervalChanged(newValue);
+            }
+        };
+
+        nodeListChangeListener = c -> {
+            while (c.next()) {
+                if (c.wasAdded()) {
+                    c.getAddedSubList().stream()
+                            .filter(node -> node instanceof Text)
+                            .forEach(node -> node.getStyleClass().add("axis-tick-mark-text-node"));
+                }
+            }
         };
     }
 
     @Override
     public void activate() {
-        root.widthProperty().addListener(widthListener);
-        timeUnitToggleGroup.selectedToggleProperty().addListener(timeUnitChangeListener);
-
-        splitPane.setOnMousePressed(this::onMousePressedSplitPane);
-        splitPane.setOnMouseDragged(this::onMouseDragged);
-        center.setOnMousePressed(this::onMousePressedCenter);
-        center.setOnMouseReleased(this::onMouseReleasedCenter);
-
-        initData();
-        initDividerMouseHandlers();
-        // Need to get called again here as otherwise styles are not applied correctly
-        applySeriesStyles();
+        timelineNavigation.setDividerPositions(model.getDividerPositions()[0], model.getDividerPositions()[1]);
 
         TemporalAdjuster temporalAdjuster = model.getTemporalAdjuster();
         applyTemporalAdjuster(temporalAdjuster);
-        findToggleByTemporalAdjuster(temporalAdjuster).ifPresent(timeUnitToggleGroup::selectToggle);
+        findTimeIntervalToggleByTemporalAdjuster(temporalAdjuster).ifPresent(timeIntervalToggleGroup::selectToggle);
+
+        defineAndAddActiveSeries();
+        applyData();
+        initBoundsForTimelineNavigation();
+
+        updateChartAfterDataChange();
+        // Need delay to next render frame
+        UserThread.execute(this::applyTimeLineNavigationLabels);
+
+        // Apply listeners and handlers
+        root.widthProperty().addListener(widthListener);
+        xAxis.getChildrenUnmodifiable().addListener(nodeListChangeListener);
+        yAxis.widthProperty().addListener(yAxisWidthListener);
+        timeIntervalToggleGroup.selectedToggleProperty().addListener(timeIntervalChangeListener);
+
+        timelineNavigation.setOnMousePressed(this::onMousePressedSplitPane);
+        timelineNavigation.setOnMouseDragged(this::onMouseDragged);
+        center.setOnMousePressed(this::onMousePressedCenter);
+        center.setOnMouseReleased(this::onMouseReleasedCenter);
+
+        addLegendToggleActionHandlers(getSeriesForLegend1());
+        addLegendToggleActionHandlers(getSeriesForLegend2());
+        addActionHandlersToDividers();
     }
 
     @Override
     public void deactivate() {
         root.widthProperty().removeListener(widthListener);
-        timeUnitToggleGroup.selectedToggleProperty().removeListener(timeUnitChangeListener);
-        splitPane.setOnMousePressed(null);
-        splitPane.setOnMouseDragged(null);
+        xAxis.getChildrenUnmodifiable().removeListener(nodeListChangeListener);
+        yAxis.widthProperty().removeListener(yAxisWidthListener);
+        timeIntervalToggleGroup.selectedToggleProperty().removeListener(timeIntervalChangeListener);
+
+        timelineNavigation.setOnMousePressed(null);
+        timelineNavigation.setOnMouseDragged(null);
         center.setOnMousePressed(null);
         center.setOnMouseReleased(null);
 
-        dividerNodes.forEach(node -> node.setOnMouseReleased(null));
+        removeLegendToggleActionHandlers(getSeriesForLegend1());
+        removeLegendToggleActionHandlers(getSeriesForLegend2());
+        removeActionHandlersToDividers();
+
+        // clear data, reset states. We keep timeInterval state though
+        activeSeries.clear();
+        chart.getData().clear();
+        legendToggleBySeriesName.values().forEach(e -> e.setSelected(false));
+        model.invalidateCache();
     }
 
-    public void addListener(ChartViewModel.Listener listener) {
-        model.addListener(listener);
-    }
-
-    public void removeListener(ChartViewModel.Listener listener) {
-        model.removeListener(listener);
-    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Customisations
+    // TimeInterval/TemporalAdjuster
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     protected Pane getTimeIntervalBox() {
-        ToggleButton year = getToggleButton(Res.get("time.year"), TemporalAdjusterModel.Interval.YEAR,
-                timeUnitToggleGroup, "toggle-left");
-        ToggleButton month = getToggleButton(Res.get("time.month"), TemporalAdjusterModel.Interval.MONTH,
-                timeUnitToggleGroup, "toggle-center");
-        ToggleButton week = getToggleButton(Res.get("time.week"), TemporalAdjusterModel.Interval.WEEK,
-                timeUnitToggleGroup, "toggle-center");
-        ToggleButton day = getToggleButton(Res.get("time.day"), TemporalAdjusterModel.Interval.DAY,
-                timeUnitToggleGroup, "toggle-center");
+        ToggleButton year = getTimeIntervalToggleButton(Res.get("time.year"), TemporalAdjusterModel.Interval.YEAR,
+                timeIntervalToggleGroup, "toggle-left");
+        ToggleButton month = getTimeIntervalToggleButton(Res.get("time.month"), TemporalAdjusterModel.Interval.MONTH,
+                timeIntervalToggleGroup, "toggle-center");
+        ToggleButton week = getTimeIntervalToggleButton(Res.get("time.week"), TemporalAdjusterModel.Interval.WEEK,
+                timeIntervalToggleGroup, "toggle-center");
+        ToggleButton day = getTimeIntervalToggleButton(Res.get("time.day"), TemporalAdjusterModel.Interval.DAY,
+                timeIntervalToggleGroup, "toggle-center");
 
         HBox toggleBox = new HBox();
         toggleBox.setSpacing(0);
@@ -229,10 +294,10 @@ public abstract class ChartView<T extends ChartViewModel> extends ActivatableVie
         return pane;
     }
 
-    protected ToggleButton getToggleButton(String label,
-                                           TemporalAdjusterModel.Interval interval,
-                                           ToggleGroup toggleGroup,
-                                           String style) {
+    private ToggleButton getTimeIntervalToggleButton(String label,
+                                                     TemporalAdjusterModel.Interval interval,
+                                                     ToggleGroup toggleGroup,
+                                                     String style) {
         ToggleButton toggleButton = new AutoTooltipToggleButton(label);
         toggleButton.setUserData(interval);
         toggleButton.setToggleGroup(toggleGroup);
@@ -240,45 +305,64 @@ public abstract class ChartView<T extends ChartViewModel> extends ActivatableVie
         return toggleButton;
     }
 
+    protected void applyTemporalAdjuster(TemporalAdjuster temporalAdjuster) {
+        model.applyTemporalAdjuster(temporalAdjuster);
+        findTimeIntervalToggleByTemporalAdjuster(temporalAdjuster)
+                .map(e -> (TemporalAdjusterModel.Interval) e.getUserData())
+                .ifPresent(model::setDateFormatPattern);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Chart
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     protected NumberAxis getXAxis() {
-        NumberAxis xAxis;
-        xAxis = new NumberAxis();
+        NumberAxis xAxis = new NumberAxis();
         xAxis.setForceZeroInRange(false);
-        xAxis.setTickLabelFormatter(getTimeAxisStringConverter());
-        xAxis.setAutoRanging(true);
+        xAxis.setTickLabelFormatter(model.getTimeAxisStringConverter());
         return xAxis;
     }
 
     protected NumberAxis getYAxis() {
-        NumberAxis yAxis;
-        yAxis = new NumberAxis();
-        yAxis.setForceZeroInRange(false);
-        yAxis.setTickLabelFormatter(getYAxisStringConverter());
+        NumberAxis yAxis = new NumberAxis();
+        yAxis.setForceZeroInRange(true);
+        yAxis.setSide(Side.RIGHT);
+        StringConverter<Number> yAxisStringConverter = model.getYAxisStringConverter();
+        yAxis.setTickLabelFormatter(yAxisStringConverter);
         return yAxis;
     }
 
-    protected XYChart<Number, Number> getChart() {
+    // Add implementation if update of the y axis is required at series change
+    protected void onSetYAxisFormatter(XYChart.Series<Number, Number> series) {
+    }
+
+    protected LineChart<Number, Number> getChart() {
         LineChart<Number, Number> chart = new LineChart<>(xAxis, yAxis);
-        chart.setLegendVisible(false);
         chart.setAnimated(false);
+        chart.setCreateSymbols(true);
+        chart.setLegendVisible(false);
+        chart.setId("charts-dao");
         return chart;
     }
 
-    protected abstract void initSeries();
 
-    protected HBox getLegendBox(Collection<XYChart.Series<Number, Number>> data) {
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Legend
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    protected HBox initLegendsAndGetLegendBox(Collection<XYChart.Series<Number, Number>> collection) {
         HBox hBox = new HBox();
         hBox.setSpacing(10);
-        data.forEach(series -> {
+        collection.forEach(series -> {
             AutoTooltipSlideToggleButton toggle = new AutoTooltipSlideToggleButton();
             toggle.setMinWidth(200);
             toggle.setAlignment(Pos.TOP_LEFT);
-            String seriesName = getSeriesId(series);
-            toggleBySeriesName.put(seriesName, toggle);
-            toggle.setText(seriesName);
-            toggle.setId("charts-legend-toggle" + seriesIndexMap.get(seriesName));
-            toggle.setSelected(true);
-            toggle.setOnAction(e -> onSelectLegendToggle(series, toggle.isSelected()));
+            String seriesId = getSeriesId(series);
+            legendToggleBySeriesName.put(seriesId, toggle);
+            toggle.setText(seriesId);
+            toggle.setId("charts-legend-toggle" + seriesIndexMap.get(seriesId));
+            toggle.setSelected(false);
             hBox.getChildren().add(toggle);
         });
         Region spacer = new Region();
@@ -287,114 +371,38 @@ public abstract class ChartView<T extends ChartViewModel> extends ActivatableVie
         return hBox;
     }
 
-    protected abstract Collection<XYChart.Series<Number, Number>> getSeriesForLegend1();
-
-    protected abstract Collection<XYChart.Series<Number, Number>> getSeriesForLegend2();
-
-    private void onSelectLegendToggle(XYChart.Series<Number, Number> series, boolean isSelected) {
-        if (isSelected) {
-            activateSeries(series);
-        } else {
-            chart.getData().remove(series);
-            activeSeries.remove(getSeriesId(series));
+    private void addLegendToggleActionHandlers(@Nullable Collection<XYChart.Series<Number, Number>> collection) {
+        if (collection != null) {
+            collection.forEach(series ->
+                    legendToggleBySeriesName.get(getSeriesId(series)).setOnAction(e -> onSelectLegendToggle(series)));
         }
-        applySeriesStyles();
-        applyTooltip();
     }
 
-    protected void activateSeries(XYChart.Series<Number, Number> series) {
-        chart.getData().add(series);
-        activeSeries.add(getSeriesId(series));
-    }
-
-    protected void hideSeries(XYChart.Series<Number, Number> series) {
-        toggleBySeriesName.get(getSeriesId(series)).setSelected(false);
-        onSelectLegendToggle(series, false);
-    }
-
-    protected StringConverter<Number> getTimeAxisStringConverter() {
-        return new StringConverter<>() {
-            @Override
-            public String toString(Number value) {
-                DateFormat format = new SimpleDateFormat(dateFormatPatters);
-                Date date = new Date(Math.round(value.doubleValue()) * 1000);
-                return format.format(date);
-            }
-
-            @Override
-            public Number fromString(String string) {
-                return null;
-            }
-        };
-    }
-
-    protected StringConverter<Number> getYAxisStringConverter() {
-        return new StringConverter<>() {
-            @Override
-            public String toString(Number value) {
-                return String.valueOf(value);
-            }
-
-            @Override
-            public Number fromString(String string) {
-                return null;
-            }
-        };
-    }
-
-    protected void applyTemporalAdjuster(TemporalAdjuster temporalAdjuster) {
-        model.applyTemporalAdjuster(temporalAdjuster);
-        findToggleByTemporalAdjuster(temporalAdjuster)
-                .map(e -> (TemporalAdjusterModel.Interval) e.getUserData())
-                .ifPresent(this::setDateFormatPatters);
-
-        updateData(model.getPredicate());
-    }
-
-    private void setDateFormatPatters(TemporalAdjusterModel.Interval interval) {
-        switch (interval) {
-            case YEAR:
-                dateFormatPatters = "yyyy";
-                break;
-            case MONTH:
-                dateFormatPatters = "MMM\nyyyy";
-                break;
-            default:
-                dateFormatPatters = "MMM dd\nyyyy";
-                break;
+    private void removeLegendToggleActionHandlers(@Nullable Collection<XYChart.Series<Number, Number>> collection) {
+        if (collection != null) {
+            collection.forEach(series ->
+                    legendToggleBySeriesName.get(getSeriesId(series)).setOnAction(null));
         }
-
     }
 
-    protected abstract void initData();
 
-    protected abstract void updateData(Predicate<Long> predicate);
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Timeline navigation
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
-    protected void applyTooltip() {
-        chart.getData().forEach(series -> {
-            series.getData().forEach(data -> {
-                Node node = data.getNode();
-                if (node == null) {
-                    return;
-                }
-                String xValue = getTooltipDateConverter(data.getXValue());
-                String yValue = getYAxisStringConverter().toString(data.getYValue());
-                Tooltip.install(node, new Tooltip(Res.get("dao.factsAndFigures.supply.chart.tradeFee.toolTip", yValue, xValue)));
-            });
-        });
+    private void addTimelineNavigation() {
+        Pane left = new Pane();
+        center = new Pane();
+        center.setId("chart-navigation-center-pane");
+        Pane right = new Pane();
+        timelineNavigation = new SplitPane();
+        timelineNavigation.setMinHeight(30);
+        timelineNavigation.getItems().addAll(left, center, right);
+        timelineLabels = new HBox();
     }
 
-    protected String getTooltipDateConverter(Number date) {
-        return getTimeAxisStringConverter().toString(date).replace("\n", " ");
-    }
-
-    protected String getTooltipValueConverter(Number value) {
-        return getYAxisStringConverter().toString(value);
-    }
-
-    // Only called once when initial data are applied. We want the min. and max. values so we have the max. scale for
-    // navigation.
-    protected void setTimeLineLabels() {
+    // After initial chart data are created we apply the text from the x-axis ticks to our timeline navigation.
+    protected void applyTimeLineNavigationLabels() {
         timelineLabels.getChildren().clear();
         int size = xAxis.getTickMarks().size();
         for (int i = 0; i < size; i++) {
@@ -407,6 +415,7 @@ public abstract class ChartView<T extends ChartViewModel> extends ActivatableVie
                 xValueString = String.valueOf(xValue);
             }
             Label label = new Label(xValueString);
+            label.setMinHeight(30);
             label.setId("chart-navigation-label");
             Region spacer = new Region();
             HBox.setHgrow(spacer, Priority.ALWAYS);
@@ -419,98 +428,23 @@ public abstract class ChartView<T extends ChartViewModel> extends ActivatableVie
         }
     }
 
-    // The chart framework assigns the colored depending on the order it got added, but want to keep colors
-    // the same so they match with the legend toggle.
-    protected void applySeriesStyles() {
-        for (int index = 0; index < chart.getData().size(); index++) {
-            XYChart.Series<Number, Number> series = chart.getData().get(index);
-            int staticIndex = seriesIndexMap.get(getSeriesId(series));
-            Set<Node> lines = getNodesForStyle(series.getNode(), ".default-color%d.chart-series-line");
-            Stream<Node> symbols = series.getData().stream().map(XYChart.Data::getNode)
-                    .flatMap(node -> getNodesForStyle(node, ".default-color%d.chart-line-symbol").stream());
-            Stream.concat(lines.stream(), symbols).forEach(node -> {
-                removeStyles(node);
-                node.getStyleClass().add("default-color" + staticIndex);
-            });
-        }
+    private void resetTimeNavigation() {
+        timelineNavigation.setDividerPositions(0d, 1d);
+        model.onTimelineNavigationChanged(0, 1);
     }
 
-    private void removeStyles(Node node) {
-        for (int i = 0; i < getMaxSeriesSize(); i++) {
-            node.getStyleClass().remove("default-color" + i);
-        }
-    }
-
-    private Set<Node> getNodesForStyle(Node node, String style) {
-        Set<Node> result = new HashSet<>();
-        for (int i = 0; i < getMaxSeriesSize(); i++) {
-            result.addAll(node.lookupAll(String.format(style, i)));
-        }
-        return result;
-    }
-
-    private int getMaxSeriesSize() {
-        maxSeriesSize = Math.max(maxSeriesSize, chart.getData().size());
-        return maxSeriesSize;
-    }
-
-    private Optional<Toggle> findToggleByTemporalAdjuster(TemporalAdjuster adjuster) {
-        return timeUnitToggleGroup.getToggles().stream()
-                .filter(toggle -> ((TemporalAdjusterModel.Interval) toggle.getUserData()).getAdjuster().equals(adjuster))
-                .findAny();
-    }
-
-    // We use the name as id as there is no other suitable data inside series
-    protected String getSeriesId(XYChart.Series<Number, Number> series) {
-        return series.getName();
-    }
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Timeline navigation
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private void onTimelineChanged() {
-        double leftPos = splitPane.getDividerPositions()[0];
-        double rightPos = splitPane.getDividerPositions()[1];
-        // We need to snap into the 0 and 1 values once we are close as otherwise once navigation has been used we
-        // would not get back to exact 0 or 1. Not clear why but might be rounding issues from values at x positions of
-        // drag operations.
-        if (leftPos < 0.01) {
-            leftPos = 0;
-        }
-        if (rightPos > 0.99) {
-            rightPos = 1;
-        }
-        dividerPositions[0] = leftPos;
-        dividerPositions[1] = rightPos;
-        splitPane.setDividerPositions(leftPos, rightPos);
-        Tuple2<Double, Double> fromToTuple = model.timelinePositionToEpochSeconds(leftPos, rightPos);
-        updateData(model.setAndGetPredicate(fromToTuple));
-        model.notifyListeners(fromToTuple);
-    }
-
-    private void initDividerMouseHandlers() {
-        // No API access to dividers ;-( only via css lookup hack (https://stackoverflow.com/questions/40707295/how-to-add-listener-to-divider-position?rq=1)
-        // Need to be done after added to scene and call requestLayout and applyCss. We keep it in a list atm
-        // and set action handler in activate.
-        splitPane.requestLayout();
-        splitPane.applyCss();
-        for (Node node : splitPane.lookupAll(".split-pane-divider")) {
-            dividerNodes.add(node);
-            node.setOnMouseReleased(e -> onTimelineChanged());
-        }
-    }
 
     private void onMouseDragged(MouseEvent e) {
         if (pressed) {
             double newX = e.getX();
-            double width = splitPane.getWidth();
+            double width = timelineNavigation.getWidth();
             double relativeDelta = (x - newX) / width;
-            double leftPos = splitPane.getDividerPositions()[0] - relativeDelta;
-            double rightPos = splitPane.getDividerPositions()[1] - relativeDelta;
-            dividerPositions[0] = leftPos;
-            dividerPositions[1] = rightPos;
-            splitPane.setDividerPositions(leftPos, rightPos);
+            double leftPos = timelineNavigation.getDividerPositions()[0] - relativeDelta;
+            double rightPos = timelineNavigation.getDividerPositions()[1] - relativeDelta;
+
+            // Model might limit application of new values if we hit a boundary
+            model.onTimelineMouseDrag(leftPos, rightPos);
+            timelineNavigation.setDividerPositions(model.getDividerPositions()[0], model.getDividerPositions()[1]);
             x = newX;
         }
     }
@@ -526,5 +460,248 @@ public abstract class ChartView<T extends ChartViewModel> extends ActivatableVie
 
     private void onMousePressedCenter(MouseEvent e) {
         pressed = true;
+    }
+
+    private void addActionHandlersToDividers() {
+        // No API access to dividers ;-( only via css lookup hack (https://stackoverflow.com/questions/40707295/how-to-add-listener-to-divider-position?rq=1)
+        // Need to be done after added to scene and call requestLayout and applyCss. We keep it in a list atm
+        // and set action handler in activate.
+        timelineNavigation.requestLayout();
+        timelineNavigation.applyCss();
+        for (Node node : timelineNavigation.lookupAll(".split-pane-divider")) {
+            dividerNodes.add(node);
+            node.setOnMouseReleased(e -> onTimelineChanged());
+        }
+    }
+
+    private void removeActionHandlersToDividers() {
+        dividerNodes.forEach(node -> node.setOnMouseReleased(null));
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Series
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    protected abstract void createSeries();
+
+    protected abstract Collection<XYChart.Series<Number, Number>> getSeriesForLegend1();
+
+    // If a second legend is used this has to be overridden
+    protected Collection<XYChart.Series<Number, Number>> getSeriesForLegend2() {
+        return null;
+    }
+
+    protected abstract void defineAndAddActiveSeries();
+
+    protected void activateSeries(XYChart.Series<Number, Number> series) {
+        if (activeSeries.contains(series)) {
+            return;
+        }
+
+        chart.getData().add(series);
+        activeSeries.add(series);
+        legendToggleBySeriesName.get(getSeriesId(series)).setSelected(true);
+        updateChartAfterDataChange();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Data
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    protected abstract void applyData();
+
+    /**
+     * Implementations define which series will be used for setBoundsForTimelineNavigation
+     */
+    protected abstract void initBoundsForTimelineNavigation();
+
+    /**
+     * @param   data The series data which determines the min/max x values for the time line navigation.
+     *               If not applicable initBoundsForTimelineNavigation requires custom implementation.
+     */
+    protected void setBoundsForTimelineNavigation(ObservableList<XYChart.Data<Number, Number>> data) {
+        model.initBounds(data);
+        xAxis.setLowerBound(model.getLowerBound().doubleValue());
+        xAxis.setUpperBound(model.getUpperBound().doubleValue());
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Handlers triggering a data/chart update
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void onTimeIntervalChanged(Toggle newValue) {
+        TemporalAdjusterModel.Interval interval = (TemporalAdjusterModel.Interval) newValue.getUserData();
+        applyTemporalAdjuster(interval.getAdjuster());
+        model.invalidateCache();
+        applyData();
+        updateChartAfterDataChange();
+    }
+
+    private void onTimelineChanged() {
+        double leftPos = timelineNavigation.getDividerPositions()[0];
+        double rightPos = timelineNavigation.getDividerPositions()[1];
+        model.onTimelineNavigationChanged(leftPos, rightPos);
+        // We need to update as model might have adjusted the values
+        timelineNavigation.setDividerPositions(model.getDividerPositions()[0], model.getDividerPositions()[1]);
+
+        model.invalidateCache();
+        applyData();
+        updateChartAfterDataChange();
+    }
+
+    private void onSelectLegendToggle(XYChart.Series<Number, Number> series) {
+        boolean isSelected = legendToggleBySeriesName.get(getSeriesId(series)).isSelected();
+        // If we have set that flag we deselect all other toggles
+        if (isRadioButtonBehaviour) {
+            new ArrayList<>(chart.getData()).stream() // We need to copy to a new list to avoid ConcurrentModificationException
+                    .filter(activeSeries::contains)
+                    .forEach(seriesToRemove -> {
+                        chart.getData().remove(seriesToRemove);
+                        String seriesId = getSeriesId(seriesToRemove);
+                        activeSeries.remove(seriesToRemove);
+                        legendToggleBySeriesName.get(seriesId).setSelected(false);
+                    });
+        }
+
+        if (isSelected) {
+            chart.getData().add(series);
+            activeSeries.add(series);
+            //model.invalidateCache();
+            applyData();
+
+            if (isRadioButtonBehaviour) {
+                // We support different y-axis formats only if isRadioButtonBehaviour is set, otherwise we would get
+                // mixed data on y-axis
+                onSetYAxisFormatter(series);
+            }
+        } else if (!isRadioButtonBehaviour) { // if isRadioButtonBehaviour we have removed it already via the code above
+            chart.getData().remove(series);
+            activeSeries.remove(series);
+
+        }
+        updateChartAfterDataChange();
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Chart update after data change
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    // Update of the chart data can be triggered by:
+    // 1. activate()
+    // 2. TimeInterval toggle change
+    // 3. Timeline navigation change
+    // 4. Legend/series toggle change
+
+    // Timeline navigation and legend/series toggles get reset at activate.
+    // Time interval toggle keeps its state at screen changes.
+    protected void updateChartAfterDataChange() {
+        // If a series got no data points after update we need to clear it from the chart
+        cleanupDanglingSeries();
+
+        // Hides symbols if too many data points are created
+        updateSymbolsVisibility();
+
+        // When series gets added/removed the JavaFx charts framework would try to apply styles by the index of
+        // addition, but we want to use a static color assignment which is synced with the legend color.
+        applySeriesStyles();
+
+        // Set tooltip on symbols
+        applyTooltip();
+    }
+
+    private void cleanupDanglingSeries() {
+        List<XYChart.Series<Number, Number>> activeSeriesList = new ArrayList<>(activeSeries);
+        activeSeriesList.forEach(series -> {
+            ObservableList<XYChart.Series<Number, Number>> seriesOnChart = chart.getData();
+            if (series.getData().isEmpty()) {
+                seriesOnChart.remove(series);
+            } else if (!seriesOnChart.contains(series)) {
+                seriesOnChart.add(series);
+            }
+        });
+    }
+
+    private void updateSymbolsVisibility() {
+        maxDataPointsForShowingSymbols = 100;
+        long numDataPoints = chart.getData().stream()
+                .map(XYChart.Series::getData)
+                .mapToLong(List::size)
+                .max()
+                .orElse(0);
+        boolean prevValue = chart.getCreateSymbols();
+        boolean newValue = numDataPoints < maxDataPointsForShowingSymbols;
+        if (prevValue != newValue) {
+            chart.setCreateSymbols(newValue);
+        }
+    }
+
+    // The chart framework assigns the colored depending on the order it got added, but want to keep colors
+    // the same so they match with the legend toggle.
+    private void applySeriesStyles() {
+        for (int index = 0; index < chart.getData().size(); index++) {
+            XYChart.Series<Number, Number> series = chart.getData().get(index);
+            int staticIndex = seriesIndexMap.get(getSeriesId(series));
+            Set<Node> lines = getNodesForStyle(series.getNode(), ".default-color%d.chart-series-line");
+            Stream<Node> symbols = series.getData().stream().map(XYChart.Data::getNode)
+                    .flatMap(node -> getNodesForStyle(node, ".default-color%d.chart-line-symbol").stream());
+            Stream.concat(lines.stream(), symbols).forEach(node -> {
+                removeStyles(node);
+                node.getStyleClass().add("default-color" + staticIndex);
+            });
+        }
+    }
+
+    private void applyTooltip() {
+        chart.getData().forEach(series -> {
+            series.getData().forEach(data -> {
+                Node node = data.getNode();
+                if (node == null) {
+                    return;
+                }
+                String xValue = model.getTooltipDateConverter(data.getXValue());
+                String yValue = model.getYAxisStringConverter().toString(data.getYValue());
+                Tooltip.install(node, new Tooltip(Res.get("dao.factsAndFigures.supply.chart.tradeFee.toolTip", yValue, xValue)));
+            });
+        });
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Utils
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void removeStyles(Node node) {
+        for (int i = 0; i < getMaxSeriesSize(); i++) {
+            node.getStyleClass().remove("default-color" + i);
+        }
+    }
+
+    private Set<Node> getNodesForStyle(Node node, String style) {
+        Set<Node> result = new HashSet<>();
+        if (node != null) {
+            for (int i = 0; i < getMaxSeriesSize(); i++) {
+                result.addAll(node.lookupAll(String.format(style, i)));
+            }
+        }
+        return result;
+    }
+
+    private int getMaxSeriesSize() {
+        maxSeriesSize = Math.max(maxSeriesSize, chart.getData().size());
+        return maxSeriesSize;
+    }
+
+    private Optional<Toggle> findTimeIntervalToggleByTemporalAdjuster(TemporalAdjuster adjuster) {
+        return timeIntervalToggleGroup.getToggles().stream()
+                .filter(toggle -> ((TemporalAdjusterModel.Interval) toggle.getUserData()).getAdjuster().equals(adjuster))
+                .findAny();
+    }
+
+    // We use the name as id as there is no other suitable data inside series
+    protected String getSeriesId(XYChart.Series<Number, Number> series) {
+        return series.getName();
     }
 }
