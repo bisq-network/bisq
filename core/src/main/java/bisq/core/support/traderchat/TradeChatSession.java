@@ -48,12 +48,15 @@ public class TradeChatSession extends SupportSession {
     }
 
     @Override
-    public PubKeyRing getClientPubKeyRing() {
+    public int getClientId() {
         // TODO remove that client-server concept for trade chat
         // Get pubKeyRing of taker. Maker is considered server for chat sessions
-        if (trade != null && trade.getContract() != null)
-            return trade.getContract().getTakerPubKeyRing();
-        return null;
+        try {
+            return trade.getContract().getTakerPubKeyRing().hashCode();
+        } catch (NullPointerException e) {
+            log.warn("Unable to get takerPubKeyRing from Trade Contract - {}", e.toString());
+        }
+        return 0;
     }
 
     @Override
