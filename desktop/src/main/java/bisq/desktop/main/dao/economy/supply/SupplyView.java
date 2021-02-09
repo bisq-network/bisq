@@ -43,6 +43,9 @@ import javafx.scene.layout.VBox;
 
 import javafx.geometry.Insets;
 
+import javafx.beans.binding.Bindings;
+import javafx.beans.property.ReadOnlyLongProperty;
+
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 import static bisq.desktop.util.FormBuilder.addTopLabelReadOnlyTextField;
 
@@ -52,9 +55,9 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
     private final DaoChartView daoChartView;
     private final BsqFormatter bsqFormatter;
 
-    private TextField genesisIssueAmountTextField, compRequestIssueAmountTextField, reimbursementAmountTextField,
-            totalBurntBsqTradeFeeTextField, totalLockedUpAmountTextField, totalUnlockingAmountTextField,
-            totalUnlockedAmountTextField, totalConfiscatedAmountTextField, totalProofOfBurnAmountTextField;
+    private TextField genesisIssueAmountTextField, compensationAmountTextField, reimbursementAmountTextField,
+            bsqTradeFeeAmountTextField, totalLockedUpAmountTextField, totalUnlockingAmountTextField,
+            totalUnlockedAmountTextField, totalConfiscatedAmountTextField, proofOfBurnAmountTextField;
     private int gridRow = 0;
 
 
@@ -80,17 +83,34 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
 
     @Override
     protected void activate() {
+        daoFacade.addBsqStateListener(this);
+
+        compensationAmountTextField.textProperty().bind(Bindings.createStringBinding(
+                () -> getFormattedValue(daoChartView.compensationAmountProperty()),
+                daoChartView.compensationAmountProperty()));
+        reimbursementAmountTextField.textProperty().bind(Bindings.createStringBinding(
+                () -> getFormattedValue(daoChartView.reimbursementAmountProperty()),
+                daoChartView.reimbursementAmountProperty()));
+        bsqTradeFeeAmountTextField.textProperty().bind(Bindings.createStringBinding(
+                () -> getFormattedValue(daoChartView.bsqTradeFeeAmountProperty()),
+                daoChartView.bsqTradeFeeAmountProperty()));
+        proofOfBurnAmountTextField.textProperty().bind(Bindings.createStringBinding(
+                () -> getFormattedValue(daoChartView.proofOfBurnAmountProperty()),
+                daoChartView.proofOfBurnAmountProperty()));
+
         Coin issuedAmountFromGenesis = daoFacade.getGenesisTotalSupply();
         genesisIssueAmountTextField.setText(bsqFormatter.formatAmountWithGroupSeparatorAndCode(issuedAmountFromGenesis));
-
         updateWithBsqBlockChainData();
-
-        daoFacade.addBsqStateListener(this);
     }
 
     @Override
     protected void deactivate() {
         daoFacade.removeBsqStateListener(this);
+
+        compensationAmountTextField.textProperty().unbind();
+        reimbursementAmountTextField.textProperty().unbind();
+        bsqTradeFeeAmountTextField.textProperty().unbind();
+        proofOfBurnAmountTextField.textProperty().unbind();
     }
 
 
@@ -137,17 +157,17 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
         genesisIssueAmountTextField = genesisAmountTuple.second;
         GridPane.setColumnSpan(genesisAmountTuple.third, 2);
 
-        compRequestIssueAmountTextField = addTopLabelReadOnlyTextField(root, ++gridRow,
+        compensationAmountTextField = addTopLabelReadOnlyTextField(root, ++gridRow,
                 Res.get("dao.factsAndFigures.supply.compRequestIssueAmount")).second;
         reimbursementAmountTextField = addTopLabelReadOnlyTextField(root, gridRow, 1,
                 Res.get("dao.factsAndFigures.supply.reimbursementAmount")).second;
 
         addTitledGroupBg(root, ++gridRow, 1, Res.get("dao.factsAndFigures.supply.burnt"), Layout.GROUP_DISTANCE_WITHOUT_SEPARATOR);
 
-        totalBurntBsqTradeFeeTextField = addTopLabelReadOnlyTextField(root, gridRow,
+        bsqTradeFeeAmountTextField = addTopLabelReadOnlyTextField(root, gridRow,
                 Res.get("dao.factsAndFigures.supply.bsqTradeFee"), Layout.COMPACT_FIRST_ROW_AND_COMPACT_GROUP_DISTANCE).second;
 
-        totalProofOfBurnAmountTextField = addTopLabelReadOnlyTextField(root, gridRow, 1,
+        proofOfBurnAmountTextField = addTopLabelReadOnlyTextField(root, gridRow, 1,
                 Res.get("dao.factsAndFigures.supply.proofOfBurn"), Layout.COMPACT_FIRST_ROW_AND_COMPACT_GROUP_DISTANCE).second;
     }
 
@@ -174,27 +194,6 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void updateWithBsqBlockChainData() {
-        updateEconomicsData();
-        updateLockedTxData();
-    }
-
-    private void updateEconomicsData() {
-        // We use the supplyDataProvider to get the adjusted data with static historical data as well to use the same
-        // monthly scoped data.
-        Coin issuedAmountFromCompRequests = Coin.valueOf(daoChartView.getCompensationAmount());
-        compRequestIssueAmountTextField.setText(bsqFormatter.formatAmountWithGroupSeparatorAndCode(issuedAmountFromCompRequests));
-
-        Coin issuedAmountFromReimbursementRequests = Coin.valueOf(daoChartView.getReimbursementAmount());
-        reimbursementAmountTextField.setText(bsqFormatter.formatAmountWithGroupSeparatorAndCode(issuedAmountFromReimbursementRequests));
-
-        Coin totalBurntTradeFee = Coin.valueOf(daoChartView.getBsqTradeFeeAmount());
-        totalBurntBsqTradeFeeTextField.setText(bsqFormatter.formatAmountWithGroupSeparatorAndCode(totalBurntTradeFee));
-
-        Coin totalProofOfBurnAmount = Coin.valueOf(daoChartView.getProofOfBurnAmount());
-        totalProofOfBurnAmountTextField.setText(bsqFormatter.formatAmountWithGroupSeparatorAndCode(totalProofOfBurnAmount));
-    }
-
-    private void updateLockedTxData() {
         Coin totalLockedUpAmount = Coin.valueOf(daoFacade.getTotalLockupAmount());
         totalLockedUpAmountTextField.setText(bsqFormatter.formatAmountWithGroupSeparatorAndCode(totalLockedUpAmount));
 
@@ -206,5 +205,9 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
 
         Coin totalConfiscatedAmount = Coin.valueOf(daoFacade.getTotalAmountOfConfiscatedTxOutputs());
         totalConfiscatedAmountTextField.setText(bsqFormatter.formatAmountWithGroupSeparatorAndCode(totalConfiscatedAmount));
+    }
+
+    private String getFormattedValue(ReadOnlyLongProperty property) {
+        return bsqFormatter.formatAmountWithGroupSeparatorAndCode(Coin.valueOf(property.get()));
     }
 }
