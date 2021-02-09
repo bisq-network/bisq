@@ -38,7 +38,6 @@ import bisq.core.btc.wallet.TxBroadcaster;
 import bisq.core.dao.DaoFacade;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
-import bisq.core.provider.fee.FeeService;
 import bisq.core.support.SupportType;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeList;
@@ -105,7 +104,6 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     private final TradeWalletService tradeWalletService;
     private final BtcWalletService btcWalletService;
     private final TxFeeEstimationService txFeeEstimationService;
-    private final FeeService feeService;
     private final DaoFacade daoFacade;
     private Dispute dispute;
     private Optional<Runnable> finalizeDisputeHandlerOptional = Optional.empty();
@@ -143,7 +141,6 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                                 TradeWalletService tradeWalletService,
                                 BtcWalletService btcWalletService,
                                 TxFeeEstimationService txFeeEstimationService,
-                                FeeService feeService,
                                 DaoFacade daoFacade) {
 
         this.formatter = formatter;
@@ -152,7 +149,6 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         this.tradeWalletService = tradeWalletService;
         this.btcWalletService = btcWalletService;
         this.txFeeEstimationService = txFeeEstimationService;
-        this.feeService = feeService;
         this.daoFacade = daoFacade;
 
         type = Type.Confirmation;
@@ -672,7 +668,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         Coin sellerPayoutAmount = disputeResult.getSellerPayoutAmount();
         String sellerPayoutAddressString = contract.getSellerPayoutAddressString();
         Coin outputAmount = buyerPayoutAmount.add(sellerPayoutAmount);
-        Tuple2<Coin, Integer> feeTuple = txFeeEstimationService.getEstimatedFeeAndTxVsize(outputAmount, feeService, btcWalletService);
+        Tuple2<Coin, Integer> feeTuple = txFeeEstimationService.getEstimatedFeeAndTxVsize(outputAmount, btcWalletService);
         Coin fee = feeTuple.first;
         Integer txVsize = feeTuple.second;
         double feePerVbyte = CoinUtil.getFeePerVbyte(fee, txVsize);
