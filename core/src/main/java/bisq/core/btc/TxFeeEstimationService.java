@@ -141,9 +141,8 @@ public class TxFeeEstimationService {
     }
 
     public Tuple2<Coin, Integer> getEstimatedFeeAndTxVsize(Coin amount,
-                                                           FeeService feeService,
                                                            BtcWalletService btcWalletService) {
-        Coin txFeePerVbyte = feeService.getTxFeePerVbyte();
+        Coin txFeePerVbyte = btcWalletService.getTxFeeForWithdrawalPerVbyte();
         // We start with min taker fee vsize of 175
         int estimatedTxVsize = TYPICAL_TX_WITH_1_INPUT_VSIZE;
         try {
