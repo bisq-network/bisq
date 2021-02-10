@@ -25,6 +25,8 @@ import bisq.core.locale.Res;
 
 import bisq.common.UserThread;
 
+import javafx.stage.PopupWindow;
+
 import javafx.scene.Node;
 import javafx.scene.chart.Axis;
 import javafx.scene.chart.LineChart;
@@ -44,15 +46,21 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 
+import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.geometry.Side;
 
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
+
+import javafx.event.EventHandler;
 
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 
+import javafx.util.Duration;
 import javafx.util.StringConverter;
 
 import java.time.temporal.TemporalAdjuster;
@@ -76,31 +84,31 @@ import javax.annotation.Nullable;
 public abstract class ChartView<T extends ChartViewModel<? extends ChartDataModel>> extends ActivatableViewAndModel<VBox, T> {
     private Pane center;
     private SplitPane timelineNavigation;
-    protected NumberAxis xAxis;
-    protected NumberAxis yAxis;
+    protected NumberAxis xAxis, yAxis;
     protected LineChart<Number, Number> chart;
-    private HBox timelineLabels;
+    private HBox timelineLabels, legendBox2;
     private final ToggleGroup timeIntervalToggleGroup = new ToggleGroup();
 
     protected final Set<XYChart.Series<Number, Number>> activeSeries = new HashSet<>();
     protected final Map<String, Integer> seriesIndexMap = new HashMap<>();
     protected final Map<String, AutoTooltipSlideToggleButton> legendToggleBySeriesName = new HashMap<>();
-
     private final List<Node> dividerNodes = new ArrayList<>();
-
+    private final List<Tooltip> dividerNodesTooltips = new ArrayList<>();
     private ChangeListener<Number> widthListener;
     private ChangeListener<Toggle> timeIntervalChangeListener;
     private ListChangeListener<Node> nodeListChangeListener;
     private int maxSeriesSize;
-    private boolean pressed;
+    private boolean centerPanePressed;
     private double x;
 
     @Setter
     protected boolean isRadioButtonBehaviour;
     @Setter
     private int maxDataPointsForShowingSymbols = 100;
-    private HBox legendBox2;
     private ChangeListener<Number> yAxisWidthListener;
+    private EventHandler<MouseEvent> dividerMouseDraggedEventHandler;
+    private StringProperty fromProperty = new SimpleStringProperty();
+    private StringProperty toProperty = new SimpleStringProperty();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -123,7 +131,7 @@ public abstract class ChartView<T extends ChartViewModel<? extends ChartDataMode
         prepareInitialize();
 
         maxSeriesSize = 0;
-        pressed = false;
+        centerPanePressed = false;
         x = 0;
 
         // Series
@@ -152,6 +160,7 @@ public abstract class ChartView<T extends ChartViewModel<? extends ChartDataMode
         defineAndAddActiveSeries();
 
         // Put all together
+        VBox timelineNavigationBox = new VBox();
         double paddingLeft = 15;
         double paddingRight = 89;
         // Y-axis width depends on data so we register a listener to get correct value
@@ -172,15 +181,17 @@ public abstract class ChartView<T extends ChartViewModel<? extends ChartDataMode
                 }
             }
         };
+
         VBox.setMargin(timeIntervalBox, new Insets(0, paddingRight, 0, paddingLeft));
         VBox.setMargin(timelineNavigation, new Insets(0, paddingRight, 0, paddingLeft));
         VBox.setMargin(timelineLabels, new Insets(0, paddingRight, 0, paddingLeft));
         VBox.setMargin(legendBox1, new Insets(0, paddingRight, 0, paddingLeft));
-        root.getChildren().addAll(timeIntervalBox, chart, timelineNavigation, timelineLabels, legendBox1);
+        timelineNavigationBox.getChildren().addAll(timelineNavigation, timelineLabels, legendBox1);
         if (legendBox2 != null) {
             VBox.setMargin(legendBox2, new Insets(-20, paddingRight, 0, paddingLeft));
-            root.getChildren().add(legendBox2);
+            timelineNavigationBox.getChildren().add(legendBox2);
         }
+        root.getChildren().addAll(timeIntervalBox, chart, timelineNavigationBox);
 
         // Listeners
         widthListener = (observable, oldValue, newValue) -> {
@@ -208,6 +219,8 @@ public abstract class ChartView<T extends ChartViewModel<? extends ChartDataMode
     @Override
     public void activate() {
         timelineNavigation.setDividerPositions(model.getDividerPositions()[0], model.getDividerPositions()[1]);
+        UserThread.execute(this::applyTimeLineNavigationLabels);
+        UserThread.execute(this::onTimelineChanged);
 
         TemporalAdjuster temporalAdjuster = model.getTemporalAdjuster();
         applyTemporalAdjuster(temporalAdjuster);
@@ -218,8 +231,6 @@ public abstract class ChartView<T extends ChartViewModel<? extends ChartDataMode
         initBoundsForTimelineNavigation();
 
         updateChartAfterDataChange();
-        // Need delay to next render frame
-        UserThread.execute(this::applyTimeLineNavigationLabels);
 
         // Apply listeners and handlers
         root.widthProperty().addListener(widthListener);
@@ -257,6 +268,8 @@ public abstract class ChartView<T extends ChartViewModel<? extends ChartDataMode
         activeSeries.clear();
         chart.getData().clear();
         legendToggleBySeriesName.values().forEach(e -> e.setSelected(false));
+        dividerNodes.clear();
+        dividerNodesTooltips.clear();
         model.invalidateCache();
     }
 
@@ -329,7 +342,6 @@ public abstract class ChartView<T extends ChartViewModel<? extends ChartDataMode
     protected LineChart<Number, Number> getChart() {
         LineChart<Number, Number> chart = new LineChart<>(xAxis, yAxis);
         chart.setAnimated(false);
-        chart.setCreateSymbols(true);
         chart.setLegendVisible(false);
         chart.setMinHeight(200);
         chart.setId("charts-dao");
@@ -385,9 +397,9 @@ public abstract class ChartView<T extends ChartViewModel<? extends ChartDataMode
         center = new Pane();
         center.setId("chart-navigation-center-pane");
         Pane right = new Pane();
-        timelineNavigation = new SplitPane();
+        timelineNavigation = new SplitPane(left, center, right);
+        timelineNavigation.setDividerPositions(model.getDividerPositions()[0], model.getDividerPositions()[1]);
         timelineNavigation.setMinHeight(25);
-        timelineNavigation.getItems().addAll(left, center, right);
         timelineLabels = new HBox();
     }
 
@@ -419,14 +431,26 @@ public abstract class ChartView<T extends ChartViewModel<? extends ChartDataMode
         }
     }
 
-    private void resetTimeNavigation() {
-        timelineNavigation.setDividerPositions(0d, 1d);
-        model.onTimelineNavigationChanged(0, 1);
+    private void onMousePressedSplitPane(MouseEvent e) {
+        x = e.getX();
+        applyFromToDates();
+        showDividerTooltips();
     }
 
+    private void onMousePressedCenter(MouseEvent e) {
+        centerPanePressed = true;
+        applyFromToDates();
+        showDividerTooltips();
+    }
+
+    private void onMouseReleasedCenter(MouseEvent e) {
+        centerPanePressed = false;
+        onTimelineChanged();
+        hideDividerTooltips();
+    }
 
     private void onMouseDragged(MouseEvent e) {
-        if (pressed) {
+        if (centerPanePressed) {
             double newX = e.getX();
             double width = timelineNavigation.getWidth();
             double relativeDelta = (x - newX) / width;
@@ -437,20 +461,10 @@ public abstract class ChartView<T extends ChartViewModel<? extends ChartDataMode
             model.onTimelineMouseDrag(leftPos, rightPos);
             timelineNavigation.setDividerPositions(model.getDividerPositions()[0], model.getDividerPositions()[1]);
             x = newX;
+
+            applyFromToDates();
+            showDividerTooltips();
         }
-    }
-
-    private void onMouseReleasedCenter(MouseEvent e) {
-        pressed = false;
-        onTimelineChanged();
-    }
-
-    private void onMousePressedSplitPane(MouseEvent e) {
-        x = e.getX();
-    }
-
-    private void onMousePressedCenter(MouseEvent e) {
-        pressed = true;
     }
 
     private void addActionHandlersToDividers() {
@@ -459,14 +473,59 @@ public abstract class ChartView<T extends ChartViewModel<? extends ChartDataMode
         // and set action handler in activate.
         timelineNavigation.requestLayout();
         timelineNavigation.applyCss();
+        dividerMouseDraggedEventHandler = event -> {
+            applyFromToDates();
+            showDividerTooltips();
+        };
+
         for (Node node : timelineNavigation.lookupAll(".split-pane-divider")) {
             dividerNodes.add(node);
-            node.setOnMouseReleased(e -> onTimelineChanged());
+            node.setOnMouseReleased(e -> {
+                hideDividerTooltips();
+                onTimelineChanged();
+            });
+            node.addEventHandler(MouseEvent.MOUSE_DRAGGED, dividerMouseDraggedEventHandler);
+
+            Tooltip tooltip = new Tooltip("");
+            dividerNodesTooltips.add(tooltip);
+            tooltip.setShowDelay(Duration.millis(300));
+            tooltip.setShowDuration(Duration.seconds(3));
+            tooltip.textProperty().bind(dividerNodes.size() == 1 ? fromProperty : toProperty);
+            Tooltip.install(node, tooltip);
         }
     }
 
     private void removeActionHandlersToDividers() {
-        dividerNodes.forEach(node -> node.setOnMouseReleased(null));
+        dividerNodes.forEach(node -> {
+            node.setOnMouseReleased(null);
+            node.removeEventHandler(MouseEvent.MOUSE_DRAGGED, dividerMouseDraggedEventHandler);
+        });
+        for (int i = 0; i < dividerNodesTooltips.size(); i++) {
+            Tooltip tooltip = dividerNodesTooltips.get(i);
+            tooltip.textProperty().unbind();
+            Tooltip.uninstall(dividerNodes.get(i), tooltip);
+        }
+    }
+
+    private void resetTimeNavigation() {
+        timelineNavigation.setDividerPositions(0d, 1d);
+        model.onTimelineNavigationChanged(0, 1);
+    }
+
+    private void showDividerTooltips() {
+        showDividerTooltip(0);
+        showDividerTooltip(1);
+    }
+
+    private void hideDividerTooltips() {
+        dividerNodesTooltips.forEach(PopupWindow::hide);
+    }
+
+    private void showDividerTooltip(int index) {
+        Node divider = dividerNodes.get(index);
+        Bounds bounds = divider.localToScene(divider.getBoundsInLocal());
+        Tooltip tooltip = dividerNodesTooltips.get(index);
+        tooltip.show(divider, bounds.getMaxX(), bounds.getMaxY() - 20);
     }
 
 
@@ -532,15 +591,29 @@ public abstract class ChartView<T extends ChartViewModel<? extends ChartDataMode
     }
 
     private void onTimelineChanged() {
+        updateTimeLinePositions();
+
+        model.invalidateCache();
+        applyData();
+        updateChartAfterDataChange();
+    }
+
+    private void updateTimeLinePositions() {
         double leftPos = timelineNavigation.getDividerPositions()[0];
         double rightPos = timelineNavigation.getDividerPositions()[1];
         model.onTimelineNavigationChanged(leftPos, rightPos);
         // We need to update as model might have adjusted the values
         timelineNavigation.setDividerPositions(model.getDividerPositions()[0], model.getDividerPositions()[1]);
+        fromProperty.set(model.getTimeAxisStringConverter().toString(model.getFromDate()).replace("\n", " "));
+        toProperty.set(model.getTimeAxisStringConverter().toString(model.getToDate()).replace("\n", " "));
+    }
 
-        model.invalidateCache();
-        applyData();
-        updateChartAfterDataChange();
+    private void applyFromToDates() {
+        double leftPos = timelineNavigation.getDividerPositions()[0];
+        double rightPos = timelineNavigation.getDividerPositions()[1];
+        model.applyFromToDates(leftPos, rightPos);
+        fromProperty.set(model.getTimeAxisStringConverter().toString(model.getFromDate()).replace("\n", " "));
+        toProperty.set(model.getTimeAxisStringConverter().toString(model.getToDate()).replace("\n", " "));
     }
 
     private void onSelectLegendToggle(XYChart.Series<Number, Number> series) {

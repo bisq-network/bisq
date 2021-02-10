@@ -50,6 +50,10 @@ public abstract class ChartViewModel<T extends ChartDataModel> extends Activatab
     protected Number upperBound;
     @Getter
     protected String dateFormatPatters = "dd MMM\nyyyy";
+    @Getter
+    long fromDate;
+    @Getter
+    long toDate;
 
     public ChartViewModel(T dataModel) {
         super(dataModel);
@@ -94,8 +98,36 @@ public abstract class ChartViewModel<T extends ChartDataModel> extends Activatab
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     void onTimelineNavigationChanged(double leftPos, double rightPos) {
+        applyFromToDates(leftPos, rightPos);
+        // TODO find better solution
+        // The TemporalAdjusters map dates to the lower bound (e.g. 1.1.2016) but our from date is the date of
+        // the first data entry so if we filter by that we would exclude the first year data in case YEAR was selected
+        // A trade with data 3.May.2016 gets mapped to 1.1.2016 and our from date will be April 2016, so we would
+        // filter that. It is a bit tricky to sync the TemporalAdjusters with our date filter. To include at least in
+        // the case when we have not set the date filter (left =0 / right =1) we set from date to epoch time 0 and
+        // to date to one year ahead to be sure we include all.
+
         long from, to;
 
+        // We only manipulate the from, to variables for the date filter, not the fromDate, toDate properties as those
+        // are used by the view for tooltip over the time line navigation dividers
+        if (leftPos == 0) {
+            from = 0;
+        } else {
+            from = fromDate;
+        }
+        if (rightPos == 1) {
+            to = new Date().getTime() / 1000 + TimeUnit.DAYS.toSeconds(365);
+        } else {
+            to = toDate;
+        }
+
+        dividerPositions[0] = leftPos;
+        dividerPositions[1] = rightPos;
+        dataModel.setDateFilter(from, to);
+    }
+
+    void applyFromToDates(double leftPos, double rightPos) {
         // We need to snap into the 0 and 1 values once we are close as otherwise once navigation has been used we
         // would not get back to exact 0 or 1. Not clear why but might be rounding issues from values at x positions of
         // drag operations.
@@ -105,32 +137,12 @@ public abstract class ChartViewModel<T extends ChartDataModel> extends Activatab
         if (rightPos > RIGHT_TIMELINE_SNAP_VALUE) {
             rightPos = 1;
         }
-        dividerPositions[0] = leftPos;
-        dividerPositions[1] = rightPos;
 
         long lowerBoundAsLong = lowerBound.longValue();
         long totalRange = upperBound.longValue() - lowerBoundAsLong;
 
-        // TODO find better solution
-        // The TemporalAdjusters map dates to the lower bound (e.g. 1.1.2016) but our from date is the date of
-        // the first data entry so if we filter by that we would exclude the first year data in case YEAR was selected
-        // A trade with data 3.May.2016 gets mapped to 1.1.2016 and our from date will be April 2016, so we would
-        // filter that. It is a bit tricky to sync the TemporalAdjusters with our date filter. To include at least in
-        // the case when we have not set the date filter (left =0 / right =1) we set from date to epoch time 0 and
-        // to date to one year ahead to be sure we include all.
-
-        if (leftPos == 0) {
-            from = 0;
-        } else {
-            from = (long) (lowerBoundAsLong + totalRange * leftPos);
-        }
-        if (rightPos == 1) {
-            to = new Date().getTime() / 1000 + TimeUnit.DAYS.toSeconds(365);
-        } else {
-            to = (long) (lowerBoundAsLong + totalRange * rightPos);
-        }
-
-        dataModel.setDateFilter(from, to);
+        fromDate = (long) (lowerBoundAsLong + totalRange * leftPos);
+        toDate = (long) (lowerBoundAsLong + totalRange * rightPos);
     }
 
     void onTimelineMouseDrag(double leftPos, double rightPos) {
