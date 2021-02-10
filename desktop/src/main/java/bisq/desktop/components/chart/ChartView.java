@@ -24,7 +24,6 @@ import bisq.desktop.components.AutoTooltipToggleButton;
 import bisq.core.locale.Res;
 
 import bisq.common.UserThread;
-import bisq.common.util.Tuple2;
 
 import javafx.scene.Node;
 import javafx.scene.chart.Axis;
@@ -38,7 +37,6 @@ import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.Tooltip;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
@@ -73,8 +71,6 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
-
-import static bisq.desktop.util.FormBuilder.getTopLabelWithVBox;
 
 @Slf4j
 public abstract class ChartView<T extends ChartViewModel<? extends ChartDataModel>> extends ActivatableViewAndModel<VBox, T> {
@@ -134,7 +130,7 @@ public abstract class ChartView<T extends ChartViewModel<? extends ChartDataMode
         createSeries();
 
         // Time interval
-        Pane timeIntervalBox = getTimeIntervalBox();
+        HBox timeIntervalBox = getTimeIntervalBox();
 
         // chart
         xAxis = getXAxis();
@@ -156,20 +152,19 @@ public abstract class ChartView<T extends ChartViewModel<? extends ChartDataMode
         defineAndAddActiveSeries();
 
         // Put all together
-        VBox timelineNavigationBox = new VBox();
-
         double paddingLeft = 15;
         double paddingRight = 89;
         // Y-axis width depends on data so we register a listener to get correct value
         yAxisWidthListener = (observable, oldValue, newValue) -> {
             double width = newValue.doubleValue();
             if (width > 0) {
-                double paddingRight1 = width + 14;
-                VBox.setMargin(timelineNavigation, new Insets(0, paddingRight1, 0, paddingLeft));
-                VBox.setMargin(timelineLabels, new Insets(0, paddingRight1, 0, paddingLeft));
-                VBox.setMargin(legendBox1, new Insets(10, paddingRight1, 0, paddingLeft));
+                double rightPadding = width + 14;
+                VBox.setMargin(timeIntervalBox, new Insets(0, rightPadding, 0, paddingLeft));
+                VBox.setMargin(timelineNavigation, new Insets(0, rightPadding, 0, paddingLeft));
+                VBox.setMargin(timelineLabels, new Insets(0, rightPadding, 0, paddingLeft));
+                VBox.setMargin(legendBox1, new Insets(10, rightPadding, 0, paddingLeft));
                 if (legendBox2 != null) {
-                    VBox.setMargin(legendBox2, new Insets(-20, paddingRight1, 0, paddingLeft));
+                    VBox.setMargin(legendBox2, new Insets(-20, rightPadding, 0, paddingLeft));
                 }
 
                 if (model.getDividerPositions()[0] == 0 && model.getDividerPositions()[1] == 1) {
@@ -177,16 +172,15 @@ public abstract class ChartView<T extends ChartViewModel<? extends ChartDataMode
                 }
             }
         };
-
+        VBox.setMargin(timeIntervalBox, new Insets(0, paddingRight, 0, paddingLeft));
         VBox.setMargin(timelineNavigation, new Insets(0, paddingRight, 0, paddingLeft));
         VBox.setMargin(timelineLabels, new Insets(0, paddingRight, 0, paddingLeft));
-        VBox.setMargin(legendBox1, new Insets(10, paddingRight, 0, paddingLeft));
-        timelineNavigationBox.getChildren().addAll(timelineNavigation, timelineLabels, legendBox1);
+        VBox.setMargin(legendBox1, new Insets(0, paddingRight, 0, paddingLeft));
+        root.getChildren().addAll(timeIntervalBox, chart, timelineNavigation, timelineLabels, legendBox1);
         if (legendBox2 != null) {
             VBox.setMargin(legendBox2, new Insets(-20, paddingRight, 0, paddingLeft));
-            timelineNavigationBox.getChildren().add(legendBox2);
+            root.getChildren().add(legendBox2);
         }
-        root.getChildren().addAll(timeIntervalBox, chart, timelineNavigationBox);
 
         // Listeners
         widthListener = (observable, oldValue, newValue) -> {
@@ -271,7 +265,7 @@ public abstract class ChartView<T extends ChartViewModel<? extends ChartDataMode
     // TimeInterval/TemporalAdjuster
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    protected Pane getTimeIntervalBox() {
+    protected HBox getTimeIntervalBox() {
         ToggleButton year = getTimeIntervalToggleButton(Res.get("time.year"), TemporalAdjusterModel.Interval.YEAR,
                 timeIntervalToggleGroup, "toggle-left");
         ToggleButton month = getTimeIntervalToggleButton(Res.get("time.month"), TemporalAdjusterModel.Interval.MONTH,
@@ -280,18 +274,13 @@ public abstract class ChartView<T extends ChartViewModel<? extends ChartDataMode
                 timeIntervalToggleGroup, "toggle-center");
         ToggleButton day = getTimeIntervalToggleButton(Res.get("time.day"), TemporalAdjusterModel.Interval.DAY,
                 timeIntervalToggleGroup, "toggle-center");
-
         HBox toggleBox = new HBox();
         toggleBox.setSpacing(0);
         toggleBox.setAlignment(Pos.CENTER_LEFT);
-        toggleBox.getChildren().addAll(year, month, week, day);
-
-        Tuple2<Label, VBox> topLabelWithVBox = getTopLabelWithVBox(Res.get("shared.interval"), toggleBox);
-        AnchorPane pane = new AnchorPane();
-        VBox vBox = topLabelWithVBox.second;
-        pane.getChildren().add(vBox);
-        AnchorPane.setRightAnchor(vBox, 90d);
-        return pane;
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+        toggleBox.getChildren().addAll(spacer, year, month, week, day);
+        return toggleBox;
     }
 
     private ToggleButton getTimeIntervalToggleButton(String label,
@@ -342,6 +331,7 @@ public abstract class ChartView<T extends ChartViewModel<? extends ChartDataMode
         chart.setAnimated(false);
         chart.setCreateSymbols(true);
         chart.setLegendVisible(false);
+        chart.setMinHeight(200);
         chart.setId("charts-dao");
         return chart;
     }
@@ -396,7 +386,7 @@ public abstract class ChartView<T extends ChartViewModel<? extends ChartDataMode
         center.setId("chart-navigation-center-pane");
         Pane right = new Pane();
         timelineNavigation = new SplitPane();
-        timelineNavigation.setMinHeight(30);
+        timelineNavigation.setMinHeight(25);
         timelineNavigation.getItems().addAll(left, center, right);
         timelineLabels = new HBox();
     }
@@ -404,9 +394,10 @@ public abstract class ChartView<T extends ChartViewModel<? extends ChartDataMode
     // After initial chart data are created we apply the text from the x-axis ticks to our timeline navigation.
     protected void applyTimeLineNavigationLabels() {
         timelineLabels.getChildren().clear();
-        int size = xAxis.getTickMarks().size();
+        ObservableList<Axis.TickMark<Number>> tickMarks = xAxis.getTickMarks();
+        int size = tickMarks.size();
         for (int i = 0; i < size; i++) {
-            Axis.TickMark<Number> tickMark = xAxis.getTickMarks().get(i);
+            Axis.TickMark<Number> tickMark = tickMarks.get(i);
             Number xValue = tickMark.getValue();
             String xValueString;
             if (xAxis.getTickLabelFormatter() != null) {

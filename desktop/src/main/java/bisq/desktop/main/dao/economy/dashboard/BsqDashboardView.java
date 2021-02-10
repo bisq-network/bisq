@@ -165,10 +165,10 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
         marketPriceBox.second.getStyleClass().add("dao-kpi-subtext");
 
         avgUSDPrice90TextField = addTopLabelReadOnlyTextField(root, ++gridRow,
-                Res.get("dao.factsAndFigures.dashboard.avgUSDPrice90")).second;
+                Res.get("dao.factsAndFigures.dashboard.avgUSDPrice90"), -20).second;
 
         avgUSDPrice30TextField = addTopLabelTextFieldWithIcon(root, gridRow, 1,
-                Res.get("dao.factsAndFigures.dashboard.avgUSDPrice30"), -15).second;
+                Res.get("dao.factsAndFigures.dashboard.avgUSDPrice30"), -35).second;
         AnchorPane.setRightAnchor(avgUSDPrice30TextField.getIconLabel(), 10d);
 
         avgPrice90TextField = addTopLabelReadOnlyTextField(root, ++gridRow,
@@ -186,8 +186,9 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
     }
 
     private void createPriceChart() {
-        addTitledGroupBg(root, ++gridRow, 2,
+        TitledGroupBg titledGroupBg = addTitledGroupBg(root, ++gridRow, 2,
                 Res.get("dao.factsAndFigures.supply.priceChat"), Layout.FLOATING_LABEL_DISTANCE);
+        titledGroupBg.getStyleClass().add("last");
 
         priceChartView.initialize();
         VBox chartContainer = priceChartView.getRoot();
@@ -195,7 +196,7 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
         AnchorPane chartPane = new AnchorPane();
         chartPane.getStyleClass().add("chart-pane");
         AnchorPane.setTopAnchor(chartContainer, 15d);
-        AnchorPane.setBottomAnchor(chartContainer, 10d);
+        AnchorPane.setBottomAnchor(chartContainer, 0d);
         AnchorPane.setLeftAnchor(chartContainer, 25d);
         AnchorPane.setRightAnchor(chartContainer, 10d);
         GridPane.setColumnSpan(chartPane, 2);
@@ -217,7 +218,7 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
         AnchorPane chartPane = new AnchorPane();
         chartPane.getStyleClass().add("chart-pane");
         AnchorPane.setTopAnchor(chartContainer, 15d);
-        AnchorPane.setBottomAnchor(chartContainer, 10d);
+        AnchorPane.setBottomAnchor(chartContainer, 0d);
         AnchorPane.setLeftAnchor(chartContainer, 25d);
         AnchorPane.setRightAnchor(chartContainer, 10d);
         GridPane.setColumnSpan(chartPane, 2);

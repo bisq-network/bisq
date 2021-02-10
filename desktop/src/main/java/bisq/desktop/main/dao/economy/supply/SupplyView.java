@@ -137,7 +137,7 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
         AnchorPane chartPane = new AnchorPane();
         chartPane.getStyleClass().add("chart-pane");
         AnchorPane.setTopAnchor(chartContainer, 15d);
-        AnchorPane.setBottomAnchor(chartContainer, 10d);
+        AnchorPane.setBottomAnchor(chartContainer, 0d);
         AnchorPane.setLeftAnchor(chartContainer, 25d);
         AnchorPane.setRightAnchor(chartContainer, 10d);
         GridPane.setColumnSpan(chartPane, 2);
