@@ -39,7 +39,9 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.RadioButton;
 import javafx.scene.control.TextArea;
+import javafx.scene.control.ToggleGroup;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
@@ -49,6 +51,7 @@ import javafx.geometry.Insets;
 
 import static bisq.desktop.util.FormBuilder.addInputTextField;
 import static bisq.desktop.util.FormBuilder.addLabelCheckBox;
+import static bisq.desktop.util.FormBuilder.addRadioButton;
 import static bisq.desktop.util.FormBuilder.addTopLabelTextArea;
 
 public class SendAlertMessageWindow extends Overlay<SendAlertMessageWindow> {
@@ -107,13 +110,26 @@ public class SendAlertMessageWindow extends Overlay<SendAlertMessageWindow> {
         TextArea alertMessageTextArea = labelTextAreaTuple2.second;
         Label first = labelTextAreaTuple2.first;
         first.setMinWidth(150);
-        CheckBox isUpdateCheckBox = addLabelCheckBox(gridPane, ++rowIndex,
-                Res.get("sendAlertMessageWindow.isUpdate"));
+        CheckBox isSoftwareUpdateCheckBox = addLabelCheckBox(gridPane, ++rowIndex,
+                Res.get("sendAlertMessageWindow.isSoftwareUpdate"));
+        HBox hBoxRelease = new HBox();
+        hBoxRelease.setSpacing(10);
+        GridPane.setRowIndex(hBoxRelease, ++rowIndex);
+
+        ToggleGroup toggleGroup = new ToggleGroup();
+        RadioButton isUpdateCheckBox = addRadioButton(gridPane, rowIndex, toggleGroup, Res.get("sendAlertMessageWindow.isUpdate"));
+        RadioButton isPreReleaseCheckBox = addRadioButton(gridPane, rowIndex, toggleGroup, Res.get("sendAlertMessageWindow.isPreRelease"));
+        hBoxRelease.getChildren().addAll(new Label(""), isUpdateCheckBox, isPreReleaseCheckBox);
+        gridPane.getChildren().add(hBoxRelease);
+
+        isSoftwareUpdateCheckBox.setSelected(true);
         isUpdateCheckBox.setSelected(true);
 
         InputTextField versionInputTextField = FormBuilder.addInputTextField(gridPane, ++rowIndex,
                 Res.get("sendAlertMessageWindow.version"));
-        versionInputTextField.disableProperty().bind(isUpdateCheckBox.selectedProperty().not());
+        versionInputTextField.disableProperty().bind(isSoftwareUpdateCheckBox.selectedProperty().not());
+        isUpdateCheckBox.disableProperty().bind(isSoftwareUpdateCheckBox.selectedProperty().not());
+        isPreReleaseCheckBox.disableProperty().bind(isSoftwareUpdateCheckBox.selectedProperty().not());
 
         Button sendButton = new AutoTooltipButton(Res.get("sendAlertMessageWindow.send"));
         sendButton.getStyleClass().add("action-button");
@@ -121,8 +137,9 @@ public class SendAlertMessageWindow extends Overlay<SendAlertMessageWindow> {
         sendButton.setOnAction(e -> {
             final String version = versionInputTextField.getText();
             boolean versionOK = false;
-            final boolean isUpdate = isUpdateCheckBox.isSelected();
-            if (isUpdate) {
+            final boolean isUpdate = (isSoftwareUpdateCheckBox.isSelected() && isUpdateCheckBox.isSelected());
+            final boolean isPreRelease = (isSoftwareUpdateCheckBox.isSelected() && isPreReleaseCheckBox.isSelected());
+            if (isUpdate || isPreRelease) {
                 final String[] split = version.split("\\.");
                 versionOK = split.length == 3;
                 if (!versionOK) // Do not translate as only used by devs
@@ -130,10 +147,10 @@ public class SendAlertMessageWindow extends Overlay<SendAlertMessageWindow> {
                             .onClose(this::blurAgain)
                             .show();
             }
-            if (!isUpdate || versionOK) {
+            if (!isSoftwareUpdateCheckBox.isSelected() || versionOK) {
                 if (alertMessageTextArea.getText().length() > 0 && keyInputTextField.getText().length() > 0) {
                     if (alertManager.addAlertMessageIfKeyIsValid(
-                            new Alert(alertMessageTextArea.getText(), isUpdate, version),
+                            new Alert(alertMessageTextArea.getText(), isUpdate, isPreRelease, version),
                             keyInputTextField.getText())
                     )
                         hide();

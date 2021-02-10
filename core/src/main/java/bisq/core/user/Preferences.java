@@ -782,6 +782,11 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         requestPersistence();
     }
 
+    public void setNotifyOnPreRelease(boolean value) {
+        prefPayload.setNotifyOnPreRelease(value);
+        requestPersistence();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getter
@@ -1095,5 +1100,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         void setShowOffersMatchingMyAccounts(boolean value);
 
         void setDenyApiTaker(boolean value);
+
+        void setNotifyOnPreRelease(boolean value);
     }
 }
