@@ -41,7 +41,7 @@ import bisq.daemon.app.BisqDaemonMain;
  * Runs a regtest/dao Bisq application instance in the background.
  */
 @Slf4j
-public class BisqApp extends AbstractLinuxProcess implements LinuxProcess {
+public class BisqProcess extends AbstractLinuxProcess implements LinuxProcess {
 
     private final BisqAppConfig bisqAppConfig;
     private final String baseCurrencyNetwork;
@@ -55,7 +55,7 @@ public class BisqApp extends AbstractLinuxProcess implements LinuxProcess {
     private final String findBisqPidScript;
     private final String debugOpts;
 
-    public BisqApp(BisqAppConfig bisqAppConfig, ApiTestConfig config) {
+    public BisqProcess(BisqAppConfig bisqAppConfig, ApiTestConfig config) {
         super(bisqAppConfig.appName, config);
         this.bisqAppConfig = bisqAppConfig;
         this.baseCurrencyNetwork = "BTC_REGTEST";

@@ -31,11 +31,23 @@ import bisq.proto.grpc.GetPaymentMethodsReply;
 import bisq.proto.grpc.GetPaymentMethodsRequest;
 import bisq.proto.grpc.PaymentAccountsGrpc;
 
+import io.grpc.ServerInterceptor;
 import io.grpc.stub.StreamObserver;
 
 import javax.inject.Inject;
 
+import java.util.HashMap;
+import java.util.Optional;
 import java.util.stream.Collectors;
+
+import static bisq.daemon.grpc.interceptor.GrpcServiceRateMeteringConfig.getCustomRateMeteringInterceptor;
+import static java.util.concurrent.TimeUnit.MINUTES;
+import static java.util.concurrent.TimeUnit.SECONDS;
+
+
+
+import bisq.daemon.grpc.interceptor.CallRateMeteringInterceptor;
+import bisq.daemon.grpc.interceptor.GrpcCallRateMeter;
 
 
 class GrpcPaymentAccountsService extends PaymentAccountsGrpc.PaymentAccountsImplBase {
@@ -109,5 +121,23 @@ class GrpcPaymentAccountsService extends PaymentAccountsGrpc.PaymentAccountsImpl
         } catch (Throwable cause) {
             exceptionHandler.handleException(cause, responseObserver);
         }
+    }
+
+    final ServerInterceptor[] interceptors() {
+        Optional<ServerInterceptor> rateMeteringInterceptor = rateMeteringInterceptor();
+        return rateMeteringInterceptor.map(serverInterceptor ->
+                new ServerInterceptor[]{serverInterceptor}).orElseGet(() -> new ServerInterceptor[0]);
+    }
+
+    final Optional<ServerInterceptor> rateMeteringInterceptor() {
+        return getCustomRateMeteringInterceptor(coreApi.getConfig().appDataDir, this.getClass())
+                .or(() -> Optional.of(CallRateMeteringInterceptor.valueOf(
+                        new HashMap<>() {{
+                            put("createPaymentAccount", new GrpcCallRateMeter(1, MINUTES));
+                            put("getPaymentAccounts", new GrpcCallRateMeter(1, SECONDS));
+                            put("getPaymentMethods", new GrpcCallRateMeter(1, SECONDS));
+                            put("getPaymentAccountForm", new GrpcCallRateMeter(1, SECONDS));
+                        }}
+                )));
     }
 }

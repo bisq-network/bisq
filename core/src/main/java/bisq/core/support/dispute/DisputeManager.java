@@ -69,6 +69,7 @@ import java.security.KeyPair;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -231,6 +232,9 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
         return disputeListService.getDisputeList();
     }
 
+    public Set<String> getDisputedTradeIds() {
+        return disputeListService.getDisputedTradeIds();
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API

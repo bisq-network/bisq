@@ -28,7 +28,7 @@ import org.bitcoinj.core.Transaction;
 
 import javafx.collections.FXCollections;
 
-import java.util.Collections;
+import java.util.Set;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -40,8 +40,6 @@ import static org.mockito.Mockito.when;
 
 public class TransactionAwareTradeTest {
     private static final Sha256Hash XID = Sha256Hash.wrap("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef");
-
-
 
     private Transaction transaction;
     private ArbitrationManager arbitrationManager;
@@ -95,7 +93,10 @@ public class TransactionAwareTradeTest {
         when(dispute.getTradeId()).thenReturn(tradeId);
 
         when(arbitrationManager.getDisputesAsObservableList())
-                .thenReturn(FXCollections.observableArrayList(Collections.singleton(dispute)));
+                .thenReturn(FXCollections.observableArrayList(Set.of(dispute)));
+
+        when(arbitrationManager.getDisputedTradeIds())
+                .thenReturn(Set.of(tradeId));
 
         when(delegate.getId()).thenReturn(tradeId);
 

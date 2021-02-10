@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.presentation;
 
-import bisq.desktop.components.BalanceWithConfirmationTextField;
 import bisq.desktop.components.TxIdTextField;
 import bisq.desktop.main.shared.PriceFeedComboBoxItem;
 import bisq.desktop.util.GUIUtil;
@@ -98,7 +97,6 @@ public class MarketPricePresentation {
 
         // TODO
         TxIdTextField.setWalletService(btcWalletService);
-        BalanceWithConfirmationTextField.setWalletService(btcWalletService);
 
         GUIUtil.setFeeService(feeService);
     }

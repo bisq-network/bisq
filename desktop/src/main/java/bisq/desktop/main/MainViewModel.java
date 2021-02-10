@@ -19,7 +19,6 @@ package bisq.desktop.main;
 
 import bisq.desktop.app.BisqApp;
 import bisq.desktop.common.model.ViewModel;
-import bisq.desktop.components.BalanceWithConfirmationTextField;
 import bisq.desktop.components.TxIdTextField;
 import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.notifications.NotificationCenter;
@@ -207,7 +206,6 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
         TxIdTextField.setPreferences(preferences);
 
         TxIdTextField.setWalletService(btcWalletService);
-        BalanceWithConfirmationTextField.setWalletService(btcWalletService);
 
         GUIUtil.setFeeService(feeService);
         GUIUtil.setPreferences(preferences);

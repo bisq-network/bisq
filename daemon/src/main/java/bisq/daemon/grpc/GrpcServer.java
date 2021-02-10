@@ -60,15 +60,15 @@ public class GrpcServer {
                       GrpcWalletsService walletsService) {
         this.server = ServerBuilder.forPort(config.apiPort)
                 .executor(UserThread.getExecutor())
-                .addService(disputeAgentsService)
-                .addService(helpService)
-                .addService(offersService)
-                .addService(paymentAccountsService)
-                .addService(priceService)
-                .addService(tradeStatisticsService)
-                .addService(tradesService)
+                .addService(interceptForward(disputeAgentsService, disputeAgentsService.interceptors()))
+                .addService(interceptForward(helpService, helpService.interceptors()))
+                .addService(interceptForward(offersService, offersService.interceptors()))
+                .addService(interceptForward(paymentAccountsService, paymentAccountsService.interceptors()))
+                .addService(interceptForward(priceService, priceService.interceptors()))
+                .addService(interceptForward(tradeStatisticsService, tradeStatisticsService.interceptors()))
+                .addService(interceptForward(tradesService, tradesService.interceptors()))
                 .addService(interceptForward(versionService, versionService.interceptors()))
-                .addService(walletsService)
+                .addService(interceptForward(walletsService, walletsService.interceptors()))
                 .intercept(passwordAuthInterceptor)
                 .build();
         coreContext.setApiUser(true);
