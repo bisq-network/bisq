@@ -36,16 +36,27 @@ import bisq.proto.grpc.GetOffersReply;
 import bisq.proto.grpc.GetOffersRequest;
 import bisq.proto.grpc.OffersGrpc;
 
+import io.grpc.ServerInterceptor;
 import io.grpc.stub.StreamObserver;
 
 import javax.inject.Inject;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
 import static bisq.core.api.model.OfferInfo.toOfferInfo;
+import static bisq.daemon.grpc.interceptor.GrpcServiceRateMeteringConfig.getCustomRateMeteringInterceptor;
+import static java.util.concurrent.TimeUnit.MINUTES;
+import static java.util.concurrent.TimeUnit.SECONDS;
+
+
+
+import bisq.daemon.grpc.interceptor.CallRateMeteringInterceptor;
+import bisq.daemon.grpc.interceptor.GrpcCallRateMeter;
 
 @Slf4j
 class GrpcOffersService extends OffersGrpc.OffersImplBase {
@@ -170,5 +181,25 @@ class GrpcOffersService extends OffersGrpc.OffersImplBase {
         } catch (Throwable cause) {
             exceptionHandler.handleException(cause, responseObserver);
         }
+    }
+
+    final ServerInterceptor[] interceptors() {
+        Optional<ServerInterceptor> rateMeteringInterceptor = rateMeteringInterceptor();
+        return rateMeteringInterceptor.map(serverInterceptor ->
+                new ServerInterceptor[]{serverInterceptor}).orElseGet(() -> new ServerInterceptor[0]);
+    }
+
+    final Optional<ServerInterceptor> rateMeteringInterceptor() {
+        return getCustomRateMeteringInterceptor(coreApi.getConfig().appDataDir, this.getClass())
+                .or(() -> Optional.of(CallRateMeteringInterceptor.valueOf(
+                        new HashMap<>() {{
+                            put("getOffer", new GrpcCallRateMeter(1, SECONDS));
+                            put("getMyOffer", new GrpcCallRateMeter(1, SECONDS));
+                            put("getOffers", new GrpcCallRateMeter(1, SECONDS));
+                            put("getMyOffers", new GrpcCallRateMeter(1, SECONDS));
+                            put("createOffer", new GrpcCallRateMeter(1, MINUTES));
+                            put("cancelOffer", new GrpcCallRateMeter(1, MINUTES));
+                        }}
+                )));
     }
 }
