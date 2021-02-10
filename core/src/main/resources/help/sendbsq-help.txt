@@ -7,8 +7,8 @@ sendbsq - send BSQ to an external wallet
 SYNOPSIS
 --------
 sendbsq
-		--address=<btc-address>
-		--amount=<btc-amount>
+		--address=<bsq-address>
+		--amount=<bsq-amount>
 		[--tx-fee-rate=<sats/byte>]
 
 DESCRIPTION

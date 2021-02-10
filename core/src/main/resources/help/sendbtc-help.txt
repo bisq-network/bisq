@@ -47,5 +47,5 @@ $ ./bisq-cli --password=xyz --port=9998 sendbtc --address=bcrt1qygvsqmyt8jyhtp7l
 Send 0.005 BTC to address bcrt1qygvsqmyt8jyhtp7l3zwqm7s7v3nar6vkc2luz3 with a transaction
 fee rate of 40 sats/byte, and save a memo with the send transaction:
 $ ./bisq-cli --password=xyz --port=9998 sendbtc --address=bcrt1qygvsqmyt8jyhtp7l3zwqm7s7v3nar6vkc2luz3 --amount=0.005 \
-    --tx-fee-rate=40
+    --tx-fee-rate=40 \
     --memo="note to self"

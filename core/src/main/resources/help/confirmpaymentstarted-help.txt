@@ -23,4 +23,4 @@ EXAMPLES
 --------
 A BTC buyer has taken an offer with ID 83e8b2e2-51b6-4f39-a748-3ebd29c22aea, and has recently
 initiated the required fiat payment to the seller's fiat account:
-$ ./bisq-cli --password=xyz --port=9998 confirmpaymentstarted -trade-id=83e8b2e2-51b6-4f39-a748-3ebd29c22aea
+$ ./bisq-cli --password=xyz --port=9998 confirmpaymentstarted --trade-id=83e8b2e2-51b6-4f39-a748-3ebd29c22aea

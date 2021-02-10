@@ -24,4 +24,4 @@ EXAMPLES
 --------
 To see the summary of a transaction with ID 282dc2a5755219a49ee9f6d46a31a2cbaec6624beba96548180eccb1f004cdd8:
 $ ./bisq-cli --password=xyz --port=9998 gettransaction \
-    -transaction-id=282dc2a5755219a49ee9f6d46a31a2cbaec6624beba96548180eccb1f004cdd8
+    --transaction-id=282dc2a5755219a49ee9f6d46a31a2cbaec6624beba96548180eccb1f004cdd8
