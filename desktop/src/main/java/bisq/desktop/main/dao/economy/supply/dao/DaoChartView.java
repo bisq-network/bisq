@@ -55,10 +55,6 @@ public class DaoChartView extends ChartView<DaoChartViewModel> {
     // API Total amounts
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public long getCompensationAmountProperty() {
-        return model.getCompensationAmount();
-    }
-
     public ReadOnlyLongProperty compensationAmountProperty() {
         if (compensationAmountProperty.get() == 0) {
             compensationAmountProperty.set(model.getCompensationAmount());

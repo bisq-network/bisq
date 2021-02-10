@@ -25,6 +25,10 @@ import javax.inject.Inject;
 
 import javafx.scene.chart.XYChart;
 
+import javafx.beans.property.LongProperty;
+import javafx.beans.property.ReadOnlyLongProperty;
+import javafx.beans.property.SimpleLongProperty;
+
 import java.util.Collection;
 import java.util.List;
 
@@ -33,6 +37,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class VolumeChartView extends ChartView<VolumeChartViewModel> {
     private XYChart.Series<Number, Number> seriesUsdVolume, seriesBtcVolume;
+
+    private LongProperty usdVolumeProperty = new SimpleLongProperty();
+    private LongProperty btcVolumeProperty = new SimpleLongProperty();
 
     @Inject
     public VolumeChartView(VolumeChartViewModel model) {
@@ -121,5 +128,22 @@ public class VolumeChartView extends ChartView<VolumeChartViewModel> {
         if (activeSeries.contains(seriesBtcVolume)) {
             seriesBtcVolume.getData().setAll(model.getBtcVolumeChartData());
         }
+
+        usdVolumeProperty.set(model.getUsdVolume());
+        btcVolumeProperty.set(model.getBtcVolume());
+    }
+
+    public ReadOnlyLongProperty usdVolumeProperty() {
+        if (usdVolumeProperty.get() == 0) {
+            usdVolumeProperty.set(model.getUsdVolume());
+        }
+        return usdVolumeProperty;
+    }
+
+    public ReadOnlyLongProperty btcVolumeProperty() {
+        if (btcVolumeProperty.get() == 0) {
+            btcVolumeProperty.set(model.getBtcVolume());
+        }
+        return btcVolumeProperty;
     }
 }

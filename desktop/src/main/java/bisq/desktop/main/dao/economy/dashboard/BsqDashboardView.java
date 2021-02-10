@@ -29,6 +29,7 @@ import bisq.core.dao.DaoFacade;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.dao.state.model.governance.IssuanceType;
+import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.Res;
 import bisq.core.monetary.Price;
 import bisq.core.provider.price.PriceFeedService;
@@ -38,6 +39,7 @@ import bisq.core.util.AveragePriceUtil;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.BsqFormatter;
 
+import bisq.common.util.MathUtils;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple3;
 
@@ -55,9 +57,12 @@ import javafx.scene.layout.VBox;
 
 import javafx.geometry.Insets;
 
+import javafx.beans.binding.Bindings;
 import javafx.beans.value.ChangeListener;
 
 import javafx.collections.ObservableList;
+
+import java.text.DecimalFormat;
 
 import java.util.Optional;
 
@@ -78,7 +83,7 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
     private final Preferences preferences;
     private final BsqFormatter bsqFormatter;
 
-    private TextField avgPrice90TextField, avgUSDPrice90TextField, marketCapTextField, availableAmountTextField;
+    private TextField avgPrice90TextField, avgUSDPrice90TextField, marketCapTextField, availableAmountTextField, usdVolumeTextField, btcVolumeTextField;
     private TextFieldWithIcon avgPrice30TextField, avgUSDPrice30TextField;
     private Label marketPriceLabel;
 
@@ -133,6 +138,24 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
         updateAveragePriceFields(avgPrice90TextField, avgPrice30TextField, false);
         updateAveragePriceFields(avgUSDPrice90TextField, avgUSDPrice30TextField, true);
         updateMarketCap();
+
+        usdVolumeTextField.textProperty().bind(Bindings.createStringBinding(
+                () -> {
+                    DecimalFormat volumeFormat = (DecimalFormat) DecimalFormat.getNumberInstance(GlobalSettings.getLocale());
+                    volumeFormat.setMaximumFractionDigits(0);
+                    double scaled = MathUtils.scaleDownByPowerOf10(volumeChartView.usdVolumeProperty().get(), 4);
+                    return volumeFormat.format(scaled) + " USD";
+                },
+                volumeChartView.usdVolumeProperty()));
+
+        btcVolumeTextField.textProperty().bind(Bindings.createStringBinding(
+                () -> {
+                    DecimalFormat volumeFormat = (DecimalFormat) DecimalFormat.getNumberInstance(GlobalSettings.getLocale());
+                    volumeFormat.setMaximumFractionDigits(4);
+                    double scaled = MathUtils.scaleDownByPowerOf10(volumeChartView.btcVolumeProperty().get(), 8);
+                    return volumeFormat.format(scaled) + " BTC";
+                },
+                volumeChartView.btcVolumeProperty()));
     }
 
 
@@ -140,6 +163,9 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
     protected void deactivate() {
         daoFacade.removeBsqStateListener(this);
         priceFeedService.updateCounterProperty().removeListener(priceChangeListener);
+
+        usdVolumeTextField.textProperty().unbind();
+        btcVolumeTextField.textProperty().unbind();
     }
 
 
@@ -227,6 +253,11 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
         chartPane.getChildren().add(chartContainer);
 
         root.getChildren().add(chartPane);
+
+        usdVolumeTextField = addTopLabelReadOnlyTextField(root, ++gridRow,
+                Res.get("dao.factsAndFigures.dashboard.volumeUsd")).second;
+        btcVolumeTextField = addTopLabelReadOnlyTextField(root, gridRow, 1,
+                Res.get("dao.factsAndFigures.dashboard.volumeBtc")).second;
     }
 
     private void updateWithBsqBlockChainData() {
