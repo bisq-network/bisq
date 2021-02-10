@@ -792,6 +792,8 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
         // if not reset here. Not clear why...
         triggerPriceValidationResult.set(new InputValidator.ValidationResult(true));
 
+        if (dataModel.getPrice().get() == null) // fix NPE @ bisq/issues/5166
+            return;
         InputValidator.ValidationResult result = PriceUtil.isTriggerPriceValid(triggerPriceAsString,
                 dataModel.getPrice().get(),
                 dataModel.isSellOffer(),
