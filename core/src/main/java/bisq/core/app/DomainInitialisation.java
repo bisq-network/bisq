@@ -242,8 +242,8 @@ public class DomainInitialisation {
 
         priceFeedService.setCurrencyCodeOnInit();
 
-        filterManager.onAllServicesInitialized();
         filterManager.setFilterWarningHandler(filterWarningHandler);
+        filterManager.onAllServicesInitialized();
 
         voteResultService.getVoteResultExceptions().addListener((ListChangeListener<VoteResultException>) c -> {
             c.next();
