@@ -61,7 +61,6 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 
 import javafx.util.Duration;
-import javafx.util.StringConverter;
 
 import java.time.temporal.TemporalAdjuster;
 
@@ -322,6 +321,7 @@ public abstract class ChartView<T extends ChartViewModel<? extends ChartDataMode
     protected NumberAxis getXAxis() {
         NumberAxis xAxis = new NumberAxis();
         xAxis.setForceZeroInRange(false);
+        xAxis.setAutoRanging(true);
         xAxis.setTickLabelFormatter(model.getTimeAxisStringConverter());
         return xAxis;
     }
@@ -330,8 +330,7 @@ public abstract class ChartView<T extends ChartViewModel<? extends ChartDataMode
         NumberAxis yAxis = new NumberAxis();
         yAxis.setForceZeroInRange(true);
         yAxis.setSide(Side.RIGHT);
-        StringConverter<Number> yAxisStringConverter = model.getYAxisStringConverter();
-        yAxis.setTickLabelFormatter(yAxisStringConverter);
+        yAxis.setTickLabelFormatter(model.getYAxisStringConverter());
         return yAxis;
     }
 
@@ -525,7 +524,8 @@ public abstract class ChartView<T extends ChartViewModel<? extends ChartDataMode
         Node divider = dividerNodes.get(index);
         Bounds bounds = divider.localToScene(divider.getBoundsInLocal());
         Tooltip tooltip = dividerNodesTooltips.get(index);
-        tooltip.show(divider, bounds.getMaxX(), bounds.getMaxY() - 20);
+        double xOffset = index == 0 ? 75 : 0;
+        tooltip.show(divider, bounds.getMaxX() - xOffset, bounds.getMaxY() - 20);
     }
 
 

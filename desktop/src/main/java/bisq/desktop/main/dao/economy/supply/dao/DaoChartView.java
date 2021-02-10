@@ -194,37 +194,34 @@ public class DaoChartView extends ChartView<DaoChartViewModel> {
         if (activeSeries.contains(seriesProofOfBurn)) {
             applyProofOfBurn();
         }
+
+        compensationAmountProperty.set(model.getCompensationAmount());
+        reimbursementAmountProperty.set(model.getReimbursementAmount());
+        bsqTradeFeeAmountProperty.set(model.getBsqTradeFeeAmount());
+        proofOfBurnAmountProperty.set(model.getProofOfBurnAmount());
     }
 
     private void applyTotalIssued() {
         seriesTotalIssued.getData().setAll(model.getTotalIssuedChartData());
-        compensationAmountProperty.set(model.getCompensationAmount());
-        reimbursementAmountProperty.set(model.getReimbursementAmount());
     }
 
     private void applyCompensation() {
         seriesCompensation.getData().setAll(model.getCompensationChartData());
-        compensationAmountProperty.set(model.getCompensationAmount());
     }
 
     private void applyReimbursement() {
         seriesReimbursement.getData().setAll(model.getReimbursementChartData());
-        reimbursementAmountProperty.set(model.getReimbursementAmount());
     }
 
     private void applyTotalBurned() {
         seriesTotalBurned.getData().setAll(model.getTotalBurnedChartData());
-        bsqTradeFeeAmountProperty.set(model.getBsqTradeFeeAmount());
-        proofOfBurnAmountProperty.set(model.getProofOfBurnAmount());
     }
 
     private void applyBsqTradeFee() {
         seriesBsqTradeFee.getData().setAll(model.getBsqTradeFeeChartData());
-        bsqTradeFeeAmountProperty.set(model.getBsqTradeFeeAmount());
     }
 
     private void applyProofOfBurn() {
         seriesProofOfBurn.getData().setAll(model.getProofOfBurnChartData());
-        proofOfBurnAmountProperty.set(model.getProofOfBurnAmount());
     }
 }
