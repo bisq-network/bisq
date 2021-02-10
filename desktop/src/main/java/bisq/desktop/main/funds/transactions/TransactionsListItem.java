@@ -40,10 +40,13 @@ import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionConfidence;
 import org.bitcoinj.core.TransactionOutput;
 
+import com.google.common.base.Suppliers;
+
 import javafx.scene.control.Tooltip;
 
 import java.util.Date;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -57,8 +60,6 @@ class TransactionsListItem {
     private String dateString;
     private final Date date;
     private final String txId;
-    private final TxConfidenceIndicator txConfidenceIndicator;
-    private final Tooltip tooltip;
     @Nullable
     private Tradable tradable;
     private String details = "";
@@ -72,16 +73,26 @@ class TransactionsListItem {
     private int confirmations = 0;
     @Getter
     private final boolean isDustAttackTx;
+    private boolean initialTxConfidenceVisibility = true;
+    private final Supplier<LazyFields> lazyFieldsSupplier;
+
+    private static class LazyFields {
+        TxConfidenceIndicator txConfidenceIndicator;
+        Tooltip tooltip;
+    }
+
+    private LazyFields lazy() {
+        return lazyFieldsSupplier.get();
+    }
 
     // used at exportCSV
     TransactionsListItem() {
         date = null;
         btcWalletService = null;
-        txConfidenceIndicator = null;
-        tooltip = null;
         txId = null;
         formatter = null;
         isDustAttackTx = false;
+        lazyFieldsSupplier = null;
     }
 
     TransactionsListItem(Transaction transaction,
@@ -181,26 +192,6 @@ class TransactionsListItem {
             //addressString = "";
         }
 
-        // confidence
-        txConfidenceIndicator = new TxConfidenceIndicator();
-        txConfidenceIndicator.setId("funds-confidence");
-        tooltip = new Tooltip(Res.get("shared.notUsedYet"));
-        txConfidenceIndicator.setProgress(0);
-        txConfidenceIndicator.setTooltip(tooltip);
-
-        txConfidenceListener = new TxConfidenceListener(txId) {
-            @Override
-            public void onTransactionConfidenceChanged(TransactionConfidence confidence) {
-                GUIUtil.updateConfidence(confidence, tooltip, txConfidenceIndicator);
-                confirmations = confidence.getDepthInBlocks();
-            }
-        };
-        btcWalletService.addTxConfidenceListener(txConfidenceListener);
-        TransactionConfidence confidence = transaction.getConfidence();
-        GUIUtil.updateConfidence(confidence, tooltip, txConfidenceIndicator);
-        confirmations = confidence.getDepthInBlocks();
-
-
         if (optionalTradable.isPresent()) {
             tradable = optionalTradable.get();
             detailsAvailable = true;
@@ -225,7 +216,7 @@ class TransactionsListItem {
                         details = Res.get("funds.tx.multiSigPayout", tradeId);
 
                         if (amountAsCoin.isZero()) {
-                            txConfidenceIndicator.setVisible(false);
+                            initialTxConfidenceVisibility = false;
                         }
                     } else {
                         Trade.DisputeState disputeState = trade.getDisputeState();
@@ -234,7 +225,7 @@ class TransactionsListItem {
                                 details = Res.get("funds.tx.disputePayout", tradeId);
                             } else {
                                 details = Res.get("funds.tx.disputeLost", tradeId);
-                                txConfidenceIndicator.setVisible(false);
+                                initialTxConfidenceVisibility = false;
                             }
                         } else if (disputeState == Trade.DisputeState.REFUND_REQUEST_CLOSED ||
                                 disputeState == Trade.DisputeState.REFUND_REQUESTED ||
@@ -249,12 +240,12 @@ class TransactionsListItem {
                                 // left our wallet nor we received funds. So we set indicator invisible.
                                 amountAsCoin = Coin.ZERO;
                                 details = Res.get("funds.tx.collateralForRefund", tradeId);
-                                txConfidenceIndicator.setVisible(false);
+                                initialTxConfidenceVisibility = false;
                             }
                         } else {
                             if (transactionAwareTrade.isDelayedPayoutTx(txId)) {
                                 details = Res.get("funds.tx.timeLockedPayoutTx", tradeId);
-                                txConfidenceIndicator.setVisible(false);
+                                initialTxConfidenceVisibility = false;
                             } else {
                                 details = Res.get("funds.tx.unknown", tradeId);
                             }
@@ -265,7 +256,7 @@ class TransactionsListItem {
         } else {
             if (amountAsCoin.isZero()) {
                 details = Res.get("funds.tx.noFundsFromDispute");
-                txConfidenceIndicator.setVisible(false);
+                initialTxConfidenceVisibility = false;
             } else if (withdrawalFromBSQWallet) {
                 details = Res.get("funds.tx.withdrawnFromBSQWallet");
             } else if (!txFeeForBsqPayment) {
@@ -282,6 +273,29 @@ class TransactionsListItem {
         if (isDustAttackTx) {
             details = Res.get("funds.tx.dustAttackTx");
         }
+
+        // confidence
+        lazyFieldsSupplier = Suppliers.memoize(() -> new LazyFields() {{
+            txConfidenceIndicator = new TxConfidenceIndicator();
+            txConfidenceIndicator.setId("funds-confidence");
+            tooltip = new Tooltip(Res.get("shared.notUsedYet"));
+            txConfidenceIndicator.setProgress(0);
+            txConfidenceIndicator.setTooltip(tooltip);
+            txConfidenceIndicator.setVisible(initialTxConfidenceVisibility);
+
+            TransactionConfidence confidence = transaction.getConfidence();
+            GUIUtil.updateConfidence(confidence, tooltip, txConfidenceIndicator);
+            confirmations = confidence.getDepthInBlocks();
+        }});
+
+        txConfidenceListener = new TxConfidenceListener(txId) {
+            @Override
+            public void onTransactionConfidenceChanged(TransactionConfidence confidence) {
+                GUIUtil.updateConfidence(confidence, lazy().tooltip, lazy().txConfidenceIndicator);
+                confirmations = confidence.getDepthInBlocks();
+            }
+        };
+        btcWalletService.addTxConfidenceListener(txConfidenceListener);
     }
 
     public void cleanup() {
@@ -290,7 +304,7 @@ class TransactionsListItem {
 
 
     public TxConfidenceIndicator getTxConfidenceIndicator() {
-        return txConfidenceIndicator;
+        return lazy().txConfidenceIndicator;
     }
 
     public final String getDateString() {
@@ -344,6 +358,7 @@ class TransactionsListItem {
         return String.valueOf(confirmations);
     }
 
-    public String getMemo() { return memo; }
+    public String getMemo() {
+        return memo;
+    }
 }
-

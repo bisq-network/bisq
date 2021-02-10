@@ -80,7 +80,6 @@ import static org.bitcoinj.core.TransactionConfidence.ConfidenceType.PENDING;
 @Slf4j
 public class BsqWalletService extends WalletService implements DaoStateListener {
 
-
     public interface WalletTransactionsChangeListener {
 
         void onWalletTransactionsChange();
@@ -140,42 +139,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
             wallet = walletsSetup.getBsqWallet();
             if (wallet != null) {
                 wallet.setCoinSelector(bsqCoinSelector);
-
-                wallet.addCoinsReceivedEventListener(walletEventListener);
-                wallet.addCoinsSentEventListener(walletEventListener);
-                wallet.addReorganizeEventListener(walletEventListener);
-                wallet.addTransactionConfidenceEventListener(walletEventListener);
-
-                wallet.addCoinsReceivedEventListener((wallet, tx, prevBalance, newBalance) -> {
-                    updateBsqWalletTransactions();
-                });
-                wallet.addCoinsSentEventListener((wallet, tx, prevBalance, newBalance) -> {
-                    updateBsqWalletTransactions();
-                });
-                wallet.addReorganizeEventListener(wallet -> {
-                    log.warn("onReorganize ");
-                    updateBsqWalletTransactions();
-                    unconfirmedBsqChangeOutputListService.onReorganize();
-                });
-                wallet.addTransactionConfidenceEventListener((wallet, tx) -> {
-                    // We are only interested in updates from unconfirmed txs and confirmed txs at the
-                    // time when it gets into a block. Otherwise we would get called
-                    // updateBsqWalletTransactions for each tx as the block depth changes for all.
-                    if (tx != null && tx.getConfidence() != null && tx.getConfidence().getDepthInBlocks() <= 1 &&
-                            daoStateService.isParseBlockChainComplete()) {
-                        updateBsqWalletTransactions();
-                    }
-                    unconfirmedBsqChangeOutputListService.onTransactionConfidenceChanged(tx);
-                });
-                wallet.addKeyChainEventListener(keys -> {
-                    updateBsqWalletTransactions();
-                });
-                wallet.addScriptsChangeEventListener((wallet, scripts, isAddingScripts) -> {
-                    updateBsqWalletTransactions();
-                });
-                wallet.addChangeEventListener(wallet -> {
-                    updateBsqWalletTransactions();
-                });
+                addListenersToWallet();
             }
 
             BlockChain chain = walletsSetup.getChain();
@@ -188,6 +152,41 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
         daoStateService.addDaoStateListener(this);
     }
 
+    @Override
+    protected void addListenersToWallet() {
+        super.addListenersToWallet();
+
+        wallet.addCoinsReceivedEventListener((wallet, tx, prevBalance, newBalance) ->
+                updateBsqWalletTransactions()
+        );
+        wallet.addCoinsSentEventListener((wallet, tx, prevBalance, newBalance) ->
+                updateBsqWalletTransactions()
+        );
+        wallet.addReorganizeEventListener(wallet -> {
+            log.warn("onReorganize ");
+            updateBsqWalletTransactions();
+            unconfirmedBsqChangeOutputListService.onReorganize();
+        });
+        wallet.addTransactionConfidenceEventListener((wallet, tx) -> {
+            // We are only interested in updates from unconfirmed txs and confirmed txs at the
+            // time when it gets into a block. Otherwise we would get called
+            // updateBsqWalletTransactions for each tx as the block depth changes for all.
+            if (tx != null && tx.getConfidence() != null && tx.getConfidence().getDepthInBlocks() <= 1 &&
+                    daoStateService.isParseBlockChainComplete()) {
+                updateBsqWalletTransactions();
+            }
+            unconfirmedBsqChangeOutputListService.onTransactionConfidenceChanged(tx);
+        });
+        wallet.addKeyChainEventListener(keys ->
+                updateBsqWalletTransactions()
+        );
+        wallet.addScriptsChangeEventListener((wallet, scripts, isAddingScripts) ->
+                updateBsqWalletTransactions()
+        );
+        wallet.addChangeEventListener(wallet ->
+                updateBsqWalletTransactions()
+        );
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // DaoStateListener
