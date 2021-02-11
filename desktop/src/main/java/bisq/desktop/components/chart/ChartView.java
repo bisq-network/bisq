@@ -26,6 +26,7 @@ import bisq.core.locale.Res;
 import bisq.common.UserThread;
 
 import javafx.stage.PopupWindow;
+import javafx.stage.Stage;
 
 import javafx.scene.Node;
 import javafx.scene.chart.Axis;
@@ -524,8 +525,10 @@ public abstract class ChartView<T extends ChartViewModel<? extends ChartDataMode
         Node divider = dividerNodes.get(index);
         Bounds bounds = divider.localToScene(divider.getBoundsInLocal());
         Tooltip tooltip = dividerNodesTooltips.get(index);
-        double xOffset = index == 0 ? 75 : 0;
-        tooltip.show(divider, bounds.getMaxX() - xOffset, bounds.getMaxY() - 20);
+        double xOffset = index == 0 ? -90 : 10;
+        Stage stage = (Stage) root.getScene().getWindow();
+        tooltip.show(stage, stage.getX() + bounds.getMaxX() + xOffset,
+                stage.getY() + bounds.getMaxY() - 40);
     }
 
 
