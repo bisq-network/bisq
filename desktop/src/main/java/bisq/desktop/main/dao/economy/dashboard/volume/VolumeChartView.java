@@ -50,6 +50,19 @@ public class VolumeChartView extends ChartView<VolumeChartViewModel> {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public ReadOnlyLongProperty usdVolumeProperty() {
+        return usdVolumeProperty;
+    }
+
+    public ReadOnlyLongProperty btcVolumeProperty() {
+        return btcVolumeProperty;
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
     // Chart
     ///////////////////////////////////////////////////////////////////////////////////////////
 
@@ -131,19 +144,5 @@ public class VolumeChartView extends ChartView<VolumeChartViewModel> {
 
         usdVolumeProperty.set(model.getUsdVolume());
         btcVolumeProperty.set(model.getBtcVolume());
-    }
-
-    public ReadOnlyLongProperty usdVolumeProperty() {
-        if (usdVolumeProperty.get() == 0) {
-            usdVolumeProperty.set(model.getUsdVolume());
-        }
-        return usdVolumeProperty;
-    }
-
-    public ReadOnlyLongProperty btcVolumeProperty() {
-        if (btcVolumeProperty.get() == 0) {
-            btcVolumeProperty.set(model.getBtcVolume());
-        }
-        return btcVolumeProperty;
     }
 }

@@ -83,7 +83,8 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
     private final Preferences preferences;
     private final BsqFormatter bsqFormatter;
 
-    private TextField avgPrice90TextField, avgUSDPrice90TextField, marketCapTextField, availableAmountTextField, usdVolumeTextField, btcVolumeTextField;
+    private TextField avgPrice90TextField, avgUSDPrice90TextField, marketCapTextField, availableAmountTextField,
+            usdVolumeTextField, btcVolumeTextField, averageBsqUsdPriceTextField, averageBsqBtcPriceTextField;
     private TextFieldWithIcon avgPrice30TextField, avgUSDPrice30TextField;
     private Label marketPriceLabel;
 
@@ -139,6 +140,27 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
         updateAveragePriceFields(avgUSDPrice90TextField, avgUSDPrice30TextField, true);
         updateMarketCap();
 
+        averageBsqUsdPriceTextField.textProperty().bind(Bindings.createStringBinding(
+                () -> {
+                    DecimalFormat priceFormat = (DecimalFormat) DecimalFormat.getNumberInstance(GlobalSettings.getLocale());
+                    priceFormat.setMaximumFractionDigits(4);
+                    return priceFormat.format(priceChartView.averageBsqUsdPriceProperty().get()) + " BSQ/USD";
+                },
+                priceChartView.averageBsqUsdPriceProperty()));
+        averageBsqBtcPriceTextField.textProperty().bind(Bindings.createStringBinding(
+                () -> {
+                    DecimalFormat priceFormat = (DecimalFormat) DecimalFormat.getNumberInstance(GlobalSettings.getLocale());
+                    priceFormat.setMaximumFractionDigits(8);
+                  /*  yAxisFormatter = value -> {
+                        value = MathUtils.scaleDownByPowerOf10(value.longValue(), 8);
+                        return priceFormat.format(value) + " BSQ/BTC";
+                    };*/
+
+                    double scaled = MathUtils.scaleDownByPowerOf10(priceChartView.averageBsqBtcPriceProperty().get(), 8);
+                    return priceFormat.format(scaled) + " BSQ/BTC";
+                },
+                priceChartView.averageBsqBtcPriceProperty()));
+
         usdVolumeTextField.textProperty().bind(Bindings.createStringBinding(
                 () -> {
                     DecimalFormat volumeFormat = (DecimalFormat) DecimalFormat.getNumberInstance(GlobalSettings.getLocale());
@@ -147,7 +169,6 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
                     return volumeFormat.format(scaled) + " USD";
                 },
                 volumeChartView.usdVolumeProperty()));
-
         btcVolumeTextField.textProperty().bind(Bindings.createStringBinding(
                 () -> {
                     DecimalFormat volumeFormat = (DecimalFormat) DecimalFormat.getNumberInstance(GlobalSettings.getLocale());
@@ -164,10 +185,11 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
         daoFacade.removeBsqStateListener(this);
         priceFeedService.updateCounterProperty().removeListener(priceChangeListener);
 
+        averageBsqUsdPriceTextField.textProperty().unbind();
+        averageBsqBtcPriceTextField.textProperty().unbind();
         usdVolumeTextField.textProperty().unbind();
         btcVolumeTextField.textProperty().unbind();
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // DaoStateListener
@@ -231,6 +253,12 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
         chartPane.getChildren().add(chartContainer);
 
         root.getChildren().add(chartPane);
+
+        averageBsqUsdPriceTextField = addTopLabelReadOnlyTextField(root, ++gridRow,
+                Res.get("dao.factsAndFigures.dashboard.averageBsqUsdPriceFromSelection")).second;
+        averageBsqBtcPriceTextField = addTopLabelReadOnlyTextField(root, gridRow, 1,
+                Res.get("dao.factsAndFigures.dashboard.averageBsqBtcPriceFromSelection")).second;
+
     }
 
     private void createTradeChart() {

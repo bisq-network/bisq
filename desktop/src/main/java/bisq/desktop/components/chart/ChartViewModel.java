@@ -111,12 +111,12 @@ public abstract class ChartViewModel<T extends ChartDataModel> extends Activatab
 
         // We only manipulate the from, to variables for the date filter, not the fromDate, toDate properties as those
         // are used by the view for tooltip over the time line navigation dividers
-        if (leftPos == 0) {
+        if (leftPos < LEFT_TIMELINE_SNAP_VALUE) {
             from = 0;
         } else {
             from = fromDate;
         }
-        if (rightPos == 1) {
+        if (rightPos > RIGHT_TIMELINE_SNAP_VALUE) {
             to = new Date().getTime() / 1000 + TimeUnit.DAYS.toSeconds(365);
         } else {
             to = toDate;

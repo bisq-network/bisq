@@ -72,9 +72,10 @@ public abstract class ChartDataModel extends ActivatableDataModel {
         return dateFilter;
     }
 
-    void setDateFilter(double from, double to) {
+    void setDateFilter(long from, long to) {
         dateFilter = value -> value >= from && value <= to;
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Data

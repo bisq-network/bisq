@@ -67,6 +67,27 @@ public class PriceChartDataModel extends ChartDataModel {
         btcUsdPriceByInterval = null;
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Average price from timeline selection
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    double averageBsqUsdPrice() {
+        return getAveragePriceFromDateFilter(tradeStatistics -> tradeStatistics.getCurrency().equals("BSQ") ||
+                        tradeStatistics.getCurrency().equals("USD"),
+                PriceChartDataModel::getAverageBsqUsdPrice);
+    }
+
+    double averageBsqBtcPrice() {
+        return getAveragePriceFromDateFilter(tradeStatistics -> tradeStatistics.getCurrency().equals("BSQ"),
+                PriceChartDataModel::getAverageBsqBtcPrice);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Chart data
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     Map<Long, Double> getBsqUsdPriceByInterval() {
         if (bsqUsdPriceByInterval != null) {
             return bsqUsdPriceByInterval;
@@ -190,5 +211,13 @@ public class PriceChartDataModel extends ChartDataModel {
                         getAveragePriceFunction.apply(entry.getValue())))
                 .filter(e -> e.getValue() > 0d)
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+    }
+
+    private double getAveragePriceFromDateFilter(Predicate<TradeStatistics3> collectionFilter,
+                                                 Function<List<TradeStatistics3>, Double> getAveragePriceFunction) {
+        return getAveragePriceFunction.apply(tradeStatisticsManager.getObservableTradeStatisticsSet().stream()
+                .filter(collectionFilter)
+                .filter(tradeStatistics -> dateFilter.test(tradeStatistics.getDateAsLong() / 1000))
+                .collect(Collectors.toList()));
     }
 }

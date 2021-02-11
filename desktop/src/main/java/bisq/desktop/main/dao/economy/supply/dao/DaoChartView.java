@@ -56,30 +56,18 @@ public class DaoChartView extends ChartView<DaoChartViewModel> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public ReadOnlyLongProperty compensationAmountProperty() {
-        if (compensationAmountProperty.get() == 0) {
-            compensationAmountProperty.set(model.getCompensationAmount());
-        }
         return compensationAmountProperty;
     }
 
     public ReadOnlyLongProperty reimbursementAmountProperty() {
-        if (reimbursementAmountProperty.get() == 0) {
-            reimbursementAmountProperty.set(model.getReimbursementAmount());
-        }
         return reimbursementAmountProperty;
     }
 
     public ReadOnlyLongProperty bsqTradeFeeAmountProperty() {
-        if (bsqTradeFeeAmountProperty.get() == 0) {
-            bsqTradeFeeAmountProperty.set(model.getBsqTradeFeeAmount());
-        }
         return bsqTradeFeeAmountProperty;
     }
 
     public ReadOnlyLongProperty proofOfBurnAmountProperty() {
-        if (proofOfBurnAmountProperty.get() == 0) {
-            proofOfBurnAmountProperty.set(model.getProofOfBurnAmount());
-        }
         return proofOfBurnAmountProperty;
     }
 

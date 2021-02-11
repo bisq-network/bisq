@@ -25,6 +25,10 @@ import javax.inject.Inject;
 
 import javafx.scene.chart.XYChart;
 
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.ReadOnlyDoubleProperty;
+import javafx.beans.property.SimpleDoubleProperty;
+
 import java.util.Collection;
 import java.util.List;
 
@@ -33,13 +37,27 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class PriceChartView extends ChartView<PriceChartViewModel> {
     private XYChart.Series<Number, Number> seriesBsqUsdPrice, seriesBsqBtcPrice, seriesBtcUsdPrice;
-
+    private DoubleProperty averageBsqUsdPriceProperty = new SimpleDoubleProperty();
+    private DoubleProperty averageBsqBtcPriceProperty = new SimpleDoubleProperty();
 
     @Inject
     public PriceChartView(PriceChartViewModel model) {
         super(model);
 
         setRadioButtonBehaviour(true);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public ReadOnlyDoubleProperty averageBsqUsdPriceProperty() {
+        return averageBsqUsdPriceProperty;
+    }
+
+    public ReadOnlyDoubleProperty averageBsqBtcPriceProperty() {
+        return averageBsqBtcPriceProperty;
     }
 
 
@@ -133,5 +151,8 @@ public class PriceChartView extends ChartView<PriceChartViewModel> {
         if (activeSeries.contains(seriesBtcUsdPrice)) {
             seriesBtcUsdPrice.getData().setAll(model.getBtcUsdPriceChartData());
         }
+
+        averageBsqBtcPriceProperty.set(model.averageBsqBtcPrice());
+        averageBsqUsdPriceProperty.set(model.averageBsqUsdPrice());
     }
 }
