@@ -73,7 +73,7 @@ $ ./bisq-apitest --apiPassword=xyz
 Alternatively, you can specify any or all of these bisq-apitest options in a properties file located in
 `apitest/src/main/resources/apitest.properties`.
 
-In this example, a beta tester uses the `apitest.properties` below, instead of ./bisq-cli options.
+In this example, a beta tester uses the `apitest.properties` below, instead of `bisq-cli` options.
 ```
 supportingApps=bitcoind,seednode,arbdaemon,alicedaemon,bobdaemon
 apiPassword=xyz
@@ -112,7 +112,7 @@ Same as described at the top of this document, but your bitcoin-core’s `bitcoi
 
 The regtest trade simulation script `apitest/scripts/trade-simulation.sh` is a useful introduction to the Bisq Api.
 The bash script’s output is intended to serve as a tutorial, showing how the CLI can be used to create payment
-accounts for Bob and Alice, create an offer, take the offer, and complete a trade protocol.
+accounts for Bob and Alice, create an offer, take the offer, and complete a trade.
 (The bash script itself is not intended to be as useful as the output.)  The output is generated too quickly to
 follow in real time, so let the script complete before studying the output from start to finish.
 
@@ -131,7 +131,7 @@ The script takes four options:
 This simulation creates US / USD face-to-face payment accounts for Bob and Alice.  Alice (always the trade maker)
 creates a SELL / USD offer for the amount of 0.1 BTC, at a price 2% below the current market price.
 Bob (always the taker), will use his face-to-face account to take the offer, then the two sides will complete
-the trade protocol, checking their trade status along the way, and their BSQ / BTC balances when the trade is closed.
+the trade, checking their trade status along the way, and their BSQ / BTC balances when the trade is closed.
 ```
 $ apitest/scripts/trade-simulation.sh    -d sell -c us -m 2.00 -a 0.1
 ```
@@ -225,7 +225,7 @@ To receive BTC from an external wallet, find an unused BTC address (with a zero 
 ```
 $ ./bisq-cli --password=xyz --port=9998 getfundingaddresses
 ```
-You can check block explorers for the status of a transaction, and check your Bisq BTC wallet address directly:
+You can check a block explorer for the status of a transaction, or you can check your Bisq BTC wallet address directly:
 ```
 $ ./bisq-cli --password=xyz --port=9998 getaddressbalance --address=<btc-address>
 ```
@@ -238,7 +238,7 @@ $ ./bisq-cli --password=xyz --port=9998 getunusedbsqaddress
 
 Give the public address to the sender.  After the BSQ is sent, you can check block explorers for the status of
 the transaction.  There is no support (yet) to check the balance of an individual BSQ address in your wallet,
-but you can check your BSQ wallet’s balance to see when the new funds arrive:
+but you can check your BSQ wallet’s balance to determine if the new funds have arrived:
 ```
 $ ./bisq-cli --password=xyz --port=9999 getbalance --currency-code=bsq
 ```
@@ -251,6 +251,8 @@ Send BSQ:
 ```
 $ ./bisq-cli --password=xyz --port=9998 sendbsq --address=<bsq-address> --amount=<bsq-amount>
 ```
+_Please note that sending BSQ to non-Bisq wallets is not supported and highly discouraged_
+
 Send BSQ with a withdrawal transaction fee of 10 sats/byte:
 ```
 $ ./bisq-cli --password=xyz --port=9998 sendbsq --address=<bsq-address> --amount=<bsq-amount>  --tx-fee-rate=10
@@ -268,7 +270,7 @@ $ ./bisq-cli --password=xyz --port=9998 sendbtc --address=<btc-address> --amount
 ### Withdrawal Transaction Fees
 
 If you have traded using the Bisq UI, you are probably aware of the default network bitcoin withdrawal transaction
-fee, and the custom withdrawal transaction fee user preference in the UI’s setting view.  The Api uses these same
+fee and custom withdrawal transaction fee user preference in the UI’s setting view.  The Api uses these same
 withdrawal transaction fee rates, and affords a third – as mentioned in the previous section -- withdrawal
 transaction fee option in the `sendbsq` and `sendbtc` commands.  The `sendbsq` and `sendbtc` commands'
 `--tx-fee-rate=<sats/byte>` options override both the default network fee rate, and your custom transaction fee
@@ -318,9 +320,14 @@ Creating a payment account using the Api involves three steps:
     $ ./bisq-cli --password=xyz --port=9998 createpaymentacct
         --payment-account-form=f2f_1612381824625.json
     ```
-    The server will create and save the new payment account from details defined in the json file.
-
     _Note:  You can rename the file before passing it to the  `createpaymentacct` command._
+
+    The server will create and save the new payment account from details defined in the json file then
+    return the new payment account to the CLI.  The CLI will display the account ID with other details
+    in the console, but if you ever need to find a payment account ID, use the `getpaymentaccts` command:
+    ```
+    $ ./bisq-cli --password=xyz --port=9998 getpaymentaccts
+    ```
 
 ### Creating Offers
 
@@ -333,7 +340,7 @@ $ ./bisq-cli --password=xyz --port=9998 createoffer --help
 #### Examples
 
 The `trade-simulation.sh` script described above is an easy way to figure out how to use this command.
-In one of the examples, Alice created a BUY/ EUR offer to buy 0.125 BTC at a fixed price of  30,800 EUR,
+In a previous example, Alice created a BUY/ EUR offer to buy 0.125 BTC at a fixed price of  30,800 EUR,
 and pay the Bisq maker fee in BSQ.  Alice had already created an EUR face-to-face payment account with id
 `f3c1ec8b-9761-458d-b13d-9039c6892413`, and used this `createoffer` command:
 ```
@@ -427,7 +434,7 @@ the trade.
 ### Completing Trade Protocol
 
 The first step in the Bisq trade protocol is completed when a `takeoffer` command successfully creates a new trade from
-the taken offer.  After the Bisq servers prepare the trade, its status can be viewed with the `gettrade` command:
+the taken offer.  After the Bisq nodes prepare the trade, its status can be viewed with the `gettrade` command:
 ```
 $ ./bisq-cli --password=xyz --port=9998 gettrade --trade-id=<trade-id>
 ```
@@ -448,7 +455,7 @@ Output columns include:
 Deposit Published           YES if the taker fee tx deposit has been broadcast to the network.
 Deposit Confirmed           YES if the taker fee tx deposit has been confirmed by the network.
 Fiat Sent                   YES if the buyer has sent a “payment started” message to seller.
-Fiat Received               YES if the sell has sent a “payment received” message to buyer.
+Fiat Received               YES if the seller has sent a “payment received” message to buyer.
 Payout Published            YES if the seller’s BTC payout tx has been broadcast to the network.
 Withdrawn                   YES if the buyer’s BTC proceeds have been sent to an external wallet.
 ```
@@ -470,8 +477,8 @@ keepfunds                   Keep trade proceeds in their Bisq wallets.
 withdrawfunds               Send trade proceeds to an external wallet.
 ```
 The last two mutually exclusive commands (`keepfunds` or `withdrawfunds`) may seem unnecessary, but they are critical
-because they inform the server that a trade’s state can be set to `CLOSED`.  Please close out your trades with one or
-the other command.
+because they inform the Bisq node that a trade’s state can be set to `CLOSED`.  Please close out your trades with one
+or the other command.
 
 Each of the CLI commands above takes one argument:  `--trade-id=<trade-id>`:
 ```
