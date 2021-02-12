@@ -62,9 +62,13 @@ public class AmazonGiftCardForm extends PaymentMethodForm {
                 Layout.COMPACT_FIRST_ROW_AND_GROUP_DISTANCE);
         addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.email.mobile"),
                 amazonGiftCardAccountPayload.getEmailOrMobileNr());
+        String countryText = CountryUtil.getNameAndCode(amazonGiftCardAccountPayload.getCountryCode());
+        if (countryText.isEmpty()) {
+            countryText = Res.get("payment.ask");
+        }
         addCompactTopLabelTextFieldWithCopyIcon(gridPane, gridRow, 1,
                 Res.get("shared.country"),
-                CountryUtil.getNameAndCode(amazonGiftCardAccountPayload.getCountryCode()));
+                countryText);
         return gridRow;
     }
 
@@ -174,6 +178,7 @@ public class AmazonGiftCardForm extends PaymentMethodForm {
             put("SG", "https://www.amazon.sg");
             put("TR", "https://www.amazon.tr");
             put("US", "https://www.amazon.com");
+            put("",   Res.get("payment.ask"));
         }};
         return mapCountryToSite.get(countryCode);
     }
