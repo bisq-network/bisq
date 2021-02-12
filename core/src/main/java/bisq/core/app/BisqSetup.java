@@ -33,6 +33,7 @@ import bisq.core.dao.governance.voteresult.VoteResultException;
 import bisq.core.dao.state.unconfirmed.UnconfirmedBsqChangeOutputListService;
 import bisq.core.locale.Res;
 import bisq.core.offer.OpenOfferManager;
+import bisq.core.payment.AmazonGiftCardAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.RevolutAccount;
 import bisq.core.payment.payload.PaymentMethod;
@@ -177,6 +178,9 @@ public class BisqSetup {
     @Setter
     @Nullable
     private Consumer<List<RevolutAccount>> revolutAccountsUpdateHandler;
+    @Setter
+    @Nullable
+    private Consumer<List<AmazonGiftCardAccount>> amazonGiftCardAccountsUpdateHandler;
     @Setter
     @Nullable
     private Runnable osxKeyLoggerWarningHandler;
@@ -456,6 +460,7 @@ public class BisqSetup {
                 filterWarningHandler,
                 voteResultExceptionHandler,
                 revolutAccountsUpdateHandler,
+                amazonGiftCardAccountsUpdateHandler,
                 daoRequiresRestartHandler);
 
         if (walletsSetup.downloadPercentageProperty().get() == 1) {
