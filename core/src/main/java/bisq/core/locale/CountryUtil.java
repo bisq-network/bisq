@@ -37,7 +37,7 @@ public class CountryUtil {
     public static List<Country> getAllSepaEuroCountries() {
         List<Country> list = new ArrayList<>();
         String[] codes = {"AT", "BE", "CY", "DE", "EE", "FI", "FR", "GR", "IE",
-                "IT", "LV", "LT", "LU", "MC", "MT", "NL", "PT", "SK", "SI", "ES"};
+                "IT", "LV", "LT", "LU", "MC", "MT", "NL", "PT", "SK", "SI", "ES", "AD", "SM", "VA"};
         populateCountryListByCodes(list, codes);
         list.sort((a, b) -> a.name.compareTo(b.name));
 
@@ -86,7 +86,7 @@ public class CountryUtil {
     public static List<Country> getAllSepaNonEuroCountries() {
         List<Country> list = new ArrayList<>();
         String[] codes = {"BG", "HR", "CZ", "DK", "GB", "HU", "PL", "RO",
-                "SE", "IS", "NO", "LI", "CH"};
+                "SE", "IS", "NO", "LI", "CH", "JE"};
         populateCountryListByCodes(list, codes);
         list.sort((a, b) -> a.name.compareTo(b.name));
         return list;
