@@ -18,6 +18,7 @@
 package bisq.core.support;
 
 import bisq.core.btc.setup.WalletsSetup;
+import bisq.core.locale.Res;
 import bisq.core.support.messages.ChatMessage;
 import bisq.core.support.messages.SupportMessage;
 
@@ -191,7 +192,10 @@ public abstract class SupportManager {
     public ChatMessage sendChatMessage(ChatMessage message) {
         NodeAddress peersNodeAddress = getPeerNodeAddress(message);
         PubKeyRing receiverPubKeyRing = getPeerPubKeyRing(message);
-        if (receiverPubKeyRing != null) {
+        if (peersNodeAddress == null || receiverPubKeyRing == null) {
+            UserThread.runAfter(() ->
+                message.setSendMessageError(Res.get("support.receiverNotKnown")), 1);
+        } else {
             log.info("Send {} to peer {}. tradeId={}, uid={}",
                     message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
 
