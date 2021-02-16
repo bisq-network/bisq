@@ -176,6 +176,11 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
         setSendBtcGroupVisibleState(false);
         bsqBalanceUtil.activate();
 
+        sendBsqButton.setOnAction((event) -> onSendBsq());
+        bsqInputControlButton.setOnAction((event) -> onBsqInputControl());
+        sendBtcButton.setOnAction((event) -> onSendBtc());
+        btcInputControlButton.setOnAction((event) -> onBtcInputControl());
+
         receiversAddressInputTextField.focusedProperty().addListener(focusOutListener);
         amountInputTextField.focusedProperty().addListener(focusOutListener);
         receiversBtcAddressInputTextField.focusedProperty().addListener(focusOutListener);
@@ -188,7 +193,7 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
 
         bsqWalletService.addBsqBalanceListener(this);
 
-        // We reset the input selection at active to have all inputs selected, otherwise the user
+        // We reset the input selection at activate to have all inputs selected, otherwise the user
         // might get confused if he had deselected inputs earlier and cannot spend the full balance.
         bsqUtxoCandidates = null;
         btcUtxoCandidates = null;
@@ -279,9 +284,6 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
                 Res.get("dao.wallet.send.send"), Res.get("dao.wallet.send.inputControl"));
         sendBsqButton = tuple.first;
         bsqInputControlButton = tuple.second;
-
-        sendBsqButton.setOnAction((event) -> onSendBsq());
-        bsqInputControlButton.setOnAction((event) -> onBsqInputControl());
     }
 
     private void onSendBsq() {
@@ -383,9 +385,6 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
                 Res.get("dao.wallet.send.sendBtc"), Res.get("dao.wallet.send.inputControl"));
         sendBtcButton = tuple.first;
         btcInputControlButton = tuple.second;
-
-        sendBtcButton.setOnAction((event) -> onSendBtc());
-        btcInputControlButton.setOnAction((event) -> onBtcInputControl());
     }
 
     private void onBtcInputControl() {
@@ -525,4 +524,3 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
         walletsManager.publishAndCommitBsqTx(txWithBtcFee, txType, callback);
     }
 }
-
