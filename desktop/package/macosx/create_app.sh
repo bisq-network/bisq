@@ -6,7 +6,7 @@ mkdir -p deploy
 
 set -e
 
-version="1.5.5"
+version="1.5.6"
 
 cd ..
 ./gradlew :desktop:build -x test shadowJar
