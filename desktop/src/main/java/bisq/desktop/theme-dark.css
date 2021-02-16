@@ -294,8 +294,7 @@
 }
 
 .zero-decimals {
-    -fx-text-fill: -bs-decimals;
-    -fx-fill: -bs-decimals;
+    -bs-text-color: -bs-color-gray-3;
 }
 
 .confirmation-label {
