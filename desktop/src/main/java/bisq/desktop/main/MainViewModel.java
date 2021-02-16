@@ -19,7 +19,6 @@ package bisq.desktop.main;
 
 import bisq.desktop.app.BisqApp;
 import bisq.desktop.common.model.ViewModel;
-import bisq.desktop.components.BalanceWithConfirmationTextField;
 import bisq.desktop.components.TxIdTextField;
 import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.notifications.NotificationCenter;
@@ -27,6 +26,7 @@ import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.DisplayAlertMessageWindow;
 import bisq.desktop.main.overlays.windows.TacWindow;
 import bisq.desktop.main.overlays.windows.TorNetworkSettingsWindow;
+import bisq.desktop.main.overlays.windows.UpdateAmazonGiftCardAccountWindow;
 import bisq.desktop.main.overlays.windows.UpdateRevolutAccountWindow;
 import bisq.desktop.main.overlays.windows.WalletPasswordWindow;
 import bisq.desktop.main.overlays.windows.downloadupdate.DisplayUpdateDownloadWindow;
@@ -51,6 +51,7 @@ import bisq.core.locale.Res;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.payment.AliPayAccount;
+import bisq.core.payment.AmazonGiftCardAccount;
 import bisq.core.payment.CryptoCurrencyAccount;
 import bisq.core.payment.RevolutAccount;
 import bisq.core.payment.payload.AssetsAccountPayload;
@@ -207,7 +208,6 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
         TxIdTextField.setPreferences(preferences);
 
         TxIdTextField.setWalletService(btcWalletService);
-        BalanceWithConfirmationTextField.setWalletService(btcWalletService);
 
         GUIUtil.setFeeService(feeService);
         GUIUtil.setPreferences(preferences);
@@ -410,6 +410,10 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
             // We copy the array as we will mutate it later
             showRevolutAccountUpdateWindow(new ArrayList<>(revolutAccountList));
         });
+        bisqSetup.setAmazonGiftCardAccountsUpdateHandler(amazonGiftCardAccountList -> {
+            // We copy the array as we will mutate it later
+            showAmazonGiftCardAccountUpdateWindow(new ArrayList<>(amazonGiftCardAccountList));
+        });
         bisqSetup.setOsxKeyLoggerWarningHandler(() -> {
             String key = "osxKeyLoggerWarning";
             if (preferences.showAgain(key)) {
@@ -483,6 +487,17 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
             new UpdateRevolutAccountWindow(revolutAccount, user).onClose(() -> {
                 // We delay a bit in case we have multiple account for better UX
                 UserThread.runAfter(() -> showRevolutAccountUpdateWindow(revolutAccountList), 300, TimeUnit.MILLISECONDS);
+            }).show();
+        }
+    }
+
+    private void showAmazonGiftCardAccountUpdateWindow(List<AmazonGiftCardAccount> amazonGiftCardAccountList) {
+        if (!amazonGiftCardAccountList.isEmpty()) {
+            AmazonGiftCardAccount amazonGiftCardAccount = amazonGiftCardAccountList.get(0);
+            amazonGiftCardAccountList.remove(0);
+            new UpdateAmazonGiftCardAccountWindow(amazonGiftCardAccount, user).onClose(() -> {
+                // We delay a bit in case we have multiple account for better UX
+                UserThread.runAfter(() -> showAmazonGiftCardAccountUpdateWindow(amazonGiftCardAccountList), 300, TimeUnit.MILLISECONDS);
             }).show();
         }
     }

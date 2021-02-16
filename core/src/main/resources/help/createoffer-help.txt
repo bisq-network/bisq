@@ -54,11 +54,29 @@ OPTIONS
 
 EXAMPLES
 --------
+
 To create a BUY 0.125 BTC with EUR offer
 	at the current market price,
 	using a payment account with ID 7413d263-225a-4f1b-837a-1e3094dc0d77,
 	putting up a 30 percent security deposit,
 	and paying the Bisq maker trading fee in BSQ:
-$ ./bisq-cli --password=xyz --port=9998 createoffer --payment-account=7413d263-225a-4f1b-837a-1e3094dc0d77 --direction=buy --currency-code=eur --amount=0.125 --market-price-margin=0.00 --security-deposit=30.0 --fee-currency=bsq
+$ ./bisq-cli --password=xyz --port=9998 createoffer --payment-account=7413d263-225a-4f1b-837a-1e3094dc0d77 \
+    --direction=buy \
+    --currency-code=eur \
+    --amount=0.125 \
+    --market-price-margin=0.00 \
+    --security-deposit=30.0 \
+    --fee-currency=bsq
 
- (TODO another 3 examples: selling @ mkt price, buying a fixed price, selling at fixed price...)
+To create a SELL 0.006 BTC for USD offer
+	at a fixed price of 40,000 USD,
+	using a payment account with ID 7413d263-225a-4f1b-837a-1e3094dc0d77,
+	putting up a 25 percent security deposit,
+	and paying the Bisq maker trading fee in BTC:
+$ ./bisq-cli --password=xyz --port=9998 createoffer --payment-account=7413d263-225a-4f1b-837a-1e3094dc0d77 \
+    --direction=sell \
+    --currency-code=usd \
+    --amount=0.006 \
+    --fixed-price=40000 \
+    --security-deposit=25.0 \
+    --fee-currency=btc

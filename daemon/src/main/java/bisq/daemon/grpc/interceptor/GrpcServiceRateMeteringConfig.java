@@ -76,6 +76,7 @@ public class GrpcServiceRateMeteringConfig {
         this.methodRateMeters = methodRateMeters;
     }
 
+    @SuppressWarnings("unused")
     public GrpcServiceRateMeteringConfig addMethodCallRateMeter(String methodName,
                                                                 int maxCalls,
                                                                 TimeUnit timeUnit) {

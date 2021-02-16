@@ -99,10 +99,7 @@ public class BtcWalletService extends WalletService {
 
         walletsSetup.addSetupCompletedHandler(() -> {
             wallet = walletsSetup.getBtcWallet();
-            wallet.addCoinsReceivedEventListener(walletEventListener);
-            wallet.addCoinsSentEventListener(walletEventListener);
-            wallet.addReorganizeEventListener(walletEventListener);
-            wallet.addTransactionConfidenceEventListener(walletEventListener);
+            addListenersToWallet();
 
             walletsSetup.getChain().addNewBestBlockListener(block -> chainHeightProperty.set(block.getHeight()));
             chainHeightProperty.set(walletsSetup.getChain().getBestChainHeight());
@@ -676,8 +673,7 @@ public class BtcWalletService extends WalletService {
                 .filter(e -> {
                     boolean isSegwitOutputScriptType = Script.ScriptType.P2WPKH.equals(e.getAddress().getOutputScriptType());
                     // We need to ensure that we take only addressEntries which matches our segWit flag
-                    boolean isMatchingOutputScriptType = isSegwitOutputScriptType == segwit;
-                    return isMatchingOutputScriptType;
+                    return isSegwitOutputScriptType == segwit;
                 })
                 .findAny();
         return getOrCreateAddressEntry(context, addressEntry, segwit);

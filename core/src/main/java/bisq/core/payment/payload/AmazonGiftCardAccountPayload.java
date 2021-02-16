@@ -18,6 +18,7 @@
 package bisq.core.payment.payload;
 
 import bisq.core.locale.Res;
+import bisq.common.util.JsonExclude;
 
 import com.google.protobuf.Message;
 
@@ -39,6 +40,10 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class AmazonGiftCardAccountPayload extends PaymentAccountPayload {
     private String emailOrMobileNr;
+    // For backward compatibility we need to exclude the new field for the contract json.
+    // We can remove that after a while when risk that users with pre 1.5.5 version is very low.
+    @JsonExclude
+    private String countryCode = "";
 
     public AmazonGiftCardAccountPayload(String paymentMethod, String id) {
         super(paymentMethod, id);
@@ -52,6 +57,7 @@ public class AmazonGiftCardAccountPayload extends PaymentAccountPayload {
     private AmazonGiftCardAccountPayload(String paymentMethodName,
                                          String id,
                                          String emailOrMobileNr,
+                                         String countryCode,
                                          long maxTradePeriod,
                                          Map<String, String> excludeFromJsonDataMap) {
         super(paymentMethodName,
@@ -59,12 +65,14 @@ public class AmazonGiftCardAccountPayload extends PaymentAccountPayload {
                 maxTradePeriod,
                 excludeFromJsonDataMap);
         this.emailOrMobileNr = emailOrMobileNr;
+        this.countryCode = countryCode;
     }
 
     @Override
     public Message toProtoMessage() {
         protobuf.AmazonGiftCardAccountPayload.Builder builder =
                 protobuf.AmazonGiftCardAccountPayload.newBuilder()
+                        .setCountryCode(countryCode)
                         .setEmailOrMobileNr(emailOrMobileNr);
         return getPaymentAccountPayloadBuilder()
                 .setAmazonGiftCardAccountPayload(builder)
@@ -76,6 +84,7 @@ public class AmazonGiftCardAccountPayload extends PaymentAccountPayload {
         return new AmazonGiftCardAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),
                 amazonGiftCardAccountPayload.getEmailOrMobileNr(),
+                amazonGiftCardAccountPayload.getCountryCode(),
                 proto.getMaxTradePeriod(),
                 new HashMap<>(proto.getExcludeFromJsonDataMap()));
     }
@@ -99,5 +108,9 @@ public class AmazonGiftCardAccountPayload extends PaymentAccountPayload {
     public byte[] getAgeWitnessInputData() {
         String data = "AmazonGiftCard" + emailOrMobileNr;
         return super.getAgeWitnessInputData(data.getBytes(StandardCharsets.UTF_8));
+    }
+
+    public boolean countryNotSet() {
+        return countryCode.isEmpty();
     }
 }

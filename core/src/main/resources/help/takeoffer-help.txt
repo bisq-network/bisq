@@ -32,4 +32,6 @@ EXAMPLES
 To take an offer with ID 83e8b2e2-51b6-4f39-a748-3ebd29c22aea
 	using a payment account with ID fe20cdbd-22be-4b8a-a4b6-d2608ff09d6e,
 	and paying the Bisq trading fee in BSQ:
-$ ./bisq-cli --password=xyz --port=9998 takeoffer -offer-id=83e8b2e2-51b6-4f39-a748-3ebd29c22aea -payment-account=fe20cdbd-22be-4b8a-a4b6-d2608ff09d6e -fee-currency=bsq
+$ ./bisq-cli --password=xyz --port=9998 takeoffer --offer-id=83e8b2e2-51b6-4f39-a748-3ebd29c22aea \
+    --payment-account=fe20cdbd-22be-4b8a-a4b6-d2608ff09d6e \
+    -fee-currency=bsq

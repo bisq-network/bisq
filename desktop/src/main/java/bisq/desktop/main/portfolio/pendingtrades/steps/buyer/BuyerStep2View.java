@@ -63,7 +63,6 @@ import bisq.core.network.MessageState;
 import bisq.core.offer.Offer;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.PaymentAccountUtil;
-import bisq.core.payment.payload.AmazonGiftCardAccountPayload;
 import bisq.core.payment.payload.AssetsAccountPayload;
 import bisq.core.payment.payload.CashByMailAccountPayload;
 import bisq.core.payment.payload.CashDepositAccountPayload;
@@ -569,9 +568,6 @@ public class BuyerStep2View extends TradeStepView {
                         Res.get("portfolio.pending.step2_buyer.fasterPaymentsHolderNameInfo") + "\n\n" +
                         refTextWarn + "\n\n" +
                         fees;
-            } else if (paymentAccountPayload instanceof AmazonGiftCardAccountPayload) {
-                message += Res.get("portfolio.pending.step2_buyer.amazonGiftCard", amount) +
-                        refTextWarn;
             } else if (paymentAccountPayload instanceof CashByMailAccountPayload ||
                     paymentAccountPayload instanceof HalCashAccountPayload) {
                 message += Res.get("portfolio.pending.step2_buyer.pay", amount);

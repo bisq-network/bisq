@@ -46,7 +46,7 @@ public abstract class SupportSession {
 
     public abstract String getTradeId();
 
-    public abstract PubKeyRing getClientPubKeyRing();
+    public abstract int getClientId();
 
     public abstract ObservableList<ChatMessage> getObservableChatMessageList();
 

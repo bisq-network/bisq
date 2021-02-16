@@ -55,7 +55,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import bisq.apitest.config.ApiTestConfig;
 import bisq.apitest.config.BisqAppConfig;
 import bisq.apitest.linux.BashCommand;
-import bisq.apitest.linux.BisqApp;
+import bisq.apitest.linux.BisqProcess;
 import bisq.apitest.linux.BitcoinDaemon;
 import bisq.apitest.linux.LinuxProcess;
 
@@ -367,25 +367,25 @@ public class Scaffold {
                               CountDownLatch countdownLatch)
             throws IOException, InterruptedException {
 
-        BisqApp bisqApp = createBisqApp(bisqAppConfig);
+        BisqProcess bisqProcess = createBisqProcess(bisqAppConfig);
         switch (bisqAppConfig) {
             case seednode:
-                seedNodeTask = new SetupTask(bisqApp, countdownLatch);
+                seedNodeTask = new SetupTask(bisqProcess, countdownLatch);
                 seedNodeTaskFuture = executor.submit(seedNodeTask);
                 break;
             case arbdaemon:
             case arbdesktop:
-                arbNodeTask = new SetupTask(bisqApp, countdownLatch);
+                arbNodeTask = new SetupTask(bisqProcess, countdownLatch);
                 arbNodeTaskFuture = executor.submit(arbNodeTask);
                 break;
             case alicedaemon:
             case alicedesktop:
-                aliceNodeTask = new SetupTask(bisqApp, countdownLatch);
+                aliceNodeTask = new SetupTask(bisqProcess, countdownLatch);
                 aliceNodeTaskFuture = executor.submit(aliceNodeTask);
                 break;
             case bobdaemon:
             case bobdesktop:
-                bobNodeTask = new SetupTask(bisqApp, countdownLatch);
+                bobNodeTask = new SetupTask(bisqProcess, countdownLatch);
                 bobNodeTaskFuture = executor.submit(bobNodeTask);
                 break;
             default:
@@ -393,18 +393,18 @@ public class Scaffold {
         }
         log.info("Giving {} ms for {} to initialize ...", config.bisqAppInitTime, bisqAppConfig.appName);
         MILLISECONDS.sleep(config.bisqAppInitTime);
-        if (bisqApp.hasStartupExceptions()) {
-            bisqApp.logExceptions(bisqApp.getStartupExceptions(), log);
-            throw new IllegalStateException(bisqApp.getStartupExceptions().get(0));
+        if (bisqProcess.hasStartupExceptions()) {
+            bisqProcess.logExceptions(bisqProcess.getStartupExceptions(), log);
+            throw new IllegalStateException(bisqProcess.getStartupExceptions().get(0));
         }
     }
 
-    private BisqApp createBisqApp(BisqAppConfig bisqAppConfig)
+    private BisqProcess createBisqProcess(BisqAppConfig bisqAppConfig)
             throws IOException, InterruptedException {
-        BisqApp bisqNode = new BisqApp(bisqAppConfig, config);
-        bisqNode.verifyAppNotRunning();
-        bisqNode.verifyAppDataDirInstalled();
-        return bisqNode;
+        BisqProcess bisqProcess = new BisqProcess(bisqAppConfig, config);
+        bisqProcess.verifyAppNotRunning();
+        bisqProcess.verifyAppDataDirInstalled();
+        return bisqProcess;
     }
 
     private void verifyStartupCompleted()

@@ -57,9 +57,14 @@ public abstract class DisputeSession extends SupportSession {
     }
 
     @Override
-    public PubKeyRing getClientPubKeyRing() {
+    public int getClientId() {
         // Get pubKeyRing of trader. Arbitrator is considered server for the chat session
-        return dispute != null ? dispute.getTraderPubKeyRing() : null;
+        try {
+            return dispute.getTraderPubKeyRing().hashCode();
+        } catch (NullPointerException e) {
+            log.warn("Unable to get traderPubKeyRing from Dispute - {}", e.toString());
+        }
+        return 0;
     }
 
     @Override
