@@ -64,7 +64,7 @@ public class NonBsqCoinSelector extends BisqDefaultCoinSelector {
         return !daoStateService.existsTxOutput(key) || daoStateService.isRejectedIssuanceOutput(key);
     }
 
-    // Prevent to use dust attack utxos
+    // Prevent usage of dust attack utxos
     @Override
     protected boolean isDustAttackUtxo(TransactionOutput output) {
         return output.getValue().value < preferences.getIgnoreDustThreshold();

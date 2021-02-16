@@ -78,7 +78,7 @@ public abstract class BisqDefaultCoinSelector implements CoinSelector {
         ArrayList<TransactionOutput> sortedOutputs;
         if (utxoCandidates != null) {
             sortedOutputs = new ArrayList<>(utxoCandidates);
-            // We we reuse the selectors we reset the transactionOutputCandidates field
+            // We reuse the selectors. Reset the transactionOutputCandidates field
             utxoCandidates = null;
         } else {
             sortedOutputs = new ArrayList<>(candidates);
