@@ -34,8 +34,10 @@ import javafx.beans.property.SimpleIntegerProperty;
 import javafx.collections.ObservableList;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -53,6 +55,8 @@ public abstract class DisputeListService<T extends DisputeList<Dispute>> impleme
     private final Map<String, Subscription> disputeIsClosedSubscriptionsMap = new HashMap<>();
     @Getter
     private final IntegerProperty numOpenDisputes = new SimpleIntegerProperty();
+    @Getter
+    private final Set<String> disputedTradeIds = new HashSet<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -154,6 +158,7 @@ public abstract class DisputeListService<T extends DisputeList<Dispute>> impleme
                     disputeIsClosedSubscriptionsMap.get(id).unsubscribe();
                     disputeIsClosedSubscriptionsMap.remove(id);
                 }
+                disputedTradeIds.remove(dispute.getTradeId());
             });
         }
         addedList.forEach(dispute -> {
@@ -168,6 +173,7 @@ public abstract class DisputeListService<T extends DisputeList<Dispute>> impleme
                         });
                     });
             disputeIsClosedSubscriptionsMap.put(id, disputeStateSubscription);
+            disputedTradeIds.add(dispute.getTradeId());
         });
     }
 

@@ -33,6 +33,7 @@ import bisq.core.dao.governance.voteresult.VoteResultException;
 import bisq.core.dao.state.unconfirmed.UnconfirmedBsqChangeOutputListService;
 import bisq.core.locale.Res;
 import bisq.core.offer.OpenOfferManager;
+import bisq.core.payment.AmazonGiftCardAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.RevolutAccount;
 import bisq.core.payment.payload.PaymentMethod;
@@ -179,6 +180,9 @@ public class BisqSetup {
     private Consumer<List<RevolutAccount>> revolutAccountsUpdateHandler;
     @Setter
     @Nullable
+    private Consumer<List<AmazonGiftCardAccount>> amazonGiftCardAccountsUpdateHandler;
+    @Setter
+    @Nullable
     private Runnable osxKeyLoggerWarningHandler;
     @Setter
     @Nullable
@@ -250,20 +254,23 @@ public class BisqSetup {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void displayAlertIfPresent(Alert alert, boolean openNewVersionPopup) {
-        if (alert != null) {
-            if (alert.isUpdateInfo()) {
-                user.setDisplayedAlert(alert);
-                final boolean isNewVersion = alert.isNewVersion();
-                newVersionAvailableProperty.set(isNewVersion);
-                String key = "Update_" + alert.getVersion();
-                if (isNewVersion && (preferences.showAgain(key) || openNewVersionPopup) && displayUpdateHandler != null) {
-                    displayUpdateHandler.accept(alert, key);
+        if (alert == null)
+            return;
+
+        if (alert.isSoftwareUpdateNotification()) {
+            // only process if the alert version is "newer" than ours
+            if (alert.isNewVersion(preferences)) {
+                user.setDisplayedAlert(alert);          // save context to compare later
+                newVersionAvailableProperty.set(true);  // shows link in footer bar
+                if ((alert.canShowPopup(preferences) || openNewVersionPopup) && displayUpdateHandler != null) {
+                    displayUpdateHandler.accept(alert, alert.showAgainKey());
                 }
-            } else {
-                final Alert displayedAlert = user.getDisplayedAlert();
-                if ((displayedAlert == null || !displayedAlert.equals(alert)) && displayAlertHandler != null)
-                    displayAlertHandler.accept(alert);
             }
+        } else {
+            // it is a normal message alert
+            final Alert displayedAlert = user.getDisplayedAlert();
+            if ((displayedAlert == null || !displayedAlert.equals(alert)) && displayAlertHandler != null)
+                displayAlertHandler.accept(alert);
         }
     }
 
@@ -453,6 +460,7 @@ public class BisqSetup {
                 filterWarningHandler,
                 voteResultExceptionHandler,
                 revolutAccountsUpdateHandler,
+                amazonGiftCardAccountsUpdateHandler,
                 daoRequiresRestartHandler);
 
         if (walletsSetup.downloadPercentageProperty().get() == 1) {

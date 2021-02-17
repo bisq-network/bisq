@@ -65,6 +65,10 @@ class CoreOffersService {
     private final Supplier<Comparator<Offer>> reversePriceComparator = () -> comparing(Offer::getPrice).reversed();
 
     private final KeyRing keyRing;
+    // Dependencies on core api services in this package must be kept to an absolute
+    // minimum, but some trading functions require an unlocked wallet's key, so an
+    // exception is made in this case.
+    private final CoreWalletsService coreWalletsService;
     private final CreateOfferService createOfferService;
     private final OfferBookService offerBookService;
     private final OfferFilter offerFilter;
@@ -76,6 +80,7 @@ class CoreOffersService {
     @Inject
     public CoreOffersService(CoreContext coreContext,
                              KeyRing keyRing,
+                             CoreWalletsService coreWalletsService,
                              CreateOfferService createOfferService,
                              OfferBookService offerBookService,
                              OfferFilter offerFilter,
@@ -83,6 +88,7 @@ class CoreOffersService {
                              OfferUtil offerUtil,
                              User user) {
         this.keyRing = keyRing;
+        this.coreWalletsService = coreWalletsService;
         this.createOfferService = createOfferService;
         this.offerBookService = offerBookService;
         this.offerFilter = offerFilter;
@@ -144,7 +150,8 @@ class CoreOffersService {
                              String paymentAccountId,
                              String makerFeeCurrencyCode,
                              Consumer<Offer> resultHandler) {
-
+        coreWalletsService.verifyWalletsAreAvailable();
+        coreWalletsService.verifyEncryptedWalletIsUnlocked();
         offerUtil.maybeSetFeePaymentCurrencyPreference(makerFeeCurrencyCode);
 
         String upperCaseCurrencyCode = currencyCode.toUpperCase();

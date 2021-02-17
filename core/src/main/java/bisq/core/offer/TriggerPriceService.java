@@ -23,6 +23,9 @@ import bisq.core.monetary.Price;
 import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
 
+import bisq.network.p2p.BootstrapListener;
+import bisq.network.p2p.P2PService;
+
 import bisq.common.util.MathUtils;
 
 import org.bitcoinj.utils.Fiat;
@@ -47,17 +50,34 @@ import static bisq.common.util.MathUtils.scaleUpByPowerOf10;
 @Slf4j
 @Singleton
 public class TriggerPriceService {
+    private final P2PService p2PService;
     private final OpenOfferManager openOfferManager;
     private final PriceFeedService priceFeedService;
     private final Map<String, Set<OpenOffer>> openOffersByCurrency = new HashMap<>();
 
     @Inject
-    public TriggerPriceService(OpenOfferManager openOfferManager, PriceFeedService priceFeedService) {
+    public TriggerPriceService(P2PService p2PService,
+                               OpenOfferManager openOfferManager,
+                               PriceFeedService priceFeedService) {
+        this.p2PService = p2PService;
         this.openOfferManager = openOfferManager;
         this.priceFeedService = priceFeedService;
     }
 
     public void onAllServicesInitialized() {
+        if (p2PService.isBootstrapped()) {
+            onBootstrapComplete();
+        } else {
+            p2PService.addP2PServiceListener(new BootstrapListener() {
+                @Override
+                public void onUpdatedDataReceived() {
+                    onBootstrapComplete();
+                }
+            });
+        }
+    }
+
+    private void onBootstrapComplete() {
         openOfferManager.getObservableList().addListener((ListChangeListener<OpenOffer>) c -> {
             c.next();
             if (c.wasAdded()) {

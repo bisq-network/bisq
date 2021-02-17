@@ -28,4 +28,4 @@ EXAMPLES
 A BTC seller has informed the buyer that fiat payment has been received for trade with ID
 83e8b2e2-51b6-4f39-a748-3ebd29c22aea, and locked BTC has been released to the buyer.
 The BTC buyer closes out the trade by keeping the received BTC in her Bisq wallet:
-$ ./bisq-cli --password=xyz --port=9998 keepfunds -trade-id=83e8b2e2-51b6-4f39-a748-3ebd29c22aea
+$ ./bisq-cli --password=xyz --port=9998 keepfunds --trade-id=83e8b2e2-51b6-4f39-a748-3ebd29c22aea

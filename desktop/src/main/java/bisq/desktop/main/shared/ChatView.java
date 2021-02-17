@@ -648,7 +648,7 @@ public class ChatView extends AnchorPane {
             ChatMessage message = new ChatMessage(
                     supportManager.getSupportType(),
                     supportSession.getTradeId(),
-                    supportSession.getClientPubKeyRing().hashCode(),
+                    supportSession.getClientId(),
                     supportSession.isClient(),
                     text,
                     supportManager.getMyAddress(),

@@ -309,15 +309,25 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         useStandbyModeProperty.set(prefPayload.isUseStandbyMode());
         cssThemeProperty.set(prefPayload.getCssTheme());
 
+        // a list of previously-used federated explorers
+        // if user preference references any deprecated explorers we need to select a new valid explorer
+        String deprecatedExplorers = "(bsq.bisq.cc|bsq.vante.me|bsq.emzy.de|bsq.sqrrm.net|bsq.bisq.services|bsq.ninja).*";
+
         // if no valid Bitcoin block explorer is set, select the 1st valid Bitcoin block explorer
         ArrayList<BlockChainExplorer> btcExplorers = getBlockChainExplorers();
-        if (getBlockChainExplorer() == null || getBlockChainExplorer().name.length() == 0)
+        if (getBlockChainExplorer() == null ||
+                getBlockChainExplorer().name.length() == 0 ||
+                getBlockChainExplorer().name.matches(deprecatedExplorers)) {
             setBlockChainExplorer(btcExplorers.get(0));
+        }
 
         // if no valid BSQ block explorer is set, randomly select a valid BSQ block explorer
         ArrayList<BlockChainExplorer> bsqExplorers = getBsqBlockChainExplorers();
-        if (getBsqBlockChainExplorer() == null || getBsqBlockChainExplorer().name.length() == 0)
+        if (getBsqBlockChainExplorer() == null ||
+                getBsqBlockChainExplorer().name.length() == 0 ||
+                getBsqBlockChainExplorer().name.matches(deprecatedExplorers)) {
             setBsqBlockChainExplorer(bsqExplorers.get((new Random()).nextInt(bsqExplorers.size())));
+        }
 
         tradeCurrenciesAsObservable.addAll(prefPayload.getFiatCurrencies());
         tradeCurrenciesAsObservable.addAll(prefPayload.getCryptoCurrencies());
@@ -782,6 +792,11 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         requestPersistence();
     }
 
+    public void setNotifyOnPreRelease(boolean value) {
+        prefPayload.setNotifyOnPreRelease(value);
+        requestPersistence();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getter
@@ -1095,5 +1110,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         void setShowOffersMatchingMyAccounts(boolean value);
 
         void setDenyApiTaker(boolean value);
+
+        void setNotifyOnPreRelease(boolean value);
     }
 }
