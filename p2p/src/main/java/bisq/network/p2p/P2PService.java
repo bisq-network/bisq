@@ -258,6 +258,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
         if (!seedNodesAvailable) {
             isBootstrapped = true;
+            mailboxMessageService.onNoSeedNodeAvailable();
             p2pServiceListeners.forEach(P2PServiceListener::onNoSeedNodeAvailable);
         }
     }
