@@ -142,7 +142,7 @@ public class RandomOffer {
             this.id = offer.getId();
             return this;
         } catch (Exception ex) {
-            String error = String.format("Could not create valid %s offer for %s BTC:  %s",
+            String error = format("Could not create valid %s offer for %s BTC:  %s",
                     currencyCode,
                     formatSatoshis(amount),
                     ex.getMessage());

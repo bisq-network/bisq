@@ -88,11 +88,10 @@ public class MakerBotProtocol extends BotProtocol {
                 }
             } // end while
             throw new IllegalStateException("Offer was never taken; we won't wait any longer.");
+        } catch (ManualBotShutdownException ex) {
+            throw ex; // not an error, tells bot to shutdown
         } catch (Exception ex) {
-            if (ex instanceof ManualBotShutdownException)
-                throw ex; // not an error
-            else
-                throw new IllegalStateException("Error while waiting for offer to be taken.", ex);
+            throw new IllegalStateException("Error while waiting for offer to be taken.", ex);
         }
     };
 

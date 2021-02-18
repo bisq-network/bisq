@@ -143,11 +143,10 @@ public abstract class BotProtocol {
             } // end while
 
             throw new IllegalStateException("Payment was never sent; we won't wait any longer.");
+        } catch (ManualBotShutdownException ex) {
+            throw ex; // not an error, tells bot to shutdown
         } catch (Exception ex) {
-            if (ex instanceof ManualBotShutdownException)
-                throw ex; // not an error
-            else
-                throw new IllegalStateException("Error while waiting payment sent message.", ex);
+            throw new IllegalStateException("Error while waiting payment sent message.", ex);
         }
     };
 
@@ -178,11 +177,10 @@ public abstract class BotProtocol {
             } // end while
 
             throw new IllegalStateException("Payment was never received; we won't wait any longer.");
+        } catch (ManualBotShutdownException ex) {
+            throw ex; // not an error, tells bot to shutdown
         } catch (Exception ex) {
-            if (ex instanceof ManualBotShutdownException)
-                throw ex; // not an error
-            else
-                throw new IllegalStateException("Error while waiting payment received confirmation message.", ex);
+            throw new IllegalStateException("Error while waiting payment received confirmation message.", ex);
         }
     };
 
@@ -214,11 +212,10 @@ public abstract class BotProtocol {
             } // end while
 
             throw new IllegalStateException("Payout tx was never published; we won't wait any longer.");
+        } catch (ManualBotShutdownException ex) {
+            throw ex; // not an error, tells bot to shutdown
         } catch (Exception ex) {
-            if (ex instanceof ManualBotShutdownException)
-                throw ex; // not an error
-            else
-                throw new IllegalStateException("Error while waiting for published payout tx.", ex);
+            throw new IllegalStateException("Error while waiting for published payout tx.", ex);
         }
     };
 
@@ -308,11 +305,10 @@ public abstract class BotProtocol {
                 }
             }  // end while
             throw new IllegalStateException(stoppedWaitingForDepositFeeTxMsg(this.getBotClient().getTrade(tradeId).getDepositTxId()));
+        } catch (ManualBotShutdownException ex) {
+            throw ex; // not an error, tells bot to shutdown
         } catch (Exception ex) {
-            if (ex instanceof ManualBotShutdownException)
-                throw ex; // not an error
-            else
-                throw new IllegalStateException("Error while waiting for taker deposit tx to be published or confirmed.", ex);
+            throw new IllegalStateException("Error while waiting for taker deposit tx to be published or confirmed.", ex);
         }
     }
 
