@@ -70,6 +70,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -316,34 +317,12 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
     @Override
     public void onUpdatedDataReceived() {
-        if (!isBootstrapped) {
-            isBootstrapped = true;
-
-            p2PDataStorage.onBootstrapped();
-
-            // We don't use a listener at mailboxMessageService as we require the correct
-            // order of execution. The p2pServiceListeners must be called after
-            // mailboxMessageService.onUpdatedDataReceived.
-            mailboxMessageService.onBootstrapped();
-
-            p2pServiceListeners.forEach(P2PServiceListener::onUpdatedDataReceived);
-        }
+        applyIsBootstrapped(P2PServiceListener::onUpdatedDataReceived);
     }
 
     @Override
     public void onNoSeedNodeAvailable() {
-        if (!isBootstrapped) {
-            isBootstrapped = true;
-
-            p2PDataStorage.onBootstrapped();
-
-            // We don't use a listener at mailboxMessageService as we require the correct
-            // order of execution. The p2pServiceListeners must be called after
-            // mailboxMessageService.onUpdatedDataReceived.
-            mailboxMessageService.onBootstrapped();
-
-            p2pServiceListeners.forEach(P2PServiceListener::onNoSeedNodeAvailable);
-        }
+        applyIsBootstrapped(P2PServiceListener::onNoSeedNodeAvailable);
     }
 
     @Override
@@ -354,6 +333,22 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     @Override
     public void onDataReceived() {
         p2pServiceListeners.forEach(P2PServiceListener::onDataReceived);
+    }
+
+    private void applyIsBootstrapped(Consumer<P2PServiceListener> listenerHandler) {
+        if (!isBootstrapped) {
+            isBootstrapped = true;
+
+            p2PDataStorage.onBootstrapped();
+
+            // We don't use a listener at mailboxMessageService as we require the correct
+            // order of execution. The p2pServiceListeners must be called after
+            // mailboxMessageService.onUpdatedDataReceived.
+            mailboxMessageService.onBootstrapped();
+
+            // Once we have applied the state in the P2P domain we notify our listeners
+            p2pServiceListeners.forEach(listenerHandler);
+        }
     }
 
 
