@@ -138,7 +138,9 @@ public abstract class BisqDefaultCoinSelector implements CoinSelector {
 
     abstract boolean isTxOutputSpendable(TransactionOutput output);
 
-    //TODO why it uses coin age and not try to minimize number of inputs as the highest priority?
+    // TODO Why it uses coin age and not try to minimize number of inputs as the highest priority?
+    //      Asked Oscar and he also don't knows why coin age is used. Should be changed so that min. number of inputs is
+    //      target.
     protected void sortOutputs(ArrayList<TransactionOutput> outputs) {
         Collections.sort(outputs, (a, b) -> {
             int depth1 = a.getParentTransactionDepthInBlocks();
