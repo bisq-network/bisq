@@ -35,6 +35,7 @@ import bisq.core.notifications.alerts.market.MarketAlerts;
 import bisq.core.notifications.alerts.price.PriceAlert;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.offer.TriggerPriceService;
+import bisq.core.payment.AmazonGiftCardAccount;
 import bisq.core.payment.RevolutAccount;
 import bisq.core.payment.TradeLimits;
 import bisq.core.provider.fee.FeeService;
@@ -189,6 +190,7 @@ public class DomainInitialisation {
                                    Consumer<String> filterWarningHandler,
                                    Consumer<VoteResultException> voteResultExceptionHandler,
                                    Consumer<List<RevolutAccount>> revolutAccountsUpdateHandler,
+                                   Consumer<List<AmazonGiftCardAccount>> amazonGiftCardAccountsUpdateHandler,
                                    Runnable daoRequiresRestartHandler) {
         clockWatcher.start();
 
@@ -265,6 +267,13 @@ public class DomainInitialisation {
                     .filter(paymentAccount -> paymentAccount instanceof RevolutAccount)
                     .map(paymentAccount -> (RevolutAccount) paymentAccount)
                     .filter(RevolutAccount::userNameNotSet)
+                    .collect(Collectors.toList()));
+        }
+        if (amazonGiftCardAccountsUpdateHandler != null) {
+            amazonGiftCardAccountsUpdateHandler.accept(user.getPaymentAccountsAsObservable().stream()
+                    .filter(paymentAccount -> paymentAccount instanceof AmazonGiftCardAccount)
+                    .map(paymentAccount -> (AmazonGiftCardAccount) paymentAccount)
+                    .filter(AmazonGiftCardAccount::countryNotSet)
                     .collect(Collectors.toList()));
         }
     }

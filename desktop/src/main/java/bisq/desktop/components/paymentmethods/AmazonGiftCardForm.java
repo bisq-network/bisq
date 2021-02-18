@@ -18,10 +18,11 @@
 package bisq.desktop.components.paymentmethods;
 
 import bisq.desktop.components.InputTextField;
-import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
+import bisq.core.locale.Country;
+import bisq.core.locale.CountryUtil;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
@@ -33,25 +34,41 @@ import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.validation.InputValidator;
 
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 
 import javafx.collections.FXCollections;
 
+import javafx.util.StringConverter;
+
+import java.util.HashMap;
+
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextField;
-import static bisq.desktop.util.FormBuilder.addInputTextField;
-import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
+import static bisq.desktop.util.FormBuilder.*;
 
 @Slf4j
 public class AmazonGiftCardForm extends PaymentMethodForm {
     private InputTextField accountNrInputTextField;
+    ComboBox<Country> countryCombo;
     private final AmazonGiftCardAccount amazonGiftCardAccount;
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountPayload paymentAccountPayload) {
-        FormBuilder.addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.email.mobile"),
-                ((AmazonGiftCardAccountPayload) paymentAccountPayload).getEmailOrMobileNr());
+        AmazonGiftCardAccountPayload amazonGiftCardAccountPayload = (AmazonGiftCardAccountPayload) paymentAccountPayload;
+
+        addTopLabelTextFieldWithCopyIcon(gridPane, gridRow, 1, Res.get("payment.amazon.site"),
+                countryToAmazonSite(amazonGiftCardAccountPayload.getCountryCode()),
+                Layout.COMPACT_FIRST_ROW_AND_GROUP_DISTANCE);
+        addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.email.mobile"),
+                amazonGiftCardAccountPayload.getEmailOrMobileNr());
+        String countryText = CountryUtil.getNameAndCode(amazonGiftCardAccountPayload.getCountryCode());
+        if (countryText.isEmpty()) {
+            countryText = Res.get("payment.ask");
+        }
+        addCompactTopLabelTextFieldWithCopyIcon(gridPane, gridRow, 1,
+                Res.get("shared.country"),
+                countryText);
         return gridRow;
     }
 
@@ -66,11 +83,6 @@ public class AmazonGiftCardForm extends PaymentMethodForm {
         this.amazonGiftCardAccount = (AmazonGiftCardAccount) paymentAccount;
     }
 
-    public void addTradeCurrency() {
-        addTradeCurrencyComboBox();
-        currencyComboBox.setItems(FXCollections.observableArrayList(CurrencyUtil.getAllAmazonGiftCardCurrencies()));
-    }
-
     @Override
     public void addFormForAddAccount() {
         gridRowFrom = gridRow + 1;
@@ -82,12 +94,32 @@ public class AmazonGiftCardForm extends PaymentMethodForm {
             updateFromInputs();
         });
 
-        addTradeCurrency();
+        countryCombo = addComboBox(gridPane, ++gridRow, Res.get("shared.country"));
+        countryCombo.setPromptText(Res.get("payment.select.country"));
+        countryCombo.setItems(FXCollections.observableArrayList(CountryUtil.getAllAmazonGiftCardCountries()));
+        TextField ccyField = addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"), "").second;
+        countryCombo.setConverter(new StringConverter<>() {
+            @Override
+            public String toString(Country country) {
+                return country.name + " (" + country.code + ")";
+            }
+            @Override
+            public Country fromString(String s) {
+                return null;
+            }
+        });
+        countryCombo.setOnAction(e -> {
+            Country countryCode = countryCombo.getValue();
+            amazonGiftCardAccount.setCountry(countryCode);
+            TradeCurrency currency = CurrencyUtil.getCurrencyByCountryCode(countryCode.code);
+            paymentAccount.setSingleTradeCurrency(currency);
+            ccyField.setText(currency.getNameAndCode());
+            updateFromInputs();
+        });
 
         addLimitations(false);
         addAccountNameTextFieldWithAutoFillToggleButton();
     }
-
 
     @Override
     protected void autoFillNameTextField() {
@@ -121,9 +153,33 @@ public class AmazonGiftCardForm extends PaymentMethodForm {
                 Res.get("payment.email.mobile"), accountNr).second;
         field.setMouseTransparent(false);
 
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.country"),
+                amazonGiftCardAccount.getCountry() != null ? amazonGiftCardAccount.getCountry().name : "");
         String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "";
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"), nameAndCode);
 
         addLimitations(true);
+    }
+
+    private static String countryToAmazonSite(String countryCode) {
+        HashMap<String, String> mapCountryToSite = new HashMap<>() {{
+            put("AU", "https://www.amazon.au");
+            put("CA", "https://www.amazon.ca");
+            put("FR", "https://www.amazon.fr");
+            put("DE", "https://www.amazon.de");
+            put("IT", "https://www.amazon.it");
+            put("NL", "https://www.amazon.nl");
+            put("ES", "https://www.amazon.es");
+            put("UK", "https://www.amazon.co.uk");
+            put("IN", "https://www.amazon.in");
+            put("JP", "https://www.amazon.co.jp");
+            put("SA", "https://www.amazon.sa");
+            put("SE", "https://www.amazon.se");
+            put("SG", "https://www.amazon.sg");
+            put("TR", "https://www.amazon.tr");
+            put("US", "https://www.amazon.com");
+            put("",   Res.get("payment.ask"));
+        }};
+        return mapCountryToSite.get(countryCode);
     }
 }
