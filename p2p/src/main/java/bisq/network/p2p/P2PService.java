@@ -332,8 +332,18 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
     @Override
     public void onNoSeedNodeAvailable() {
-        mailboxMessageService.onBootstrapped();
-        p2pServiceListeners.forEach(P2PServiceListener::onNoSeedNodeAvailable);
+        if (!isBootstrapped) {
+            isBootstrapped = true;
+
+            p2PDataStorage.onBootstrapped();
+
+            // We don't use a listener at mailboxMessageService as we require the correct
+            // order of execution. The p2pServiceListeners must be called after
+            // mailboxMessageService.onUpdatedDataReceived.
+            mailboxMessageService.onBootstrapped();
+
+            p2pServiceListeners.forEach(P2PServiceListener::onNoSeedNodeAvailable);
+        }
     }
 
     @Override
