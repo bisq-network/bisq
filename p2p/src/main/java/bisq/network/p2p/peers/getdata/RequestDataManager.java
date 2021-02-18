@@ -155,7 +155,7 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
         this.listener = listener;
     }
 
-    public boolean requestPreliminaryData() {
+    public void requestPreliminaryData() {
         ArrayList<NodeAddress> nodeAddresses = new ArrayList<>(seedNodeAddresses);
         if (!nodeAddresses.isEmpty()) {
             ArrayList<NodeAddress> finalNodeAddresses = new ArrayList<>(nodeAddresses);
@@ -169,9 +169,8 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
             }
 
             isPreliminaryDataRequest = true;
-            return true;
         } else {
-            return false;
+            checkNotNull(listener).onNoSeedNodeAvailable();
         }
     }
 

@@ -252,14 +252,9 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     public void onTorNodeReady() {
         socks5ProxyProvider.setSocks5ProxyInternal(networkNode);
 
-        boolean seedNodesAvailable = requestDataManager.requestPreliminaryData();
-
+        requestDataManager.requestPreliminaryData();
         keepAliveManager.start();
         p2pServiceListeners.forEach(SetupListener::onTorNodeReady);
-
-        if (!seedNodesAvailable) {
-            onNoSeedNodeAvailable();
-        }
     }
 
     @Override
