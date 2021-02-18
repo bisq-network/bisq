@@ -48,10 +48,10 @@ import bisq.core.dao.state.model.blockchain.TxType;
 import bisq.core.locale.Res;
 import bisq.core.user.DontShowAgainLookup;
 import bisq.core.util.FormattingUtils;
+import bisq.core.util.ParsingUtils;
 import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.coin.CoinUtil;
-import bisq.core.util.ParsingUtils;
 import bisq.core.util.validation.BtcAddressValidator;
 
 import bisq.network.p2p.P2PService;
@@ -242,41 +242,44 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
 
         sendBsqButton = addButtonAfterGroup(root, ++gridRow, Res.get("dao.wallet.send.send"));
 
-        sendBsqButton.setOnAction((event) -> {
-            // TODO break up in methods
-            if (GUIUtil.isReadyForTxBroadcastOrShowPopup(p2PService, walletsSetup)) {
-                String receiversAddressString = bsqFormatter.getAddressFromBsqAddress(receiversAddressInputTextField.getText()).toString();
-                Coin receiverAmount = ParsingUtils.parseToCoin(amountInputTextField.getText(), bsqFormatter);
-                try {
-                    Transaction preparedSendTx = bsqWalletService.getPreparedSendBsqTx(receiversAddressString, receiverAmount);
-                    Transaction txWithBtcFee = btcWalletService.completePreparedSendBsqTx(preparedSendTx);
-                    Transaction signedTx = bsqWalletService.signTx(txWithBtcFee);
-                    Coin miningFee = signedTx.getFee();
-                    int txVsize = signedTx.getVsize();
-                    showPublishTxPopup(receiverAmount,
-                            txWithBtcFee,
-                            TxType.TRANSFER_BSQ,
-                            miningFee,
-                            txVsize,
-                            receiversAddressInputTextField.getText(),
-                            bsqFormatter,
-                            btcFormatter,
-                            () -> {
-                                receiversAddressInputTextField.setValidator(null);
-                                receiversAddressInputTextField.setText("");
-                                receiversAddressInputTextField.setValidator(bsqAddressValidator);
-                                amountInputTextField.setValidator(null);
-                                amountInputTextField.setText("");
-                                amountInputTextField.setValidator(bsqValidator);
-                            });
-                } catch (BsqChangeBelowDustException e) {
-                    String msg = Res.get("popup.warning.bsqChangeBelowDustException", bsqFormatter.formatCoinWithCode(e.getOutputValue()));
-                    new Popup().warning(msg).show();
-                } catch (Throwable t) {
-                    handleError(t);
-                }
-            }
-        });
+        sendBsqButton.setOnAction((event) -> onSendBsq());
+    }
+
+    private void onSendBsq() {
+        if (!GUIUtil.isReadyForTxBroadcastOrShowPopup(p2PService, walletsSetup)) {
+            return;
+        }
+
+        String receiversAddressString = bsqFormatter.getAddressFromBsqAddress(receiversAddressInputTextField.getText()).toString();
+        Coin receiverAmount = ParsingUtils.parseToCoin(amountInputTextField.getText(), bsqFormatter);
+        try {
+            Transaction preparedSendTx = bsqWalletService.getPreparedSendBsqTx(receiversAddressString, receiverAmount);
+            Transaction txWithBtcFee = btcWalletService.completePreparedSendBsqTx(preparedSendTx);
+            Transaction signedTx = bsqWalletService.signTx(txWithBtcFee);
+            Coin miningFee = signedTx.getFee();
+            int txVsize = signedTx.getVsize();
+            showPublishTxPopup(receiverAmount,
+                    txWithBtcFee,
+                    TxType.TRANSFER_BSQ,
+                    miningFee,
+                    txVsize,
+                    receiversAddressInputTextField.getText(),
+                    bsqFormatter,
+                    btcFormatter,
+                    () -> {
+                        receiversAddressInputTextField.setValidator(null);
+                        receiversAddressInputTextField.setText("");
+                        receiversAddressInputTextField.setValidator(bsqAddressValidator);
+                        amountInputTextField.setValidator(null);
+                        amountInputTextField.setText("");
+                        amountInputTextField.setValidator(bsqValidator);
+                    });
+        } catch (BsqChangeBelowDustException e) {
+            String msg = Res.get("popup.warning.bsqChangeBelowDustException", bsqFormatter.formatCoinWithCode(e.getOutputValue()));
+            new Popup().warning(msg).show();
+        } catch (Throwable t) {
+            handleError(t);
+        }
     }
 
     private void setSendBtcGroupVisibleState(boolean visible) {
