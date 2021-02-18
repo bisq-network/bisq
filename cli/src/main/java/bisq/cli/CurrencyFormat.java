@@ -65,37 +65,37 @@ public class CurrencyFormat {
                     formatFeeSatoshis(txFeeRateInfo.getFeeServiceRate()));
     }
 
-    static String formatAmountRange(long minAmount, long amount) {
+    public static String formatAmountRange(long minAmount, long amount) {
         return minAmount != amount
                 ? formatSatoshis(minAmount) + " - " + formatSatoshis(amount)
                 : formatSatoshis(amount);
     }
 
-    static String formatVolumeRange(long minVolume, long volume) {
+    public static String formatVolumeRange(long minVolume, long volume) {
         return minVolume != volume
                 ? formatOfferVolume(minVolume) + " - " + formatOfferVolume(volume)
                 : formatOfferVolume(volume);
     }
 
-    static String formatMarketPrice(double price) {
+    public static String formatMarketPrice(double price) {
         NUMBER_FORMAT.setMinimumFractionDigits(4);
         return NUMBER_FORMAT.format(price);
     }
 
-    static String formatOfferPrice(long price) {
+    public static String formatOfferPrice(long price) {
         NUMBER_FORMAT.setMaximumFractionDigits(4);
         NUMBER_FORMAT.setMinimumFractionDigits(4);
         NUMBER_FORMAT.setRoundingMode(RoundingMode.UNNECESSARY);
         return NUMBER_FORMAT.format((double) price / 10000);
     }
 
-    static String formatOfferVolume(long volume) {
+    public static String formatOfferVolume(long volume) {
         NUMBER_FORMAT.setMaximumFractionDigits(0);
         NUMBER_FORMAT.setRoundingMode(RoundingMode.UNNECESSARY);
         return NUMBER_FORMAT.format((double) volume / 10000);
     }
 
-    static long toSatoshis(String btc) {
+    public static long toSatoshis(String btc) {
         if (btc.startsWith("-"))
             throw new IllegalArgumentException(format("'%s' is not a positive number", btc));
 
@@ -106,7 +106,7 @@ public class CurrencyFormat {
         }
     }
 
-    static double toSecurityDepositAsPct(String securityDepositInput) {
+    public static double toSecurityDepositAsPct(String securityDepositInput) {
         try {
             return new BigDecimal(securityDepositInput)
                     .multiply(SECURITY_DEPOSIT_MULTIPLICAND).doubleValue();
@@ -116,7 +116,7 @@ public class CurrencyFormat {
     }
 
     @SuppressWarnings("BigDecimalMethodWithoutRoundingCalled")
-    private static String formatFeeSatoshis(long sats) {
+    public static String formatFeeSatoshis(long sats) {
         return BTC_TX_FEE_FORMAT.format(BigDecimal.valueOf(sats).divide(SATOSHI_DIVISOR));
     }
 }
