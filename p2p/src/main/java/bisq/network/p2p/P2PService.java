@@ -330,6 +330,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
     @Override
     public void onNoSeedNodeAvailable() {
+        mailboxMessageService.onNoSeedNodeAvailable();
         p2pServiceListeners.forEach(P2PServiceListener::onNoSeedNodeAvailable);
     }
 
