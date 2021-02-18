@@ -176,6 +176,11 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
         setSendBtcGroupVisibleState(false);
         bsqBalanceUtil.activate();
 
+        receiversAddressInputTextField.resetValidation();
+        amountInputTextField.resetValidation();
+        receiversBtcAddressInputTextField.resetValidation();
+        btcAmountInputTextField.resetValidation();
+
         sendBsqButton.setOnAction((event) -> onSendBsq());
         bsqInputControlButton.setOnAction((event) -> onBsqInputControl());
         sendBtcButton.setOnAction((event) -> onSendBtc());
@@ -309,12 +314,11 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
                     bsqFormatter,
                     btcFormatter,
                     () -> {
-                        receiversAddressInputTextField.setValidator(null);
                         receiversAddressInputTextField.setText("");
-                        receiversAddressInputTextField.setValidator(bsqAddressValidator);
-                        amountInputTextField.setValidator(null);
                         amountInputTextField.setText("");
-                        amountInputTextField.setValidator(bsqValidator);
+
+                        receiversAddressInputTextField.resetValidation();
+                        amountInputTextField.resetValidation();
                     });
         } catch (BsqChangeBelowDustException e) {
             String msg = Res.get("popup.warning.bsqChangeBelowDustException", bsqFormatter.formatCoinWithCode(e.getOutputValue()));
@@ -444,6 +448,10 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
                         () -> {
                             receiversBtcAddressInputTextField.setText("");
                             btcAmountInputTextField.setText("");
+
+                            receiversBtcAddressInputTextField.resetValidation();
+                            btcAmountInputTextField.resetValidation();
+
                         });
             }
         } catch (BsqChangeBelowDustException e) {
