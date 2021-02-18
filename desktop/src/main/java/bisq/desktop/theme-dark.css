@@ -135,10 +135,16 @@
     -bs-white: white;
     -bs-prompt-text: -bs-color-gray-3;
     -bs-decimals: #db6300;
+    -bs-soft-red: #aa4c3b;
+    -bs-turquoise-light: #11eeee;
 
     /* dao chart colors */
-    -bs-chart-dao-line1: -bs-color-green-5;
-    -bs-chart-dao-line2: -bs-color-blue-2;
+    -bs-chart-dao-line1: -bs-color-blue-5;
+    -bs-chart-dao-line2: -bs-color-green-3;
+    -bs-chart-dao-line3: -bs-turquoise;
+    -bs-chart-dao-line4: -bs-turquoise-light;
+    -bs-chart-dao-line5: -bs-yellow;
+    -bs-chart-dao-line6: -bs-soft-red;
 
     /* Monero orange color code */
     -xmr-orange: #f26822;

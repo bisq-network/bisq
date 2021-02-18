@@ -160,7 +160,7 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
     @Getter
     private final long price;
     @Getter
-    private final long amount;
+    private final long amount; // BTC amount
     private final String paymentMethod;
     // As only seller is publishing it is the sellers trade date
     private final long date;
@@ -193,7 +193,7 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
     private transient final Date dateObj;
 
     @JsonExclude
-    private transient Volume volume = null;
+    private transient Volume volume = null; // Fiat or altcoin volume
     @JsonExclude
     private transient LocalDateTime localDateTime;
 
