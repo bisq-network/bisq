@@ -318,13 +318,15 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     public void onUpdatedDataReceived() {
         if (!isBootstrapped) {
             isBootstrapped = true;
+
+            p2PDataStorage.onBootstrapComplete();
+
             // We don't use a listener at mailboxMessageService as we require the correct
             // order of execution. The p2pServiceListeners must be called after
             // mailboxMessageService.onUpdatedDataReceived.
             mailboxMessageService.onBootstrapped();
 
             p2pServiceListeners.forEach(P2PServiceListener::onUpdatedDataReceived);
-            p2PDataStorage.onBootstrapComplete();
         }
     }
 
