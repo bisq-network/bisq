@@ -48,6 +48,7 @@ import bisq.proto.grpc.SendBsqRequest;
 import bisq.proto.grpc.SendBtcRequest;
 import bisq.proto.grpc.SetTxFeeRatePreferenceRequest;
 import bisq.proto.grpc.SetWalletPasswordRequest;
+import bisq.proto.grpc.StopRequest;
 import bisq.proto.grpc.TakeOfferRequest;
 import bisq.proto.grpc.TxInfo;
 import bisq.proto.grpc.UnlockWalletRequest;
@@ -193,6 +194,7 @@ public class CliMain {
         var offersService = grpcStubs.offersService;
         var paymentAccountsService = grpcStubs.paymentAccountsService;
         var priceService = grpcStubs.priceService;
+        var shutdownService = grpcStubs.shutdownService;
         var tradesService = grpcStubs.tradesService;
         var versionService = grpcStubs.versionService;
         var walletsService = grpcStubs.walletsService;
@@ -741,6 +743,16 @@ public class CliMain {
                     out.println(disputeAgentType + " registered");
                     return;
                 }
+                case stop: {
+                    if (new SimpleMethodOptionParser(args).parse().isForHelp()) {
+                        out.println(getMethodHelp(helpService, method));
+                        return;
+                    }
+                    var request = StopRequest.newBuilder().build();
+                    shutdownService.stop(request);
+                    out.println("server shutdown signal received");
+                    return;
+                }
                 default: {
                     throw new RuntimeException(format("unhandled method '%s'", method));
                 }
@@ -893,6 +905,8 @@ public class CliMain {
             stream.format(rowFormat, setwalletpassword.name(), "--wallet-password=<password> \\",
                     "Encrypt wallet with password, or set new password on encrypted wallet");
             stream.format(rowFormat, "", "[--new-wallet-password=<new-password>]", "");
+            stream.println();
+            stream.format(rowFormat, stop.name(), "", "Shut down the server");
             stream.println();
             stream.println("Method Help Usage: bisq-cli [options] <method> --help");
             stream.println();

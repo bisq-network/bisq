@@ -1,0 +1,22 @@
+stop
+
+NAME
+----
+stop - stop the server
+
+SYNOPSIS
+--------
+stop
+
+DESCRIPTION
+-----------
+Shutdown the RPC server.
+
+OPTIONS
+-------
+
+EXAMPLES
+--------
+To shutdown the server:
+$ ./bisq-cli --password=xyz --port=9998 stop
+
