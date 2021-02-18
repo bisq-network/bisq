@@ -53,5 +53,6 @@ public enum Method {
     takeoffer,
     unlockwallet,
     unsettxfeerate,
-    withdrawfunds
+    withdrawfunds,
+    stop
 }

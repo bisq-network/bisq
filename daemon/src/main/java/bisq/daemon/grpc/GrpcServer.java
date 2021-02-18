@@ -54,6 +54,7 @@ public class GrpcServer {
                       GrpcOffersService offersService,
                       GrpcPaymentAccountsService paymentAccountsService,
                       GrpcPriceService priceService,
+                      GrpcShutdownService shutdownService,
                       GrpcVersionService versionService,
                       GrpcGetTradeStatisticsService tradeStatisticsService,
                       GrpcTradesService tradesService,
@@ -65,6 +66,7 @@ public class GrpcServer {
                 .addService(interceptForward(offersService, offersService.interceptors()))
                 .addService(interceptForward(paymentAccountsService, paymentAccountsService.interceptors()))
                 .addService(interceptForward(priceService, priceService.interceptors()))
+                .addService(shutdownService)
                 .addService(interceptForward(tradeStatisticsService, tradeStatisticsService.interceptors()))
                 .addService(interceptForward(tradesService, tradesService.interceptors()))
                 .addService(interceptForward(versionService, versionService.interceptors()))

@@ -23,6 +23,7 @@ import bisq.proto.grpc.HelpGrpc;
 import bisq.proto.grpc.OffersGrpc;
 import bisq.proto.grpc.PaymentAccountsGrpc;
 import bisq.proto.grpc.PriceGrpc;
+import bisq.proto.grpc.ShutdownServerGrpc;
 import bisq.proto.grpc.TradesGrpc;
 import bisq.proto.grpc.WalletsGrpc;
 
@@ -39,6 +40,7 @@ public class GrpcStubs {
     public final OffersGrpc.OffersBlockingStub offersService;
     public final PaymentAccountsGrpc.PaymentAccountsBlockingStub paymentAccountsService;
     public final PriceGrpc.PriceBlockingStub priceService;
+    public final ShutdownServerGrpc.ShutdownServerBlockingStub shutdownService;
     public final TradesGrpc.TradesBlockingStub tradesService;
     public final WalletsGrpc.WalletsBlockingStub walletsService;
 
@@ -60,6 +62,7 @@ public class GrpcStubs {
         this.offersService = OffersGrpc.newBlockingStub(channel).withCallCredentials(credentials);
         this.paymentAccountsService = PaymentAccountsGrpc.newBlockingStub(channel).withCallCredentials(credentials);
         this.priceService = PriceGrpc.newBlockingStub(channel).withCallCredentials(credentials);
+        this.shutdownService = ShutdownServerGrpc.newBlockingStub(channel).withCallCredentials(credentials);
         this.tradesService = TradesGrpc.newBlockingStub(channel).withCallCredentials(credentials);
         this.walletsService = WalletsGrpc.newBlockingStub(channel).withCallCredentials(credentials);
     }
