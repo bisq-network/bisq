@@ -561,7 +561,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         }
     }
 
-    public void onBootstrapComplete() {
+    public void onBootstrapped() {
         removeExpiredEntriesTimer = UserThread.runPeriodically(this::removeExpiredEntries, CHECK_TTL_INTERVAL_SEC);
     }
 
