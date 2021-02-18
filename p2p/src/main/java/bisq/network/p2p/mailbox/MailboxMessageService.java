@@ -218,20 +218,11 @@ public class MailboxMessageService implements HashMapChangedListener, PersistedD
     // We don't listen on requestDataManager directly as we require the correct
     // order of execution. The p2pService is handling the correct order of execution and we get called
     // directly from there.
-    public void onUpdatedDataReceived() {
+    public void onBootstrapped() {
         if (!isBootstrapped) {
             isBootstrapped = true;
             // Only now we start listening and processing. The p2PDataStorage is our cache for data we have received
             // after the hidden service was ready.
-            addHashMapChangedListenerAndApply();
-            maybeRepublishMailBoxMessages();
-        }
-    }
-
-    public void onNoSeedNodeAvailable() {
-        if (!isBootstrapped) {
-            isBootstrapped = true;
-            // As we do not expect a updated data request response we start here with addHashMapChangedListenerAndApply
             addHashMapChangedListenerAndApply();
             maybeRepublishMailBoxMessages();
         }
