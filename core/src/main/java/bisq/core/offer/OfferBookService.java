@@ -25,6 +25,7 @@ import bisq.network.p2p.BootstrapListener;
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.storage.HashMapChangedListener;
 import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
+import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 
 import bisq.common.UserThread;
 import bisq.common.config.Config;
@@ -149,7 +150,7 @@ public class OfferBookService {
         }
     }
 
-    public void refreshTTL(OfferPayload offerPayload,
+    public void refreshTTL(ProtectedStoragePayload protectedStoragePayload,
                            ResultHandler resultHandler,
                            ErrorMessageHandler errorMessageHandler) {
         if (filterManager.requireUpdateToNewVersionForTrading()) {
@@ -157,7 +158,7 @@ public class OfferBookService {
             return;
         }
 
-        boolean result = p2PService.refreshTTL(offerPayload);
+        boolean result = p2PService.refreshTTL(protectedStoragePayload);
         if (result) {
             resultHandler.handleResult();
         } else {
@@ -171,16 +172,16 @@ public class OfferBookService {
         addOffer(offer, resultHandler, errorMessageHandler);
     }
 
-    public void deactivateOffer(OfferPayload offerPayload,
+    public void deactivateOffer(ProtectedStoragePayload protectedStoragePayload,
                                 @Nullable ResultHandler resultHandler,
                                 @Nullable ErrorMessageHandler errorMessageHandler) {
-        removeOffer(offerPayload, resultHandler, errorMessageHandler);
+        removeOffer(protectedStoragePayload, resultHandler, errorMessageHandler);
     }
 
-    public void removeOffer(OfferPayload offerPayload,
+    public void removeOffer(ProtectedStoragePayload protectedStoragePayload,
                             @Nullable ResultHandler resultHandler,
                             @Nullable ErrorMessageHandler errorMessageHandler) {
-        if (p2PService.removeData(offerPayload)) {
+        if (p2PService.removeData(protectedStoragePayload)) {
             if (resultHandler != null)
                 resultHandler.handleResult();
         } else {
@@ -201,8 +202,8 @@ public class OfferBookService {
                 .collect(Collectors.toList());
     }
 
-    public void removeOfferAtShutDown(OfferPayload offerPayload) {
-        removeOffer(offerPayload, null, null);
+    public void removeOfferAtShutDown(ProtectedStoragePayload protectedStoragePayload) {
+        removeOffer(protectedStoragePayload, null, null);
     }
 
     public boolean isBootstrapped() {
