@@ -203,6 +203,10 @@ public class Offer implements NetworkPayload, PersistablePayload {
         }
     }
 
+    public long getFixedPrice() {
+        return offerPayload.getPrice();
+    }
+
     public void checkTradePriceTolerance(long takersTradePrice) throws TradePriceOutOfToleranceException,
             MarketPriceNotAvailableException, IllegalArgumentException {
         Price tradePrice = Price.valueOf(getCurrencyCode(), takersTradePrice);
@@ -437,6 +441,14 @@ public class Offer implements NetworkPayload, PersistablePayload {
                 offerPayload.getCounterCurrencyCode() :
                 offerPayload.getBaseCurrencyCode();
         return currencyCode;
+    }
+
+    public String getCounterCurrencyCode() {
+        return offerPayload.getCounterCurrencyCode();
+    }
+
+    public String getBaseCurrencyCode() {
+        return offerPayload.getBaseCurrencyCode();
     }
 
     public long getProtocolVersion() {

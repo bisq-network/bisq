@@ -40,7 +40,7 @@ public class OfferRestrictions {
     public static Coin TOLERATED_SMALL_TRADE_AMOUNT = Coin.parseCoin("0.01");
 
     static boolean hasOfferMandatoryCapability(Offer offer, Capability mandatoryCapability) {
-        Map<String, String> extraDataMap = offer.getOfferPayload().getExtraDataMap();
+        Map<String, String> extraDataMap = offer.getExtraDataMap();
         if (extraDataMap != null && extraDataMap.containsKey(OfferPayload.CAPABILITIES)) {
             String commaSeparatedOrdinals = extraDataMap.get(OfferPayload.CAPABILITIES);
             Capabilities capabilities = Capabilities.fromStringList(commaSeparatedOrdinals);

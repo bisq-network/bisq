@@ -346,7 +346,7 @@ class CoreOffersService {
                                                      String direction,
                                                      String currencyCode) {
         var offerOfWantedDirection = offer.getDirection().name().equalsIgnoreCase(direction);
-        var offerInWantedCurrency = offer.getOfferPayload().getCounterCurrencyCode()
+        var offerInWantedCurrency = offer.getCounterCurrencyCode()
                 .equalsIgnoreCase(currencyCode);
         return offerOfWantedDirection && offerInWantedCurrency;
     }
