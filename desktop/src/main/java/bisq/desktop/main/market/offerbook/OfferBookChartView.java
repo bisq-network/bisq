@@ -38,6 +38,7 @@ import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
+import bisq.core.offer.OfferPayloadI;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.CoinFormatter;
 
@@ -88,10 +89,10 @@ import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 
-import java.text.DecimalFormat;
-
 import javafx.util.Callback;
 import javafx.util.StringConverter;
+
+import java.text.DecimalFormat;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -161,8 +162,8 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
 
         VBox.setMargin(chartPane, new Insets(0, 0, 5, 0));
 
-        Tuple4<TableView<OfferListItem>, VBox, Button, Label> tupleBuy = getOfferTable(OfferPayload.Direction.BUY);
-        Tuple4<TableView<OfferListItem>, VBox, Button, Label> tupleSell = getOfferTable(OfferPayload.Direction.SELL);
+        Tuple4<TableView<OfferListItem>, VBox, Button, Label> tupleBuy = getOfferTable(OfferPayloadI.Direction.BUY);
+        Tuple4<TableView<OfferListItem>, VBox, Button, Label> tupleSell = getOfferTable(OfferPayloadI.Direction.SELL);
         buyOfferTableView = tupleBuy.first;
         sellOfferTableView = tupleSell.first;
 
@@ -178,8 +179,8 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         VBox.setMargin(bottomHBox, new Insets(-5, 0, 0, 0));
         HBox.setHgrow(tupleBuy.second, Priority.ALWAYS);
         HBox.setHgrow(tupleSell.second, Priority.ALWAYS);
-        tupleBuy.second.setUserData(OfferPayload.Direction.BUY.name());
-        tupleSell.second.setUserData(OfferPayload.Direction.SELL.name());
+        tupleBuy.second.setUserData(OfferPayloadI.Direction.BUY.name());
+        tupleSell.second.setUserData(OfferPayloadI.Direction.SELL.name());
         bottomHBox.getChildren().addAll(tupleBuy.second, tupleSell.second);
 
         root.getChildren().addAll(currencyComboBoxTuple.first, chartPane, bottomHBox);
@@ -247,7 +248,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                     });
 
                     if (CurrencyUtil.isCryptoCurrency(code)) {
-                        if (bottomHBox.getChildren().size() == 2 && bottomHBox.getChildren().get(0).getUserData().equals(OfferPayload.Direction.BUY.name())) {
+                        if (bottomHBox.getChildren().size() == 2 && bottomHBox.getChildren().get(0).getUserData().equals(OfferPayloadI.Direction.BUY.name())) {
                             bottomHBox.getChildren().get(0).toFront();
                             reverseTableColumns();
                         }
@@ -260,7 +261,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
 
                         priceColumnLabel.set(Res.get("shared.priceWithCur", Res.getBaseCurrencyCode()));
                     } else {
-                        if (bottomHBox.getChildren().size() == 2 && bottomHBox.getChildren().get(0).getUserData().equals(OfferPayload.Direction.SELL.name())) {
+                        if (bottomHBox.getChildren().size() == 2 && bottomHBox.getChildren().get(0).getUserData().equals(OfferPayloadI.Direction.SELL.name())) {
                             bottomHBox.getChildren().get(0).toFront();
                             reverseTableColumns();
                         }
@@ -598,7 +599,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                     }
                 });
 
-        boolean isSellOffer = direction == OfferPayload.Direction.SELL;
+        boolean isSellOffer = direction == OfferPayloadI.Direction.SELL;
 
         // trader avatar
         TableColumn<OfferListItem, OfferListItem> avatarColumn = new AutoTooltipTableColumn<>(isSellOffer ?

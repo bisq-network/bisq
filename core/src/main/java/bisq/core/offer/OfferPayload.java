@@ -18,9 +18,6 @@
 package bisq.core.offer;
 
 import bisq.network.p2p.NodeAddress;
-import bisq.network.p2p.storage.payload.ExpirablePayload;
-import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
-import bisq.network.p2p.storage.payload.RequiresOwnerIsOnlinePayload;
 
 import bisq.common.crypto.Hash;
 import bisq.common.crypto.PubKeyRing;
@@ -56,25 +53,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @EqualsAndHashCode
 @Getter
 @Slf4j
-public final class OfferPayload implements ProtectedStoragePayload, ExpirablePayload, RequiresOwnerIsOnlinePayload {
+public final class OfferPayload extends OfferPayloadI {
     public static final long TTL = TimeUnit.MINUTES.toMillis(9);
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Enum
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public enum Direction {
-        BUY,
-        SELL;
-
-        public static OfferPayload.Direction fromProto(protobuf.OfferPayload.Direction direction) {
-            return ProtoUtil.enumFromProto(OfferPayload.Direction.class, direction.name());
-        }
-
-        public static protobuf.OfferPayload.Direction toProtoMessage(Direction direction) {
-            return protobuf.OfferPayload.Direction.valueOf(direction.name());
-        }
-    }
 
     // Keys for extra map
     // Only set for fiat offers
@@ -345,7 +325,7 @@ public final class OfferPayload implements ProtectedStoragePayload, ExpirablePay
                 proto.getDate(),
                 NodeAddress.fromProto(proto.getOwnerNodeAddress()),
                 PubKeyRing.fromProto(proto.getPubKeyRing()),
-                OfferPayload.Direction.fromProto(proto.getDirection()),
+                OfferPayloadI.Direction.fromProto(proto.getDirection()),
                 proto.getPrice(),
                 proto.getMarketPriceMargin(),
                 proto.getUseMarketBasedPrice(),

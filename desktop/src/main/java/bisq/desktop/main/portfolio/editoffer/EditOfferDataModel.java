@@ -31,6 +31,7 @@ import bisq.core.offer.CreateOfferService;
 import bisq.core.offer.MutableOfferPayloadFields;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
+import bisq.core.offer.OfferPayloadI;
 import bisq.core.offer.OfferUtil;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
@@ -55,6 +56,8 @@ import com.google.inject.Inject;
 import javax.inject.Named;
 
 import java.util.Optional;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 class EditOfferDataModel extends MutableOfferDataModel {
 
@@ -183,9 +186,14 @@ class EditOfferDataModel extends MutableOfferDataModel {
     }
 
     public void onPublishOffer(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+        var offerPayloadI = createAndGetOffer().getOfferPayloadI();
+        if (!(offerPayloadI instanceof OfferPayload))
+            return;
+        var offerPayload = (OfferPayload) offerPayloadI;
         MutableOfferPayloadFields mutableOfferPayloadFields =
-                new MutableOfferPayloadFields(createAndGetOffer().getOfferPayload());
+                new MutableOfferPayloadFields(offerPayload);
         final OfferPayload editedPayload = offerUtil.getMergedOfferPayload(openOffer, mutableOfferPayloadFields);
+
         final Offer editedOffer = new Offer(editedPayload);
         editedOffer.setPriceFeedService(priceFeedService);
         editedOffer.setState(Offer.State.AVAILABLE);

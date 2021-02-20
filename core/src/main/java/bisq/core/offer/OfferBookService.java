@@ -142,7 +142,7 @@ public class OfferBookService {
             return;
         }
 
-        boolean result = p2PService.addProtectedStorageEntry(offer.getOfferPayload());
+        boolean result = p2PService.addProtectedStorageEntry(offer.getOfferPayloadI());
         if (result) {
             resultHandler.handleResult();
         } else {

@@ -65,7 +65,7 @@ public class PlaceOfferProtocol {
                     log.error(errorMessage);
 
                     if (model.isOfferAddedToOfferBook()) {
-                        model.getOfferBookService().removeOffer(model.getOffer().getOfferPayload(),
+                        model.getOfferBookService().removeOffer(model.getOffer().getOfferPayloadI(),
                                 () -> {
                                     model.setOfferAddedToOfferBook(false);
                                     log.debug("OfferPayload removed from offer book.");

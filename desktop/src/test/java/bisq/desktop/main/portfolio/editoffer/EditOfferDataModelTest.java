@@ -11,7 +11,7 @@ import bisq.core.locale.CryptoCurrency;
 import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.Res;
 import bisq.core.offer.CreateOfferService;
-import bisq.core.offer.OfferPayload;
+import bisq.core.offer.OfferPayloadI;
 import bisq.core.offer.OfferUtil;
 import bisq.core.offer.OpenOffer;
 import bisq.core.payment.CryptoCurrencyAccount;
@@ -129,6 +129,6 @@ public class EditOfferDataModelTest {
     @Test
     public void testInitializeEditOfferWithRemovedAsset() {
         exception.expect(IllegalArgumentException.class);
-        model.initWithData(OfferPayload.Direction.BUY, null);
+        model.initWithData(OfferPayloadI.Direction.BUY, null);
     }
 }

@@ -256,7 +256,8 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                     MenuItem editItem = new MenuItem(Res.get("portfolio.context.offerLikeThis"));
                     editItem.setOnAction((event) -> {
                         try {
-                            OfferPayload offerPayload = row.getItem().getTradable().getOffer().getOfferPayload();
+                            OfferPayload offerPayload = (OfferPayload) row.getItem().getTradable().getOffer().
+                                    getOfferPayloadI();
                             if (offerPayload.getPubKeyRing().equals(keyRing.getPubKeyRing())) {
                                 navigation.navigateToWithData(offerPayload, MainView.class, PortfolioView.class, DuplicateOfferView.class);
                             } else {

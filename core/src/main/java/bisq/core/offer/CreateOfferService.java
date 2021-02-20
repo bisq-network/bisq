@@ -188,7 +188,7 @@ public class CreateOfferService {
                 creationTime,
                 makerAddress,
                 pubKeyRing,
-                OfferPayload.Direction.valueOf(direction.name()),
+                OfferPayloadI.Direction.valueOf(direction.name()),
                 priceAsLong,
                 marketPriceMarginParam,
                 useMarketBasedPriceValue,

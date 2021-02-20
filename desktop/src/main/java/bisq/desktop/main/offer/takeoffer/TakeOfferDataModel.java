@@ -37,6 +37,7 @@ import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
+import bisq.core.offer.OfferPayloadI;
 import bisq.core.offer.OfferUtil;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.PaymentAccountUtil;
@@ -217,7 +218,7 @@ class TakeOfferDataModel extends OfferDataModel {
 
         this.amount.set(Coin.valueOf(Math.min(offer.getAmount().value, getMaxTradeLimit())));
 
-        securityDeposit = offer.getDirection() == OfferPayload.Direction.SELL ?
+        securityDeposit = offer.getDirection() == OfferPayloadI.Direction.SELL ?
                 getBuyerSecurityDeposit() :
                 getSellerSecurityDeposit();
 
@@ -255,13 +256,16 @@ class TakeOfferDataModel extends OfferDataModel {
         });
 
         mempoolStatus.setValue(-1);
-        mempoolService.validateOfferMakerTx(offer.getOfferPayload(), (txValidator -> {
-            mempoolStatus.setValue(txValidator.isFail() ? 0 : 1);
-            if (txValidator.isFail()) {
-                mempoolStatusText = txValidator.toString();
-                log.info("Mempool check of OfferFeePaymentTxId returned errors: [{}]", mempoolStatusText);
-            }
-        }));
+        var offerPayload = offer.getOfferPayloadI();
+        if (offerPayload instanceof OfferPayload) {
+            mempoolService.validateOfferMakerTx((OfferPayload) offerPayload, (txValidator -> {
+                mempoolStatus.setValue(txValidator.isFail() ? 0 : 1);
+                if (txValidator.isFail()) {
+                    mempoolStatusText = txValidator.toString();
+                    log.info("Mempool check of OfferFeePaymentTxId returned errors: [{}]", mempoolStatusText);
+                }
+            }));
+        }
 
         calculateVolume();
         calculateTotalToPay();
@@ -525,11 +529,11 @@ class TakeOfferDataModel extends OfferDataModel {
     }
 
     boolean isBuyOffer() {
-        return getDirection() == OfferPayload.Direction.BUY;
+        return getDirection() == OfferPayloadI.Direction.BUY;
     }
 
     boolean isSellOffer() {
-        return getDirection() == OfferPayload.Direction.SELL;
+        return getDirection() == OfferPayloadI.Direction.SELL;
     }
 
     boolean isCryptoCurrency() {

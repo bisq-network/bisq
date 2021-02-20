@@ -39,7 +39,7 @@ import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.core.offer.OfferPayload.Direction.BUY;
+import static bisq.core.offer.OfferPayloadI.Direction.BUY;
 
 /**
  * Holds and manages the unsorted and unfiltered offerbook list (except for banned offers) of both buy and sell offers.
@@ -139,7 +139,7 @@ public class OfferBook {
         offer.setState(Offer.State.REMOVED);
         offer.cancelAvailabilityRequest();
 
-        P2PDataStorage.ByteArray hashOfPayload = new P2PDataStorage.ByteArray(offer.getOfferPayload().getHash());
+        P2PDataStorage.ByteArray hashOfPayload = new P2PDataStorage.ByteArray(offer.getOfferPayloadHash());
 
         if (log.isDebugEnabled()) {  // TODO delete debug stmt in future PR.
             log.debug("onRemoved: id = {}\n"

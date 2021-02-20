@@ -57,8 +57,8 @@ import static bisq.common.util.MathUtils.roundDoubleToLong;
 import static bisq.common.util.MathUtils.scaleUpByPowerOf10;
 import static bisq.core.locale.CurrencyUtil.isCryptoCurrency;
 import static bisq.core.offer.Offer.State;
-import static bisq.core.offer.OfferPayload.Direction;
-import static bisq.core.offer.OfferPayload.Direction.BUY;
+import static bisq.core.offer.OfferPayloadI.Direction;
+import static bisq.core.offer.OfferPayloadI.Direction.BUY;
 import static bisq.core.offer.OpenOffer.State.AVAILABLE;
 import static bisq.core.offer.OpenOffer.State.DEACTIVATED;
 import static bisq.core.payment.PaymentAccountUtil.isPaymentAccountValidForOffer;
@@ -256,7 +256,7 @@ class CoreOffersService {
                 editedMarketPriceMargin,
                 editType);
         Offer editedOffer = new Offer(editedPayload);
-        priceFeedService.setCurrencyCode(openOffer.getOffer().getOfferPayload().getCurrencyCode());
+        priceFeedService.setCurrencyCode(openOffer.getOffer().getCurrencyCode());
         editedOffer.setPriceFeedService(priceFeedService);
         editedOffer.setState(State.AVAILABLE);
         openOfferManager.editOpenOfferStart(openOffer,
@@ -302,7 +302,7 @@ class CoreOffersService {
         // code fields.  Note: triggerPrice isDeactivated fields are in OpenOffer, not
         // in OfferPayload.
         Offer offer = openOffer.getOffer();
-        String currencyCode = offer.getOfferPayload().getCurrencyCode();
+        String currencyCode = offer.getCurrencyCode();
         boolean isEditingPrice = editType.equals(FIXED_PRICE_ONLY) || editType.equals(FIXED_PRICE_AND_ACTIVATION_STATE);
         Price editedPrice;
         if (isEditingPrice) {
@@ -320,15 +320,15 @@ class CoreOffersService {
                 Objects.requireNonNull(editedPrice).getValue(),
                 isUsingMktPriceMargin ? exactMultiply(editedMarketPriceMargin, 0.01) : 0.00,
                 isUsingMktPriceMargin,
-                offer.getOfferPayload().getBaseCurrencyCode(),
-                offer.getOfferPayload().getCounterCurrencyCode(),
+                offer.getBaseCurrencyCode(),
+                offer.getCounterCurrencyCode(),
                 offer.getPaymentMethod().getId(),
                 offer.getMakerPaymentAccountId(),
-                offer.getOfferPayload().getCountryCode(),
-                offer.getOfferPayload().getAcceptedCountryCodes(),
-                offer.getOfferPayload().getBankId(),
-                offer.getOfferPayload().getAcceptedBankIds(),
-                offer.getOfferPayload().getExtraDataMap());
+                offer.getCountryCode(),
+                offer.getAcceptedCountryCodes(),
+                offer.getBankId(),
+                offer.getAcceptedBankIds(),
+                offer.getExtraDataMap());
         log.info("Merging OfferPayload with {}", mutableOfferPayloadFields);
         return offerUtil.getMergedOfferPayload(openOffer, mutableOfferPayloadFields);
     }
@@ -336,7 +336,7 @@ class CoreOffersService {
     private void verifyPaymentAccountIsValidForNewOffer(Offer offer, PaymentAccount paymentAccount) {
         if (!isPaymentAccountValidForOffer(offer, paymentAccount)) {
             String error = format("cannot create %s offer with payment account %s",
-                    offer.getOfferPayload().getCounterCurrencyCode(),
+                    offer.getCounterCurrencyCode(),
                     paymentAccount.getId());
             throw new IllegalStateException(error);
         }

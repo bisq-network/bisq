@@ -27,6 +27,7 @@ import bisq.core.monetary.Altcoin;
 import bisq.core.monetary.Price;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
+import bisq.core.offer.OfferPayloadI;
 import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.statistics.TradeStatisticsManager;
@@ -179,7 +180,7 @@ public class PriceUtil {
         long priceAsLong = checkNotNull(price).getValue();
         double scaled = MathUtils.scaleDownByPowerOf10(priceAsLong, precision);
         double value;
-        if (direction == OfferPayload.Direction.SELL) {
+        if (direction == OfferPayloadI.Direction.SELL) {
             if (CurrencyUtil.isFiatCurrency(currencyCode)) {
                 if (marketPrice == 0) {
                     return Optional.empty();

@@ -46,6 +46,7 @@ import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
+import bisq.core.offer.OfferPayloadI;
 import bisq.core.offer.OfferRestrictions;
 import bisq.core.offer.OfferUtil;
 import bisq.core.payment.PaymentAccount;
@@ -268,7 +269,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
     }
 
     private void addBindings() {
-        if (dataModel.getDirection() == OfferPayload.Direction.BUY) {
+        if (dataModel.getDirection() == OfferPayloadI.Direction.BUY) {
             volumeDescriptionLabel.bind(createStringBinding(
                     () -> Res.get("createOffer.amountPriceBox.buy.volumeDescription", dataModel.getTradeCurrencyCode().get()),
                     dataModel.getTradeCurrencyCode()));
@@ -338,8 +339,8 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
                                 double priceAsDouble = ParsingUtils.parseNumberStringToDouble(price.get());
                                 double relation = priceAsDouble / marketPriceAsDouble;
                                 final OfferPayload.Direction compareDirection = CurrencyUtil.isCryptoCurrency(currencyCode) ?
-                                        OfferPayload.Direction.SELL :
-                                        OfferPayload.Direction.BUY;
+                                        OfferPayloadI.Direction.SELL :
+                                        OfferPayloadI.Direction.BUY;
                                 double percentage = dataModel.getDirection() == compareDirection ? 1 - relation : relation - 1;
                                 percentage = MathUtils.roundDouble(percentage, 4);
                                 dataModel.setMarketPriceMargin(percentage);
@@ -374,8 +375,8 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
                                 double marketPriceAsDouble = marketPrice.getPrice();
                                 final boolean isCryptoCurrency = CurrencyUtil.isCryptoCurrency(currencyCode);
                                 final OfferPayload.Direction compareDirection = isCryptoCurrency ?
-                                        OfferPayload.Direction.SELL :
-                                        OfferPayload.Direction.BUY;
+                                        OfferPayloadI.Direction.SELL :
+                                        OfferPayloadI.Direction.BUY;
                                 double factor = dataModel.getDirection() == compareDirection ?
                                         1 - percentage :
                                         1 + percentage;
@@ -590,7 +591,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
         btcValidator.setMaxTradeLimit(Coin.valueOf(dataModel.getMaxTradeLimit()));
         btcValidator.setMinValue(Restrictions.getMinTradeAmount());
 
-        final boolean isBuy = dataModel.getDirection() == OfferPayload.Direction.BUY;
+        final boolean isBuy = dataModel.getDirection() == OfferPayloadI.Direction.BUY;
         amountDescription = Res.get("createOffer.amountPriceBox.amountDescription",
                 isBuy ? Res.get("shared.buy") : Res.get("shared.sell"));
 
@@ -983,7 +984,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
     }
 
     public boolean isSellOffer() {
-        return dataModel.getDirection() == OfferPayload.Direction.SELL;
+        return dataModel.getDirection() == OfferPayloadI.Direction.SELL;
     }
 
     public TradeCurrency getTradeCurrency() {

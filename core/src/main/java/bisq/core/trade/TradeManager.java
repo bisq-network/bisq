@@ -23,7 +23,7 @@ import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
-import bisq.core.offer.OfferPayload;
+import bisq.core.offer.OfferPayloadI;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.offer.availability.OfferAvailabilityModel;
@@ -706,7 +706,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         if (isMyOffer(offer))
             return offer.isBuyOffer();
         else
-            return offer.getDirection() == OfferPayload.Direction.SELL;
+            return offer.getDirection() == OfferPayloadI.Direction.SELL;
     }
 
     public Optional<Trade> getTradeById(String tradeId) {

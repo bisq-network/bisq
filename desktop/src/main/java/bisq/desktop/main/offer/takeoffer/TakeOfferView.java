@@ -52,7 +52,7 @@ import bisq.desktop.util.Transitions;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
-import bisq.core.offer.OfferPayload;
+import bisq.core.offer.OfferPayloadI;
 import bisq.core.payment.FasterPaymentsAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentMethod;
@@ -354,7 +354,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         model.initWithData(offer);
         priceAsPercentageInputBox.setVisible(offer.isUseMarketBasedPrice());
 
-        if (model.getOffer().getDirection() == OfferPayload.Direction.SELL) {
+        if (model.getOffer().getDirection() == OfferPayloadI.Direction.SELL) {
             takeOfferButton.setId("buy-button-big");
             takeOfferButton.updateText(Res.get("takeOffer.takeOfferButton", Res.get("shared.buy")));
             nextButton.setId("buy-button");

@@ -34,7 +34,7 @@ import bisq.core.locale.FiatCurrency;
 import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.offer.Offer;
-import bisq.core.offer.OfferPayload;
+import bisq.core.offer.OfferPayloadI;
 import bisq.core.payment.AssetAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentMethod;
@@ -187,14 +187,14 @@ public abstract class PaymentMethodForm {
                 Res.get("payment.maxPeriodAndLimitCrypto",
                         getTimeText(hours),
                         formatter.formatCoinWithCode(Coin.valueOf(accountAgeWitnessService.getMyTradeLimit(
-                                paymentAccount, tradeCurrency.getCode(), OfferPayload.Direction.BUY))))
+                                paymentAccount, tradeCurrency.getCode(), OfferPayloadI.Direction.BUY))))
                 :
                 Res.get("payment.maxPeriodAndLimit",
                         getTimeText(hours),
                         formatter.formatCoinWithCode(Coin.valueOf(accountAgeWitnessService.getMyTradeLimit(
-                                paymentAccount, tradeCurrency.getCode(), OfferPayload.Direction.BUY))),
+                                paymentAccount, tradeCurrency.getCode(), OfferPayloadI.Direction.BUY))),
                         formatter.formatCoinWithCode(Coin.valueOf(accountAgeWitnessService.getMyTradeLimit(
-                                paymentAccount, tradeCurrency.getCode(), OfferPayload.Direction.SELL))),
+                                paymentAccount, tradeCurrency.getCode(), OfferPayloadI.Direction.SELL))),
                         DisplayUtils.formatAccountAge(accountAge));
         return limitationsText;
     }

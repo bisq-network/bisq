@@ -55,6 +55,7 @@ import bisq.core.monetary.Price;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferFilter;
 import bisq.core.offer.OfferPayload;
+import bisq.core.offer.OfferPayloadI;
 import bisq.core.offer.OfferRestrictions;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentMethod;
@@ -265,7 +266,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
             if (price2 == null || price1 == null) {
                 return 0;
             }
-            if (model.getDirection() == OfferPayload.Direction.SELL) {
+            if (model.getDirection() == OfferPayloadI.Direction.SELL) {
                 return price1.compareTo(price2);
             } else {
                 return price2.compareTo(price1);
@@ -277,7 +278,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         paymentMethodColumn.setComparator(Comparator.comparing(o -> Res.get(o.getOffer().getPaymentMethod().getId())));
         avatarColumn.setComparator(Comparator.comparing(o -> model.getNumTrades(o.getOffer())));
         depositColumn.setComparator(Comparator.comparing(item -> {
-            boolean isSellOffer = item.getOffer().getDirection() == OfferPayload.Direction.SELL;
+            boolean isSellOffer = item.getOffer().getDirection() == OfferPayloadI.Direction.SELL;
             Coin deposit = isSellOffer ?
                     item.getOffer().getBuyerSecurityDeposit() :
                     item.getOffer().getSellerSecurityDeposit();
@@ -314,7 +315,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     protected void activate() {
         currencyComboBox.setCellFactory(GUIUtil.getTradeCurrencyCellFactory(Res.get("shared.oneOffer"),
                 Res.get("shared.multipleOffers"),
-                (model.getDirection() == OfferPayload.Direction.BUY ? model.getSellOfferCounts() : model.getBuyOfferCounts())));
+                (model.getDirection() == OfferPayloadI.Direction.BUY ? model.getSellOfferCounts() : model.getBuyOfferCounts())));
 
         currencyComboBox.setConverter(new CurrencyStringConverter(currencyComboBox));
         currencyComboBox.getEditor().getStyleClass().add("combo-box-editor-bold");
@@ -541,9 +542,9 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         ImageView iconView = new ImageView();
 
         createOfferButton.setGraphic(iconView);
-        iconView.setId(direction == OfferPayload.Direction.SELL ? "image-sell-white" : "image-buy-white");
-        createOfferButton.setId(direction == OfferPayload.Direction.SELL ? "sell-button-big" : "buy-button-big");
-        avatarColumn.setTitle(direction == OfferPayload.Direction.SELL ? Res.get("shared.buyerUpperCase") : Res.get("shared.sellerUpperCase"));
+        iconView.setId(direction == OfferPayloadI.Direction.SELL ? "image-sell-white" : "image-buy-white");
+        createOfferButton.setId(direction == OfferPayloadI.Direction.SELL ? "sell-button-big" : "buy-button-big");
+        avatarColumn.setTitle(direction == OfferPayloadI.Direction.SELL ? Res.get("shared.buyerUpperCase") : Res.get("shared.sellerUpperCase"));
         setDirectionTitles();
     }
 
@@ -555,19 +556,19 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
             String code = selectedTradeCurrency.getCode();
 
             if (model.showAllTradeCurrenciesProperty.get()) {
-                offerButtonText = direction == OfferPayload.Direction.BUY ?
+                offerButtonText = direction == OfferPayloadI.Direction.BUY ?
                         Res.get("offerbook.createOfferToBuy",
                                 Res.getBaseCurrencyCode()) :
                         Res.get("offerbook.createOfferToSell",
                                 Res.getBaseCurrencyCode());
             } else if (selectedTradeCurrency instanceof FiatCurrency) {
-                offerButtonText = direction == OfferPayload.Direction.BUY ?
+                offerButtonText = direction == OfferPayloadI.Direction.BUY ?
                         Res.get("offerbook.createOfferToBuy.withFiat",
                                 Res.getBaseCurrencyCode(), code) :
                         Res.get("offerbook.createOfferToSell.forFiat", Res.getBaseCurrencyCode(), code);
 
             } else {
-                offerButtonText = direction == OfferPayload.Direction.BUY ?
+                offerButtonText = direction == OfferPayloadI.Direction.BUY ?
                         Res.get("offerbook.createOfferToBuy.withCrypto",
                                 code, Res.getBaseCurrencyCode()) :
                         Res.get("offerbook.createOfferToSell.forCrypto", code, Res.getBaseCurrencyCode());
@@ -673,7 +674,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
     private void onTakeOffer(Offer offer) {
         if (model.canCreateOrTakeOffer()) {
-            if (offer.getDirection() == OfferPayload.Direction.SELL &&
+            if (offer.getDirection() == OfferPayloadI.Direction.SELL &&
                     offer.getPaymentMethod().getId().equals(PaymentMethod.CASH_DEPOSIT.getId())) {
                 new Popup().confirmation(Res.get("popup.info.cashDepositInfo", offer.getBankId()))
                         .actionButtonText(Res.get("popup.info.cashDepositInfo.confirm"))
@@ -981,7 +982,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                             public void updateItem(final OfferBookListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
-                                    var isSellOffer = item.getOffer().getDirection() == OfferPayload.Direction.SELL;
+                                    var isSellOffer = item.getOffer().getDirection() == OfferPayloadI.Direction.SELL;
                                     var deposit = isSellOffer ? item.getOffer().getBuyerSecurityDeposit() :
                                             item.getOffer().getSellerSecurityDeposit();
                                     if (deposit == null) {
@@ -1070,7 +1071,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                         button.setStyle(CssTheme.isDarkTheme() ? "-fx-text-fill: white" : "-fx-text-fill: #444444");
                                         button.setOnAction(e -> onRemoveOpenOffer(offer));
                                     } else {
-                                        boolean isSellOffer = offer.getDirection() == OfferPayload.Direction.SELL;
+                                        boolean isSellOffer = offer.getDirection() == OfferPayloadI.Direction.SELL;
                                         iconView.setId(isSellOffer ? "image-buy-white" : "image-sell-white");
                                         button.setId(isSellOffer ? "buy-button" : "sell-button");
                                         button.setStyle("-fx-text-fill: white");

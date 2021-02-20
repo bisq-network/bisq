@@ -128,7 +128,7 @@ public class TriggerPriceService {
         }
 
         OfferPayload.Direction direction = openOffer.getOffer().getDirection();
-        boolean isSellOffer = direction == OfferPayload.Direction.SELL;
+        boolean isSellOffer = direction == OfferPayloadI.Direction.SELL;
         boolean condition = isSellOffer && !cryptoCurrency || !isSellOffer && cryptoCurrency;
         return condition ?
                 marketPriceAsLong < triggerPrice :
@@ -158,8 +158,10 @@ public class TriggerPriceService {
             });
         } else if (openOffer.getState() == OpenOffer.State.AVAILABLE) {
             // check the mempool if it has not been done before
-            if (openOffer.getMempoolStatus() < 0 && mempoolService.canRequestBeMade(openOffer.getOffer().getOfferPayload())) {
-                mempoolService.validateOfferMakerTx(openOffer.getOffer().getOfferPayload(), (txValidator -> {
+            var offerPayload = openOffer.getOffer().getOfferPayloadI();
+            if (openOffer.getMempoolStatus() < 0 && offerPayload instanceof OfferPayload  &&
+                    mempoolService.canRequestBeMade((OfferPayload) offerPayload)) {
+                mempoolService.validateOfferMakerTx((OfferPayload) offerPayload, (txValidator -> {
                     openOffer.setMempoolStatus(txValidator.isFail() ? 0 : 1);
                 }));
             }

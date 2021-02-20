@@ -24,6 +24,7 @@ import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
+import bisq.core.offer.OfferPayloadI;
 import bisq.core.offer.OfferRestrictions;
 import bisq.core.payment.AssetAccount;
 import bisq.core.payment.ChargeBackRisk;
@@ -425,7 +426,7 @@ public class AccountAgeWitnessService {
                                PaymentMethod paymentMethod) {
         if (CurrencyUtil.isCryptoCurrency(currencyCode) ||
                 !PaymentMethod.hasChargebackRisk(paymentMethod, currencyCode) ||
-                direction == OfferPayload.Direction.SELL) {
+                direction == OfferPayloadI.Direction.SELL) {
             return maxTradeLimit.value;
         }
 

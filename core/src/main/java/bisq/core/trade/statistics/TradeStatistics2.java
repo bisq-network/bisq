@@ -23,6 +23,7 @@ import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
+import bisq.core.offer.OfferPayloadI;
 import bisq.core.trade.Trade;
 import bisq.core.util.VolumeUtil;
 
@@ -60,6 +61,7 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
@@ -93,7 +95,10 @@ public final class TradeStatistics2 implements ProcessOncePersistableNetworkPayl
         Offer offer = trade.getOffer();
         checkNotNull(offer, "offer must not ne null");
         checkNotNull(trade.getTradeAmount(), "trade.getTradeAmount() must not ne null");
-        return new TradeStatistics2(offer.getOfferPayload(),
+        checkArgument(offer.getOfferPayloadI() instanceof OfferPayload,
+                "OfferPayloadI must be of type OfferPayload");
+        var offerPayload = (OfferPayload) offer.getOfferPayloadI();
+        return new TradeStatistics2(offerPayload,
                 trade.getTradePrice(),
                 trade.getTradeAmount(),
                 trade.getDate(),
@@ -209,7 +214,7 @@ public final class TradeStatistics2 implements ProcessOncePersistableNetworkPayl
 
     private protobuf.TradeStatistics2.Builder getBuilder() {
         final protobuf.TradeStatistics2.Builder builder = protobuf.TradeStatistics2.newBuilder()
-                .setDirection(OfferPayload.Direction.toProtoMessage(direction))
+                .setDirection(OfferPayloadI.Direction.toProtoMessage(direction))
                 .setBaseCurrency(baseCurrency)
                 .setCounterCurrency(counterCurrency)
                 .setPaymentMethodId(offerPaymentMethod)
@@ -239,7 +244,7 @@ public final class TradeStatistics2 implements ProcessOncePersistableNetworkPayl
 
     public static TradeStatistics2 fromProto(protobuf.TradeStatistics2 proto) {
         return new TradeStatistics2(
-                OfferPayload.Direction.fromProto(proto.getDirection()),
+                OfferPayloadI.Direction.fromProto(proto.getDirection()),
                 proto.getBaseCurrency(),
                 proto.getCounterCurrency(),
                 proto.getPaymentMethodId(),

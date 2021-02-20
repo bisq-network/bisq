@@ -34,7 +34,7 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.dao.DaoFacade;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
-import bisq.core.offer.OfferPayload;
+import bisq.core.offer.OfferPayloadI;
 import bisq.core.offer.OfferUtil;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.support.SupportType;
@@ -534,7 +534,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
             Dispute dispute = new Dispute(new Date().getTime(),
                     trade.getId(),
                     pubKeyRing.hashCode(), // traderId
-                    (offer.getDirection() == OfferPayload.Direction.BUY) == isMaker,
+                    (offer.getDirection() == OfferPayloadI.Direction.BUY) == isMaker,
                     isMaker,
                     pubKeyRing,
                     trade.getDate().getTime(),
@@ -595,7 +595,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
             Dispute dispute = new Dispute(new Date().getTime(),
                     trade.getId(),
                     pubKeyRing.hashCode(), // traderId
-                    (offer.getDirection() == OfferPayload.Direction.BUY) == isMaker,
+                    (offer.getDirection() == OfferPayloadI.Direction.BUY) == isMaker,
                     isMaker,
                     pubKeyRing,
                     trade.getDate().getTime(),
