@@ -27,6 +27,7 @@ import joptsimple.OptionSpec;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintStream;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -35,6 +36,7 @@ import javax.annotation.Nullable;
 import static java.lang.System.err;
 import static java.lang.System.exit;
 import static java.lang.System.getProperty;
+import static java.lang.System.out;
 
 @Slf4j
 public class BotScriptGenerator {
@@ -56,6 +58,8 @@ public class BotScriptGenerator {
 
     public BotScriptGenerator(String[] args) {
         OptionParser parser = new OptionParser();
+        var helpOpt = parser.accepts("help", "Print this help text.")
+                .forHelp();
         OptionSpec<Boolean> useTestHarnessOpt = parser
                 .accepts("use-testharness", "Use the test harness, or manually start your own nodes.")
                 .withRequiredArg()
@@ -107,8 +111,14 @@ public class BotScriptGenerator {
                 .defaultsTo(true);
         OptionSet options = parser.parse(args);
 
+        if (options.has(helpOpt)) {
+            printHelp(parser, out);
+            exit(0);
+        }
+
         if (!options.has(actionsOpt)) {
-            usageError(parser);
+            printHelp(parser, err);
+            exit(1);
         }
 
         this.useTestHarness = options.has(useTestHarnessOpt) ? options.valueOf(useTestHarnessOpt) : true;
@@ -133,7 +143,8 @@ public class BotScriptGenerator {
                     + " a country based F2F account using the country-code.");
             log.error("If both are present, the bot-payment-method will take precedence.  "
                     + "Currently, only the CLEAR_X_CHANGE_ID bot-payment-method is supported.");
-            usageError(parser);
+            printHelp(parser, err);
+            exit(1);
         }
 
         var noPaymentAccountIdOrApiPortForCliScripts = !useTestHarness &&
@@ -145,25 +156,25 @@ public class BotScriptGenerator {
             log.error(" \t\t(2) --payment-account-for-bot=<payment-account-id>");
             log.error(" \t\t(3) --payment-account-for-cli-scripts=<payment-account-id>");
             log.error("These will be used by the bot and in CLI scripts the bot will generate when creating an offer.");
-            usageError(parser);
+            printHelp(parser, err);
+            exit(1);
         }
     }
 
-    private void usageError(OptionParser parser) {
+    private void printHelp(OptionParser parser, PrintStream stream) {
         try {
             String usage = "Examples\n--------\n"
                     + examplesUsingTestHarness()
                     + examplesNotUsingTestHarness();
-            err.println();
+            stream.println();
             parser.formatHelpWith(new HelpFormatter());
-            parser.printHelpOn(err);
-            err.println();
-            err.println(usage);
-            err.println();
+            parser.printHelpOn(stream);
+            stream.println();
+            stream.println(usage);
+            stream.println();
         } catch (IOException ex) {
             log.error("", ex);
         }
-        exit(1);
     }
 
     private String examplesUsingTestHarness() {
