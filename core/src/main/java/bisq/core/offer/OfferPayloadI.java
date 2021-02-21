@@ -24,9 +24,13 @@ import bisq.network.p2p.storage.payload.RequiresOwnerIsOnlinePayload;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.proto.ProtoUtil;
 
+import java.util.concurrent.TimeUnit;
+
 import javax.annotation.Nullable;
 
 public abstract class OfferPayloadI implements ProtectedStoragePayload, ExpirablePayload, RequiresOwnerIsOnlinePayload {
+
+    public static final long TTL = TimeUnit.MINUTES.toMillis(9);
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Enum

@@ -134,11 +134,20 @@ public class Offer implements NetworkPayload, PersistablePayload {
             return protobuf.Offer.newBuilder().setOfferPayload(((OfferPayload) offerPayloadI)
                     .toProtoMessage().getOfferPayload()).build();
         }
+        if (offerPayloadI instanceof AtomicOfferPayload) {
+            return protobuf.Offer.newBuilder().setOfferPayload(((AtomicOfferPayload) offerPayloadI)
+                    .toProtoMessage().getOfferPayload()).build();
+        }
         return null;
     }
 
     public static Offer fromProto(protobuf.Offer proto) {
-        return new Offer(OfferPayload.fromProto(proto.getOfferPayload()));
+        if (proto.hasOfferPayload()) {
+            return new Offer(OfferPayload.fromProto(proto.getOfferPayload()));
+        } else if (proto.hasAtomicOfferPayload()) {
+            return new Offer(AtomicOfferPayload.fromProto(proto.getAtomicOfferPayload()));
+        }
+        return null;
     }
 
 

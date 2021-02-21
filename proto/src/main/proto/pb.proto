@@ -546,6 +546,7 @@ message StoragePayload {
         OfferPayload offer_payload = 7;
         TempProposalPayload temp_proposal_payload = 8;
         RefundAgent refund_agent = 9;
+        AtomicOfferPayload atomic_offer_payload = 10;
     }
 }
 
@@ -790,6 +791,20 @@ message OfferPayload {
     string hash_of_challenge = 36;
     map<string, string> extra_data = 37;
     int32 protocol_version = 38;
+}
+
+enum OfferDirection {
+    OFFER_DIRECTION_ERROR = 0;
+    BUY = 1;
+    SELL = 2;
+}
+
+message AtomicOfferPayload {
+    string id = 1;
+    int64 date = 2;
+    NodeAddress owner_node_address = 3;
+    PubKeyRing pub_key_ring = 4;
+    OfferDirection direction = 5;
 }
 
 message AccountAgeWitness {
@@ -1436,7 +1451,10 @@ message Offer {
         MAKER_OFFLINE = 6;
     }
 
-    OfferPayload offer_payload = 1;
+    oneof message {
+        OfferPayload offer_payload = 1;
+        AtomicOfferPayload atomic_offer_payload = 2;
+    }
 }
 
 message OpenOffer {

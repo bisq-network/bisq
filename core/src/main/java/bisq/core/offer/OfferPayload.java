@@ -34,7 +34,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import lombok.EqualsAndHashCode;
@@ -50,12 +49,10 @@ import static com.google.common.base.Preconditions.checkNotNull;
 // OfferPayload has about 1.4 kb. We should look into options to make it smaller but will be hard to do it in a
 // backward compatible way. Maybe a candidate when segwit activation is done as hardfork?
 
-@EqualsAndHashCode
+@EqualsAndHashCode(callSuper = true)
 @Getter
 @Slf4j
 public final class OfferPayload extends OfferPayloadI {
-    public static final long TTL = TimeUnit.MINUTES.toMillis(9);
-
     // Keys for extra map
     // Only set for fiat offers
     public static final String ACCOUNT_AGE_WITNESS_HASH = "accountAgeWitnessHash";
