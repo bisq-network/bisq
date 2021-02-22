@@ -53,6 +53,14 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Getter
 @Slf4j
 public final class OfferPayload extends OfferPayloadI {
+    public static Direction fromProto(protobuf.OfferPayload.Direction direction) {
+        return ProtoUtil.enumFromProto(OfferPayload.Direction.class, direction.name());
+    }
+
+    public static protobuf.OfferPayload.Direction toProtoMessage(Direction direction) {
+        return protobuf.OfferPayload.Direction.valueOf(direction.name());
+    }
+
     // Keys for extra map
     // Only set for fiat offers
     public static final String ACCOUNT_AGE_WITNESS_HASH = "accountAgeWitnessHash";
@@ -263,7 +271,7 @@ public final class OfferPayload extends OfferPayloadI {
                 .setDate(date)
                 .setOwnerNodeAddress(ownerNodeAddress.toProtoMessage())
                 .setPubKeyRing(pubKeyRing.toProtoMessage())
-                .setDirection(Direction.toProtoMessage(direction))
+                .setDirection(toProtoMessage(direction))
                 .setPrice(price)
                 .setMarketPriceMargin(marketPriceMargin)
                 .setUseMarketBasedPrice(useMarketBasedPrice)
@@ -322,7 +330,7 @@ public final class OfferPayload extends OfferPayloadI {
                 proto.getDate(),
                 NodeAddress.fromProto(proto.getOwnerNodeAddress()),
                 PubKeyRing.fromProto(proto.getPubKeyRing()),
-                OfferPayloadI.Direction.fromProto(proto.getDirection()),
+                fromProto(proto.getDirection()),
                 proto.getPrice(),
                 proto.getMarketPriceMargin(),
                 proto.getUseMarketBasedPrice(),

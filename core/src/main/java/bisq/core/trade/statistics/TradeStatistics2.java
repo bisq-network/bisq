@@ -23,7 +23,6 @@ import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
-import bisq.core.offer.OfferPayloadI;
 import bisq.core.trade.Trade;
 import bisq.core.util.VolumeUtil;
 
@@ -214,7 +213,7 @@ public final class TradeStatistics2 implements ProcessOncePersistableNetworkPayl
 
     private protobuf.TradeStatistics2.Builder getBuilder() {
         final protobuf.TradeStatistics2.Builder builder = protobuf.TradeStatistics2.newBuilder()
-                .setDirection(OfferPayloadI.Direction.toProtoMessage(direction))
+                .setDirection(OfferPayload.toProtoMessage(direction))
                 .setBaseCurrency(baseCurrency)
                 .setCounterCurrency(counterCurrency)
                 .setPaymentMethodId(offerPaymentMethod)
@@ -244,7 +243,7 @@ public final class TradeStatistics2 implements ProcessOncePersistableNetworkPayl
 
     public static TradeStatistics2 fromProto(protobuf.TradeStatistics2 proto) {
         return new TradeStatistics2(
-                OfferPayloadI.Direction.fromProto(proto.getDirection()),
+                OfferPayload.fromProto(proto.getDirection()),
                 proto.getBaseCurrency(),
                 proto.getCounterCurrency(),
                 proto.getPaymentMethodId(),
