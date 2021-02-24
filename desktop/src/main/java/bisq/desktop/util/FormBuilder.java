@@ -1519,6 +1519,15 @@ public class FormBuilder {
         return addTopLabelTextFieldWithCopyIcon(gridPane, rowIndex, colIndex, title, value, -Layout.FLOATING_LABEL_DISTANCE);
     }
 
+    public static Tuple2<Label, TextFieldWithCopyIcon> addCompactTopLabelTextFieldWithCopyIcon(GridPane gridPane,
+                                                                                               int rowIndex,
+                                                                                               int colIndex,
+                                                                                               String title,
+                                                                                               String value,
+                                                                                               boolean withoutBeforeSlash) {
+        return addTopLabelTextFieldWithCopyIcon(gridPane, rowIndex, colIndex, title, value, -Layout.FLOATING_LABEL_DISTANCE, withoutBeforeSlash);
+    }
+
     public static Tuple2<Label, TextFieldWithCopyIcon> addTopLabelTextFieldWithCopyIcon(GridPane gridPane,
                                                                                         int rowIndex,
                                                                                         String title,
@@ -1544,6 +1553,25 @@ public class FormBuilder {
         textFieldWithCopyIcon.setText(value);
 
         final Tuple2<Label, VBox> topLabelWithVBox = addTopLabelWithVBox(gridPane, rowIndex, title, textFieldWithCopyIcon, top);
+
+        return new Tuple2<>(topLabelWithVBox.first, textFieldWithCopyIcon);
+    }
+
+    public static Tuple2<Label, TextFieldWithCopyIcon> addTopLabelTextFieldWithCopyIcon(GridPane gridPane,
+                                                                                        int rowIndex,
+                                                                                        int colIndex,
+                                                                                        String title,
+                                                                                        String value,
+                                                                                        double top,
+                                                                                        boolean withoutBeforeSlash) {
+
+        TextFieldWithCopyIcon textFieldWithCopyIcon = new TextFieldWithCopyIcon();
+        textFieldWithCopyIcon.setText(value);
+        textFieldWithCopyIcon.setCopyWithoutBeforeSlash(true);
+
+        final Tuple2<Label, VBox> topLabelWithVBox = addTopLabelWithVBox(gridPane, rowIndex, title, textFieldWithCopyIcon, top);
+        topLabelWithVBox.second.setAlignment(Pos.TOP_LEFT);
+        GridPane.setColumnIndex(topLabelWithVBox.second, colIndex);
 
         return new Tuple2<>(topLabelWithVBox.first, textFieldWithCopyIcon);
     }
