@@ -84,16 +84,16 @@ import javafx.geometry.Insets;
 import javafx.beans.binding.Bindings;
 import javafx.beans.value.ChangeListener;
 
+import java.time.Instant;
+
 import java.util.Date;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.desktop.util.FormBuilder.add2ButtonsWithBox;
-import static bisq.desktop.util.FormBuilder.addConfirmationLabelLabel;
-import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
-import static bisq.desktop.util.FormBuilder.addTopLabelWithVBox;
+import static bisq.desktop.util.FormBuilder.*;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -104,6 +104,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     private final TradeWalletService tradeWalletService;
     private final BtcWalletService btcWalletService;
     private final TxFeeEstimationService txFeeEstimationService;
+    // PR5160 will add private final MempoolService mempoolService;
     private final DaoFacade daoFacade;
     private Dispute dispute;
     private Optional<Runnable> finalizeDisputeHandlerOptional = Optional.empty();
@@ -120,6 +121,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     // Dispute object of other trade peer. The dispute field is the one from which we opened the close dispute window.
     private Optional<Dispute> peersDisputeOptional;
     private String role;
+    private Label delayedPayoutTxStatus;
     private TextArea summaryNotesTextArea;
 
     private ChangeListener<Boolean> customRadioButtonSelectedListener;
@@ -141,6 +143,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                                 TradeWalletService tradeWalletService,
                                 BtcWalletService btcWalletService,
                                 TxFeeEstimationService txFeeEstimationService,
+                                // PR5160 will add MempoolService mempoolService,
                                 DaoFacade daoFacade) {
 
         this.formatter = formatter;
@@ -149,6 +152,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         this.tradeWalletService = tradeWalletService;
         this.btcWalletService = btcWalletService;
         this.txFeeEstimationService = txFeeEstimationService;
+        // PR5160 will add this.mempoolService = mempoolService;
         this.daoFacade = daoFacade;
 
         type = Type.Confirmation;
@@ -161,6 +165,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         width = 1150;
         createGridPane();
         addContent();
+        checkDelayedPayoutTransaction();
         display();
 
         if (DevEnv.isDevMode()) {
@@ -169,12 +174,6 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
             });
         }
     }
-
-    public DisputeSummaryWindow onFinalizeDispute(Runnable finalizeDisputeHandler) {
-        this.finalizeDisputeHandlerOptional = Optional.of(finalizeDisputeHandler);
-        return this;
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Protected
@@ -288,17 +287,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         addConfirmationLabelLabel(gridPane, rowIndex, Res.get("shared.tradeId"), dispute.getShortTradeId(),
                 Layout.TWICE_FIRST_ROW_DISTANCE);
         addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("disputeSummaryWindow.openDate"), DisplayUtils.formatDateTime(dispute.getOpeningDate()));
-        if (dispute.isDisputeOpenerIsMaker()) {
-            if (dispute.isDisputeOpenerIsBuyer())
-                role = Res.get("support.buyerOfferer");
-            else
-                role = Res.get("support.sellerOfferer");
-        } else {
-            if (dispute.isDisputeOpenerIsBuyer())
-                role = Res.get("support.buyerTaker");
-            else
-                role = Res.get("support.sellerTaker");
-        }
+        role = dispute.getRoleString();
         addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("disputeSummaryWindow.role"), role);
         addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("shared.tradeAmount"),
                 formatter.formatCoinWithCode(contract.getTradeAmount()));
@@ -314,6 +303,26 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                 " " +
                 formatter.formatCoinWithCode(contract.getOfferPayload().getSellerSecurityDeposit());
         addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("shared.securityDeposit"), securityDeposit);
+
+        boolean isMediationDispute = getDisputeManager(dispute) instanceof MediationManager;
+        if (isMediationDispute) {
+            if (dispute.getTradePeriodEnd().getTime() > 0) {
+                String status = DisplayUtils.formatDateTime(dispute.getTradePeriodEnd());
+                Label tpe = addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("disputeSummaryWindow.tradePeriodEnd"), status).second;
+                if (dispute.getTradePeriodEnd().toInstant().isAfter(Instant.now())) {
+                    tpe.getStyleClass().add("version-new"); // highlight field when the trade period is still active
+                }
+            }
+            if (dispute.getExtraDataMap() != null && dispute.getExtraDataMap().size() > 0) {
+                String extraDataSummary = "";
+                for (Map.Entry<String, String> entry : dispute.getExtraDataMap().entrySet()) {
+                    extraDataSummary += "[" + entry.getKey() + ":" + entry.getValue() + "] ";
+                }
+                addConfirmationLabelLabelWithCopyIcon(gridPane, ++rowIndex, Res.get("disputeSummaryWindow.extraInfo"), extraDataSummary);
+            }
+        } else { // it is arbitration, show the delayed payout status
+            delayedPayoutTxStatus = addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("disputeSummaryWindow.delayedPayoutStatus"), "Checking...").second;
+        }
     }
 
     private void addTradeAmountPayoutControls() {
@@ -639,6 +648,10 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         Button cancelButton = tuple.second;
 
         closeTicketButton.setOnAction(e -> {
+            if (dispute.getPayoutTxConfirms() == 0) {
+                log.warn("dispute payout tx is not confirmed");
+                return;
+            }
             if (dispute.getDepositTxSerialized() == null) {
                 log.warn("dispute.getDepositTxSerialized is null");
                 return;
@@ -812,7 +825,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         disputeResult.setLoserPublisher(isLoserPublisherCheckBox.isSelected());
         disputeResult.setCloseDate(new Date());
         dispute.setDisputeResult(disputeResult);
-        dispute.setIsClosed(true);
+        dispute.setIsClosed();
         DisputeResult.Reason reason = disputeResult.getReason();
 
         summaryNotesTextArea.textProperty().unbindBidirectional(disputeResult.summaryNotesProperty());
@@ -968,6 +981,33 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
             sellerGetsAllRadioButton.setSelected(true);
         } else {
             customRadioButton.setSelected(true);
+        }
+    }
+
+    private void checkDelayedPayoutTransaction() {
+        if (dispute.getDelayedPayoutTxId() == null)
+            return;
+        if (dispute.getPayoutTxConfirms() < 1) {
+            log.warn("TODO: // PR5160 will add Mempool check of DelayedPayoutTxId");
+/*
+            mempoolService.checkTxIsConfirmed(dispute.getDelayedPayoutTxId(), (status -> {
+                log.warn("Mempool check confirmation status of DelayedPayoutTxId returned: [{}]", status);
+                dispute.setPayoutTxConfirms(status);
+                displayPayoutStatus(status);
+            }));
+*/
+        }
+        displayPayoutStatus(dispute.getPayoutTxConfirms());
+    }
+
+    private void displayPayoutStatus(long nConfirmStatus) {
+        if (delayedPayoutTxStatus != null) {
+            String status = Res.get("confidence.unknown");
+            if (nConfirmStatus == 0)
+                status = Res.get("confidence.seen", 1);
+            else if (nConfirmStatus > 0)
+                status = Res.get("confidence.confirmed", nConfirmStatus);
+            delayedPayoutTxStatus.setText(status);
         }
     }
 }

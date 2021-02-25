@@ -537,6 +537,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                     isMaker,
                     pubKeyRing,
                     trade.getDate().getTime(),
+                    trade.getMaxTradePeriodDate().getTime(),
                     trade.getContract(),
                     trade.getContractHash(),
                     depositTxSerialized,
@@ -549,6 +550,8 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                     mediatorPubKeyRing,
                     isSupportTicket,
                     SupportType.MEDIATION);
+            dispute.setExtraData("counterCurrencyTxId", trade.getCounterCurrencyTxId());
+            dispute.setExtraData("counterCurrencyExtraData", trade.getCounterCurrencyExtraData());
 
             dispute.setDonationAddressOfDelayedPayoutTx(donationAddressString.get());
             if (delayedPayoutTx != null) {
@@ -598,6 +601,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                     isMaker,
                     pubKeyRing,
                     trade.getDate().getTime(),
+                    trade.getMaxTradePeriodDate().getTime(),
                     trade.getContract(),
                     trade.getContractHash(),
                     depositTxSerialized,
@@ -610,6 +614,8 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                     refundAgentPubKeyRing,
                     isSupportTicket,
                     SupportType.REFUND);
+            dispute.setExtraData("counterCurrencyTxId", trade.getCounterCurrencyTxId());
+            dispute.setExtraData("counterCurrencyExtraData", trade.getCounterCurrencyExtraData());
 
             String tradeId = dispute.getTradeId();
             mediationManager.findDispute(tradeId)
