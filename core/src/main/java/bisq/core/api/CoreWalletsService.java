@@ -313,6 +313,9 @@ class CoreWalletsService {
     void setTxFeeRatePreference(long txFeeRate,
                                 ResultHandler resultHandler) {
         long minFeePerVbyte = BTC_DAO_REGTEST.getDefaultMinFeePerVbyte();
+        // TODO Replace line above with line below, after commit
+        //  c33ac1b9834fb9f7f14e553d09776f94efc9d13d is merged.
+        // long minFeePerVbyte = feeService.getMinFeePerVByte();
         if (txFeeRate < minFeePerVbyte)
             throw new IllegalStateException(
                     format("tx fee rate preference must be >= %d sats/byte", minFeePerVbyte));
