@@ -102,7 +102,7 @@ public class FeeRateServiceTest {
         assertNotEquals(0L, retrievedData.get("bitcoinFeesTs"));
 
         Map<String, String> retrievedDataMap = (Map<String, String>) retrievedData.get("dataMap");
-        assertEquals(1, retrievedDataMap.size());
+        assertEquals(2, retrievedDataMap.size());
         assertEquals(expectedFeeRate, retrievedDataMap.get("btcTxFee"));
     }
 }

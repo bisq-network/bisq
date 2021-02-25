@@ -24,11 +24,13 @@ public class FeeRate {
 
     private final String currency;
     private final long price;
+    private final long minimumFee;
     private final long timestamp;
 
-    public FeeRate(String currency, long price, long timestamp) {
+    public FeeRate(String currency, long price, long minimumFee, long timestamp) {
         this.currency = currency;
         this.price = price;
+        this.minimumFee = minimumFee;
         this.timestamp = timestamp;
     }
 
@@ -38,6 +40,10 @@ public class FeeRate {
 
     public long getPrice() {
         return price;
+    }
+
+    public long getMinimumFee() {
+        return minimumFee;
     }
 
     public long getTimestamp() {
