@@ -17,6 +17,8 @@
 
 package bisq.price.mining;
 
+import bisq.common.config.Config;
+
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -90,11 +92,11 @@ class FeeRateService {
         // Prepare response: Add timestamp of now
         // Since this is an average, the timestamp is associated with when the moment in
         // time when the avg was computed
-        metadata.put("bitcoinFeesTs", Instant.now().getEpochSecond());
+        metadata.put(Config.BTC_FEES_TS, Instant.now().getEpochSecond());
 
         // Prepare response: Add the fee average
-        allFeeRates.put("btcTxFee", averageFeeRate);
-        allFeeRates.put("btcMinTxFee", averageMinFeeRate);
+        allFeeRates.put(Config.BTC_TX_FEE, averageFeeRate);
+        allFeeRates.put(Config.BTC_MIN_TX_FEE, averageMinFeeRate);
 
         // Build response
         return new HashMap<>() {{

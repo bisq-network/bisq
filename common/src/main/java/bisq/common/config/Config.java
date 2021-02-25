@@ -121,6 +121,9 @@ public class Config {
     public static final String API_PORT = "apiPort";
     public static final String PREVENT_PERIODIC_SHUTDOWN_AT_SEED_NODE = "preventPeriodicShutdownAtSeedNode";
     public static final String REPUBLISH_MAILBOX_ENTRIES = "republishMailboxEntries";
+    public static final String BTC_TX_FEE = "btcTxFee";
+    public static final String BTC_MIN_TX_FEE = "btcMinTxFee";
+    public static final String BTC_FEES_TS = "bitcoinFeesTs";
 
     // Default values for certain options
     public static final int UNSPECIFIED_PORT = -1;

@@ -52,18 +52,18 @@ public class FeeProvider extends HttpClientProvider {
 
         LinkedTreeMap<?, ?> linkedTreeMap = new Gson().fromJson(json, LinkedTreeMap.class);
         Map<String, Long> tsMap = new HashMap<>();
-        tsMap.put("bitcoinFeesTs", ((Double) linkedTreeMap.get("bitcoinFeesTs")).longValue());
+        tsMap.put(Config.BTC_FEES_TS, ((Double) linkedTreeMap.get(Config.BTC_FEES_TS)).longValue());
 
         Map<String, Long> map = new HashMap<>();
 
         try {
             LinkedTreeMap<?, ?> dataMap = (LinkedTreeMap<?, ?>) linkedTreeMap.get("dataMap");
-            Long btcTxFee = ((Double) dataMap.get("btcTxFee")).longValue();
-            Long btcMinTxFee = dataMap.get("btcMinTxFee") != null ?
-                    ((Double) dataMap.get("btcMinTxFee")).longValue() : Config.baseCurrencyNetwork().getDefaultMinFeePerVbyte();
+            Long btcTxFee = ((Double) dataMap.get(Config.BTC_TX_FEE)).longValue();
+            Long btcMinTxFee = dataMap.get(Config.BTC_MIN_TX_FEE) != null ?
+                    ((Double) dataMap.get(Config.BTC_MIN_TX_FEE)).longValue() : Config.baseCurrencyNetwork().getDefaultMinFeePerVbyte();
 
-            map.put("BTC", btcTxFee);
-            map.put("btcMinTxFee", btcMinTxFee);
+            map.put(Config.BTC_TX_FEE, btcTxFee);
+            map.put(Config.BTC_MIN_TX_FEE, btcMinTxFee);
         } catch (Throwable t) {
             log.error(t.toString());
             t.printStackTrace();
