@@ -2,6 +2,8 @@ package bisq.apitest.method.wallet;
 
 import bisq.core.api.model.TxFeeRateInfo;
 
+import io.grpc.StatusRuntimeException;
+
 import lombok.extern.slf4j.Slf4j;
 
 import org.junit.jupiter.api.AfterAll;
@@ -15,8 +17,11 @@ import org.junit.jupiter.api.TestMethodOrder;
 import static bisq.apitest.Scaffold.BitcoinCoreApp.bitcoind;
 import static bisq.apitest.config.BisqAppConfig.alicedaemon;
 import static bisq.apitest.config.BisqAppConfig.seednode;
+import static bisq.common.config.BaseCurrencyNetwork.BTC_DAO_REGTEST;
+import static java.lang.String.format;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 
@@ -50,17 +55,28 @@ public class BtcTxFeeRateTest extends MethodTest {
 
     @Test
     @Order(2)
-    public void testSetTxFeeRate(final TestInfo testInfo) {
-        TxFeeRateInfo txFeeRateInfo = setTxFeeRate(alicedaemon, 10);
-        log.debug("{} -> Fee rates with custom preference: {}", testName(testInfo), txFeeRateInfo);
-
-        assertTrue(txFeeRateInfo.isUseCustomTxFeeRate());
-        assertEquals(10, txFeeRateInfo.getCustomTxFeeRate());
-        assertTrue(txFeeRateInfo.getFeeServiceRate() > 0);
+    public void testSetInvalidTxFeeRateShouldThrowException(final TestInfo testInfo) {
+        Throwable exception = assertThrows(StatusRuntimeException.class, () ->
+                setTxFeeRate(alicedaemon, 10));
+        String expectedExceptionMessage =
+                format("UNKNOWN: tx fee rate preference must be >= %d sats/byte",
+                        BTC_DAO_REGTEST.getDefaultMinFeePerVbyte());
+        assertEquals(expectedExceptionMessage, exception.getMessage());
     }
 
     @Test
     @Order(3)
+    public void testSetValidTxFeeRate(final TestInfo testInfo) {
+        TxFeeRateInfo txFeeRateInfo = setTxFeeRate(alicedaemon, 15);
+        log.debug("{} -> Fee rates with custom preference: {}", testName(testInfo), txFeeRateInfo);
+
+        assertTrue(txFeeRateInfo.isUseCustomTxFeeRate());
+        assertEquals(15, txFeeRateInfo.getCustomTxFeeRate());
+        assertTrue(txFeeRateInfo.getFeeServiceRate() > 0);
+    }
+
+    @Test
+    @Order(4)
     public void testUnsetTxFeeRate(final TestInfo testInfo) {
         TxFeeRateInfo txFeeRateInfo = unsetTxFeeRate(alicedaemon);
         log.debug("{} -> Fee rate with no preference: {}", testName(testInfo), txFeeRateInfo);

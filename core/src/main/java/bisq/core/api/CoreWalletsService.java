@@ -79,6 +79,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
+import static bisq.common.config.BaseCurrencyNetwork.BTC_DAO_REGTEST;
 import static bisq.core.btc.wallet.Restrictions.getMinNonDustOutput;
 import static bisq.core.util.ParsingUtils.parseToCoin;
 import static java.lang.String.format;
@@ -311,8 +312,10 @@ class CoreWalletsService {
 
     void setTxFeeRatePreference(long txFeeRate,
                                 ResultHandler resultHandler) {
-        if (txFeeRate <= 0)
-            throw new IllegalStateException("cannot create transactions without fees");
+        long minFeePerVbyte = BTC_DAO_REGTEST.getDefaultMinFeePerVbyte();
+        if (txFeeRate < minFeePerVbyte)
+            throw new IllegalStateException(
+                    format("tx fee rate preference must be >= %d sats/byte", minFeePerVbyte));
 
         preferences.setUseCustomWithdrawalTxFee(true);
         Coin satsPerByte = Coin.valueOf(txFeeRate);
