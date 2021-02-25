@@ -164,6 +164,15 @@ If all was successful:
  Check the checkbox for update, set the version number (e.g. 0.9.4) and add the short version of the release notes.
  * After sending the Update message leave it running for about 1 minute to give time for good propagation.
  * Make a backup of that alert sender app data directory
+ * To support source code signature verification for Arch Linux download `Source code (tar.gz)`, sign it and
+ upload signature.
+```
+    # sign source code bundle
+    gpg --digest-algo SHA256 --local-user $BISQ_GPG_USER --output bisq-${NEW-VERSION}.tar.gz.asc --detach-sig --armor bisq-${NEW-VERSION}.tar.gz
+
+    # verify signature of source code bundle
+    gpg --digest-algo SHA256 --verify bisq-${NEW-VERSION}.tar.gz{.asc*,}
+```
 
 ### Announce the release
 
