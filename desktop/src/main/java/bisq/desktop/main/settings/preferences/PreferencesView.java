@@ -294,7 +294,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
                 String estimatedFee = String.valueOf(feeService.getTxFeePerVbyte().value);
                 try {
                     int withdrawalTxFeePerVbyte = Integer.parseInt(transactionFeeInputTextField.getText());
-                    final long minFeePerVbyte = Config.baseCurrencyNetwork().getDefaultMinFeePerVbyte();
+                    final long minFeePerVbyte = feeService.getMinFeePerVByte();
                     if (withdrawalTxFeePerVbyte < minFeePerVbyte) {
                         new Popup().warning(Res.get("setting.preferences.txFeeMin", minFeePerVbyte)).show();
                         transactionFeeInputTextField.setText(estimatedFee);

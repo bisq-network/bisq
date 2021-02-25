@@ -98,6 +98,7 @@ public class FeeService {
     private Map<String, Long> timeStampMap;
     @Getter
     private long lastRequest;
+    @Getter
     private long minFeePerVByte;
     private long epochInSecondAtLastRequest;
 
@@ -157,14 +158,15 @@ public class FeeService {
                         epochInSecondAtLastRequest = timeStampMap.get("bitcoinFeesTs");
                         final Map<String, Long> map = result.second;
                         txFeePerVbyte = map.get("BTC");
+                        minFeePerVByte = map.get("btcMinTxFee");
 
                         if (txFeePerVbyte < minFeePerVByte) {
-                            log.warn("The delivered fee per vbyte is smaller than the min. default fee of 5 sat/vbyte");
+                            log.warn("The delivered fee of {} sat/vbyte is smaller than the min. default fee of {} sat/vbyte", txFeePerVbyte, minFeePerVByte);
                             txFeePerVbyte = minFeePerVByte;
                         }
 
                         feeUpdateCounter.set(feeUpdateCounter.get() + 1);
-                        log.info("BTC tx fee: txFeePerVbyte={}", txFeePerVbyte);
+                        log.info("BTC tx fee: txFeePerVbyte={} minFeePerVbyte={}", txFeePerVbyte, minFeePerVByte);
                         if (resultHandler != null)
                             resultHandler.run();
                     });

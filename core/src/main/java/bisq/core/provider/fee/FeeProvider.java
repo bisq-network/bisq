@@ -24,6 +24,7 @@ import bisq.core.provider.ProvidersRepository;
 import bisq.network.http.HttpClient;
 
 import bisq.common.app.Version;
+import bisq.common.config.Config;
 import bisq.common.util.Tuple2;
 
 import com.google.gson.Gson;
@@ -58,8 +59,11 @@ public class FeeProvider extends HttpClientProvider {
         try {
             LinkedTreeMap<?, ?> dataMap = (LinkedTreeMap<?, ?>) linkedTreeMap.get("dataMap");
             Long btcTxFee = ((Double) dataMap.get("btcTxFee")).longValue();
+            Long btcMinTxFee = dataMap.get("btcMinTxFee") != null ?
+                    ((Double) dataMap.get("btcMinTxFee")).longValue() : Config.baseCurrencyNetwork().getDefaultMinFeePerVbyte();
 
             map.put("BTC", btcTxFee);
+            map.put("btcMinTxFee", btcMinTxFee);
         } catch (Throwable t) {
             log.error(t.toString());
             t.printStackTrace();
