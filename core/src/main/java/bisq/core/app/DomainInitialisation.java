@@ -196,12 +196,12 @@ public class DomainInitialisation {
 
         tradeLimits.onAllServicesInitialized();
 
+        tradeManager.onAllServicesInitialized();
         arbitrationManager.onAllServicesInitialized();
         mediationManager.onAllServicesInitialized();
         refundManager.onAllServicesInitialized();
         traderChatManager.onAllServicesInitialized();
 
-        tradeManager.onAllServicesInitialized();
         closedTradableManager.onAllServicesInitialized();
         failedTradesManager.onAllServicesInitialized();
         xmrTxProofService.onAllServicesInitialized();

@@ -44,6 +44,7 @@ import ch.qos.logback.core.read.ListAppender;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import static java.lang.Thread.sleep;
 import static java.util.Arrays.asList;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -287,6 +288,9 @@ public class ExchangeRateServiceTest {
 
         // Initialize provider
         dummyProvider.start();
+        try {
+            sleep(1000);
+        } catch (InterruptedException e) { }
         dummyProvider.stop();
 
         return dummyProvider;
@@ -322,6 +326,9 @@ public class ExchangeRateServiceTest {
 
         // Initialize provider
         dummyProvider.start();
+        try {
+            sleep(1000);
+        } catch (InterruptedException e) { }
         dummyProvider.stop();
 
         return dummyProvider;

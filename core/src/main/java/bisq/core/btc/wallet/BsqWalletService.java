@@ -72,6 +72,8 @@ import java.util.stream.Stream;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
+
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.bitcoinj.core.TransactionConfidence.ConfidenceType.BUILDING;
@@ -134,6 +136,8 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
         this.daoStateService = daoStateService;
         this.unconfirmedBsqChangeOutputListService = unconfirmedBsqChangeOutputListService;
         this.daoKillSwitch = daoKillSwitch;
+
+        nonBsqCoinSelector.setPreferences(preferences);
 
         walletsSetup.addSetupCompletedHandler(() -> {
             wallet = walletsSetup.getBsqWallet();
@@ -311,6 +315,16 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
 
     public void removeWalletTransactionsChangeListener(WalletTransactionsChangeListener listener) {
         walletTransactionsChangeListeners.remove(listener);
+    }
+
+    public List<TransactionOutput> getSpendableBsqTransactionOutputs() {
+        return new ArrayList<>(bsqCoinSelector.select(NetworkParameters.MAX_MONEY,
+                wallet.calculateAllSpendCandidates()).gathered);
+    }
+
+    public List<TransactionOutput> getSpendableNonBsqTransactionOutputs() {
+        return new ArrayList<>(nonBsqCoinSelector.select(NetworkParameters.MAX_MONEY,
+                wallet.calculateAllSpendCandidates()).gathered);
     }
 
 
@@ -511,7 +525,19 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public Transaction getPreparedSendBsqTx(String receiverAddress, Coin receiverAmount)
-            throws AddressFormatException, InsufficientBsqException, WalletException, TransactionVerificationException, BsqChangeBelowDustException {
+            throws AddressFormatException, InsufficientBsqException, WalletException,
+            TransactionVerificationException, BsqChangeBelowDustException {
+        return getPreparedSendTx(receiverAddress, receiverAmount, bsqCoinSelector, false);
+    }
+
+    public Transaction getPreparedSendBsqTx(String receiverAddress,
+                                            Coin receiverAmount,
+                                            @Nullable Set<TransactionOutput> utxoCandidates)
+            throws AddressFormatException, InsufficientBsqException, WalletException,
+            TransactionVerificationException, BsqChangeBelowDustException {
+        if (utxoCandidates != null) {
+            bsqCoinSelector.setUtxoCandidates(utxoCandidates);
+        }
         return getPreparedSendTx(receiverAddress, receiverAmount, bsqCoinSelector, false);
     }
 
@@ -520,7 +546,19 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public Transaction getPreparedSendBtcTx(String receiverAddress, Coin receiverAmount)
-            throws AddressFormatException, InsufficientBsqException, WalletException, TransactionVerificationException, BsqChangeBelowDustException {
+            throws AddressFormatException, InsufficientBsqException, WalletException,
+            TransactionVerificationException, BsqChangeBelowDustException {
+        return getPreparedSendTx(receiverAddress, receiverAmount, nonBsqCoinSelector, true);
+    }
+
+    public Transaction getPreparedSendBtcTx(String receiverAddress,
+                                            Coin receiverAmount,
+                                            @Nullable Set<TransactionOutput> utxoCandidates)
+            throws AddressFormatException, InsufficientBsqException, WalletException,
+            TransactionVerificationException, BsqChangeBelowDustException {
+        if (utxoCandidates != null) {
+            nonBsqCoinSelector.setUtxoCandidates(utxoCandidates);
+        }
         return getPreparedSendTx(receiverAddress, receiverAmount, nonBsqCoinSelector, true);
     }
 
