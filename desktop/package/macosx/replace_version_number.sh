@@ -2,8 +2,8 @@
 
 cd $(dirname $0)/../../../.
 
-oldVersion=1.5.5
-newVersion=1.5.6
+oldVersion=1.5.6
+newVersion=1.5.7
 
 find . -type f \( -name "finalize.sh" \
 -o -name "create_app.sh" \
@@ -19,5 +19,6 @@ find . -type f \( -name "finalize.sh" \
 find . -type f \( -name "Info.plist" \
 -o -name "SeedNodeMain.java" \
 -o -name "Version.java" \
+-o -name "copy_dbs.sh" \
 \) -exec sed -i '' s/$oldVersion/$newVersion/ {} +
 
