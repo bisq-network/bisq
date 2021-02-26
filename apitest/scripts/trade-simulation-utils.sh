@@ -267,9 +267,9 @@ istradepaymentsent() {
     MAKER_OR_TAKER="$2"
     if [ "$MAKER_OR_TAKER" = "MAKER" ]
     then
-        ANSWER=$(echo "$TRADE_DETAIL" | awk '{print $11}')
-    else
         ANSWER=$(echo "$TRADE_DETAIL" | awk '{print $12}')
+    else
+        ANSWER=$(echo "$TRADE_DETAIL" | awk '{print $13}')
     fi
     commandalert $? "Could not parse istradepaymentsent from trade detail."
     echo "$ANSWER"
@@ -280,9 +280,9 @@ istradepaymentreceived() {
     MAKER_OR_TAKER="$2"
     if [ "$MAKER_OR_TAKER" = "MAKER" ]
     then
-        ANSWER=$(echo "$TRADE_DETAIL" | awk '{print $12}')
-    else
         ANSWER=$(echo "$TRADE_DETAIL" | awk '{print $13}')
+    else
+        ANSWER=$(echo "$TRADE_DETAIL" | awk '{print $14}')
     fi
     commandalert $? "Could not parse istradepaymentreceived from trade detail."
     echo "$ANSWER"
@@ -293,9 +293,9 @@ istradepayoutpublished() {
     MAKER_OR_TAKER="$2"
     if [ "$MAKER_OR_TAKER" = "MAKER" ]
     then
-        ANSWER=$(echo "$TRADE_DETAIL" | awk '{print $13}')
-    else
         ANSWER=$(echo "$TRADE_DETAIL" | awk '{print $14}')
+    else
+        ANSWER=$(echo "$TRADE_DETAIL" | awk '{print $15}')
     fi
     commandalert $? "Could not parse istradepayoutpublished from trade detail."
     echo "$ANSWER"

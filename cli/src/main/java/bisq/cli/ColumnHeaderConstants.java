@@ -27,8 +27,8 @@ class ColumnHeaderConstants {
 
     // Table column header format specs, right padded with two spaces.  In some cases
     // such as COL_HEADER_CREATION_DATE, COL_HEADER_VOLUME and COL_HEADER_UUID, the
-    // expected max data string length is accounted for.  In others, the column header length
-    // are expected to be greater than any column value length.
+    // expected max data string length is accounted for.  In others, column header
+    // lengths are expected to be greater than any column value length.
     static final String COL_HEADER_ADDRESS = padEnd("%-3s Address", 52, ' ');
     static final String COL_HEADER_AMOUNT = padEnd("BTC(min - max)", 24, ' ');
     static final String COL_HEADER_AVAILABLE_BALANCE = "Available Balance";
@@ -49,17 +49,17 @@ class ColumnHeaderConstants {
     static final String COL_HEADER_PAYMENT_METHOD = "Payment Method";
     static final String COL_HEADER_PRICE = "Price in %-3s for 1 BTC";
     static final String COL_HEADER_TRADE_AMOUNT = padStart("Amount(%-3s)", 12, ' ');
+    static final String COL_HEADER_TRADE_BUYER_COST = padEnd("Buyer Cost(%-3s)", 15, ' ');
     static final String COL_HEADER_TRADE_DEPOSIT_CONFIRMED = "Deposit Confirmed";
     static final String COL_HEADER_TRADE_DEPOSIT_PUBLISHED = "Deposit Published";
-    static final String COL_HEADER_TRADE_FIAT_SENT = "Fiat Sent";
-    static final String COL_HEADER_TRADE_FIAT_RECEIVED = "Fiat Received";
+    static final String COL_HEADER_TRADE_PAYMENT_SENT = padEnd("%-3s Sent", 8, ' ');
+    static final String COL_HEADER_TRADE_PAYMENT_RECEIVED = padEnd("%-3s Received", 12, ' ');
     static final String COL_HEADER_TRADE_PAYOUT_PUBLISHED = "Payout Published";
     static final String COL_HEADER_TRADE_WITHDRAWN = "Withdrawn";
     static final String COL_HEADER_TRADE_ROLE = "My Role";
     static final String COL_HEADER_TRADE_SHORT_ID = "ID";
     static final String COL_HEADER_TRADE_TX_FEE = "Tx Fee(%-3s)";
     static final String COL_HEADER_TRADE_TAKER_FEE = "Taker Fee(%-3s)";
-    static final String COL_HEADER_TRADE_WITHDRAWAL_TX_ID = "Withdrawal TX ID";
 
     static final String COL_HEADER_TX_ID = "Tx ID";
     static final String COL_HEADER_TX_INPUT_SUM = "Tx Inputs (BTC)";
