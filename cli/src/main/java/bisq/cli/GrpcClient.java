@@ -64,11 +64,9 @@ import bisq.proto.grpc.WithdrawFundsRequest;
 import protobuf.PaymentAccount;
 import protobuf.PaymentMethod;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static java.lang.String.format;
 import static java.util.Comparator.comparing;
 
 @SuppressWarnings("ResultOfMethodCallIgnored")
