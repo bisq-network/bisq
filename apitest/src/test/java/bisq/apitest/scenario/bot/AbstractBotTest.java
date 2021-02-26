@@ -63,7 +63,7 @@ public abstract class AbstractBotTest extends MethodTest {
 
     private PaymentAccount createAlicesPaymentAccount() {
         BotPaymentAccountGenerator accountGenerator =
-                new BotPaymentAccountGenerator(new BotClient(aliceStubs));
+                new BotPaymentAccountGenerator(new BotClient(aliceClient));
         String paymentMethodId = botScript.getBotPaymentMethodId();
         if (paymentMethodId != null) {
             if (paymentMethodId.equals(CLEAR_X_CHANGE_ID)) {

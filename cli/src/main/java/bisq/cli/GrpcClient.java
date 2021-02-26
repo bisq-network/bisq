@@ -19,6 +19,8 @@ package bisq.cli;
 
 import bisq.proto.grpc.AddressBalanceInfo;
 import bisq.proto.grpc.BalancesInfo;
+import bisq.proto.grpc.BsqBalanceInfo;
+import bisq.proto.grpc.BtcBalanceInfo;
 import bisq.proto.grpc.CancelOfferRequest;
 import bisq.proto.grpc.ConfirmPaymentReceivedRequest;
 import bisq.proto.grpc.ConfirmPaymentStartedRequest;
@@ -62,7 +64,12 @@ import bisq.proto.grpc.WithdrawFundsRequest;
 import protobuf.PaymentAccount;
 import protobuf.PaymentMethod;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+
+import static java.lang.String.format;
+import static java.util.Comparator.comparing;
 
 @SuppressWarnings("ResultOfMethodCallIgnored")
 public final class GrpcClient {
@@ -76,6 +83,18 @@ public final class GrpcClient {
     public String getVersion() {
         var request = GetVersionRequest.newBuilder().build();
         return grpcStubs.versionService.getVersion(request).getVersion();
+    }
+
+    public BalancesInfo getBalances() {
+        return getBalances("");
+    }
+
+    public BsqBalanceInfo getBsqBalances() {
+        return getBalances("BSQ").getBsq();
+    }
+
+    public BtcBalanceInfo getBtcBalances() {
+        return getBalances("BTC").getBtc();
     }
 
     public BalancesInfo getBalances(String currencyCode) {
@@ -106,6 +125,18 @@ public final class GrpcClient {
     public String getUnusedBsqAddress() {
         var request = GetUnusedBsqAddressRequest.newBuilder().build();
         return grpcStubs.walletsService.getUnusedBsqAddress(request).getAddress();
+    }
+
+    public String getUnusedBtcAddress() {
+        var request = GetFundingAddressesRequest.newBuilder().build();
+        //noinspection OptionalGetWithoutIsPresent
+        return grpcStubs.walletsService.getFundingAddresses(request)
+                .getAddressBalanceInfoList()
+                .stream()
+                .filter(a -> a.getBalance() == 0 && a.getNumConfirmations() == 0)
+                .findFirst()
+                .get()
+                .getAddress();
     }
 
     public TxInfo sendBsq(String address, String amount, String txFeeRate) {
@@ -151,6 +182,47 @@ public final class GrpcClient {
         return grpcStubs.walletsService.getTransaction(request).getTxInfo();
     }
 
+    public OfferInfo createFixedPricedOffer(String direction,
+                                 String currencyCode,
+                                 long amount,
+                                 long minAmount,
+                                 String fixedPrice,
+                                 double securityDeposit,
+                                 String paymentAcctId,
+                                 String makerFeeCurrencyCode) {
+      return createOffer(direction,
+              currencyCode,
+              amount,
+              minAmount,
+              false,
+              fixedPrice,
+              0.00,
+              securityDeposit,
+              paymentAcctId,
+              makerFeeCurrencyCode);
+    }
+
+    public OfferInfo createMarketBasedPricedOffer(String direction,
+                                                  String currencyCode,
+                                                  long amount,
+                                                  long minAmount,
+                                                  double marketPriceMargin,
+                                                  double securityDeposit,
+                                                  String paymentAcctId,
+                                                  String makerFeeCurrencyCode) {
+        return createOffer(direction,
+                currencyCode,
+                amount,
+                minAmount,
+                true,
+                "0",
+                marketPriceMargin,
+                securityDeposit,
+                paymentAcctId,
+                makerFeeCurrencyCode);
+    }
+
+    // TODO make private, move to bottom of class
     public OfferInfo createOffer(String direction,
                                  String currencyCode,
                                  long amount,
@@ -205,12 +277,34 @@ public final class GrpcClient {
         return grpcStubs.offersService.getOffers(request).getOffersList();
     }
 
+    public List<OfferInfo> getOffersSortedByDate(String direction, String currencyCode) {
+        var offers = getOffers(direction, currencyCode);
+        return offers.isEmpty() ? offers : sortOffersByDate(offers);
+    }
+
     public List<OfferInfo> getMyOffers(String direction, String currencyCode) {
         var request = GetMyOffersRequest.newBuilder()
                 .setDirection(direction)
                 .setCurrencyCode(currencyCode)
                 .build();
         return grpcStubs.offersService.getMyOffers(request).getOffersList();
+    }
+
+    public List<OfferInfo> getMyOffersSortedByDate(String direction, String currencyCode) {
+       var offers = getMyOffers(direction, currencyCode);
+       return offers.isEmpty() ? offers : sortOffersByDate(offers);
+    }
+
+    public OfferInfo getMostRecentOffer(String direction, String currencyCode) {
+        List<OfferInfo> offers = getOffersSortedByDate(direction, currencyCode);
+        return offers.isEmpty() ? null : offers.get(offers.size() - 1);
+    }
+
+    // TODO move to bottom of class
+    private List<OfferInfo> sortOffersByDate(List<OfferInfo> offerInfoList) {
+        return offerInfoList.stream()
+                .sorted(comparing(OfferInfo::getDate))
+                .collect(Collectors.toList());
     }
 
     public TradeInfo takeOffer(String offerId, String paymentAccountId, String takerFeeCurrencyCode) {
@@ -301,9 +395,15 @@ public final class GrpcClient {
         grpcStubs.walletsService.removeWalletPassword(request);
     }
 
-    public void setWalletPassword(String walletPassword, String newWalletPassword) {
+    public void setWalletPassword(String walletPassword) {
         var request = SetWalletPasswordRequest.newBuilder()
-                .setPassword(walletPassword)
+                .setPassword(walletPassword).build();
+        grpcStubs.walletsService.setWalletPassword(request);
+    }
+
+    public void setWalletPassword(String oldWalletPassword, String newWalletPassword) {
+        var request = SetWalletPasswordRequest.newBuilder()
+                .setPassword(oldWalletPassword)
                 .setNewPassword(newWalletPassword).build();
         grpcStubs.walletsService.setWalletPassword(request);
     }

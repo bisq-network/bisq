@@ -46,7 +46,7 @@ public class BtcTxFeeRateTest extends MethodTest {
     @Test
     @Order(1)
     public void testGetTxFeeRate(final TestInfo testInfo) {
-        TxFeeRateInfo txFeeRateInfo = getTxFeeRate(alicedaemon);
+        var txFeeRateInfo = TxFeeRateInfo.fromProto(aliceClient.getTxFeeRate());
         log.debug("{} -> Fee rate with no preference: {}", testName(testInfo), txFeeRateInfo);
 
         assertFalse(txFeeRateInfo.isUseCustomTxFeeRate());
@@ -57,7 +57,7 @@ public class BtcTxFeeRateTest extends MethodTest {
     @Order(2)
     public void testSetInvalidTxFeeRateShouldThrowException(final TestInfo testInfo) {
         Throwable exception = assertThrows(StatusRuntimeException.class, () ->
-                setTxFeeRate(alicedaemon, 10));
+                aliceClient.setTxFeeRate(10));
         String expectedExceptionMessage =
                 format("UNKNOWN: tx fee rate preference must be >= %d sats/byte",
                         BTC_DAO_REGTEST.getDefaultMinFeePerVbyte());
@@ -67,7 +67,7 @@ public class BtcTxFeeRateTest extends MethodTest {
     @Test
     @Order(3)
     public void testSetValidTxFeeRate(final TestInfo testInfo) {
-        TxFeeRateInfo txFeeRateInfo = setTxFeeRate(alicedaemon, 15);
+        var txFeeRateInfo = TxFeeRateInfo.fromProto(aliceClient.setTxFeeRate(15));
         log.debug("{} -> Fee rates with custom preference: {}", testName(testInfo), txFeeRateInfo);
 
         assertTrue(txFeeRateInfo.isUseCustomTxFeeRate());
@@ -78,7 +78,7 @@ public class BtcTxFeeRateTest extends MethodTest {
     @Test
     @Order(4)
     public void testUnsetTxFeeRate(final TestInfo testInfo) {
-        TxFeeRateInfo txFeeRateInfo = unsetTxFeeRate(alicedaemon);
+        var txFeeRateInfo = TxFeeRateInfo.fromProto(aliceClient.unsetTxFeeRate());
         log.debug("{} -> Fee rate with no preference: {}", testName(testInfo), txFeeRateInfo);
 
         assertFalse(txFeeRateInfo.isUseCustomTxFeeRate());

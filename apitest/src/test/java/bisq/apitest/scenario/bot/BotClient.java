@@ -18,18 +18,8 @@
 package bisq.apitest.scenario.bot;
 
 import bisq.proto.grpc.BalancesInfo;
-import bisq.proto.grpc.ConfirmPaymentReceivedRequest;
-import bisq.proto.grpc.ConfirmPaymentStartedRequest;
-import bisq.proto.grpc.CreateOfferRequest;
-import bisq.proto.grpc.CreatePaymentAccountRequest;
-import bisq.proto.grpc.GetBalancesRequest;
-import bisq.proto.grpc.GetOffersRequest;
 import bisq.proto.grpc.GetPaymentAccountsRequest;
-import bisq.proto.grpc.GetTradeRequest;
-import bisq.proto.grpc.KeepFundsRequest;
-import bisq.proto.grpc.MarketPriceRequest;
 import bisq.proto.grpc.OfferInfo;
-import bisq.proto.grpc.TakeOfferRequest;
 import bisq.proto.grpc.TradeInfo;
 
 import protobuf.PaymentAccount;
@@ -45,13 +35,15 @@ import static org.apache.commons.lang3.StringUtils.capitalize;
 
 
 
-import bisq.cli.GrpcStubs;
+import bisq.cli.GrpcClient;
 
 /**
- * Convenience for test bots making gRPC calls.
+ * Convenience GrpcClient wrapper for bots using gRPC services.
  *
- * Although this duplicates code in the method package, I anticipate
- * this entire bot package will move to the cli subproject.
+ * TODO Consider if the duplication smell is bad enough to force a BotClient user
+ *  to use the GrpcClient instead (and delete this class).  But right now, I think it is
+ *  OK because moving some of the non-gRPC related methods to GrpcClient is even smellier.
+ *
  */
 @SuppressWarnings({"JavaDoc", "unused"})
 @Slf4j
@@ -59,10 +51,10 @@ public class BotClient {
 
     private static final DecimalFormat FIXED_PRICE_FMT = new DecimalFormat("###########0");
 
-    private final GrpcStubs grpcStubs;
+    private final GrpcClient grpcClient;
 
-    public BotClient(GrpcStubs grpcStubs) {
-        this.grpcStubs = grpcStubs;
+    public BotClient(GrpcClient grpcClient) {
+        this.grpcClient = grpcClient;
     }
 
     /**
@@ -70,8 +62,7 @@ public class BotClient {
      * @return BalancesInfo
      */
     public BalancesInfo getBalance() {
-        var req = GetBalancesRequest.newBuilder().build();
-        return grpcStubs.walletsService.getBalances(req).getBalances();
+        return grpcClient.getBalances();
     }
 
     /**
@@ -80,8 +71,7 @@ public class BotClient {
      * @return double
      */
     public double getCurrentBTCMarketPrice(String currencyCode) {
-        var request = MarketPriceRequest.newBuilder().setCurrencyCode(currencyCode).build();
-        return grpcStubs.priceService.getMarketPrice(request).getPrice();
+        return grpcClient.getBtcPrice(currencyCode);
     }
 
     /**
@@ -113,10 +103,7 @@ public class BotClient {
      * @return List<OfferInfo>
      */
     public List<OfferInfo> getBuyOffers(String currencyCode) {
-        var buyOffersRequest = GetOffersRequest.newBuilder()
-                .setCurrencyCode(currencyCode)
-                .setDirection("BUY").build();
-        return grpcStubs.offersService.getOffers(buyOffersRequest).getOffersList();
+        return grpcClient.getOffers(currencyCode, "BUY");
     }
 
     /**
@@ -125,10 +112,7 @@ public class BotClient {
      * @return List<OfferInfo>
      */
     public List<OfferInfo> getSellOffers(String currencyCode) {
-        var buyOffersRequest = GetOffersRequest.newBuilder()
-                .setCurrencyCode(currencyCode)
-                .setDirection("SELL").build();
-        return grpcStubs.offersService.getOffers(buyOffersRequest).getOffersList();
+        return grpcClient.getOffers(currencyCode, "SELL");
     }
 
     /**
@@ -151,19 +135,14 @@ public class BotClient {
                                                    double priceMarginAsPercent,
                                                    double securityDepositAsPercent,
                                                    String feeCurrency) {
-        var req = CreateOfferRequest.newBuilder()
-                .setPaymentAccountId(paymentAccount.getId())
-                .setDirection(direction)
-                .setCurrencyCode(currencyCode)
-                .setAmount(amountInSatoshis)
-                .setMinAmount(minAmountInSatoshis)
-                .setUseMarketBasedPrice(true)
-                .setMarketPriceMargin(priceMarginAsPercent)
-                .setPrice("0")
-                .setBuyerSecurityDeposit(securityDepositAsPercent)
-                .setMakerFeeCurrencyCode(feeCurrency)
-                .build();
-        return grpcStubs.offersService.createOffer(req).getOffer();
+        return grpcClient.createMarketBasedPricedOffer(direction,
+                currencyCode,
+                amountInSatoshis,
+                minAmountInSatoshis,
+                priceMarginAsPercent,
+                securityDepositAsPercent,
+                paymentAccount.getId(),
+                feeCurrency);
     }
 
     /**
@@ -186,28 +165,18 @@ public class BotClient {
                                              String fixedOfferPriceAsString,
                                              double securityDepositAsPercent,
                                              String feeCurrency) {
-        var req = CreateOfferRequest.newBuilder()
-                .setPaymentAccountId(paymentAccount.getId())
-                .setDirection(direction)
-                .setCurrencyCode(currencyCode)
-                .setAmount(amountInSatoshis)
-                .setMinAmount(minAmountInSatoshis)
-                .setUseMarketBasedPrice(false)
-                .setMarketPriceMargin(0)
-                .setPrice(fixedOfferPriceAsString)
-                .setBuyerSecurityDeposit(securityDepositAsPercent)
-                .setMakerFeeCurrencyCode(feeCurrency)
-                .build();
-        return grpcStubs.offersService.createOffer(req).getOffer();
+        return grpcClient.createFixedPricedOffer(direction,
+                currencyCode,
+                amountInSatoshis,
+                minAmountInSatoshis,
+                fixedOfferPriceAsString,
+                securityDepositAsPercent,
+                paymentAccount.getId(),
+                feeCurrency);
     }
 
     public TradeInfo takeOffer(String offerId, PaymentAccount paymentAccount, String feeCurrency) {
-        var req = TakeOfferRequest.newBuilder()
-                .setOfferId(offerId)
-                .setPaymentAccountId(paymentAccount.getId())
-                .setTakerFeeCurrencyCode(feeCurrency)
-                .build();
-        return grpcStubs.tradesService.takeOffer(req).getTrade();
+        return grpcClient.takeOffer(offerId, paymentAccount.getId(), feeCurrency);
     }
 
     /**
@@ -216,8 +185,7 @@ public class BotClient {
      * @return TradeInfo
      */
     public TradeInfo getTrade(String tradeId) {
-        var req = GetTradeRequest.newBuilder().setTradeId(tradeId).build();
-        return grpcStubs.tradesService.getTrade(req).getTrade();
+        return grpcClient.getTrade(tradeId);
     }
 
     /**
@@ -243,7 +211,7 @@ public class BotClient {
      */
     public String getTradeContract(String tradeId) {
         try {
-            var trade = getTrade(tradeId);
+            var trade = grpcClient.getTrade(tradeId);
             return trade.getContractAsJson();
         } catch (Exception ex) {
             if (tradeContractIsNotReady.test(ex, tradeId))
@@ -259,7 +227,7 @@ public class BotClient {
      * @return boolean
      */
     public boolean isTakerDepositFeeTxPublished(String tradeId) {
-        return getTrade(tradeId).getIsPayoutPublished();
+        return grpcClient.getTrade(tradeId).getIsPayoutPublished();
     }
 
     /**
@@ -268,7 +236,7 @@ public class BotClient {
      * @return boolean
      */
     public boolean isTakerDepositFeeTxConfirmed(String tradeId) {
-        return getTrade(tradeId).getIsDepositConfirmed();
+        return grpcClient.getTrade(tradeId).getIsDepositConfirmed();
     }
 
     /**
@@ -277,7 +245,7 @@ public class BotClient {
      * @return boolean
      */
     public boolean isTradePaymentStartedSent(String tradeId) {
-        return getTrade(tradeId).getIsFiatSent();
+        return grpcClient.getTrade(tradeId).getIsFiatSent();
     }
 
     /**
@@ -286,7 +254,7 @@ public class BotClient {
      * @return boolean
      */
     public boolean isTradePaymentReceivedConfirmationSent(String tradeId) {
-        return getTrade(tradeId).getIsFiatReceived();
+        return grpcClient.getTrade(tradeId).getIsFiatReceived();
     }
 
     /**
@@ -295,7 +263,7 @@ public class BotClient {
      * @return boolean
      */
     public boolean isTradePayoutTxPublished(String tradeId) {
-        return getTrade(tradeId).getIsPayoutPublished();
+        return grpcClient.getTrade(tradeId).getIsPayoutPublished();
     }
 
     /**
@@ -304,9 +272,7 @@ public class BotClient {
      * @param tradeId
      */
     public void sendConfirmPaymentStartedMessage(String tradeId) {
-        var req = ConfirmPaymentStartedRequest.newBuilder().setTradeId(tradeId).build();
-        //noinspection ResultOfMethodCallIgnored
-        grpcStubs.tradesService.confirmPaymentStarted(req);
+        grpcClient.confirmPaymentStarted(tradeId);
     }
 
     /**
@@ -315,9 +281,7 @@ public class BotClient {
      * @param tradeId
      */
     public void sendConfirmPaymentReceivedMessage(String tradeId) {
-        var req = ConfirmPaymentReceivedRequest.newBuilder().setTradeId(tradeId).build();
-        //noinspection ResultOfMethodCallIgnored
-        grpcStubs.tradesService.confirmPaymentReceived(req);
+        grpcClient.confirmPaymentReceived(tradeId);
     }
 
     /**
@@ -326,9 +290,7 @@ public class BotClient {
      * @param tradeId
      */
     public void sendKeepFundsMessage(String tradeId) {
-        var req = KeepFundsRequest.newBuilder().setTradeId(tradeId).build();
-        //noinspection ResultOfMethodCallIgnored
-        grpcStubs.tradesService.keepFunds(req);
+        grpcClient.keepFunds(tradeId);
     }
 
     /**
@@ -337,11 +299,7 @@ public class BotClient {
      * @return PaymentAccount
      */
     public PaymentAccount createNewPaymentAccount(String json) {
-        var req = CreatePaymentAccountRequest.newBuilder()
-                .setPaymentAccountForm(json)
-                .build();
-        var paymentAccountsService = grpcStubs.paymentAccountsService;
-        return paymentAccountsService.createPaymentAccount(req).getPaymentAccount();
+        return grpcClient.createPaymentAccount(json);
     }
 
     /**
@@ -351,10 +309,7 @@ public class BotClient {
      * @return PaymentAccount
      */
     public PaymentAccount getPaymentAccount(String paymentAccountId) {
-        var req = GetPaymentAccountsRequest.newBuilder().build();
-        return grpcStubs.paymentAccountsService.getPaymentAccounts(req)
-                .getPaymentAccountsList()
-                .stream()
+        return grpcClient.getPaymentAccounts().stream()
                 .filter(a -> (a.getId().equals(paymentAccountId)))
                 .findFirst()
                 .orElseThrow(() ->
@@ -370,9 +325,7 @@ public class BotClient {
      */
     public PaymentAccount getPaymentAccountWithName(String accountName) {
         var req = GetPaymentAccountsRequest.newBuilder().build();
-        return grpcStubs.paymentAccountsService.getPaymentAccounts(req)
-                .getPaymentAccountsList()
-                .stream()
+        return grpcClient.getPaymentAccounts().stream()
                 .filter(a -> (a.getAccountName().equals(accountName)))
                 .findFirst()
                 .orElseThrow(() ->

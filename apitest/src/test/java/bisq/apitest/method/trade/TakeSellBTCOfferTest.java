@@ -32,9 +32,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.TestMethodOrder;
 
-import static bisq.apitest.config.BisqAppConfig.alicedaemon;
-import static bisq.apitest.config.BisqAppConfig.bobdaemon;
 import static bisq.cli.CurrencyFormat.formatSatoshis;
+import static bisq.core.btc.wallet.Restrictions.getDefaultBuyerSecurityDepositAsPercent;
 import static bisq.core.trade.Trade.Phase.*;
 import static bisq.core.trade.Trade.State.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -60,11 +59,14 @@ public class TakeSellBTCOfferTest extends AbstractTradeTest {
     @Order(1)
     public void testTakeAlicesSellOffer(final TestInfo testInfo) {
         try {
-            PaymentAccount alicesUsdAccount = createDummyF2FAccount(alicedaemon, "US");
-            var alicesOffer = createAliceOffer(alicesUsdAccount,
-                    "sell",
+            PaymentAccount alicesUsdAccount = createDummyF2FAccount(aliceClient, "US");
+            var alicesOffer = aliceClient.createMarketBasedPricedOffer("sell",
                     "usd",
-                    12500000,
+                    12500000L,
+                    12500000L, // min-amount = amount
+                    0.00,
+                    getDefaultBuyerSecurityDepositAsPercent(),
+                    alicesUsdAccount.getId(),
                     TRADE_FEE_CURRENCY_CODE);
             var offerId = alicesOffer.getId();
             assertTrue(alicesOffer.getIsCurrencyForMakerFeeBtc());
@@ -73,10 +75,10 @@ public class TakeSellBTCOfferTest extends AbstractTradeTest {
             // Wait times vary;  my logs show >= 2 second delay, but taking sell offers
             // seems to require more time to prepare.
             sleep(3000); // TODO loop instead of hard code wait time
-            var alicesUsdOffers = getMyOffersSortedByDate(aliceStubs, "sell", "usd");
+            var alicesUsdOffers = aliceClient.getMyOffersSortedByDate("sell", "usd");
             assertEquals(1, alicesUsdOffers.size());
 
-            PaymentAccount bobsUsdAccount = createDummyF2FAccount(bobdaemon, "US");
+            PaymentAccount bobsUsdAccount = createDummyF2FAccount(bobClient, "US");
             var trade = takeAlicesOffer(offerId, bobsUsdAccount.getId(), TRADE_FEE_CURRENCY_CODE);
             assertNotNull(trade);
             assertEquals(offerId, trade.getTradeId());
@@ -85,10 +87,10 @@ public class TakeSellBTCOfferTest extends AbstractTradeTest {
             tradeId = trade.getTradeId();
 
             genBtcBlocksThenWait(1, 4000);
-            var takeableUsdOffers = getOffersSortedByDate(bobStubs, "sell", "usd");
+            var takeableUsdOffers = bobClient.getOffersSortedByDate("sell", "usd");
             assertEquals(0, takeableUsdOffers.size());
 
-            trade = getTrade(bobdaemon, trade.getTradeId());
+            trade = bobClient.getTrade(trade.getTradeId());
             EXPECTED_PROTOCOL_STATUS.setState(BUYER_RECEIVED_DEPOSIT_TX_PUBLISHED_MSG)
                     .setPhase(DEPOSIT_PUBLISHED)
                     .setDepositPublished(true);
@@ -97,7 +99,7 @@ public class TakeSellBTCOfferTest extends AbstractTradeTest {
             logTrade(log, testInfo, "Bob's view after taking offer and sending deposit", trade);
 
             genBtcBlocksThenWait(1, 1000);
-            trade = getTrade(bobdaemon, trade.getTradeId());
+            trade = bobClient.getTrade(trade.getTradeId());
             EXPECTED_PROTOCOL_STATUS.setState(DEPOSIT_CONFIRMED_IN_BLOCK_CHAIN)
                     .setPhase(DEPOSIT_CONFIRMED)
                     .setDepositConfirmed(true);
@@ -112,11 +114,11 @@ public class TakeSellBTCOfferTest extends AbstractTradeTest {
     @Order(2)
     public void testBobsConfirmPaymentStarted(final TestInfo testInfo) {
         try {
-            var trade = getTrade(bobdaemon, tradeId);
-            confirmPaymentStarted(bobdaemon, trade.getTradeId());
+            var trade = bobClient.getTrade(tradeId);
+            bobClient.confirmPaymentStarted(tradeId);
             sleep(3000);
 
-            trade = getTrade(bobdaemon, tradeId);
+            trade = bobClient.getTrade(tradeId);
             // Note: offer.state == available
             assertEquals(AVAILABLE.name(), trade.getOffer().getState());
             EXPECTED_PROTOCOL_STATUS.setState(BUYER_SAW_ARRIVED_FIAT_PAYMENT_INITIATED_MSG)
@@ -132,11 +134,11 @@ public class TakeSellBTCOfferTest extends AbstractTradeTest {
     @Test
     @Order(3)
     public void testAlicesConfirmPaymentReceived(final TestInfo testInfo) {
-        var trade = getTrade(alicedaemon, tradeId);
-        confirmPaymentReceived(alicedaemon, trade.getTradeId());
+        var trade = aliceClient.getTrade(tradeId);
+        aliceClient.confirmPaymentReceived(trade.getTradeId());
         sleep(3000);
 
-        trade = getTrade(alicedaemon, tradeId);
+        trade = aliceClient.getTrade(tradeId);
         assertEquals(OFFER_FEE_PAID.name(), trade.getOffer().getState());
         EXPECTED_PROTOCOL_STATUS.setState(SELLER_SAW_ARRIVED_PAYOUT_TX_PUBLISHED_MSG)
                 .setPhase(PAYOUT_PUBLISHED)
@@ -151,21 +153,21 @@ public class TakeSellBTCOfferTest extends AbstractTradeTest {
     public void testBobsBtcWithdrawalToExternalAddress(final TestInfo testInfo) {
         genBtcBlocksThenWait(1, 1000);
 
-        var trade = getTrade(bobdaemon, tradeId);
+        var trade = bobClient.getTrade(tradeId);
         logTrade(log, testInfo, "Bob's view before withdrawing funds to external wallet", trade);
 
         String toAddress = bitcoinCli.getNewBtcAddress();
-        withdrawFunds(bobdaemon, tradeId, toAddress, WITHDRAWAL_TX_MEMO);
+        bobClient.withdrawFunds(tradeId, toAddress, WITHDRAWAL_TX_MEMO);
 
         genBtcBlocksThenWait(1, 1000);
 
-        trade = getTrade(bobdaemon, tradeId);
+        trade = bobClient.getTrade(tradeId);
         EXPECTED_PROTOCOL_STATUS.setState(WITHDRAW_COMPLETED)
                 .setPhase(WITHDRAWN)
                 .setWithdrawn(true);
         verifyExpectedProtocolStatus(trade);
         logTrade(log, testInfo, "Bob's view after withdrawing funds to external wallet", trade);
-        BtcBalanceInfo currentBalance = getBtcBalances(bobdaemon);
+        BtcBalanceInfo currentBalance = bobClient.getBtcBalances();
         log.debug("{} Bob's current available balance: {} BTC",
                 testName(testInfo),
                 formatSatoshis(currentBalance.getAvailableBalance()));

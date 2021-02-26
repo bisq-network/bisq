@@ -99,8 +99,8 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_ACCOUNT_NR, "0000 1111 2222");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_SALT, encodeToHex("Restored Advanced Cash Acct Salt"));
         String jsonString = getCompletedFormAsJsonString();
-        AdvancedCashAccount paymentAccount = (AdvancedCashAccount) createPaymentAccount(alicedaemon, jsonString);
-        verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
+        AdvancedCashAccount paymentAccount = (AdvancedCashAccount) createPaymentAccount(aliceClient, jsonString);
+        verifyUserPayloadHasPaymentAccountWithId(aliceClient, paymentAccount.getId());
         verifyAccountTradeCurrencies(getAllAdvancedCashCurrencies(), paymentAccount);
         verifyCommonFormEntries(paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_ACCOUNT_NR), paymentAccount.getAccountNr());
@@ -119,8 +119,8 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_ACCOUNT_NR, "2222 3333 4444");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_SALT, "");
         String jsonString = getCompletedFormAsJsonString();
-        AliPayAccount paymentAccount = (AliPayAccount) createPaymentAccount(alicedaemon, jsonString);
-        verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
+        AliPayAccount paymentAccount = (AliPayAccount) createPaymentAccount(aliceClient, jsonString);
+        verifyUserPayloadHasPaymentAccountWithId(aliceClient, paymentAccount.getId());
         verifyAccountSingleTradeCurrency("CNY", paymentAccount);
         verifyCommonFormEntries(paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_ACCOUNT_NR), paymentAccount.getAccountNr());
@@ -139,8 +139,8 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_BANK_ACCOUNT_NAME, "Credit Union Australia");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_SALT, encodeToHex("Restored Australia Pay ID Acct Salt"));
         String jsonString = getCompletedFormAsJsonString();
-        AustraliaPayid paymentAccount = (AustraliaPayid) createPaymentAccount(alicedaemon, jsonString);
-        verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
+        AustraliaPayid paymentAccount = (AustraliaPayid) createPaymentAccount(aliceClient, jsonString);
+        verifyUserPayloadHasPaymentAccountWithId(aliceClient, paymentAccount.getId());
         verifyAccountSingleTradeCurrency("AUD", paymentAccount);
         verifyCommonFormEntries(paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_PAY_ID), paymentAccount.getPayid());
@@ -180,8 +180,8 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_REQUIREMENTS, "Requirements...");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_SALT, "");
         String jsonString = getCompletedFormAsJsonString();
-        CashDepositAccount paymentAccount = (CashDepositAccount) createPaymentAccount(alicedaemon, jsonString);
-        verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
+        CashDepositAccount paymentAccount = (CashDepositAccount) createPaymentAccount(aliceClient, jsonString);
+        verifyUserPayloadHasPaymentAccountWithId(aliceClient, paymentAccount.getId());
         verifyAccountSingleTradeCurrency("EUR", paymentAccount);
         verifyCommonFormEntries(paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_COUNTRY),
@@ -226,8 +226,8 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_NATIONAL_ACCOUNT_ID, "123456789");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_SALT, encodeToHex("Restored Banco do Brasil Acct Salt"));
         String jsonString = getCompletedFormAsJsonString();
-        NationalBankAccount paymentAccount = (NationalBankAccount) createPaymentAccount(alicedaemon, jsonString);
-        verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
+        NationalBankAccount paymentAccount = (NationalBankAccount) createPaymentAccount(aliceClient, jsonString);
+        verifyUserPayloadHasPaymentAccountWithId(aliceClient, paymentAccount.getId());
         verifyAccountSingleTradeCurrency("BRL", paymentAccount);
         verifyCommonFormEntries(paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_COUNTRY),
@@ -259,8 +259,8 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_HOLDER_NAME, "John Doe");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_SALT, "");
         String jsonString = getCompletedFormAsJsonString();
-        ChaseQuickPayAccount paymentAccount = (ChaseQuickPayAccount) createPaymentAccount(alicedaemon, jsonString);
-        verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
+        ChaseQuickPayAccount paymentAccount = (ChaseQuickPayAccount) createPaymentAccount(aliceClient, jsonString);
+        verifyUserPayloadHasPaymentAccountWithId(aliceClient, paymentAccount.getId());
         verifyAccountSingleTradeCurrency("USD", paymentAccount);
         verifyCommonFormEntries(paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_EMAIL), paymentAccount.getEmail());
@@ -281,8 +281,8 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_HOLDER_NAME, "Jane Doe");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_SALT, encodeToHex("Restored Zelle Acct Salt"));
         String jsonString = getCompletedFormAsJsonString();
-        ClearXchangeAccount paymentAccount = (ClearXchangeAccount) createPaymentAccount(alicedaemon, jsonString);
-        verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
+        ClearXchangeAccount paymentAccount = (ClearXchangeAccount) createPaymentAccount(aliceClient, jsonString);
+        verifyUserPayloadHasPaymentAccountWithId(aliceClient, paymentAccount.getId());
         verifyAccountSingleTradeCurrency("USD", paymentAccount);
         verifyCommonFormEntries(paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_EMAIL_OR_MOBILE_NR), paymentAccount.getEmailOrMobileNr());
@@ -308,8 +308,8 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_EXTRA_INFO, "So fim de semana");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_SALT, "");
         String jsonString = getCompletedFormAsJsonString();
-        F2FAccount paymentAccount = (F2FAccount) createPaymentAccount(alicedaemon, jsonString);
-        verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
+        F2FAccount paymentAccount = (F2FAccount) createPaymentAccount(aliceClient, jsonString);
+        verifyUserPayloadHasPaymentAccountWithId(aliceClient, paymentAccount.getId());
         verifyAccountSingleTradeCurrency("BRL", paymentAccount);
         verifyCommonFormEntries(paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_COUNTRY),
@@ -333,8 +333,8 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_SORT_CODE, "3127");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_SALT, encodeToHex("Restored Faster Payments Acct Salt"));
         String jsonString = getCompletedFormAsJsonString();
-        FasterPaymentsAccount paymentAccount = (FasterPaymentsAccount) createPaymentAccount(alicedaemon, jsonString);
-        verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
+        FasterPaymentsAccount paymentAccount = (FasterPaymentsAccount) createPaymentAccount(aliceClient, jsonString);
+        verifyUserPayloadHasPaymentAccountWithId(aliceClient, paymentAccount.getId());
         verifyAccountSingleTradeCurrency("GBP", paymentAccount);
         verifyCommonFormEntries(paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_ACCOUNT_NR), paymentAccount.getAccountNr());
@@ -354,8 +354,8 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_MOBILE_NR, "798 123 456");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_SALT, "");
         String jsonString = getCompletedFormAsJsonString();
-        HalCashAccount paymentAccount = (HalCashAccount) createPaymentAccount(alicedaemon, jsonString);
-        verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
+        HalCashAccount paymentAccount = (HalCashAccount) createPaymentAccount(aliceClient, jsonString);
+        verifyUserPayloadHasPaymentAccountWithId(aliceClient, paymentAccount.getId());
         verifyAccountSingleTradeCurrency("EUR", paymentAccount);
         verifyCommonFormEntries(paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_MOBILE_NR), paymentAccount.getMobileNr());
@@ -379,8 +379,8 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_ANSWER, "Fido");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_SALT, encodeToHex("Restored Interac Transfer Acct Salt"));
         String jsonString = getCompletedFormAsJsonString();
-        InteracETransferAccount paymentAccount = (InteracETransferAccount) createPaymentAccount(alicedaemon, jsonString);
-        verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
+        InteracETransferAccount paymentAccount = (InteracETransferAccount) createPaymentAccount(aliceClient, jsonString);
+        verifyUserPayloadHasPaymentAccountWithId(aliceClient, paymentAccount.getId());
         verifyAccountSingleTradeCurrency("CAD", paymentAccount);
         verifyCommonFormEntries(paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_HOLDER_NAME), paymentAccount.getHolderName());
@@ -414,8 +414,8 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_BANK_ACCOUNT_NUMBER, "8100-8727-0000");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_SALT, "");
         String jsonString = getCompletedFormAsJsonString();
-        JapanBankAccount paymentAccount = (JapanBankAccount) createPaymentAccount(alicedaemon, jsonString);
-        verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
+        JapanBankAccount paymentAccount = (JapanBankAccount) createPaymentAccount(aliceClient, jsonString);
+        verifyUserPayloadHasPaymentAccountWithId(aliceClient, paymentAccount.getId());
         verifyAccountSingleTradeCurrency("JPY", paymentAccount);
         verifyCommonFormEntries(paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_BANK_CODE), paymentAccount.getBankCode());
@@ -439,8 +439,8 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_ACCOUNT_ID, "MB 0000 1111");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_SALT, encodeToHex("Restored Money Beam Acct Salt"));
         String jsonString = getCompletedFormAsJsonString();
-        MoneyBeamAccount paymentAccount = (MoneyBeamAccount) createPaymentAccount(alicedaemon, jsonString);
-        verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
+        MoneyBeamAccount paymentAccount = (MoneyBeamAccount) createPaymentAccount(aliceClient, jsonString);
+        verifyUserPayloadHasPaymentAccountWithId(aliceClient, paymentAccount.getId());
         verifyAccountSingleTradeCurrency("EUR", paymentAccount);
         verifyCommonFormEntries(paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_ACCOUNT_ID), paymentAccount.getAccountId());
@@ -465,8 +465,8 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_STATE, "NY");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_SALT, "");
         String jsonString = getCompletedFormAsJsonString();
-        MoneyGramAccount paymentAccount = (MoneyGramAccount) createPaymentAccount(alicedaemon, jsonString);
-        verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
+        MoneyGramAccount paymentAccount = (MoneyGramAccount) createPaymentAccount(aliceClient, jsonString);
+        verifyUserPayloadHasPaymentAccountWithId(aliceClient, paymentAccount.getId());
         verifyAccountTradeCurrencies(getAllMoneyGramCurrencies(), paymentAccount);
         verifyCommonFormEntries(paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_HOLDER_NAME), paymentAccount.getFullName());
@@ -488,8 +488,8 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_ACCOUNT_NR, "PM 0000 1111");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_SALT, encodeToHex("Restored Perfect Money Acct Salt"));
         String jsonString = getCompletedFormAsJsonString();
-        PerfectMoneyAccount paymentAccount = (PerfectMoneyAccount) createPaymentAccount(alicedaemon, jsonString);
-        verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
+        PerfectMoneyAccount paymentAccount = (PerfectMoneyAccount) createPaymentAccount(aliceClient, jsonString);
+        verifyUserPayloadHasPaymentAccountWithId(aliceClient, paymentAccount.getId());
         verifyAccountSingleTradeCurrency("USD", paymentAccount);
         verifyCommonFormEntries(paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_ACCOUNT_NR), paymentAccount.getAccountNr());
@@ -510,8 +510,8 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_HOLDER_NAME, "Jane Doe");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_SALT, "");
         String jsonString = getCompletedFormAsJsonString();
-        PopmoneyAccount paymentAccount = (PopmoneyAccount) createPaymentAccount(alicedaemon, jsonString);
-        verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
+        PopmoneyAccount paymentAccount = (PopmoneyAccount) createPaymentAccount(aliceClient, jsonString);
+        verifyUserPayloadHasPaymentAccountWithId(aliceClient, paymentAccount.getId());
         verifyAccountSingleTradeCurrency("USD", paymentAccount);
         verifyCommonFormEntries(paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_ACCOUNT_ID), paymentAccount.getAccountId());
@@ -530,8 +530,8 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_PROMPT_PAY_ID, "PP 0000 1111");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_SALT, encodeToHex("Restored Prompt Pay Acct Salt"));
         String jsonString = getCompletedFormAsJsonString();
-        PromptPayAccount paymentAccount = (PromptPayAccount) createPaymentAccount(alicedaemon, jsonString);
-        verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
+        PromptPayAccount paymentAccount = (PromptPayAccount) createPaymentAccount(aliceClient, jsonString);
+        verifyUserPayloadHasPaymentAccountWithId(aliceClient, paymentAccount.getId());
         verifyAccountSingleTradeCurrency("THB", paymentAccount);
         verifyCommonFormEntries(paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_PROMPT_PAY_ID), paymentAccount.getPromptPayId());
@@ -550,8 +550,8 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_USERNAME, "revolut123");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_SALT, "");
         String jsonString = getCompletedFormAsJsonString();
-        RevolutAccount paymentAccount = (RevolutAccount) createPaymentAccount(alicedaemon, jsonString);
-        verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
+        RevolutAccount paymentAccount = (RevolutAccount) createPaymentAccount(aliceClient, jsonString);
+        verifyUserPayloadHasPaymentAccountWithId(aliceClient, paymentAccount.getId());
         verifyAccountTradeCurrencies(getAllRevolutCurrencies(), paymentAccount);
         verifyCommonFormEntries(paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_USERNAME), paymentAccount.getUserName());
@@ -583,8 +583,8 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_NATIONAL_ACCOUNT_ID, "123456789");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_SALT, encodeToHex("Restored Same Bank Acct Salt"));
         String jsonString = getCompletedFormAsJsonString();
-        SameBankAccount paymentAccount = (SameBankAccount) createPaymentAccount(alicedaemon, jsonString);
-        verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
+        SameBankAccount paymentAccount = (SameBankAccount) createPaymentAccount(aliceClient, jsonString);
+        verifyUserPayloadHasPaymentAccountWithId(aliceClient, paymentAccount.getId());
         verifyAccountSingleTradeCurrency("GBP", paymentAccount);
         verifyCommonFormEntries(paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_COUNTRY),
@@ -620,8 +620,8 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_BIC, "909");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_SALT, "");
         String jsonString = getCompletedFormAsJsonString();
-        SepaInstantAccount paymentAccount = (SepaInstantAccount) createPaymentAccount(alicedaemon, jsonString);
-        verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
+        SepaInstantAccount paymentAccount = (SepaInstantAccount) createPaymentAccount(aliceClient, jsonString);
+        verifyUserPayloadHasPaymentAccountWithId(aliceClient, paymentAccount.getId());
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_COUNTRY),
                 Objects.requireNonNull(paymentAccount.getCountry()).code);
         verifyAccountSingleTradeCurrency("EUR", paymentAccount);
@@ -651,8 +651,8 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_BIC, "909");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_SALT, encodeToHex("Restored Conta Sepa Salt"));
         String jsonString = getCompletedFormAsJsonString();
-        SepaAccount paymentAccount = (SepaAccount) createPaymentAccount(alicedaemon, jsonString);
-        verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
+        SepaAccount paymentAccount = (SepaAccount) createPaymentAccount(aliceClient, jsonString);
+        verifyUserPayloadHasPaymentAccountWithId(aliceClient, paymentAccount.getId());
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_COUNTRY),
                 Objects.requireNonNull(paymentAccount.getCountry()).code);
         verifyAccountSingleTradeCurrency("EUR", paymentAccount);
@@ -694,8 +694,8 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_NATIONAL_ACCOUNT_ID, "123456789");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_SALT, "");
         String jsonString = getCompletedFormAsJsonString();
-        SpecificBanksAccount paymentAccount = (SpecificBanksAccount) createPaymentAccount(alicedaemon, jsonString);
-        verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
+        SpecificBanksAccount paymentAccount = (SpecificBanksAccount) createPaymentAccount(aliceClient, jsonString);
+        verifyUserPayloadHasPaymentAccountWithId(aliceClient, paymentAccount.getId());
         verifyAccountSingleTradeCurrency("GBP", paymentAccount);
         verifyCommonFormEntries(paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_COUNTRY),
@@ -726,8 +726,8 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_HOLDER_NAME, "Swish Acct Holder");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_SALT, encodeToHex("Restored Swish Acct Salt"));
         String jsonString = getCompletedFormAsJsonString();
-        SwishAccount paymentAccount = (SwishAccount) createPaymentAccount(alicedaemon, jsonString);
-        verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
+        SwishAccount paymentAccount = (SwishAccount) createPaymentAccount(aliceClient, jsonString);
+        verifyUserPayloadHasPaymentAccountWithId(aliceClient, paymentAccount.getId());
         verifyAccountSingleTradeCurrency("SEK", paymentAccount);
         verifyCommonFormEntries(paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_MOBILE_NR), paymentAccount.getMobileNr());
@@ -747,8 +747,8 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_EMAIL, "jan@doe.info");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_SALT, "");
         String jsonString = getCompletedFormAsJsonString();
-        TransferwiseAccount paymentAccount = (TransferwiseAccount) createPaymentAccount(alicedaemon, jsonString);
-        verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
+        TransferwiseAccount paymentAccount = (TransferwiseAccount) createPaymentAccount(aliceClient, jsonString);
+        verifyUserPayloadHasPaymentAccountWithId(aliceClient, paymentAccount.getId());
         // As per commit 88f26f93241af698ae689bf081205d0f9dc929fa
         // Do not autofill all currencies by default but keep all unselected.
         // verifyAccountTradeCurrencies(getAllTransferwiseCurrencies(), paymentAccount);
@@ -769,8 +769,8 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_ACCOUNT_ID, "UA 9876");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_SALT, encodeToHex("Restored Uphold Acct Salt"));
         String jsonString = getCompletedFormAsJsonString();
-        UpholdAccount paymentAccount = (UpholdAccount) createPaymentAccount(alicedaemon, jsonString);
-        verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
+        UpholdAccount paymentAccount = (UpholdAccount) createPaymentAccount(aliceClient, jsonString);
+        verifyUserPayloadHasPaymentAccountWithId(aliceClient, paymentAccount.getId());
         verifyAccountTradeCurrencies(getAllUpholdCurrencies(), paymentAccount);
         verifyCommonFormEntries(paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_ACCOUNT_ID), paymentAccount.getAccountId());
@@ -791,8 +791,8 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_POSTAL_ADDRESS, "000 Westwood Terrace Austin, TX 78700");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_SALT, "");
         String jsonString = getCompletedFormAsJsonString();
-        USPostalMoneyOrderAccount paymentAccount = (USPostalMoneyOrderAccount) createPaymentAccount(alicedaemon, jsonString);
-        verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
+        USPostalMoneyOrderAccount paymentAccount = (USPostalMoneyOrderAccount) createPaymentAccount(aliceClient, jsonString);
+        verifyUserPayloadHasPaymentAccountWithId(aliceClient, paymentAccount.getId());
         verifyAccountSingleTradeCurrency("USD", paymentAccount);
         verifyCommonFormEntries(paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_HOLDER_NAME), paymentAccount.getHolderName());
@@ -811,8 +811,8 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_ACCOUNT_NR, "WC 1234");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_SALT, encodeToHex("Restored WeChat Pay Acct Salt"));
         String jsonString = getCompletedFormAsJsonString();
-        WeChatPayAccount paymentAccount = (WeChatPayAccount) createPaymentAccount(alicedaemon, jsonString);
-        verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
+        WeChatPayAccount paymentAccount = (WeChatPayAccount) createPaymentAccount(aliceClient, jsonString);
+        verifyUserPayloadHasPaymentAccountWithId(aliceClient, paymentAccount.getId());
         verifyAccountSingleTradeCurrency("CNY", paymentAccount);
         verifyCommonFormEntries(paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_ACCOUNT_NR), paymentAccount.getAccountNr());
@@ -839,8 +839,8 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_EMAIL, "jane@doe.info");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_SALT, "");
         String jsonString = getCompletedFormAsJsonString();
-        WesternUnionAccount paymentAccount = (WesternUnionAccount) createPaymentAccount(alicedaemon, jsonString);
-        verifyUserPayloadHasPaymentAccountWithId(paymentAccount.getId());
+        WesternUnionAccount paymentAccount = (WesternUnionAccount) createPaymentAccount(aliceClient, jsonString);
+        verifyUserPayloadHasPaymentAccountWithId(aliceClient, paymentAccount.getId());
         verifyAccountSingleTradeCurrency("USD", paymentAccount);
         verifyCommonFormEntries(paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_HOLDER_NAME), paymentAccount.getFullName());

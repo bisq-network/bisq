@@ -19,8 +19,6 @@ package bisq.apitest.method.offer;
 
 import bisq.core.payment.PaymentAccount;
 
-import bisq.proto.grpc.CreateOfferRequest;
-
 import io.grpc.StatusRuntimeException;
 
 import lombok.extern.slf4j.Slf4j;
@@ -31,7 +29,6 @@ import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 
-import static bisq.apitest.config.BisqAppConfig.alicedaemon;
 import static bisq.core.btc.wallet.Restrictions.getDefaultBuyerSecurityDepositAsPercent;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -44,22 +41,17 @@ public class ValidateCreateOfferTest extends AbstractOfferTest {
     @Test
     @Order(1)
     public void testAmtTooLargeShouldThrowException() {
-        PaymentAccount usdAccount = createDummyF2FAccount(alicedaemon, "US");
-        var req = CreateOfferRequest.newBuilder()
-                .setPaymentAccountId(usdAccount.getId())
-                .setDirection("buy")
-                .setCurrencyCode("usd")
-                .setAmount(100000000000L)
-                .setMinAmount(100000000000L)
-                .setUseMarketBasedPrice(false)
-                .setMarketPriceMargin(0.00)
-                .setPrice("10000.0000")
-                .setBuyerSecurityDeposit(getDefaultBuyerSecurityDepositAsPercent())
-                .setMakerFeeCurrencyCode("bsq")
-                .build();
+        PaymentAccount usdAccount = createDummyF2FAccount(aliceClient, "US");
         @SuppressWarnings("ResultOfMethodCallIgnored")
         Throwable exception = assertThrows(StatusRuntimeException.class, () ->
-                aliceStubs.offersService.createOffer(req).getOffer());
+                aliceClient.createFixedPricedOffer("buy",
+                        "usd",
+                        100000000000L, // exceeds amount limit
+                        100000000000L,
+                        "10000.0000",
+                        getDefaultBuyerSecurityDepositAsPercent(),
+                        usdAccount.getId(),
+                        "bsq"));
         assertEquals("UNKNOWN: An error occurred at task: ValidateOffer",
                 exception.getMessage());
     }
