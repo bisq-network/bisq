@@ -32,7 +32,7 @@ import io.grpc.ManagedChannelBuilder;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 
-public class GrpcStubs {
+public final class GrpcStubs {
 
     public final DisputeAgentsGrpc.DisputeAgentsBlockingStub disputeAgentsService;
     public final HelpGrpc.HelpBlockingStub helpService;
