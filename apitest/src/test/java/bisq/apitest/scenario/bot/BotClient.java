@@ -103,7 +103,7 @@ public class BotClient {
      * @return List<OfferInfo>
      */
     public List<OfferInfo> getBuyOffers(String currencyCode) {
-        return grpcClient.getOffers(currencyCode, "BUY");
+        return grpcClient.getOffers("BUY", currencyCode);
     }
 
     /**
@@ -112,7 +112,7 @@ public class BotClient {
      * @return List<OfferInfo>
      */
     public List<OfferInfo> getSellOffers(String currencyCode) {
-        return grpcClient.getOffers(currencyCode, "SELL");
+        return grpcClient.getOffers("SELL", currencyCode);
     }
 
     /**
