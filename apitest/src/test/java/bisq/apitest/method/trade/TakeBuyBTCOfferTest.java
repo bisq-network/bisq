@@ -32,9 +32,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.TestMethodOrder;
 
-import static bisq.apitest.config.BisqAppConfig.alicedaemon;
-import static bisq.apitest.config.BisqAppConfig.bobdaemon;
 import static bisq.cli.CurrencyFormat.formatSatoshis;
+import static bisq.core.btc.wallet.Restrictions.getDefaultBuyerSecurityDepositAsPercent;
 import static bisq.core.trade.Trade.Phase.DEPOSIT_CONFIRMED;
 import static bisq.core.trade.Trade.Phase.DEPOSIT_PUBLISHED;
 import static bisq.core.trade.Trade.Phase.FIAT_SENT;
@@ -61,11 +60,14 @@ public class TakeBuyBTCOfferTest extends AbstractTradeTest {
     @Order(1)
     public void testTakeAlicesBuyOffer(final TestInfo testInfo) {
         try {
-            PaymentAccount alicesUsdAccount = createDummyF2FAccount(alicedaemon, "US");
-            var alicesOffer = createAliceOffer(alicesUsdAccount,
-                    "buy",
+            PaymentAccount alicesUsdAccount = createDummyF2FAccount(aliceClient, "US");
+            var alicesOffer = aliceClient.createMarketBasedPricedOffer("buy",
                     "usd",
                     12500000,
+                    12500000, // min-amount = amount
+                    0.00,
+                    getDefaultBuyerSecurityDepositAsPercent(),
+                    alicesUsdAccount.getId(),
                     TRADE_FEE_CURRENCY_CODE);
             var offerId = alicesOffer.getId();
             assertFalse(alicesOffer.getIsCurrencyForMakerFeeBtc());
@@ -73,10 +75,10 @@ public class TakeBuyBTCOfferTest extends AbstractTradeTest {
             // Wait for Alice's AddToOfferBook task.
             // Wait times vary;  my logs show >= 2 second delay.
             sleep(3000); // TODO loop instead of hard code wait time
-            var alicesUsdOffers = getMyOffersSortedByDate(aliceStubs, "buy", "usd");
+            var alicesUsdOffers = aliceClient.getMyOffersSortedByDate("buy", "usd");
             assertEquals(1, alicesUsdOffers.size());
 
-            PaymentAccount bobsUsdAccount = createDummyF2FAccount(bobdaemon, "US");
+            PaymentAccount bobsUsdAccount = createDummyF2FAccount(bobClient, "US");
             var trade = takeAlicesOffer(offerId, bobsUsdAccount.getId(), TRADE_FEE_CURRENCY_CODE);
             assertNotNull(trade);
             assertEquals(offerId, trade.getTradeId());
@@ -85,10 +87,10 @@ public class TakeBuyBTCOfferTest extends AbstractTradeTest {
             tradeId = trade.getTradeId();
 
             genBtcBlocksThenWait(1, 1000);
-            alicesUsdOffers = getMyOffersSortedByDate(aliceStubs, "buy", "usd");
+            alicesUsdOffers = aliceClient.getMyOffersSortedByDate("buy", "usd");
             assertEquals(0, alicesUsdOffers.size());
 
-            trade = getTrade(bobdaemon, trade.getTradeId());
+            trade = bobClient.getTrade(trade.getTradeId());
             EXPECTED_PROTOCOL_STATUS.setState(SELLER_PUBLISHED_DEPOSIT_TX)
                     .setPhase(DEPOSIT_PUBLISHED)
                     .setDepositPublished(true);
@@ -96,7 +98,7 @@ public class TakeBuyBTCOfferTest extends AbstractTradeTest {
             logTrade(log, testInfo, "Bob's view after taking offer and sending deposit", trade);
 
             genBtcBlocksThenWait(1, 1000);
-            trade = getTrade(bobdaemon, trade.getTradeId());
+            trade = bobClient.getTrade(trade.getTradeId());
             EXPECTED_PROTOCOL_STATUS.setState(DEPOSIT_CONFIRMED_IN_BLOCK_CHAIN)
                     .setPhase(DEPOSIT_CONFIRMED)
                     .setDepositConfirmed(true);
@@ -111,11 +113,11 @@ public class TakeBuyBTCOfferTest extends AbstractTradeTest {
     @Order(2)
     public void testAlicesConfirmPaymentStarted(final TestInfo testInfo) {
         try {
-            var trade = getTrade(alicedaemon, tradeId);
-            confirmPaymentStarted(alicedaemon, trade.getTradeId());
+            var trade = aliceClient.getTrade(tradeId);
+            aliceClient.confirmPaymentStarted(trade.getTradeId());
             sleep(3000);
 
-            trade = getTrade(alicedaemon, tradeId);
+            trade = aliceClient.getTrade(tradeId);
             assertEquals(OFFER_FEE_PAID.name(), trade.getOffer().getState());
             EXPECTED_PROTOCOL_STATUS.setState(BUYER_SAW_ARRIVED_FIAT_PAYMENT_INITIATED_MSG)
                     .setPhase(FIAT_SENT)
@@ -130,11 +132,11 @@ public class TakeBuyBTCOfferTest extends AbstractTradeTest {
     @Test
     @Order(3)
     public void testBobsConfirmPaymentReceived(final TestInfo testInfo) {
-        var trade = getTrade(bobdaemon, tradeId);
-        confirmPaymentReceived(bobdaemon, trade.getTradeId());
+        var trade = bobClient.getTrade(tradeId);
+        bobClient.confirmPaymentReceived(trade.getTradeId());
         sleep(3000);
 
-        trade = getTrade(bobdaemon, tradeId);
+        trade = bobClient.getTrade(tradeId);
         // Note: offer.state == available
         assertEquals(AVAILABLE.name(), trade.getOffer().getState());
         EXPECTED_PROTOCOL_STATUS.setState(SELLER_SAW_ARRIVED_PAYOUT_TX_PUBLISHED_MSG)
@@ -150,19 +152,19 @@ public class TakeBuyBTCOfferTest extends AbstractTradeTest {
     public void testAlicesKeepFunds(final TestInfo testInfo) {
         genBtcBlocksThenWait(1, 1000);
 
-        var trade = getTrade(alicedaemon, tradeId);
+        var trade = aliceClient.getTrade(tradeId);
         logTrade(log, testInfo, "Alice's view before keeping funds", trade);
 
-        keepFunds(alicedaemon, tradeId);
+        aliceClient.keepFunds(tradeId);
 
         genBtcBlocksThenWait(1, 1000);
 
-        trade = getTrade(alicedaemon, tradeId);
+        trade = aliceClient.getTrade(tradeId);
         EXPECTED_PROTOCOL_STATUS.setState(BUYER_RECEIVED_PAYOUT_TX_PUBLISHED_MSG)
                 .setPhase(PAYOUT_PUBLISHED);
         verifyExpectedProtocolStatus(trade);
         logTrade(log, testInfo, "Alice's view after keeping funds", trade);
-        BtcBalanceInfo currentBalance = getBtcBalances(bobdaemon);
+        BtcBalanceInfo currentBalance = aliceClient.getBtcBalances();
         log.debug("{} Alice's current available balance: {} BTC",
                 testName(testInfo),
                 formatSatoshis(currentBalance.getAvailableBalance()));

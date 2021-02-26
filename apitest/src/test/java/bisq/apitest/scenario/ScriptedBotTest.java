@@ -34,7 +34,6 @@ import static bisq.apitest.config.BisqAppConfig.arbdaemon;
 import static bisq.apitest.config.BisqAppConfig.bobdaemon;
 import static bisq.apitest.config.BisqAppConfig.seednode;
 import static bisq.apitest.scenario.bot.shutdown.ManualShutdown.startShutdownTimer;
-import static java.net.InetAddress.getLoopbackAddress;
 import static org.junit.jupiter.api.Assertions.fail;
 
 
@@ -46,7 +45,6 @@ import bisq.apitest.scenario.bot.BotClient;
 import bisq.apitest.scenario.bot.RobotBob;
 import bisq.apitest.scenario.bot.script.BashScriptGenerator;
 import bisq.apitest.scenario.bot.shutdown.ManualBotShutdownException;
-import bisq.cli.GrpcStubs;
 
 // The test case is enabled if AbstractBotTest#botScriptExists() returns true.
 @EnabledIf("botScriptExists")
@@ -75,13 +73,10 @@ public class ScriptedBotTest extends AbstractBotTest {
             // an offer can be taken.
             config = new ApiTestConfig("--apiPassword", "xyz");
             bitcoinCli = new BitcoinCliHelper(config);
-            bobStubs = new GrpcStubs(getLoopbackAddress().getHostAddress(),
-                    bobdaemon.apiPort,
-                    config.apiPassword);
             log.warn("Don't forget to register dispute agents before trying to trade with me.");
         }
 
-        botClient = new BotClient(bobStubs);
+        botClient = new BotClient(bobClient);
     }
 
     @BeforeEach

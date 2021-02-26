@@ -53,10 +53,10 @@ public class BtcWalletTest extends MethodTest {
     public void testInitialBtcBalances(final TestInfo testInfo) {
         // Bob & Alice's regtest Bisq wallets were initialized with 10 BTC.
 
-        BtcBalanceInfo alicesBalances = getBtcBalances(alicedaemon);
+        BtcBalanceInfo alicesBalances = aliceClient.getBtcBalances();
         log.debug("{} Alice's BTC Balances:\n{}", testName(testInfo), formatBtcBalanceInfoTbl(alicesBalances));
 
-        BtcBalanceInfo bobsBalances = getBtcBalances(bobdaemon);
+        BtcBalanceInfo bobsBalances = bobClient.getBtcBalances();
         log.debug("{} Bob's BTC Balances:\n{}", testName(testInfo), formatBtcBalanceInfoTbl(bobsBalances));
 
         assertEquals(INITIAL_BTC_BALANCES.getAvailableBalance(), alicesBalances.getAvailableBalance());
@@ -66,20 +66,20 @@ public class BtcWalletTest extends MethodTest {
     @Test
     @Order(2)
     public void testFundAlicesBtcWallet(final TestInfo testInfo) {
-        String newAddress = getUnusedBtcAddress(alicedaemon);
+        String newAddress = aliceClient.getUnusedBtcAddress();
         bitcoinCli.sendToAddress(newAddress, "2.5");
         genBtcBlocksThenWait(1, 1000);
 
-        BtcBalanceInfo btcBalanceInfo = getBtcBalances(alicedaemon);
+        BtcBalanceInfo btcBalanceInfo = aliceClient.getBtcBalances();
         // New balance is 12.5 BTC
         assertEquals(1250000000, btcBalanceInfo.getAvailableBalance());
 
         log.debug("{} -> Alice's Funded Address Balance -> \n{}",
                 testName(testInfo),
-                formatAddressBalanceTbl(singletonList(getAddressBalance(alicedaemon, newAddress))));
+                formatAddressBalanceTbl(singletonList(aliceClient.getAddressBalance(newAddress))));
 
         // New balance is 12.5 BTC
-        btcBalanceInfo = getBtcBalances(alicedaemon);
+        btcBalanceInfo = aliceClient.getBtcBalances();
         bisq.core.api.model.BtcBalanceInfo alicesExpectedBalances =
                 bisq.core.api.model.BtcBalanceInfo.valueOf(1250000000,
                         0,
@@ -94,11 +94,10 @@ public class BtcWalletTest extends MethodTest {
     @Test
     @Order(3)
     public void testAliceSendBTCToBob(TestInfo testInfo) {
-        String bobsBtcAddress = getUnusedBtcAddress(bobdaemon);
+        String bobsBtcAddress = bobClient.getUnusedBtcAddress();
         log.debug("Sending 5.5 BTC From Alice to Bob @ {}", bobsBtcAddress);
 
-        TxInfo txInfo = sendBtc(alicedaemon,
-                bobsBtcAddress,
+        TxInfo txInfo = aliceClient.sendBtc(bobsBtcAddress,
                 "5.50",
                 "100",
                 TX_MEMO);
@@ -109,11 +108,11 @@ public class BtcWalletTest extends MethodTest {
         genBtcBlocksThenWait(1, 1000);
 
         // Fetch the tx and check for confirmation and memo.
-        txInfo = getTransaction(alicedaemon, txInfo.getTxId());
+        txInfo = aliceClient.getTransaction(txInfo.getTxId());
         assertFalse(txInfo.getIsPending());
         assertEquals(TX_MEMO, txInfo.getMemo());
 
-        BtcBalanceInfo alicesBalances = getBtcBalances(alicedaemon);
+        BtcBalanceInfo alicesBalances = aliceClient.getBtcBalances();
         log.debug("{} Alice's BTC Balances:\n{}",
                 testName(testInfo),
                 formatBtcBalanceInfoTbl(alicesBalances));
@@ -124,7 +123,7 @@ public class BtcWalletTest extends MethodTest {
                         0);
         verifyBtcBalances(alicesExpectedBalances, alicesBalances);
 
-        BtcBalanceInfo bobsBalances = getBtcBalances(bobdaemon);
+        BtcBalanceInfo bobsBalances = bobClient.getBtcBalances();
         log.debug("{} Bob's BTC Balances:\n{}",
                 testName(testInfo),
                 formatBtcBalanceInfoTbl(bobsBalances));

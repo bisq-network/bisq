@@ -13,6 +13,7 @@ import org.junit.jupiter.api.TestMethodOrder;
 import static bisq.apitest.Scaffold.BitcoinCoreApp.bitcoind;
 import static bisq.apitest.config.BisqAppConfig.alicedaemon;
 import static bisq.apitest.config.BisqAppConfig.seednode;
+import static java.util.Objects.requireNonNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -80,7 +81,8 @@ public class PaymentAccountTest extends AbstractPaymentAccountTest {
         test.testCreateWeChatPayAccount(testInfo);
         test.testCreateWesternUnionAccount(testInfo);
 
-        assertEquals(EXPECTED_NUM_PAYMENT_ACCOUNTS, getPaymentAccounts(alicedaemon).size());
+        var paymentAccounts = requireNonNull(aliceClient).getPaymentAccounts();
+        assertEquals(EXPECTED_NUM_PAYMENT_ACCOUNTS, paymentAccounts.size());
     }
 
     @AfterAll
