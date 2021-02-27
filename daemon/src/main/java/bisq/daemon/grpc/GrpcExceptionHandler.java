@@ -58,9 +58,9 @@ class GrpcExceptionHandler {
     }
 
     public void handleExceptionAsWarning(Logger log,
-                                        String calledMethod,
-                                        Throwable t,
-                                        StreamObserver<?> responseObserver) {
+                                         String calledMethod,
+                                         Throwable t,
+                                         StreamObserver<?> responseObserver) {
         // Just log a warning instead of an error with full stack trace.
         log.warn(calledMethod + " -> " + t.getMessage());
         var grpcStatusRuntimeException = wrapException(t);
