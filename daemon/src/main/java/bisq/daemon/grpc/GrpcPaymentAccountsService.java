@@ -40,6 +40,8 @@ import java.util.HashMap;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import lombok.extern.slf4j.Slf4j;
+
 import static bisq.daemon.grpc.interceptor.GrpcServiceRateMeteringConfig.getCustomRateMeteringInterceptor;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -49,7 +51,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import bisq.daemon.grpc.interceptor.CallRateMeteringInterceptor;
 import bisq.daemon.grpc.interceptor.GrpcCallRateMeter;
 
-
+@Slf4j
 class GrpcPaymentAccountsService extends PaymentAccountsGrpc.PaymentAccountsImplBase {
 
     private final CoreApi coreApi;
@@ -72,7 +74,7 @@ class GrpcPaymentAccountsService extends PaymentAccountsGrpc.PaymentAccountsImpl
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
         } catch (Throwable cause) {
-            exceptionHandler.handleException(cause, responseObserver);
+            exceptionHandler.handleException(log, cause, responseObserver);
         }
     }
 
@@ -88,7 +90,7 @@ class GrpcPaymentAccountsService extends PaymentAccountsGrpc.PaymentAccountsImpl
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
         } catch (Throwable cause) {
-            exceptionHandler.handleException(cause, responseObserver);
+            exceptionHandler.handleException(log, cause, responseObserver);
         }
     }
 
@@ -104,7 +106,7 @@ class GrpcPaymentAccountsService extends PaymentAccountsGrpc.PaymentAccountsImpl
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
         } catch (Throwable cause) {
-            exceptionHandler.handleException(cause, responseObserver);
+            exceptionHandler.handleException(log, cause, responseObserver);
         }
     }
 
@@ -119,7 +121,7 @@ class GrpcPaymentAccountsService extends PaymentAccountsGrpc.PaymentAccountsImpl
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
         } catch (Throwable cause) {
-            exceptionHandler.handleException(cause, responseObserver);
+            exceptionHandler.handleException(log, cause, responseObserver);
         }
     }
 

@@ -79,7 +79,7 @@ class GrpcTradesService extends TradesGrpc.TradesImplBase {
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
         } catch (Throwable cause) {
-            exceptionHandler.handleException(cause, responseObserver);
+            exceptionHandler.handleException(log, cause, responseObserver);
         }
     }
 
@@ -99,7 +99,7 @@ class GrpcTradesService extends TradesGrpc.TradesImplBase {
                         responseObserver.onCompleted();
                     });
         } catch (Throwable cause) {
-            exceptionHandler.handleException(cause, responseObserver);
+            exceptionHandler.handleException(log, cause, responseObserver);
         }
     }
 
@@ -112,7 +112,7 @@ class GrpcTradesService extends TradesGrpc.TradesImplBase {
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
         } catch (Throwable cause) {
-            exceptionHandler.handleException(cause, responseObserver);
+            exceptionHandler.handleException(log, cause, responseObserver);
         }
     }
 
@@ -125,7 +125,7 @@ class GrpcTradesService extends TradesGrpc.TradesImplBase {
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
         } catch (Throwable cause) {
-            exceptionHandler.handleException(cause, responseObserver);
+            exceptionHandler.handleException(log, cause, responseObserver);
         }
     }
 
@@ -138,7 +138,7 @@ class GrpcTradesService extends TradesGrpc.TradesImplBase {
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
         } catch (Throwable cause) {
-            exceptionHandler.handleException(cause, responseObserver);
+            exceptionHandler.handleException(log, cause, responseObserver);
         }
     }
 
@@ -151,7 +151,7 @@ class GrpcTradesService extends TradesGrpc.TradesImplBase {
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
         } catch (Throwable cause) {
-            exceptionHandler.handleException(cause, responseObserver);
+            exceptionHandler.handleException(log, cause, responseObserver);
         }
     }
 

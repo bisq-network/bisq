@@ -26,7 +26,7 @@ import javax.inject.Singleton;
 
 import java.util.function.Predicate;
 
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
 
 import static io.grpc.Status.INVALID_ARGUMENT;
 import static io.grpc.Status.UNKNOWN;
@@ -37,7 +37,6 @@ import static io.grpc.Status.UNKNOWN;
  * An unexpected Throwable's message will be replaced with an 'unexpected' error message.
  */
 @Singleton
-@Slf4j
 class GrpcExceptionHandler {
 
     private final Predicate<Throwable> isExpectedException = (t) ->
@@ -47,7 +46,7 @@ class GrpcExceptionHandler {
     public GrpcExceptionHandler() {
     }
 
-    public void handleException(Throwable t, StreamObserver<?> responseObserver) {
+    public void handleException(Logger log, Throwable t, StreamObserver<?> responseObserver) {
         // Log the core api error (this is last chance to do that), wrap it in a new
         // gRPC StatusRuntimeException, then send it to the client in the gRPC response.
         log.error("", t);

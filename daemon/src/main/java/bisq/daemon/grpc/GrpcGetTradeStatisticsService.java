@@ -16,6 +16,8 @@ import java.util.HashMap;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import lombok.extern.slf4j.Slf4j;
+
 import static bisq.daemon.grpc.interceptor.GrpcServiceRateMeteringConfig.getCustomRateMeteringInterceptor;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
@@ -24,6 +26,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import bisq.daemon.grpc.interceptor.CallRateMeteringInterceptor;
 import bisq.daemon.grpc.interceptor.GrpcCallRateMeter;
 
+@Slf4j
 class GrpcGetTradeStatisticsService extends GetTradeStatisticsGrpc.GetTradeStatisticsImplBase {
 
     private final CoreApi coreApi;
@@ -47,7 +50,7 @@ class GrpcGetTradeStatisticsService extends GetTradeStatisticsGrpc.GetTradeStati
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
         } catch (Throwable cause) {
-            exceptionHandler.handleException(cause, responseObserver);
+            exceptionHandler.handleException(log, cause, responseObserver);
         }
     }
 
