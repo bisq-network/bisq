@@ -46,10 +46,23 @@ class GrpcExceptionHandler {
     public GrpcExceptionHandler() {
     }
 
-    public void handleException(Logger log, Throwable t, StreamObserver<?> responseObserver) {
+    public void handleException(Logger log,
+                                Throwable t,
+                                StreamObserver<?> responseObserver) {
         // Log the core api error (this is last chance to do that), wrap it in a new
         // gRPC StatusRuntimeException, then send it to the client in the gRPC response.
         log.error("", t);
+        var grpcStatusRuntimeException = wrapException(t);
+        responseObserver.onError(grpcStatusRuntimeException);
+        throw grpcStatusRuntimeException;
+    }
+
+    public void handleExceptionAsWarning(Logger log,
+                                        String calledMethod,
+                                        Throwable t,
+                                        StreamObserver<?> responseObserver) {
+        // Just log a warning instead of an error with full stack trace.
+        log.warn(calledMethod + " -> " + t.getMessage());
         var grpcStatusRuntimeException = wrapException(t);
         responseObserver.onError(grpcStatusRuntimeException);
         throw grpcStatusRuntimeException;
