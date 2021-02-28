@@ -59,9 +59,9 @@ class GrpcDisputeAgentsService extends DisputeAgentsGrpc.DisputeAgentsImplBase {
         return getCustomRateMeteringInterceptor(coreApi.getConfig().appDataDir, this.getClass())
                 .or(() -> Optional.of(CallRateMeteringInterceptor.valueOf(
                         new HashMap<>() {{
-                            // You can only register mainnet dispute agents in the UI.
-                            // Do not limit devs' ability to register test agents.
-                            put("registerDisputeAgent", new GrpcCallRateMeter(1, SECONDS));
+                            // Do not limit devs' ability to test agent registration
+                            // and call validation in regtest arbitration daemons.
+                            put("registerDisputeAgent", new GrpcCallRateMeter(10, SECONDS));
                         }}
                 )));
     }

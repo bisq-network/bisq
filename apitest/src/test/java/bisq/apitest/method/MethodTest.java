@@ -71,8 +71,11 @@ public class MethodTest extends ApiTestCase {
                                            boolean generateBtcBlock,
                                            Enum<?>... supportingApps) {
         try {
+            // Disable call rate metering where there is no callRateMeteringConfigFile.
+            File callRateMeteringConfigFile = defaultRateMeterInterceptorConfig();
             setUpScaffold(new String[]{
                     "--supportingApps", toNameList.apply(supportingApps),
+                    "--callRateMeteringConfigPath", callRateMeteringConfigFile.getAbsolutePath(),
                     "--enableBisqDebugging", "false"
             });
             doPostStartup(registerDisputeAgents, generateBtcBlock);
@@ -136,6 +139,7 @@ public class MethodTest extends ApiTestCase {
 
     protected static void registerDisputeAgents() {
         arbClient.registerDisputeAgent(MEDIATOR, DEV_PRIVILEGE_PRIV_KEY);
+        sleep(1001); // Can call registerdisputeagent 1x per second.
         arbClient.registerDisputeAgent(REFUND_AGENT, DEV_PRIVILEGE_PRIV_KEY);
     }
 

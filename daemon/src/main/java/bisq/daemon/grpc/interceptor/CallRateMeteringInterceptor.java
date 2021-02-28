@@ -27,7 +27,6 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
@@ -35,6 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 import static io.grpc.Status.PERMISSION_DENIED;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
+import static org.apache.commons.lang3.StringUtils.uncapitalize;
 
 @Slf4j
 public final class CallRateMeteringInterceptor implements ServerInterceptor {
@@ -106,11 +106,16 @@ public final class CallRateMeteringInterceptor implements ServerInterceptor {
     }
 
     private String getRateMeterKey(ServerCall<?, ?> serverCall) {
-        // Get the rate meter map key from the full rpc service name.  The key name
-        // is hard coded in the Grpc*Service interceptors() method.
-        String fullServiceName = serverCall.getMethodDescriptor().getServiceName();
-        return StringUtils.uncapitalize(Objects.requireNonNull(fullServiceName)
-                .substring("io.bisq.protobuffer.".length()));
+        // Get the rate meter map key from the server call method descriptor.  The
+        // returned key (e.g., 'createOffer') is defined in the 'serviceCallRateMeters'
+        // constructor argument.  It is extracted from the gRPC fullMethodName, e.g.,
+        // 'io.bisq.protobuffer.Offers/CreateOffer'.
+        String fullServiceMethodName = serverCall.getMethodDescriptor().getFullMethodName();
+        if (fullServiceMethodName.contains("/"))
+            return uncapitalize(fullServiceMethodName.split("/")[1]);
+        else
+            throw new IllegalStateException("Could not extract rate meter key from "
+                    + fullServiceMethodName + ".");
     }
 
     @Override

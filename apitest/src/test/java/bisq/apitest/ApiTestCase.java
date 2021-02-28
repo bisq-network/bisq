@@ -17,10 +17,13 @@
 
 package bisq.apitest;
 
+import java.io.File;
 import java.io.IOException;
 
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
+
+import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
@@ -29,15 +32,19 @@ import org.junit.jupiter.api.TestInfo;
 import static bisq.apitest.config.BisqAppConfig.alicedaemon;
 import static bisq.apitest.config.BisqAppConfig.arbdaemon;
 import static bisq.apitest.config.BisqAppConfig.bobdaemon;
+import static bisq.common.file.FileUtil.deleteFileIfExists;
 import static java.net.InetAddress.getLoopbackAddress;
 import static java.util.Arrays.stream;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 
 
 import bisq.apitest.config.ApiTestConfig;
 import bisq.apitest.method.BitcoinCliHelper;
 import bisq.cli.GrpcClient;
+import bisq.daemon.grpc.GrpcVersionService;
+import bisq.daemon.grpc.interceptor.GrpcServiceRateMeteringConfig;
 
 /**
  * Base class for all test types:  'method', 'scenario' and 'e2e'.
@@ -64,6 +71,7 @@ import bisq.cli.GrpcClient;
  * <p>
  * Initial Bob balances & accounts:    10.0 BTC, 1500000.00 BSQ, USD PerfectMoney dummy
  */
+@Slf4j
 public class ApiTestCase {
 
     protected static Scaffold scaffold;
@@ -79,12 +87,12 @@ public class ApiTestCase {
 
     public static void setUpScaffold(Enum<?>... supportingApps)
             throws InterruptedException, ExecutionException, IOException {
-        scaffold = new Scaffold(stream(supportingApps).map(Enum::name)
-                .collect(Collectors.joining(",")))
-                .setUp();
-        config = scaffold.config;
-        bitcoinCli = new BitcoinCliHelper((config));
-        createGrpcClients();
+        String[] params = new String[]{
+                "--supportingApps", stream(supportingApps).map(Enum::name).collect(Collectors.joining(",")),
+                "--callRateMeteringConfigPath", defaultRateMeterInterceptorConfig().getAbsolutePath(),
+                "--enableBisqDebugging", "false"
+        };
+        setUpScaffold(params);
     }
 
     public static void setUpScaffold(String[] params)
@@ -138,5 +146,33 @@ public class ApiTestCase {
         return testInfo.getTestMethod().isPresent()
                 ? testInfo.getTestMethod().get().getName()
                 : "unknown test name";
+    }
+
+    protected static File defaultRateMeterInterceptorConfig() {
+        GrpcServiceRateMeteringConfig.Builder builder = new GrpcServiceRateMeteringConfig.Builder();
+        builder.addCallRateMeter(GrpcVersionService.class.getSimpleName(),
+                "getVersion",
+                1,
+                SECONDS);
+        // Only GrpcVersionService is @VisibleForTesting, so we hardcode the class names.
+        builder.addCallRateMeter("GrpcDisputeAgentsService",
+                "registerDisputeAgent",
+                6, // Allow 6/second for test harness setup + tests.
+                SECONDS);
+        String[] serviceClassNames = new String[]{
+                "GrpcGetTradeStatisticsService",
+                "GrpcHelpService",
+                "GrpcOffersService",
+                "GrpcPaymentAccountsService",
+                "GrpcPriceService",
+                "GrpcTradesService",
+                "GrpcWalletsService"
+        };
+        for (String service : serviceClassNames) {
+            builder.addCallRateMeter(service, "disabled", 1, MILLISECONDS);
+        }
+        File file = builder.build();
+        file.deleteOnExit();
+        return file;
     }
 }

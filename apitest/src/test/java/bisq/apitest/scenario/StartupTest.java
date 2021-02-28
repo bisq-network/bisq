@@ -33,7 +33,6 @@ import static bisq.apitest.Scaffold.BitcoinCoreApp.bitcoind;
 import static bisq.apitest.config.BisqAppConfig.alicedaemon;
 import static bisq.apitest.config.BisqAppConfig.arbdaemon;
 import static bisq.apitest.config.BisqAppConfig.seednode;
-import static bisq.apitest.method.CallRateMeteringInterceptorTest.buildInterceptorConfigFile;
 import static bisq.common.file.FileUtil.deleteFileIfExists;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -55,7 +54,7 @@ public class StartupTest extends MethodTest {
     @BeforeAll
     public static void setUp() {
         try {
-            callRateMeteringConfigFile = buildInterceptorConfigFile();
+            callRateMeteringConfigFile = defaultRateMeterInterceptorConfig();
             startSupportingApps(callRateMeteringConfigFile,
                     false,
                     false,
