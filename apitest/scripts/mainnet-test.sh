@@ -155,7 +155,7 @@
 }
 
 @test "test getunusedbsqaddress" {
-  run ./bisq-cli --password=xyz getfundingaddresses
+  run ./bisq-cli --password=xyz getunusedbsqaddress
   [ "$status" -eq 0 ]
 }
 
