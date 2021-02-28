@@ -157,7 +157,7 @@ public class ApiTestCase {
         // Only GrpcVersionService is @VisibleForTesting, so we hardcode the class names.
         builder.addCallRateMeter("GrpcDisputeAgentsService",
                 "registerDisputeAgent",
-                6, // Allow 6/second for test harness setup + tests.
+                10, // Same as default.
                 SECONDS);
         String[] serviceClassNames = new String[]{
                 "GrpcGetTradeStatisticsService",
