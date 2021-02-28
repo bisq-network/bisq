@@ -3,7 +3,6 @@ package bisq.daemon.grpc;
 import bisq.core.api.CoreApi;
 import bisq.core.trade.statistics.TradeStatistics3;
 
-import bisq.proto.grpc.GetTradeStatisticsGrpc;
 import bisq.proto.grpc.GetTradeStatisticsReply;
 import bisq.proto.grpc.GetTradeStatisticsRequest;
 
@@ -19,6 +18,8 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 import static bisq.daemon.grpc.interceptor.GrpcServiceRateMeteringConfig.getCustomRateMeteringInterceptor;
+import static bisq.proto.grpc.GetTradeStatisticsGrpc.GetTradeStatisticsImplBase;
+import static bisq.proto.grpc.GetTradeStatisticsGrpc.getGetTradeStatisticsMethod;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 
@@ -27,7 +28,7 @@ import bisq.daemon.grpc.interceptor.CallRateMeteringInterceptor;
 import bisq.daemon.grpc.interceptor.GrpcCallRateMeter;
 
 @Slf4j
-class GrpcGetTradeStatisticsService extends GetTradeStatisticsGrpc.GetTradeStatisticsImplBase {
+class GrpcGetTradeStatisticsService extends GetTradeStatisticsImplBase {
 
     private final CoreApi coreApi;
     private final GrpcExceptionHandler exceptionHandler;
@@ -64,7 +65,7 @@ class GrpcGetTradeStatisticsService extends GetTradeStatisticsGrpc.GetTradeStati
         return getCustomRateMeteringInterceptor(coreApi.getConfig().appDataDir, this.getClass())
                 .or(() -> Optional.of(CallRateMeteringInterceptor.valueOf(
                         new HashMap<>() {{
-                            put("getTradeStatistics", new GrpcCallRateMeter(1, SECONDS));
+                            put(getGetTradeStatisticsMethod().getFullMethodName(), new GrpcCallRateMeter(1, SECONDS));
                         }}
                 )));
     }

@@ -21,7 +21,6 @@ import bisq.core.api.CoreApi;
 
 import bisq.proto.grpc.GetMethodHelpReply;
 import bisq.proto.grpc.GetMethodHelpRequest;
-import bisq.proto.grpc.HelpGrpc;
 
 import io.grpc.ServerInterceptor;
 import io.grpc.stub.StreamObserver;
@@ -34,6 +33,8 @@ import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 
 import static bisq.daemon.grpc.interceptor.GrpcServiceRateMeteringConfig.getCustomRateMeteringInterceptor;
+import static bisq.proto.grpc.HelpGrpc.HelpImplBase;
+import static bisq.proto.grpc.HelpGrpc.getGetMethodHelpMethod;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 
@@ -42,7 +43,7 @@ import bisq.daemon.grpc.interceptor.CallRateMeteringInterceptor;
 import bisq.daemon.grpc.interceptor.GrpcCallRateMeter;
 
 @Slf4j
-class GrpcHelpService extends HelpGrpc.HelpImplBase {
+class GrpcHelpService extends HelpImplBase {
 
     private final CoreApi coreApi;
     private final GrpcExceptionHandler exceptionHandler;
@@ -76,7 +77,7 @@ class GrpcHelpService extends HelpGrpc.HelpImplBase {
         return getCustomRateMeteringInterceptor(coreApi.getConfig().appDataDir, this.getClass())
                 .or(() -> Optional.of(CallRateMeteringInterceptor.valueOf(
                         new HashMap<>() {{
-                            put("getMethodHelp", new GrpcCallRateMeter(1, SECONDS));
+                            put(getGetMethodHelpMethod().getFullMethodName(), new GrpcCallRateMeter(1, SECONDS));
                         }}
                 )));
     }

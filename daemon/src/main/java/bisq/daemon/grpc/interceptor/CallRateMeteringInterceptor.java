@@ -34,7 +34,6 @@ import lombok.extern.slf4j.Slf4j;
 import static io.grpc.Status.PERMISSION_DENIED;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
-import static org.apache.commons.lang3.StringUtils.uncapitalize;
 
 @Slf4j
 public final class CallRateMeteringInterceptor implements ServerInterceptor {
@@ -85,16 +84,19 @@ public final class CallRateMeteringInterceptor implements ServerInterceptor {
                                                            ServerCall<?, ?> serverCall)
             throws StatusRuntimeException {
         String msg = getDefaultRateExceededError(methodName, rateMeter);
-        log.warn(StringUtils.capitalize(msg) + ".");
-        serverCall.close(PERMISSION_DENIED.withDescription(msg), new Metadata());
+        log.warn(msg + ".");
+        serverCall.close(PERMISSION_DENIED.withDescription(msg.toLowerCase()), new Metadata());
     }
 
     private String getDefaultRateExceededError(String methodName,
                                                GrpcCallRateMeter rateMeter) {
         // The derived method name may not be an exact match to CLI's method name.
         String timeUnitName = StringUtils.chop(rateMeter.getTimeUnit().name().toLowerCase());
-        return format("the maximum allowed number of %s calls (%d/%s) has been exceeded",
-                methodName.toLowerCase(),
+        // Just print 'getversion', not the grpc method descriptor's
+        // full-method-name: 'io.bisq.protobuffer.getversion/getversion'.
+        String loggedMethodName = methodName.split("/")[1];
+        return format("The maximum allowed number of %s calls (%d/%s) has been exceeded",
+                loggedMethodName,
                 rateMeter.getAllowedCallsPerTimeWindow(),
                 timeUnitName);
     }
@@ -107,15 +109,10 @@ public final class CallRateMeteringInterceptor implements ServerInterceptor {
 
     private String getRateMeterKey(ServerCall<?, ?> serverCall) {
         // Get the rate meter map key from the server call method descriptor.  The
-        // returned key (e.g., 'createOffer') is defined in the 'serviceCallRateMeters'
-        // constructor argument.  It is extracted from the gRPC fullMethodName, e.g.,
-        // 'io.bisq.protobuffer.Offers/CreateOffer'.
-        String fullServiceMethodName = serverCall.getMethodDescriptor().getFullMethodName();
-        if (fullServiceMethodName.contains("/"))
-            return uncapitalize(fullServiceMethodName.split("/")[1]);
-        else
-            throw new IllegalStateException("Could not extract rate meter key from "
-                    + fullServiceMethodName + ".");
+        // returned String (e.g., 'io.bisq.protobuffer.Offers/CreateOffer') will match
+        // a map entry key in the 'serviceCallRateMeters' constructor argument, if it
+        // was defined in the Grpc*Service class' rateMeteringInterceptor method.
+        return serverCall.getMethodDescriptor().getFullMethodName();
     }
 
     @Override

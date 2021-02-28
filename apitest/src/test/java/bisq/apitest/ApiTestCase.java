@@ -32,6 +32,8 @@ import org.junit.jupiter.api.TestInfo;
 import static bisq.apitest.config.BisqAppConfig.alicedaemon;
 import static bisq.apitest.config.BisqAppConfig.arbdaemon;
 import static bisq.apitest.config.BisqAppConfig.bobdaemon;
+import static bisq.proto.grpc.DisputeAgentsGrpc.getRegisterDisputeAgentMethod;
+import static bisq.proto.grpc.GetVersionGrpc.getGetVersionMethod;
 import static java.net.InetAddress.getLoopbackAddress;
 import static java.util.Arrays.stream;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -150,14 +152,19 @@ public class ApiTestCase {
     protected static File defaultRateMeterInterceptorConfig() {
         GrpcServiceRateMeteringConfig.Builder builder = new GrpcServiceRateMeteringConfig.Builder();
         builder.addCallRateMeter(GrpcVersionService.class.getSimpleName(),
-                "getVersion",
+                getGetVersionMethod().getFullMethodName(),
                 1,
                 SECONDS);
-        // Only GrpcVersionService is @VisibleForTesting, so we hardcode the class names.
+        // Only GrpcVersionService is @VisibleForTesting, so we need to
+        // hardcode other grpcServiceClassName parameter values used in
+        // builder.addCallRateMeter(...).
         builder.addCallRateMeter("GrpcDisputeAgentsService",
-                "registerDisputeAgent",
+                getRegisterDisputeAgentMethod().getFullMethodName(),
                 10, // Same as default.
                 SECONDS);
+        // Define rate meters for non-existent method 'disabled', to override other grpc
+        // services' default rate meters -- defined in their rateMeteringInterceptor()
+        // methods.
         String[] serviceClassNames = new String[]{
                 "GrpcGetTradeStatisticsService",
                 "GrpcHelpService",

@@ -2,7 +2,6 @@ package bisq.daemon.grpc;
 
 import bisq.core.api.CoreApi;
 
-import bisq.proto.grpc.DisputeAgentsGrpc;
 import bisq.proto.grpc.RegisterDisputeAgentReply;
 import bisq.proto.grpc.RegisterDisputeAgentRequest;
 
@@ -17,6 +16,8 @@ import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 
 import static bisq.daemon.grpc.interceptor.GrpcServiceRateMeteringConfig.getCustomRateMeteringInterceptor;
+import static bisq.proto.grpc.DisputeAgentsGrpc.DisputeAgentsImplBase;
+import static bisq.proto.grpc.DisputeAgentsGrpc.getRegisterDisputeAgentMethod;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 
@@ -25,7 +26,7 @@ import bisq.daemon.grpc.interceptor.CallRateMeteringInterceptor;
 import bisq.daemon.grpc.interceptor.GrpcCallRateMeter;
 
 @Slf4j
-class GrpcDisputeAgentsService extends DisputeAgentsGrpc.DisputeAgentsImplBase {
+class GrpcDisputeAgentsService extends DisputeAgentsImplBase {
 
     private final CoreApi coreApi;
     private final GrpcExceptionHandler exceptionHandler;
@@ -61,7 +62,7 @@ class GrpcDisputeAgentsService extends DisputeAgentsGrpc.DisputeAgentsImplBase {
                         new HashMap<>() {{
                             // Do not limit devs' ability to test agent registration
                             // and call validation in regtest arbitration daemons.
-                            put("registerDisputeAgent", new GrpcCallRateMeter(10, SECONDS));
+                            put(getRegisterDisputeAgentMethod().getFullMethodName(), new GrpcCallRateMeter(10, SECONDS));
                         }}
                 )));
     }

@@ -51,7 +51,6 @@ import bisq.proto.grpc.UnlockWalletReply;
 import bisq.proto.grpc.UnlockWalletRequest;
 import bisq.proto.grpc.UnsetTxFeeRatePreferenceReply;
 import bisq.proto.grpc.UnsetTxFeeRatePreferenceRequest;
-import bisq.proto.grpc.WalletsGrpc;
 
 import io.grpc.ServerInterceptor;
 import io.grpc.stub.StreamObserver;
@@ -73,6 +72,7 @@ import org.jetbrains.annotations.NotNull;
 
 import static bisq.core.api.model.TxInfo.toTxInfo;
 import static bisq.daemon.grpc.interceptor.GrpcServiceRateMeteringConfig.getCustomRateMeteringInterceptor;
+import static bisq.proto.grpc.WalletsGrpc.*;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
@@ -82,7 +82,7 @@ import bisq.daemon.grpc.interceptor.CallRateMeteringInterceptor;
 import bisq.daemon.grpc.interceptor.GrpcCallRateMeter;
 
 @Slf4j
-class GrpcWalletsService extends WalletsGrpc.WalletsImplBase {
+class GrpcWalletsService extends WalletsImplBase {
 
     private final CoreApi coreApi;
     private final GrpcExceptionHandler exceptionHandler;
@@ -352,24 +352,24 @@ class GrpcWalletsService extends WalletsGrpc.WalletsImplBase {
         return getCustomRateMeteringInterceptor(coreApi.getConfig().appDataDir, this.getClass())
                 .or(() -> Optional.of(CallRateMeteringInterceptor.valueOf(
                         new HashMap<>() {{
-                            put("getBalances", new GrpcCallRateMeter(1, SECONDS));
-                            put("getAddressBalance", new GrpcCallRateMeter(1, SECONDS));
-                            put("getFundingAddresses", new GrpcCallRateMeter(1, SECONDS));
-                            put("getUnusedBsqAddress", new GrpcCallRateMeter(1, SECONDS));
-                            put("sendBsq", new GrpcCallRateMeter(1, MINUTES));
-                            put("sendBtc", new GrpcCallRateMeter(1, MINUTES));
-                            put("getTxFeeRate", new GrpcCallRateMeter(1, SECONDS));
-                            put("setTxFeeRatePreference", new GrpcCallRateMeter(1, SECONDS));
-                            put("unsetTxFeeRatePreference", new GrpcCallRateMeter(1, SECONDS));
-                            put("getTransaction", new GrpcCallRateMeter(1, SECONDS));
+                            put(getGetBalancesMethod().getFullMethodName(), new GrpcCallRateMeter(1, SECONDS));
+                            put(getGetAddressBalanceMethod().getFullMethodName(), new GrpcCallRateMeter(1, SECONDS));
+                            put(getGetFundingAddressesMethod().getFullMethodName(), new GrpcCallRateMeter(1, SECONDS));
+                            put(getGetUnusedBsqAddressMethod().getFullMethodName(), new GrpcCallRateMeter(1, SECONDS));
+                            put(getSendBsqMethod().getFullMethodName(), new GrpcCallRateMeter(1, MINUTES));
+                            put(getSendBtcMethod().getFullMethodName(), new GrpcCallRateMeter(1, MINUTES));
+                            put(getGetTxFeeRateMethod().getFullMethodName(), new GrpcCallRateMeter(1, SECONDS));
+                            put(getSetTxFeeRatePreferenceMethod().getFullMethodName(), new GrpcCallRateMeter(1, SECONDS));
+                            put(getUnsetTxFeeRatePreferenceMethod().getFullMethodName(), new GrpcCallRateMeter(1, SECONDS));
+                            put(getGetTransactionMethod().getFullMethodName(), new GrpcCallRateMeter(1, SECONDS));
 
                             // Trying to set or remove a wallet password several times before the 1st attempt has time to
                             // persist the change to disk may corrupt the wallet, so allow only 1 attempt per 5 seconds.
-                            put("setWalletPassword", new GrpcCallRateMeter(1, SECONDS, 5));
-                            put("removeWalletPassword", new GrpcCallRateMeter(1, SECONDS, 5));
+                            put(getSetWalletPasswordMethod().getFullMethodName(), new GrpcCallRateMeter(1, SECONDS, 5));
+                            put(getRemoveWalletPasswordMethod().getFullMethodName(), new GrpcCallRateMeter(1, SECONDS, 5));
 
-                            put("lockWallet", new GrpcCallRateMeter(1, SECONDS));
-                            put("unlockWallet", new GrpcCallRateMeter(1, SECONDS));
+                            put(getLockWalletMethod().getFullMethodName(), new GrpcCallRateMeter(1, SECONDS));
+                            put(getUnlockWalletMethod().getFullMethodName(), new GrpcCallRateMeter(1, SECONDS));
                         }}
                 )));
     }
