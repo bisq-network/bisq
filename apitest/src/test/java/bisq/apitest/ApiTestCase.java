@@ -32,7 +32,6 @@ import org.junit.jupiter.api.TestInfo;
 import static bisq.apitest.config.BisqAppConfig.alicedaemon;
 import static bisq.apitest.config.BisqAppConfig.arbdaemon;
 import static bisq.apitest.config.BisqAppConfig.bobdaemon;
-import static bisq.common.file.FileUtil.deleteFileIfExists;
 import static java.net.InetAddress.getLoopbackAddress;
 import static java.util.Arrays.stream;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
