@@ -59,6 +59,7 @@ import bisq.core.util.coin.CoinFormatter;
 
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
+import bisq.common.util.StringUtils;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple3;
 import bisq.common.util.Utilities;
@@ -1288,7 +1289,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
 
     private void addAmountPriceFields() {
         // amountBox
-        Tuple3<HBox, InputTextField, Label> amountValueCurrencyBoxTuple = getEditableValueBox(Res.get("createOffer.amount.prompt"));
+        Tuple3<HBox, InputTextField, Label> amountValueCurrencyBoxTuple = getEditableValueBox(StringUtils.truncatePromptString(Res.get("createOffer.amount.prompt"), 28));
         amountValueCurrencyBox = amountValueCurrencyBoxTuple.first;
         amountTextField = amountValueCurrencyBoxTuple.second;
         editOfferElements.add(amountTextField);
@@ -1385,7 +1386,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
     private void addSecondRow() {
         // price as fiat
         Tuple3<HBox, InputTextField, Label> priceValueCurrencyBoxTuple = getEditableValueBox(
-                Res.get("createOffer.price.prompt"));
+                StringUtils.truncatePromptString(Res.get("createOffer.price.prompt"), 28));
         priceValueCurrencyBox = priceValueCurrencyBoxTuple.first;
         fixedPriceTextField = priceValueCurrencyBoxTuple.second;
         editOfferElements.add(fixedPriceTextField);
@@ -1399,10 +1400,10 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
         editOfferElements.add(priceDescriptionLabel);
         fixedPriceBox = priceInputBoxTuple.second;
 
-        marketBasedPriceTextField.setPromptText(Res.get("shared.enterPercentageValue"));
+        marketBasedPriceTextField.setPromptText(StringUtils.truncatePromptString(Res.get("shared.enterPercentageValue"), 28));
         marketBasedPriceLabel.setText("%");
 
-        Tuple3<HBox, InputTextField, Label> amountValueCurrencyBoxTuple = getEditableValueBox(Res.get("createOffer.amount.prompt"));
+        Tuple3<HBox, InputTextField, Label> amountValueCurrencyBoxTuple = getEditableValueBox(StringUtils.truncatePromptString(Res.get("createOffer.amount.prompt"), 28));
         minAmountValueCurrencyBox = amountValueCurrencyBoxTuple.first;
         minAmountTextField = amountValueCurrencyBoxTuple.second;
         editOfferElements.add(minAmountTextField);
@@ -1424,7 +1425,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
                 updatePriceToggleButtons(model.getDataModel().getUseMarketBasedPrice().getValue()));
 
         // triggerPrice
-        Tuple3<HBox, InfoInputTextField, Label> triggerPriceTuple3 = getEditableValueBoxWithInfo(Res.get("createOffer.triggerPrice.prompt"));
+        Tuple3<HBox, InfoInputTextField, Label> triggerPriceTuple3 = getEditableValueBoxWithInfo(StringUtils.truncatePromptString(Res.get("createOffer.triggerPrice.prompt"), 28));
         triggerPriceHBox = triggerPriceTuple3.first;
         triggerPriceInfoInputTextField = triggerPriceTuple3.second;
         editOfferElements.add(triggerPriceInfoInputTextField);

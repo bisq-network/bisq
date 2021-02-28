@@ -65,6 +65,7 @@ import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
 import bisq.common.util.MathUtils;
+import bisq.common.util.StringUtils;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;
@@ -276,7 +277,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
                     dataModel.getTradeCurrencyCode()));
         }
         volumePromptLabel.bind(createStringBinding(
-                () -> Res.get("createOffer.volume.prompt", dataModel.getTradeCurrencyCode().get()),
+                () -> StringUtils.truncatePromptString(Res.get("createOffer.volume.prompt", dataModel.getTradeCurrencyCode().get()), 28),
                 dataModel.getTradeCurrencyCode()));
 
         totalToPay.bind(createStringBinding(() -> btcFormatter.formatCoinWithCode(dataModel.totalToPayAsCoinProperty().get()),
