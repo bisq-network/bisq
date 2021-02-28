@@ -53,6 +53,8 @@
 }
 
 @test "test getversion" {
+  # Wait 1 second before calling getversion again.
+  sleep 1
   load 'version-parser'
   run ./bisq-cli --password=xyz getversion
   [ "$status" -eq 0 ]
@@ -118,6 +120,8 @@
 }
 
 @test "test setwalletpassword oldpwd newpwd" {
+  # Wait 5 seconds before calling setwalletpassword again.
+  sleep 5
   run ./bisq-cli --password=xyz setwalletpassword --wallet-password="a b c"  --new-wallet-password="d e f"
   [ "$status" -eq 0 ]
   echo "actual output:  $output" >&2
@@ -163,6 +167,8 @@
 }
 
 @test "test getaddressbalance bogus address argument" {
+  # Wait 1 second before calling getaddressbalance again.
+  sleep 1
   run ./bisq-cli --password=xyz getaddressbalance --address=bogus
   [ "$status" -eq 1 ]
   echo "actual output:  $output" >&2
@@ -187,16 +193,22 @@
 }
 
 @test "test getoffers sell eur check return status" {
+  # Wait 1 second before calling getoffers again.
+  sleep 1
   run ./bisq-cli --password=xyz getoffers --direction=sell --currency-code=eur
   [ "$status" -eq 0 ]
 }
 
 @test "test getoffers buy eur check return status" {
+  # Wait 1 second before calling getoffers again.
+  sleep 1
   run ./bisq-cli --password=xyz getoffers --direction=buy --currency-code=eur
   [ "$status" -eq 0 ]
 }
 
 @test "test getoffers sell gbp check return status" {
+  # Wait 1 second before calling getoffers again.
+  sleep 1
   run ./bisq-cli --password=xyz getoffers --direction=sell --currency-code=gbp
   [ "$status" -eq 0 ]
 }
@@ -215,4 +227,10 @@
   [ "${lines[0]}" = "Bisq RPC Client" ]
   [ "${lines[1]}" = "Usage: bisq-cli [options] <method> [params]" ]
   # TODO add asserts after help text is modified for new endpoints
+}
+
+@test "test takeoffer method --help" {
+  run ./bisq-cli --password=xyz takeoffer --help
+  [ "$status" -eq 0 ]
+  [ "${lines[0]}" = "takeoffer" ]
 }
