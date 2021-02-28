@@ -141,7 +141,7 @@
   [ "$status" -eq 0 ]
   echo "actual output:  $output" >&2
   [ "$output" = "wallet decrypted" ]
-  sleep 1
+  sleep 3
 }
 
 @test "test getbalance when wallet available & unlocked with 0 btc balance" {
