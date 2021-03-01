@@ -98,6 +98,7 @@ public class FeeService {
     private Map<String, Long> timeStampMap;
     @Getter
     private long lastRequest;
+    @Getter
     private long minFeePerVByte;
     private long epochInSecondAtLastRequest;
 
@@ -154,17 +155,18 @@ public class FeeService {
                     UserThread.execute(() -> {
                         checkNotNull(result, "Result must not be null at getFees");
                         timeStampMap = result.first;
-                        epochInSecondAtLastRequest = timeStampMap.get("bitcoinFeesTs");
+                        epochInSecondAtLastRequest = timeStampMap.get(Config.BTC_FEES_TS);
                         final Map<String, Long> map = result.second;
-                        txFeePerVbyte = map.get("BTC");
+                        txFeePerVbyte = map.get(Config.BTC_TX_FEE);
+                        minFeePerVByte = map.get(Config.BTC_MIN_TX_FEE);
 
                         if (txFeePerVbyte < minFeePerVByte) {
-                            log.warn("The delivered fee per vbyte is smaller than the min. default fee of 5 sat/vbyte");
+                            log.warn("The delivered fee of {} sat/vbyte is smaller than the min. default fee of {} sat/vbyte", txFeePerVbyte, minFeePerVByte);
                             txFeePerVbyte = minFeePerVByte;
                         }
 
                         feeUpdateCounter.set(feeUpdateCounter.get() + 1);
-                        log.info("BTC tx fee: txFeePerVbyte={}", txFeePerVbyte);
+                        log.info("BTC tx fee: txFeePerVbyte={} minFeePerVbyte={}", txFeePerVbyte, minFeePerVByte);
                         if (resultHandler != null)
                             resultHandler.run();
                     });

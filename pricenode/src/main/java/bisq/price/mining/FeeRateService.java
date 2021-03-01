@@ -17,6 +17,8 @@
 
 package bisq.price.mining;
 
+import bisq.common.config.Config;
+
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -55,6 +57,7 @@ class FeeRateService {
         Map<String, Long> allFeeRates = new HashMap<>();
 
         AtomicLong sumOfAllFeeRates = new AtomicLong();
+        AtomicLong sumOfAllMinFeeRates = new AtomicLong();
         AtomicInteger amountOfFeeRates = new AtomicInteger();
 
         // Process each provider, retrieve and store their fee rate
@@ -67,6 +70,7 @@ class FeeRateService {
             String currency = feeRate.getCurrency();
             if ("BTC".equals(currency)) {
                 sumOfAllFeeRates.getAndAdd(feeRate.getPrice());
+                sumOfAllMinFeeRates.getAndAdd(feeRate.getMinimumFee());
                 amountOfFeeRates.getAndAdd(1);
             }
         });
@@ -75,18 +79,24 @@ class FeeRateService {
         long averageFeeRate = (amountOfFeeRates.intValue() > 0)
                 ? sumOfAllFeeRates.longValue() / amountOfFeeRates.intValue()
                 : FeeRateProvider.MIN_FEE_RATE;
+        long averageMinFeeRate = (amountOfFeeRates.intValue() > 0)
+                ? sumOfAllMinFeeRates.longValue() / amountOfFeeRates.intValue()
+                : FeeRateProvider.MIN_FEE_RATE;
 
         // Make sure the returned value is within the min-max range
         averageFeeRate = Math.max(averageFeeRate, FeeRateProvider.MIN_FEE_RATE);
         averageFeeRate = Math.min(averageFeeRate, FeeRateProvider.MAX_FEE_RATE);
+        averageMinFeeRate = Math.max(averageMinFeeRate, FeeRateProvider.MIN_FEE_RATE);
+        averageMinFeeRate = Math.min(averageMinFeeRate, FeeRateProvider.MAX_FEE_RATE);
 
         // Prepare response: Add timestamp of now
         // Since this is an average, the timestamp is associated with when the moment in
         // time when the avg was computed
-        metadata.put("bitcoinFeesTs", Instant.now().getEpochSecond());
+        metadata.put(Config.BTC_FEES_TS, Instant.now().getEpochSecond());
 
         // Prepare response: Add the fee average
-        allFeeRates.put("btcTxFee", averageFeeRate);
+        allFeeRates.put(Config.BTC_TX_FEE, averageFeeRate);
+        allFeeRates.put(Config.BTC_MIN_TX_FEE, averageMinFeeRate);
 
         // Build response
         return new HashMap<>() {{

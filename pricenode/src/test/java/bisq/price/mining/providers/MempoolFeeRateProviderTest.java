@@ -61,7 +61,7 @@ public class MempoolFeeRateProviderTest {
         MempoolFeeRateProvider dummyProvider = new MempoolFeeRateProvider.First(env) {
             @Override
             protected FeeRate doGet() {
-                return new FeeRate("BTC", feeRate, Instant.now().getEpochSecond());
+                return new FeeRate("BTC", feeRate, MIN_FEE_RATE, Instant.now().getEpochSecond());
             }
         };
 
