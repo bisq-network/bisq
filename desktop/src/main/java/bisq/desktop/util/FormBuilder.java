@@ -1267,6 +1267,29 @@ public class FormBuilder {
         return new Tuple2<>(label, vBox);
     }
 
+    public static Tuple3<Label, TextField, HBox> addTopLabelTextFieldWithHbox(GridPane gridPane,
+                                                                              int rowIndex,
+                                                                              String titleTextfield,
+                                                                              double top) {
+        HBox hBox = new HBox();
+        hBox.setSpacing(10);
+
+        TextField textField = new BisqTextField();
+
+        final VBox topLabelVBox = getTopLabelVBox(5);
+        final Label topLabel = getTopLabel(titleTextfield);
+        topLabelVBox.getChildren().addAll(topLabel, textField);
+
+        hBox.getChildren().addAll(topLabelVBox);
+
+        GridPane.setRowIndex(hBox, rowIndex);
+        GridPane.setMargin(hBox, new Insets(top, 0, 0, 0));
+        gridPane.getChildren().add(hBox);
+
+        return new Tuple3<>(topLabel, textField, hBox);
+    }
+
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Label  + ComboBox
     ///////////////////////////////////////////////////////////////////////////////////////////
