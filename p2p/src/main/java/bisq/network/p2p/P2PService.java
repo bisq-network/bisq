@@ -334,12 +334,14 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
             p2PDataStorage.onBootstrapped();
 
+            // We don't use a listener at mailboxMessageService as we require the correct
+            // order of execution. The mailboxMessageService must be called before.
+            mailboxMessageService.onBootstrapped();
+
             // Once we have applied the state in the P2P domain we notify our listeners
             p2pServiceListeners.forEach(listenerHandler);
 
-            // We don't use a listener at mailboxMessageService as we require the correct
-            // order of execution. The p2pServiceListeners must be called before.
-            mailboxMessageService.onBootstrapped();
+            mailboxMessageService.initAfterBootstrapped();
         }
     }
 
