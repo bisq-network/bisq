@@ -21,6 +21,10 @@ public class LengthValidator extends InputValidator {
         ValidationResult result = new ValidationResult(true);
         int length = (input == null) ? 0 : input.length();
 
+        if (this.minLength == this.maxLength) {
+            if (length != this.minLength)
+                result = new ValidationResult(false, Res.get("validation.fixedLength", this.minLength));
+        } else
         if (length < this.minLength || length > this.maxLength)
             result = new ValidationResult(false, Res.get("validation.length", this.minLength, this.maxLength));
 

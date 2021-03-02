@@ -111,7 +111,7 @@ public class TableFormat {
                 formatSatoshis(btcBalanceInfo.getLockedBalance()));
     }
 
-    static String formatOfferTable(List<OfferInfo> offerInfo, String fiatCurrency) {
+    public static String formatOfferTable(List<OfferInfo> offerInfo, String fiatCurrency) {
         // Some column values might be longer than header, so we need to calculate them.
         int paymentMethodColWidth = getLengthOfLongestColumn(
                 COL_HEADER_PAYMENT_METHOD.length(),
@@ -147,7 +147,7 @@ public class TableFormat {
                 .collect(Collectors.joining("\n"));
     }
 
-    static String formatPaymentAcctTbl(List<PaymentAccount> paymentAccounts) {
+    public static String formatPaymentAcctTbl(List<PaymentAccount> paymentAccounts) {
         // Some column values might be longer than header, so we need to calculate them.
         int nameColWidth = getLengthOfLongestColumn(
                 COL_HEADER_NAME.length(),

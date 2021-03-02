@@ -16,6 +16,7 @@ public class JFXInputValidator extends ValidatorBase {
     }
 
     public void resetValidation() {
+        message.set(null);
         hasErrors.set(false);
     }
 

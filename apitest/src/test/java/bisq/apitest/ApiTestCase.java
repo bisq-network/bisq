@@ -17,26 +17,27 @@
 
 package bisq.apitest;
 
-import java.net.InetAddress;
-
 import java.io.IOException;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
+import javax.annotation.Nullable;
+
 import org.junit.jupiter.api.TestInfo;
 
+import static bisq.apitest.config.BisqAppConfig.alicedaemon;
+import static bisq.apitest.config.BisqAppConfig.arbdaemon;
+import static bisq.apitest.config.BisqAppConfig.bobdaemon;
+import static java.net.InetAddress.getLoopbackAddress;
 import static java.util.Arrays.stream;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 
 
 import bisq.apitest.config.ApiTestConfig;
-import bisq.apitest.config.BisqAppConfig;
 import bisq.apitest.method.BitcoinCliHelper;
-import bisq.cli.GrpcStubs;
+import bisq.cli.GrpcClient;
 
 /**
  * Base class for all test types:  'method', 'scenario' and 'e2e'.
@@ -50,8 +51,8 @@ import bisq.cli.GrpcStubs;
  * <p>
  * Those documents contain information about the configurations used by this test harness:
  * bitcoin-core's bitcoin.conf and blocknotify values, bisq instance options, the DAO genesis
- * transaction id, initial BSQ and BTC balances for Bob & Alice accounts, and default
- * PerfectMoney dummy payment accounts (USD) for Bob and Alice.
+ * transaction id, initial BSQ and BTC balances for Bob & Alice accounts, and Bob and
+ * Alice's default payment accounts.
  * <p>
  * During a build, the
  * <a href="https://github.com/bisq-network/bisq/blob/master/docs/dao-setup.zip">dao-setup.zip</a>
@@ -69,8 +70,12 @@ public class ApiTestCase {
     protected static ApiTestConfig config;
     protected static BitcoinCliHelper bitcoinCli;
 
-    // gRPC service stubs are used by method & scenario tests, but not e2e tests.
-    private static final Map<BisqAppConfig, GrpcStubs> grpcStubsCache = new HashMap<>();
+    @Nullable
+    protected static GrpcClient arbClient;
+    @Nullable
+    protected static GrpcClient aliceClient;
+    @Nullable
+    protected static GrpcClient bobClient;
 
     public static void setUpScaffold(Enum<?>... supportingApps)
             throws InterruptedException, ExecutionException, IOException {
@@ -79,6 +84,7 @@ public class ApiTestCase {
                 .setUp();
         config = scaffold.config;
         bitcoinCli = new BitcoinCliHelper((config));
+        createGrpcClients();
     }
 
     public static void setUpScaffold(String[] params)
@@ -90,24 +96,28 @@ public class ApiTestCase {
         scaffold = new Scaffold(params).setUp();
         config = scaffold.config;
         bitcoinCli = new BitcoinCliHelper((config));
+        createGrpcClients();
     }
 
     public static void tearDownScaffold() {
         scaffold.tearDown();
     }
 
-    protected static String getEnumArrayAsString(Enum<?>[] supportingApps) {
-        return stream(supportingApps).map(Enum::name).collect(Collectors.joining(","));
-    }
-
-    protected static GrpcStubs grpcStubs(BisqAppConfig bisqAppConfig) {
-        if (grpcStubsCache.containsKey(bisqAppConfig)) {
-            return grpcStubsCache.get(bisqAppConfig);
-        } else {
-            GrpcStubs stubs = new GrpcStubs(InetAddress.getLoopbackAddress().getHostAddress(),
-                    bisqAppConfig.apiPort, config.apiPassword);
-            grpcStubsCache.put(bisqAppConfig, stubs);
-            return stubs;
+    protected static void createGrpcClients() {
+        if (config.supportingApps.contains(alicedaemon.name())) {
+            aliceClient = new GrpcClient(getLoopbackAddress().getHostAddress(),
+                    alicedaemon.apiPort,
+                    config.apiPassword);
+        }
+        if (config.supportingApps.contains(bobdaemon.name())) {
+            bobClient = new GrpcClient(getLoopbackAddress().getHostAddress(),
+                    bobdaemon.apiPort,
+                    config.apiPassword);
+        }
+        if (config.supportingApps.contains(arbdaemon.name())) {
+            arbClient = new GrpcClient(getLoopbackAddress().getHostAddress(),
+                    arbdaemon.apiPort,
+                    config.apiPassword);
         }
     }
 
