@@ -38,7 +38,7 @@ public class CurrencyFormat {
 
     static final BigDecimal SATOSHI_DIVISOR = new BigDecimal(100000000);
     static final DecimalFormat BTC_FORMAT = new DecimalFormat("###,##0.00000000");
-    static final DecimalFormat BTC_TX_FEE_FORMAT = new DecimalFormat("###,##0.00");
+    static final DecimalFormat BTC_TX_FEE_FORMAT = new DecimalFormat("###,###,##0");
 
     static final BigDecimal BSQ_SATOSHI_DIVISOR = new BigDecimal(100);
     static final DecimalFormat BSQ_FORMAT = new DecimalFormat("###,###,###,##0.00");
@@ -117,6 +117,6 @@ public class CurrencyFormat {
 
     @SuppressWarnings("BigDecimalMethodWithoutRoundingCalled")
     public static String formatFeeSatoshis(long sats) {
-        return BTC_TX_FEE_FORMAT.format(BigDecimal.valueOf(sats).divide(SATOSHI_DIVISOR));
+        return BTC_TX_FEE_FORMAT.format(BigDecimal.valueOf(sats));
     }
 }
