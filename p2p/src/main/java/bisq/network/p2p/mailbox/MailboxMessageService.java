@@ -221,11 +221,16 @@ public class MailboxMessageService implements HashMapChangedListener, PersistedD
     public void onBootstrapped() {
         if (!isBootstrapped) {
             isBootstrapped = true;
-            // Only now we start listening and processing. The p2PDataStorage is our cache for data we have received
-            // after the hidden service was ready.
-            addHashMapChangedListenerAndApply();
-            maybeRepublishMailBoxMessages();
         }
+    }
+
+    // second stage starup for MailboxMessageService ... apply existing messages to their modules
+    public void initAfterBootstrapped() {
+        // Only now we start listening and processing. The p2PDataStorage is our cache for data we have received
+        // after the hidden service was ready.
+        addHashMapChangedListener();
+        onAdded(p2PDataStorage.getMap().values());
+        maybeRepublishMailBoxMessages();
     }
 
 
@@ -374,9 +379,8 @@ public class MailboxMessageService implements HashMapChangedListener, PersistedD
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void addHashMapChangedListenerAndApply() {
+    private void addHashMapChangedListener() {
         p2PDataStorage.addHashMapChangedListener(this);
-        onAdded(p2PDataStorage.getMap().values());
     }
 
     private void processSingleMailboxEntry(Collection<ProtectedMailboxStorageEntry> protectedMailboxStorageEntries) {
