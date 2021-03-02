@@ -63,7 +63,7 @@ class DesktopUtil {
         }
 
         if (os.isWindows()) {
-            return runCommand("explorer", "%s", what);
+            return runCommand("explorer", "%s", "\"" + what + "\"");
         }
 
         return false;
