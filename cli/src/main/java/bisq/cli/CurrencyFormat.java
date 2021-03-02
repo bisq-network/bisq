@@ -115,7 +115,6 @@ public class CurrencyFormat {
         }
     }
 
-    @SuppressWarnings("BigDecimalMethodWithoutRoundingCalled")
     public static String formatFeeSatoshis(long sats) {
         return BTC_TX_FEE_FORMAT.format(BigDecimal.valueOf(sats));
     }
