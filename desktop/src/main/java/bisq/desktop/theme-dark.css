@@ -212,7 +212,7 @@
 /* text field */
 .jfx-text-field, .jfx-text-area,
 .jfx-combo-box, .jfx-combo-box > .list-cell {
-    -fx-background-color: -bs-background-color;
+    -fx-background-color: derive(-bs-background-color, 8%);
     -fx-prompt-text-fill: -bs-color-gray-3;
     -fx-text-fill: -bs-color-gray-11;
 }
