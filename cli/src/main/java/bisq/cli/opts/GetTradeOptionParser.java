@@ -22,13 +22,11 @@ import joptsimple.OptionSpec;
 
 import static bisq.cli.opts.OptLabel.OPT_SHOW_CONTRACT;
 import static bisq.cli.opts.OptLabel.OPT_TRADE_ID;
-import static joptsimple.internal.Strings.EMPTY;
 
 public class GetTradeOptionParser extends AbstractMethodOptionParser implements MethodOpts {
 
     final OptionSpec<String> tradeIdOpt = parser.accepts(OPT_TRADE_ID, "id of trade")
-            .withRequiredArg()
-            .defaultsTo(EMPTY);
+            .withRequiredArg();
 
     final OptionSpec<Boolean> showContractOpt = parser.accepts(OPT_SHOW_CONTRACT, "show trade's json contract")
             .withOptionalArg()

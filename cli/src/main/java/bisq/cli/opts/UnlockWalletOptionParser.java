@@ -22,13 +22,11 @@ import joptsimple.OptionSpec;
 
 import static bisq.cli.opts.OptLabel.OPT_TIMEOUT;
 import static bisq.cli.opts.OptLabel.OPT_WALLET_PASSWORD;
-import static joptsimple.internal.Strings.EMPTY;
 
 public class UnlockWalletOptionParser extends AbstractMethodOptionParser implements MethodOpts {
 
     final OptionSpec<String> passwordOpt = parser.accepts(OPT_WALLET_PASSWORD, "bisq wallet password")
-            .withRequiredArg()
-            .defaultsTo(EMPTY);
+            .withRequiredArg();
 
     final OptionSpec<Long> unlockTimeoutOpt = parser.accepts(OPT_TIMEOUT, "wallet unlock timeout (s)")
             .withRequiredArg()

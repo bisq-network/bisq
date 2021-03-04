@@ -29,12 +29,10 @@ import static joptsimple.internal.Strings.EMPTY;
 public class SendBtcOptionParser extends AbstractMethodOptionParser implements MethodOpts {
 
     final OptionSpec<String> addressOpt = parser.accepts(OPT_ADDRESS, "destination btc address")
-            .withRequiredArg()
-            .defaultsTo(EMPTY);
+            .withRequiredArg();
 
     final OptionSpec<String> amountOpt = parser.accepts(OPT_AMOUNT, "amount of btc to send")
-            .withRequiredArg()
-            .defaultsTo(EMPTY);
+            .withRequiredArg();
 
     final OptionSpec<String> feeRateOpt = parser.accepts(OPT_TX_FEE_RATE, "optional tx fee rate (sats/byte)")
             .withOptionalArg()

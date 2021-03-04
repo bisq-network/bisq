@@ -21,13 +21,11 @@ package bisq.cli.opts;
 import joptsimple.OptionSpec;
 
 import static bisq.cli.opts.OptLabel.OPT_ADDRESS;
-import static joptsimple.internal.Strings.EMPTY;
 
 public class GetAddressBalanceOptionParser extends AbstractMethodOptionParser implements MethodOpts {
 
     final OptionSpec<String> addressOpt = parser.accepts(OPT_ADDRESS, "wallet btc address")
-            .withRequiredArg()
-            .defaultsTo(EMPTY);
+            .withRequiredArg();
 
     public GetAddressBalanceOptionParser(String[] args) {
         super(args);

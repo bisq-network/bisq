@@ -25,14 +25,12 @@ import java.nio.file.Paths;
 
 import static bisq.cli.opts.OptLabel.OPT_PAYMENT_ACCOUNT_FORM;
 import static java.lang.String.format;
-import static joptsimple.internal.Strings.EMPTY;
 
 public class CreatePaymentAcctOptionParser extends AbstractMethodOptionParser implements MethodOpts {
 
     final OptionSpec<String> paymentAcctFormPathOpt = parser.accepts(OPT_PAYMENT_ACCOUNT_FORM,
             "path to json payment account form")
-            .withRequiredArg()
-            .defaultsTo(EMPTY);
+            .withRequiredArg();
 
     public CreatePaymentAcctOptionParser(String[] args) {
         super(args);

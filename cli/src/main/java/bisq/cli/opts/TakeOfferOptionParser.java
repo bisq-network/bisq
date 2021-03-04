@@ -23,17 +23,14 @@ import joptsimple.OptionSpec;
 import static bisq.cli.opts.OptLabel.OPT_FEE_CURRENCY;
 import static bisq.cli.opts.OptLabel.OPT_OFFER_ID;
 import static bisq.cli.opts.OptLabel.OPT_PAYMENT_ACCOUNT;
-import static joptsimple.internal.Strings.EMPTY;
 
 public class TakeOfferOptionParser extends AbstractMethodOptionParser implements MethodOpts {
 
     final OptionSpec<String> offerIdOpt = parser.accepts(OPT_OFFER_ID, "id of offer to take")
-            .withRequiredArg()
-            .defaultsTo(EMPTY);
+            .withRequiredArg();
 
     final OptionSpec<String> paymentAccountIdOpt = parser.accepts(OPT_PAYMENT_ACCOUNT, "id of payment account used for trade")
-            .withRequiredArg()
-            .defaultsTo(EMPTY);
+            .withRequiredArg();
 
     final OptionSpec<String> takerFeeCurrencyCodeOpt = parser.accepts(OPT_FEE_CURRENCY, "taker fee currency code (bsq|btc)")
             .withOptionalArg()

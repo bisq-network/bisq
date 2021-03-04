@@ -21,14 +21,12 @@ package bisq.cli.opts;
 import joptsimple.OptionSpec;
 
 import static bisq.cli.opts.OptLabel.OPT_PAYMENT_METHOD_ID;
-import static joptsimple.internal.Strings.EMPTY;
 
 public class GetPaymentAcctFormOptionParser extends AbstractMethodOptionParser implements MethodOpts {
 
     final OptionSpec<String> paymentMethodIdOpt = parser.accepts(OPT_PAYMENT_METHOD_ID,
             "id of payment method type used by a payment account")
-            .withRequiredArg()
-            .defaultsTo(EMPTY);
+            .withRequiredArg();
 
     public GetPaymentAcctFormOptionParser(String[] args) {
         super(args);

@@ -21,13 +21,11 @@ package bisq.cli.opts;
 import joptsimple.OptionSpec;
 
 import static bisq.cli.opts.OptLabel.OPT_OFFER_ID;
-import static joptsimple.internal.Strings.EMPTY;
 
 public class CancelOfferOptionParser extends AbstractMethodOptionParser implements MethodOpts {
 
     final OptionSpec<String> offerIdOpt = parser.accepts(OPT_OFFER_ID, "id of offer to cancel")
-            .withRequiredArg()
-            .defaultsTo(EMPTY);
+            .withRequiredArg();
 
     public CancelOfferOptionParser(String[] args) {
         super(args);

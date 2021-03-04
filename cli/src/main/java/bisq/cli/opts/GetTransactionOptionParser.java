@@ -21,13 +21,11 @@ package bisq.cli.opts;
 import joptsimple.OptionSpec;
 
 import static bisq.cli.opts.OptLabel.OPT_TRANSACTION_ID;
-import static joptsimple.internal.Strings.EMPTY;
 
 public class GetTransactionOptionParser extends AbstractMethodOptionParser implements MethodOpts {
 
     final OptionSpec<String> txIdOpt = parser.accepts(OPT_TRANSACTION_ID, "id of transaction")
-            .withRequiredArg()
-            .defaultsTo(EMPTY);
+            .withRequiredArg();
 
     public GetTransactionOptionParser(String[] args) {
         super(args);
