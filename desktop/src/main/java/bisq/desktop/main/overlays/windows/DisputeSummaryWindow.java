@@ -38,6 +38,7 @@ import bisq.core.btc.wallet.TxBroadcaster;
 import bisq.core.dao.DaoFacade;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
+import bisq.core.provider.mempool.MempoolService;
 import bisq.core.support.SupportType;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeList;
@@ -84,16 +85,16 @@ import javafx.geometry.Insets;
 import javafx.beans.binding.Bindings;
 import javafx.beans.value.ChangeListener;
 
+import java.time.Instant;
+
 import java.util.Date;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.desktop.util.FormBuilder.add2ButtonsWithBox;
-import static bisq.desktop.util.FormBuilder.addConfirmationLabelLabel;
-import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
-import static bisq.desktop.util.FormBuilder.addTopLabelWithVBox;
+import static bisq.desktop.util.FormBuilder.*;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -104,6 +105,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     private final TradeWalletService tradeWalletService;
     private final BtcWalletService btcWalletService;
     private final TxFeeEstimationService txFeeEstimationService;
+    private final MempoolService mempoolService;
     private final DaoFacade daoFacade;
     private Dispute dispute;
     private Optional<Runnable> finalizeDisputeHandlerOptional = Optional.empty();
@@ -120,6 +122,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     // Dispute object of other trade peer. The dispute field is the one from which we opened the close dispute window.
     private Optional<Dispute> peersDisputeOptional;
     private String role;
+    private Label delayedPayoutTxStatus;
     private TextArea summaryNotesTextArea;
 
     private ChangeListener<Boolean> customRadioButtonSelectedListener;
@@ -141,6 +144,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                                 TradeWalletService tradeWalletService,
                                 BtcWalletService btcWalletService,
                                 TxFeeEstimationService txFeeEstimationService,
+                                MempoolService mempoolService,
                                 DaoFacade daoFacade) {
 
         this.formatter = formatter;
@@ -149,6 +153,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         this.tradeWalletService = tradeWalletService;
         this.btcWalletService = btcWalletService;
         this.txFeeEstimationService = txFeeEstimationService;
+        this.mempoolService = mempoolService;
         this.daoFacade = daoFacade;
 
         type = Type.Confirmation;
@@ -161,6 +166,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         width = 1150;
         createGridPane();
         addContent();
+        checkDelayedPayoutTransaction();
         display();
 
         if (DevEnv.isDevMode()) {
@@ -314,6 +320,26 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                 " " +
                 formatter.formatCoinWithCode(contract.getOfferPayload().getSellerSecurityDeposit());
         addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("shared.securityDeposit"), securityDeposit);
+
+        boolean isMediationDispute = getDisputeManager(dispute) instanceof MediationManager;
+        if (isMediationDispute) {
+            if (dispute.getTradePeriodEnd().getTime() > 0) {
+                String status = DisplayUtils.formatDateTime(dispute.getTradePeriodEnd());
+                Label tradePeriodEnd = addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("disputeSummaryWindow.tradePeriodEnd"), status).second;
+                if (dispute.getTradePeriodEnd().toInstant().isAfter(Instant.now())) {
+                    tradePeriodEnd.getStyleClass().add("version-new"); // highlight field when the trade period is still active
+                }
+            }
+            if (dispute.getExtraDataMap() != null && dispute.getExtraDataMap().size() > 0) {
+                String extraDataSummary = "";
+                for (Map.Entry<String, String> entry : dispute.getExtraDataMap().entrySet()) {
+                    extraDataSummary += "[" + entry.getKey() + ":" + entry.getValue() + "] ";
+                }
+                addConfirmationLabelLabelWithCopyIcon(gridPane, ++rowIndex, Res.get("disputeSummaryWindow.extraInfo"), extraDataSummary);
+            }
+        } else {
+            delayedPayoutTxStatus = addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("disputeSummaryWindow.delayedPayoutStatus"), "Checking...").second;
+        }
     }
 
     private void addTradeAmountPayoutControls() {
@@ -968,6 +994,27 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
             sellerGetsAllRadioButton.setSelected(true);
         } else {
             customRadioButton.setSelected(true);
+        }
+    }
+
+    private void checkDelayedPayoutTransaction() {
+        if (dispute.getDelayedPayoutTxId() == null)
+            return;
+        mempoolService.checkTxIsConfirmed(dispute.getDelayedPayoutTxId(), (validator -> {
+            long confirms = validator.parseJsonValidateTx();
+            log.info("Mempool check confirmation status of DelayedPayoutTxId returned: [{}]", confirms);
+            displayPayoutStatus(confirms);
+        }));
+    }
+
+    private void displayPayoutStatus(long nConfirmStatus) {
+        if (delayedPayoutTxStatus != null) {
+            String status = Res.get("confidence.unknown");
+            if (nConfirmStatus == 0)
+                status = Res.get("confidence.seen", 1);
+            else if (nConfirmStatus > 0)
+                status = Res.get("confidence.confirmed", nConfirmStatus);
+            delayedPayoutTxStatus.setText(status);
         }
     }
 }

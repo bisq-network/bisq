@@ -42,6 +42,7 @@ import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.PaymentAccountUtil;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.provider.fee.FeeService;
+import bisq.core.provider.mempool.MempoolService;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.handlers.TradeResultHandler;
@@ -60,13 +61,17 @@ import org.bitcoinj.wallet.Wallet;
 
 import com.google.inject.Inject;
 
+import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 
 import javafx.collections.ObservableList;
 
 import java.util.Set;
+
+import lombok.Getter;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -86,6 +91,7 @@ class TakeOfferDataModel extends OfferDataModel {
     private final BsqWalletService bsqWalletService;
     private final User user;
     private final FeeService feeService;
+    private final MempoolService mempoolService;
     private final FilterManager filterManager;
     final Preferences preferences;
     private final TxFeeEstimationService txFeeEstimationService;
@@ -113,6 +119,10 @@ class TakeOfferDataModel extends OfferDataModel {
     private int feeTxVsize = 192;  // (175+233+169)/3
     private boolean freezeFee;
     private Coin txFeePerVbyteFromFeeService;
+    @Getter
+    protected final IntegerProperty mempoolStatus = new SimpleIntegerProperty();
+    @Getter
+    protected String mempoolStatusText;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -127,6 +137,7 @@ class TakeOfferDataModel extends OfferDataModel {
                        BtcWalletService btcWalletService,
                        BsqWalletService bsqWalletService,
                        User user, FeeService feeService,
+                       MempoolService mempoolService,
                        FilterManager filterManager,
                        Preferences preferences,
                        TxFeeEstimationService txFeeEstimationService,
@@ -142,6 +153,7 @@ class TakeOfferDataModel extends OfferDataModel {
         this.bsqWalletService = bsqWalletService;
         this.user = user;
         this.feeService = feeService;
+        this.mempoolService = mempoolService;
         this.filterManager = filterManager;
         this.preferences = preferences;
         this.txFeeEstimationService = txFeeEstimationService;
@@ -240,6 +252,15 @@ class TakeOfferDataModel extends OfferDataModel {
                         "to avoid that the total funds to pay changes due changed tx fees.");
             }
         });
+
+        mempoolStatus.setValue(-1);
+        mempoolService.validateOfferMakerTx(offer.getOfferPayload(), (txValidator -> {
+            mempoolStatus.setValue(txValidator.isFail() ? 0 : 1);
+            if (txValidator.isFail()) {
+                mempoolStatusText = txValidator.toString();
+                log.info("Mempool check of OfferFeePaymentTxId returned errors: [{}]", mempoolStatusText);
+            }
+        }));
 
         calculateVolume();
         calculateTotalToPay();

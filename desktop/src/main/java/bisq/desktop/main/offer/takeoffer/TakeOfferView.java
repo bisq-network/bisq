@@ -164,6 +164,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     private boolean offerDetailsWindowDisplayed, clearXchangeWarningDisplayed, fasterPaymentsWarningDisplayed;
     private SimpleBooleanProperty errorPopupDisplayed;
     private ChangeListener<Boolean> amountFocusedListener, getShowWalletFundedNotificationListener;
+
     private InfoInputTextField volumeInfoTextField;
     private AutoTooltipSlideToggleButton tradeFeeInBtcToggle, tradeFeeInBsqToggle;
     private ChangeListener<Boolean> tradeFeeInBtcToggleListener, tradeFeeInBsqToggleListener,
@@ -887,7 +888,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         nextButton = tuple.first;
         nextButton.setMaxWidth(200);
         nextButton.setDefaultButton(true);
-        nextButton.setOnAction(e -> showNextStepAfterAmountIsSet());
+        nextButton.setOnAction(e -> nextStepCheckMakerTx());
 
         cancelButton1 = tuple.second;
         cancelButton1.setMaxWidth(200);
@@ -896,6 +897,25 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             model.dataModel.swapTradeToSavings();
             close(false);
         });
+    }
+
+    private void nextStepCheckMakerTx() {
+        // the tx validation check has had plenty of time to complete, but if for some reason it has not returned
+        // we continue anyway since the check is not crucial.
+        // note, it would be great if there was a real tri-state boolean we could use here, instead of -1, 0, and 1
+        int result = model.dataModel.mempoolStatus.get();
+        if (result == 0) {
+            new Popup().warning(Res.get("popup.warning.makerTxInvalid") + model.dataModel.getMempoolStatusText())
+                    .onClose(() -> {
+                        cancelButton1.fire();
+                    })
+                    .show();
+        } else {
+            if (result == -1) {
+                log.warn("Fee check has not returned a result yet. We optimistically assume all is ok and continue.");
+            }
+            showNextStepAfterAmountIsSet();
+        }
     }
 
     private void showNextStepAfterAmountIsSet() {
@@ -938,7 +958,6 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     private void addOfferAvailabilityLabel() {
         offerAvailabilityBusyAnimation = new BusyAnimation(false);
         offerAvailabilityLabel = new AutoTooltipLabel(Res.get("takeOffer.fundsBox.isOfferAvailable"));
-
         buttonBox.getChildren().addAll(offerAvailabilityBusyAnimation, offerAvailabilityLabel);
     }
 

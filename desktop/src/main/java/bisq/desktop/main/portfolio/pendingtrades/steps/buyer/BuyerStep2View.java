@@ -195,6 +195,7 @@ public class BuyerStep2View extends TradeStepView {
     protected void onPendingTradesInitialized() {
         super.onPendingTradesInitialized();
         validatePayoutTx();
+        model.checkTakerFeeTx(trade);
     }
 
 
@@ -598,7 +599,7 @@ public class BuyerStep2View extends TradeStepView {
             // trade manager after initPendingTrades which happens after activate might be called.
         } catch (TradeDataValidation.ValidationException e) {
             if (!model.dataModel.tradeManager.isAllowFaultyDelayedTxs()) {
-                new Popup().warning(Res.get("portfolio.pending.invalidDelayedPayoutTx", e.getMessage())).show();
+                new Popup().warning(Res.get("portfolio.pending.invalidTx", e.getMessage())).show();
             }
         }
     }
