@@ -43,7 +43,7 @@ public class CreatePaymentAcctOptionParser extends AbstractMethodOptionParser im
         if (options.has(helpOpt))
             return this;
 
-        if (!options.has(paymentAcctFormPathOpt))
+        if (!options.has(paymentAcctFormPathOpt) || options.valueOf(paymentAcctFormPathOpt).isEmpty())
             throw new IllegalArgumentException("no path to json payment account form specified");
 
         Path path = Paths.get(options.valueOf(paymentAcctFormPathOpt));

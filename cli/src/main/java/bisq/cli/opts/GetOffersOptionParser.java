@@ -42,10 +42,10 @@ public class GetOffersOptionParser extends AbstractMethodOptionParser implements
         if (options.has(helpOpt))
             return this;
 
-        if (!options.has(directionOpt))
+        if (!options.has(directionOpt) || options.valueOf(directionOpt).isEmpty())
             throw new IllegalArgumentException("no direction (buy|sell) specified");
 
-        if (!options.has(currencyCodeOpt))
+        if (!options.has(currencyCodeOpt) || options.valueOf(currencyCodeOpt).isEmpty())
             throw new IllegalArgumentException("no currency code specified");
 
         return this;

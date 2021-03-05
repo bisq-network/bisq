@@ -38,7 +38,7 @@ public class GetOfferOptionParser extends AbstractMethodOptionParser implements 
         if (options.has(helpOpt))
             return this;
 
-        if (!options.has(offerIdOpt))
+        if (!options.has(offerIdOpt) || options.valueOf(offerIdOpt).isEmpty())
             throw new IllegalArgumentException("no offer id specified");
 
         return this;

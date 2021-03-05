@@ -39,7 +39,7 @@ public class GetPaymentAcctFormOptionParser extends AbstractMethodOptionParser i
         if (options.has(helpOpt))
             return this;
 
-        if (!options.has(paymentMethodIdOpt))
+        if (!options.has(paymentMethodIdOpt) || options.valueOf(paymentMethodIdOpt).isEmpty())
             throw new IllegalArgumentException("no payment method id specified");
 
         return this;

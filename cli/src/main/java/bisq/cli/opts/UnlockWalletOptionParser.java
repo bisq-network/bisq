@@ -44,7 +44,7 @@ public class UnlockWalletOptionParser extends AbstractMethodOptionParser impleme
         if (options.has(helpOpt))
             return this;
 
-        if (!options.has(passwordOpt))
+        if (!options.has(passwordOpt) || options.valueOf(passwordOpt).isEmpty())
             throw new IllegalArgumentException("no password specified");
 
         if (!options.has(unlockTimeoutOpt) || options.valueOf(unlockTimeoutOpt) <= 0)

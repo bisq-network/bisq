@@ -38,7 +38,7 @@ public class GetAddressBalanceOptionParser extends AbstractMethodOptionParser im
         if (options.has(helpOpt))
             return this;
 
-        if (!options.has(addressOpt))
+        if (!options.has(addressOpt) || options.valueOf(addressOpt).isEmpty())
             throw new IllegalArgumentException("no address specified");
 
         return this;

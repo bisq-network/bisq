@@ -48,10 +48,10 @@ public class WithdrawFundsOptionParser extends AbstractMethodOptionParser implem
         if (options.has(helpOpt))
             return this;
 
-        if (!options.has(tradeIdOpt))
+        if (!options.has(tradeIdOpt) || options.valueOf(tradeIdOpt).isEmpty())
             throw new IllegalArgumentException("no trade id specified");
 
-        if (!options.has(addressOpt))
+        if (!options.has(addressOpt) || options.valueOf(addressOpt).isEmpty())
             throw new IllegalArgumentException("no destination address specified");
 
         return this;

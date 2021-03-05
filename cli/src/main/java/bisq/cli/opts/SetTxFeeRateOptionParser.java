@@ -39,7 +39,7 @@ public class SetTxFeeRateOptionParser extends AbstractMethodOptionParser impleme
         if (options.has(helpOpt))
             return this;
 
-        if (!options.has(feeRateOpt))
+        if (!options.has(feeRateOpt) || options.valueOf(feeRateOpt).isEmpty())
             throw new IllegalArgumentException("no tx fee rate specified");
 
         return this;

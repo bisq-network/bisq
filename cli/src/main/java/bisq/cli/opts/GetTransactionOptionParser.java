@@ -38,7 +38,7 @@ public class GetTransactionOptionParser extends AbstractMethodOptionParser imple
         if (options.has(helpOpt))
             return this;
 
-        if (!options.has(txIdOpt))
+        if (!options.has(txIdOpt) || options.valueOf(txIdOpt).isEmpty())
             throw new IllegalArgumentException("no tx id specified");
 
         return this;

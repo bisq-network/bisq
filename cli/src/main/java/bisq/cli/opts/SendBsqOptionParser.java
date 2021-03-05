@@ -48,10 +48,10 @@ public class SendBsqOptionParser extends AbstractMethodOptionParser implements M
         if (options.has(helpOpt))
             return this;
 
-        if (!options.has(addressOpt))
+        if (!options.has(addressOpt) || options.valueOf(addressOpt).isEmpty())
             throw new IllegalArgumentException("no bsq address specified");
 
-        if (!options.has(amountOpt))
+        if (!options.has(amountOpt) || options.valueOf(amountOpt).isEmpty())
             throw new IllegalArgumentException("no bsq amount specified");
 
         return this;

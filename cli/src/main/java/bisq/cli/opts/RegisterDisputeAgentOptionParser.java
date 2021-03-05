@@ -42,10 +42,10 @@ public class RegisterDisputeAgentOptionParser extends AbstractMethodOptionParser
         if (options.has(helpOpt))
             return this;
 
-        if (!options.has(disputeAgentTypeOpt))
+        if (!options.has(disputeAgentTypeOpt) || options.valueOf(disputeAgentTypeOpt).isEmpty())
             throw new IllegalArgumentException("no dispute agent type specified");
 
-        if (!options.has(registrationKeyOpt))
+        if (!options.has(registrationKeyOpt) || options.valueOf(registrationKeyOpt).isEmpty())
             throw new IllegalArgumentException("no registration key specified");
 
         return this;

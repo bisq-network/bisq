@@ -44,7 +44,7 @@ public class GetTradeOptionParser extends AbstractMethodOptionParser implements 
         if (options.has(helpOpt))
             return this;
 
-        if (!options.has(tradeIdOpt))
+        if (!options.has(tradeIdOpt) || options.valueOf(tradeIdOpt).isEmpty())
             throw new IllegalArgumentException("no trade id specified");
 
         return this;

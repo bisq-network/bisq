@@ -38,7 +38,7 @@ public class GetBTCMarketPriceOptionParser extends AbstractMethodOptionParser im
         if (options.has(helpOpt))
             return this;
 
-        if (!options.has(currencyCodeOpt))
+        if (!options.has(currencyCodeOpt) || options.valueOf(currencyCodeOpt).isEmpty())
             throw new IllegalArgumentException("no currency code specified");
 
         return this;
