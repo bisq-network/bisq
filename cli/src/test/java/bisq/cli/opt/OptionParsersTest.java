@@ -54,7 +54,7 @@ public class OptionParsersTest {
         };
         Throwable exception = assertThrows(RuntimeException.class, () ->
                 new CancelOfferOptionParser(args).parse());
-        assertEquals("Option offer-id requires an argument", exception.getMessage());
+        assertEquals("offer-id requires an argument", exception.getMessage());
     }
 
     @Test
@@ -81,6 +81,18 @@ public class OptionParsersTest {
     }
 
     @Test
+    public void testCreateOfferOptParserWithEmptyPaymentAccountIdOptShouldThrowException() {
+        String[] args = new String[]{
+                PASSWORD_OPT,
+                createoffer.name(),
+                "--" + OPT_PAYMENT_ACCOUNT
+        };
+        Throwable exception = assertThrows(RuntimeException.class, () ->
+                new CreateOfferOptionParser(args).parse());
+        assertEquals("payment-account requires an argument", exception.getMessage());
+    }
+
+    @Test
     public void testCreateOfferOptParserWithMissingDirectionOptShouldThrowException() {
         String[] args = new String[]{
                 PASSWORD_OPT,
@@ -91,6 +103,7 @@ public class OptionParsersTest {
                 new CreateOfferOptionParser(args).parse());
         assertEquals("no direction (buy|sell) specified", exception.getMessage());
     }
+
 
     @Test
     public void testCreateOfferOptParserWithMissingDirectionOptValueShouldThrowException() {
