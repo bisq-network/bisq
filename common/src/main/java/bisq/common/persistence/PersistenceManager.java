@@ -86,6 +86,14 @@ public class PersistenceManager<T extends PersistableEnvelope> {
 
     public static void onAllServicesInitialized() {
         allServicesInitialized.set(true);
+
+        ALL_PERSISTENCE_MANAGERS.values().forEach(persistenceManager -> {
+            // In case we got a requestPersistence call before we got initialized we trigger the timer for the
+            // persist call
+            if (persistenceManager.persistenceRequested) {
+                persistenceManager.maybeStartTimerForPersistence();
+            }
+        });
     }
 
     // We require being called only once from the global shutdown routine. As the shutdown routine has a timeout
@@ -363,6 +371,16 @@ public class PersistenceManager<T extends PersistableEnvelope> {
 
         persistenceRequested = true;
 
+        // If we have not initialized yet we postpone the start of the timer and call maybeStartTimerForPersistence at
+        // onAllServicesInitialized
+        if (!allServicesInitialized.get()) {
+            return;
+        }
+
+        maybeStartTimerForPersistence();
+    }
+
+    private void maybeStartTimerForPersistence() {
         // We write to disk with a delay to avoid frequent write operations. Depending on the priority those delays
         // can be rather long.
         if (timer == null) {
