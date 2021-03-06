@@ -81,14 +81,25 @@ public class PersistenceManager<T extends PersistableEnvelope> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public static final Map<String, PersistenceManager<?>> ALL_PERSISTENCE_MANAGERS = new HashMap<>();
-    public static boolean FLUSH_ALL_DATA_TO_DISK_CALLED = false;
+    private static boolean FLUSH_ALL_DATA_TO_DISK_CALLED = false;
+    private static AtomicBoolean allServicesInitialized = new AtomicBoolean(false);
 
+    public static void onAllServicesInitialized() {
+        allServicesInitialized.set(true);
+    }
 
     // We require being called only once from the global shutdown routine. As the shutdown routine has a timeout
     // and error condition where we call the method as well beside the standard path and it could be that those
     // alternative code paths call our method after it was called already, so it is a valid but rare case.
     // We add a guard to prevent repeated calls.
     public static void flushAllDataToDisk(ResultHandler completeHandler) {
+        if (!allServicesInitialized.get()) {
+            log.warn("Application has not completed start up yet so we do not flush data to disk.");
+            completeHandler.handleResult();
+            return;
+        }
+
+
         // We don't know from which thread we are called so we map to user thread
         UserThread.execute(() -> {
             if (FLUSH_ALL_DATA_TO_DISK_CALLED) {
@@ -137,7 +148,6 @@ public class PersistenceManager<T extends PersistableEnvelope> {
             log.info("flushAllDataToDisk completed");
             completeHandler.handleResult();
         }
-
     }
 
 
@@ -387,6 +397,12 @@ public class PersistenceManager<T extends PersistableEnvelope> {
     }
 
     public void writeToDisk(protobuf.PersistableEnvelope serialized, @Nullable Runnable completeHandler) {
+        if (!allServicesInitialized.get()) {
+            log.warn("Application has not completed start up yet so we do not permit writing data to disk.");
+            UserThread.execute(completeHandler);
+            return;
+        }
+
         long ts = System.currentTimeMillis();
         File tempFile = null;
         FileOutputStream fileOutputStream = null;
@@ -458,7 +474,6 @@ public class PersistenceManager<T extends PersistableEnvelope> {
         }
         return writeToDiskExecutor;
     }
-
 
     @Override
     public String toString() {
