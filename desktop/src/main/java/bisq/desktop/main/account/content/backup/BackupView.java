@@ -137,7 +137,7 @@ public class BackupView extends ActivatableView<GridPane, Void> {
         backupNow.setOnAction(event -> {
             String backupDirectory = preferences.getBackupDirectory();
             if (backupDirectory != null && backupDirectory.length() > 0) {  // We need to flush data to disk
-                PersistenceManager.flushAllDataToDisk(() -> {
+                PersistenceManager.flushAllDataToDiskAtBackup(() -> {
                     try {
                         String dateString = new SimpleDateFormat("yyyy-MM-dd-HHmmss").format(new Date());
                         String destination = Paths.get(backupDirectory, "bisq_backup_" + dateString).toString();

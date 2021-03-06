@@ -252,7 +252,7 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
                         module.close(injector);
                         if (!hasDowngraded) {
                             // If user tried to downgrade we do not write the persistable data to avoid data corruption
-                            PersistenceManager.flushAllDataToDisk(() -> {
+                            PersistenceManager.flushAllDataToDiskAtShutdown(() -> {
                                 log.info("Graceful shutdown completed. Exiting now.");
                                 resultHandler.handleResult();
                                 UserThread.runAfter(() -> System.exit(EXIT_SUCCESS), 1);
@@ -271,7 +271,7 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
                 log.warn("Graceful shut down not completed in 20 sec. We trigger our timeout handler.");
                 if (!hasDowngraded) {
                     // If user tried to downgrade we do not write the persistable data to avoid data corruption
-                    PersistenceManager.flushAllDataToDisk(() -> {
+                    PersistenceManager.flushAllDataToDiskAtShutdown(() -> {
                         log.info("Graceful shutdown resulted in a timeout. Exiting now.");
                         resultHandler.handleResult();
                         UserThread.runAfter(() -> System.exit(EXIT_SUCCESS), 1);
@@ -286,7 +286,7 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
             t.printStackTrace();
             if (!hasDowngraded) {
                 // If user tried to downgrade we do not write the persistable data to avoid data corruption
-                PersistenceManager.flushAllDataToDisk(() -> {
+                PersistenceManager.flushAllDataToDiskAtShutdown(() -> {
                     log.info("Graceful shutdown resulted in an error. Exiting now.");
                     resultHandler.handleResult();
                     UserThread.runAfter(() -> System.exit(EXIT_FAILURE), 1);

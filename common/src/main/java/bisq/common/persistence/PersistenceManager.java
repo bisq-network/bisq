@@ -81,7 +81,7 @@ public class PersistenceManager<T extends PersistableEnvelope> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public static final Map<String, PersistenceManager<?>> ALL_PERSISTENCE_MANAGERS = new HashMap<>();
-    private static boolean flushAllDataToDiskCalled = false;
+    private static boolean flushAtShutdownCalled;
     private static final AtomicBoolean allServicesInitialized = new AtomicBoolean(false);
 
     public static void onAllServicesInitialized() {
@@ -96,11 +96,19 @@ public class PersistenceManager<T extends PersistableEnvelope> {
         });
     }
 
+    public static void flushAllDataToDiskAtBackup(ResultHandler completeHandler) {
+        flushAllDataToDisk(completeHandler, false);
+    }
+
+    public static void flushAllDataToDiskAtShutdown(ResultHandler completeHandler) {
+        flushAllDataToDisk(completeHandler, true);
+    }
+
     // We require being called only once from the global shutdown routine. As the shutdown routine has a timeout
     // and error condition where we call the method as well beside the standard path and it could be that those
     // alternative code paths call our method after it was called already, so it is a valid but rare case.
     // We add a guard to prevent repeated calls.
-    public static void flushAllDataToDisk(ResultHandler completeHandler) {
+    private static void flushAllDataToDisk(ResultHandler completeHandler, boolean doShutdown) {
         if (!allServicesInitialized.get()) {
             log.warn("Application has not completed start up yet so we do not flush data to disk.");
             completeHandler.handleResult();
@@ -110,14 +118,16 @@ public class PersistenceManager<T extends PersistableEnvelope> {
 
         // We don't know from which thread we are called so we map to user thread
         UserThread.execute(() -> {
-            if (flushAllDataToDiskCalled) {
-                log.warn("We got flushAllDataToDisk called again. This can happen in some rare cases. We ignore the repeated call.");
-                return;
+            if (doShutdown) {
+                if (flushAtShutdownCalled) {
+                    log.warn("We got flushAllDataToDisk called again. This can happen in some rare cases. We ignore the repeated call.");
+                    return;
+                }
+
+                flushAtShutdownCalled = true;
             }
 
-            flushAllDataToDiskCalled = true;
-
-            log.info("Start flushAllDataToDisk at shutdown");
+            log.info("Start flushAllDataToDisk");
             AtomicInteger openInstances = new AtomicInteger(ALL_PERSISTENCE_MANAGERS.size());
 
             if (openInstances.get() == 0) {
@@ -139,9 +149,9 @@ public class PersistenceManager<T extends PersistableEnvelope> {
 
                     // We get our result handler called from the write thread so we map back to user thread.
                     persistenceManager.persistNow(() ->
-                            UserThread.execute(() -> onWriteCompleted(completeHandler, openInstances, persistenceManager)));
+                            UserThread.execute(() -> onWriteCompleted(completeHandler, openInstances, persistenceManager, doShutdown)));
                 } else {
-                    onWriteCompleted(completeHandler, openInstances, persistenceManager);
+                    onWriteCompleted(completeHandler, openInstances, persistenceManager, doShutdown);
                 }
             });
         });
@@ -150,8 +160,12 @@ public class PersistenceManager<T extends PersistableEnvelope> {
     // We get called always from user thread here.
     private static void onWriteCompleted(ResultHandler completeHandler,
                                          AtomicInteger openInstances,
-                                         PersistenceManager<?> persistenceManager) {
-        persistenceManager.shutdown();
+                                         PersistenceManager<?> persistenceManager,
+                                         boolean doShutdown) {
+        if (doShutdown) {
+            persistenceManager.shutdown();
+        }
+
         if (openInstances.decrementAndGet() == 0) {
             log.info("flushAllDataToDisk completed");
             completeHandler.handleResult();
@@ -231,7 +245,7 @@ public class PersistenceManager<T extends PersistableEnvelope> {
     }
 
     public void initialize(T persistable, String fileName, Source source) {
-        if (flushAllDataToDiskCalled) {
+        if (flushAtShutdownCalled) {
             log.warn("We have started the shut down routine already. We ignore that initialize call.");
             return;
         }
@@ -297,7 +311,7 @@ public class PersistenceManager<T extends PersistableEnvelope> {
      * @param orElse            Called if no file exists or reading of file failed.
      */
     public void readPersisted(String fileName, Consumer<T> resultHandler, Runnable orElse) {
-        if (flushAllDataToDiskCalled) {
+        if (flushAtShutdownCalled) {
             log.warn("We have started the shut down routine already. We ignore that readPersisted call.");
             return;
         }
@@ -321,7 +335,7 @@ public class PersistenceManager<T extends PersistableEnvelope> {
 
     @Nullable
     public T getPersisted(String fileName) {
-        if (flushAllDataToDiskCalled) {
+        if (flushAtShutdownCalled) {
             log.warn("We have started the shut down routine already. We ignore that getPersisted call.");
             return null;
         }
@@ -364,7 +378,7 @@ public class PersistenceManager<T extends PersistableEnvelope> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void requestPersistence() {
-        if (flushAllDataToDiskCalled) {
+        if (flushAtShutdownCalled) {
             log.warn("We have started the shut down routine already. We ignore that requestPersistence call.");
             return;
         }
