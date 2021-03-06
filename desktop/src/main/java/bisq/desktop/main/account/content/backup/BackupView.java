@@ -27,6 +27,7 @@ import bisq.core.user.Preferences;
 
 import bisq.common.config.Config;
 import bisq.common.file.FileUtil;
+import bisq.common.persistence.PersistenceManager;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Utilities;
 
@@ -135,17 +136,19 @@ public class BackupView extends ActivatableView<GridPane, Void> {
 
         backupNow.setOnAction(event -> {
             String backupDirectory = preferences.getBackupDirectory();
-            if (backupDirectory != null && backupDirectory.length() > 0) {
-                try {
-                    String dateString = new SimpleDateFormat("yyyy-MM-dd-HHmmss").format(new Date());
-                    String destination = Paths.get(backupDirectory, "bisq_backup_" + dateString).toString();
-                    FileUtil.copyDirectory(dataDir, new File(destination));
-                    new Popup().feedback(Res.get("account.backup.success", destination)).show();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    log.error(e.getMessage());
-                    showWrongPathWarningAndReset(e);
-                }
+            if (backupDirectory != null && backupDirectory.length() > 0) {  // We need to flush data to disk
+                PersistenceManager.flushAllDataToDisk(() -> {
+                    try {
+                        String dateString = new SimpleDateFormat("yyyy-MM-dd-HHmmss").format(new Date());
+                        String destination = Paths.get(backupDirectory, "bisq_backup_" + dateString).toString();
+                        FileUtil.copyDirectory(dataDir, new File(destination));
+                        new Popup().feedback(Res.get("account.backup.success", destination)).show();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        log.error(e.getMessage());
+                        showWrongPathWarningAndReset(e);
+                    }
+                });
             }
         });
     }
