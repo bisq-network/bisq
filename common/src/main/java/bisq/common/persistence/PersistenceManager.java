@@ -82,7 +82,7 @@ public class PersistenceManager<T extends PersistableEnvelope> {
 
     public static final Map<String, PersistenceManager<?>> ALL_PERSISTENCE_MANAGERS = new HashMap<>();
     private static boolean flushAllDataToDiskCalled = false;
-    private static AtomicBoolean allServicesInitialized = new AtomicBoolean(false);
+    private static final AtomicBoolean allServicesInitialized = new AtomicBoolean(false);
 
     public static void onAllServicesInitialized() {
         allServicesInitialized.set(true);
