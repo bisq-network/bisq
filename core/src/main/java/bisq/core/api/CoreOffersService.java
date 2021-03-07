@@ -55,6 +55,7 @@ import static bisq.core.locale.CurrencyUtil.isCryptoCurrency;
 import static bisq.core.offer.OfferPayload.Direction;
 import static bisq.core.offer.OfferPayload.Direction.BUY;
 import static bisq.core.payment.PaymentAccountUtil.isPaymentAccountValidForOffer;
+import static java.lang.String.*;
 import static java.lang.String.format;
 import static java.util.Comparator.comparing;
 
@@ -224,7 +225,7 @@ class CoreOffersService {
 
     private void verifyPaymentAccountIsValidForNewOffer(Offer offer, PaymentAccount paymentAccount) {
         if (!isPaymentAccountValidForOffer(offer, paymentAccount)) {
-            String error = String.format("cannot create %s offer with payment account %s",
+            String error = format("cannot create %s offer with payment account %s",
                     offer.getOfferPayload().getCounterCurrencyCode(),
                     paymentAccount.getId());
             throw new IllegalStateException(error);
