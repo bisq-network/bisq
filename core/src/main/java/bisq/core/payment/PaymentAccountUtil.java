@@ -41,10 +41,10 @@ import javax.annotation.Nullable;
 @Slf4j
 public class PaymentAccountUtil {
 
-    public static boolean isAnyTakerPaymentAccountValidForOffer(Offer offer,
-                                                                Collection<PaymentAccount> takerPaymentAccounts) {
-        for (PaymentAccount takerPaymentAccount : takerPaymentAccounts) {
-            if (isTakerPaymentAccountValidForOffer(offer, takerPaymentAccount))
+    public static boolean isAnyPaymentAccountValidForOffer(Offer offer,
+                                                           Collection<PaymentAccount> paymentAccounts) {
+        for (PaymentAccount paymentAccount : paymentAccounts) {
+            if (isPaymentAccountValidForOffer(offer, paymentAccount))
                 return true;
         }
         return false;
@@ -55,7 +55,7 @@ public class PaymentAccountUtil {
                                                                             AccountAgeWitnessService accountAgeWitnessService) {
         ObservableList<PaymentAccount> result = FXCollections.observableArrayList();
         result.addAll(paymentAccounts.stream()
-                .filter(paymentAccount -> isTakerPaymentAccountValidForOffer(offer, paymentAccount))
+                .filter(paymentAccount -> isPaymentAccountValidForOffer(offer, paymentAccount))
                 .filter(paymentAccount -> isAmountValidForOffer(offer, paymentAccount, accountAgeWitnessService))
                 .collect(Collectors.toList()));
         return result;
@@ -79,7 +79,7 @@ public class PaymentAccountUtil {
                 "Payment method from offer: " + offer.getPaymentMethod().toString();
     }
 
-    public static boolean isTakerPaymentAccountValidForOffer(Offer offer, PaymentAccount paymentAccount) {
+    public static boolean isPaymentAccountValidForOffer(Offer offer, PaymentAccount paymentAccount) {
         return new ReceiptValidator(offer, paymentAccount).isValid();
     }
 
@@ -144,23 +144,4 @@ public class PaymentAccountUtil {
                 filter(e -> e.getPaymentAccountPayload().equals(paymentAccountPayload))
                 .findAny();
     }
-
-    // TODO no code duplication found in UI code (added for API)
-    // That is optional and set to null if not supported (AltCoins,...)
-   /* public static String getCountryCode(PaymentAccount paymentAccount) {
-        if (paymentAccount instanceof CountryBasedPaymentAccount) {
-            Country country = ((CountryBasedPaymentAccount) paymentAccount).getCountry();
-            return country != null ? country.code : null;
-        } else {
-            return null;
-        }
-    }*/
-
-    // TODO no code duplication found in UI code (added for API)
-    /*public static long getMaxTradeLimit(AccountAgeWitnessService accountAgeWitnessService, PaymentAccount paymentAccount, String currencyCode) {
-        if (paymentAccount != null)
-            return accountAgeWitnessService.getMyTradeLimit(paymentAccount, currencyCode);
-        else
-            return 0;
-    }*/
 }

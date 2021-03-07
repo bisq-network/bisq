@@ -42,6 +42,8 @@ public class OfferTest extends AbstractOfferTest {
     public void testAmtTooLargeShouldThrowException() {
         ValidateCreateOfferTest test = new ValidateCreateOfferTest();
         test.testAmtTooLargeShouldThrowException();
+        test.testNoMatchingEURPaymentAccountShouldThrowException();
+        test.testNoMatchingCADPaymentAccountShouldThrowException();
     }
 
     @Test
