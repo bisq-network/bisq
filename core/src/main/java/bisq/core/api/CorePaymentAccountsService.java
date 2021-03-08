@@ -44,19 +44,23 @@ class CorePaymentAccountsService {
     private final AccountAgeWitnessService accountAgeWitnessService;
     private final PaymentAccountForm paymentAccountForm;
     private final User user;
+    private final boolean isApiUser;
 
     @Inject
-    public CorePaymentAccountsService(AccountAgeWitnessService accountAgeWitnessService,
+    public CorePaymentAccountsService(CoreContext coreContext,
+                                      AccountAgeWitnessService accountAgeWitnessService,
                                       PaymentAccountForm paymentAccountForm,
                                       User user) {
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.paymentAccountForm = paymentAccountForm;
         this.user = user;
+        this.isApiUser = coreContext.isApiUser();
     }
 
     PaymentAccount createPaymentAccount(String jsonString) {
         PaymentAccount paymentAccount = paymentAccountForm.toPaymentAccount(jsonString);
         verifyPaymentAccountHasRequiredFields(paymentAccount);
+        maybeAssignSelectedTradeCurrency(paymentAccount);
         user.addPaymentAccountIfNotExists(paymentAccount);
         accountAgeWitnessService.publishMyAccountAgeWitness(paymentAccount.getPaymentAccountPayload());
         log.info("Saved payment account with id {} and payment method {}.",
@@ -91,5 +95,10 @@ class CorePaymentAccountsService {
         if (paymentAccount.isTransferwiseAccount() && paymentAccount.getTradeCurrencies().isEmpty())
             throw new IllegalArgumentException(format("no trade currencies defined for %s payment account",
                     paymentAccount.getPaymentMethod().getDisplayString().toLowerCase()));
+    }
+
+    private void maybeAssignSelectedTradeCurrency(PaymentAccount paymentAccount) {
+        if (isApiUser && paymentAccount.getSelectedTradeCurrency() == null)
+            paymentAccount.setSelectedTradeCurrency(paymentAccount.getTradeCurrency().orElse(null));
     }
 }
