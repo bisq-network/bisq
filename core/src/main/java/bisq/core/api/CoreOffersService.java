@@ -215,7 +215,7 @@ class CoreOffersService {
     }
 
     void cancelOffer(String id) {
-        Offer offer = getOffer(id);
+        Offer offer = getMyOffer(id);
         openOfferManager.removeOffer(offer,
                 () -> {
                 },
