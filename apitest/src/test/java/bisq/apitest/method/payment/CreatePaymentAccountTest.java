@@ -17,6 +17,7 @@
 
 package bisq.apitest.method.payment;
 
+import bisq.core.locale.TradeCurrency;
 import bisq.core.payment.AdvancedCashAccount;
 import bisq.core.payment.AliPayAccount;
 import bisq.core.payment.AustraliaPayid;
@@ -50,8 +51,12 @@ import bisq.core.payment.payload.CashDepositAccountPayload;
 import bisq.core.payment.payload.SameBankAccountPayload;
 import bisq.core.payment.payload.SpecificBanksAccountPayload;
 
+import io.grpc.StatusRuntimeException;
+
 import java.io.File;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 import lombok.extern.slf4j.Slf4j;
@@ -65,12 +70,11 @@ import org.junit.jupiter.api.TestMethodOrder;
 
 import static bisq.apitest.Scaffold.BitcoinCoreApp.bitcoind;
 import static bisq.apitest.config.BisqAppConfig.alicedaemon;
-import static bisq.core.locale.CurrencyUtil.getAllAdvancedCashCurrencies;
-import static bisq.core.locale.CurrencyUtil.getAllMoneyGramCurrencies;
-import static bisq.core.locale.CurrencyUtil.getAllRevolutCurrencies;
-import static bisq.core.locale.CurrencyUtil.getAllUpholdCurrencies;
+import static bisq.core.locale.CurrencyUtil.*;
 import static bisq.core.payment.payload.PaymentMethod.*;
+import static java.util.Collections.singletonList;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 
@@ -737,25 +741,96 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
     }
 
     @Test
-    public void testCreateTransferwiseAccount(TestInfo testInfo) {
+    public void testCreateTransferwiseAccountWith1TradeCurrency(TestInfo testInfo) {
         File emptyForm = getEmptyForm(testInfo, TRANSFERWISE_ID);
         verifyEmptyForm(emptyForm,
                 TRANSFERWISE_ID,
                 PROPERTY_NAME_EMAIL);
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_PAYMENT_METHOD_ID, TRANSFERWISE_ID);
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_ACCOUNT_NAME, "Transferwise Acct");
-        COMPLETED_FORM_MAP.put(PROPERTY_NAME_EMAIL, "jan@doe.info");
+        COMPLETED_FORM_MAP.put(PROPERTY_NAME_TRADE_CURRENCIES, "eur");
+        COMPLETED_FORM_MAP.put(PROPERTY_NAME_EMAIL, "jane@doe.info");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_SALT, "");
         String jsonString = getCompletedFormAsJsonString();
         TransferwiseAccount paymentAccount = (TransferwiseAccount) createPaymentAccount(aliceClient, jsonString);
         verifyUserPayloadHasPaymentAccountWithId(aliceClient, paymentAccount.getId());
-        // As per commit 88f26f93241af698ae689bf081205d0f9dc929fa
-        // Do not autofill all currencies by default but keep all unselected.
-        // verifyAccountTradeCurrencies(getAllTransferwiseCurrencies(), paymentAccount);
-        assertEquals(0, paymentAccount.getTradeCurrencies().size());
+        assertEquals(1, paymentAccount.getTradeCurrencies().size());
+        List<TradeCurrency> expectedTradeCurrencies = singletonList(getTradeCurrency("EUR").get());
+        verifyAccountTradeCurrencies(expectedTradeCurrencies, paymentAccount);
         verifyCommonFormEntries(paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_EMAIL), paymentAccount.getEmail());
         log.debug("Deserialized {}: {}", paymentAccount.getClass().getSimpleName(), paymentAccount);
+    }
+
+    @Test
+    public void testCreateTransferwiseAccountWith10TradeCurrencies(TestInfo testInfo) {
+        File emptyForm = getEmptyForm(testInfo, TRANSFERWISE_ID);
+        verifyEmptyForm(emptyForm,
+                TRANSFERWISE_ID,
+                PROPERTY_NAME_EMAIL);
+        COMPLETED_FORM_MAP.put(PROPERTY_NAME_PAYMENT_METHOD_ID, TRANSFERWISE_ID);
+        COMPLETED_FORM_MAP.put(PROPERTY_NAME_ACCOUNT_NAME, "Transferwise Acct");
+        COMPLETED_FORM_MAP.put(PROPERTY_NAME_TRADE_CURRENCIES, "ars, cad, hrk, czk, eur, hkd, idr, jpy, chf, nzd");
+        COMPLETED_FORM_MAP.put(PROPERTY_NAME_EMAIL, "jane@doe.info");
+        COMPLETED_FORM_MAP.put(PROPERTY_NAME_SALT, "");
+        String jsonString = getCompletedFormAsJsonString();
+        TransferwiseAccount paymentAccount = (TransferwiseAccount) createPaymentAccount(aliceClient, jsonString);
+        verifyUserPayloadHasPaymentAccountWithId(aliceClient, paymentAccount.getId());
+        assertEquals(10, paymentAccount.getTradeCurrencies().size());
+        List<TradeCurrency> expectedTradeCurrencies = new ArrayList<>() {{
+            add(getTradeCurrency("ARS").get());
+            add(getTradeCurrency("CAD").get());
+            add(getTradeCurrency("HRK").get());
+            add(getTradeCurrency("CZK").get());
+            add(getTradeCurrency("EUR").get());
+            add(getTradeCurrency("HKD").get());
+            add(getTradeCurrency("IDR").get());
+            add(getTradeCurrency("JPY").get());
+            add(getTradeCurrency("CHF").get());
+            add(getTradeCurrency("NZD").get());
+        }};
+        verifyAccountTradeCurrencies(expectedTradeCurrencies, paymentAccount);
+        verifyCommonFormEntries(paymentAccount);
+        assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_EMAIL), paymentAccount.getEmail());
+        log.debug("Deserialized {}: {}", paymentAccount.getClass().getSimpleName(), paymentAccount);
+    }
+
+    @Test
+    public void testCreateTransferwiseAccountWithInvalidBrlTradeCurrencyShouldThrowException(TestInfo testInfo) {
+        File emptyForm = getEmptyForm(testInfo, TRANSFERWISE_ID);
+        verifyEmptyForm(emptyForm,
+                TRANSFERWISE_ID,
+                PROPERTY_NAME_EMAIL);
+        COMPLETED_FORM_MAP.put(PROPERTY_NAME_PAYMENT_METHOD_ID, TRANSFERWISE_ID);
+        COMPLETED_FORM_MAP.put(PROPERTY_NAME_ACCOUNT_NAME, "Transferwise Acct");
+        COMPLETED_FORM_MAP.put(PROPERTY_NAME_TRADE_CURRENCIES, "eur, hkd, idr, jpy, chf, nzd, brl, gbp");
+        COMPLETED_FORM_MAP.put(PROPERTY_NAME_EMAIL, "jane@doe.info");
+        COMPLETED_FORM_MAP.put(PROPERTY_NAME_SALT, "");
+        String jsonString = getCompletedFormAsJsonString();
+
+        Throwable exception = assertThrows(StatusRuntimeException.class, () ->
+                createPaymentAccount(aliceClient, jsonString));
+        assertEquals("INVALID_ARGUMENT: BRL is not a member of valid currencies list",
+                exception.getMessage());
+    }
+
+    @Test
+    public void testCreateTransferwiseAccountWithoutTradeCurrenciesShouldThrowException(TestInfo testInfo) {
+        File emptyForm = getEmptyForm(testInfo, TRANSFERWISE_ID);
+        verifyEmptyForm(emptyForm,
+                TRANSFERWISE_ID,
+                PROPERTY_NAME_EMAIL);
+        COMPLETED_FORM_MAP.put(PROPERTY_NAME_PAYMENT_METHOD_ID, TRANSFERWISE_ID);
+        COMPLETED_FORM_MAP.put(PROPERTY_NAME_ACCOUNT_NAME, "Transferwise Acct");
+        COMPLETED_FORM_MAP.put(PROPERTY_NAME_TRADE_CURRENCIES, "");
+        COMPLETED_FORM_MAP.put(PROPERTY_NAME_EMAIL, "jane@doe.info");
+        COMPLETED_FORM_MAP.put(PROPERTY_NAME_SALT, "");
+        String jsonString = getCompletedFormAsJsonString();
+
+        Throwable exception = assertThrows(StatusRuntimeException.class, () ->
+                createPaymentAccount(aliceClient, jsonString));
+        assertEquals("INVALID_ARGUMENT: no trade currencies defined for transferwise payment account",
+                exception.getMessage());
     }
 
     @Test

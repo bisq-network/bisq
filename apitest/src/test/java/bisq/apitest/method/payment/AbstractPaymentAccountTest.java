@@ -85,6 +85,7 @@ public class AbstractPaymentAccountTest extends MethodTest {
     static final String PROPERTY_NAME_SALT = "salt";
     static final String PROPERTY_NAME_SORT_CODE = "sortCode";
     static final String PROPERTY_NAME_STATE = "state";
+    static final String PROPERTY_NAME_TRADE_CURRENCIES = "tradeCurrencies";
     static final String PROPERTY_NAME_USERNAME = "userName";
 
     static final Gson GSON = new GsonBuilder()

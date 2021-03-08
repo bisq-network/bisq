@@ -43,6 +43,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -51,6 +52,7 @@ import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static java.lang.String.format;
 
 @Slf4j
 public class CurrencyUtil {
@@ -484,6 +486,32 @@ public class CurrencyUtil {
             return Optional.of(cryptoCurrencyOptional.get());
 
         return Optional.empty();
+    }
+
+    public static Optional<List<TradeCurrency>> getTradeCurrencies(List<String> currencyCodes) {
+        List<TradeCurrency> tradeCurrencies = new ArrayList<>();
+        currencyCodes.stream().forEachOrdered(c ->
+                tradeCurrencies.add(getTradeCurrency(c).orElseThrow(() ->
+                        new IllegalArgumentException(format("%s is not a valid trade currency code", c)))));
+        return tradeCurrencies.isEmpty()
+                ? Optional.empty()
+                : Optional.of(tradeCurrencies);
+    }
+
+    public static Optional<List<TradeCurrency>> getTradeCurrenciesInList(List<String> currencyCodes,
+                                                                         List<TradeCurrency> validCurrencies) {
+        Optional<List<TradeCurrency>> tradeCurrencies = getTradeCurrencies(currencyCodes);
+        Consumer<List<TradeCurrency>> validateCandidateCurrencies = (list) -> {
+            for (TradeCurrency tradeCurrency : list) {
+                if (!validCurrencies.contains(tradeCurrency)) {
+                    throw new IllegalArgumentException(
+                            format("%s is not a member of valid currencies list",
+                                    tradeCurrency.getCode()));
+                }
+            }
+        };
+        tradeCurrencies.ifPresent(validateCandidateCurrencies);
+        return tradeCurrencies;
     }
 
     public static FiatCurrency getCurrencyByCountryCode(String countryCode) {

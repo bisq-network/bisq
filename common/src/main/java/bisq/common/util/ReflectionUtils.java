@@ -28,9 +28,13 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 
+import lombok.extern.slf4j.Slf4j;
+
+import static java.lang.String.format;
 import static java.util.Arrays.stream;
 import static org.apache.commons.lang3.StringUtils.capitalize;
 
+@Slf4j
 public class ReflectionUtils {
 
     /**
@@ -104,5 +108,33 @@ public class ReflectionUtils {
             return "public";
         else
             return "";
+    }
+
+    public static Field getField(String name, Class<?> clazz) {
+        Optional<Field> field = stream(clazz.getDeclaredFields())
+                .filter(f -> f.getName().equals(name)).findFirst();
+        return field.orElseThrow(() ->
+                new IllegalArgumentException(format("field %s not found in class %s",
+                        name,
+                        clazz.getSimpleName())));
+    }
+
+    public static Method getMethod(String name, Class<?> clazz) {
+        Optional<Method> method = stream(clazz.getDeclaredMethods())
+                .filter(m -> m.getName().equals(name)).findFirst();
+        return method.orElseThrow(() ->
+                new IllegalArgumentException(format("method %s not found in class %s",
+                        name,
+                        clazz.getSimpleName())));
+    }
+
+    public static void handleSetFieldValueError(Object object,
+                                                Field field,
+                                                ReflectiveOperationException ex) {
+        String errMsg = format("cannot set value of field %s, on class %s",
+                field.getName(),
+                object.getClass().getSimpleName());
+        log.error(capitalize(errMsg) + ".", ex);
+        throw new IllegalStateException("programmer error: " + errMsg);
     }
 }

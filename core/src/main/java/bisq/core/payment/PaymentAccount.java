@@ -198,6 +198,10 @@ public abstract class PaymentAccount implements PersistablePayload {
         return this instanceof MoneyGramAccount;
     }
 
+    public boolean isTransferwiseAccount() {
+        return this instanceof TransferwiseAccount;
+    }
+
     /**
      * Return an Optional of the trade currency for this payment account, or
      * Optional.empty() if none is found.  If this payment account has a selected

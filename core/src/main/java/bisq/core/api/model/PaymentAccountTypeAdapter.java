@@ -20,6 +20,7 @@ package bisq.core.api.model;
 
 import bisq.core.locale.Country;
 import bisq.core.locale.FiatCurrency;
+import bisq.core.locale.TradeCurrency;
 import bisq.core.payment.CountryBasedPaymentAccount;
 import bisq.core.payment.MoneyGramAccount;
 import bisq.core.payment.PaymentAccount;
@@ -35,12 +36,11 @@ import org.apache.commons.lang3.StringUtils;
 import java.io.IOException;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 import java.lang.reflect.Constructor;
@@ -50,16 +50,20 @@ import java.lang.reflect.Method;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.common.util.ReflectionUtils.getSetterMethodForFieldInClassHierarchy;
-import static bisq.common.util.ReflectionUtils.getVisibilityModifierAsString;
-import static bisq.common.util.ReflectionUtils.isSetterOnClass;
-import static bisq.common.util.ReflectionUtils.loadFieldListForClassHierarchy;
+import static bisq.common.util.ReflectionUtils.*;
 import static bisq.common.util.Utilities.decodeFromHex;
 import static bisq.core.locale.CountryUtil.findCountryByCode;
+import static bisq.core.locale.CurrencyUtil.getAllTransferwiseCurrencies;
 import static bisq.core.locale.CurrencyUtil.getCurrencyByCountryCode;
+import static bisq.core.locale.CurrencyUtil.getTradeCurrencies;
+import static bisq.core.locale.CurrencyUtil.getTradeCurrenciesInList;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.String.format;
+import static java.util.Arrays.stream;
+import static java.util.Collections.singletonList;
+import static java.util.Collections.unmodifiableMap;
 import static java.util.Comparator.comparing;
+import static java.util.stream.Collectors.toList;
 
 @Slf4j
 class PaymentAccountTypeAdapter extends TypeAdapter<PaymentAccount> {
@@ -96,7 +100,7 @@ class PaymentAccountTypeAdapter extends TypeAdapter<PaymentAccount> {
     public PaymentAccountTypeAdapter(Class<? extends PaymentAccount> paymentAccountType, String[] excludedFields) {
         this.paymentAccountType = paymentAccountType;
         this.paymentAccountPayloadType = getPaymentAccountPayloadType();
-        this.isExcludedField = (f) -> Arrays.stream(excludedFields).anyMatch(e -> e.equals(f.getName()));
+        this.isExcludedField = (f) -> stream(excludedFields).anyMatch(e -> e.equals(f.getName()));
         this.fieldSettersMap = getFieldSetterMap();
     }
 
@@ -128,6 +132,9 @@ class PaymentAccountTypeAdapter extends TypeAdapter<PaymentAccount> {
     }
 
     private void writeInnerMutableFields(JsonWriter out, PaymentAccount account) {
+        if (account.isTransferwiseAccount())
+            writeTradeCurrenciesField(out, account);
+
         fieldSettersMap.forEach((field, value) -> {
             try {
                 // Write out a json element if there is a @Setter for this field.
@@ -151,12 +158,36 @@ class PaymentAccountTypeAdapter extends TypeAdapter<PaymentAccount> {
         });
     }
 
+    // In some cases (TransferwiseAccount), we need to include a 'tradeCurrencies'
+    // field in the json form, though the 'tradeCurrencies' field has no setter method in
+    // the PaymentAccount class hierarchy.  At of time of this change, TransferwiseAccount
+    // is the only known exception to the rule.
+    private void writeTradeCurrenciesField(JsonWriter out, PaymentAccount account) {
+        try {
+            String fieldName = "tradeCurrencies";
+            log.debug("Append form with non-settable field: {}", fieldName);
+            out.name(fieldName);
+            out.value("comma delimited currency code list, e.g., gbp,eur");
+        } catch (Exception ex) {
+            String errMsg = format("cannot create a new %s json form",
+                    account.getClass().getSimpleName());
+            log.error(StringUtils.capitalize(errMsg) + ".", ex);
+            throw new IllegalStateException("programmer error: " + errMsg);
+        }
+    }
+
+
     @Override
     public PaymentAccount read(JsonReader in) throws IOException {
         PaymentAccount account = initNewPaymentAccount();
         in.beginObject();
         while (in.hasNext()) {
             String currentFieldName = in.nextName();
+
+            // The tradeCurrency field is common to all payment account types,
+            // but has no setter.
+            if (didReadTradeCurrenciesField(in, account, currentFieldName))
+                continue;
 
             // Some of the fields are common to all payment account types.
             if (didReadCommonField(in, account, currentFieldName))
@@ -199,17 +230,13 @@ class PaymentAccountTypeAdapter extends TypeAdapter<PaymentAccount> {
                             account.getClass().getSimpleName());
                     throw new IllegalStateException(errMsg);
                 }
-            } catch (IllegalAccessException | InvocationTargetException ex) {
-                String errMsg = format("cannot set field value for %s on %s",
-                        field.getName(),
-                        account.getClass().getSimpleName());
-                log.error(StringUtils.capitalize(errMsg) + ".", ex);
-                throw new IllegalStateException("programmer error: " + errMsg);
+            } catch (ReflectiveOperationException ex) {
+                handleSetFieldValueError(account, field, ex);
             }
         } else {
             throw new IllegalStateException(
                     format("programmer error: cannot de-serialize json to a '%s' "
-                                    + " because there is no setter method for field %s.",
+                                    + " because field value cannot be set %s.",
                             account.getClass().getSimpleName(),
                             field.getName()));
         }
@@ -232,7 +259,7 @@ class PaymentAccountTypeAdapter extends TypeAdapter<PaymentAccount> {
                     .or(() -> getSetterMethodForFieldInClassHierarchy(field, paymentAccountPayloadType));
             map.put(field, setter);
         }
-        return Collections.unmodifiableMap(map);
+        return unmodifiableMap(map);
     }
 
     private List<Field> getOrderedFields() {
@@ -272,6 +299,56 @@ class PaymentAccountTypeAdapter extends TypeAdapter<PaymentAccount> {
             log.error(StringUtils.capitalize(errMsg) + ".", ex);
             throw new IllegalStateException("programmer error: " + errMsg);
         }
+    }
+
+    private final Predicate<String> isCommaDelimitedCurrencyList = (s) -> s != null && s.contains(",");
+    private final Function<String, List<String>> commaDelimitedCodesToList = (s) -> {
+        if (isCommaDelimitedCurrencyList.test(s))
+            return stream(s.split(",")).map(a -> a.trim().toUpperCase()).collect(toList());
+        else if (s != null && !s.isEmpty())
+            return singletonList(s.trim().toUpperCase());
+        else
+            return new ArrayList<>();
+    };
+
+    private boolean didReadTradeCurrenciesField(JsonReader in,
+                                                PaymentAccount account,
+                                                String fieldName) {
+        // The PaymentAccount.tradeCurrencies field is a special case because it has
+        // no setter, and we add currencies to the List here.  Normally, it is an
+        // excluded field, TransferwiseAccount excepted.
+        if (fieldName.equals("tradeCurrencies")) {
+            try {
+                String fieldValue = nextStringOrNull(in);
+                List<String> currencyCodes = commaDelimitedCodesToList.apply(fieldValue);
+
+                Optional<List<TradeCurrency>> tradeCurrencies;
+                if (account.isTransferwiseAccount())
+                    tradeCurrencies = getTradeCurrenciesInList(currencyCodes, getAllTransferwiseCurrencies());
+                else
+                    tradeCurrencies = getTradeCurrencies(currencyCodes);
+
+                if (tradeCurrencies.isPresent()) {
+                    Method addCurrencyMethod = getMethod("addCurrency", PaymentAccount.class);
+                    for (TradeCurrency tradeCurrency : tradeCurrencies.get()) {
+                        addCurrencyMethod.invoke(account, tradeCurrency);
+                    }
+                } else {
+                    // Log a warning.  We should not throw an exception here because the
+                    // gson library will not pass it up to the calling Bisq class as it
+                    // would be defined here.  Do a check in a calling class to make sure
+                    // the tradeCurrencies field is populated in the PaymentAccount
+                    // object, if it is required for the payment account method.
+                    log.warn("No trade currencies were found in the {} account form.",
+                            account.getPaymentMethod().getDisplayString());
+                }
+                return true;
+            } catch (ReflectiveOperationException ex) {
+                Field field = getField("tradeCurrencies", PaymentAccount.class);
+                handleSetFieldValueError(account, field, ex);
+            }
+        }
+        return false;
     }
 
     private boolean didReadCommonField(JsonReader in,
