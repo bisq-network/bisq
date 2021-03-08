@@ -318,35 +318,31 @@ class PaymentAccountTypeAdapter extends TypeAdapter<PaymentAccount> {
         // no setter, and we add currencies to the List here.  Normally, it is an
         // excluded field, TransferwiseAccount excepted.
         if (fieldName.equals("tradeCurrencies")) {
-            try {
-                String fieldValue = nextStringOrNull(in);
-                List<String> currencyCodes = commaDelimitedCodesToList.apply(fieldValue);
+            String fieldValue = nextStringOrNull(in);
+            List<String> currencyCodes = commaDelimitedCodesToList.apply(fieldValue);
 
-                Optional<List<TradeCurrency>> tradeCurrencies;
-                if (account.isTransferwiseAccount())
-                    tradeCurrencies = getTradeCurrenciesInList(currencyCodes, getAllTransferwiseCurrencies());
-                else
-                    tradeCurrencies = getTradeCurrencies(currencyCodes);
+            Optional<List<TradeCurrency>> tradeCurrencies;
+            if (account.isTransferwiseAccount())
+                tradeCurrencies = getTradeCurrenciesInList(currencyCodes, getAllTransferwiseCurrencies());
+            else
+                tradeCurrencies = getTradeCurrencies(currencyCodes);
 
-                if (tradeCurrencies.isPresent()) {
-                    Method addCurrencyMethod = getMethod("addCurrency", PaymentAccount.class);
-                    for (TradeCurrency tradeCurrency : tradeCurrencies.get()) {
-                        addCurrencyMethod.invoke(account, tradeCurrency);
-                    }
-                } else {
-                    // Log a warning.  We should not throw an exception here because the
-                    // gson library will not pass it up to the calling Bisq class as it
-                    // would be defined here.  Do a check in a calling class to make sure
-                    // the tradeCurrencies field is populated in the PaymentAccount
-                    // object, if it is required for the payment account method.
-                    log.warn("No trade currencies were found in the {} account form.",
-                            account.getPaymentMethod().getDisplayString());
+            if (tradeCurrencies.isPresent()) {
+                for (TradeCurrency tradeCurrency : tradeCurrencies.get()) {
+                    account.addCurrency(tradeCurrency);
                 }
-                return true;
-            } catch (ReflectiveOperationException ex) {
-                Field field = getField("tradeCurrencies", PaymentAccount.class);
-                handleSetFieldValueError(account, field, ex);
+                // For api users, define a selected currency.
+                account.setSelectedTradeCurrency(account.getTradeCurrency().orElse(null));
+            } else {
+                // Log a warning.  We should not throw an exception here because the
+                // gson library will not pass it up to the calling Bisq class as it
+                // would be defined here.  Do a check in a calling class to make sure
+                // the tradeCurrencies field is populated in the PaymentAccount
+                // object, if it is required for the payment account method.
+                log.warn("No trade currencies were found in the {} account form.",
+                        account.getPaymentMethod().getDisplayString());
             }
+            return true;
         }
         return false;
     }

@@ -758,7 +758,9 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         TransferwiseAccount paymentAccount = (TransferwiseAccount) createPaymentAccount(aliceClient, jsonString);
         verifyUserPayloadHasPaymentAccountWithId(aliceClient, paymentAccount.getId());
         assertEquals(1, paymentAccount.getTradeCurrencies().size());
-        List<TradeCurrency> expectedTradeCurrencies = singletonList(getTradeCurrency("EUR").get());
+        TradeCurrency expectedCurrency = getTradeCurrency("EUR").get();
+        assertEquals(expectedCurrency, paymentAccount.getSelectedTradeCurrency());
+        List<TradeCurrency> expectedTradeCurrencies = singletonList(expectedCurrency);
         verifyAccountTradeCurrencies(expectedTradeCurrencies, paymentAccount);
         verifyCommonFormEntries(paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_EMAIL), paymentAccount.getEmail());
@@ -781,7 +783,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         verifyUserPayloadHasPaymentAccountWithId(aliceClient, paymentAccount.getId());
         assertEquals(10, paymentAccount.getTradeCurrencies().size());
         List<TradeCurrency> expectedTradeCurrencies = new ArrayList<>() {{
-            add(getTradeCurrency("ARS").get());
+            add(getTradeCurrency("ARS").get()); // 1st in list = selected ccy
             add(getTradeCurrency("CAD").get());
             add(getTradeCurrency("HRK").get());
             add(getTradeCurrency("CZK").get());
@@ -793,6 +795,8 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
             add(getTradeCurrency("NZD").get());
         }};
         verifyAccountTradeCurrencies(expectedTradeCurrencies, paymentAccount);
+        TradeCurrency expectedSelectedCurrency = expectedTradeCurrencies.get(0);
+        assertEquals(expectedSelectedCurrency, paymentAccount.getSelectedTradeCurrency());
         verifyCommonFormEntries(paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_EMAIL), paymentAccount.getEmail());
         print(paymentAccount);
