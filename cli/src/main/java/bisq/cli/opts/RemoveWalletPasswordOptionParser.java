@@ -21,13 +21,11 @@ package bisq.cli.opts;
 import joptsimple.OptionSpec;
 
 import static bisq.cli.opts.OptLabel.OPT_WALLET_PASSWORD;
-import static joptsimple.internal.Strings.EMPTY;
 
 public class RemoveWalletPasswordOptionParser extends AbstractMethodOptionParser implements MethodOpts {
 
     final OptionSpec<String> passwordOpt = parser.accepts(OPT_WALLET_PASSWORD, "bisq wallet password")
-            .withRequiredArg()
-            .defaultsTo(EMPTY);
+            .withRequiredArg();
 
     public RemoveWalletPasswordOptionParser(String[] args) {
         super(args);
@@ -40,7 +38,7 @@ public class RemoveWalletPasswordOptionParser extends AbstractMethodOptionParser
         if (options.has(helpOpt))
             return this;
 
-        if (!options.has(passwordOpt))
+        if (!options.has(passwordOpt) || options.valueOf(passwordOpt).isEmpty())
             throw new IllegalArgumentException("no password specified");
 
         return this;
