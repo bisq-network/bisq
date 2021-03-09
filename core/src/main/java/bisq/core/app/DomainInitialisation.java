@@ -58,6 +58,7 @@ import bisq.network.p2p.P2PService;
 
 import bisq.common.ClockWatcher;
 import bisq.common.app.DevEnv;
+import bisq.common.persistence.PersistenceManager;
 
 import javax.inject.Inject;
 
@@ -193,6 +194,8 @@ public class DomainInitialisation {
                                    Consumer<List<AmazonGiftCardAccount>> amazonGiftCardAccountsUpdateHandler,
                                    Runnable daoRequiresRestartHandler) {
         clockWatcher.start();
+
+        PersistenceManager.onAllServicesInitialized();
 
         tradeLimits.onAllServicesInitialized();
 
