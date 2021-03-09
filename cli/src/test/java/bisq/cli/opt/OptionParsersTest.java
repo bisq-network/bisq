@@ -130,6 +130,13 @@ public class OptionParsersTest {
                 "--" + OPT_MKT_PRICE_MARGIN + "=" + "0.0",
                 "--" + OPT_SECURITY_DEPOSIT + "=" + "25.0"
         };
+        CreateOfferOptionParser parser = new CreateOfferOptionParser(args).parse();
+        assertEquals("abc-payment-acct-id-123", parser.getPaymentAccountId());
+        assertEquals("BUY", parser.getDirection());
+        assertEquals("EUR", parser.getCurrencyCode());
+        assertEquals("0.125", parser.getAmount());
+        assertEquals("0.0", parser.getMktPriceMargin());
+        assertEquals("25.0", parser.getSecurityDeposit());
     }
 
     // CreatePaymentAcct opt parser tests
