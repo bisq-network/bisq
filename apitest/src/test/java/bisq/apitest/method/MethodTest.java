@@ -71,8 +71,11 @@ public class MethodTest extends ApiTestCase {
                                            boolean generateBtcBlock,
                                            Enum<?>... supportingApps) {
         try {
+            // Disable call rate metering where there is no callRateMeteringConfigFile.
+            File callRateMeteringConfigFile = defaultRateMeterInterceptorConfig();
             setUpScaffold(new String[]{
                     "--supportingApps", toNameList.apply(supportingApps),
+                    "--callRateMeteringConfigPath", callRateMeteringConfigFile.getAbsolutePath(),
                     "--enableBisqDebugging", "false"
             });
             doPostStartup(registerDisputeAgents, generateBtcBlock);

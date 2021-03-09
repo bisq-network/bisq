@@ -29,7 +29,6 @@ import bisq.proto.grpc.GetPaymentAccountsReply;
 import bisq.proto.grpc.GetPaymentAccountsRequest;
 import bisq.proto.grpc.GetPaymentMethodsReply;
 import bisq.proto.grpc.GetPaymentMethodsRequest;
-import bisq.proto.grpc.PaymentAccountsGrpc;
 
 import io.grpc.ServerInterceptor;
 import io.grpc.stub.StreamObserver;
@@ -43,6 +42,7 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 import static bisq.daemon.grpc.interceptor.GrpcServiceRateMeteringConfig.getCustomRateMeteringInterceptor;
+import static bisq.proto.grpc.PaymentAccountsGrpc.*;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
@@ -52,7 +52,7 @@ import bisq.daemon.grpc.interceptor.CallRateMeteringInterceptor;
 import bisq.daemon.grpc.interceptor.GrpcCallRateMeter;
 
 @Slf4j
-class GrpcPaymentAccountsService extends PaymentAccountsGrpc.PaymentAccountsImplBase {
+class GrpcPaymentAccountsService extends PaymentAccountsImplBase {
 
     private final CoreApi coreApi;
     private final GrpcExceptionHandler exceptionHandler;
@@ -135,10 +135,10 @@ class GrpcPaymentAccountsService extends PaymentAccountsGrpc.PaymentAccountsImpl
         return getCustomRateMeteringInterceptor(coreApi.getConfig().appDataDir, this.getClass())
                 .or(() -> Optional.of(CallRateMeteringInterceptor.valueOf(
                         new HashMap<>() {{
-                            put("createPaymentAccount", new GrpcCallRateMeter(1, MINUTES));
-                            put("getPaymentAccounts", new GrpcCallRateMeter(1, SECONDS));
-                            put("getPaymentMethods", new GrpcCallRateMeter(1, SECONDS));
-                            put("getPaymentAccountForm", new GrpcCallRateMeter(1, SECONDS));
+                            put(getCreatePaymentAccountMethod().getFullMethodName(), new GrpcCallRateMeter(1, MINUTES));
+                            put(getGetPaymentAccountsMethod().getFullMethodName(), new GrpcCallRateMeter(1, SECONDS));
+                            put(getGetPaymentMethodsMethod().getFullMethodName(), new GrpcCallRateMeter(1, SECONDS));
+                            put(getGetPaymentAccountFormMethod().getFullMethodName(), new GrpcCallRateMeter(1, SECONDS));
                         }}
                 )));
     }
