@@ -20,6 +20,7 @@ package bisq.apitest.method;
 import io.grpc.StatusRuntimeException;
 
 import java.io.File;
+import java.io.IOException;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -34,6 +35,7 @@ import org.junit.jupiter.api.TestMethodOrder;
 
 import static bisq.apitest.Scaffold.BitcoinCoreApp.bitcoind;
 import static bisq.apitest.config.BisqAppConfig.alicedaemon;
+import static bisq.common.file.FileUtil.deleteFileIfExists;
 import static java.util.concurrent.TimeUnit.DAYS;
 import static java.util.concurrent.TimeUnit.HOURS;
 import static java.util.concurrent.TimeUnit.MINUTES;
@@ -53,9 +55,11 @@ public class CallRateMeteringInterceptorTest extends MethodTest {
 
     private static final GetVersionTest getVersionTest = new GetVersionTest();
 
+    private static File callRateMeteringConfigFile;
+
     @BeforeAll
     public static void setUp() {
-        File callRateMeteringConfigFile = buildInterceptorConfigFile();
+        callRateMeteringConfigFile = buildInterceptorConfigFile();
         startSupportingApps(callRateMeteringConfigFile,
                 false,
                 false,
@@ -98,6 +102,11 @@ public class CallRateMeteringInterceptorTest extends MethodTest {
 
     @AfterAll
     public static void tearDown() {
+        try {
+            deleteFileIfExists(callRateMeteringConfigFile);
+        } catch (IOException ex) {
+            log.error(ex.getMessage());
+        }
         tearDownScaffold();
     }
 
@@ -116,7 +125,7 @@ public class CallRateMeteringInterceptorTest extends MethodTest {
                 "createOffer",
                 5,
                 MINUTES);
-        builder.addCallRateMeter("GrpcOffersService",
+        builder.addCallRateMeter("GrpcTradesService",
                 "takeOffer",
                 10,
                 DAYS);

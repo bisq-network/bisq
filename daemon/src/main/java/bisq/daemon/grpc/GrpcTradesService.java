@@ -78,8 +78,12 @@ class GrpcTradesService extends TradesGrpc.TradesImplBase {
                     .build();
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
+        } catch (IllegalArgumentException cause) {
+            // Offer makers may call 'gettrade' many times before a trade exists.
+            // Log a 'trade not found' warning instead of a full stack trace.
+            exceptionHandler.handleExceptionAsWarning(log, "getTrade", cause, responseObserver);
         } catch (Throwable cause) {
-            exceptionHandler.handleException(cause, responseObserver);
+            exceptionHandler.handleException(log, cause, responseObserver);
         }
     }
 
@@ -99,7 +103,7 @@ class GrpcTradesService extends TradesGrpc.TradesImplBase {
                         responseObserver.onCompleted();
                     });
         } catch (Throwable cause) {
-            exceptionHandler.handleException(cause, responseObserver);
+            exceptionHandler.handleException(log, cause, responseObserver);
         }
     }
 
@@ -112,7 +116,7 @@ class GrpcTradesService extends TradesGrpc.TradesImplBase {
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
         } catch (Throwable cause) {
-            exceptionHandler.handleException(cause, responseObserver);
+            exceptionHandler.handleException(log, cause, responseObserver);
         }
     }
 
@@ -125,7 +129,7 @@ class GrpcTradesService extends TradesGrpc.TradesImplBase {
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
         } catch (Throwable cause) {
-            exceptionHandler.handleException(cause, responseObserver);
+            exceptionHandler.handleException(log, cause, responseObserver);
         }
     }
 
@@ -138,7 +142,7 @@ class GrpcTradesService extends TradesGrpc.TradesImplBase {
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
         } catch (Throwable cause) {
-            exceptionHandler.handleException(cause, responseObserver);
+            exceptionHandler.handleException(log, cause, responseObserver);
         }
     }
 
@@ -151,7 +155,7 @@ class GrpcTradesService extends TradesGrpc.TradesImplBase {
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
         } catch (Throwable cause) {
-            exceptionHandler.handleException(cause, responseObserver);
+            exceptionHandler.handleException(log, cause, responseObserver);
         }
     }
 

@@ -64,7 +64,7 @@ class GrpcPriceService extends PriceGrpc.PriceImplBase {
                         responseObserver.onCompleted();
                     });
         } catch (Throwable cause) {
-            exceptionHandler.handleException(cause, responseObserver);
+            exceptionHandler.handleException(log, cause, responseObserver);
         }
     }
 

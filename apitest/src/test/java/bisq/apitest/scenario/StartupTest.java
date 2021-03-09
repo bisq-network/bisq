@@ -18,6 +18,7 @@
 package bisq.apitest.scenario;
 
 import java.io.File;
+import java.io.IOException;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -33,6 +34,7 @@ import static bisq.apitest.config.BisqAppConfig.alicedaemon;
 import static bisq.apitest.config.BisqAppConfig.arbdaemon;
 import static bisq.apitest.config.BisqAppConfig.seednode;
 import static bisq.apitest.method.CallRateMeteringInterceptorTest.buildInterceptorConfigFile;
+import static bisq.common.file.FileUtil.deleteFileIfExists;
 import static org.junit.jupiter.api.Assertions.fail;
 
 
@@ -48,10 +50,12 @@ import bisq.apitest.method.RegisterDisputeAgentsTest;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class StartupTest extends MethodTest {
 
+    private static File callRateMeteringConfigFile;
+
     @BeforeAll
     public static void setUp() {
         try {
-            File callRateMeteringConfigFile = buildInterceptorConfigFile();
+            callRateMeteringConfigFile = buildInterceptorConfigFile();
             startSupportingApps(callRateMeteringConfigFile,
                     false,
                     false,
@@ -102,6 +106,11 @@ public class StartupTest extends MethodTest {
 
     @AfterAll
     public static void tearDown() {
+        try {
+            deleteFileIfExists(callRateMeteringConfigFile);
+        } catch (IOException ex) {
+            log.error(ex.getMessage());
+        }
         tearDownScaffold();
     }
 }

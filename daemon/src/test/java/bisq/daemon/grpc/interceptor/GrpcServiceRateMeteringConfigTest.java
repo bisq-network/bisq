@@ -74,7 +74,7 @@ public class GrpcServiceRateMeteringConfigTest {
                 "createOffer",
                 5,
                 MINUTES);
-        builder.addCallRateMeter("GrpcOffersService",
+        builder.addCallRateMeter("GrpcTradesService",
                 "takeOffer",
                 10,
                 DAYS);

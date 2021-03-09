@@ -103,7 +103,7 @@ class GrpcWalletsService extends WalletsGrpc.WalletsImplBase {
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
         } catch (Throwable cause) {
-            exceptionHandler.handleException(cause, responseObserver);
+            exceptionHandler.handleException(log, cause, responseObserver);
         }
     }
 
@@ -117,7 +117,7 @@ class GrpcWalletsService extends WalletsGrpc.WalletsImplBase {
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
         } catch (Throwable cause) {
-            exceptionHandler.handleException(cause, responseObserver);
+            exceptionHandler.handleException(log, cause, responseObserver);
         }
     }
 
@@ -135,7 +135,7 @@ class GrpcWalletsService extends WalletsGrpc.WalletsImplBase {
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
         } catch (Throwable cause) {
-            exceptionHandler.handleException(cause, responseObserver);
+            exceptionHandler.handleException(log, cause, responseObserver);
         }
     }
 
@@ -150,7 +150,7 @@ class GrpcWalletsService extends WalletsGrpc.WalletsImplBase {
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
         } catch (Throwable cause) {
-            exceptionHandler.handleException(cause, responseObserver);
+            exceptionHandler.handleException(log, cause, responseObserver);
         }
     }
 
@@ -182,7 +182,7 @@ class GrpcWalletsService extends WalletsGrpc.WalletsImplBase {
                         }
                     });
         } catch (Throwable cause) {
-            exceptionHandler.handleException(cause, responseObserver);
+            exceptionHandler.handleException(log, cause, responseObserver);
         }
     }
 
@@ -220,7 +220,7 @@ class GrpcWalletsService extends WalletsGrpc.WalletsImplBase {
                         }
                     });
         } catch (Throwable cause) {
-            exceptionHandler.handleException(cause, responseObserver);
+            exceptionHandler.handleException(log, cause, responseObserver);
         }
     }
 
@@ -237,7 +237,7 @@ class GrpcWalletsService extends WalletsGrpc.WalletsImplBase {
                 responseObserver.onCompleted();
             });
         } catch (Throwable cause) {
-            exceptionHandler.handleException(cause, responseObserver);
+            exceptionHandler.handleException(log, cause, responseObserver);
         }
     }
 
@@ -254,7 +254,7 @@ class GrpcWalletsService extends WalletsGrpc.WalletsImplBase {
                 responseObserver.onCompleted();
             });
         } catch (Throwable cause) {
-            exceptionHandler.handleException(cause, responseObserver);
+            exceptionHandler.handleException(log, cause, responseObserver);
         }
     }
 
@@ -271,7 +271,7 @@ class GrpcWalletsService extends WalletsGrpc.WalletsImplBase {
                 responseObserver.onCompleted();
             });
         } catch (Throwable cause) {
-            exceptionHandler.handleException(cause, responseObserver);
+            exceptionHandler.handleException(log, cause, responseObserver);
         }
     }
 
@@ -286,7 +286,7 @@ class GrpcWalletsService extends WalletsGrpc.WalletsImplBase {
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
         } catch (Throwable cause) {
-            exceptionHandler.handleException(cause, responseObserver);
+            exceptionHandler.handleException(log, cause, responseObserver);
         }
     }
 
@@ -299,7 +299,7 @@ class GrpcWalletsService extends WalletsGrpc.WalletsImplBase {
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
         } catch (Throwable cause) {
-            exceptionHandler.handleException(cause, responseObserver);
+            exceptionHandler.handleException(log, cause, responseObserver);
         }
     }
 
@@ -312,7 +312,7 @@ class GrpcWalletsService extends WalletsGrpc.WalletsImplBase {
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
         } catch (Throwable cause) {
-            exceptionHandler.handleException(cause, responseObserver);
+            exceptionHandler.handleException(log, cause, responseObserver);
         }
     }
 
@@ -325,7 +325,7 @@ class GrpcWalletsService extends WalletsGrpc.WalletsImplBase {
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
         } catch (Throwable cause) {
-            exceptionHandler.handleException(cause, responseObserver);
+            exceptionHandler.handleException(log, cause, responseObserver);
         }
     }
 
@@ -338,7 +338,7 @@ class GrpcWalletsService extends WalletsGrpc.WalletsImplBase {
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
         } catch (Throwable cause) {
-            exceptionHandler.handleException(cause, responseObserver);
+            exceptionHandler.handleException(log, cause, responseObserver);
         }
     }
 
