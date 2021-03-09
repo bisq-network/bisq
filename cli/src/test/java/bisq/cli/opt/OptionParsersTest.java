@@ -130,6 +130,7 @@ public class OptionParsersTest {
                 "--" + OPT_MKT_PRICE_MARGIN + "=" + "0.0",
                 "--" + OPT_SECURITY_DEPOSIT + "=" + "25.0"
         };
+        new CreateOfferOptionParser(args).parse();
     }
 
     // CreatePaymentAcct opt parser tests
