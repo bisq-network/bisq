@@ -24,6 +24,7 @@ import io.grpc.stub.StreamObserver;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 import org.slf4j.Logger;
@@ -68,6 +69,18 @@ class GrpcExceptionHandler {
         throw grpcStatusRuntimeException;
     }
 
+    public void handleErrorMessage(Logger log,
+                                   String errorMessage,
+                                   StreamObserver<?> responseObserver) {
+        // This is used to wrap Task errors from the ErrorMessageHandler
+        // interface, an interface that is not allowed to throw exceptions.
+        log.error(errorMessage);
+        var grpcStatusRuntimeException = new StatusRuntimeException(
+                UNKNOWN.withDescription(cliStyleErrorMessage.apply(errorMessage)));
+        responseObserver.onError(grpcStatusRuntimeException);
+        throw grpcStatusRuntimeException;
+    }
+
     private StatusRuntimeException wrapException(Throwable t) {
         // We want to be careful about what kinds of exception messages we send to the
         // client.  Expected core exceptions should be wrapped in an IllegalStateException
@@ -86,6 +99,12 @@ class GrpcExceptionHandler {
             return new StatusRuntimeException(mapGrpcErrorStatus(t, "unexpected error on server"));
         }
     }
+
+    private final Function<String, String> cliStyleErrorMessage = (e) -> {
+        String[] line = e.split("\\r?\\n");
+        int lastLine = line.length;
+        return line[lastLine - 1].toLowerCase();
+    };
 
     private Status mapGrpcErrorStatus(Throwable t, String description) {
         // We default to the UNKNOWN status, except were the mapping of a core api
