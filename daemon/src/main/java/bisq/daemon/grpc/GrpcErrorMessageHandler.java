@@ -30,6 +30,8 @@ import org.slf4j.Logger;
 import lombok.Getter;
 
 import static bisq.proto.grpc.TradesGrpc.getTakeOfferMethod;
+import static java.lang.String.format;
+import static java.util.Arrays.stream;
 
 /**
  * An implementation of bisq.common.handlers.ErrorMessageHandler that avoids
@@ -76,7 +78,7 @@ public class GrpcErrorMessageHandler implements ErrorMessageHandler {
             log.error(errorMessage);
 
             if (isTakeOfferError()) {
-                handleTakeOfferError();
+                handleTakeOfferError(errorMessage);
             } else {
                 exceptionHandler.handleErrorMessage(log,
                         errorMessage,
@@ -85,17 +87,33 @@ public class GrpcErrorMessageHandler implements ErrorMessageHandler {
         }
     }
 
-    private void handleTakeOfferError() {
+    private void handleTakeOfferError(String errorMessage) {
         // Send the AvailabilityResult to the client instead of throwing an exception.
         // The client should look at the grpc reply object's AvailabilityResult
         // field if reply.hasTrade = false, and use it give the user a human readable msg.
-        StreamObserver<TakeOfferReply> takeOfferResponseObserver = (StreamObserver<TakeOfferReply>) responseObserver;
-        var availabilityResult = AvailabilityResult.valueOf("MAKER_DENIED_API_USER");
-        var reply = TakeOfferReply.newBuilder()
-                .setAvailabilityResult(availabilityResult)
-                .build();
-        takeOfferResponseObserver.onNext(reply);
-        takeOfferResponseObserver.onCompleted();
+        try {
+            AvailabilityResult availabilityResult = getAvailabilityResult(errorMessage);
+            var reply = TakeOfferReply.newBuilder()
+                    .setAvailabilityResult(availabilityResult)
+                    .build();
+            @SuppressWarnings("unchecked")
+            var takeOfferResponseObserver = (StreamObserver<TakeOfferReply>) responseObserver;
+            takeOfferResponseObserver.onNext(reply);
+            takeOfferResponseObserver.onCompleted();
+        } catch (IllegalArgumentException ex) {
+            log.error("", ex);
+            exceptionHandler.handleErrorMessage(log,
+                    errorMessage,
+                    responseObserver);
+        }
+    }
+
+    private AvailabilityResult getAvailabilityResult(String errorMessage) {
+        return stream(AvailabilityResult.values())
+                .filter((e) -> errorMessage.toUpperCase().contains(e.name()))
+                .findFirst().orElseThrow(() ->
+                        new IllegalArgumentException(
+                                format("Could not find an AvailabilityResult in error message:%n%s", errorMessage)));
     }
 
     private boolean isTakeOfferError() {
