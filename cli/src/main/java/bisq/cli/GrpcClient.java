@@ -67,9 +67,13 @@ import protobuf.PaymentMethod;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import lombok.extern.slf4j.Slf4j;
+
 import static java.util.Comparator.comparing;
 
+
 @SuppressWarnings("ResultOfMethodCallIgnored")
+@Slf4j
 public final class GrpcClient {
 
     private final GrpcStubs grpcStubs;
@@ -181,23 +185,23 @@ public final class GrpcClient {
     }
 
     public OfferInfo createFixedPricedOffer(String direction,
-                                 String currencyCode,
-                                 long amount,
-                                 long minAmount,
-                                 String fixedPrice,
-                                 double securityDeposit,
-                                 String paymentAcctId,
-                                 String makerFeeCurrencyCode) {
-      return createOffer(direction,
-              currencyCode,
-              amount,
-              minAmount,
-              false,
-              fixedPrice,
-              0.00,
-              securityDeposit,
-              paymentAcctId,
-              makerFeeCurrencyCode);
+                                            String currencyCode,
+                                            long amount,
+                                            long minAmount,
+                                            String fixedPrice,
+                                            double securityDeposit,
+                                            String paymentAcctId,
+                                            String makerFeeCurrencyCode) {
+        return createOffer(direction,
+                currencyCode,
+                amount,
+                minAmount,
+                false,
+                fixedPrice,
+                0.00,
+                securityDeposit,
+                paymentAcctId,
+                makerFeeCurrencyCode);
     }
 
     public OfferInfo createMarketBasedPricedOffer(String direction,
@@ -289,8 +293,8 @@ public final class GrpcClient {
     }
 
     public List<OfferInfo> getMyOffersSortedByDate(String direction, String currencyCode) {
-       var offers = getMyOffers(direction, currencyCode);
-       return offers.isEmpty() ? offers : sortOffersByDate(offers);
+        var offers = getMyOffers(direction, currencyCode);
+        return offers.isEmpty() ? offers : sortOffersByDate(offers);
     }
 
     public OfferInfo getMostRecentOffer(String direction, String currencyCode) {
@@ -311,7 +315,35 @@ public final class GrpcClient {
                 .setPaymentAccountId(paymentAccountId)
                 .setTakerFeeCurrencyCode(takerFeeCurrencyCode)
                 .build();
-        return grpcStubs.tradesService.takeOffer(request).getTrade();
+        var reply = grpcStubs.tradesService.takeOffer(request);
+        if (reply.hasTrade()) {
+            return reply.getTrade();
+        } else {
+            // If there is no trade, there should be a reason in the AvailabilityResult.
+            // Convert the enum to a user error message before throwing the exception.
+            switch (reply.getAvailabilityResult()) {
+                case MARKET_PRICE_NOT_AVAILABLE:
+                    throw new IllegalStateException("could not take offer because market price for calculating trade price is unavailable");
+                case PRICE_OUT_OF_TOLERANCE:
+                    throw new IllegalStateException("could not take offer because taker's price is outside tolerance");
+                case PRICE_CHECK_FAILED:
+                    throw new IllegalStateException("could not take offer because trade price check failed");
+                case NO_ARBITRATORS:
+                    throw new IllegalStateException("could not take offer because no arbitrators are available");
+                case NO_MEDIATORS:
+                    throw new IllegalStateException("could not take offer because no mediators are available");
+                case NO_REFUND_AGENTS:
+                    throw new IllegalStateException("could not take offer because no refund agents are available");
+                case USER_IGNORED:
+                    throw new IllegalStateException("could not take offer from ignored user");
+                case MAKER_DENIED_API_USER:
+                    throw new IllegalStateException("could not take offer because maker is api user");
+                case UNCONF_TX_LIMIT_HIT:
+                    throw new IllegalStateException("could not take offer because you have too many unconfirmed transactions at this moment");
+                default:
+                    throw new IllegalStateException("programmer error: could not take offer for unknown reason");
+            }
+        }
     }
 
     public TradeInfo getTrade(String tradeId) {
