@@ -104,6 +104,7 @@ public class CurrencyUtil {
         list.add(new FiatCurrency("AUD"));
         list.add(new FiatCurrency("RUB"));
         list.add(new FiatCurrency("INR"));
+        list.add(new FiatCurrency("NGN"));
 
         list.sort(TradeCurrency::compareTo);
 
