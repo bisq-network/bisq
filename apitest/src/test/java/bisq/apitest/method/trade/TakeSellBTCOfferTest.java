@@ -134,42 +134,50 @@ public class TakeSellBTCOfferTest extends AbstractTradeTest {
     @Test
     @Order(3)
     public void testAlicesConfirmPaymentReceived(final TestInfo testInfo) {
-        var trade = aliceClient.getTrade(tradeId);
-        aliceClient.confirmPaymentReceived(trade.getTradeId());
-        sleep(3000);
+        try {
+            var trade = aliceClient.getTrade(tradeId);
+            aliceClient.confirmPaymentReceived(trade.getTradeId());
+            sleep(3000);
 
-        trade = aliceClient.getTrade(tradeId);
-        assertEquals(OFFER_FEE_PAID.name(), trade.getOffer().getState());
-        EXPECTED_PROTOCOL_STATUS.setState(SELLER_SAW_ARRIVED_PAYOUT_TX_PUBLISHED_MSG)
-                .setPhase(PAYOUT_PUBLISHED)
-                .setPayoutPublished(true)
-                .setFiatReceived(true);
-        verifyExpectedProtocolStatus(trade);
-        logTrade(log, testInfo, "Alice's view after confirming fiat payment received", trade);
+            trade = aliceClient.getTrade(tradeId);
+            assertEquals(OFFER_FEE_PAID.name(), trade.getOffer().getState());
+            EXPECTED_PROTOCOL_STATUS.setState(SELLER_SAW_ARRIVED_PAYOUT_TX_PUBLISHED_MSG)
+                    .setPhase(PAYOUT_PUBLISHED)
+                    .setPayoutPublished(true)
+                    .setFiatReceived(true);
+            verifyExpectedProtocolStatus(trade);
+            logTrade(log, testInfo, "Alice's view after confirming fiat payment received", trade);
+        } catch (StatusRuntimeException e) {
+            fail(e);
+        }
     }
 
     @Test
     @Order(4)
     public void testBobsBtcWithdrawalToExternalAddress(final TestInfo testInfo) {
-        genBtcBlocksThenWait(1, 1000);
+        try {
+            genBtcBlocksThenWait(1, 1000);
 
-        var trade = bobClient.getTrade(tradeId);
-        logTrade(log, testInfo, "Bob's view before withdrawing funds to external wallet", trade);
+            var trade = bobClient.getTrade(tradeId);
+            logTrade(log, testInfo, "Bob's view before withdrawing funds to external wallet", trade);
 
-        String toAddress = bitcoinCli.getNewBtcAddress();
-        bobClient.withdrawFunds(tradeId, toAddress, WITHDRAWAL_TX_MEMO);
+            String toAddress = bitcoinCli.getNewBtcAddress();
+            bobClient.withdrawFunds(tradeId, toAddress, WITHDRAWAL_TX_MEMO);
 
-        genBtcBlocksThenWait(1, 1000);
+            genBtcBlocksThenWait(1, 1000);
 
-        trade = bobClient.getTrade(tradeId);
-        EXPECTED_PROTOCOL_STATUS.setState(WITHDRAW_COMPLETED)
-                .setPhase(WITHDRAWN)
-                .setWithdrawn(true);
-        verifyExpectedProtocolStatus(trade);
-        logTrade(log, testInfo, "Bob's view after withdrawing funds to external wallet", trade);
-        BtcBalanceInfo currentBalance = bobClient.getBtcBalances();
-        log.debug("{} Bob's current available balance: {} BTC",
-                testName(testInfo),
-                formatSatoshis(currentBalance.getAvailableBalance()));
+            trade = bobClient.getTrade(tradeId);
+            EXPECTED_PROTOCOL_STATUS.setState(WITHDRAW_COMPLETED)
+                    .setPhase(WITHDRAWN)
+                    .setWithdrawn(true);
+            verifyExpectedProtocolStatus(trade);
+            logTrade(log, testInfo, "Bob's view after withdrawing funds to external wallet", trade);
+            BtcBalanceInfo currentBalance = bobClient.getBtcBalances();
+            log.debug("{} Bob's current available balance: {} BTC",
+                    testName(testInfo),
+                    formatSatoshis(currentBalance.getAvailableBalance()));
+        } catch (StatusRuntimeException e) {
+            fail(e);
+        }
     }
 }
