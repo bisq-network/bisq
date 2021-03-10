@@ -277,6 +277,7 @@ message TakeOfferRequest {
 
 message TakeOfferReply {
     TradeInfo trade = 1;
+    AvailabilityResult availabilityResult = 2;
 }
 
 message ConfirmPaymentStartedRequest {
