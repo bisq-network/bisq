@@ -22,17 +22,14 @@ import joptsimple.OptionSpec;
 
 import static bisq.cli.opts.OptLabel.OPT_CURRENCY_CODE;
 import static bisq.cli.opts.OptLabel.OPT_DIRECTION;
-import static joptsimple.internal.Strings.EMPTY;
 
 public class GetOffersOptionParser extends AbstractMethodOptionParser implements MethodOpts {
 
     final OptionSpec<String> directionOpt = parser.accepts(OPT_DIRECTION, "offer direction (buy|sell)")
-            .withRequiredArg()
-            .defaultsTo(EMPTY);
+            .withRequiredArg();
 
     final OptionSpec<String> currencyCodeOpt = parser.accepts(OPT_CURRENCY_CODE, "currency code (eur|usd|...)")
-            .withRequiredArg()
-            .defaultsTo(EMPTY);
+            .withRequiredArg();
 
     public GetOffersOptionParser(String[] args) {
         super(args);
@@ -45,10 +42,10 @@ public class GetOffersOptionParser extends AbstractMethodOptionParser implements
         if (options.has(helpOpt))
             return this;
 
-        if (!options.has(directionOpt))
+        if (!options.has(directionOpt) || options.valueOf(directionOpt).isEmpty())
             throw new IllegalArgumentException("no direction (buy|sell) specified");
 
-        if (!options.has(currencyCodeOpt))
+        if (!options.has(currencyCodeOpt) || options.valueOf(currencyCodeOpt).isEmpty())
             throw new IllegalArgumentException("no currency code specified");
 
         return this;

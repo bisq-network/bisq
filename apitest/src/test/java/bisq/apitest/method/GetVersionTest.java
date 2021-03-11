@@ -17,8 +17,6 @@
 
 package bisq.apitest.method;
 
-import bisq.proto.grpc.GetVersionRequest;
-
 import lombok.extern.slf4j.Slf4j;
 
 import org.junit.jupiter.api.AfterAll;
@@ -51,8 +49,7 @@ public class GetVersionTest extends MethodTest {
     @Test
     @Order(1)
     public void testGetVersion() {
-        var version = grpcStubs(alicedaemon).versionService
-                .getVersion(GetVersionRequest.newBuilder().build()).getVersion();
+        var version = aliceClient.getVersion();
         assertEquals(VERSION, version);
     }
 

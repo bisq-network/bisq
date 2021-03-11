@@ -19,7 +19,6 @@ package bisq.daemon.grpc;
 
 import bisq.core.api.CoreApi;
 
-import bisq.proto.grpc.GetVersionGrpc;
 import bisq.proto.grpc.GetVersionReply;
 import bisq.proto.grpc.GetVersionRequest;
 
@@ -36,6 +35,8 @@ import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 
 import static bisq.daemon.grpc.interceptor.GrpcServiceRateMeteringConfig.getCustomRateMeteringInterceptor;
+import static bisq.proto.grpc.GetVersionGrpc.GetVersionImplBase;
+import static bisq.proto.grpc.GetVersionGrpc.getGetVersionMethod;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 
@@ -45,7 +46,7 @@ import bisq.daemon.grpc.interceptor.GrpcCallRateMeter;
 
 @VisibleForTesting
 @Slf4j
-public class GrpcVersionService extends GetVersionGrpc.GetVersionImplBase {
+public class GrpcVersionService extends GetVersionImplBase {
 
     private final CoreApi coreApi;
     private final GrpcExceptionHandler exceptionHandler;
@@ -63,7 +64,7 @@ public class GrpcVersionService extends GetVersionGrpc.GetVersionImplBase {
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
         } catch (Throwable cause) {
-            exceptionHandler.handleException(cause, responseObserver);
+            exceptionHandler.handleException(log, cause, responseObserver);
         }
     }
 
@@ -77,7 +78,7 @@ public class GrpcVersionService extends GetVersionGrpc.GetVersionImplBase {
         return getCustomRateMeteringInterceptor(coreApi.getConfig().appDataDir, this.getClass())
                 .or(() -> Optional.of(CallRateMeteringInterceptor.valueOf(
                         new HashMap<>() {{
-                            put("getVersion", new GrpcCallRateMeter(1, SECONDS));
+                            put(getGetVersionMethod().getFullMethodName(), new GrpcCallRateMeter(1, SECONDS));
                         }}
                 )));
     }

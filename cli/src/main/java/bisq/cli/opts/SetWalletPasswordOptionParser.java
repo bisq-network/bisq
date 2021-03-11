@@ -27,8 +27,7 @@ import static joptsimple.internal.Strings.EMPTY;
 public class SetWalletPasswordOptionParser extends AbstractMethodOptionParser implements MethodOpts {
 
     final OptionSpec<String> passwordOpt = parser.accepts(OPT_WALLET_PASSWORD, "bisq wallet password")
-            .withRequiredArg()
-            .defaultsTo(EMPTY);
+            .withRequiredArg();
 
     final OptionSpec<String> newPasswordOpt = parser.accepts(OPT_NEW_WALLET_PASSWORD, "new bisq wallet password")
             .withOptionalArg()
@@ -45,7 +44,7 @@ public class SetWalletPasswordOptionParser extends AbstractMethodOptionParser im
         if (options.has(helpOpt))
             return this;
 
-        if (!options.has(passwordOpt))
+        if (!options.has(passwordOpt) || options.valueOf(passwordOpt).isEmpty())
             throw new IllegalArgumentException("no password specified");
 
         return this;

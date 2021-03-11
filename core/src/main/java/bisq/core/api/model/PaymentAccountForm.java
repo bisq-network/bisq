@@ -136,7 +136,7 @@ public class PaymentAccountForm {
             "paymentMethod",
             "paymentMethodId",  // This field will be included, but handled differently.
             "selectedTradeCurrency",
-            "tradeCurrencies",
+            "tradeCurrencies",  // This field may be included, but handled differently.
             "HOLDER_NAME",
             "SALT"              // This field will be included, but handled differently.
     };

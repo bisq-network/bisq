@@ -21,13 +21,11 @@ package bisq.cli.opts;
 import joptsimple.OptionSpec;
 
 import static bisq.cli.opts.OptLabel.OPT_CURRENCY_CODE;
-import static joptsimple.internal.Strings.EMPTY;
 
 public class GetBTCMarketPriceOptionParser extends AbstractMethodOptionParser implements MethodOpts {
 
     final OptionSpec<String> currencyCodeOpt = parser.accepts(OPT_CURRENCY_CODE, "currency-code")
-            .withRequiredArg()
-            .defaultsTo(EMPTY);
+            .withRequiredArg();
 
     public GetBTCMarketPriceOptionParser(String[] args) {
         super(args);
@@ -40,7 +38,7 @@ public class GetBTCMarketPriceOptionParser extends AbstractMethodOptionParser im
         if (options.has(helpOpt))
             return this;
 
-        if (!options.has(currencyCodeOpt))
+        if (!options.has(currencyCodeOpt) || options.valueOf(currencyCodeOpt).isEmpty())
             throw new IllegalArgumentException("no currency code specified");
 
         return this;

@@ -17,8 +17,6 @@
 
 package bisq.apitest.method;
 
-import bisq.proto.grpc.GetMethodHelpRequest;
-
 import lombok.extern.slf4j.Slf4j;
 
 import org.junit.jupiter.api.AfterAll;
@@ -51,10 +49,7 @@ public class GetMethodHelpTest extends MethodTest {
     @Test
     @Order(1)
     public void testGetCreateOfferHelp() {
-        var help = grpcStubs(alicedaemon).helpService
-                .getMethodHelp(GetMethodHelpRequest.newBuilder()
-                        .setMethodName(createoffer.name()).build())
-                .getMethodHelp();
+        var help = aliceClient.getMethodHelp(createoffer);
         assertNotNull(help);
     }
 

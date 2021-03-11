@@ -17,11 +17,13 @@
 
 package bisq.cli.opts;
 
+import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
 import java.util.List;
+import java.util.function.Function;
 
 import lombok.Getter;
 
@@ -48,12 +50,29 @@ abstract class AbstractMethodOptionParser implements MethodOpts {
     }
 
     public AbstractMethodOptionParser parse() {
-        options = parser.parse(new ArgumentList(args).getMethodArguments());
-        nonOptionArguments = (List<String>) options.nonOptionArguments();
-        return this;
+        try {
+            options = parser.parse(new ArgumentList(args).getMethodArguments());
+            //noinspection unchecked
+            nonOptionArguments = (List<String>) options.nonOptionArguments();
+            return this;
+        } catch (OptionException ex) {
+            throw new IllegalArgumentException(cliExceptionMessageStyle.apply(ex), ex);
+        }
     }
 
     public boolean isForHelp() {
         return options.has(helpOpt);
     }
+
+    private final Function<OptionException, String> cliExceptionMessageStyle = (ex) -> {
+        if (ex.getMessage() == null)
+            return null;
+
+        var optionToken = "option ";
+        var cliMessage = ex.getMessage().toLowerCase();
+        if (cliMessage.startsWith(optionToken) && cliMessage.length() > optionToken.length()) {
+            cliMessage = cliMessage.substring(cliMessage.indexOf(" ") + 1);
+        }
+        return cliMessage;
+    };
 }

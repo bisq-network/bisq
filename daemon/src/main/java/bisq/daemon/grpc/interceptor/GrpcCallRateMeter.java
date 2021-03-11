@@ -55,8 +55,11 @@ public class GrpcCallRateMeter {
 
     public String getCallsCountProgress(String calledMethodName) {
         String shortTimeUnitName = StringUtils.chop(timeUnit.name().toLowerCase());
+        // Just print 'GetVersion has been called N times...',
+        // not 'io.bisq.protobuffer.GetVersion/GetVersion has been called N times...'
+        String loggedMethodName = calledMethodName.split("/")[1];
         return format("%s has been called %d time%s in the last %s, rate limit is %d/%s",
-                calledMethodName,
+                loggedMethodName,
                 callTimestamps.size(),
                 callTimestamps.size() == 1 ? "" : "s",
                 shortTimeUnitName,
