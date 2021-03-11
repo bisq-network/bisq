@@ -65,6 +65,7 @@ class CoreOffersService {
     private final Supplier<Comparator<Offer>> priceComparator = () -> comparing(Offer::getPrice);
     private final Supplier<Comparator<Offer>> reversePriceComparator = () -> comparing(Offer::getPrice).reversed();
 
+    private final CoreContext coreContext;
     private final KeyRing keyRing;
     // Dependencies on core api services in this package must be kept to an absolute
     // minimum, but some trading functions require an unlocked wallet's key, so an
@@ -76,7 +77,6 @@ class CoreOffersService {
     private final OpenOfferManager openOfferManager;
     private final OfferUtil offerUtil;
     private final User user;
-    private final boolean isApiUser;
 
     @Inject
     public CoreOffersService(CoreContext coreContext,
@@ -88,6 +88,7 @@ class CoreOffersService {
                              OpenOfferManager openOfferManager,
                              OfferUtil offerUtil,
                              User user) {
+        this.coreContext = coreContext;
         this.keyRing = keyRing;
         this.coreWalletsService = coreWalletsService;
         this.createOfferService = createOfferService;
@@ -96,14 +97,13 @@ class CoreOffersService {
         this.openOfferManager = openOfferManager;
         this.offerUtil = offerUtil;
         this.user = user;
-        this.isApiUser = coreContext.isApiUser();
     }
 
     Offer getOffer(String id) {
         return offerBookService.getOffers().stream()
                 .filter(o -> o.getId().equals(id))
                 .filter(o -> !o.isMyOffer(keyRing))
-                .filter(o -> offerFilter.canTakeOffer(o, isApiUser).isValid())
+                .filter(o -> offerFilter.canTakeOffer(o, coreContext.isApiUser()).isValid())
                 .findAny().orElseThrow(() ->
                         new IllegalStateException(format("offer with id '%s' not found", id)));
     }
@@ -120,7 +120,7 @@ class CoreOffersService {
         return offerBookService.getOffers().stream()
                 .filter(o -> !o.isMyOffer(keyRing))
                 .filter(o -> offerMatchesDirectionAndCurrency(o, direction, currencyCode))
-                .filter(o -> offerFilter.canTakeOffer(o, isApiUser).isValid())
+                .filter(o -> offerFilter.canTakeOffer(o, coreContext.isApiUser()).isValid())
                 .sorted(priceComparator(direction))
                 .collect(Collectors.toList());
     }
