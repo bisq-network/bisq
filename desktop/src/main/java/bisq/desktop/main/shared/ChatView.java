@@ -488,10 +488,12 @@ public class ChatView extends AnchorPane {
                             visible = true;
                             icon = AwesomeIcon.OK;
                             text = Res.get("support.arrived");
+                            statusHBox.setOpacity(0.5);
                         } else if (message.storedInMailboxProperty().get()) {
                             visible = true;
                             icon = AwesomeIcon.ENVELOPE;
                             text = Res.get("support.savedInMailbox");
+                            statusHBox.setOpacity(0.5);
                         } else {
                             visible = false;
                             log.debug("updateMsgState called but no msg state available. message={}", message);
