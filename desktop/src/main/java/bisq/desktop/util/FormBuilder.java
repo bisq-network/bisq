@@ -1524,8 +1524,8 @@ public class FormBuilder {
                                                                                                int colIndex,
                                                                                                String title,
                                                                                                String value,
-                                                                                               boolean withoutBeforeSlash) {
-        return addTopLabelTextFieldWithCopyIcon(gridPane, rowIndex, colIndex, title, value, -Layout.FLOATING_LABEL_DISTANCE, withoutBeforeSlash);
+                                                                                               boolean onlyCopyTextAfterDelimiter) {
+        return addTopLabelTextFieldWithCopyIcon(gridPane, rowIndex, colIndex, title, value, -Layout.FLOATING_LABEL_DISTANCE, onlyCopyTextAfterDelimiter);
     }
 
     public static Tuple2<Label, TextFieldWithCopyIcon> addTopLabelTextFieldWithCopyIcon(GridPane gridPane,
@@ -1563,11 +1563,11 @@ public class FormBuilder {
                                                                                         String title,
                                                                                         String value,
                                                                                         double top,
-                                                                                        boolean withoutBeforeSlash) {
+                                                                                        boolean onlyCopyTextAfterDelimiter) {
 
         TextFieldWithCopyIcon textFieldWithCopyIcon = new TextFieldWithCopyIcon();
         textFieldWithCopyIcon.setText(value);
-        textFieldWithCopyIcon.setCopyWithoutBeforeSlash(true);
+        textFieldWithCopyIcon.setCopyTextAfterDelimiter(true);
 
         final Tuple2<Label, VBox> topLabelWithVBox = addTopLabelWithVBox(gridPane, rowIndex, title, textFieldWithCopyIcon, top);
         topLabelWithVBox.second.setAlignment(Pos.TOP_LEFT);

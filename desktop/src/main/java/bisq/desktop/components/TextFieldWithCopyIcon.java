@@ -39,7 +39,7 @@ public class TextFieldWithCopyIcon extends AnchorPane {
     private final StringProperty text = new SimpleStringProperty();
     private final TextField textField;
     private boolean copyWithoutCurrencyPostFix;
-    private boolean copyWithoutBeforeSlash;
+    private boolean copyTextAfterDelimiter;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -65,7 +65,7 @@ public class TextFieldWithCopyIcon extends AnchorPane {
                         copyText = strings[0]; // exclude the BTC postfix
                     else
                         copyText = text;
-                } else if (copyWithoutBeforeSlash) {
+                } else if (copyTextAfterDelimiter) {
                     String[] strings = text.split(" ");
                     if (strings.length > 1)
                         copyText = strings[2]; // exclude the part before / (slash included)
@@ -116,8 +116,8 @@ public class TextFieldWithCopyIcon extends AnchorPane {
         this.copyWithoutCurrencyPostFix = copyWithoutCurrencyPostFix;
     }
 
-    public void setCopyWithoutBeforeSlash(boolean copyWithoutBeforeSlash) {
-        this.copyWithoutBeforeSlash = copyWithoutBeforeSlash;
+    public void setCopyTextAfterDelimiter(boolean copyTextAfterDelimiter) {
+        this.copyTextAfterDelimiter = copyTextAfterDelimiter;
     }
 
 }
