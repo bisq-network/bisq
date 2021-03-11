@@ -964,7 +964,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
                                     badge.setPosition(Pos.TOP_RIGHT);
                                     badge.setVisible(item.isNew());
                                     badge.setText("New");
-                                    badge.getStyleClass().add("auto-conf");
+                                    badge.getStyleClass().add("new");
                                     newBadgeByDispute.put(item.getId(), badge);
                                     HBox hBox = new HBox(button, badge);
                                     setGraphic(hBox);
