@@ -253,23 +253,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
             addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("offerDetailsWindow.myTradingAccount"), myPaymentAccount.getAccountName());
         } else {
             final String method = Res.get(paymentMethod.getId());
-            String paymentMethodLabel = Res.get("shared.paymentMethod");
-            if (countryCode != null && (isNationalBanks || isSpecificBanks || isSepa)) {
-                if (BankUtil.isBankIdRequired(countryCode))
-                    addConfirmationLabelLabel(gridPane, ++rowIndex,
-                            paymentMethodLabel,
-                            method);
-                else if (BankUtil.isBankNameRequired(countryCode))
-                    addConfirmationLabelLabel(gridPane, ++rowIndex,
-                            paymentMethodLabel,
-                            method);
-            } else if (paymentMethod.equals(PaymentMethod.CASH_DEPOSIT)) {
-                addConfirmationLabelLabel(gridPane, ++rowIndex,
-                        paymentMethodLabel,
-                        method);
-            } else {
-                addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("shared.paymentMethod"), method);
-            }
+            addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("shared.paymentMethod"), method);
         }
 
         if (showXmrAutoConf) {
