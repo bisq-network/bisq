@@ -41,7 +41,7 @@ public class LongRunningTradesTest extends AbstractTradeTest {
 
     @Test
     @Order(1)
-    public void testTradeLoop(final TestInfo testInfo) {
+    public void TradeLoop(final TestInfo testInfo) {
         int numTrades = 0;
         while (numTrades < 50) {
 

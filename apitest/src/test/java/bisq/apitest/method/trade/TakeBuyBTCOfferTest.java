@@ -50,6 +50,10 @@ import static org.junit.jupiter.api.Assertions.fail;
 import static protobuf.Offer.State.OFFER_FEE_PAID;
 import static protobuf.OpenOffer.State.AVAILABLE;
 
+
+
+import bisq.cli.TradeFormat;
+
 @Disabled
 @Slf4j
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -266,9 +270,10 @@ public class TakeBuyBTCOfferTest extends AbstractTradeTest {
             verifyExpectedProtocolStatus(trade);
             logTrade(log, testInfo, "Alice's view after keeping funds", trade);
             BtcBalanceInfo currentBalance = aliceClient.getBtcBalances();
-            log.info("{} Alice's current available balance: {} BTC",
+            log.info("{} Alice's current available balance: {} BTC.  Last trade:\n{}",
                     testName(testInfo),
-                    formatSatoshis(currentBalance.getAvailableBalance()));
+                    formatSatoshis(currentBalance.getAvailableBalance()),
+                    TradeFormat.format(aliceClient.getTrade(tradeId)));
         } catch (StatusRuntimeException e) {
             fail(e);
         }
