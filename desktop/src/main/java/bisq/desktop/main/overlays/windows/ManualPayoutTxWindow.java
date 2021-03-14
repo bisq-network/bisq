@@ -496,8 +496,6 @@ public class ManualPayoutTxWindow extends Overlay<ManualPayoutTxWindow> {
         for (Dispute dispute :disputeObservableList) {
             if (dispute.getDisputePayoutTxId() != null)    // only show disputes not paid out
                 continue;
-            if (!dispute.isClosed())    // only show closed disputes
-                continue;
             if (recentTicketsOnly && dispute.getOpeningDate().toInstant().isBefore(twoWeeksAgo))
                 continue;
             if (!disputeIds.contains(dispute.getTradeId()))

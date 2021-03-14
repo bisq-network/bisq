@@ -232,7 +232,7 @@ public class OfferBookViewModelTest {
     }
 
     @Test
-    public void testMaxCharactersForAmountWithNoOffes() {
+    public void testMaxCharactersForAmountWithNoOffers() {
         OfferBook offerBook = mock(OfferBook.class);
         final ObservableList<OfferBookListItem> offerBookListItems = FXCollections.observableArrayList();
 
@@ -283,7 +283,7 @@ public class OfferBookViewModelTest {
     }
 
     @Test
-    public void testMaxCharactersForVolumeWithNoOffes() {
+    public void testMaxCharactersForVolumeWithNoOffers() {
         OfferBook offerBook = mock(OfferBook.class);
         final ObservableList<OfferBookListItem> offerBookListItems = FXCollections.observableArrayList();
 
