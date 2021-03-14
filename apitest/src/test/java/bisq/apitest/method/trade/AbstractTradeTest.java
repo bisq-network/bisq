@@ -2,6 +2,8 @@ package bisq.apitest.method.trade;
 
 import bisq.proto.grpc.TradeInfo;
 
+import java.util.function.Supplier;
+
 import org.slf4j.Logger;
 
 import org.junit.jupiter.api.BeforeAll;
@@ -21,6 +23,8 @@ public class AbstractTradeTest extends AbstractOfferTest {
 
     // A Trade ID cache for use in @Test sequences.
     protected static String tradeId;
+
+    protected final Supplier<Integer> maxTradeStateAndPhaseChecks = () -> isLongRunningTest ? 10 : 2;
 
     @BeforeAll
     public static void initStaticFixtures() {
@@ -44,7 +48,10 @@ public class AbstractTradeTest extends AbstractOfferTest {
         assertNotNull(trade);
         assertEquals(EXPECTED_PROTOCOL_STATUS.state.name(), trade.getState());
         assertEquals(EXPECTED_PROTOCOL_STATUS.phase.name(), trade.getPhase());
-        assertEquals(EXPECTED_PROTOCOL_STATUS.isDepositPublished, trade.getIsDepositPublished());
+
+        if (!isLongRunningTest)
+            assertEquals(EXPECTED_PROTOCOL_STATUS.isDepositPublished, trade.getIsDepositPublished());
+
         assertEquals(EXPECTED_PROTOCOL_STATUS.isDepositConfirmed, trade.getIsDepositConfirmed());
         assertEquals(EXPECTED_PROTOCOL_STATUS.isFiatSent, trade.getIsFiatSent());
         assertEquals(EXPECTED_PROTOCOL_STATUS.isFiatReceived, trade.getIsFiatReceived());

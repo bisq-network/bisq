@@ -55,11 +55,23 @@ public class MethodTest extends ApiTestCase {
                                            boolean registerDisputeAgents,
                                            boolean generateBtcBlock,
                                            Enum<?>... supportingApps) {
+        startSupportingApps(callRateMeteringConfigFile,
+                registerDisputeAgents,
+                generateBtcBlock,
+                false,
+                supportingApps);
+    }
+
+    public static void startSupportingApps(File callRateMeteringConfigFile,
+                                           boolean registerDisputeAgents,
+                                           boolean generateBtcBlock,
+                                           boolean startSupportingAppsInDebugMode,
+                                           Enum<?>... supportingApps) {
         try {
             setUpScaffold(new String[]{
                     "--supportingApps", toNameList.apply(supportingApps),
                     "--callRateMeteringConfigPath", callRateMeteringConfigFile.getAbsolutePath(),
-                    "--enableBisqDebugging", "false"
+                    "--enableBisqDebugging", startSupportingAppsInDebugMode ? "true" : "false"
             });
             doPostStartup(registerDisputeAgents, generateBtcBlock);
         } catch (Exception ex) {
@@ -70,13 +82,23 @@ public class MethodTest extends ApiTestCase {
     public static void startSupportingApps(boolean registerDisputeAgents,
                                            boolean generateBtcBlock,
                                            Enum<?>... supportingApps) {
+        startSupportingApps(registerDisputeAgents,
+                generateBtcBlock,
+                false,
+                supportingApps);
+    }
+
+    public static void startSupportingApps(boolean registerDisputeAgents,
+                                           boolean generateBtcBlock,
+                                           boolean startSupportingAppsInDebugMode,
+                                           Enum<?>... supportingApps) {
         try {
             // Disable call rate metering where there is no callRateMeteringConfigFile.
             File callRateMeteringConfigFile = defaultRateMeterInterceptorConfig();
             setUpScaffold(new String[]{
                     "--supportingApps", toNameList.apply(supportingApps),
                     "--callRateMeteringConfigPath", callRateMeteringConfigFile.getAbsolutePath(),
-                    "--enableBisqDebugging", "false"
+                    "--enableBisqDebugging", startSupportingAppsInDebugMode ? "true" : "false"
             });
             doPostStartup(registerDisputeAgents, generateBtcBlock);
         } catch (Exception ex) {
