@@ -47,7 +47,6 @@ import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentMethod;
-import bisq.core.provider.fee.FeeService;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
 import bisq.core.util.FormattingUtils;
@@ -120,21 +119,19 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     private ComboBox<TradeCurrency> preferredTradeCurrencyComboBox;
 
     private ToggleButton showOwnOffersInOfferBook, useAnimations, useDarkMode, sortMarketCurrenciesNumerically,
-            avoidStandbyMode, useCustomFee, autoConfirmXmrToggle, hideNonAccountPaymentMethodsToggle, denyApiTakerToggle,
+            avoidStandbyMode, autoConfirmXmrToggle, hideNonAccountPaymentMethodsToggle, denyApiTakerToggle,
             notifyOnPreReleaseToggle;
     private int gridRow = 0;
     private int displayCurrenciesGridRowIndex = 0;
-    private InputTextField transactionFeeInputTextField, ignoreTradersListInputTextField, ignoreDustThresholdInputTextField,
+    private InputTextField ignoreTradersListInputTextField, ignoreDustThresholdInputTextField,
             autoConfRequiredConfirmationsTf, autoConfServiceAddressTf, autoConfTradeLimitTf, /*referralIdInputTextField,*/
             rpcUserTextField, blockNotifyPortTextField;
     private ToggleButton isDaoFullNodeToggleButton;
     private PasswordTextField rpcPwTextField;
     private TitledGroupBg daoOptionsTitledGroupBg;
 
-    private ChangeListener<Boolean> transactionFeeFocusedListener;
     private ChangeListener<Boolean> autoConfServiceAddressFocusOutListener, autoConfRequiredConfirmationsFocusOutListener;
     private final Preferences preferences;
-    private final FeeService feeService;
     //private final ReferralIdService referralIdService;
     private final AssetService assetService;
     private final FilterManager filterManager;
@@ -159,8 +156,6 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
             rpcUserListener, rpcPwListener, blockNotifyPortListener,
             autoConfTradeLimitListener, autoConfServiceAddressListener;
     private ChangeListener<Boolean> deviationFocusedListener, bsqAverageTrimThresholdFocusedListener;
-    private ChangeListener<Boolean> useCustomFeeCheckboxListener;
-    private ChangeListener<Number> transactionFeeChangeListener;
     private final boolean daoOptionsSet;
     private final boolean displayStandbyModeFeature;
     private ChangeListener<Filter> filterChangeListener;
@@ -173,7 +168,6 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     @Inject
     public PreferencesView(PreferencesViewModel model,
                            Preferences preferences,
-                           FeeService feeService,
                            AssetService assetService,
                            FilterManager filterManager,
                            DaoFacade daoFacade,
@@ -188,7 +182,6 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         this.user = user;
         this.formatter = formatter;
         this.preferences = preferences;
-        this.feeService = feeService;
         this.assetService = assetService;
         this.filterManager = filterManager;
         this.daoFacade = daoFacade;
@@ -250,7 +243,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void initializeGeneralOptions() {
-        int titledGroupBgRowSpan = displayStandbyModeFeature ? 9 : 8;
+        int titledGroupBgRowSpan = displayStandbyModeFeature ? 8 : 7;
         TitledGroupBg titledGroupBg = addTitledGroupBg(root, gridRow, titledGroupBgRowSpan, Res.get("setting.preferences.general"));
         GridPane.setColumnSpan(titledGroupBg, 1);
 
@@ -268,56 +261,6 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         Tuple2<TextField, Button> bsqExp = addTextFieldWithEditButton(root, ++gridRow, Res.get("setting.preferences.explorer.bsq"));
         bsqExplorerTextField = bsqExp.first;
         editCustomBsqExplorer = bsqExp.second;
-
-        Tuple3<Label, InputTextField, ToggleButton> tuple = addTopLabelInputTextFieldSlideToggleButton(root, ++gridRow,
-                Res.get("setting.preferences.txFee"), Res.get("setting.preferences.useCustomValue"));
-        transactionFeeInputTextField = tuple.second;
-        useCustomFee = tuple.third;
-
-        useCustomFeeCheckboxListener = (observable, oldValue, newValue) -> {
-            preferences.setUseCustomWithdrawalTxFee(newValue);
-            transactionFeeInputTextField.setEditable(newValue);
-            if (!newValue) {
-                transactionFeeInputTextField.setText(String.valueOf(feeService.getTxFeePerVbyte().value));
-                try {
-                    preferences.setWithdrawalTxFeeInVbytes(feeService.getTxFeePerVbyte().value);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-
-            preferences.setUseCustomWithdrawalTxFee(newValue);
-        };
-
-        transactionFeeFocusedListener = (o, oldValue, newValue) -> {
-            if (oldValue && !newValue) {
-                String estimatedFee = String.valueOf(feeService.getTxFeePerVbyte().value);
-                try {
-                    int withdrawalTxFeePerVbyte = Integer.parseInt(transactionFeeInputTextField.getText());
-                    final long minFeePerVbyte = feeService.getMinFeePerVByte();
-                    if (withdrawalTxFeePerVbyte < minFeePerVbyte) {
-                        new Popup().warning(Res.get("setting.preferences.txFeeMin", minFeePerVbyte)).show();
-                        transactionFeeInputTextField.setText(estimatedFee);
-                    } else if (withdrawalTxFeePerVbyte > 5000) {
-                        new Popup().warning(Res.get("setting.preferences.txFeeTooLarge")).show();
-                        transactionFeeInputTextField.setText(estimatedFee);
-                    } else {
-                        preferences.setWithdrawalTxFeeInVbytes(withdrawalTxFeePerVbyte);
-                    }
-                } catch (NumberFormatException t) {
-                    log.error(t.toString());
-                    t.printStackTrace();
-                    new Popup().warning(Res.get("validation.integerOnly")).show();
-                    transactionFeeInputTextField.setText(estimatedFee);
-                } catch (Throwable t) {
-                    log.error(t.toString());
-                    t.printStackTrace();
-                    new Popup().warning(Res.get("validation.inputError", t.getMessage())).show();
-                    transactionFeeInputTextField.setText(estimatedFee);
-                }
-            }
-        };
-        transactionFeeChangeListener = (observable, oldValue, newValue) -> transactionFeeInputTextField.setText(String.valueOf(feeService.getTxFeePerVbyte().value));
 
         // deviation
         deviationInputTextField = addInputTextField(root, ++gridRow,
@@ -800,16 +743,6 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void activateGeneralOptions() {
-        boolean useCustomWithdrawalTxFee = preferences.isUseCustomWithdrawalTxFee();
-        useCustomFee.setSelected(useCustomWithdrawalTxFee);
-
-        transactionFeeInputTextField.setEditable(useCustomWithdrawalTxFee);
-        if (!useCustomWithdrawalTxFee) {
-            transactionFeeInputTextField.setText(String.valueOf(feeService.getTxFeePerVbyte().value));
-            feeService.feeUpdateCounterProperty().addListener(transactionFeeChangeListener);
-        }
-
-        transactionFeeInputTextField.setText(String.valueOf(getTxFeeForWithdrawalPerVbyte()));
         ignoreTradersListInputTextField.setText(String.join(", ", preferences.getIgnoreTradersList()));
         /* referralIdService.getOptionalReferralId().ifPresent(referralId -> referralIdInputTextField.setText(referralId));
         referralIdInputTextField.setPromptText(Res.get("setting.preferences.refererId.prompt"));*/
@@ -873,19 +806,9 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         deviationInputTextField.textProperty().addListener(deviationListener);
         deviationInputTextField.focusedProperty().addListener(deviationFocusedListener);
 
-        transactionFeeInputTextField.focusedProperty().addListener(transactionFeeFocusedListener);
         ignoreTradersListInputTextField.textProperty().addListener(ignoreTradersListListener);
-        useCustomFee.selectedProperty().addListener(useCustomFeeCheckboxListener);
         //referralIdInputTextField.textProperty().addListener(referralIdListener);
         ignoreDustThresholdInputTextField.textProperty().addListener(ignoreDustThresholdListener);
-    }
-
-    private Coin getTxFeeForWithdrawalPerVbyte() {
-        Coin fee = (preferences.isUseCustomWithdrawalTxFee()) ?
-                Coin.valueOf(preferences.getWithdrawalTxFeeInVbytes()) :
-                feeService.getTxFeePerVbyte();
-        log.info("tx fee = " + fee.toFriendlyString());
-        return fee;
     }
 
     private void activateDisplayCurrencies() {
@@ -1119,11 +1042,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         editCustomBsqExplorer.setOnAction(null);
         deviationInputTextField.textProperty().removeListener(deviationListener);
         deviationInputTextField.focusedProperty().removeListener(deviationFocusedListener);
-        transactionFeeInputTextField.focusedProperty().removeListener(transactionFeeFocusedListener);
-        if (transactionFeeChangeListener != null)
-            feeService.feeUpdateCounterProperty().removeListener(transactionFeeChangeListener);
         ignoreTradersListInputTextField.textProperty().removeListener(ignoreTradersListListener);
-        useCustomFee.selectedProperty().removeListener(useCustomFeeCheckboxListener);
         //referralIdInputTextField.textProperty().removeListener(referralIdListener);
         ignoreDustThresholdInputTextField.textProperty().removeListener(ignoreDustThresholdListener);
     }
