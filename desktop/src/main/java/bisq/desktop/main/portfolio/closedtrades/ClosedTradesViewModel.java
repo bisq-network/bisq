@@ -135,10 +135,12 @@ class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataMod
         if (item == null)
             return "";
         Tradable tradable = item.getTradable();
-        if (!wasMyOffer(tradable) && (tradable instanceof Trade))
-            return btcFormatter.formatCoin(((Trade) tradable).getTxFee());
-        else
+        if (!wasMyOffer(tradable) && (tradable instanceof Trade)) {
+            // taker pays for 3 transactions
+            return btcFormatter.formatCoin(((Trade) tradable).getTxFee().multiply(3));
+        } else {
             return btcFormatter.formatCoin(tradable.getOffer().getTxFee());
+        }
     }
 
     boolean isCurrencyForTradeFeeBtc(ClosedTradableListItem item) {
