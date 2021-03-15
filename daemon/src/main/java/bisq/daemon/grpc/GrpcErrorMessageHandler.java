@@ -92,9 +92,10 @@ public class GrpcErrorMessageHandler implements ErrorMessageHandler {
         // The client should look at the grpc reply object's AvailabilityResult
         // field if reply.hasTrade = false, and use it give the user a human readable msg.
         try {
-            AvailabilityResult availabilityResult = getAvailabilityResult(errorMessage);
+            AvailabilityResult availabilityResultProto = getAvailabilityResult(errorMessage);
             var reply = TakeOfferReply.newBuilder()
-                    .setAvailabilityResult(availabilityResult)
+                    .setAvailabilityResult(availabilityResultProto)
+                    .setAvailabilityResultDescription(getAvailabilityResultDescription(availabilityResultProto))
                     .build();
             @SuppressWarnings("unchecked")
             var takeOfferResponseObserver = (StreamObserver<TakeOfferReply>) responseObserver;
@@ -114,6 +115,10 @@ public class GrpcErrorMessageHandler implements ErrorMessageHandler {
                 .findFirst().orElseThrow(() ->
                         new IllegalArgumentException(
                                 format("Could not find an AvailabilityResult in error message:%n%s", errorMessage)));
+    }
+
+    private String getAvailabilityResultDescription(AvailabilityResult proto) {
+        return bisq.core.offer.AvailabilityResult.fromProto(proto).description();
     }
 
     private boolean isTakeOfferError() {

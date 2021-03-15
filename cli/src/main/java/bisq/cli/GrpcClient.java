@@ -53,6 +53,7 @@ import bisq.proto.grpc.SendBtcRequest;
 import bisq.proto.grpc.SetTxFeeRatePreferenceRequest;
 import bisq.proto.grpc.SetWalletPasswordRequest;
 import bisq.proto.grpc.StopRequest;
+import bisq.proto.grpc.TakeOfferReply;
 import bisq.proto.grpc.TakeOfferRequest;
 import bisq.proto.grpc.TradeInfo;
 import bisq.proto.grpc.TxFeeRateInfo;
@@ -309,41 +310,21 @@ public final class GrpcClient {
                 .collect(Collectors.toList());
     }
 
-    public TradeInfo takeOffer(String offerId, String paymentAccountId, String takerFeeCurrencyCode) {
+    public TakeOfferReply getTakeOfferReply(String offerId, String paymentAccountId, String takerFeeCurrencyCode) {
         var request = TakeOfferRequest.newBuilder()
                 .setOfferId(offerId)
                 .setPaymentAccountId(paymentAccountId)
                 .setTakerFeeCurrencyCode(takerFeeCurrencyCode)
                 .build();
-        var reply = grpcStubs.tradesService.takeOffer(request);
-        if (reply.hasTrade()) {
+        return grpcStubs.tradesService.takeOffer(request);
+    }
+
+    public TradeInfo takeOffer(String offerId, String paymentAccountId, String takerFeeCurrencyCode) {
+        var reply = getTakeOfferReply(offerId, paymentAccountId, takerFeeCurrencyCode);
+        if (reply.hasTrade())
             return reply.getTrade();
-        } else {
-            // If there is no trade, there should be a reason in the AvailabilityResult.
-            // Convert the enum to a user error message before throwing the exception.
-            switch (reply.getAvailabilityResult()) {
-                case MARKET_PRICE_NOT_AVAILABLE:
-                    throw new IllegalStateException("could not take offer because market price for calculating trade price is unavailable");
-                case PRICE_OUT_OF_TOLERANCE:
-                    throw new IllegalStateException("could not take offer because taker's price is outside tolerance");
-                case PRICE_CHECK_FAILED:
-                    throw new IllegalStateException("could not take offer because trade price check failed");
-                case NO_ARBITRATORS:
-                    throw new IllegalStateException("could not take offer because no arbitrators are available");
-                case NO_MEDIATORS:
-                    throw new IllegalStateException("could not take offer because no mediators are available");
-                case NO_REFUND_AGENTS:
-                    throw new IllegalStateException("could not take offer because no refund agents are available");
-                case USER_IGNORED:
-                    throw new IllegalStateException("could not take offer from ignored user");
-                case MAKER_DENIED_API_USER:
-                    throw new IllegalStateException("could not take offer because maker is api user");
-                case UNCONF_TX_LIMIT_HIT:
-                    throw new IllegalStateException("could not take offer because you have too many unconfirmed transactions at this moment");
-                default:
-                    throw new IllegalStateException("programmer error: could not take offer for unknown reason");
-            }
-        }
+        else
+            throw new IllegalStateException(reply.getAvailabilityResultDescription());
     }
 
     public TradeInfo getTrade(String tradeId) {
