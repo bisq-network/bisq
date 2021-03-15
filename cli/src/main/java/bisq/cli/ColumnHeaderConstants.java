@@ -42,6 +42,7 @@ class ColumnHeaderConstants {
     static final String COL_HEADER_UNLOCKING_BONDS_BALANCE = "Unlocking Bonds Balance";
     static final String COL_HEADER_UNVERIFIED_BALANCE = "Unverified Balance";
     static final String COL_HEADER_CONFIRMATIONS = "Confirmations";
+    static final String COL_HEADER_IS_USED_ADDRESS = "Is Used";
     static final String COL_HEADER_CREATION_DATE = padEnd("Creation Date (UTC)", 20, ' ');
     static final String COL_HEADER_CURRENCY = "Currency";
     static final String COL_HEADER_DIRECTION = "Buy/Sell";

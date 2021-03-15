@@ -135,11 +135,11 @@ public final class GrpcClient {
 
     public String getUnusedBtcAddress() {
         var request = GetFundingAddressesRequest.newBuilder().build();
+        var addressBalances = grpcStubs.walletsService.getFundingAddresses(request)
+                .getAddressBalanceInfoList();
         //noinspection OptionalGetWithoutIsPresent
-        return grpcStubs.walletsService.getFundingAddresses(request)
-                .getAddressBalanceInfoList()
-                .stream()
-                .filter(a -> a.getBalance() == 0 && a.getNumConfirmations() == 0)
+        return addressBalances.stream()
+                .filter(AddressBalanceInfo::getIsAddressUnused)
                 .findFirst()
                 .get()
                 .getAddress();
