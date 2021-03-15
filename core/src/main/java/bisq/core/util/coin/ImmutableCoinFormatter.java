@@ -27,8 +27,6 @@ import javax.inject.Inject;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import org.jetbrains.annotations.NotNull;
-
 @Slf4j
 public class ImmutableCoinFormatter implements CoinFormatter {
 
@@ -56,7 +54,11 @@ public class ImmutableCoinFormatter implements CoinFormatter {
     }
 
     @Override
-    @NotNull
+    public String formatCoin(Coin coin, boolean appendCode) {
+        return appendCode ? formatCoinWithCode(coin) : formatCoin(coin);
+    }
+
+    @Override
     public String formatCoin(Coin coin, int decimalPlaces) {
         return formatCoin(coin, decimalPlaces, false, 0);
     }
