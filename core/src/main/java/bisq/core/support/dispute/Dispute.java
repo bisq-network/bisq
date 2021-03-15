@@ -150,7 +150,7 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
     private transient long payoutTxConfirms = -1;
 
     private transient final BooleanProperty isClosedProperty = new SimpleBooleanProperty();
-    private transient final IntegerProperty alertCountProperty = new SimpleIntegerProperty();
+    private transient final IntegerProperty badgeCountProperty = new SimpleIntegerProperty();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -340,12 +340,6 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
         setState(State.REOPENED);
     }
 
-    public void clearNewFlag() {
-        if (this.disputeState == State.NEW) {
-            this.disputeState = State.OPEN;
-        }
-    }
-
     public void setState(Dispute.State disputeState) {
         this.disputeState = disputeState;
         this.isClosedProperty.set(disputeState == State.CLOSED);
@@ -376,8 +370,8 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
     public ReadOnlyBooleanProperty isClosedProperty() {
         return isClosedProperty;
     }
-    public ReadOnlyIntegerProperty getAlertCountProperty() {
-        return alertCountProperty;
+    public ReadOnlyIntegerProperty getBadgeCountProperty() {
+        return badgeCountProperty;
     }
     public ReadOnlyObjectProperty<DisputeResult> disputeResultProperty() {
         return disputeResultProperty;
@@ -405,8 +399,12 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
 
     public void refreshAlertLevel(boolean senderFlag) {
         // if the dispute is "new" that is 1 alert that has to be propagated upstream
-        // unread message count also has to be propagated upstream
-        alertCountProperty.setValue((isNew() ? 1 : 0) + unreadMessageCount(senderFlag));
+        // or if there are unread messages that is 1 alert that has to be propagated upstream
+        if (isNew() || unreadMessageCount(senderFlag) > 0) {
+            badgeCountProperty.setValue(1);
+        } else {
+            badgeCountProperty.setValue(0);
+        }
     }
 
     public long unreadMessageCount(boolean senderFlag) {

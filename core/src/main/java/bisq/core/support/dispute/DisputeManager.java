@@ -859,13 +859,12 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
     }
 
     public void addMediationReOpenedMessage(Dispute dispute, boolean senderIsTrader) {
-        String message = "Dispute ticket has been re-opened.";
         ChatMessage chatMessage = new ChatMessage(
                 getSupportType(),
                 dispute.getTradeId(),
                 dispute.getTraderId(),
                 senderIsTrader,
-                message,
+                Res.get("support.info.disputeReOpened"),
                 p2PService.getAddress());
         chatMessage.setSystemMessage(false);
         dispute.addAndPersistChatMessage(chatMessage);

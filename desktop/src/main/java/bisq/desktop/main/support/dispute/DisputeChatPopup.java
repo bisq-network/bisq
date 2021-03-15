@@ -80,12 +80,12 @@ public class DisputeChatPopup {
             chatPopupStage.close();
     }
 
-    public void openChat(Dispute selectedDispute, DisputeSession concreteDisputeSession, String cptyName) {
+    public void openChat(Dispute selectedDispute, DisputeSession concreteDisputeSession, String counterpartyName) {
         closeChat();
         selectedDispute.getChatMessages().forEach(m -> m.setWasDisplayed(true));
         disputeManager.requestPersistence();
 
-        ChatView chatView = new ChatView(disputeManager, formatter, cptyName);
+        ChatView chatView = new ChatView(disputeManager, formatter, counterpartyName);
         chatView.setAllowAttachments(true);
         chatView.setDisplayHeader(false);
         chatView.initialize();

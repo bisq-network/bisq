@@ -153,13 +153,13 @@ public abstract class DisputeListService<T extends DisputeList<Dispute>> impleme
             });
         }
         addedList.forEach(dispute -> {
-            // for each dispute added, keep track of its "AlertCountProperty"
-            EasyBind.subscribe(dispute.getAlertCountProperty(),
+            // for each dispute added, keep track of its "BadgeCountProperty"
+            EasyBind.subscribe(dispute.getBadgeCountProperty(),
                     isAlerting -> {
                         // We get the event before the list gets updated, so we execute on next frame
                         UserThread.execute(() -> {
                             int numAlerts = (int) disputeList.getList().stream()
-                                    .mapToLong(x -> x.getAlertCountProperty().getValue())
+                                    .mapToLong(x -> x.getBadgeCountProperty().getValue())
                                     .sum();
                             numOpenDisputes.set(numAlerts);
                         });

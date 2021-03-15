@@ -73,6 +73,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
@@ -330,6 +331,19 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
         tableView.setItems(sortedList);
 
+        // double-click on a row clears its "new" badge
+        tableView.setRowFactory( tv -> {
+            TableRow<Dispute> row = new TableRow<>();
+            row.setOnMouseClicked(event -> {
+                if (event.getClickCount() == 2 && (!row.isEmpty())) {
+                    Dispute dispute = row.getItem();
+                    dispute.setDisputeSeen(senderFlag());
+                    newBadgeByDispute.get(dispute.getId()).setVisible(dispute.isNew());
+                }
+            });
+            return row;
+        });
+
         selectedDisputeSubscription = EasyBind.subscribe(tableView.getSelectionModel().selectedItemProperty(), this::onSelectDispute);
 
         Dispute selectedItem = tableView.getSelectionModel().getSelectedItem();
@@ -495,6 +509,8 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
             selectedDispute.setIsClosed();
             disputeManager.requestPersistence();
             onSelectDispute(selectedDispute);
+        } else {
+            new Popup().warning(Res.get("support.warning.traderCloseOwnDisputeWarning")).show();
         }
     }
 
@@ -971,7 +987,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
                                     button.setOnAction(e -> {
                                         tableView.getSelectionModel().select(this.getIndex());
                                         onOpenContract(item);
-                                        item.clearNewFlag();
+                                        item.setDisputeSeen(senderFlag());
                                         badge.setVisible(item.isNew());
                                     });
                                 } else {
@@ -1007,7 +1023,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
                                     button.setOnAction(e -> {
                                         tableView.getSelectionModel().select(this.getIndex());
                                         handleOnProcessDispute(item);
-                                        item.clearNewFlag();
+                                        item.setDisputeSeen(senderFlag());
                                         newBadgeByDispute.get(item.getId()).setVisible(item.isNew());
                                     });
                                     HBox hBox = new HBox(button);
@@ -1062,7 +1078,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
                                     button.setOnAction(e -> {
                                         tableView.getSelectionModel().select(this.getIndex());
                                         chatPopup.openChat(item, getConcreteDisputeChatSession(item), getCounterpartyName());
-                                        item.clearNewFlag();
+                                        item.setDisputeSeen(senderFlag());
                                         newBadgeByDispute.get(id).setVisible(item.isNew());
                                         updateChatMessageCount(item, chatBadge);
                                     });

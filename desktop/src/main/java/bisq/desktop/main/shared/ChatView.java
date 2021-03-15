@@ -137,12 +137,12 @@ public class ChatView extends AnchorPane {
     private EventHandler<KeyEvent> keyEventEventHandler;
     private SupportManager supportManager;
     private Optional<SupportSession> optionalSupportSession = Optional.empty();
-    private String cptyName;
+    private String counterpartyName;
 
-    public ChatView(SupportManager supportManager, CoinFormatter formatter, String cptyName) {
+    public ChatView(SupportManager supportManager, CoinFormatter formatter, String counterpartyName) {
         this.supportManager = supportManager;
         this.formatter = formatter;
-        this.cptyName = cptyName;
+        this.counterpartyName = counterpartyName;
         allowAttachments = true;
         displayHeader = true;
     }
@@ -419,7 +419,7 @@ public class ChatView extends AnchorPane {
                             String metaData = DisplayUtils.formatDateTime(new Date(message.getDate()));
                             if (!message.isSystemMessage())
                                 metaData = (isMyMsg ? "Sent " : "Received ") + metaData
-                                    + (isMyMsg ? "" : " from " + cptyName);
+                                    + (isMyMsg ? "" : " from " + counterpartyName);
                             headerLabel.setText(metaData);
                             messageLabel.setText(message.getMessage());
                             attachmentsBox.getChildren().clear();
