@@ -17,7 +17,14 @@
 
 package bisq.core.util;
 
+import bisq.core.monetary.Altcoin;
+import bisq.core.monetary.AltcoinExchangeRate;
+import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
+
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.utils.ExchangeRate;
+import org.bitcoinj.utils.Fiat;
 
 public class VolumeUtil {
 
@@ -46,5 +53,13 @@ public class VolumeUtil {
         // Smallest allowed volume is factor (e.g. 10 EUR or 1 EUR,...)
         roundedVolume = Math.max(factor, roundedVolume);
         return Volume.parse(String.valueOf(roundedVolume), volumeByAmount.getCurrencyCode());
+    }
+
+    public static Volume getVolume(Coin amount, Price price) {
+        if (price.getMonetary() instanceof Altcoin) {
+            return new Volume(new AltcoinExchangeRate((Altcoin) price.getMonetary()).coinToAltcoin(amount));
+        } else {
+            return new Volume(new ExchangeRate((Fiat) price.getMonetary()).coinToFiat(amount));
+        }
     }
 }

@@ -62,6 +62,7 @@
     <HBox spacing="10">
         <Label fx:id="numItems"/>
         <Region fx:id="footerSpacer"/>
+        <AutoTooltipButton fx:id="summaryButton"/>
         <AutoTooltipButton fx:id="exportButton"/>
     </HBox>
 </VBox>

@@ -23,9 +23,9 @@ import bisq.desktop.util.DisplayUtils;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.btc.wallet.BsqWalletService;
-import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
+import bisq.core.monetary.Altcoin;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OpenOffer;
@@ -37,16 +37,20 @@ import bisq.core.util.coin.CoinFormatter;
 
 import bisq.network.p2p.NodeAddress;
 
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.Monetary;
+import org.bitcoinj.utils.Fiat;
+
 import com.google.inject.Inject;
 
 import javax.inject.Named;
 
 import javafx.collections.ObservableList;
 
+import java.util.Map;
 import java.util.stream.Collectors;
 
-class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataModel> implements ViewModel {
-    private final BtcWalletService btcWalletService;
+public class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataModel> implements ViewModel {
     private final BsqWalletService bsqWalletService;
     private final BsqFormatter bsqFormatter;
     private final CoinFormatter btcFormatter;
@@ -55,13 +59,11 @@ class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataMod
     @Inject
     public ClosedTradesViewModel(ClosedTradesDataModel dataModel,
                                  AccountAgeWitnessService accountAgeWitnessService,
-                                 BtcWalletService btcWalletService,
                                  BsqWalletService bsqWalletService,
                                  BsqFormatter bsqFormatter,
                                  @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter) {
         super(dataModel);
         this.accountAgeWitnessService = accountAgeWitnessService;
-        this.btcWalletService = btcWalletService;
         this.bsqWalletService = bsqWalletService;
         this.bsqFormatter = bsqFormatter;
         this.btcFormatter = btcFormatter;
@@ -275,6 +277,66 @@ class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataMod
     }
 
     boolean wasMyOffer(Tradable tradable) {
-        return dataModel.closedTradableManager.wasMyOffer(tradable.getOffer());
+        return dataModel.wasMyOffer(tradable);
+    }
+
+    public Coin getTotalTradeAmount() {
+        return dataModel.getTotalAmount();
+    }
+
+    public String getTotalAmountWithVolume(Coin totalTradeAmount) {
+        return dataModel.getVolumeInUserFiatCurrency(totalTradeAmount)
+                .map(volume -> {
+                    return Res.get("closedTradesSummaryWindow.totalAmount.value",
+                            btcFormatter.formatCoin(totalTradeAmount, true),
+                            DisplayUtils.formatVolumeWithCode(volume));
+                })
+                .orElse("");
+    }
+
+    public Map<String, String> getTotalVolumeByCurrency() {
+        return dataModel.getTotalVolumeByCurrency().entrySet().stream()
+                .collect(Collectors.toMap(Map.Entry::getKey,
+                        entry -> {
+                            String currencyCode = entry.getKey();
+                            Monetary monetary;
+                            if (CurrencyUtil.isCryptoCurrency(currencyCode)) {
+                                monetary = Altcoin.valueOf(currencyCode, entry.getValue());
+                            } else {
+                                monetary = Fiat.valueOf(currencyCode, entry.getValue());
+                            }
+                            return DisplayUtils.formatVolumeWithCode(new Volume(monetary));
+                        }
+                ));
+    }
+
+    public String getTotalTxFee(Coin totalTradeAmount) {
+        Coin totalTxFee = dataModel.getTotalTxFee();
+        double percentage = ((double) totalTxFee.value) / totalTradeAmount.value;
+        return Res.get("closedTradesSummaryWindow.totalMinerFee.value",
+                btcFormatter.formatCoin(totalTxFee, true),
+                FormattingUtils.formatToPercentWithSymbol(percentage));
+    }
+
+    public String getTotalTradeFeeInBtc(Coin totalTradeAmount) {
+        Coin totalTradeFee = dataModel.getTotalTradeFee(true);
+        double percentage = ((double) totalTradeFee.value) / totalTradeAmount.value;
+        return Res.get("closedTradesSummaryWindow.totalTradeFeeInBtc.value",
+                btcFormatter.formatCoin(totalTradeFee, true),
+                FormattingUtils.formatToPercentWithSymbol(percentage));
+    }
+
+    public String getTotalTradeFeeInBsq(Coin totalTradeAmount) {
+        return dataModel.getVolume(totalTradeAmount, "USD")
+                .filter(v -> v.getValue() > 0)
+                .map(tradeAmountVolume -> {
+                    Coin totalTradeFee = dataModel.getTotalTradeFee(false);
+                    Volume bsqVolumeInUsd = dataModel.getBsqVolumeInUsdWithAveragePrice(totalTradeFee); // with 4 decimal
+                    double percentage = ((double) bsqVolumeInUsd.getValue()) / tradeAmountVolume.getValue();
+                    return Res.get("closedTradesSummaryWindow.totalTradeFeeInBsq.value",
+                            bsqFormatter.formatCoin(totalTradeFee, true),
+                            FormattingUtils.formatToPercentWithSymbol(percentage));
+                })
+                .orElse("");
     }
 }

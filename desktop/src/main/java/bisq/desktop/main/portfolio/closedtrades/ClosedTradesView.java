@@ -25,6 +25,7 @@ import bisq.desktop.components.AutoTooltipTableColumn;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.components.PeerInfoIcon;
+import bisq.desktop.main.overlays.windows.ClosedTradesSummaryWindow;
 import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
 import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
 import bisq.desktop.util.GUIUtil;
@@ -124,7 +125,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
     @FXML
     Pane searchBoxSpacer;
     @FXML
-    AutoTooltipButton exportButton;
+    AutoTooltipButton exportButton, summaryButton;
     @FXML
     Label numItems;
     @FXML
@@ -242,6 +243,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
         HBox.setHgrow(footerSpacer, Priority.ALWAYS);
         HBox.setMargin(exportButton, new Insets(0, 10, 0, 0));
         exportButton.updateText(Res.get("shared.exportCSV"));
+        summaryButton.updateText(Res.get("shared.summary"));
     }
 
     @Override
@@ -291,6 +293,8 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                     new ClosedTradableListItem(null), sortedList, (Stage) root.getScene().getWindow());
         });
 
+        summaryButton.setOnAction(event -> new ClosedTradesSummaryWindow(model).show());
+
         filterTextField.textProperty().addListener(filterTextFieldListener);
         applyFilteredListPredicate(filterTextField.getText());
         root.widthProperty().addListener(widthListener);
@@ -301,6 +305,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
     protected void deactivate() {
         sortedList.comparatorProperty().unbind();
         exportButton.setOnAction(null);
+        summaryButton.setOnAction(null);
 
         filterTextField.textProperty().removeListener(filterTextFieldListener);
         root.widthProperty().removeListener(widthListener);
