@@ -18,17 +18,31 @@
 package bisq.core.offer;
 
 public enum AvailabilityResult {
-    UNKNOWN_FAILURE,
-    AVAILABLE,
-    OFFER_TAKEN,
-    PRICE_OUT_OF_TOLERANCE,
-    MARKET_PRICE_NOT_AVAILABLE,
-    @SuppressWarnings("unused") NO_ARBITRATORS,
-    NO_MEDIATORS,
-    USER_IGNORED,
-    @SuppressWarnings("unused") MISSING_MANDATORY_CAPABILITY,
-    @SuppressWarnings("unused") NO_REFUND_AGENTS,
-    UNCONF_TX_LIMIT_HIT,
-    MAKER_DENIED_API_USER,
-    PRICE_CHECK_FAILED
+    UNKNOWN_FAILURE("cannot take offer for unknown reason"),
+    AVAILABLE("offer available"),
+    OFFER_TAKEN("offer taken"),
+    PRICE_OUT_OF_TOLERANCE("cannot take offer because taker's price is outside tolerance"),
+    MARKET_PRICE_NOT_AVAILABLE("cannot take offer because market price for calculating trade price is unavailable"),
+    @SuppressWarnings("unused") NO_ARBITRATORS("cannot take offer because no arbitrators are available"),
+    NO_MEDIATORS("cannot take offer because no mediators are available"),
+    USER_IGNORED("cannot take offer because user is ignored"),
+    @SuppressWarnings("unused") MISSING_MANDATORY_CAPABILITY("description not available"),
+    @SuppressWarnings("unused") NO_REFUND_AGENTS("cannot take offer because no refund agents are available"),
+    UNCONF_TX_LIMIT_HIT("cannot take offer because you have too many unconfirmed transactions at this moment"),
+    MAKER_DENIED_API_USER("cannot take offer because maker is api user"),
+    PRICE_CHECK_FAILED("cannot take offer because trade price check failed");
+
+    private final String description;
+
+    AvailabilityResult(String description) {
+        this.description = description;
+    }
+
+    public String description() {
+        return description;
+    }
+
+    public static AvailabilityResult fromProto(protobuf.AvailabilityResult proto) {
+        return AvailabilityResult.valueOf(proto.name());
+    }
 }
