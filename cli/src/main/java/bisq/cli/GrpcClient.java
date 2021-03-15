@@ -308,6 +308,13 @@ public final class GrpcClient {
         return offers.isEmpty() ? offers : sortOffersByDate(offers);
     }
 
+    public List<OfferInfo> getMyOffersSortedByDate(String currencyCode) {
+        ArrayList<OfferInfo> offers = new ArrayList<>();
+        offers.addAll(getMyOffers(BUY.name(), currencyCode));
+        offers.addAll(getMyOffers(SELL.name(), currencyCode));
+        return sortOffersByDate(offers);
+    }
+
     public OfferInfo getMostRecentOffer(String direction, String currencyCode) {
         List<OfferInfo> offers = getOffersSortedByDate(direction, currencyCode);
         return offers.isEmpty() ? null : offers.get(offers.size() - 1);
