@@ -65,12 +65,15 @@ import bisq.proto.grpc.WithdrawFundsRequest;
 import protobuf.PaymentAccount;
 import protobuf.PaymentMethod;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
 import static java.util.Comparator.comparing;
+import static protobuf.OfferPayload.Direction.BUY;
+import static protobuf.OfferPayload.Direction.SELL;
 
 
 @SuppressWarnings("ResultOfMethodCallIgnored")
@@ -280,6 +283,13 @@ public final class GrpcClient {
         return grpcStubs.offersService.getOffers(request).getOffersList();
     }
 
+    public List<OfferInfo> getOffersSortedByDate(String currencyCode) {
+        ArrayList<OfferInfo> offers = new ArrayList<>();
+        offers.addAll(getOffers(BUY.name(), currencyCode));
+        offers.addAll(getOffers(SELL.name(), currencyCode));
+        return sortOffersByDate(offers);
+    }
+
     public List<OfferInfo> getOffersSortedByDate(String direction, String currencyCode) {
         var offers = getOffers(direction, currencyCode);
         return offers.isEmpty() ? offers : sortOffersByDate(offers);
@@ -303,8 +313,7 @@ public final class GrpcClient {
         return offers.isEmpty() ? null : offers.get(offers.size() - 1);
     }
 
-    // TODO move to bottom of class
-    private List<OfferInfo> sortOffersByDate(List<OfferInfo> offerInfoList) {
+    public List<OfferInfo> sortOffersByDate(List<OfferInfo> offerInfoList) {
         return offerInfoList.stream()
                 .sorted(comparing(OfferInfo::getDate))
                 .collect(Collectors.toList());
