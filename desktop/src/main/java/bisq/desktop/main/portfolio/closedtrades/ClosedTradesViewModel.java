@@ -26,6 +26,7 @@ import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
+import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OpenOffer;
 import bisq.core.trade.Tradable;
@@ -35,12 +36,6 @@ import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.coin.CoinFormatter;
 
 import bisq.network.p2p.NodeAddress;
-
-import bisq.common.config.Config;
-
-import org.bitcoinj.core.Address;
-import org.bitcoinj.core.Transaction;
-import org.bitcoinj.core.TransactionOutput;
 
 import com.google.inject.Inject;
 
@@ -83,8 +78,6 @@ class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataMod
     String getAmount(ClosedTradableListItem item) {
         if (item != null && item.getTradable() instanceof Trade)
             return btcFormatter.formatCoin(((Trade) item.getTradable()).getTradeAmount());
-        else if (item != null && item.getTradable() instanceof OpenOffer)
-            return "-";
         else
             return "";
     }
@@ -110,13 +103,32 @@ class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataMod
         }
     }
 
-    String getVolume(ClosedTradableListItem item) {
-        if (item != null && item.getTradable() instanceof Trade)
-            return DisplayUtils.formatVolumeWithCode(((Trade) item.getTradable()).getTradeVolume());
-        else if (item != null && item.getTradable() instanceof OpenOffer)
-            return "-";
-        else
+    String getVolume(ClosedTradableListItem item, boolean appendCode) {
+        if (item == null) {
             return "";
+        }
+
+        if (item.getTradable() instanceof OpenOffer) {
+            return "";
+        }
+
+        Trade trade = (Trade) item.getTradable();
+        return DisplayUtils.formatVolume(trade.getTradeVolume(), appendCode);
+    }
+
+    String getVolumeCurrency(ClosedTradableListItem item) {
+        if (item == null) {
+            return "";
+        }
+        Volume volume;
+        if (item.getTradable() instanceof OpenOffer) {
+            OpenOffer openOffer = (OpenOffer) item.getTradable();
+            volume = openOffer.getOffer().getVolume();
+        } else {
+            Trade trade = (Trade) item.getTradable();
+            volume = trade.getTradeVolume();
+        }
+        return volume != null ? volume.getCurrencyCode() : "";
     }
 
     String getTxFee(ClosedTradableListItem item) {
@@ -129,33 +141,44 @@ class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataMod
             return btcFormatter.formatCoin(tradable.getOffer().getTxFee());
     }
 
-    String getTradeFee(ClosedTradableListItem item) {
+    boolean isCurrencyForTradeFeeBtc(ClosedTradableListItem item) {
+        if (item == null) {
+            return false;
+        }
+
+        Tradable tradable = item.getTradable();
+        Offer offer = tradable.getOffer();
+        if (wasMyOffer(tradable)) {
+            // I was maker so we use offer
+            return offer.isCurrencyForMakerFeeBtc();
+        } else {
+            Trade trade = (Trade) tradable;
+            String takerFeeTxId = trade.getTakerFeeTxId();
+            // If we find our tx in the bsq wallet its a BSQ trade fee tx
+            return bsqWalletService.getTransaction(takerFeeTxId) == null;
+        }
+    }
+
+    String getTradeFee(ClosedTradableListItem item, boolean appendCode) {
         if (item == null) {
             return "";
         }
 
         Tradable tradable = item.getTradable();
         Offer offer = tradable.getOffer();
-
-        if (!wasMyOffer(tradable) && (tradable instanceof Trade)) {
-            Trade trade = (Trade) tradable;
-            Transaction takerFeeTx = btcWalletService.getTransaction(trade.getTakerFeeTxId());
-            if (takerFeeTx != null && takerFeeTx.getOutputs().size() > 1) {
-                // First output is fee receiver address. If its a BSQ (change) address of our own wallet its a BSQ fee
-                TransactionOutput output = takerFeeTx.getOutput(0);
-                Address address = output.getScriptPubKey().getToAddress(Config.baseCurrencyNetworkParameters());
-                if (bsqWalletService.getWallet().findKeyFromAddress(address) != null) {
-                    return bsqFormatter.formatCoinWithCode(trade.getTakerFee());
-                } else {
-                    return btcFormatter.formatCoinWithCode(trade.getTakerFee());
-                }
-            } else {
-                log.warn("takerFeeTx is null or has invalid structure. takerFeeTx={}", takerFeeTx);
-                return Res.get("shared.na");
-            }
-        } else {
+        if (wasMyOffer(tradable)) {
             CoinFormatter formatter = offer.isCurrencyForMakerFeeBtc() ? btcFormatter : bsqFormatter;
-            return formatter.formatCoinWithCode(offer.getMakerFee());
+            return formatter.formatCoin(offer.getMakerFee(), appendCode);
+        } else {
+            Trade trade = (Trade) tradable;
+            String takerFeeTxId = trade.getTakerFeeTxId();
+            if (bsqWalletService.getTransaction(takerFeeTxId) == null) {
+                // Was BTC fee
+                return btcFormatter.formatCoin(trade.getTakerFee(), appendCode);
+            } else {
+                // BSQ fee
+                return bsqFormatter.formatCoin(trade.getTakerFee(), appendCode);
+            }
         }
     }
 
