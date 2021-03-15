@@ -425,7 +425,6 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                     log.info("Fee for tx with size {}: {} " + Res.getBaseCurrencyCode() + "", txVsize, fee.toPlainString());
 
                     if (receiverAmount.isPositive()) {
-                        double feePerVbyte = Double.parseDouble(transactionFeeInputTextField.getText());
                         double vkb = txVsize / 1000d;
 
                         String messageText = Res.get("shared.sendFundsDetailsWithFee",
@@ -433,7 +432,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                                 withdrawFromTextField.getText(),
                                 withdrawToTextField.getText(),
                                 formatter.formatCoinWithCode(fee),
-                                feePerVbyte,
+                                Double.parseDouble(transactionFeeInputTextField.getText()),
                                 vkb,
                                 formatter.formatCoinWithCode(receiverAmount));
                         if (dust.isPositive()) {
