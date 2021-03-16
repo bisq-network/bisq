@@ -24,6 +24,7 @@ import bisq.desktop.main.portfolio.pendingtrades.steps.buyer.BuyerStep3View;
 import bisq.desktop.main.portfolio.pendingtrades.steps.buyer.BuyerStep4View;
 
 import bisq.core.locale.Res;
+import bisq.core.trade.Trade;
 
 import org.fxmisc.easybind.EasyBind;
 
@@ -56,6 +57,23 @@ public class BuyerSubView extends TradeSubView {
         step2 = new TradeWizardItem(BuyerStep2View.class, Res.get("portfolio.pending.step2_buyer.startPayment"), "2");
         step3 = new TradeWizardItem(BuyerStep3View.class, Res.get("portfolio.pending.step3_buyer.waitPaymentArrived"), "3");
         step4 = new TradeWizardItem(BuyerStep4View.class, Res.get("portfolio.pending.step5.completed"), "4");
+
+        // This is a proposed solution the number 1 mediation issue of "Unable to confirm payment received".
+        // If user double clicks on buyer step 2 (Start Payment), and if a dispute has been closed, then it will move
+        // the trade state back to BUYER_CONFIRMED_IN_UI_FIAT_PAYMENT_INITIATED.  This will then cause the existing
+        // workflow to show a button requesting that the trader resend the message.
+        step2.setOnMouseClicked(event -> {
+            if (event.getClickCount() == 2) {
+                Trade trade = model.dataModel.getTrade();
+                if (trade != null) {
+                    log.info("User double-clicked on trade Step 2, id={}, state={}", trade.getShortId(), trade.stateProperty().get());
+                    if (trade.disputeStateProperty().get() == Trade.DisputeState.MEDIATION_CLOSED && trade.getPhase() == Trade.Phase.FIAT_SENT) {
+                        log.warn("Reverting trade to BUYER_CONFIRMED_IN_UI_FIAT_PAYMENT_INITIATED so that payment message may be re-sent");
+                        trade.setState(Trade.State.BUYER_CONFIRMED_IN_UI_FIAT_PAYMENT_INITIATED);
+                    }
+                }
+            }
+        });
 
         addWizardsToGridPane(step1);
         addLineSeparatorToGridPane();

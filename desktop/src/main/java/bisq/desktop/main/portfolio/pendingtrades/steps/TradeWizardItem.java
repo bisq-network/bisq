@@ -42,9 +42,7 @@ public class TradeWizardItem extends Label {
         this.viewClass = viewClass;
         this.iconLabel = iconLabel;
 
-        setMouseTransparent(true);
         setText(title);
-//        setPrefHeight(40);
         setPrefWidth(360);
         setAlignment(Pos.CENTER_LEFT);
         setDisabled();
