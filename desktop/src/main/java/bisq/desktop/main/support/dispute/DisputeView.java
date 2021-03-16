@@ -331,14 +331,12 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
         tableView.setItems(sortedList);
 
-        // double-click on a row clears its "new" badge
+        // double-click on a row opens chat window
         tableView.setRowFactory( tv -> {
             TableRow<Dispute> row = new TableRow<>();
             row.setOnMouseClicked(event -> {
                 if (event.getClickCount() == 2 && (!row.isEmpty())) {
-                    Dispute dispute = row.getItem();
-                    dispute.setDisputeSeen(senderFlag());
-                    newBadgeByDispute.get(dispute.getId()).setVisible(dispute.isNew());
+                    openChat(row.getItem());
                 }
             });
             return row;
@@ -1077,10 +1075,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
                                     }
                                     button.setOnAction(e -> {
                                         tableView.getSelectionModel().select(this.getIndex());
-                                        chatPopup.openChat(item, getConcreteDisputeChatSession(item), getCounterpartyName());
-                                        item.setDisputeSeen(senderFlag());
-                                        newBadgeByDispute.get(id).setVisible(item.isNew());
-                                        updateChatMessageCount(item, chatBadge);
+                                        openChat(item);
                                     });
                                     if (!listenerByDispute.containsKey(id)) {
                                         ListChangeListener<ChatMessage> listener = c -> updateChatMessageCount(item, chatBadge);
@@ -1389,6 +1384,13 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
                     }
                 });
         return column;
+    }
+
+    private void openChat(Dispute dispute) {
+        chatPopup.openChat(dispute, getConcreteDisputeChatSession(dispute), getCounterpartyName());
+        dispute.setDisputeSeen(senderFlag());
+        newBadgeByDispute.get(dispute.getId()).setVisible(dispute.isNew());
+        updateChatMessageCount(dispute, chatBadgeByDispute.get(dispute.getId()));
     }
 
     private void updateChatMessageCount(Dispute dispute, JFXBadge chatBadge) {
