@@ -47,8 +47,6 @@ import java.util.Locale;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import org.jetbrains.annotations.NotNull;
-
 @Slf4j
 @Singleton
 public class BsqFormatter implements CoinFormatter {
@@ -224,10 +222,15 @@ public class BsqFormatter implements CoinFormatter {
     }
 
     public String formatCoin(Coin coin) {
-        return immutableCoinFormatter.formatCoin(coin);
+        return formatCoin(coin, false);
     }
 
-    @NotNull
+    public String formatCoin(Coin coin, boolean appendCode) {
+        return appendCode ?
+                immutableCoinFormatter.formatCoinWithCode(coin) :
+                immutableCoinFormatter.formatCoin(coin);
+    }
+
     public String formatCoin(Coin coin, int decimalPlaces) {
         return immutableCoinFormatter.formatCoin(coin, decimalPlaces);
     }
@@ -240,7 +243,7 @@ public class BsqFormatter implements CoinFormatter {
     }
 
     public String formatCoinWithCode(Coin coin) {
-        return immutableCoinFormatter.formatCoinWithCode(coin);
+        return formatCoin(coin, true);
     }
 
     public String formatCoinWithCode(long value) {

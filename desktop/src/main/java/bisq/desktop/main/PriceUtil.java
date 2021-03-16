@@ -106,6 +106,17 @@ public class PriceUtil {
         }
     }
 
+    public static Price marketPriceToPrice(MarketPrice marketPrice) {
+        String currencyCode = marketPrice.getCurrencyCode();
+        double priceAsDouble = marketPrice.getPrice();
+        int precision = CurrencyUtil.isCryptoCurrency(currencyCode) ?
+                Altcoin.SMALLEST_UNIT_EXPONENT :
+                Fiat.SMALLEST_UNIT_EXPONENT;
+        double scaled = MathUtils.scaleUpByPowerOf10(priceAsDouble, precision);
+        long roundedToLong = MathUtils.roundDoubleToLong(scaled);
+        return Price.valueOf(currencyCode, roundedToLong);
+    }
+
     public void recalculateBsq30DayAveragePrice() {
         bsq30DayAveragePrice = null;
         bsq30DayAveragePrice = getBsq30DayAveragePrice();
