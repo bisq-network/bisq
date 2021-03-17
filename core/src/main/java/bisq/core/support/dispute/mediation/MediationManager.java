@@ -193,7 +193,7 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
         } else {
             log.warn("We got a dispute mail msg what we have already stored. TradeId = " + chatMessage.getTradeId());
         }
-        dispute.setIsClosed(true);
+        dispute.setIsClosed();
 
         dispute.setDisputeResult(disputeResult);
 

@@ -28,10 +28,10 @@ import bisq.core.dao.DaoFacade;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeList;
 import bisq.core.support.dispute.DisputeManager;
-import bisq.core.support.dispute.DisputeSession;
 import bisq.core.support.dispute.mediation.mediator.MediatorManager;
 import bisq.core.support.dispute.refund.refundagent.RefundAgentManager;
 import bisq.core.trade.TradeManager;
+import bisq.core.user.Preferences;
 import bisq.core.util.coin.CoinFormatter;
 
 import bisq.common.crypto.KeyRing;
@@ -41,6 +41,7 @@ public abstract class DisputeClientView extends DisputeView {
                              KeyRing keyRing,
                              TradeManager tradeManager,
                              CoinFormatter formatter,
+                             Preferences preferences,
                              DisputeSummaryWindow disputeSummaryWindow,
                              PrivateNotificationManager privateNotificationManager,
                              ContractWindow contractWindow,
@@ -50,15 +51,9 @@ public abstract class DisputeClientView extends DisputeView {
                              RefundAgentManager refundAgentManager,
                              DaoFacade daoFacade,
                              boolean useDevPrivilegeKeys) {
-        super(DisputeManager, keyRing, tradeManager, formatter, disputeSummaryWindow, privateNotificationManager,
+        super(DisputeManager, keyRing, tradeManager, formatter, preferences, disputeSummaryWindow, privateNotificationManager,
                 contractWindow, tradeDetailsWindow, accountAgeWitnessService,
                 mediatorManager, refundAgentManager, daoFacade, useDevPrivilegeKeys);
-    }
-
-    @Override
-    protected void handleOnSelectDispute(Dispute dispute) {
-        DisputeSession chatSession = getConcreteDisputeChatSession(dispute);
-        chatView.display(chatSession, root.widthProperty());
     }
 
     @Override
@@ -69,5 +64,10 @@ public abstract class DisputeClientView extends DisputeView {
         }
 
         return super.getFilterResult(dispute, filterString);
+    }
+
+    @Override
+    protected boolean senderFlag() {
+        return false;
     }
 }

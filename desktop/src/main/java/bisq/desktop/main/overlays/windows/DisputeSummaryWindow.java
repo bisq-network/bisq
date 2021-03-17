@@ -84,16 +84,16 @@ import javafx.geometry.Insets;
 import javafx.beans.binding.Bindings;
 import javafx.beans.value.ChangeListener;
 
+import java.time.Instant;
+
 import java.util.Date;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.desktop.util.FormBuilder.add2ButtonsWithBox;
-import static bisq.desktop.util.FormBuilder.addConfirmationLabelLabel;
-import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
-import static bisq.desktop.util.FormBuilder.addTopLabelWithVBox;
+import static bisq.desktop.util.FormBuilder.*;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -169,12 +169,6 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
             });
         }
     }
-
-    public DisputeSummaryWindow onFinalizeDispute(Runnable finalizeDisputeHandler) {
-        this.finalizeDisputeHandlerOptional = Optional.of(finalizeDisputeHandler);
-        return this;
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Protected
@@ -288,17 +282,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         addConfirmationLabelLabel(gridPane, rowIndex, Res.get("shared.tradeId"), dispute.getShortTradeId(),
                 Layout.TWICE_FIRST_ROW_DISTANCE);
         addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("disputeSummaryWindow.openDate"), DisplayUtils.formatDateTime(dispute.getOpeningDate()));
-        if (dispute.isDisputeOpenerIsMaker()) {
-            if (dispute.isDisputeOpenerIsBuyer())
-                role = Res.get("support.buyerOfferer");
-            else
-                role = Res.get("support.sellerOfferer");
-        } else {
-            if (dispute.isDisputeOpenerIsBuyer())
-                role = Res.get("support.buyerTaker");
-            else
-                role = Res.get("support.sellerTaker");
-        }
+        role = dispute.getRoleString();
         addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("disputeSummaryWindow.role"), role);
         addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("shared.tradeAmount"),
                 formatter.formatCoinWithCode(contract.getTradeAmount()));
@@ -314,6 +298,24 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                 " " +
                 formatter.formatCoinWithCode(contract.getOfferPayload().getSellerSecurityDeposit());
         addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("shared.securityDeposit"), securityDeposit);
+
+        boolean isMediationDispute = getDisputeManager(dispute) instanceof MediationManager;
+        if (isMediationDispute) {
+            if (dispute.getTradePeriodEnd().getTime() > 0) {
+                String status = DisplayUtils.formatDateTime(dispute.getTradePeriodEnd());
+                Label tradePeriodEnd = addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("disputeSummaryWindow.tradePeriodEnd"), status).second;
+                if (dispute.getTradePeriodEnd().toInstant().isAfter(Instant.now())) {
+                    tradePeriodEnd.getStyleClass().add("version-new"); // highlight field when the trade period is still active
+                }
+            }
+            if (dispute.getExtraDataMap() != null && dispute.getExtraDataMap().size() > 0) {
+                String extraDataSummary = "";
+                for (Map.Entry<String, String> entry : dispute.getExtraDataMap().entrySet()) {
+                    extraDataSummary += "[" + entry.getKey() + ":" + entry.getValue() + "] ";
+                }
+                addConfirmationLabelLabelWithCopyIcon(gridPane, ++rowIndex, Res.get("disputeSummaryWindow.extraInfo"), extraDataSummary);
+            }
+        }
     }
 
     private void addTradeAmountPayoutControls() {
@@ -812,7 +814,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         disputeResult.setLoserPublisher(isLoserPublisherCheckBox.isSelected());
         disputeResult.setCloseDate(new Date());
         dispute.setDisputeResult(disputeResult);
-        dispute.setIsClosed(true);
+        dispute.setIsClosed();
         DisputeResult.Reason reason = disputeResult.getReason();
 
         summaryNotesTextArea.textProperty().unbindBidirectional(disputeResult.summaryNotesProperty());

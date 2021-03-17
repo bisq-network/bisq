@@ -392,6 +392,21 @@ public class FormBuilder {
         return new Tuple2<>(label1, label2);
     }
 
+    public static Tuple2<Label, TextFieldWithCopyIcon> addConfirmationLabelLabelWithCopyIcon(GridPane gridPane,
+                                                                 int rowIndex,
+                                                                 String title1,
+                                                                 String title2) {
+        Label label1 = addLabel(gridPane, rowIndex, title1);
+        label1.getStyleClass().add("confirmation-label");
+        TextFieldWithCopyIcon label2 = new TextFieldWithCopyIcon("confirmation-value");
+        label2.setText(title2);
+        GridPane.setRowIndex(label2, rowIndex);
+        gridPane.getChildren().add(label2);
+        GridPane.setColumnIndex(label2, 1);
+        GridPane.setHalignment(label1, HPos.LEFT);
+        return new Tuple2<>(label1, label2);
+    }
+
     public static Tuple2<Label, TextArea> addConfirmationLabelTextArea(GridPane gridPane,
                                                                        int rowIndex,
                                                                        String title1,
