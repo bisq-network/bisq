@@ -39,6 +39,7 @@ import bisq.core.payment.AmazonGiftCardAccount;
 import bisq.core.payment.RevolutAccount;
 import bisq.core.payment.TradeLimits;
 import bisq.core.provider.fee.FeeService;
+import bisq.core.provider.mempool.MempoolService;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.support.dispute.arbitration.ArbitrationManager;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
@@ -110,6 +111,7 @@ public class DomainInitialisation {
     private final User user;
     private final DaoStateSnapshotService daoStateSnapshotService;
     private final TriggerPriceService triggerPriceService;
+    private final MempoolService mempoolService;
 
     @Inject
     public DomainInitialisation(ClockWatcher clockWatcher,
@@ -146,7 +148,8 @@ public class DomainInitialisation {
                                 MarketAlerts marketAlerts,
                                 User user,
                                 DaoStateSnapshotService daoStateSnapshotService,
-                                TriggerPriceService triggerPriceService) {
+                                TriggerPriceService triggerPriceService,
+                                MempoolService mempoolService) {
         this.clockWatcher = clockWatcher;
         this.tradeLimits = tradeLimits;
         this.arbitrationManager = arbitrationManager;
@@ -182,6 +185,7 @@ public class DomainInitialisation {
         this.user = user;
         this.daoStateSnapshotService = daoStateSnapshotService;
         this.triggerPriceService = triggerPriceService;
+        this.mempoolService = mempoolService;
     }
 
     public void initDomainServices(Consumer<String> rejectedTxErrorMessageHandler,
@@ -264,6 +268,7 @@ public class DomainInitialisation {
         priceAlert.onAllServicesInitialized();
         marketAlerts.onAllServicesInitialized();
         triggerPriceService.onAllServicesInitialized();
+        mempoolService.onAllServicesInitialized();
 
         if (revolutAccountsUpdateHandler != null) {
             revolutAccountsUpdateHandler.accept(user.getPaymentAccountsAsObservable().stream()

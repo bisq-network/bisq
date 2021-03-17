@@ -20,15 +20,18 @@ package bisq.desktop.main.portfolio.pendingtrades;
 import bisq.desktop.Navigation;
 import bisq.desktop.common.model.ActivatableWithDataModel;
 import bisq.desktop.common.model.ViewModel;
+import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.btc.wallet.Restrictions;
+import bisq.core.locale.Res;
 import bisq.core.network.MessageState;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferUtil;
 import bisq.core.provider.fee.FeeService;
+import bisq.core.provider.mempool.MempoolService;
 import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeUtil;
@@ -42,6 +45,7 @@ import bisq.core.util.validation.BtcAddressValidator;
 import bisq.network.p2p.P2PService;
 
 import bisq.common.ClockWatcher;
+import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
 
 import org.bitcoinj.core.Coin;
@@ -53,11 +57,14 @@ import javax.inject.Named;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import lombok.Getter;
@@ -97,6 +104,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     public final BtcAddressValidator btcAddressValidator;
     final AccountAgeWitnessService accountAgeWitnessService;
     public final P2PService p2PService;
+    private final MempoolService mempoolService;
     private final ClosedTradableManager closedTradableManager;
     private final OfferUtil offerUtil;
     private final TradeUtil tradeUtil;
@@ -112,6 +120,8 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     private final ObjectProperty<MessageState> messageStateProperty = new SimpleObjectProperty<>(MessageState.UNDEFINED);
     private Subscription tradeStateSubscription;
     private Subscription messageStateSubscription;
+    @Getter
+    protected final IntegerProperty mempoolStatus = new SimpleIntegerProperty();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -124,6 +134,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
                                   BsqFormatter bsqFormatter,
                                   BtcAddressValidator btcAddressValidator,
                                   P2PService p2PService,
+                                  MempoolService mempoolService,
                                   ClosedTradableManager closedTradableManager,
                                   OfferUtil offerUtil,
                                   TradeUtil tradeUtil,
@@ -137,6 +148,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         this.bsqFormatter = bsqFormatter;
         this.btcAddressValidator = btcAddressValidator;
         this.p2PService = p2PService;
+        this.mempoolService = mempoolService;
         this.closedTradableManager = closedTradableManager;
         this.offerUtil = offerUtil;
         this.tradeUtil = tradeUtil;
@@ -196,6 +208,29 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         messageStateProperty.set(messageState);
     }
 
+    public void checkTakerFeeTx(Trade trade) {
+        mempoolStatus.setValue(-1);
+        mempoolService.validateOfferTakerTx(trade, (txValidator -> {
+            mempoolStatus.setValue(txValidator.isFail() ? 0 : 1);
+            if (txValidator.isFail()) {
+                String errorMessage = "Validation of Taker Tx returned: " + txValidator.toString();
+                log.warn(errorMessage);
+                // prompt user to open mediation
+                if (trade.getDisputeState() == Trade.DisputeState.NO_DISPUTE) {
+                    UserThread.runAfter(() -> {
+                        Popup popup = new Popup();
+                        popup.headLine(Res.get("portfolio.pending.openSupportTicket.headline"))
+                                .message(Res.get("portfolio.pending.invalidTx", errorMessage))
+                                .actionButtonText(Res.get("portfolio.pending.openSupportTicket.headline"))
+                                .onAction(dataModel::onOpenSupportTicket)
+                                .closeButtonText(Res.get("shared.cancel"))
+                                .onClose(popup::hide)
+                                .show();
+                    }, 100, TimeUnit.MILLISECONDS);
+                }
+            }
+        }));
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters

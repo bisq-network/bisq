@@ -139,6 +139,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     private ChangeListener<Trade.State> tradeStateListener;
     private ChangeListener<Trade.DisputeState> disputeStateListener;
     private ChangeListener<MediationResultState> mediationResultStateListener;
+    private ChangeListener<Number> getMempoolStatusListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -228,6 +229,15 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         };
 
         tradesListChangeListener = c -> onListChanged();
+
+        getMempoolStatusListener = (observable, oldValue, newValue) -> {
+            // -1 status is unknown
+            // 0 status is FAIL
+            // 1 status is PASS
+            if (newValue.longValue() >= 0) {
+                log.info("Taker fee validation returned {}", newValue.longValue());
+            }
+        };
     }
 
     @Override
@@ -287,6 +297,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
 
         list.addListener(tradesListChangeListener);
         updateNewChatMessagesByTradeMap();
+        model.getMempoolStatus().addListener(getMempoolStatusListener);
     }
 
     @Override
@@ -298,6 +309,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         removeSelectedSubView();
 
         model.dataModel.list.removeListener(tradesListChangeListener);
+        model.getMempoolStatus().removeListener(getMempoolStatusListener);
 
         if (scene != null)
             scene.removeEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);

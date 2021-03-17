@@ -124,6 +124,7 @@ public class Config {
     public static final String BTC_TX_FEE = "btcTxFee";
     public static final String BTC_MIN_TX_FEE = "btcMinTxFee";
     public static final String BTC_FEES_TS = "bitcoinFeesTs";
+    public static final String BYPASS_MEMPOOL_VALIDATION = "bypassMempoolValidation";
 
     // Default values for certain options
     public static final int UNSPECIFIED_PORT = -1;
@@ -212,6 +213,7 @@ public class Config {
     public final int apiPort;
     public final boolean preventPeriodicShutdownAtSeedNode;
     public final boolean republishMailboxEntries;
+    public final boolean bypassMempoolValidation;
 
     // Properties derived from options but not exposed as options themselves
     public final File torDir;
@@ -660,6 +662,13 @@ public class Config {
                         .ofType(boolean.class)
                         .defaultsTo(false);
 
+        ArgumentAcceptingOptionSpec<Boolean> bypassMempoolValidationOpt =
+                parser.accepts(BYPASS_MEMPOOL_VALIDATION,
+                        "Prevents mempool check of trade parameters")
+                        .withRequiredArg()
+                        .ofType(boolean.class)
+                        .defaultsTo(false);
+
         try {
             CompositeOptionSet options = new CompositeOptionSet();
 
@@ -777,6 +786,7 @@ public class Config {
             this.apiPort = options.valueOf(apiPortOpt);
             this.preventPeriodicShutdownAtSeedNode = options.valueOf(preventPeriodicShutdownAtSeedNodeOpt);
             this.republishMailboxEntries = options.valueOf(republishMailboxEntriesOpt);
+            this.bypassMempoolValidation = options.valueOf(bypassMempoolValidationOpt);
         } catch (OptionException ex) {
             throw new ConfigException("problem parsing option '%s': %s",
                     ex.options().get(0),

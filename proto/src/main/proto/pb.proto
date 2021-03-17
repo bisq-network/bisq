@@ -689,6 +689,7 @@ message Filter {
     repeated string banned_auto_conf_explorers = 25;
     repeated string node_addresses_banned_from_network = 26;
     bool disable_api = 27;
+    bool disable_mempool_validation = 28;
 }
 
 // Deprecated

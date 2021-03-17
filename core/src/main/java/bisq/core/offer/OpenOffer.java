@@ -73,6 +73,9 @@ public final class OpenOffer implements Tradable {
     // If market price reaches that trigger price the offer gets deactivated
     @Getter
     private final long triggerPrice;
+    @Getter
+    @Setter
+    transient private long mempoolStatus = -1;
 
     public OpenOffer(Offer offer) {
         this(offer, 0);
