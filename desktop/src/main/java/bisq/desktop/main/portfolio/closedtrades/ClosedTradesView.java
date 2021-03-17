@@ -25,6 +25,7 @@ import bisq.desktop.components.AutoTooltipTableColumn;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.components.PeerInfoIcon;
+import bisq.desktop.main.overlays.windows.ClosedTradesSummaryWindow;
 import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
 import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
 import bisq.desktop.util.GUIUtil;
@@ -68,7 +69,6 @@ import javafx.geometry.Insets;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.value.ChangeListener;
 
-import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 
@@ -89,8 +89,10 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
         DEVIATION(Res.get("shared.deviation")),
         AMOUNT(Res.get("shared.amountWithCur", Res.getBaseCurrencyCode())),
         VOLUME(Res.get("shared.amount")),
+        VOLUME_CURRENCY(Res.get("shared.currency")),
         TX_FEE(Res.get("shared.txFee")),
-        TRADE_FEE(Res.get("shared.tradeFee")),
+        TRADE_FEE_BTC(Res.get("shared.tradeFee") + " BTC"),
+        TRADE_FEE_BSQ(Res.get("shared.tradeFee") + " BSQ"),
         BUYER_SEC(Res.get("shared.buyerSecurityDeposit")),
         SELLER_SEC(Res.get("shared.sellerSecurityDeposit")),
         OFFER_TYPE(Res.get("shared.offerType")),
@@ -123,7 +125,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
     @FXML
     Pane searchBoxSpacer;
     @FXML
-    AutoTooltipButton exportButton;
+    AutoTooltipButton exportButton, summaryButton;
     @FXML
     Label numItems;
     @FXML
@@ -157,7 +159,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
     public void initialize() {
         widthListener = (observable, oldValue, newValue) -> onWidthChange((double) newValue);
         txFeeColumn.setGraphic(new AutoTooltipLabel(ColumnNames.TX_FEE.toString()));
-        tradeFeeColumn.setGraphic(new AutoTooltipLabel(ColumnNames.TRADE_FEE.toString()));
+        tradeFeeColumn.setGraphic(new AutoTooltipLabel(ColumnNames.TRADE_FEE_BTC.toString().replace(" BTC", "")));
         buyerSecurityDepositColumn.setGraphic(new AutoTooltipLabel(ColumnNames.BUYER_SEC.toString()));
         sellerSecurityDepositColumn.setGraphic(new AutoTooltipLabel(ColumnNames.SELLER_SEC.toString()));
         priceColumn.setGraphic(new AutoTooltipLabel(ColumnNames.PRICE.toString()));
@@ -211,7 +213,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
 
         //
         tradeFeeColumn.setComparator(Comparator.comparing(item -> {
-            String tradeFee = model.getTradeFee(item);
+            String tradeFee = model.getTradeFee(item, true);
             // We want to separate BSQ and BTC fees so we use a prefix
             if (item.getTradable().getOffer().isCurrencyForMakerFeeBtc()) {
                 return "BTC" + tradeFee;
@@ -241,6 +243,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
         HBox.setHgrow(footerSpacer, Priority.ALWAYS);
         HBox.setMargin(exportButton, new Insets(0, 10, 0, 0));
         exportButton.updateText(Res.get("shared.exportCSV"));
+        summaryButton.updateText(Res.get("shared.summary"));
     }
 
     @Override
@@ -254,7 +257,6 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
 
         numItems.setText(Res.get("shared.numItemsLabel", sortedList.size()));
         exportButton.setOnAction(event -> {
-            final ObservableList<TableColumn<ClosedTradableListItem, ?>> tableColumns = tableView.getColumns();
             CSVEntryConverter<ClosedTradableListItem> headerConverter = item -> {
                 String[] columns = new String[ColumnNames.values().length];
                 for (ColumnNames m : ColumnNames.values()) {
@@ -270,9 +272,16 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                 columns[ColumnNames.PRICE.ordinal()] = model.getPrice(item);
                 columns[ColumnNames.DEVIATION.ordinal()] = model.getPriceDeviation(item);
                 columns[ColumnNames.AMOUNT.ordinal()] = model.getAmount(item);
-                columns[ColumnNames.VOLUME.ordinal()] = model.getVolume(item);
+                columns[ColumnNames.VOLUME.ordinal()] = model.getVolume(item, false);
+                columns[ColumnNames.VOLUME_CURRENCY.ordinal()] = model.getVolumeCurrency(item);
                 columns[ColumnNames.TX_FEE.ordinal()] = model.getTxFee(item);
-                columns[ColumnNames.TRADE_FEE.ordinal()] = model.getTradeFee(item);
+                if (model.isCurrencyForTradeFeeBtc(item)) {
+                    columns[ColumnNames.TRADE_FEE_BTC.ordinal()] = model.getTradeFee(item, false);
+                    columns[ColumnNames.TRADE_FEE_BSQ.ordinal()] = "";
+                } else {
+                    columns[ColumnNames.TRADE_FEE_BTC.ordinal()] = "";
+                    columns[ColumnNames.TRADE_FEE_BSQ.ordinal()] = model.getTradeFee(item, false);
+                }
                 columns[ColumnNames.BUYER_SEC.ordinal()] = model.getBuyerSecurityDeposit(item);
                 columns[ColumnNames.SELLER_SEC.ordinal()] = model.getSellerSecurityDeposit(item);
                 columns[ColumnNames.OFFER_TYPE.ordinal()] = model.getDirectionLabel(item);
@@ -284,6 +293,8 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                     new ClosedTradableListItem(null), sortedList, (Stage) root.getScene().getWindow());
         });
 
+        summaryButton.setOnAction(event -> new ClosedTradesSummaryWindow(model).show());
+
         filterTextField.textProperty().addListener(filterTextFieldListener);
         applyFilteredListPredicate(filterTextField.getText());
         root.widthProperty().addListener(widthListener);
@@ -294,6 +305,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
     protected void deactivate() {
         sortedList.comparatorProperty().unbind();
         exportButton.setOnAction(null);
+        summaryButton.setOnAction(null);
 
         filterTextField.textProperty().removeListener(filterTextFieldListener);
         root.widthProperty().removeListener(widthListener);
@@ -343,13 +355,13 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                 return true;
             }
 
-            if (model.getVolume(item).contains(filterString)) {
+            if (model.getVolume(item, true).contains(filterString)) {
                 return true;
             }
             if (model.getAmount(item).contains(filterString)) {
                 return true;
             }
-            if (model.getTradeFee(item).contains(filterString)) {
+            if (model.getTradeFee(item, true).contains(filterString)) {
                 return true;
             }
             if (model.getTxFee(item).contains(filterString)) {
@@ -607,7 +619,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                             public void updateItem(final ClosedTradableListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
-                                    setGraphic(new AutoTooltipLabel(model.getVolume(item)));
+                                    setGraphic(new AutoTooltipLabel(model.getVolume(item, true)));
                                 else
                                     setGraphic(null);
                             }
@@ -663,7 +675,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                             @Override
                             public void updateItem(final ClosedTradableListItem item, boolean empty) {
                                 super.updateItem(item, empty);
-                                setGraphic(new AutoTooltipLabel(model.getTradeFee(item)));
+                                setGraphic(new AutoTooltipLabel(model.getTradeFee(item, true)));
                             }
                         };
                     }

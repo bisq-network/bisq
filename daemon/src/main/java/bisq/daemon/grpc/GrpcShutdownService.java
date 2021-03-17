@@ -53,7 +53,7 @@ class GrpcShutdownService extends ShutdownServerGrpc.ShutdownServerImplBase {
             responseObserver.onCompleted();
             UserThread.runAfter(BisqHeadlessApp.getShutDownHandler(), 500, MILLISECONDS);
         } catch (Throwable cause) {
-            exceptionHandler.handleException(cause, responseObserver);
+            exceptionHandler.handleException(log, cause, responseObserver);
         }
     }
 }

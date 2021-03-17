@@ -30,6 +30,7 @@ import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.TxDetailsBsq;
 import bisq.desktop.main.overlays.windows.TxInputSelectionWindow;
 import bisq.desktop.main.overlays.windows.WalletPasswordWindow;
+import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
@@ -48,6 +49,7 @@ import bisq.core.btc.wallet.TxBroadcaster;
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.dao.state.model.blockchain.TxType;
 import bisq.core.locale.Res;
+import bisq.core.monetary.Volume;
 import bisq.core.user.DontShowAgainLookup;
 import bisq.core.user.Preferences;
 import bisq.core.util.FormattingUtils;
@@ -251,6 +253,11 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
         updateBtcValidator(availableNonBsqBalance);
 
         setSendBtcGroupVisibleState(availableNonBsqBalance.isPositive());
+    }
+
+    public void fillFromTradeData(Tuple2<Volume, String> tuple) {
+        amountInputTextField.setText(DisplayUtils.formatVolume(tuple.first));
+        receiversAddressInputTextField.setText(tuple.second);
     }
 
     private void updateBsqValidator(Coin availableConfirmedBalance) {

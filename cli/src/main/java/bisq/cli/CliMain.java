@@ -45,10 +45,7 @@ import static bisq.cli.CurrencyFormat.toSatoshis;
 import static bisq.cli.CurrencyFormat.toSecurityDepositAsPct;
 import static bisq.cli.Method.*;
 import static bisq.cli.TableFormat.*;
-import static bisq.cli.opts.OptLabel.OPT_HELP;
-import static bisq.cli.opts.OptLabel.OPT_HOST;
-import static bisq.cli.opts.OptLabel.OPT_PASSWORD;
-import static bisq.cli.opts.OptLabel.OPT_PORT;
+import static bisq.cli.opts.OptLabel.*;
 import static java.lang.String.format;
 import static java.lang.System.err;
 import static java.lang.System.exit;
@@ -230,11 +227,11 @@ public class CliMain {
                     }
                     var address = opts.getAddress();
                     var amount = opts.getAmount();
-                    verifyStringIsValidDecimal(amount);
+                    verifyStringIsValidDecimal(OPT_AMOUNT, amount);
 
                     var txFeeRate = opts.getFeeRate();
-                    if (txFeeRate.isEmpty())
-                        verifyStringIsValidLong(txFeeRate);
+                    if (!txFeeRate.isEmpty())
+                        verifyStringIsValidLong(OPT_TX_FEE_RATE, txFeeRate);
 
                     var txInfo = client.sendBsq(address, amount, txFeeRate);
                     out.printf("%s bsq sent to %s in tx %s%n",
@@ -251,11 +248,11 @@ public class CliMain {
                     }
                     var address = opts.getAddress();
                     var amount = opts.getAmount();
-                    verifyStringIsValidDecimal(amount);
+                    verifyStringIsValidDecimal(OPT_AMOUNT, amount);
 
                     var txFeeRate = opts.getFeeRate();
-                    if (txFeeRate.isEmpty())
-                        verifyStringIsValidLong(txFeeRate);
+                    if (!txFeeRate.isEmpty())
+                        verifyStringIsValidLong(OPT_TX_FEE_RATE, txFeeRate);
 
                     var memo = opts.getMemo();
 
@@ -605,7 +602,10 @@ public class CliMain {
         } catch (StatusRuntimeException ex) {
             // Remove the leading gRPC status code (e.g. "UNKNOWN: ") from the message
             String message = ex.getMessage().replaceFirst("^[A-Z_]+: ", "");
-            throw new RuntimeException(message, ex);
+            if (message.equals("io exception"))
+                throw new RuntimeException(message + ", server may not be running", ex);
+            else
+                throw new RuntimeException(message, ex);
         }
     }
 
@@ -616,19 +616,27 @@ public class CliMain {
         return Method.valueOf(methodName.toLowerCase());
     }
 
-    private static void verifyStringIsValidDecimal(String param) {
+    @SuppressWarnings("SameParameterValue")
+    private static void verifyStringIsValidDecimal(String optionLabel, String optionValue) {
         try {
-            Double.parseDouble(param);
+            Double.parseDouble(optionValue);
         } catch (NumberFormatException ex) {
-            throw new IllegalArgumentException(format("'%s' is not a number", param));
+            throw new IllegalArgumentException(format("--%s=%s, '%s' is not a number",
+                    optionLabel,
+                    optionValue,
+                    optionValue));
         }
     }
 
-    private static void verifyStringIsValidLong(String param) {
+    @SuppressWarnings("SameParameterValue")
+    private static void verifyStringIsValidLong(String optionLabel, String optionValue) {
         try {
-            Long.parseLong(param);
+            Long.parseLong(optionValue);
         } catch (NumberFormatException ex) {
-            throw new IllegalArgumentException(format("'%s' is not a number", param));
+            throw new IllegalArgumentException(format("--%s=%s, '%s' is not a number",
+                    optionLabel,
+                    optionValue,
+                    optionValue));
         }
     }
 

@@ -28,12 +28,10 @@ import static joptsimple.internal.Strings.EMPTY;
 public class WithdrawFundsOptionParser extends AbstractMethodOptionParser implements MethodOpts {
 
     final OptionSpec<String> tradeIdOpt = parser.accepts(OPT_TRADE_ID, "id of trade")
-            .withRequiredArg()
-            .defaultsTo(EMPTY);
+            .withRequiredArg();
 
     final OptionSpec<String> addressOpt = parser.accepts(OPT_ADDRESS, "destination btc address")
-            .withRequiredArg()
-            .defaultsTo(EMPTY);
+            .withRequiredArg();
 
     final OptionSpec<String> memoOpt = parser.accepts(OPT_MEMO, "optional tx memo")
             .withOptionalArg()
@@ -50,8 +48,11 @@ public class WithdrawFundsOptionParser extends AbstractMethodOptionParser implem
         if (options.has(helpOpt))
             return this;
 
-        if (!options.has(tradeIdOpt))
+        if (!options.has(tradeIdOpt) || options.valueOf(tradeIdOpt).isEmpty())
             throw new IllegalArgumentException("no trade id specified");
+
+        if (!options.has(addressOpt) || options.valueOf(addressOpt).isEmpty())
+            throw new IllegalArgumentException("no destination address specified");
 
         return this;
     }

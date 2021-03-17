@@ -184,6 +184,7 @@ public class AccountAgeWitnessServiceTest {
                 true,
                 buyerPubKeyRing,
                 now - 1,
+                now - 1,
                 contract,
                 null,
                 null,
@@ -196,7 +197,7 @@ public class AccountAgeWitnessServiceTest {
                 null,
                 true,
                 SupportType.ARBITRATION));
-        disputes.get(0).getIsClosedProperty().set(true);
+        disputes.get(0).setIsClosed();
         disputes.get(0).getDisputeResultProperty().set(new DisputeResult(
                 "trade1",
                 1,

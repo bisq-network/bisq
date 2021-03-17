@@ -105,13 +105,13 @@ abstract class BankForm extends GeneralBankForm {
             addCompactTopLabelTextFieldWithCopyIcon(gridPane, getIndexOfColumn(colIndex) == 0 ? ++gridRow : gridRow, getIndexOfColumn(colIndex++),
                     bankNameLabel + " / " +
                             bankIdLabel + ":",
-                    data.getBankName() + " / " + data.getBankId());
+                    data.getBankName() + " / " + data.getBankId(), true);
         }
         if (bankNameBranchIdCombined) {
             addCompactTopLabelTextFieldWithCopyIcon(gridPane, getIndexOfColumn(colIndex) == 0 ? ++gridRow : gridRow, getIndexOfColumn(colIndex++),
                     bankNameLabel + " / " +
                             branchIdLabel + ":",
-                    data.getBankName() + " / " + data.getBranchId());
+                    data.getBankName() + " / " + data.getBranchId(), true);
         }
 
         if (!bankNameBankIdCombined && !bankNameBranchIdCombined && BankUtil.isBankNameRequired(countryCode))

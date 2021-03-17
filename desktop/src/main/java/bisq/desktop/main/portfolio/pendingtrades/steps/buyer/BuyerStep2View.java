@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.portfolio.pendingtrades.steps.buyer;
 
+import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.BusyAnimation;
 import bisq.desktop.components.TextFieldWithCopyIcon;
 import bisq.desktop.components.TitledGroupBg;
@@ -50,6 +51,10 @@ import bisq.desktop.components.paymentmethods.USPostalMoneyOrderForm;
 import bisq.desktop.components.paymentmethods.UpholdForm;
 import bisq.desktop.components.paymentmethods.WeChatPayForm;
 import bisq.desktop.components.paymentmethods.WesternUnionForm;
+import bisq.desktop.main.MainView;
+import bisq.desktop.main.dao.DaoView;
+import bisq.desktop.main.dao.wallet.BsqWalletView;
+import bisq.desktop.main.dao.wallet.send.BsqSendView;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.SetXmrTxKeyWindow;
 import bisq.desktop.main.portfolio.pendingtrades.PendingTradesViewModel;
@@ -59,6 +64,7 @@ import bisq.desktop.util.Layout;
 import bisq.desktop.util.Transitions;
 
 import bisq.core.locale.Res;
+import bisq.core.monetary.Volume;
 import bisq.core.network.MessageState;
 import bisq.core.offer.Offer;
 import bisq.core.payment.PaymentAccount;
@@ -81,6 +87,7 @@ import bisq.core.user.DontShowAgainLookup;
 import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
+import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple4;
 
 import javafx.scene.control.Button;
@@ -108,6 +115,7 @@ public class BuyerStep2View extends TradeStepView {
     private BusyAnimation busyAnimation;
     private Subscription tradeStatePropertySubscription;
     private Timer timeoutTimer;
+    private AutoTooltipButton fillBsqButton;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, Initialisation
@@ -343,11 +351,23 @@ public class BuyerStep2View extends TradeStepView {
         Tuple4<Button, BusyAnimation, Label, HBox> tuple3 = addButtonBusyAnimationLabel(gridPane, ++gridRow, 0,
                 Res.get("portfolio.pending.step2_buyer.paymentStarted"), 10);
 
-        GridPane.setColumnSpan(tuple3.fourth, 2);
+        HBox hBox = tuple3.fourth;
+        GridPane.setColumnSpan(hBox, 2);
         confirmButton = tuple3.first;
         confirmButton.setOnAction(e -> onPaymentStarted());
         busyAnimation = tuple3.second;
         statusLabel = tuple3.third;
+
+        if (trade.getOffer().getCurrencyCode().equals("BSQ")) {
+            fillBsqButton = new AutoTooltipButton(Res.get("portfolio.pending.step2_buyer.fillInBsqWallet"));
+            hBox.getChildren().add(1, fillBsqButton);
+            fillBsqButton.setOnAction(e -> {
+                AssetsAccountPayload assetsAccountPayload = (AssetsAccountPayload) paymentAccountPayload;
+                Tuple2<Volume, String> data = new Tuple2<>(trade.getTradeVolume(), assetsAccountPayload.getAddress());
+                model.getNavigation().navigateToWithData(data, MainView.class, DaoView.class, BsqWalletView.class,
+                        BsqSendView.class);
+            });
+        }
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

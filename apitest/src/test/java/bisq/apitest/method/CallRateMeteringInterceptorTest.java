@@ -19,8 +19,6 @@ package bisq.apitest.method;
 
 import io.grpc.StatusRuntimeException;
 
-import java.io.File;
-
 import lombok.extern.slf4j.Slf4j;
 
 import org.junit.jupiter.api.AfterAll;
@@ -34,17 +32,8 @@ import org.junit.jupiter.api.TestMethodOrder;
 
 import static bisq.apitest.Scaffold.BitcoinCoreApp.bitcoind;
 import static bisq.apitest.config.BisqAppConfig.alicedaemon;
-import static java.util.concurrent.TimeUnit.DAYS;
-import static java.util.concurrent.TimeUnit.HOURS;
-import static java.util.concurrent.TimeUnit.MINUTES;
-import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-
-
-
-import bisq.daemon.grpc.GrpcVersionService;
-import bisq.daemon.grpc.interceptor.GrpcServiceRateMeteringConfig;
 
 @Disabled
 @Slf4j
@@ -55,9 +44,7 @@ public class CallRateMeteringInterceptorTest extends MethodTest {
 
     @BeforeAll
     public static void setUp() {
-        File callRateMeteringConfigFile = buildInterceptorConfigFile();
-        startSupportingApps(callRateMeteringConfigFile,
-                false,
+        startSupportingApps(false,
                 false,
                 bitcoind, alicedaemon);
     }
@@ -99,31 +86,5 @@ public class CallRateMeteringInterceptorTest extends MethodTest {
     @AfterAll
     public static void tearDown() {
         tearDownScaffold();
-    }
-
-    public static File buildInterceptorConfigFile() {
-        GrpcServiceRateMeteringConfig.Builder builder = new GrpcServiceRateMeteringConfig.Builder();
-        builder.addCallRateMeter(GrpcVersionService.class.getSimpleName(),
-                "getVersion",
-                1,
-                SECONDS);
-        builder.addCallRateMeter(GrpcVersionService.class.getSimpleName(),
-                "shouldNotBreakAnything",
-                1000,
-                DAYS);
-        // Only GrpcVersionService is @VisibleForTesting, so we hardcode the class names.
-        builder.addCallRateMeter("GrpcOffersService",
-                "createOffer",
-                5,
-                MINUTES);
-        builder.addCallRateMeter("GrpcOffersService",
-                "takeOffer",
-                10,
-                DAYS);
-        builder.addCallRateMeter("GrpcTradesService",
-                "withdrawFunds",
-                3,
-                HOURS);
-        return builder.build();
     }
 }

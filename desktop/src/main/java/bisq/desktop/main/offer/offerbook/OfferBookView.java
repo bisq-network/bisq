@@ -1117,7 +1117,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                 Res.get("offerbook.timeSinceSigning"),
                 Res.get("offerbook.timeSinceSigning.help",
                         SignedWitnessService.SIGNER_AGE_DAYS,
-                        formatter.formatCoinWithCode(OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT))) {
+                        formatter.formatCoinWithCode(OfferRestrictions.TOLERATED_SMALL_AMOUNT_PEER))) {
             {
                 setMinWidth(60);
                 setSortable(true);

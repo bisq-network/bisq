@@ -54,6 +54,7 @@ import static bisq.common.util.MathUtils.scaleUpByPowerOf10;
 import static bisq.core.locale.CurrencyUtil.isCryptoCurrency;
 import static bisq.core.offer.OfferPayload.Direction;
 import static bisq.core.offer.OfferPayload.Direction.BUY;
+import static bisq.core.payment.PaymentAccountUtil.isPaymentAccountValidForOffer;
 import static java.lang.String.format;
 import static java.util.Comparator.comparing;
 
@@ -64,6 +65,7 @@ class CoreOffersService {
     private final Supplier<Comparator<Offer>> priceComparator = () -> comparing(Offer::getPrice);
     private final Supplier<Comparator<Offer>> reversePriceComparator = () -> comparing(Offer::getPrice).reversed();
 
+    private final CoreContext coreContext;
     private final KeyRing keyRing;
     // Dependencies on core api services in this package must be kept to an absolute
     // minimum, but some trading functions require an unlocked wallet's key, so an
@@ -75,7 +77,6 @@ class CoreOffersService {
     private final OpenOfferManager openOfferManager;
     private final OfferUtil offerUtil;
     private final User user;
-    private final boolean isApiUser;
 
     @Inject
     public CoreOffersService(CoreContext coreContext,
@@ -87,6 +88,7 @@ class CoreOffersService {
                              OpenOfferManager openOfferManager,
                              OfferUtil offerUtil,
                              User user) {
+        this.coreContext = coreContext;
         this.keyRing = keyRing;
         this.coreWalletsService = coreWalletsService;
         this.createOfferService = createOfferService;
@@ -95,13 +97,13 @@ class CoreOffersService {
         this.openOfferManager = openOfferManager;
         this.offerUtil = offerUtil;
         this.user = user;
-        this.isApiUser = coreContext.isApiUser();
     }
 
     Offer getOffer(String id) {
         return offerBookService.getOffers().stream()
                 .filter(o -> o.getId().equals(id))
-                .filter(o -> offerFilter.canTakeOffer(o, isApiUser).isValid())
+                .filter(o -> !o.isMyOffer(keyRing))
+                .filter(o -> offerFilter.canTakeOffer(o, coreContext.isApiUser()).isValid())
                 .findAny().orElseThrow(() ->
                         new IllegalStateException(format("offer with id '%s' not found", id)));
     }
@@ -116,8 +118,9 @@ class CoreOffersService {
 
     List<Offer> getOffers(String direction, String currencyCode) {
         return offerBookService.getOffers().stream()
+                .filter(o -> !o.isMyOffer(keyRing))
                 .filter(o -> offerMatchesDirectionAndCurrency(o, direction, currencyCode))
-                .filter(o -> offerFilter.canTakeOffer(o, isApiUser).isValid())
+                .filter(o -> offerFilter.canTakeOffer(o, coreContext.isApiUser()).isValid())
                 .sorted(priceComparator(direction))
                 .collect(Collectors.toList());
     }
@@ -174,6 +177,8 @@ class CoreOffersService {
                 buyerSecurityDeposit,
                 paymentAccount);
 
+        verifyPaymentAccountIsValidForNewOffer(offer, paymentAccount);
+
         // We don't support atm funding from external wallet to keep it simple.
         boolean useSavingsWallet = true;
         //noinspection ConstantConditions
@@ -210,13 +215,22 @@ class CoreOffersService {
     }
 
     void cancelOffer(String id) {
-        Offer offer = getOffer(id);
+        Offer offer = getMyOffer(id);
         openOfferManager.removeOffer(offer,
                 () -> {
                 },
                 errorMessage -> {
                     throw new IllegalStateException(errorMessage);
                 });
+    }
+
+    private void verifyPaymentAccountIsValidForNewOffer(Offer offer, PaymentAccount paymentAccount) {
+        if (!isPaymentAccountValidForOffer(offer, paymentAccount)) {
+            String error = format("cannot create %s offer with payment account %s",
+                    offer.getOfferPayload().getCounterCurrencyCode(),
+                    paymentAccount.getId());
+            throw new IllegalStateException(error);
+        }
     }
 
     private void placeOffer(Offer offer,

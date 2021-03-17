@@ -392,6 +392,21 @@ public class FormBuilder {
         return new Tuple2<>(label1, label2);
     }
 
+    public static Tuple2<Label, TextFieldWithCopyIcon> addConfirmationLabelLabelWithCopyIcon(GridPane gridPane,
+                                                                 int rowIndex,
+                                                                 String title1,
+                                                                 String title2) {
+        Label label1 = addLabel(gridPane, rowIndex, title1);
+        label1.getStyleClass().add("confirmation-label");
+        TextFieldWithCopyIcon label2 = new TextFieldWithCopyIcon("confirmation-value");
+        label2.setText(title2);
+        GridPane.setRowIndex(label2, rowIndex);
+        gridPane.getChildren().add(label2);
+        GridPane.setColumnIndex(label2, 1);
+        GridPane.setHalignment(label1, HPos.LEFT);
+        return new Tuple2<>(label1, label2);
+    }
+
     public static Tuple2<Label, TextArea> addConfirmationLabelTextArea(GridPane gridPane,
                                                                        int rowIndex,
                                                                        String title1,
@@ -1519,6 +1534,15 @@ public class FormBuilder {
         return addTopLabelTextFieldWithCopyIcon(gridPane, rowIndex, colIndex, title, value, -Layout.FLOATING_LABEL_DISTANCE);
     }
 
+    public static Tuple2<Label, TextFieldWithCopyIcon> addCompactTopLabelTextFieldWithCopyIcon(GridPane gridPane,
+                                                                                               int rowIndex,
+                                                                                               int colIndex,
+                                                                                               String title,
+                                                                                               String value,
+                                                                                               boolean onlyCopyTextAfterDelimiter) {
+        return addTopLabelTextFieldWithCopyIcon(gridPane, rowIndex, colIndex, title, value, -Layout.FLOATING_LABEL_DISTANCE, onlyCopyTextAfterDelimiter);
+    }
+
     public static Tuple2<Label, TextFieldWithCopyIcon> addTopLabelTextFieldWithCopyIcon(GridPane gridPane,
                                                                                         int rowIndex,
                                                                                         String title,
@@ -1544,6 +1568,25 @@ public class FormBuilder {
         textFieldWithCopyIcon.setText(value);
 
         final Tuple2<Label, VBox> topLabelWithVBox = addTopLabelWithVBox(gridPane, rowIndex, title, textFieldWithCopyIcon, top);
+
+        return new Tuple2<>(topLabelWithVBox.first, textFieldWithCopyIcon);
+    }
+
+    public static Tuple2<Label, TextFieldWithCopyIcon> addTopLabelTextFieldWithCopyIcon(GridPane gridPane,
+                                                                                        int rowIndex,
+                                                                                        int colIndex,
+                                                                                        String title,
+                                                                                        String value,
+                                                                                        double top,
+                                                                                        boolean onlyCopyTextAfterDelimiter) {
+
+        TextFieldWithCopyIcon textFieldWithCopyIcon = new TextFieldWithCopyIcon();
+        textFieldWithCopyIcon.setText(value);
+        textFieldWithCopyIcon.setCopyTextAfterDelimiter(true);
+
+        final Tuple2<Label, VBox> topLabelWithVBox = addTopLabelWithVBox(gridPane, rowIndex, title, textFieldWithCopyIcon, top);
+        topLabelWithVBox.second.setAlignment(Pos.TOP_LEFT);
+        GridPane.setColumnIndex(topLabelWithVBox.second, colIndex);
 
         return new Tuple2<>(topLabelWithVBox.first, textFieldWithCopyIcon);
     }

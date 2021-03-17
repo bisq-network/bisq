@@ -346,16 +346,16 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                 if (dataModel.wouldCreateDustForMaker())
                     amountValidationResult.set(new InputValidator.ValidationResult(false,
                             Res.get("takeOffer.validation.amountLargerThanOfferAmountMinusFee")));
-            } else if (btcValidator.getMaxTradeLimit() != null && btcValidator.getMaxTradeLimit().value == OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT.value) {
+            } else if (btcValidator.getMaxTradeLimit() != null && btcValidator.getMaxTradeLimit().value == OfferRestrictions.TOLERATED_SMALL_AMOUNT_PEER.value) {
                 if (dataModel.getDirection() == OfferPayload.Direction.BUY) {
                     new Popup().information(Res.get("popup.warning.tradeLimitDueAccountAgeRestriction.seller",
-                            btcFormatter.formatCoinWithCode(OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT),
+                            btcFormatter.formatCoinWithCode(OfferRestrictions.TOLERATED_SMALL_AMOUNT_PEER),
                             Res.get("offerbook.warning.newVersionAnnouncement")))
                             .width(900)
                             .show();
                 } else {
                     new Popup().information(Res.get("popup.warning.tradeLimitDueAccountAgeRestriction.buyer",
-                            btcFormatter.formatCoinWithCode(OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT),
+                            btcFormatter.formatCoinWithCode(OfferRestrictions.TOLERATED_SMALL_AMOUNT_PEER),
                             Res.get("offerbook.warning.newVersionAnnouncement")))
                             .width(900)
                             .show();

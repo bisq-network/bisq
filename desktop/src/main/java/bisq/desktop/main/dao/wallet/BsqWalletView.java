@@ -34,6 +34,7 @@ import bisq.desktop.main.dao.wallet.tx.BsqTxView;
 import bisq.core.locale.Res;
 
 import bisq.common.app.DevEnv;
+import bisq.common.util.Tuple2;
 
 import javax.inject.Inject;
 
@@ -45,6 +46,8 @@ import javafx.scene.layout.VBox;
 
 import java.util.Arrays;
 import java.util.List;
+
+import javax.annotation.Nullable;
 
 @FxmlView
 public class BsqWalletView extends ActivatableView<AnchorPane, Void> {
@@ -71,12 +74,24 @@ public class BsqWalletView extends ActivatableView<AnchorPane, Void> {
 
     @Override
     public void initialize() {
-        listener = viewPath -> {
-            if (viewPath.size() != 4 || viewPath.indexOf(BsqWalletView.class) != 2)
-                return;
+        listener = new Navigation.Listener() {
+            @Override
+            public void onNavigationRequested(ViewPath viewPath) {
+                if (viewPath.size() != 4 || viewPath.indexOf(BsqWalletView.class) != 2)
+                    return;
 
-            selectedViewClass = viewPath.tip();
-            loadView(selectedViewClass);
+                selectedViewClass = viewPath.tip();
+                loadView(selectedViewClass);
+            }
+
+            @Override
+            public void onNavigationRequested(ViewPath viewPath, @Nullable Object data) {
+                if (viewPath.size() != 4 || viewPath.indexOf(BsqWalletView.class) != 2)
+                    return;
+
+                selectedViewClass = viewPath.tip();
+                loadView(selectedViewClass, data);
+            }
         };
 
         toggleGroup = new ToggleGroup();
@@ -126,12 +141,23 @@ public class BsqWalletView extends ActivatableView<AnchorPane, Void> {
     }
 
     private void loadView(Class<? extends View> viewClass) {
+        loadView(viewClass, null);
+    }
+
+    private void loadView(Class<? extends View> viewClass, @Nullable Object data) {
         View view = viewLoader.load(viewClass);
         content.getChildren().setAll(view.getRoot());
 
-        if (view instanceof BsqSendView) toggleGroup.selectToggle(send);
-        else if (view instanceof BsqReceiveView) toggleGroup.selectToggle(receive);
-        else if (view instanceof BsqTxView) toggleGroup.selectToggle(transactions);
+        if (view instanceof BsqSendView) {
+            toggleGroup.selectToggle(send);
+            if (data instanceof Tuple2) {
+                ((BsqSendView) view).fillFromTradeData((Tuple2) data);
+            }
+        } else if (view instanceof BsqReceiveView) {
+            toggleGroup.selectToggle(receive);
+        } else if (view instanceof BsqTxView) {
+            toggleGroup.selectToggle(transactions);
+        }
     }
 
     public Class<? extends View> getSelectedViewClass() {

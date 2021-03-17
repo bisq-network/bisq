@@ -805,6 +805,13 @@ message SignedWitness {
 
 
 message Dispute {
+    enum State {
+        NEEDS_UPGRADE = 0;
+        NEW = 1;
+        OPEN = 2;
+        REOPENED = 3;
+        CLOSED = 4;
+    }
     string trade_id = 1;
     string id = 2;
     int32 trader_id = 3;
@@ -832,6 +839,9 @@ message Dispute {
     string mediators_dispute_result = 25;
     string delayed_payout_tx_id = 26;
     string donation_address_of_delayed_payout_tx = 27;
+    State state = 28;
+    int64 trade_period_end = 29;
+    map<string, string> extra_data = 30;
 }
 
 message Attachment {

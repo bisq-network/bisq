@@ -36,6 +36,7 @@ import bisq.core.support.dispute.refund.RefundManager;
 import bisq.core.support.dispute.refund.RefundSession;
 import bisq.core.support.dispute.refund.refundagent.RefundAgentManager;
 import bisq.core.trade.TradeManager;
+import bisq.core.user.Preferences;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.CoinFormatter;
 
@@ -53,6 +54,7 @@ public class RefundAgentView extends DisputeAgentView {
                            KeyRing keyRing,
                            TradeManager tradeManager,
                            @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter,
+                           Preferences preferences,
                            DisputeSummaryWindow disputeSummaryWindow,
                            PrivateNotificationManager privateNotificationManager,
                            ContractWindow contractWindow,
@@ -66,6 +68,7 @@ public class RefundAgentView extends DisputeAgentView {
                 keyRing,
                 tradeManager,
                 formatter,
+                preferences,
                 disputeSummaryWindow,
                 privateNotificationManager,
                 contractWindow,
@@ -92,7 +95,8 @@ public class RefundAgentView extends DisputeAgentView {
         long protocolVersion = dispute.getContract().getOfferPayload().getProtocolVersion();
         // Refund agent was introduced with protocolVersion version 2. We do not support old trade protocol cases.
         if (protocolVersion >= 2) {
-            disputeSummaryWindow.onFinalizeDispute(() -> chatView.removeInputBox()).show(dispute);
+            chatPopup.closeChat();
+            disputeSummaryWindow.show(dispute);
         } else {
             new Popup().warning(Res.get("support.wrongVersion", protocolVersion)).show();
         }

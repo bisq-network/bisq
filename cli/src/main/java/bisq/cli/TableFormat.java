@@ -163,7 +163,7 @@ public class TableFormat {
                 + padEnd(COL_HEADER_PAYMENT_METHOD, paymentMethodColWidth, ' ') + COL_HEADER_DELIMITER
                 + COL_HEADER_UUID + COL_HEADER_DELIMITER + "\n";
         String colDataFormat = "%-" + nameColWidth + "s"        // left justify
-                + "  %" + COL_HEADER_CURRENCY.length() + "s"    // right justify
+                + "  %-" + COL_HEADER_CURRENCY.length() + "s"    // left justify
                 + "  %-" + paymentMethodColWidth + "s"          // left justify
                 + "  %-" + COL_HEADER_UUID.length() + "s";      // left justify
         return headerLine

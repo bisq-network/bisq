@@ -30,6 +30,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 
 import static bisq.core.btc.wallet.Restrictions.getDefaultBuyerSecurityDepositAsPercent;
+import static java.lang.String.format;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -54,5 +55,41 @@ public class ValidateCreateOfferTest extends AbstractOfferTest {
                         "bsq"));
         assertEquals("UNKNOWN: An error occurred at task: ValidateOffer",
                 exception.getMessage());
+    }
+
+    @Test
+    @Order(2)
+    public void testNoMatchingEURPaymentAccountShouldThrowException() {
+        PaymentAccount chfAccount = createDummyF2FAccount(aliceClient, "ch");
+        @SuppressWarnings("ResultOfMethodCallIgnored")
+        Throwable exception = assertThrows(StatusRuntimeException.class, () ->
+                aliceClient.createFixedPricedOffer("buy",
+                        "eur",
+                        10000000L,
+                        10000000L,
+                        "40000.0000",
+                        getDefaultBuyerSecurityDepositAsPercent(),
+                        chfAccount.getId(),
+                        "btc"));
+        String expectedError = format("UNKNOWN: cannot create EUR offer with payment account %s", chfAccount.getId());
+        assertEquals(expectedError, exception.getMessage());
+    }
+
+    @Test
+    @Order(2)
+    public void testNoMatchingCADPaymentAccountShouldThrowException() {
+        PaymentAccount audAccount = createDummyF2FAccount(aliceClient, "au");
+        @SuppressWarnings("ResultOfMethodCallIgnored")
+        Throwable exception = assertThrows(StatusRuntimeException.class, () ->
+                aliceClient.createFixedPricedOffer("buy",
+                        "cad",
+                        10000000L,
+                        10000000L,
+                        "63000.0000",
+                        getDefaultBuyerSecurityDepositAsPercent(),
+                        audAccount.getId(),
+                        "btc"));
+        String expectedError = format("UNKNOWN: cannot create CAD offer with payment account %s", audAccount.getId());
+        assertEquals(expectedError, exception.getMessage());
     }
 }

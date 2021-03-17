@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.portfolio.pendingtrades;
 
+import bisq.desktop.Navigation;
 import bisq.desktop.common.model.ActivatableWithDataModel;
 import bisq.desktop.common.model.ViewModel;
 import bisq.desktop.main.overlays.popups.Popup;
@@ -109,6 +110,8 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     private final TradeUtil tradeUtil;
     public final ClockWatcher clockWatcher;
     @Getter
+    private final Navigation navigation;
+    @Getter
     private final User user;
 
     private final ObjectProperty<BuyerState> buyerState = new SimpleObjectProperty<>();
@@ -137,6 +140,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
                                   TradeUtil tradeUtil,
                                   AccountAgeWitnessService accountAgeWitnessService,
                                   ClockWatcher clockWatcher,
+                                  Navigation navigation,
                                   User user) {
         super(dataModel);
 
@@ -150,6 +154,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         this.tradeUtil = tradeUtil;
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.clockWatcher = clockWatcher;
+        this.navigation = navigation;
         this.user = user;
     }
 

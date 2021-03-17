@@ -134,7 +134,7 @@ public class OfferFilter {
 
     public boolean isAnyPaymentAccountValidForOffer(Offer offer) {
         return user.getPaymentAccounts() != null &&
-                PaymentAccountUtil.isAnyTakerPaymentAccountValidForOffer(offer, user.getPaymentAccounts());
+                PaymentAccountUtil.isAnyPaymentAccountValidForOffer(offer, user.getPaymentAccounts());
     }
 
     public boolean hasSameProtocolVersion(Offer offer) {

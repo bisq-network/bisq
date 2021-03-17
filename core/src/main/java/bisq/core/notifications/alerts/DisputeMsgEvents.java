@@ -123,7 +123,7 @@ public class DisputeMsgEvents {
         // If last message is not a result message we re-open as we might have received a new message from the
         // trader/mediator/arbitrator who has reopened the case
         if (dispute.isClosed() && !chatMessages.isEmpty() && !chatMessages.get(chatMessages.size() - 1).isResultMessage(dispute)) {
-            dispute.setIsClosed(false);
+            dispute.reOpen();
             if (dispute.getSupportType() == SupportType.MEDIATION) {
                 mediationManager.requestPersistence();
             } else if (dispute.getSupportType() == SupportType.REFUND) {

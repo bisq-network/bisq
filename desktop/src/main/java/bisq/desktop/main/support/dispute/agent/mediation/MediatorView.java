@@ -34,6 +34,7 @@ import bisq.core.support.dispute.mediation.MediationSession;
 import bisq.core.support.dispute.mediation.mediator.MediatorManager;
 import bisq.core.support.dispute.refund.refundagent.RefundAgentManager;
 import bisq.core.trade.TradeManager;
+import bisq.core.user.Preferences;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.CoinFormatter;
 
@@ -51,6 +52,7 @@ public class MediatorView extends DisputeAgentView {
                         KeyRing keyRing,
                         TradeManager tradeManager,
                         @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter,
+                        Preferences preferences,
                         DisputeSummaryWindow disputeSummaryWindow,
                         PrivateNotificationManager privateNotificationManager,
                         ContractWindow contractWindow,
@@ -64,6 +66,7 @@ public class MediatorView extends DisputeAgentView {
                 keyRing,
                 tradeManager,
                 formatter,
+                preferences,
                 disputeSummaryWindow,
                 privateNotificationManager,
                 contractWindow,
@@ -112,6 +115,7 @@ public class MediatorView extends DisputeAgentView {
 
     @Override
     protected void onCloseDispute(Dispute dispute) {
-        disputeSummaryWindow.onFinalizeDispute(() -> chatView.removeInputBox()).show(dispute);
+        chatPopup.closeChat();
+        disputeSummaryWindow.show(dispute);
     }
 }

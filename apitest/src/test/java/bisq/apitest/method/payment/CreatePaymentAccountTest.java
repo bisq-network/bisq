@@ -17,6 +17,7 @@
 
 package bisq.apitest.method.payment;
 
+import bisq.core.locale.TradeCurrency;
 import bisq.core.payment.AdvancedCashAccount;
 import bisq.core.payment.AliPayAccount;
 import bisq.core.payment.AustraliaPayid;
@@ -31,6 +32,7 @@ import bisq.core.payment.JapanBankAccount;
 import bisq.core.payment.MoneyBeamAccount;
 import bisq.core.payment.MoneyGramAccount;
 import bisq.core.payment.NationalBankAccount;
+import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.PerfectMoneyAccount;
 import bisq.core.payment.PopmoneyAccount;
 import bisq.core.payment.PromptPayAccount;
@@ -50,8 +52,12 @@ import bisq.core.payment.payload.CashDepositAccountPayload;
 import bisq.core.payment.payload.SameBankAccountPayload;
 import bisq.core.payment.payload.SpecificBanksAccountPayload;
 
+import io.grpc.StatusRuntimeException;
+
 import java.io.File;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 import lombok.extern.slf4j.Slf4j;
@@ -65,15 +71,16 @@ import org.junit.jupiter.api.TestMethodOrder;
 
 import static bisq.apitest.Scaffold.BitcoinCoreApp.bitcoind;
 import static bisq.apitest.config.BisqAppConfig.alicedaemon;
-import static bisq.core.locale.CurrencyUtil.getAllAdvancedCashCurrencies;
-import static bisq.core.locale.CurrencyUtil.getAllMoneyGramCurrencies;
-import static bisq.core.locale.CurrencyUtil.getAllRevolutCurrencies;
-import static bisq.core.locale.CurrencyUtil.getAllUpholdCurrencies;
+import static bisq.cli.TableFormat.formatPaymentAcctTbl;
+import static bisq.core.locale.CurrencyUtil.*;
 import static bisq.core.payment.payload.PaymentMethod.*;
+import static java.util.Collections.singletonList;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 
+@SuppressWarnings({"OptionalGetWithoutIsPresent", "ConstantConditions"})
 @Disabled
 @Slf4j
 @TestMethodOrder(OrderAnnotation.class)
@@ -105,7 +112,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         verifyCommonFormEntries(paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_ACCOUNT_NR), paymentAccount.getAccountNr());
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_SALT), paymentAccount.getSaltAsHex());
-        log.debug("Deserialized {}: {}", paymentAccount.getClass().getSimpleName(), paymentAccount);
+        print(paymentAccount);
     }
 
     @Test
@@ -124,7 +131,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         verifyAccountSingleTradeCurrency("CNY", paymentAccount);
         verifyCommonFormEntries(paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_ACCOUNT_NR), paymentAccount.getAccountNr());
-        log.debug("Deserialized {}: {}", paymentAccount.getClass().getSimpleName(), paymentAccount);
+        print(paymentAccount);
     }
 
     @Test
@@ -146,7 +153,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_PAY_ID), paymentAccount.getPayid());
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_BANK_ACCOUNT_NAME), paymentAccount.getBankAccountName());
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_SALT), paymentAccount.getSaltAsHex());
-        log.debug("Deserialized {}: {}", paymentAccount.getClass().getSimpleName(), paymentAccount);
+        print(paymentAccount);
     }
 
     @Test
@@ -198,7 +205,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_HOLDER_TAX_ID), payload.getHolderTaxId());
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_NATIONAL_ACCOUNT_ID), payload.getNationalAccountId());
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_REQUIREMENTS), payload.getRequirements());
-        log.debug("Deserialized {}: {}", paymentAccount.getClass().getSimpleName(), paymentAccount);
+        print(paymentAccount);
     }
 
     @Test
@@ -243,7 +250,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_HOLDER_TAX_ID), payload.getHolderTaxId());
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_NATIONAL_ACCOUNT_ID), payload.getNationalAccountId());
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_SALT), paymentAccount.getSaltAsHex());
-        log.debug("Deserialized {}: {}", paymentAccount.getClass().getSimpleName(), paymentAccount);
+        print(paymentAccount);
     }
 
     @Test
@@ -265,7 +272,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         verifyCommonFormEntries(paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_EMAIL), paymentAccount.getEmail());
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_HOLDER_NAME), paymentAccount.getHolderName());
-        log.debug("Deserialized {}: {}", paymentAccount.getClass().getSimpleName(), paymentAccount);
+        print(paymentAccount);
     }
 
     @Test
@@ -288,7 +295,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_EMAIL_OR_MOBILE_NR), paymentAccount.getEmailOrMobileNr());
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_HOLDER_NAME), paymentAccount.getHolderName());
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_SALT), paymentAccount.getSaltAsHex());
-        log.debug("Deserialized {}: {}", paymentAccount.getClass().getSimpleName(), paymentAccount);
+        print(paymentAccount);
     }
 
     @Test
@@ -317,7 +324,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_CITY), paymentAccount.getCity());
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_CONTACT), paymentAccount.getContact());
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_EXTRA_INFO), paymentAccount.getExtraInfo());
-        log.debug("Deserialized {}: {}", paymentAccount.getClass().getSimpleName(), paymentAccount);
+        print(paymentAccount);
     }
 
     @Test
@@ -340,7 +347,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_ACCOUNT_NR), paymentAccount.getAccountNr());
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_SORT_CODE), paymentAccount.getSortCode());
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_SALT), paymentAccount.getSaltAsHex());
-        log.debug("Deserialized {}: {}", paymentAccount.getClass().getSimpleName(), paymentAccount);
+        print(paymentAccount);
     }
 
     @Test
@@ -359,7 +366,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         verifyAccountSingleTradeCurrency("EUR", paymentAccount);
         verifyCommonFormEntries(paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_MOBILE_NR), paymentAccount.getMobileNr());
-        log.debug("Deserialized {}: {}", paymentAccount.getClass().getSimpleName(), paymentAccount);
+        print(paymentAccount);
     }
 
     @Test
@@ -388,7 +395,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_QUESTION), paymentAccount.getQuestion());
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_ANSWER), paymentAccount.getAnswer());
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_SALT), paymentAccount.getSaltAsHex());
-        log.debug("Deserialized {}: {}", paymentAccount.getClass().getSimpleName(), paymentAccount);
+        print(paymentAccount);
     }
 
     @Test
@@ -425,7 +432,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_BANK_ACCOUNT_NAME), paymentAccount.getBankAccountName());
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_BANK_ACCOUNT_TYPE), paymentAccount.getBankAccountType());
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_BANK_ACCOUNT_NUMBER), paymentAccount.getBankAccountNumber());
-        log.debug("Deserialized {}: {}", paymentAccount.getClass().getSimpleName(), paymentAccount);
+        print(paymentAccount);
     }
 
     @Test
@@ -445,7 +452,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         verifyCommonFormEntries(paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_ACCOUNT_ID), paymentAccount.getAccountId());
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_SALT), paymentAccount.getSaltAsHex());
-        log.debug("Deserialized {}: {}", paymentAccount.getClass().getSimpleName(), paymentAccount);
+        print(paymentAccount);
     }
 
     @Test
@@ -474,7 +481,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_COUNTRY),
                 Objects.requireNonNull(paymentAccount.getCountry()).code);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_STATE), paymentAccount.getState());
-        log.debug("Deserialized {}: {}", paymentAccount.getClass().getSimpleName(), paymentAccount);
+        print(paymentAccount);
     }
 
     @Test
@@ -494,7 +501,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         verifyCommonFormEntries(paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_ACCOUNT_NR), paymentAccount.getAccountNr());
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_SALT), paymentAccount.getSaltAsHex());
-        log.debug("Deserialized {}: {}", paymentAccount.getClass().getSimpleName(), paymentAccount);
+        print(paymentAccount);
     }
 
     @Test
@@ -516,7 +523,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         verifyCommonFormEntries(paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_ACCOUNT_ID), paymentAccount.getAccountId());
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_HOLDER_NAME), paymentAccount.getHolderName());
-        log.debug("Deserialized {}: {}", paymentAccount.getClass().getSimpleName(), paymentAccount);
+        print(paymentAccount);
     }
 
     @Test
@@ -536,7 +543,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         verifyCommonFormEntries(paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_PROMPT_PAY_ID), paymentAccount.getPromptPayId());
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_SALT), paymentAccount.getSaltAsHex());
-        log.debug("Deserialized {}: {}", paymentAccount.getClass().getSimpleName(), paymentAccount);
+        print(paymentAccount);
     }
 
     @Test
@@ -555,7 +562,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         verifyAccountTradeCurrencies(getAllRevolutCurrencies(), paymentAccount);
         verifyCommonFormEntries(paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_USERNAME), paymentAccount.getUserName());
-        log.debug("Deserialized {}: {}", paymentAccount.getClass().getSimpleName(), paymentAccount);
+        print(paymentAccount);
     }
 
     @Test
@@ -600,7 +607,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_HOLDER_TAX_ID), payload.getHolderTaxId());
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_NATIONAL_ACCOUNT_ID), payload.getNationalAccountId());
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_SALT), paymentAccount.getSaltAsHex());
-        log.debug("Deserialized {}: {}", paymentAccount.getClass().getSimpleName(), paymentAccount);
+        print(paymentAccount);
     }
 
     @Test
@@ -631,7 +638,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_BIC), paymentAccount.getBic());
         // bankId == bic
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_BIC), paymentAccount.getBankId());
-        log.debug("Deserialized {}: {}", paymentAccount.getClass().getSimpleName(), paymentAccount);
+        print(paymentAccount);
     }
 
     @Test
@@ -663,7 +670,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         // bankId == bic
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_BIC), paymentAccount.getBankId());
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_SALT), paymentAccount.getSaltAsHex());
-        log.debug("Deserialized {}: {}", paymentAccount.getClass().getSimpleName(), paymentAccount);
+        print(paymentAccount);
     }
 
     @Test
@@ -710,7 +717,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_HOLDER_NAME), payload.getHolderName());
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_HOLDER_TAX_ID), payload.getHolderTaxId());
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_NATIONAL_ACCOUNT_ID), payload.getNationalAccountId());
-        log.debug("Deserialized {}: {}", paymentAccount.getClass().getSimpleName(), paymentAccount);
+        print(paymentAccount);
     }
 
     @Test
@@ -733,29 +740,104 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_MOBILE_NR), paymentAccount.getMobileNr());
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_HOLDER_NAME), paymentAccount.getHolderName());
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_SALT), paymentAccount.getSaltAsHex());
-        log.debug("Deserialized {}: {}", paymentAccount.getClass().getSimpleName(), paymentAccount);
+        print(paymentAccount);
     }
 
     @Test
-    public void testCreateTransferwiseAccount(TestInfo testInfo) {
+    public void testCreateTransferwiseAccountWith1TradeCurrency(TestInfo testInfo) {
         File emptyForm = getEmptyForm(testInfo, TRANSFERWISE_ID);
         verifyEmptyForm(emptyForm,
                 TRANSFERWISE_ID,
                 PROPERTY_NAME_EMAIL);
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_PAYMENT_METHOD_ID, TRANSFERWISE_ID);
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_ACCOUNT_NAME, "Transferwise Acct");
-        COMPLETED_FORM_MAP.put(PROPERTY_NAME_EMAIL, "jan@doe.info");
+        COMPLETED_FORM_MAP.put(PROPERTY_NAME_TRADE_CURRENCIES, "eur");
+        COMPLETED_FORM_MAP.put(PROPERTY_NAME_EMAIL, "jane@doe.info");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_SALT, "");
         String jsonString = getCompletedFormAsJsonString();
         TransferwiseAccount paymentAccount = (TransferwiseAccount) createPaymentAccount(aliceClient, jsonString);
         verifyUserPayloadHasPaymentAccountWithId(aliceClient, paymentAccount.getId());
-        // As per commit 88f26f93241af698ae689bf081205d0f9dc929fa
-        // Do not autofill all currencies by default but keep all unselected.
-        // verifyAccountTradeCurrencies(getAllTransferwiseCurrencies(), paymentAccount);
-        assertEquals(0, paymentAccount.getTradeCurrencies().size());
+        assertEquals(1, paymentAccount.getTradeCurrencies().size());
+        TradeCurrency expectedCurrency = getTradeCurrency("EUR").get();
+        assertEquals(expectedCurrency, paymentAccount.getSelectedTradeCurrency());
+        List<TradeCurrency> expectedTradeCurrencies = singletonList(expectedCurrency);
+        verifyAccountTradeCurrencies(expectedTradeCurrencies, paymentAccount);
         verifyCommonFormEntries(paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_EMAIL), paymentAccount.getEmail());
-        log.debug("Deserialized {}: {}", paymentAccount.getClass().getSimpleName(), paymentAccount);
+        print(paymentAccount);
+    }
+
+    @Test
+    public void testCreateTransferwiseAccountWith10TradeCurrencies(TestInfo testInfo) {
+        File emptyForm = getEmptyForm(testInfo, TRANSFERWISE_ID);
+        verifyEmptyForm(emptyForm,
+                TRANSFERWISE_ID,
+                PROPERTY_NAME_EMAIL);
+        COMPLETED_FORM_MAP.put(PROPERTY_NAME_PAYMENT_METHOD_ID, TRANSFERWISE_ID);
+        COMPLETED_FORM_MAP.put(PROPERTY_NAME_ACCOUNT_NAME, "Transferwise Acct");
+        COMPLETED_FORM_MAP.put(PROPERTY_NAME_TRADE_CURRENCIES, "ars, cad, hrk, czk, eur, hkd, idr, jpy, chf, nzd");
+        COMPLETED_FORM_MAP.put(PROPERTY_NAME_EMAIL, "jane@doe.info");
+        COMPLETED_FORM_MAP.put(PROPERTY_NAME_SALT, "");
+        String jsonString = getCompletedFormAsJsonString();
+        TransferwiseAccount paymentAccount = (TransferwiseAccount) createPaymentAccount(aliceClient, jsonString);
+        verifyUserPayloadHasPaymentAccountWithId(aliceClient, paymentAccount.getId());
+        assertEquals(10, paymentAccount.getTradeCurrencies().size());
+        List<TradeCurrency> expectedTradeCurrencies = new ArrayList<>() {{
+            add(getTradeCurrency("ARS").get()); // 1st in list = selected ccy
+            add(getTradeCurrency("CAD").get());
+            add(getTradeCurrency("HRK").get());
+            add(getTradeCurrency("CZK").get());
+            add(getTradeCurrency("EUR").get());
+            add(getTradeCurrency("HKD").get());
+            add(getTradeCurrency("IDR").get());
+            add(getTradeCurrency("JPY").get());
+            add(getTradeCurrency("CHF").get());
+            add(getTradeCurrency("NZD").get());
+        }};
+        verifyAccountTradeCurrencies(expectedTradeCurrencies, paymentAccount);
+        TradeCurrency expectedSelectedCurrency = expectedTradeCurrencies.get(0);
+        assertEquals(expectedSelectedCurrency, paymentAccount.getSelectedTradeCurrency());
+        verifyCommonFormEntries(paymentAccount);
+        assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_EMAIL), paymentAccount.getEmail());
+        print(paymentAccount);
+    }
+
+    @Test
+    public void testCreateTransferwiseAccountWithInvalidBrlTradeCurrencyShouldThrowException(TestInfo testInfo) {
+        File emptyForm = getEmptyForm(testInfo, TRANSFERWISE_ID);
+        verifyEmptyForm(emptyForm,
+                TRANSFERWISE_ID,
+                PROPERTY_NAME_EMAIL);
+        COMPLETED_FORM_MAP.put(PROPERTY_NAME_PAYMENT_METHOD_ID, TRANSFERWISE_ID);
+        COMPLETED_FORM_MAP.put(PROPERTY_NAME_ACCOUNT_NAME, "Transferwise Acct");
+        COMPLETED_FORM_MAP.put(PROPERTY_NAME_TRADE_CURRENCIES, "eur, hkd, idr, jpy, chf, nzd, brl, gbp");
+        COMPLETED_FORM_MAP.put(PROPERTY_NAME_EMAIL, "jane@doe.info");
+        COMPLETED_FORM_MAP.put(PROPERTY_NAME_SALT, "");
+        String jsonString = getCompletedFormAsJsonString();
+
+        Throwable exception = assertThrows(StatusRuntimeException.class, () ->
+                createPaymentAccount(aliceClient, jsonString));
+        assertEquals("INVALID_ARGUMENT: BRL is not a member of valid currencies list",
+                exception.getMessage());
+    }
+
+    @Test
+    public void testCreateTransferwiseAccountWithoutTradeCurrenciesShouldThrowException(TestInfo testInfo) {
+        File emptyForm = getEmptyForm(testInfo, TRANSFERWISE_ID);
+        verifyEmptyForm(emptyForm,
+                TRANSFERWISE_ID,
+                PROPERTY_NAME_EMAIL);
+        COMPLETED_FORM_MAP.put(PROPERTY_NAME_PAYMENT_METHOD_ID, TRANSFERWISE_ID);
+        COMPLETED_FORM_MAP.put(PROPERTY_NAME_ACCOUNT_NAME, "Transferwise Acct");
+        COMPLETED_FORM_MAP.put(PROPERTY_NAME_TRADE_CURRENCIES, "");
+        COMPLETED_FORM_MAP.put(PROPERTY_NAME_EMAIL, "jane@doe.info");
+        COMPLETED_FORM_MAP.put(PROPERTY_NAME_SALT, "");
+        String jsonString = getCompletedFormAsJsonString();
+
+        Throwable exception = assertThrows(StatusRuntimeException.class, () ->
+                createPaymentAccount(aliceClient, jsonString));
+        assertEquals("INVALID_ARGUMENT: no trade currencies defined for transferwise payment account",
+                exception.getMessage());
     }
 
     @Test
@@ -775,7 +857,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         verifyCommonFormEntries(paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_ACCOUNT_ID), paymentAccount.getAccountId());
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_SALT), paymentAccount.getSaltAsHex());
-        log.debug("Deserialized {}: {}", paymentAccount.getClass().getSimpleName(), paymentAccount);
+        print(paymentAccount);
     }
 
     @Test
@@ -797,7 +879,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         verifyCommonFormEntries(paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_HOLDER_NAME), paymentAccount.getHolderName());
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_POSTAL_ADDRESS), paymentAccount.getPostalAddress());
-        log.debug("Deserialized {}: {}", paymentAccount.getClass().getSimpleName(), paymentAccount);
+        print(paymentAccount);
     }
 
     @Test
@@ -817,7 +899,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         verifyCommonFormEntries(paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_ACCOUNT_NR), paymentAccount.getAccountNr());
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_SALT), paymentAccount.getSaltAsHex());
-        log.debug("Deserialized {}: {}", paymentAccount.getClass().getSimpleName(), paymentAccount);
+        print(paymentAccount);
     }
 
     @Test
@@ -849,11 +931,18 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_EMAIL), paymentAccount.getEmail());
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_COUNTRY),
                 Objects.requireNonNull(paymentAccount.getCountry()).code);
-        log.debug("Deserialized {}: {}", paymentAccount.getClass().getSimpleName(), paymentAccount);
+        print(paymentAccount);
     }
 
     @AfterAll
     public static void tearDown() {
         tearDownScaffold();
+    }
+
+    private void print(PaymentAccount paymentAccount) {
+        if (log.isDebugEnabled()) {
+            log.debug("Deserialized {}: {}", paymentAccount.getClass().getSimpleName(), paymentAccount);
+            log.debug("\n{}", formatPaymentAcctTbl(singletonList(paymentAccount.toProtoMessage())));
+        }
     }
 }

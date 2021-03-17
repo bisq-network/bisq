@@ -35,6 +35,8 @@ import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static java.lang.String.format;
+
 @Singleton
 @Slf4j
 class CorePaymentAccountsService {
@@ -54,6 +56,7 @@ class CorePaymentAccountsService {
 
     PaymentAccount createPaymentAccount(String jsonString) {
         PaymentAccount paymentAccount = paymentAccountForm.toPaymentAccount(jsonString);
+        verifyPaymentAccountHasRequiredFields(paymentAccount);
         user.addPaymentAccountIfNotExists(paymentAccount);
         accountAgeWitnessService.publishMyAccountAgeWitness(paymentAccount.getPaymentAccountPayload());
         log.info("Saved payment account with id {} and payment method {}.",
@@ -81,5 +84,12 @@ class CorePaymentAccountsService {
 
     File getPaymentAccountForm(String paymentMethodId) {
         return paymentAccountForm.getPaymentAccountForm(paymentMethodId);
+    }
+
+    private void verifyPaymentAccountHasRequiredFields(PaymentAccount paymentAccount) {
+        // Do checks here to make sure required fields are populated.
+        if (paymentAccount.isTransferwiseAccount() && paymentAccount.getTradeCurrencies().isEmpty())
+            throw new IllegalArgumentException(format("no trade currencies defined for %s payment account",
+                    paymentAccount.getPaymentMethod().getDisplayString().toLowerCase()));
     }
 }

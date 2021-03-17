@@ -29,6 +29,7 @@ import bisq.common.UserThread;
 import bisq.common.taskrunner.TaskRunner;
 
 import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.Utils;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -56,7 +57,8 @@ public class ProcessMediatedPayoutTxPublishedMessage extends TradeTask {
             if (trade.getPayoutTx() == null) {
                 Transaction committedMediatedPayoutTx = WalletService.maybeAddNetworkTxToWallet(message.getPayoutTx(), processModel.getBtcWalletService().getWallet());
                 trade.setPayoutTx(committedMediatedPayoutTx);
-                BtcWalletService.printTx("MediatedPayoutTx received from peer", committedMediatedPayoutTx);
+                log.info("MediatedPayoutTx received from peer.  Txid: {}\nhex: {}",
+                        committedMediatedPayoutTx.getTxId().toString(), Utils.HEX.encode(committedMediatedPayoutTx.bitcoinSerialize()));
 
                 trade.setMediationResultState(MediationResultState.RECEIVED_PAYOUT_TX_PUBLISHED_MSG);
 

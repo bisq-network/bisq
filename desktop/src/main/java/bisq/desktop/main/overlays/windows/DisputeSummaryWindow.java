@@ -176,12 +176,6 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         }
     }
 
-    public DisputeSummaryWindow onFinalizeDispute(Runnable finalizeDisputeHandler) {
-        this.finalizeDisputeHandlerOptional = Optional.of(finalizeDisputeHandler);
-        return this;
-    }
-
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Protected
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -294,17 +288,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         addConfirmationLabelLabel(gridPane, rowIndex, Res.get("shared.tradeId"), dispute.getShortTradeId(),
                 Layout.TWICE_FIRST_ROW_DISTANCE);
         addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("disputeSummaryWindow.openDate"), DisplayUtils.formatDateTime(dispute.getOpeningDate()));
-        if (dispute.isDisputeOpenerIsMaker()) {
-            if (dispute.isDisputeOpenerIsBuyer())
-                role = Res.get("support.buyerOfferer");
-            else
-                role = Res.get("support.sellerOfferer");
-        } else {
-            if (dispute.isDisputeOpenerIsBuyer())
-                role = Res.get("support.buyerTaker");
-            else
-                role = Res.get("support.sellerTaker");
-        }
+        role = dispute.getRoleString();
         addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("disputeSummaryWindow.role"), role);
         addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("shared.tradeAmount"),
                 formatter.formatCoinWithCode(contract.getTradeAmount()));
@@ -838,7 +822,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         disputeResult.setLoserPublisher(isLoserPublisherCheckBox.isSelected());
         disputeResult.setCloseDate(new Date());
         dispute.setDisputeResult(disputeResult);
-        dispute.setIsClosed(true);
+        dispute.setIsClosed();
         DisputeResult.Reason reason = disputeResult.getReason();
 
         summaryNotesTextArea.textProperty().unbindBidirectional(disputeResult.summaryNotesProperty());

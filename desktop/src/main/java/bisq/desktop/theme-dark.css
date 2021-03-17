@@ -12,7 +12,7 @@
     -fx-accent: #25b135;
     -fx-box-border: transparent;
     -fx-focus-color: #2ea33c;
-    -fx-faint-focus-color: #006000;
+    -fx-faint-focus-color: #2ea33c;
     -fx-selection-bar: #1a6e1e;
     -fx-selection-bar-non-focused: #2a7e2e;
     -fx-default-button: derive(-fx-accent, 95%);
@@ -212,7 +212,7 @@
 /* text field */
 .jfx-text-field, .jfx-text-area,
 .jfx-combo-box, .jfx-combo-box > .list-cell {
-    -fx-background-color: -bs-background-color;
+    -fx-background-color: derive(-bs-background-color, 8%);
     -fx-prompt-text-fill: -bs-color-gray-3;
     -fx-text-fill: -bs-color-gray-11;
 }
