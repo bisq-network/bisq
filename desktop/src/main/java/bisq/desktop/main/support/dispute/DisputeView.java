@@ -1017,7 +1017,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
                             public void updateItem(final Dispute item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
-                                    Button button = getRegularIconButton(MaterialDesignIcon.SETTINGS);
+                                    Button button = getRegularIconButton(MaterialDesignIcon.GAVEL);
                                     button.setOnAction(e -> {
                                         tableView.getSelectionModel().select(this.getIndex());
                                         handleOnProcessDispute(item);
