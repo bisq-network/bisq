@@ -46,27 +46,27 @@ $ ./gradlew clean build :apitest:installDaoSetup            # if you want to run
 If your bitcoin-core binaries are in your system `PATH`, start bitcoind in regtest-mode, Bisq seednode and arbitration
 node daemons, plus Bob & Alice daemons in a bash terminal with the following bash command:
 ```
-$ ./bisq-apitest --apiPassword=xyz
-        --supportingApps=bitcoind,seednode,arbdaemon,alicedaemon,bobdaemon
+$ ./bisq-apitest --apiPassword=xyz \
+        --supportingApps=bitcoind,seednode,arbdaemon,alicedaemon,bobdaemon \
         --shutdownAfterTests=false
 ```
 
 If your bitcoin-core binaries are not in your system `PATH`, you can specify the bitcoin-core bin directory with the
 `-–bitcoinPath=<path>` option:
 ```
-$ ./bisq-apitest --apiPassword=xyz
-        --supportingApps=bitcoind,seednode,arbdaemon,alicedaemon,bobdaemon
-        --shutdownAfterTests=false
+$ ./bisq-apitest --apiPassword=xyz \
+        --supportingApps=bitcoind,seednode,arbdaemon,alicedaemon,bobdaemon \
+        --shutdownAfterTests=false \
         --bitcoinPath=<bitcoin-core-home>/bin
 ```
 
 If your bitcoin-core binaries are not statically linked to your BerkleyDB library, you can specify the path to it
 with the `–-berkeleyDbLibPath=<path>` option:
 ```
-$ ./bisq-apitest --apiPassword=xyz
-        --supportingApps=bitcoind,seednode,arbdaemon,alicedaemon,bobdaemon
-        --shutdownAfterTests=false
-        --bitcoinPath=<bitcoin-core-home>/bin
+$ ./bisq-apitest --apiPassword=xyz \
+        --supportingApps=bitcoind,seednode,arbdaemon,alicedaemon,bobdaemon \
+        --shutdownAfterTests=false \
+        --bitcoinPath=<bitcoin-core-home>/bin \
         --berkeleyDbLibPath=<lib-berkleydb-path>
 ```
 
@@ -163,10 +163,10 @@ manually register dispute agents in the arbitration node before you can initiate
 the following CLI commands to register a `mediator` and a `refundagent`.  Do not change the commands' port `9997`
 option (the test arbitration node's listening port).
 ```
-$ ./bisq-cli --password=xyz --port=9997 registerdisputeagent --dispute-agent-type=mediator
+$ ./bisq-cli --password=xyz --port=9997 registerdisputeagent --dispute-agent-type=mediator \
     --registration-key=6ac43ea1df2a290c1c8391736aa42e4339c5cb4f110ff0257a13b63211977b7a
 
-$ ./bisq-cli --password=xyz --port=9997 registerdisputeagent --dispute-agent-type=refundagent
+$ ./bisq-cli --password=xyz --port=9997 registerdisputeagent --dispute-agent-type=refundagent \
     --registration-key=6ac43ea1df2a290c1c8391736aa42e4339c5cb4f110ff0257a13b63211977b7a
 ```
 _Note:  The API cannot be used to register dispute agents on nodes connected to `mainnet`._
@@ -203,7 +203,7 @@ $ ./bisq-cli --password=xyz setwalletpassword --wallet-password=<wallet-password
 
 Set a new password on your already encrypted wallet:
 ```
-$ ./bisq-cli --password=xyz setwalletpassword --wallet-password=<wallet-password>
+$ ./bisq-cli --password=xyz setwalletpassword --wallet-password=<wallet-password> \
     --new-wallet-password=<new-wallet-password>
 ```
 
@@ -270,7 +270,7 @@ Send BSQ:
 ```
 $ ./bisq-cli --password=xyz --port=9998 sendbsq --address=<bsq-address> --amount=<bsq-amount>
 ```
-_Please note that sending BSQ to non-Bisq wallets is not supported and highly discouraged._
+_Note:  Sending BSQ to non-Bisq wallets is not supported and highly discouraged._
 
 Send BSQ with a withdrawal transaction fee of 10 sats/byte:
 ```
@@ -336,7 +336,7 @@ Creating a payment account using the Api involves three steps:
 
 3.  Manually edit the json file, and use its path in the `createpaymentacct` command.
     ```
-    $ ./bisq-cli --password=xyz --port=9998 createpaymentacct
+    $ ./bisq-cli --password=xyz --port=9998 createpaymentacct \
         --payment-account-form=f2f_1612381824625.json
     ```
     _Note:  You can rename the file before passing it to the  `createpaymentacct` command._
@@ -363,26 +363,26 @@ In a previous example, Alice created a BUY/ EUR offer to buy 0.125 BTC at a fixe
 and pay the Bisq maker fee in BSQ.  Alice had already created an EUR face-to-face payment account with id
 `f3c1ec8b-9761-458d-b13d-9039c6892413`, and used this `createoffer` command:
 ```
-$ ./bisq-cli --password=xyz --port=9998 createoffer
-    --payment-account=f3c1ec8b-9761-458d-b13d-9039c6892413
-    --direction=BUY
-    --currency-code=EUR
-    --amount=0.125
-    --fixed-price=30800
-    --security-deposit=15.0
+$ ./bisq-cli --password=xyz --port=9998 createoffer \
+    --payment-account=f3c1ec8b-9761-458d-b13d-9039c6892413 \
+    --direction=BUY \
+    --currency-code=EUR \
+    --amount=0.125 \
+    --fixed-price=30800 \
+    --security-deposit=15.0 \
     --fee-currency=BSQ
 ```
 
 If Alice was in Japan, and wanted to create an offer to sell 0.125 BTC at 0.5% above the current market JPY price,
 putting up a 15% security deposit, the `createoffer` command to do that would be:
 ```
-$ ./bisq-cli --password=xyz --port=9998 createoffer
-    --payment-account=f3c1ec8b-9761-458d-b13d-9039c6892413
-    --direction=SELL
-    --currency-code=JPY
-    --amount=0.125
-    --market-price-margin=0.5
-    --security-deposit=15.0
+$ ./bisq-cli --password=xyz --port=9998 createoffer \
+    --payment-account=f3c1ec8b-9761-458d-b13d-9039c6892413 \
+    --direction=SELL \
+    --currency-code=JPY \
+    --amount=0.125 \
+    --market-price-margin=0.5 \
+    --security-deposit=15.0 \
     --fee-currency=BSQ
 ```
 
@@ -442,9 +442,9 @@ $ ./bisq-cli --password=xyz --port=9998  getoffers --direction=SELL --currency-c
 And takes one of the available offers with an EUR payment account ( id `fe20cdbd-22be-4b8a-a4b6-d2608ff09d6e`)
 with the `takeoffer` command:
 ```
-$ ./bisq-cli --password=xyz --port=9998 takeoffer
-    --offer-id=83e8b2e2-51b6-4f39-a748-3ebd29c22aea
-    --payment-account=fe20cdbd-22be-4b8a-a4b6-d2608ff09d6e
+$ ./bisq-cli --password=xyz --port=9998 takeoffer \
+    --offer-id=83e8b2e2-51b6-4f39-a748-3ebd29c22aea \
+    --payment-account=fe20cdbd-22be-4b8a-a4b6-d2608ff09d6e \
     --fee-currency=btc
 ```
 The taken offer will be used to create a trade contract.  The next section describes how to use the Api to execute
@@ -502,9 +502,9 @@ or the other command.
 Each of the CLI commands above takes one argument:  `--trade-id=<trade-id>`:
 ```
 $ ./bisq-cli --password=xyz --port=9998 confirmpaymentstarted --trade-id=<trade-id>
-$ ./bisq-cli --password=xyz --port=9998 confirmpaymentreceived --trade-id=<trade-id>
+$ ./bisq-cli --password=xyz --port=9999 confirmpaymentreceived --trade-id=<trade-id>
 $ ./bisq-cli --password=xyz --port=9998 keepfunds --trade-id=<trade-id>
-$ ./bisq-cli --password=xyz --port=9998 withdrawfunds --trade-id=<trade-id>
+$ ./bisq-cli --password=xyz --port=9999 withdrawfunds --trade-id=<trade-id> --address=<btc-address> [--memo=<"memo">]
 ```
 
 ## Shutting Down Test Harness
