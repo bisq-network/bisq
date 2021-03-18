@@ -129,7 +129,10 @@ public class AbstractPaymentAccountTest extends MethodTest {
         assertEquals(paymentMethodId, emptyForm.get(PROPERTY_NAME_PAYMENT_METHOD_ID));
         assertEquals("your accountname", emptyForm.get(PROPERTY_NAME_ACCOUNT_NAME));
         for (String field : fields) {
-            assertEquals("your " + field.toLowerCase(), emptyForm.get(field));
+            if (field.equals("country"))
+                assertEquals("your two letter country code", emptyForm.get(field));
+            else
+                assertEquals("your " + field.toLowerCase(), emptyForm.get(field));
         }
     }
 
