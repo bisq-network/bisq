@@ -270,7 +270,7 @@ Send BSQ:
 ```
 $ ./bisq-cli --password=xyz --port=9998 sendbsq --address=<bsq-address> --amount=<bsq-amount>
 ```
-_Please note that sending BSQ to non-Bisq wallets is not supported and highly discouraged._
+_Note:  Sending BSQ to non-Bisq wallets is not supported and highly discouraged._
 
 Send BSQ with a withdrawal transaction fee of 10 sats/byte:
 ```
