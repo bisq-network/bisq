@@ -69,7 +69,7 @@ public class Restrictions {
     // So 0.0005 BTC is the min. buyer security deposit even with amount of 0.0001 BTC and 0.05% percentage value.
     public static Coin getMinBuyerSecurityDepositAsCoin() {
         if (MIN_BUYER_SECURITY_DEPOSIT == null)
-            MIN_BUYER_SECURITY_DEPOSIT = Coin.parseCoin("0.006"); // 0.006 BTC about 42 USD @ 7000 USD/BTC
+            MIN_BUYER_SECURITY_DEPOSIT = Coin.parseCoin("0.001"); // 0.001 BTC is 60 USD @ 60000 USD/BTC
         return MIN_BUYER_SECURITY_DEPOSIT;
     }
 
@@ -80,14 +80,14 @@ public class Restrictions {
 
     public static Coin getMinSellerSecurityDepositAsCoin() {
         if (SELLER_SECURITY_DEPOSIT == null)
-            SELLER_SECURITY_DEPOSIT = Coin.parseCoin("0.006"); // 0.006 BTC about 42 USD @ 7000 USD/BTC
+            SELLER_SECURITY_DEPOSIT = Coin.parseCoin("0.001"); // 0.001 BTC is 60 USD @ 60000 USD/BTC
         return SELLER_SECURITY_DEPOSIT;
     }
 
     // This value must be lower than MIN_BUYER_SECURITY_DEPOSIT and SELLER_SECURITY_DEPOSIT
     public static Coin getMinRefundAtMediatedDispute() {
         if (MIN_REFUND_AT_MEDIATED_DISPUTE == null)
-            MIN_REFUND_AT_MEDIATED_DISPUTE = Coin.parseCoin("0.003"); // 0.003 BTC about 21 USD @ 7000 USD/BTC
+            MIN_REFUND_AT_MEDIATED_DISPUTE = Coin.parseCoin("0.0005"); // 0.0005 BTC is 30 USD @ 60000 USD/BTC
         return MIN_REFUND_AT_MEDIATED_DISPUTE;
     }
 
