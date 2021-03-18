@@ -147,7 +147,10 @@ class PaymentAccountTypeAdapter extends TypeAdapter<PaymentAccount> {
 
                     String fieldName = field.getName();
                     out.name(fieldName);
-                    out.value("your " + fieldName.toLowerCase());
+                    if (fieldName.equals("country"))
+                        out.value("your two letter country code");
+                    else
+                        out.value("your " + fieldName.toLowerCase());
                 }
             } catch (Exception ex) {
                 String errMsg = format("cannot create a new %s json form",
