@@ -17,7 +17,7 @@ To run the Bisq daemon:
 
     $ ./bisq-daemon --apiPassword=<api-password> --apiPort=<api-port(default=9998)> --appDataDir=$APPDIR`
 
-_Note: $APPDIR is empty or otherwise contains a Bisq wallet created by the daemon or the UI._
+_Note: `$APPDIR` is empty or otherwise contains a Bisq wallet created by the daemon or the UI._
 
 _Note: Never run the API daemon and Bisq UI on the same host, or you will corrupt your wallet.  It will be possible
 with specific command line options, i.e., unique appDatadir and ports, but this scenario has not been tested yet._
