@@ -504,7 +504,7 @@ Each of the CLI commands above takes one argument:  `--trade-id=<trade-id>`:
 $ ./bisq-cli --password=xyz --port=9998 confirmpaymentstarted --trade-id=<trade-id>
 $ ./bisq-cli --password=xyz --port=9999 confirmpaymentreceived --trade-id=<trade-id>
 $ ./bisq-cli --password=xyz --port=9998 keepfunds --trade-id=<trade-id>
-$ ./bisq-cli --password=xyz --port=9999 withdrawfunds --trade-id=<trade-id>
+$ ./bisq-cli --password=xyz --port=9999 withdrawfunds --trade-id=<trade-id> --address=<btc-address> [--memo=<"memo">]
 ```
 
 ## Shutting Down Test Harness
