@@ -23,6 +23,7 @@ import org.bitcoinj.utils.Fiat;
 
 import java.math.BigDecimal;
 
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import org.junit.jupiter.api.AfterAll;
@@ -44,6 +45,9 @@ import bisq.apitest.method.MethodTest;
 
 @Slf4j
 public abstract class AbstractOfferTest extends MethodTest {
+
+    @Setter
+    protected static boolean isLongRunningTest;
 
     @BeforeAll
     public static void setUp() {

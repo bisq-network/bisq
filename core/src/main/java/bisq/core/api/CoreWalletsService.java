@@ -159,15 +159,22 @@ class CoreWalletsService {
     AddressBalanceInfo getAddressBalanceInfo(String addressString) {
         var satoshiBalance = getAddressBalance(addressString);
         var numConfirmations = getNumConfirmationsForMostRecentTransaction(addressString);
-        return new AddressBalanceInfo(addressString, satoshiBalance, numConfirmations);
+        Address address = getAddressEntry(addressString).getAddress();
+        return new AddressBalanceInfo(addressString,
+                satoshiBalance,
+                numConfirmations,
+                btcWalletService.isAddressUnused(address));
     }
 
     List<AddressBalanceInfo> getFundingAddresses() {
         verifyWalletsAreAvailable();
         verifyEncryptedWalletIsUnlocked();
 
-        // Create a new funding address if none exists.
-        if (btcWalletService.getAvailableAddressEntries().isEmpty())
+        // Create a new  unused funding address if none exists.
+        boolean unusedAddressExists = btcWalletService.getAvailableAddressEntries()
+                .stream()
+                .anyMatch(a -> btcWalletService.isAddressUnused(a.getAddress()));
+        if (!unusedAddressExists)
             btcWalletService.getFreshAddressEntry();
 
         List<String> addressStrings = btcWalletService
@@ -192,7 +199,8 @@ class CoreWalletsService {
         return addressStrings.stream().map(address ->
                 new AddressBalanceInfo(address,
                         balances.getUnchecked(address),
-                        getNumConfirmationsForMostRecentTransaction(address)))
+                        getNumConfirmationsForMostRecentTransaction(address),
+                        btcWalletService.isAddressUnused(getAddressEntry(address).getAddress())))
                 .collect(Collectors.toList());
     }
 

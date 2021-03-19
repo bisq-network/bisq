@@ -157,13 +157,16 @@ class CoreOffersService {
         coreWalletsService.verifyEncryptedWalletIsUnlocked();
         offerUtil.maybeSetFeePaymentCurrencyPreference(makerFeeCurrencyCode);
 
+        PaymentAccount paymentAccount = user.getPaymentAccount(paymentAccountId);
+        if (paymentAccount == null)
+            throw new IllegalArgumentException(format("payment account with id %s not found", paymentAccountId));
+
         String upperCaseCurrencyCode = currencyCode.toUpperCase();
         String offerId = createOfferService.getRandomOfferId();
         Direction direction = Direction.valueOf(directionAsString.toUpperCase());
         Price price = Price.valueOf(upperCaseCurrencyCode, priceStringToLong(priceAsString, upperCaseCurrencyCode));
         Coin amount = Coin.valueOf(amountAsLong);
         Coin minAmount = Coin.valueOf(minAmountAsLong);
-        PaymentAccount paymentAccount = user.getPaymentAccount(paymentAccountId);
         Coin useDefaultTxFee = Coin.ZERO;
         Offer offer = createOfferService.createAndGetOffer(offerId,
                 direction,

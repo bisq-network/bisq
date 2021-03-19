@@ -24,11 +24,16 @@ public class AddressBalanceInfo implements Payload {
     private final String address;
     private final long balance;             // address' balance in satoshis
     private final long numConfirmations;    // # confirmations for address' most recent tx
+    private final boolean isAddressUnused;
 
-    public AddressBalanceInfo(String address, long balance, long numConfirmations) {
+    public AddressBalanceInfo(String address,
+                              long balance,
+                              long numConfirmations,
+                              boolean isAddressUnused) {
         this.address = address;
         this.balance = balance;
         this.numConfirmations = numConfirmations;
+        this.isAddressUnused = isAddressUnused;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -40,13 +45,16 @@ public class AddressBalanceInfo implements Payload {
         return bisq.proto.grpc.AddressBalanceInfo.newBuilder()
                 .setAddress(address)
                 .setBalance(balance)
-                .setNumConfirmations(numConfirmations).build();
+                .setNumConfirmations(numConfirmations)
+                .setIsAddressUnused(isAddressUnused)
+                .build();
     }
 
     public static AddressBalanceInfo fromProto(bisq.proto.grpc.AddressBalanceInfo proto) {
         return new AddressBalanceInfo(proto.getAddress(),
                 proto.getBalance(),
-                proto.getNumConfirmations());
+                proto.getNumConfirmations(),
+                proto.getIsAddressUnused());
     }
 
     @Override
@@ -55,6 +63,7 @@ public class AddressBalanceInfo implements Payload {
                 "address='" + address + '\'' +
                 ", balance=" + balance +
                 ", numConfirmations=" + numConfirmations +
+                ", isAddressUnused=" + isAddressUnused +
                 '}';
     }
 }

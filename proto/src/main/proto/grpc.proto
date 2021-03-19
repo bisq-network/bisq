@@ -540,6 +540,7 @@ message AddressBalanceInfo {
     string address = 1;
     int64 balance = 2;
     int64 numConfirmations = 3;
+    bool isAddressUnused = 4;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
