@@ -90,21 +90,26 @@ class GrpcTradesService extends TradesImplBase {
     @Override
     public void takeOffer(TakeOfferRequest req,
                           StreamObserver<TakeOfferReply> responseObserver) {
-        try {
-            coreApi.takeOffer(req.getOfferId(),
-                    req.getPaymentAccountId(),
-                    req.getTakerFeeCurrencyCode(),
-                    trade -> {
-                        TradeInfo tradeInfo = toTradeInfo(trade);
-                        var reply = TakeOfferReply.newBuilder()
-                                .setTrade(tradeInfo.toProtoMessage())
-                                .build();
-                        responseObserver.onNext(reply);
-                        responseObserver.onCompleted();
-                    });
-        } catch (Throwable cause) {
-            exceptionHandler.handleException(log, cause, responseObserver);
-        }
+        GrpcErrorMessageHandler errorMessageHandler =
+                new GrpcErrorMessageHandler(getTakeOfferMethod().getFullMethodName(),
+                        responseObserver,
+                        exceptionHandler,
+                        log);
+        coreApi.takeOffer(req.getOfferId(),
+                req.getPaymentAccountId(),
+                req.getTakerFeeCurrencyCode(),
+                trade -> {
+                    TradeInfo tradeInfo = toTradeInfo(trade);
+                    var reply = TakeOfferReply.newBuilder()
+                            .setTrade(tradeInfo.toProtoMessage())
+                            .build();
+                    responseObserver.onNext(reply);
+                    responseObserver.onCompleted();
+                },
+                errorMessage -> {
+                    if (!errorMessageHandler.isErrorHandled())
+                        errorMessageHandler.handleErrorMessage(errorMessage);
+                });
     }
 
     @Override

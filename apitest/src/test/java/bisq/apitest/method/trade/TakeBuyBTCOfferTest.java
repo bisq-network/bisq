@@ -132,41 +132,49 @@ public class TakeBuyBTCOfferTest extends AbstractTradeTest {
     @Test
     @Order(3)
     public void testBobsConfirmPaymentReceived(final TestInfo testInfo) {
-        var trade = bobClient.getTrade(tradeId);
-        bobClient.confirmPaymentReceived(trade.getTradeId());
-        sleep(3000);
+        try {
+            var trade = bobClient.getTrade(tradeId);
+            bobClient.confirmPaymentReceived(trade.getTradeId());
+            sleep(3000);
 
-        trade = bobClient.getTrade(tradeId);
-        // Note: offer.state == available
-        assertEquals(AVAILABLE.name(), trade.getOffer().getState());
-        EXPECTED_PROTOCOL_STATUS.setState(SELLER_SAW_ARRIVED_PAYOUT_TX_PUBLISHED_MSG)
-                .setPhase(PAYOUT_PUBLISHED)
-                .setPayoutPublished(true)
-                .setFiatReceived(true);
-        verifyExpectedProtocolStatus(trade);
-        logTrade(log, testInfo, "Bob's view after confirming fiat payment received", trade);
+            trade = bobClient.getTrade(tradeId);
+            // Note: offer.state == available
+            assertEquals(AVAILABLE.name(), trade.getOffer().getState());
+            EXPECTED_PROTOCOL_STATUS.setState(SELLER_SAW_ARRIVED_PAYOUT_TX_PUBLISHED_MSG)
+                    .setPhase(PAYOUT_PUBLISHED)
+                    .setPayoutPublished(true)
+                    .setFiatReceived(true);
+            verifyExpectedProtocolStatus(trade);
+            logTrade(log, testInfo, "Bob's view after confirming fiat payment received", trade);
+        } catch (StatusRuntimeException e) {
+            fail(e);
+        }
     }
 
     @Test
     @Order(4)
     public void testAlicesKeepFunds(final TestInfo testInfo) {
-        genBtcBlocksThenWait(1, 1000);
+        try {
+            genBtcBlocksThenWait(1, 1000);
 
-        var trade = aliceClient.getTrade(tradeId);
-        logTrade(log, testInfo, "Alice's view before keeping funds", trade);
+            var trade = aliceClient.getTrade(tradeId);
+            logTrade(log, testInfo, "Alice's view before keeping funds", trade);
 
-        aliceClient.keepFunds(tradeId);
+            aliceClient.keepFunds(tradeId);
 
-        genBtcBlocksThenWait(1, 1000);
+            genBtcBlocksThenWait(1, 1000);
 
-        trade = aliceClient.getTrade(tradeId);
-        EXPECTED_PROTOCOL_STATUS.setState(BUYER_RECEIVED_PAYOUT_TX_PUBLISHED_MSG)
-                .setPhase(PAYOUT_PUBLISHED);
-        verifyExpectedProtocolStatus(trade);
-        logTrade(log, testInfo, "Alice's view after keeping funds", trade);
-        BtcBalanceInfo currentBalance = aliceClient.getBtcBalances();
-        log.debug("{} Alice's current available balance: {} BTC",
-                testName(testInfo),
-                formatSatoshis(currentBalance.getAvailableBalance()));
+            trade = aliceClient.getTrade(tradeId);
+            EXPECTED_PROTOCOL_STATUS.setState(BUYER_RECEIVED_PAYOUT_TX_PUBLISHED_MSG)
+                    .setPhase(PAYOUT_PUBLISHED);
+            verifyExpectedProtocolStatus(trade);
+            logTrade(log, testInfo, "Alice's view after keeping funds", trade);
+            BtcBalanceInfo currentBalance = aliceClient.getBtcBalances();
+            log.debug("{} Alice's current available balance: {} BTC",
+                    testName(testInfo),
+                    formatSatoshis(currentBalance.getAvailableBalance()));
+        } catch (StatusRuntimeException e) {
+            fail(e);
+        }
     }
 }

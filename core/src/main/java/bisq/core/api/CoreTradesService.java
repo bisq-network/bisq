@@ -32,6 +32,8 @@ import bisq.core.trade.protocol.SellerProtocol;
 import bisq.core.user.User;
 import bisq.core.util.validation.BtcAddressValidator;
 
+import bisq.common.handlers.ErrorMessageHandler;
+
 import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
@@ -86,7 +88,8 @@ class CoreTradesService {
     void takeOffer(Offer offer,
                    String paymentAccountId,
                    String takerFeeCurrencyCode,
-                   Consumer<Trade> resultHandler) {
+                   Consumer<Trade> resultHandler,
+                   ErrorMessageHandler errorMessageHandler) {
         coreWalletsService.verifyWalletsAreAvailable();
         coreWalletsService.verifyEncryptedWalletIsUnlocked();
 
@@ -114,10 +117,7 @@ class CoreTradesService {
                 useSavingsWallet,
                 coreContext.isApiUser(),
                 resultHandler::accept,
-                errorMessage -> {
-                    log.error(errorMessage);
-                    throw new IllegalStateException(errorMessage);
-                }
+                errorMessageHandler
         );
     }
 

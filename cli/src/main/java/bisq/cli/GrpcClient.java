@@ -53,6 +53,7 @@ import bisq.proto.grpc.SendBtcRequest;
 import bisq.proto.grpc.SetTxFeeRatePreferenceRequest;
 import bisq.proto.grpc.SetWalletPasswordRequest;
 import bisq.proto.grpc.StopRequest;
+import bisq.proto.grpc.TakeOfferReply;
 import bisq.proto.grpc.TakeOfferRequest;
 import bisq.proto.grpc.TradeInfo;
 import bisq.proto.grpc.TxFeeRateInfo;
@@ -67,9 +68,13 @@ import protobuf.PaymentMethod;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import lombok.extern.slf4j.Slf4j;
+
 import static java.util.Comparator.comparing;
 
+
 @SuppressWarnings("ResultOfMethodCallIgnored")
+@Slf4j
 public final class GrpcClient {
 
     private final GrpcStubs grpcStubs;
@@ -181,23 +186,23 @@ public final class GrpcClient {
     }
 
     public OfferInfo createFixedPricedOffer(String direction,
-                                 String currencyCode,
-                                 long amount,
-                                 long minAmount,
-                                 String fixedPrice,
-                                 double securityDeposit,
-                                 String paymentAcctId,
-                                 String makerFeeCurrencyCode) {
-      return createOffer(direction,
-              currencyCode,
-              amount,
-              minAmount,
-              false,
-              fixedPrice,
-              0.00,
-              securityDeposit,
-              paymentAcctId,
-              makerFeeCurrencyCode);
+                                            String currencyCode,
+                                            long amount,
+                                            long minAmount,
+                                            String fixedPrice,
+                                            double securityDeposit,
+                                            String paymentAcctId,
+                                            String makerFeeCurrencyCode) {
+        return createOffer(direction,
+                currencyCode,
+                amount,
+                minAmount,
+                false,
+                fixedPrice,
+                0.00,
+                securityDeposit,
+                paymentAcctId,
+                makerFeeCurrencyCode);
     }
 
     public OfferInfo createMarketBasedPricedOffer(String direction,
@@ -289,8 +294,8 @@ public final class GrpcClient {
     }
 
     public List<OfferInfo> getMyOffersSortedByDate(String direction, String currencyCode) {
-       var offers = getMyOffers(direction, currencyCode);
-       return offers.isEmpty() ? offers : sortOffersByDate(offers);
+        var offers = getMyOffers(direction, currencyCode);
+        return offers.isEmpty() ? offers : sortOffersByDate(offers);
     }
 
     public OfferInfo getMostRecentOffer(String direction, String currencyCode) {
@@ -305,13 +310,21 @@ public final class GrpcClient {
                 .collect(Collectors.toList());
     }
 
-    public TradeInfo takeOffer(String offerId, String paymentAccountId, String takerFeeCurrencyCode) {
+    public TakeOfferReply getTakeOfferReply(String offerId, String paymentAccountId, String takerFeeCurrencyCode) {
         var request = TakeOfferRequest.newBuilder()
                 .setOfferId(offerId)
                 .setPaymentAccountId(paymentAccountId)
                 .setTakerFeeCurrencyCode(takerFeeCurrencyCode)
                 .build();
-        return grpcStubs.tradesService.takeOffer(request).getTrade();
+        return grpcStubs.tradesService.takeOffer(request);
+    }
+
+    public TradeInfo takeOffer(String offerId, String paymentAccountId, String takerFeeCurrencyCode) {
+        var reply = getTakeOfferReply(offerId, paymentAccountId, takerFeeCurrencyCode);
+        if (reply.hasTrade())
+            return reply.getTrade();
+        else
+            throw new IllegalStateException(reply.getAvailabilityResultDescription());
     }
 
     public TradeInfo getTrade(String tradeId) {
