@@ -22,6 +22,7 @@ import bisq.core.api.model.BalancesInfo;
 import bisq.core.api.model.BsqBalanceInfo;
 import bisq.core.api.model.BtcBalanceInfo;
 import bisq.core.api.model.TxFeeRateInfo;
+import bisq.core.app.AppStartupState;
 import bisq.core.btc.Balances;
 import bisq.core.btc.exceptions.AddressEntryException;
 import bisq.core.btc.exceptions.BsqChangeBelowDustException;
@@ -30,6 +31,7 @@ import bisq.core.btc.exceptions.TransactionVerificationException;
 import bisq.core.btc.exceptions.WalletException;
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.model.BsqTransferModel;
+import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BsqTransferService;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
@@ -89,8 +91,11 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 @Slf4j
 class CoreWalletsService {
 
+    private final AppStartupState appStartupState;
+    private final CoreContext coreContext;
     private final Balances balances;
     private final WalletsManager walletsManager;
+    private final WalletsSetup walletsSetup;
     private final BsqWalletService bsqWalletService;
     private final BsqTransferService bsqTransferService;
     private final BsqFormatter bsqFormatter;
@@ -108,8 +113,11 @@ class CoreWalletsService {
     private final ListeningExecutorService executor = Utilities.getSingleThreadListeningExecutor("CoreWalletsService");
 
     @Inject
-    public CoreWalletsService(Balances balances,
+    public CoreWalletsService(AppStartupState appStartupState,
+                              CoreContext coreContext,
+                              Balances balances,
                               WalletsManager walletsManager,
+                              WalletsSetup walletsSetup,
                               BsqWalletService bsqWalletService,
                               BsqTransferService bsqTransferService,
                               BsqFormatter bsqFormatter,
@@ -117,8 +125,11 @@ class CoreWalletsService {
                               @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
                               FeeService feeService,
                               Preferences preferences) {
+        this.appStartupState = appStartupState;
+        this.coreContext = coreContext;
         this.balances = balances;
         this.walletsManager = walletsManager;
+        this.walletsSetup = walletsSetup;
         this.bsqWalletService = bsqWalletService;
         this.bsqTransferService = bsqTransferService;
         this.bsqFormatter = bsqFormatter;
@@ -433,6 +444,9 @@ class CoreWalletsService {
             lockTimer = null;
         }
 
+        if (coreContext.isApiUser())
+            maybeInitWallet();
+
         lockTimer = UserThread.runAfter(() -> {
             if (tempAesKey != null) {
                 // The unlockwallet timeout has expired;  re-lock the wallet.
@@ -458,12 +472,16 @@ class CoreWalletsService {
 
     // Throws a RuntimeException if wallets are not available (encrypted or not).
     void verifyWalletsAreAvailable() {
+        verifyWalletAndNetworkIsReady();
+
         if (!walletsManager.areWalletsAvailable())
             throw new IllegalStateException("wallet is not yet available");
     }
 
     // Throws a RuntimeException if wallets are not available or not encrypted.
     void verifyWalletIsAvailableAndEncrypted() {
+        verifyWalletAndNetworkIsReady();
+
         if (!walletsManager.areWalletsAvailable())
             throw new IllegalStateException("wallet is not yet available");
 
@@ -477,6 +495,18 @@ class CoreWalletsService {
             throw new IllegalStateException("wallet is locked");
     }
 
+    // Throws a RuntimeException if wallets and network are not ready.
+    void verifyWalletAndNetworkIsReady() {
+        if (!appStartupState.isWalletAndNetworkReady())
+            throw new IllegalStateException("wallet and network is not yet initialized");
+    }
+
+    // Throws a RuntimeException if application is not fully initialized.
+    void verifyApplicationIsFullyInitialized() {
+        if (!appStartupState.isApplicationFullyInitialized())
+            throw new IllegalStateException("server is not fully initialized");
+    }
+
     // Throws a RuntimeException if wallet currency code is not BSQ or BTC.
     private void verifyWalletCurrencyCodeIsValid(String currencyCode) {
         if (currencyCode == null || currencyCode.isEmpty())
@@ -485,6 +515,20 @@ class CoreWalletsService {
         if (!currencyCode.equalsIgnoreCase("BSQ")
                 && !currencyCode.equalsIgnoreCase("BTC"))
             throw new IllegalStateException(format("wallet does not support %s", currencyCode));
+    }
+
+    private void maybeInitWallet() {
+        // Unlike the UI, a daemon cannot capture the user's wallet encryption password
+        // during startup.  This method will set the wallet service's aesKey if necessary.
+        log.info("Init wallet");
+        if (tempAesKey == null)
+            throw new IllegalStateException("cannot init encrypted wallet without key");
+
+        if (btcWalletService.getAesKey() == null || bsqWalletService.getAesKey() == null) {
+            KeyParameter aesKey = new KeyParameter(tempAesKey.getKey());
+            walletsManager.setAesKey(aesKey);
+            walletsSetup.getWalletConfig().maybeAddSegwitKeychain(walletsSetup.getWalletConfig().btcWallet(), aesKey);
+        }
     }
 
     private BsqBalanceInfo getBsqBalances() {
