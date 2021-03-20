@@ -1,0 +1,31 @@
+keepfunds
+
+NAME
+----
+keepfunds - keep BTC received during a trade in Bisq wallet
+
+SYNOPSIS
+--------
+keepfunds
+		--trade-id=<trade-id>
+
+DESCRIPTION
+-----------
+A BTC buyer completes the final step in the trade protocol by keeping received BTC in his
+Bisq wallet.  This step may not seem necessary from the buyer's perspective, but it is
+necessary for correct transition of a trade's state to CLOSED, within the Bisq server.
+
+The alternative way to close out the trade is to send the received BTC to an external
+BTC wallet, using the withdrawfunds command.
+
+OPTIONS
+-------
+--trade-id
+		The ID of the trade (the full offer-id).
+
+EXAMPLES
+--------
+A BTC seller has informed the buyer that fiat payment has been received for trade with ID
+83e8b2e2-51b6-4f39-a748-3ebd29c22aea, and locked BTC has been released to the buyer.
+The BTC buyer closes out the trade by keeping the received BTC in her Bisq wallet:
+$ ./bisq-cli --password=xyz --port=9998 keepfunds --trade-id=83e8b2e2-51b6-4f39-a748-3ebd29c22aea

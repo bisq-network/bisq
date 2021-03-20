@@ -41,94 +41,83 @@ public class WalletProtectionTest extends MethodTest {
     @Test
     @Order(1)
     public void testSetWalletPassword() {
-        var request = createSetWalletPasswordRequest("first-password");
-        grpcStubs(alicedaemon).walletsService.setWalletPassword(request);
+        aliceClient.setWalletPassword("first-password");
     }
 
     @Test
     @Order(2)
     public void testGetBalanceOnEncryptedWalletShouldThrowException() {
-        Throwable exception = assertThrows(StatusRuntimeException.class, () -> getBtcBalances(alicedaemon));
+        Throwable exception = assertThrows(StatusRuntimeException.class, () -> aliceClient.getBtcBalances());
         assertEquals("UNKNOWN: wallet is locked", exception.getMessage());
     }
 
     @Test
     @Order(3)
     public void testUnlockWalletFor4Seconds() {
-        var request = createUnlockWalletRequest("first-password", 4);
-        grpcStubs(alicedaemon).walletsService.unlockWallet(request);
-        getBtcBalances(alicedaemon); // should not throw 'wallet locked' exception
+        aliceClient.unlockWallet("first-password", 4);
+        aliceClient.getBtcBalances(); // should not throw 'wallet locked' exception
         sleep(4500); // let unlock timeout expire
-        Throwable exception = assertThrows(StatusRuntimeException.class, () -> getBtcBalances(alicedaemon));
+        Throwable exception = assertThrows(StatusRuntimeException.class, () -> aliceClient.getBtcBalances());
         assertEquals("UNKNOWN: wallet is locked", exception.getMessage());
     }
 
     @Test
     @Order(4)
     public void testGetBalanceAfterUnlockTimeExpiryShouldThrowException() {
-        var request = createUnlockWalletRequest("first-password", 3);
-        grpcStubs(alicedaemon).walletsService.unlockWallet(request);
+        aliceClient.unlockWallet("first-password", 3);
         sleep(4000); // let unlock timeout expire
-        Throwable exception = assertThrows(StatusRuntimeException.class, () -> getBtcBalances(alicedaemon));
+        Throwable exception = assertThrows(StatusRuntimeException.class, () -> aliceClient.getBtcBalances());
         assertEquals("UNKNOWN: wallet is locked", exception.getMessage());
     }
 
     @Test
     @Order(5)
     public void testLockWalletBeforeUnlockTimeoutExpiry() {
-        unlockWallet(alicedaemon, "first-password", 60);
-        var request = createLockWalletRequest();
-        grpcStubs(alicedaemon).walletsService.lockWallet(request);
-        Throwable exception = assertThrows(StatusRuntimeException.class, () -> getBtcBalances(alicedaemon));
+        aliceClient.unlockWallet("first-password", 60);
+        aliceClient.lockWallet();
+        Throwable exception = assertThrows(StatusRuntimeException.class, () -> aliceClient.getBtcBalances());
         assertEquals("UNKNOWN: wallet is locked", exception.getMessage());
     }
 
     @Test
     @Order(6)
     public void testLockWalletWhenWalletAlreadyLockedShouldThrowException() {
-        var request = createLockWalletRequest();
-        Throwable exception = assertThrows(StatusRuntimeException.class, () ->
-                grpcStubs(alicedaemon).walletsService.lockWallet(request));
+        Throwable exception = assertThrows(StatusRuntimeException.class, () -> aliceClient.lockWallet());
         assertEquals("UNKNOWN: wallet is already locked", exception.getMessage());
     }
 
     @Test
     @Order(7)
     public void testUnlockWalletTimeoutOverride() {
-        unlockWallet(alicedaemon, "first-password", 2);
+        aliceClient.unlockWallet("first-password", 2);
         sleep(500); // override unlock timeout after 0.5s
-        unlockWallet(alicedaemon, "first-password", 6);
+        aliceClient.unlockWallet("first-password", 6);
         sleep(5000);
-        getBtcBalances(alicedaemon);  // getbalance 5s after overriding timeout to 6s
+        aliceClient.getBtcBalances(); // getbalance 5s after overriding timeout to 6s
     }
 
     @Test
     @Order(8)
     public void testSetNewWalletPassword() {
-        var request = createSetWalletPasswordRequest(
-                "first-password", "second-password");
-        grpcStubs(alicedaemon).walletsService.setWalletPassword(request);
-        unlockWallet(alicedaemon, "second-password", 2);
-        getBtcBalances(alicedaemon);
+        aliceClient.setWalletPassword("first-password", "second-password");
         sleep(2500); // allow time for wallet save
+        aliceClient.unlockWallet("second-password", 2);
+        aliceClient.getBtcBalances();
     }
 
     @Test
     @Order(9)
     public void testSetNewWalletPasswordWithIncorrectNewPasswordShouldThrowException() {
-        var request = createSetWalletPasswordRequest(
-                "bad old password", "irrelevant");
         Throwable exception = assertThrows(StatusRuntimeException.class, () ->
-                grpcStubs(alicedaemon).walletsService.setWalletPassword(request));
+                aliceClient.setWalletPassword("bad old password", "irrelevant"));
         assertEquals("UNKNOWN: incorrect old password", exception.getMessage());
     }
 
     @Test
     @Order(10)
     public void testRemoveNewWalletPassword() {
-        var request = createRemoveWalletPasswordRequest("second-password");
-        grpcStubs(alicedaemon).walletsService.removeWalletPassword(request);
-        getBtcBalances(alicedaemon);  // should not throw 'wallet locked' exception
+        aliceClient.removeWalletPassword("second-password");
+        aliceClient.getBtcBalances();  // should not throw 'wallet locked' exception
     }
 
     @AfterAll

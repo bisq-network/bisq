@@ -724,10 +724,10 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
 
                 if (minAmount.get() != null)
                     minAmountValidationResult.set(isBtcInputValid(minAmount.get()));
-            } else if (amount.get() != null && btcValidator.getMaxTradeLimit() != null && btcValidator.getMaxTradeLimit().value == OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT.value) {
+            } else if (amount.get() != null && btcValidator.getMaxTradeLimit() != null && btcValidator.getMaxTradeLimit().value == OfferRestrictions.TOLERATED_SMALL_AMOUNT_SELF.value) {
                 amount.set(btcFormatter.formatCoin(btcValidator.getMaxTradeLimit()));
                 new Popup().information(Res.get("popup.warning.tradeLimitDueAccountAgeRestriction.buyer",
-                        btcFormatter.formatCoinWithCode(OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT),
+                        btcFormatter.formatCoinWithCode(OfferRestrictions.TOLERATED_SMALL_AMOUNT_SELF),
                         Res.get("offerbook.warning.newVersionAnnouncement")))
                         .width(900)
                         .show();
@@ -792,6 +792,8 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
         // if not reset here. Not clear why...
         triggerPriceValidationResult.set(new InputValidator.ValidationResult(true));
 
+        if (dataModel.getPrice().get() == null) // fix NPE @ bisq/issues/5166
+            return;
         InputValidator.ValidationResult result = PriceUtil.isTriggerPriceValid(triggerPriceAsString,
                 dataModel.getPrice().get(),
                 dataModel.isSellOffer(),

@@ -3,17 +3,32 @@ package bisq.daemon.grpc;
 import bisq.core.api.CoreApi;
 import bisq.core.trade.statistics.TradeStatistics3;
 
-import bisq.proto.grpc.GetTradeStatisticsGrpc;
 import bisq.proto.grpc.GetTradeStatisticsReply;
 import bisq.proto.grpc.GetTradeStatisticsRequest;
 
+import io.grpc.ServerInterceptor;
 import io.grpc.stub.StreamObserver;
 
 import javax.inject.Inject;
 
+import java.util.HashMap;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
-class GrpcGetTradeStatisticsService extends GetTradeStatisticsGrpc.GetTradeStatisticsImplBase {
+import lombok.extern.slf4j.Slf4j;
+
+import static bisq.daemon.grpc.interceptor.GrpcServiceRateMeteringConfig.getCustomRateMeteringInterceptor;
+import static bisq.proto.grpc.GetTradeStatisticsGrpc.GetTradeStatisticsImplBase;
+import static bisq.proto.grpc.GetTradeStatisticsGrpc.getGetTradeStatisticsMethod;
+import static java.util.concurrent.TimeUnit.SECONDS;
+
+
+
+import bisq.daemon.grpc.interceptor.CallRateMeteringInterceptor;
+import bisq.daemon.grpc.interceptor.GrpcCallRateMeter;
+
+@Slf4j
+class GrpcGetTradeStatisticsService extends GetTradeStatisticsImplBase {
 
     private final CoreApi coreApi;
     private final GrpcExceptionHandler exceptionHandler;
@@ -36,7 +51,22 @@ class GrpcGetTradeStatisticsService extends GetTradeStatisticsGrpc.GetTradeStati
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
         } catch (Throwable cause) {
-            exceptionHandler.handleException(cause, responseObserver);
+            exceptionHandler.handleException(log, cause, responseObserver);
         }
+    }
+
+    final ServerInterceptor[] interceptors() {
+        Optional<ServerInterceptor> rateMeteringInterceptor = rateMeteringInterceptor();
+        return rateMeteringInterceptor.map(serverInterceptor ->
+                new ServerInterceptor[]{serverInterceptor}).orElseGet(() -> new ServerInterceptor[0]);
+    }
+
+    final Optional<ServerInterceptor> rateMeteringInterceptor() {
+        return getCustomRateMeteringInterceptor(coreApi.getConfig().appDataDir, this.getClass())
+                .or(() -> Optional.of(CallRateMeteringInterceptor.valueOf(
+                        new HashMap<>() {{
+                            put(getGetTradeStatisticsMethod().getFullMethodName(), new GrpcCallRateMeter(1, SECONDS));
+                        }}
+                )));
     }
 }

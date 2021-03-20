@@ -37,7 +37,7 @@ public class DisputeAgentLookupMap {
             case "apbp7ubuyezav4hy.onion:9999":
                 return "bisq_knight";
             case "a56olqlmmpxrn5q34itq5g5tb5d3fg7vxekpbceq7xqvfl3cieocgsyd.onion:9999":
-                return "leo816";
+                return "huey735";
             case "3z5jnirlccgxzoxc6zwkcgwj66bugvqplzf6z2iyd5oxifiaorhnanqd.onion:9999":
                 return "refundagent2";
             default:

@@ -34,3 +34,4 @@ deploy
 /monitor/monitor-tor/*
 .java-version
 .localnet
+/apitest/src/main/resources/dao-setup*

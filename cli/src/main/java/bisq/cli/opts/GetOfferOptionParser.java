@@ -21,13 +21,11 @@ package bisq.cli.opts;
 import joptsimple.OptionSpec;
 
 import static bisq.cli.opts.OptLabel.OPT_OFFER_ID;
-import static joptsimple.internal.Strings.EMPTY;
 
 public class GetOfferOptionParser extends AbstractMethodOptionParser implements MethodOpts {
 
     final OptionSpec<String> offerIdOpt = parser.accepts(OPT_OFFER_ID, "id of offer to get")
-            .withRequiredArg()
-            .defaultsTo(EMPTY);
+            .withRequiredArg();
 
     public GetOfferOptionParser(String[] args) {
         super(args);
@@ -40,7 +38,7 @@ public class GetOfferOptionParser extends AbstractMethodOptionParser implements 
         if (options.has(helpOpt))
             return this;
 
-        if (!options.has(offerIdOpt))
+        if (!options.has(offerIdOpt) || options.valueOf(offerIdOpt).isEmpty())
             throw new IllegalArgumentException("no offer id specified");
 
         return this;

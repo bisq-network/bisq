@@ -107,7 +107,7 @@ public final class F2FAccountPayload extends CountryBasedPaymentAccountPayload {
     public String getPaymentDetails() {
         return Res.get(paymentMethodId) + " - " + Res.getWithCol("payment.f2f.contact") + " " + contact + ", " +
                 Res.getWithCol("payment.f2f.city") + " " + city +
-                ", " + Res.getWithCol("payment.f2f.extra") + " " + extraInfo;
+                ", " + Res.getWithCol("payment.shared.extraInfo") + " " + extraInfo;
     }
 
 

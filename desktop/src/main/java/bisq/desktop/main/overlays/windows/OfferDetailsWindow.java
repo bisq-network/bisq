@@ -163,14 +163,17 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         List<String> acceptedCountryCodes = offer.getAcceptedCountryCodes();
         boolean showAcceptedCountryCodes = acceptedCountryCodes != null && !acceptedCountryCodes.isEmpty();
         boolean isF2F = offer.getPaymentMethod().equals(PaymentMethod.F2F);
+        boolean showExtraInfo = offer.getPaymentMethod().equals(PaymentMethod.F2F) || offer.getPaymentMethod().equals(PaymentMethod.CASH_BY_MAIL);
         if (!takeOfferHandlerOptional.isPresent())
             rows++;
         if (showAcceptedBanks)
             rows++;
         if (showAcceptedCountryCodes)
             rows++;
+        if (showExtraInfo)
+            rows++;
         if (isF2F)
-            rows += 2;
+            rows++;
 
         boolean showXmrAutoConf = offer.isXmr() && offer.getDirection() == OfferPayload.Direction.SELL;
         if (showXmrAutoConf) {
@@ -313,8 +316,10 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
 
         if (isF2F) {
             addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("payment.f2f.city"), offer.getF2FCity());
-            TextArea textArea = addConfirmationLabelTextArea(gridPane, ++rowIndex, Res.get("payment.f2f.extra"), "", 0).second;
-            textArea.setText(offer.getF2FExtraInfo());
+        }
+        if (showExtraInfo) {
+            TextArea textArea = addConfirmationLabelTextArea(gridPane, ++rowIndex, Res.get("payment.shared.extraInfo"), "", 0).second;
+            textArea.setText(offer.getExtraInfo());
             textArea.setMinHeight(33);
             textArea.setMaxHeight(textArea.getMinHeight());
             textArea.setEditable(false);
@@ -433,7 +438,8 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
             if (GUIUtil.canCreateOrTakeOfferOrShowPopup(user, navigation)) {
                 button.setDisable(true);
                 cancelButton.setDisable(true);
-                busyAnimation.play();
+                // temporarily disabled due to high CPU usage (per issue #4649)
+                //  busyAnimation.play();
                 if (isPlaceOffer) {
                     spinnerInfoLabel.setText(Res.get("createOffer.fundsBox.placeOfferSpinnerInfo"));
                     placeOfferHandlerOptional.ifPresent(Runnable::run);

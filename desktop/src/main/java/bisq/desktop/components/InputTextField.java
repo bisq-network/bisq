@@ -76,7 +76,7 @@ public class InputTextField extends JFXTextField {
 
         validationResult.addListener((ov, oldValue, newValue) -> {
             if (newValue != null) {
-                resetValidation();
+                jfxValidationWrapper.resetValidation();
                 if (!newValue.isValid) {
                     if (!newValue.errorMessageEquals(oldValue)) {  // avoid blinking
                         validate();  // ensure that the new error message replaces the old one
@@ -92,9 +92,7 @@ public class InputTextField extends JFXTextField {
         });
 
         textProperty().addListener((o, oldValue, newValue) -> {
-            if (validator != null) {
-                this.validationResult.set(validator.validate(getText()));
-            }
+            refreshValidation();
         });
 
         focusedProperty().addListener((o, oldValue, newValue) -> {
@@ -108,6 +106,7 @@ public class InputTextField extends JFXTextField {
         });
     }
 
+
     public InputTextField(double inputLineExtension) {
         this();
         this.inputLineExtension = inputLineExtension;
@@ -119,6 +118,19 @@ public class InputTextField extends JFXTextField {
 
     public void resetValidation() {
         jfxValidationWrapper.resetValidation();
+
+        String input = getText();
+        if (input.isEmpty()) {
+            validationResult.set(new InputValidator.ValidationResult(true));
+        } else {
+            validationResult.set(validator.validate(input));
+        }
+    }
+
+    public void refreshValidation() {
+        if (validator != null) {
+            this.validationResult.set(validator.validate(getText()));
+        }
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

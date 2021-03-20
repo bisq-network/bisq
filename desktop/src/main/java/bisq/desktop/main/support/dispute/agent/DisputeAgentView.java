@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.support.dispute.agent;
 
-import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipTableColumn;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.ContractWindow;
@@ -32,13 +31,13 @@ import bisq.core.locale.Res;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeList;
 import bisq.core.support.dispute.DisputeManager;
-import bisq.core.support.dispute.DisputeSession;
 import bisq.core.support.dispute.agent.MultipleHolderNameDetection;
 import bisq.core.support.dispute.mediation.mediator.MediatorManager;
 import bisq.core.support.dispute.refund.refundagent.RefundAgentManager;
 import bisq.core.trade.TradeDataValidation;
 import bisq.core.trade.TradeManager;
 import bisq.core.user.DontShowAgainLookup;
+import bisq.core.user.Preferences;
 import bisq.core.util.coin.CoinFormatter;
 
 import bisq.common.crypto.KeyRing;
@@ -46,7 +45,6 @@ import bisq.common.util.Utilities;
 
 import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 
-import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
@@ -76,6 +74,7 @@ public abstract class DisputeAgentView extends DisputeView implements MultipleHo
                             KeyRing keyRing,
                             TradeManager tradeManager,
                             CoinFormatter formatter,
+                            Preferences preferences,
                             DisputeSummaryWindow disputeSummaryWindow,
                             PrivateNotificationManager privateNotificationManager,
                             ContractWindow contractWindow,
@@ -89,6 +88,7 @@ public abstract class DisputeAgentView extends DisputeView implements MultipleHo
                 keyRing,
                 tradeManager,
                 formatter,
+                preferences,
                 disputeSummaryWindow,
                 privateNotificationManager,
                 contractWindow,
@@ -216,14 +216,8 @@ public abstract class DisputeAgentView extends DisputeView implements MultipleHo
     }
 
     @Override
-    protected void handleOnSelectDispute(Dispute dispute) {
-        Button closeDisputeButton = null;
-        if (!dispute.isClosed() && !disputeManager.isTrader(dispute)) {
-            closeDisputeButton = new AutoTooltipButton(Res.get("support.closeTicket"));
-            closeDisputeButton.setOnAction(e -> onCloseDispute(getSelectedDispute()));
-        }
-        DisputeSession chatSession = getConcreteDisputeChatSession(dispute);
-        chatView.display(chatSession, closeDisputeButton, root.widthProperty());
+    protected void handleOnProcessDispute(Dispute dispute) {
+        onCloseDispute(dispute);
     }
 
     @Override
@@ -351,6 +345,16 @@ public abstract class DisputeAgentView extends DisputeView implements MultipleHo
                 "If you find suspicious disputes, please notify the developers and provide the contract json data " +
                 "to them so they can ban those traders.\n\n" +
                 Utilities.toTruncatedString(report, 700, false);
+    }
+
+    @Override
+    protected void maybeAddProcessColumn() {
+        tableView.getColumns().add(getProcessColumn());
+    }
+
+    @Override
+    protected boolean senderFlag() {
+        return true;
     }
 }
 

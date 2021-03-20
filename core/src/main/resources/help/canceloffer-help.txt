@@ -1,0 +1,26 @@
+canceloffer
+
+NAME
+----
+canceloffer - cancel an existing offer to buy or sell BTC
+
+SYNOPSIS
+--------
+canceloffer
+		--offer-id=<offer-id>
+
+DESCRIPTION
+-----------
+Cancel an existing offer.  The offer will be removed from other Bisq users' offer views,
+and paid transaction fees will be forfeited.
+
+OPTIONS
+-------
+--offer-id
+		The ID of the buy or sell offer to cancel.
+
+EXAMPLES
+--------
+To cancel an offer with ID 83e8b2e2-51b6-4f39-a748-3ebd29c22aea:
+$ ./bisq-cli --password=xyz --port=9998 canceloffer --offer-id=83e8b2e2-51b6-4f39-a748-3ebd29c22aea
+

@@ -83,16 +83,18 @@ public class TacWindow extends Overlay<TacWindow> {
 
                 "6. The user confirms that they have read and agreed to the rules regarding the dispute process:\n" +
                 "    - You must complete trades within the maximum duration specified for each payment method.\n" +
-                "    - You must enter the trade ID in the \"reason for payment\" text field (if possible) when doing the fiat payment transfer.\n" +
+                "    - Leave the \"reason for payment\" field empty. DO NOT put the trade ID or any other text like 'bitcoin', 'BTC', or 'Bisq'.\n" +
                 "    - If the bank of the fiat sender charges fees, the sender (" + Res.getBaseCurrencyCode() + " buyer) has to cover the fees.\n" +
                 "    - You must cooperate with the mediator during the mediation process, and respond to each mediator message within 48 hours.\n" +
-                "    - If either (or both) traders do not accept the mediator's suggested payout, traders can open a refund request from an arbitrator after 10 days in case of altcoin trades and 20 days for fiat trades.\n" +
+                "    - If either (or both) traders do not accept the mediator's suggested payout, traders can open a refund request from an arbitrator after 10 days in case of altcoin trades\n" +
+                "      and 20 days for fiat trades.\n" +
                 "    - You should only open a refund request from an arbitrator if you think the mediator's suggested payout is unfair, or if your trading peer is unresponsive.\n" +
-                "    - Opening a refund request from an arbitrator triggers the delayed payout transaction, sending all funds from the deposit transaction to the Bisq DAO receiver address ('collateral for refund to avoid scamming the refund process'). At this point, the arbitrator will re-investigate the case and personally refund (at their discretion) the trader who requested arbitration.\n" +
-                "The arbitrator may charge a small fee (max. the traders security deposit) as compensation for their work.\n" +
+                "    - Opening a refund request from an arbitrator triggers the delayed payout transaction, sending all funds from the deposit transaction to the Bisq DAO receiver\n" +
+                "      address ('collateral for refund to avoid scamming the refund process'). At this point, the arbitrator will re-investigate the case and personally refund \n" +
+                "      (at their discretion) the trader who requested arbitration.\n" +
+                "    - The arbitrator may charge a small fee (max. the traders security deposit) as compensation for their work.\n" +
                 "    - The arbitrator will then make a reimbursement request to the Bisq DAO to get reimbursed for the refund they paid to the trader.\n\n" +
-                "For more details and a general overview please read the full documentation about " +
-                "dispute resolution.";
+                "For more details and a general overview please read the full documentation about dispute resolution.";
         message(text);
         actionButtonText(Res.get("tacWindow.agree"));
         closeButtonText(Res.get("tacWindow.disagree"));

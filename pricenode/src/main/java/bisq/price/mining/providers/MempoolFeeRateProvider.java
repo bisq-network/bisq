@@ -39,7 +39,7 @@ import java.time.Instant;
 
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Stream;
+import java.util.Set;
 
 /**
  * {@link FeeRateProvider} that interprets the Mempool API format to retrieve a mining
@@ -77,33 +77,37 @@ abstract class MempoolFeeRateProvider extends FeeRateProvider {
     protected FeeRate doGet() {
         // Default value is the minimum rate. If the connection to the fee estimate
         // provider fails, we fall back to this value.
-        long estimatedFeeRate = MIN_FEE_RATE;
         try {
-            estimatedFeeRate = getEstimatedFeeRate();
+            return getEstimatedFeeRate();
         }
         catch (Exception e) {
             // Something happened with the connection
             log.error("Error retrieving bitcoin mining fee estimation: " + e.getMessage());
         }
 
-        return new FeeRate("BTC", estimatedFeeRate, Instant.now().getEpochSecond());
+        return new FeeRate("BTC", MIN_FEE_RATE, MIN_FEE_RATE, Instant.now().getEpochSecond());
     }
 
-    private long getEstimatedFeeRate() {
-        return getFeeRatePredictions()
-            .filter(p -> p.getKey().equalsIgnoreCase("halfHourFee"))
-            .map(Map.Entry::getValue)
-            .findFirst()
-            .map(r -> {
-                log.info("Retrieved estimated mining fee of {} sat/vbyte from {}", r, getMempoolApiHostname());
-                return r;
-            })
-            .map(r -> Math.max(r, MIN_FEE_RATE))
-            .map(r -> Math.min(r, MAX_FEE_RATE))
-            .orElse(MIN_FEE_RATE);
+    private FeeRate getEstimatedFeeRate() {
+        Set<Map.Entry<String, Long>> feeRatePredictions = getFeeRatePredictions();
+        long estimatedFeeRate = feeRatePredictions.stream()
+                .filter(p -> p.getKey().equalsIgnoreCase("halfHourFee"))
+                .map(Map.Entry::getValue)
+                .findFirst()
+                .map(r -> Math.max(r, MIN_FEE_RATE))
+                .map(r -> Math.min(r, MAX_FEE_RATE))
+                .orElse(MIN_FEE_RATE);
+        long minimumFee = feeRatePredictions.stream()
+                .filter(p -> p.getKey().equalsIgnoreCase("minimumFee"))
+                .map(Map.Entry::getValue)
+                .findFirst()
+                .map(r -> Math.multiplyExact(r, 2)) // multiply the minimumFee by 2 (per wiz)
+                .orElse(MIN_FEE_RATE);
+        log.info("Retrieved estimated mining fee of {} sat/vB and minimumFee of {} sat/vB from {}", estimatedFeeRate, minimumFee, getMempoolApiHostname());
+        return new FeeRate("BTC", estimatedFeeRate, minimumFee, Instant.now().getEpochSecond());
     }
 
-    private Stream<Map.Entry<String, Long>> getFeeRatePredictions() {
+    private Set<Map.Entry<String, Long>> getFeeRatePredictions() {
         return restTemplate.exchange(
             RequestEntity
                 .get(UriComponentsBuilder
@@ -112,7 +116,7 @@ abstract class MempoolFeeRateProvider extends FeeRateProvider {
                     .build().toUri())
                 .build(),
             new ParameterizedTypeReference<Map<String, Long>>() { }
-        ).getBody().entrySet().stream();
+        ).getBody().entrySet();
     }
 
     /**

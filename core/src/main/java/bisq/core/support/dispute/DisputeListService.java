@@ -26,16 +26,15 @@ import bisq.common.persistence.PersistenceManager;
 import bisq.common.proto.persistable.PersistedDataHost;
 
 import org.fxmisc.easybind.EasyBind;
-import org.fxmisc.easybind.Subscription;
 
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 
 import javafx.collections.ObservableList;
 
-import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -50,9 +49,10 @@ public abstract class DisputeListService<T extends DisputeList<Dispute>> impleme
     protected final PersistenceManager<T> persistenceManager;
     @Getter
     private final T disputeList;
-    private final Map<String, Subscription> disputeIsClosedSubscriptionsMap = new HashMap<>();
     @Getter
     private final IntegerProperty numOpenDisputes = new SimpleIntegerProperty();
+    @Getter
+    private final Set<String> disputedTradeIds = new HashSet<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -149,25 +149,22 @@ public abstract class DisputeListService<T extends DisputeList<Dispute>> impleme
                                           @Nullable List<? extends Dispute> removedList) {
         if (removedList != null) {
             removedList.forEach(dispute -> {
-                String id = dispute.getId();
-                if (disputeIsClosedSubscriptionsMap.containsKey(id)) {
-                    disputeIsClosedSubscriptionsMap.get(id).unsubscribe();
-                    disputeIsClosedSubscriptionsMap.remove(id);
-                }
+                disputedTradeIds.remove(dispute.getTradeId());
             });
         }
         addedList.forEach(dispute -> {
-            String id = dispute.getId();
-            Subscription disputeStateSubscription = EasyBind.subscribe(dispute.isClosedProperty(),
-                    isClosed -> {
+            // for each dispute added, keep track of its "BadgeCountProperty"
+            EasyBind.subscribe(dispute.getBadgeCountProperty(),
+                    isAlerting -> {
                         // We get the event before the list gets updated, so we execute on next frame
                         UserThread.execute(() -> {
-                            int openDisputes = (int) disputeList.getList().stream()
-                                    .filter(e -> !e.isClosed()).count();
-                            numOpenDisputes.set(openDisputes);
+                            int numAlerts = (int) disputeList.getList().stream()
+                                    .mapToLong(x -> x.getBadgeCountProperty().getValue())
+                                    .sum();
+                            numOpenDisputes.set(numAlerts);
                         });
                     });
-            disputeIsClosedSubscriptionsMap.put(id, disputeStateSubscription);
+            disputedTradeIds.add(dispute.getTradeId());
         });
     }
 

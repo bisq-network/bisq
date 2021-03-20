@@ -1,5 +1,6 @@
 package bisq.core.offer;
 
+import bisq.core.api.CoreContext;
 import bisq.core.trade.TradableList;
 
 import bisq.network.p2p.P2PService;
@@ -26,12 +27,14 @@ import static org.mockito.Mockito.*;
 
 public class OpenOfferManagerTest {
     private PersistenceManager<TradableList<OpenOffer>> persistenceManager;
+    private CoreContext coreContext;
 
     @Before
     public void setUp() throws Exception {
         var corruptedStorageFileHandler = mock(CorruptedStorageFileHandler.class);
         var storageDir = Files.createTempDirectory("storage").toFile();
         persistenceManager = new PersistenceManager<>(storageDir, null, corruptedStorageFileHandler);
+        coreContext = new CoreContext();
     }
 
     @After
@@ -46,10 +49,25 @@ public class OpenOfferManagerTest {
 
         when(p2PService.getPeerManager()).thenReturn(mock(PeerManager.class));
 
-        final OpenOfferManager manager = new OpenOfferManager(null, null, null, p2PService,
-                null, null, null, offerBookService,
-                null, null, null,
-                null, null, null, null, null, null, null,
+        final OpenOfferManager manager = new OpenOfferManager(coreContext,
+                null,
+                null,
+                null,
+                p2PService,
+                null,
+                null,
+                null,
+                offerBookService,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
                 persistenceManager);
 
         AtomicBoolean startEditOfferSuccessful = new AtomicBoolean(false);
@@ -78,10 +96,25 @@ public class OpenOfferManagerTest {
         OfferBookService offerBookService = mock(OfferBookService.class);
         when(p2PService.getPeerManager()).thenReturn(mock(PeerManager.class));
 
-        final OpenOfferManager manager = new OpenOfferManager(null, null, null, p2PService,
-                null, null, null, offerBookService,
-                null, null, null,
-                null, null, null, null, null, null, null,
+        final OpenOfferManager manager = new OpenOfferManager(coreContext,
+                null,
+                null,
+                null,
+                p2PService,
+                null,
+                null,
+                null,
+                offerBookService,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
                 persistenceManager);
 
         AtomicBoolean startEditOfferSuccessful = new AtomicBoolean(false);
@@ -103,10 +136,25 @@ public class OpenOfferManagerTest {
 
         when(p2PService.getPeerManager()).thenReturn(mock(PeerManager.class));
 
-        final OpenOfferManager manager = new OpenOfferManager(null, null, null, p2PService,
-                null, null, null, offerBookService,
-                null, null, null,
-                null, null, null, null, null, null, null,
+        final OpenOfferManager manager = new OpenOfferManager(coreContext,
+                null,
+                null,
+                null,
+                p2PService,
+                null,
+                null,
+                null,
+                offerBookService,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
                 persistenceManager);
 
         AtomicBoolean startEditOfferSuccessful = new AtomicBoolean(false);

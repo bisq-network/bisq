@@ -63,7 +63,7 @@ configure(subprojects) {
         loggingVersion = '1.2'
         lombokVersion = '1.18.2'
         mockitoVersion = '3.0.0'
-        netlayerVersion = 'cc80787'
+        netlayerVersion = '32779ac' // Commit ID from https://github.com/bisq-network/netlayer/commits/externaltor
         protobufVersion = '3.10.0'
         protocVersion = protobufVersion
         pushyVersion = '0.13.2'
@@ -364,6 +364,17 @@ configure(project(':cli')) {
         implementation "ch.qos.logback:logback-classic:$logbackVersion"
         compileOnly "org.projectlombok:lombok:$lombokVersion"
         annotationProcessor "org.projectlombok:lombok:$lombokVersion"
+
+        testImplementation "org.junit.jupiter:junit-jupiter-api:$jupiterVersion"
+        testImplementation "org.junit.jupiter:junit-jupiter-params:$jupiterVersion"
+        testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$jupiterVersion")
+        testAnnotationProcessor "org.projectlombok:lombok:$lombokVersion"
+        testCompileOnly "org.projectlombok:lombok:$lombokVersion"
+        testRuntime "javax.annotation:javax.annotation-api:$javaxAnnotationVersion"
+    }
+
+    test {
+        useJUnitPlatform()
     }
 }
 
@@ -372,7 +383,7 @@ configure(project(':desktop')) {
     apply plugin: 'witness'
     apply from: '../gradle/witness/gradle-witness.gradle'
 
-    version = '1.5.4-SNAPSHOT'
+    version = '1.6.0'
 
     mainClassName = 'bisq.desktop.app.BisqAppMain'
 

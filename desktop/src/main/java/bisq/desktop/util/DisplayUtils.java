@@ -144,7 +144,11 @@ public class DisplayUtils {
     }
 
     public static String formatVolumeWithCode(Volume volume) {
-        return formatVolume(volume, FIAT_VOLUME_FORMAT, true);
+        return formatVolume(volume, true);
+    }
+
+    public static String formatVolume(Volume volume, boolean appendCode) {
+        return formatVolume(volume, FIAT_VOLUME_FORMAT, appendCode);
     }
 
     public static String formatAverageVolumeWithCode(Volume volume) {

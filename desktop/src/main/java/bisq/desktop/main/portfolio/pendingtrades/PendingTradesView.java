@@ -126,19 +126,20 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     private Subscription selectedItemSubscription;
     private Stage chatPopupStage;
     private ListChangeListener<PendingTradesListItem> tradesListChangeListener;
-    private Map<String, Long> newChatMessagesByTradeMap = new HashMap<>();
+    private final Map<String, Long> newChatMessagesByTradeMap = new HashMap<>();
     private String tradeIdOfOpenChat;
     private double chatPopupStageXPosition = -1;
     private double chatPopupStageYPosition = -1;
     private ChangeListener<Number> xPositionListener;
     private ChangeListener<Number> yPositionListener;
 
-    private Map<String, Button> buttonByTrade = new HashMap<>();
-    private Map<String, JFXBadge> badgeByTrade = new HashMap<>();
-    private Map<String, ListChangeListener<ChatMessage>> listenerByTrade = new HashMap<>();
+    private final Map<String, Button> buttonByTrade = new HashMap<>();
+    private final Map<String, JFXBadge> badgeByTrade = new HashMap<>();
+    private final Map<String, ListChangeListener<ChatMessage>> listenerByTrade = new HashMap<>();
     private ChangeListener<Trade.State> tradeStateListener;
     private ChangeListener<Trade.DisputeState> disputeStateListener;
     private ChangeListener<MediationResultState> mediationResultStateListener;
+    private ChangeListener<Number> getMempoolStatusListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -228,6 +229,15 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         };
 
         tradesListChangeListener = c -> onListChanged();
+
+        getMempoolStatusListener = (observable, oldValue, newValue) -> {
+            // -1 status is unknown
+            // 0 status is FAIL
+            // 1 status is PASS
+            if (newValue.longValue() >= 0) {
+                log.info("Taker fee validation returned {}", newValue.longValue());
+            }
+        };
     }
 
     @Override
@@ -287,6 +297,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
 
         list.addListener(tradesListChangeListener);
         updateNewChatMessagesByTradeMap();
+        model.getMempoolStatus().addListener(getMempoolStatusListener);
     }
 
     @Override
@@ -298,6 +309,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         removeSelectedSubView();
 
         model.dataModel.list.removeListener(tradesListChangeListener);
+        model.getMempoolStatus().removeListener(getMempoolStatusListener);
 
         if (scene != null)
             scene.removeEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
@@ -403,7 +415,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         model.dataModel.getTradeManager().requestPersistence();
         tradeIdOfOpenChat = trade.getId();
 
-        ChatView chatView = new ChatView(traderChatManager, formatter);
+        ChatView chatView = new ChatView(traderChatManager, formatter, Res.get("offerbook.trader"));
         chatView.setAllowAttachments(false);
         chatView.setDisplayHeader(false);
         chatView.initialize();
@@ -536,9 +548,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         if (selectedItemFromModel != null) {
             // Select and focus selectedItem from model
             int index = tableView.getItems().indexOf(selectedItemFromModel);
-            UserThread.execute(() -> {
-                tableView.getSelectionModel().select(index);
-            });
+            UserThread.execute(() -> tableView.getSelectionModel().select(index));
         }
     }
 
@@ -578,12 +588,16 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                                     setGraphic(null);
                                     if (trade != null && listener != null) {
                                         trade.stateProperty().removeListener(listener);
+                                        trade = null;
+                                        listener = null;
                                     }
                                 }
                             }
 
                             private void update() {
                                 HyperlinkWithIcon field;
+                                if (trade == null) return;
+
                                 if (isMaybeInvalidTrade(trade)) {
                                     field = new HyperlinkWithIcon(trade.getShortId());
                                     field.setIcon(FormBuilder.getMediumSizeIcon(MaterialDesignIcon.ALERT_CIRCLE_OUTLINE));
@@ -864,7 +878,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         return chatColumn;
     }
 
-    private TableColumn<PendingTradesListItem, PendingTradesListItem> setRemoveTradeColumnCellFactory() {
+    private void setRemoveTradeColumnCellFactory() {
         moveTradeToFailedColumn.setCellValueFactory((trade) -> new ReadOnlyObjectWrapper<>(trade.getValue()));
         moveTradeToFailedColumn.setCellFactory(
                 new Callback<>() {
@@ -937,6 +951,5 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                         };
                     }
                 });
-        return moveTradeToFailedColumn;
     }
 }

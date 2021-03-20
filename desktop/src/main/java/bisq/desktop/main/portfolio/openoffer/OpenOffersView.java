@@ -200,10 +200,12 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
         updateSelectToggleButtonState();
 
         selectToggleButton.setOnAction(event -> {
-            if (selectToggleButton.isSelected()) {
-                sortedList.forEach(openOfferListItem -> onActivateOpenOffer(openOfferListItem.getOpenOffer()));
-            } else {
-                sortedList.forEach(openOfferListItem -> onDeactivateOpenOffer(openOfferListItem.getOpenOffer()));
+            if (model.isBootstrappedOrShowPopup()) {
+                if (selectToggleButton.isSelected()) {
+                    sortedList.forEach(openOfferListItem -> onActivateOpenOffer(openOfferListItem.getOpenOffer()));
+                } else {
+                    sortedList.forEach(openOfferListItem -> onDeactivateOpenOffer(openOfferListItem.getOpenOffer()));
+                }
             }
             tableView.refresh();
         });

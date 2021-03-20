@@ -26,11 +26,9 @@ import bisq.network.p2p.SendMailboxMessageListener;
 import bisq.network.p2p.messaging.DecryptedMailboxListener;
 import bisq.network.p2p.network.Connection;
 import bisq.network.p2p.network.NetworkNode;
-import bisq.network.p2p.network.SetupListener;
 import bisq.network.p2p.peers.BroadcastHandler;
 import bisq.network.p2p.peers.Broadcaster;
 import bisq.network.p2p.peers.PeerManager;
-import bisq.network.p2p.peers.getdata.RequestDataManager;
 import bisq.network.p2p.storage.HashMapChangedListener;
 import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.messages.AddDataMessage;
@@ -112,14 +110,12 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 @Singleton
 @Slf4j
-public class MailboxMessageService implements SetupListener, RequestDataManager.Listener, HashMapChangedListener,
-        PersistedDataHost {
+public class MailboxMessageService implements HashMapChangedListener, PersistedDataHost {
     private static final long REPUBLISH_DELAY_SEC = TimeUnit.MINUTES.toSeconds(2);
 
     private final NetworkNode networkNode;
     private final PeerManager peerManager;
     private final P2PDataStorage p2PDataStorage;
-    private final RequestDataManager requestDataManager;
     private final EncryptionService encryptionService;
     private final IgnoredMailboxService ignoredMailboxService;
     private final PersistenceManager<MailboxMessageList> persistenceManager;
@@ -137,7 +133,6 @@ public class MailboxMessageService implements SetupListener, RequestDataManager.
     public MailboxMessageService(NetworkNode networkNode,
                                  PeerManager peerManager,
                                  P2PDataStorage p2PDataStorage,
-                                 RequestDataManager requestDataManager,
                                  EncryptionService encryptionService,
                                  IgnoredMailboxService ignoredMailboxService,
                                  PersistenceManager<MailboxMessageList> persistenceManager,
@@ -147,16 +142,12 @@ public class MailboxMessageService implements SetupListener, RequestDataManager.
         this.networkNode = networkNode;
         this.peerManager = peerManager;
         this.p2PDataStorage = p2PDataStorage;
-        this.requestDataManager = requestDataManager;
         this.encryptionService = encryptionService;
         this.ignoredMailboxService = ignoredMailboxService;
         this.persistenceManager = persistenceManager;
         this.keyRing = keyRing;
         this.clock = clock;
         this.republishMailboxEntries = republishMailboxEntries;
-
-        this.requestDataManager.addListener(this);
-        this.networkNode.addSetupListener(this);
 
         this.persistenceManager.initialize(mailboxMessageList, PersistenceManager.Source.PRIVATE_LOW_PRIO);
     }
@@ -224,6 +215,25 @@ public class MailboxMessageService implements SetupListener, RequestDataManager.
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    // We don't listen on requestDataManager directly as we require the correct
+    // order of execution. The p2pService is handling the correct order of execution and we get called
+    // directly from there.
+    public void onBootstrapped() {
+        if (!isBootstrapped) {
+            isBootstrapped = true;
+        }
+    }
+
+    // second stage starup for MailboxMessageService ... apply existing messages to their modules
+    public void initAfterBootstrapped() {
+        // Only now we start listening and processing. The p2PDataStorage is our cache for data we have received
+        // after the hidden service was ready.
+        addHashMapChangedListener();
+        onAdded(p2PDataStorage.getMap().values());
+        maybeRepublishMailBoxMessages();
+    }
+
+
     public void sendEncryptedMailboxMessage(NodeAddress peer,
                                             PubKeyRing peersPubKeyRing,
                                             MailboxMessage mailboxMessage,
@@ -238,8 +248,9 @@ public class MailboxMessageService implements SetupListener, RequestDataManager.
                 "My node address must not be null at sendEncryptedMailboxMessage");
         checkArgument(!keyRing.getPubKeyRing().equals(peersPubKeyRing), "We got own keyring instead of that from peer");
 
-        if (!isBootstrapped)
+        if (!isBootstrapped) {
             throw new NetworkNotReadyException();
+        }
 
         if (networkNode.getAllConnections().isEmpty()) {
             sendMailboxMessageListener.onFault("There are no P2P network nodes connected. " +
@@ -331,49 +342,6 @@ public class MailboxMessageService implements SetupListener, RequestDataManager.
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // SetupListener implementation
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    @Override
-    public void onTorNodeReady() {
-        boolean seedNodesAvailable = requestDataManager.requestPreliminaryData();
-        if (!seedNodesAvailable) {
-            isBootstrapped = true;
-            // As we do not expect a updated data request response we start here with addHashMapChangedListenerAndApply
-            addHashMapChangedListenerAndApply();
-            maybeRepublishMailBoxMessages();
-        }
-    }
-
-    @Override
-    public void onHiddenServicePublished() {
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // RequestDataManager.Listener implementation
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public void onPreliminaryDataReceived() {
-    }
-
-    @Override
-    public void onUpdatedDataReceived() {
-        if (!isBootstrapped) {
-            isBootstrapped = true;
-            // Only now we start listening and processing. The p2PDataStorage is our cache for data we have received
-            // after the hidden service was ready.
-            addHashMapChangedListenerAndApply();
-            maybeRepublishMailBoxMessages();
-        }
-    }
-
-    @Override
-    public void onDataReceived() {
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
     // HashMapChangedListener implementation for ProtectedStorageEntry items
     ///////////////////////////////////////////////////////////////////////////////////////////
 
@@ -411,9 +379,8 @@ public class MailboxMessageService implements SetupListener, RequestDataManager.
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void addHashMapChangedListenerAndApply() {
+    private void addHashMapChangedListener() {
         p2PDataStorage.addHashMapChangedListener(this);
-        onAdded(p2PDataStorage.getMap().values());
     }
 
     private void processSingleMailboxEntry(Collection<ProtectedMailboxStorageEntry> protectedMailboxStorageEntries) {

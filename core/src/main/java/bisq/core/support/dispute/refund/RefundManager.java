@@ -190,7 +190,7 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
         } else {
             log.warn("We got a dispute mail msg what we have already stored. TradeId = " + chatMessage.getTradeId());
         }
-        dispute.setIsClosed(true);
+        dispute.setIsClosed();
 
         if (dispute.disputeResultProperty().get() != null) {
             log.warn("We got already a dispute result. That should only happen if a dispute needs to be closed " +

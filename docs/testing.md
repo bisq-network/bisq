@@ -12,7 +12,7 @@ In order to take part in the testing process, you will need to do the following:
 
 ## Communication Channels
 
-If you would like to discuss and/or contribute to Bisq's testing effort, join us in the [#testing](https://bisq.slack.com/messages/CEBLT79ML) channel within the [Bisq Slack workspace](https://bisq.network/slack-invite).
+If you would like to discuss and/or contribute to Bisq's testing effort, join us in the #testing channel within the [Bisq Keybase team](https://keybase.io/team/bisq).
 
 ## Compensation
 

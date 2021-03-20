@@ -1,0 +1,27 @@
+confirmpaymentreceived
+
+NAME
+----
+confirmpaymentreceived - confirm payment has been received
+
+SYNOPSIS
+--------
+confirmpaymentreceived
+		--trade-id=<trade-id>
+
+DESCRIPTION
+-----------
+After the seller receives payment from the BTC buyer, confirmpaymentreceived notifies
+the buyer the payment has arrived.  The seller can release locked BTC only after the
+this confirmation message has been sent.
+
+OPTIONS
+-------
+--trade-id
+		The ID of the trade (the full offer-id).
+
+EXAMPLES
+--------
+A BTC seller has taken an offer with ID 83e8b2e2-51b6-4f39-a748-3ebd29c22aea, and has recently
+received the required fiat payment from the buyer's fiat account:
+$ ./bisq-cli --password=xyz --port=9998 confirmpaymentreceived --trade-id=83e8b2e2-51b6-4f39-a748-3ebd29c22aea

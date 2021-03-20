@@ -130,6 +130,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     private ChangeListener<String> tradeErrorListener;
     private ChangeListener<Offer.State> offerStateListener;
     private ChangeListener<String> offerErrorListener;
+    private ChangeListener<Number> getMempoolStatusListener;
     private ConnectionListener connectionListener;
     //  private Subscription isFeeSufficientSubscription;
     private Runnable takeOfferSucceededHandler;
@@ -345,16 +346,16 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                 if (dataModel.wouldCreateDustForMaker())
                     amountValidationResult.set(new InputValidator.ValidationResult(false,
                             Res.get("takeOffer.validation.amountLargerThanOfferAmountMinusFee")));
-            } else if (btcValidator.getMaxTradeLimit() != null && btcValidator.getMaxTradeLimit().value == OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT.value) {
+            } else if (btcValidator.getMaxTradeLimit() != null && btcValidator.getMaxTradeLimit().value == OfferRestrictions.TOLERATED_SMALL_AMOUNT_PEER.value) {
                 if (dataModel.getDirection() == OfferPayload.Direction.BUY) {
                     new Popup().information(Res.get("popup.warning.tradeLimitDueAccountAgeRestriction.seller",
-                            btcFormatter.formatCoinWithCode(OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT),
+                            btcFormatter.formatCoinWithCode(OfferRestrictions.TOLERATED_SMALL_AMOUNT_PEER),
                             Res.get("offerbook.warning.newVersionAnnouncement")))
                             .width(900)
                             .show();
                 } else {
                     new Popup().information(Res.get("popup.warning.tradeLimitDueAccountAgeRestriction.buyer",
-                            btcFormatter.formatCoinWithCode(OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT),
+                            btcFormatter.formatCoinWithCode(OfferRestrictions.TOLERATED_SMALL_AMOUNT_PEER),
                             Res.get("offerbook.warning.newVersionAnnouncement")))
                             .width(900)
                             .show();
@@ -462,6 +463,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         boolean inputDataValid = isBtcInputValid(amount.get()).isValid
                 && dataModel.isMinAmountLessOrEqualAmount()
                 && !dataModel.isAmountLargerThanOfferAmount()
+                && dataModel.mempoolStatus.get() >= 0 // TODO do we want to block in case response is slow (tor can be slow)?
                 && isOfferAvailable.get()
                 && !dataModel.wouldCreateDustForMaker();
         isNextButtonDisabled.set(!inputDataValid);
@@ -509,6 +511,13 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         tradeStateListener = (ov, oldValue, newValue) -> applyTradeState();
         tradeErrorListener = (ov, oldValue, newValue) -> applyTradeErrorMessage(newValue);
         offerStateListener = (ov, oldValue, newValue) -> applyOfferState(newValue);
+
+        getMempoolStatusListener = (observable, oldValue, newValue) -> {
+            if (newValue.longValue() >= 0) {
+                updateButtonDisableState();
+            }
+        };
+
         connectionListener = new ConnectionListener() {
             @Override
             public void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection) {
@@ -558,6 +567,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         dataModel.getAmount().addListener(amountAsCoinListener);
 
         dataModel.getIsBtcWalletFunded().addListener(isWalletFundedListener);
+        dataModel.getMempoolStatus().addListener(getMempoolStatusListener);
         p2PService.getNetworkNode().addConnectionListener(connectionListener);
        /* isFeeSufficientSubscription = EasyBind.subscribe(dataModel.isFeeFromFundingTxSufficient, newValue -> {
             updateButtonDisableState();
@@ -570,6 +580,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
 
         // Binding with Bindings.createObjectBinding does not work because of bi-directional binding
         dataModel.getAmount().removeListener(amountAsCoinListener);
+        dataModel.getMempoolStatus().removeListener(getMempoolStatusListener);
 
         dataModel.getIsBtcWalletFunded().removeListener(isWalletFundedListener);
         if (offer != null) {

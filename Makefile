@@ -89,11 +89,11 @@
 # registered on the network. Follow the instructions below to complete
 # that process:
 #
-#  a) Go to the Account screen in the Mediator instance and press CMD+N
+#  a) Go to the Account screen in the Mediator instance and press CMD+D
 #  and a popup will appear. Click 'Unlock' and then click 'Register' to
 #  register the instance as a mediator.
 #
-#  b) While still in the Account screen, press CMD+D and follow the same
+#  b) While still in the Account screen, press CMD+N and follow the same
 #  steps as above to register the instance as a refund agent.
 #
 # When the steps above are complete, your localnet should be up and

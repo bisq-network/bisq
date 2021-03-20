@@ -72,6 +72,10 @@ import org.bitcoinj.wallet.listeners.WalletReorganizeEventListener;
 
 import javax.inject.Inject;
 
+import com.google.common.collect.ImmutableMultiset;
+import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.Multiset;
+import com.google.common.collect.SetMultimap;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -83,9 +87,13 @@ import org.bouncycastle.crypto.params.KeyParameter;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -106,10 +114,13 @@ public abstract class WalletService {
     protected final Preferences preferences;
     protected final FeeService feeService;
     protected final NetworkParameters params;
-    protected final BisqWalletListener walletEventListener = new BisqWalletListener();
-    protected final CopyOnWriteArraySet<AddressConfidenceListener> addressConfidenceListeners = new CopyOnWriteArraySet<>();
-    protected final CopyOnWriteArraySet<TxConfidenceListener> txConfidenceListeners = new CopyOnWriteArraySet<>();
-    protected final CopyOnWriteArraySet<BalanceListener> balanceListeners = new CopyOnWriteArraySet<>();
+    private final BisqWalletListener walletEventListener = new BisqWalletListener();
+    private final CopyOnWriteArraySet<AddressConfidenceListener> addressConfidenceListeners = new CopyOnWriteArraySet<>();
+    private final CopyOnWriteArraySet<TxConfidenceListener> txConfidenceListeners = new CopyOnWriteArraySet<>();
+    private final CopyOnWriteArraySet<BalanceListener> balanceListeners = new CopyOnWriteArraySet<>();
+    private final WalletChangeEventListener cacheInvalidationListener;
+    private final AtomicReference<Multiset<Address>> txOutputAddressCache = new AtomicReference<>();
+    private final AtomicReference<SetMultimap<Address, Transaction>> addressToMatchingTxSetCache = new AtomicReference<>();
     @Getter
     protected Wallet wallet;
     @Getter
@@ -131,6 +142,11 @@ public abstract class WalletService {
         this.feeService = feeService;
 
         params = walletsSetup.getParams();
+
+        cacheInvalidationListener = wallet -> {
+            txOutputAddressCache.set(null);
+            addressToMatchingTxSetCache.set(null);
+        };
     }
 
 
@@ -138,13 +154,21 @@ public abstract class WalletService {
     // Lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    protected void addListenersToWallet() {
+        wallet.addCoinsReceivedEventListener(walletEventListener);
+        wallet.addCoinsSentEventListener(walletEventListener);
+        wallet.addReorganizeEventListener(walletEventListener);
+        wallet.addTransactionConfidenceEventListener(walletEventListener);
+        wallet.addChangeEventListener(Threading.SAME_THREAD, cacheInvalidationListener);
+    }
+
     public void shutDown() {
         if (wallet != null) {
-            //noinspection deprecation
             wallet.removeCoinsReceivedEventListener(walletEventListener);
             wallet.removeCoinsSentEventListener(walletEventListener);
             wallet.removeReorganizeEventListener(walletEventListener);
             wallet.removeTransactionConfidenceEventListener(walletEventListener);
+            wallet.removeChangeEventListener(cacheInvalidationListener);
         }
     }
 
@@ -371,13 +395,26 @@ public abstract class WalletService {
     public TransactionConfidence getConfidenceForAddress(Address address) {
         List<TransactionConfidence> transactionConfidenceList = new ArrayList<>();
         if (wallet != null) {
-            Set<Transaction> transactions = wallet.getTransactions(false);
-            if (transactions != null) {
-                transactionConfidenceList.addAll(transactions.stream().map(tx ->
-                        getTransactionConfidence(tx, address)).collect(Collectors.toList()));
-            }
+            Set<Transaction> transactions = getAddressToMatchingTxSetMultiset().get(address);
+            transactionConfidenceList.addAll(transactions.stream().map(tx ->
+                    getTransactionConfidence(tx, address)).collect(Collectors.toList()));
         }
         return getMostRecentConfidence(transactionConfidenceList);
+    }
+
+    private SetMultimap<Address, Transaction> getAddressToMatchingTxSetMultiset() {
+        return addressToMatchingTxSetCache.updateAndGet(set -> set != null ? set : computeAddressToMatchingTxSetMultimap());
+    }
+
+    private SetMultimap<Address, Transaction> computeAddressToMatchingTxSetMultimap() {
+        return wallet.getTransactions(false).stream()
+                .collect(ImmutableSetMultimap.flatteningToImmutableSetMultimap(
+                        Function.identity(),
+                        (Function<Transaction, Stream<Address>>) (
+                                t -> getOutputsWithConnectedOutputs(t).stream()
+                                        .map(WalletService::getAddressFromOutput)
+                                        .filter(Objects::nonNull))))
+                .inverse();
     }
 
     @Nullable
@@ -392,18 +429,18 @@ public abstract class WalletService {
         return null;
     }
 
-    protected TransactionConfidence getTransactionConfidence(Transaction tx, Address address) {
-        List<TransactionConfidence> transactionConfidenceList = getOutputsWithConnectedOutputs(tx)
-                .stream()
-                .filter(WalletService::isOutputScriptConvertibleToAddress)
+    @Nullable
+    private TransactionConfidence getTransactionConfidence(Transaction tx, Address address) {
+        List<TransactionConfidence> transactionConfidenceList = getOutputsWithConnectedOutputs(tx).stream()
                 .filter(output -> address != null && address.equals(getAddressFromOutput(output)))
-                .map(o -> tx.getConfidence())
+                .flatMap(o -> Stream.ofNullable(o.getParentTransaction()))
+                .map(Transaction::getConfidence)
                 .collect(Collectors.toList());
         return getMostRecentConfidence(transactionConfidenceList);
     }
 
 
-    protected List<TransactionOutput> getOutputsWithConnectedOutputs(Transaction tx) {
+    private List<TransactionOutput> getOutputsWithConnectedOutputs(Transaction tx) {
         List<TransactionOutput> transactionOutputs = tx.getOutputs();
         List<TransactionOutput> connectedOutputs = new ArrayList<>();
 
@@ -423,7 +460,7 @@ public abstract class WalletService {
     }
 
     @Nullable
-    protected TransactionConfidence getMostRecentConfidence(List<TransactionConfidence> transactionConfidenceList) {
+    private TransactionConfidence getMostRecentConfidence(List<TransactionConfidence> transactionConfidenceList) {
         TransactionConfidence transactionConfidence = null;
         for (TransactionConfidence confidence : transactionConfidenceList) {
             if (confidence != null) {
@@ -490,16 +527,19 @@ public abstract class WalletService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public int getNumTxOutputsForAddress(Address address) {
-        List<TransactionOutput> transactionOutputs = new ArrayList<>();
-        wallet.getTransactions(false).forEach(t -> transactionOutputs.addAll(t.getOutputs()));
-        int outputs = 0;
-        for (TransactionOutput output : transactionOutputs) {
-            if (isOutputScriptConvertibleToAddress(output) &&
-                    address != null &&
-                    address.equals(getAddressFromOutput(output)))
-                outputs++;
-        }
-        return outputs;
+        return getTxOutputAddressMultiset().count(address);
+    }
+
+    private Multiset<Address> getTxOutputAddressMultiset() {
+        return txOutputAddressCache.updateAndGet(set -> set != null ? set : computeTxOutputAddressMultiset());
+    }
+
+    private Multiset<Address> computeTxOutputAddressMultiset() {
+        return wallet.getTransactions(false).stream()
+                .flatMap(t -> t.getOutputs().stream())
+                .map(WalletService::getAddressFromOutput)
+                .filter(Objects::nonNull)
+                .collect(ImmutableMultiset.toImmutableMultiset());
     }
 
     public boolean isAddressUnused(Address address) {
@@ -595,17 +635,13 @@ public abstract class WalletService {
         wallet.removeChangeEventListener(listener);
     }
 
-    @SuppressWarnings("deprecation")
     public void addNewBestBlockListener(NewBestBlockListener listener) {
-        //noinspection deprecation
         final BlockChain chain = walletsSetup.getChain();
         if (isWalletReady() && chain != null)
             chain.addNewBestBlockListener(listener);
     }
 
-    @SuppressWarnings("deprecation")
     public void removeNewBestBlockListener(NewBestBlockListener listener) {
-        //noinspection deprecation
         final BlockChain chain = walletsSetup.getChain();
         if (isWalletReady() && chain != null)
             chain.removeNewBestBlockListener(listener);
@@ -786,7 +822,6 @@ public abstract class WalletService {
     // bisqWalletEventListener
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @SuppressWarnings("deprecation")
     public class BisqWalletListener implements WalletCoinsReceivedEventListener, WalletCoinsSentEventListener, WalletReorganizeEventListener, TransactionConfidenceEventListener {
         @Override
         public void onCoinsReceived(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
@@ -806,11 +841,8 @@ public abstract class WalletService {
         @Override
         public void onTransactionConfidenceChanged(Wallet wallet, Transaction tx) {
             for (AddressConfidenceListener addressConfidenceListener : addressConfidenceListeners) {
-                List<TransactionConfidence> transactionConfidenceList = new ArrayList<>();
-                transactionConfidenceList.add(getTransactionConfidence(tx, addressConfidenceListener.getAddress()));
-
-                TransactionConfidence transactionConfidence = getMostRecentConfidence(transactionConfidenceList);
-                addressConfidenceListener.onTransactionConfidenceChanged(transactionConfidence);
+                TransactionConfidence confidence = getTransactionConfidence(tx, addressConfidenceListener.getAddress());
+                addressConfidenceListener.onTransactionConfidenceChanged(confidence);
             }
             txConfidenceListeners.stream()
                     .filter(txConfidenceListener -> tx != null &&

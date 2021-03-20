@@ -24,9 +24,10 @@ import io.grpc.stub.StreamObserver;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import java.util.function.Function;
 import java.util.function.Predicate;
 
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
 
 import static io.grpc.Status.INVALID_ARGUMENT;
 import static io.grpc.Status.UNKNOWN;
@@ -37,7 +38,6 @@ import static io.grpc.Status.UNKNOWN;
  * An unexpected Throwable's message will be replaced with an 'unexpected' error message.
  */
 @Singleton
-@Slf4j
 class GrpcExceptionHandler {
 
     private final Predicate<Throwable> isExpectedException = (t) ->
@@ -47,11 +47,36 @@ class GrpcExceptionHandler {
     public GrpcExceptionHandler() {
     }
 
-    public void handleException(Throwable t, StreamObserver<?> responseObserver) {
+    public void handleException(Logger log,
+                                Throwable t,
+                                StreamObserver<?> responseObserver) {
         // Log the core api error (this is last chance to do that), wrap it in a new
         // gRPC StatusRuntimeException, then send it to the client in the gRPC response.
         log.error("", t);
         var grpcStatusRuntimeException = wrapException(t);
+        responseObserver.onError(grpcStatusRuntimeException);
+        throw grpcStatusRuntimeException;
+    }
+
+    public void handleExceptionAsWarning(Logger log,
+                                         String calledMethod,
+                                         Throwable t,
+                                         StreamObserver<?> responseObserver) {
+        // Just log a warning instead of an error with full stack trace.
+        log.warn(calledMethod + " -> " + t.getMessage());
+        var grpcStatusRuntimeException = wrapException(t);
+        responseObserver.onError(grpcStatusRuntimeException);
+        throw grpcStatusRuntimeException;
+    }
+
+    public void handleErrorMessage(Logger log,
+                                   String errorMessage,
+                                   StreamObserver<?> responseObserver) {
+        // This is used to wrap Task errors from the ErrorMessageHandler
+        // interface, an interface that is not allowed to throw exceptions.
+        log.error(errorMessage);
+        var grpcStatusRuntimeException = new StatusRuntimeException(
+                UNKNOWN.withDescription(cliStyleErrorMessage.apply(errorMessage)));
         responseObserver.onError(grpcStatusRuntimeException);
         throw grpcStatusRuntimeException;
     }
@@ -74,6 +99,12 @@ class GrpcExceptionHandler {
             return new StatusRuntimeException(mapGrpcErrorStatus(t, "unexpected error on server"));
         }
     }
+
+    private final Function<String, String> cliStyleErrorMessage = (e) -> {
+        String[] line = e.split("\\r?\\n");
+        int lastLine = line.length;
+        return line[lastLine - 1].toLowerCase();
+    };
 
     private Status mapGrpcErrorStatus(Throwable t, String description) {
         // We default to the UNKNOWN status, except were the mapping of a core api

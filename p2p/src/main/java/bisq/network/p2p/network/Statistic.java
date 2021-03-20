@@ -19,6 +19,7 @@ package bisq.network.p2p.network;
 
 import bisq.common.UserThread;
 import bisq.common.proto.network.NetworkEnvelope;
+import bisq.common.util.Utilities;
 
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.IntegerProperty;
@@ -75,16 +76,16 @@ public class Statistic {
         UserThread.runPeriodically(() -> {
             String ls = System.lineSeparator();
             log.info("Accumulated network statistics:" + ls +
-                            "Bytes sent: {} kb;" + ls +
+                            "Bytes sent: {};" + ls +
                             "Number of sent messages/Sent messages: {} / {};" + ls +
                             "Number of sent messages per sec: {};" + ls +
-                            "Bytes received: {} kb" + ls +
+                            "Bytes received: {}" + ls +
                             "Number of received messages/Received messages: {} / {};" + ls +
                             "Number of received messages per sec: {};" + ls,
-                    totalSentBytes.get() / 1024d,
+                    Utilities.readableFileSize(totalSentBytes.get()),
                     numTotalSentMessages.get(), totalSentMessages,
                     numTotalSentMessagesPerSec.get(),
-                    totalReceivedBytes.get() / 1024d,
+                    Utilities.readableFileSize(totalReceivedBytes.get()),
                     numTotalReceivedMessages.get(), totalReceivedMessages,
                     numTotalReceivedMessagesPerSec.get());
         }, TimeUnit.MINUTES.toSeconds(5));

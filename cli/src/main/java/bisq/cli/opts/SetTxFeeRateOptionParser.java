@@ -21,14 +21,12 @@ package bisq.cli.opts;
 import joptsimple.OptionSpec;
 
 import static bisq.cli.opts.OptLabel.OPT_TX_FEE_RATE;
-import static joptsimple.internal.Strings.EMPTY;
 
 public class SetTxFeeRateOptionParser extends AbstractMethodOptionParser implements MethodOpts {
 
     final OptionSpec<String> feeRateOpt = parser.accepts(OPT_TX_FEE_RATE,
             "tx fee rate preference (sats/byte)")
-            .withRequiredArg()
-            .defaultsTo(EMPTY);
+            .withRequiredArg();
 
     public SetTxFeeRateOptionParser(String[] args) {
         super(args);
@@ -41,7 +39,7 @@ public class SetTxFeeRateOptionParser extends AbstractMethodOptionParser impleme
         if (options.has(helpOpt))
             return this;
 
-        if (!options.has(feeRateOpt))
+        if (!options.has(feeRateOpt) || options.valueOf(feeRateOpt).isEmpty())
             throw new IllegalArgumentException("no tx fee rate specified");
 
         return this;

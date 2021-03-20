@@ -64,11 +64,11 @@ public class F2FForm extends PaymentMethodForm {
                 offer.getF2FCity(), top);
         addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.f2f.contact"),
                 f2fAccountPayload.getContact());
-        TextArea textArea = addTopLabelTextArea(gridPane, gridRow, 1, Res.get("payment.f2f.extra"), "").second;
+        TextArea textArea = addTopLabelTextArea(gridPane, gridRow, 1, Res.get("payment.shared.extraInfo"), "").second;
         textArea.setMinHeight(70);
         textArea.setEditable(false);
         textArea.setId("text-area-disabled");
-        textArea.setText(offer.getF2FExtraInfo());
+        textArea.setText(offer.getExtraInfo());
         return gridRow;
     }
 
@@ -109,7 +109,7 @@ public class F2FForm extends PaymentMethodForm {
         });
 
         TextArea extraTextArea = addTopLabelTextArea(gridPane, ++gridRow,
-                Res.get("payment.f2f.optionalExtra"), Res.get("payment.f2f.extra.prompt")).second;
+                Res.get("payment.shared.optionalExtra"), Res.get("payment.shared.extraInfo.prompt")).second;
         extraTextArea.setMinHeight(70);
         ((JFXTextArea) extraTextArea).setLabelFloat(false);
         //extraTextArea.setValidator(f2fValidator);
@@ -163,7 +163,7 @@ public class F2FForm extends PaymentMethodForm {
                 f2fAccount.getContact());
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.f2f.city", f2fAccount.getCity()),
                 f2fAccount.getCity());
-        TextArea textArea = addCompactTopLabelTextArea(gridPane, ++gridRow, Res.get("payment.f2f.extra"), "").second;
+        TextArea textArea = addCompactTopLabelTextArea(gridPane, ++gridRow, Res.get("payment.shared.extraInfo"), "").second;
         textArea.setText(f2fAccount.getExtraInfo());
         textArea.setMinHeight(70);
         textArea.setEditable(false);

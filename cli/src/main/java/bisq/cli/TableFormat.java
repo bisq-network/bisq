@@ -51,18 +51,21 @@ public class TableFormat {
     public static String formatAddressBalanceTbl(List<AddressBalanceInfo> addressBalanceInfo) {
         String headerFormatString = COL_HEADER_ADDRESS + COL_HEADER_DELIMITER
                 + COL_HEADER_AVAILABLE_BALANCE + COL_HEADER_DELIMITER
-                + COL_HEADER_CONFIRMATIONS + COL_HEADER_DELIMITER + "\n";
+                + COL_HEADER_CONFIRMATIONS + COL_HEADER_DELIMITER
+                + COL_HEADER_IS_USED_ADDRESS + COL_HEADER_DELIMITER + "\n";
         String headerLine = format(headerFormatString, "BTC");
 
         String colDataFormat = "%-" + COL_HEADER_ADDRESS.length() + "s" // lt justify
                 + "  %" + (COL_HEADER_AVAILABLE_BALANCE.length() - 1) + "s" // rt justify
-                + "  %" + COL_HEADER_CONFIRMATIONS.length() + "d"; // lt justify
+                + "  %" + COL_HEADER_CONFIRMATIONS.length() + "d"       // lt justify
+                + "  %" + COL_HEADER_IS_USED_ADDRESS.length() + "s";  // lt justify
         return headerLine
                 + addressBalanceInfo.stream()
                 .map(info -> format(colDataFormat,
                         info.getAddress(),
                         formatSatoshis(info.getBalance()),
-                        info.getNumConfirmations()))
+                        info.getNumConfirmations(),
+                        info.getIsAddressUnused() ? "NO" : "YES"))
                 .collect(Collectors.joining("\n"));
     }
 
@@ -111,7 +114,7 @@ public class TableFormat {
                 formatSatoshis(btcBalanceInfo.getLockedBalance()));
     }
 
-    static String formatOfferTable(List<OfferInfo> offerInfo, String fiatCurrency) {
+    public static String formatOfferTable(List<OfferInfo> offerInfo, String fiatCurrency) {
         // Some column values might be longer than header, so we need to calculate them.
         int paymentMethodColWidth = getLengthOfLongestColumn(
                 COL_HEADER_PAYMENT_METHOD.length(),
@@ -147,7 +150,7 @@ public class TableFormat {
                 .collect(Collectors.joining("\n"));
     }
 
-    static String formatPaymentAcctTbl(List<PaymentAccount> paymentAccounts) {
+    public static String formatPaymentAcctTbl(List<PaymentAccount> paymentAccounts) {
         // Some column values might be longer than header, so we need to calculate them.
         int nameColWidth = getLengthOfLongestColumn(
                 COL_HEADER_NAME.length(),
@@ -163,7 +166,7 @@ public class TableFormat {
                 + padEnd(COL_HEADER_PAYMENT_METHOD, paymentMethodColWidth, ' ') + COL_HEADER_DELIMITER
                 + COL_HEADER_UUID + COL_HEADER_DELIMITER + "\n";
         String colDataFormat = "%-" + nameColWidth + "s"        // left justify
-                + "  %" + COL_HEADER_CURRENCY.length() + "s"    // right justify
+                + "  %-" + COL_HEADER_CURRENCY.length() + "s"    // left justify
                 + "  %-" + paymentMethodColWidth + "s"          // left justify
                 + "  %-" + COL_HEADER_UUID.length() + "s";      // left justify
         return headerLine

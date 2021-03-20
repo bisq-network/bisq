@@ -40,11 +40,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -53,6 +51,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.Nullable;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class RequestDataManager implements MessageListener, ConnectionListener, PeerManager.Listener {
@@ -91,7 +90,10 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
     private final P2PDataStorage dataStorage;
     private final PeerManager peerManager;
     private final List<NodeAddress> seedNodeAddresses;
-    private final Set<Listener> listeners = new HashSet<>();
+
+    // As we use Guice injection we cannot set the listener in our constructor but the P2PService calls the setListener
+    // in it's constructor so we can guarantee it is not null.
+    private Listener listener;
 
     private final Map<NodeAddress, RequestDataHandler> handlerMap = new HashMap<>();
     private final Map<String, GetDataRequestHandler> getDataRequestHandlers = new HashMap<>();
@@ -147,11 +149,13 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void addListener(Listener listener) {
-        listeners.add(listener);
+    // We only support one listener as P2PService will manage calls on other clients in the correct order of execution.
+    // The listener is set from the P2PService constructor so we can guarantee it is not null.
+    public void setListener(Listener listener) {
+        this.listener = listener;
     }
 
-    public boolean requestPreliminaryData() {
+    public void requestPreliminaryData() {
         ArrayList<NodeAddress> nodeAddresses = new ArrayList<>(seedNodeAddresses);
         if (!nodeAddresses.isEmpty()) {
             ArrayList<NodeAddress> finalNodeAddresses = new ArrayList<>(nodeAddresses);
@@ -165,9 +169,8 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
             }
 
             isPreliminaryDataRequest = true;
-            return true;
         } else {
-            return false;
+            checkNotNull(listener).onNoSeedNodeAvailable();
         }
     }
 
@@ -334,16 +337,16 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
                                     // We delay because it can be that we get the HS published before we receive the
                                     // preliminary data and the onPreliminaryDataReceived call triggers the
                                     // dataUpdateRequested set to true, so we would also call the onUpdatedDataReceived.
-                                    UserThread.runAfter(() -> listeners.forEach(Listener::onPreliminaryDataReceived), 100, TimeUnit.MILLISECONDS);
+                                    UserThread.runAfter(checkNotNull(listener)::onPreliminaryDataReceived, 100, TimeUnit.MILLISECONDS);
                                 }
 
                                 // 2. Later we get a response from requestUpdatesData
                                 if (dataUpdateRequested) {
                                     dataUpdateRequested = false;
-                                    listeners.forEach(Listener::onUpdatedDataReceived);
+                                    checkNotNull(listener).onUpdatedDataReceived();
                                 }
 
-                                listeners.forEach(Listener::onDataReceived);
+                                checkNotNull(listener).onDataReceived();
                             }
 
                             @Override
@@ -371,9 +374,9 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
                                     // Notify listeners
                                     if (!nodeAddressOfPreliminaryDataRequest.isPresent()) {
                                         if (peerManager.isSeedNode(nodeAddress)) {
-                                            listeners.forEach(Listener::onNoSeedNodeAvailable);
+                                            checkNotNull(listener).onNoSeedNodeAvailable();
                                         } else {
-                                            listeners.forEach(Listener::onNoPeersAvailable);
+                                            checkNotNull(listener).onNoPeersAvailable();
                                         }
                                     }
 

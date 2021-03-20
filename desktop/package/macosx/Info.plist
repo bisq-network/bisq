@@ -5,10 +5,10 @@
         <!-- See: https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html -->
 
         <key>CFBundleVersion</key>
-        <string>1.5.4</string>
+        <string>1.6.0</string>
 
         <key>CFBundleShortVersionString</key>
-        <string>1.5.4</string>
+        <string>1.6.0</string>
 
         <key>CFBundleExecutable</key>
         <string>Bisq</string>
@@ -26,7 +26,7 @@
         <string>public.app-category.finance</string>
 
         <key>NSHumanReadableCopyright</key>
-        <string>Copyright © 2013-2020 - The Bisq developers</string>
+        <string>Copyright © 2013-2021 - The Bisq developers</string>
 
          <!-- Only supported in older OSX versions.
               See: https://github.com/bitcoin/bitcoin/issues/11896#issuecomment-352148399-->

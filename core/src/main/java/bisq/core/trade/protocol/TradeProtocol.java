@@ -108,12 +108,12 @@ public abstract class TradeProtocol implements DecryptedDirectMessageListener, D
 
     @Override
     public void onDirectMessage(DecryptedMessageWithPubKey decryptedMessageWithPubKey, NodeAddress peer) {
-        if (!isPubKeyValid(decryptedMessageWithPubKey)) {
+        NetworkEnvelope networkEnvelope = decryptedMessageWithPubKey.getNetworkEnvelope();
+        if (!isMyMessage(networkEnvelope)) {
             return;
         }
 
-        NetworkEnvelope networkEnvelope = decryptedMessageWithPubKey.getNetworkEnvelope();
-        if (!isMyMessage(networkEnvelope)) {
+        if (!isPubKeyValid(decryptedMessageWithPubKey)) {
             return;
         }
 

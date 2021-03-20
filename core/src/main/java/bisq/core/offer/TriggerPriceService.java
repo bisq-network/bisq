@@ -20,8 +20,12 @@ package bisq.core.offer;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.monetary.Altcoin;
 import bisq.core.monetary.Price;
+import bisq.core.provider.mempool.MempoolService;
 import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
+
+import bisq.network.p2p.BootstrapListener;
+import bisq.network.p2p.P2PService;
 
 import bisq.common.util.MathUtils;
 
@@ -47,17 +51,37 @@ import static bisq.common.util.MathUtils.scaleUpByPowerOf10;
 @Slf4j
 @Singleton
 public class TriggerPriceService {
+    private final P2PService p2PService;
     private final OpenOfferManager openOfferManager;
+    private final MempoolService mempoolService;
     private final PriceFeedService priceFeedService;
     private final Map<String, Set<OpenOffer>> openOffersByCurrency = new HashMap<>();
 
     @Inject
-    public TriggerPriceService(OpenOfferManager openOfferManager, PriceFeedService priceFeedService) {
+    public TriggerPriceService(P2PService p2PService,
+                               OpenOfferManager openOfferManager,
+                               MempoolService mempoolService,
+                               PriceFeedService priceFeedService) {
+        this.p2PService = p2PService;
         this.openOfferManager = openOfferManager;
+        this.mempoolService = mempoolService;
         this.priceFeedService = priceFeedService;
     }
 
     public void onAllServicesInitialized() {
+        if (p2PService.isBootstrapped()) {
+            onBootstrapComplete();
+        } else {
+            p2PService.addP2PServiceListener(new BootstrapListener() {
+                @Override
+                public void onUpdatedDataReceived() {
+                    onBootstrapComplete();
+                }
+            });
+        }
+    }
+
+    private void onBootstrapComplete() {
         openOfferManager.getObservableList().addListener((ListChangeListener<OpenOffer>) c -> {
             c.next();
             if (c.wasAdded()) {
@@ -132,6 +156,20 @@ public class TriggerPriceService {
             openOfferManager.deactivateOpenOffer(openOffer, () -> {
             }, errorMessage -> {
             });
+        } else if (openOffer.getState() == OpenOffer.State.AVAILABLE) {
+            // check the mempool if it has not been done before
+            if (openOffer.getMempoolStatus() < 0 && mempoolService.canRequestBeMade(openOffer.getOffer().getOfferPayload())) {
+                mempoolService.validateOfferMakerTx(openOffer.getOffer().getOfferPayload(), (txValidator -> {
+                    openOffer.setMempoolStatus(txValidator.isFail() ? 0 : 1);
+                }));
+            }
+            // if the mempool indicated failure then deactivate the open offer
+            if (openOffer.getMempoolStatus() == 0) {
+                log.info("Deactivating open offer {} due to mempool validation", openOffer.getOffer().getShortId());
+                openOfferManager.deactivateOpenOffer(openOffer, () -> {
+                }, errorMessage -> {
+                });
+            }
         }
     }
 

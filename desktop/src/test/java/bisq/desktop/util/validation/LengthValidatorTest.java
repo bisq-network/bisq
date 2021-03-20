@@ -69,5 +69,4 @@ public class LengthValidatorTest {
         assertFalse(validator2.validate(null).isValid); // too short
         assertFalse(validator2.validate("123456789").isValid); // too long
     }
-
 }

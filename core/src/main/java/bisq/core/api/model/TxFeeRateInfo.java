@@ -67,8 +67,8 @@ public class TxFeeRateInfo implements Payload {
     public String toString() {
         return "TxFeeRateInfo{" + "\n" +
                 "  useCustomTxFeeRate=" + useCustomTxFeeRate + "\n" +
-                ", customTxFeeRate=" + customTxFeeRate + "sats/byte" + "\n" +
-                ", feeServiceRate=" + feeServiceRate + "sats/byte" + "\n" +
+                ", customTxFeeRate=" + customTxFeeRate + " sats/byte" + "\n" +
+                ", feeServiceRate=" + feeServiceRate + " sats/byte" + "\n" +
                 ", lastFeeServiceRequestTs=" + lastFeeServiceRequestTs + "\n" +
                 '}';
     }

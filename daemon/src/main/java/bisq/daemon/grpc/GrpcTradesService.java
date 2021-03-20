@@ -31,20 +31,32 @@ import bisq.proto.grpc.KeepFundsReply;
 import bisq.proto.grpc.KeepFundsRequest;
 import bisq.proto.grpc.TakeOfferReply;
 import bisq.proto.grpc.TakeOfferRequest;
-import bisq.proto.grpc.TradesGrpc;
 import bisq.proto.grpc.WithdrawFundsReply;
 import bisq.proto.grpc.WithdrawFundsRequest;
 
+import io.grpc.ServerInterceptor;
 import io.grpc.stub.StreamObserver;
 
 import javax.inject.Inject;
 
+import java.util.HashMap;
+import java.util.Optional;
+
 import lombok.extern.slf4j.Slf4j;
 
 import static bisq.core.api.model.TradeInfo.toTradeInfo;
+import static bisq.daemon.grpc.interceptor.GrpcServiceRateMeteringConfig.getCustomRateMeteringInterceptor;
+import static bisq.proto.grpc.TradesGrpc.*;
+import static java.util.concurrent.TimeUnit.MINUTES;
+import static java.util.concurrent.TimeUnit.SECONDS;
+
+
+
+import bisq.daemon.grpc.interceptor.CallRateMeteringInterceptor;
+import bisq.daemon.grpc.interceptor.GrpcCallRateMeter;
 
 @Slf4j
-class GrpcTradesService extends TradesGrpc.TradesImplBase {
+class GrpcTradesService extends TradesImplBase {
 
     private final CoreApi coreApi;
     private final GrpcExceptionHandler exceptionHandler;
@@ -66,29 +78,38 @@ class GrpcTradesService extends TradesGrpc.TradesImplBase {
                     .build();
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
+        } catch (IllegalArgumentException cause) {
+            // Offer makers may call 'gettrade' many times before a trade exists.
+            // Log a 'trade not found' warning instead of a full stack trace.
+            exceptionHandler.handleExceptionAsWarning(log, "getTrade", cause, responseObserver);
         } catch (Throwable cause) {
-            exceptionHandler.handleException(cause, responseObserver);
+            exceptionHandler.handleException(log, cause, responseObserver);
         }
     }
 
     @Override
     public void takeOffer(TakeOfferRequest req,
                           StreamObserver<TakeOfferReply> responseObserver) {
-        try {
-            coreApi.takeOffer(req.getOfferId(),
-                    req.getPaymentAccountId(),
-                    req.getTakerFeeCurrencyCode(),
-                    trade -> {
-                        TradeInfo tradeInfo = toTradeInfo(trade);
-                        var reply = TakeOfferReply.newBuilder()
-                                .setTrade(tradeInfo.toProtoMessage())
-                                .build();
-                        responseObserver.onNext(reply);
-                        responseObserver.onCompleted();
-                    });
-        } catch (Throwable cause) {
-            exceptionHandler.handleException(cause, responseObserver);
-        }
+        GrpcErrorMessageHandler errorMessageHandler =
+                new GrpcErrorMessageHandler(getTakeOfferMethod().getFullMethodName(),
+                        responseObserver,
+                        exceptionHandler,
+                        log);
+        coreApi.takeOffer(req.getOfferId(),
+                req.getPaymentAccountId(),
+                req.getTakerFeeCurrencyCode(),
+                trade -> {
+                    TradeInfo tradeInfo = toTradeInfo(trade);
+                    var reply = TakeOfferReply.newBuilder()
+                            .setTrade(tradeInfo.toProtoMessage())
+                            .build();
+                    responseObserver.onNext(reply);
+                    responseObserver.onCompleted();
+                },
+                errorMessage -> {
+                    if (!errorMessageHandler.isErrorHandled())
+                        errorMessageHandler.handleErrorMessage(errorMessage);
+                });
     }
 
     @Override
@@ -100,7 +121,7 @@ class GrpcTradesService extends TradesGrpc.TradesImplBase {
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
         } catch (Throwable cause) {
-            exceptionHandler.handleException(cause, responseObserver);
+            exceptionHandler.handleException(log, cause, responseObserver);
         }
     }
 
@@ -113,7 +134,7 @@ class GrpcTradesService extends TradesGrpc.TradesImplBase {
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
         } catch (Throwable cause) {
-            exceptionHandler.handleException(cause, responseObserver);
+            exceptionHandler.handleException(log, cause, responseObserver);
         }
     }
 
@@ -126,7 +147,7 @@ class GrpcTradesService extends TradesGrpc.TradesImplBase {
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
         } catch (Throwable cause) {
-            exceptionHandler.handleException(cause, responseObserver);
+            exceptionHandler.handleException(log, cause, responseObserver);
         }
     }
 
@@ -139,7 +160,27 @@ class GrpcTradesService extends TradesGrpc.TradesImplBase {
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
         } catch (Throwable cause) {
-            exceptionHandler.handleException(cause, responseObserver);
+            exceptionHandler.handleException(log, cause, responseObserver);
         }
+    }
+
+    final ServerInterceptor[] interceptors() {
+        Optional<ServerInterceptor> rateMeteringInterceptor = rateMeteringInterceptor();
+        return rateMeteringInterceptor.map(serverInterceptor ->
+                new ServerInterceptor[]{serverInterceptor}).orElseGet(() -> new ServerInterceptor[0]);
+    }
+
+    final Optional<ServerInterceptor> rateMeteringInterceptor() {
+        return getCustomRateMeteringInterceptor(coreApi.getConfig().appDataDir, this.getClass())
+                .or(() -> Optional.of(CallRateMeteringInterceptor.valueOf(
+                        new HashMap<>() {{
+                            put(getGetTradeMethod().getFullMethodName(), new GrpcCallRateMeter(1, SECONDS));
+                            put(getTakeOfferMethod().getFullMethodName(), new GrpcCallRateMeter(1, MINUTES));
+                            put(getConfirmPaymentStartedMethod().getFullMethodName(), new GrpcCallRateMeter(1, MINUTES));
+                            put(getConfirmPaymentReceivedMethod().getFullMethodName(), new GrpcCallRateMeter(1, MINUTES));
+                            put(getKeepFundsMethod().getFullMethodName(), new GrpcCallRateMeter(1, MINUTES));
+                            put(getWithdrawFundsMethod().getFullMethodName(), new GrpcCallRateMeter(1, MINUTES));
+                        }}
+                )));
     }
 }

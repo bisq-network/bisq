@@ -98,6 +98,9 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
     private final Set<String> nodeAddressesBannedFromNetwork;
     private final boolean disableApi;
 
+    // added at v1.6.0
+    private final boolean disableMempoolValidation;
+
     // After we have created the signature from the filter data we clone it and apply the signature
     static Filter cloneWithSig(Filter filter, String signatureAsBase64) {
         return new Filter(filter.getBannedOfferIds(),
@@ -126,6 +129,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                 filter.isDisableAutoConf(),
                 filter.getBannedAutoConfExplorers(),
                 filter.getNodeAddressesBannedFromNetwork(),
+                filter.isDisableMempoolValidation(),
                 filter.isDisableApi());
     }
 
@@ -157,6 +161,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                 filter.isDisableAutoConf(),
                 filter.getBannedAutoConfExplorers(),
                 filter.getNodeAddressesBannedFromNetwork(),
+                filter.isDisableMempoolValidation(),
                 filter.isDisableApi());
     }
 
@@ -183,6 +188,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                   boolean disableAutoConf,
                   List<String> bannedAutoConfExplorers,
                   Set<String> nodeAddressesBannedFromNetwork,
+                  boolean disableMempoolValidation,
                   boolean disableApi) {
         this(bannedOfferIds,
                 nodeAddressesBannedFromTrading,
@@ -210,6 +216,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                 disableAutoConf,
                 bannedAutoConfExplorers,
                 nodeAddressesBannedFromNetwork,
+                disableMempoolValidation,
                 disableApi);
     }
 
@@ -245,6 +252,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                   boolean disableAutoConf,
                   List<String> bannedAutoConfExplorers,
                   Set<String> nodeAddressesBannedFromNetwork,
+                  boolean disableMempoolValidation,
                   boolean disableApi) {
         this.bannedOfferIds = bannedOfferIds;
         this.nodeAddressesBannedFromTrading = nodeAddressesBannedFromTrading;
@@ -272,6 +280,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
         this.disableAutoConf = disableAutoConf;
         this.bannedAutoConfExplorers = bannedAutoConfExplorers;
         this.nodeAddressesBannedFromNetwork = nodeAddressesBannedFromNetwork;
+        this.disableMempoolValidation = disableMempoolValidation;
         this.disableApi = disableApi;
 
         // ownerPubKeyBytes can be null when called from tests
@@ -312,6 +321,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                 .setDisableAutoConf(disableAutoConf)
                 .addAllBannedAutoConfExplorers(bannedAutoConfExplorers)
                 .addAllNodeAddressesBannedFromNetwork(nodeAddressesBannedFromNetwork)
+                .setDisableMempoolValidation(disableMempoolValidation)
                 .setDisableApi(disableApi);
 
         Optional.ofNullable(signatureAsBase64).ifPresent(builder::setSignatureAsBase64);
@@ -352,6 +362,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                 proto.getDisableAutoConf(),
                 ProtoUtil.protocolStringListToList(proto.getBannedAutoConfExplorersList()),
                 ProtoUtil.protocolStringListToSet(proto.getNodeAddressesBannedFromNetworkList()),
+                proto.getDisableMempoolValidation(),
                 proto.getDisableApi()
         );
     }
@@ -396,6 +407,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                 ",\n     ownerPubKey=" + ownerPubKey +
                 ",\n     disableAutoConf=" + disableAutoConf +
                 ",\n     nodeAddressesBannedFromNetwork=" + nodeAddressesBannedFromNetwork +
+                ",\n     disableMempoolValidation=" + disableMempoolValidation +
                 ",\n     disableApi=" + disableApi +
                 "\n}";
     }

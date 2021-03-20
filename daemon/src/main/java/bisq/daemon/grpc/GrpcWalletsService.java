@@ -51,8 +51,8 @@ import bisq.proto.grpc.UnlockWalletReply;
 import bisq.proto.grpc.UnlockWalletRequest;
 import bisq.proto.grpc.UnsetTxFeeRatePreferenceReply;
 import bisq.proto.grpc.UnsetTxFeeRatePreferenceRequest;
-import bisq.proto.grpc.WalletsGrpc;
 
+import io.grpc.ServerInterceptor;
 import io.grpc.stub.StreamObserver;
 
 import org.bitcoinj.core.Transaction;
@@ -61,7 +61,9 @@ import javax.inject.Inject;
 
 import com.google.common.util.concurrent.FutureCallback;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
@@ -69,9 +71,18 @@ import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 
 import static bisq.core.api.model.TxInfo.toTxInfo;
+import static bisq.daemon.grpc.interceptor.GrpcServiceRateMeteringConfig.getCustomRateMeteringInterceptor;
+import static bisq.proto.grpc.WalletsGrpc.*;
+import static java.util.concurrent.TimeUnit.MINUTES;
+import static java.util.concurrent.TimeUnit.SECONDS;
+
+
+
+import bisq.daemon.grpc.interceptor.CallRateMeteringInterceptor;
+import bisq.daemon.grpc.interceptor.GrpcCallRateMeter;
 
 @Slf4j
-class GrpcWalletsService extends WalletsGrpc.WalletsImplBase {
+class GrpcWalletsService extends WalletsImplBase {
 
     private final CoreApi coreApi;
     private final GrpcExceptionHandler exceptionHandler;
@@ -92,7 +103,7 @@ class GrpcWalletsService extends WalletsGrpc.WalletsImplBase {
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
         } catch (Throwable cause) {
-            exceptionHandler.handleException(cause, responseObserver);
+            exceptionHandler.handleException(log, cause, responseObserver);
         }
     }
 
@@ -106,7 +117,7 @@ class GrpcWalletsService extends WalletsGrpc.WalletsImplBase {
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
         } catch (Throwable cause) {
-            exceptionHandler.handleException(cause, responseObserver);
+            exceptionHandler.handleException(log, cause, responseObserver);
         }
     }
 
@@ -124,7 +135,7 @@ class GrpcWalletsService extends WalletsGrpc.WalletsImplBase {
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
         } catch (Throwable cause) {
-            exceptionHandler.handleException(cause, responseObserver);
+            exceptionHandler.handleException(log, cause, responseObserver);
         }
     }
 
@@ -139,7 +150,7 @@ class GrpcWalletsService extends WalletsGrpc.WalletsImplBase {
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
         } catch (Throwable cause) {
-            exceptionHandler.handleException(cause, responseObserver);
+            exceptionHandler.handleException(log, cause, responseObserver);
         }
     }
 
@@ -171,7 +182,7 @@ class GrpcWalletsService extends WalletsGrpc.WalletsImplBase {
                         }
                     });
         } catch (Throwable cause) {
-            exceptionHandler.handleException(cause, responseObserver);
+            exceptionHandler.handleException(log, cause, responseObserver);
         }
     }
 
@@ -209,7 +220,7 @@ class GrpcWalletsService extends WalletsGrpc.WalletsImplBase {
                         }
                     });
         } catch (Throwable cause) {
-            exceptionHandler.handleException(cause, responseObserver);
+            exceptionHandler.handleException(log, cause, responseObserver);
         }
     }
 
@@ -226,7 +237,7 @@ class GrpcWalletsService extends WalletsGrpc.WalletsImplBase {
                 responseObserver.onCompleted();
             });
         } catch (Throwable cause) {
-            exceptionHandler.handleException(cause, responseObserver);
+            exceptionHandler.handleException(log, cause, responseObserver);
         }
     }
 
@@ -243,7 +254,7 @@ class GrpcWalletsService extends WalletsGrpc.WalletsImplBase {
                 responseObserver.onCompleted();
             });
         } catch (Throwable cause) {
-            exceptionHandler.handleException(cause, responseObserver);
+            exceptionHandler.handleException(log, cause, responseObserver);
         }
     }
 
@@ -260,7 +271,7 @@ class GrpcWalletsService extends WalletsGrpc.WalletsImplBase {
                 responseObserver.onCompleted();
             });
         } catch (Throwable cause) {
-            exceptionHandler.handleException(cause, responseObserver);
+            exceptionHandler.handleException(log, cause, responseObserver);
         }
     }
 
@@ -275,7 +286,7 @@ class GrpcWalletsService extends WalletsGrpc.WalletsImplBase {
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
         } catch (Throwable cause) {
-            exceptionHandler.handleException(cause, responseObserver);
+            exceptionHandler.handleException(log, cause, responseObserver);
         }
     }
 
@@ -288,7 +299,7 @@ class GrpcWalletsService extends WalletsGrpc.WalletsImplBase {
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
         } catch (Throwable cause) {
-            exceptionHandler.handleException(cause, responseObserver);
+            exceptionHandler.handleException(log, cause, responseObserver);
         }
     }
 
@@ -301,7 +312,7 @@ class GrpcWalletsService extends WalletsGrpc.WalletsImplBase {
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
         } catch (Throwable cause) {
-            exceptionHandler.handleException(cause, responseObserver);
+            exceptionHandler.handleException(log, cause, responseObserver);
         }
     }
 
@@ -314,7 +325,7 @@ class GrpcWalletsService extends WalletsGrpc.WalletsImplBase {
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
         } catch (Throwable cause) {
-            exceptionHandler.handleException(cause, responseObserver);
+            exceptionHandler.handleException(log, cause, responseObserver);
         }
     }
 
@@ -327,7 +338,39 @@ class GrpcWalletsService extends WalletsGrpc.WalletsImplBase {
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
         } catch (Throwable cause) {
-            exceptionHandler.handleException(cause, responseObserver);
+            exceptionHandler.handleException(log, cause, responseObserver);
         }
+    }
+
+    final ServerInterceptor[] interceptors() {
+        Optional<ServerInterceptor> rateMeteringInterceptor = rateMeteringInterceptor();
+        return rateMeteringInterceptor.map(serverInterceptor ->
+                new ServerInterceptor[]{serverInterceptor}).orElseGet(() -> new ServerInterceptor[0]);
+    }
+
+    final Optional<ServerInterceptor> rateMeteringInterceptor() {
+        return getCustomRateMeteringInterceptor(coreApi.getConfig().appDataDir, this.getClass())
+                .or(() -> Optional.of(CallRateMeteringInterceptor.valueOf(
+                        new HashMap<>() {{
+                            put(getGetBalancesMethod().getFullMethodName(), new GrpcCallRateMeter(1, SECONDS));
+                            put(getGetAddressBalanceMethod().getFullMethodName(), new GrpcCallRateMeter(1, SECONDS));
+                            put(getGetFundingAddressesMethod().getFullMethodName(), new GrpcCallRateMeter(1, SECONDS));
+                            put(getGetUnusedBsqAddressMethod().getFullMethodName(), new GrpcCallRateMeter(1, SECONDS));
+                            put(getSendBsqMethod().getFullMethodName(), new GrpcCallRateMeter(1, MINUTES));
+                            put(getSendBtcMethod().getFullMethodName(), new GrpcCallRateMeter(1, MINUTES));
+                            put(getGetTxFeeRateMethod().getFullMethodName(), new GrpcCallRateMeter(1, SECONDS));
+                            put(getSetTxFeeRatePreferenceMethod().getFullMethodName(), new GrpcCallRateMeter(1, SECONDS));
+                            put(getUnsetTxFeeRatePreferenceMethod().getFullMethodName(), new GrpcCallRateMeter(1, SECONDS));
+                            put(getGetTransactionMethod().getFullMethodName(), new GrpcCallRateMeter(1, SECONDS));
+
+                            // Trying to set or remove a wallet password several times before the 1st attempt has time to
+                            // persist the change to disk may corrupt the wallet, so allow only 1 attempt per 5 seconds.
+                            put(getSetWalletPasswordMethod().getFullMethodName(), new GrpcCallRateMeter(1, SECONDS, 5));
+                            put(getRemoveWalletPasswordMethod().getFullMethodName(), new GrpcCallRateMeter(1, SECONDS, 5));
+
+                            put(getLockWalletMethod().getFullMethodName(), new GrpcCallRateMeter(1, SECONDS));
+                            put(getUnlockWalletMethod().getFullMethodName(), new GrpcCallRateMeter(1, SECONDS));
+                        }}
+                )));
     }
 }

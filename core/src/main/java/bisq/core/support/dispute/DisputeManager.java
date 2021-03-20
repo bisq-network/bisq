@@ -69,6 +69,7 @@ import java.security.KeyPair;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -231,6 +232,9 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
         return disputeListService.getDisputeList();
     }
 
+    public Set<String> getDisputedTradeIds() {
+        return disputeListService.getDisputedTradeIds();
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
@@ -310,6 +314,8 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
         Dispute dispute = openNewDisputeMessage.getDispute();
         // Disputes from clients < 1.2.0 always have support type ARBITRATION in dispute as the field didn't exist before
         dispute.setSupportType(openNewDisputeMessage.getSupportType());
+        // disputes from clients < 1.6.0 have state not set as the field didn't exist before
+        dispute.setState(Dispute.State.NEW);    // this can be removed a few months after 1.6.0 release
 
         Contract contract = dispute.getContract();
         addPriceInfoMessage(dispute, 0);
@@ -573,6 +579,7 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
                 !disputeFromOpener.isDisputeOpenerIsMaker(),
                 pubKeyRing,
                 disputeFromOpener.getTradeDate().getTime(),
+                disputeFromOpener.getTradePeriodEnd().getTime(),
                 contractFromOpener,
                 disputeFromOpener.getContractHash(),
                 disputeFromOpener.getDepositTxSerialized(),
@@ -585,6 +592,7 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
                 disputeFromOpener.getAgentPubKeyRing(),
                 disputeFromOpener.isSupportTicket(),
                 disputeFromOpener.getSupportType());
+        dispute.setExtraDataMap(disputeFromOpener.getExtraDataMap());
         dispute.setDelayedPayoutTxId(disputeFromOpener.getDelayedPayoutTxId());
         dispute.setDonationAddressOfDelayedPayoutTx(disputeFromOpener.getDonationAddressOfDelayedPayoutTx());
 
@@ -825,6 +833,14 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
                 .findAny();
     }
 
+    public Optional<Trade> findTrade(Dispute dispute) {
+        Optional<Trade> retVal = tradeManager.getTradeById(dispute.getTradeId());
+        if (!retVal.isPresent()) {
+            retVal = closedTradableManager.getClosedTrades().stream().filter(e -> e.getId().equals(dispute.getTradeId())).findFirst();
+        }
+        return retVal;
+    }
+
     private void addMediationResultMessage(Dispute dispute) {
         // In case of refundAgent we add a message with the mediatorsDisputeSummary. Only visible for refundAgent.
         if (dispute.getMediatorsDisputeResult() != null) {
@@ -840,6 +856,20 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
             dispute.addAndPersistChatMessage(mediatorsDisputeResultMessage);
             requestPersistence();
         }
+    }
+
+    public void addMediationReOpenedMessage(Dispute dispute, boolean senderIsTrader) {
+        ChatMessage chatMessage = new ChatMessage(
+                getSupportType(),
+                dispute.getTradeId(),
+                dispute.getTraderId(),
+                senderIsTrader,
+                Res.get("support.info.disputeReOpened"),
+                p2PService.getAddress());
+        chatMessage.setSystemMessage(false);
+        dispute.addAndPersistChatMessage(chatMessage);
+        this.sendChatMessage(chatMessage);
+        requestPersistence();
     }
 
     // If price was going down between take offer time and open dispute time the buyer has an incentive to

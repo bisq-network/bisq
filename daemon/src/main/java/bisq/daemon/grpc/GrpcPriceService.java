@@ -21,16 +21,29 @@ import bisq.core.api.CoreApi;
 
 import bisq.proto.grpc.MarketPriceReply;
 import bisq.proto.grpc.MarketPriceRequest;
-import bisq.proto.grpc.PriceGrpc;
 
+import io.grpc.ServerInterceptor;
 import io.grpc.stub.StreamObserver;
 
 import javax.inject.Inject;
 
+import java.util.HashMap;
+import java.util.Optional;
+
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.daemon.grpc.interceptor.GrpcServiceRateMeteringConfig.getCustomRateMeteringInterceptor;
+import static bisq.proto.grpc.PriceGrpc.PriceImplBase;
+import static bisq.proto.grpc.PriceGrpc.getGetMarketPriceMethod;
+import static java.util.concurrent.TimeUnit.SECONDS;
+
+
+
+import bisq.daemon.grpc.interceptor.CallRateMeteringInterceptor;
+import bisq.daemon.grpc.interceptor.GrpcCallRateMeter;
+
 @Slf4j
-class GrpcPriceService extends PriceGrpc.PriceImplBase {
+class GrpcPriceService extends PriceImplBase {
 
     private final CoreApi coreApi;
     private final GrpcExceptionHandler exceptionHandler;
@@ -45,12 +58,29 @@ class GrpcPriceService extends PriceGrpc.PriceImplBase {
     public void getMarketPrice(MarketPriceRequest req,
                                StreamObserver<MarketPriceReply> responseObserver) {
         try {
-            double price = coreApi.getMarketPrice(req.getCurrencyCode());
-            var reply = MarketPriceReply.newBuilder().setPrice(price).build();
-            responseObserver.onNext(reply);
-            responseObserver.onCompleted();
+            coreApi.getMarketPrice(req.getCurrencyCode(),
+                    price -> {
+                        var reply = MarketPriceReply.newBuilder().setPrice(price).build();
+                        responseObserver.onNext(reply);
+                        responseObserver.onCompleted();
+                    });
         } catch (Throwable cause) {
-            exceptionHandler.handleException(cause, responseObserver);
+            exceptionHandler.handleException(log, cause, responseObserver);
         }
+    }
+
+    final ServerInterceptor[] interceptors() {
+        Optional<ServerInterceptor> rateMeteringInterceptor = rateMeteringInterceptor();
+        return rateMeteringInterceptor.map(serverInterceptor ->
+                new ServerInterceptor[]{serverInterceptor}).orElseGet(() -> new ServerInterceptor[0]);
+    }
+
+    final Optional<ServerInterceptor> rateMeteringInterceptor() {
+        return getCustomRateMeteringInterceptor(coreApi.getConfig().appDataDir, this.getClass())
+                .or(() -> Optional.of(CallRateMeteringInterceptor.valueOf(
+                        new HashMap<>() {{
+                            put(getGetMarketPriceMethod().getFullMethodName(), new GrpcCallRateMeter(1, SECONDS));
+                        }}
+                )));
     }
 }

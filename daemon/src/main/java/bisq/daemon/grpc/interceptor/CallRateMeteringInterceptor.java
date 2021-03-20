@@ -25,8 +25,8 @@ import io.grpc.StatusRuntimeException;
 
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
@@ -84,16 +84,19 @@ public final class CallRateMeteringInterceptor implements ServerInterceptor {
                                                            ServerCall<?, ?> serverCall)
             throws StatusRuntimeException {
         String msg = getDefaultRateExceededError(methodName, rateMeter);
-        log.warn(StringUtils.capitalize(msg) + ".");
-        serverCall.close(PERMISSION_DENIED.withDescription(msg), new Metadata());
+        log.warn(msg + ".");
+        serverCall.close(PERMISSION_DENIED.withDescription(msg.toLowerCase()), new Metadata());
     }
 
     private String getDefaultRateExceededError(String methodName,
                                                GrpcCallRateMeter rateMeter) {
         // The derived method name may not be an exact match to CLI's method name.
         String timeUnitName = StringUtils.chop(rateMeter.getTimeUnit().name().toLowerCase());
-        return format("the maximum allowed number of %s calls (%d/%s) has been exceeded",
-                methodName.toLowerCase(),
+        // Just print 'getversion', not the grpc method descriptor's
+        // full-method-name: 'io.bisq.protobuffer.getversion/getversion'.
+        String loggedMethodName = methodName.split("/")[1];
+        return format("The maximum allowed number of %s calls (%d/%s) has been exceeded",
+                loggedMethodName,
                 rateMeter.getAllowedCallsPerTimeWindow(),
                 timeUnitName);
     }
@@ -105,11 +108,11 @@ public final class CallRateMeteringInterceptor implements ServerInterceptor {
     }
 
     private String getRateMeterKey(ServerCall<?, ?> serverCall) {
-        // Get the rate meter map key from the full rpc service name.  The key name
-        // is hard coded in the Grpc*Service interceptors() method.
-        String fullServiceName = serverCall.getMethodDescriptor().getServiceName();
-        return StringUtils.uncapitalize(Objects.requireNonNull(fullServiceName)
-                .substring("io.bisq.protobuffer.".length()));
+        // Get the rate meter map key from the server call method descriptor.  The
+        // returned String (e.g., 'io.bisq.protobuffer.Offers/CreateOffer') will match
+        // a map entry key in the 'serviceCallRateMeters' constructor argument, if it
+        // was defined in the Grpc*Service class' rateMeteringInterceptor method.
+        return serverCall.getMethodDescriptor().getFullMethodName();
     }
 
     @Override
@@ -123,5 +126,11 @@ public final class CallRateMeteringInterceptor implements ServerInterceptor {
                 "serviceCallRateMeters {" + "\n\t\t" +
                 rateMetersString + "\n\t" + "}" + "\n"
                 + "}";
+    }
+
+    public static CallRateMeteringInterceptor valueOf(Map<String, GrpcCallRateMeter> rateMeters) {
+        return new CallRateMeteringInterceptor(new HashMap<>() {{
+            putAll(rateMeters);
+        }});
     }
 }

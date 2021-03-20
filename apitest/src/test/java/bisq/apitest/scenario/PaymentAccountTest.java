@@ -13,7 +13,6 @@ import org.junit.jupiter.api.TestMethodOrder;
 import static bisq.apitest.Scaffold.BitcoinCoreApp.bitcoind;
 import static bisq.apitest.config.BisqAppConfig.alicedaemon;
 import static bisq.apitest.config.BisqAppConfig.seednode;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 
 
@@ -25,10 +24,6 @@ import bisq.apitest.method.payment.GetPaymentMethodsTest;
 @Slf4j
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class PaymentAccountTest extends AbstractPaymentAccountTest {
-
-    // Two dummy (usd +eth) accounts are set up as defaults in regtest / dao mode,
-    // then we add 28 more payment accounts in testCreatePaymentAccount().
-    private static final int EXPECTED_NUM_PAYMENT_ACCOUNTS = 2 + 28;
 
     @BeforeAll
     public static void setUp() {
@@ -74,13 +69,18 @@ public class PaymentAccountTest extends AbstractPaymentAccountTest {
         test.testCreateSepaAccount(testInfo);
         test.testCreateSpecificBanksAccount(testInfo);
         test.testCreateSwishAccount(testInfo);
-        test.testCreateTransferwiseAccount(testInfo);
+
+        // TransferwiseAccount is only PaymentAccount with a
+        // tradeCurrencies field in the json form.
+        test.testCreateTransferwiseAccountWith1TradeCurrency(testInfo);
+        test.testCreateTransferwiseAccountWith10TradeCurrencies(testInfo);
+        test.testCreateTransferwiseAccountWithInvalidBrlTradeCurrencyShouldThrowException(testInfo);
+        test.testCreateTransferwiseAccountWithoutTradeCurrenciesShouldThrowException(testInfo);
+
         test.testCreateUpholdAccount(testInfo);
         test.testCreateUSPostalMoneyOrderAccount(testInfo);
         test.testCreateWeChatPayAccount(testInfo);
         test.testCreateWesternUnionAccount(testInfo);
-
-        assertEquals(EXPECTED_NUM_PAYMENT_ACCOUNTS, getPaymentAccounts(alicedaemon).size());
     }
 
     @AfterAll

@@ -29,6 +29,7 @@ import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.PaymentAccountUtil;
+import bisq.core.provider.fee.FeeService;
 import bisq.core.setup.CoreNetworkCapabilities;
 
 import bisq.network.p2p.network.BridgeAddressProvider;
@@ -165,6 +166,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
     private final PersistenceManager<PreferencesPayload> persistenceManager;
     private final Config config;
+    private final FeeService feeService;
     private final LocalBitcoinNode localBitcoinNode;
     private final String btcNodesFromOptions, referralIdFromOptions,
             rpcUserFromOptions, rpcPwFromOptions;
@@ -181,6 +183,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     @Inject
     public Preferences(PersistenceManager<PreferencesPayload> persistenceManager,
                        Config config,
+                       FeeService feeService,
                        LocalBitcoinNode localBitcoinNode,
                        @Named(Config.BTC_NODES) String btcNodesFromOptions,
                        @Named(Config.REFERRAL_ID) String referralId,
@@ -191,6 +194,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
         this.persistenceManager = persistenceManager;
         this.config = config;
+        this.feeService = feeService;
         this.localBitcoinNode = localBitcoinNode;
         this.btcNodesFromOptions = btcNodesFromOptions;
         this.referralIdFromOptions = referralId;
@@ -309,15 +313,25 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         useStandbyModeProperty.set(prefPayload.isUseStandbyMode());
         cssThemeProperty.set(prefPayload.getCssTheme());
 
+        // a list of previously-used federated explorers
+        // if user preference references any deprecated explorers we need to select a new valid explorer
+        String deprecatedExplorers = "(bsq.bisq.cc|bsq.vante.me|bsq.emzy.de|bsq.sqrrm.net|bsq.bisq.services|bsq.ninja).*";
+
         // if no valid Bitcoin block explorer is set, select the 1st valid Bitcoin block explorer
         ArrayList<BlockChainExplorer> btcExplorers = getBlockChainExplorers();
-        if (getBlockChainExplorer() == null || getBlockChainExplorer().name.length() == 0)
+        if (getBlockChainExplorer() == null ||
+                getBlockChainExplorer().name.length() == 0 ||
+                getBlockChainExplorer().name.matches(deprecatedExplorers)) {
             setBlockChainExplorer(btcExplorers.get(0));
+        }
 
         // if no valid BSQ block explorer is set, randomly select a valid BSQ block explorer
         ArrayList<BlockChainExplorer> bsqExplorers = getBsqBlockChainExplorers();
-        if (getBsqBlockChainExplorer() == null || getBsqBlockChainExplorer().name.length() == 0)
+        if (getBsqBlockChainExplorer() == null ||
+                getBsqBlockChainExplorer().name.length() == 0 ||
+                getBsqBlockChainExplorer().name.matches(deprecatedExplorers)) {
             setBsqBlockChainExplorer(bsqExplorers.get((new Random()).nextInt(bsqExplorers.size())));
+        }
 
         tradeCurrenciesAsObservable.addAll(prefPayload.getFiatCurrencies());
         tradeCurrenciesAsObservable.addAll(prefPayload.getCryptoCurrencies());
@@ -782,6 +796,11 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         requestPersistence();
     }
 
+    public void setNotifyOnPreRelease(boolean value) {
+        prefPayload.setNotifyOnPreRelease(value);
+        requestPersistence();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getter
@@ -892,7 +911,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
     public long getWithdrawalTxFeeInVbytes() {
         return Math.max(prefPayload.getWithdrawalTxFeeInVbytes(),
-                Config.baseCurrencyNetwork().getDefaultMinFeePerVbyte());
+                feeService.getMinFeePerVByte());
     }
 
     public boolean isDaoFullNode() {
@@ -1095,5 +1114,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         void setShowOffersMatchingMyAccounts(boolean value);
 
         void setDenyApiTaker(boolean value);
+
+        void setNotifyOnPreRelease(boolean value);
     }
 }

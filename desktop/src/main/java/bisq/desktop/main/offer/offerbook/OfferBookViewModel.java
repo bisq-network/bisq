@@ -484,7 +484,7 @@ class OfferBookViewModel extends ActivatableViewModel {
                     result += "\n" + Res.get("payment.f2f.offerbook.tooltip.countryAndCity",
                             CountryUtil.getNameByCode(countryCode), offer.getF2FCity());
 
-                    result += "\n" + Res.get("payment.f2f.offerbook.tooltip.extra", offer.getF2FExtraInfo());
+                    result += "\n" + Res.get("payment.f2f.offerbook.tooltip.extra", offer.getExtraInfo());
                 }
             } else {
                 if (countryCode != null) {

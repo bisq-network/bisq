@@ -63,7 +63,7 @@ class DesktopUtil {
         }
 
         if (os.isWindows()) {
-            return runCommand("explorer", "%s", what);
+            return runCommand("explorer", "%s", "\"" + what + "\"");
         }
 
         return false;
@@ -94,7 +94,7 @@ class DesktopUtil {
                 return true;
             }
         } catch (IOException e) {
-            log.warn("Error running command. {}", e);
+            log.warn("Error running command. {}", e.toString());
             return false;
         }
     }

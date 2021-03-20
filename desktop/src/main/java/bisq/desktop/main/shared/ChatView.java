@@ -137,10 +137,12 @@ public class ChatView extends AnchorPane {
     private EventHandler<KeyEvent> keyEventEventHandler;
     private SupportManager supportManager;
     private Optional<SupportSession> optionalSupportSession = Optional.empty();
+    private String counterpartyName;
 
-    public ChatView(SupportManager supportManager, CoinFormatter formatter) {
+    public ChatView(SupportManager supportManager, CoinFormatter formatter, String counterpartyName) {
         this.supportManager = supportManager;
         this.formatter = formatter;
+        this.counterpartyName = counterpartyName;
         allowAttachments = true;
         displayHeader = true;
     }
@@ -414,7 +416,11 @@ public class ChatView extends AnchorPane {
                                 AnchorPane.setLeftAnchor(statusHBox, padding);
                             }
                             AnchorPane.setBottomAnchor(statusHBox, 7d);
-                            headerLabel.setText(DisplayUtils.formatDateTime(new Date(message.getDate())));
+                            String metaData = DisplayUtils.formatDateTime(new Date(message.getDate()));
+                            if (!message.isSystemMessage())
+                                metaData = (isMyMsg ? "Sent " : "Received ") + metaData
+                                    + (isMyMsg ? "" : " from " + counterpartyName);
+                            headerLabel.setText(metaData);
                             messageLabel.setText(message.getMessage());
                             attachmentsBox.getChildren().clear();
                             if (allowAttachments &&
@@ -648,7 +654,7 @@ public class ChatView extends AnchorPane {
             ChatMessage message = new ChatMessage(
                     supportManager.getSupportType(),
                     supportSession.getTradeId(),
-                    supportSession.getClientPubKeyRing().hashCode(),
+                    supportSession.getClientId(),
                     supportSession.isClient(),
                     text,
                     supportManager.getMyAddress(),

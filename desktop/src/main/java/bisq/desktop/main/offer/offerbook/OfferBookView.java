@@ -85,10 +85,10 @@ import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 
@@ -112,6 +112,8 @@ import javafx.util.StringConverter;
 
 import java.util.Comparator;
 import java.util.Optional;
+
+import org.jetbrains.annotations.NotNull;
 
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 
@@ -173,10 +175,10 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         final TitledGroupBg titledGroupBg = addTitledGroupBg(root, gridRow, 2, Res.get("offerbook.availableOffers"));
         titledGroupBg.getStyleClass().add("last");
 
-        HBox hBox = new HBox();
-        hBox.setAlignment(Pos.CENTER_LEFT);
-        hBox.setSpacing(35);
-        hBox.setPadding(new Insets(10, 0, 0, 0));
+        HBox offerToolsBox = new HBox();
+        offerToolsBox.setAlignment(Pos.BOTTOM_LEFT);
+        offerToolsBox.setSpacing(10);
+        offerToolsBox.setPadding(new Insets(10, 0, 0, 0));
 
         Tuple3<VBox, Label, AutocompleteComboBox<TradeCurrency>> currencyBoxTuple = FormBuilder.addTopLabelAutocompleteComboBox(
                 Res.get("offerbook.filterByCurrency"));
@@ -193,25 +195,19 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         matchingOffersToggle.setText(Res.get("offerbook.matchingOffers"));
         HBox.setMargin(matchingOffersToggle, new Insets(7, 0, -9, -15));
 
-        hBox.getChildren().addAll(currencyBoxTuple.first, paymentBoxTuple.first, matchingOffersToggle);
-        AnchorPane.setLeftAnchor(hBox, 0d);
-        AnchorPane.setTopAnchor(hBox, 0d);
-        AnchorPane.setBottomAnchor(hBox, 0d);
 
         createOfferButton = new AutoTooltipButton();
         createOfferButton.setMinHeight(40);
         createOfferButton.setGraphicTextGap(10);
-        AnchorPane.setRightAnchor(createOfferButton, 0d);
-        AnchorPane.setBottomAnchor(createOfferButton, 0d);
 
-        AnchorPane anchorPane = new AnchorPane();
-        anchorPane.getChildren().addAll(hBox, createOfferButton);
+        offerToolsBox.getChildren().addAll(currencyBoxTuple.first, paymentBoxTuple.first,
+                matchingOffersToggle, getSpacer(), createOfferButton);
 
-        GridPane.setHgrow(anchorPane, Priority.ALWAYS);
-        GridPane.setRowIndex(anchorPane, gridRow);
-        GridPane.setColumnSpan(anchorPane, 2);
-        GridPane.setMargin(anchorPane, new Insets(Layout.FIRST_ROW_DISTANCE, 0, 0, 0));
-        root.getChildren().add(anchorPane);
+        GridPane.setHgrow(offerToolsBox, Priority.ALWAYS);
+        GridPane.setRowIndex(offerToolsBox, gridRow);
+        GridPane.setColumnSpan(offerToolsBox, 2);
+        GridPane.setMargin(offerToolsBox, new Insets(Layout.FIRST_ROW_DISTANCE, 0, 0, 0));
+        root.getChildren().add(offerToolsBox);
 
         tableView = new TableView<>();
 
@@ -453,7 +449,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     }
 
     static class CurrencyStringConverter extends StringConverter<TradeCurrency> {
-        private ComboBox<TradeCurrency> comboBox;
+        private final ComboBox<TradeCurrency> comboBox;
 
         CurrencyStringConverter(ComboBox<TradeCurrency> comboBox) {
             this.comboBox = comboBox;
@@ -497,7 +493,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     }
 
     static class PaymentMethodStringConverter extends StringConverter<PaymentMethod> {
-        private ComboBox<PaymentMethod> comboBox;
+        private final ComboBox<PaymentMethod> comboBox;
 
         PaymentMethodStringConverter(ComboBox<PaymentMethod> comboBox) {
             this.comboBox = comboBox;
@@ -1121,7 +1117,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                 Res.get("offerbook.timeSinceSigning"),
                 Res.get("offerbook.timeSinceSigning.help",
                         SignedWitnessService.SIGNER_AGE_DAYS,
-                        formatter.formatCoinWithCode(OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT))) {
+                        formatter.formatCoinWithCode(OfferRestrictions.TOLERATED_SMALL_AMOUNT_PEER))) {
             {
                 setMinWidth(60);
                 setSortable(true);
@@ -1134,8 +1130,6 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
             @Override
             public TableCell<OfferBookListItem, OfferBookListItem> call(TableColumn<OfferBookListItem, OfferBookListItem> column) {
                 return new TableCell<>() {
-                    private HyperlinkWithIcon field;
-
                     @Override
                     public void updateItem(final OfferBookListItem item, boolean empty) {
                         super.updateItem(item, empty);
@@ -1198,5 +1192,12 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                     }
                 });
         return column;
+    }
+
+    @NotNull
+    private Region getSpacer() {
+        final Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+        return spacer;
     }
 }

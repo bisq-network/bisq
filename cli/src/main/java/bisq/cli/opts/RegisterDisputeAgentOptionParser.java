@@ -22,17 +22,14 @@ import joptsimple.OptionSpec;
 
 import static bisq.cli.opts.OptLabel.OPT_DISPUTE_AGENT_TYPE;
 import static bisq.cli.opts.OptLabel.OPT_REGISTRATION_KEY;
-import static joptsimple.internal.Strings.EMPTY;
 
 public class RegisterDisputeAgentOptionParser extends AbstractMethodOptionParser implements MethodOpts {
 
     final OptionSpec<String> disputeAgentTypeOpt = parser.accepts(OPT_DISPUTE_AGENT_TYPE, "dispute agent type")
-            .withRequiredArg()
-            .defaultsTo(EMPTY);
+            .withRequiredArg();
 
     final OptionSpec<String> registrationKeyOpt = parser.accepts(OPT_REGISTRATION_KEY, "registration key")
-            .withRequiredArg()
-            .defaultsTo(EMPTY);
+            .withRequiredArg();
 
     public RegisterDisputeAgentOptionParser(String[] args) {
         super(args);
@@ -45,10 +42,10 @@ public class RegisterDisputeAgentOptionParser extends AbstractMethodOptionParser
         if (options.has(helpOpt))
             return this;
 
-        if (!options.has(disputeAgentTypeOpt))
+        if (!options.has(disputeAgentTypeOpt) || options.valueOf(disputeAgentTypeOpt).isEmpty())
             throw new IllegalArgumentException("no dispute agent type specified");
 
-        if (!options.has(registrationKeyOpt))
+        if (!options.has(registrationKeyOpt) || options.valueOf(registrationKeyOpt).isEmpty())
             throw new IllegalArgumentException("no registration key specified");
 
         return this;

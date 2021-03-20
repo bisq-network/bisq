@@ -72,6 +72,8 @@ import java.util.stream.Stream;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
+
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.bitcoinj.core.TransactionConfidence.ConfidenceType.BUILDING;
@@ -79,7 +81,6 @@ import static org.bitcoinj.core.TransactionConfidence.ConfidenceType.PENDING;
 
 @Slf4j
 public class BsqWalletService extends WalletService implements DaoStateListener {
-
 
     public interface WalletTransactionsChangeListener {
 
@@ -136,46 +137,13 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
         this.unconfirmedBsqChangeOutputListService = unconfirmedBsqChangeOutputListService;
         this.daoKillSwitch = daoKillSwitch;
 
+        nonBsqCoinSelector.setPreferences(preferences);
+
         walletsSetup.addSetupCompletedHandler(() -> {
             wallet = walletsSetup.getBsqWallet();
             if (wallet != null) {
                 wallet.setCoinSelector(bsqCoinSelector);
-
-                wallet.addCoinsReceivedEventListener(walletEventListener);
-                wallet.addCoinsSentEventListener(walletEventListener);
-                wallet.addReorganizeEventListener(walletEventListener);
-                wallet.addTransactionConfidenceEventListener(walletEventListener);
-
-                wallet.addCoinsReceivedEventListener((wallet, tx, prevBalance, newBalance) -> {
-                    updateBsqWalletTransactions();
-                });
-                wallet.addCoinsSentEventListener((wallet, tx, prevBalance, newBalance) -> {
-                    updateBsqWalletTransactions();
-                });
-                wallet.addReorganizeEventListener(wallet -> {
-                    log.warn("onReorganize ");
-                    updateBsqWalletTransactions();
-                    unconfirmedBsqChangeOutputListService.onReorganize();
-                });
-                wallet.addTransactionConfidenceEventListener((wallet, tx) -> {
-                    // We are only interested in updates from unconfirmed txs and confirmed txs at the
-                    // time when it gets into a block. Otherwise we would get called
-                    // updateBsqWalletTransactions for each tx as the block depth changes for all.
-                    if (tx != null && tx.getConfidence() != null && tx.getConfidence().getDepthInBlocks() <= 1 &&
-                            daoStateService.isParseBlockChainComplete()) {
-                        updateBsqWalletTransactions();
-                    }
-                    unconfirmedBsqChangeOutputListService.onTransactionConfidenceChanged(tx);
-                });
-                wallet.addKeyChainEventListener(keys -> {
-                    updateBsqWalletTransactions();
-                });
-                wallet.addScriptsChangeEventListener((wallet, scripts, isAddingScripts) -> {
-                    updateBsqWalletTransactions();
-                });
-                wallet.addChangeEventListener(wallet -> {
-                    updateBsqWalletTransactions();
-                });
+                addListenersToWallet();
             }
 
             BlockChain chain = walletsSetup.getChain();
@@ -188,6 +156,41 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
         daoStateService.addDaoStateListener(this);
     }
 
+    @Override
+    protected void addListenersToWallet() {
+        super.addListenersToWallet();
+
+        wallet.addCoinsReceivedEventListener((wallet, tx, prevBalance, newBalance) ->
+                updateBsqWalletTransactions()
+        );
+        wallet.addCoinsSentEventListener((wallet, tx, prevBalance, newBalance) ->
+                updateBsqWalletTransactions()
+        );
+        wallet.addReorganizeEventListener(wallet -> {
+            log.warn("onReorganize ");
+            updateBsqWalletTransactions();
+            unconfirmedBsqChangeOutputListService.onReorganize();
+        });
+        wallet.addTransactionConfidenceEventListener((wallet, tx) -> {
+            // We are only interested in updates from unconfirmed txs and confirmed txs at the
+            // time when it gets into a block. Otherwise we would get called
+            // updateBsqWalletTransactions for each tx as the block depth changes for all.
+            if (tx != null && tx.getConfidence() != null && tx.getConfidence().getDepthInBlocks() <= 1 &&
+                    daoStateService.isParseBlockChainComplete()) {
+                updateBsqWalletTransactions();
+            }
+            unconfirmedBsqChangeOutputListService.onTransactionConfidenceChanged(tx);
+        });
+        wallet.addKeyChainEventListener(keys ->
+                updateBsqWalletTransactions()
+        );
+        wallet.addScriptsChangeEventListener((wallet, scripts, isAddingScripts) ->
+                updateBsqWalletTransactions()
+        );
+        wallet.addChangeEventListener(wallet ->
+                updateBsqWalletTransactions()
+        );
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // DaoStateListener
@@ -312,6 +315,16 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
 
     public void removeWalletTransactionsChangeListener(WalletTransactionsChangeListener listener) {
         walletTransactionsChangeListeners.remove(listener);
+    }
+
+    public List<TransactionOutput> getSpendableBsqTransactionOutputs() {
+        return new ArrayList<>(bsqCoinSelector.select(NetworkParameters.MAX_MONEY,
+                wallet.calculateAllSpendCandidates()).gathered);
+    }
+
+    public List<TransactionOutput> getSpendableNonBsqTransactionOutputs() {
+        return new ArrayList<>(nonBsqCoinSelector.select(NetworkParameters.MAX_MONEY,
+                wallet.calculateAllSpendCandidates()).gathered);
     }
 
 
@@ -512,7 +525,19 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public Transaction getPreparedSendBsqTx(String receiverAddress, Coin receiverAmount)
-            throws AddressFormatException, InsufficientBsqException, WalletException, TransactionVerificationException, BsqChangeBelowDustException {
+            throws AddressFormatException, InsufficientBsqException, WalletException,
+            TransactionVerificationException, BsqChangeBelowDustException {
+        return getPreparedSendTx(receiverAddress, receiverAmount, bsqCoinSelector, false);
+    }
+
+    public Transaction getPreparedSendBsqTx(String receiverAddress,
+                                            Coin receiverAmount,
+                                            @Nullable Set<TransactionOutput> utxoCandidates)
+            throws AddressFormatException, InsufficientBsqException, WalletException,
+            TransactionVerificationException, BsqChangeBelowDustException {
+        if (utxoCandidates != null) {
+            bsqCoinSelector.setUtxoCandidates(utxoCandidates);
+        }
         return getPreparedSendTx(receiverAddress, receiverAmount, bsqCoinSelector, false);
     }
 
@@ -521,7 +546,19 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public Transaction getPreparedSendBtcTx(String receiverAddress, Coin receiverAmount)
-            throws AddressFormatException, InsufficientBsqException, WalletException, TransactionVerificationException, BsqChangeBelowDustException {
+            throws AddressFormatException, InsufficientBsqException, WalletException,
+            TransactionVerificationException, BsqChangeBelowDustException {
+        return getPreparedSendTx(receiverAddress, receiverAmount, nonBsqCoinSelector, true);
+    }
+
+    public Transaction getPreparedSendBtcTx(String receiverAddress,
+                                            Coin receiverAmount,
+                                            @Nullable Set<TransactionOutput> utxoCandidates)
+            throws AddressFormatException, InsufficientBsqException, WalletException,
+            TransactionVerificationException, BsqChangeBelowDustException {
+        if (utxoCandidates != null) {
+            nonBsqCoinSelector.setUtxoCandidates(utxoCandidates);
+        }
         return getPreparedSendTx(receiverAddress, receiverAmount, nonBsqCoinSelector, true);
     }
 

@@ -19,8 +19,6 @@ package bisq.apitest.method.offer;
 
 import bisq.core.payment.PaymentAccount;
 
-import bisq.proto.grpc.CreateOfferRequest;
-
 import io.grpc.StatusRuntimeException;
 
 import lombok.extern.slf4j.Slf4j;
@@ -31,8 +29,8 @@ import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 
-import static bisq.apitest.config.BisqAppConfig.alicedaemon;
 import static bisq.core.btc.wallet.Restrictions.getDefaultBuyerSecurityDepositAsPercent;
+import static java.lang.String.format;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -44,23 +42,54 @@ public class ValidateCreateOfferTest extends AbstractOfferTest {
     @Test
     @Order(1)
     public void testAmtTooLargeShouldThrowException() {
-        PaymentAccount usdAccount = createDummyF2FAccount(alicedaemon, "US");
-        var req = CreateOfferRequest.newBuilder()
-                .setPaymentAccountId(usdAccount.getId())
-                .setDirection("buy")
-                .setCurrencyCode("usd")
-                .setAmount(100000000000L)
-                .setMinAmount(100000000000L)
-                .setUseMarketBasedPrice(false)
-                .setMarketPriceMargin(0.00)
-                .setPrice("10000.0000")
-                .setBuyerSecurityDeposit(getDefaultBuyerSecurityDepositAsPercent())
-                .setMakerFeeCurrencyCode("bsq")
-                .build();
+        PaymentAccount usdAccount = createDummyF2FAccount(aliceClient, "US");
         @SuppressWarnings("ResultOfMethodCallIgnored")
         Throwable exception = assertThrows(StatusRuntimeException.class, () ->
-                aliceStubs.offersService.createOffer(req).getOffer());
+                aliceClient.createFixedPricedOffer("buy",
+                        "usd",
+                        100000000000L, // exceeds amount limit
+                        100000000000L,
+                        "10000.0000",
+                        getDefaultBuyerSecurityDepositAsPercent(),
+                        usdAccount.getId(),
+                        "bsq"));
         assertEquals("UNKNOWN: An error occurred at task: ValidateOffer",
                 exception.getMessage());
+    }
+
+    @Test
+    @Order(2)
+    public void testNoMatchingEURPaymentAccountShouldThrowException() {
+        PaymentAccount chfAccount = createDummyF2FAccount(aliceClient, "ch");
+        @SuppressWarnings("ResultOfMethodCallIgnored")
+        Throwable exception = assertThrows(StatusRuntimeException.class, () ->
+                aliceClient.createFixedPricedOffer("buy",
+                        "eur",
+                        10000000L,
+                        10000000L,
+                        "40000.0000",
+                        getDefaultBuyerSecurityDepositAsPercent(),
+                        chfAccount.getId(),
+                        "btc"));
+        String expectedError = format("UNKNOWN: cannot create EUR offer with payment account %s", chfAccount.getId());
+        assertEquals(expectedError, exception.getMessage());
+    }
+
+    @Test
+    @Order(2)
+    public void testNoMatchingCADPaymentAccountShouldThrowException() {
+        PaymentAccount audAccount = createDummyF2FAccount(aliceClient, "au");
+        @SuppressWarnings("ResultOfMethodCallIgnored")
+        Throwable exception = assertThrows(StatusRuntimeException.class, () ->
+                aliceClient.createFixedPricedOffer("buy",
+                        "cad",
+                        10000000L,
+                        10000000L,
+                        "63000.0000",
+                        getDefaultBuyerSecurityDepositAsPercent(),
+                        audAccount.getId(),
+                        "btc"));
+        String expectedError = format("UNKNOWN: cannot create CAD offer with payment account %s", audAccount.getId());
+        assertEquals(expectedError, exception.getMessage());
     }
 }

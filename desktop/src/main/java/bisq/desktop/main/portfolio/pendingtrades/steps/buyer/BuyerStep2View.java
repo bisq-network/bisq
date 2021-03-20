@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.portfolio.pendingtrades.steps.buyer;
 
+import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.BusyAnimation;
 import bisq.desktop.components.TextFieldWithCopyIcon;
 import bisq.desktop.components.TitledGroupBg;
@@ -24,6 +25,7 @@ import bisq.desktop.components.paymentmethods.AdvancedCashForm;
 import bisq.desktop.components.paymentmethods.AliPayForm;
 import bisq.desktop.components.paymentmethods.AmazonGiftCardForm;
 import bisq.desktop.components.paymentmethods.AssetsForm;
+import bisq.desktop.components.paymentmethods.CashByMailForm;
 import bisq.desktop.components.paymentmethods.CashDepositForm;
 import bisq.desktop.components.paymentmethods.ChaseQuickPayForm;
 import bisq.desktop.components.paymentmethods.ClearXchangeForm;
@@ -49,6 +51,10 @@ import bisq.desktop.components.paymentmethods.USPostalMoneyOrderForm;
 import bisq.desktop.components.paymentmethods.UpholdForm;
 import bisq.desktop.components.paymentmethods.WeChatPayForm;
 import bisq.desktop.components.paymentmethods.WesternUnionForm;
+import bisq.desktop.main.MainView;
+import bisq.desktop.main.dao.DaoView;
+import bisq.desktop.main.dao.wallet.BsqWalletView;
+import bisq.desktop.main.dao.wallet.send.BsqSendView;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.SetXmrTxKeyWindow;
 import bisq.desktop.main.portfolio.pendingtrades.PendingTradesViewModel;
@@ -58,12 +64,13 @@ import bisq.desktop.util.Layout;
 import bisq.desktop.util.Transitions;
 
 import bisq.core.locale.Res;
+import bisq.core.monetary.Volume;
 import bisq.core.network.MessageState;
 import bisq.core.offer.Offer;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.PaymentAccountUtil;
-import bisq.core.payment.payload.AmazonGiftCardAccountPayload;
 import bisq.core.payment.payload.AssetsAccountPayload;
+import bisq.core.payment.payload.CashByMailAccountPayload;
 import bisq.core.payment.payload.CashDepositAccountPayload;
 import bisq.core.payment.payload.F2FAccountPayload;
 import bisq.core.payment.payload.FasterPaymentsAccountPayload;
@@ -80,6 +87,7 @@ import bisq.core.user.DontShowAgainLookup;
 import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
+import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple4;
 
 import javafx.scene.control.Button;
@@ -107,6 +115,7 @@ public class BuyerStep2View extends TradeStepView {
     private BusyAnimation busyAnimation;
     private Subscription tradeStatePropertySubscription;
     private Timer timeoutTimer;
+    private AutoTooltipButton fillBsqButton;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, Initialisation
@@ -194,6 +203,7 @@ public class BuyerStep2View extends TradeStepView {
     protected void onPendingTradesInitialized() {
         super.onPendingTradesInitialized();
         validatePayoutTx();
+        model.checkTakerFeeTx(trade);
     }
 
 
@@ -217,13 +227,6 @@ public class BuyerStep2View extends TradeStepView {
                 model.getFiatVolume(),
                 Layout.COMPACT_FIRST_ROW_AND_GROUP_DISTANCE).second;
         field.setCopyWithoutCurrencyPostFix(true);
-
-        if (!(paymentAccountPayload instanceof AssetsAccountPayload) &&
-                !(paymentAccountPayload instanceof F2FAccountPayload)) {
-            addTopLabelTextFieldWithCopyIcon(gridPane, gridRow, 1,
-                    Res.get("shared.reasonForPayment"), model.dataModel.getReference(),
-                    Layout.COMPACT_FIRST_ROW_AND_GROUP_DISTANCE);
-        }
 
         switch (paymentMethodId) {
             case PaymentMethod.UPHOLD_ID:
@@ -286,6 +289,9 @@ public class BuyerStep2View extends TradeStepView {
             case PaymentMethod.CASH_DEPOSIT_ID:
                 gridRow = CashDepositForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
                 break;
+            case PaymentMethod.CASH_BY_MAIL_ID:
+                gridRow = CashByMailForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
+                break;
             case PaymentMethod.MONEY_GRAM_ID:
                 gridRow = MoneyGramForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
                 break;
@@ -345,11 +351,23 @@ public class BuyerStep2View extends TradeStepView {
         Tuple4<Button, BusyAnimation, Label, HBox> tuple3 = addButtonBusyAnimationLabel(gridPane, ++gridRow, 0,
                 Res.get("portfolio.pending.step2_buyer.paymentStarted"), 10);
 
-        GridPane.setColumnSpan(tuple3.fourth, 2);
+        HBox hBox = tuple3.fourth;
+        GridPane.setColumnSpan(hBox, 2);
         confirmButton = tuple3.first;
         confirmButton.setOnAction(e -> onPaymentStarted());
         busyAnimation = tuple3.second;
         statusLabel = tuple3.third;
+
+        if (trade.getOffer().getCurrencyCode().equals("BSQ")) {
+            fillBsqButton = new AutoTooltipButton(Res.get("portfolio.pending.step2_buyer.fillInBsqWallet"));
+            hBox.getChildren().add(1, fillBsqButton);
+            fillBsqButton.setOnAction(e -> {
+                AssetsAccountPayload assetsAccountPayload = (AssetsAccountPayload) paymentAccountPayload;
+                Tuple2<Volume, String> data = new Tuple2<>(trade.getTradeVolume(), assetsAccountPayload.getAddress());
+                model.getNavigation().navigateToWithData(data, MainView.class, DaoView.class, BsqWalletView.class,
+                        BsqSendView.class);
+            });
+        }
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -534,32 +552,18 @@ public class BuyerStep2View extends TradeStepView {
     private void showPopup() {
         PaymentAccountPayload paymentAccountPayload = model.dataModel.getSellersPaymentAccountPayload();
         if (paymentAccountPayload != null) {
-            String paymentDetailsForTradePopup = paymentAccountPayload.getPaymentDetailsForTradePopup();
             String message = Res.get("portfolio.pending.step2.confReached");
-            String copyPaste = Res.get("portfolio.pending.step2_buyer.copyPaste");
             String refTextWarn = Res.get("portfolio.pending.step2_buyer.refTextWarn");
-            String accountDetails = Res.get("portfolio.pending.step2_buyer.accountDetails");
-            String tradeId = Res.get("portfolio.pending.step2_buyer.tradeId");
-            String assign = Res.get("portfolio.pending.step2_buyer.assign");
             String fees = Res.get("portfolio.pending.step2_buyer.fees");
             String id = trade.getShortId();
-            String paddedId = " " + id + " ";
             String amount = DisplayUtils.formatVolumeWithCode(trade.getTradeVolume());
             if (paymentAccountPayload instanceof AssetsAccountPayload) {
                 message += Res.get("portfolio.pending.step2_buyer.altcoin",
                         getCurrencyName(trade),
-                        amount) +
-                        accountDetails +
-                        paymentDetailsForTradePopup + "\n\n" +
-                        copyPaste;
+                        amount);
             } else if (paymentAccountPayload instanceof CashDepositAccountPayload) {
                 message += Res.get("portfolio.pending.step2_buyer.cash",
                         amount) +
-                        accountDetails +
-                        paymentDetailsForTradePopup + ".\n\n" +
-                        copyPaste + "\n\n" +
-                        tradeId + paddedId +
-                        assign +
                         refTextWarn + "\n\n" +
                         fees + "\n\n" +
                         Res.get("portfolio.pending.step2_buyer.cash.extra");
@@ -568,60 +572,28 @@ public class BuyerStep2View extends TradeStepView {
                 final String extra = Res.get("portfolio.pending.step2_buyer.westernUnion.extra", email);
                 message += Res.get("portfolio.pending.step2_buyer.westernUnion",
                         amount) +
-                        accountDetails +
-                        paymentDetailsForTradePopup + ".\n\n" +
-                        copyPaste + "\n\n" +
                         extra;
             } else if (paymentAccountPayload instanceof MoneyGramAccountPayload) {
                 final String email = ((MoneyGramAccountPayload) paymentAccountPayload).getEmail();
                 final String extra = Res.get("portfolio.pending.step2_buyer.moneyGram.extra", email);
                 message += Res.get("portfolio.pending.step2_buyer.moneyGram",
                         amount) +
-                        accountDetails +
-                        paymentDetailsForTradePopup + ".\n\n" +
-                        copyPaste + "\n\n" +
                         extra;
             } else if (paymentAccountPayload instanceof USPostalMoneyOrderAccountPayload) {
                 message += Res.get("portfolio.pending.step2_buyer.postal", amount) +
-                        accountDetails +
-                        paymentDetailsForTradePopup + ".\n\n" +
-                        copyPaste + "\n\n" +
-                        tradeId + paddedId +
-                        assign +
                         refTextWarn;
             } else if (paymentAccountPayload instanceof F2FAccountPayload) {
-                message += Res.get("portfolio.pending.step2_buyer.f2f", amount) +
-                        accountDetails +
-                        paymentDetailsForTradePopup + "\n\n" +
-                        copyPaste;
-            } else if (paymentAccountPayload instanceof HalCashAccountPayload) {
-                message += Res.get("portfolio.pending.step2_buyer.bank", amount) +
-                        accountDetails +
-                        paymentDetailsForTradePopup + ".\n\n" +
-                        copyPaste;
+                message += Res.get("portfolio.pending.step2_buyer.f2f", amount);
             } else if (paymentAccountPayload instanceof FasterPaymentsAccountPayload) {
-                message += Res.get("portfolio.pending.step2_buyer.bank", amount) +
-                        accountDetails +
-                        paymentDetailsForTradePopup + ".\n\n" +
+                message += Res.get("portfolio.pending.step2_buyer.pay", amount) +
                         Res.get("portfolio.pending.step2_buyer.fasterPaymentsHolderNameInfo") + "\n\n" +
-                        copyPaste + "\n\n" +
-                        tradeId + paddedId +
-                        assign +
                         refTextWarn + "\n\n" +
                         fees;
-            } else if (paymentAccountPayload instanceof AmazonGiftCardAccountPayload) {
-                message += Res.get("portfolio.pending.step2_buyer.amazonGiftCard",
-                        amount) +
-                        accountDetails +
-                        paymentDetailsForTradePopup + ".\n\n" +
-                        copyPaste;
+            } else if (paymentAccountPayload instanceof CashByMailAccountPayload ||
+                    paymentAccountPayload instanceof HalCashAccountPayload) {
+                message += Res.get("portfolio.pending.step2_buyer.pay", amount);
             } else {
-                message += Res.get("portfolio.pending.step2_buyer.bank", amount) +
-                        accountDetails +
-                        paymentDetailsForTradePopup + ".\n\n" +
-                        copyPaste + "\n\n" +
-                        tradeId + paddedId +
-                        assign +
+                message += Res.get("portfolio.pending.step2_buyer.pay", amount) +
                         refTextWarn + "\n\n" +
                         fees;
             }
@@ -647,7 +619,7 @@ public class BuyerStep2View extends TradeStepView {
             // trade manager after initPendingTrades which happens after activate might be called.
         } catch (TradeDataValidation.ValidationException e) {
             if (!model.dataModel.tradeManager.isAllowFaultyDelayedTxs()) {
-                new Popup().warning(Res.get("portfolio.pending.invalidDelayedPayoutTx", e.getMessage())).show();
+                new Popup().warning(Res.get("portfolio.pending.invalidTx", e.getMessage())).show();
             }
         }
     }

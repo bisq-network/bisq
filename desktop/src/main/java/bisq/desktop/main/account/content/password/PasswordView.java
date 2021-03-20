@@ -26,6 +26,7 @@ import bisq.desktop.components.PasswordTextField;
 import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.account.AccountView;
+import bisq.desktop.main.account.content.backup.BackupView;
 import bisq.desktop.main.account.content.seedwords.SeedWordsView;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.Layout;
@@ -116,12 +117,12 @@ public class PasswordView extends ActivatableView<GridPane, Void> {
         pwButton.setOnAction(e -> {
             if (!walletsManager.areWalletsEncrypted()) {
                 new Popup().backgroundInfo(Res.get("password.backupReminder"))
-                        .secondaryActionButtonText(Res.get("password.backupWasDone"))
-                        .onSecondaryAction(() -> onApplyPassword(busyAnimation, deriveStatusLabel))
-                        .actionButtonTextWithGoTo("navigation.account.walletSeed")
-                        .onAction(() -> {
+                        .actionButtonText(Res.get("password.setPassword"))
+                        .onAction(() -> onApplyPassword(busyAnimation, deriveStatusLabel))
+                        .secondaryActionButtonText(Res.get("password.makeBackup"))
+                        .onSecondaryAction(() -> {
                             navigation.setReturnPath(navigation.getCurrentPath());
-                            navigation.navigateTo(MainView.class, AccountView.class, SeedWordsView.class);
+                            navigation.navigateTo(MainView.class, AccountView.class, BackupView.class);
                         })
                         .width(800)
                         .show();

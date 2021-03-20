@@ -25,6 +25,7 @@ import java.util.function.Supplier;
 
 import static bisq.cli.ColumnHeaderConstants.*;
 import static bisq.cli.CurrencyFormat.formatOfferPrice;
+import static bisq.cli.CurrencyFormat.formatOfferVolume;
 import static bisq.cli.CurrencyFormat.formatSatoshis;
 import static com.google.common.base.Strings.padEnd;
 
@@ -54,18 +55,33 @@ public class TradeFormat {
                 + takerFeeHeaderFormat.get()
                 + COL_HEADER_TRADE_DEPOSIT_PUBLISHED + COL_HEADER_DELIMITER
                 + COL_HEADER_TRADE_DEPOSIT_CONFIRMED + COL_HEADER_DELIMITER
-                + COL_HEADER_TRADE_FIAT_SENT + COL_HEADER_DELIMITER
-                + COL_HEADER_TRADE_FIAT_RECEIVED + COL_HEADER_DELIMITER
+                + COL_HEADER_TRADE_BUYER_COST + COL_HEADER_DELIMITER
+                + COL_HEADER_TRADE_PAYMENT_SENT + COL_HEADER_DELIMITER
+                + COL_HEADER_TRADE_PAYMENT_RECEIVED + COL_HEADER_DELIMITER
                 + COL_HEADER_TRADE_PAYOUT_PUBLISHED + COL_HEADER_DELIMITER
                 + COL_HEADER_TRADE_WITHDRAWN + COL_HEADER_DELIMITER
                 + "%n";
 
         String counterCurrencyCode = tradeInfo.getOffer().getCounterCurrencyCode();
         String baseCurrencyCode = tradeInfo.getOffer().getBaseCurrencyCode();
-        String headerLine = isTaker
-                ? String.format(headersFormat, counterCurrencyCode, baseCurrencyCode, baseCurrencyCode, baseCurrencyCode)
-                : String.format(headersFormat, counterCurrencyCode, baseCurrencyCode, baseCurrencyCode);
 
+        // The taker's output contains an extra taker tx fee column.
+        String headerLine = isTaker
+                ? String.format(headersFormat,
+                /* COL_HEADER_PRICE */ counterCurrencyCode,
+                /* COL_HEADER_TRADE_AMOUNT */ baseCurrencyCode,
+                /* COL_HEADER_TRADE_TX_FEE */ baseCurrencyCode,
+                /* COL_HEADER_TRADE_TAKER_FEE */ baseCurrencyCode,
+                /* COL_HEADER_TRADE_BUYER_COST */ counterCurrencyCode,
+                /* COL_HEADER_TRADE_PAYMENT_SENT */ counterCurrencyCode,
+                /* COL_HEADER_TRADE_PAYMENT_RECEIVED */ counterCurrencyCode)
+                : String.format(headersFormat,
+                /* COL_HEADER_PRICE */ counterCurrencyCode,
+                /* COL_HEADER_TRADE_AMOUNT */ baseCurrencyCode,
+                /* COL_HEADER_TRADE_TX_FEE */ baseCurrencyCode,
+                /* COL_HEADER_TRADE_BUYER_COST */ counterCurrencyCode,
+                /* COL_HEADER_TRADE_PAYMENT_SENT */ counterCurrencyCode,
+                /* COL_HEADER_TRADE_PAYMENT_RECEIVED */ counterCurrencyCode);
 
         String colDataFormat = "%-" + shortIdColWidth + "s"                 // lt justify
                 + "  %-" + (roleColWidth + COL_HEADER_DELIMITER.length()) + "s" // left
@@ -75,8 +91,9 @@ public class TradeFormat {
                 + takerFeeHeader.get()                                      // rt justify
                 + "  %-" + COL_HEADER_TRADE_DEPOSIT_PUBLISHED.length() + "s" // lt justify
                 + "  %-" + COL_HEADER_TRADE_DEPOSIT_CONFIRMED.length() + "s" // lt justify
-                + "  %-" + COL_HEADER_TRADE_FIAT_SENT.length() + "s"        // lt justify
-                + "  %-" + COL_HEADER_TRADE_FIAT_RECEIVED.length() + "s"    // lt justify
+                + "%" + (COL_HEADER_TRADE_BUYER_COST.length() + 1) + "s"    // rt justify
+                + "  %-" + (COL_HEADER_TRADE_PAYMENT_SENT.length() - 1) + "s" // left
+                + "  %-" + (COL_HEADER_TRADE_PAYMENT_RECEIVED.length() - 1) + "s" // left
                 + "  %-" + COL_HEADER_TRADE_PAYOUT_PUBLISHED.length() + "s" // lt justify
                 + "  %-" + COL_HEADER_TRADE_WITHDRAWN.length() + "s";       // lt justify
 
@@ -95,6 +112,7 @@ public class TradeFormat {
                 formatSatoshis(tradeInfo.getTxFeeAsLong()),
                 tradeInfo.getIsDepositPublished() ? "YES" : "NO",
                 tradeInfo.getIsDepositConfirmed() ? "YES" : "NO",
+                formatOfferVolume(tradeInfo.getOffer().getVolume()),
                 tradeInfo.getIsFiatSent() ? "YES" : "NO",
                 tradeInfo.getIsFiatReceived() ? "YES" : "NO",
                 tradeInfo.getIsPayoutPublished() ? "YES" : "NO",
@@ -111,6 +129,7 @@ public class TradeFormat {
                 formatSatoshis(tradeInfo.getTakerFeeAsLong()),
                 tradeInfo.getIsDepositPublished() ? "YES" : "NO",
                 tradeInfo.getIsDepositConfirmed() ? "YES" : "NO",
+                formatOfferVolume(tradeInfo.getOffer().getVolume()),
                 tradeInfo.getIsFiatSent() ? "YES" : "NO",
                 tradeInfo.getIsFiatReceived() ? "YES" : "NO",
                 tradeInfo.getIsPayoutPublished() ? "YES" : "NO",

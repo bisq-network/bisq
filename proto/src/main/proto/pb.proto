@@ -620,6 +620,7 @@ message Alert {
     string signature_as_base64 = 4;
     bytes owner_pub_key_bytes = 5;
     map<string, string> extra_data = 6;
+    bool is_pre_release_info = 7;
 }
 
 message Arbitrator {
@@ -688,6 +689,7 @@ message Filter {
     repeated string banned_auto_conf_explorers = 25;
     repeated string node_addresses_banned_from_network = 26;
     bool disable_api = 27;
+    bool disable_mempool_validation = 28;
 }
 
 // Deprecated
@@ -803,6 +805,13 @@ message SignedWitness {
 
 
 message Dispute {
+    enum State {
+        NEEDS_UPGRADE = 0;
+        NEW = 1;
+        OPEN = 2;
+        REOPENED = 3;
+        CLOSED = 4;
+    }
     string trade_id = 1;
     string id = 2;
     int32 trader_id = 3;
@@ -830,6 +839,9 @@ message Dispute {
     string mediators_dispute_result = 25;
     string delayed_payout_tx_id = 26;
     string donation_address_of_delayed_payout_tx = 27;
+    State state = 28;
+    int64 trade_period_end = 29;
+    map<string, string> extra_data = 30;
 }
 
 message Attachment {
@@ -925,6 +937,7 @@ enum AvailabilityResult {
     NO_REFUND_AGENTS = 10;
     UNCONF_TX_LIMIT_HIT = 11;
     MAKER_DENIED_API_USER = 12;
+    PRICE_CHECK_FAILED = 13;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -964,6 +977,7 @@ message PaymentAccountPayload {
         TransferwiseAccountPayload Transferwise_account_payload = 29;
         AustraliaPayidPayload australia_payid_payload = 30;
         AmazonGiftCardAccountPayload amazon_gift_card_account_payload = 31;
+        CashByMailAccountPayload cash_by_mail_account_payload = 32;
     }
     map<string, string> exclude_from_json_data = 15;
 }
@@ -1073,6 +1087,7 @@ message WesternUnionAccountPayload {
 
 message AmazonGiftCardAccountPayload {
     string email_or_mobile_nr = 1;
+    string country_code = 2;
 }
 
 message SepaAccountPayload {
@@ -1162,6 +1177,12 @@ message USPostalMoneyOrderAccountPayload {
 message F2FAccountPayload {
     string contact = 1;
     string city = 2;
+    string extra_info = 3;
+}
+
+message CashByMailAccountPayload {
+    string postal_address = 1;
+    string contact = 2;
     string extra_info = 3;
 }
 
@@ -1631,6 +1652,7 @@ message PreferencesPayload {
     bool hide_non_account_payment_methods = 58;
     bool show_offers_matching_my_accounts = 59;
     bool deny_api_taker = 60;
+    bool notify_on_pre_release = 61;
 }
 
 message AutoConfirmSettings {

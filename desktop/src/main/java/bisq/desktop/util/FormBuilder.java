@@ -76,6 +76,7 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 
@@ -391,6 +392,21 @@ public class FormBuilder {
         return new Tuple2<>(label1, label2);
     }
 
+    public static Tuple2<Label, TextFieldWithCopyIcon> addConfirmationLabelLabelWithCopyIcon(GridPane gridPane,
+                                                                 int rowIndex,
+                                                                 String title1,
+                                                                 String title2) {
+        Label label1 = addLabel(gridPane, rowIndex, title1);
+        label1.getStyleClass().add("confirmation-label");
+        TextFieldWithCopyIcon label2 = new TextFieldWithCopyIcon("confirmation-value");
+        label2.setText(title2);
+        GridPane.setRowIndex(label2, rowIndex);
+        gridPane.getChildren().add(label2);
+        GridPane.setColumnIndex(label2, 1);
+        GridPane.setHalignment(label1, HPos.LEFT);
+        return new Tuple2<>(label1, label2);
+    }
+
     public static Tuple2<Label, TextArea> addConfirmationLabelTextArea(GridPane gridPane,
                                                                        int rowIndex,
                                                                        String title1,
@@ -607,11 +623,49 @@ public class FormBuilder {
                                                                   int rowIndex,
                                                                   String title,
                                                                   double top) {
+        return addTopLabelDatePicker(gridPane, rowIndex, 0, title, top);
+    }
+
+    public static Tuple2<Label, DatePicker> addTopLabelDatePicker(GridPane gridPane,
+                                                                  int rowIndex,
+                                                                  int columnIndex,
+                                                                  String title,
+                                                                  double top) {
         DatePicker datePicker = new JFXDatePicker();
-
-        final Tuple2<Label, VBox> topLabelWithVBox = addTopLabelWithVBox(gridPane, rowIndex, title, datePicker, top);
-
+        Tuple2<Label, VBox> topLabelWithVBox = addTopLabelWithVBox(gridPane, rowIndex, columnIndex, title, datePicker, top);
         return new Tuple2<>(topLabelWithVBox.first, datePicker);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // 2 DatePickers
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static Tuple2<DatePicker, DatePicker> add2TopLabelDatePicker(GridPane gridPane,
+                                                                        int rowIndex,
+                                                                        int columnIndex,
+                                                                        String title1,
+                                                                        String title2,
+                                                                        double top) {
+        DatePicker datePicker1 = new JFXDatePicker();
+        Tuple2<Label, VBox> topLabelWithVBox1 = getTopLabelWithVBox(title1, datePicker1);
+        VBox vBox1 = topLabelWithVBox1.second;
+
+        DatePicker datePicker2 = new JFXDatePicker();
+        Tuple2<Label, VBox> topLabelWithVBox2 = getTopLabelWithVBox(title2, datePicker2);
+        VBox vBox2 = topLabelWithVBox2.second;
+
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+
+        HBox hBox = new HBox();
+        hBox.setSpacing(10);
+        hBox.getChildren().addAll(spacer, vBox1, vBox2);
+
+        GridPane.setRowIndex(hBox, rowIndex);
+        GridPane.setColumnIndex(hBox, columnIndex);
+        GridPane.setMargin(hBox, new Insets(top, 0, 0, 0));
+        gridPane.getChildren().add(hBox);
+        return new Tuple2<>(datePicker1, datePicker2);
     }
 
 
@@ -906,10 +960,10 @@ public class FormBuilder {
     }
 
     public static Tuple3<Button, CheckBox, HBox> addButtonCheckBoxWithBox(GridPane gridPane,
-                                                             int rowIndex,
-                                                             String buttonTitle,
-                                                             String checkBoxTitle,
-                                                             double top) {
+                                                                          int rowIndex,
+                                                                          String buttonTitle,
+                                                                          String checkBoxTitle,
+                                                                          double top) {
         Button button = new AutoTooltipButton(buttonTitle);
         CheckBox checkBox = new AutoTooltipCheckBox(checkBoxTitle);
 
@@ -1480,6 +1534,15 @@ public class FormBuilder {
         return addTopLabelTextFieldWithCopyIcon(gridPane, rowIndex, colIndex, title, value, -Layout.FLOATING_LABEL_DISTANCE);
     }
 
+    public static Tuple2<Label, TextFieldWithCopyIcon> addCompactTopLabelTextFieldWithCopyIcon(GridPane gridPane,
+                                                                                               int rowIndex,
+                                                                                               int colIndex,
+                                                                                               String title,
+                                                                                               String value,
+                                                                                               boolean onlyCopyTextAfterDelimiter) {
+        return addTopLabelTextFieldWithCopyIcon(gridPane, rowIndex, colIndex, title, value, -Layout.FLOATING_LABEL_DISTANCE, onlyCopyTextAfterDelimiter);
+    }
+
     public static Tuple2<Label, TextFieldWithCopyIcon> addTopLabelTextFieldWithCopyIcon(GridPane gridPane,
                                                                                         int rowIndex,
                                                                                         String title,
@@ -1505,6 +1568,25 @@ public class FormBuilder {
         textFieldWithCopyIcon.setText(value);
 
         final Tuple2<Label, VBox> topLabelWithVBox = addTopLabelWithVBox(gridPane, rowIndex, title, textFieldWithCopyIcon, top);
+
+        return new Tuple2<>(topLabelWithVBox.first, textFieldWithCopyIcon);
+    }
+
+    public static Tuple2<Label, TextFieldWithCopyIcon> addTopLabelTextFieldWithCopyIcon(GridPane gridPane,
+                                                                                        int rowIndex,
+                                                                                        int colIndex,
+                                                                                        String title,
+                                                                                        String value,
+                                                                                        double top,
+                                                                                        boolean onlyCopyTextAfterDelimiter) {
+
+        TextFieldWithCopyIcon textFieldWithCopyIcon = new TextFieldWithCopyIcon();
+        textFieldWithCopyIcon.setText(value);
+        textFieldWithCopyIcon.setCopyTextAfterDelimiter(true);
+
+        final Tuple2<Label, VBox> topLabelWithVBox = addTopLabelWithVBox(gridPane, rowIndex, title, textFieldWithCopyIcon, top);
+        topLabelWithVBox.second.setAlignment(Pos.TOP_LEFT);
+        GridPane.setColumnIndex(topLabelWithVBox.second, colIndex);
 
         return new Tuple2<>(topLabelWithVBox.first, textFieldWithCopyIcon);
     }
@@ -1642,11 +1724,14 @@ public class FormBuilder {
 
 
     public static BalanceTextField addBalanceTextField(GridPane gridPane, int rowIndex, String title) {
+        return addBalanceTextField(gridPane, rowIndex, title, 20);
+    }
 
+    public static BalanceTextField addBalanceTextField(GridPane gridPane, int rowIndex, String title, double top) {
         BalanceTextField balanceTextField = new BalanceTextField(title);
         GridPane.setRowIndex(balanceTextField, rowIndex);
         GridPane.setColumnIndex(balanceTextField, 0);
-        GridPane.setMargin(balanceTextField, new Insets(20, 0, 0, 0));
+        GridPane.setMargin(balanceTextField, new Insets(top, 0, 0, 0));
         gridPane.getChildren().add(balanceTextField);
 
         return balanceTextField;

@@ -120,7 +120,8 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     private ComboBox<TradeCurrency> preferredTradeCurrencyComboBox;
 
     private ToggleButton showOwnOffersInOfferBook, useAnimations, useDarkMode, sortMarketCurrenciesNumerically,
-            avoidStandbyMode, useCustomFee, autoConfirmXmrToggle, hideNonAccountPaymentMethodsToggle, denyApiTakerToggle;
+            avoidStandbyMode, useCustomFee, autoConfirmXmrToggle, hideNonAccountPaymentMethodsToggle, denyApiTakerToggle,
+            notifyOnPreReleaseToggle;
     private int gridRow = 0;
     private int displayCurrenciesGridRowIndex = 0;
     private InputTextField transactionFeeInputTextField, ignoreTradersListInputTextField, ignoreDustThresholdInputTextField,
@@ -293,7 +294,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
                 String estimatedFee = String.valueOf(feeService.getTxFeePerVbyte().value);
                 try {
                     int withdrawalTxFeePerVbyte = Integer.parseInt(transactionFeeInputTextField.getText());
-                    final long minFeePerVbyte = Config.baseCurrencyNetwork().getDefaultMinFeePerVbyte();
+                    final long minFeePerVbyte = feeService.getMinFeePerVByte();
                     if (withdrawalTxFeePerVbyte < minFeePerVbyte) {
                         new Popup().warning(Res.get("setting.preferences.txFeeMin", minFeePerVbyte)).show();
                         transactionFeeInputTextField.setText(estimatedFee);
@@ -612,6 +613,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         sortMarketCurrenciesNumerically = addSlideToggleButton(root, ++gridRow, Res.get("setting.preferences.sortWithNumOffers"));
         hideNonAccountPaymentMethodsToggle = addSlideToggleButton(root, ++gridRow, Res.get("setting.preferences.onlyShowPaymentMethodsFromAccount"));
         denyApiTakerToggle = addSlideToggleButton(root, ++gridRow, Res.get("setting.preferences.denyApiTaker"));
+        notifyOnPreReleaseToggle = addSlideToggleButton(root, ++gridRow, Res.get("setting.preferences.notifyOnPreRelease"));
         resetDontShowAgainButton = addButton(root, ++gridRow, Res.get("setting.preferences.resetAllFlags"), 0);
         resetDontShowAgainButton.getStyleClass().add("compact-button");
         resetDontShowAgainButton.setMaxWidth(Double.MAX_VALUE);
@@ -954,6 +956,9 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         denyApiTakerToggle.setSelected(preferences.isDenyApiTaker());
         denyApiTakerToggle.setOnAction(e -> preferences.setDenyApiTaker(denyApiTakerToggle.isSelected()));
 
+        notifyOnPreReleaseToggle.setSelected(preferences.isNotifyOnPreRelease());
+        notifyOnPreReleaseToggle.setOnAction(e -> preferences.setNotifyOnPreRelease(notifyOnPreReleaseToggle.isSelected()));
+
         resetDontShowAgainButton.setOnAction(e -> preferences.resetDontShowAgain());
 
         editCustomBtcExplorer.setOnAction(e -> {
@@ -1133,6 +1138,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         sortMarketCurrenciesNumerically.setOnAction(null);
         hideNonAccountPaymentMethodsToggle.setOnAction(null);
         denyApiTakerToggle.setOnAction(null);
+        notifyOnPreReleaseToggle.setOnAction(null);
         showOwnOffersInOfferBook.setOnAction(null);
         resetDontShowAgainButton.setOnAction(null);
         if (displayStandbyModeFeature) {

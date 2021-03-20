@@ -2,7 +2,7 @@
 
 cd $(dirname $0)/../../../
 
-version="1.5.2"
+version="1.6.0"
 
 # Set BISQ_DIR as environment var to the path of your locally synced Bisq data directory e.g. BISQ_DIR=~/Library/Application\ Support/Bisq
 

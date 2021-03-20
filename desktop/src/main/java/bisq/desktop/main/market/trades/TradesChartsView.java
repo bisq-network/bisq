@@ -240,8 +240,10 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
             volumeAxisYWidth = (double) newValue;
             layoutChart();
         };
-        tradeStatisticsByCurrencyListener = c -> nrOfTradeStatisticsLabel.setText(Res.get("market.trades.nrOfTrades",
-                model.selectedTradeStatistics.size()));
+        tradeStatisticsByCurrencyListener = c -> {
+            nrOfTradeStatisticsLabel.setText(Res.get("market.trades.nrOfTrades", model.selectedTradeStatistics.size()));
+            fillList();
+        };
         parentHeightListener = (observable, oldValue, newValue) -> layout();
 
         priceColumnLabelListener = (o, oldVal, newVal) -> priceColumn.setGraphic(new AutoTooltipLabel(newVal));
@@ -308,7 +310,6 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
             CurrencyListItem selectedItem = currencyComboBox.getSelectionModel().getSelectedItem();
             if (selectedItem != null) {
                 model.onSetTradeCurrency(selectedItem.tradeCurrency);
-                fillList();
             }
         });
 
@@ -396,14 +397,12 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
     }
 
     private void fillList() {
-        ObservableList<TradeStatistics3ListItem> tradeStatistics3ListItems = FXCollections.observableList(
-                model.selectedTradeStatistics.stream()
-                        .map(tradeStatistics -> new TradeStatistics3ListItem(tradeStatistics,
-                                coinFormatter,
-                                model.showAllTradeCurrenciesProperty.get()))
-                        .collect(Collectors.toList()));
-        listItems.clear();
-        listItems.addAll(tradeStatistics3ListItems);
+        List<TradeStatistics3ListItem> tradeStatistics3ListItems = model.selectedTradeStatistics.stream()
+                .map(tradeStatistics -> new TradeStatistics3ListItem(tradeStatistics,
+                        coinFormatter,
+                        model.showAllTradeCurrenciesProperty.get()))
+                .collect(Collectors.toList());
+        listItems.setAll(tradeStatistics3ListItems);
     }
 
     private void exportToCsv() {
