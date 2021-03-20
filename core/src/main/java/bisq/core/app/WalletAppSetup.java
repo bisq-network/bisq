@@ -17,6 +17,7 @@
 
 package bisq.core.app;
 
+import bisq.core.api.CoreContext;
 import bisq.core.btc.exceptions.InvalidHostException;
 import bisq.core.btc.exceptions.RejectedTxException;
 import bisq.core.btc.setup.WalletsSetup;
@@ -63,6 +64,7 @@ import javax.annotation.Nullable;
 @Singleton
 public class WalletAppSetup {
 
+    private final CoreContext coreContext;
     private final WalletsManager walletsManager;
     private final WalletsSetup walletsSetup;
     private final FeeService feeService;
@@ -86,11 +88,13 @@ public class WalletAppSetup {
     private final BooleanProperty useTorForBTC = new SimpleBooleanProperty();
 
     @Inject
-    public WalletAppSetup(WalletsManager walletsManager,
+    public WalletAppSetup(CoreContext coreContext,
+                          WalletsManager walletsManager,
                           WalletsSetup walletsSetup,
                           FeeService feeService,
                           Config config,
                           Preferences preferences) {
+        this.coreContext = coreContext;
         this.walletsManager = walletsManager;
         this.walletsSetup = walletsSetup;
         this.feeService = feeService;
@@ -172,10 +176,10 @@ public class WalletAppSetup {
         walletsSetup.initialize(null,
                 () -> {
                     // We only check one wallet as we apply encryption to all or none
-                    if (walletsManager.areWalletsEncrypted()) {
+                    if (walletsManager.areWalletsEncrypted() && !coreContext.isApiUser()) {
                         walletPasswordHandler.run();
                     } else {
-                        if (preferences.isResyncSpvRequested()) {
+                        if (preferences.isResyncSpvRequested() && !coreContext.isApiUser()) {
                             if (showFirstPopupIfResyncSPVRequestedHandler != null)
                                 showFirstPopupIfResyncSPVRequestedHandler.run();
                         } else {
