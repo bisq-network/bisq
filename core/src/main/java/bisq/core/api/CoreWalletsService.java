@@ -445,7 +445,7 @@ class CoreWalletsService {
         }
 
         if (coreContext.isApiUser())
-            maybeInitWallet();
+            maybeSetWalletsManagerKey();
 
         lockTimer = UserThread.runAfter(() -> {
             if (tempAesKey != null) {
@@ -521,11 +521,11 @@ class CoreWalletsService {
             throw new IllegalStateException(format("wallet does not support %s", currencyCode));
     }
 
-    private void maybeInitWallet() {
+    private void maybeSetWalletsManagerKey() {
         // Unlike the UI, a daemon cannot capture the user's wallet encryption password
         // during startup.  This method will set the wallet service's aesKey if necessary.
         if (tempAesKey == null)
-            throw new IllegalStateException("cannot init encrypted wallet without key");
+            throw new IllegalStateException("cannot use null key, unlockwallet timeout may have expired");
 
         if (btcWalletService.getAesKey() == null || bsqWalletService.getAesKey() == null) {
             KeyParameter aesKey = new KeyParameter(tempAesKey.getKey());
