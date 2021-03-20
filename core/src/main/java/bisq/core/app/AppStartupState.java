@@ -130,7 +130,7 @@ public class AppStartupState {
         return updatedDataReceived;
     }
 
-    public boolean isIsBlockDownloadComplete() {
+    public boolean isBlockDownloadComplete() {
         return isBlockDownloadComplete.get();
     }
 
