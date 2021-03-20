@@ -474,6 +474,10 @@ class CoreWalletsService {
     void verifyWalletsAreAvailable() {
         verifyWalletAndNetworkIsReady();
 
+        // TODO This check may be redundant, but the AppStartupState is new and unused
+        //  prior to commit 838595cb03886c3980c40df9cfe5f19e9f8a0e39.  I would prefer
+        //  to leave this check in place until certain AppStartupState will always work
+        //  as expected.
         if (!walletsManager.areWalletsAvailable())
             throw new IllegalStateException("wallet is not yet available");
     }
@@ -520,7 +524,6 @@ class CoreWalletsService {
     private void maybeInitWallet() {
         // Unlike the UI, a daemon cannot capture the user's wallet encryption password
         // during startup.  This method will set the wallet service's aesKey if necessary.
-        log.info("Init wallet");
         if (tempAesKey == null)
             throw new IllegalStateException("cannot init encrypted wallet without key");
 
