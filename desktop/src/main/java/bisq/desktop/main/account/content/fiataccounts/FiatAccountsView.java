@@ -66,7 +66,6 @@ import bisq.desktop.util.validation.HalCashValidator;
 import bisq.desktop.util.validation.IBANValidator;
 import bisq.desktop.util.validation.InteracETransferValidator;
 import bisq.desktop.util.validation.JapanBankTransferValidator;
-import bisq.desktop.util.validation.LengthValidator;
 import bisq.desktop.util.validation.MoneyBeamValidator;
 import bisq.desktop.util.validation.PerfectMoneyValidator;
 import bisq.desktop.util.validation.PopmoneyValidator;
@@ -77,6 +76,7 @@ import bisq.desktop.util.validation.TransferwiseValidator;
 import bisq.desktop.util.validation.USPostalMoneyOrderValidator;
 import bisq.desktop.util.validation.UpholdValidator;
 import bisq.desktop.util.validation.WeChatPayValidator;
+import bisq.desktop.util.validation.LengthValidator;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.Res;
@@ -271,7 +271,7 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
 
             if (PaymentMethod.hasChargebackRisk(paymentAccount.getPaymentMethod(), paymentAccount.getTradeCurrencies())) {
                 limitsInfoKey = "payment.limits.info.withSigning";
-                initialLimit = formatter.formatCoinWithCode(OfferRestrictions.TOLERATED_SMALL_AMOUNT_SELF);
+                initialLimit = formatter.formatCoinWithCode(OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT);
             }
 
             new Popup().information(Res.get(limitsInfoKey,
