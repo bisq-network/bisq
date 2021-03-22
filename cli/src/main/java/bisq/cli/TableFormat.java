@@ -57,8 +57,8 @@ public class TableFormat {
 
         String colDataFormat = "%-" + COL_HEADER_ADDRESS.length() + "s" // lt justify
                 + "  %" + (COL_HEADER_AVAILABLE_BALANCE.length() - 1) + "s" // rt justify
-                + "  %" + COL_HEADER_CONFIRMATIONS.length() + "d"       // lt justify
-                + "  %" + COL_HEADER_IS_USED_ADDRESS.length() + "s";  // lt justify
+                + "  %" + COL_HEADER_CONFIRMATIONS.length() + "d"       // rt justify
+                + "  %-" + COL_HEADER_IS_USED_ADDRESS.length() + "s";  // lt justify
         return headerLine
                 + addressBalanceInfo.stream()
                 .map(info -> format(colDataFormat,
