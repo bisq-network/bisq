@@ -644,6 +644,17 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         return dataModel.getDirection() == OfferPayload.Direction.BUY;
     }
 
+    public boolean isSellingToAnUnsignedAccount(Offer offer) {
+        if (offer.getDirection() == OfferPayload.Direction.BUY &&
+                PaymentMethod.hasChargebackRisk(offer.getPaymentMethod(), offer.getCurrencyCode())) {
+            // considered risky when either UNSIGNED, PEER_INITIAL, or BANNED (see #5343)
+            return accountAgeWitnessService.getSignState(offer) == AccountAgeWitnessService.SignState.UNSIGNED ||
+                    accountAgeWitnessService.getSignState(offer) == AccountAgeWitnessService.SignState.PEER_INITIAL ||
+                    accountAgeWitnessService.getSignState(offer) == AccountAgeWitnessService.SignState.BANNED;
+        }
+        return false;
+    }
+
     private InputValidator.ValidationResult isBtcInputValid(String input) {
         return btcValidator.validate(input);
     }

@@ -161,7 +161,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             isOfferAvailableSubscription;
 
     private int gridRow = 0;
-    private boolean offerDetailsWindowDisplayed, clearXchangeWarningDisplayed, fasterPaymentsWarningDisplayed;
+    private boolean offerDetailsWindowDisplayed, clearXchangeWarningDisplayed, fasterPaymentsWarningDisplayed, takeOfferFromUnsignedAccountWarningDisplayed;
     private SimpleBooleanProperty errorPopupDisplayed;
     private ChangeListener<Boolean> amountFocusedListener, getShowWalletFundedNotificationListener;
 
@@ -304,6 +304,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
         balanceTextField.setTargetAmount(model.dataModel.getTotalToPayAsCoin().get());
 
+        maybeShowTakeOfferFromUnsignedAccountWarning(model.dataModel.getOffer());
         maybeShowClearXchangeWarning(lastPaymentAccount);
         maybeShowFasterPaymentsWarning(lastPaymentAccount);
 
@@ -1241,6 +1242,14 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                     .actionButtonTextWithGoTo("navigation.dao.wallet.receive")
                     .onAction(() -> navigation.navigateTo(MainView.class, DaoView.class, BsqWalletView.class, BsqReceiveView.class))
                     .show();
+    }
+
+    private void maybeShowTakeOfferFromUnsignedAccountWarning(Offer offer) {
+        // warn if you are selling BTC to unsigned account (#5343)
+        if (model.isSellingToAnUnsignedAccount(offer) && !takeOfferFromUnsignedAccountWarningDisplayed) {
+            takeOfferFromUnsignedAccountWarningDisplayed = true;
+            UserThread.runAfter(GUIUtil::showTakeOfferFromUnsignedAccountWarning, 500, TimeUnit.MILLISECONDS);
+        }
     }
 
     private void maybeShowClearXchangeWarning(PaymentAccount paymentAccount) {
