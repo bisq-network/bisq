@@ -17,7 +17,14 @@
 
 package bisq.core.dao.node.full;
 
+import bisq.core.dao.node.full.rpc.BitcoindClient;
+import bisq.core.dao.node.full.rpc.BitcoindDaemon;
+import bisq.core.dao.node.full.rpc.dto.DtoPubKeyScript;
+import bisq.core.dao.node.full.rpc.dto.RawDtoBlock;
+import bisq.core.dao.node.full.rpc.dto.RawDtoInput;
+import bisq.core.dao.node.full.rpc.dto.RawDtoTransaction;
 import bisq.core.dao.state.model.blockchain.PubKeyScript;
+import bisq.core.dao.state.model.blockchain.ScriptType;
 import bisq.core.dao.state.model.blockchain.TxInput;
 import bisq.core.user.Preferences;
 
@@ -28,34 +35,28 @@ import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Utils;
 
-import com.neemre.btcdcli4j.core.BitcoindException;
-import com.neemre.btcdcli4j.core.BtcdCli4jVersion;
-import com.neemre.btcdcli4j.core.CommunicationException;
-import com.neemre.btcdcli4j.core.client.BtcdClient;
-import com.neemre.btcdcli4j.core.client.BtcdClientImpl;
-import com.neemre.btcdcli4j.core.domain.RawTransaction;
-import com.neemre.btcdcli4j.core.domain.enums.ScriptTypes;
-import com.neemre.btcdcli4j.daemon.BtcdDaemon;
-import com.neemre.btcdcli4j.daemon.BtcdDaemonImpl;
-import com.neemre.btcdcli4j.daemon.event.BlockListener;
-
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
-
 import com.google.inject.Inject;
 
 import javax.inject.Named;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Range;
+import com.google.common.primitives.Chars;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 
+import java.io.IOException;
+
+import java.math.BigDecimal;
+
 import java.util.List;
-import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -70,6 +71,11 @@ import org.jetbrains.annotations.NotNull;
  */
 @Slf4j
 public class RpcService {
+    private static final int ACTIVATE_HARD_FORK_2_HEIGHT_MAINNET = 680300;
+    private static final int ACTIVATE_HARD_FORK_2_HEIGHT_TESTNET = 1943000;
+    private static final int ACTIVATE_HARD_FORK_2_HEIGHT_REGTEST = 1;
+    private static final Range<Integer> SUPPORTED_NODE_VERSION_RANGE = Range.closedOpen(180000, 210100);
+
     private final String rpcUser;
     private final String rpcPassword;
     private final String rpcHost;
@@ -77,8 +83,8 @@ public class RpcService {
     private final int rpcBlockPort;
     private final String rpcBlockHost;
 
-    private BtcdClient client;
-    private BtcdDaemon daemon;
+    private BitcoindClient client;
+    private BitcoindDaemon daemon;
 
     // We could use multiple threads but then we need to support ordering of results in a queue
     // Keep that for optimization after measuring performance differences
@@ -89,13 +95,12 @@ public class RpcService {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @SuppressWarnings("WeakerAccess")
     @Inject
-    public RpcService(Preferences preferences,
-                      @Named(Config.RPC_HOST) String rpcHost,
-                      @Named(Config.RPC_PORT) int rpcPort,
-                      @Named(Config.RPC_BLOCK_NOTIFICATION_PORT) int rpcBlockPort,
-                      @Named(Config.RPC_BLOCK_NOTIFICATION_HOST) String rpcBlockHost) {
+    private RpcService(Preferences preferences,
+                       @Named(Config.RPC_HOST) String rpcHost,
+                       @Named(Config.RPC_PORT) int rpcPort,
+                       @Named(Config.RPC_BLOCK_NOTIFICATION_PORT) int rpcBlockPort,
+                       @Named(Config.RPC_BLOCK_NOTIFICATION_HOST) String rpcBlockHost) {
         this.rpcUser = preferences.getRpcUser();
         this.rpcPassword = preferences.getRpcPw();
 
@@ -127,53 +132,32 @@ public class RpcService {
             log.info("daemon shut down");
         }
 
-        if (client != null) {
-            client.close();
-            log.info("client closed");
-        }
-
         executor.shutdown();
     }
 
     void setup(ResultHandler resultHandler, Consumer<Throwable> errorHandler) {
         ListenableFuture<Void> future = executor.submit(() -> {
             try {
-                log.info("Starting RPCService with btcd-cli4j version {} on {}:{} with user {}, " +
-                                "listening for blocknotify on port {} from {}",
-                        BtcdCli4jVersion.VERSION, this.rpcHost, this.rpcPort, this.rpcUser, this.rpcBlockPort,
-                        this.rpcBlockHost);
+                log.info("Starting RpcService on {}:{} with user {}, listening for blocknotify on port {} from {}",
+                        this.rpcHost, this.rpcPort, this.rpcUser, this.rpcBlockPort, this.rpcBlockHost);
 
                 long startTs = System.currentTimeMillis();
-                PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager();
-                CloseableHttpClient httpProvider = HttpClients.custom().setConnectionManager(cm).build();
-                Properties nodeConfig = new Properties();
-                nodeConfig.setProperty("node.bitcoind.rpc.protocol", "http");
-                nodeConfig.setProperty("node.bitcoind.rpc.host", rpcHost);
-                nodeConfig.setProperty("node.bitcoind.rpc.auth_scheme", "Basic");
-                nodeConfig.setProperty("node.bitcoind.rpc.user", rpcUser);
-                nodeConfig.setProperty("node.bitcoind.rpc.password", rpcPassword);
-                nodeConfig.setProperty("node.bitcoind.rpc.port", Integer.toString(rpcPort));
-                nodeConfig.setProperty("node.bitcoind.notification.block.port", Integer.toString(rpcBlockPort));
-                nodeConfig.setProperty("node.bitcoind.notification.block.host", rpcBlockHost);
-                nodeConfig.setProperty("node.bitcoind.notification.alert.port", Integer.toString(bisq.network.utils.Utils.findFreeSystemPort()));
-                nodeConfig.setProperty("node.bitcoind.notification.wallet.port", Integer.toString(bisq.network.utils.Utils.findFreeSystemPort()));
 
-                nodeConfig.setProperty("node.bitcoind.http.auth_scheme", "Basic");
-                BtcdClientImpl client = new BtcdClientImpl(httpProvider, nodeConfig);
-                daemon = new BtcdDaemonImpl(client, throwable -> {
+                client = BitcoindClient.builder()
+                        .rpcHost(rpcHost)
+                        .rpcPort(rpcPort)
+                        .rpcUser(rpcUser)
+                        .rpcPassword(rpcPassword)
+                        .build();
+                checkNodeVersionAndHealth();
+
+                daemon = new BitcoindDaemon(rpcBlockHost, rpcBlockPort, throwable -> {
                     log.error(throwable.toString());
                     throwable.printStackTrace();
                     UserThread.execute(() -> errorHandler.accept(new RpcException(throwable)));
                 });
+
                 log.info("Setup took {} ms", System.currentTimeMillis() - startTs);
-                this.client = client;
-            } catch (BitcoindException | CommunicationException e) {
-                if (e instanceof CommunicationException)
-                    log.error("Probably Bitcoin Core is not running or the rpc port is not set correctly. rpcPort=" + rpcPort);
-                log.error(e.toString());
-                e.printStackTrace();
-                log.error(e.getCause() != null ? e.getCause().toString() : "e.getCause()=null");
-                throw new RpcException(e.getMessage(), e);
             } catch (Throwable e) {
                 log.error(e.toString());
                 e.printStackTrace();
@@ -193,31 +177,46 @@ public class RpcService {
         }, MoreExecutors.directExecutor());
     }
 
-    void addNewBtcBlockHandler(Consumer<RawBlock> btcBlockHandler,
-                               Consumer<Throwable> errorHandler) {
-        daemon.addBlockListener(new BlockListener() {
-            @Override
-            public void blockDetected(com.neemre.btcdcli4j.core.domain.RawBlock rawBtcBlock) {
-                if (rawBtcBlock.getHeight() == null || rawBtcBlock.getHeight() == 0) {
-                    log.warn("We received a RawBlock with no data. blockHash={}", rawBtcBlock.getHash());
-                    return;
-                }
+    private String decodeNodeVersion(Integer encodedVersion) {
+        var paddedEncodedVersion = Strings.padStart(encodedVersion.toString(), 8, '0');
 
-                try {
-                    log.info("New block received: height={}, id={}", rawBtcBlock.getHeight(), rawBtcBlock.getHash());
-                    List<RawTx> txList = rawBtcBlock.getTx().stream()
-                            .map(e -> getTxFromRawTransaction(e, rawBtcBlock))
-                            .collect(Collectors.toList());
-                    UserThread.execute(() -> {
-                        btcBlockHandler.accept(new RawBlock(rawBtcBlock.getHeight(),
-                                rawBtcBlock.getTime() * 1000, // rawBtcBlock.getTime() is in sec but we want ms
-                                rawBtcBlock.getHash(),
-                                rawBtcBlock.getPreviousBlockHash(),
-                                ImmutableList.copyOf(txList)));
-                    });
-                } catch (Throwable t) {
-                    errorHandler.accept(t);
-                }
+        return Lists.partition(Chars.asList(paddedEncodedVersion.toCharArray()), 2).stream()
+                .map(chars -> new String(Chars.toArray(chars)).replaceAll("^0", ""))
+                .collect(Collectors.joining("."))
+                .replaceAll("\\.0$", "");
+    }
+
+    private void checkNodeVersionAndHealth() throws IOException {
+        var networkInfo = client.getNetworkInfo();
+        var nodeVersion = decodeNodeVersion(networkInfo.getVersion());
+
+        if (SUPPORTED_NODE_VERSION_RANGE.contains(networkInfo.getVersion())) {
+            log.info("Got Bitcoin Core version: {}", nodeVersion);
+        } else {
+            log.warn("Server version mismatch - client optimized for '[{} .. {})', node responded with '{}'",
+                    decodeNodeVersion(SUPPORTED_NODE_VERSION_RANGE.lowerEndpoint()),
+                    decodeNodeVersion(SUPPORTED_NODE_VERSION_RANGE.upperEndpoint()), nodeVersion);
+        }
+
+        var bestRawBlock = client.getBlock(client.getBestBlockHash(), 1);
+        long currentTime = System.currentTimeMillis() / 1000;
+        if ((currentTime - bestRawBlock.getTime()) > TimeUnit.HOURS.toSeconds(6)) {
+            log.warn("Last available block was mined >{} hours ago; please check your network connection",
+                    ((currentTime - bestRawBlock.getTime()) / 3600));
+        }
+    }
+
+    void addNewDtoBlockHandler(Consumer<RawBlock> dtoBlockHandler,
+                               Consumer<Throwable> errorHandler) {
+        daemon.setBlockListener(blockHash -> {
+            try {
+                var rawDtoBlock = client.getBlock(blockHash, 2);
+                log.info("New block received: height={}, id={}", rawDtoBlock.getHeight(), rawDtoBlock.getHash());
+
+                var block = getBlockFromRawDtoBlock(rawDtoBlock);
+                UserThread.execute(() -> dtoBlockHandler.accept(block));
+            } catch (Throwable t) {
+                errorHandler.accept(t);
             }
         });
     }
@@ -235,23 +234,17 @@ public class RpcService {
         }, MoreExecutors.directExecutor());
     }
 
-    void requestBtcBlock(int blockHeight,
+    void requestDtoBlock(int blockHeight,
                          Consumer<RawBlock> resultHandler,
                          Consumer<Throwable> errorHandler) {
         ListenableFuture<RawBlock> future = executor.submit(() -> {
             long startTs = System.currentTimeMillis();
             String blockHash = client.getBlockHash(blockHeight);
-            com.neemre.btcdcli4j.core.domain.RawBlock rawBtcBlock = client.getBlock(blockHash, 2);
-            List<RawTx> txList = rawBtcBlock.getTx().stream()
-                    .map(e -> getTxFromRawTransaction(e, rawBtcBlock))
-                    .collect(Collectors.toList());
-            log.info("requestBtcBlock from bitcoind at blockHeight {} with {} txs took {} ms",
-                    blockHeight, txList.size(), System.currentTimeMillis() - startTs);
-            return new RawBlock(rawBtcBlock.getHeight(),
-                    rawBtcBlock.getTime() * 1000, // rawBtcBlock.getTime() is in sec but we want ms
-                    rawBtcBlock.getHash(),
-                    rawBtcBlock.getPreviousBlockHash(),
-                    ImmutableList.copyOf(txList));
+            var rawDtoBlock = client.getBlock(blockHash, 2);
+            var block = getBlockFromRawDtoBlock(rawDtoBlock);
+            log.info("requestDtoBlock from bitcoind at blockHeight {} with {} txs took {} ms",
+                    blockHeight, block.getRawTxs().size(), System.currentTimeMillis() - startTs);
+            return block;
         });
 
         Futures.addCallback(future, new FutureCallback<>() {
@@ -262,7 +255,7 @@ public class RpcService {
 
             @Override
             public void onFailure(@NotNull Throwable throwable) {
-                log.error("Error at requestBtcBlock: blockHeight={}", blockHeight);
+                log.error("Error at requestDtoBlock: blockHeight={}", blockHeight);
                 UserThread.execute(() -> errorHandler.accept(throwable));
             }
         }, MoreExecutors.directExecutor());
@@ -273,41 +266,50 @@ public class RpcService {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private RawTx getTxFromRawTransaction(RawTransaction rawBtcTx,
-                                          com.neemre.btcdcli4j.core.domain.RawBlock rawBtcBlock) {
-        String txId = rawBtcTx.getTxId();
-        long blockTime = rawBtcBlock.getTime() * 1000; // We convert block time from sec to ms
-        int blockHeight = rawBtcBlock.getHeight();
-        String blockHash = rawBtcBlock.getHash();
-        final List<TxInput> txInputs = rawBtcTx.getVIn()
+    private static RawBlock getBlockFromRawDtoBlock(RawDtoBlock rawDtoBlock) {
+        List<RawTx> txList = rawDtoBlock.getTx().stream()
+                .map(e -> getTxFromRawTransaction(e, rawDtoBlock))
+                .collect(Collectors.toList());
+        return new RawBlock(rawDtoBlock.getHeight(),
+                rawDtoBlock.getTime() * 1000, // rawDtoBlock.getTime() is in sec but we want ms
+                rawDtoBlock.getHash(),
+                rawDtoBlock.getPreviousBlockHash(),
+                ImmutableList.copyOf(txList));
+    }
+
+    private static RawTx getTxFromRawTransaction(RawDtoTransaction rawDtoTx,
+                                                 RawDtoBlock rawDtoBlock) {
+        String txId = rawDtoTx.getTxId();
+        long blockTime = rawDtoBlock.getTime() * 1000; // We convert block time from sec to ms
+        int blockHeight = rawDtoBlock.getHeight();
+        String blockHash = rawDtoBlock.getHash();
+
+        // Extracting pubKeys for segwit (P2WPKH) inputs, instead of just P2PKH inputs as
+        // originally, changes the DAO state and thus represents a hard fork. We disallow
+        // it until the fork activates, which is determined by block height.
+        boolean allowSegwit = blockHeight >= getActivateHardFork2Height();
+
+        final List<TxInput> txInputs = rawDtoTx.getVIn()
                 .stream()
                 .filter(rawInput -> rawInput != null && rawInput.getVOut() != null && rawInput.getTxId() != null)
                 .map(rawInput -> {
-                    // We don't support segWit inputs yet as well as no pay to pubkey txs...
-                    String[] split = rawInput.getScriptSig().getAsm().split("\\[ALL] ");
-                    String pubKeyAsHex;
-                    if (split.length == 2) {
-                        pubKeyAsHex = rawInput.getScriptSig().getAsm().split("\\[ALL] ")[1];
-                    } else {
-                        // If we receive a pay to pubkey tx the pubKey is not included as
-                        // it is in the output already.
-                        // Bitcoin Core creates payToPubKey tx when spending mined coins (regtest)...
-                        pubKeyAsHex = null;
-                        log.debug("pubKeyAsHex is not set as we received a not supported sigScript " +
-                                        "(segWit or payToPubKey tx). txId={}, asm={}",
-                                rawBtcTx.getTxId(), rawInput.getScriptSig().getAsm());
+                    String pubKeyAsHex = extractPubKeyAsHex(rawInput, allowSegwit);
+                    if (pubKeyAsHex == null) {
+                        log.debug("pubKeyAsHex is not set as we received a not supported sigScript. " +
+                                        "txId={}, asm={}, txInWitness={}",
+                                rawDtoTx.getTxId(), rawInput.getScriptSig().getAsm(), rawInput.getTxInWitness());
                     }
                     return new TxInput(rawInput.getTxId(), rawInput.getVOut(), pubKeyAsHex);
                 })
                 .collect(Collectors.toList());
 
-        final List<RawTxOutput> txOutputs = rawBtcTx.getVOut()
+        final List<RawTxOutput> txOutputs = rawDtoTx.getVOut()
                 .stream()
                 .filter(e -> e != null && e.getN() != null && e.getValue() != null && e.getScriptPubKey() != null)
-                .map(rawBtcTxOutput -> {
+                .map(rawDtoTxOutput -> {
                             byte[] opReturnData = null;
-                            com.neemre.btcdcli4j.core.domain.PubKeyScript scriptPubKey = rawBtcTxOutput.getScriptPubKey();
-                            if (ScriptTypes.NULL_DATA.equals(scriptPubKey.getType()) && scriptPubKey.getAsm() != null) {
+                            DtoPubKeyScript scriptPubKey = rawDtoTxOutput.getScriptPubKey();
+                            if (ScriptType.NULL_DATA.equals(scriptPubKey.getType()) && scriptPubKey.getAsm() != null) {
                                 String[] chunks = scriptPubKey.getAsm().split(" ");
                                 // We get on testnet a lot of "OP_RETURN 0" data, so we filter those away
                                 if (chunks.length == 2 && "OP_RETURN".equals(chunks[0]) && !"0".equals(chunks[1])) {
@@ -327,9 +329,9 @@ public class RpcService {
                             String address = scriptPubKey.getAddresses() != null &&
                                     scriptPubKey.getAddresses().size() == 1 ? scriptPubKey.getAddresses().get(0) : null;
                             PubKeyScript pubKeyScript = new PubKeyScript(scriptPubKey);
-                            return new RawTxOutput(rawBtcTxOutput.getN(),
-                                    rawBtcTxOutput.getValue().movePointRight(8).longValue(),
-                                    rawBtcTx.getTxId(),
+                            return new RawTxOutput(rawDtoTxOutput.getN(),
+                                    BigDecimal.valueOf(rawDtoTxOutput.getValue()).movePointRight(8).longValueExact(),
+                                    rawDtoTx.getTxId(),
                                     pubKeyScript,
                                     address,
                                     opReturnData,
@@ -344,5 +346,34 @@ public class RpcService {
                 blockTime,
                 ImmutableList.copyOf(txInputs),
                 ImmutableList.copyOf(txOutputs));
+    }
+
+    private static int getActivateHardFork2Height() {
+        return Config.baseCurrencyNetwork().isMainnet() ? ACTIVATE_HARD_FORK_2_HEIGHT_MAINNET :
+                Config.baseCurrencyNetwork().isTestnet() ? ACTIVATE_HARD_FORK_2_HEIGHT_TESTNET :
+                        ACTIVATE_HARD_FORK_2_HEIGHT_REGTEST;
+    }
+
+    @VisibleForTesting
+    static String extractPubKeyAsHex(RawDtoInput rawInput, boolean allowSegwit) {
+        // We only allow inputs with a single SIGHASH_ALL signature. That is, multisig or
+        // signing of only some of the tx inputs/outputs is intentionally disallowed...
+        if (rawInput.getScriptSig() == null) {
+            // coinbase input - no pubKey to extract
+            return null;
+        }
+        String[] split = rawInput.getScriptSig().getAsm().split(" ");
+        if (split.length == 2 && split[0].endsWith("[ALL]")) {
+            // P2PKH input
+            return split[1];
+        }
+        List<String> txInWitness = rawInput.getTxInWitness() != null ? rawInput.getTxInWitness() : List.of();
+        if (allowSegwit && split.length < 2 && txInWitness.size() == 2 && txInWitness.get(0).endsWith("01")) {
+            // P2WPKH or P2SH-P2WPKH input
+            return txInWitness.get(1);
+        }
+        // If we receive a pay to pubkey tx, the pubKey is not included as it is in the
+        // output already.
+        return null;
     }
 }

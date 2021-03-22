@@ -15,16 +15,22 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.http;
+package bisq.core.dao.node.full.rpc.dto;
 
-import lombok.Getter;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
-public class HttpException extends Exception {
-    @Getter
-    private final int responseCode;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-    public HttpException(String message, int responseCode) {
-        super(message);
-        this.responseCode = responseCode;
-    }
+@Data
+@NoArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonPropertyOrder({"value", "n", "scriptPubKey"})
+public class RawDtoOutput {
+    private Double value;
+    private Integer n;
+    private DtoPubKeyScript scriptPubKey;
 }

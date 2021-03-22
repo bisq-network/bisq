@@ -10,7 +10,4 @@
         <appender-ref ref="CONSOLE_APPENDER"/>
     </root>
 
-    <logger name="com.neemre.btcdcli4j" level="WARN"/>
-    <logger name="com.neemre.btcdcli4j.core.client.ClientConfigurator" level="ERROR"/>
-
 </configuration>

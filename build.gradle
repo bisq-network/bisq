@@ -29,7 +29,6 @@ configure(subprojects) {
     ext { // in alphabetical order
         bcVersion = '1.63'
         bitcoinjVersion = '2a80db4'
-        btcdCli4jVersion = '27b94333'
         codecVersion = '1.13'
         easybindVersion = '1.0.3'
         easyVersion = '4.0.1'
@@ -46,7 +45,7 @@ configure(subprojects) {
         httpclientVersion = '4.5.12'
         httpcoreVersion = '4.4.13'
         ioVersion = '2.6'
-        jacksonVersion = '2.8.10'
+        jacksonVersion = '2.12.1'
         javafxVersion = '11.0.2'
         javaxAnnotationVersion = '1.2'
         jcsvVersion = '1.4.0'
@@ -54,6 +53,7 @@ configure(subprojects) {
         jfoenixVersion = '9.0.6'
         joptVersion = '5.0.4'
         jsonsimpleVersion = '1.1.1'
+        jsonrpc4jVersion = '1.6.0.bisq.1'
         junitVersion = '4.12'
         jupiterVersion = '5.7.0'
         kotlinVersion = '1.3.41'
@@ -314,23 +314,9 @@ configure(project(':core')) {
             exclude(module: 'commons-codec')
         }
         compile "com.google.guava:guava:$guavaVersion"
-        compile("network.bisq.btcd-cli4j:btcd-cli4j-core:$btcdCli4jVersion") {
-            exclude(module: 'guava')
-            exclude(module: 'slf4j-api')
-            exclude(module: 'httpclient')
-            exclude(module: 'commons-lang3')
-            exclude(module: 'jackson-core')
-            exclude(module: 'jackson-annotations')
-            exclude(module: 'jackson-databind')
-        }
-        compile("network.bisq.btcd-cli4j:btcd-cli4j-daemon:$btcdCli4jVersion") {
-            exclude(module: 'guava')
-            exclude(module: 'slf4j-api')
-            exclude(module: 'httpclient')
-            exclude(module: 'commons-lang3')
-            exclude(module: 'jackson-core')
-            exclude(module: 'jackson-annotations')
-            exclude(module: 'jackson-databind')
+        compile("com.github.bisq-network:jsonrpc4j:$jsonrpc4jVersion") {
+            exclude(module: 'base64')
+            exclude(module: 'httpcore-nio')
         }
         compile "com.fasterxml.jackson.core:jackson-core:$jacksonVersion"
         compile "com.fasterxml.jackson.core:jackson-annotations:$jacksonVersion"
@@ -678,7 +664,7 @@ configure(project(':apitest')) {
                     "${result.skippedTestCount} skipped]  html report contains skipped test info")
 
                 // Show report link if all tests passed in case you want to see more detail, stdout, skipped, etc.
-                if(result.resultType == TestResult.ResultType.SUCCESS) {
+                if (result.resultType == TestResult.ResultType.SUCCESS) {
                     DirectoryReport htmlReport = getReports().getHtml()
                     String reportUrl = new org.gradle.internal.logging.ConsoleRenderer()
                         .asClickableFileUrl(htmlReport.getEntryPoint())
