@@ -36,11 +36,7 @@ public class OfferRestrictions {
         return new Date().after(REQUIRE_UPDATE_DATE);
     }
 
-    // These values should generally be the same. However, to avoid voiding offers created with a higher limit
-    // the TOLERATED_SMALL_AMOUNT_PEER value can be set to the higher limit to allow those offers to be taken
-    // for a while.
-    public static Coin TOLERATED_SMALL_AMOUNT_SELF = Coin.parseCoin("0.0025");
-    public static Coin TOLERATED_SMALL_AMOUNT_PEER = Coin.parseCoin("0.01");
+    public static Coin TOLERATED_SMALL_TRADE_AMOUNT = Coin.parseCoin("0.01");
 
     static boolean hasOfferMandatoryCapability(Offer offer, Capability mandatoryCapability) {
         Map<String, String> extraDataMap = offer.getOfferPayload().getExtraDataMap();

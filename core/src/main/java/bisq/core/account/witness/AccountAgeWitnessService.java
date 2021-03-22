@@ -414,16 +414,14 @@ public class AccountAgeWitnessService {
                                AccountAgeWitness accountAgeWitness,
                                AccountAge accountAgeCategory,
                                OfferPayload.Direction direction,
-                               PaymentMethod paymentMethod,
-                               boolean isMyLimit) {
+                               PaymentMethod paymentMethod) {
         if (CurrencyUtil.isCryptoCurrency(currencyCode) ||
                 !PaymentMethod.hasChargebackRisk(paymentMethod, currencyCode) ||
                 direction == OfferPayload.Direction.SELL) {
             return maxTradeLimit.value;
         }
 
-        long limit = isMyLimit ? OfferRestrictions.TOLERATED_SMALL_AMOUNT_SELF.value :
-                OfferRestrictions.TOLERATED_SMALL_AMOUNT_PEER.value;
+        long limit = OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT.value;
         var factor = signedBuyFactor(accountAgeCategory);
         if (factor > 0) {
             limit = MathUtils.roundDoubleToLong((double) maxTradeLimit.value * factor);
@@ -511,8 +509,7 @@ public class AccountAgeWitnessService {
                 accountAgeWitness,
                 accountAgeCategory,
                 direction,
-                paymentAccount.getPaymentMethod(),
-                true);
+                paymentAccount.getPaymentMethod());
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -574,14 +571,14 @@ public class AccountAgeWitnessService {
         checkNotNull(offer);
 
         // In case we don't find the witness we check if the trade amount is above the
-        // TOLERATED_SMALL_AMOUNT_PEER and only in that case return false.
+        // TOLERATED_SMALL_TRADE_AMOUNT (0.01 BTC) and only in that case return false.
         return findWitness(offer)
                 .map(witness -> verifyPeersTradeLimit(offer, tradeAmount, witness, new Date(), errorMessageHandler))
-                .orElse(isPeerToleratedSmallAmount(tradeAmount));
+                .orElse(isToleratedSmalleAmount(tradeAmount));
     }
 
-    private boolean isPeerToleratedSmallAmount(Coin tradeAmount) {
-        return tradeAmount.value <= OfferRestrictions.TOLERATED_SMALL_AMOUNT_PEER.value;
+    private boolean isToleratedSmalleAmount(Coin tradeAmount) {
+        return tradeAmount.value <= OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT.value;
     }
 
 
@@ -645,7 +642,7 @@ public class AccountAgeWitnessService {
             OfferPayload.Direction direction = offer.isMyOffer(keyRing) ?
                     offer.getMirroredDirection() : offer.getDirection();
             peersCurrentTradeLimit = getTradeLimit(defaultMaxTradeLimit, currencyCode, peersWitness,
-                    accountAgeCategory, direction, offer.getPaymentMethod(), false);
+                    accountAgeCategory, direction, offer.getPaymentMethod());
         }
         // Makers current trade limit cannot be smaller than that in the offer
         boolean result = tradeAmount.value <= peersCurrentTradeLimit;
