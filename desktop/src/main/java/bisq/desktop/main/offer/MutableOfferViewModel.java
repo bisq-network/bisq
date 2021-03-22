@@ -49,6 +49,7 @@ import bisq.core.offer.OfferPayload;
 import bisq.core.offer.OfferRestrictions;
 import bisq.core.offer.OfferUtil;
 import bisq.core.payment.PaymentAccount;
+import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
@@ -660,6 +661,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
 
         btcValidator.setMaxValue(dataModel.paymentAccount.getPaymentMethod().getMaxTradeLimitAsCoin(dataModel.getTradeCurrencyCode().get()));
         btcValidator.setMaxTradeLimit(Coin.valueOf(dataModel.getMaxTradeLimit()));
+        maybeShowMakeOfferToUnsignedAccountWarning();
 
         securityDepositValidator.setPaymentAccount(paymentAccount);
     }
@@ -776,6 +778,8 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
             } else {
                 syncMinAmountWithAmount = true;
             }
+
+            maybeShowMakeOfferToUnsignedAccountWarning();
         }
     }
 
@@ -1215,6 +1219,16 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
         String value = FormattingUtils.formatToPercent(dataModel.getBuyerSecurityDeposit().get());
         if (!securityDepositValidator.validate(value).isValid) {
             dataModel.setBuyerSecurityDeposit(Restrictions.getDefaultBuyerSecurityDepositAsPercent());
+        }
+    }
+
+    private void maybeShowMakeOfferToUnsignedAccountWarning() {
+        if (dataModel.getDirection() == OfferPayload.Direction.SELL &&
+                PaymentMethod.hasChargebackRisk(dataModel.getPaymentAccount().getPaymentMethod(), dataModel.getTradeCurrency().getCode())) {
+            Coin checkAmount = dataModel.getMinAmount().get() == null ? dataModel.getAmount().get() : dataModel.getMinAmount().get();
+            if (checkAmount != null && !checkAmount.isGreaterThan(OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT)) {
+                GUIUtil.showMakeOfferToUnsignedAccountWarning();
+            }
         }
     }
 

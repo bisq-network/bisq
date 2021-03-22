@@ -698,6 +698,24 @@ public class GUIUtil {
         return t.cast(parent);
     }
 
+    public static void showTakeOfferFromUnsignedAccountWarning() {
+        String key = "confirmTakeOfferFromUnsignedAccount";
+        new Popup().warning(Res.get("payment.takeOfferFromUnsignedAccount.warning"))
+                .width(900)
+                .closeButtonText(Res.get("shared.iConfirm"))
+                .dontShowAgainId(key)
+                .show();
+    }
+
+    public static void showMakeOfferToUnsignedAccountWarning() {
+        String key = "confirmMakeOfferToUnsignedAccount";
+        new Popup().warning(Res.get("payment.makeOfferToUnsignedAccount.warning"))
+                .width(900)
+                .closeButtonText(Res.get("shared.iConfirm"))
+                .dontShowAgainId(key)
+                .show();
+    }
+
     public static void showClearXchangeWarning() {
         String key = "confirmClearXchangeRequirements";
         final String currencyName = Config.baseCurrencyNetwork().getCurrencyName();
