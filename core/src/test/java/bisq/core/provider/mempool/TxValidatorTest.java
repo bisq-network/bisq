@@ -79,19 +79,22 @@ public class TxValidatorTest {
         Assert.assertTrue(createTxValidator(offerData).parseJsonValidateMakerFeeTx(mempoolData, btcFeeReceivers).getResult());
 
         // UNDERPAID expected 1.01 BSQ, actual fee paid 0.80 BSQ (USED 8.00 RATE INSTEAD OF 10.06 RATE)
+        // PASS due to leniency rule of accepting old DAO rate parameters: https://github.com/bisq-network/bisq/issues/5329#issuecomment-803223859
         offerData = "48067552,3b6009da764b71d79a4df8e2d8960b6919cae2e9bdccd5ef281e261fa9cd31b3,10000000,80,0,667656";
         mempoolData = "{\"txid\":\"3b6009da764b71d79a4df8e2d8960b6919cae2e9bdccd5ef281e261fa9cd31b3\",\"version\":1,\"locktime\":0,\"vin\":[{\"vout\":0,\"prevout\":{\"value\":9717}},{\"vout\":0,\"prevout\":{\"value\":4434912}},{\"vout\":2,\"prevout\":{\"value\":12809932}}],\"vout\":[{\"scriptpubkey_address\":\"1Nzqa4J7ck5bgz7QNXKtcjZExAvReozFo4\",\"value\":9637},{\"scriptpubkey_address\":\"bc1qhmmulf5prreqhccqy2wqpxxn6dcye7ame9dd57\",\"value\":11500000},{\"scriptpubkey_address\":\"bc1qx6hg8km2jdjc5ukhuedmkseu9wlsjtd8zeajpj\",\"value\":5721894}],\"size\":553,\"weight\":1879,\"fee\":23030,\"status\":{\"confirmed\":true,\"block_height\":667660}}";
-        Assert.assertFalse(createTxValidator(offerData).parseJsonValidateMakerFeeTx(mempoolData, btcFeeReceivers).getResult());
+        Assert.assertTrue(createTxValidator(offerData).parseJsonValidateMakerFeeTx(mempoolData, btcFeeReceivers).getResult());
 
         // UNDERPAID Expected fee: 0.61 BSQ, actual fee paid: 0.35 BSQ (USED 5.75 RATE INSTEAD OF 10.06 RATE)
+        // PASS due to leniency rule of accepting old DAO rate parameters: https://github.com/bisq-network/bisq/issues/5329#issuecomment-803223859
         offerData = "am7DzIv,4cdea8872a7d96210f378e0221dc1aae8ee9abb282582afa7546890fb39b7189,6100000,35,0,668195";
         mempoolData = "{\"txid\":\"4cdea8872a7d96210f378e0221dc1aae8ee9abb282582afa7546890fb39b7189\",\"version\":1,\"locktime\":0,\"vin\":[{\"vout\":0,\"prevout\":{\"value\":23893}},{\"vout\":1,\"prevout\":{\"value\":1440000}},{\"vout\":2,\"prevout\":{\"value\":16390881}}],\"vout\":[{\"scriptpubkey_address\":\"1Kmrzq3WGCQsZw5kroEphuk1KgsEr65yB7\",\"value\":23858},{\"scriptpubkey_address\":\"bc1qyw5qql9m7rkse9mhcun225nrjpwycszsa5dpjg\",\"value\":7015000},{\"scriptpubkey_address\":\"bc1q90y3p6mg0pe3rvvzfeudq4mfxafgpc9rulruff\",\"value\":10774186}],\"size\":554,\"weight\":1559,\"fee\":41730,\"status\":{\"confirmed\":true,\"block_height\":668198}}";
-        Assert.assertFalse(createTxValidator(offerData).parseJsonValidateMakerFeeTx(mempoolData, btcFeeReceivers).getResult());
+        Assert.assertTrue(createTxValidator(offerData).parseJsonValidateMakerFeeTx(mempoolData, btcFeeReceivers).getResult());
 
         // UNDERPAID expected 0.11 BSQ, actual fee paid 0.08 BSQ (USED 5.75 RATE INSTEAD OF 7.53)
+        // PASS due to leniency rule of accepting old DAO rate parameters: https://github.com/bisq-network/bisq/issues/5329#issuecomment-803223859
         offerData = "F1dzaFNQ,f72e263947c9dee6fbe7093fc85be34a149ef5bcfdd49b59b9cc3322fea8967b,1440000,8,0,670822, bsq paid too little";
         mempoolData = "{\"txid\":\"f72e263947c9dee6fbe7093fc85be34a149ef5bcfdd49b59b9cc3322fea8967b\",\"version\":1,\"locktime\":0,\"vin\":[{\"vout\":0,\"prevout\":{\"value\":15163}},{\"vout\":2,\"prevout\":{\"value\":6100000}}],\"vout\":[{\"scriptpubkey_address\":\"1MEsc2m4MSomNJWSr1p6fhnUQMyA3DRGrN\",\"value\":15155},{\"scriptpubkey_address\":\"bc1qztgwe9ry9a9puchjuscqdnv4v9lsm2ut0jtfec\",\"value\":2040000},{\"scriptpubkey_address\":\"bc1q0nstwxc0vqkj4x000xt328mfjapvlsd56nn70h\",\"value\":4048308}],\"size\":406,\"weight\":1291,\"fee\":11700,\"status\":{\"confirmed\":true,\"block_height\":670823}}";
-        Assert.assertFalse(createTxValidator(offerData).parseJsonValidateMakerFeeTx(mempoolData, btcFeeReceivers).getResult());
+        Assert.assertTrue(createTxValidator(offerData).parseJsonValidateMakerFeeTx(mempoolData, btcFeeReceivers).getResult());
     }
 
     @Test
@@ -181,22 +184,18 @@ public class TxValidatorTest {
             boolean isCurrencyForMakerFeeBtc = Long.parseLong(y[4]) > 0;
             DaoStateService mockedDaoStateService = mock(DaoStateService.class);
 
-            Answer<Coin> mockGetMakerFeeBsq = invocation -> {
-                return mockedGetMakerFeeBsq(invocation.getArgument(1));
+            Answer<Coin> mockGetFeeRate = invocation -> {
+                return mockedLookupFeeRate(invocation.getArgument(0), invocation.getArgument(1));
             };
-            Answer<Coin> mockGetTakerFeeBsq = invocation -> {
-                return mockedGetTakerFeeBsq(invocation.getArgument(1));
+            Answer<Coin> mockGetParamValueAsCoin = invocation -> {
+                return mockedGetParamValueAsCoin(invocation.getArgument(0), invocation.getArgument(1));
             };
-            Answer<Coin> mockGetMakerFeeBtc = invocation -> {
-                return mockedGetMakerFeeBtc(invocation.getArgument(1));
+            Answer<List<Coin>> mockGetParamChangeList = invocation -> {
+                return mockedGetParamChangeList(invocation.getArgument(0));
             };
-            Answer<Coin> mockGetTakerFeeBtc = invocation -> {
-                return mockedGetTakerFeeBtc(invocation.getArgument(1));
-            };
-            when(mockedDaoStateService.getParamValueAsCoin(Mockito.same(Param.DEFAULT_MAKER_FEE_BSQ), Mockito.anyInt())).thenAnswer(mockGetMakerFeeBsq);
-            when(mockedDaoStateService.getParamValueAsCoin(Mockito.same(Param.DEFAULT_TAKER_FEE_BSQ), Mockito.anyInt())).thenAnswer(mockGetTakerFeeBsq);
-            when(mockedDaoStateService.getParamValueAsCoin(Mockito.same(Param.DEFAULT_MAKER_FEE_BTC), Mockito.anyInt())).thenAnswer(mockGetMakerFeeBtc);
-            when(mockedDaoStateService.getParamValueAsCoin(Mockito.same(Param.DEFAULT_TAKER_FEE_BTC), Mockito.anyInt())).thenAnswer(mockGetTakerFeeBtc);
+            when(mockedDaoStateService.getParamValueAsCoin(Mockito.any(Param.class), Mockito.anyInt())).thenAnswer(mockGetFeeRate);
+            when(mockedDaoStateService.getParamValueAsCoin(Mockito.any(Param.class), Mockito.anyString())).thenAnswer(mockGetParamValueAsCoin);
+            when(mockedDaoStateService.getParamChangeList(Mockito.any())).thenAnswer(mockGetParamChangeList);
             TxValidator txValidator = new TxValidator(mockedDaoStateService, txId, Coin.valueOf(amount), isCurrencyForMakerFeeBtc);
             return txValidator;
         } catch (RuntimeException ignore) {
@@ -205,74 +204,65 @@ public class TxValidatorTest {
         return null;
     }
 
-    // for testing purposes, we have a hardcoded list of needed DAO param values
-    // since we cannot start the P2P network / DAO in order to run tests
-    Coin mockedGetMakerFeeBsq(int blockHeight) {
+    Coin mockedLookupFeeRate(Param param, int blockHeight) {
         BsqFormatter bsqFormatter = new BsqFormatter();
-        LinkedHashMap<Long, String> feeMap = new LinkedHashMap<>();
-        feeMap.put(670027L, "7.53");
-        feeMap.put(660667L, "10.06");
-        feeMap.put(655987L, "8.74");
-        feeMap.put(641947L, "7.6");
-        feeMap.put(632587L, "6.6");
-        feeMap.put(623227L, "5.75");
-        feeMap.put(599827L, "10.0");
-        feeMap.put(590467L, "13.0");
-        feeMap.put(585787L, "8.0");
-        feeMap.put(581107L, "1.6");
+        LinkedHashMap<Long, String> feeMap = mockedGetFeeRateMap(param);
         for (Map.Entry<Long, String> entry : feeMap.entrySet()) {
             if (blockHeight >= entry.getKey()) {
                 return ParsingUtils.parseToCoin(entry.getValue(), bsqFormatter);
             }
         }
-        return ParsingUtils.parseToCoin("0.5", bsqFormatter); // DEFAULT_MAKER_FEE_BSQ("0.50", ParamType.BSQ, 5, 5),     // ~ 0.01% of trade amount
+        return ParsingUtils.parseToCoin(param.getDefaultValue(), bsqFormatter);
     }
 
-    Coin mockedGetTakerFeeBsq(int blockHeight) {
-        BsqFormatter bsqFormatter = new BsqFormatter();
+    private LinkedHashMap<Long, String> mockedGetFeeRateMap(Param param) {
         LinkedHashMap<Long, String> feeMap = new LinkedHashMap<>();
-        feeMap.put(670027L, "52.68");
-        feeMap.put(660667L, "70.39");
-        feeMap.put(655987L, "61.21");
-        feeMap.put(641947L, "53.23");
-        feeMap.put(632587L, "46.30");
-        feeMap.put(623227L, "40.25");
-        feeMap.put(599827L, "30.00");
-        feeMap.put(590467L, "38.00");
-        feeMap.put(585787L, "24.00");
-        feeMap.put(581107L, "4.80");
-        for (Map.Entry<Long, String> entry : feeMap.entrySet()) {
-            if (blockHeight >= entry.getKey()) {
-                return ParsingUtils.parseToCoin(entry.getValue(), bsqFormatter);
-            }
+        if (param == Param.DEFAULT_MAKER_FEE_BSQ) {
+            feeMap.put(674707L, "8.66");    // https://github.com/bisq-network/proposals/issues/318
+            feeMap.put(670027L, "7.53");
+            feeMap.put(660667L, "10.06");
+            feeMap.put(655987L, "8.74");
+            feeMap.put(641947L, "7.6");
+            feeMap.put(632587L, "6.6");
+            feeMap.put(623227L, "5.75");
+            feeMap.put(599827L, "10.0");
+            feeMap.put(590467L, "13.0");
+            feeMap.put(585787L, "8.0");
+            feeMap.put(581107L, "1.6");
+        } else if (param == Param.DEFAULT_TAKER_FEE_BSQ) {
+            feeMap.put(674707L, "60.59");   // https://github.com/bisq-network/proposals/issues/318
+            feeMap.put(670027L, "52.68");
+            feeMap.put(660667L, "70.39");
+            feeMap.put(655987L, "61.21");
+            feeMap.put(641947L, "53.23");
+            feeMap.put(632587L, "46.30");
+            feeMap.put(623227L, "40.25");
+            feeMap.put(599827L, "30.00");
+            feeMap.put(590467L, "38.00");
+            feeMap.put(585787L, "24.00");
+            feeMap.put(581107L, "4.80");
+        } else if (param == Param.DEFAULT_MAKER_FEE_BTC) {
+            feeMap.put(623227L, "0.0010");
+            feeMap.put(585787L, "0.0020");
+        } else if (param == Param.DEFAULT_TAKER_FEE_BTC) {
+            feeMap.put(623227L, "0.0070");
+            feeMap.put(585787L, "0.0060");
         }
-        return ParsingUtils.parseToCoin("1.5", bsqFormatter);
+        return feeMap;
     }
 
-    Coin mockedGetMakerFeeBtc(int blockHeight) {
+    public Coin mockedGetParamValueAsCoin(Param param, String paramValue) {
         BsqFormatter bsqFormatter = new BsqFormatter();
-        LinkedHashMap<Long, String> feeMap = new LinkedHashMap<>();
-        feeMap.put(623227L, "0.0010");
-        feeMap.put(585787L, "0.0020");
-        for (Map.Entry<Long, String> entry : feeMap.entrySet()) {
-            if (blockHeight >= entry.getKey()) {
-                return ParsingUtils.parseToCoin(entry.getValue(), bsqFormatter);
-            }
-        }
-        return ParsingUtils.parseToCoin("0.001", bsqFormatter);
+        return bsqFormatter.parseParamValueToCoin(param, paramValue);
     }
 
-    Coin mockedGetTakerFeeBtc(int blockHeight) {
+    public List<Coin> mockedGetParamChangeList(Param param) {
         BsqFormatter bsqFormatter = new BsqFormatter();
-        LinkedHashMap<Long, String> feeMap = new LinkedHashMap<>();
-        feeMap.put(623227L, "0.0070");
-        feeMap.put(585787L, "0.0060");
+        List<Coin> retVal = new ArrayList<Coin>();
+        Map<Long, String> feeMap = mockedGetFeeRateMap(param);
         for (Map.Entry<Long, String> entry : feeMap.entrySet()) {
-            if (blockHeight >= entry.getKey()) {
-                return ParsingUtils.parseToCoin(entry.getValue(), bsqFormatter);
-            }
+            retVal.add(ParsingUtils.parseToCoin(entry.getValue(), bsqFormatter));
         }
-        return ParsingUtils.parseToCoin("0.003", bsqFormatter);
+        return retVal;
     }
-
 }
