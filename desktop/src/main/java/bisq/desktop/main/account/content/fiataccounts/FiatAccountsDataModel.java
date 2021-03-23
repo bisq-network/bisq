@@ -28,6 +28,7 @@ import bisq.core.locale.TradeCurrency;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.payment.AssetAccount;
 import bisq.core.payment.PaymentAccount;
+import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
@@ -137,6 +138,8 @@ class FiatAccountsDataModel extends ActivatableDataModel {
         boolean isPaymentAccountUsed = openOfferManager.getObservableList().stream()
                 .anyMatch(o -> o.getOffer().getMakerPaymentAccountId().equals(paymentAccount.getId()));
         isPaymentAccountUsed = isPaymentAccountUsed || tradeManager.getObservableList().stream()
+                .filter(tradable -> tradable instanceof Trade)
+                .map(tradable -> (Trade) tradable)
                 .anyMatch(t -> t.getOffer().getMakerPaymentAccountId().equals(paymentAccount.getId()) ||
                         paymentAccount.getId().equals(t.getTakerPaymentAccountId()));
         if (!isPaymentAccountUsed)

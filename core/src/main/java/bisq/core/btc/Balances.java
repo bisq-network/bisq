@@ -24,6 +24,7 @@ import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.refund.RefundManager;
+import bisq.core.trade.Tradable;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.closed.ClosedTradableManager;
@@ -80,7 +81,7 @@ public class Balances {
 
     public void onAllServicesInitialized() {
         openOfferManager.getObservableList().addListener((ListChangeListener<OpenOffer>) c -> updateBalance());
-        tradeManager.getObservableList().addListener((ListChangeListener<Trade>) change -> updateBalance());
+        tradeManager.getObservableList().addListener((ListChangeListener<Tradable>) change -> updateBalance());
         refundManager.getDisputesAsObservableList().addListener((ListChangeListener<Dispute>) c -> updateBalance());
         btcWalletService.addBalanceListener(new BalanceListener() {
             @Override

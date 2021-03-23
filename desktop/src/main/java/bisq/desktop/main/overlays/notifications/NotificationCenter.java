@@ -32,6 +32,7 @@ import bisq.core.support.dispute.refund.RefundManager;
 import bisq.core.trade.BuyerTrade;
 import bisq.core.trade.MakerTrade;
 import bisq.core.trade.SellerTrade;
+import bisq.core.trade.Tradable;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
 import bisq.core.user.DontShowAgainLookup;
@@ -109,55 +110,64 @@ public class NotificationCenter {
     }
 
     public void onAllServicesAndViewsInitialized() {
-        tradeManager.getObservableList().addListener((ListChangeListener<Trade>) change -> {
+        tradeManager.getObservableList().addListener((ListChangeListener<Tradable>) change -> {
             change.next();
             if (change.wasRemoved()) {
-                change.getRemoved().forEach(trade -> {
-                    String tradeId = trade.getId();
-                    if (disputeStateSubscriptionsMap.containsKey(tradeId)) {
-                        disputeStateSubscriptionsMap.get(tradeId).unsubscribe();
-                        disputeStateSubscriptionsMap.remove(tradeId);
-                    }
+                change.getRemoved().stream()
+                        .filter(tradable -> tradable instanceof Trade)
+                        .map(tradable -> (Trade) tradable)
+                        .forEach(trade -> {
+                            String tradeId = trade.getId();
+                            if (disputeStateSubscriptionsMap.containsKey(tradeId)) {
+                                disputeStateSubscriptionsMap.get(tradeId).unsubscribe();
+                                disputeStateSubscriptionsMap.remove(tradeId);
+                            }
 
-                    if (tradePhaseSubscriptionsMap.containsKey(tradeId)) {
-                        tradePhaseSubscriptionsMap.get(tradeId).unsubscribe();
-                        tradePhaseSubscriptionsMap.remove(tradeId);
-                    }
-                });
+                            if (tradePhaseSubscriptionsMap.containsKey(tradeId)) {
+                                tradePhaseSubscriptionsMap.get(tradeId).unsubscribe();
+                                tradePhaseSubscriptionsMap.remove(tradeId);
+                            }
+                        });
             }
             if (change.wasAdded()) {
-                change.getAddedSubList().forEach(trade -> {
-                    String tradeId = trade.getId();
-                    if (disputeStateSubscriptionsMap.containsKey(tradeId)) {
-                        log.debug("We have already an entry in disputeStateSubscriptionsMap.");
-                    } else {
-                        Subscription disputeStateSubscription = EasyBind.subscribe(trade.disputeStateProperty(),
-                                disputeState -> onDisputeStateChanged(trade, disputeState));
-                        disputeStateSubscriptionsMap.put(tradeId, disputeStateSubscription);
-                    }
+                change.getAddedSubList().stream()
+                        .filter(tradable -> tradable instanceof Trade)
+                        .map(tradable -> (Trade) tradable)
+                        .forEach(trade -> {
+                            String tradeId = trade.getId();
+                            if (disputeStateSubscriptionsMap.containsKey(tradeId)) {
+                                log.debug("We have already an entry in disputeStateSubscriptionsMap.");
+                            } else {
+                                Subscription disputeStateSubscription = EasyBind.subscribe(trade.disputeStateProperty(),
+                                        disputeState -> onDisputeStateChanged(trade, disputeState));
+                                disputeStateSubscriptionsMap.put(tradeId, disputeStateSubscription);
+                            }
 
-                    if (tradePhaseSubscriptionsMap.containsKey(tradeId)) {
-                        log.debug("We have already an entry in tradePhaseSubscriptionsMap.");
-                    } else {
-                        Subscription tradePhaseSubscription = EasyBind.subscribe(trade.statePhaseProperty(),
-                                phase -> onTradePhaseChanged(trade, phase));
-                        tradePhaseSubscriptionsMap.put(tradeId, tradePhaseSubscription);
-                    }
-                });
+                            if (tradePhaseSubscriptionsMap.containsKey(tradeId)) {
+                                log.debug("We have already an entry in tradePhaseSubscriptionsMap.");
+                            } else {
+                                Subscription tradePhaseSubscription = EasyBind.subscribe(trade.statePhaseProperty(),
+                                        phase -> onTradePhaseChanged(trade, phase));
+                                tradePhaseSubscriptionsMap.put(tradeId, tradePhaseSubscription);
+                            }
+                        });
             }
         });
 
-        tradeManager.getObservableList().forEach(trade -> {
-                    String tradeId = trade.getId();
-                    Subscription disputeStateSubscription = EasyBind.subscribe(trade.disputeStateProperty(),
-                            disputeState -> onDisputeStateChanged(trade, disputeState));
-                    disputeStateSubscriptionsMap.put(tradeId, disputeStateSubscription);
+        tradeManager.getObservableList().stream()
+                .filter(tradable -> tradable instanceof Trade)
+                .map(tradable -> (Trade) tradable)
+                .forEach(trade -> {
+                            String tradeId = trade.getId();
+                            Subscription disputeStateSubscription = EasyBind.subscribe(trade.disputeStateProperty(),
+                                    disputeState -> onDisputeStateChanged(trade, disputeState));
+                            disputeStateSubscriptionsMap.put(tradeId, disputeStateSubscription);
 
-                    Subscription tradePhaseSubscription = EasyBind.subscribe(trade.statePhaseProperty(),
-                            phase -> onTradePhaseChanged(trade, phase));
-                    tradePhaseSubscriptionsMap.put(tradeId, tradePhaseSubscription);
-                }
-        );
+                            Subscription tradePhaseSubscription = EasyBind.subscribe(trade.statePhaseProperty(),
+                                    phase -> onTradePhaseChanged(trade, phase));
+                            tradePhaseSubscriptionsMap.put(tradeId, tradePhaseSubscription);
+                        }
+                );
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

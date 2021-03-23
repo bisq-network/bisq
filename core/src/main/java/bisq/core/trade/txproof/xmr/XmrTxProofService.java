@@ -23,6 +23,7 @@ import bisq.core.locale.Res;
 import bisq.core.support.dispute.mediation.MediationManager;
 import bisq.core.support.dispute.refund.RefundManager;
 import bisq.core.trade.SellerTrade;
+import bisq.core.trade.Tradable;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.closed.ClosedTradableManager;
@@ -180,8 +181,8 @@ public class XmrTxProofService implements AssetTxProofService {
         });
 
         // We listen on new trades
-        ObservableList<Trade> tradableList = tradeManager.getObservableList();
-        tradableList.addListener((ListChangeListener<Trade>) c -> {
+        ObservableList<Tradable> tradableList = tradeManager.getObservableList();
+        tradableList.addListener((ListChangeListener<Tradable>) c -> {
             c.next();
             if (c.wasAdded()) {
                 processTrades(c.getAddedSubList());
@@ -192,7 +193,7 @@ public class XmrTxProofService implements AssetTxProofService {
         processTrades(tradableList);
     }
 
-    private void processTrades(List<? extends Trade> trades) {
+    private void processTrades(List<? extends Tradable> trades) {
         trades.stream()
                 .filter(trade -> trade instanceof SellerTrade)
                 .map(trade -> (SellerTrade) trade)
@@ -363,7 +364,7 @@ public class XmrTxProofService implements AssetTxProofService {
                 filterManager.getFilter().isDisableAutoConf();
     }
 
-    private boolean wasTxKeyReUsed(Trade trade, List<Trade> activeTrades) {
+    private boolean wasTxKeyReUsed(Trade trade, List<Tradable> activeTrades) {
         // For dev testing we reuse test data so we ignore that check
         if (DevEnv.isDevMode()) {
             return false;
@@ -372,7 +373,11 @@ public class XmrTxProofService implements AssetTxProofService {
         // We need to prevent that a user tries to scam by reusing a txKey and txHash of a previous XMR trade with
         // the same user (same address) and same amount. We check only for the txKey as a same txHash but different
         // txKey is not possible to get a valid result at proof.
-        Stream<Trade> failedAndOpenTrades = Stream.concat(activeTrades.stream(), failedTradesManager.getObservableList().stream());
+        Stream<Trade> failedAndOpenTrades = Stream.concat(
+                activeTrades.stream()
+                        .filter(tradable -> tradable instanceof Trade)
+                        .map(tradable -> (Trade) tradable),
+                failedTradesManager.getObservableList().stream());
         Stream<Trade> closedTrades = closedTradableManager.getObservableList().stream()
                 .filter(tradable -> tradable instanceof Trade)
                 .map(tradable -> (Trade) tradable);

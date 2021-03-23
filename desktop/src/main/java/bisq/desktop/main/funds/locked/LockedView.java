@@ -105,7 +105,7 @@ public class LockedView extends ActivatableView<VBox, Void> {
     private final SortedList<LockedListItem> sortedList = new SortedList<>(observableList);
     private BalanceListener balanceListener;
     private ListChangeListener<OpenOffer> openOfferListChangeListener;
-    private ListChangeListener<Trade> tradeListChangeListener;
+    private ListChangeListener<Tradable> tradeListChangeListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

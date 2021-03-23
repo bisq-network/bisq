@@ -63,6 +63,7 @@ import bisq.core.presentation.SupportTicketsPresentation;
 import bisq.core.presentation.TradePresentation;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.PriceFeedService;
+import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
 import bisq.core.user.DontShowAgainLookup;
 import bisq.core.user.Preferences;
@@ -241,34 +242,37 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
             if (newValue) {
                 tradeManager.applyTradePeriodState();
 
-                tradeManager.getObservableList().forEach(trade -> {
-                    Date maxTradePeriodDate = trade.getMaxTradePeriodDate();
-                    String key;
-                    switch (trade.getTradePeriodState()) {
-                        case FIRST_HALF:
-                            break;
-                        case SECOND_HALF:
-                            key = "displayHalfTradePeriodOver" + trade.getId();
-                            if (DontShowAgainLookup.showAgain(key)) {
-                                DontShowAgainLookup.dontShowAgain(key, true);
-                                new Popup().warning(Res.get("popup.warning.tradePeriod.halfReached",
-                                        trade.getShortId(),
-                                        DisplayUtils.formatDateTime(maxTradePeriodDate)))
-                                        .show();
+                tradeManager.getObservableList().stream()
+                        .filter(tradable -> tradable instanceof Trade)
+                        .map(tradable -> (Trade) tradable)
+                        .forEach(trade -> {
+                            Date maxTradePeriodDate = trade.getMaxTradePeriodDate();
+                            String key;
+                            switch (trade.getTradePeriodState()) {
+                                case FIRST_HALF:
+                                    break;
+                                case SECOND_HALF:
+                                    key = "displayHalfTradePeriodOver" + trade.getId();
+                                    if (DontShowAgainLookup.showAgain(key)) {
+                                        DontShowAgainLookup.dontShowAgain(key, true);
+                                        new Popup().warning(Res.get("popup.warning.tradePeriod.halfReached",
+                                                trade.getShortId(),
+                                                DisplayUtils.formatDateTime(maxTradePeriodDate)))
+                                                .show();
+                                    }
+                                    break;
+                                case TRADE_PERIOD_OVER:
+                                    key = "displayTradePeriodOver" + trade.getId();
+                                    if (DontShowAgainLookup.showAgain(key)) {
+                                        DontShowAgainLookup.dontShowAgain(key, true);
+                                        new Popup().warning(Res.get("popup.warning.tradePeriod.ended",
+                                                trade.getShortId(),
+                                                DisplayUtils.formatDateTime(maxTradePeriodDate)))
+                                                .show();
+                                    }
+                                    break;
                             }
-                            break;
-                        case TRADE_PERIOD_OVER:
-                            key = "displayTradePeriodOver" + trade.getId();
-                            if (DontShowAgainLookup.showAgain(key)) {
-                                DontShowAgainLookup.dontShowAgain(key, true);
-                                new Popup().warning(Res.get("popup.warning.tradePeriod.ended",
-                                        trade.getShortId(),
-                                        DisplayUtils.formatDateTime(maxTradePeriodDate)))
-                                        .show();
-                            }
-                            break;
-                    }
-                });
+                        });
             }
         });
 

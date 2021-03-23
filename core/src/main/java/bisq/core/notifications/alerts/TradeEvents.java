@@ -21,6 +21,7 @@ import bisq.core.locale.Res;
 import bisq.core.notifications.MobileMessage;
 import bisq.core.notifications.MobileMessageType;
 import bisq.core.notifications.MobileNotificationService;
+import bisq.core.trade.Tradable;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
 
@@ -53,13 +54,19 @@ public class TradeEvents {
     }
 
     public void onAllServicesInitialized() {
-        tradeManager.getObservableList().addListener((ListChangeListener<Trade>) c -> {
+        tradeManager.getObservableList().addListener((ListChangeListener<Tradable>) c -> {
             c.next();
             if (c.wasAdded()) {
-                c.getAddedSubList().forEach(this::setTradePhaseListener);
+                c.getAddedSubList().stream()
+                        .filter(tradable -> tradable instanceof Trade)
+                        .map(tradable -> (Trade) tradable)
+                        .forEach(this::setTradePhaseListener);
             }
         });
-        tradeManager.getObservableList().forEach(this::setTradePhaseListener);
+        tradeManager.getObservableList().stream()
+                .filter(tradable -> tradable instanceof Trade)
+                .map(tradable -> (Trade) tradable)
+                .forEach(this::setTradePhaseListener);
     }
 
     private void setTradePhaseListener(Trade trade) {

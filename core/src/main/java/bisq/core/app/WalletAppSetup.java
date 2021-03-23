@@ -25,6 +25,7 @@ import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.locale.Res;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.provider.fee.FeeService;
+import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
 import bisq.core.user.Preferences;
 import bisq.core.util.FormattingUtils;
@@ -246,6 +247,8 @@ public class WalletAppSetup {
                                 });
 
                         tradeManager.getObservableList().stream()
+                                .filter(tradable -> tradable instanceof Trade)
+                                .map(tradable -> (Trade) tradable)
                                 .filter(trade -> trade.getOffer() != null)
                                 .forEach(trade -> {
                                     String details = null;

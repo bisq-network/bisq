@@ -102,7 +102,6 @@ import javafx.util.Callback;
 
 import org.bouncycastle.crypto.params.KeyParameter;
 
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
@@ -466,7 +465,10 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                                             log.error("onWithdraw transaction is null");
                                         }
 
-                                        List<Trade> trades = new ArrayList<>(tradeManager.getObservableList());
+                                        List<Trade> trades = tradeManager.getObservableList().stream()
+                                                .filter(tradable -> tradable instanceof Trade)
+                                                .map(tradable -> (Trade) tradable)
+                                                .collect(Collectors.toList());
                                         trades.stream()
                                                 .filter(Trade::isPayoutPublished)
                                                 .forEach(trade -> btcWalletService.getAddressEntry(trade.getId(), AddressEntry.Context.TRADE_PAYOUT)
