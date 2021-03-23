@@ -938,6 +938,16 @@ public class DaoStateService implements DaoSetupService {
         return param.getDefaultValue();
     }
 
+    public List<Coin> getParamChangeList(Param param) {
+        List<Coin> values = new ArrayList<>();
+        for (ParamChange paramChange : daoState.getParamChangeList()) {
+            if (paramChange.getParamName().equals(param.name())) {
+                values.add(getParamValueAsCoin(param, paramChange.getValue()));
+            }
+        }
+        return values;
+    }
+
     public Coin getParamValueAsCoin(Param param, String paramValue) {
         return bsqFormatter.parseParamValueToCoin(param, paramValue);
     }
