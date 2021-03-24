@@ -311,7 +311,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                 String status = DisplayUtils.formatDateTime(dispute.getTradePeriodEnd());
                 Label tradePeriodEnd = addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("disputeSummaryWindow.tradePeriodEnd"), status).second;
                 if (dispute.getTradePeriodEnd().toInstant().isAfter(Instant.now())) {
-                    tradePeriodEnd.getStyleClass().add("version-new"); // highlight field when the trade period is still active
+                    tradePeriodEnd.getStyleClass().add("alert"); // highlight field when the trade period is still active
                 }
             }
             if (dispute.getExtraDataMap() != null && dispute.getExtraDataMap().size() > 0) {

@@ -802,6 +802,10 @@ tree-table-view:focused {
     -fx-cursor: hand;
 }
 
+.alert {
+    -fx-text-fill: -bs-rd-error-red;
+}
+
 .opaque-icon {
     -fx-fill: -bs-color-gray-bbb;
     -fx-opacity: 1;
