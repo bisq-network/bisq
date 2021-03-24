@@ -409,8 +409,7 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
 
     public long unreadMessageCount(boolean senderFlag) {
         return chatMessages.stream()
-                .filter(m -> m.isSenderIsTrader() == senderFlag)
-                .filter(m -> !m.isSystemMessage())
+                .filter(m -> m.isSenderIsTrader() == senderFlag || m.isSystemMessage())
                 .filter(m -> !m.isWasDisplayed())
                 .count();
     }
