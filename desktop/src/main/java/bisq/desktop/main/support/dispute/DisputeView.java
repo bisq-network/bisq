@@ -1291,14 +1291,14 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
                                     listener = (observable, oldValue, newValue) -> {
                                         setText(newValue ? Res.get("support.closed") : Res.get("support.open"));
                                         if (getTableRow() != null)
-                                            getTableRow().setOpacity(newValue ? 0.4 : 1);
+                                            getTableRow().setOpacity(newValue && item.getBadgeCountProperty().get() == 0 ? 0.4 : 1);
                                     };
                                     closedProperty = item.isClosedProperty();
                                     closedProperty.addListener(listener);
                                     boolean isClosed = item.isClosed();
                                     setText(isClosed ? Res.get("support.closed") : Res.get("support.open"));
                                     if (getTableRow() != null)
-                                        getTableRow().setOpacity(isClosed ? 0.4 : 1);
+                                        getTableRow().setOpacity(isClosed && item.getBadgeCountProperty().get() == 0  ? 0.4 : 1);
                                 } else {
                                     if (closedProperty != null) {
                                         closedProperty.removeListener(listener);
