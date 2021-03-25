@@ -155,6 +155,10 @@ message OfferInfo {
     string counterCurrencyCode = 17;
     uint64 date = 18;
     string state = 19;
+    uint64 sellerSecurityDeposit = 20;
+    string offerFeePaymentTxId = 21;
+    uint64 txFee = 22;
+    uint64 makerFee = 23;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -365,6 +369,28 @@ message TradeInfo {
     bool isPayoutPublished = 22;
     bool isWithdrawn = 23;
     string contractAsJson = 24;
+    ContractInfo contract = 25;
+}
+
+message ContractInfo {
+    string buyerNodeAddress = 1;
+    string sellerNodeAddress = 2;
+    string mediatorNodeAddress = 3;
+    string refundAgentNodeAddress = 4;
+    bool isBuyerMakerAndSellerTaker = 5;
+    string makerAccountId = 6;
+    string takerAccountId = 7;
+    PaymentAccountPayloadInfo makerPaymentAccountPayload = 8;
+    PaymentAccountPayloadInfo takerPaymentAccountPayload = 9;
+    string makerPayoutAddressString = 10;
+    string takerPayoutAddressString = 11;
+    uint64 lockTime = 12;
+}
+
+message PaymentAccountPayloadInfo {
+    string id = 1;
+    string paymentMethodId = 2;
+    string address = 3;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////

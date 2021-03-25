@@ -17,6 +17,7 @@
 
 package bisq.core.api.model;
 
+import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
 
 import bisq.common.Payload;
@@ -27,6 +28,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 import static bisq.core.api.model.OfferInfo.toOfferInfo;
+import static bisq.core.api.model.PaymentAccountPayloadInfo.toPaymentAccountPayloadInfo;
 
 @EqualsAndHashCode
 @Getter
@@ -60,6 +62,7 @@ public class TradeInfo implements Payload {
     private final boolean isPayoutPublished;
     private final boolean isWithdrawn;
     private final String contractAsJson;
+    private final ContractInfo contract;
 
     public TradeInfo(TradeInfoBuilder builder) {
         this.offer = builder.offer;
@@ -86,6 +89,7 @@ public class TradeInfo implements Payload {
         this.isPayoutPublished = builder.isPayoutPublished;
         this.isWithdrawn = builder.isWithdrawn;
         this.contractAsJson = builder.contractAsJson;
+        this.contract = builder.contract;
     }
 
     public static TradeInfo toTradeInfo(Trade trade) {
@@ -93,7 +97,26 @@ public class TradeInfo implements Payload {
     }
 
     public static TradeInfo toTradeInfo(Trade trade, String role) {
-        return new TradeInfo.TradeInfoBuilder()
+        ContractInfo contractInfo;
+        if (trade.getContract() != null) {
+            Contract contract = trade.getContract();
+            contractInfo = new ContractInfo(contract.getBuyerPayoutAddressString(),
+                    contract.getSellerPayoutAddressString(),
+                    contract.getMediatorNodeAddress().getFullAddress(),
+                    contract.getRefundAgentNodeAddress().getFullAddress(),
+                    contract.isBuyerMakerAndSellerTaker(),
+                    contract.getMakerAccountId(),
+                    contract.getTakerAccountId(),
+                    toPaymentAccountPayloadInfo(contract.getMakerPaymentAccountPayload()),
+                    toPaymentAccountPayloadInfo(contract.getTakerPaymentAccountPayload()),
+                    contract.getMakerPayoutAddressString(),
+                    contract.getTakerPayoutAddressString(),
+                    contract.getLockTime());
+        } else {
+            contractInfo = ContractInfo.emptyContract.get();
+        }
+
+        return new TradeInfoBuilder()
                 .withOffer(toOfferInfo(trade.getOffer()))
                 .withTradeId(trade.getId())
                 .withShortId(trade.getShortId())
@@ -120,6 +143,7 @@ public class TradeInfo implements Payload {
                 .withIsPayoutPublished(trade.isPayoutPublished())
                 .withIsWithdrawn(trade.isWithdrawn())
                 .withContractAsJson(trade.getContractAsJson())
+                .withContract(contractInfo)
                 .build();
     }
 
@@ -154,12 +178,38 @@ public class TradeInfo implements Payload {
                 .setIsPayoutPublished(isPayoutPublished)
                 .setIsWithdrawn(isWithdrawn)
                 .setContractAsJson(contractAsJson == null ? "" : contractAsJson)
+                .setContract(contract.toProtoMessage())
                 .build();
     }
 
-    @SuppressWarnings({"unused", "SameReturnValue"})
     public static TradeInfo fromProto(bisq.proto.grpc.TradeInfo proto) {
-        return null;  // TODO
+        return new TradeInfoBuilder()
+                .withOffer(OfferInfo.fromProto(proto.getOffer()))
+                .withTradeId(proto.getTradeId())
+                .withShortId(proto.getShortId())
+                .withDate(proto.getDate())
+                .withRole(proto.getRole())
+                .withIsCurrencyForTakerFeeBtc(proto.getIsCurrencyForTakerFeeBtc())
+                .withTxFeeAsLong(proto.getTxFeeAsLong())
+                .withTakerFeeAsLong(proto.getTakerFeeAsLong())
+                .withTakerFeeTxId(proto.getTakerFeeTxId())
+                .withDepositTxId(proto.getDepositTxId())
+                .withPayoutTxId(proto.getPayoutTxId())
+                .withTradeAmountAsLong(proto.getTradeAmountAsLong())
+                .withTradePrice(proto.getTradePrice())
+                .withTradePeriodState(proto.getTradePeriodState())
+                .withState(proto.getState())
+                .withPhase(proto.getPhase())
+                .withTradingPeerNodeAddress(proto.getTradingPeerNodeAddress())
+                .withIsDepositPublished(proto.getIsDepositPublished())
+                .withIsDepositConfirmed(proto.getIsDepositConfirmed())
+                .withIsFiatSent(proto.getIsFiatSent())
+                .withIsFiatReceived(proto.getIsFiatReceived())
+                .withIsPayoutPublished(proto.getIsPayoutPublished())
+                .withIsWithdrawn(proto.getIsWithdrawn())
+                .withContractAsJson(proto.getContractAsJson())
+                .withContract((ContractInfo.fromProto(proto.getContract())))
+                .build();
     }
 
     /*
@@ -193,6 +243,7 @@ public class TradeInfo implements Payload {
         private boolean isPayoutPublished;
         private boolean isWithdrawn;
         private String contractAsJson;
+        private ContractInfo contract;
 
         public TradeInfoBuilder withOffer(OfferInfo offer) {
             this.offer = offer;
@@ -314,6 +365,11 @@ public class TradeInfo implements Payload {
             return this;
         }
 
+        public TradeInfoBuilder withContract(ContractInfo contract) {
+            this.contract = contract;
+            return this;
+        }
+
         public TradeInfo build() {
             return new TradeInfo(this);
         }
@@ -346,6 +402,7 @@ public class TradeInfo implements Payload {
                 ", isWithdrawn=" + isWithdrawn + "\n" +
                 ", offer=" + offer + "\n" +
                 ", contractAsJson=" + contractAsJson + "\n" +
+                ", contract=" + contract + "\n" +
                 '}';
     }
 }

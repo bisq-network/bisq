@@ -36,7 +36,10 @@ import java.util.stream.Collectors;
 
 import static bisq.cli.ColumnHeaderConstants.*;
 import static bisq.cli.CurrencyFormat.*;
+import static bisq.cli.DirectionFormat.directionFormat;
+import static bisq.cli.DirectionFormat.getLongestDirectionColWidth;
 import static com.google.common.base.Strings.padEnd;
+import static com.google.common.base.Strings.padStart;
 import static java.lang.String.format;
 import static java.util.Collections.max;
 import static java.util.Comparator.comparing;
@@ -114,31 +117,69 @@ public class TableFormat {
                 formatSatoshis(btcBalanceInfo.getLockedBalance()));
     }
 
-    public static String formatOfferTable(List<OfferInfo> offerInfo, String fiatCurrency) {
+    public static String formatPaymentAcctTbl(List<PaymentAccount> paymentAccounts) {
         // Some column values might be longer than header, so we need to calculate them.
-        int paymentMethodColWidth = getLengthOfLongestColumn(
-                COL_HEADER_PAYMENT_METHOD.length(),
-                offerInfo.stream()
-                        .map(OfferInfo::getPaymentMethodShortName)
+        int nameColWidth = getLongestColumnSize(
+                COL_HEADER_NAME.length(),
+                paymentAccounts.stream().map(PaymentAccount::getAccountName)
                         .collect(Collectors.toList()));
+        int paymentMethodColWidth = getLongestColumnSize(
+                COL_HEADER_PAYMENT_METHOD.length(),
+                paymentAccounts.stream().map(a -> a.getPaymentMethod().getId())
+                        .collect(Collectors.toList()));
+        String headerLine = padEnd(COL_HEADER_NAME, nameColWidth, ' ') + COL_HEADER_DELIMITER
+                + COL_HEADER_CURRENCY + COL_HEADER_DELIMITER
+                + padEnd(COL_HEADER_PAYMENT_METHOD, paymentMethodColWidth, ' ') + COL_HEADER_DELIMITER
+                + COL_HEADER_UUID + COL_HEADER_DELIMITER + "\n";
+        String colDataFormat = "%-" + nameColWidth + "s"            // left justify
+                + "  %-" + COL_HEADER_CURRENCY.length() + "s"       // left justify
+                + "  %-" + paymentMethodColWidth + "s"              // left justify
+                + "  %-" + COL_HEADER_UUID.length() + "s";          // left justify
+        return headerLine
+                + paymentAccounts.stream()
+                .map(a -> format(colDataFormat,
+                        a.getAccountName(),
+                        a.getSelectedTradeCurrency().getCode(),
+                        a.getPaymentMethod().getId(),
+                        a.getId()))
+                .collect(Collectors.joining("\n"));
+    }
+
+    public static String formatOfferTable(List<OfferInfo> offers, String currencyCode) {
+        if (offers == null || offers.isEmpty())
+            throw new IllegalArgumentException(format("%s offers argument is empty", currencyCode.toLowerCase()));
+
+        String baseCurrencyCode = offers.get(0).getBaseCurrencyCode();
+        return baseCurrencyCode.equalsIgnoreCase("BTC")
+                ? formatFiatOfferTable(offers, currencyCode)
+                : formatCryptoCurrencyOfferTable(offers, baseCurrencyCode);
+    }
+
+    private static String formatFiatOfferTable(List<OfferInfo> offers, String fiatCurrencyCode) {
+        // Some column values might be longer than header, so we need to calculate them.
+        int amountColWith = getLongestAmountColWidth(offers);
+        int volumeColWidth = getLongestVolumeColWidth(offers);
+        int paymentMethodColWidth = getLongestPaymentMethodColWidth(offers);
         String headersFormat = COL_HEADER_DIRECTION + COL_HEADER_DELIMITER
-                + COL_HEADER_PRICE + COL_HEADER_DELIMITER   // includes %s -> fiatCurrency
-                + COL_HEADER_AMOUNT + COL_HEADER_DELIMITER
-                + COL_HEADER_VOLUME + COL_HEADER_DELIMITER  // includes %s -> fiatCurrency
+                + COL_HEADER_PRICE + COL_HEADER_DELIMITER   // includes %s -> fiatCurrencyCode
+                + padStart(COL_HEADER_AMOUNT, amountColWith, ' ') + COL_HEADER_DELIMITER
+                // COL_HEADER_VOLUME includes %s -> fiatCurrencyCode
+                + padStart(COL_HEADER_VOLUME, volumeColWidth, ' ') + COL_HEADER_DELIMITER
                 + padEnd(COL_HEADER_PAYMENT_METHOD, paymentMethodColWidth, ' ') + COL_HEADER_DELIMITER
                 + COL_HEADER_CREATION_DATE + COL_HEADER_DELIMITER
                 + COL_HEADER_UUID.trim() + "%n";
-        String headerLine = format(headersFormat, fiatCurrency.toUpperCase(), fiatCurrency.toUpperCase());
-
-        String colDataFormat = "%-" + (COL_HEADER_DIRECTION.length() + COL_HEADER_DELIMITER.length()) + "s" // left
-                + "%" + (COL_HEADER_PRICE.length() - 1) + "s" // rt justify to end of hdr
-                + "  %-" + (COL_HEADER_AMOUNT.length() - 1) + "s" // left justify
-                + "  %" + COL_HEADER_VOLUME.length() + "s" // right justify
-                + "  %-" + paymentMethodColWidth + "s" // left justify
-                + "  %-" + (COL_HEADER_CREATION_DATE.length()) + "s" // left justify
+        String headerLine = format(headersFormat,
+                fiatCurrencyCode.toUpperCase(),
+                fiatCurrencyCode.toUpperCase());
+        String colDataFormat = "%-" + (COL_HEADER_DIRECTION.length() + COL_HEADER_DELIMITER.length()) + "s"
+                + "%" + (COL_HEADER_PRICE.length() - 1) + "s"
+                + "  %" + amountColWith + "s"
+                + "  %" + (volumeColWidth - 1) + "s"
+                + "  %-" + paymentMethodColWidth + "s"
+                + "  %-" + (COL_HEADER_CREATION_DATE.length()) + "s"
                 + "  %-" + COL_HEADER_UUID.length() + "s";
         return headerLine
-                + offerInfo.stream()
+                + offers.stream()
                 .map(o -> format(colDataFormat,
                         o.getDirection(),
                         formatOfferPrice(o.getPrice()),
@@ -150,37 +191,80 @@ public class TableFormat {
                 .collect(Collectors.joining("\n"));
     }
 
-    public static String formatPaymentAcctTbl(List<PaymentAccount> paymentAccounts) {
+    private static String formatCryptoCurrencyOfferTable(List<OfferInfo> offers, String cryptoCurrencyCode) {
         // Some column values might be longer than header, so we need to calculate them.
-        int nameColWidth = getLengthOfLongestColumn(
-                COL_HEADER_NAME.length(),
-                paymentAccounts.stream().map(PaymentAccount::getAccountName)
-                        .collect(Collectors.toList()));
-        int paymentMethodColWidth = getLengthOfLongestColumn(
-                COL_HEADER_PAYMENT_METHOD.length(),
-                paymentAccounts.stream().map(a -> a.getPaymentMethod().getId())
-                        .collect(Collectors.toList()));
-
-        String headerLine = padEnd(COL_HEADER_NAME, nameColWidth, ' ') + COL_HEADER_DELIMITER
-                + COL_HEADER_CURRENCY + COL_HEADER_DELIMITER
+        int directionColWidth = getLongestDirectionColWidth(offers);
+        int amountColWith = getLongestAmountColWidth(offers);
+        int volumeColWidth = getLongestCryptoCurrencyVolumeColWidth(offers);
+        int paymentMethodColWidth = getLongestPaymentMethodColWidth(offers);
+        // TODO use memoize function to avoid duplicate the formatting done above?
+        String headersFormat = padEnd(COL_HEADER_DIRECTION, directionColWidth, ' ') + COL_HEADER_DELIMITER
+                + COL_HEADER_PRICE_OF_ALTCOIN + COL_HEADER_DELIMITER   // includes %s -> cryptoCurrencyCode
+                + padStart(COL_HEADER_AMOUNT, amountColWith, ' ') + COL_HEADER_DELIMITER
+                // COL_HEADER_VOLUME  includes %s -> cryptoCurrencyCode
+                + padStart(COL_HEADER_VOLUME, volumeColWidth, ' ') + COL_HEADER_DELIMITER
                 + padEnd(COL_HEADER_PAYMENT_METHOD, paymentMethodColWidth, ' ') + COL_HEADER_DELIMITER
-                + COL_HEADER_UUID + COL_HEADER_DELIMITER + "\n";
-        String colDataFormat = "%-" + nameColWidth + "s"        // left justify
-                + "  %-" + COL_HEADER_CURRENCY.length() + "s"    // left justify
-                + "  %-" + paymentMethodColWidth + "s"          // left justify
-                + "  %-" + COL_HEADER_UUID.length() + "s";      // left justify
+                + COL_HEADER_CREATION_DATE + COL_HEADER_DELIMITER
+                + COL_HEADER_UUID.trim() + "%n";
+        String headerLine = format(headersFormat,
+                cryptoCurrencyCode.toUpperCase(),
+                cryptoCurrencyCode.toUpperCase());
+        String colDataFormat = "%-" + directionColWidth + "s"
+                + "%" + (COL_HEADER_PRICE_OF_ALTCOIN.length() + 1) + "s"
+                + "  %" + amountColWith + "s"
+                + "  %" + (volumeColWidth - 1) + "s"
+                + "  %-" + paymentMethodColWidth + "s"
+                + "  %-" + (COL_HEADER_CREATION_DATE.length()) + "s"
+                + "  %-" + COL_HEADER_UUID.length() + "s";
         return headerLine
-                + paymentAccounts.stream()
-                .map(a -> format(colDataFormat,
-                        a.getAccountName(),
-                        a.getSelectedTradeCurrency().getCode(),
-                        a.getPaymentMethod().getId(),
-                        a.getId()))
+                + offers.stream()
+                .map(o -> format(colDataFormat,
+                        directionFormat.apply(o),
+                        formatCryptoCurrencyOfferPrice(o.getPrice()),
+                        formatAmountRange(o.getMinAmount(), o.getAmount()),
+                        formatCryptoCurrencyVolumeRange(o.getMinVolume(), o.getVolume()),
+                        o.getPaymentMethodShortName(),
+                        formatTimestamp(o.getDate()),
+                        o.getId()))
                 .collect(Collectors.joining("\n"));
     }
 
-    // Return length of the longest string value, or the header.len, whichever is greater.
-    private static int getLengthOfLongestColumn(int headerLength, List<String> strings) {
+    private static int getLongestPaymentMethodColWidth(List<OfferInfo> offers) {
+        return getLongestColumnSize(
+                COL_HEADER_PAYMENT_METHOD.length(),
+                offers.stream()
+                        .map(OfferInfo::getPaymentMethodShortName)
+                        .collect(Collectors.toList()));
+    }
+
+    private static int getLongestAmountColWidth(List<OfferInfo> offers) {
+        return getLongestColumnSize(
+                COL_HEADER_AMOUNT.length(),
+                offers.stream()
+                        .map(o -> formatAmountRange(o.getMinAmount(), o.getAmount()))
+                        .collect(Collectors.toList()));
+    }
+
+    private static int getLongestVolumeColWidth(List<OfferInfo> offers) {
+        // Pad this col width by 1 space.
+        return 1 + getLongestColumnSize(
+                COL_HEADER_VOLUME.length(),
+                offers.stream()
+                        .map(o -> formatVolumeRange(o.getMinVolume(), o.getVolume()))
+                        .collect(Collectors.toList()));
+    }
+
+    private static int getLongestCryptoCurrencyVolumeColWidth(List<OfferInfo> offers) {
+        // Pad this col width by 1 space.
+        return 1 + getLongestColumnSize(
+                COL_HEADER_VOLUME.length(),
+                offers.stream()
+                        .map(o -> formatCryptoCurrencyVolumeRange(o.getMinVolume(), o.getVolume()))
+                        .collect(Collectors.toList()));
+    }
+
+    // Return size of the longest string value, or the header.len, whichever is greater.
+    private static int getLongestColumnSize(int headerLength, List<String> strings) {
         int longest = max(strings, comparing(String::length)).length();
         return Math.max(longest, headerLength);
     }

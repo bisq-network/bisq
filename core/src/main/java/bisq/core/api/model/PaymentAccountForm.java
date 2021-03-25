@@ -57,7 +57,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 /**
  * <p>
  * An instance of this class can write new payment account forms (editable json files),
- * and de-serialize edited json files into {@link bisq.core.payment.PaymentAccount}
+ * and de-serialize edited json files into {@link PaymentAccount}
  * instances.
  * </p>
  * <p>
@@ -66,8 +66,8 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  * </p>
  * <br>
  * <p>
- * (1) Ask for a hal cash account form:  Pass a {@link bisq.core.payment.payload.PaymentMethod#HAL_CASH_ID}
- * to {@link bisq.core.api.model.PaymentAccountForm#getPaymentAccountForm(String)} to
+ * (1) Ask for a hal cash account form:  Pass a {@link PaymentMethod#HAL_CASH_ID}
+ * to {@link PaymentAccountForm#getPaymentAccountForm(String)} to
  * get the json Hal Cash payment account form:
  * <pre>
  * {
@@ -98,8 +98,8 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  * </pre>
  * </p>
  * (3) De-serialize the edited json account form:  Pass the edited json file to
- * {@link bisq.core.api.model.PaymentAccountForm#toPaymentAccount(File)}, or
- * a json string to {@link bisq.core.api.model.PaymentAccountForm#toPaymentAccount(String)}
+ * {@link PaymentAccountForm#toPaymentAccount(File)}, or
+ * a json string to {@link PaymentAccountForm#toPaymentAccount(String)}
  * and get a {@link bisq.core.payment.HalCashAccount} instance.
  * <pre>
  * PaymentAccount(
