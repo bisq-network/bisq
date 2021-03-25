@@ -693,7 +693,7 @@ public class CliMain {
             stream.println();
             parser.printHelpOn(stream);
             stream.println();
-            String rowFormat = "%-24s%-52s%s%n";
+            String rowFormat = "%-25s%-52s%s%n";
             stream.format(rowFormat, "Method", "Params", "Description");
             stream.format(rowFormat, "------", "------", "------------");
             stream.format(rowFormat, getversion.name(), "", "Get server version");
@@ -765,7 +765,9 @@ public class CliMain {
             stream.println();
             stream.format(rowFormat, createpaymentacct.name(), "--payment-account-form=<path>", "Create a new payment account");
             stream.println();
-            stream.format(rowFormat, createcryptopaymentacct.name(), "--TODO=<TODO>", "Create a new cryptocurrency payment account");
+            stream.format(rowFormat, createcryptopaymentacct.name(), "--account-name=<name> \\", "Create a new cryptocurrency payment account");
+            stream.format(rowFormat, "", "--currency-code=<bsq> \\", "");
+            stream.format(rowFormat, "", "--address=<bsq-address>", "");
             stream.println();
             stream.format(rowFormat, getpaymentaccts.name(), "", "Get user payment accounts");
             stream.println();
