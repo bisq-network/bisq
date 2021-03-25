@@ -56,6 +56,7 @@ import static java.util.Collections.singletonList;
 
 import bisq.cli.opts.ArgumentList;
 import bisq.cli.opts.CancelOfferOptionParser;
+import bisq.cli.opts.CreateCryptoCurrencyPaymentAcctOptionParser;
 import bisq.cli.opts.CreateOfferOptionParser;
 import bisq.cli.opts.CreatePaymentAcctOptionParser;
 import bisq.cli.opts.GetAddressBalanceOptionParser;
@@ -517,6 +518,22 @@ public class CliMain {
                     out.println(formatPaymentAcctTbl(singletonList(paymentAccount)));
                     return;
                 }
+                case createcryptopaymentacct: {
+                    var opts = new CreateCryptoCurrencyPaymentAcctOptionParser(args).parse();
+                    if (opts.isForHelp()) {
+                        out.println(client.getMethodHelp(method));
+                        return;
+                    }
+                    var accountName = opts.getAccountName();
+                    var currencyCode = opts.getCurrencyCode();
+                    var address = opts.getAddress();
+                    var paymentAccount = client.createCryptoCurrencyPaymentAccount(accountName,
+                            currencyCode,
+                            address);
+                    out.println("payment account saved");
+                    out.println(formatPaymentAcctTbl(singletonList(paymentAccount)));
+                    return;
+                }
                 case getpaymentaccts: {
                     if (new SimpleMethodOptionParser(args).parse().isForHelp()) {
                         out.println(client.getMethodHelp(method));
@@ -747,6 +764,8 @@ public class CliMain {
             stream.format(rowFormat, getpaymentacctform.name(), "--payment-method-id=<payment-method-id>", "Get a new payment account form");
             stream.println();
             stream.format(rowFormat, createpaymentacct.name(), "--payment-account-form=<path>", "Create a new payment account");
+            stream.println();
+            stream.format(rowFormat, createcryptopaymentacct.name(), "--TODO=<TODO>", "Create a new cryptocurrency payment account");
             stream.println();
             stream.format(rowFormat, getpaymentaccts.name(), "", "Get user payment accounts");
             stream.println();

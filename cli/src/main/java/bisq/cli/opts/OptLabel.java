@@ -21,6 +21,7 @@ package bisq.cli.opts;
  * CLI opt label definitions.
  */
 public class OptLabel {
+    public final static String OPT_ACCOUNT_NAME = "account-name";
     public final static String OPT_ADDRESS = "address";
     public final static String OPT_AMOUNT = "amount";
     public final static String OPT_CURRENCY_CODE = "currency-code";

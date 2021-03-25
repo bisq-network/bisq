@@ -511,6 +511,16 @@ class CoreWalletsService {
             throw new IllegalStateException("server is not fully initialized");
     }
 
+    // Returns a LegacyAddress for the string, or a RuntimeException if invalid.
+    LegacyAddress getValidBsqLegacyAddress(String address) {
+        try {
+            return bsqFormatter.getAddressFromBsqAddress(address);
+        } catch (Throwable t) {
+            log.error("", t);
+            throw new IllegalStateException(format("%s is not a valid bsq address", address));
+        }
+    }
+
     // Throws a RuntimeException if wallet currency code is not BSQ or BTC.
     private void verifyWalletCurrencyCodeIsValid(String currencyCode) {
         if (currencyCode == null || currencyCode.isEmpty())
@@ -573,16 +583,6 @@ class CoreWalletsService {
                 reservedBalance.value,
                 availableBalance.add(reservedBalance).value,
                 lockedBalance.value);
-    }
-
-    // Returns a LegacyAddress for the string, or a RuntimeException if invalid.
-    private LegacyAddress getValidBsqLegacyAddress(String address) {
-        try {
-            return bsqFormatter.getAddressFromBsqAddress(address);
-        } catch (Throwable t) {
-            log.error("", t);
-            throw new IllegalStateException(format("%s is not a valid bsq address", address));
-        }
     }
 
     // Returns a Coin for the transfer amount string, or a RuntimeException if invalid.

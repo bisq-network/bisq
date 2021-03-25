@@ -170,6 +170,10 @@ service PaymentAccounts {
     }
     rpc GetPaymentAccountForm (GetPaymentAccountFormRequest) returns (GetPaymentAccountFormReply) {
     }
+    rpc CreateCryptoCurrencyPaymentAccount (CreateCryptoCurrencyPaymentAccountRequest) returns (CreateCryptoCurrencyPaymentAccountReply) {
+    }
+    rpc GetCryptoCurrencyPaymentMethods (GetCryptoCurrencyPaymentMethodsRequest) returns (GetCryptoCurrencyPaymentMethodsReply) {
+    }
 }
 
 message CreatePaymentAccountRequest {
@@ -200,6 +204,23 @@ message GetPaymentAccountFormRequest {
 
 message GetPaymentAccountFormReply {
     string paymentAccountFormJson = 1;
+}
+
+message CreateCryptoCurrencyPaymentAccountRequest {
+    string accountName = 1;
+    string currencyCode = 2;
+    string address = 3;
+}
+
+message CreateCryptoCurrencyPaymentAccountReply {
+    PaymentAccount paymentAccount = 1;
+}
+
+message GetCryptoCurrencyPaymentMethodsRequest {
+}
+
+message GetCryptoCurrencyPaymentMethodsReply {
+    repeated PaymentMethod paymentMethods = 1;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////

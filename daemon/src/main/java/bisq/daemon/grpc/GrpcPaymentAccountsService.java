@@ -21,8 +21,12 @@ import bisq.core.api.CoreApi;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentMethod;
 
+import bisq.proto.grpc.CreateCryptoCurrencyPaymentAccountReply;
+import bisq.proto.grpc.CreateCryptoCurrencyPaymentAccountRequest;
 import bisq.proto.grpc.CreatePaymentAccountReply;
 import bisq.proto.grpc.CreatePaymentAccountRequest;
+import bisq.proto.grpc.GetCryptoCurrencyPaymentMethodsReply;
+import bisq.proto.grpc.GetCryptoCurrencyPaymentMethodsRequest;
 import bisq.proto.grpc.GetPaymentAccountFormReply;
 import bisq.proto.grpc.GetPaymentAccountFormRequest;
 import bisq.proto.grpc.GetPaymentAccountsReply;
@@ -118,6 +122,39 @@ class GrpcPaymentAccountsService extends PaymentAccountsImplBase {
             var reply = GetPaymentAccountFormReply.newBuilder()
                     .setPaymentAccountFormJson(paymentAccountFormJson)
                     .build();
+            responseObserver.onNext(reply);
+            responseObserver.onCompleted();
+        } catch (Throwable cause) {
+            exceptionHandler.handleException(log, cause, responseObserver);
+        }
+    }
+
+    @Override
+    public void createCryptoCurrencyPaymentAccount(CreateCryptoCurrencyPaymentAccountRequest req,
+                                                   StreamObserver<CreateCryptoCurrencyPaymentAccountReply> responseObserver) {
+        try {
+            PaymentAccount paymentAccount = coreApi.createCryptoCurrencyPaymentAccount(req.getAccountName(),
+                    req.getCurrencyCode(),
+                    req.getAddress());
+            var reply = CreateCryptoCurrencyPaymentAccountReply.newBuilder()
+                    .setPaymentAccount(paymentAccount.toProtoMessage())
+                    .build();
+            responseObserver.onNext(reply);
+            responseObserver.onCompleted();
+        } catch (Throwable cause) {
+            exceptionHandler.handleException(log, cause, responseObserver);
+        }
+    }
+
+    @Override
+    public void getCryptoCurrencyPaymentMethods(GetCryptoCurrencyPaymentMethodsRequest req,
+                                                StreamObserver<GetCryptoCurrencyPaymentMethodsReply> responseObserver) {
+        try {
+            var paymentMethods = coreApi.getCryptoCurrencyPaymentMethods().stream()
+                    .map(PaymentMethod::toProtoMessage)
+                    .collect(Collectors.toList());
+            var reply = GetCryptoCurrencyPaymentMethodsReply.newBuilder()
+                    .addAllPaymentMethods(paymentMethods).build();
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
         } catch (Throwable cause) {

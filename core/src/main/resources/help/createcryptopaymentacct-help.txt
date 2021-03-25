@@ -1,0 +1,39 @@
+createcryptopaymentacct
+
+NAME
+----
+createcryptopaymentacct - create a cryptocurrency payment account
+
+SYNOPSIS
+--------
+createcryptopaymentacct
+		--account-name=<name>
+		--currency-code=<bsq>
+		--address=<bsq-address>
+
+DESCRIPTION
+-----------
+Creates a cryptocurrency (altcoin) trading account for buying and selling BTC.
+
+OPTIONS
+-------
+--account-name
+		The name of the cryptocurrency payment account.
+
+--currency-code
+		The three letter code for the cryptocurrency used to buy or sell BTC, e.g., BSQ.
+
+--address
+		A valid BSQ wallet address.
+
+EXAMPLES
+--------
+To create a new BSQ payment account, find an unused BSQ wallet address:
+$ ./bisq-cli --password=xyz --port=9998 getunusedbsqaddress
+
+With the returned BSQ address, e.g., Bn3PCQgRwhkrGnaMp1RYwt9tFwL51YELqne create the cryptocurrency payment account:
+$ ./bisq-cli --password=xyz --port=9998 createcryptopaymentacct \
+    --account-name="My BSQ Account" \
+    --currency-code=BSQ \
+    --address=Bn3PCQgRwhkrGnaMp1RYwt9tFwL51YELqne
+

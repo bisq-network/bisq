@@ -22,5 +22,4 @@ public interface MethodOpts {
     MethodOpts parse();
 
     boolean isForHelp();
-
 }

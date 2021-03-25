@@ -113,6 +113,7 @@ public class ArgumentList {
         return currentIndex < arguments.length;
     }
 
+    @SuppressWarnings("UnusedReturnValue")
     String next() {
         return arguments[currentIndex++];
     }

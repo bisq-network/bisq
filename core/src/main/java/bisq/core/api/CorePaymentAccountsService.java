@@ -19,7 +19,10 @@ package bisq.core.api;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.api.model.PaymentAccountForm;
+import bisq.core.locale.CryptoCurrency;
+import bisq.core.payment.CryptoCurrencyAccount;
 import bisq.core.payment.PaymentAccount;
+import bisq.core.payment.PaymentAccountFactory;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.user.User;
 
@@ -30,29 +33,36 @@ import java.io.File;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.core.locale.CurrencyUtil.getCryptoCurrency;
 import static java.lang.String.format;
 
 @Singleton
 @Slf4j
 class CorePaymentAccountsService {
 
+    private final CoreWalletsService coreWalletsService;
     private final AccountAgeWitnessService accountAgeWitnessService;
     private final PaymentAccountForm paymentAccountForm;
     private final User user;
 
     @Inject
-    public CorePaymentAccountsService(AccountAgeWitnessService accountAgeWitnessService,
+    public CorePaymentAccountsService(CoreWalletsService coreWalletsService,
+                                      AccountAgeWitnessService accountAgeWitnessService,
                                       PaymentAccountForm paymentAccountForm,
                                       User user) {
+        this.coreWalletsService = coreWalletsService;
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.paymentAccountForm = paymentAccountForm;
         this.user = user;
     }
+
+    // Fiat Currency Accounts
 
     PaymentAccount createPaymentAccount(String jsonString) {
         PaymentAccount paymentAccount = paymentAccountForm.toPaymentAccount(jsonString);
@@ -84,6 +94,44 @@ class CorePaymentAccountsService {
 
     File getPaymentAccountForm(String paymentMethodId) {
         return paymentAccountForm.getPaymentAccountForm(paymentMethodId);
+    }
+
+    // Crypto Currency Accounts
+
+    PaymentAccount createCryptoCurrencyPaymentAccount(String accountName,
+                                                      String currencyCode,
+                                                      String address) {
+        String bsqCode = currencyCode.toUpperCase();
+        if (!bsqCode.equals("BSQ"))
+            throw new IllegalArgumentException("api does not currently support " + currencyCode + " accounts");
+
+        // Validate the BSQ address string but ignore the return value.
+        coreWalletsService.getValidBsqLegacyAddress(address);
+
+        CryptoCurrencyAccount cryptoCurrencyAccount =
+                (CryptoCurrencyAccount) PaymentAccountFactory.getPaymentAccount(PaymentMethod.BLOCK_CHAINS);
+        cryptoCurrencyAccount.init();
+        cryptoCurrencyAccount.setAccountName(accountName);
+        cryptoCurrencyAccount.setAddress(address);
+        Optional<CryptoCurrency> cryptoCurrency = getCryptoCurrency(bsqCode);
+        cryptoCurrency.ifPresent(cryptoCurrencyAccount::setSingleTradeCurrency);
+        user.addPaymentAccount(cryptoCurrencyAccount);
+        accountAgeWitnessService.publishMyAccountAgeWitness(cryptoCurrencyAccount.getPaymentAccountPayload());
+        log.info("Saved crypto payment account with id {} and payment method {}.",
+                cryptoCurrencyAccount.getId(),
+                cryptoCurrencyAccount.getPaymentAccountPayload().getPaymentMethodId());
+        return cryptoCurrencyAccount;
+    }
+
+    // TODO Support all alt coin payment methods supported by UI.
+    //  The getCryptoCurrencyPaymentMethods method below will be
+    //  callable from the CLI when more are supported.
+
+    List<PaymentMethod> getCryptoCurrencyPaymentMethods() {
+        return PaymentMethod.getPaymentMethods().stream()
+                .filter(PaymentMethod::isAsset)
+                .sorted(Comparator.comparing(PaymentMethod::getId))
+                .collect(Collectors.toList());
     }
 
     private void verifyPaymentAccountHasRequiredFields(PaymentAccount paymentAccount) {
