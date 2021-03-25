@@ -145,11 +145,6 @@ public class TakeBuyBSQOfferTest extends AbstractTradeTest {
             logTrade(log, testInfo, "Alice's Maker/Buyer View", aliceClient.getTrade(tradeId), true);
             logTrade(log, testInfo, "Bob's Taker/Seller View", bobClient.getTrade(tradeId), true);
 
-            if (false) {
-                log.warn("Sleeping for 30 min while test CLI.");
-                sleep(30 * 60 * 1000);
-            }
-
         } catch (StatusRuntimeException e) {
             fail(e);
         }
@@ -223,10 +218,6 @@ public class TakeBuyBSQOfferTest extends AbstractTradeTest {
             logTrade(log, testInfo, "Alice's Maker/Buyer View (Payment Sent)", aliceClient.getTrade(tradeId), true);
             logTrade(log, testInfo, "Bob's Taker/Seller View (Payment Sent)", bobClient.getTrade(tradeId), true);
 
-            if (false) {
-                log.warn("Sleeping for 30 min while test CLI.");
-                sleep(30 * 60 * 1000);
-            }
         } catch (StatusRuntimeException e) {
             fail(e);
         }
