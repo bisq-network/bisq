@@ -32,6 +32,8 @@ import java.util.function.BiPredicate;
 import lombok.extern.slf4j.Slf4j;
 
 import static org.apache.commons.lang3.StringUtils.capitalize;
+import static protobuf.OfferPayload.Direction.BUY;
+import static protobuf.OfferPayload.Direction.SELL;
 
 
 
@@ -103,7 +105,7 @@ public class BotClient {
      * @return List<OfferInfo>
      */
     public List<OfferInfo> getBuyOffers(String currencyCode) {
-        return grpcClient.getOffers("BUY", currencyCode);
+        return grpcClient.getOffers(BUY.name(), currencyCode);
     }
 
     /**
@@ -112,7 +114,7 @@ public class BotClient {
      * @return List<OfferInfo>
      */
     public List<OfferInfo> getSellOffers(String currencyCode) {
-        return grpcClient.getOffers("SELL", currencyCode);
+        return grpcClient.getOffers(SELL.name(), currencyCode);
     }
 
     /**

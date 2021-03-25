@@ -18,6 +18,7 @@ import static bisq.apitest.scenario.bot.protocol.ProtocolStep.WAIT_FOR_OFFER_TAK
 import static bisq.apitest.scenario.bot.shutdown.ManualShutdown.checkIfShutdownCalled;
 import static bisq.cli.TableFormat.formatOfferTable;
 import static java.util.Collections.singletonList;
+import static protobuf.OfferPayload.Direction.BUY;
 
 
 
@@ -50,7 +51,7 @@ public class MakerBotProtocol extends BotProtocol {
         Function<Supplier<OfferInfo>, TradeInfo> makeTrade = waitForNewTrade.andThen(waitForTakerFeeTxConfirm);
         var trade = makeTrade.apply(randomOffer);
 
-        var makerIsBuyer = trade.getOffer().getDirection().equalsIgnoreCase(BUY);
+        var makerIsBuyer = trade.getOffer().getDirection().equalsIgnoreCase(BUY.name());
         Function<TradeInfo, TradeInfo> completeFiatTransaction = makerIsBuyer
                 ? sendPaymentStartedMessage.andThen(waitForPaymentReceivedConfirmation)
                 : waitForPaymentStartedMessage.andThen(sendPaymentReceivedMessage);

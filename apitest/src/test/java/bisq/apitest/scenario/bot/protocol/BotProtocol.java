@@ -43,6 +43,8 @@ import static java.lang.String.format;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Arrays.stream;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static protobuf.OfferPayload.Direction.BUY;
+import static protobuf.OfferPayload.Direction.SELL;
 
 
 
@@ -56,8 +58,6 @@ import bisq.cli.TradeFormat;
 public abstract class BotProtocol {
 
     static final SecureRandom RANDOM = new SecureRandom();
-    static final String BUY = "BUY";
-    static final String SELL = "SELL";
 
     protected final Supplier<Long> randomDelay = () -> (long) (2000 + RANDOM.nextInt(5000));
 
@@ -221,8 +221,8 @@ public abstract class BotProtocol {
 
     protected final Function<TradeInfo, TradeInfo> keepFundsFromTrade = (trade) -> {
         initProtocolStep.accept(KEEP_FUNDS);
-        var isBuy = trade.getOffer().getDirection().equalsIgnoreCase(BUY);
-        var isSell = trade.getOffer().getDirection().equalsIgnoreCase(SELL);
+        var isBuy = trade.getOffer().getDirection().equalsIgnoreCase(BUY.name());
+        var isSell = trade.getOffer().getDirection().equalsIgnoreCase(SELL.name());
         var cliUserIsSeller = (this instanceof MakerBotProtocol && isBuy) || (this instanceof TakerBotProtocol && isSell);
         if (cliUserIsSeller) {
             createKeepFundsScript(trade);

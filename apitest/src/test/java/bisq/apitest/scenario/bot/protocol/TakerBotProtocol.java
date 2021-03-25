@@ -13,12 +13,16 @@ import java.util.function.Supplier;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.apitest.method.MethodTest.BSQ;
+import static bisq.apitest.method.MethodTest.BTC;
 import static bisq.apitest.scenario.bot.protocol.ProtocolStep.DONE;
 import static bisq.apitest.scenario.bot.protocol.ProtocolStep.FIND_OFFER;
 import static bisq.apitest.scenario.bot.protocol.ProtocolStep.TAKE_OFFER;
 import static bisq.apitest.scenario.bot.shutdown.ManualShutdown.checkIfShutdownCalled;
 import static bisq.cli.TableFormat.formatOfferTable;
 import static bisq.core.payment.payload.PaymentMethod.F2F_ID;
+import static protobuf.OfferPayload.Direction.BUY;
+import static protobuf.OfferPayload.Direction.SELL;
 
 
 
@@ -49,7 +53,7 @@ public class TakerBotProtocol extends BotProtocol {
         Function<OfferInfo, TradeInfo> takeTrade = takeOffer.andThen(waitForTakerFeeTxConfirm);
         var trade = takeTrade.apply(findOffer.get());
 
-        var takerIsSeller = trade.getOffer().getDirection().equalsIgnoreCase(BUY);
+        var takerIsSeller = trade.getOffer().getDirection().equalsIgnoreCase(BUY.name());
         Function<TradeInfo, TradeInfo> completeFiatTransaction = takerIsSeller
                 ? waitForPaymentStartedMessage.andThen(sendPaymentReceivedMessage)
                 : sendPaymentStartedMessage.andThen(waitForPaymentReceivedConfirmation);
@@ -102,13 +106,13 @@ public class TakerBotProtocol extends BotProtocol {
     private final Function<OfferInfo, TradeInfo> takeOffer = (offer) -> {
         initProtocolStep.accept(TAKE_OFFER);
         checkIfShutdownCalled("Interrupted before taking offer.");
-        String feeCurrency = RANDOM.nextBoolean() ? "BSQ" : "BTC";
+        String feeCurrency = RANDOM.nextBoolean() ? BSQ : BTC;
         return botClient.takeOffer(offer.getId(), paymentAccount, feeCurrency);
     };
 
     private void createMakeOfferScript() {
-        String direction = RANDOM.nextBoolean() ? "BUY" : "SELL";
-        String feeCurrency = RANDOM.nextBoolean() ? "BSQ" : "BTC";
+        String direction = RANDOM.nextBoolean() ? BUY.name() : SELL.name();
+        String feeCurrency = RANDOM.nextBoolean() ? BSQ : BTC;
         boolean createMarginPricedOffer = RANDOM.nextBoolean();
         // If not using an F2F account, don't go over possible 0.01 BTC
         // limit if account is not signed.

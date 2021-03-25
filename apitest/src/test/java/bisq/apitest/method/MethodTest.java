@@ -42,6 +42,9 @@ import bisq.cli.GrpcClient;
 
 public class MethodTest extends ApiTestCase {
 
+    public static final String BSQ = "BSQ";
+    public static final String BTC = "BTC";
+
     protected static final String ARBITRATOR = "arbitrator";
     protected static final String MEDIATOR = "mediator";
     protected static final String REFUND_AGENT = "refundagent";

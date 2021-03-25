@@ -34,13 +34,14 @@ import org.junit.jupiter.api.TestMethodOrder;
 
 import static bisq.core.btc.wallet.Restrictions.getDefaultBuyerSecurityDepositAsPercent;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static protobuf.OfferPayload.Direction.BUY;
 
 @Disabled
 @Slf4j
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class CancelOfferTest extends AbstractOfferTest {
 
-    private static final String DIRECTION = "buy";
+    private static final String DIRECTION = BUY.name();
     private static final String CURRENCY_CODE = "cad";
     private static final int MAX_OFFERS = 3;
 
@@ -52,7 +53,7 @@ public class CancelOfferTest extends AbstractOfferTest {
                 0.00,
                 getDefaultBuyerSecurityDepositAsPercent(),
                 paymentAccountId,
-                "bsq");
+                BSQ);
     };
 
     @Test

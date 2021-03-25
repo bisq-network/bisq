@@ -63,7 +63,20 @@ public class AbstractTradeTest extends AbstractOfferTest {
                                   TestInfo testInfo,
                                   String description,
                                   TradeInfo trade) {
-        if (log.isDebugEnabled()) {
+        logTrade(log, testInfo, description, trade, false);
+    }
+
+    protected final void logTrade(Logger log,
+                                  TestInfo testInfo,
+                                  String description,
+                                  TradeInfo trade,
+                                  boolean force) {
+        if (force)
+            log.info(String.format("%s %s%n%s",
+                    testName(testInfo),
+                    description.toUpperCase(),
+                    format(trade)));
+        else if (log.isDebugEnabled()) {
             log.debug(String.format("%s %s%n%s",
                     testName(testInfo),
                     description.toUpperCase(),
