@@ -261,4 +261,19 @@ block:
 				-rpcpassword=bsq \
 				generatetoaddress 1
 
+# Generate more than 1 block.
+# Instead of running `make block` 24 times,
+# you can now run `make blocks n=24`
+blocks:
+	bitcoin-cli \
+    		-regtest \
+    		-rpcuser=bisqdao \
+    		-rpcpassword=bsq \
+    		getnewaddress \
+    		| xargs bitcoin-cli \
+    				-regtest \
+    				-rpcuser=bisqdao \
+					-rpcpassword=bsq \
+    				generatetoaddress $(n)
+
 .PHONY: build seednode
