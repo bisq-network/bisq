@@ -25,6 +25,7 @@ import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
+import bisq.core.offer.OpenOffer;
 import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.Tradable;
@@ -159,7 +160,7 @@ class ClosedTradesDataModel extends ActivatableDataModel {
         return Coin.valueOf(getList().stream()
                 .map(ClosedTradableListItem::getTradable)
                 .mapToLong(tradable -> {
-                    if (wasMyOffer(tradable)) {
+                    if (wasMyOffer(tradable) || tradable instanceof OpenOffer) {
                         return tradable.getOffer().getTxFee().value;
                     } else {
                         // taker pays for 3 transactions
@@ -178,7 +179,7 @@ class ClosedTradesDataModel extends ActivatableDataModel {
 
     protected long getTradeFee(Tradable tradable, boolean expectBtcFee) {
         Offer offer = tradable.getOffer();
-        if (wasMyOffer(tradable)) {
+        if (wasMyOffer(tradable) || tradable instanceof OpenOffer) {
             String makerFeeTxId = offer.getOfferFeePaymentTxId();
             boolean notInBsqWallet = bsqWalletService.getTransaction(makerFeeTxId) == null;
             if (expectBtcFee) {
