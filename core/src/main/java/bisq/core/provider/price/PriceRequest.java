@@ -78,14 +78,6 @@ public class PriceRequest {
         if (provider != null) {
             provider.shutDown();
         }
-
-        executorService.shutdown();
-        try {
-            if (!executorService.awaitTermination(1, TimeUnit.SECONDS)) {
-                executorService.shutdownNow();
-            }
-        } catch (InterruptedException e) {
-            executorService.shutdownNow();
-        }
+        Utilities.shutdownAndAwaitTermination(executorService, 1, TimeUnit.SECONDS);
     }
 }

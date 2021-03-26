@@ -18,6 +18,7 @@
 package bisq.monitor;
 
 import bisq.common.app.Version;
+import bisq.common.util.Utilities;
 
 import java.util.Properties;
 import java.util.Random;
@@ -141,13 +142,6 @@ public abstract class Metric extends Configurable implements Runnable {
      * shut down or after one minute.
      */
     public static void haltAllMetrics() {
-        executor.shutdown();
-
-        try {
-            if (!Metric.executor.awaitTermination(2, TimeUnit.MINUTES))
-                Metric.executor.shutdownNow();
-        } catch (InterruptedException e) {
-            Metric.executor.shutdownNow();
-        }
+        Utilities.shutdownAndAwaitTermination(executor, 2, TimeUnit.MINUTES);
     }
 }

@@ -39,6 +39,7 @@ import javax.annotation.concurrent.Immutable;
 public enum ScriptType implements ImmutableDaoStateModel {
     UNDEFINED("undefined"),
     // https://github.com/bitcoin/bitcoin/blob/master/src/script/standard.cpp
+    NONSTANDARD("nonstandard"),
     PUB_KEY("pubkey"),
     PUB_KEY_HASH("pubkeyhash"),
     SCRIPT_HASH("scripthash"),
@@ -46,11 +47,10 @@ public enum ScriptType implements ImmutableDaoStateModel {
     NULL_DATA("nulldata"),
     WITNESS_V0_KEYHASH("witness_v0_keyhash"),
     WITNESS_V0_SCRIPTHASH("witness_v0_scripthash"),
-    WITNESS_UNKNOWN("witness_unknown"),
-    NONSTANDARD("nonstandard");
+    WITNESS_V1_TAPROOT("witness_v1_taproot"),
+    WITNESS_UNKNOWN("witness_unknown");
 
     private final String name;
-
 
     @JsonValue
     private String getName() {
