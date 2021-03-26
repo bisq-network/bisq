@@ -238,65 +238,35 @@ gettradedetail() {
 
 istradedepositpublished() {
     TRADE_DETAIL="$1"
-    MAKER_OR_TAKER="$2"
-    if [ "$MAKER_OR_TAKER" = "MAKER" ]
-    then
-        ANSWER=$(echo "$TRADE_DETAIL" | awk '{print $9}')
-    else
-        ANSWER=$(echo "$TRADE_DETAIL" | awk '{print $10}')
-    fi
+    ANSWER=$(echo "$TRADE_DETAIL" | awk '{print $10}')
     commandalert $? "Could not parse istradedepositpublished from trade detail."
     echo "$ANSWER"
 }
 
 istradedepositconfirmed() {
     TRADE_DETAIL="$1"
-    MAKER_OR_TAKER="$2"
-    if [ "$MAKER_OR_TAKER" = "MAKER" ]
-    then
-        ANSWER=$(echo "$TRADE_DETAIL" | awk '{print $10}')
-    else
-        ANSWER=$(echo "$TRADE_DETAIL" | awk '{print $11}')
-    fi
+    ANSWER=$(echo "$TRADE_DETAIL" | awk '{print $11}')
     commandalert $? "Could not parse istradedepositconfirmed from trade detail."
     echo "$ANSWER"
 }
 
 istradepaymentsent() {
     TRADE_DETAIL="$1"
-    MAKER_OR_TAKER="$2"
-    if [ "$MAKER_OR_TAKER" = "MAKER" ]
-    then
-        ANSWER=$(echo "$TRADE_DETAIL" | awk '{print $12}')
-    else
-        ANSWER=$(echo "$TRADE_DETAIL" | awk '{print $13}')
-    fi
+    ANSWER=$(echo "$TRADE_DETAIL" | awk '{print $13}')
     commandalert $? "Could not parse istradepaymentsent from trade detail."
     echo "$ANSWER"
 }
 
 istradepaymentreceived() {
     TRADE_DETAIL="$1"
-    MAKER_OR_TAKER="$2"
-    if [ "$MAKER_OR_TAKER" = "MAKER" ]
-    then
-        ANSWER=$(echo "$TRADE_DETAIL" | awk '{print $13}')
-    else
-        ANSWER=$(echo "$TRADE_DETAIL" | awk '{print $14}')
-    fi
+    ANSWER=$(echo "$TRADE_DETAIL" | awk '{print $14}')
     commandalert $? "Could not parse istradepaymentreceived from trade detail."
     echo "$ANSWER"
 }
 
 istradepayoutpublished() {
     TRADE_DETAIL="$1"
-    MAKER_OR_TAKER="$2"
-    if [ "$MAKER_OR_TAKER" = "MAKER" ]
-    then
-        ANSWER=$(echo "$TRADE_DETAIL" | awk '{print $14}')
-    else
-        ANSWER=$(echo "$TRADE_DETAIL" | awk '{print $15}')
-    fi
+    ANSWER=$(echo "$TRADE_DETAIL" | awk '{print $15}')
     commandalert $? "Could not parse istradepayoutpublished from trade detail."
     echo "$ANSWER"
 }
@@ -321,7 +291,7 @@ waitfortradedepositpublished() {
         TRADE_DETAIL=$(gettradedetail "$GETTRADE_CMD_OUTPUT")
         exitoncommandalert $?
 
-        IS_TRADE_DEPOSIT_PUBLISHED=$(istradedepositpublished "$TRADE_DETAIL" "TAKER")
+        IS_TRADE_DEPOSIT_PUBLISHED=$(istradedepositpublished "$TRADE_DETAIL")
         exitoncommandalert $?
 
         printdate "BOB $BOB_ROLE:  Has taker's trade deposit been published?  $IS_TRADE_DEPOSIT_PUBLISHED"
@@ -356,7 +326,7 @@ waitfortradedepositconfirmed() {
         TRADE_DETAIL=$(gettradedetail "$GETTRADE_CMD_OUTPUT")
         exitoncommandalert $?
 
-        IS_TRADE_DEPOSIT_CONFIRMED=$(istradedepositconfirmed "$TRADE_DETAIL" "TAKER")
+        IS_TRADE_DEPOSIT_CONFIRMED=$(istradedepositconfirmed "$TRADE_DETAIL")
         exitoncommandalert $?
         printdate "BOB $BOB_ROLE:  Has taker's trade deposit been confirmed?  $IS_TRADE_DEPOSIT_CONFIRMED"
         printbreak
@@ -379,7 +349,6 @@ waitfortradepaymentsent() {
     PORT="$1"
     SELLER="$2"
     OFFER_ID="$3"
-    MAKER_OR_TAKER="$4"
     DONE=0
     while : ; do
         if [ "$DONE" -ne 0 ]; then
@@ -397,7 +366,7 @@ waitfortradepaymentsent() {
         TRADE_DETAIL=$(gettradedetail "$GETTRADE_CMD_OUTPUT")
         exitoncommandalert $?
 
-        IS_TRADE_PAYMENT_SENT=$(istradepaymentsent "$TRADE_DETAIL" "$MAKER_OR_TAKER")
+        IS_TRADE_PAYMENT_SENT=$(istradepaymentsent "$TRADE_DETAIL")
         exitoncommandalert $?
         printdate "$SELLER:  Has buyer's fiat payment been initiated?  $IS_TRADE_PAYMENT_SENT"
         if [ "$IS_TRADE_PAYMENT_SENT" = "YES" ]
@@ -416,7 +385,6 @@ waitfortradepaymentreceived() {
     PORT="$1"
     SELLER="$2"
     OFFER_ID="$3"
-    MAKER_OR_TAKER="$4"
     DONE=0
     while : ; do
         if [ "$DONE" -ne 0 ]; then
@@ -437,7 +405,7 @@ waitfortradepaymentreceived() {
         # When the seller receives a 'payment sent' message, it is assumed funds (fiat) have already been deposited.
         # In a real trade, there is usually a delay between receipt of a 'payment sent' message, and the funds deposit,
         # but we do not need to simulate that in this regtest script.
-        IS_TRADE_PAYMENT_SENT=$(istradepaymentreceived "$TRADE_DETAIL" "$MAKER_OR_TAKER")
+        IS_TRADE_PAYMENT_SENT=$(istradepaymentreceived "$TRADE_DETAIL")
         exitoncommandalert $?
         printdate "$SELLER:  Has buyer's payment been transferred to seller's fiat account?  $IS_TRADE_PAYMENT_SENT"
         if [ "$IS_TRADE_PAYMENT_SENT" = "YES" ]
@@ -544,10 +512,10 @@ executetrade() {
     if [ "$DIRECTION" = "BUY" ]
     then
         # Bob waits for payment, polling status in taker specific trade detail.
-        waitfortradepaymentsent "$PAYEE_PORT" "$PAYEE" "$OFFER_ID" "TAKER"
+        waitfortradepaymentsent "$PAYEE_PORT" "$PAYEE" "$OFFER_ID"
     else
         # Alice waits for payment, polling status in maker specific trade detail.
-        waitfortradepaymentsent "$PAYEE_PORT" "$PAYEE" "$OFFER_ID" "MAKER"
+        waitfortradepaymentsent "$PAYEE_PORT" "$PAYEE" "$OFFER_ID"
     fi
 
 
@@ -557,10 +525,10 @@ executetrade() {
     if [ "$DIRECTION" = "BUY" ]
     then
         # Alice waits for payment rcvd confirm from Bob, polling status in maker specific trade detail.
-        waitfortradepaymentreceived "$PAYER_PORT" "$PAYER" "$OFFER_ID" "MAKER"
+        waitfortradepaymentreceived "$PAYER_PORT" "$PAYER" "$OFFER_ID"
     else
         # Bob waits for payment rcvd confirm from Alice, polling status in taker specific trade detail.
-        waitfortradepaymentreceived "$PAYER_PORT" "$PAYER" "$OFFER_ID" "TAKER"
+        waitfortradepaymentreceived "$PAYER_PORT" "$PAYER" "$OFFER_ID"
     fi
 
     # Generate some btc blocks
