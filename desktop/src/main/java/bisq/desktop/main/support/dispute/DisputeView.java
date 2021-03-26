@@ -1151,6 +1151,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
                                     setGraphic(field);
                                 } else {
                                     setGraphic(null);
+                                    setText("");
                                     if (field != null)
                                         field.setOnAction(null);
                                 }
