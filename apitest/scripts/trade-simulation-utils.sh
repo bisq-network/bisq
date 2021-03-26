@@ -525,10 +525,10 @@ executetrade() {
     if [ "$DIRECTION" = "BUY" ]
     then
         # Alice waits for payment rcvd confirm from Bob, polling status in maker specific trade detail.
-        waitfortradepaymentreceived "$PAYER_PORT" "$PAYER" "$OFFER_ID" "MAKER"
+        waitfortradepaymentreceived "$PAYER_PORT" "$PAYER" "$OFFER_ID"
     else
         # Bob waits for payment rcvd confirm from Alice, polling status in taker specific trade detail.
-        waitfortradepaymentreceived "$PAYER_PORT" "$PAYER" "$OFFER_ID" "TAKER"
+        waitfortradepaymentreceived "$PAYER_PORT" "$PAYER" "$OFFER_ID"
     fi
 
     # Generate some btc blocks
