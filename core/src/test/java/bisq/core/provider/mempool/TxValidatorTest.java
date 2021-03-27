@@ -125,6 +125,12 @@ public class TxValidatorTest {
         offerData = "VOxRS,e99ea06aefc824fd45031447f7a0b56efb8117a09f9b8982e2c4da480a3a0e91,10000000,101,0,669129";
         mempoolData = "{\"txid\":\"e99ea06aefc824fd45031447f7a0b56efb8117a09f9b8982e2c4da480a3a0e91\",\"version\":1,\"locktime\":0,\"vin\":[{\"vout\":0,\"prevout\":{\"value\":16739}},{\"vout\":2,\"prevout\":{\"value\":113293809}}],\"vout\":[{\"scriptpubkey_address\":\"1F14nF6zoUfJkqZrFgdmK5VX5QVwEpAnKW\",\"value\":16638},{\"scriptpubkey_address\":\"bc1q80y688ev7u43vqy964yf7feqddvt2mkm8977cm\",\"value\":11500000},{\"scriptpubkey_address\":\"bc1q9whgyc2du9mrgnxz0nl0shwpw8ugrcae0j0w8p\",\"value\":101784485}],\"size\":406,\"weight\":1291,\"fee\":9425,\"status\":{\"confirmed\":true,\"block_height\":669134}}";
         Assert.assertFalse(createTxValidator(offerData).parseJsonValidateTakerFeeTx(mempoolData, btcFeeReceivers).getResult());
+
+        // UNDERPAID: Expected fee: 1029000 sats BTC, actual fee paid: 441000 sats BTC because they used the default rate of 0.003 should have been 0.007 per BTC
+        // after 1.6.0 we introduce additional leniency to allow the default rate (which is not stored in the DAO param change list)
+        offerData = "AKA,6779b7571f21a5a1af01d675bf032b8a3c571416d05345491018cbc2d016e888,147000000,441000,1,676543";
+        mempoolData = "{'txid':'6779b7571f21a5a1af01d675bf032b8a3c571416d05345491018cbc2d016e888','version':1,'locktime':0,'vin':[{'txid':'94c36c0a9c5c99844ddfe17ef05a3ebbe94b14d76ee4bed7b00c7d45e681b441','vout':0,'prevout':{'scriptpubkey_address':'bc1qt5uprdzeh9g4el0k9cttn40qzagvpca9q0q6vl','value':177920825},'sequence':4294967295}],'vout':[{'scriptpubkey_address':'19BNi5EpZhgBBWAt5ka7xWpJpX2ZWJEYyq','value':441000},{'scriptpubkey_address':'bc1qxxcl9dz6usrx4z456g6fg8n3u9327hl458d6mx','value':177008388},{'scriptpubkey_address':'bc1qdq0894p2nmg04ceyqgapln6addfl80zy7z36jd','value':467243}],'size':256,'weight':697,'fee':4194,'status':{'confirmed':true,'block_height':676543}}";
+        Assert.assertTrue(createTxValidator(offerData).parseJsonValidateTakerFeeTx(mempoolData, btcFeeReceivers).getResult());
     }
 
     @Test
@@ -209,10 +215,16 @@ public class TxValidatorTest {
         LinkedHashMap<Long, String> feeMap = mockedGetFeeRateMap(param);
         for (Map.Entry<Long, String> entry : feeMap.entrySet()) {
             if (blockHeight >= entry.getKey()) {
-                return ParsingUtils.parseToCoin(entry.getValue(), bsqFormatter);
+                if (param.equals(Param.DEFAULT_MAKER_FEE_BTC) || param.equals(Param.DEFAULT_TAKER_FEE_BTC))
+                    return bsqFormatter.parseToBTC(entry.getValue());
+                else
+                    return ParsingUtils.parseToCoin(entry.getValue(), bsqFormatter);
             }
         }
-        return ParsingUtils.parseToCoin(param.getDefaultValue(), bsqFormatter);
+        if (param.equals(Param.DEFAULT_MAKER_FEE_BTC) || param.equals(Param.DEFAULT_TAKER_FEE_BTC))
+            return bsqFormatter.parseToBTC(param.getDefaultValue());
+        else
+            return ParsingUtils.parseToCoin(param.getDefaultValue(), bsqFormatter);
     }
 
     private LinkedHashMap<Long, String> mockedGetFeeRateMap(Param param) {
