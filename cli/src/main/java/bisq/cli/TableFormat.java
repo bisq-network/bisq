@@ -182,7 +182,7 @@ public class TableFormat {
                 + offers.stream()
                 .map(o -> format(colDataFormat,
                         o.getDirection(),
-                        formatOfferPrice(o.getPrice()),
+                        formatPrice(o.getPrice()),
                         formatAmountRange(o.getMinAmount(), o.getAmount()),
                         formatVolumeRange(o.getMinVolume(), o.getVolume()),
                         o.getPaymentMethodShortName(),
@@ -220,7 +220,7 @@ public class TableFormat {
                 + offers.stream()
                 .map(o -> format(colDataFormat,
                         directionFormat.apply(o),
-                        formatCryptoCurrencyOfferPrice(o.getPrice()),
+                        formatCryptoCurrencyPrice(o.getPrice()),
                         formatAmountRange(o.getMinAmount(), o.getAmount()),
                         formatCryptoCurrencyVolumeRange(o.getMinVolume(), o.getVolume()),
                         o.getPaymentMethodShortName(),
