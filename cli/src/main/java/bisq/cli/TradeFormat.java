@@ -35,6 +35,8 @@ public class TradeFormat {
     private static final String YES = "YES";
     private static final String NO = "NO";
 
+    // TODO add String format(List<TradeInfo> trades)
+
     @VisibleForTesting
     public static String format(TradeInfo tradeInfo) {
         // Some column values might be longer than header, so we need to calculate them.
@@ -79,7 +81,7 @@ public class TradeFormat {
         String headerLine = String.format(headersFormat,
                 /* COL_HEADER_PRICE */ priceHeaderCurrencyCode.apply(tradeInfo),
                 /* COL_HEADER_TRADE_AMOUNT */ baseCurrencyCode,
-                /* COL_HEADER_TRADE_(M||T)AKER_FEE */ makerTakerFeeHeaderCurrencyCode.apply(tradeInfo),
+                /* COL_HEADER_TRADE_(M||T)AKER_FEE */ makerTakerFeeHeaderCurrencyCode.apply(tradeInfo, isTaker),
                 /* COL_HEADER_TRADE_BUYER_COST */ counterCurrencyCode,
                 /* COL_HEADER_TRADE_PAYMENT_SENT */ paymentStatusHeaderCurrencyCode.apply(tradeInfo),
                 /* COL_HEADER_TRADE_PAYMENT_RECEIVED */  paymentStatusHeaderCurrencyCode.apply(tradeInfo));
@@ -132,8 +134,13 @@ public class TradeFormat {
                     ? t.getOffer().getCounterCurrencyCode()
                     : t.getOffer().getBaseCurrencyCode();
 
-    private static final Function<TradeInfo, String> makerTakerFeeHeaderCurrencyCode = (t) ->
-            t.getIsCurrencyForTakerFeeBtc() ? "BTC" : "BSQ";
+    private static final BiFunction<TradeInfo, Boolean, String> makerTakerFeeHeaderCurrencyCode = (t, isTaker) -> {
+        if (isTaker) {
+            return t.getIsCurrencyForTakerFeeBtc() ? "BTC" : "BSQ";
+        } else {
+            return t.getOffer().getIsCurrencyForMakerFeeBtc() ? "BTC" : "BSQ";
+        }
+    };
 
     private static final Function<TradeInfo, String> paymentStatusHeaderCurrencyCode = (t) ->
             t.getOffer().getBaseCurrencyCode().equals("BTC")
@@ -142,8 +149,8 @@ public class TradeFormat {
 
     private static final Function<TradeInfo, String> priceFormat = (t) ->
             t.getOffer().getBaseCurrencyCode().equals("BTC")
-                    ? formatOfferPrice(t.getTradePrice())
-                    : formatCryptoCurrencyOfferPrice(t.getOffer().getPrice());
+                    ? formatPrice(t.getTradePrice())
+                    : formatCryptoCurrencyPrice(t.getOffer().getPrice());
 
     private static final Function<TradeInfo, String> amountFormat = (t) ->
             t.getOffer().getBaseCurrencyCode().equals("BTC")
@@ -159,11 +166,15 @@ public class TradeFormat {
     };
 
     private static final BiFunction<TradeInfo, Boolean, String> makerTakerFeeFormat = (t, isTaker) -> {
-        if (isTaker)
-            return t.getIsCurrencyForTakerFeeBtc() ? formatSatoshis(t.getTakerFeeAsLong()) : formatBsq(t.getTakerFeeAsLong());
-        else
-            return t.getIsCurrencyForTakerFeeBtc() ? formatSatoshis(t.getOffer().getMakerFee()) : formatBsq(t.getOffer().getMakerFee());
-
+        if (isTaker) {
+            return t.getIsCurrencyForTakerFeeBtc()
+                    ? formatSatoshis(t.getTakerFeeAsLong())
+                    : formatBsq(t.getTakerFeeAsLong());
+        } else {
+            return t.getOffer().getIsCurrencyForMakerFeeBtc()
+                    ? formatSatoshis(t.getOffer().getMakerFee())
+                    : formatBsq(t.getOffer().getMakerFee());
+        }
     };
 
     private static final Function<TradeInfo, String> tradeCostFormat = (t) ->
