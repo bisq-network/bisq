@@ -152,7 +152,7 @@ public class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTrades
 
         Tradable tradable = item.getTradable();
         Offer offer = tradable.getOffer();
-        if (wasMyOffer(tradable)) {
+        if (wasMyOffer(tradable) || tradable instanceof OpenOffer) {
             // I was maker so we use offer
             return offer.isCurrencyForMakerFeeBtc();
         } else {
