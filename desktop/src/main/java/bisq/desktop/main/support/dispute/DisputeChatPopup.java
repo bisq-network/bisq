@@ -96,7 +96,7 @@ public class DisputeChatPopup {
         AnchorPane.setRightAnchor(chatView, 10d);
         AnchorPane.setTopAnchor(chatView, -20d);
         AnchorPane.setBottomAnchor(chatView, 10d);
-
+        pane.setStyle("-fx-background-color: -bs-color-blue-5");
         Button closeDisputeButton = null;
         if (!selectedDispute.isClosed() && !disputeManager.isTrader(selectedDispute)) {
             closeDisputeButton = new AutoTooltipButton(Res.get("support.closeTicket"));
@@ -106,7 +106,7 @@ public class DisputeChatPopup {
         chatView.activate();
         chatView.scrollToBottom();
         chatPopupStage = new Stage();
-        chatPopupStage.setTitle(Res.get("tradeChat.chatWindowTitle", selectedDispute.getShortTradeId())
+        chatPopupStage.setTitle(Res.get("disputeChat.chatWindowTitle", selectedDispute.getShortTradeId())
                 + " " + selectedDispute.getRoleString());
         StackPane owner = MainView.getRootContainer();
         Scene rootScene = owner.getScene();
