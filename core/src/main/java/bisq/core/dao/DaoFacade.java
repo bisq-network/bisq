@@ -650,10 +650,6 @@ public class DaoFacade implements DaoSetupService {
         return daoStateService.getLockupTxOutput(txId);
     }
 
-    public long getTotalBurntFee() {
-        return daoStateService.getTotalBurntFee();
-    }
-
     public long getTotalIssuedAmount(IssuanceType issuanceType) {
         return daoStateService.getTotalIssuedAmount(issuanceType);
     }

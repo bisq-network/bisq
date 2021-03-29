@@ -37,6 +37,7 @@ import static org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 
 import bisq.apitest.config.BisqAppConfig;
 import bisq.apitest.method.MethodTest;
+import bisq.cli.GrpcClient;
 
 @Disabled
 @Slf4j
@@ -59,9 +60,7 @@ public class BsqWalletTest extends MethodTest {
     @Test
     @Order(1)
     public void testGetUnusedBsqAddress() {
-        var request = createGetUnusedBsqAddressRequest();
-
-        String address = grpcStubs(alicedaemon).walletsService.getUnusedBsqAddress(request).getAddress();
+        var address = aliceClient.getUnusedBsqAddress();
         assertFalse(address.isEmpty());
         assertTrue(address.startsWith("B"));
 
@@ -76,13 +75,13 @@ public class BsqWalletTest extends MethodTest {
     @Test
     @Order(2)
     public void testInitialBsqBalances(final TestInfo testInfo) {
-        BsqBalanceInfo alicesBsqBalances = getBsqBalances(alicedaemon);
+        BsqBalanceInfo alicesBsqBalances = aliceClient.getBsqBalances();
         log.debug("{} -> Alice's BSQ Initial Balances -> \n{}",
                 testName(testInfo),
                 formatBsqBalanceInfoTbl(alicesBsqBalances));
         verifyBsqBalances(ALICES_INITIAL_BSQ_BALANCES, alicesBsqBalances);
 
-        BsqBalanceInfo bobsBsqBalances = getBsqBalances(bobdaemon);
+        BsqBalanceInfo bobsBsqBalances = bobClient.getBsqBalances();
         log.debug("{} -> Bob's BSQ Initial Balances -> \n{}",
                 testName(testInfo),
                 formatBsqBalanceInfoTbl(bobsBsqBalances));
@@ -92,12 +91,12 @@ public class BsqWalletTest extends MethodTest {
     @Test
     @Order(3)
     public void testSendBsqAndCheckBalancesBeforeGeneratingBtcBlock(final TestInfo testInfo) {
-        String bobsBsqAddress = getUnusedBsqAddress(bobdaemon);
-        sendBsq(alicedaemon, bobsBsqAddress, SEND_BSQ_AMOUNT, "100");
+        String bobsBsqAddress = bobClient.getUnusedBsqAddress();
+        aliceClient.sendBsq(bobsBsqAddress, SEND_BSQ_AMOUNT, "100");
         sleep(2000);
 
-        BsqBalanceInfo alicesBsqBalances = getBsqBalances(alicedaemon);
-        BsqBalanceInfo bobsBsqBalances = waitForNonZeroBsqUnverifiedBalance(bobdaemon);
+        BsqBalanceInfo alicesBsqBalances = aliceClient.getBsqBalances();
+        BsqBalanceInfo bobsBsqBalances = waitForNonZeroBsqUnverifiedBalance(bobClient);
 
         log.debug("BSQ Balances Before BTC Block Gen...");
         printBobAndAliceBsqBalances(testInfo,
@@ -129,8 +128,8 @@ public class BsqWalletTest extends MethodTest {
         // wait for both wallets to be saved to disk.
         genBtcBlocksThenWait(1, 4000);
 
-        BsqBalanceInfo alicesBsqBalances = getBsqBalances(alicedaemon);
-        BsqBalanceInfo bobsBsqBalances = waitForBsqNewAvailableConfirmedBalance(bobdaemon, 150000000);
+        BsqBalanceInfo alicesBsqBalances = aliceClient.getBalances().getBsq();
+        BsqBalanceInfo bobsBsqBalances = waitForBsqNewAvailableConfirmedBalance(bobClient, 150000000);
 
         log.debug("See Available Confirmed BSQ Balances...");
         printBobAndAliceBsqBalances(testInfo,
@@ -160,26 +159,26 @@ public class BsqWalletTest extends MethodTest {
         tearDownScaffold();
     }
 
-    private BsqBalanceInfo waitForNonZeroBsqUnverifiedBalance(BisqAppConfig daemon) {
+    private BsqBalanceInfo waitForNonZeroBsqUnverifiedBalance(GrpcClient grpcClient) {
         // A BSQ recipient needs to wait for her daemon to detect a new tx.
         // Loop here until her unverifiedBalance != 0, or give up after 15 seconds.
         // A slow test is preferred over a flaky test.
-        BsqBalanceInfo bsqBalance = getBsqBalances(daemon);
+        BsqBalanceInfo bsqBalance = grpcClient.getBsqBalances();
         for (int numRequests = 1; numRequests <= 15 && bsqBalance.getUnverifiedBalance() == 0; numRequests++) {
             sleep(1000);
-            bsqBalance = getBsqBalances(daemon);
+            bsqBalance = grpcClient.getBsqBalances();
         }
         return bsqBalance;
     }
 
-    private BsqBalanceInfo waitForBsqNewAvailableConfirmedBalance(BisqAppConfig daemon,
+    private BsqBalanceInfo waitForBsqNewAvailableConfirmedBalance(GrpcClient grpcClient,
                                                                   long staleBalance) {
-        BsqBalanceInfo bsqBalance = getBsqBalances(daemon);
+        BsqBalanceInfo bsqBalance = grpcClient.getBsqBalances();
         for (int numRequests = 1;
              numRequests <= 15 && bsqBalance.getAvailableConfirmedBalance() == staleBalance;
              numRequests++) {
             sleep(1000);
-            bsqBalance = getBsqBalances(daemon);
+            bsqBalance = grpcClient.getBsqBalances();
         }
         return bsqBalance;
     }

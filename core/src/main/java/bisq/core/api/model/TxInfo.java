@@ -19,10 +19,15 @@ package bisq.core.api.model;
 
 import bisq.common.Payload;
 
+import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.Transaction;
+
+import java.util.Map;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+
+import static java.util.Objects.requireNonNull;
 
 @EqualsAndHashCode
 @Getter
@@ -55,15 +60,26 @@ public class TxInfo implements Payload {
         if (transaction == null)
             throw new IllegalStateException("server created a null transaction");
 
-        return new TxInfo.TxInfoBuilder()
-                .withTxId(transaction.getTxId().toString())
-                .withInputSum(transaction.getInputSum().value)
-                .withOutputSum(transaction.getOutputSum().value)
-                .withFee(transaction.getFee().value)
-                .withSize(transaction.getMessageSize())
-                .withIsPending(transaction.isPending())
-                .withMemo(transaction.getMemo())
-                .build();
+        if (transaction.getFee() != null)
+            return new TxInfo.TxInfoBuilder()
+                    .withTxId(transaction.getTxId().toString())
+                    .withInputSum(transaction.getInputSum().value)
+                    .withOutputSum(transaction.getOutputSum().value)
+                    .withFee(transaction.getFee().value)
+                    .withSize(transaction.getMessageSize())
+                    .withIsPending(transaction.isPending())
+                    .withMemo(transaction.getMemo())
+                    .build();
+        else
+            return new TxInfo.TxInfoBuilder()
+                    .withTxId(transaction.getTxId().toString())
+                    .withInputSum(transaction.getInputSum().value)
+                    .withOutputSum(transaction.getOutputSum().value)
+                    // Do not set fee == null.
+                    .withSize(transaction.getMessageSize())
+                    .withIsPending(transaction.isPending())
+                    .withMemo(transaction.getMemo())
+                    .build();
     }
 
     //////////////////////////////////////////////////////////////////////////////////////
@@ -156,5 +172,41 @@ public class TxInfo implements Payload {
                 ", isPending=" + isPending + "\n" +
                 ", memo='" + memo + '\'' + "\n" +
                 '}';
+    }
+
+    public static String getTransactionDetailString(Transaction tx) {
+        if (tx == null)
+            throw new IllegalArgumentException("Cannot print details for null transaction");
+
+        StringBuilder builder = new StringBuilder("Transaction " + requireNonNull(tx).getTxId() + ":").append("\n");
+
+        builder.append("\tisPending:                    ").append(tx.isPending()).append("\n");
+        builder.append("\tfee:                          ").append(tx.getFee()).append("\n");
+        builder.append("\tweight:                       ").append(tx.getWeight()).append("\n");
+        builder.append("\tVsize:                        ").append(tx.getVsize()).append("\n");
+        builder.append("\tinputSum:                     ").append(tx.getInputSum()).append("\n");
+        builder.append("\toutputSum:                    ").append(tx.getOutputSum()).append("\n");
+
+        Map<Sha256Hash, Integer> appearsInHashes = tx.getAppearsInHashes();
+        if (appearsInHashes != null)
+            builder.append("\tappearsInHashes: yes, count:  ").append(appearsInHashes.size()).append("\n");
+        else
+            builder.append("\tappearsInHashes:              ").append("no").append("\n");
+
+        builder.append("\tanyOutputSpent:               ").append(tx.isAnyOutputSpent()).append("\n");
+        builder.append("\tupdateTime:                   ").append(tx.getUpdateTime()).append("\n");
+        builder.append("\tincludedInBestChainAt:        ").append(tx.getIncludedInBestChainAt()).append("\n");
+        builder.append("\thasWitnesses:                 ").append(tx.hasWitnesses()).append("\n");
+        builder.append("\tlockTime:                     ").append(tx.getLockTime()).append("\n");
+        builder.append("\tversion:                      ").append(tx.getVersion()).append("\n");
+        builder.append("\thasConfidence:                ").append(tx.hasConfidence()).append("\n");
+        builder.append("\tsigOpCount:                   ").append(tx.getSigOpCount()).append("\n");
+        builder.append("\tisTimeLocked:                 ").append(tx.isTimeLocked()).append("\n");
+        builder.append("\thasRelativeLockTime:          ").append(tx.hasRelativeLockTime()).append("\n");
+        builder.append("\tisOptInFullRBF:               ").append(tx.isOptInFullRBF()).append("\n");
+        builder.append("\tpurpose:                      ").append(tx.getPurpose()).append("\n");
+        builder.append("\texchangeRate:                 ").append(tx.getExchangeRate()).append("\n");
+        builder.append("\tmemo:                         ").append(tx.getMemo()).append("\n");
+        return builder.toString();
     }
 }

@@ -528,7 +528,7 @@ public class WalletsSetup {
     public boolean isChainHeightSyncedWithinTolerance() {
         int peersChainHeight = PeerGroup.getMostCommonChainHeight(connectedPeers.get());
         int bestChainHeight = walletConfig.chain().getBestChainHeight();
-        if (peersChainHeight - bestChainHeight <= 3) {
+        if (Math.abs(peersChainHeight - bestChainHeight) <= 3) {
             return true;
         }
         log.warn("Our chain height: {} is out of sync with peer nodes chain height: {}", chainHeight.get(), peersChainHeight);

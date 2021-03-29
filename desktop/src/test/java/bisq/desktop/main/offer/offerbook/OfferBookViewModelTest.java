@@ -105,46 +105,46 @@ public class OfferBookViewModelTest {
         Collection<PaymentAccount> paymentAccounts;
         paymentAccounts = new ArrayList<>(FXCollections.singletonObservableList(getSepaAccount("EUR", "DE", "1212324",
                 new ArrayList<>(Arrays.asList("AT", "DE")))));
-        assertTrue(PaymentAccountUtil.isAnyTakerPaymentAccountValidForOffer(
+        assertTrue(PaymentAccountUtil.isAnyPaymentAccountValidForOffer(
                 getSEPAPaymentMethod("EUR", "AT", new ArrayList<>(Arrays.asList("AT", "DE")), "PSK"), paymentAccounts));
 
 
         // empty paymentAccounts
         paymentAccounts = new ArrayList<>();
-        assertFalse(PaymentAccountUtil.isAnyTakerPaymentAccountValidForOffer(getSEPAPaymentMethod("EUR", "AT",
+        assertFalse(PaymentAccountUtil.isAnyPaymentAccountValidForOffer(getSEPAPaymentMethod("EUR", "AT",
                 new ArrayList<>(Arrays.asList("AT", "DE")), "PSK"), paymentAccounts));
 
         // simple cases: same payment methods
 
         // offer: alipay paymentAccount: alipay - same country, same currency
         paymentAccounts = new ArrayList<>(FXCollections.singletonObservableList(getAliPayAccount("CNY")));
-        assertTrue(PaymentAccountUtil.isAnyTakerPaymentAccountValidForOffer(
+        assertTrue(PaymentAccountUtil.isAnyPaymentAccountValidForOffer(
                 getAliPayPaymentMethod("EUR"), paymentAccounts));
 
         // offer: ether paymentAccount: ether - same country, same currency
         paymentAccounts = new ArrayList<>(FXCollections.singletonObservableList(getCryptoAccount("ETH")));
-        assertTrue(PaymentAccountUtil.isAnyTakerPaymentAccountValidForOffer(
+        assertTrue(PaymentAccountUtil.isAnyPaymentAccountValidForOffer(
                 getBlockChainsPaymentMethod("ETH"), paymentAccounts));
 
         // offer: sepa paymentAccount: sepa - same country, same currency
         paymentAccounts = new ArrayList<>(FXCollections.singletonObservableList(getSepaAccount("EUR", "AT", "1212324",
                 new ArrayList<>(Arrays.asList("AT", "DE")))));
-        assertTrue(PaymentAccountUtil.isAnyTakerPaymentAccountValidForOffer(
+        assertTrue(PaymentAccountUtil.isAnyPaymentAccountValidForOffer(
                 getSEPAPaymentMethod("EUR", "AT", new ArrayList<>(Arrays.asList("AT", "DE")), "PSK"), paymentAccounts));
 
         // offer: nationalBank paymentAccount: nationalBank - same country, same currency
         paymentAccounts = new ArrayList<>(FXCollections.singletonObservableList(getNationalBankAccount("EUR", "AT", "PSK")));
-        assertTrue(PaymentAccountUtil.isAnyTakerPaymentAccountValidForOffer(
+        assertTrue(PaymentAccountUtil.isAnyPaymentAccountValidForOffer(
                 getNationalBankPaymentMethod("EUR", "AT", "PSK"), paymentAccounts));
 
         // offer: SameBank paymentAccount: SameBank - same country, same currency
         paymentAccounts = new ArrayList<>(FXCollections.singletonObservableList(getSameBankAccount("EUR", "AT", "PSK")));
-        assertTrue(PaymentAccountUtil.isAnyTakerPaymentAccountValidForOffer(
+        assertTrue(PaymentAccountUtil.isAnyPaymentAccountValidForOffer(
                 getSameBankPaymentMethod("EUR", "AT", "PSK"), paymentAccounts));
 
         // offer: sepa paymentAccount: sepa - diff. country, same currency
         paymentAccounts = new ArrayList<>(FXCollections.singletonObservableList(getSepaAccount("EUR", "DE", "1212324", new ArrayList<>(Arrays.asList("AT", "DE")))));
-        assertTrue(PaymentAccountUtil.isAnyTakerPaymentAccountValidForOffer(
+        assertTrue(PaymentAccountUtil.isAnyPaymentAccountValidForOffer(
                 getSEPAPaymentMethod("EUR", "AT", new ArrayList<>(Arrays.asList("AT", "DE")), "PSK"), paymentAccounts));
 
 
@@ -152,79 +152,79 @@ public class OfferBookViewModelTest {
 
         // offer: sepa paymentAccount: sepa - same country, same currency
         paymentAccounts = new ArrayList<>(FXCollections.singletonObservableList(getSepaAccount("EUR", "AT", "1212324", new ArrayList<>(Arrays.asList("AT", "DE")))));
-        assertTrue(PaymentAccountUtil.isAnyTakerPaymentAccountValidForOffer(
+        assertTrue(PaymentAccountUtil.isAnyPaymentAccountValidForOffer(
                 getSEPAPaymentMethod("EUR", "AT", new ArrayList<>(Arrays.asList("AT", "DE")), "PSK"), paymentAccounts));
 
 
         // offer: sepa paymentAccount: nationalBank - same country, same currency
         // wrong method
         paymentAccounts = new ArrayList<>(FXCollections.singletonObservableList(getNationalBankAccount("EUR", "AT", "PSK")));
-        assertFalse(PaymentAccountUtil.isAnyTakerPaymentAccountValidForOffer(
+        assertFalse(PaymentAccountUtil.isAnyPaymentAccountValidForOffer(
                 getSEPAPaymentMethod("EUR", "AT", new ArrayList<>(Arrays.asList("AT", "DE")), "PSK"), paymentAccounts));
 
         // wrong currency
         paymentAccounts = new ArrayList<>(FXCollections.singletonObservableList(getNationalBankAccount("USD", "US", "XXX")));
-        assertFalse(PaymentAccountUtil.isAnyTakerPaymentAccountValidForOffer(
+        assertFalse(PaymentAccountUtil.isAnyPaymentAccountValidForOffer(
                 getNationalBankPaymentMethod("EUR", "AT", "PSK"), paymentAccounts));
 
         // wrong country
         paymentAccounts = new ArrayList<>(FXCollections.singletonObservableList(getNationalBankAccount("EUR", "FR", "PSK")));
-        assertFalse(PaymentAccountUtil.isAnyTakerPaymentAccountValidForOffer(
+        assertFalse(PaymentAccountUtil.isAnyPaymentAccountValidForOffer(
                 getNationalBankPaymentMethod("EUR", "AT", "PSK"), paymentAccounts));
 
         // sepa wrong country
         paymentAccounts = new ArrayList<>(FXCollections.singletonObservableList(getNationalBankAccount("EUR", "CH", "PSK")));
-        assertFalse(PaymentAccountUtil.isAnyTakerPaymentAccountValidForOffer(
+        assertFalse(PaymentAccountUtil.isAnyPaymentAccountValidForOffer(
                 getSEPAPaymentMethod("EUR", "AT", new ArrayList<>(Arrays.asList("AT", "DE")), "PSK"), paymentAccounts));
 
         // sepa wrong currency
         paymentAccounts = new ArrayList<>(FXCollections.singletonObservableList(getNationalBankAccount("CHF", "DE", "PSK")));
-        assertFalse(PaymentAccountUtil.isAnyTakerPaymentAccountValidForOffer(
+        assertFalse(PaymentAccountUtil.isAnyPaymentAccountValidForOffer(
                 getSEPAPaymentMethod("EUR", "AT", new ArrayList<>(Arrays.asList("AT", "DE")), "PSK"), paymentAccounts));
 
 
         // same bank
         paymentAccounts = new ArrayList<>(FXCollections.singletonObservableList(getSameBankAccount("EUR", "AT", "PSK")));
-        assertTrue(PaymentAccountUtil.isAnyTakerPaymentAccountValidForOffer(
+        assertTrue(PaymentAccountUtil.isAnyPaymentAccountValidForOffer(
                 getNationalBankPaymentMethod("EUR", "AT", "PSK"), paymentAccounts));
 
         // not same bank
         paymentAccounts = new ArrayList<>(FXCollections.singletonObservableList(getSameBankAccount("EUR", "AT", "Raika")));
-        assertFalse(PaymentAccountUtil.isAnyTakerPaymentAccountValidForOffer(
+        assertFalse(PaymentAccountUtil.isAnyPaymentAccountValidForOffer(
                 getNationalBankPaymentMethod("EUR", "AT", "PSK"), paymentAccounts));
 
         // same bank, wrong country
         paymentAccounts = new ArrayList<>(FXCollections.singletonObservableList(getSameBankAccount("EUR", "DE", "PSK")));
-        assertFalse(PaymentAccountUtil.isAnyTakerPaymentAccountValidForOffer(
+        assertFalse(PaymentAccountUtil.isAnyPaymentAccountValidForOffer(
                 getNationalBankPaymentMethod("EUR", "AT", "PSK"), paymentAccounts));
 
         // same bank, wrong currency
         paymentAccounts = new ArrayList<>(FXCollections.singletonObservableList(getSameBankAccount("USD", "AT", "PSK")));
-        assertFalse(PaymentAccountUtil.isAnyTakerPaymentAccountValidForOffer(
+        assertFalse(PaymentAccountUtil.isAnyPaymentAccountValidForOffer(
                 getNationalBankPaymentMethod("EUR", "AT", "PSK"), paymentAccounts));
 
         // spec. bank
         paymentAccounts = new ArrayList<>(FXCollections.singletonObservableList(getSpecificBanksAccount("EUR", "AT", "PSK",
                 new ArrayList<>(Arrays.asList("PSK", "Raika")))));
-        assertTrue(PaymentAccountUtil.isAnyTakerPaymentAccountValidForOffer(
+        assertTrue(PaymentAccountUtil.isAnyPaymentAccountValidForOffer(
                 getNationalBankPaymentMethod("EUR", "AT", "PSK"), paymentAccounts));
 
         // spec. bank, missing bank
         paymentAccounts = new ArrayList<>(FXCollections.singletonObservableList(getSpecificBanksAccount("EUR", "AT", "PSK",
                 new ArrayList<>(FXCollections.singletonObservableList("Raika")))));
-        assertFalse(PaymentAccountUtil.isAnyTakerPaymentAccountValidForOffer(
+        assertFalse(PaymentAccountUtil.isAnyPaymentAccountValidForOffer(
                 getNationalBankPaymentMethod("EUR", "AT", "PSK"), paymentAccounts));
 
         // spec. bank, wrong country
         paymentAccounts = new ArrayList<>(FXCollections.singletonObservableList(getSpecificBanksAccount("EUR", "FR", "PSK",
                 new ArrayList<>(Arrays.asList("PSK", "Raika")))));
-        assertFalse(PaymentAccountUtil.isAnyTakerPaymentAccountValidForOffer(
+        assertFalse(PaymentAccountUtil.isAnyPaymentAccountValidForOffer(
                 getNationalBankPaymentMethod("EUR", "AT", "PSK"), paymentAccounts));
 
         // spec. bank, wrong currency
         paymentAccounts = new ArrayList<>(FXCollections.singletonObservableList(getSpecificBanksAccount("USD", "AT", "PSK",
                 new ArrayList<>(Arrays.asList("PSK", "Raika")))));
-        assertFalse(PaymentAccountUtil.isAnyTakerPaymentAccountValidForOffer(
+        assertFalse(PaymentAccountUtil.isAnyPaymentAccountValidForOffer(
                 getNationalBankPaymentMethod("EUR", "AT", "PSK"), paymentAccounts));
 
         //TODO add more tests
@@ -232,7 +232,7 @@ public class OfferBookViewModelTest {
     }
 
     @Test
-    public void testMaxCharactersForAmountWithNoOffes() {
+    public void testMaxCharactersForAmountWithNoOffers() {
         OfferBook offerBook = mock(OfferBook.class);
         final ObservableList<OfferBookListItem> offerBookListItems = FXCollections.observableArrayList();
 
@@ -283,7 +283,7 @@ public class OfferBookViewModelTest {
     }
 
     @Test
-    public void testMaxCharactersForVolumeWithNoOffes() {
+    public void testMaxCharactersForVolumeWithNoOffers() {
         OfferBook offerBook = mock(OfferBook.class);
         final ObservableList<OfferBookListItem> offerBookListItems = FXCollections.observableArrayList();
 

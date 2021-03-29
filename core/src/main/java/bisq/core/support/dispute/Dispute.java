@@ -17,6 +17,7 @@
 
 package bisq.core.support.dispute;
 
+import bisq.core.locale.Res;
 import bisq.core.proto.CoreProtoResolver;
 import bisq.core.support.SupportType;
 import bisq.core.support.messages.ChatMessage;
@@ -26,15 +27,20 @@ import bisq.common.crypto.PubKeyRing;
 import bisq.common.proto.ProtoUtil;
 import bisq.common.proto.network.NetworkPayload;
 import bisq.common.proto.persistable.PersistablePayload;
+import bisq.common.util.CollectionUtils;
+import bisq.common.util.ExtraDataMapValidator;
 import bisq.common.util.Utilities;
 
 import com.google.protobuf.ByteString;
 
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyBooleanProperty;
+import javafx.beans.property.ReadOnlyIntegerProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 
 import javafx.collections.FXCollections;
@@ -42,7 +48,9 @@ import javafx.collections.ObservableList;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -58,6 +66,23 @@ import javax.annotation.Nullable;
 @EqualsAndHashCode
 @Getter
 public final class Dispute implements NetworkPayload, PersistablePayload {
+
+    public enum State {
+        NEEDS_UPGRADE,
+        NEW,
+        OPEN,
+        REOPENED,
+        CLOSED;
+
+        public static Dispute.State fromProto(protobuf.Dispute.State state) {
+            return ProtoUtil.enumFromProto(Dispute.State.class, state.name());
+        }
+
+        public static protobuf.Dispute.State toProtoMessage(Dispute.State state) {
+            return protobuf.Dispute.State.valueOf(state.name());
+        }
+    }
+
     private final String tradeId;
     private final String id;
     private final int traderId;
@@ -66,6 +91,7 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
     // PubKeyRing of trader who opened the dispute
     private final PubKeyRing traderPubKeyRing;
     private final long tradeDate;
+    private final long tradePeriodEnd;
     private final Contract contract;
     @Nullable
     private final byte[] contractHash;
@@ -85,7 +111,6 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
     private final PubKeyRing agentPubKeyRing; // dispute agent
     private final boolean isSupportTicket;
     private final ObservableList<ChatMessage> chatMessages = FXCollections.observableArrayList();
-    private final BooleanProperty isClosedProperty = new SimpleBooleanProperty();
     // disputeResultProperty.get is Nullable!
     private final ObjectProperty<DisputeResult> disputeResultProperty = new SimpleObjectProperty<>();
     private final long openingDate;
@@ -107,10 +132,25 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
     @Setter
     @Nullable
     private String donationAddressOfDelayedPayoutTx;
+    // Added at v1.6.0
+    private Dispute.State disputeState = State.NEW;
+
+    // Should be only used in emergency case if we need to add data but do not want to break backward compatibility
+    // at the P2P network storage checks. The hash of the object will be used to verify if the data is valid. Any new
+    // field in a class would break that hash and therefore break the storage mechanism.
+    @Nullable
+    @Setter
+    private Map<String, String> extraDataMap;
+
     // We do not persist uid, it is only used by dispute agents to guarantee an uid.
     @Setter
     @Nullable
     private transient String uid;
+    @Setter
+    private transient long payoutTxConfirms = -1;
+
+    private transient final BooleanProperty isClosedProperty = new SimpleBooleanProperty();
+    private transient final IntegerProperty badgeCountProperty = new SimpleIntegerProperty();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -124,6 +164,7 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
                    boolean disputeOpenerIsMaker,
                    PubKeyRing traderPubKeyRing,
                    long tradeDate,
+                   long tradePeriodEnd,
                    Contract contract,
                    @Nullable byte[] contractHash,
                    @Nullable byte[] depositTxSerialized,
@@ -143,6 +184,7 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
         this.disputeOpenerIsMaker = disputeOpenerIsMaker;
         this.traderPubKeyRing = traderPubKeyRing;
         this.tradeDate = tradeDate;
+        this.tradePeriodEnd = tradePeriodEnd;
         this.contract = contract;
         this.contractHash = contractHash;
         this.depositTxSerialized = depositTxSerialized;
@@ -158,6 +200,7 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
 
         id = tradeId + "_" + traderId;
         uid = UUID.randomUUID().toString();
+        refreshAlertLevel(true);
     }
 
 
@@ -176,6 +219,7 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
                 .setDisputeOpenerIsMaker(disputeOpenerIsMaker)
                 .setTraderPubKeyRing(traderPubKeyRing.toProtoMessage())
                 .setTradeDate(tradeDate)
+                .setTradePeriodEnd(tradePeriodEnd)
                 .setContract(contract.toProtoMessage())
                 .setContractAsJson(contractAsJson)
                 .setAgentPubKeyRing(agentPubKeyRing.toProtoMessage())
@@ -183,8 +227,9 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
                 .addAllChatMessage(clonedChatMessages.stream()
                         .map(msg -> msg.toProtoNetworkEnvelope().getChatMessage())
                         .collect(Collectors.toList()))
-                .setIsClosed(isClosedProperty.get())
+                .setIsClosed(this.isClosed())
                 .setOpeningDate(openingDate)
+                .setState(Dispute.State.toProtoMessage(disputeState))
                 .setId(id);
 
         Optional.ofNullable(contractHash).ifPresent(e -> builder.setContractHash(ByteString.copyFrom(e)));
@@ -200,6 +245,7 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
         Optional.ofNullable(mediatorsDisputeResult).ifPresent(result -> builder.setMediatorsDisputeResult(mediatorsDisputeResult));
         Optional.ofNullable(delayedPayoutTxId).ifPresent(result -> builder.setDelayedPayoutTxId(delayedPayoutTxId));
         Optional.ofNullable(donationAddressOfDelayedPayoutTx).ifPresent(result -> builder.setDonationAddressOfDelayedPayoutTx(donationAddressOfDelayedPayoutTx));
+        Optional.ofNullable(getExtraDataMap()).ifPresent(builder::putAllExtraData);
         return builder.build();
     }
 
@@ -211,6 +257,7 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
                 proto.getDisputeOpenerIsMaker(),
                 PubKeyRing.fromProto(proto.getTraderPubKeyRing()),
                 proto.getTradeDate(),
+                proto.getTradePeriodEnd(),
                 Contract.fromProto(proto.getContract(), coreProtoResolver),
                 ProtoUtil.byteArrayOrNullFromProto(proto.getContractHash()),
                 ProtoUtil.byteArrayOrNullFromProto(proto.getDepositTxSerialized()),
@@ -224,11 +271,13 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
                 proto.getIsSupportTicket(),
                 SupportType.fromProto(proto.getSupportType()));
 
+        dispute.setExtraDataMap(CollectionUtils.isEmpty(proto.getExtraDataMap()) ?
+                null : ExtraDataMapValidator.getValidatedExtraDataMap(proto.getExtraDataMap()));
+
         dispute.chatMessages.addAll(proto.getChatMessageList().stream()
                 .map(ChatMessage::fromPayloadProto)
                 .collect(Collectors.toList()));
 
-        dispute.isClosedProperty.set(proto.getIsClosed());
         if (proto.hasDisputeResult())
             dispute.disputeResultProperty.set(DisputeResult.fromProto(proto.getDisputeResult()));
         dispute.disputePayoutTxId = ProtoUtil.stringOrNullFromProto(proto.getDisputePayoutTxId());
@@ -248,6 +297,20 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
             dispute.setDonationAddressOfDelayedPayoutTx(donationAddressOfDelayedPayoutTx);
         }
 
+        if (Dispute.State.fromProto(proto.getState()) == State.NEEDS_UPGRADE) {
+            // old disputes did not have a state field, so choose an appropriate state:
+            dispute.setState(proto.getIsClosed() ? State.CLOSED : State.OPEN);
+            if (dispute.getDisputeState() == State.CLOSED) {
+                // mark chat messages as read for pre-existing CLOSED disputes
+                // otherwise at upgrade, all old disputes would have 1 unread chat message
+                // because currently when a dispute is closed, the last chat message is not marked read
+                dispute.getChatMessages().forEach(m -> m.setWasDisplayed(true));
+            }
+        } else {
+            dispute.setState(Dispute.State.fromProto(proto.getState()));
+        }
+
+        dispute.refreshAlertLevel(true);
         return dispute;
     }
 
@@ -269,14 +332,32 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
     // Setters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void setIsClosed(boolean isClosed) {
-        this.isClosedProperty.set(isClosed);
+    public void setIsClosed() {
+        setState(State.CLOSED);
+    }
+
+    public void reOpen() {
+        setState(State.REOPENED);
+    }
+
+    public void setState(Dispute.State disputeState) {
+        this.disputeState = disputeState;
+        this.isClosedProperty.set(disputeState == State.CLOSED);
     }
 
     public void setDisputeResult(DisputeResult disputeResult) {
         disputeResultProperty.set(disputeResult);
     }
 
+    public void setExtraData(String key, String value) {
+        if (key == null || value == null) {
+            return;
+        }
+        if (extraDataMap == null) {
+            extraDataMap = new HashMap<>();
+        }
+        extraDataMap.put(key, value);
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
@@ -289,7 +370,9 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
     public ReadOnlyBooleanProperty isClosedProperty() {
         return isClosedProperty;
     }
-
+    public ReadOnlyIntegerProperty getBadgeCountProperty() {
+        return badgeCountProperty;
+    }
     public ReadOnlyObjectProperty<DisputeResult> disputeResultProperty() {
         return disputeResultProperty;
     }
@@ -298,14 +381,63 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
         return new Date(tradeDate);
     }
 
+    public Date getTradePeriodEnd() {
+        return new Date(tradePeriodEnd);
+    }
+
     public Date getOpeningDate() {
         return new Date(openingDate);
     }
 
-    public boolean isClosed() {
-        return isClosedProperty.get();
+    public boolean isNew() {
+        return this.disputeState == State.NEW;
     }
 
+    public boolean isClosed() {
+        return this.disputeState == State.CLOSED;
+    }
+
+    public void refreshAlertLevel(boolean senderFlag) {
+        // if the dispute is "new" that is 1 alert that has to be propagated upstream
+        // or if there are unread messages that is 1 alert that has to be propagated upstream
+        if (isNew() || unreadMessageCount(senderFlag) > 0) {
+            badgeCountProperty.setValue(1);
+        } else {
+            badgeCountProperty.setValue(0);
+        }
+    }
+
+    public long unreadMessageCount(boolean senderFlag) {
+        return chatMessages.stream()
+                .filter(m -> m.isSenderIsTrader() == senderFlag || m.isSystemMessage())
+                .filter(m -> !m.isWasDisplayed())
+                .count();
+    }
+
+    public void setDisputeSeen(boolean senderFlag) {
+        if (this.disputeState == State.NEW)
+            setState(State.OPEN);
+        refreshAlertLevel(senderFlag);
+    }
+
+    public void setChatMessagesSeen(boolean senderFlag) {
+        getChatMessages().forEach(m -> m.setWasDisplayed(true));
+        refreshAlertLevel(senderFlag);
+    }
+
+    public String getRoleString() {
+        if (disputeOpenerIsMaker) {
+            if (disputeOpenerIsBuyer)
+                return Res.get("support.buyerOfferer");
+            else
+                return Res.get("support.sellerOfferer");
+        } else {
+            if (disputeOpenerIsBuyer)
+                return Res.get("support.buyerTaker");
+            else
+                return Res.get("support.sellerTaker");
+        }
+    }
 
     @Override
     public String toString() {
@@ -313,11 +445,13 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
                 "\n     tradeId='" + tradeId + '\'' +
                 ",\n     id='" + id + '\'' +
                 ",\n     uid='" + uid + '\'' +
+                ",\n     state=" + disputeState +
                 ",\n     traderId=" + traderId +
                 ",\n     disputeOpenerIsBuyer=" + disputeOpenerIsBuyer +
                 ",\n     disputeOpenerIsMaker=" + disputeOpenerIsMaker +
                 ",\n     traderPubKeyRing=" + traderPubKeyRing +
                 ",\n     tradeDate=" + tradeDate +
+                ",\n     tradePeriodEnd=" + tradePeriodEnd +
                 ",\n     contract=" + contract +
                 ",\n     contractHash=" + Utilities.bytesAsHexString(contractHash) +
                 ",\n     depositTxSerialized=" + Utilities.bytesAsHexString(depositTxSerialized) +

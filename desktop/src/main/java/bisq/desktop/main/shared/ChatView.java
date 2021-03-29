@@ -137,10 +137,12 @@ public class ChatView extends AnchorPane {
     private EventHandler<KeyEvent> keyEventEventHandler;
     private SupportManager supportManager;
     private Optional<SupportSession> optionalSupportSession = Optional.empty();
+    private String counterpartyName;
 
-    public ChatView(SupportManager supportManager, CoinFormatter formatter) {
+    public ChatView(SupportManager supportManager, CoinFormatter formatter, String counterpartyName) {
         this.supportManager = supportManager;
         this.formatter = formatter;
+        this.counterpartyName = counterpartyName;
         allowAttachments = true;
         displayHeader = true;
     }
@@ -414,7 +416,11 @@ public class ChatView extends AnchorPane {
                                 AnchorPane.setLeftAnchor(statusHBox, padding);
                             }
                             AnchorPane.setBottomAnchor(statusHBox, 7d);
-                            headerLabel.setText(DisplayUtils.formatDateTime(new Date(message.getDate())));
+                            String metaData = DisplayUtils.formatDateTime(new Date(message.getDate()));
+                            if (!message.isSystemMessage())
+                                metaData = (isMyMsg ? "Sent " : "Received ") + metaData
+                                    + (isMyMsg ? "" : " from " + counterpartyName);
+                            headerLabel.setText(metaData);
                             messageLabel.setText(message.getMessage());
                             attachmentsBox.getChildren().clear();
                             if (allowAttachments &&
@@ -477,7 +483,6 @@ public class ChatView extends AnchorPane {
                             visible = true;
                             icon = AwesomeIcon.OK_SIGN;
                             text = Res.get("support.acknowledged");
-
                         } else if (message.ackErrorProperty().get() != null) {
                             visible = true;
                             icon = AwesomeIcon.EXCLAMATION_SIGN;
@@ -488,12 +493,10 @@ public class ChatView extends AnchorPane {
                             visible = true;
                             icon = AwesomeIcon.OK;
                             text = Res.get("support.arrived");
-                            statusHBox.setOpacity(0.5);
                         } else if (message.storedInMailboxProperty().get()) {
                             visible = true;
                             icon = AwesomeIcon.ENVELOPE;
                             text = Res.get("support.savedInMailbox");
-                            statusHBox.setOpacity(0.5);
                         } else {
                             visible = false;
                             log.debug("updateMsgState called but no msg state available. message={}", message);

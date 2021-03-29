@@ -104,7 +104,8 @@ public class WalletTest extends MethodTest {
         BtcTxFeeRateTest test = new BtcTxFeeRateTest();
 
         test.testGetTxFeeRate(testInfo);
-        test.testSetTxFeeRate(testInfo);
+        test.testSetInvalidTxFeeRateShouldThrowException(testInfo);
+        test.testSetValidTxFeeRate(testInfo);
         test.testUnsetTxFeeRate(testInfo);
     }
 

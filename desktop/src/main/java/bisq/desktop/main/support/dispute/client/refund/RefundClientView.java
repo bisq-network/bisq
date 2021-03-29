@@ -35,6 +35,7 @@ import bisq.core.support.dispute.refund.RefundSession;
 import bisq.core.support.dispute.refund.refundagent.RefundAgentManager;
 import bisq.core.trade.Contract;
 import bisq.core.trade.TradeManager;
+import bisq.core.user.Preferences;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.CoinFormatter;
 
@@ -46,8 +47,6 @@ import bisq.common.crypto.KeyRing;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import javafx.scene.control.TableColumn;
-
 @FxmlView
 public class RefundClientView extends DisputeClientView {
     @Inject
@@ -55,6 +54,7 @@ public class RefundClientView extends DisputeClientView {
                             KeyRing keyRing,
                             TradeManager tradeManager,
                             @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter,
+                            Preferences preferences,
                             DisputeSummaryWindow disputeSummaryWindow,
                             PrivateNotificationManager privateNotificationManager,
                             ContractWindow contractWindow,
@@ -64,7 +64,7 @@ public class RefundClientView extends DisputeClientView {
                             RefundAgentManager refundAgentManager,
                             DaoFacade daoFacade,
                             @Named(Config.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
-        super(refundManager, keyRing, tradeManager, formatter, disputeSummaryWindow,
+        super(refundManager, keyRing, tradeManager, formatter, preferences, disputeSummaryWindow,
                 privateNotificationManager, contractWindow, tradeDetailsWindow, accountAgeWitnessService,
                 mediatorManager, refundAgentManager, daoFacade, useDevPrivilegeKeys);
     }
@@ -86,7 +86,6 @@ public class RefundClientView extends DisputeClientView {
 
     @Override
     protected void maybeAddAgentColumn() {
-        TableColumn<Dispute, Dispute> agentColumn = getAgentColumn();
-        tableView.getColumns().add(agentColumn);
+        tableView.getColumns().add(getAgentColumn());
     }
 }

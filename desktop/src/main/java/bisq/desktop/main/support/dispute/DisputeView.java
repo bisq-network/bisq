@@ -29,8 +29,8 @@ import bisq.desktop.main.overlays.windows.DisputeSummaryWindow;
 import bisq.desktop.main.overlays.windows.SendPrivateNotificationWindow;
 import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
 import bisq.desktop.main.overlays.windows.VerifyDisputeResultSignatureWindow;
-import bisq.desktop.main.shared.ChatView;
 import bisq.desktop.util.DisplayUtils;
+import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
@@ -45,17 +45,20 @@ import bisq.core.support.dispute.DisputeManager;
 import bisq.core.support.dispute.DisputeResult;
 import bisq.core.support.dispute.DisputeSession;
 import bisq.core.support.dispute.agent.DisputeAgentLookupMap;
+import bisq.core.support.dispute.mediation.MediationManager;
 import bisq.core.support.dispute.mediation.mediator.MediatorManager;
 import bisq.core.support.dispute.refund.refundagent.RefundAgentManager;
 import bisq.core.support.messages.ChatMessage;
 import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
+import bisq.core.user.Preferences;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.CoinFormatter;
 
 import bisq.network.p2p.NodeAddress;
 
+import bisq.common.UserThread;
 import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.util.Utilities;
@@ -64,10 +67,13 @@ import org.bitcoinj.core.Coin;
 
 import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 
+import com.jfoenix.controls.JFXBadge;
+
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
@@ -77,6 +83,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -110,6 +117,7 @@ import lombok.Getter;
 import javax.annotation.Nullable;
 
 import static bisq.desktop.util.FormBuilder.getIconForLabel;
+import static bisq.desktop.util.FormBuilder.getRegularIconButton;
 
 public abstract class DisputeView extends ActivatableView<VBox, Void> {
     public enum FilterResult {
@@ -143,6 +151,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
     protected final KeyRing keyRing;
     private final TradeManager tradeManager;
     protected final CoinFormatter formatter;
+    protected final Preferences preferences;
     protected final DisputeSummaryWindow disputeSummaryWindow;
     private final PrivateNotificationManager privateNotificationManager;
     private final ContractWindow contractWindow;
@@ -160,19 +169,21 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
     @Getter
     protected Dispute selectedDispute;
 
-    protected ChatView chatView;
-
-    private ChangeListener<Boolean> selectedDisputeClosedPropertyListener;
     private Subscription selectedDisputeSubscription;
     protected FilteredList<Dispute> filteredList;
     protected InputTextField filterTextField;
     private ChangeListener<String> filterTextFieldListener;
-    protected AutoTooltipButton sigCheckButton, reOpenButton, sendPrivateNotificationButton, reportButton, fullReportButton;
+    protected AutoTooltipButton sigCheckButton, reOpenButton, closeButton, sendPrivateNotificationButton, reportButton, fullReportButton;
     private final Map<String, ListChangeListener<ChatMessage>> disputeChatMessagesListeners = new HashMap<>();
     @Nullable
     private ListChangeListener<Dispute> disputesListener; // Only set in mediation cases
     protected Label alertIconLabel;
     protected TableColumn<Dispute, Dispute> stateColumn;
+    private Map<String, ListChangeListener<ChatMessage>> listenerByDispute = new HashMap<>();
+    private Map<String, Button> chatButtonByDispute = new HashMap<>();
+    private Map<String, JFXBadge> chatBadgeByDispute = new HashMap<>();
+    private Map<String, JFXBadge> newBadgeByDispute = new HashMap<>();
+    protected DisputeChatPopup chatPopup;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -183,6 +194,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
                        KeyRing keyRing,
                        TradeManager tradeManager,
                        CoinFormatter formatter,
+                       Preferences preferences,
                        DisputeSummaryWindow disputeSummaryWindow,
                        PrivateNotificationManager privateNotificationManager,
                        ContractWindow contractWindow,
@@ -196,6 +208,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
         this.keyRing = keyRing;
         this.tradeManager = tradeManager;
         this.formatter = formatter;
+        this.preferences = preferences;
         this.disputeSummaryWindow = disputeSummaryWindow;
         this.privateNotificationManager = privateNotificationManager;
         this.contractWindow = contractWindow;
@@ -205,6 +218,8 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
         this.refundAgentManager = refundAgentManager;
         this.daoFacade = daoFacade;
         this.useDevPrivilegeKeys = useDevPrivilegeKeys;
+        DisputeChatPopup.ChatCallback chatCallback = this::handleOnProcessDispute;
+        chatPopup = new DisputeChatPopup(disputeManager, formatter, preferences, chatCallback);
     }
 
     @Override
@@ -236,6 +251,15 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
         HBox.setHgrow(reOpenButton, Priority.NEVER);
         reOpenButton.setOnAction(e -> {
             reOpenDisputeFromButton();
+        });
+
+        closeButton = new AutoTooltipButton(Res.get("support.closeTicket"));
+        closeButton.setDisable(true);
+        closeButton.setVisible(false);
+        closeButton.setManaged(false);
+        HBox.setHgrow(closeButton, Priority.NEVER);
+        closeButton.setOnAction(e -> {
+            closeDisputeFromButton();
         });
 
         sendPrivateNotificationButton = new AutoTooltipButton(Res.get("support.sendNotificationButton.label"));
@@ -279,6 +303,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
                 alertIconLabel,
                 spacer,
                 reOpenButton,
+                closeButton,
                 sendPrivateNotificationButton,
                 reportButton,
                 fullReportButton,
@@ -292,11 +317,6 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
         root.getChildren().addAll(filterBox, tableView);
 
         setupTable();
-
-        selectedDisputeClosedPropertyListener = (observable, oldValue, newValue) -> chatView.setInputBoxVisible(!newValue);
-
-        chatView = new ChatView(disputeManager, formatter);
-        chatView.initialize();
     }
 
     @Override
@@ -311,7 +331,17 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
         tableView.setItems(sortedList);
 
-        // sortedList.setComparator((o1, o2) -> o2.getOpeningDate().compareTo(o1.getOpeningDate()));
+        // double-click on a row opens chat window
+        tableView.setRowFactory( tv -> {
+            TableRow<Dispute> row = new TableRow<>();
+            row.setOnMouseClicked(event -> {
+                if (event.getClickCount() == 2 && (!row.isEmpty())) {
+                    openChat(row.getItem());
+                }
+            });
+            return row;
+        });
+
         selectedDisputeSubscription = EasyBind.subscribe(tableView.getSelectionModel().selectedItemProperty(), this::onSelectDispute);
 
         Dispute selectedItem = tableView.getSelectionModel().getSelectedItem();
@@ -319,11 +349,6 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
             tableView.getSelectionModel().select(selectedItem);
         else if (sortedList.size() > 0)
             tableView.getSelectionModel().select(0);
-
-        if (chatView != null) {
-            chatView.activate();
-            chatView.scrollToBottom();
-        }
 
         GUIUtil.requestFocus(filterTextField);
     }
@@ -333,10 +358,6 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
         filterTextField.textProperty().removeListener(filterTextFieldListener);
         sortedList.comparatorProperty().unbind();
         selectedDisputeSubscription.unsubscribe();
-        removeListenersOnSelectDispute();
-
-        if (chatView != null)
-            chatView.deactivate();
     }
 
 
@@ -384,6 +405,8 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
     protected abstract SupportType getType();
 
     protected abstract DisputeSession getConcreteDisputeChatSession(Dispute dispute);
+
+    protected abstract boolean senderFlag();    // implemented in the agent / client views
 
     protected void applyFilteredListPredicate(String filterString) {
         AtomicReference<FilterResult> filterResult = new AtomicReference<>(FilterResult.NO_FILTER);
@@ -468,18 +491,37 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
         return FilterResult.NO_MATCH;
     }
 
-
+    // a derived version in the ClientView for users pops up an "Are you sure" box first.
+    // this version includes the sending of an automatic message to the user, see addMediationReOpenedMessage
     protected void reOpenDisputeFromButton() {
         reOpenDispute();
+        disputeManager.addMediationReOpenedMessage(selectedDispute, false);
     }
 
-    protected abstract void handleOnSelectDispute(Dispute dispute);
+    // only applicable to traders
+    // only allow them to close the dispute if the trade is paid out
+    // the reason for having this is that sometimes traders end up with closed disputes that are not "closed" @pazza
+    protected void closeDisputeFromButton() {
+        Optional<Trade> tradeOptional = disputeManager.findTrade(selectedDispute);
+        if (tradeOptional.isPresent() && tradeOptional.get().getPayoutTxId() != null && tradeOptional.get().getPayoutTxId().length() > 0) {
+            selectedDispute.setIsClosed();
+            disputeManager.requestPersistence();
+            onSelectDispute(selectedDispute);
+        } else {
+            new Popup().warning(Res.get("support.warning.traderCloseOwnDisputeWarning")).show();
+        }
+    }
+
+    protected void handleOnProcessDispute(Dispute dispute) {
+        // overridden by clients that use it (dispute agents)
+    }
 
     protected void reOpenDispute() {
-        if (selectedDispute != null) {
-            selectedDispute.setIsClosed(false);
-            handleOnSelectDispute(selectedDispute);
+        if (selectedDispute != null && selectedDispute.isClosed()) {
+            selectedDispute.reOpen();
+            handleOnProcessDispute(selectedDispute);
             disputeManager.requestPersistence();
+            onSelectDispute(selectedDispute);
         }
     }
 
@@ -488,46 +530,21 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
     // UI actions
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void onOpenContract(Dispute dispute) {
+    protected void onOpenContract(Dispute dispute) {
+        dispute.setDisputeSeen(senderFlag());
         contractWindow.show(dispute);
     }
 
-    private void removeListenersOnSelectDispute() {
-        if (selectedDispute != null) {
-            if (selectedDisputeClosedPropertyListener != null)
-                selectedDispute.isClosedProperty().removeListener(selectedDisputeClosedPropertyListener);
-        }
-    }
-
-    private void addListenersOnSelectDispute() {
-        if (selectedDispute != null)
-            selectedDispute.isClosedProperty().addListener(selectedDisputeClosedPropertyListener);
-    }
-
     private void onSelectDispute(Dispute dispute) {
-        removeListenersOnSelectDispute();
         if (dispute == null) {
-            if (root.getChildren().size() > 2) {
-                root.getChildren().remove(2);
-            }
-
             selectedDispute = null;
         } else if (selectedDispute != dispute) {
             selectedDispute = dispute;
-            if (chatView != null) {
-                handleOnSelectDispute(dispute);
-            }
-
-            if (root.getChildren().size() > 2) {
-                root.getChildren().remove(2);
-            }
-            root.getChildren().add(2, chatView);
         }
 
         reOpenButton.setDisable(selectedDispute == null || !selectedDispute.isClosed());
+        closeButton.setDisable(selectedDispute == null || selectedDispute.isClosed());
         sendPrivateNotificationButton.setDisable(selectedDispute == null);
-
-        addListenersOnSelectDispute();
     }
 
 
@@ -887,10 +904,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
         tableView.setPlaceholder(placeholder);
         tableView.getSelectionModel().clearSelection();
 
-        tableView.getColumns().add(getSelectColumn());
-
-        TableColumn<Dispute, Dispute> contractColumn = getContractColumn();
-        tableView.getColumns().add(contractColumn);
+        tableView.getColumns().add(getContractColumn());
 
         TableColumn<Dispute, Dispute> dateColumn = getDateColumn();
         tableView.getColumns().add(dateColumn);
@@ -904,17 +918,18 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
         TableColumn<Dispute, Dispute> sellerOnionAddressColumn = getSellerOnionAddressColumn();
         tableView.getColumns().add(sellerOnionAddressColumn);
 
-
         TableColumn<Dispute, Dispute> marketColumn = getMarketColumn();
         tableView.getColumns().add(marketColumn);
 
-        TableColumn<Dispute, Dispute> roleColumn = getRoleColumn();
-        tableView.getColumns().add(roleColumn);
+        tableView.getColumns().add(getRoleColumn());
 
         maybeAddAgentColumn();
 
         stateColumn = getStateColumn();
         tableView.getColumns().add(stateColumn);
+
+        maybeAddProcessColumn();
+        tableView.getColumns().add(getChatColumn());
 
         tradeIdColumn.setComparator(Comparator.comparing(Dispute::getTradeId));
         dateColumn.setComparator(Comparator.comparing(Dispute::getOpeningDate));
@@ -926,6 +941,10 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
         tableView.getSortOrder().add(dateColumn);
     }
 
+    protected void maybeAddProcessColumn() {
+        // Only relevant client views will impl it
+    }
+
     protected void maybeAddAgentColumn() {
         // Only relevant client views will impl it
     }
@@ -935,41 +954,42 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
         return null;
     }
 
-    private TableColumn<Dispute, Dispute> getSelectColumn() {
-        TableColumn<Dispute, Dispute> column = new AutoTooltipTableColumn<>(Res.get("shared.select"));
-        column.setMinWidth(80);
-        column.setMaxWidth(80);
-        column.setSortable(false);
-        column.getStyleClass().add("first-column");
-
-        column.setCellValueFactory((addressListItem) ->
-                new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
+    private TableColumn<Dispute, Dispute> getContractColumn() {
+        TableColumn<Dispute, Dispute> column = new AutoTooltipTableColumn<>(Res.get("shared.details")) {
+            {
+                setMaxWidth(150);
+                setMinWidth(80);
+                getStyleClass().addAll("first-column", "avatar-column");
+                setSortable(false);
+            }
+        };
+        column.setCellValueFactory((dispute) -> new ReadOnlyObjectWrapper<>(dispute.getValue()));
         column.setCellFactory(
                 new Callback<>() {
-
                     @Override
-                    public TableCell<Dispute, Dispute> call(TableColumn<Dispute,
-                            Dispute> column) {
+                    public TableCell<Dispute, Dispute> call(TableColumn<Dispute, Dispute> column) {
                         return new TableCell<>() {
-
-                            Button button;
-
                             @Override
                             public void updateItem(final Dispute item, boolean empty) {
                                 super.updateItem(item, empty);
-
                                 if (item != null && !empty) {
-                                    if (button == null) {
-                                        button = new AutoTooltipButton(Res.get("shared.select"));
-                                        setGraphic(button);
-                                    }
-                                    button.setOnAction(e -> tableView.getSelectionModel().select(item));
+                                    Button button = getRegularIconButton(MaterialDesignIcon.INFORMATION_OUTLINE);
+                                    JFXBadge badge = new JFXBadge(new Label(""), Pos.BASELINE_RIGHT);
+                                    badge.setPosition(Pos.TOP_RIGHT);
+                                    badge.setVisible(item.isNew());
+                                    badge.setText("New");
+                                    badge.getStyleClass().add("new");
+                                    newBadgeByDispute.put(item.getId(), badge);
+                                    HBox hBox = new HBox(button, badge);
+                                    setGraphic(hBox);
+                                    button.setOnAction(e -> {
+                                        tableView.getSelectionModel().select(this.getIndex());
+                                        onOpenContract(item);
+                                        item.setDisputeSeen(senderFlag());
+                                        badge.setVisible(item.isNew());
+                                    });
                                 } else {
                                     setGraphic(null);
-                                    if (button != null) {
-                                        button.setOnAction(null);
-                                        button = null;
-                                    }
                                 }
                             }
                         };
@@ -978,38 +998,94 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
         return column;
     }
 
-    private TableColumn<Dispute, Dispute> getContractColumn() {
-        TableColumn<Dispute, Dispute> column = new AutoTooltipTableColumn<>(Res.get("shared.details")) {
+    protected TableColumn<Dispute, Dispute> getProcessColumn() {
+        TableColumn<Dispute, Dispute> column = new AutoTooltipTableColumn<>(Res.get("support.process")) {
             {
-                setMinWidth(80);
+                setMaxWidth(50);
+                setMinWidth(50);
+                getStyleClass().addAll("avatar-column");
                 setSortable(false);
             }
         };
         column.setCellValueFactory((dispute) -> new ReadOnlyObjectWrapper<>(dispute.getValue()));
         column.setCellFactory(
                 new Callback<>() {
-
                     @Override
                     public TableCell<Dispute, Dispute> call(TableColumn<Dispute, Dispute> column) {
                         return new TableCell<>() {
-                            Button button;
-
                             @Override
                             public void updateItem(final Dispute item, boolean empty) {
                                 super.updateItem(item, empty);
-
                                 if (item != null && !empty) {
-                                    if (button == null) {
-                                        button = new AutoTooltipButton(Res.get("shared.details"));
-                                        setGraphic(button);
-                                    }
-                                    button.setOnAction(e -> onOpenContract(item));
+                                    Button button = getRegularIconButton(MaterialDesignIcon.GAVEL);
+                                    button.setOnAction(e -> {
+                                        tableView.getSelectionModel().select(this.getIndex());
+                                        handleOnProcessDispute(item);
+                                        item.setDisputeSeen(senderFlag());
+                                        newBadgeByDispute.get(item.getId()).setVisible(item.isNew());
+                                    });
+                                    HBox hBox = new HBox(button);
+                                    hBox.setAlignment(Pos.CENTER);
+                                    setGraphic(hBox);
                                 } else {
                                     setGraphic(null);
-                                    if (button != null) {
-                                        button.setOnAction(null);
-                                        button = null;
+                                }
+                            }
+                        };
+                    }
+                });
+        return column;
+    }
+
+    private TableColumn<Dispute, Dispute> getChatColumn() {
+        TableColumn<Dispute, Dispute> column = new AutoTooltipTableColumn<>(Res.get("support.chat")) {
+            {
+                setMaxWidth(40);
+                setMinWidth(40);
+                getStyleClass().addAll("avatar-column");
+                setSortable(false);
+            }
+        };
+        column.setCellValueFactory((dispute) -> new ReadOnlyObjectWrapper<>(dispute.getValue()));
+        column.setCellFactory(
+                new Callback<>() {
+                    @Override
+                    public TableCell<Dispute, Dispute> call(TableColumn<Dispute, Dispute> column) {
+                        return new TableCell<>() {
+                            @Override
+                            public void updateItem(final Dispute item, boolean empty) {
+                                super.updateItem(item, empty);
+                                if (item != null && !empty) {
+                                    String id = item.getId();
+                                    Button button;
+                                    if (!chatButtonByDispute.containsKey(id)) {
+                                        button = FormBuilder.getIconButton(MaterialDesignIcon.COMMENT_MULTIPLE_OUTLINE);
+                                        chatButtonByDispute.put(id, button);
+                                        button.setTooltip(new Tooltip(Res.get("tradeChat.openChat")));
+                                    } else {
+                                        button = chatButtonByDispute.get(id);
                                     }
+                                    JFXBadge chatBadge;
+                                    if (!chatBadgeByDispute.containsKey(id)) {
+                                        chatBadge = new JFXBadge(button);
+                                        chatBadgeByDispute.put(id, chatBadge);
+                                        chatBadge.setPosition(Pos.TOP_RIGHT);
+                                    } else {
+                                        chatBadge = chatBadgeByDispute.get(id);
+                                    }
+                                    button.setOnAction(e -> {
+                                        tableView.getSelectionModel().select(this.getIndex());
+                                        openChat(item);
+                                    });
+                                    if (!listenerByDispute.containsKey(id)) {
+                                        ListChangeListener<ChatMessage> listener = c -> updateChatMessageCount(item, chatBadge);
+                                        listenerByDispute.put(id, listener);
+                                        item.getChatMessages().addListener(listener);
+                                    }
+                                    updateChatMessageCount(item, chatBadge);
+                                    setGraphic(chatBadge);
+                                } else {
+                                    setGraphic(null);
                                 }
                             }
                         };
@@ -1063,18 +1139,19 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
                                 super.updateItem(item, empty);
 
                                 if (item != null && !empty) {
-                                    field = new HyperlinkWithIcon(item.getShortTradeId());
                                     Optional<Trade> tradeOptional = tradeManager.getTradeById(item.getTradeId());
                                     if (tradeOptional.isPresent()) {
+                                        field = new HyperlinkWithIcon(item.getShortTradeId());
                                         field.setMouseTransparent(false);
                                         field.setTooltip(new Tooltip(Res.get("tooltip.openPopupForDetails")));
                                         field.setOnAction(event -> tradeDetailsWindow.show(tradeOptional.get()));
                                     } else {
-                                        field.setMouseTransparent(true);
+                                        setText(item.getShortTradeId());
                                     }
                                     setGraphic(field);
                                 } else {
                                     setGraphic(null);
+                                    setText("");
                                     if (field != null)
                                         field.setOnAction(null);
                                 }
@@ -1214,10 +1291,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
                             public void updateItem(final Dispute item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
-                                    if (item.isDisputeOpenerIsMaker())
-                                        setText(item.isDisputeOpenerIsBuyer() ? Res.get("support.buyerOfferer") : Res.get("support.sellerOfferer"));
-                                    else
-                                        setText(item.isDisputeOpenerIsBuyer() ? Res.get("support.buyerTaker") : Res.get("support.sellerTaker"));
+                                    setText(item.getRoleString());
                                 } else {
                                     setText("");
                                 }
@@ -1291,14 +1365,14 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
                                     listener = (observable, oldValue, newValue) -> {
                                         setText(newValue ? Res.get("support.closed") : Res.get("support.open"));
                                         if (getTableRow() != null)
-                                            getTableRow().setOpacity(newValue ? 0.4 : 1);
+                                            getTableRow().setOpacity(newValue && item.getBadgeCountProperty().get() == 0 ? 0.4 : 1);
                                     };
                                     closedProperty = item.isClosedProperty();
                                     closedProperty.addListener(listener);
                                     boolean isClosed = item.isClosed();
                                     setText(isClosed ? Res.get("support.closed") : Res.get("support.open"));
                                     if (getTableRow() != null)
-                                        getTableRow().setOpacity(isClosed ? 0.4 : 1);
+                                        getTableRow().setOpacity(isClosed && item.getBadgeCountProperty().get() == 0  ? 0.4 : 1);
                                 } else {
                                     if (closedProperty != null) {
                                         closedProperty.removeListener(listener);
@@ -1312,6 +1386,43 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
                 });
         return column;
     }
+
+    private void openChat(Dispute dispute) {
+        chatPopup.openChat(dispute, getConcreteDisputeChatSession(dispute), getCounterpartyName());
+        dispute.setDisputeSeen(senderFlag());
+        newBadgeByDispute.get(dispute.getId()).setVisible(dispute.isNew());
+        updateChatMessageCount(dispute, chatBadgeByDispute.get(dispute.getId()));
+    }
+
+    private void updateChatMessageCount(Dispute dispute, JFXBadge chatBadge) {
+        if (chatBadge == null)
+            return;
+        // when the chat popup is active, we do not display new message count indicator for that item
+        if (chatPopup.isChatShown() && selectedDispute != null && dispute.getId().equals(selectedDispute.getId())) {
+            chatBadge.setText("");
+            chatBadge.setEnabled(false);
+            chatBadge.refreshBadge();
+            // have to UserThread.execute or the new message will be sent to peer as "read"
+            UserThread.execute(() -> dispute.setChatMessagesSeen(senderFlag()));
+            return;
+        }
+
+        if (dispute.unreadMessageCount(senderFlag()) > 0) {
+            chatBadge.setText(String.valueOf(dispute.unreadMessageCount(senderFlag())));
+            chatBadge.setEnabled(true);
+        } else {
+            chatBadge.setText("");
+            chatBadge.setEnabled(false);
+        }
+        chatBadge.refreshBadge();
+        dispute.refreshAlertLevel(senderFlag());
+    }
+
+    private String getCounterpartyName() {
+        if (senderFlag()) {
+            return Res.get("offerbook.trader");
+        } else {
+            return (disputeManager instanceof MediationManager) ? Res.get("shared.mediator") : Res.get("shared.refundAgent");
+        }
+    }
 }
-
-

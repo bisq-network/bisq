@@ -23,6 +23,7 @@ import bisq.network.utils.Utils;
 import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.proto.network.NetworkProtoResolver;
+import bisq.common.util.Utilities;
 
 import org.berndpruenster.netlayer.tor.HiddenServiceSocket;
 import org.berndpruenster.netlayer.tor.Tor;
@@ -31,7 +32,6 @@ import org.berndpruenster.netlayer.tor.TorSocket;
 
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 
-import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -55,7 +55,6 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -310,13 +309,8 @@ public class TorNetworkNode extends NetworkNode {
 
             return null;
         });
-        Futures.addCallback(torStartupFuture, new FutureCallback<Void>() {
-            public void onSuccess(Void ignore) {
-            }
-
-            public void onFailure(@NotNull Throwable throwable) {
-                UserThread.execute(() -> log.error("Hidden service creation failed: " + throwable));
-            }
-        }, MoreExecutors.directExecutor());
+        Futures.addCallback(torStartupFuture, Utilities.failureCallback(throwable ->
+                UserThread.execute(() -> log.error("Hidden service creation failed: " + throwable))
+        ), MoreExecutors.directExecutor());
     }
 }

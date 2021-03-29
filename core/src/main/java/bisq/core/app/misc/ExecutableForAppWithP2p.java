@@ -94,7 +94,7 @@ public abstract class ExecutableForAppWithP2p extends BisqExecutable {
                     injector.getInstance(WalletsSetup.class).shutDownComplete.addListener((ov, o, n) -> {
                         module.close(injector);
 
-                        PersistenceManager.flushAllDataToDisk(() -> {
+                        PersistenceManager.flushAllDataToDiskAtShutdown(() -> {
                             resultHandler.handleResult();
                             log.info("Graceful shutdown completed. Exiting now.");
                             UserThread.runAfter(() -> System.exit(BisqExecutable.EXIT_SUCCESS), 1);
@@ -106,7 +106,7 @@ public abstract class ExecutableForAppWithP2p extends BisqExecutable {
                 }));
                 // we wait max 5 sec.
                 UserThread.runAfter(() -> {
-                    PersistenceManager.flushAllDataToDisk(() -> {
+                    PersistenceManager.flushAllDataToDiskAtShutdown(() -> {
                         resultHandler.handleResult();
                         log.info("Graceful shutdown caused a timeout. Exiting now.");
                         UserThread.runAfter(() -> System.exit(BisqExecutable.EXIT_SUCCESS), 1);
@@ -121,7 +121,7 @@ public abstract class ExecutableForAppWithP2p extends BisqExecutable {
         } catch (Throwable t) {
             log.debug("App shutdown failed with exception");
             t.printStackTrace();
-            PersistenceManager.flushAllDataToDisk(() -> {
+            PersistenceManager.flushAllDataToDiskAtShutdown(() -> {
                 resultHandler.handleResult();
                 log.info("Graceful shutdown resulted in an error. Exiting now.");
                 UserThread.runAfter(() -> System.exit(BisqExecutable.EXIT_FAILURE), 1);

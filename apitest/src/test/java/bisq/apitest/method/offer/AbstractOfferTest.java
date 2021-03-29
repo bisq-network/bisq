@@ -18,20 +18,12 @@
 package bisq.apitest.method.offer;
 
 import bisq.core.monetary.Altcoin;
-import bisq.core.payment.PaymentAccount;
-
-import bisq.proto.grpc.CreateOfferRequest;
-import bisq.proto.grpc.GetMyOffersRequest;
-import bisq.proto.grpc.GetOffersRequest;
-import bisq.proto.grpc.OfferInfo;
 
 import org.bitcoinj.utils.Fiat;
 
 import java.math.BigDecimal;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import org.junit.jupiter.api.AfterAll;
@@ -44,20 +36,18 @@ import static bisq.apitest.config.BisqAppConfig.bobdaemon;
 import static bisq.apitest.config.BisqAppConfig.seednode;
 import static bisq.common.util.MathUtils.roundDouble;
 import static bisq.common.util.MathUtils.scaleDownByPowerOf10;
-import static bisq.core.btc.wallet.Restrictions.getDefaultBuyerSecurityDepositAsPercent;
 import static bisq.core.locale.CurrencyUtil.isCryptoCurrency;
-import static java.lang.String.format;
 import static java.math.RoundingMode.HALF_UP;
-import static java.util.Comparator.comparing;
-import static org.junit.jupiter.api.Assertions.fail;
 
 
 
 import bisq.apitest.method.MethodTest;
-import bisq.cli.GrpcStubs;
 
 @Slf4j
 public abstract class AbstractOfferTest extends MethodTest {
+
+    @Setter
+    protected static boolean isLongRunningTest;
 
     @BeforeAll
     public static void setUp() {
@@ -70,107 +60,9 @@ public abstract class AbstractOfferTest extends MethodTest {
                 bobdaemon);
     }
 
-    protected final OfferInfo createAliceOffer(PaymentAccount paymentAccount,
-                                               String direction,
-                                               String currencyCode,
-                                               long amount,
-                                               String makerFeeCurrencyCode) {
-        return createMarketBasedPricedOffer(aliceStubs,
-                paymentAccount,
-                direction,
-                currencyCode,
-                amount,
-                makerFeeCurrencyCode);
-    }
-
-    protected final OfferInfo createBobOffer(PaymentAccount paymentAccount,
-                                             String direction,
-                                             String currencyCode,
-                                             long amount,
-                                             String makerFeeCurrencyCode) {
-        return createMarketBasedPricedOffer(bobStubs,
-                paymentAccount,
-                direction,
-                currencyCode,
-                amount,
-                makerFeeCurrencyCode);
-    }
-
-    protected final OfferInfo createMarketBasedPricedOffer(GrpcStubs grpcStubs,
-                                                           PaymentAccount paymentAccount,
-                                                           String direction,
-                                                           String currencyCode,
-                                                           long amount,
-                                                           String makerFeeCurrencyCode) {
-        var req = CreateOfferRequest.newBuilder()
-                .setPaymentAccountId(paymentAccount.getId())
-                .setDirection(direction)
-                .setCurrencyCode(currencyCode)
-                .setAmount(amount)
-                .setMinAmount(amount)
-                .setUseMarketBasedPrice(true)
-                .setMarketPriceMargin(0.00)
-                .setPrice("0")
-                .setBuyerSecurityDeposit(getDefaultBuyerSecurityDepositAsPercent())
-                .setMakerFeeCurrencyCode(makerFeeCurrencyCode)
-                .build();
-        return grpcStubs.offersService.createOffer(req).getOffer();
-    }
-
-    protected final OfferInfo getOffer(String offerId) {
-        return aliceStubs.offersService.getOffer(createGetOfferRequest(offerId)).getOffer();
-    }
-
-    protected final OfferInfo getMyOffer(String offerId) {
-        return aliceStubs.offersService.getMyOffer(createGetMyOfferRequest(offerId)).getOffer();
-    }
-
-    @SuppressWarnings("ResultOfMethodCallIgnored")
-    protected final void cancelOffer(GrpcStubs grpcStubs, String offerId) {
-        grpcStubs.offersService.cancelOffer(createCancelOfferRequest(offerId));
-    }
-
-    protected final OfferInfo getMostRecentOffer(GrpcStubs grpcStubs, String direction, String currencyCode) {
-        List<OfferInfo> offerInfoList = getOffersSortedByDate(grpcStubs, direction, currencyCode);
-        if (offerInfoList.isEmpty())
-            fail(format("No %s offers found for currency %s", direction, currencyCode));
-
-        return offerInfoList.get(offerInfoList.size() - 1);
-    }
-
-    protected final List<OfferInfo> getOffersSortedByDate(GrpcStubs grpcStubs,
-                                                          String direction,
-                                                          String currencyCode) {
-        var req = GetOffersRequest.newBuilder()
-                .setDirection(direction)
-                .setCurrencyCode(currencyCode).build();
-        var reply = grpcStubs.offersService.getOffers(req);
-        return sortOffersByDate(reply.getOffersList());
-    }
-
-    protected final List<OfferInfo> getMyOffersSortedByDate(GrpcStubs grpcStubs,
-                                                            String direction,
-                                                            String currencyCode) {
-        var req = GetMyOffersRequest.newBuilder()
-                .setDirection(direction)
-                .setCurrencyCode(currencyCode).build();
-        var reply = grpcStubs.offersService.getMyOffers(req);
-        return sortOffersByDate(reply.getOffersList());
-    }
-
-    protected final List<OfferInfo> sortOffersByDate(List<OfferInfo> offerInfoList) {
-        return offerInfoList.stream()
-                .sorted(comparing(OfferInfo::getDate))
-                .collect(Collectors.toList());
-    }
-
     protected double getScaledOfferPrice(double offerPrice, String currencyCode) {
         int precision = isCryptoCurrency(currencyCode) ? Altcoin.SMALLEST_UNIT_EXPONENT : Fiat.SMALLEST_UNIT_EXPONENT;
         return scaleDownByPowerOf10(offerPrice, precision);
-    }
-
-    protected final double getMarketPrice(String currencyCode) {
-        return getMarketPrice(alicedaemon, currencyCode);
     }
 
     protected final double getPercentageDifference(double price1, double price2) {

@@ -169,6 +169,8 @@ public class FilterWindow extends Overlay<FilterWindow> {
                 Res.get("filterWindow.bannedPrivilegedDevPubKeys")).second;
         InputTextField autoConfExplorersTF = addTopLabelInputTextField(gridPane, ++rowIndex,
                 Res.get("filterWindow.autoConfExplorers")).second;
+        CheckBox disableMempoolValidationCheckBox = addLabelCheckBox(gridPane, ++rowIndex,
+                Res.get("filterWindow.disableMempoolValidation"));
         CheckBox disableApiCheckBox = addLabelCheckBox(gridPane, ++rowIndex,
                 Res.get("filterWindow.disableApi"));
 
@@ -196,6 +198,7 @@ public class FilterWindow extends Overlay<FilterWindow> {
             disableAutoConfCheckBox.setSelected(filter.isDisableAutoConf());
             disableDaoBelowVersionTF.setText(filter.getDisableDaoBelowVersion());
             disableTradeBelowVersionTF.setText(filter.getDisableTradeBelowVersion());
+            disableMempoolValidationCheckBox.setSelected(filter.isDisableMempoolValidation());
             disableApiCheckBox.setSelected(filter.isDisableApi());
         }
 
@@ -231,6 +234,7 @@ public class FilterWindow extends Overlay<FilterWindow> {
                         disableAutoConfCheckBox.isSelected(),
                         readAsList(autoConfExplorersTF),
                         new HashSet<>(readAsList(bannedFromNetworkTF)),
+                        disableMempoolValidationCheckBox.isSelected(),
                         disableApiCheckBox.isSelected()
                 );
 

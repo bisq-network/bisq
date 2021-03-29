@@ -33,20 +33,16 @@ public class CreateOfferOptionParser extends AbstractMethodOptionParser implemen
             .defaultsTo(EMPTY);
 
     final OptionSpec<String> directionOpt = parser.accepts(OPT_DIRECTION, "offer direction (buy|sell)")
-            .withRequiredArg()
-            .defaultsTo(EMPTY);
+            .withRequiredArg();
 
     final OptionSpec<String> currencyCodeOpt = parser.accepts(OPT_CURRENCY_CODE, "currency code (eur|usd|...)")
-            .withRequiredArg()
-            .defaultsTo(EMPTY);
+            .withRequiredArg();
 
     final OptionSpec<String> amountOpt = parser.accepts(OPT_AMOUNT, "amount of btc to buy or sell")
-            .withRequiredArg()
-            .defaultsTo(EMPTY);
+            .withRequiredArg();
 
     final OptionSpec<String> minAmountOpt = parser.accepts(OPT_MIN_AMOUNT, "minimum amount of btc to buy or sell")
-            .withOptionalArg()
-            .defaultsTo(EMPTY);
+            .withOptionalArg();
 
     final OptionSpec<String> mktPriceMarginOpt = parser.accepts(OPT_MKT_PRICE_MARGIN, "market btc price margin (%)")
             .withOptionalArg()
@@ -54,11 +50,10 @@ public class CreateOfferOptionParser extends AbstractMethodOptionParser implemen
 
     final OptionSpec<String> fixedPriceOpt = parser.accepts(OPT_FIXED_PRICE, "fixed btc price")
             .withOptionalArg()
-            .defaultsTo(EMPTY);
+            .defaultsTo("0");
 
     final OptionSpec<String> securityDepositOpt = parser.accepts(OPT_SECURITY_DEPOSIT, "maker security deposit (%)")
-            .withRequiredArg()
-            .defaultsTo(EMPTY);
+            .withRequiredArg();
 
     final OptionSpec<String> makerFeeCurrencyCodeOpt = parser.accepts(OPT_FEE_CURRENCY, "maker fee currency code (bsq|btc)")
             .withOptionalArg()
@@ -75,19 +70,28 @@ public class CreateOfferOptionParser extends AbstractMethodOptionParser implemen
         if (options.has(helpOpt))
             return this;
 
-        if (!options.has(paymentAccountIdOpt))
+        if (!options.has(paymentAccountIdOpt) || options.valueOf(paymentAccountIdOpt).isEmpty())
             throw new IllegalArgumentException("no payment account id specified");
 
-        if (!options.has(directionOpt))
+        if (!options.has(directionOpt) || options.valueOf(directionOpt).isEmpty())
             throw new IllegalArgumentException("no direction (buy|sell) specified");
 
-        if (!options.has(amountOpt))
+        if (!options.has(currencyCodeOpt) || options.valueOf(currencyCodeOpt).isEmpty())
+            throw new IllegalArgumentException("no currency code specified");
+
+        if (!options.has(amountOpt) || options.valueOf(amountOpt).isEmpty())
             throw new IllegalArgumentException("no btc amount specified");
 
         if (!options.has(mktPriceMarginOpt) && !options.has(fixedPriceOpt))
             throw new IllegalArgumentException("no market price margin or fixed price specified");
 
-        if (!options.has(securityDepositOpt))
+        if (options.has(mktPriceMarginOpt) && options.valueOf(mktPriceMarginOpt).isEmpty())
+            throw new IllegalArgumentException("no market price margin specified");
+
+        if (options.has(fixedPriceOpt) && options.valueOf(fixedPriceOpt).isEmpty())
+            throw new IllegalArgumentException("no fixed price specified");
+
+        if (!options.has(securityDepositOpt) || options.valueOf(securityDepositOpt).isEmpty())
             throw new IllegalArgumentException("no security deposit specified");
 
         return this;

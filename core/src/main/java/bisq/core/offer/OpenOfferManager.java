@@ -17,6 +17,7 @@
 
 package bisq.core.offer;
 
+import bisq.core.api.CoreContext;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
@@ -101,6 +102,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     private static final long REPUBLISH_INTERVAL_MS = TimeUnit.MINUTES.toMillis(40);
     private static final long REFRESH_INTERVAL_MS = TimeUnit.MINUTES.toMillis(6);
 
+    private final CoreContext coreContext;
     private final CreateOfferService createOfferService;
     private final KeyRing keyRing;
     private final User user;
@@ -133,7 +135,8 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public OpenOfferManager(CreateOfferService createOfferService,
+    public OpenOfferManager(CoreContext coreContext,
+                            CreateOfferService createOfferService,
                             KeyRing keyRing,
                             User user,
                             P2PService p2PService,
@@ -152,6 +155,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                             FilterManager filterManager,
                             Broadcaster broadcaster,
                             PersistenceManager<TradableList<OpenOffer>> persistenceManager) {
+        this.coreContext = coreContext;
         this.createOfferService = createOfferService;
         this.keyRing = keyRing;
         this.user = user;
@@ -658,7 +662,11 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                                 availabilityResult = AvailabilityResult.MARKET_PRICE_NOT_AVAILABLE;
                             } catch (Throwable e) {
                                 log.warn("Trade price check failed. " + e.getMessage());
-                                availabilityResult = AvailabilityResult.UNKNOWN_FAILURE;
+                                if (coreContext.isApiUser())
+                                    // Give api user something more than 'unknown_failure'.
+                                    availabilityResult = AvailabilityResult.PRICE_CHECK_FAILED;
+                                else
+                                    availabilityResult = AvailabilityResult.UNKNOWN_FAILURE;
                             }
                         } else {
                             availabilityResult = AvailabilityResult.USER_IGNORED;

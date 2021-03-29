@@ -41,7 +41,7 @@ public class GetPaymentMethodsTest extends MethodTest {
     @Test
     @Order(1)
     public void testGetPaymentMethods() {
-        List<String> paymentMethodIds = getPaymentMethods(alicedaemon)
+        List<String> paymentMethodIds = aliceClient.getPaymentMethods()
                 .stream()
                 .map(PaymentMethod::getId)
                 .collect(Collectors.toList());

@@ -130,6 +130,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     private ChangeListener<String> tradeErrorListener;
     private ChangeListener<Offer.State> offerStateListener;
     private ChangeListener<String> offerErrorListener;
+    private ChangeListener<Number> getMempoolStatusListener;
     private ConnectionListener connectionListener;
     //  private Subscription isFeeSufficientSubscription;
     private Runnable takeOfferSucceededHandler;
@@ -462,6 +463,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         boolean inputDataValid = isBtcInputValid(amount.get()).isValid
                 && dataModel.isMinAmountLessOrEqualAmount()
                 && !dataModel.isAmountLargerThanOfferAmount()
+                && dataModel.mempoolStatus.get() >= 0 // TODO do we want to block in case response is slow (tor can be slow)?
                 && isOfferAvailable.get()
                 && !dataModel.wouldCreateDustForMaker();
         isNextButtonDisabled.set(!inputDataValid);
@@ -509,6 +511,13 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         tradeStateListener = (ov, oldValue, newValue) -> applyTradeState();
         tradeErrorListener = (ov, oldValue, newValue) -> applyTradeErrorMessage(newValue);
         offerStateListener = (ov, oldValue, newValue) -> applyOfferState(newValue);
+
+        getMempoolStatusListener = (observable, oldValue, newValue) -> {
+            if (newValue.longValue() >= 0) {
+                updateButtonDisableState();
+            }
+        };
+
         connectionListener = new ConnectionListener() {
             @Override
             public void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection) {
@@ -558,6 +567,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         dataModel.getAmount().addListener(amountAsCoinListener);
 
         dataModel.getIsBtcWalletFunded().addListener(isWalletFundedListener);
+        dataModel.getMempoolStatus().addListener(getMempoolStatusListener);
         p2PService.getNetworkNode().addConnectionListener(connectionListener);
        /* isFeeSufficientSubscription = EasyBind.subscribe(dataModel.isFeeFromFundingTxSufficient, newValue -> {
             updateButtonDisableState();
@@ -570,6 +580,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
 
         // Binding with Bindings.createObjectBinding does not work because of bi-directional binding
         dataModel.getAmount().removeListener(amountAsCoinListener);
+        dataModel.getMempoolStatus().removeListener(getMempoolStatusListener);
 
         dataModel.getIsBtcWalletFunded().removeListener(isWalletFundedListener);
         if (offer != null) {
@@ -631,6 +642,17 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
 
     boolean isSeller() {
         return dataModel.getDirection() == OfferPayload.Direction.BUY;
+    }
+
+    public boolean isSellingToAnUnsignedAccount(Offer offer) {
+        if (offer.getDirection() == OfferPayload.Direction.BUY &&
+                PaymentMethod.hasChargebackRisk(offer.getPaymentMethod(), offer.getCurrencyCode())) {
+            // considered risky when either UNSIGNED, PEER_INITIAL, or BANNED (see #5343)
+            return accountAgeWitnessService.getSignState(offer) == AccountAgeWitnessService.SignState.UNSIGNED ||
+                    accountAgeWitnessService.getSignState(offer) == AccountAgeWitnessService.SignState.PEER_INITIAL ||
+                    accountAgeWitnessService.getSignState(offer) == AccountAgeWitnessService.SignState.BANNED;
+        }
+        return false;
     }
 
     private InputValidator.ValidationResult isBtcInputValid(String input) {

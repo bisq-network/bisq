@@ -36,6 +36,7 @@ import bisq.core.support.dispute.arbitration.ArbitrationSession;
 import bisq.core.support.dispute.mediation.mediator.MediatorManager;
 import bisq.core.support.dispute.refund.refundagent.RefundAgentManager;
 import bisq.core.trade.TradeManager;
+import bisq.core.user.Preferences;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.CoinFormatter;
 
@@ -53,6 +54,7 @@ public class ArbitratorView extends DisputeAgentView {
                           KeyRing keyRing,
                           TradeManager tradeManager,
                           @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter,
+                          Preferences preferences,
                           DisputeSummaryWindow disputeSummaryWindow,
                           PrivateNotificationManager privateNotificationManager,
                           ContractWindow contractWindow,
@@ -66,6 +68,7 @@ public class ArbitratorView extends DisputeAgentView {
                 keyRing,
                 tradeManager,
                 formatter,
+                preferences,
                 disputeSummaryWindow,
                 privateNotificationManager,
                 contractWindow,
@@ -94,7 +97,8 @@ public class ArbitratorView extends DisputeAgentView {
         // This code path is not tested and it is not assumed that it is still be used as old arbitrators would use
         // their old Bisq version if still cases are pending.
         if (protocolVersion == 1) {
-            disputeSummaryWindow.onFinalizeDispute(() -> chatView.removeInputBox()).show(dispute);
+            chatPopup.closeChat();
+            disputeSummaryWindow.show(dispute);
         } else {
             new Popup().warning(Res.get("support.wrongVersion", protocolVersion)).show();
         }

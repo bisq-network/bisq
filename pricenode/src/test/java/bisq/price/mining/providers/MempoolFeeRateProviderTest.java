@@ -28,6 +28,7 @@ import java.time.Instant;
 
 import org.junit.jupiter.api.Test;
 
+import static java.lang.Thread.sleep;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -60,12 +61,15 @@ public class MempoolFeeRateProviderTest {
         MempoolFeeRateProvider dummyProvider = new MempoolFeeRateProvider.First(env) {
             @Override
             protected FeeRate doGet() {
-                return new FeeRate("BTC", feeRate, Instant.now().getEpochSecond());
+                return new FeeRate("BTC", feeRate, MIN_FEE_RATE, Instant.now().getEpochSecond());
             }
         };
 
         // Initialize provider
         dummyProvider.start();
+        try {
+            sleep(1000);
+        } catch (InterruptedException e) { }
         dummyProvider.stop();
 
         return dummyProvider;
@@ -86,6 +90,9 @@ public class MempoolFeeRateProviderTest {
 
         // Initialize provider
         dummyProvider.start();
+        try {
+            sleep(1000);
+        } catch (InterruptedException e) { }
         dummyProvider.stop();
 
         return dummyProvider;

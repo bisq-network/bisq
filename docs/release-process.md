@@ -79,9 +79,9 @@ with following configuration:
 
 Build output expected in deploy directory (opened after successful build process):
 
-  1. `Bisq-${NEW-VERSION}.dmg` macOS signed installer
-  2. `Bisq-${NEW-VERSION}.jar` Deterministic fat jar
-  3. `Bisq-${NEW-VERSION}.jar.txt` sha256 sum of deterministic fat jar
+1. `Bisq-${NEW_VERSION}.dmg` macOS signed installer
+2. `Bisq-${NEW_VERSION}.jar` Deterministic fat jar
+3. `Bisq-${NEW_VERSION}.jar.txt` sha256 sum of deterministic fat jar
 
 The build script also copies over the deterministic fat jar into the shared folders for the other VMs (Windows & Linux).
 Before building the other binaries install the generated Bisq app on macOS and verify that everything works as expected.
@@ -92,8 +92,8 @@ Before building the other binaries install the generated Bisq app on macOS and v
 
 Build output expected:
 
-  1. `Bisq-${NEW-VERSION}.deb` package for distributions that derive from Debian
-  2. `Bisq-${NEW-VERSION}.rpm` package for distributions that derive from Redhat based distros
+1. `Bisq-${NEW_VERSION}.deb` package for distributions that derive from Debian
+2. `Bisq-${NEW_VERSION}.rpm` package for distributions that derive from Redhat based distros
 
 * Install and run generated package
 
@@ -103,8 +103,8 @@ Build output expected:
 
 Build output expected:
 
-  1. `Bisq-${NEW-VERSION}.exe` Windows unsigned installer
-  2. `Bisq-${NEW-VERSION}.exe.txt` sha256 sum of installer
+1. `Bisq-${NEW_VERSION}.exe` Windows unsigned installer
+2. `Bisq-${NEW_VERSION}.exe.txt` sha256 sum of installer
 
 ### Sign release on macOS
 
@@ -112,19 +112,19 @@ Build output expected:
 
 Build output expected:
 
-  1. `F379A1C6.asc` Sig key of Manfred Karrer
-  2. `5BC5ED73.asc` Sig key of Chris Beams
-  3. `29CDFD3B.asc`Sig key of Christoph Atteneder
-  4. `signingkey.asc` Fingerprint of key that was used for these builds
-  5. `Bisq-${NEW-VERSION}.jar.txt` Sha256 sum of deterministic fat jar
-  6. `Bisq-${NEW-VERSION}.dmg` macOS installer
-  7. `Bisq-${NEW-VERSION}.dmg.asc` Signature for macOS installer
-  8. `Bisq-${NEW-VERSION}.deb` Debian package
-  9. `Bisq-${NEW-VERSION}.deb.asc` Signature for Debian package
-  10. `Bisq-${NEW-VERSION}.rpm` Redhat based distro package
-  11. `Bisq-${NEW-VERSION}.rpm.asc` Signature for Redhat based distro package
-  12. `Bisq-${NEW-VERSION}.exe` Windows installer
-  13. `Bisq-${NEW-VERSION}.exe.asc` Signature for Windows installer
+1. `F379A1C6.asc` Sig key of Manfred Karrer
+2. `5BC5ED73.asc` Sig key of Chris Beams
+3. `29CDFD3B.asc`Sig key of Christoph Atteneder
+4. `signingkey.asc` Fingerprint of key that was used for these builds
+5. `Bisq-${NEW_VERSION}.jar.txt` Sha256 sum of deterministic fat jar
+6. `Bisq-${NEW_VERSION}.dmg` macOS installer
+7. `Bisq-${NEW_VERSION}.dmg.asc` Signature for macOS installer
+8. `Bisq-${NEW_VERSION}.deb` Debian package
+9. `Bisq-${NEW_VERSION}.deb.asc` Signature for Debian package
+10. `Bisq-${NEW_VERSION}.rpm` Redhat based distro package
+11. `Bisq-${NEW_VERSION}.rpm.asc` Signature for Redhat based distro package
+12. `Bisq-${NEW_VERSION}.exe` Windows installer
+13. `Bisq-${NEW_VERSION}.exe.asc` Signature for Windows installer
 
  * Run a AV scan over all files on the Windows VM where the files got copied over.
 
@@ -164,6 +164,15 @@ If all was successful:
  Check the checkbox for update, set the version number (e.g. 0.9.4) and add the short version of the release notes.
  * After sending the Update message leave it running for about 1 minute to give time for good propagation.
  * Make a backup of that alert sender app data directory
+ * To support source code signature verification for Arch Linux download `Source code (tar.gz)`, sign it and
+ upload signature.
+```
+    # sign source code bundle
+    gpg --digest-algo SHA256 --local-user $BISQ_GPG_USER --output bisq-${NEW_VERSION}.tar.gz.asc --detach-sig --armor bisq-${NEW_VERSION}.tar.gz
+
+    # verify signature of source code bundle
+    gpg --digest-algo SHA256 --verify bisq-${NEW_VERSION}.tar.gz{.asc*,}
+```
 
 ### Announce the release
 

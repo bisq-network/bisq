@@ -17,13 +17,12 @@
 
 package bisq.apitest.method.offer;
 
-import bisq.core.btc.wallet.Restrictions;
 import bisq.core.payment.PaymentAccount;
 
-import bisq.proto.grpc.CreateOfferRequest;
 import bisq.proto.grpc.OfferInfo;
 
 import java.util.List;
+import java.util.function.Consumer;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -33,7 +32,7 @@ import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 
-import static bisq.apitest.config.BisqAppConfig.alicedaemon;
+import static bisq.core.btc.wallet.Restrictions.getDefaultBuyerSecurityDepositAsPercent;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Disabled
@@ -45,45 +44,43 @@ public class CancelOfferTest extends AbstractOfferTest {
     private static final String CURRENCY_CODE = "cad";
     private static final int MAX_OFFERS = 3;
 
+    private final Consumer<String> createOfferToCancel = (paymentAccountId) -> {
+        aliceClient.createMarketBasedPricedOffer(DIRECTION,
+                CURRENCY_CODE,
+                10000000L,
+                10000000L,
+                0.00,
+                getDefaultBuyerSecurityDepositAsPercent(),
+                paymentAccountId,
+                "bsq");
+    };
+
     @Test
     @Order(1)
     public void testCancelOffer() {
-        PaymentAccount cadAccount = createDummyF2FAccount(alicedaemon, "CA");
-        var req = CreateOfferRequest.newBuilder()
-                .setPaymentAccountId(cadAccount.getId())
-                .setDirection(DIRECTION)
-                .setCurrencyCode(CURRENCY_CODE)
-                .setAmount(10000000)
-                .setMinAmount(10000000)
-                .setUseMarketBasedPrice(true)
-                .setMarketPriceMargin(0.00)
-                .setPrice("0")
-                .setBuyerSecurityDeposit(Restrictions.getDefaultBuyerSecurityDepositAsPercent())
-                .setMakerFeeCurrencyCode("bsq")
-                .build();
+        PaymentAccount cadAccount = createDummyF2FAccount(aliceClient, "CA");
 
         // Create some offers.
         for (int i = 1; i <= MAX_OFFERS; i++) {
-            //noinspection ResultOfMethodCallIgnored
-            aliceStubs.offersService.createOffer(req);
+            createOfferToCancel.accept(cadAccount.getId());
             // Wait for Alice's AddToOfferBook task.
             // Wait times vary;  my logs show >= 2 second delay.
             sleep(2500);
         }
 
-        List<OfferInfo> offers = getMyOffersSortedByDate(aliceStubs, DIRECTION, CURRENCY_CODE);
+        List<OfferInfo> offers = aliceClient.getMyOffersSortedByDate(DIRECTION, CURRENCY_CODE);
         assertEquals(MAX_OFFERS, offers.size());
 
         // Cancel the offers, checking the open offer count after each offer removal.
         for (int i = 1; i <= MAX_OFFERS; i++) {
-            cancelOffer(aliceStubs, offers.remove(0).getId());
-            offers = getMyOffersSortedByDate(aliceStubs, DIRECTION, CURRENCY_CODE);
+            aliceClient.cancelOffer(offers.remove(0).getId());
+            offers = aliceClient.getMyOffersSortedByDate(DIRECTION, CURRENCY_CODE);
             assertEquals(MAX_OFFERS - i, offers.size());
         }
 
         sleep(1000);  // wait for offer removal
 
-        offers = getMyOffersSortedByDate(aliceStubs, DIRECTION, CURRENCY_CODE);
+        offers = aliceClient.getMyOffersSortedByDate(DIRECTION, CURRENCY_CODE);
         assertEquals(0, offers.size());
     }
 }

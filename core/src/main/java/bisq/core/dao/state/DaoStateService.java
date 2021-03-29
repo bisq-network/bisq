@@ -192,6 +192,10 @@ public class DaoStateService implements DaoSetupService {
         return getCycle(blockHeight).map(cycle -> cycle.getHeightOfLastBlock() + 1);
     }
 
+    public Optional<Integer> getStartHeightOfCurrentCycle(int blockHeight) {
+        return getCycle(blockHeight).map(cycle -> cycle.getHeightOfFirstBlock());
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Block
@@ -394,7 +398,7 @@ public class DaoStateService implements DaoSetupService {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // BurntFee
+    // BurntFee (trade fee and fee burned at proof of burn)
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public long getBurntFee(String txId) {
@@ -405,10 +409,19 @@ public class DaoStateService implements DaoSetupService {
         return getBurntFee(txId) > 0;
     }
 
-    public long getTotalBurntFee() {
-        return getUnorderedTxStream().mapToLong(Tx::getBurntFee).sum();
+    public Set<Tx> getTradeFeeTxs() {
+        return getUnorderedTxStream()
+                .filter(tx -> tx.getTxType() == TxType.PAY_TRADE_FEE)
+                .collect(Collectors.toSet());
     }
 
+    public Set<Tx> getProofOfBurnTxs() {
+        return getUnorderedTxStream()
+                .filter(tx -> tx.getTxType() == TxType.PROOF_OF_BURN)
+                .collect(Collectors.toSet());
+    }
+
+    // Any tx with burned BSQ
     public Set<Tx> getBurntFeeTxs() {
         return getUnorderedTxStream()
                 .filter(tx -> tx.getBurntFee() > 0)
@@ -923,6 +936,16 @@ public class DaoStateService implements DaoSetupService {
 
         // If no value found we use default values
         return param.getDefaultValue();
+    }
+
+    public List<Coin> getParamChangeList(Param param) {
+        List<Coin> values = new ArrayList<>();
+        for (ParamChange paramChange : daoState.getParamChangeList()) {
+            if (paramChange.getParamName().equals(param.name())) {
+                values.add(getParamValueAsCoin(param, paramChange.getValue()));
+            }
+        }
+        return values;
     }
 
     public Coin getParamValueAsCoin(Param param, String paramValue) {

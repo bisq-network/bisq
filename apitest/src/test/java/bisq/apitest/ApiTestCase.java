@@ -17,26 +17,35 @@
 
 package bisq.apitest;
 
-import java.net.InetAddress;
-
+import java.io.File;
 import java.io.IOException;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
+import lombok.extern.slf4j.Slf4j;
+
+import javax.annotation.Nullable;
+
 import org.junit.jupiter.api.TestInfo;
 
+import static bisq.apitest.config.BisqAppConfig.alicedaemon;
+import static bisq.apitest.config.BisqAppConfig.arbdaemon;
+import static bisq.apitest.config.BisqAppConfig.bobdaemon;
+import static bisq.proto.grpc.DisputeAgentsGrpc.getRegisterDisputeAgentMethod;
+import static bisq.proto.grpc.GetVersionGrpc.getGetVersionMethod;
+import static java.net.InetAddress.getLoopbackAddress;
 import static java.util.Arrays.stream;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 
 
 import bisq.apitest.config.ApiTestConfig;
-import bisq.apitest.config.BisqAppConfig;
 import bisq.apitest.method.BitcoinCliHelper;
-import bisq.cli.GrpcStubs;
+import bisq.cli.GrpcClient;
+import bisq.daemon.grpc.GrpcVersionService;
+import bisq.daemon.grpc.interceptor.GrpcServiceRateMeteringConfig;
 
 /**
  * Base class for all test types:  'method', 'scenario' and 'e2e'.
@@ -50,8 +59,8 @@ import bisq.cli.GrpcStubs;
  * <p>
  * Those documents contain information about the configurations used by this test harness:
  * bitcoin-core's bitcoin.conf and blocknotify values, bisq instance options, the DAO genesis
- * transaction id, initial BSQ and BTC balances for Bob & Alice accounts, and default
- * PerfectMoney dummy payment accounts (USD) for Bob and Alice.
+ * transaction id, initial BSQ and BTC balances for Bob & Alice accounts, and Bob and
+ * Alice's default payment accounts.
  * <p>
  * During a build, the
  * <a href="https://github.com/bisq-network/bisq/blob/master/docs/dao-setup.zip">dao-setup.zip</a>
@@ -63,22 +72,28 @@ import bisq.cli.GrpcStubs;
  * <p>
  * Initial Bob balances & accounts:    10.0 BTC, 1500000.00 BSQ, USD PerfectMoney dummy
  */
+@Slf4j
 public class ApiTestCase {
 
     protected static Scaffold scaffold;
     protected static ApiTestConfig config;
     protected static BitcoinCliHelper bitcoinCli;
 
-    // gRPC service stubs are used by method & scenario tests, but not e2e tests.
-    private static final Map<BisqAppConfig, GrpcStubs> grpcStubsCache = new HashMap<>();
+    @Nullable
+    protected static GrpcClient arbClient;
+    @Nullable
+    protected static GrpcClient aliceClient;
+    @Nullable
+    protected static GrpcClient bobClient;
 
     public static void setUpScaffold(Enum<?>... supportingApps)
             throws InterruptedException, ExecutionException, IOException {
-        scaffold = new Scaffold(stream(supportingApps).map(Enum::name)
-                .collect(Collectors.joining(",")))
-                .setUp();
-        config = scaffold.config;
-        bitcoinCli = new BitcoinCliHelper((config));
+        String[] params = new String[]{
+                "--supportingApps", stream(supportingApps).map(Enum::name).collect(Collectors.joining(",")),
+                "--callRateMeteringConfigPath", defaultRateMeterInterceptorConfig().getAbsolutePath(),
+                "--enableBisqDebugging", "false"
+        };
+        setUpScaffold(params);
     }
 
     public static void setUpScaffold(String[] params)
@@ -90,24 +105,28 @@ public class ApiTestCase {
         scaffold = new Scaffold(params).setUp();
         config = scaffold.config;
         bitcoinCli = new BitcoinCliHelper((config));
+        createGrpcClients();
     }
 
     public static void tearDownScaffold() {
         scaffold.tearDown();
     }
 
-    protected static String getEnumArrayAsString(Enum<?>[] supportingApps) {
-        return stream(supportingApps).map(Enum::name).collect(Collectors.joining(","));
-    }
-
-    protected static GrpcStubs grpcStubs(BisqAppConfig bisqAppConfig) {
-        if (grpcStubsCache.containsKey(bisqAppConfig)) {
-            return grpcStubsCache.get(bisqAppConfig);
-        } else {
-            GrpcStubs stubs = new GrpcStubs(InetAddress.getLoopbackAddress().getHostAddress(),
-                    bisqAppConfig.apiPort, config.apiPassword);
-            grpcStubsCache.put(bisqAppConfig, stubs);
-            return stubs;
+    protected static void createGrpcClients() {
+        if (config.supportingApps.contains(alicedaemon.name())) {
+            aliceClient = new GrpcClient(getLoopbackAddress().getHostAddress(),
+                    alicedaemon.apiPort,
+                    config.apiPassword);
+        }
+        if (config.supportingApps.contains(bobdaemon.name())) {
+            bobClient = new GrpcClient(getLoopbackAddress().getHostAddress(),
+                    bobdaemon.apiPort,
+                    config.apiPassword);
+        }
+        if (config.supportingApps.contains(arbdaemon.name())) {
+            arbClient = new GrpcClient(getLoopbackAddress().getHostAddress(),
+                    arbdaemon.apiPort,
+                    config.apiPassword);
         }
     }
 
@@ -128,5 +147,38 @@ public class ApiTestCase {
         return testInfo.getTestMethod().isPresent()
                 ? testInfo.getTestMethod().get().getName()
                 : "unknown test name";
+    }
+
+    protected static File defaultRateMeterInterceptorConfig() {
+        GrpcServiceRateMeteringConfig.Builder builder = new GrpcServiceRateMeteringConfig.Builder();
+        builder.addCallRateMeter(GrpcVersionService.class.getSimpleName(),
+                getGetVersionMethod().getFullMethodName(),
+                1,
+                SECONDS);
+        // Only GrpcVersionService is @VisibleForTesting, so we need to
+        // hardcode other grpcServiceClassName parameter values used in
+        // builder.addCallRateMeter(...).
+        builder.addCallRateMeter("GrpcDisputeAgentsService",
+                getRegisterDisputeAgentMethod().getFullMethodName(),
+                10, // Same as default.
+                SECONDS);
+        // Define rate meters for non-existent method 'disabled', to override other grpc
+        // services' default rate meters -- defined in their rateMeteringInterceptor()
+        // methods.
+        String[] serviceClassNames = new String[]{
+                "GrpcGetTradeStatisticsService",
+                "GrpcHelpService",
+                "GrpcOffersService",
+                "GrpcPaymentAccountsService",
+                "GrpcPriceService",
+                "GrpcTradesService",
+                "GrpcWalletsService"
+        };
+        for (String service : serviceClassNames) {
+            builder.addCallRateMeter(service, "disabled", 1, MILLISECONDS);
+        }
+        File file = builder.build();
+        file.deleteOnExit();
+        return file;
     }
 }

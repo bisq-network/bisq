@@ -689,6 +689,7 @@ message Filter {
     repeated string banned_auto_conf_explorers = 25;
     repeated string node_addresses_banned_from_network = 26;
     bool disable_api = 27;
+    bool disable_mempool_validation = 28;
 }
 
 // Deprecated
@@ -804,6 +805,13 @@ message SignedWitness {
 
 
 message Dispute {
+    enum State {
+        NEEDS_UPGRADE = 0;
+        NEW = 1;
+        OPEN = 2;
+        REOPENED = 3;
+        CLOSED = 4;
+    }
     string trade_id = 1;
     string id = 2;
     int32 trader_id = 3;
@@ -831,6 +839,9 @@ message Dispute {
     string mediators_dispute_result = 25;
     string delayed_payout_tx_id = 26;
     string donation_address_of_delayed_payout_tx = 27;
+    State state = 28;
+    int64 trade_period_end = 29;
+    map<string, string> extra_data = 30;
 }
 
 message Attachment {
@@ -926,6 +937,7 @@ enum AvailabilityResult {
     NO_REFUND_AGENTS = 10;
     UNCONF_TX_LIMIT_HIT = 11;
     MAKER_DENIED_API_USER = 12;
+    PRICE_CHECK_FAILED = 13;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -1820,6 +1832,8 @@ enum ScriptType {
     WITNESS_V0_KEYHASH = 6;
     WITNESS_V0_SCRIPTHASH = 7;
     NONSTANDARD = 8;
+    WITNESS_UNKNOWN = 9;
+    WITNESS_V1_TAPROOT = 10;
 }
 
 message PubKeyScript {

@@ -33,6 +33,7 @@ import bisq.core.trade.statistics.TradeStatisticsManager;
 
 import bisq.common.app.Version;
 import bisq.common.config.Config;
+import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
 
 import org.bitcoinj.core.Coin;
@@ -224,12 +225,14 @@ public class CoreApi {
     public void takeOffer(String offerId,
                           String paymentAccountId,
                           String takerFeeCurrencyCode,
-                          Consumer<Trade> resultHandler) {
+                          Consumer<Trade> resultHandler,
+                          ErrorMessageHandler errorMessageHandler) {
         Offer offer = coreOffersService.getOffer(offerId);
         coreTradesService.takeOffer(offer,
                 paymentAccountId,
                 takerFeeCurrencyCode,
-                resultHandler);
+                resultHandler,
+                errorMessageHandler);
     }
 
     public void confirmPaymentStarted(String tradeId) {

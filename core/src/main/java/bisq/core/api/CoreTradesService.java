@@ -32,6 +32,8 @@ import bisq.core.trade.protocol.SellerProtocol;
 import bisq.core.user.User;
 import bisq.core.util.validation.BtcAddressValidator;
 
+import bisq.common.handlers.ErrorMessageHandler;
+
 import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
@@ -49,11 +51,11 @@ import static java.lang.String.format;
 @Slf4j
 class CoreTradesService {
 
+    private final CoreContext coreContext;
     // Dependencies on core api services in this package must be kept to an absolute
     // minimum, but some trading functions require an unlocked wallet's key, so an
     // exception is made in this case.
     private final CoreWalletsService coreWalletsService;
-
     private final BtcWalletService btcWalletService;
     private final OfferUtil offerUtil;
     private final ClosedTradableManager closedTradableManager;
@@ -61,7 +63,6 @@ class CoreTradesService {
     private final TradeManager tradeManager;
     private final TradeUtil tradeUtil;
     private final User user;
-    private final boolean isApiUser;
 
     @Inject
     public CoreTradesService(CoreContext coreContext,
@@ -73,6 +74,7 @@ class CoreTradesService {
                              TradeManager tradeManager,
                              TradeUtil tradeUtil,
                              User user) {
+        this.coreContext = coreContext;
         this.coreWalletsService = coreWalletsService;
         this.btcWalletService = btcWalletService;
         this.offerUtil = offerUtil;
@@ -81,13 +83,13 @@ class CoreTradesService {
         this.tradeManager = tradeManager;
         this.tradeUtil = tradeUtil;
         this.user = user;
-        this.isApiUser = coreContext.isApiUser();
     }
 
     void takeOffer(Offer offer,
                    String paymentAccountId,
                    String takerFeeCurrencyCode,
-                   Consumer<Trade> resultHandler) {
+                   Consumer<Trade> resultHandler,
+                   ErrorMessageHandler errorMessageHandler) {
         coreWalletsService.verifyWalletsAreAvailable();
         coreWalletsService.verifyEncryptedWalletIsUnlocked();
 
@@ -113,12 +115,9 @@ class CoreTradesService {
                 offer,
                 paymentAccountId,
                 useSavingsWallet,
-                isApiUser,
+                coreContext.isApiUser(),
                 resultHandler::accept,
-                errorMessage -> {
-                    log.error(errorMessage);
-                    throw new IllegalStateException(errorMessage);
-                }
+                errorMessageHandler
         );
     }
 

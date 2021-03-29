@@ -17,44 +17,7 @@
 
 package bisq.cli;
 
-import bisq.proto.grpc.CancelOfferRequest;
-import bisq.proto.grpc.ConfirmPaymentReceivedRequest;
-import bisq.proto.grpc.ConfirmPaymentStartedRequest;
-import bisq.proto.grpc.CreateOfferRequest;
-import bisq.proto.grpc.CreatePaymentAccountRequest;
-import bisq.proto.grpc.GetAddressBalanceRequest;
-import bisq.proto.grpc.GetBalancesRequest;
-import bisq.proto.grpc.GetFundingAddressesRequest;
-import bisq.proto.grpc.GetMethodHelpRequest;
-import bisq.proto.grpc.GetMyOfferRequest;
-import bisq.proto.grpc.GetMyOffersRequest;
-import bisq.proto.grpc.GetOfferRequest;
-import bisq.proto.grpc.GetOffersRequest;
-import bisq.proto.grpc.GetPaymentAccountFormRequest;
-import bisq.proto.grpc.GetPaymentAccountsRequest;
-import bisq.proto.grpc.GetPaymentMethodsRequest;
-import bisq.proto.grpc.GetTradeRequest;
-import bisq.proto.grpc.GetTransactionRequest;
-import bisq.proto.grpc.GetTxFeeRateRequest;
-import bisq.proto.grpc.GetUnusedBsqAddressRequest;
-import bisq.proto.grpc.GetVersionRequest;
-import bisq.proto.grpc.KeepFundsRequest;
-import bisq.proto.grpc.LockWalletRequest;
-import bisq.proto.grpc.MarketPriceRequest;
 import bisq.proto.grpc.OfferInfo;
-import bisq.proto.grpc.RegisterDisputeAgentRequest;
-import bisq.proto.grpc.RemoveWalletPasswordRequest;
-import bisq.proto.grpc.SendBsqRequest;
-import bisq.proto.grpc.SendBtcRequest;
-import bisq.proto.grpc.SetTxFeeRatePreferenceRequest;
-import bisq.proto.grpc.SetWalletPasswordRequest;
-import bisq.proto.grpc.TakeOfferRequest;
-import bisq.proto.grpc.TxInfo;
-import bisq.proto.grpc.UnlockWalletRequest;
-import bisq.proto.grpc.UnsetTxFeeRatePreferenceRequest;
-import bisq.proto.grpc.WithdrawFundsRequest;
-
-import protobuf.PaymentAccount;
 
 import io.grpc.StatusRuntimeException;
 
@@ -82,11 +45,7 @@ import static bisq.cli.CurrencyFormat.toSatoshis;
 import static bisq.cli.CurrencyFormat.toSecurityDepositAsPct;
 import static bisq.cli.Method.*;
 import static bisq.cli.TableFormat.*;
-import static bisq.cli.opts.OptLabel.OPT_HELP;
-import static bisq.cli.opts.OptLabel.OPT_HOST;
-import static bisq.cli.opts.OptLabel.OPT_PASSWORD;
-import static bisq.cli.opts.OptLabel.OPT_PORT;
-import static bisq.proto.grpc.HelpGrpc.HelpBlockingStub;
+import static bisq.cli.opts.OptLabel.*;
 import static java.lang.String.format;
 import static java.lang.System.err;
 import static java.lang.System.exit;
@@ -121,7 +80,6 @@ import bisq.cli.opts.WithdrawFundsOptionParser;
 /**
  * A command-line client for the Bisq gRPC API.
  */
-@SuppressWarnings("ResultOfMethodCallIgnored")
 @Slf4j
 public class CliMain {
 
@@ -187,49 +145,36 @@ public class CliMain {
             throw new IllegalArgumentException(format("'%s' is not a supported method", methodName));
         }
 
-        GrpcStubs grpcStubs = new GrpcStubs(host, port, password);
-        var disputeAgentsService = grpcStubs.disputeAgentsService;
-        var helpService = grpcStubs.helpService;
-        var offersService = grpcStubs.offersService;
-        var paymentAccountsService = grpcStubs.paymentAccountsService;
-        var priceService = grpcStubs.priceService;
-        var tradesService = grpcStubs.tradesService;
-        var versionService = grpcStubs.versionService;
-        var walletsService = grpcStubs.walletsService;
-
+        GrpcClient client = new GrpcClient(host, port, password);
         try {
             switch (method) {
                 case getversion: {
                     if (new SimpleMethodOptionParser(args).parse().isForHelp()) {
-                        out.println(getMethodHelp(helpService, method));
+                        out.println(client.getMethodHelp(method));
                         return;
                     }
-                    var request = GetVersionRequest.newBuilder().build();
-                    var version = versionService.getVersion(request).getVersion();
+                    var version = client.getVersion();
                     out.println(version);
                     return;
                 }
                 case getbalance: {
                     var opts = new GetBalanceOptionParser(args).parse();
                     if (opts.isForHelp()) {
-                        out.println(getMethodHelp(helpService, method));
+                        out.println(client.getMethodHelp(method));
                         return;
                     }
                     var currencyCode = opts.getCurrencyCode();
-                    var request = GetBalancesRequest.newBuilder()
-                            .setCurrencyCode(currencyCode)
-                            .build();
-                    var reply = walletsService.getBalances(request);
+                    var balances = client.getBalances(currencyCode);
                     switch (currencyCode.toUpperCase()) {
                         case "BSQ":
-                            out.println(formatBsqBalanceInfoTbl(reply.getBalances().getBsq()));
+                            out.println(formatBsqBalanceInfoTbl(balances.getBsq()));
                             break;
                         case "BTC":
-                            out.println(formatBtcBalanceInfoTbl(reply.getBalances().getBtc()));
+                            out.println(formatBtcBalanceInfoTbl(balances.getBtc()));
                             break;
                         case "":
                         default:
-                            out.println(formatBalancesTbls(reply.getBalances()));
+                            out.println(formatBalancesTbls(balances));
                             break;
                     }
                     return;
@@ -237,71 +182,58 @@ public class CliMain {
                 case getaddressbalance: {
                     var opts = new GetAddressBalanceOptionParser(args).parse();
                     if (opts.isForHelp()) {
-                        out.println(getMethodHelp(helpService, method));
+                        out.println(client.getMethodHelp(method));
                         return;
                     }
                     var address = opts.getAddress();
-                    var request = GetAddressBalanceRequest.newBuilder()
-                            .setAddress(address).build();
-                    var reply = walletsService.getAddressBalance(request);
-                    out.println(formatAddressBalanceTbl(singletonList(reply.getAddressBalanceInfo())));
+                    var addressBalance = client.getAddressBalance(address);
+                    out.println(formatAddressBalanceTbl(singletonList(addressBalance)));
                     return;
                 }
                 case getbtcprice: {
                     var opts = new GetBTCMarketPriceOptionParser(args).parse();
                     if (opts.isForHelp()) {
-                        out.println(getMethodHelp(helpService, method));
+                        out.println(client.getMethodHelp(method));
                         return;
                     }
                     var currencyCode = opts.getCurrencyCode();
-                    var request = MarketPriceRequest.newBuilder()
-                            .setCurrencyCode(currencyCode)
-                            .build();
-                    var reply = priceService.getMarketPrice(request);
-                    out.println(formatMarketPrice(reply.getPrice()));
+                    var price = client.getBtcPrice(currencyCode);
+                    out.println(formatMarketPrice(price));
                     return;
                 }
                 case getfundingaddresses: {
                     if (new SimpleMethodOptionParser(args).parse().isForHelp()) {
-                        out.println(getMethodHelp(helpService, method));
+                        out.println(client.getMethodHelp(method));
                         return;
                     }
-                    var request = GetFundingAddressesRequest.newBuilder().build();
-                    var reply = walletsService.getFundingAddresses(request);
-                    out.println(formatAddressBalanceTbl(reply.getAddressBalanceInfoList()));
+                    var fundingAddresses = client.getFundingAddresses();
+                    out.println(formatAddressBalanceTbl(fundingAddresses));
                     return;
                 }
                 case getunusedbsqaddress: {
                     if (new SimpleMethodOptionParser(args).parse().isForHelp()) {
-                        out.println(getMethodHelp(helpService, method));
+                        out.println(client.getMethodHelp(method));
                         return;
                     }
-                    var request = GetUnusedBsqAddressRequest.newBuilder().build();
-                    var reply = walletsService.getUnusedBsqAddress(request);
-                    out.println(reply.getAddress());
+                    var address = client.getUnusedBsqAddress();
+                    out.println(address);
                     return;
                 }
                 case sendbsq: {
                     var opts = new SendBsqOptionParser(args).parse();
                     if (opts.isForHelp()) {
-                        out.println(getMethodHelp(helpService, method));
+                        out.println(client.getMethodHelp(method));
                         return;
                     }
                     var address = opts.getAddress();
                     var amount = opts.getAmount();
-                    verifyStringIsValidDecimal(amount);
+                    verifyStringIsValidDecimal(OPT_AMOUNT, amount);
 
                     var txFeeRate = opts.getFeeRate();
-                    if (txFeeRate.isEmpty())
-                        verifyStringIsValidLong(txFeeRate);
+                    if (!txFeeRate.isEmpty())
+                        verifyStringIsValidLong(OPT_TX_FEE_RATE, txFeeRate);
 
-                    var request = SendBsqRequest.newBuilder()
-                            .setAddress(address)
-                            .setAmount(amount)
-                            .setTxFeeRate(txFeeRate)
-                            .build();
-                    var reply = walletsService.sendBsq(request);
-                    TxInfo txInfo = reply.getTxInfo();
+                    var txInfo = client.sendBsq(address, amount, txFeeRate);
                     out.printf("%s bsq sent to %s in tx %s%n",
                             amount,
                             address,
@@ -311,26 +243,20 @@ public class CliMain {
                 case sendbtc: {
                     var opts = new SendBtcOptionParser(args).parse();
                     if (opts.isForHelp()) {
-                        out.println(getMethodHelp(helpService, method));
+                        out.println(client.getMethodHelp(method));
                         return;
                     }
                     var address = opts.getAddress();
                     var amount = opts.getAmount();
-                    verifyStringIsValidDecimal(amount);
+                    verifyStringIsValidDecimal(OPT_AMOUNT, amount);
 
                     var txFeeRate = opts.getFeeRate();
-                    if (txFeeRate.isEmpty())
-                        verifyStringIsValidLong(txFeeRate);
+                    if (!txFeeRate.isEmpty())
+                        verifyStringIsValidLong(OPT_TX_FEE_RATE, txFeeRate);
 
                     var memo = opts.getMemo();
-                    var request = SendBtcRequest.newBuilder()
-                            .setAddress(address)
-                            .setAmount(amount)
-                            .setTxFeeRate(txFeeRate)
-                            .setMemo(memo)
-                            .build();
-                    var reply = walletsService.sendBtc(request);
-                    TxInfo txInfo = reply.getTxInfo();
+
+                    var txInfo = client.sendBtc(address, amount, txFeeRate, memo);
                     out.printf("%s btc sent to %s in tx %s%n",
                             amount,
                             address,
@@ -339,56 +265,47 @@ public class CliMain {
                 }
                 case gettxfeerate: {
                     if (new SimpleMethodOptionParser(args).parse().isForHelp()) {
-                        out.println(getMethodHelp(helpService, method));
+                        out.println(client.getMethodHelp(method));
                         return;
                     }
-                    var request = GetTxFeeRateRequest.newBuilder().build();
-                    var reply = walletsService.getTxFeeRate(request);
-                    out.println(formatTxFeeRateInfo(reply.getTxFeeRateInfo()));
+                    var txFeeRate = client.getTxFeeRate();
+                    out.println(formatTxFeeRateInfo(txFeeRate));
                     return;
                 }
                 case settxfeerate: {
                     var opts = new SetTxFeeRateOptionParser(args).parse();
                     if (opts.isForHelp()) {
-                        out.println(getMethodHelp(helpService, method));
+                        out.println(client.getMethodHelp(method));
                         return;
                     }
-                    var txFeeRate = toLong(opts.getFeeRate());
-                    var request = SetTxFeeRatePreferenceRequest.newBuilder()
-                            .setTxFeeRatePreference(txFeeRate)
-                            .build();
-                    var reply = walletsService.setTxFeeRatePreference(request);
-                    out.println(formatTxFeeRateInfo(reply.getTxFeeRateInfo()));
+                    var txFeeRate = client.setTxFeeRate(toLong(opts.getFeeRate()));
+                    out.println(formatTxFeeRateInfo(txFeeRate));
                     return;
                 }
                 case unsettxfeerate: {
                     if (new SimpleMethodOptionParser(args).parse().isForHelp()) {
-                        out.println(getMethodHelp(helpService, method));
+                        out.println(client.getMethodHelp(method));
                         return;
                     }
-                    var request = UnsetTxFeeRatePreferenceRequest.newBuilder().build();
-                    var reply = walletsService.unsetTxFeeRatePreference(request);
-                    out.println(formatTxFeeRateInfo(reply.getTxFeeRateInfo()));
+                    var txFeeRate = client.unsetTxFeeRate();
+                    out.println(formatTxFeeRateInfo(txFeeRate));
                     return;
                 }
                 case gettransaction: {
                     var opts = new GetTransactionOptionParser(args).parse();
                     if (opts.isForHelp()) {
-                        out.println(getMethodHelp(helpService, method));
+                        out.println(client.getMethodHelp(method));
                         return;
                     }
                     var txId = opts.getTxId();
-                    var request = GetTransactionRequest.newBuilder()
-                            .setTxId(txId)
-                            .build();
-                    var reply = walletsService.getTransaction(request);
-                    out.println(TransactionFormat.format(reply.getTxInfo()));
+                    var tx = client.getTransaction(txId);
+                    out.println(TransactionFormat.format(tx));
                     return;
                 }
                 case createoffer: {
                     var opts = new CreateOfferOptionParser(args).parse();
                     if (opts.isForHelp()) {
-                        out.println(getMethodHelp(helpService, method));
+                        out.println(client.getMethodHelp(method));
                         return;
                     }
                     var paymentAcctId = opts.getPaymentAccountId();
@@ -401,232 +318,178 @@ public class CliMain {
                     var marketPriceMargin = opts.getMktPriceMarginAsBigDecimal();
                     var securityDeposit = toSecurityDepositAsPct(opts.getSecurityDeposit());
                     var makerFeeCurrencyCode = opts.getMakerFeeCurrencyCode();
-                    var request = CreateOfferRequest.newBuilder()
-                            .setDirection(direction)
-                            .setCurrencyCode(currencyCode)
-                            .setAmount(amount)
-                            .setMinAmount(minAmount)
-                            .setUseMarketBasedPrice(useMarketBasedPrice)
-                            .setPrice(fixedPrice)
-                            .setMarketPriceMargin(marketPriceMargin.doubleValue())
-                            .setBuyerSecurityDeposit(securityDeposit)
-                            .setPaymentAccountId(paymentAcctId)
-                            .setMakerFeeCurrencyCode(makerFeeCurrencyCode)
-                            .build();
-                    var reply = offersService.createOffer(request);
-                    out.println(formatOfferTable(singletonList(reply.getOffer()), currencyCode));
+                    var offer = client.createOffer(direction,
+                            currencyCode,
+                            amount,
+                            minAmount,
+                            useMarketBasedPrice,
+                            fixedPrice,
+                            marketPriceMargin.doubleValue(),
+                            securityDeposit,
+                            paymentAcctId,
+                            makerFeeCurrencyCode);
+                    out.println(formatOfferTable(singletonList(offer), currencyCode));
                     return;
                 }
                 case canceloffer: {
                     var opts = new CancelOfferOptionParser(args).parse();
                     if (opts.isForHelp()) {
-                        out.println(getMethodHelp(helpService, method));
+                        out.println(client.getMethodHelp(method));
                         return;
                     }
                     var offerId = opts.getOfferId();
-                    var request = CancelOfferRequest.newBuilder()
-                            .setId(offerId)
-                            .build();
-                    offersService.cancelOffer(request);
+                    client.cancelOffer(offerId);
                     out.println("offer canceled and removed from offer book");
                     return;
                 }
                 case getoffer: {
                     var opts = new GetOfferOptionParser(args).parse();
                     if (opts.isForHelp()) {
-                        out.println(getMethodHelp(helpService, method));
+                        out.println(client.getMethodHelp(method));
                         return;
                     }
                     var offerId = opts.getOfferId();
-                    var request = GetOfferRequest.newBuilder()
-                            .setId(offerId)
-                            .build();
-                    var reply = offersService.getOffer(request);
-                    out.println(formatOfferTable(singletonList(reply.getOffer()),
-                            reply.getOffer().getCounterCurrencyCode()));
+                    var offer = client.getOffer(offerId);
+                    out.println(formatOfferTable(singletonList(offer), offer.getCounterCurrencyCode()));
                     return;
                 }
                 case getmyoffer: {
                     var opts = new GetOfferOptionParser(args).parse();
                     if (opts.isForHelp()) {
-                        out.println(getMethodHelp(helpService, method));
+                        out.println(client.getMethodHelp(method));
                         return;
                     }
                     var offerId = opts.getOfferId();
-                    var request = GetMyOfferRequest.newBuilder()
-                            .setId(offerId)
-                            .build();
-                    var reply = offersService.getMyOffer(request);
-                    out.println(formatOfferTable(singletonList(reply.getOffer()),
-                            reply.getOffer().getCounterCurrencyCode()));
+                    var offer = client.getMyOffer(offerId);
+                    out.println(formatOfferTable(singletonList(offer), offer.getCounterCurrencyCode()));
                     return;
                 }
                 case getoffers: {
                     var opts = new GetOffersOptionParser(args).parse();
                     if (opts.isForHelp()) {
-                        out.println(getMethodHelp(helpService, method));
+                        out.println(client.getMethodHelp(method));
                         return;
                     }
                     var direction = opts.getDirection();
                     var currencyCode = opts.getCurrencyCode();
-                    var request = GetOffersRequest.newBuilder()
-                            .setDirection(direction)
-                            .setCurrencyCode(currencyCode)
-                            .build();
-                    var reply = offersService.getOffers(request);
-
-                    List<OfferInfo> offers = reply.getOffersList();
+                    List<OfferInfo> offers = client.getOffers(direction, currencyCode);
                     if (offers.isEmpty())
                         out.printf("no %s %s offers found%n", direction, currencyCode);
                     else
-                        out.println(formatOfferTable(reply.getOffersList(), currencyCode));
+                        out.println(formatOfferTable(offers, currencyCode));
 
                     return;
                 }
                 case getmyoffers: {
                     var opts = new GetOffersOptionParser(args).parse();
                     if (opts.isForHelp()) {
-                        out.println(getMethodHelp(helpService, method));
+                        out.println(client.getMethodHelp(method));
                         return;
                     }
                     var direction = opts.getDirection();
                     var currencyCode = opts.getCurrencyCode();
-                    var request = GetMyOffersRequest.newBuilder()
-                            .setDirection(direction)
-                            .setCurrencyCode(currencyCode)
-                            .build();
-                    var reply = offersService.getMyOffers(request);
-
-                    List<OfferInfo> offers = reply.getOffersList();
+                    List<OfferInfo> offers = client.getMyOffers(direction, currencyCode);
                     if (offers.isEmpty())
                         out.printf("no %s %s offers found%n", direction, currencyCode);
                     else
-                        out.println(formatOfferTable(reply.getOffersList(), currencyCode));
+                        out.println(formatOfferTable(offers, currencyCode));
 
                     return;
                 }
                 case takeoffer: {
                     var opts = new TakeOfferOptionParser(args).parse();
                     if (opts.isForHelp()) {
-                        out.println(getMethodHelp(helpService, method));
+                        out.println(client.getMethodHelp(method));
                         return;
                     }
                     var offerId = opts.getOfferId();
                     var paymentAccountId = opts.getPaymentAccountId();
                     var takerFeeCurrencyCode = opts.getTakerFeeCurrencyCode();
-                    var request = TakeOfferRequest.newBuilder()
-                            .setOfferId(offerId)
-                            .setPaymentAccountId(paymentAccountId)
-                            .setTakerFeeCurrencyCode(takerFeeCurrencyCode)
-                            .build();
-                    var reply = tradesService.takeOffer(request);
-                    out.printf("trade %s successfully taken%n", reply.getTrade().getTradeId());
+                    var trade = client.takeOffer(offerId, paymentAccountId, takerFeeCurrencyCode);
+                    out.printf("trade %s successfully taken%n", trade.getTradeId());
                     return;
                 }
                 case gettrade: {
                     // TODO make short-id a valid argument?
                     var opts = new GetTradeOptionParser(args).parse();
                     if (opts.isForHelp()) {
-                        out.println(getMethodHelp(helpService, method));
+                        out.println(client.getMethodHelp(method));
                         return;
                     }
                     var tradeId = opts.getTradeId();
                     var showContract = opts.getShowContract();
-                    var request = GetTradeRequest.newBuilder()
-                            .setTradeId(tradeId)
-                            .build();
-                    var reply = tradesService.getTrade(request);
-
+                    var trade = client.getTrade(tradeId);
                     if (showContract)
-                        out.println(reply.getTrade().getContractAsJson());
+                        out.println(trade.getContractAsJson());
                     else
-                        out.println(TradeFormat.format(reply.getTrade()));
+                        out.println(TradeFormat.format(trade));
 
                     return;
                 }
                 case confirmpaymentstarted: {
                     var opts = new GetTradeOptionParser(args).parse();
                     if (opts.isForHelp()) {
-                        out.println(getMethodHelp(helpService, method));
+                        out.println(client.getMethodHelp(method));
                         return;
                     }
                     var tradeId = opts.getTradeId();
-                    var request = ConfirmPaymentStartedRequest.newBuilder()
-                            .setTradeId(tradeId)
-                            .build();
-                    tradesService.confirmPaymentStarted(request);
+                    client.confirmPaymentStarted(tradeId);
                     out.printf("trade %s payment started message sent%n", tradeId);
                     return;
                 }
                 case confirmpaymentreceived: {
                     var opts = new GetTradeOptionParser(args).parse();
                     if (opts.isForHelp()) {
-                        out.println(getMethodHelp(helpService, method));
+                        out.println(client.getMethodHelp(method));
                         return;
                     }
                     var tradeId = opts.getTradeId();
-                    var request = ConfirmPaymentReceivedRequest.newBuilder()
-                            .setTradeId(tradeId)
-                            .build();
-                    tradesService.confirmPaymentReceived(request);
+                    client.confirmPaymentReceived(tradeId);
                     out.printf("trade %s payment received message sent%n", tradeId);
                     return;
                 }
                 case keepfunds: {
                     var opts = new GetTradeOptionParser(args).parse();
                     if (opts.isForHelp()) {
-                        out.println(getMethodHelp(helpService, method));
+                        out.println(client.getMethodHelp(method));
                         return;
                     }
                     var tradeId = opts.getTradeId();
-                    var request = KeepFundsRequest.newBuilder()
-                            .setTradeId(tradeId)
-                            .build();
-                    tradesService.keepFunds(request);
+                    client.keepFunds(tradeId);
                     out.printf("funds from trade %s saved in bisq wallet%n", tradeId);
                     return;
                 }
                 case withdrawfunds: {
                     var opts = new WithdrawFundsOptionParser(args).parse();
                     if (opts.isForHelp()) {
-                        out.println(getMethodHelp(helpService, method));
+                        out.println(client.getMethodHelp(method));
                         return;
                     }
                     var tradeId = opts.getTradeId();
                     var address = opts.getAddress();
                     // Multi-word memos must be double quoted.
                     var memo = opts.getMemo();
-                    var request = WithdrawFundsRequest.newBuilder()
-                            .setTradeId(tradeId)
-                            .setAddress(address)
-                            .setMemo(memo)
-                            .build();
-                    tradesService.withdrawFunds(request);
+                    client.withdrawFunds(tradeId, address, memo);
                     out.printf("trade %s funds sent to btc address %s%n", tradeId, address);
                     return;
                 }
                 case getpaymentmethods: {
                     if (new SimpleMethodOptionParser(args).parse().isForHelp()) {
-                        out.println(getMethodHelp(helpService, method));
+                        out.println(client.getMethodHelp(method));
                         return;
                     }
-                    var request = GetPaymentMethodsRequest.newBuilder().build();
-                    var reply = paymentAccountsService.getPaymentMethods(request);
-                    reply.getPaymentMethodsList().forEach(p -> out.println(p.getId()));
+                    var paymentMethods = client.getPaymentMethods();
+                    paymentMethods.forEach(p -> out.println(p.getId()));
                     return;
                 }
                 case getpaymentacctform: {
                     var opts = new GetPaymentAcctFormOptionParser(args).parse();
                     if (opts.isForHelp()) {
-                        out.println(getMethodHelp(helpService, method));
+                        out.println(client.getMethodHelp(method));
                         return;
                     }
                     var paymentMethodId = opts.getPaymentMethodId();
-                    var request = GetPaymentAccountFormRequest.newBuilder()
-                            .setPaymentMethodId(paymentMethodId)
-                            .build();
-                    String jsonString = paymentAccountsService.getPaymentAccountForm(request)
-                            .getPaymentAccountFormJson();
+                    String jsonString = client.getPaymentAcctFormAsJson(paymentMethodId);
                     File jsonFile = saveFileToDisk(paymentMethodId.toLowerCase(),
                             ".json",
                             jsonString);
@@ -638,7 +501,7 @@ public class CliMain {
                 case createpaymentacct: {
                     var opts = new CreatePaymentAcctOptionParser(args).parse();
                     if (opts.isForHelp()) {
-                        out.println(getMethodHelp(helpService, method));
+                        out.println(client.getMethodHelp(method));
                         return;
                     }
                     var paymentAccountForm = opts.getPaymentAcctForm();
@@ -649,24 +512,17 @@ public class CliMain {
                         throw new IllegalStateException(
                                 format("could not read %s", paymentAccountForm.toString()));
                     }
-
-                    var request = CreatePaymentAccountRequest.newBuilder()
-                            .setPaymentAccountForm(jsonString)
-                            .build();
-                    var reply = paymentAccountsService.createPaymentAccount(request);
+                    var paymentAccount = client.createPaymentAccount(jsonString);
                     out.println("payment account saved");
-                    out.println(formatPaymentAcctTbl(singletonList(reply.getPaymentAccount())));
+                    out.println(formatPaymentAcctTbl(singletonList(paymentAccount)));
                     return;
                 }
                 case getpaymentaccts: {
                     if (new SimpleMethodOptionParser(args).parse().isForHelp()) {
-                        out.println(getMethodHelp(helpService, method));
+                        out.println(client.getMethodHelp(method));
                         return;
                     }
-                    var request = GetPaymentAccountsRequest.newBuilder().build();
-                    var reply = paymentAccountsService.getPaymentAccounts(request);
-
-                    List<PaymentAccount> paymentAccounts = reply.getPaymentAccountsList();
+                    var paymentAccounts = client.getPaymentAccounts();
                     if (paymentAccounts.size() > 0)
                         out.println(formatPaymentAcctTbl(paymentAccounts));
                     else
@@ -676,69 +532,67 @@ public class CliMain {
                 }
                 case lockwallet: {
                     if (new SimpleMethodOptionParser(args).parse().isForHelp()) {
-                        out.println(getMethodHelp(helpService, method));
+                        out.println(client.getMethodHelp(method));
                         return;
                     }
-                    var request = LockWalletRequest.newBuilder().build();
-                    walletsService.lockWallet(request);
+                    client.lockWallet();
                     out.println("wallet locked");
                     return;
                 }
                 case unlockwallet: {
                     var opts = new UnlockWalletOptionParser(args).parse();
                     if (opts.isForHelp()) {
-                        out.println(getMethodHelp(helpService, method));
+                        out.println(client.getMethodHelp(method));
                         return;
                     }
                     var walletPassword = opts.getPassword();
                     var timeout = opts.getUnlockTimeout();
-                    var request = UnlockWalletRequest.newBuilder()
-                            .setPassword(walletPassword)
-                            .setTimeout(timeout).build();
-                    walletsService.unlockWallet(request);
+                    client.unlockWallet(walletPassword, timeout);
                     out.println("wallet unlocked");
                     return;
                 }
                 case removewalletpassword: {
                     var opts = new RemoveWalletPasswordOptionParser(args).parse();
                     if (opts.isForHelp()) {
-                        out.println(getMethodHelp(helpService, method));
+                        out.println(client.getMethodHelp(method));
                         return;
                     }
                     var walletPassword = opts.getPassword();
-                    var request = RemoveWalletPasswordRequest.newBuilder()
-                            .setPassword(walletPassword).build();
-                    walletsService.removeWalletPassword(request);
+                    client.removeWalletPassword(walletPassword);
                     out.println("wallet decrypted");
                     return;
                 }
                 case setwalletpassword: {
                     var opts = new SetWalletPasswordOptionParser(args).parse();
                     if (opts.isForHelp()) {
-                        out.println(getMethodHelp(helpService, method));
+                        out.println(client.getMethodHelp(method));
                         return;
                     }
                     var walletPassword = opts.getPassword();
                     var newWalletPassword = opts.getNewPassword();
-                    var requestBuilder = SetWalletPasswordRequest.newBuilder()
-                            .setPassword(walletPassword)
-                            .setNewPassword(newWalletPassword);
-                    walletsService.setWalletPassword(requestBuilder.build());
+                    client.setWalletPassword(walletPassword, newWalletPassword);
                     out.println("wallet encrypted" + (!newWalletPassword.isEmpty() ? " with new password" : ""));
                     return;
                 }
                 case registerdisputeagent: {
                     var opts = new RegisterDisputeAgentOptionParser(args).parse();
                     if (opts.isForHelp()) {
-                        out.println(getMethodHelp(helpService, method));
+                        out.println(client.getMethodHelp(method));
                         return;
                     }
                     var disputeAgentType = opts.getDisputeAgentType();
                     var registrationKey = opts.getRegistrationKey();
-                    var requestBuilder = RegisterDisputeAgentRequest.newBuilder()
-                            .setDisputeAgentType(disputeAgentType).setRegistrationKey(registrationKey);
-                    disputeAgentsService.registerDisputeAgent(requestBuilder.build());
+                    client.registerDisputeAgent(disputeAgentType, registrationKey);
                     out.println(disputeAgentType + " registered");
+                    return;
+                }
+                case stop: {
+                    if (new SimpleMethodOptionParser(args).parse().isForHelp()) {
+                        out.println(client.getMethodHelp(method));
+                        return;
+                    }
+                    client.stopServer();
+                    out.println("server shutdown signal received");
                     return;
                 }
                 default: {
@@ -748,7 +602,10 @@ public class CliMain {
         } catch (StatusRuntimeException ex) {
             // Remove the leading gRPC status code (e.g. "UNKNOWN: ") from the message
             String message = ex.getMessage().replaceFirst("^[A-Z_]+: ", "");
-            throw new RuntimeException(message, ex);
+            if (message.equals("io exception"))
+                throw new RuntimeException(message + ", server may not be running", ex);
+            else
+                throw new RuntimeException(message, ex);
         }
     }
 
@@ -759,19 +616,27 @@ public class CliMain {
         return Method.valueOf(methodName.toLowerCase());
     }
 
-    private static void verifyStringIsValidDecimal(String param) {
+    @SuppressWarnings("SameParameterValue")
+    private static void verifyStringIsValidDecimal(String optionLabel, String optionValue) {
         try {
-            Double.parseDouble(param);
+            Double.parseDouble(optionValue);
         } catch (NumberFormatException ex) {
-            throw new IllegalArgumentException(format("'%s' is not a number", param));
+            throw new IllegalArgumentException(format("--%s=%s, '%s' is not a number",
+                    optionLabel,
+                    optionValue,
+                    optionValue));
         }
     }
 
-    private static void verifyStringIsValidLong(String param) {
+    @SuppressWarnings("SameParameterValue")
+    private static void verifyStringIsValidLong(String optionLabel, String optionValue) {
         try {
-            Long.parseLong(param);
+            Long.parseLong(optionValue);
         } catch (NumberFormatException ex) {
-            throw new IllegalArgumentException(format("'%s' is not a number", param));
+            throw new IllegalArgumentException(format("--%s=%s, '%s' is not a number",
+                    optionLabel,
+                    optionValue,
+                    optionValue));
         }
     }
 
@@ -894,16 +759,12 @@ public class CliMain {
                     "Encrypt wallet with password, or set new password on encrypted wallet");
             stream.format(rowFormat, "", "[--new-wallet-password=<new-password>]", "");
             stream.println();
+            stream.format(rowFormat, stop.name(), "", "Shut down the server");
+            stream.println();
             stream.println("Method Help Usage: bisq-cli [options] <method> --help");
             stream.println();
         } catch (IOException ex) {
             ex.printStackTrace(stream);
         }
-    }
-
-    private static String getMethodHelp(HelpBlockingStub helpService, Method method) {
-        var request = GetMethodHelpRequest.newBuilder().setMethodName(method.name()).build();
-        var reply = helpService.getMethodHelp(request);
-        return reply.getMethodHelp();
     }
 }

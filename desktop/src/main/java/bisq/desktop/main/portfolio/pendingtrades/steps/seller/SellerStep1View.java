@@ -17,10 +17,12 @@
 
 package bisq.desktop.main.portfolio.pendingtrades.steps.seller;
 
+import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.portfolio.pendingtrades.PendingTradesViewModel;
 import bisq.desktop.main.portfolio.pendingtrades.steps.TradeStepView;
 
 import bisq.core.locale.Res;
+import bisq.core.trade.TradeDataValidation;
 
 public class SellerStep1View extends TradeStepView {
 
@@ -30,6 +32,12 @@ public class SellerStep1View extends TradeStepView {
 
     public SellerStep1View(PendingTradesViewModel model) {
         super(model);
+    }
+
+    @Override
+    protected void onPendingTradesInitialized() {
+        super.onPendingTradesInitialized();
+        validateDepositInputs();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -62,6 +70,21 @@ public class SellerStep1View extends TradeStepView {
     @Override
     protected String getPeriodOverWarnText() {
         return Res.get("portfolio.pending.step1.openForDispute");
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    // Verify that deposit tx inputs are matching the trade fee txs outputs.
+    private void validateDepositInputs() {
+        try {
+            TradeDataValidation.validateDepositInputs(trade);
+        } catch (TradeDataValidation.ValidationException e) {
+            if (!model.dataModel.tradeManager.isAllowFaultyDelayedTxs()) {
+                new Popup().warning(Res.get("portfolio.pending.invalidTx", e.getMessage())).show();
+            }
+        }
     }
 }
 

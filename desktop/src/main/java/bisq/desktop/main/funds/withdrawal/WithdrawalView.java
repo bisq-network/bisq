@@ -141,7 +141,6 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     private Set<String> fromAddresses = new HashSet<>();
     private Coin totalAvailableAmountOfSelectedItems = Coin.ZERO;
     private Coin amountAsCoin = Coin.ZERO;
-    private Coin sendersAmount = Coin.ZERO;
     private ChangeListener<String> amountListener;
     private ChangeListener<Boolean> amountFocusListener;
     private ChangeListener<Toggle> feeToggleGroupListener, inputsToggleGroupListener;
@@ -327,11 +326,13 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     private void onWithdraw() {
         if (GUIUtil.isReadyForTxBroadcastOrShowPopup(p2PService, walletsSetup)) {
             try {
+                final String withdrawToAddress = withdrawToTextField.getText();
+                final Coin sendersAmount;
+
                 // We do not know sendersAmount if senderPaysFee is true. We repeat fee calculation after first attempt if senderPaysFee is true.
                 Transaction feeEstimationTransaction = btcWalletService.getFeeEstimationTransactionForMultipleAddresses(fromAddresses, amountAsCoin);
                 if (feeExcluded && feeEstimationTransaction != null) {
-                    sendersAmount = amountAsCoin.add(feeEstimationTransaction.getFee());
-                    feeEstimationTransaction = btcWalletService.getFeeEstimationTransactionForMultipleAddresses(fromAddresses, sendersAmount);
+                    feeEstimationTransaction = btcWalletService.getFeeEstimationTransactionForMultipleAddresses(fromAddresses, amountAsCoin.add(feeEstimationTransaction.getFee()));
                 }
                 checkNotNull(feeEstimationTransaction, "feeEstimationTransaction must not be null");
 
@@ -356,7 +357,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                             fee.value);
                 }
 
-                if (areInputsValid()) {
+                if (areInputsValid(sendersAmount)) {
                     int txVsize = feeEstimationTransaction.getVsize();
                     log.info("Fee for tx with size {}: {} " + Res.getBaseCurrencyCode() + "", txVsize, fee.toPlainString());
 
@@ -367,7 +368,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                         String messageText = Res.get("shared.sendFundsDetailsWithFee",
                                 formatter.formatCoinWithCode(sendersAmount),
                                 withdrawFromTextField.getText(),
-                                withdrawToTextField.getText(),
+                                withdrawToAddress,
                                 formatter.formatCoinWithCode(fee),
                                 feePerVbyte,
                                 vkb,
@@ -387,7 +388,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                                         if (transaction != null) {
                                             String key = "showTransactionSent";
                                             if (DontShowAgainLookup.showAgain(key)) {
-                                                new TxDetails(transaction.getTxId().toString(), withdrawToTextField.getText(), formatter.formatCoinWithCode(sendersAmount))
+                                                new TxDetails(transaction.getTxId().toString(), withdrawToAddress, formatter.formatCoinWithCode(sendersAmount))
                                                         .dontShowAgainId(key)
                                                         .show();
                                             }
@@ -540,7 +541,6 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
 
         totalAvailableAmountOfSelectedItems = Coin.ZERO;
         amountAsCoin = Coin.ZERO;
-        sendersAmount = Coin.ZERO;
         amountTextField.setText("");
         amountTextField.setPromptText(Res.get("funds.withdrawal.setAmount"));
 
@@ -554,7 +554,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
         tableView.getSelectionModel().clearSelection();
     }
 
-    private boolean areInputsValid() {
+    private boolean areInputsValid(Coin sendersAmount) {
         if (!sendersAmount.isPositive()) {
             new Popup().warning(Res.get("validation.negative")).show();
             return false;

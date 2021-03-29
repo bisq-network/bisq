@@ -62,6 +62,11 @@ public class SellerStep2View extends TradeStepView {
         super.deactivate();
     }
 
+    @Override
+    protected void onPendingTradesInitialized() {
+        super.onPendingTradesInitialized();
+        model.checkTakerFeeTx(trade);
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Info

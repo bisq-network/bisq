@@ -5,8 +5,6 @@ import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.payment.PaymentAccount;
 
-import bisq.proto.grpc.GetPaymentAccountsRequest;
-
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.stream.JsonWriter;
@@ -29,7 +27,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestInfo;
 
-import static bisq.apitest.config.BisqAppConfig.alicedaemon;
 import static java.lang.String.format;
 import static java.lang.System.getProperty;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -38,6 +35,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 
 import bisq.apitest.method.MethodTest;
+import bisq.cli.GrpcClient;
 
 @Slf4j
 public class AbstractPaymentAccountTest extends MethodTest {
@@ -87,6 +85,7 @@ public class AbstractPaymentAccountTest extends MethodTest {
     static final String PROPERTY_NAME_SALT = "salt";
     static final String PROPERTY_NAME_SORT_CODE = "sortCode";
     static final String PROPERTY_NAME_STATE = "state";
+    static final String PROPERTY_NAME_TRADE_CURRENCIES = "tradeCurrencies";
     static final String PROPERTY_NAME_USERNAME = "userName";
 
     static final Gson GSON = new GsonBuilder()
@@ -110,7 +109,7 @@ public class AbstractPaymentAccountTest extends MethodTest {
         // would be skipped.
         COMPLETED_FORM_MAP.clear();
 
-        File emptyForm = getPaymentAccountForm(alicedaemon, paymentMethodId);
+        File emptyForm = getPaymentAccountForm(aliceClient, paymentMethodId);
         // A short cut over the API:
         // File emptyForm = PAYMENT_ACCOUNT_FORM.getPaymentAccountForm(paymentMethodId);
         log.debug("{} Empty form saved to {}",
@@ -130,7 +129,10 @@ public class AbstractPaymentAccountTest extends MethodTest {
         assertEquals(paymentMethodId, emptyForm.get(PROPERTY_NAME_PAYMENT_METHOD_ID));
         assertEquals("your accountname", emptyForm.get(PROPERTY_NAME_ACCOUNT_NAME));
         for (String field : fields) {
-            assertEquals("your " + field.toLowerCase(), emptyForm.get(field));
+            if (field.equals("country"))
+                assertEquals("your two letter country code", emptyForm.get(field));
+            else
+                assertEquals("your " + field.toLowerCase(), emptyForm.get(field));
         }
     }
 
@@ -153,11 +155,10 @@ public class AbstractPaymentAccountTest extends MethodTest {
         assertArrayEquals(expectedTradeCurrencies.toArray(), paymentAccount.getTradeCurrencies().toArray());
     }
 
-    protected final void verifyUserPayloadHasPaymentAccountWithId(String paymentAccountId) {
-        var getPaymentAccountsRequest = GetPaymentAccountsRequest.newBuilder().build();
-        var reply = grpcStubs(alicedaemon)
-                .paymentAccountsService.getPaymentAccounts(getPaymentAccountsRequest);
-        Optional<protobuf.PaymentAccount> paymentAccount = reply.getPaymentAccountsList().stream()
+    protected final void verifyUserPayloadHasPaymentAccountWithId(GrpcClient grpcClient,
+                                                                  String paymentAccountId) {
+        Optional<protobuf.PaymentAccount> paymentAccount = grpcClient.getPaymentAccounts()
+                .stream()
                 .filter(a -> a.getId().equals(paymentAccountId))
                 .findFirst();
         assertTrue(paymentAccount.isPresent());

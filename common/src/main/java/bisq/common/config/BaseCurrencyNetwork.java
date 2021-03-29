@@ -73,6 +73,6 @@ public enum BaseCurrencyNetwork {
     }
 
     public long getDefaultMinFeePerVbyte() {
-        return 2;
+        return 15;  // 2021-02-22 due to mempool congestion, increased from 2
     }
 }
