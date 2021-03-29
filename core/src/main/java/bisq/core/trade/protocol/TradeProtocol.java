@@ -19,6 +19,7 @@ package bisq.core.trade.protocol;
 
 import bisq.core.offer.Offer;
 import bisq.core.trade.Trade;
+import bisq.core.trade.TradeModel;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.messages.CounterCurrencyTransferStartedMessage;
 import bisq.core.trade.messages.DepositTxAndDelayedPayoutTxMessage;
@@ -49,10 +50,11 @@ import lombok.extern.slf4j.Slf4j;
 import javax.annotation.Nullable;
 
 @Slf4j
-public abstract class TradeProtocol implements DecryptedDirectMessageListener, DecryptedMailboxListener {
+public abstract class TradeProtocol implements DecryptedDirectMessageListener,
+        DecryptedMailboxListener {
 
     protected final ProcessModel processModel;
-    protected final Trade trade;
+    protected final TradeModel tradeModel;
     private Timer timeoutTimer;
 
 
@@ -60,9 +62,9 @@ public abstract class TradeProtocol implements DecryptedDirectMessageListener, D
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public TradeProtocol(Trade trade) {
-        this.trade = trade;
-        this.processModel = trade.getProcessModel();
+    public TradeProtocol(TradeModel tradeModel) {
+        this.tradeModel = tradeModel;
+        this.processModel = tradeModel.getProcessModel();
     }
 
 
@@ -76,6 +78,10 @@ public abstract class TradeProtocol implements DecryptedDirectMessageListener, D
     }
 
     protected void onInitialized() {
+        if (!(tradeModel instanceof Trade))
+            return;
+
+        Trade trade = (Trade) tradeModel;
         if (!trade.isWithdrawn()) {
             processModel.getP2PService().addDecryptedDirectMessageListener(this);
         }
@@ -145,6 +151,11 @@ public abstract class TradeProtocol implements DecryptedDirectMessageListener, D
     }
 
     private void handleMailboxMessage(MailboxMessage mailboxMessage) {
+        if (!(tradeModel instanceof Trade))
+            return;
+
+        Trade trade = (Trade) tradeModel;
+
         if (mailboxMessage instanceof TradeMessage) {
             TradeMessage tradeMessage = (TradeMessage) mailboxMessage;
             // We only remove here if we have already completed the trade.
@@ -208,16 +219,20 @@ public abstract class TradeProtocol implements DecryptedDirectMessageListener, D
     }
 
     protected FluentProtocol.Condition phase(Trade.Phase expectedPhase) {
-        return new FluentProtocol.Condition(trade).phase(expectedPhase);
+        return new FluentProtocol.Condition(tradeModel).phase(expectedPhase);
     }
 
     protected FluentProtocol.Condition anyPhase(Trade.Phase... expectedPhases) {
-        return new FluentProtocol.Condition(trade).anyPhase(expectedPhases);
+        return new FluentProtocol.Condition(tradeModel).anyPhase(expectedPhases);
+    }
+
+    protected FluentProtocol.Condition preCondition(boolean preCondition) {
+        return new FluentProtocol.Condition(tradeModel).preCondition(preCondition);
     }
 
     @SafeVarargs
-    public final FluentProtocol.Setup tasks(Class<? extends Task<Trade>>... tasks) {
-        return new FluentProtocol.Setup(this, trade).tasks(tasks);
+    public final FluentProtocol.Setup tasks(Class<? extends Task<TradeModel>>... tasks) {
+        return new FluentProtocol.Setup(this, tradeModel).tasks(tasks);
     }
 
 
@@ -236,10 +251,10 @@ public abstract class TradeProtocol implements DecryptedDirectMessageListener, D
 
         if (ackMessage.isSuccess()) {
             log.info("Received AckMessage for {} from {} with tradeId {} and uid {}",
-                    ackMessage.getSourceMsgClassName(), peer, trade.getId(), ackMessage.getSourceUid());
+                    ackMessage.getSourceMsgClassName(), peer, tradeModel.getId(), ackMessage.getSourceUid());
         } else {
             log.warn("Received AckMessage with error state for {} from {} with tradeId {} and errorMessage={}",
-                    ackMessage.getSourceMsgClassName(), peer, trade.getId(), ackMessage.getErrorMessage());
+                    ackMessage.getSourceMsgClassName(), peer, tradeModel.getId(), ackMessage.getErrorMessage());
         }
     }
 
@@ -261,8 +276,8 @@ public abstract class TradeProtocol implements DecryptedDirectMessageListener, D
                 errorMessage);
         // If there was an error during offer verification, the tradingPeerNodeAddress of the trade might not be set yet.
         // We can find the peer's node address in the processModel's tempTradingPeerNodeAddress in that case.
-        NodeAddress peer = trade.getTradingPeerNodeAddress() != null ?
-                trade.getTradingPeerNodeAddress() :
+        NodeAddress peer = tradeModel.getTradingPeerNodeAddress() != null ?
+                tradeModel.getTradingPeerNodeAddress() :
                 processModel.getTempTradingPeerNodeAddress();
         log.info("Send AckMessage for {} to peer {}. tradeId={}, sourceUid={}",
                 ackMessage.getSourceMsgClassName(), peer, tradeId, sourceUid);
@@ -302,8 +317,8 @@ public abstract class TradeProtocol implements DecryptedDirectMessageListener, D
 
         timeoutTimer = UserThread.runAfter(() -> {
             log.error("Timeout reached. TradeID={}, state={}, timeoutSec={}",
-                    trade.getId(), trade.stateProperty().get(), timeoutSec);
-            trade.setErrorMessage("Timeout reached. Protocol did not complete in " + timeoutSec + " sec.");
+                    tradeModel.getId(), tradeModel.getStateInfo(), timeoutSec);
+            tradeModel.setErrorMessage("Timeout reached. Protocol did not complete in " + timeoutSec + " sec.");
 
             processModel.getTradeManager().requestPersistence();
             cleanup();
@@ -362,7 +377,7 @@ public abstract class TradeProtocol implements DecryptedDirectMessageListener, D
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void handleTaskRunnerSuccess(@Nullable TradeMessage message, String source) {
-        log.info("TaskRunner successfully completed. Triggered from {}, tradeId={}", source, trade.getId());
+        log.info("TaskRunner successfully completed. Triggered from {}, tradeId={}", source, tradeModel.getId());
         if (message != null) {
             sendAckMessage(message, true, null);
 
@@ -385,11 +400,11 @@ public abstract class TradeProtocol implements DecryptedDirectMessageListener, D
     private boolean isMyMessage(NetworkEnvelope message) {
         if (message instanceof TradeMessage) {
             TradeMessage tradeMessage = (TradeMessage) message;
-            return tradeMessage.getTradeId().equals(trade.getId());
+            return tradeMessage.getTradeId().equals(tradeModel.getId());
         } else if (message instanceof AckMessage) {
             AckMessage ackMessage = (AckMessage) message;
             return ackMessage.getSourceType() == AckMessageSourceType.TRADE_MESSAGE &&
-                    ackMessage.getSourceId().equals(trade.getId());
+                    ackMessage.getSourceId().equals(tradeModel.getId());
         } else {
             return false;
         }

@@ -38,7 +38,6 @@ import bisq.network.p2p.NodeAddress;
 
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.proto.ProtoUtil;
-import bisq.common.taskrunner.Model;
 import bisq.common.util.Utilities;
 
 import com.google.protobuf.ByteString;
@@ -84,7 +83,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * stored in the task model.
  */
 @Slf4j
-public abstract class Trade implements Tradable, Model {
+public abstract class Trade extends TradeModel {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Enums

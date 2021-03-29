@@ -18,6 +18,8 @@
 package bisq.core.trade.protocol;
 
 import bisq.core.trade.Trade;
+import bisq.core.trade.TradeModel;
+import bisq.core.trade.atomic.AtomicTrade;
 import bisq.core.trade.messages.TradeMessage;
 
 import bisq.network.p2p.NodeAddress;
@@ -29,6 +31,8 @@ import java.text.MessageFormat;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -61,7 +65,7 @@ public class FluentProtocol {
         return this;
     }
 
-    protected FluentProtocol setup(Setup setup) {
+    public FluentProtocol setup(Setup setup) {
         this.setup = setup;
         return this;
     }
@@ -149,7 +153,7 @@ public class FluentProtocol {
         private final Set<Trade.Phase> expectedPhases = new HashSet<>();
         private final Set<Trade.State> expectedStates = new HashSet<>();
         private final Set<Boolean> preConditions = new HashSet<>();
-        private final Trade trade;
+        private final TradeModel tradeModel;
         @Nullable
         private Result result;
 
@@ -166,8 +170,8 @@ public class FluentProtocol {
         private Runnable preConditionFailedHandler;
 
 
-        public Condition(Trade trade) {
-            this.trade = trade;
+        public Condition(TradeModel tradeModel) {
+            this.tradeModel = tradeModel;
         }
 
         public Condition phase(Trade.Phase expectedPhase) {
@@ -228,10 +232,10 @@ public class FluentProtocol {
 
         public Result getResult() {
             if (result == null) {
-                boolean isTradeIdValid = message == null || isTradeIdValid(trade.getId(), message);
+                boolean isTradeIdValid = message == null || isTradeIdValid(tradeModel.getId(), message);
                 if (!isTradeIdValid) {
                     String info = MessageFormat.format("TradeId does not match tradeId in message, TradeId={0}, tradeId in message={1}",
-                            trade.getId(), message.getTradeId());
+                            tradeModel.getId(), message.getTradeId());
                     result = Result.INVALID_TRADE_ID.info(info);
                     return result;
                 }
@@ -252,7 +256,7 @@ public class FluentProtocol {
                 boolean allPreConditionsMet = preConditions.stream().allMatch(e -> e);
                 if (!allPreConditionsMet) {
                     String info = MessageFormat.format("PreConditions not met. preConditions={0}, this={1}, tradeId={2}",
-                            preConditions, this, trade.getId());
+                            preConditions, this, tradeModel.getId());
                     result = Result.INVALID_PRE_CONDITION.info(info);
 
                     if (preConditionFailedHandler != null) {
@@ -270,6 +274,8 @@ public class FluentProtocol {
             if (expectedPhases.isEmpty()) {
                 return Result.VALID;
             }
+            checkArgument(tradeModel instanceof Trade);
+            Trade trade = (Trade) tradeModel;
 
             boolean isPhaseValid = expectedPhases.stream().anyMatch(e -> e == trade.getPhase());
             String trigger = message != null ?
@@ -304,6 +310,9 @@ public class FluentProtocol {
                 return Result.VALID;
             }
 
+            checkArgument(tradeModel instanceof Trade);
+            Trade trade = (Trade) tradeModel;
+
             boolean isStateValid = expectedStates.stream().anyMatch(e -> e == trade.getState());
             String trigger = message != null ?
                     message.getClass().getSimpleName() :
@@ -337,21 +346,21 @@ public class FluentProtocol {
     @Slf4j
     public static class Setup {
         private final TradeProtocol tradeProtocol;
-        private final Trade trade;
+        private final TradeModel tradeModel;
         @Getter
-        private Class<? extends Task<Trade>>[] tasks;
+        private Class<? extends Task<TradeModel>>[] tasks;
         @Getter
         private int timeoutSec;
         @Nullable
         private TradeTaskRunner taskRunner;
 
-        public Setup(TradeProtocol tradeProtocol, Trade trade) {
+        public Setup(TradeProtocol tradeProtocol, TradeModel tradeModel) {
             this.tradeProtocol = tradeProtocol;
-            this.trade = trade;
+            this.tradeModel = tradeModel;
         }
 
         @SafeVarargs
-        public final Setup tasks(Class<? extends Task<Trade>>... tasks) {
+        public final Setup tasks(Class<? extends Task<TradeModel>>... tasks) {
             this.tasks = tasks;
             return this;
         }
@@ -369,11 +378,11 @@ public class FluentProtocol {
         public TradeTaskRunner getTaskRunner(@Nullable TradeMessage message, @Nullable Event event) {
             if (taskRunner == null) {
                 if (message != null) {
-                    taskRunner = new TradeTaskRunner(trade,
+                    taskRunner = new TradeTaskRunner(tradeModel,
                             () -> tradeProtocol.handleTaskRunnerSuccess(message),
                             errorMessage -> tradeProtocol.handleTaskRunnerFault(message, errorMessage));
                 } else if (event != null) {
-                    taskRunner = new TradeTaskRunner(trade,
+                    taskRunner = new TradeTaskRunner(tradeModel,
                             () -> tradeProtocol.handleTaskRunnerSuccess(event),
                             errorMessage -> tradeProtocol.handleTaskRunnerFault(event, errorMessage));
                 } else {

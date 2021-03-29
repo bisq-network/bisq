@@ -45,6 +45,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class DisputeProtocol extends TradeProtocol {
 
+    protected Trade trade;
+
     enum DisputeEvent implements FluentProtocol.Event {
         MEDIATION_RESULT_ACCEPTED,
         MEDIATION_RESULT_REJECTED,
@@ -53,6 +55,7 @@ public class DisputeProtocol extends TradeProtocol {
 
     public DisputeProtocol(Trade trade) {
         super(trade);
+        this.trade = trade;
     }
 
 
