@@ -42,16 +42,20 @@ import bisq.core.user.Preferences;
 import bisq.network.p2p.P2PService;
 
 import bisq.common.UserThread;
+import bisq.common.config.Config;
 import bisq.common.util.Base64;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Utilities;
 
+import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.SignatureDecodeException;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.Utils;
 import org.bitcoinj.core.VerificationException;
+import org.bitcoinj.core.ECKey;
+import org.bitcoinj.script.Script;
 
 import javax.inject.Inject;
 
@@ -80,6 +84,8 @@ import javafx.beans.value.ChangeListener;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+
+import java.security.SignatureException;
 
 import java.time.Instant;
 
@@ -112,10 +118,10 @@ public class ManualPayoutTxWindow extends Overlay<ManualPayoutTxWindow> {
     GridPane exportTxGridPane;
     GridPane signTxGridPane;
     GridPane buildTxGridPane;
+    GridPane signVerifyMsgGridPane;
     CheckBox depositTxLegacy, recentTickets;
     ComboBox<String> mediationDropDown;
     ObservableList<Dispute> disputeObservableList;
-    Label blockExplorerIcon, copyIcon;
     InputTextField depositTxHex;
     InputTextField amountInMultisig;
     InputTextField buyerPayoutAmount;
@@ -216,8 +222,6 @@ public class ManualPayoutTxWindow extends Overlay<ManualPayoutTxWindow> {
 
     @Override
     protected void cleanup() {
-        blockExplorerIcon.setOnMouseClicked(null);
-        copyIcon.setOnMouseClicked(null);
         txFee.focusedProperty().removeListener(txFeeListener);
         buyerPayoutAmount.focusedProperty().removeListener(buyerPayoutAmountListener);
         sellerPayoutAmount.focusedProperty().removeListener(sellerPayoutAmountListener);
@@ -234,6 +238,7 @@ public class ManualPayoutTxWindow extends Overlay<ManualPayoutTxWindow> {
         addExportPane();
         addSignPane();
         addBuildPane();
+        signVerifyMsgGridPane = addSignVerifyMsgPane(new GridPane());
         hideAllPanes();
         inputsGridPane.setVisible(true);
 
@@ -251,7 +256,8 @@ public class ManualPayoutTxWindow extends Overlay<ManualPayoutTxWindow> {
         Button buttonExport = new AutoTooltipButton("Export");
         Button buttonSign = new AutoTooltipButton("Sign");
         Button buttonBuild = new AutoTooltipButton("Build");
-        VBox vBox = new VBox(12, buttonInputs, buttonImport, buttonExport, buttonSign, buttonBuild);
+        Button buttonSignVerifyMsg = new AutoTooltipButton("Sign/Verify Msg");
+        VBox vBox = new VBox(12, buttonInputs, buttonImport, buttonExport, buttonSign, buttonBuild, buttonSignVerifyMsg);
         vBox.getChildren().forEach(button -> ((Button) button).setPrefWidth(500));
         gridPane.add(vBox, 0, rowIndex);
         buttonInputs.getStyleClass().add("action-button");
@@ -290,6 +296,12 @@ public class ManualPayoutTxWindow extends Overlay<ManualPayoutTxWindow> {
             buildTxGridPane.setVisible(true);
             finalSignedTxHex.setText("");
         });
+        buttonSignVerifyMsg.setOnAction(e -> {  // just show the sign msg pane
+            hideAllPanes();
+            vBox.getChildren().forEach(button -> button.getStyleClass().remove("action-button"));
+            buttonSignVerifyMsg.getStyleClass().add("action-button");
+            signVerifyMsgGridPane.setVisible(true);
+        });
     }
 
     private void addInputsPane() {
@@ -300,7 +312,7 @@ public class ManualPayoutTxWindow extends Overlay<ManualPayoutTxWindow> {
         depositTxLegacy = addCheckBox(inputsGridPane, rowIndexA, "depositTxLegacy");
 
         Tooltip tooltip = new Tooltip(Res.get("txIdTextField.blockExplorerIcon.tooltip"));
-        blockExplorerIcon = new Label();
+        Label blockExplorerIcon = new Label();
         blockExplorerIcon.getStyleClass().addAll("icon", "highlight");
         blockExplorerIcon.setTooltip(tooltip);
         AwesomeDude.setIcon(blockExplorerIcon, AwesomeIcon.EXTERNAL_LINK);
@@ -416,7 +428,7 @@ public class ManualPayoutTxWindow extends Overlay<ManualPayoutTxWindow> {
         signatureHex = addInputTextField(signTxGridPane, ++rowIndexB, "signatureHex");
         signatureHex.setPrefWidth(800);
         signatureHex.setEditable(false);
-        copyIcon = new Label();
+        Label copyIcon = new Label();
         copyIcon.setTooltip(new Tooltip(Res.get("txIdTextField.copyIcon.tooltip")));
         AwesomeDude.setIcon(copyIcon, AwesomeIcon.COPY);
         copyIcon.getStyleClass().addAll("icon", "highlight");
@@ -440,9 +452,9 @@ public class ManualPayoutTxWindow extends Overlay<ManualPayoutTxWindow> {
                 return;
             }
             String walletInfo = walletsManager.getWalletsAsString(true);
-            String privateKeyText = findPrivForPub(walletInfo, buyerPubKeyAsHex.getText());
+            String privateKeyText = findPrivForPubOrAddress(walletInfo, buyerPubKeyAsHex.getText());
             if (privateKeyText == null) {
-                privateKeyText = findPrivForPub(walletInfo, sellerPubKeyAsHex.getText());
+                privateKeyText = findPrivForPubOrAddress(walletInfo, sellerPubKeyAsHex.getText());
             }
             if (privateKeyText == null) {
                 privateKeyText = "Not found in wallet";
@@ -481,12 +493,70 @@ public class ManualPayoutTxWindow extends Overlay<ManualPayoutTxWindow> {
         });
     }
 
+    private GridPane addSignVerifyMsgPane(GridPane myGridPane) {
+        int rowIndexB = 0;
+        gridPane.add(myGridPane, 1, rowIndex);
+        TextArea messageText = new BisqTextArea();
+        messageText.setPromptText("Message");
+        messageText.setEditable(true);
+        messageText.setWrapText(true);
+        messageText.setPrefSize(800, 150);
+        myGridPane.add(messageText, 0, ++rowIndexB);
+        myGridPane.add(new Label(""), 0, ++rowIndexB);  // spacer
+        InputTextField address = addInputTextField(myGridPane, ++rowIndexB, "Address");
+        myGridPane.add(new Label(""), 0, ++rowIndexB);  // spacer
+        TextArea messageSig = new BisqTextArea();
+        messageSig.setPromptText("Signature");
+        messageSig.setEditable(true);
+        messageSig.setWrapText(true);
+        messageSig.setPrefSize(800, 65);
+        myGridPane.add(messageSig, 0, ++rowIndexB);
+        myGridPane.add(new Label(""), 0, ++rowIndexB);  // spacer
+        Button buttonSign = new AutoTooltipButton("Sign");
+        Button buttonVerify = new AutoTooltipButton("Verify");
+        HBox buttonBox = new HBox(12, buttonSign, buttonVerify);
+        buttonBox.setAlignment(Pos.BASELINE_CENTER);
+        buttonBox.setPrefWidth(800);
+        myGridPane.add(buttonBox, 0, ++rowIndexB);
+
+        buttonSign.setOnAction(e -> {
+            String walletInfo = walletsManager.getWalletsAsString(true);
+            String privKeyHex = findPrivForPubOrAddress(walletInfo, address.getText());
+            if (privKeyHex == null) {
+                messageSig.setText("");
+                new Popup().information("Key not found in wallet").show();
+            } else {
+                ECKey myPrivateKey = ECKey.fromPrivate(Utils.HEX.decode(privKeyHex));
+                String signatureBase64 = myPrivateKey.signMessage(messageText.getText());
+                messageSig.setText(signatureBase64);
+            }
+        });
+        buttonVerify.setOnAction(e -> {
+            try {
+                ECKey key = ECKey.signedMessageToKey(messageText.getText(), messageSig.getText());
+                Address address1 = Address.fromKey(Config.baseCurrencyNetworkParameters(), key, Script.ScriptType.P2PKH);
+                Address address2 = Address.fromKey(Config.baseCurrencyNetworkParameters(), key, Script.ScriptType.P2WPKH);
+                if (address.getText().equalsIgnoreCase(address1.toString()) ||
+                        address.getText().equalsIgnoreCase(address2.toString())) {
+                    new Popup().information("Signature verified").show();
+                } else {
+                    new Popup().warning("Wrong signature").show();
+                }
+            } catch (SignatureException ex) {
+                log.warn(ex.toString());
+                new Popup().warning("Wrong signature").show();
+            }
+        });
+        return myGridPane;
+    }
+
     private void hideAllPanes() {
         inputsGridPane.setVisible(false);
         importTxGridPane.setVisible(false);
         exportTxGridPane.setVisible(false);
         signTxGridPane.setVisible(false);
         buildTxGridPane.setVisible(false);
+        signVerifyMsgGridPane.setVisible(false);
     }
 
     private void populateMediationTicketCombo(boolean recentTicketsOnly) {
@@ -565,12 +635,12 @@ public class ManualPayoutTxWindow extends Overlay<ManualPayoutTxWindow> {
         }
     }
 
-    private String findPrivForPub(String walletInfo, String publicKey) {
+    private String findPrivForPubOrAddress(String walletInfo, String searchKey) {
         // split the walletInfo into lines, strip whitespace
-        // look for lines beginning "DeterministicKey{pub HEX=" .... ", priv HEX="
+        // look for lines beginning "  addr:" followed by "DeterministicKey{pub HEX=" .... ", priv HEX="
         int lineIndex = 0;
         while (lineIndex < walletInfo.length() && lineIndex != -1) {
-            lineIndex = walletInfo.indexOf("DeterministicKey{pub HEX=", lineIndex);
+            lineIndex = walletInfo.indexOf("  addr:", lineIndex);
             if (lineIndex == -1) {
                 return  null;
             }
@@ -580,8 +650,8 @@ public class ManualPayoutTxWindow extends Overlay<ManualPayoutTxWindow> {
             }
             String candidate1 = walletInfo.substring(lineIndex, toIndex);
             lineIndex = toIndex;
-            // do we have the public key?
-            if (candidate1.indexOf(publicKey, 0) > -1) {
+            // do we have the search key?
+            if (candidate1.indexOf(searchKey, 0) > -1) {
                 int startOfPriv = candidate1.indexOf("priv HEX=", 0);
                 if (startOfPriv > -1) {
                     return candidate1.substring(startOfPriv + 9, startOfPriv + 9 + HEX_HASH_LENGTH);
