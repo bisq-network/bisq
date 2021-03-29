@@ -42,6 +42,8 @@ public class MathUtils {
     public static double roundDouble(double value, int precision, RoundingMode roundingMode) {
         if (precision < 0)
             throw new IllegalArgumentException();
+        if (!Double.isFinite(value))
+            throw new IllegalArgumentException("Expected a finite double, but found " + value);
 
         try {
             BigDecimal bd = BigDecimal.valueOf(value);

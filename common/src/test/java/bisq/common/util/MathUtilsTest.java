@@ -24,6 +24,20 @@ import static org.junit.Assert.assertFalse;
 
 public class MathUtilsTest {
 
+    @Test(expected = IllegalArgumentException.class)
+    public void testRoundDoubleWithInfiniteArg() {
+        MathUtils.roundDouble(Double.POSITIVE_INFINITY, 2);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testRoundDoubleWithNaNArg() {
+        MathUtils.roundDouble(Double.NaN, 2);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testRoundDoubleWithNegativePrecision() {
+        MathUtils.roundDouble(3, -1);
+    }
 
     @SuppressWarnings("OptionalGetWithoutIsPresent")
     @Test
