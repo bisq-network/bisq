@@ -1,7 +1,13 @@
+---
+name: "\U0001F41B Bug report"
+about: Report a bug or a technical issue
+
+---
+
 <!--
    SUPPORT REQUESTS: This is for reporting bugs in the Bisq app.
    If you have a support request, please join #support on Bisq's
-   Keybase team at https://keybase.io/team/Bisq
+   Keybase team over at https://keybase.io/team/Bisq
 -->
 
 ### Description
