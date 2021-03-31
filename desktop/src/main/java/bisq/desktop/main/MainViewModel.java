@@ -575,7 +575,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
 
     private void showSecondPopupIfResyncSPVRequested(Popup firstPopup) {
         firstPopup.hide();
-        preferences.setResyncSpvRequested(false);
+        BisqSetup.setResyncSpvSemaphore(false);
         new Popup().information(Res.get("settings.net.reSyncSPVAfterRestartCompleted"))
                 .hideCloseButton()
                 .useShutDownButton()
