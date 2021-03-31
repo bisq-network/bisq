@@ -105,6 +105,7 @@ public class WalletAppSetup {
 
     void init(@Nullable Consumer<String> chainFileLockedExceptionHandler,
               @Nullable Consumer<String> spvFileCorruptedHandler,
+              boolean isSpvResyncRequested,
               @Nullable Runnable showFirstPopupIfResyncSPVRequestedHandler,
               @Nullable Runnable showPopupIfInvalidBtcConfigHandler,
               Runnable walletPasswordHandler,
@@ -179,7 +180,7 @@ public class WalletAppSetup {
                     if (walletsManager.areWalletsEncrypted() && !coreContext.isApiUser()) {
                         walletPasswordHandler.run();
                     } else {
-                        if (preferences.isResyncSpvRequested() && !coreContext.isApiUser()) {
+                        if (isSpvResyncRequested && !coreContext.isApiUser()) {
                             if (showFirstPopupIfResyncSPVRequestedHandler != null)
                                 showFirstPopupIfResyncSPVRequestedHandler.run();
                         } else {
