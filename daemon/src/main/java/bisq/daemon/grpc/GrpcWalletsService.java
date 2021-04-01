@@ -51,6 +51,8 @@ import bisq.proto.grpc.UnlockWalletReply;
 import bisq.proto.grpc.UnlockWalletRequest;
 import bisq.proto.grpc.UnsetTxFeeRatePreferenceReply;
 import bisq.proto.grpc.UnsetTxFeeRatePreferenceRequest;
+import bisq.proto.grpc.VerifyBsqSentToAddressReply;
+import bisq.proto.grpc.VerifyBsqSentToAddressRequest;
 
 import io.grpc.ServerInterceptor;
 import io.grpc.stub.StreamObserver;
@@ -225,6 +227,21 @@ class GrpcWalletsService extends WalletsImplBase {
     }
 
     @Override
+    public void verifyBsqSentToAddress(VerifyBsqSentToAddressRequest req,
+                                       StreamObserver<VerifyBsqSentToAddressReply> responseObserver) {
+        try {
+            boolean isAmountReceived = coreApi.verifyBsqSentToAddress(req.getAddress(), req.getAmount());
+            var reply = VerifyBsqSentToAddressReply.newBuilder()
+                    .setIsAmountReceived(isAmountReceived)
+                    .build();
+            responseObserver.onNext(reply);
+            responseObserver.onCompleted();
+        } catch (Throwable cause) {
+            exceptionHandler.handleException(log, cause, responseObserver);
+        }
+    }
+
+    @Override
     public void getTxFeeRate(GetTxFeeRateRequest req,
                              StreamObserver<GetTxFeeRateReply> responseObserver) {
         try {
@@ -358,6 +375,7 @@ class GrpcWalletsService extends WalletsImplBase {
                             put(getGetUnusedBsqAddressMethod().getFullMethodName(), new GrpcCallRateMeter(1, SECONDS));
                             put(getSendBsqMethod().getFullMethodName(), new GrpcCallRateMeter(1, MINUTES));
                             put(getSendBtcMethod().getFullMethodName(), new GrpcCallRateMeter(1, MINUTES));
+                            put(getVerifyBsqSentToAddressMethod().getFullMethodName(), new GrpcCallRateMeter(1, SECONDS));
                             put(getGetTxFeeRateMethod().getFullMethodName(), new GrpcCallRateMeter(1, SECONDS));
                             put(getSetTxFeeRatePreferenceMethod().getFullMethodName(), new GrpcCallRateMeter(1, SECONDS));
                             put(getUnsetTxFeeRatePreferenceMethod().getFullMethodName(), new GrpcCallRateMeter(1, SECONDS));
