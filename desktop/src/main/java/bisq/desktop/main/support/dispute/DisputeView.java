@@ -1366,6 +1366,8 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
                                         setText(newValue ? Res.get("support.closed") : Res.get("support.open"));
                                         if (getTableRow() != null)
                                             getTableRow().setOpacity(newValue && item.getBadgeCountProperty().get() == 0 ? 0.4 : 1);
+                                        if (item.isClosed() && item == chatPopup.getSelectedDispute())
+                                            chatPopup.closeChat(); // close the chat popup when the associated ticket is closed
                                     };
                                     closedProperty = item.isClosedProperty();
                                     closedProperty.addListener(listener);
