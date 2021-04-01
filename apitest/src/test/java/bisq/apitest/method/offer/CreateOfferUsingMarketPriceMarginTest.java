@@ -31,6 +31,7 @@ import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 
+import static bisq.apitest.config.ApiTestConfig.BTC;
 import static bisq.cli.TableFormat.formatOfferTable;
 import static bisq.common.util.MathUtils.scaleDownByPowerOf10;
 import static bisq.common.util.MathUtils.scaleUpByPowerOf10;

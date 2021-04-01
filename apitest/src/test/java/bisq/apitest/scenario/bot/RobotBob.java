@@ -20,48 +20,49 @@ package bisq.apitest.scenario.bot;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.apitest.scenario.bot.protocol.ProtocolStep.DONE;
-import static bisq.apitest.scenario.bot.shutdown.ManualShutdown.isShutdownCalled;
+import static bisq.apitest.botsupport.protocol.ProtocolStep.DONE;
+import static bisq.apitest.botsupport.shutdown.ManualShutdown.isShutdownCalled;
 import static bisq.cli.TableFormat.formatBalancesTbls;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 
 
+import bisq.apitest.botsupport.BotClient;
+import bisq.apitest.botsupport.script.BashScriptGenerator;
+import bisq.apitest.botsupport.shutdown.ManualBotShutdownException;
 import bisq.apitest.method.BitcoinCliHelper;
-import bisq.apitest.scenario.bot.protocol.BotProtocol;
-import bisq.apitest.scenario.bot.protocol.MakerBotProtocol;
-import bisq.apitest.scenario.bot.protocol.TakerBotProtocol;
-import bisq.apitest.scenario.bot.script.BashScriptGenerator;
+import bisq.apitest.scenario.bot.protocol.ApiTestBotProtocol;
+import bisq.apitest.scenario.bot.protocol.ApiTestMakerBotProtocol;
+import bisq.apitest.scenario.bot.protocol.ApiTestTakerBotProtocol;
 import bisq.apitest.scenario.bot.script.BotScript;
-import bisq.apitest.scenario.bot.shutdown.ManualBotShutdownException;
+
 
 @Slf4j
-public
-class RobotBob extends Bot {
+public class RobotBob extends Bot {
 
     @Getter
     private int numTrades;
 
-    public RobotBob(BotClient botClient,
+    public RobotBob(BotClient makerBotClient,
                     BotScript botScript,
                     BitcoinCliHelper bitcoinCli,
                     BashScriptGenerator bashScriptGenerator) {
-        super(botClient, botScript, bitcoinCli, bashScriptGenerator);
+        super(makerBotClient, botScript, bitcoinCli, bashScriptGenerator);
     }
 
     public void run() {
         for (String action : actions) {
             checkActionIsValid(action);
 
-            BotProtocol botProtocol;
+            ApiTestBotProtocol botProtocol;
             if (action.equalsIgnoreCase(MAKE)) {
-                botProtocol = new MakerBotProtocol(botClient,
+                botProtocol = new ApiTestMakerBotProtocol(makerBotClient,
                         paymentAccount,
                         protocolStepTimeLimitInMs,
                         bitcoinCli,
                         bashScriptGenerator);
             } else {
-                botProtocol = new TakerBotProtocol(botClient,
+                botProtocol = new ApiTestTakerBotProtocol(makerBotClient,
                         paymentAccount,
                         protocolStepTimeLimitInMs,
                         bitcoinCli,
@@ -77,7 +78,7 @@ class RobotBob extends Bot {
             log.info("Completed {} successful trade{}.  Current Balance:\n{}",
                     ++numTrades,
                     numTrades == 1 ? "" : "s",
-                    formatBalancesTbls(botClient.getBalance()));
+                    formatBalancesTbls(makerBotClient.getBalance()));
 
             if (numTrades < actions.length) {
                 try {

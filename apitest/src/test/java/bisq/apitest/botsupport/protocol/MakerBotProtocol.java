@@ -15,21 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.apitest.scenario.bot;
+package bisq.apitest.botsupport.protocol;
 
-import bisq.common.BisqException;
-
-@SuppressWarnings("unused")
-public class PaymentAccountNotFoundException extends BisqException {
-    public PaymentAccountNotFoundException(Throwable cause) {
-        super(cause);
-    }
-
-    public PaymentAccountNotFoundException(String format, Object... args) {
-        super(format, args);
-    }
-
-    public PaymentAccountNotFoundException(Throwable cause, String format, Object... args) {
-        super(cause, format, args);
-    }
+public interface MakerBotProtocol {
 }

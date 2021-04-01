@@ -32,6 +32,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 
 import static bisq.apitest.Scaffold.BitcoinCoreApp.bitcoind;
+import static bisq.apitest.config.ApiTestConfig.BSQ;
 import static bisq.apitest.config.BisqAppConfig.alicedaemon;
 import static bisq.apitest.config.BisqAppConfig.arbdaemon;
 import static bisq.apitest.config.BisqAppConfig.bobdaemon;
@@ -57,7 +58,6 @@ public abstract class AbstractOfferTest extends MethodTest {
     @BeforeAll
     public static void setUp() {
         startSupportingApps(true,
-                true,
                 false,
                 bitcoind,
                 seednode,
@@ -70,10 +70,12 @@ public abstract class AbstractOfferTest extends MethodTest {
     public static void createBsqPaymentAccounts() {
         alicesBsqAcct = aliceClient.createCryptoCurrencyPaymentAccount("Alice's BSQ Account",
                 BSQ,
-                aliceClient.getUnusedBsqAddress());
+                aliceClient.getUnusedBsqAddress(),
+                false);
         bobsBsqAcct = bobClient.createCryptoCurrencyPaymentAccount("Bob's BSQ Account",
                 BSQ,
-                bobClient.getUnusedBsqAddress());
+                bobClient.getUnusedBsqAddress(),
+                false);
     }
 
     protected double getScaledOfferPrice(double offerPrice, String currencyCode) {

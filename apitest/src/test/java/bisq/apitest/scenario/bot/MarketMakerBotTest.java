@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.apitest.scenario;
+package bisq.apitest.scenario.bot;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -41,40 +41,25 @@ import static org.junit.jupiter.api.Assertions.fail;
 import bisq.apitest.botsupport.BotClient;
 import bisq.apitest.botsupport.script.BashScriptGenerator;
 import bisq.apitest.botsupport.shutdown.ManualBotShutdownException;
-import bisq.apitest.config.ApiTestConfig;
-import bisq.apitest.method.BitcoinCliHelper;
-import bisq.apitest.scenario.bot.AbstractBotTest;
-import bisq.apitest.scenario.bot.RobotBob;
 
-// The test case is enabled if AbstractBotTest#botScriptExists() returns true.
 @EnabledIf("botScriptExists")
 @Slf4j
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class ScriptedBotTest extends AbstractBotTest {
+public class MarketMakerBotTest extends AbstractBotTest {
 
-    private RobotBob robotBob;
+    private RobotBobMMBot robotBobMM;
 
     @BeforeAll
     public static void startTestHarness() {
         botScript = deserializeBotScript();
 
-        if (botScript.isUseTestHarness()) {
-            startSupportingApps(true,
-                    true,
-                    bitcoind,
-                    seednode,
-                    arbdaemon,
-                    alicedaemon,
-                    bobdaemon);
-        } else {
-            // We need just enough configurations to make sure Bob and testers use
-            // the right apiPassword, to create a bitcoin-cli helper, and RobotBob's
-            // gRPC stubs.  But the user will have to register dispute agents before
-            // an offer can be taken.
-            config = new ApiTestConfig("--apiPassword", "xyz");
-            bitcoinCli = new BitcoinCliHelper(config);
-            log.warn("Don't forget to register dispute agents before trying to trade with me.");
-        }
+        startSupportingApps(true,
+                true,
+                bitcoind,
+                seednode,
+                arbdaemon,
+                alicedaemon,
+                bobdaemon);
 
         makerBotClient = new BotClient(bobClient);
         takerBotClient = new BotClient(aliceClient);
@@ -84,7 +69,12 @@ public class ScriptedBotTest extends AbstractBotTest {
     public void initRobotBob() {
         try {
             BashScriptGenerator bashScriptGenerator = getBashScriptGenerator();
-            robotBob = new RobotBob(makerBotClient, botScript, bitcoinCli, bashScriptGenerator);
+
+            robotBobMM = new RobotBobMMBot(makerBotClient,
+                    takerBotClient,
+                    botScript,
+                    bitcoinCli,
+                    bashScriptGenerator);
         } catch (Exception ex) {
             fail(ex);
         }
@@ -94,9 +84,19 @@ public class ScriptedBotTest extends AbstractBotTest {
     @Order(1)
     public void runRobotBob() {
         try {
-
             startShutdownTimer();
-            robotBob.run();
+
+            log.info("Bob's Initial Bank Balance: {}", robotBobMM.getBobsBankBalance().get());
+
+            robotBobMM.run();
+
+            // A controlled bot shutdown is always desired in the event of a fatal error.
+            // Check RobotBob's bot exception fields, and fail the test if one or more
+            // is not null.
+            if (robotBobMM.botDidFail())
+                fail(robotBobMM.getBotFailureReason());
+
+            log.info("Bob's Final Bank Balance: {}", robotBobMM.getBobsBankBalance().get());
 
         } catch (ManualBotShutdownException ex) {
             // This exception is thrown if a /tmp/bottest-shutdown file was found.
@@ -109,14 +109,18 @@ public class ScriptedBotTest extends AbstractBotTest {
             log.warn("{}  Shutting down test case before test completion;"
                             + "  this is not a test failure.",
                     ex.getMessage());
-        } catch (Throwable throwable) {
-            fail(throwable);
+        } catch (Throwable t) {
+            if (robotBobMM.botDidFail()) {
+                fail(robotBobMM.getBotFailureReason());
+            } else {
+                log.error("Uncontrolled bot shutdown caused by uncaught bot exception:");
+                fail(t);
+            }
         }
     }
 
     @AfterAll
     public static void tearDown() {
-        if (botScript.isUseTestHarness())
-            tearDownScaffold();
+        tearDownScaffold();
     }
 }

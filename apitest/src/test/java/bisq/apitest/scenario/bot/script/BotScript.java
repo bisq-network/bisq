@@ -25,8 +25,7 @@ import javax.annotation.Nullable;
 
 @Getter
 @ToString
-public
-class BotScript {
+public class BotScript {
 
     // Common, default is true.
     private final boolean useTestHarness;

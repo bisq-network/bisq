@@ -98,7 +98,7 @@ public class BotScriptGenerator {
                 .accepts("step-time-limit", "Each protocol step's time limit in minutes")
                 .withRequiredArg()
                 .ofType(Integer.class)
-                .defaultsTo(60);
+                .defaultsTo(10);
         OptionSpec<Boolean> printCliScriptsOpt = parser
                 .accepts("print-cli-scripts", "Print the generated CLI scripts from bot")
                 .withRequiredArg()

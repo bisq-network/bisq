@@ -11,35 +11,36 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import lombok.extern.slf4j.Slf4j;
-
-import static bisq.apitest.method.MethodTest.BSQ;
-import static bisq.apitest.method.MethodTest.BTC;
-import static bisq.apitest.scenario.bot.protocol.ProtocolStep.DONE;
-import static bisq.apitest.scenario.bot.protocol.ProtocolStep.FIND_OFFER;
-import static bisq.apitest.scenario.bot.protocol.ProtocolStep.TAKE_OFFER;
-import static bisq.apitest.scenario.bot.shutdown.ManualShutdown.checkIfShutdownCalled;
+import static bisq.apitest.botsupport.protocol.ProtocolStep.DONE;
+import static bisq.apitest.botsupport.protocol.ProtocolStep.FIND_OFFER;
+import static bisq.apitest.botsupport.protocol.ProtocolStep.TAKE_OFFER;
+import static bisq.apitest.botsupport.shutdown.ManualShutdown.checkIfShutdownCalled;
 import static bisq.cli.TableFormat.formatOfferTable;
+import static bisq.core.offer.OfferPayload.Direction.BUY;
+import static bisq.core.offer.OfferPayload.Direction.SELL;
 import static bisq.core.payment.payload.PaymentMethod.F2F_ID;
-import static protobuf.OfferPayload.Direction.BUY;
-import static protobuf.OfferPayload.Direction.SELL;
 
 
 
+import bisq.apitest.botsupport.BotClient;
+import bisq.apitest.botsupport.protocol.TakerBotProtocol;
+import bisq.apitest.botsupport.script.BashScriptGenerator;
+import bisq.apitest.botsupport.shutdown.ManualBotShutdownException;
 import bisq.apitest.method.BitcoinCliHelper;
-import bisq.apitest.scenario.bot.BotClient;
-import bisq.apitest.scenario.bot.script.BashScriptGenerator;
-import bisq.apitest.scenario.bot.shutdown.ManualBotShutdownException;
 
-@Slf4j
-public class TakerBotProtocol extends BotProtocol {
+public class ApiTestTakerBotProtocol extends ApiTestBotProtocol implements TakerBotProtocol {
 
-    public TakerBotProtocol(BotClient botClient,
-                            PaymentAccount paymentAccount,
-                            long protocolStepTimeLimitInMs,
-                            BitcoinCliHelper bitcoinCli,
-                            BashScriptGenerator bashScriptGenerator) {
-        super(botClient,
+    // Don't use @Slf4j annotation to init log and use in Functions w/out IDE warnings.
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(ApiTestTakerBotProtocol.class);
+
+
+    public ApiTestTakerBotProtocol(BotClient botClient,
+                                   PaymentAccount paymentAccount,
+                                   long protocolStepTimeLimitInMs,
+                                   BitcoinCliHelper bitcoinCli,
+                                   BashScriptGenerator bashScriptGenerator) {
+        super("Taker",
+                botClient,
                 paymentAccount,
                 protocolStepTimeLimitInMs,
                 bitcoinCli,
@@ -66,7 +67,7 @@ public class TakerBotProtocol extends BotProtocol {
     }
 
     private final Supplier<Optional<OfferInfo>> firstOffer = () -> {
-        var offers = botClient.getOffers(currencyCode);
+        var offers = botClient.getOffersSortedByDate(currencyCode);
         if (offers.size() > 0) {
             log.info("Offers found:\n{}", formatOfferTable(offers, currencyCode));
             OfferInfo offer = offers.get(0);
@@ -82,7 +83,7 @@ public class TakerBotProtocol extends BotProtocol {
         initProtocolStep.accept(FIND_OFFER);
         createMakeOfferScript();
         try {
-            log.info("Impatiently waiting for at least one {} offer to be created, repeatedly calling getoffers.", currencyCode);
+            log.info("Waiting for a {} offer to be created.", currencyCode);
             while (isWithinProtocolStepTimeLimit()) {
                 checkIfShutdownCalled("Interrupted while checking offers.");
                 try {
@@ -90,7 +91,7 @@ public class TakerBotProtocol extends BotProtocol {
                     if (offer.isPresent())
                         return offer.get();
                     else
-                        sleep(randomDelay.get());
+                        sleep(shortRandomDelayInSeconds.get());
                 } catch (Exception ex) {
                     throw new IllegalStateException(this.getBotClient().toCleanGrpcExceptionMessage(ex), ex);
                 }
@@ -106,13 +107,13 @@ public class TakerBotProtocol extends BotProtocol {
     private final Function<OfferInfo, TradeInfo> takeOffer = (offer) -> {
         initProtocolStep.accept(TAKE_OFFER);
         checkIfShutdownCalled("Interrupted before taking offer.");
-        String feeCurrency = RANDOM.nextBoolean() ? BSQ : BTC;
+        String feeCurrency = RANDOM.nextBoolean() ? "BSQ" : "BTC";
         return botClient.takeOffer(offer.getId(), paymentAccount, feeCurrency);
     };
 
     private void createMakeOfferScript() {
         String direction = RANDOM.nextBoolean() ? BUY.name() : SELL.name();
-        String feeCurrency = RANDOM.nextBoolean() ? BSQ : BTC;
+        String feeCurrency = RANDOM.nextBoolean() ? "BSQ" : "BTC";
         boolean createMarginPricedOffer = RANDOM.nextBoolean();
         // If not using an F2F account, don't go over possible 0.01 BTC
         // limit if account is not signed.

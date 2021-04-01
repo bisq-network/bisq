@@ -9,13 +9,16 @@ import org.slf4j.Logger;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.TestInfo;
 
+import static bisq.cli.CurrencyFormat.formatBsqAmount;
 import static bisq.cli.TradeFormat.format;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.fail;
 
 
 
 import bisq.apitest.method.offer.AbstractOfferTest;
+import bisq.cli.GrpcClient;
 
 public class AbstractTradeTest extends AbstractOfferTest {
 
@@ -57,6 +60,40 @@ public class AbstractTradeTest extends AbstractOfferTest {
         assertEquals(EXPECTED_PROTOCOL_STATUS.isFiatReceived, trade.getIsFiatReceived());
         assertEquals(EXPECTED_PROTOCOL_STATUS.isPayoutPublished, trade.getIsPayoutPublished());
         assertEquals(EXPECTED_PROTOCOL_STATUS.isWithdrawn, trade.getIsWithdrawn());
+    }
+
+    protected final void sendBsqPayment(Logger log,
+                                        GrpcClient grpcClient,
+                                        TradeInfo trade) {
+        var contract = trade.getContract();
+        String receiverAddress = contract.getIsBuyerMakerAndSellerTaker()
+                ? contract.getTakerPaymentAccountPayload().getAddress()
+                : contract.getMakerPaymentAccountPayload().getAddress();
+        String sendBsqAmount = formatBsqAmount(trade.getOffer().getVolume());
+        log.info("Sending {} BSQ to address {}", sendBsqAmount, receiverAddress);
+        grpcClient.sendBsq(receiverAddress, sendBsqAmount, "");
+    }
+
+    protected final void verifyBsqPaymentHasBeenReceived(Logger log,
+                                                         GrpcClient grpcClient,
+                                                         TradeInfo trade) {
+        var contract = trade.getContract();
+        var bsqSats = trade.getOffer().getVolume();
+        var receiveAmountAsString = formatBsqAmount(bsqSats);
+        var address = contract.getIsBuyerMakerAndSellerTaker()
+                ? contract.getTakerPaymentAccountPayload().getAddress()
+                : contract.getMakerPaymentAccountPayload().getAddress();
+        boolean receivedBsqSatoshis = grpcClient.verifyBsqSentToAddress(address, receiveAmountAsString);
+        if (receivedBsqSatoshis)
+            log.info("Payment of {} BSQ was received to address {} for trade with id {}.",
+                    receiveAmountAsString,
+                    address,
+                    trade.getTradeId());
+        else
+            fail(String.format("Payment of %s BSQ was was not sent to address %s for trade with id %s.",
+                    receiveAmountAsString,
+                    address,
+                    trade.getTradeId()));
     }
 
     protected final void logTrade(Logger log,

@@ -15,9 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.apitest.scenario.bot.script;
-
-import bisq.common.file.FileUtil;
+package bisq.apitest.botsupport.script;
 
 import bisq.proto.grpc.OfferInfo;
 import bisq.proto.grpc.TradeInfo;
@@ -36,6 +34,7 @@ import java.util.List;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.apitest.botsupport.util.FileUtil.deleteFileIfExists;
 import static com.google.common.io.FileWriteMode.APPEND;
 import static java.lang.String.format;
 import static java.lang.System.getProperty;
@@ -126,6 +125,10 @@ public class BashScriptGenerator {
     }
 
     public File createTakeOfferScript(OfferInfo offer) {
+        return createTakeOfferScript(offer, "takeoffer.sh");
+    }
+
+    public File createTakeOfferScript(OfferInfo offer, String scriptFilename) {
         String getOffersCmd = format("%s getoffers --direction=%s --currency-code=%s",
                 cliBase,
                 offer.getDirection(),
@@ -137,40 +140,52 @@ public class BashScriptGenerator {
         String getTradeCmd = format("%s gettrade --trade-id=%s",
                 cliBase,
                 offer.getId());
-        return createCliScript("takeoffer.sh",
+        return createCliScript(scriptFilename,
                 getOffersCmd,
                 takeOfferCmd,
-                "sleep 5",
+                "sleep 2",
                 getTradeCmd);
     }
 
     public File createPaymentStartedScript(TradeInfo trade) {
+        return createPaymentStartedScript(trade, "confirmpaymentstarted.sh");
+    }
+
+    public File createPaymentStartedScript(TradeInfo trade, String scriptFilename) {
         String paymentStartedCmd = format("%s confirmpaymentstarted --trade-id=%s",
                 cliBase,
                 trade.getTradeId());
         String getTradeCmd = format("%s gettrade --trade-id=%s", cliBase, trade.getTradeId());
-        return createCliScript("confirmpaymentstarted.sh",
+        return createCliScript(scriptFilename,
                 paymentStartedCmd,
                 "sleep 2",
                 getTradeCmd);
     }
 
     public File createPaymentReceivedScript(TradeInfo trade) {
+        return createPaymentReceivedScript(trade, "confirmpaymentreceived.sh");
+    }
+
+    public File createPaymentReceivedScript(TradeInfo trade, String scriptFilename) {
         String paymentStartedCmd = format("%s confirmpaymentreceived --trade-id=%s",
                 cliBase,
                 trade.getTradeId());
         String getTradeCmd = format("%s gettrade --trade-id=%s", cliBase, trade.getTradeId());
-        return createCliScript("confirmpaymentreceived.sh",
+        return createCliScript(scriptFilename,
                 paymentStartedCmd,
                 "sleep 2",
                 getTradeCmd);
     }
 
     public File createKeepFundsScript(TradeInfo trade) {
+        return createKeepFundsScript(trade, "keepfunds.sh");
+    }
+
+    public File createKeepFundsScript(TradeInfo trade, String scriptFilename) {
         String paymentStartedCmd = format("%s keepfunds --trade-id=%s", cliBase, trade.getTradeId());
         String getTradeCmd = format("%s gettrade --trade-id=%s", cliBase, trade.getTradeId());
         String getBalanceCmd = format("%s getbalance", cliBase);
-        return createCliScript("keepfunds.sh",
+        return createCliScript(scriptFilename,
                 paymentStartedCmd,
                 "sleep 2",
                 getTradeCmd,
@@ -195,7 +210,7 @@ public class BashScriptGenerator {
         File oldScript = new File(filename);
         if (oldScript.exists()) {
             try {
-                FileUtil.deleteFileIfExists(oldScript);
+                deleteFileIfExists(oldScript);
             } catch (IOException ex) {
                 throw new IllegalStateException("Unable to delete old script.", ex);
             }
@@ -205,8 +220,8 @@ public class BashScriptGenerator {
             List<CharSequence> lines = new ArrayList<>();
             lines.add("#!/bin/bash");
             lines.add("############################################################");
-            lines.add("# This example CLI script may be overwritten during the test");
-            lines.add("# run, and will be deleted when the test harness shuts down.");
+            lines.add("# This example CLI script may be overwritten during bot");
+            lines.add("# execution, and will be deleted when the bot shuts down.");
             lines.add("# Make a copy if you want to save it.");
             lines.add("############################################################");
             lines.add("set -x");

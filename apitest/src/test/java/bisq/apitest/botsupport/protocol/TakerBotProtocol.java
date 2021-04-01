@@ -15,21 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.apitest.scenario.bot.shutdown;
+package bisq.apitest.botsupport.protocol;
 
-import bisq.common.BisqException;
-
-@SuppressWarnings("unused")
-public class ManualBotShutdownException extends BisqException {
-    public ManualBotShutdownException(Throwable cause) {
-        super(cause);
-    }
-
-    public ManualBotShutdownException(String format, Object... args) {
-        super(format, args);
-    }
-
-    public ManualBotShutdownException(Throwable cause, String format, Object... args) {
-        super(cause, format, args);
-    }
+public interface TakerBotProtocol {
 }

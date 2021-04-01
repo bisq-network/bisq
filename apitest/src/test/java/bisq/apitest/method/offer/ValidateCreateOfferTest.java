@@ -29,6 +29,8 @@ import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 
+import static bisq.apitest.config.ApiTestConfig.BSQ;
+import static bisq.apitest.config.ApiTestConfig.BTC;
 import static bisq.core.btc.wallet.Restrictions.getDefaultBuyerSecurityDepositAsPercent;
 import static java.lang.String.format;
 import static org.junit.jupiter.api.Assertions.assertEquals;

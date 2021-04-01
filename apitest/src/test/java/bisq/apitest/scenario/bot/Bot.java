@@ -1,31 +1,32 @@
 package bisq.apitest.scenario.bot;
 
 import bisq.core.locale.Country;
+import bisq.core.locale.CountryUtil;
+import bisq.core.payment.payload.PaymentMethod;
 
 import protobuf.PaymentAccount;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.core.locale.CountryUtil.findCountryByCode;
-import static bisq.core.payment.payload.PaymentMethod.CLEAR_X_CHANGE_ID;
-import static bisq.core.payment.payload.PaymentMethod.getPaymentMethodById;
-import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.MINUTES;
 
 
 
+import bisq.apitest.botsupport.BotClient;
+import bisq.apitest.botsupport.script.BashScriptGenerator;
 import bisq.apitest.method.BitcoinCliHelper;
-import bisq.apitest.scenario.bot.script.BashScriptGenerator;
 import bisq.apitest.scenario.bot.script.BotScript;
 
+// TODO Create a bot superclass in CLI, stripped of all the test harness references.
+// This not for the CLI, regtest/apitest only.
+
 @Slf4j
-public
-class Bot {
+public class Bot {
 
     static final String MAKE = "MAKE";
     static final String TAKE = "TAKE";
 
-    protected final BotClient botClient;
+    protected final BotClient makerBotClient;
     protected final BitcoinCliHelper bitcoinCli;
     protected final BashScriptGenerator bashScriptGenerator;
     protected final String[] actions;
@@ -38,7 +39,7 @@ class Bot {
                BotScript botScript,
                BitcoinCliHelper bitcoinCli,
                BashScriptGenerator bashScriptGenerator) {
-        this.botClient = botClient;
+        this.makerBotClient = botClient;
         this.bitcoinCli = bitcoinCli;
         this.bashScriptGenerator = bashScriptGenerator;
         this.actions = botScript.getActions();
@@ -48,30 +49,27 @@ class Bot {
         if (isUsingTestHarness)
             this.paymentAccount = createBotPaymentAccount(botScript);
         else
-            this.paymentAccount = botClient.getPaymentAccount(botScript.getPaymentAccountIdForBot());
+            this.paymentAccount = this.makerBotClient.getPaymentAccount(botScript.getPaymentAccountIdForBot());
     }
 
     private PaymentAccount createBotPaymentAccount(BotScript botScript) {
-        BotPaymentAccountGenerator accountGenerator = new BotPaymentAccountGenerator(botClient);
+        BotPaymentAccountGenerator accountGenerator = new BotPaymentAccountGenerator(makerBotClient);
 
         String paymentMethodId = botScript.getBotPaymentMethodId();
         if (paymentMethodId != null) {
-            if (paymentMethodId.equals(CLEAR_X_CHANGE_ID)) {
+            if (paymentMethodId.equals(PaymentMethod.CLEAR_X_CHANGE_ID)) {
                 return accountGenerator.createZellePaymentAccount("Bob's Zelle Account",
                         "Bob");
             } else {
                 throw new UnsupportedOperationException(
-                        format("This bot test does not work with %s payment accounts yet.",
-                                getPaymentMethodById(paymentMethodId).getDisplayString()));
+                        String.format("This bot test does not work with %s payment accounts yet.",
+                                PaymentMethod.getPaymentMethodById(paymentMethodId).getDisplayString()));
             }
         } else {
-            Country country = findCountry(botScript.getCountryCode());
+            String countryCode = botScript.getCountryCode();
+            Country country = CountryUtil.findCountryByCode(countryCode).orElseThrow(() ->
+                    new IllegalArgumentException(countryCode + " is not a valid iso country code."));
             return accountGenerator.createF2FPaymentAccount(country, country.name + " F2F Account");
         }
-    }
-
-    private Country findCountry(String countryCode) {
-        return findCountryByCode(countryCode).orElseThrow(() ->
-                new IllegalArgumentException(countryCode + " is not a valid iso country code."));
     }
 }

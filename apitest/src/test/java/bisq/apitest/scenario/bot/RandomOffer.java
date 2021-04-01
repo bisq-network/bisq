@@ -33,17 +33,19 @@ import java.util.function.Supplier;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.apitest.method.MethodTest.BSQ;
-import static bisq.apitest.method.MethodTest.BTC;
 import static bisq.cli.CurrencyFormat.formatMarketPrice;
 import static bisq.cli.CurrencyFormat.formatSatoshis;
 import static bisq.common.util.MathUtils.scaleDownByPowerOf10;
 import static bisq.core.btc.wallet.Restrictions.getDefaultBuyerSecurityDepositAsPercent;
+import static bisq.core.offer.OfferPayload.Direction.BUY;
+import static bisq.core.offer.OfferPayload.Direction.SELL;
 import static bisq.core.payment.payload.PaymentMethod.F2F_ID;
 import static java.lang.String.format;
 import static java.math.RoundingMode.HALF_UP;
-import static protobuf.OfferPayload.Direction.BUY;
-import static protobuf.OfferPayload.Direction.SELL;
+
+
+
+import bisq.apitest.botsupport.BotClient;
 
 @Slf4j
 public class RandomOffer {
@@ -118,7 +120,7 @@ public class RandomOffer {
         this.minAmount = nextMinAmount.get();
         this.useMarketBasedPrice = RANDOM.nextBoolean();
         this.priceMargin = nextPriceMargin.get();
-        this.feeCurrency = RANDOM.nextBoolean() ? BSQ : BTC;
+        this.feeCurrency = RANDOM.nextBoolean() ? "BSQ" : "BTC";
     }
 
     public RandomOffer create() throws InvalidRandomOfferException {

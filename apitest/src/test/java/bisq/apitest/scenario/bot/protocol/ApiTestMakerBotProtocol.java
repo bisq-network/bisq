@@ -11,33 +11,36 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import lombok.extern.slf4j.Slf4j;
-
-import static bisq.apitest.scenario.bot.protocol.ProtocolStep.DONE;
-import static bisq.apitest.scenario.bot.protocol.ProtocolStep.WAIT_FOR_OFFER_TAKER;
-import static bisq.apitest.scenario.bot.shutdown.ManualShutdown.checkIfShutdownCalled;
+import static bisq.apitest.botsupport.protocol.ProtocolStep.DONE;
+import static bisq.apitest.botsupport.protocol.ProtocolStep.WAIT_FOR_OFFER_TAKER;
+import static bisq.apitest.botsupport.shutdown.ManualShutdown.checkIfShutdownCalled;
 import static bisq.cli.TableFormat.formatOfferTable;
+import static bisq.core.offer.OfferPayload.Direction.BUY;
 import static java.util.Collections.singletonList;
-import static protobuf.OfferPayload.Direction.BUY;
 
 
 
+import bisq.apitest.botsupport.BotClient;
+import bisq.apitest.botsupport.protocol.MakerBotProtocol;
+import bisq.apitest.botsupport.script.BashScriptGenerator;
+import bisq.apitest.botsupport.shutdown.ManualBotShutdownException;
 import bisq.apitest.method.BitcoinCliHelper;
-import bisq.apitest.scenario.bot.BotClient;
 import bisq.apitest.scenario.bot.RandomOffer;
-import bisq.apitest.scenario.bot.script.BashScriptGenerator;
-import bisq.apitest.scenario.bot.shutdown.ManualBotShutdownException;
 import bisq.cli.TradeFormat;
 
-@Slf4j
-public class MakerBotProtocol extends BotProtocol {
 
-    public MakerBotProtocol(BotClient botClient,
-                            PaymentAccount paymentAccount,
-                            long protocolStepTimeLimitInMs,
-                            BitcoinCliHelper bitcoinCli,
-                            BashScriptGenerator bashScriptGenerator) {
-        super(botClient,
+public class ApiTestMakerBotProtocol extends ApiTestBotProtocol implements MakerBotProtocol {
+
+    // Don't use @Slf4j annotation to init log and use in Functions w/out IDE warnings.
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(ApiTestMakerBotProtocol.class);
+
+    public ApiTestMakerBotProtocol(BotClient botClient,
+                                   PaymentAccount paymentAccount,
+                                   long protocolStepTimeLimitInMs,
+                                   BitcoinCliHelper bitcoinCli,
+                                   BashScriptGenerator bashScriptGenerator) {
+        super("Maker",
+                botClient,
                 paymentAccount,
                 protocolStepTimeLimitInMs,
                 bitcoinCli,
@@ -75,7 +78,7 @@ public class MakerBotProtocol extends BotProtocol {
         OfferInfo offer = randomOffer.get();
         createTakeOfferCliScript(offer);
         try {
-            log.info("Impatiently waiting for offer {} to be taken, repeatedly calling gettrade.", offer.getId());
+            log.info("Waiting for offer {} to be taken.", offer.getId());
             while (isWithinProtocolStepTimeLimit()) {
                 checkIfShutdownCalled("Interrupted while waiting for offer to be taken.");
                 try {
@@ -83,7 +86,7 @@ public class MakerBotProtocol extends BotProtocol {
                     if (trade.isPresent())
                         return trade.get();
                     else
-                        sleep(randomDelay.get());
+                        sleep(shortRandomDelayInSeconds.get());
                 } catch (Exception ex) {
                     throw new IllegalStateException(this.getBotClient().toCleanGrpcExceptionMessage(ex), ex);
                 }

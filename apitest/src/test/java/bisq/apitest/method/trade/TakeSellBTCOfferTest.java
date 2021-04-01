@@ -34,6 +34,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.TestMethodOrder;
 
+import static bisq.apitest.config.ApiTestConfig.BTC;
 import static bisq.cli.TableFormat.formatBalancesTbls;
 import static bisq.core.btc.wallet.Restrictions.getDefaultBuyerSecurityDepositAsPercent;
 import static bisq.core.trade.Trade.Phase.DEPOSIT_CONFIRMED;

@@ -17,7 +17,6 @@
 
 package bisq.apitest.method.trade;
 
-import bisq.proto.grpc.ContractInfo;
 import bisq.proto.grpc.TradeInfo;
 
 import io.grpc.StatusRuntimeException;
@@ -34,7 +33,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.TestMethodOrder;
 
-import static bisq.cli.CurrencyFormat.formatBsqSendAmount;
+import static bisq.apitest.config.ApiTestConfig.BSQ;
 import static bisq.cli.TableFormat.formatBalancesTbls;
 import static bisq.cli.TableFormat.formatOfferTable;
 import static bisq.core.btc.wallet.Restrictions.getDefaultBuyerSecurityDepositAsPercent;
@@ -181,16 +180,7 @@ public class TakeBuyBSQOfferTest extends AbstractTradeTest {
                         trade.getPhase()));
             }
 
-            // TODO refactor into superclass?  Might be needed in :cli.
-            // ContractInfo contract = ContractInfo.fromProto(trade);
-            ContractInfo contract = trade.getContract();
-            String alicesBsqAddress = contract.getIsBuyerMakerAndSellerTaker()
-                    ? contract.getTakerPaymentAccountPayload().getAddress()
-                    : contract.getMakerPaymentAccountPayload().getAddress();
-            String sendBsqAmount = formatBsqSendAmount(trade.getOffer().getVolume());
-            log.info("Bob sending {} BSQ to Alice's address {}", sendBsqAmount, alicesBsqAddress);
-            bobClient.sendBsq(alicesBsqAddress, sendBsqAmount, "");
-
+            sendBsqPayment(log, bobClient, trade);
             genBtcBlocksThenWait(1, 2500);
             bobClient.confirmPaymentStarted(trade.getTradeId());
             sleep(6000);
@@ -253,6 +243,9 @@ public class TakeBuyBSQOfferTest extends AbstractTradeTest {
                         trade.getState(),
                         trade.getPhase()));
             }
+
+            sleep(2000);
+            verifyBsqPaymentHasBeenReceived(log, aliceClient, trade);
 
             aliceClient.confirmPaymentReceived(trade.getTradeId());
             sleep(3000);

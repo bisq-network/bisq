@@ -29,7 +29,7 @@ import lombok.Getter;
 
 import static bisq.cli.opts.OptLabel.OPT_HELP;
 
-abstract class AbstractMethodOptionParser implements MethodOpts {
+public abstract class AbstractMethodOptionParser implements MethodOpts {
 
     // The full command line args passed to CliMain.main(String[] args).
     // CLI and Method level arguments are derived from args by an ArgumentList(args).
