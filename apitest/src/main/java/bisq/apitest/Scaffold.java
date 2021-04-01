@@ -42,10 +42,14 @@ import lombok.extern.slf4j.Slf4j;
 import javax.annotation.Nullable;
 
 import static bisq.apitest.Scaffold.BitcoinCoreApp.bitcoind;
+import static bisq.apitest.config.ApiTestConfig.MEDIATOR;
+import static bisq.apitest.config.ApiTestConfig.REFUND_AGENT;
 import static bisq.apitest.config.BisqAppConfig.*;
+import static bisq.common.app.DevEnv.DEV_PRIVILEGE_PRIV_KEY;
 import static java.lang.String.format;
 import static java.lang.System.exit;
 import static java.lang.System.out;
+import static java.net.InetAddress.getLoopbackAddress;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -58,6 +62,7 @@ import bisq.apitest.linux.BashCommand;
 import bisq.apitest.linux.BisqProcess;
 import bisq.apitest.linux.BitcoinDaemon;
 import bisq.apitest.linux.LinuxProcess;
+import bisq.cli.GrpcClient;
 
 @Slf4j
 public class Scaffold {
@@ -146,6 +151,8 @@ public class Scaffold {
 
         // Verify each startup task's future is done.
         verifyStartupCompleted();
+
+        maybeRegisterDisputeAgents();
         return this;
     }
 
@@ -447,5 +454,16 @@ public class Scaffold {
     private void verifyNotWindows() {
         if (Utilities.isWindows())
             throw new IllegalStateException("ApiTest not supported on Windows");
+    }
+
+    private void maybeRegisterDisputeAgents() {
+        if (config.hasSupportingApp(arbdaemon.name()) && config.registerDisputeAgents) {
+            log.info("Option --registerDisputeAgents=true, registering dispute agents in arbdaemon ...");
+            GrpcClient arbClient = new GrpcClient(getLoopbackAddress().getHostAddress(),
+                    arbdaemon.apiPort,
+                    config.apiPassword);
+            arbClient.registerDisputeAgent(MEDIATOR, DEV_PRIVILEGE_PRIV_KEY);
+            arbClient.registerDisputeAgent(REFUND_AGENT, DEV_PRIVILEGE_PRIV_KEY);
+        }
     }
 }

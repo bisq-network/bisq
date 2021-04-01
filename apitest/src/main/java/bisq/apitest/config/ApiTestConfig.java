@@ -54,6 +54,13 @@ import static joptsimple.internal.Strings.EMPTY;
 @Slf4j
 public class ApiTestConfig {
 
+    // Global constants
+    public static final String BSQ = "BSQ";
+    public static final String BTC = "BTC";
+    public static final String ARBITRATOR = "arbitrator";
+    public static final String MEDIATOR = "mediator";
+    public static final String REFUND_AGENT = "refundagent";
+
     // Option name constants
     static final String HELP = "help";
     static final String BASH_PATH = "bashPath";
@@ -73,6 +80,7 @@ public class ApiTestConfig {
     static final String SUPPORTING_APPS = "supportingApps";
     static final String CALL_RATE_METERING_CONFIG_PATH = "callRateMeteringConfigPath";
     static final String ENABLE_BISQ_DEBUGGING = "enableBisqDebugging";
+    static final String REGISTER_DISPUTE_AGENTS = "registerDisputeAgents";
 
     // Default values for certain options
     static final String DEFAULT_CONFIG_FILE_NAME = "apitest.properties";
@@ -105,6 +113,7 @@ public class ApiTestConfig {
     public final List<String> supportingApps;
     public final String callRateMeteringConfigPath;
     public final boolean enableBisqDebugging;
+    public final boolean registerDisputeAgents;
 
     // Immutable system configurations set in the constructor.
     public final String bitcoinDatadir;
@@ -242,6 +251,13 @@ public class ApiTestConfig {
                         .withRequiredArg()
                         .ofType(Boolean.class)
                         .defaultsTo(false);
+
+        ArgumentAcceptingOptionSpec<Boolean> registerDisputeAgentsOpt =
+                parser.accepts(REGISTER_DISPUTE_AGENTS,
+                        "Register dispute agents in arbitration daemon")
+                        .withRequiredArg()
+                        .ofType(Boolean.class)
+                        .defaultsTo(true);
         try {
             CompositeOptionSet options = new CompositeOptionSet();
 
@@ -299,6 +315,7 @@ public class ApiTestConfig {
             this.supportingApps = asList(options.valueOf(supportingAppsOpt).split(","));
             this.callRateMeteringConfigPath = options.valueOf(callRateMeteringConfigPathOpt);
             this.enableBisqDebugging = options.valueOf(enableBisqDebuggingOpt);
+            this.registerDisputeAgents = options.valueOf(registerDisputeAgentsOpt);
 
             // Assign values to special-case static fields.
             BASH_PATH_VALUE = bashPath;
