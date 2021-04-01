@@ -37,7 +37,6 @@ import com.google.inject.Inject;
 
 import javax.inject.Named;
 
-import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -55,8 +54,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
-
-import org.jetbrains.annotations.NotNull;
 
 @Slf4j
 public class ExportJsonFilesService implements DaoSetupService {
@@ -160,15 +157,10 @@ public class ExportJsonFilesService implements DaoSetupService {
                 return null;
             });
 
-            Futures.addCallback(future, new FutureCallback<>() {
-                public void onSuccess(Void ignore) {
-                }
-
-                public void onFailure(@NotNull Throwable throwable) {
-                    log.error(throwable.toString());
-                    throwable.printStackTrace();
-                }
-            }, MoreExecutors.directExecutor());
+            Futures.addCallback(future, Utilities.failureCallback(throwable -> {
+                log.error(throwable.toString());
+                throwable.printStackTrace();
+            }), MoreExecutors.directExecutor());
         }
     }
 

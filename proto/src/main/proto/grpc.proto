@@ -214,6 +214,7 @@ message CreateCryptoCurrencyPaymentAccountRequest {
     string accountName = 1;
     string currencyCode = 2;
     string address = 3;
+    bool tradeInstant = 4;
 }
 
 message CreateCryptoCurrencyPaymentAccountReply {

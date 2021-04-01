@@ -527,9 +527,11 @@ public class CliMain {
                     var accountName = opts.getAccountName();
                     var currencyCode = opts.getCurrencyCode();
                     var address = opts.getAddress();
+                    var isTradeInstant = opts.getIsTradeInstant();
                     var paymentAccount = client.createCryptoCurrencyPaymentAccount(accountName,
                             currencyCode,
-                            address);
+                            address,
+                            isTradeInstant);
                     out.println("payment account saved");
                     out.println(formatPaymentAcctTbl(singletonList(paymentAccount)));
                     return;
@@ -744,7 +746,9 @@ public class CliMain {
             stream.format(rowFormat, getmyoffers.name(), "--direction=<buy|sell> \\", "Get my current offers");
             stream.format(rowFormat, "", "--currency-code=<currency-code>", "");
             stream.println();
-            stream.format(rowFormat, takeoffer.name(), "--offer-id=<offer-id> [--fee-currency=<btc|bsq>]", "Take offer with id");
+            stream.format(rowFormat, takeoffer.name(), "--offer-id=<offer-id> \\", "Take offer with id");
+            stream.format(rowFormat, "", "--payment-account=<payment-account-id>", "");
+            stream.format(rowFormat, "", "[--fee-currency=<btc|bsq>]", "");
             stream.println();
             stream.format(rowFormat, gettrade.name(), "--trade-id=<trade-id> \\", "Get trade summary or full contract");
             stream.format(rowFormat, "", "[--show-contract=<true|false>]", "");
@@ -768,6 +772,7 @@ public class CliMain {
             stream.format(rowFormat, createcryptopaymentacct.name(), "--account-name=<name> \\", "Create a new cryptocurrency payment account");
             stream.format(rowFormat, "", "--currency-code=<bsq> \\", "");
             stream.format(rowFormat, "", "--address=<bsq-address>", "");
+            stream.format(rowFormat, "", "--trade-instant=<true|false>", "");
             stream.println();
             stream.format(rowFormat, getpaymentaccts.name(), "", "Get user payment accounts");
             stream.println();

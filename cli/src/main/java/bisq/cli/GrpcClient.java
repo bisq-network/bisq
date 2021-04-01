@@ -433,11 +433,13 @@ public final class GrpcClient {
 
     public PaymentAccount createCryptoCurrencyPaymentAccount(String accountName,
                                                              String currencyCode,
-                                                             String address) {
+                                                             String address,
+                                                             boolean tradeInstant) {
         var request = CreateCryptoCurrencyPaymentAccountRequest.newBuilder()
                 .setAccountName(accountName)
                 .setCurrencyCode(currencyCode)
                 .setAddress(address)
+                .setTradeInstant(tradeInstant)
                 .build();
         return grpcStubs.paymentAccountsService.createCryptoCurrencyPaymentAccount(request).getPaymentAccount();
     }

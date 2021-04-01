@@ -20,6 +20,7 @@ package bisq.core.dao.node.full;
 import bisq.core.dao.node.BsqNode;
 import bisq.core.dao.node.explorer.ExportJsonFilesService;
 import bisq.core.dao.node.full.network.FullNodeNetworkService;
+import bisq.core.dao.node.full.rpc.NotificationHandlerException;
 import bisq.core.dao.node.parser.BlockParser;
 import bisq.core.dao.node.parser.exceptions.BlockHashNotConnectingException;
 import bisq.core.dao.node.parser.exceptions.BlockHeightNotConnectingException;
@@ -34,10 +35,9 @@ import bisq.network.p2p.network.ConnectionState;
 import bisq.common.UserThread;
 import bisq.common.handlers.ResultHandler;
 
-import com.neemre.btcdcli4j.core.http.HttpLayerException;
-import com.neemre.btcdcli4j.daemon.NotificationHandlerException;
-
 import javax.inject.Inject;
+
+import java.net.ConnectException;
 
 import java.util.function.Consumer;
 
@@ -64,15 +64,14 @@ public class FullNode extends BsqNode {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @SuppressWarnings("WeakerAccess")
     @Inject
-    public FullNode(BlockParser blockParser,
-                    DaoStateService daoStateService,
-                    DaoStateSnapshotService daoStateSnapshotService,
-                    P2PService p2PService,
-                    RpcService rpcService,
-                    ExportJsonFilesService exportJsonFilesService,
-                    FullNodeNetworkService fullNodeNetworkService) {
+    private FullNode(BlockParser blockParser,
+                     DaoStateService daoStateService,
+                     DaoStateSnapshotService daoStateSnapshotService,
+                     P2PService p2PService,
+                     RpcService rpcService,
+                     ExportJsonFilesService exportJsonFilesService,
+                     FullNodeNetworkService fullNodeNetworkService) {
         super(blockParser, daoStateService, daoStateSnapshotService, p2PService, exportJsonFilesService);
         this.rpcService = rpcService;
 
@@ -150,7 +149,7 @@ public class FullNode extends BsqNode {
     private void addBlockHandler() {
         if (!addBlockHandlerAdded) {
             addBlockHandlerAdded = true;
-            rpcService.addNewBtcBlockHandler(rawBlock -> {
+            rpcService.addNewDtoBlockHandler(rawBlock -> {
                         try {
                             // We need to call that before parsing to have set the chain tip correctly for clients
                             // which might listen for new blocks on daoStateService. DaoStateListener.onNewBlockHeight
@@ -238,7 +237,7 @@ public class FullNode extends BsqNode {
                                        Consumer<Block> newBlockHandler,
                                        ResultHandler resultHandler,
                                        Consumer<Throwable> errorHandler) {
-        rpcService.requestBtcBlock(blockHeight,
+        rpcService.requestDtoBlock(blockHeight,
                 rawBlock -> {
                     try {
                         doParseBlock(rawBlock).ifPresent(newBlockHandler);
@@ -270,20 +269,18 @@ public class FullNode extends BsqNode {
             if (throwable instanceof RpcException) {
                 Throwable cause = throwable.getCause();
                 if (cause != null) {
-                    if (cause instanceof HttpLayerException) {
-                        if (((HttpLayerException) cause).getCode() == 1004004) {
-                            if (warnMessageHandler != null)
-                                warnMessageHandler.accept("You have configured Bisq to run as DAO full node but there is no " +
-                                        "localhost Bitcoin Core node detected. You need to have Bitcoin Core started and synced before " +
-                                        "starting Bisq. Please restart Bisq with proper DAO full node setup or switch to lite node mode.");
-                            return;
-                        }
+                    if (cause instanceof ConnectException) {
+                        if (warnMessageHandler != null)
+                            warnMessageHandler.accept("You have configured Bisq to run as DAO full node but there is no " +
+                                    "localhost Bitcoin Core node detected. You need to have Bitcoin Core started and synced before " +
+                                    "starting Bisq. Please restart Bisq with proper DAO full node setup or switch to lite node mode.");
+                        return;
                     } else if (cause instanceof NotificationHandlerException) {
-                        // Maybe we need to react specifically to errors as in NotificationHandlerException.getError()
-                        // So far only IO_UNKNOWN was observed
-                        log.error("Error type of NotificationHandlerException: " + ((NotificationHandlerException) cause).getError().toString());
+                        log.error("Error from within block notification daemon: {}", cause.getCause().toString());
                         startReOrgFromLastSnapshot();
                         return;
+                    } else if (cause instanceof Error) {
+                        throw (Error) cause;
                     }
                 }
             }
