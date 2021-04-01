@@ -30,6 +30,7 @@ import bisq.desktop.main.overlays.popups.Popup;
 
 import bisq.core.account.witness.AccountAgeWitness;
 import bisq.core.account.witness.AccountAgeWitnessService;
+import bisq.core.app.BisqSetup;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.locale.Country;
 import bisq.core.locale.CountryUtil;
@@ -823,7 +824,7 @@ public class GUIUtil {
                     .useShutDownButton()
                     .actionButtonText(Res.get("shared.shutDown"))
                     .onAction(() -> {
-                        preferences.setResyncSpvRequested(true);
+                        BisqSetup.setResyncSpvSemaphore(true);
                         UserThread.runAfter(BisqApp.getShutDownHandler(), 100, TimeUnit.MILLISECONDS);
                     })
                     .closeButtonText(Res.get("shared.cancel"))

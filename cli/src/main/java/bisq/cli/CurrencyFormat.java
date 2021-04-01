@@ -57,7 +57,7 @@ public class CurrencyFormat {
         return BSQ_FORMAT.format(BigDecimal.valueOf(sats).divide(BSQ_SATOSHI_DIVISOR));
     }
 
-    public static String formatBsqSendAmount(long bsqSats) {
+    public static String formatBsqAmount(long bsqSats) {
         // BSQ sats = trade.getOffer().getVolume()
         NUMBER_FORMAT.setMinimumFractionDigits(2);
         NUMBER_FORMAT.setMaximumFractionDigits(2);

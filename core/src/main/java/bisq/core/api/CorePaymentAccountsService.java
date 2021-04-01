@@ -21,6 +21,7 @@ import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.api.model.PaymentAccountForm;
 import bisq.core.locale.CryptoCurrency;
 import bisq.core.payment.CryptoCurrencyAccount;
+import bisq.core.payment.InstantCryptoCurrencyAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.PaymentAccountFactory;
 import bisq.core.payment.payload.PaymentMethod;
@@ -100,7 +101,8 @@ class CorePaymentAccountsService {
 
     PaymentAccount createCryptoCurrencyPaymentAccount(String accountName,
                                                       String currencyCode,
-                                                      String address) {
+                                                      String address,
+                                                      boolean tradeInstant) {
         String bsqCode = currencyCode.toUpperCase();
         if (!bsqCode.equals("BSQ"))
             throw new IllegalArgumentException("api does not currently support " + currencyCode + " accounts");
@@ -108,8 +110,9 @@ class CorePaymentAccountsService {
         // Validate the BSQ address string but ignore the return value.
         coreWalletsService.getValidBsqLegacyAddress(address);
 
-        CryptoCurrencyAccount cryptoCurrencyAccount =
-                (CryptoCurrencyAccount) PaymentAccountFactory.getPaymentAccount(PaymentMethod.BLOCK_CHAINS);
+        var cryptoCurrencyAccount = tradeInstant
+                ? (InstantCryptoCurrencyAccount) PaymentAccountFactory.getPaymentAccount(PaymentMethod.BLOCK_CHAINS_INSTANT)
+                : (CryptoCurrencyAccount) PaymentAccountFactory.getPaymentAccount(PaymentMethod.BLOCK_CHAINS);
         cryptoCurrencyAccount.init();
         cryptoCurrencyAccount.setAccountName(accountName);
         cryptoCurrencyAccount.setAddress(address);

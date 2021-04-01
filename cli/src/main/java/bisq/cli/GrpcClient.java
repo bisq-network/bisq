@@ -62,6 +62,7 @@ import bisq.proto.grpc.TxFeeRateInfo;
 import bisq.proto.grpc.TxInfo;
 import bisq.proto.grpc.UnlockWalletRequest;
 import bisq.proto.grpc.UnsetTxFeeRatePreferenceRequest;
+import bisq.proto.grpc.VerifyBsqSentToAddressRequest;
 import bisq.proto.grpc.WithdrawFundsRequest;
 
 import protobuf.PaymentAccount;
@@ -164,6 +165,14 @@ public final class GrpcClient {
                 .setMemo(memo)
                 .build();
         return grpcStubs.walletsService.sendBtc(request).getTxInfo();
+    }
+
+    public boolean verifyBsqSentToAddress(String address, String amount) {
+        var request = VerifyBsqSentToAddressRequest.newBuilder()
+                .setAddress(address)
+                .setAmount(amount)
+                .build();
+        return grpcStubs.walletsService.verifyBsqSentToAddress(request).getIsAmountReceived();
     }
 
     public TxFeeRateInfo getTxFeeRate() {
@@ -367,7 +376,7 @@ public final class GrpcClient {
         if (reply.hasTrade())
             return reply.getTrade();
         else
-            throw new IllegalStateException(reply.getAvailabilityResultDescription());
+            throw new IllegalStateException(reply.getFailureReason().getDescription());
     }
 
     public TradeInfo getTrade(String tradeId) {
@@ -433,11 +442,13 @@ public final class GrpcClient {
 
     public PaymentAccount createCryptoCurrencyPaymentAccount(String accountName,
                                                              String currencyCode,
-                                                             String address) {
+                                                             String address,
+                                                             boolean tradeInstant) {
         var request = CreateCryptoCurrencyPaymentAccountRequest.newBuilder()
                 .setAccountName(accountName)
                 .setCurrencyCode(currencyCode)
                 .setAddress(address)
+                .setTradeInstant(tradeInstant)
                 .build();
         return grpcStubs.paymentAccountsService.createCryptoCurrencyPaymentAccount(request).getPaymentAccount();
     }

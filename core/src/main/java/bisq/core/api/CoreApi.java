@@ -210,8 +210,14 @@ public class CoreApi {
         return paymentAccountsService.getPaymentAccountFormAsString(paymentMethodId);
     }
 
-    public PaymentAccount createCryptoCurrencyPaymentAccount(String accountName, String currencyCode, String address) {
-        return paymentAccountsService.createCryptoCurrencyPaymentAccount(accountName, currencyCode, address);
+    public PaymentAccount createCryptoCurrencyPaymentAccount(String accountName,
+                                                             String currencyCode,
+                                                             String address,
+                                                             boolean tradeInstant) {
+        return paymentAccountsService.createCryptoCurrencyPaymentAccount(accountName,
+                currencyCode,
+                address,
+                tradeInstant);
     }
 
     public List<PaymentMethod> getCryptoCurrencyPaymentMethods() {
