@@ -134,8 +134,8 @@ public class BsqMarketMakerBotTest {
             // TODO Wait for the next offer to sync up again.
             for (int i = 0; i < 10; i++) {
                 try {
-                    log.warn("There is only 1 available offer {} at start of cycle, will check again in 10 seconds. "
-                            , offers.get(0).getId());
+                    log.warn("There is only 1 available offer {} at start of cycle, will check again in 10 seconds.",
+                            offers.get(0).getId());
                     SECONDS.sleep(10);
                     offers.clear();
                     offers.addAll(botClient.getOffersSortedByDate(BTC));

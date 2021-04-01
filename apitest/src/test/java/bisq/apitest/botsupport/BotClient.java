@@ -49,6 +49,7 @@ import static bisq.apitest.botsupport.protocol.BotProtocol.BSQ;
 import static bisq.apitest.botsupport.util.BotUtilities.capitalize;
 import static bisq.cli.CurrencyFormat.formatBsqAmount;
 import static bisq.cli.CurrencyFormat.formatMarketPrice;
+import static java.lang.System.*;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Arrays.asList;
 import static java.util.Objects.requireNonNull;
@@ -371,7 +372,7 @@ public class BotClient {
                                String feeCurrency,
                                Consumer<TakeOfferReply> resultHandler,
                                Consumer<Throwable> errorHandler) {
-        long startTime = System.currentTimeMillis();
+        long startTime = currentTimeMillis();
         ListenableFuture<TakeOfferReply> future = takeOfferExecutor.submit(() ->
                 grpcClient.getTakeOfferReply(offerId, paymentAccount.getId(), feeCurrency));
         Futures.addCallback(future, new FutureCallback<>() {
