@@ -52,8 +52,10 @@ import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.LegacyAddress;
+import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionConfidence;
+import org.bitcoinj.core.TransactionOutput;
 import org.bitcoinj.crypto.KeyCrypterScrypt;
 
 import javax.inject.Inject;
@@ -75,6 +77,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
@@ -143,6 +146,10 @@ class CoreWalletsService {
     KeyParameter getKey() {
         verifyEncryptedWalletIsUnlocked();
         return tempAesKey;
+    }
+
+    NetworkParameters getNetworkParameters() {
+        return btcWalletService.getWallet().getContext().getParams();
     }
 
     BalancesInfo getBalances(String currencyCode) {
@@ -303,6 +310,41 @@ class CoreWalletsService {
             log.error("", ex);
             throw new IllegalStateException("cannot send btc due to insufficient funds", ex);
         }
+    }
+
+    boolean verifyBsqSentToAddress(String address, String amount) {
+        Address receiverAddress = getValidBsqLegacyAddress(address);
+        NetworkParameters networkParameters = getNetworkParameters();
+        Predicate<TransactionOutput> isTxOutputAddressMatch = (txOut) ->
+                txOut.getScriptPubKey().getToAddress(networkParameters).equals(receiverAddress);
+        Coin coinValue = parseToCoin(amount, bsqFormatter);
+        Predicate<TransactionOutput> isTxOutputValueMatch = (txOut) ->
+                txOut.getValue().longValue() == coinValue.longValue();
+        List<TransactionOutput> spendableBsqTxOutputs = bsqWalletService.getSpendableBsqTransactionOutputs();
+
+        log.info("Searching {} spendable tx outputs for matching address {} and value {}:",
+                spendableBsqTxOutputs.size(),
+                address,
+                coinValue.toPlainString());
+        long numMatches = 0;
+        for (TransactionOutput txOut : spendableBsqTxOutputs) {
+            if (isTxOutputAddressMatch.test(txOut) && isTxOutputValueMatch.test(txOut)) {
+                log.info("\t\tTx {} output has matching address {} and value {}.",
+                        txOut.getParentTransaction().getTxId(),
+                        address,
+                        txOut.getValue().toPlainString());
+                numMatches++;
+            }
+        }
+        if (numMatches > 1) {
+            log.warn("{} tx outputs matched address {} and value {}, could be a"
+                            + " false positive BSQ payment verification result.",
+                    numMatches,
+                    address,
+                    coinValue.toPlainString());
+
+        }
+        return numMatches > 0;
     }
 
     void getTxFeeRate(ResultHandler resultHandler) {

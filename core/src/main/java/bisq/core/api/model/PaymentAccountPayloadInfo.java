@@ -18,10 +18,12 @@
 package bisq.core.api.model;
 
 import bisq.core.payment.payload.CryptoCurrencyAccountPayload;
+import bisq.core.payment.payload.InstantCryptoCurrencyPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
 
 import bisq.common.Payload;
 
+import java.util.Optional;
 import java.util.function.Supplier;
 
 import lombok.Getter;
@@ -45,12 +47,15 @@ public class PaymentAccountPayloadInfo implements Payload {
     }
 
     public static PaymentAccountPayloadInfo toPaymentAccountPayloadInfo(PaymentAccountPayload paymentAccountPayload) {
-        String address = paymentAccountPayload instanceof CryptoCurrencyAccountPayload
-                ? ((CryptoCurrencyAccountPayload) paymentAccountPayload).getAddress()
-                : "";
+        Optional<String> address = Optional.empty();
+        if (paymentAccountPayload instanceof CryptoCurrencyAccountPayload)
+            address = Optional.of(((CryptoCurrencyAccountPayload) paymentAccountPayload).getAddress());
+        else if (paymentAccountPayload instanceof InstantCryptoCurrencyPayload)
+            address = Optional.of(((InstantCryptoCurrencyPayload) paymentAccountPayload).getAddress());
+
         return new PaymentAccountPayloadInfo(paymentAccountPayload.getId(),
                 paymentAccountPayload.getPaymentMethodId(),
-                address);
+                address.orElse(""));
     }
 
     // For transmitting TradeInfo messages when no contract & payloads are available.

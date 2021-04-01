@@ -17,6 +17,7 @@
 
 package bisq.cli;
 
+import bisq.proto.grpc.ContractInfo;
 import bisq.proto.grpc.TradeInfo;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -58,6 +59,10 @@ public class TradeFormat {
                 "%" + (COL_HEADER_TRADE_TAKER_FEE.length() + 2) + "s"
                 : "";
 
+        boolean showBsqBuyerAddress = shouldShowBqsBuyerAddress(tradeInfo, isTaker);
+        Supplier<String> bsqBuyerAddressHeader = () -> showBsqBuyerAddress ? COL_HEADER_TRADE_BSQ_BUYER_ADDRESS : "";
+        Supplier<String> bsqBuyerAddressHeaderSpec = () -> showBsqBuyerAddress ? "%s" : "";
+
         String headersFormat = padEnd(COL_HEADER_TRADE_SHORT_ID, shortIdColWidth, ' ') + COL_HEADER_DELIMITER
                 + padEnd(COL_HEADER_TRADE_ROLE, roleColWidth, ' ') + COL_HEADER_DELIMITER
                 + priceHeader.apply(tradeInfo) + COL_HEADER_DELIMITER   // includes %s -> currencyCode
@@ -73,6 +78,7 @@ public class TradeFormat {
                 + COL_HEADER_TRADE_PAYMENT_RECEIVED + COL_HEADER_DELIMITER
                 + COL_HEADER_TRADE_PAYOUT_PUBLISHED + COL_HEADER_DELIMITER
                 + COL_HEADER_TRADE_WITHDRAWN + COL_HEADER_DELIMITER
+                + bsqBuyerAddressHeader.get()
                 + "%n";
 
         String counterCurrencyCode = tradeInfo.getOffer().getCounterCurrencyCode();
@@ -100,14 +106,16 @@ public class TradeFormat {
                 + "  %-" + (COL_HEADER_TRADE_PAYMENT_SENT.length() - 1) + "s" // left
                 + "  %-" + (COL_HEADER_TRADE_PAYMENT_RECEIVED.length() - 1) + "s" // left
                 + "  %-" + COL_HEADER_TRADE_PAYOUT_PUBLISHED.length() + "s" // lt justify
-                + "  %-" + COL_HEADER_TRADE_WITHDRAWN.length() + "s";       // lt justify
+                + "  %-" + (COL_HEADER_TRADE_WITHDRAWN.length() + 2) + "s"
+                + bsqBuyerAddressHeaderSpec.get();
 
-        return headerLine + formatTradeData(colDataFormat, tradeInfo, isTaker);
+        return headerLine + formatTradeData(colDataFormat, tradeInfo, isTaker, showBsqBuyerAddress);
     }
 
     private static String formatTradeData(String format,
                                           TradeInfo tradeInfo,
-                                          boolean isTaker) {
+                                          boolean isTaker,
+                                          boolean showBsqBuyerAddress) {
         return String.format(format,
                 tradeInfo.getShortId(),
                 tradeInfo.getRole(),
@@ -121,7 +129,8 @@ public class TradeFormat {
                 tradeInfo.getIsFiatSent() ? YES : NO,
                 tradeInfo.getIsFiatReceived() ? YES : NO,
                 tradeInfo.getIsPayoutPublished() ? YES : NO,
-                tradeInfo.getIsWithdrawn() ? YES : NO);
+                tradeInfo.getIsWithdrawn() ? YES : NO,
+                bsqReceiveAddress.apply(tradeInfo, showBsqBuyerAddress));
     }
 
     private static final Function<TradeInfo, String> priceHeader = (t) ->
@@ -181,4 +190,32 @@ public class TradeFormat {
             t.getOffer().getBaseCurrencyCode().equals("BTC")
                     ? formatOfferVolume(t.getOffer().getVolume())
                     : formatSatoshis(t.getTradeAmountAsLong());
+
+    private static final BiFunction<TradeInfo, Boolean, String> bsqReceiveAddress = (t, showBsqBuyerAddress) -> {
+        if (showBsqBuyerAddress) {
+            ContractInfo contract = t.getContract();
+            boolean isBuyerMakerAndSellerTaker = contract.getIsBuyerMakerAndSellerTaker();
+            return isBuyerMakerAndSellerTaker  // (is BTC buyer / maker)
+                    ? contract.getTakerPaymentAccountPayload().getAddress()
+                    : contract.getMakerPaymentAccountPayload().getAddress();
+        } else {
+            return "";
+        }
+    };
+
+    private static boolean shouldShowBqsBuyerAddress(TradeInfo tradeInfo, boolean isTaker) {
+        if (tradeInfo.getOffer().getBaseCurrencyCode().equals("BTC")) {
+            return false;
+        } else {
+            ContractInfo contract = tradeInfo.getContract();
+            // Do not forget buyer and seller refer to BTC buyer and seller, not BSQ
+            // buyer and seller.  If you are buying BSQ, you are the (BTC) seller.
+            boolean isBuyerMakerAndSellerTaker = contract.getIsBuyerMakerAndSellerTaker();
+            if (isTaker) {
+                return !isBuyerMakerAndSellerTaker;
+            } else {
+                return isBuyerMakerAndSellerTaker;
+            }
+        }
+    }
 }
