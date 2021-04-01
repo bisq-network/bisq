@@ -44,6 +44,7 @@ public class OptLabel {
     public final static String OPT_SECURITY_DEPOSIT = "security-deposit";
     public final static String OPT_SHOW_CONTRACT = "show-contract";
     public final static String OPT_TRADE_ID = "trade-id";
+    public final static String OPT_TRADE_INSTANT = "trade-instant";
     public final static String OPT_TIMEOUT = "timeout";
     public final static String OPT_TRANSACTION_ID = "transaction-id";
     public final static String OPT_TX_FEE_RATE = "tx-fee-rate";
