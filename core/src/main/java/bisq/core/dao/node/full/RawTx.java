@@ -128,4 +128,11 @@ public final class RawTx extends BaseTx implements NetworkPayload {
                 txInputs,
                 outputs);
     }
+
+    @Override
+    public String toString() {
+        return "RawTx{" +
+                "\n     rawTxOutputs=" + rawTxOutputs +
+                "\n} " + super.toString();
+    }
 }

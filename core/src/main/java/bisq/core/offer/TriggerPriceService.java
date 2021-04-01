@@ -111,7 +111,7 @@ public class TriggerPriceService {
 
     public static boolean wasTriggered(MarketPrice marketPrice, OpenOffer openOffer) {
         Price price = openOffer.getOffer().getPrice();
-        if (price == null) {
+        if (price == null || marketPrice == null) {
             return false;
         }
 
