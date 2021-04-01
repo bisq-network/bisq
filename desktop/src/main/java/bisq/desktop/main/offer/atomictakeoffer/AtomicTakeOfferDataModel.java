@@ -189,7 +189,7 @@ class AtomicTakeOfferDataModel extends ActivatableDataModel {
         // only local effect. Other trader might see the offer for a few seconds
         // still (but cannot take it).
         if (removeOffer) {
-            offerBook.removeOffer(checkNotNull(offer), tradeManager);
+            offerBook.removeOffer(checkNotNull(offer));
         }
     }
 

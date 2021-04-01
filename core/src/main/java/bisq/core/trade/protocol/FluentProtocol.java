@@ -19,7 +19,6 @@ package bisq.core.trade.protocol;
 
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeModel;
-import bisq.core.trade.atomic.AtomicTrade;
 import bisq.core.trade.messages.TradeMessage;
 
 import bisq.network.p2p.NodeAddress;
@@ -31,8 +30,6 @@ import java.text.MessageFormat;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Predicate;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -102,14 +99,14 @@ public class FluentProtocol {
 
         NodeAddress peer = condition.getPeer();
         if (peer != null) {
-            tradeProtocol.processModel.setTempTradingPeerNodeAddress(peer);
-            tradeProtocol.processModel.getTradeManager().requestPersistence();
+            tradeProtocol.processModelI.setTempTradingPeerNodeAddress(peer);
+            tradeProtocol.processModelI.getTradeManager().requestPersistence();
         }
 
         TradeMessage message = condition.getMessage();
         if (message != null) {
-            tradeProtocol.processModel.setTradeMessage(message);
-            tradeProtocol.processModel.getTradeManager().requestPersistence();
+            tradeProtocol.processModelI.setTradeMessage(message);
+            tradeProtocol.processModelI.getTradeManager().requestPersistence();
         }
 
         TradeTaskRunner taskRunner = setup.getTaskRunner(message, condition.getEvent());

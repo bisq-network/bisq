@@ -632,12 +632,6 @@ public abstract class AtomicOfferViewModel<M extends AtomicOfferDataModel> exten
 
                 Volume volume = dataModel.getVolume().get();
                 if (volume != null) {
-                    // For HalCash we want multiple of 10 EUR
-                    if (dataModel.paymentAccount.isHalCashAccount())
-                        volume = VolumeUtil.getAdjustedVolumeForHalCash(volume);
-                    else if (CurrencyUtil.isFiatCurrency(tradeCurrencyCode.get()))
-                        volume = VolumeUtil.getRoundedFiatVolume(volume);
-
                     this.volume.set(DisplayUtils.formatVolume(volume));
                 }
 
@@ -763,15 +757,6 @@ public abstract class AtomicOfferViewModel<M extends AtomicOfferDataModel> exten
     private void setAmountToModel() {
         if (amount.get() != null && !amount.get().isEmpty()) {
             Coin amount = DisplayUtils.parseToCoinWith4Decimals(this.amount.get(), btcFormatter);
-
-            long maxTradeLimit = dataModel.getMaxTradeLimit();
-            Price price = dataModel.getPrice().get();
-            if (price != null) {
-                if (dataModel.paymentAccount.isHalCashAccount())
-                    amount = CoinUtil.getAdjustedAmountForHalCash(amount, price, maxTradeLimit);
-                else if (CurrencyUtil.isFiatCurrency(tradeCurrencyCode.get()))
-                    amount = CoinUtil.getRoundedFiatAmount(amount, price, maxTradeLimit);
-            }
             dataModel.setAmount(amount);
             if (syncMinAmountWithAmount ||
                     dataModel.getMinAmount().get() == null ||
@@ -787,16 +772,6 @@ public abstract class AtomicOfferViewModel<M extends AtomicOfferDataModel> exten
     private void setMinAmountToModel() {
         if (minAmount.get() != null && !minAmount.get().isEmpty()) {
             Coin minAmount = DisplayUtils.parseToCoinWith4Decimals(this.minAmount.get(), btcFormatter);
-
-            Price price = dataModel.getPrice().get();
-            long maxTradeLimit = dataModel.getMaxTradeLimit();
-            if (price != null) {
-                if (dataModel.paymentAccount.isHalCashAccount())
-                    minAmount = CoinUtil.getAdjustedAmountForHalCash(minAmount, price, maxTradeLimit);
-                else if (CurrencyUtil.isFiatCurrency(tradeCurrencyCode.get()))
-                    minAmount = CoinUtil.getRoundedFiatAmount(minAmount, price, maxTradeLimit);
-            }
-
             dataModel.setMinAmount(minAmount);
         } else {
             dataModel.setMinAmount(null);

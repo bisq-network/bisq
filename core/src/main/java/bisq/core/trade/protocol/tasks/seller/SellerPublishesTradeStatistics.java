@@ -50,7 +50,7 @@ public class SellerPublishesTradeStatistics extends TradeTask {
                                 // The peer as buyer does not publish anymore with v.1.4.0 (where Capability.TRADE_STATISTICS_3 was added)
 
                                 String referralId = processModel.getReferralIdService().getOptionalReferralId().orElse(null);
-                                boolean isTorNetworkNode = model.getProcessModel().getP2PService().getNetworkNode() instanceof TorNetworkNode;
+                                boolean isTorNetworkNode = processModel.getP2PService().getNetworkNode() instanceof TorNetworkNode;
                                 TradeStatistics3 tradeStatistics = TradeStatistics3.from(trade, referralId, isTorNetworkNode);
                                 if (tradeStatistics.isValid()) {
                                     log.info("Publishing trade statistics");

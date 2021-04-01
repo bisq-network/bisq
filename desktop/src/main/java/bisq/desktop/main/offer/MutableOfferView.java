@@ -305,7 +305,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
         model.getDataModel().onTabSelected(isSelected);
     }
 
-    public void initWithData(OfferPayload.Direction direction, TradeCurrency tradeCurrency,
+    public void initWithData(OfferPayloadI.Direction direction, TradeCurrency tradeCurrency,
                              OfferView.OfferActionHandler offerActionHandler) {
         this.offerActionHandler = offerActionHandler;
 

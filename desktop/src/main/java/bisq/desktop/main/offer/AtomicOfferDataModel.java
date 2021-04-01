@@ -448,25 +448,13 @@ public abstract class AtomicOfferDataModel extends ActivatableDataModel implemen
     }
 
     private Volume calculateVolumeForAmount(ObjectProperty<Coin> minAmount) {
-        Volume volumeByAmount = price.get().getVolumeByAmount(minAmount.get());
-
-        // For HalCash we want multiple of 10 EUR
-        if (paymentAccount.isHalCashAccount())
-            volumeByAmount = VolumeUtil.getAdjustedVolumeForHalCash(volumeByAmount);
-        else if (CurrencyUtil.isFiatCurrency(tradeCurrencyCode.get()))
-            volumeByAmount = VolumeUtil.getRoundedFiatVolume(volumeByAmount);
-        return volumeByAmount;
+        return price.get().getVolumeByAmount(minAmount.get());
     }
 
     void calculateAmount() {
         if (isNonZeroPrice.test(price) && isNonZeroVolume.test(volume) && allowAmountUpdate) {
             try {
                 Coin value = DisplayUtils.reduceTo4Decimals(price.get().getAmountByVolume(volume.get()), btcFormatter);
-                if (paymentAccount.isHalCashAccount())
-                    value = CoinUtil.getAdjustedAmountForHalCash(value, price.get(), getMaxTradeLimit());
-                else if (CurrencyUtil.isFiatCurrency(tradeCurrencyCode.get()))
-                    value = CoinUtil.getRoundedFiatAmount(value, price.get(), getMaxTradeLimit());
-
                 calculateVolume();
 
                 amount.set(value);

@@ -30,6 +30,7 @@ import bisq.core.support.dispute.mediation.MediationResultState;
 import bisq.core.support.dispute.refund.RefundResultState;
 import bisq.core.support.messages.ChatMessage;
 import bisq.core.trade.protocol.ProcessModel;
+import bisq.core.trade.protocol.ProcessModelI;
 import bisq.core.trade.protocol.ProcessModelServiceProvider;
 import bisq.core.trade.txproof.AssetTxProofResult;
 import bisq.core.util.VolumeUtil;
@@ -726,6 +727,19 @@ public abstract class Trade extends TradeModel {
 
     @Override
     public void onComplete() {
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // TradeModel implementation
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public ProcessModelI getProcessModelI() {
+        return processModel;
+    }
+
+    public String getStateInfo() {
+        return stateProperty().get().toString();
     }
 
 
