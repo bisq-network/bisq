@@ -55,7 +55,7 @@ public class BsqMarketMakerBotTest {
             verifyHavePaymentAccount();
 
             int tradeCycle = 0;
-            while(tradeCycle <= MAX_TRADE_CYCLES) {
+            while (tradeCycle <= MAX_TRADE_CYCLES) {
                 offers.addAll(botClient.getOffersSortedByDate(BTC));
                 verifyHaveOffers(tradeCycle);  // Should 1 BUY and 1 SELL for each trade cycle
 
