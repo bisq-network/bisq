@@ -59,7 +59,7 @@ public class TradeFormat {
                 "%" + (COL_HEADER_TRADE_TAKER_FEE.length() + 2) + "s"
                 : "";
 
-        boolean showBsqBuyerAddress = shouldShowBqsBuyerAddress(tradeInfo, isTaker);
+        boolean showBsqBuyerAddress = shouldShowBsqBuyerAddress(tradeInfo, isTaker);
         Supplier<String> bsqBuyerAddressHeader = () -> showBsqBuyerAddress ? COL_HEADER_TRADE_BSQ_BUYER_ADDRESS : "";
         Supplier<String> bsqBuyerAddressHeaderSpec = () -> showBsqBuyerAddress ? "%s" : "";
 
@@ -203,7 +203,7 @@ public class TradeFormat {
         }
     };
 
-    private static boolean shouldShowBqsBuyerAddress(TradeInfo tradeInfo, boolean isTaker) {
+    private static boolean shouldShowBsqBuyerAddress(TradeInfo tradeInfo, boolean isTaker) {
         if (tradeInfo.getOffer().getBaseCurrencyCode().equals("BTC")) {
             return false;
         } else {
