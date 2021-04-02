@@ -49,7 +49,6 @@ import static bisq.apitest.botsupport.protocol.BotProtocol.BSQ;
 import static bisq.apitest.botsupport.util.BotUtilities.capitalize;
 import static bisq.cli.CurrencyFormat.formatBsqAmount;
 import static bisq.cli.CurrencyFormat.formatMarketPrice;
-import static java.lang.System.*;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Arrays.asList;
 import static java.util.Objects.requireNonNull;

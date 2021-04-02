@@ -144,7 +144,7 @@ abstract class BaseMarketMakerBot {
     }
 
     protected void waitForManualShutdown() {
-        log.info("When ready to shutdown bot, run '$ /tmp/bot-shutdown'.");
+        log.info("When ready to shutdown bot, run '$ touch /tmp/bot-shutdown'.");
         try {
             while (!isShutdownCalled()) {
                 rest(10);

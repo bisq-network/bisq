@@ -38,7 +38,7 @@ public class BsqMarketMakerBotTest {
 
     // TODO Install shutdown hook, check state.
 
-    private static final int MAX_TRADE_CYCLES = 5;
+    private static final int MAX_TRADE_CYCLES = 10;
 
     private final BotClient botClient;
     private final PaymentAccount paymentAccount;
@@ -54,7 +54,8 @@ public class BsqMarketMakerBotTest {
         try {
             verifyHavePaymentAccount();
 
-            for (int tradeCycle = 1; tradeCycle <= MAX_TRADE_CYCLES; tradeCycle++) {
+            int tradeCycle = 0;
+            while(tradeCycle <= MAX_TRADE_CYCLES) {
                 offers.addAll(botClient.getOffersSortedByDate(BTC));
                 verifyHaveOffers(tradeCycle);  // Should 1 BUY and 1 SELL for each trade cycle
 
@@ -79,6 +80,8 @@ public class BsqMarketMakerBotTest {
                 printBalance();
 
                 offers.clear();
+
+                tradeCycle++;
                 if (tradeCycle < MAX_TRADE_CYCLES) {
                     log.info("Completed {} trade cycle(s).  Starting the next in 1 minute.", tradeCycle);
                     SECONDS.sleep(60);
@@ -201,7 +204,7 @@ public class BsqMarketMakerBotTest {
                     receiveAmountAsString,
                     address,
                     tradeId);
-            log.info("Give bot time to send payment. Generate a block while you wait");
+            log.info("Give bot time to send payment.");
             for (int i = 0; i < 5; i++) {
                 SECONDS.sleep(30);
                 boolean receivedPayment = botClient.verifyBsqSentToAddress(address, receiveAmountAsString);
