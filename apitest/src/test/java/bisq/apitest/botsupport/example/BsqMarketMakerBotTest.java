@@ -144,7 +144,7 @@ public class BsqMarketMakerBotTest {
                     offers.addAll(botClient.getOffersSortedByDate(BTC));
                     if (offers.size() == 2) {
                         log.info("Now Bob can take offers:\n{}", formatOfferTable(offers, BSQ));
-                        break;
+                        return;
                     }
                 } catch (InterruptedException ignored) {
                     // empty
