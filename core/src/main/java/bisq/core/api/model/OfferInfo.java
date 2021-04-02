@@ -45,7 +45,11 @@ public class OfferInfo implements Payload {
     private final long minAmount;
     private final long volume;
     private final long minVolume;
+    private final long txFee;
+    private final long makerFee;
+    private final String offerFeePaymentTxId;
     private final long buyerSecurityDeposit;
+    private final long sellerSecurityDeposit;
     private final long triggerPrice;
     private final boolean isCurrencyForMakerFeeBtc;
     private final String paymentAccountId;
@@ -58,6 +62,7 @@ public class OfferInfo implements Payload {
     private final long date;
     private final String state;
 
+
     public OfferInfo(OfferInfoBuilder builder) {
         this.id = builder.id;
         this.direction = builder.direction;
@@ -68,7 +73,11 @@ public class OfferInfo implements Payload {
         this.minAmount = builder.minAmount;
         this.volume = builder.volume;
         this.minVolume = builder.minVolume;
+        this.txFee = builder.txFee;
+        this.makerFee = builder.makerFee;
+        this.offerFeePaymentTxId = builder.offerFeePaymentTxId;
         this.buyerSecurityDeposit = builder.buyerSecurityDeposit;
+        this.sellerSecurityDeposit = builder.sellerSecurityDeposit;
         this.triggerPrice = builder.triggerPrice;
         this.isCurrencyForMakerFeeBtc = builder.isCurrencyForMakerFeeBtc;
         this.paymentAccountId = builder.paymentAccountId;
@@ -78,6 +87,7 @@ public class OfferInfo implements Payload {
         this.counterCurrencyCode = builder.counterCurrencyCode;
         this.date = builder.date;
         this.state = builder.state;
+
     }
 
     public static OfferInfo toOfferInfo(Offer offer) {
@@ -90,8 +100,8 @@ public class OfferInfo implements Payload {
         return getOfferInfoBuilder(offer).withTriggerPrice(triggerPrice).build();
     }
 
-    private static OfferInfo.OfferInfoBuilder getOfferInfoBuilder(Offer offer) {
-        return new OfferInfo.OfferInfoBuilder()
+    private static OfferInfoBuilder getOfferInfoBuilder(Offer offer) {
+        return new OfferInfoBuilder()
                 .withId(offer.getId())
                 .withDirection(offer.getDirection().name())
                 .withPrice(Objects.requireNonNull(offer.getPrice()).getValue())
@@ -101,7 +111,11 @@ public class OfferInfo implements Payload {
                 .withMinAmount(offer.getMinAmount().value)
                 .withVolume(Objects.requireNonNull(offer.getVolume()).getValue())
                 .withMinVolume(Objects.requireNonNull(offer.getMinVolume()).getValue())
+                .withMakerFee(offer.getMakerFee().value)
+                .withTxFee(offer.getTxFee().value)
+                .withOfferFeePaymentTxId(offer.getOfferFeePaymentTxId())
                 .withBuyerSecurityDeposit(offer.getBuyerSecurityDeposit().value)
+                .withSellerSecurityDeposit(offer.getSellerSecurityDeposit().value)
                 .withIsCurrencyForMakerFeeBtc(offer.isCurrencyForMakerFeeBtc())
                 .withPaymentAccountId(offer.getMakerPaymentAccountId())
                 .withPaymentMethodId(offer.getPaymentMethod().getId())
@@ -128,7 +142,11 @@ public class OfferInfo implements Payload {
                 .setMinAmount(minAmount)
                 .setVolume(volume)
                 .setMinVolume(minVolume)
+                .setMakerFee(makerFee)
+                .setTxFee(txFee)
+                .setOfferFeePaymentTxId(offerFeePaymentTxId)
                 .setBuyerSecurityDeposit(buyerSecurityDeposit)
+                .setSellerSecurityDeposit(sellerSecurityDeposit)
                 .setTriggerPrice(triggerPrice)
                 .setIsCurrencyForMakerFeeBtc(isCurrencyForMakerFeeBtc)
                 .setPaymentAccountId(paymentAccountId)
@@ -143,7 +161,7 @@ public class OfferInfo implements Payload {
 
     @SuppressWarnings("unused")
     public static OfferInfo fromProto(bisq.proto.grpc.OfferInfo proto) {
-        return new OfferInfo.OfferInfoBuilder()
+        return new OfferInfoBuilder()
                 .withId(proto.getId())
                 .withDirection(proto.getDirection())
                 .withPrice(proto.getPrice())
@@ -153,7 +171,11 @@ public class OfferInfo implements Payload {
                 .withMinAmount(proto.getMinAmount())
                 .withVolume(proto.getVolume())
                 .withMinVolume(proto.getMinVolume())
+                .withMakerFee(proto.getMakerFee())
+                .withTxFee(proto.getTxFee())
+                .withOfferFeePaymentTxId(proto.getOfferFeePaymentTxId())
                 .withBuyerSecurityDeposit(proto.getBuyerSecurityDeposit())
+                .withSellerSecurityDeposit(proto.getSellerSecurityDeposit())
                 .withTriggerPrice(proto.getTriggerPrice())
                 .withIsCurrencyForMakerFeeBtc(proto.getIsCurrencyForMakerFeeBtc())
                 .withPaymentAccountId(proto.getPaymentAccountId())
@@ -182,7 +204,11 @@ public class OfferInfo implements Payload {
         private long minAmount;
         private long volume;
         private long minVolume;
+        private long txFee;
+        private long makerFee;
+        private String offerFeePaymentTxId;
         private long buyerSecurityDeposit;
+        private long sellerSecurityDeposit;
         private long triggerPrice;
         private boolean isCurrencyForMakerFeeBtc;
         private String paymentAccountId;
@@ -238,8 +264,28 @@ public class OfferInfo implements Payload {
             return this;
         }
 
+        public OfferInfoBuilder withTxFee(long txFee) {
+            this.txFee = txFee;
+            return this;
+        }
+
+        public OfferInfoBuilder withMakerFee(long makerFee) {
+            this.makerFee = makerFee;
+            return this;
+        }
+
+        public OfferInfoBuilder withOfferFeePaymentTxId(String offerFeePaymentTxId) {
+            this.offerFeePaymentTxId = offerFeePaymentTxId;
+            return this;
+        }
+
         public OfferInfoBuilder withBuyerSecurityDeposit(long buyerSecurityDeposit) {
             this.buyerSecurityDeposit = buyerSecurityDeposit;
+            return this;
+        }
+
+        public OfferInfoBuilder withSellerSecurityDeposit(long sellerSecurityDeposit) {
+            this.sellerSecurityDeposit = sellerSecurityDeposit;
             return this;
         }
 

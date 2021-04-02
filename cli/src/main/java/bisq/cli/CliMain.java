@@ -56,6 +56,7 @@ import static java.util.Collections.singletonList;
 
 import bisq.cli.opts.ArgumentList;
 import bisq.cli.opts.CancelOfferOptionParser;
+import bisq.cli.opts.CreateCryptoCurrencyPaymentAcctOptionParser;
 import bisq.cli.opts.CreateOfferOptionParser;
 import bisq.cli.opts.CreatePaymentAcctOptionParser;
 import bisq.cli.opts.GetAddressBalanceOptionParser;
@@ -517,6 +518,24 @@ public class CliMain {
                     out.println(formatPaymentAcctTbl(singletonList(paymentAccount)));
                     return;
                 }
+                case createcryptopaymentacct: {
+                    var opts = new CreateCryptoCurrencyPaymentAcctOptionParser(args).parse();
+                    if (opts.isForHelp()) {
+                        out.println(client.getMethodHelp(method));
+                        return;
+                    }
+                    var accountName = opts.getAccountName();
+                    var currencyCode = opts.getCurrencyCode();
+                    var address = opts.getAddress();
+                    var isTradeInstant = opts.getIsTradeInstant();
+                    var paymentAccount = client.createCryptoCurrencyPaymentAccount(accountName,
+                            currencyCode,
+                            address,
+                            isTradeInstant);
+                    out.println("payment account saved");
+                    out.println(formatPaymentAcctTbl(singletonList(paymentAccount)));
+                    return;
+                }
                 case getpaymentaccts: {
                     if (new SimpleMethodOptionParser(args).parse().isForHelp()) {
                         out.println(client.getMethodHelp(method));
@@ -676,7 +695,7 @@ public class CliMain {
             stream.println();
             parser.printHelpOn(stream);
             stream.println();
-            String rowFormat = "%-24s%-52s%s%n";
+            String rowFormat = "%-25s%-52s%s%n";
             stream.format(rowFormat, "Method", "Params", "Description");
             stream.format(rowFormat, "------", "------", "------------");
             stream.format(rowFormat, getversion.name(), "", "Get server version");
@@ -727,7 +746,9 @@ public class CliMain {
             stream.format(rowFormat, getmyoffers.name(), "--direction=<buy|sell> \\", "Get my current offers");
             stream.format(rowFormat, "", "--currency-code=<currency-code>", "");
             stream.println();
-            stream.format(rowFormat, takeoffer.name(), "--offer-id=<offer-id> [--fee-currency=<btc|bsq>]", "Take offer with id");
+            stream.format(rowFormat, takeoffer.name(), "--offer-id=<offer-id> \\", "Take offer with id");
+            stream.format(rowFormat, "", "--payment-account=<payment-account-id>", "");
+            stream.format(rowFormat, "", "[--fee-currency=<btc|bsq>]", "");
             stream.println();
             stream.format(rowFormat, gettrade.name(), "--trade-id=<trade-id> \\", "Get trade summary or full contract");
             stream.format(rowFormat, "", "[--show-contract=<true|false>]", "");
@@ -747,6 +768,11 @@ public class CliMain {
             stream.format(rowFormat, getpaymentacctform.name(), "--payment-method-id=<payment-method-id>", "Get a new payment account form");
             stream.println();
             stream.format(rowFormat, createpaymentacct.name(), "--payment-account-form=<path>", "Create a new payment account");
+            stream.println();
+            stream.format(rowFormat, createcryptopaymentacct.name(), "--account-name=<name> \\", "Create a new cryptocurrency payment account");
+            stream.format(rowFormat, "", "--currency-code=<bsq> \\", "");
+            stream.format(rowFormat, "", "--address=<bsq-address>", "");
+            stream.format(rowFormat, "", "--trade-instant=<true|false>", "");
             stream.println();
             stream.format(rowFormat, getpaymentaccts.name(), "", "Get user payment accounts");
             stream.println();

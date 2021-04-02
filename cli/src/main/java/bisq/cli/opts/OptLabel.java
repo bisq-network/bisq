@@ -21,6 +21,7 @@ package bisq.cli.opts;
  * CLI opt label definitions.
  */
 public class OptLabel {
+    public final static String OPT_ACCOUNT_NAME = "account-name";
     public final static String OPT_ADDRESS = "address";
     public final static String OPT_AMOUNT = "amount";
     public final static String OPT_CURRENCY_CODE = "currency-code";
@@ -43,6 +44,7 @@ public class OptLabel {
     public final static String OPT_SECURITY_DEPOSIT = "security-deposit";
     public final static String OPT_SHOW_CONTRACT = "show-contract";
     public final static String OPT_TRADE_ID = "trade-id";
+    public final static String OPT_TRADE_INSTANT = "trade-instant";
     public final static String OPT_TIMEOUT = "timeout";
     public final static String OPT_TRANSACTION_ID = "transaction-id";
     public final static String OPT_TX_FEE_RATE = "tx-fee-rate";

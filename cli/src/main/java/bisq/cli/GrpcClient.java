@@ -24,10 +24,12 @@ import bisq.proto.grpc.BtcBalanceInfo;
 import bisq.proto.grpc.CancelOfferRequest;
 import bisq.proto.grpc.ConfirmPaymentReceivedRequest;
 import bisq.proto.grpc.ConfirmPaymentStartedRequest;
+import bisq.proto.grpc.CreateCryptoCurrencyPaymentAccountRequest;
 import bisq.proto.grpc.CreateOfferRequest;
 import bisq.proto.grpc.CreatePaymentAccountRequest;
 import bisq.proto.grpc.GetAddressBalanceRequest;
 import bisq.proto.grpc.GetBalancesRequest;
+import bisq.proto.grpc.GetCryptoCurrencyPaymentMethodsRequest;
 import bisq.proto.grpc.GetFundingAddressesRequest;
 import bisq.proto.grpc.GetMethodHelpRequest;
 import bisq.proto.grpc.GetMyOfferRequest;
@@ -60,6 +62,7 @@ import bisq.proto.grpc.TxFeeRateInfo;
 import bisq.proto.grpc.TxInfo;
 import bisq.proto.grpc.UnlockWalletRequest;
 import bisq.proto.grpc.UnsetTxFeeRatePreferenceRequest;
+import bisq.proto.grpc.VerifyBsqSentToAddressRequest;
 import bisq.proto.grpc.WithdrawFundsRequest;
 
 import protobuf.PaymentAccount;
@@ -67,11 +70,11 @@ import protobuf.PaymentMethod;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
 import static java.util.Comparator.comparing;
+import static java.util.stream.Collectors.toList;
 import static protobuf.OfferPayload.Direction.BUY;
 import static protobuf.OfferPayload.Direction.SELL;
 
@@ -164,6 +167,14 @@ public final class GrpcClient {
         return grpcStubs.walletsService.sendBtc(request).getTxInfo();
     }
 
+    public boolean verifyBsqSentToAddress(String address, String amount) {
+        var request = VerifyBsqSentToAddressRequest.newBuilder()
+                .setAddress(address)
+                .setAmount(amount)
+                .build();
+        return grpcStubs.walletsService.verifyBsqSentToAddress(request).getIsAmountReceived();
+    }
+
     public TxFeeRateInfo getTxFeeRate() {
         var request = GetTxFeeRateRequest.newBuilder().build();
         return grpcStubs.walletsService.getTxFeeRate(request).getTxFeeRateInfo();
@@ -228,7 +239,6 @@ public final class GrpcClient {
                 makerFeeCurrencyCode);
     }
 
-    // TODO make private, move to bottom of class
     public OfferInfo createOffer(String direction,
                                  String currencyCode,
                                  long amount,
@@ -283,6 +293,12 @@ public final class GrpcClient {
         return grpcStubs.offersService.getOffers(request).getOffersList();
     }
 
+    public List<OfferInfo> getBsqOffers(String direction) {
+        return getOffers(direction, "BTC").stream()
+                .filter(o -> o.getBaseCurrencyCode().equals("BSQ"))
+                .collect(toList());
+    }
+
     public List<OfferInfo> getOffersSortedByDate(String currencyCode) {
         ArrayList<OfferInfo> offers = new ArrayList<>();
         offers.addAll(getOffers(BUY.name(), currencyCode));
@@ -295,12 +311,25 @@ public final class GrpcClient {
         return offers.isEmpty() ? offers : sortOffersByDate(offers);
     }
 
+    public List<OfferInfo> getBsqOffersSortedByDate() {
+        ArrayList<OfferInfo> offers = new ArrayList<>();
+        offers.addAll(getBsqOffers(BUY.name()));
+        offers.addAll(getBsqOffers(SELL.name()));
+        return sortOffersByDate(offers);
+    }
+
     public List<OfferInfo> getMyOffers(String direction, String currencyCode) {
         var request = GetMyOffersRequest.newBuilder()
                 .setDirection(direction)
                 .setCurrencyCode(currencyCode)
                 .build();
         return grpcStubs.offersService.getMyOffers(request).getOffersList();
+    }
+
+    public List<OfferInfo> getMyBsqOffers(String direction) {
+        return getMyOffers(direction, "BTC").stream()
+                .filter(o -> o.getBaseCurrencyCode().equals("BSQ"))
+                .collect(toList());
     }
 
     public List<OfferInfo> getMyOffersSortedByDate(String direction, String currencyCode) {
@@ -315,6 +344,13 @@ public final class GrpcClient {
         return sortOffersByDate(offers);
     }
 
+    public List<OfferInfo> getMyBsqOffersSortedByDate() {
+        ArrayList<OfferInfo> offers = new ArrayList<>();
+        offers.addAll(getMyBsqOffers(BUY.name()));
+        offers.addAll(getMyBsqOffers(SELL.name()));
+        return sortOffersByDate(offers);
+    }
+
     public OfferInfo getMostRecentOffer(String direction, String currencyCode) {
         List<OfferInfo> offers = getOffersSortedByDate(direction, currencyCode);
         return offers.isEmpty() ? null : offers.get(offers.size() - 1);
@@ -323,7 +359,7 @@ public final class GrpcClient {
     public List<OfferInfo> sortOffersByDate(List<OfferInfo> offerInfoList) {
         return offerInfoList.stream()
                 .sorted(comparing(OfferInfo::getDate))
-                .collect(Collectors.toList());
+                .collect(toList());
     }
 
     public TakeOfferReply getTakeOfferReply(String offerId, String paymentAccountId, String takerFeeCurrencyCode) {
@@ -340,7 +376,7 @@ public final class GrpcClient {
         if (reply.hasTrade())
             return reply.getTrade();
         else
-            throw new IllegalStateException(reply.getAvailabilityResultDescription());
+            throw new IllegalStateException(reply.getFailureReason().getDescription());
     }
 
     public TradeInfo getTrade(String tradeId) {
@@ -402,6 +438,24 @@ public final class GrpcClient {
     public List<PaymentAccount> getPaymentAccounts() {
         var request = GetPaymentAccountsRequest.newBuilder().build();
         return grpcStubs.paymentAccountsService.getPaymentAccounts(request).getPaymentAccountsList();
+    }
+
+    public PaymentAccount createCryptoCurrencyPaymentAccount(String accountName,
+                                                             String currencyCode,
+                                                             String address,
+                                                             boolean tradeInstant) {
+        var request = CreateCryptoCurrencyPaymentAccountRequest.newBuilder()
+                .setAccountName(accountName)
+                .setCurrencyCode(currencyCode)
+                .setAddress(address)
+                .setTradeInstant(tradeInstant)
+                .build();
+        return grpcStubs.paymentAccountsService.createCryptoCurrencyPaymentAccount(request).getPaymentAccount();
+    }
+
+    public List<PaymentMethod> getCryptoPaymentMethods() {
+        var request = GetCryptoCurrencyPaymentMethodsRequest.newBuilder().build();
+        return grpcStubs.paymentAccountsService.getCryptoCurrencyPaymentMethods(request).getPaymentMethodsList();
     }
 
     public void lockWallet() {

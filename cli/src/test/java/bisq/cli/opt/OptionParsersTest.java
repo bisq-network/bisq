@@ -3,6 +3,7 @@ package bisq.cli.opt;
 import org.junit.jupiter.api.Test;
 
 import static bisq.cli.Method.canceloffer;
+import static bisq.cli.Method.createcryptopaymentacct;
 import static bisq.cli.Method.createoffer;
 import static bisq.cli.Method.createpaymentacct;
 import static bisq.cli.opts.OptLabel.*;
@@ -12,6 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 
 import bisq.cli.opts.CancelOfferOptionParser;
+import bisq.cli.opts.CreateCryptoCurrencyPaymentAcctOptionParser;
 import bisq.cli.opts.CreateOfferOptionParser;
 import bisq.cli.opts.CreatePaymentAcctOptionParser;
 
@@ -20,7 +22,7 @@ public class OptionParsersTest {
 
     private static final String PASSWORD_OPT = "--" + OPT_PASSWORD + "=" + "xyz";
 
-    // CancelOffer opt parsing tests
+    // canceloffer opt parser tests
 
     @Test
     public void testCancelOfferWithMissingOfferIdOptShouldThrowException() {
@@ -67,7 +69,7 @@ public class OptionParsersTest {
         new CancelOfferOptionParser(args).parse();
     }
 
-    // CreateOffer opt parsing tests
+    // createoffer opt parser tests
 
     @Test
     public void testCreateOfferOptParserWithMissingPaymentAccountIdOptShouldThrowException() {
@@ -139,7 +141,7 @@ public class OptionParsersTest {
         assertEquals("25.0", parser.getSecurityDeposit());
     }
 
-    // CreatePaymentAcct opt parser tests
+    // createpaymentacct opt parser tests
 
     @Test
     public void testCreatePaymentAcctOptParserWithMissingPaymentFormOptShouldThrowException() {
@@ -176,5 +178,86 @@ public class OptionParsersTest {
                 new CreatePaymentAcctOptionParser(args).parse());
         assertEquals("json payment account form '/tmp/milkyway/solarsystem/mars' could not be found",
                 exception.getMessage());
+    }
+
+    // createcryptopaymentacct parser tests
+
+    @Test
+    public void testCreateCryptoCurrencyPaymentAcctOptionParserWithMissingAcctNameOptShouldThrowException() {
+        String[] args = new String[]{
+                PASSWORD_OPT,
+                createcryptopaymentacct.name()
+        };
+        Throwable exception = assertThrows(RuntimeException.class, () ->
+                new CreateCryptoCurrencyPaymentAcctOptionParser(args).parse());
+        assertEquals("no payment account name specified", exception.getMessage());
+    }
+
+    @Test
+    public void testCreateCryptoCurrencyPaymentAcctOptionParserWithEmptyAcctNameOptShouldThrowException() {
+        String[] args = new String[]{
+                PASSWORD_OPT,
+                createcryptopaymentacct.name(),
+                "--" + OPT_ACCOUNT_NAME
+        };
+        Throwable exception = assertThrows(RuntimeException.class, () ->
+                new CreateCryptoCurrencyPaymentAcctOptionParser(args).parse());
+        assertEquals("account-name requires an argument", exception.getMessage());
+    }
+
+    @Test
+    public void testCreateCryptoCurrencyPaymentAcctOptionParserWithMissingCurrencyCodeOptShouldThrowException() {
+        String[] args = new String[]{
+                PASSWORD_OPT,
+                createcryptopaymentacct.name(),
+                "--" + OPT_ACCOUNT_NAME + "=" + "bsq payment account"
+        };
+        Throwable exception = assertThrows(RuntimeException.class, () ->
+                new CreateCryptoCurrencyPaymentAcctOptionParser(args).parse());
+        assertEquals("no currency code specified", exception.getMessage());
+    }
+
+    @Test
+    public void testCreateCryptoCurrencyPaymentAcctOptionParserWithInvalidCurrencyCodeOptShouldThrowException() {
+        String[] args = new String[]{
+                PASSWORD_OPT,
+                createcryptopaymentacct.name(),
+                "--" + OPT_ACCOUNT_NAME + "=" + "bsq payment account",
+                "--" + OPT_CURRENCY_CODE + "=" + "xmr"
+        };
+        Throwable exception = assertThrows(RuntimeException.class, () ->
+                new CreateCryptoCurrencyPaymentAcctOptionParser(args).parse());
+        assertEquals("api only supports bsq crypto currency payment accounts", exception.getMessage());
+    }
+
+    @Test
+    public void testCreateCryptoCurrencyPaymentAcctOptionParserWithMissingAddressOptShouldThrowException() {
+        String[] args = new String[]{
+                PASSWORD_OPT,
+                createcryptopaymentacct.name(),
+                "--" + OPT_ACCOUNT_NAME + "=" + "bsq payment account",
+                "--" + OPT_CURRENCY_CODE + "=" + "bsq"
+        };
+        Throwable exception = assertThrows(RuntimeException.class, () ->
+                new CreateCryptoCurrencyPaymentAcctOptionParser(args).parse());
+        assertEquals("no bsq address specified", exception.getMessage());
+    }
+
+    @Test
+    public void testCreateCryptoCurrencyPaymentAcctOptionParser() {
+        var acctName = "bsq payment account";
+        var currencyCode = "bsq";
+        var address = "B1nXyZ"; // address is validated on server
+        String[] args = new String[]{
+                PASSWORD_OPT,
+                createcryptopaymentacct.name(),
+                "--" + OPT_ACCOUNT_NAME + "=" + acctName,
+                "--" + OPT_CURRENCY_CODE + "=" + currencyCode,
+                "--" + OPT_ADDRESS + "=" + address
+        };
+        var parser = new CreateCryptoCurrencyPaymentAcctOptionParser(args).parse();
+        assertEquals(acctName, parser.getAccountName());
+        assertEquals(currencyCode, parser.getCurrencyCode());
+        assertEquals(address, parser.getAddress());
     }
 }

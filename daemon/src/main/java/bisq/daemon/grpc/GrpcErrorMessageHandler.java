@@ -19,6 +19,7 @@ package bisq.daemon.grpc;
 
 import bisq.common.handlers.ErrorMessageHandler;
 
+import bisq.proto.grpc.AvailabilityResultWithDescription;
 import bisq.proto.grpc.TakeOfferReply;
 
 import protobuf.AvailabilityResult;
@@ -77,7 +78,7 @@ public class GrpcErrorMessageHandler implements ErrorMessageHandler {
             this.isErrorHandled = true;
             log.error(errorMessage);
 
-            if (isTakeOfferError()) {
+            if (takeOfferWasCalled()) {
                 handleTakeOfferError(errorMessage);
             } else {
                 exceptionHandler.handleErrorMessage(log,
@@ -88,14 +89,20 @@ public class GrpcErrorMessageHandler implements ErrorMessageHandler {
     }
 
     private void handleTakeOfferError(String errorMessage) {
-        // Send the AvailabilityResult to the client instead of throwing an exception.
-        // The client should look at the grpc reply object's AvailabilityResult
-        // field if reply.hasTrade = false, and use it give the user a human readable msg.
+        // If the errorMessage originated from a UI purposed TaskRunner, it should
+        // contain an AvailabilityResult enum name.  If it does, derive the
+        // AvailabilityResult enum from the errorMessage, wrap it in a new
+        // AvailabilityResultWithDescription enum, then send the
+        // AvailabilityResultWithDescription to the client instead of throwing
+        // an exception.  The client should use the grpc reply object's
+        // AvailabilityResultWithDescription field if reply.hasTrade = false, and the
+        // client can decide to throw an exception with the client friendly error
+        // description, or take some other action based on the AvailabilityResult enum.
+        // (Some offer availability problems are not fatal, and retries are appropriate.)
         try {
-            AvailabilityResult availabilityResultProto = getAvailabilityResult(errorMessage);
+            var failureReason = getAvailabilityResultWithDescription(errorMessage);
             var reply = TakeOfferReply.newBuilder()
-                    .setAvailabilityResult(availabilityResultProto)
-                    .setAvailabilityResultDescription(getAvailabilityResultDescription(availabilityResultProto))
+                    .setFailureReason(failureReason)
                     .build();
             @SuppressWarnings("unchecked")
             var takeOfferResponseObserver = (StreamObserver<TakeOfferReply>) responseObserver;
@@ -107,6 +114,15 @@ public class GrpcErrorMessageHandler implements ErrorMessageHandler {
                     errorMessage,
                     responseObserver);
         }
+    }
+
+    private AvailabilityResultWithDescription getAvailabilityResultWithDescription(String errorMessage) {
+        AvailabilityResult proto = getAvailabilityResult(errorMessage);
+        String description = getAvailabilityResultDescription(proto);
+        return AvailabilityResultWithDescription.newBuilder()
+                .setAvailabilityResult(proto)
+                .setDescription(description)
+                .build();
     }
 
     private AvailabilityResult getAvailabilityResult(String errorMessage) {
@@ -121,7 +137,7 @@ public class GrpcErrorMessageHandler implements ErrorMessageHandler {
         return bisq.core.offer.AvailabilityResult.fromProto(proto).description();
     }
 
-    private boolean isTakeOfferError() {
+    private boolean takeOfferWasCalled() {
         return fullMethodName.equals(getTakeOfferMethod().getFullMethodName());
     }
 }

@@ -155,6 +155,15 @@ message OfferInfo {
     string counterCurrencyCode = 17;
     uint64 date = 18;
     string state = 19;
+    uint64 sellerSecurityDeposit = 20;
+    string offerFeePaymentTxId = 21;
+    uint64 txFee = 22;
+    uint64 makerFee = 23;
+}
+
+message AvailabilityResultWithDescription {
+    AvailabilityResult availabilityResult = 1;
+    string description = 2;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -169,6 +178,10 @@ service PaymentAccounts {
     rpc GetPaymentMethods (GetPaymentMethodsRequest) returns (GetPaymentMethodsReply) {
     }
     rpc GetPaymentAccountForm (GetPaymentAccountFormRequest) returns (GetPaymentAccountFormReply) {
+    }
+    rpc CreateCryptoCurrencyPaymentAccount (CreateCryptoCurrencyPaymentAccountRequest) returns (CreateCryptoCurrencyPaymentAccountReply) {
+    }
+    rpc GetCryptoCurrencyPaymentMethods (GetCryptoCurrencyPaymentMethodsRequest) returns (GetCryptoCurrencyPaymentMethodsReply) {
     }
 }
 
@@ -200,6 +213,24 @@ message GetPaymentAccountFormRequest {
 
 message GetPaymentAccountFormReply {
     string paymentAccountFormJson = 1;
+}
+
+message CreateCryptoCurrencyPaymentAccountRequest {
+    string accountName = 1;
+    string currencyCode = 2;
+    string address = 3;
+    bool tradeInstant = 4;
+}
+
+message CreateCryptoCurrencyPaymentAccountReply {
+    PaymentAccount paymentAccount = 1;
+}
+
+message GetCryptoCurrencyPaymentMethodsRequest {
+}
+
+message GetCryptoCurrencyPaymentMethodsReply {
+    repeated PaymentMethod paymentMethods = 1;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -277,8 +308,7 @@ message TakeOfferRequest {
 
 message TakeOfferReply {
     TradeInfo trade = 1;
-    AvailabilityResult availabilityResult = 2;
-    string availabilityResultDescription = 3;
+    AvailabilityResultWithDescription failureReason = 2;
 }
 
 message ConfirmPaymentStartedRequest {
@@ -344,6 +374,28 @@ message TradeInfo {
     bool isPayoutPublished = 22;
     bool isWithdrawn = 23;
     string contractAsJson = 24;
+    ContractInfo contract = 25;
+}
+
+message ContractInfo {
+    string buyerNodeAddress = 1;
+    string sellerNodeAddress = 2;
+    string mediatorNodeAddress = 3;
+    string refundAgentNodeAddress = 4;
+    bool isBuyerMakerAndSellerTaker = 5;
+    string makerAccountId = 6;
+    string takerAccountId = 7;
+    PaymentAccountPayloadInfo makerPaymentAccountPayload = 8;
+    PaymentAccountPayloadInfo takerPaymentAccountPayload = 9;
+    string makerPayoutAddressString = 10;
+    string takerPayoutAddressString = 11;
+    uint64 lockTime = 12;
+}
+
+message PaymentAccountPayloadInfo {
+    string id = 1;
+    string paymentMethodId = 2;
+    string address = 3;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -381,6 +433,8 @@ service Wallets {
     rpc SendBsq (SendBsqRequest) returns (SendBsqReply) {
     }
     rpc SendBtc (SendBtcRequest) returns (SendBtcReply) {
+    }
+    rpc VerifyBsqSentToAddress (VerifyBsqSentToAddressRequest) returns (VerifyBsqSentToAddressReply) {
     }
     rpc GetTxFeeRate (GetTxFeeRateRequest) returns (GetTxFeeRateReply) {
     }
@@ -444,6 +498,15 @@ message SendBtcRequest {
 
 message SendBtcReply {
     TxInfo txInfo = 1;
+}
+
+message VerifyBsqSentToAddressRequest {
+    string address = 1;
+    string amount = 2;
+}
+
+message VerifyBsqSentToAddressReply {
+    bool isAmountReceived = 1;
 }
 
 message GetTxFeeRateRequest {
@@ -558,4 +621,3 @@ message GetVersionRequest {
 message GetVersionReply {
     string version = 1;
 }
-

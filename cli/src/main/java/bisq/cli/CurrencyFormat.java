@@ -25,23 +25,25 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 
 import java.util.Locale;
 
 import static java.lang.String.format;
+import static java.math.RoundingMode.HALF_UP;
+import static java.math.RoundingMode.UNNECESSARY;
 
 @VisibleForTesting
 public class CurrencyFormat {
 
     private static final NumberFormat NUMBER_FORMAT = NumberFormat.getInstance(Locale.US);
 
-    static final BigDecimal SATOSHI_DIVISOR = new BigDecimal(100000000);
+    static final BigDecimal SATOSHI_DIVISOR = new BigDecimal(100_000_000);
     static final DecimalFormat BTC_FORMAT = new DecimalFormat("###,##0.00000000");
     static final DecimalFormat BTC_TX_FEE_FORMAT = new DecimalFormat("###,###,##0");
 
     static final BigDecimal BSQ_SATOSHI_DIVISOR = new BigDecimal(100);
     static final DecimalFormat BSQ_FORMAT = new DecimalFormat("###,###,###,##0.00");
+    static final DecimalFormat SEND_BSQ_FORMAT = new DecimalFormat("###########0.00");
 
     static final BigDecimal SECURITY_DEPOSIT_MULTIPLICAND = new BigDecimal("0.01");
 
@@ -53,6 +55,14 @@ public class CurrencyFormat {
     @SuppressWarnings("BigDecimalMethodWithoutRoundingCalled")
     public static String formatBsq(long sats) {
         return BSQ_FORMAT.format(BigDecimal.valueOf(sats).divide(BSQ_SATOSHI_DIVISOR));
+    }
+
+    public static String formatBsqAmount(long bsqSats) {
+        // BSQ sats = trade.getOffer().getVolume()
+        NUMBER_FORMAT.setMinimumFractionDigits(2);
+        NUMBER_FORMAT.setMaximumFractionDigits(2);
+        NUMBER_FORMAT.setRoundingMode(HALF_UP);
+        return SEND_BSQ_FORMAT.format((double) bsqSats / SATOSHI_DIVISOR.doubleValue());
     }
 
     public static String formatTxFeeRateInfo(TxFeeRateInfo txFeeRateInfo) {
@@ -77,22 +87,44 @@ public class CurrencyFormat {
                 : formatOfferVolume(volume);
     }
 
+    public static String formatCryptoCurrencyVolumeRange(long minVolume, long volume) {
+        return minVolume != volume
+                ? formatCryptoCurrencyOfferVolume(minVolume) + " - " + formatCryptoCurrencyOfferVolume(volume)
+                : formatCryptoCurrencyOfferVolume(volume);
+    }
+
     public static String formatMarketPrice(double price) {
         NUMBER_FORMAT.setMinimumFractionDigits(4);
+        NUMBER_FORMAT.setMaximumFractionDigits(4);
         return NUMBER_FORMAT.format(price);
     }
 
-    public static String formatOfferPrice(long price) {
-        NUMBER_FORMAT.setMaximumFractionDigits(4);
+    public static String formatPrice(long price) {
         NUMBER_FORMAT.setMinimumFractionDigits(4);
-        NUMBER_FORMAT.setRoundingMode(RoundingMode.UNNECESSARY);
-        return NUMBER_FORMAT.format((double) price / 10000);
+        NUMBER_FORMAT.setMaximumFractionDigits(4);
+        NUMBER_FORMAT.setRoundingMode(UNNECESSARY);
+        return NUMBER_FORMAT.format((double) price / 10_000);
+    }
+
+    public static String formatCryptoCurrencyPrice(long price) {
+        NUMBER_FORMAT.setMinimumFractionDigits(8);
+        NUMBER_FORMAT.setMaximumFractionDigits(8);
+        NUMBER_FORMAT.setRoundingMode(UNNECESSARY);
+        return NUMBER_FORMAT.format((double) price / SATOSHI_DIVISOR.doubleValue());
     }
 
     public static String formatOfferVolume(long volume) {
+        NUMBER_FORMAT.setMinimumFractionDigits(0);
         NUMBER_FORMAT.setMaximumFractionDigits(0);
-        NUMBER_FORMAT.setRoundingMode(RoundingMode.UNNECESSARY);
-        return NUMBER_FORMAT.format((double) volume / 10000);
+        NUMBER_FORMAT.setRoundingMode(HALF_UP);
+        return NUMBER_FORMAT.format((double) volume / 10_000);
+    }
+
+    public static String formatCryptoCurrencyOfferVolume(long volume) {
+        NUMBER_FORMAT.setMinimumFractionDigits(2);
+        NUMBER_FORMAT.setMaximumFractionDigits(2);
+        NUMBER_FORMAT.setRoundingMode(HALF_UP);
+        return NUMBER_FORMAT.format((double) volume / SATOSHI_DIVISOR.doubleValue());
     }
 
     public static long toSatoshis(String btc) {
