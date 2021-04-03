@@ -31,6 +31,7 @@ import bisq.network.p2p.peers.PeerManager;
 import bisq.network.p2p.storage.P2PDataStorage;
 
 import bisq.common.config.Config;
+import bisq.common.persistence.PersistenceManager;
 import bisq.common.proto.persistable.PersistedDataHost;
 
 import javax.inject.Inject;
@@ -182,6 +183,7 @@ public class AppSetupWithP2P extends AppSetup {
 
     protected void onBasicServicesInitialized() {
         log.info("onBasicServicesInitialized");
+        PersistenceManager.onAllServicesInitialized();
 
         p2PService.onAllServicesInitialized();
 
