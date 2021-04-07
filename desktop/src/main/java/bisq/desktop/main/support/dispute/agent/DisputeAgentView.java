@@ -348,8 +348,9 @@ public abstract class DisputeAgentView extends DisputeView implements MultipleHo
     }
 
     @Override
-    protected void maybeAddProcessColumn() {
+    protected void maybeAddProcessColumnsForAgent() {
         tableView.getColumns().add(getProcessColumn());
+        tableView.getColumns().add(getChatColumn());
     }
 
     @Override

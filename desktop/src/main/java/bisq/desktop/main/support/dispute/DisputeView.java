@@ -350,7 +350,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
         else if (sortedList.size() > 0)
             tableView.getSelectionModel().select(0);
 
-        GUIUtil.requestFocus(filterTextField);
+        GUIUtil.requestFocus(tableView);
     }
 
     @Override
@@ -905,6 +905,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
         tableView.getSelectionModel().clearSelection();
 
         tableView.getColumns().add(getContractColumn());
+        maybeAddProcessColumnsForAgent();   // agent view prefers action buttons on the left
 
         TableColumn<Dispute, Dispute> dateColumn = getDateColumn();
         tableView.getColumns().add(dateColumn);
@@ -928,8 +929,8 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
         stateColumn = getStateColumn();
         tableView.getColumns().add(stateColumn);
 
-        maybeAddProcessColumn();
-        tableView.getColumns().add(getChatColumn());
+        // client view has the chat button to the right
+        maybeAddChatColumnForClient();
 
         tradeIdColumn.setComparator(Comparator.comparing(Dispute::getTradeId));
         dateColumn.setComparator(Comparator.comparing(Dispute::getOpeningDate));
@@ -941,7 +942,11 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
         tableView.getSortOrder().add(dateColumn);
     }
 
-    protected void maybeAddProcessColumn() {
+    protected void maybeAddProcessColumnsForAgent() {
+        // Only relevant client views will impl it
+    }
+
+    protected void maybeAddChatColumnForClient() {
         // Only relevant client views will impl it
     }
 
@@ -957,8 +962,8 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
     private TableColumn<Dispute, Dispute> getContractColumn() {
         TableColumn<Dispute, Dispute> column = new AutoTooltipTableColumn<>(Res.get("shared.details")) {
             {
-                setMaxWidth(150);
-                setMinWidth(80);
+                setMaxWidth(80);
+                setMinWidth(65);
                 getStyleClass().addAll("first-column", "avatar-column");
                 setSortable(false);
             }
@@ -1037,7 +1042,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
         return column;
     }
 
-    private TableColumn<Dispute, Dispute> getChatColumn() {
+    protected TableColumn<Dispute, Dispute> getChatColumn() {
         TableColumn<Dispute, Dispute> column = new AutoTooltipTableColumn<>(Res.get("support.chat")) {
             {
                 setMaxWidth(40);

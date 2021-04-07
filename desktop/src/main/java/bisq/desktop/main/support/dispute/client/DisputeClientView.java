@@ -67,6 +67,11 @@ public abstract class DisputeClientView extends DisputeView {
     }
 
     @Override
+    protected void maybeAddChatColumnForClient() {
+        tableView.getColumns().add(getChatColumn());
+    }
+
+    @Override
     protected boolean senderFlag() {
         return false;
     }
