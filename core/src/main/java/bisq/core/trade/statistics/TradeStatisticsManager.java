@@ -22,8 +22,8 @@ import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.BuyerTrade;
-import bisq.core.trade.Tradable;
 import bisq.core.trade.Trade;
+import bisq.core.trade.TradeModel;
 
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.storage.P2PDataStorage;
@@ -168,12 +168,12 @@ public class TradeStatisticsManager {
         jsonFileManager.writeToDiscThreaded(Utilities.objectToJson(array), "trade_statistics");
     }
 
-    public void maybeRepublishTradeStatistics(Set<Tradable> tradables,
+    public void maybeRepublishTradeStatistics(Set<TradeModel> trades,
                                               @Nullable String referralId,
                                               boolean isTorNetworkNode) {
         long ts = System.currentTimeMillis();
         Set<P2PDataStorage.ByteArray> hashes = tradeStatistics3StorageService.getMapOfAllData().keySet();
-        tradables.stream().filter(tradable -> tradable instanceof Trade).forEach(tradable -> {
+        trades.stream().filter(tradable -> tradable instanceof Trade).forEach(tradable -> {
             Trade trade = (Trade) tradable;
             if (trade instanceof BuyerTrade) {
                 log.debug("Trade: {} is a buyer trade, we only republish we have been seller.",
@@ -212,6 +212,6 @@ public class TradeStatisticsManager {
             p2PService.addPersistableNetworkPayload(tradeStatistics3, true);
         });
         log.info("maybeRepublishTradeStatistics took {} ms. Number of tradeStatistics: {}. Number of own trades: {}",
-                System.currentTimeMillis() - ts, hashes.size(), tradables.size());
+                System.currentTimeMillis() - ts, hashes.size(), trades.size());
     }
 }

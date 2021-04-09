@@ -132,8 +132,8 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
     private final ClockWatcher clockWatcher;
 
     private final Map<String, TradeProtocol> tradeProtocolByTradeId = new HashMap<>();
-    private final PersistenceManager<TradableList<Tradable>> persistenceManager;
-    private final TradableList<Tradable> tradableList = new TradableList<>();
+    private final PersistenceManager<TradableList<TradeModel>> persistenceManager;
+    private final TradableList<TradeModel> tradableList = new TradableList<>();
     @Getter
     private final BooleanProperty persistedTradesInitialized = new SimpleBooleanProperty();
     @Setter
@@ -167,7 +167,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                         MediatorManager mediatorManager,
                         ProcessModelServiceProvider processModelServiceProvider,
                         ClockWatcher clockWatcher,
-                        PersistenceManager<TradableList<Tradable>> persistenceManager,
+                        PersistenceManager<TradableList<TradeModel>> persistenceManager,
                         ReferralIdService referralIdService,
                         DumpDelayedPayoutTx dumpDelayedPayoutTx,
                         @Named(Config.ALLOW_FAULTY_DELAYED_TXS) boolean allowFaultyDelayedTxs) {
@@ -307,7 +307,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
             });
         }
 
-        getObservableList().addListener((ListChangeListener<Tradable>) change -> onTradesChanged());
+        getObservableList().addListener((ListChangeListener<TradeModel>) change -> onTradesChanged());
         onTradesChanged();
 
         btcWalletService.getAddressEntriesForAvailableBalanceStream()
@@ -343,18 +343,20 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         persistedTradesInitialized.set(true);
 
         // We do not include failed trades as they should not be counted anyway in the trade statistics
-        Set<Tradable> allTrades = new HashSet<>(closedTradableManager.getClosedTrades());
+        Set<TradeModel> allTrades = new HashSet<>(closedTradableManager.getClosedTrades());
         allTrades.addAll(tradableList.getList());
         String referralId = referralIdService.getOptionalReferralId().orElse(null);
         boolean isTorNetworkNode = p2PService.getNetworkNode() instanceof TorNetworkNode;
         tradeStatisticsManager.maybeRepublishTradeStatistics(allTrades, referralId, isTorNetworkNode);
     }
 
-    private void initPersistedTrade(Tradable tradable) {
-        if (!(tradable instanceof Trade))
+    private void initPersistedTrade(TradeModel tradeModel) {
+        initTradeAndProtocol(tradeModel, getTradeProtocol(tradeModel));
+
+        if (!(tradeModel instanceof Trade))
             return;
-        Trade trade = (Trade) tradable;
-        initTradeAndProtocol(trade, getTradeProtocol(trade));
+
+        Trade trade = (Trade) tradeModel;
         trade.updateDepositTxFromWallet();
         requestPersistence();
     }
@@ -523,10 +525,6 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                 processModelServiceProvider.getKeyRing().getPubKeyRing());
     }
 
-    private AtomicProcessModel getNewAtomicProcessModel() {
-        return new AtomicProcessModel(processModelServiceProvider.getKeyRing().getPubKeyRing());
-    }
-
     private OfferAvailabilityModel getOfferAvailabilityModel(Offer offer, boolean isTakerApiUser) {
         return new OfferAvailabilityModel(
                 offer,
@@ -599,14 +597,16 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void closeDisputedTrade(String tradeId, Trade.DisputeState disputeState) {
-        Optional<Trade> tradeOptional = getTradeById(tradeId);
-        if (tradeOptional.isPresent()) {
-            Trade trade = tradeOptional.get();
+        getTradeById(tradeId).ifPresent(tradeModel -> {
+            if (!(tradeModel instanceof Trade))
+                return;
+
+            Trade trade = (Trade) tradeModel;
             trade.setDisputeState(disputeState);
             onTradeCompleted(trade);
             btcWalletService.swapTradeEntryToAvailableEntry(trade.getId(), AddressEntry.Context.TRADE_PAYOUT);
             requestPersistence();
-        }
+        });
     }
 
 
@@ -630,7 +630,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
 
     private void updateTradePeriodState() {
         getObservableList().stream()
-                .filter(tradable -> tradable instanceof Trade)
+                .filter(tradeModel -> tradeModel instanceof Trade)
                 .map(tradable -> (Trade) tradable)
                 .forEach(trade -> {
                     if (!trade.isPayoutPublished()) {
@@ -750,7 +750,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
     // Getters, Utils
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public ObservableList<Tradable> getObservableList() {
+    public ObservableList<TradeModel> getObservableList() {
         return tradableList.getObservableList();
     }
 
@@ -779,20 +779,25 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
             return offer.getDirection() == OfferPayloadI.Direction.SELL;
     }
 
-    public Optional<Trade> getTradeById(String tradeId) {
+    public Optional<TradeModel> getTradeModelById(String tradeId) {
         return tradableList.stream()
-                .filter(tradable -> tradable instanceof Trade)
-                .map(tradable -> (Trade) tradable)
-                .filter(e -> e.getId().equals(tradeId)).findFirst();
+                .filter(tradeModel -> tradeModel.getId().equals(tradeId))
+                .findFirst();
     }
 
-    private void removeTrade(Trade trade) {
+    public Optional<Trade> getTradeById(String tradeId) {
+        return getTradeModelById(tradeId)
+                .filter(tradeModel -> tradeModel instanceof Trade)
+                .map(tradeModel -> (Trade) tradeModel);
+    }
+
+    private void removeTrade(TradeModel trade) {
         if (tradableList.remove(trade)) {
             requestPersistence();
         }
     }
 
-    private void addTrade(Trade trade) {
+    private void addTrade(TradeModel trade) {
         if (tradableList.add(trade)) {
             requestPersistence();
         }

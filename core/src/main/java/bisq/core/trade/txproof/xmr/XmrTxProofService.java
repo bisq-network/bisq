@@ -26,6 +26,7 @@ import bisq.core.trade.SellerTrade;
 import bisq.core.trade.Tradable;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
+import bisq.core.trade.TradeModel;
 import bisq.core.trade.closed.ClosedTradableManager;
 import bisq.core.trade.failed.FailedTradesManager;
 import bisq.core.trade.protocol.SellerProtocol;
@@ -181,7 +182,7 @@ public class XmrTxProofService implements AssetTxProofService {
         });
 
         // We listen on new trades
-        ObservableList<Tradable> tradableList = tradeManager.getObservableList();
+        ObservableList<TradeModel> tradableList = tradeManager.getObservableList();
         tradableList.addListener((ListChangeListener<Tradable>) c -> {
             c.next();
             if (c.wasAdded()) {
@@ -364,7 +365,7 @@ public class XmrTxProofService implements AssetTxProofService {
                 filterManager.getFilter().isDisableAutoConf();
     }
 
-    private boolean wasTxKeyReUsed(Trade trade, List<Tradable> activeTrades) {
+    private boolean wasTxKeyReUsed(Trade trade, List<TradeModel> activeTrades) {
         // For dev testing we reuse test data so we ignore that check
         if (DevEnv.isDevMode()) {
             return false;
