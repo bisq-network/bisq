@@ -15,8 +15,18 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.handlers;
+package bisq.core.trade.atomic;
 
-public interface TradeResultHandler<T> {
-    void handleResult(T trade);
+import bisq.common.handlers.ErrorMessageHandler;
+import bisq.common.handlers.ResultHandler;
+import bisq.common.taskrunner.TaskRunner;
+
+public class AtomicTradeTaskRunner extends TaskRunner<AtomicTrade> {
+
+    public AtomicTradeTaskRunner(AtomicTrade sharedModel,
+                                 ResultHandler resultHandler,
+                                 ErrorMessageHandler errorMessageHandler) {
+        //noinspection unchecked
+        super(sharedModel, (Class<AtomicTrade>) sharedModel.getClass().getSuperclass(), resultHandler, errorMessageHandler);
+    }
 }

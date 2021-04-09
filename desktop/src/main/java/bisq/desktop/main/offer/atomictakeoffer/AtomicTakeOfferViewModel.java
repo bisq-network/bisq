@@ -28,7 +28,7 @@ import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayloadI;
 import bisq.core.offer.OfferUtil;
 import bisq.core.payment.PaymentAccount;
-import bisq.core.trade.Trade;
+import bisq.core.trade.atomic.AtomicTrade;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.coin.CoinFormatter;
@@ -69,7 +69,7 @@ class AtomicTakeOfferViewModel extends ActivatableWithDataModel<AtomicTakeOfferD
 
     private String amountRange;
     private boolean takeOfferRequested;
-    private Trade trade;
+    private AtomicTrade atomicTrade;
     private Offer offer;
     private String price;
     private String amountDescription;
@@ -97,7 +97,7 @@ class AtomicTakeOfferViewModel extends ActivatableWithDataModel<AtomicTakeOfferD
     private ChangeListener<String> amountListener;
     private ChangeListener<Coin> amountAsCoinListener;
     private ChangeListener<Boolean> isTxBuilderReadyListener;
-    private ChangeListener<Trade.State> tradeStateListener;
+    private ChangeListener<AtomicTrade.State> tradeStateListener;
     private ChangeListener<String> tradeErrorListener;
     private ChangeListener<Offer.State> offerStateListener;
     private ChangeListener<String> offerErrorListener;
@@ -189,12 +189,12 @@ class AtomicTakeOfferViewModel extends ActivatableWithDataModel<AtomicTakeOfferD
         takeOfferSucceededHandler = resultHandler;
         takeOfferRequested = true;
         showTransactionPublishedScreen.set(false);
-        dataModel.onTakeOffer(trade -> {
-            this.trade = trade;
-            trade.stateProperty().addListener(tradeStateListener);
+        dataModel.onTakeOffer(atomicTrade -> {
+            this.atomicTrade = atomicTrade;
+            atomicTrade.stateProperty().addListener(tradeStateListener);
             applyTradeState();
-            trade.errorMessageProperty().addListener(tradeErrorListener);
-            applyTradeErrorMessage(trade.getErrorMessage());
+            atomicTrade.errorMessageProperty().addListener(tradeErrorListener);
+            applyTradeErrorMessage(atomicTrade.getErrorMessage());
             takeOfferCompleted.set(true);
         });
 
@@ -308,11 +308,12 @@ class AtomicTakeOfferViewModel extends ActivatableWithDataModel<AtomicTakeOfferD
     private void applyTradeErrorMessage(@Nullable String errorMessage) {
         if (errorMessage != null) {
             String appendMsg;
-            switch (trade.getState().getPhase()) {
-                case INIT:
+            switch (atomicTrade.getState()) {
+                case PREPARATION:
                     appendMsg = Res.get("takeOffer.error.noFundsLost");
                     break;
-                case WITHDRAWN:
+                case TX_PUBLISHED:
+                case TX_CONFIRMED:
                     appendMsg = Res.get("takeOffer.error.payoutPublished");
                     break;
                 default:
@@ -328,14 +329,12 @@ class AtomicTakeOfferViewModel extends ActivatableWithDataModel<AtomicTakeOfferD
     }
 
     private void applyTradeState() {
-        if (trade.isWithdrawn()) {
-            // TODO(sq): introduce AtomicTrade to handle states
-            if (trade.getDepositTx() != null) {
-                if (takeOfferSucceededHandler != null)
-                    takeOfferSucceededHandler.run();
+        if (atomicTrade.getState().equals(AtomicTrade.State.TX_PUBLISHED) ||
+                atomicTrade.getState().equals(AtomicTrade.State.TX_CONFIRMED)) {
+            if (takeOfferSucceededHandler != null)
+                takeOfferSucceededHandler.run();
 
-                showTransactionPublishedScreen.set(true);
-            }
+            showTransactionPublishedScreen.set(true);
         }
     }
 
@@ -433,9 +432,9 @@ class AtomicTakeOfferViewModel extends ActivatableWithDataModel<AtomicTakeOfferD
             offer.errorMessageProperty().removeListener(offerErrorListener);
         }
 
-        if (trade != null) {
-            trade.stateProperty().removeListener(tradeStateListener);
-            trade.errorMessageProperty().removeListener(tradeErrorListener);
+        if (atomicTrade != null) {
+            atomicTrade.stateProperty().removeListener(tradeStateListener);
+            atomicTrade.errorMessageProperty().removeListener(tradeErrorListener);
         }
         p2PService.getNetworkNode().removeConnectionListener(connectionListener);
         dataModel.isTxBuilderReady.removeListener(isTxBuilderReadyListener);
@@ -495,8 +494,8 @@ class AtomicTakeOfferViewModel extends ActivatableWithDataModel<AtomicTakeOfferD
         offerWarning.set(null);
     }
 
-    public Trade getTrade() {
-        return trade;
+    public AtomicTrade getAtomicTrade() {
+        return atomicTrade;
     }
 
     public void resetErrorMessage() {

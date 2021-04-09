@@ -48,7 +48,7 @@ public class TradableRepository {
         this.failedTradesManager = failedTradesManager;
     }
 
-    Set<Tradable> getAll() {
+    public Set<Tradable> getAll() {
         return ImmutableSet.<Tradable>builder()
                 .addAll(openOfferManager.getObservableList())
                 .addAll(tradeManager.getObservableList())

@@ -20,6 +20,8 @@ package bisq.core.trade;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.offer.OpenOffer;
 import bisq.core.proto.CoreProtoResolver;
+import bisq.core.trade.atomic.AtomicMakerTrade;
+import bisq.core.trade.atomic.AtomicTakerTrade;
 
 import bisq.common.proto.ProtoUtil;
 import bisq.common.proto.ProtobufferRuntimeException;
@@ -76,6 +78,10 @@ public final class TradableList<T extends Tradable> extends PersistableListAsObs
                             return SellerAsMakerTrade.fromProto(tradable.getSellerAsMakerTrade(), btcWalletService, coreProtoResolver);
                         case SELLER_AS_TAKER_TRADE:
                             return SellerAsTakerTrade.fromProto(tradable.getSellerAsTakerTrade(), btcWalletService, coreProtoResolver);
+                        case ATOMIC_MAKER_TRADE:
+                            return AtomicMakerTrade.fromProto(tradable.getAtomicMakerTrade(), coreProtoResolver);
+                        case ATOMIC_TAKER_TRADE:
+                            return AtomicTakerTrade.fromProto(tradable.getAtomicTakerTrade(), coreProtoResolver);
                         default:
                             log.error("Unknown messageCase. tradable.getMessageCase() = " + tradable.getMessageCase());
                             throw new ProtobufferRuntimeException("Unknown messageCase. tradable.getMessageCase() = " +

@@ -32,6 +32,7 @@ import bisq.core.offer.Offer;
 import bisq.core.offer.OpenOffer;
 import bisq.core.trade.Tradable;
 import bisq.core.trade.Trade;
+import bisq.core.trade.atomic.AtomicTrade;
 import bisq.core.util.coin.CoinFormatter;
 
 import org.bitcoinj.core.Coin;
@@ -252,6 +253,11 @@ class TransactionsListItem {
                         }
                     }
                 }
+            } else if (tradable instanceof AtomicTrade) {
+                direction = amountAsCoin.isPositive() ? Res.get("funds.tx.direction.atomicBuy") :
+                        Res.get("funds.tx.direction.atomicSell");
+                addressString = "";
+                details = Res.get("funds.tx.atomicTx", tradeId);
             }
         } else {
             if (amountAsCoin.isZero()) {

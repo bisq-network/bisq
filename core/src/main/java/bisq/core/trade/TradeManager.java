@@ -30,10 +30,13 @@ import bisq.core.offer.availability.OfferAvailabilityModel;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 import bisq.core.support.dispute.mediation.mediator.MediatorManager;
+import bisq.core.trade.atomic.AtomicTakerTrade;
+import bisq.core.trade.atomic.AtomicTrade;
 import bisq.core.trade.closed.ClosedTradableManager;
 import bisq.core.trade.failed.FailedTradesManager;
 import bisq.core.trade.handlers.TradeResultHandler;
 import bisq.core.trade.messages.InputsForDepositTxRequest;
+import bisq.core.trade.protocol.AtomicProcessModel;
 import bisq.core.trade.protocol.MakerProtocol;
 import bisq.core.trade.protocol.ProcessModel;
 import bisq.core.trade.protocol.ProcessModelServiceProvider;
@@ -274,13 +277,9 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                     getNewProcessModel(offer),
                     UUID.randomUUID().toString());
         }
-        TradeProtocol tradeProtocol = TradeProtocolFactory.getNewTradeProtocol(trade);
-        TradeProtocol prev = tradeProtocolByTradeId.put(trade.getUid(), tradeProtocol);
-        if (prev != null) {
-            log.error("We had already an entry with uid {}", trade.getUid());
-        }
 
-        tradableList.add(trade);
+        TradeProtocol tradeProtocol = createTradeProtocol(trade);
+
         initTradeAndProtocol(trade, tradeProtocol);
 
         ((MakerProtocol) tradeProtocol).handleTakeOfferRequest(inputsForDepositTxRequest, peer, errorMessage -> {
@@ -319,7 +318,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                 });
     }
 
-    public TradeProtocol getTradeProtocol(Trade trade) {
+    public TradeProtocol getTradeProtocol(TradeModel trade) {
         String uid = trade.getUid();
         if (tradeProtocolByTradeId.containsKey(uid)) {
             return tradeProtocolByTradeId.get(uid);
@@ -360,9 +359,10 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         requestPersistence();
     }
 
-    private void initTradeAndProtocol(Trade trade, TradeProtocol tradeProtocol) {
+    private void initTradeAndProtocol(TradeModel trade, TradeProtocol tradeProtocol) {
         tradeProtocol.initialize(processModelServiceProvider, this, trade.getOffer());
-        trade.initialize(processModelServiceProvider);
+        if (trade instanceof Trade)
+            ((Trade) trade).initialize(processModelServiceProvider);
         requestPersistence();
     }
 
@@ -401,7 +401,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                             String paymentAccountId,
                             boolean useSavingsWallet,
                             boolean isTakerApiUser,
-                            TradeResultHandler tradeResultHandler,
+                            TradeResultHandler<Trade> tradeResultHandler,
                             ErrorMessageHandler errorMessageHandler) {
 
         checkArgument(!wasOfferAlreadyUsedInTrade(offer.getId()));
@@ -444,12 +444,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                         trade.getProcessModel().setFundsNeededForTradeAsLong(fundsNeededForTrade.value);
                         trade.setTakerPaymentAccountId(paymentAccountId);
 
-                        TradeProtocol tradeProtocol = TradeProtocolFactory.getNewTradeProtocol(trade);
-                        TradeProtocol prev = tradeProtocolByTradeId.put(trade.getUid(), tradeProtocol);
-                        if (prev != null) {
-                            log.error("We had already an entry with uid {}", trade.getUid());
-                        }
-                        tradableList.add(trade);
+                        TradeProtocol tradeProtocol = createTradeProtocol(trade);
 
                         initTradeAndProtocol(trade, tradeProtocol);
 
@@ -463,10 +458,73 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         requestPersistence();
     }
 
+    public void onTakeAtomicOffer(Offer offer,
+                                  Coin amount,
+                                  long price,
+                                  long miningFeePerByte,
+                                  boolean isCurrencyForMakerFeeBtc,
+                                  boolean isCurrencyForTakerFeeBtc,
+                                  long makerFee,
+                                  long takerFee,
+                                  boolean isTakerApiUser,
+                                  TradeResultHandler<AtomicTrade> tradeResultHandler,
+                                  ErrorMessageHandler errorMessageHandler) {
+
+        checkArgument(!wasOfferAlreadyUsedInTrade(offer.getId()));
+
+        OfferAvailabilityModel model = getOfferAvailabilityModel(offer, isTakerApiUser);
+        offer.checkOfferAvailability(model,
+                () -> {
+                    if (offer.getState() == Offer.State.AVAILABLE) {
+                        AtomicTrade atomicTrade = new AtomicTakerTrade(UUID.randomUUID().toString(),
+                                offer,
+                                amount,
+                                price,
+                                new Date().getTime(),
+                                model.getPeerNodeAddress(),
+                                miningFeePerByte,
+                                isCurrencyForMakerFeeBtc,
+                                isCurrencyForTakerFeeBtc,
+                                makerFee,
+                                takerFee,
+                                new AtomicProcessModel(keyRing.getPubKeyRing()),
+                                "",
+                                AtomicTrade.State.PREPARATION);
+
+
+                        TradeProtocol tradeProtocol = createTradeProtocol(atomicTrade);
+
+                        initTradeAndProtocol(atomicTrade, tradeProtocol);
+
+                        ((TakerProtocol) tradeProtocol).onTakeOffer();
+                        tradeResultHandler.handleResult(atomicTrade);
+                        requestPersistence();
+                    }
+                },
+                errorMessageHandler);
+
+        requestPersistence();
+    }
+
+    @NotNull
+    private TradeProtocol createTradeProtocol(TradeModel trade) {
+        TradeProtocol tradeProtocol = TradeProtocolFactory.getNewTradeProtocol(trade);
+        TradeProtocol prev = tradeProtocolByTradeId.put(trade.getUid(), tradeProtocol);
+        if (prev != null) {
+            log.error("We had already an entry with uid {}", trade.getUid());
+        }
+        tradableList.add(trade);
+        return tradeProtocol;
+    }
+
     private ProcessModel getNewProcessModel(Offer offer) {
         return new ProcessModel(checkNotNull(offer).getId(),
                 processModelServiceProvider.getUser().getAccountId(),
                 processModelServiceProvider.getKeyRing().getPubKeyRing());
+    }
+
+    private AtomicProcessModel getNewAtomicProcessModel() {
+        return new AtomicProcessModel(processModelServiceProvider.getKeyRing().getPubKeyRing());
     }
 
     private OfferAvailabilityModel getOfferAvailabilityModel(Offer offer, boolean isTakerApiUser) {
@@ -705,9 +763,12 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
     }
 
     public boolean wasOfferAlreadyUsedInTrade(String offerId) {
-        return getTradeById(offerId).isPresent() ||
-                failedTradesManager.getTradeById(offerId).isPresent() ||
-                closedTradableManager.getTradableById(offerId).isPresent();
+        var hasTaken = tradableList.stream()
+                .anyMatch(t -> t.getOffer().getId().equals(offerId));
+        hasTaken &= failedTradesManager.getObservableList().stream()
+                .anyMatch(t -> t.getOffer().getId().equals(offerId));
+        return hasTaken && closedTradableManager.getObservableList().stream()
+                .anyMatch(t -> t.getOffer().getId().equals(offerId));
     }
 
     public boolean isBuyer(Offer offer) {

@@ -15,4 +15,6 @@ public abstract class TradeModel implements Tradable, Model {
 
     // TODO(sq): used for tradeModel.stateProperty().get()
     public abstract String getStateInfo();
+
+    public abstract String getUid();
 }

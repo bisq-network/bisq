@@ -161,7 +161,6 @@ public abstract class Trade extends TradeModel {
         // Alternatively the maker could have seen the payout tx earlier before he received the PAYOUT_TX_PUBLISHED_MSG
         BUYER_SAW_PAYOUT_TX_IN_NETWORK(Phase.PAYOUT_PUBLISHED),
 
-
         // #################### Phase WITHDRAWN
         WITHDRAW_COMPLETED(Phase.WITHDRAWN);
 
@@ -1074,6 +1073,12 @@ public abstract class Trade extends TradeModel {
         return offer != null && offer.getOfferPayloadI() instanceof AtomicOfferPayload;
     }
 
+    public boolean isAtomicBsqTrade() {
+        checkNotNull(getOffer(), "Offer must not be null");
+        return getOffer().getPaymentMethod().isAtomic();
+    }
+
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -1127,6 +1132,14 @@ public abstract class Trade extends TradeModel {
             // persisted in case the shutdown routine did not persist the trade.
             setState(State.DEPOSIT_CONFIRMED_IN_BLOCK_CHAIN);
         }
+    }
+
+    public String getTxIdForTradeStats() {
+        return getDepositTxId();
+    }
+
+    public boolean removeTakenOffer(Phase phase) {
+        return false;
     }
 
     @Override

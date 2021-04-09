@@ -141,7 +141,6 @@ public class AtomicTakeOfferView extends ActivatableViewAndModel<AnchorPane, Ato
     private boolean offerDetailsWindowDisplayed;
     private SimpleBooleanProperty errorPopupDisplayed;
     private ChangeListener<Boolean> amountFocusedListener;
-    private InfoInputTextField volumeInfoTextField;
     private AutoTooltipSlideToggleButton tradeFeeInBtcToggle,
             tradeFeeInBsqToggle;
     private ChangeListener<Boolean> tradeFeeInBtcToggleListener,
@@ -417,7 +416,7 @@ public class AtomicTakeOfferView extends ActivatableViewAndModel<AnchorPane, Ato
         showTransactionPublishedScreenSubscription = EasyBind.subscribe(model.showTransactionPublishedScreen, newValue -> {
             if (newValue && DevEnv.isDevMode()) {
                 close();
-            } else if (newValue && model.getTrade() != null && !model.getTrade().hasFailed()) {
+            } else if (newValue && model.getAtomicTrade() != null && !model.getAtomicTrade().hasFailed()) {
                 String key = "takeOfferSuccessInfo";
                 if (DontShowAgainLookup.showAgain(key)) {
                     UserThread.runAfter(() -> new Popup().headLine(Res.get("takeOffer.success.headline"))
@@ -608,7 +607,7 @@ public class AtomicTakeOfferView extends ActivatableViewAndModel<AnchorPane, Ato
         Tuple3<HBox, InfoInputTextField, Label> volumeValueCurrencyBoxTuple = getNonEditableValueBoxWithInfo();
         volumeValueCurrencyBox = volumeValueCurrencyBoxTuple.first;
 
-        volumeInfoTextField = volumeValueCurrencyBoxTuple.second;
+        InfoInputTextField volumeInfoTextField = volumeValueCurrencyBoxTuple.second;
         volumeTextField = volumeInfoTextField.getInputTextField();
         volumeCurrencyLabel = volumeValueCurrencyBoxTuple.third;
         Tuple2<Label, VBox> volumeInputBoxTuple = getTradeInputBox(volumeValueCurrencyBox, model.volumeDescriptionLabel.get());

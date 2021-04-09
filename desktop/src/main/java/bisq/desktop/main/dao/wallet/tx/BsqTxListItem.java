@@ -18,6 +18,7 @@
 package bisq.desktop.main.dao.wallet.tx;
 
 import bisq.desktop.components.TxConfidenceListItem;
+import bisq.desktop.main.funds.transactions.TradableRepository;
 import bisq.desktop.util.DisplayUtils;
 
 import bisq.core.btc.wallet.BsqWalletService;
@@ -26,6 +27,7 @@ import bisq.core.btc.wallet.WalletService;
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.state.model.blockchain.TxType;
 import bisq.core.locale.Res;
+import bisq.core.trade.atomic.AtomicTrade;
 import bisq.core.util.coin.BsqFormatter;
 
 import org.bitcoinj.core.Address;
@@ -56,12 +58,16 @@ class BsqTxListItem extends TxConfidenceListItem {
     private final Coin amount;
     private boolean received;
 
+    private boolean issuanceTx;
+    private String atomicTradeId;
+
     BsqTxListItem(Transaction transaction,
                   BsqWalletService bsqWalletService,
                   BtcWalletService btcWalletService,
                   DaoFacade daoFacade,
                   Date date,
-                  BsqFormatter bsqFormatter) {
+                  BsqFormatter bsqFormatter,
+                  TradableRepository tradableRepository) {
         super(transaction, bsqWalletService);
 
         this.daoFacade = daoFacade;
@@ -127,6 +133,8 @@ class BsqTxListItem extends TxConfidenceListItem {
             address = received ? receivedWithAddress : sendToAddress;
         else
             address = "";
+
+        setAtomic(tradableRepository);
     }
 
     BsqTxListItem() {
@@ -156,6 +164,15 @@ class BsqTxListItem extends TxConfidenceListItem {
 
     public String getAmountAsString() {
         return bsqFormatter.formatCoin(amount);
+    }
+
+    private void setAtomic(TradableRepository tradableRepository) {
+        var tradables = tradableRepository.getAll();
+        tradables.forEach(tradable -> {
+            if (tradable instanceof AtomicTrade && txId.equals(((AtomicTrade) tradable).getTxId())) {
+                atomicTradeId = tradable.getShortId();
+            }
+        });
     }
 }
 

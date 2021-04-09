@@ -21,6 +21,7 @@ import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
+import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.dao.DaoFacade;
 import bisq.core.filter.FilterManager;
 import bisq.core.offer.OpenOfferManager;
@@ -46,6 +47,7 @@ public class ProcessModelServiceProvider {
     private final BtcWalletService btcWalletService;
     private final BsqWalletService bsqWalletService;
     private final TradeWalletService tradeWalletService;
+    private final WalletsManager walletsManager;
     private final DaoFacade daoFacade;
     private final ReferralIdService referralIdService;
     private final User user;
@@ -63,6 +65,7 @@ public class ProcessModelServiceProvider {
                                        BtcWalletService btcWalletService,
                                        BsqWalletService bsqWalletService,
                                        TradeWalletService tradeWalletService,
+                                       WalletsManager walletsManager,
                                        DaoFacade daoFacade,
                                        ReferralIdService referralIdService,
                                        User user,
@@ -79,6 +82,7 @@ public class ProcessModelServiceProvider {
         this.btcWalletService = btcWalletService;
         this.bsqWalletService = bsqWalletService;
         this.tradeWalletService = tradeWalletService;
+        this.walletsManager = walletsManager;
         this.daoFacade = daoFacade;
         this.referralIdService = referralIdService;
         this.user = user;

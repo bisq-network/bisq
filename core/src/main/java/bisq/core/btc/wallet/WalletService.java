@@ -546,6 +546,10 @@ public abstract class WalletService {
         return getNumTxOutputsForAddress(address) == 0;
     }
 
+    public boolean isMine(TransactionOutput transactionOutput) {
+        return transactionOutput.isMine(wallet);
+    }
+
     // BISQ issue #4039: Prevent dust outputs from being created.
     // Check the outputs of a proposed transaction.  If any are below the dust threshold,
     // add up the dust, log the details, and return the cumulative dust amount.

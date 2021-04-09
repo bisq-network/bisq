@@ -23,6 +23,7 @@ import bisq.core.btc.exceptions.TransactionVerificationException;
 import bisq.core.btc.exceptions.WalletException;
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.model.AddressEntryList;
+import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.http.MemPoolSpaceTxBroadcaster;
 import bisq.core.provider.fee.FeeService;
@@ -61,6 +62,7 @@ import org.bouncycastle.crypto.params.KeyParameter;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -151,6 +153,21 @@ public class BtcWalletService extends WalletService {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Public Methods
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public Transaction signTx(Transaction tx) throws WalletException, TransactionVerificationException {
+        for (int i = 0; i < tx.getInputs().size(); i++) {
+            var input = tx.getInput(i);
+            if (input.getConnectedOutput() != null && input.getConnectedOutput().isMine(wallet)) {
+                signTransactionInput(wallet, aesKey, tx, input, i);
+                checkScriptSig(tx, input, i);
+            }
+        }
+
+        checkWalletConsistency(wallet);
+        verifyTransaction(tx);
+        printTx("BTC wallet: Signed Tx", tx);
+        return tx;
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Burn BSQ txs (some proposal txs, asset listing fee tx, proof of burn tx)
@@ -409,7 +426,6 @@ public class BtcWalletService extends WalletService {
             checkScriptSig(tx, input, i);
         }
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Vote reveal tx
@@ -1329,5 +1345,26 @@ public class BtcWalletService extends WalletService {
         WalletService.printTx("createRefundPayoutTx", resultTx);
 
         return resultTx;
+    }
+
+    // There is currently no way to verify that this tx hasn't been spent already
+    // If it has, the atomic tx won't confirm, not good but no funds lost
+    public long getBtcRawInputAmount(List<RawTransactionInput> inputs) {
+        return inputs.stream()
+                .map(rawInput -> {
+                    var tx = getTxFromSerializedTx(rawInput.parentTransaction);
+                    return tx.getOutput(rawInput.index).getValue().getValue();
+                })
+                .reduce(Long::sum)
+                .orElse(0L);
+    }
+
+    // There is currently no way to verify that this tx hasn't been spent already
+    // If it has, the atomic tx won't confirm, not good but no funds lost
+    public long getBtcInputAmount(List<TransactionInput> inputs) {
+        return inputs.stream()
+                .map(input -> Objects.requireNonNull(input.getValue()).getValue())
+                .reduce(Long::sum)
+                .orElse(0L);
     }
 }

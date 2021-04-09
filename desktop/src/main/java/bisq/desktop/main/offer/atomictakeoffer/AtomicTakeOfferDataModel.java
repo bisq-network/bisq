@@ -40,6 +40,7 @@ import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.trade.TradeManager;
+import bisq.core.trade.atomic.AtomicTrade;
 import bisq.core.trade.atomic.AtomicTxBuilder;
 import bisq.core.trade.handlers.TradeResultHandler;
 import bisq.core.user.Preferences;
@@ -200,7 +201,7 @@ class AtomicTakeOfferDataModel extends ActivatableDataModel {
 
     // errorMessageHandler is used only in the check availability phase. As soon we have a trade we write the error msg in the trade object as we want to
     // have it persisted as well.
-    void onTakeOffer(TradeResultHandler tradeResultHandler) {
+    void onTakeOffer(TradeResultHandler<AtomicTrade> tradeResultHandler) {
         checkArgument(atomicTxBuilder.getCanBuildMySide().get(), "Missing data to create transaction");
 
         if (filterManager.isCurrencyBanned(offer.getCurrencyCode())) {

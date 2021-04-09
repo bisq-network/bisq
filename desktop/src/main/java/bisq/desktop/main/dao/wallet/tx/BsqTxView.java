@@ -26,6 +26,7 @@ import bisq.desktop.components.AutoTooltipTableColumn;
 import bisq.desktop.components.ExternalHyperlink;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.main.dao.wallet.BsqBalanceUtil;
+import bisq.desktop.main.funds.transactions.TradableRepository;
 import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
@@ -103,6 +104,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
     private final BtcWalletService btcWalletService;
     private final BsqBalanceUtil bsqBalanceUtil;
     private final Preferences preferences;
+    private final TradableRepository tradableRepository;
 
     private final ObservableList<BsqTxListItem> observableList = FXCollections.observableArrayList();
     // Need to be DoubleProperty as we pass it as reference
@@ -128,7 +130,8 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                       Preferences preferences,
                       BtcWalletService btcWalletService,
                       BsqBalanceUtil bsqBalanceUtil,
-                      BsqFormatter bsqFormatter) {
+                      BsqFormatter bsqFormatter,
+                      TradableRepository tradableRepository) {
         this.daoFacade = daoFacade;
         this.daoStateService = daoStateService;
         this.bsqFormatter = bsqFormatter;
@@ -136,6 +139,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
         this.preferences = preferences;
         this.btcWalletService = btcWalletService;
         this.bsqBalanceUtil = bsqBalanceUtil;
+        this.tradableRepository = tradableRepository;
     }
 
     @Override
@@ -359,7 +363,8 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                             daoFacade,
                             // Use tx.getIncludedInBestChainAt() when available, otherwise use tx.getUpdateTime()
                             transaction.getIncludedInBestChainAt() != null ? transaction.getIncludedInBestChainAt() : transaction.getUpdateTime(),
-                            bsqFormatter);
+                            bsqFormatter,
+                            tradableRepository);
                 })
                 .collect(Collectors.toList());
         observableList.setAll(items);
@@ -485,7 +490,14 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                                     String labelString = Res.get("dao.tx.type.enum." + txType.name());
                                     Label label;
                                     if (item.getConfirmations() > 0 && isValidType(txType)) {
-                                        if (txType == TxType.COMPENSATION_REQUEST &&
+                                        if (item.getAtomicTradeId() != null) {
+                                            if (field != null)
+                                                field.setOnAction(null);
+
+                                            labelString = Res.get("dao.tx.atomicTrade", item.getAtomicTradeId());
+                                            label = new AutoTooltipLabel(labelString);
+                                            setGraphic(label);
+                                        } else if (txType == TxType.COMPENSATION_REQUEST &&
                                                 daoFacade.isIssuanceTx(item.getTxId(), IssuanceType.COMPENSATION)) {
                                             if (field != null)
                                                 field.setOnAction(null);
@@ -728,6 +740,12 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                                             awesomeIcon = AwesomeIcon.QUESTION_SIGN;
                                             style = "dao-tx-type-unverified-icon";
                                             break;
+                                    }
+                                    // Atomic tx overrides other characteristics, such as trade fee or transfer BSQ
+                                    if (item.getAtomicTradeId() != null) {
+                                        awesomeIcon = AwesomeIcon.EXCHANGE;
+                                        style = "dao-tx-type-atomic-icon";
+                                        toolTipText = Res.get("dao.tx.atomic");
                                     }
                                     Label label = FormBuilder.getIcon(awesomeIcon);
                                     label.getStyleClass().addAll("icon", style);

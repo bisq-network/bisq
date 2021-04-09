@@ -146,6 +146,10 @@ public class SellerAsTakerProtocol extends SellerProtocol implements TakerProtoc
         if (message instanceof InputsForDepositTxResponse) {
             handle((InputsForDepositTxResponse) message, peer);
         }
+        // TODO(sq)
+//        else if (message instanceof CreateAtomicTxResponse) {
+//            handle((CreateAtomicTxResponse) message, peer);
+//        }
     }
 
     @Override

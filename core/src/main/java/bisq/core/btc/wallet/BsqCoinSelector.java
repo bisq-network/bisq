@@ -26,6 +26,7 @@ import org.bitcoinj.core.TransactionOutput;
 
 import javax.inject.Inject;
 
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -36,9 +37,12 @@ import lombok.extern.slf4j.Slf4j;
 public class BsqCoinSelector extends BisqDefaultCoinSelector {
     private final DaoStateService daoStateService;
     private final UnconfirmedBsqChangeOutputListService unconfirmedBsqChangeOutputListService;
+    @Setter
+    private boolean isUnconfirmedSpendable = true;
 
     @Inject
-    public BsqCoinSelector(DaoStateService daoStateService, UnconfirmedBsqChangeOutputListService unconfirmedBsqChangeOutputListService) {
+    public BsqCoinSelector(DaoStateService daoStateService,
+                           UnconfirmedBsqChangeOutputListService unconfirmedBsqChangeOutputListService) {
         // permitForeignPendingTx is not relevant here as we do not support pending foreign utxos anyway.
         super(false);
         this.daoStateService = daoStateService;
@@ -55,6 +59,9 @@ public class BsqCoinSelector extends BisqDefaultCoinSelector {
         // If it is a normal confirmed BSQ output we use the default lookup at the daoState
         if (daoStateService.isTxOutputSpendable(new TxOutputKey(parentTransaction.getTxId().toString(), output.getIndex())))
             return true;
+
+        if (!isUnconfirmedSpendable)
+            return false;
 
         // It might be that it is an unconfirmed change output which we allow to be used for spending without requiring a confirmation.
         // We check if we have the output in the dao state, if so we have a confirmed but unspendable output (e.g. confiscated).

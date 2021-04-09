@@ -83,6 +83,9 @@ message NetworkEnvelope {
         GetInventoryResponse get_inventory_response = 53;
 
         ShareBuyerPaymentAccountMessage share_buyer_payment_account_message = 54; // Added at 1.7.0
+
+        CreateAtomicTxRequest create_atomic_tx_request = 55;
+        CreateAtomicTxResponse create_atomic_tx_response = 56;
     }
 }
 
@@ -371,6 +374,34 @@ message TraderSignedWitnessMessage {
     string trade_id = 2 [deprecated = true];
     NodeAddress sender_node_address = 3 [deprecated = true];
     SignedWitness signed_witness = 4 [deprecated = true];
+}
+
+// Atomic trade
+
+message CreateAtomicTxRequest {
+    string uid = 1;
+    string trade_id = 2;
+    NodeAddress sender_node_address = 3;
+    PubKeyRing taker_pub_key_ring = 4;
+    int64 bsq_trade_amount = 5;
+    int64 btc_trade_amount = 6;
+    int64 trade_price = 7;
+    int64 tx_fee = 8;
+    int64 taker_fee = 9;
+    bool is_currency_for_taker_fee_btc = 10;
+    int64 taker_bsq_output_value = 11;
+    string taker_bsq_output_address = 12;
+    int64 taker_btc_output_value = 13;
+    string taker_btc_output_address = 14;
+    repeated RawTransactionInput taker_bsq_inputs = 15;
+    repeated RawTransactionInput taker_btc_inputs = 16;
+}
+
+message CreateAtomicTxResponse {
+    string uid = 1;
+    string trade_id = 2;
+    NodeAddress sender_node_address = 3;
+    bytes atomic_tx = 4;
 }
 
 // dispute
@@ -1492,6 +1523,8 @@ message Tradable {
         BuyerAsTakerTrade buyer_as_taker_trade = 3;
         SellerAsMakerTrade seller_as_maker_trade = 4;
         SellerAsTakerTrade seller_as_taker_trade = 5;
+        AtomicMakerTrade atomic_maker_trade = 6;
+        AtomicTakerTrade atomic_taker_trade = 7;
     }
 }
 
@@ -1602,6 +1635,7 @@ message Trade {
     string counter_currency_extra_data = 37;
     string asset_tx_proof_result = 38; // name of AssetTxProofResult enum
     string uid = 39;
+    string atomic_tx_id = 40;
 }
 
 message BuyerAsMakerTrade {
@@ -1618,6 +1652,40 @@ message SellerAsMakerTrade {
 
 message SellerAsTakerTrade {
     Trade trade = 1;
+}
+
+message AtomicTrade {
+    enum State {
+        PB_ERROR_STATE = 0;
+        PREPARATION = 1;
+        TX_PUBLISHED = 2;
+        TX_CONFIRMED = 3;
+        FAILED = 4;
+    }
+
+    string uid = 1;
+    Offer offer = 2;
+    string tx_id = 3;
+    int64 amount = 4;
+    int64 price = 5;
+    int64 take_offer_date = 6;
+    NodeAddress peer_node_address = 7;
+    int64 mining_fee_per_byte = 8;
+    bool is_currency_for_maker_fee_btc = 9;
+    bool is_currency_for_taker_fee_btc = 10;
+    int64 maker_fee = 11;
+    int64 taker_fee = 12;
+    AtomicProcessModel atomic_process_model = 13;
+    string error_message = 14;
+    State state = 15;
+}
+
+message AtomicMakerTrade {
+    AtomicTrade atomic_trade = 1;
+}
+
+message AtomicTakerTrade {
+    AtomicTrade atomic_trade = 1;
 }
 
 message ProcessModel {
@@ -1641,6 +1709,12 @@ message ProcessModel {
     bytes mediated_payout_tx_signature = 18;
     int64 buyer_payout_amount_from_mediation = 19;
     int64 seller_payout_amount_from_mediation = 20;
+}
+
+message AtomicProcessModel {
+    TradingPeer trading_peer = 1;
+    PubKeyRing pub_key_ring = 2;
+    NodeAddress temp_trading_peer_node_address = 3;
 }
 
 message TradingPeer {
