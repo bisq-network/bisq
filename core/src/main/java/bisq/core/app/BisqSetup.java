@@ -103,6 +103,7 @@ import javax.annotation.Nullable;
 @Singleton
 public class BisqSetup {
     private static final String VERSION_FILE_NAME = "version";
+    private static final String RESYNC_SPV_FILE_NAME = "resyncSpv";
 
     public interface BisqSetupListener {
         default void onInitP2pNetwork() {
@@ -325,7 +326,7 @@ public class BisqSetup {
 
     private void maybeReSyncSPVChain() {
         // We do the delete of the spv file at startup before BitcoinJ is initialized to avoid issues with locked files under Windows.
-        if (preferences.isResyncSpvRequested()) {
+        if (getResyncSpvSemaphore()) {
             try {
                 walletsSetup.reSyncSPVChain();
 
@@ -424,7 +425,7 @@ public class BisqSetup {
                     walletsManager.setAesKey(aesKey);
                     walletsSetup.getWalletConfig().maybeAddSegwitKeychain(walletsSetup.getWalletConfig().btcWallet(),
                             aesKey);
-                    if (preferences.isResyncSpvRequested()) {
+                    if (getResyncSpvSemaphore()) {
                         if (showFirstPopupIfResyncSPVRequestedHandler != null)
                             showFirstPopupIfResyncSPVRequestedHandler.run();
                     } else {
@@ -438,6 +439,7 @@ public class BisqSetup {
         };
         walletAppSetup.init(chainFileLockedExceptionHandler,
                 spvFileCorruptedHandler,
+                getResyncSpvSemaphore(),
                 showFirstPopupIfResyncSPVRequestedHandler,
                 showPopupIfInvalidBtcConfigHandler,
                 walletPasswordHandler,
@@ -541,6 +543,33 @@ public class BisqSetup {
         }
         return null;
     }
+
+    @Nullable
+    public static boolean getResyncSpvSemaphore() {
+        File resyncSpvSemaphore = new File(Config.appDataDir(), RESYNC_SPV_FILE_NAME);
+        return resyncSpvSemaphore.exists();
+    }
+
+    public static void setResyncSpvSemaphore(boolean isResyncSpvRequested) {
+        File resyncSpvSemaphore = new File(Config.appDataDir(), RESYNC_SPV_FILE_NAME);
+        if (isResyncSpvRequested) {
+            if (!resyncSpvSemaphore.exists()) {
+                try {
+                    if (!resyncSpvSemaphore.createNewFile()) {
+                        log.error("ResyncSpv file could not be created");
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    log.error("ResyncSpv file could not be created. {}", e.toString());
+                }
+            }
+        } else {
+            resyncSpvSemaphore.delete();
+        }
+    }
+
+
+
 
     private static File getVersionFile() {
         return new File(Config.appDataDir(), VERSION_FILE_NAME);
