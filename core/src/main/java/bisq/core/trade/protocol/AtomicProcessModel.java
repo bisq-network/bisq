@@ -23,6 +23,7 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.dao.DaoFacade;
+import bisq.core.filter.FilterManager;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
 import bisq.core.proto.CoreProtoResolver;
@@ -260,5 +261,9 @@ public class AtomicProcessModel implements ProcessModelI, Model, PersistablePayl
 
     public KeyRing getKeyRing() {
         return provider.getKeyRing();
+    }
+
+    public FilterManager getFilterManager() {
+        return provider.getFilterManager();
     }
 }

@@ -27,6 +27,7 @@ import bisq.core.trade.atomic.protocol.tasks.maker.AtomicMakerVerifiesTakerInput
 import bisq.core.trade.messages.TradeMessage;
 import bisq.core.trade.protocol.TradeProtocol;
 import bisq.core.trade.protocol.TradeTaskRunner;
+import bisq.core.trade.protocol.tasks.AtomicApplyFilter;
 
 import bisq.network.p2p.NodeAddress;
 
@@ -56,7 +57,9 @@ public class AtomicMakerProtocol extends TradeProtocol {
         expect(preCondition(AtomicTrade.State.PREPARATION == atomicMakerTrade.getState())
                 .with(tradeMessage)
                 .from(sender))
-                .setup(tasks(AtomicMakerVerifiesTakerInputs.class,
+                .setup(tasks(
+                        AtomicApplyFilter.class,
+                        AtomicMakerVerifiesTakerInputs.class,
                         AtomicMakerCreatesAndSignsTx.class,
                         AtomicMakerSetupTxListener.class)
                         .using(new TradeTaskRunner(atomicMakerTrade,

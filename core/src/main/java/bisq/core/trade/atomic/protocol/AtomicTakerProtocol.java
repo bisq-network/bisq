@@ -29,7 +29,7 @@ import bisq.core.trade.atomic.protocol.tasks.taker.AtomicTakerVerifyAtomicTx;
 import bisq.core.trade.messages.TradeMessage;
 import bisq.core.trade.protocol.TakerProtocol;
 import bisq.core.trade.protocol.TradeProtocol;
-import bisq.core.trade.protocol.tasks.ApplyFilter;
+import bisq.core.trade.protocol.tasks.AtomicApplyFilter;
 
 import bisq.network.p2p.NodeAddress;
 
@@ -62,7 +62,7 @@ public class AtomicTakerProtocol extends TradeProtocol implements TakerProtocol 
         expect(preCondition(AtomicTrade.State.PREPARATION == atomicTakerTrade.getState())
                 .with(TakerEvent.TAKE_OFFER))
                 .setup(tasks(
-                        ApplyFilter.class,
+                        AtomicApplyFilter.class,
                         AtomicTakerSendsAtomicRequest.class
                 ))
                 .run(() -> {
