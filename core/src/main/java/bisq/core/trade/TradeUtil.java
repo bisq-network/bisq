@@ -18,10 +18,16 @@
 package bisq.core.trade;
 
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.filter.FilterManager;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
+import bisq.core.payment.payload.PaymentAccountPayload;
+
+import bisq.network.p2p.NodeAddress;
 
 import bisq.common.crypto.KeyRing;
+import bisq.common.handlers.ErrorMessageHandler;
+import bisq.common.handlers.ResultHandler;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Utilities;
 
@@ -222,6 +228,35 @@ public class TradeUtil {
                 return isMaker
                         ? Res.get("formatter.asMaker", currencyCode, Res.get("shared.buyer"))
                         : Res.get("formatter.asTaker", currencyCode, Res.get("shared.seller"));
+        }
+    }
+
+    public static void applyFilter(TradeModel tradeModel,
+                                   FilterManager filterManager,
+                                   NodeAddress nodeAddress,
+                                   PaymentAccountPayload paymentAccountPayload,
+                                   ResultHandler complete,
+                                   ErrorMessageHandler failed) {
+        if (filterManager.isNodeAddressBanned(nodeAddress)) {
+            failed.handleErrorMessage("Other trader is banned by their node address.\n" +
+                    "tradingPeerNodeAddress=" + nodeAddress);
+        } else if (filterManager.isOfferIdBanned(tradeModel.getId())) {
+            failed.handleErrorMessage("Offer ID is banned.\n" + "Offer ID=" + tradeModel.getId());
+        } else if (tradeModel.getOffer() != null &&
+                filterManager.isCurrencyBanned(tradeModel.getOffer().getCurrencyCode())) {
+            failed.handleErrorMessage("Currency is banned.\n" +
+                    "Currency code=" + tradeModel.getOffer().getCurrencyCode());
+        } else if (filterManager.isPaymentMethodBanned(checkNotNull(tradeModel.getOffer()).getPaymentMethod())) {
+            failed.handleErrorMessage("Payment method is banned.\n" +
+                    "Payment method=" + tradeModel.getOffer().getPaymentMethod().getId());
+        } else if (paymentAccountPayload != null && filterManager.arePeersPaymentAccountDataBanned(paymentAccountPayload)) {
+            failed.handleErrorMessage("Other trader is banned by their trading account data.\n" +
+                    "paymentAccountPayload=" + paymentAccountPayload.getPaymentDetails());
+        } else if (filterManager.requireUpdateToNewVersionForTrading()) {
+            failed.handleErrorMessage("Your version of Bisq is not compatible for trading anymore. " +
+                    "Please update to the latest Bisq version at https://bisq.network/downloads.");
+        } else {
+            complete.handleResult();
         }
     }
 }

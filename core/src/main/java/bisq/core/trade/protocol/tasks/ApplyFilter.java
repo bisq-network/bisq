@@ -20,6 +20,7 @@ package bisq.core.trade.protocol.tasks;
 import bisq.core.filter.FilterManager;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.trade.Trade;
+import bisq.core.trade.TradeUtil;
 
 import bisq.network.p2p.NodeAddress;
 
@@ -47,27 +48,13 @@ public class ApplyFilter extends TradeTask {
             PaymentAccountPayload paymentAccountPayload = processModel.getTradingPeer().getPaymentAccountPayload();
 
             FilterManager filterManager = processModel.getFilterManager();
-            if (filterManager.isNodeAddressBanned(nodeAddress)) {
-                failed("Other trader is banned by their node address.\n" +
-                        "tradingPeerNodeAddress=" + nodeAddress);
-            } else if (filterManager.isOfferIdBanned(trade.getId())) {
-                failed("Offer ID is banned.\n" +
-                        "Offer ID=" + trade.getId());
-            } else if (trade.getOffer() != null && filterManager.isCurrencyBanned(trade.getOffer().getCurrencyCode())) {
-                failed("Currency is banned.\n" +
-                        "Currency code=" + trade.getOffer().getCurrencyCode());
-            } else if (filterManager.isPaymentMethodBanned(checkNotNull(trade.getOffer()).getPaymentMethod())) {
-                failed("Payment method is banned.\n" +
-                        "Payment method=" + trade.getOffer().getPaymentMethod().getId());
-            } else if (paymentAccountPayload != null && filterManager.arePeersPaymentAccountDataBanned(paymentAccountPayload)) {
-                failed("Other trader is banned by their trading account data.\n" +
-                        "paymentAccountPayload=" + paymentAccountPayload.getPaymentDetails());
-            } else if (filterManager.requireUpdateToNewVersionForTrading()) {
-                failed("Your version of Bisq is not compatible for trading anymore. " +
-                        "Please update to the latest Bisq version at https://bisq.network/downloads.");
-            } else {
-                complete();
-            }
+
+            TradeUtil.applyFilter(trade,
+                    filterManager,
+                    nodeAddress,
+                    paymentAccountPayload,
+                    this::complete,
+                    this::failed);
         } catch (Throwable t) {
             failed(t);
         }
