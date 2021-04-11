@@ -1,42 +1,72 @@
-# Building Bisq
+## Building Bisq
 
+1. **Install Git LFS**
 
-## Install Git LFS
+   Bisq uses Git LFS (Large File Storage) to track certain large binary files. Follow the instructions at https://git-lfs.github.com to install it, then run the following to command to verify the installation:
 
-Bisq uses Git LFS to track certain large binary files. Follow the instructions at https://git-lfs.github.com to install it, then run the following to command to verify the installation:
+   ```sh
+   git lfs version
+   ```
 
-    $ git lfs version
-    git-lfs/2.10.0 (GitHub; darwin amd64; go 1.13.6)
-    
+   You should see the version of Git LFS you installed, for example:
 
-## Clone
+   ```sh
+   git-lfs/2.10.0 (GitHub; darwin amd64; go 1.13.6)
+   ```
 
-    git clone https://github.com/bisq-network/bisq
-    cd bisq
+2. **Clone Bisq**
 
+   ```sh
+   git clone https://github.com/bisq-network/bisq
+   cd bisq
+   ```
 
-## Build
+3. **Pull LFS data**
 
-You do _not_ need to install Gradle to complete the following command. The `gradlew` shell script will install it for you if necessary. Pull the lfs data first.
+   ```sh
+   git lfs pull
+   ```
 
-    git lfs pull
-    ./gradlew build
+4. **Build Bisq**
 
-If on Windows run `gradlew.bat build` instead.
-If in need to install JAVA check out - https://github.com/bisq-network/bisq/tree/master/scripts
+   On macOS and Linux, execute:
+   ```sh
+   ./gradlew build
+   ```
 
-## Run
+   On Windows:
+   ```cmd
+   gradlew.bat build
+   ```
 
-Bisq executables are now available in the root project directory. Run Bisq Desktop as follows:
+### Important notes
 
-Note: bisq runs fine on jdk10 and jdk11. jdk12 is currently not supported.
+1. You do _not_ need to install Gradle to build Bisq. The `gradlew` shell script will install it for you, if necessary.
 
-    ./bisq-desktop
+2. Bisq currently works with JDK 10 and 11 only. JDK 12 and above are not supported. You can find out which
+   version you have with:
 
-If on Windows use the `bisq-desktop.bat` script instead.
-If in need to install JAVA checkout the install_java scripts at https://github.com/bisq-network/bisq/tree/master/scripts
+   ```sh
+   javac -version
+   ```
+
+If your Java version is not 10 or 11, check out scripts in the [scripts](../scripts) directory (or online at https://github.com/bisq-network/bisq/tree/master/scripts).
+
+## Running Bisq
+
+Once Bisq is installed, its executables will be available in the root project directory. Run **Bisq Desktop** as follows:
+
+On macOS and Linux:
+```sh
+./bisq-desktop
+```
+
+On Windows:
+```cmd
+bisq-desktop.bat
+```
 
 ## See also
 
- - [idea-import.md](idea-import.md)
- - [dev-setup.md](dev-setup.md)
+ - [Importing Bisq into IntelliJ IDEA](./idea-import.md)
+ - [Bisq development environment setup guide](./dev-setup.md)
