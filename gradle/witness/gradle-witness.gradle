@@ -9,6 +9,8 @@
 // 3. Run `git diff` to verify that expected hashes have changed
 // 4. Commit the changes
 //
+// Note: The checksums are SHA-256.
+//
 // See https://github.com/signalapp/gradle-witness#using-witness for further details.
 
 dependencyVerification {
