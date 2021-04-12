@@ -92,11 +92,10 @@ public class BuyerSendCounterCurrencyTransferStartedMessage extends SendMailboxM
 
     @Override
     protected void setStateArrived() {
-        trade.setStateIfValidTransitionTo(Trade.State.BUYER_SAW_ARRIVED_FIAT_PAYMENT_INITIATED_MSG);
-
-        processModel.getTradeManager().requestPersistence();
-        cleanup();
-        // Complete is called in base class
+        // the message has arrived but we're ultimately waiting for an AckMessage response
+        if (!trade.isPayoutPublished()) {
+            tryToSendAgainLater();
+        }
     }
 
     // We override the default behaviour for onStoredInMailbox and do not call complete
@@ -142,6 +141,13 @@ public class BuyerSendCounterCurrencyTransferStartedMessage extends SendMailboxM
         }
     }
 
+    // complete() is called from base class SendMailboxMessageTask=>onArrived()
+    // We override the default behaviour for complete and keep this task open until receipt of the AckMessage
+    @Override
+    protected void complete() {
+        onMessageStateChange(processModel.getPaymentStartedMessageStateProperty().get());  // check for AckMessage
+    }
+
     private void cleanup() {
         if (timer != null) {
             timer.stop();
@@ -160,7 +166,7 @@ public class BuyerSendCounterCurrencyTransferStartedMessage extends SendMailboxM
             return;
         }
 
-        log.info("We send the message again to the peer after a delay of {} min.", delayInMin);
+        log.info("We will send the message again to the peer after a delay of {} min.", delayInMin);
         if (timer != null) {
             timer.stop();
         }
@@ -186,7 +192,7 @@ public class BuyerSendCounterCurrencyTransferStartedMessage extends SendMailboxM
             processModel.getTradeManager().requestPersistence();
 
             cleanup();
-            complete();
+            super.complete();   // received AckMessage, complete this task
         }
     }
 }
