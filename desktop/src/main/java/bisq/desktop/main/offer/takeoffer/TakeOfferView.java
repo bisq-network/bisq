@@ -40,6 +40,7 @@ import bisq.desktop.main.offer.OfferView;
 import bisq.desktop.main.offer.OfferViewUtil;
 import bisq.desktop.main.overlays.notifications.Notification;
 import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.main.overlays.windows.GenericMessageWindow;
 import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
 import bisq.desktop.main.overlays.windows.QRCodeWindow;
 import bisq.desktop.main.portfolio.PortfolioView;
@@ -161,7 +162,8 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             isOfferAvailableSubscription;
 
     private int gridRow = 0;
-    private boolean offerDetailsWindowDisplayed, clearXchangeWarningDisplayed, fasterPaymentsWarningDisplayed, takeOfferFromUnsignedAccountWarningDisplayed;
+    private boolean offerDetailsWindowDisplayed, clearXchangeWarningDisplayed, fasterPaymentsWarningDisplayed,
+            takeOfferFromUnsignedAccountWarningDisplayed, cashByMailWarningDisplayed;
     private SimpleBooleanProperty errorPopupDisplayed;
     private ChangeListener<Boolean> amountFocusedListener, getShowWalletFundedNotificationListener;
 
@@ -307,6 +309,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         maybeShowTakeOfferFromUnsignedAccountWarning(model.dataModel.getOffer());
         maybeShowClearXchangeWarning(lastPaymentAccount);
         maybeShowFasterPaymentsWarning(lastPaymentAccount);
+        maybeShowCashByMailWarning(lastPaymentAccount, model.dataModel.getOffer());
 
         if (!DevEnv.isDaoActivated() && !model.isRange()) {
             nextButton.setVisible(false);
@@ -1266,6 +1269,23 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                 !fasterPaymentsWarningDisplayed) {
             fasterPaymentsWarningDisplayed = true;
             UserThread.runAfter(() -> GUIUtil.showFasterPaymentsWarning(navigation), 500, TimeUnit.MILLISECONDS);
+        }
+    }
+
+    private void maybeShowCashByMailWarning(PaymentAccount paymentAccount, Offer offer) {
+        if (paymentAccount.getPaymentMethod().getId().equals(PaymentMethod.CASH_BY_MAIL_ID) &&
+                !cashByMailWarningDisplayed && !offer.getExtraInfo().isEmpty()) {
+            cashByMailWarningDisplayed = true;
+            UserThread.runAfter(() -> {
+                new GenericMessageWindow()
+                        .preamble(Res.get("payment.cashByMail.tradingRestrictions"))
+                        .instruction(offer.getExtraInfo())
+                        .actionButtonText(Res.get("shared.iConfirm"))
+                        .closeButtonText(Res.get("shared.close"))
+                        .width(Layout.INITIAL_WINDOW_WIDTH)
+                        .onClose(() -> close(false))
+                        .show();
+            }, 500, TimeUnit.MILLISECONDS);
         }
     }
 
