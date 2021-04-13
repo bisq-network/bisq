@@ -96,7 +96,7 @@ public class CashByMailForm extends PaymentMethodForm {
         });
 
         TextArea extraTextArea = addTopLabelTextArea(gridPane, ++gridRow,
-                Res.get("payment.shared.optionalExtra"), Res.get("payment.shared.extraInfo.prompt")).second;
+                Res.get("payment.shared.optionalExtra"), Res.get("payment.cashByMail.extraInfo.prompt")).second;
         extraTextArea.setMinHeight(70);
         ((JFXTextArea) extraTextArea).setLabelFloat(false);
         extraTextArea.textProperty().addListener((ov, oldValue, newValue) -> {
