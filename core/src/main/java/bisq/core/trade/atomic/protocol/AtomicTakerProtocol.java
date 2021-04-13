@@ -22,6 +22,7 @@ import bisq.core.offer.Offer;
 import bisq.core.trade.atomic.AtomicTakerTrade;
 import bisq.core.trade.atomic.AtomicTrade;
 import bisq.core.trade.atomic.messages.CreateAtomicTxResponse;
+import bisq.core.trade.atomic.protocol.tasks.AtomicApplyFilter;
 import bisq.core.trade.atomic.protocol.tasks.taker.AtomicTakerPublishAtomicTx;
 import bisq.core.trade.atomic.protocol.tasks.taker.AtomicTakerSendsAtomicRequest;
 import bisq.core.trade.atomic.protocol.tasks.taker.AtomicTakerSetupTxListener;
@@ -29,7 +30,6 @@ import bisq.core.trade.atomic.protocol.tasks.taker.AtomicTakerVerifyAtomicTx;
 import bisq.core.trade.messages.TradeMessage;
 import bisq.core.trade.protocol.TakerProtocol;
 import bisq.core.trade.protocol.TradeProtocol;
-import bisq.core.trade.protocol.tasks.AtomicApplyFilter;
 
 import bisq.network.p2p.NodeAddress;
 

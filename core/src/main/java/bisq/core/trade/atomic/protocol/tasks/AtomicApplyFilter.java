@@ -15,12 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.protocol.tasks;
+package bisq.core.trade.atomic.protocol.tasks;
 
 import bisq.core.filter.FilterManager;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.trade.TradeUtil;
 import bisq.core.trade.atomic.AtomicTrade;
+import bisq.core.trade.protocol.tasks.AtomicTradeTask;
 
 import bisq.network.p2p.NodeAddress;
 

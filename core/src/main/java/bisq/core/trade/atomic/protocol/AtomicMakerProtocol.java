@@ -21,13 +21,13 @@ package bisq.core.trade.atomic.protocol;
 import bisq.core.trade.atomic.AtomicMakerTrade;
 import bisq.core.trade.atomic.AtomicTrade;
 import bisq.core.trade.atomic.messages.CreateAtomicTxRequest;
+import bisq.core.trade.atomic.protocol.tasks.AtomicApplyFilter;
 import bisq.core.trade.atomic.protocol.tasks.maker.AtomicMakerCreatesAndSignsTx;
 import bisq.core.trade.atomic.protocol.tasks.maker.AtomicMakerSetupTxListener;
 import bisq.core.trade.atomic.protocol.tasks.maker.AtomicMakerVerifiesTakerInputs;
 import bisq.core.trade.messages.TradeMessage;
 import bisq.core.trade.protocol.TradeProtocol;
 import bisq.core.trade.protocol.TradeTaskRunner;
-import bisq.core.trade.protocol.tasks.AtomicApplyFilter;
 
 import bisq.network.p2p.NodeAddress;
 
