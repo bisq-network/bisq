@@ -63,8 +63,6 @@ import java.util.Set;
 
 import lombok.Getter;
 
-import javax.annotation.Nullable;
-
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -217,24 +215,21 @@ class AtomicTakeOfferDataModel extends ActivatableDataModel {
         } else if (tradeManager.wasOfferAlreadyUsedInTrade(offer.getId())) {
             new Popup().warning(Res.get("offerbook.warning.offerWasAlreadyUsedInTrade")).show();
         } else {
-            // TODO(sq): Add takeAtomicOffer
-//            tradeManager.onTakeOffer(amount.get(),
-//                    txFeeFromFeeService,
-//                    getTakerFee(),
-//                    isCurrencyForTakerFeeBtc(),
-//                    tradePrice.getValue(),
-//                    fundsNeededForTrade,
-//                    offer,
-//                    paymentAccount.getId(),
-//                    useSavingsWallet,
-//                    false,
-//                    tradeResultHandler,
-//                    errorMessage -> {
-//                        log.warn(errorMessage);
-//                        new Popup().warning(errorMessage).show();
-//                    }
-//            );
-            new Popup().information("Offer Taken").show();
+            tradeManager.onTakeAtomicOffer(offer,
+                    amount.get(),
+                    tradePrice.getValue(),
+                    feeService.getTxFeePerVbyte().getValue(),
+                    offer.isCurrencyForMakerFeeBtc(),
+                    isCurrencyForTakerFeeBtc(),
+                    offer.getMakerFee().getValue(),
+                    getTakerFee().getValue(),
+                    false,
+                    tradeResultHandler,
+                    errorMessage -> {
+                        log.warn(errorMessage);
+                        new Popup().warning(errorMessage).show();
+                    }
+            );
         }
     }
 
@@ -306,7 +301,6 @@ class AtomicTakeOfferDataModel extends ActivatableDataModel {
         atomicTxBuilder.setBtcAmount(amount);
     }
 
-    @Nullable
     Coin getTakerFee(boolean isCurrencyForTakerFeeBtc) {
         Coin amount = this.amount.get();
         if (amount != null) {
@@ -316,11 +310,10 @@ class AtomicTakeOfferDataModel extends ActivatableDataModel {
             atomicTxBuilder.setMyTradeFee(isCurrencyForTakerFeeBtc, fee);
             return atomicTxBuilder.getMyTradeFee();
         } else {
-            return null;
+            return Coin.ZERO;
         }
     }
 
-    @Nullable
     public Coin getTakerFee() {
         return getTakerFee(isCurrencyForTakerFeeBtc());
     }
