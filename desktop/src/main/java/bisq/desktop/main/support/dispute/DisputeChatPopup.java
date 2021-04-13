@@ -46,6 +46,8 @@ import javafx.scene.layout.StackPane;
 
 import javafx.beans.value.ChangeListener;
 
+import lombok.Getter;
+
 public class DisputeChatPopup {
     public interface ChatCallback {
         void onCloseDisputeFromChatWindow(Dispute dispute);
@@ -60,6 +62,7 @@ public class DisputeChatPopup {
     private double chatPopupStageYPosition = -1;
     private ChangeListener<Number> xPositionListener;
     private ChangeListener<Number> yPositionListener;
+    @Getter private Dispute selectedDispute;
 
     DisputeChatPopup(DisputeManager<? extends DisputeList<Dispute>> disputeManager,
                      CoinFormatter formatter,
@@ -78,10 +81,12 @@ public class DisputeChatPopup {
     public void closeChat() {
         if (chatPopupStage != null)
             chatPopupStage.close();
+        selectedDispute = null;
     }
 
     public void openChat(Dispute selectedDispute, DisputeSession concreteDisputeSession, String counterpartyName) {
         closeChat();
+        this.selectedDispute = selectedDispute;
         selectedDispute.getChatMessages().forEach(m -> m.setWasDisplayed(true));
         disputeManager.requestPersistence();
 
@@ -96,7 +101,7 @@ public class DisputeChatPopup {
         AnchorPane.setRightAnchor(chatView, 10d);
         AnchorPane.setTopAnchor(chatView, -20d);
         AnchorPane.setBottomAnchor(chatView, 10d);
-
+        pane.getStyleClass().add("dispute-chat-border");
         Button closeDisputeButton = null;
         if (!selectedDispute.isClosed() && !disputeManager.isTrader(selectedDispute)) {
             closeDisputeButton = new AutoTooltipButton(Res.get("support.closeTicket"));
@@ -106,7 +111,7 @@ public class DisputeChatPopup {
         chatView.activate();
         chatView.scrollToBottom();
         chatPopupStage = new Stage();
-        chatPopupStage.setTitle(Res.get("tradeChat.chatWindowTitle", selectedDispute.getShortTradeId())
+        chatPopupStage.setTitle(Res.get("disputeChat.chatWindowTitle", selectedDispute.getShortTradeId())
                 + " " + selectedDispute.getRoleString());
         StackPane owner = MainView.getRootContainer();
         Scene rootScene = owner.getScene();
