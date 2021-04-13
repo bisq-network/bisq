@@ -18,6 +18,7 @@
 package bisq.core.trade.protocol;
 
 import bisq.core.trade.TradeModel;
+import bisq.core.trade.atomic.AtomicTrade;
 
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
@@ -25,8 +26,18 @@ import bisq.common.taskrunner.TaskRunner;
 
 public class TradeTaskRunner extends TaskRunner<TradeModel> {
 
-    public TradeTaskRunner(TradeModel sharedModel, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+    public TradeTaskRunner(TradeModel sharedModel,
+                           ResultHandler resultHandler,
+                           ErrorMessageHandler errorMessageHandler) {
+        super(sharedModel, getSharedModelClass(sharedModel), resultHandler, errorMessageHandler);
+    }
+
+    static Class<TradeModel> getSharedModelClass(TradeModel sharedModel) {
+        if (sharedModel instanceof AtomicTrade) {
+            //noinspection unchecked
+            return (Class<TradeModel>) sharedModel.getClass().getSuperclass();
+        }
         //noinspection unchecked
-        super(sharedModel, (Class<TradeModel>) sharedModel.getClass().getSuperclass().getSuperclass(), resultHandler, errorMessageHandler);
+        return (Class<TradeModel>) sharedModel.getClass().getSuperclass().getSuperclass();
     }
 }
