@@ -70,6 +70,7 @@ public class BtcNodes {
                         // Devin Bileck
                         new BtcNode("btc1.bisq.services", "lva54pnbq2nsmjyr.onion", "172.105.21.216", BtcNode.DEFAULT_PORT, "@devinbileck"),
                         new BtcNode("btc2.bisq.services", "qxjrxmhyqp5vy5hj.onion", "173.255.240.205", BtcNode.DEFAULT_PORT, "@devinbileck"),
+                        new BtcNode(null, "wubwzaadboxwiffa.onion", null, BtcNode.DEFAULT_PORT, "@devinbileck"),
 
                         // m52go
                         new BtcNode(null, "4nnuyxm5k5tlyjq3.onion", null, BtcNode.DEFAULT_PORT, "@m52go"),
