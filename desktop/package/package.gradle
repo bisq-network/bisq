@@ -228,9 +228,9 @@ task packageInstallers {
         println "Packaging Bisq version ${appVersion}"
 
         // zip jar lib for Raspberry Pi
-        println "Zipping jar lib for raspberry pi"
+        /* println "Zipping jar lib for raspberry pi"
         ant.zip(basedir: "${project(':desktop').buildDir}/app/lib",
-                destfile: "${binariesFolderPath}/jar-lib-for-raspberry-pi-${appVersion}.zip")
+                destfile: "${binariesFolderPath}/jar-lib-for-raspberry-pi-${appVersion}.zip")*/
 
         String appDescription = 'A decentralized bitcoin exchange network.'
         String appCopyright = '© 2021 Bisq'
@@ -253,8 +253,8 @@ task packageInstallers {
                 " --main-jar ${mainJarName}" +
                 " --main-class bisq.desktop.app.BisqAppMain" +
                 " --java-options -Xss1280k" +
-                " --java-options -XX:MaxRAM=4g" +
-                " --java-options -Djava.net.preferIPv4Stack=true"
+                " --java-options '-XX:MaxRAM=4g'" +
+                " --java-options '-Djava.net.preferIPv4Stack=true'"
                 // Warning: this will cause guice reflection exceptions and lead to issues with the guice internal cache
                 // resulting in the UI not loading
 //              " --java-options -Djdk.module.illegalAccess=deny" +
@@ -264,6 +264,9 @@ task packageInstallers {
             // TODO Found no benefit in using --resource-dir "..package/windows", it has the same outcome as opts below
             String windowsOpts = (
                 " --icon ${project(':desktop').projectDir}/package/windows/Bisq.ico" +
+		        " --resource-dir \"${project(':desktop').projectDir}/package/windows\"" +
+                " --verbose" +
+ 		        " --win-dir-chooser" +
                 " --win-per-user-install" +
                 " --win-menu" +
                 " --win-shortcut"
