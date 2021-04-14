@@ -228,9 +228,9 @@ task packageInstallers {
         println "Packaging Bisq version ${appVersion}"
 
         // zip jar lib for Raspberry Pi
-        /* println "Zipping jar lib for raspberry pi"
+        println "Zipping jar lib for raspberry pi"
         ant.zip(basedir: "${project(':desktop').buildDir}/app/lib",
-                destfile: "${binariesFolderPath}/jar-lib-for-raspberry-pi-${appVersion}.zip")*/
+                destfile: "${binariesFolderPath}/jar-lib-for-raspberry-pi-${appVersion}.zip")
 
         String appDescription = 'A decentralized bitcoin exchange network.'
         String appCopyright = '© 2021 Bisq'
