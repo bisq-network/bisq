@@ -1,6 +1,5 @@
 # Bisq Network Monitor Node
 
-
 The Bisq monitor node collects a set of metrics which are of interest to developers and users alike. These metrics are then made available through reporters.
 
 The *Settled* release features these metrics:
