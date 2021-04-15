@@ -1,0 +1,39 @@
+verifybsqsenttoaddress
+
+NAME
+----
+verifybsqsenttoaddress - verify BSQ sent to wallet address
+
+SYNOPSIS
+--------
+verifybsqsenttoaddress
+		--address=<bsq-address>
+		--amount=<bsq-amount>
+
+DESCRIPTION
+-----------
+Verify an exact amount of BSQ was sent to a specific Bisq wallet's BSQ address.
+Receipt of BSQ to a BSQ (altcoin) payment account address should always be verified
+before a BSQ seller sends a confirmpaymentreceived message for a BSQ/BTC trade.
+
+Warning:  The verification result should be considered a false positive if a BSQ wallet
+address has received the same amount of BSQ in more than one transaction.  A way to
+avoid this problem is to use different BSQ payment accounts for different trades, so
+the payment account receiving address will vary from trade to trade.  Another way is to
+slightly vary your offer amounts and BSQ prices (if you are the maker), to make sure the
+received BSQ amounts vary from trade to trade.  Doing all of the above further reduces
+the chance of a false positive.  Another step is to check your BSQ wallet balance when
+you verify BSQ has been received to an address.
+
+OPTIONS
+-------
+--address
+        The receiving BSQ address.
+
+--amount
+		The amount of BSQ received.
+
+EXAMPLES
+--------
+Verify 500.00 BSQ was sent to address Bn3PCQgRwhkrGnaMp1RYwt9tFwL51YELqne:
+$ ./bisq-cli --password=xyz --port=9998 verifybsqsenttoaddress --address=Bn3PCQgRwhkrGnaMp1RYwt9tFwL51YELqne --amount=500.00

@@ -49,6 +49,7 @@ public enum Method {
     removewalletpassword,
     sendbsq,
     sendbtc,
+    verifybsqsenttoaddress,
     settxfeerate,
     setwalletpassword,
     takeoffer,
