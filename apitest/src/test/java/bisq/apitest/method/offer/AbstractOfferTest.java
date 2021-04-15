@@ -19,6 +19,8 @@ package bisq.apitest.method.offer;
 
 import bisq.core.monetary.Altcoin;
 
+import protobuf.PaymentAccount;
+
 import org.bitcoinj.utils.Fiat;
 
 import java.math.BigDecimal;
@@ -30,6 +32,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 
 import static bisq.apitest.Scaffold.BitcoinCoreApp.bitcoind;
+import static bisq.apitest.config.ApiTestConfig.BSQ;
 import static bisq.apitest.config.BisqAppConfig.alicedaemon;
 import static bisq.apitest.config.BisqAppConfig.arbdaemon;
 import static bisq.apitest.config.BisqAppConfig.bobdaemon;
@@ -49,15 +52,30 @@ public abstract class AbstractOfferTest extends MethodTest {
     @Setter
     protected static boolean isLongRunningTest;
 
+    protected static PaymentAccount alicesBsqAcct;
+    protected static PaymentAccount bobsBsqAcct;
+
     @BeforeAll
     public static void setUp() {
         startSupportingApps(true,
-                true,
+                false,
                 bitcoind,
                 seednode,
                 arbdaemon,
                 alicedaemon,
                 bobdaemon);
+    }
+
+
+    public static void createBsqPaymentAccounts() {
+        alicesBsqAcct = aliceClient.createCryptoCurrencyPaymentAccount("Alice's BSQ Account",
+                BSQ,
+                aliceClient.getUnusedBsqAddress(),
+                false);
+        bobsBsqAcct = bobClient.createCryptoCurrencyPaymentAccount("Bob's BSQ Account",
+                BSQ,
+                bobClient.getUnusedBsqAddress(),
+                false);
     }
 
     protected double getScaledOfferPrice(double offerPrice, String currencyCode) {

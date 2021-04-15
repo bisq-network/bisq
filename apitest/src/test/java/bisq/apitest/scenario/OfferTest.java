@@ -29,6 +29,7 @@ import org.junit.jupiter.api.TestMethodOrder;
 
 import bisq.apitest.method.offer.AbstractOfferTest;
 import bisq.apitest.method.offer.CancelOfferTest;
+import bisq.apitest.method.offer.CreateBSQOffersTest;
 import bisq.apitest.method.offer.CreateOfferUsingFixedPriceTest;
 import bisq.apitest.method.offer.CreateOfferUsingMarketPriceMarginTest;
 import bisq.apitest.method.offer.ValidateCreateOfferTest;
@@ -70,5 +71,18 @@ public class OfferTest extends AbstractOfferTest {
         test.testCreateNZDBTCBuyOfferMinus2PctPriceMargin();
         test.testCreateGBPBTCSellOfferMinus1Point5PctPriceMargin();
         test.testCreateBRLBTCSellOffer6Point55PctPriceMargin();
+    }
+
+    @Test
+    @Order(5)
+    public void testCreateBSQOffersTest() {
+        CreateBSQOffersTest test = new CreateBSQOffersTest();
+        CreateBSQOffersTest.createBsqPaymentAccounts();
+        test.testCreateBuy1BTCFor20KBSQOffer();
+        test.testCreateSell1BTCFor20KBSQOffer();
+        test.testCreateBuyBTCWith1To2KBSQOffer();
+        test.testCreateSellBTCFor5To10KBSQOffer();
+        test.testGetAllMyBsqOffers();
+        test.testGetAvailableBsqOffers();
     }
 }

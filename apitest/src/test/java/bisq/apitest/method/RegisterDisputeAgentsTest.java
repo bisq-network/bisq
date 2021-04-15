@@ -29,6 +29,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 
 import static bisq.apitest.Scaffold.BitcoinCoreApp.bitcoind;
+import static bisq.apitest.config.ApiTestConfig.ARBITRATOR;
+import static bisq.apitest.config.ApiTestConfig.MEDIATOR;
+import static bisq.apitest.config.ApiTestConfig.REFUND_AGENT;
 import static bisq.apitest.config.BisqAppConfig.arbdaemon;
 import static bisq.apitest.config.BisqAppConfig.seednode;
 import static bisq.common.app.DevEnv.DEV_PRIVILEGE_PRIV_KEY;
