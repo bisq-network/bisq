@@ -7,7 +7,7 @@ This guide describes the testing process performed prior to each release.
 In order to take part in the testing process, you will need to do the following:
 
 - Build Bisq from source (see [build.md](build.md))
-- Setup a development/testing environment (see [Makefile](../Makefile) (new) or [dev-setup.md](dev-setup.md) (deprecated))
+- Setup a development/testing environment (see [Makefile](../Makefile) or [dev-setup.md](dev-setup.md))
 - Request access to [TestPad](https://bisq.ontestpad.com) (our test management tool)
 
 ## Communication Channels
