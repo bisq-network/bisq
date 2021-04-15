@@ -386,7 +386,7 @@ message CreateAtomicTxRequest {
     int64 bsq_trade_amount = 5;
     int64 btc_trade_amount = 6;
     int64 trade_price = 7;
-    int64 tx_fee = 8;
+    int64 tx_fee_per_vbyte = 8;
     int64 taker_fee = 9;
     bool is_currency_for_taker_fee_btc = 10;
     int64 taker_bsq_output_value = 11;

@@ -40,7 +40,7 @@ public final class CreateAtomicTxRequest extends TradeMessage implements DirectM
     private final long bsqTradeAmount;
     private final long btcTradeAmount;
     private final long tradePrice;
-    private final long txFee;
+    private final long txFeePerVbyte;
     private final long takerFee;
     private final boolean isCurrencyForTakerFeeBtc;
     private final long takerBsqOutputValue;
@@ -57,7 +57,7 @@ public final class CreateAtomicTxRequest extends TradeMessage implements DirectM
                                  long bsqTradeAmount,
                                  long btcTradeAmount,
                                  long tradePrice,
-                                 long txFee,
+                                 long txFeePerVbyte,
                                  long takerFee,
                                  boolean isCurrencyForTakerFeeBtc,
                                  long takerBsqOutputValue,
@@ -74,7 +74,7 @@ public final class CreateAtomicTxRequest extends TradeMessage implements DirectM
                 bsqTradeAmount,
                 btcTradeAmount,
                 tradePrice,
-                txFee,
+                txFeePerVbyte,
                 takerFee,
                 isCurrencyForTakerFeeBtc,
                 takerBsqOutputValue,
@@ -97,7 +97,7 @@ public final class CreateAtomicTxRequest extends TradeMessage implements DirectM
                                   long bsqTradeAmount,
                                   long btcTradeAmount,
                                   long tradePrice,
-                                  long txFee,
+                                  long txFeePerVbyte,
                                   long takerFee,
                                   boolean isCurrencyForTakerFeeBtc,
                                   long takerBsqOutputValue,
@@ -112,7 +112,7 @@ public final class CreateAtomicTxRequest extends TradeMessage implements DirectM
         this.bsqTradeAmount = bsqTradeAmount;
         this.btcTradeAmount = btcTradeAmount;
         this.tradePrice = tradePrice;
-        this.txFee = txFee;
+        this.txFeePerVbyte = txFeePerVbyte;
         this.takerFee = takerFee;
         this.isCurrencyForTakerFeeBtc = isCurrencyForTakerFeeBtc;
         this.takerBsqOutputValue = takerBsqOutputValue;
@@ -134,7 +134,7 @@ public final class CreateAtomicTxRequest extends TradeMessage implements DirectM
                         .setBsqTradeAmount(bsqTradeAmount)
                         .setBtcTradeAmount(btcTradeAmount)
                         .setTradePrice(tradePrice)
-                        .setTxFee(txFee)
+                        .setTxFeePerVbyte(txFeePerVbyte)
                         .setTakerFee(takerFee)
                         .setIsCurrencyForTakerFeeBtc(isCurrencyForTakerFeeBtc)
                         .setTakerBsqOutputValue(takerBsqOutputValue)
@@ -157,7 +157,7 @@ public final class CreateAtomicTxRequest extends TradeMessage implements DirectM
                 proto.getBsqTradeAmount(),
                 proto.getBtcTradeAmount(),
                 proto.getTradePrice(),
-                proto.getTxFee(),
+                proto.getTxFeePerVbyte(),
                 proto.getTakerFee(),
                 proto.getIsCurrencyForTakerFeeBtc(),
                 proto.getTakerBsqOutputValue(),
@@ -181,7 +181,7 @@ public final class CreateAtomicTxRequest extends TradeMessage implements DirectM
                 "\n     bsqTradeAmount=" + bsqTradeAmount +
                 "\n     btcTradeAmount=" + btcTradeAmount +
                 "\n     tradePrice=" + tradePrice +
-                "\n     txFee=" + txFee +
+                "\n     txFeePerVbyte=" + txFeePerVbyte +
                 "\n     takerFee=" + takerFee +
                 "\n     isCurrencyForTakerFeeBtc=" + isCurrencyForTakerFeeBtc +
                 "\n     takerBsqOutputValue=" + takerBsqOutputValue +

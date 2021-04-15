@@ -102,7 +102,7 @@ public class AtomicProcessModel implements ProcessModelI, Model, PersistablePayl
     @Setter
     private long btcTradeFee;
     @Setter
-    private long txFee;
+    private long txFeePerVbyte;
     @Setter
     private long takerBsqOutputAmount;
     @Setter

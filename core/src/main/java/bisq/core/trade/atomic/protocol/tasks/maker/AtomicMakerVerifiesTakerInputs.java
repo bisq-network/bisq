@@ -128,7 +128,7 @@ public class AtomicMakerVerifiesTakerInputs extends AtomicTradeTask {
                     makerBtcInputAmount - message.getBtcTradeAmount();
             var btcTradeFeeAmount = atomicProcessModel.getBtcTradeFee();
             var bsqTradeFee = atomicProcessModel.getBsqTradeFee();
-            var txFee = message.getTxFee();
+            var txFee = message.getTxFeePerVbyte();
 
             // Verify input sum equals output sum
             var bsqIn = takerBsqInputAmount + makerBsqInputAmount;
@@ -144,7 +144,7 @@ public class AtomicMakerVerifiesTakerInputs extends AtomicTradeTask {
             atomicProcessModel.setMakerBtcInputs(makerBtcInputs);
             atomicProcessModel.setMakerBtcOutputAmount(makerBtcOutputAmount);
             atomicProcessModel.setMakerBsqOutputAmount(makerBsqOutputAmount);
-            atomicProcessModel.setTxFee(message.getTxFee());
+            atomicProcessModel.setTxFeePerVbyte(message.getTxFeePerVbyte());
 
             complete();
         } catch (Throwable t) {
