@@ -51,6 +51,8 @@ import bisq.proto.grpc.UnlockWalletReply;
 import bisq.proto.grpc.UnlockWalletRequest;
 import bisq.proto.grpc.UnsetTxFeeRatePreferenceReply;
 import bisq.proto.grpc.UnsetTxFeeRatePreferenceRequest;
+import bisq.proto.grpc.VerifyBsqSentToAddressReply;
+import bisq.proto.grpc.VerifyBsqSentToAddressRequest;
 
 import io.grpc.ServerInterceptor;
 import io.grpc.stub.StreamObserver;
@@ -219,6 +221,21 @@ class GrpcWalletsService extends WalletsImplBase {
                             throw new IllegalStateException(t);
                         }
                     });
+        } catch (Throwable cause) {
+            exceptionHandler.handleException(log, cause, responseObserver);
+        }
+    }
+
+    @Override
+    public void verifyBsqSentToAddress(VerifyBsqSentToAddressRequest req,
+                                       StreamObserver<VerifyBsqSentToAddressReply> responseObserver) {
+        try {
+            boolean isAmountReceived = coreApi.verifyBsqSentToAddress(req.getAddress(), req.getAmount());
+            var reply = VerifyBsqSentToAddressReply.newBuilder()
+                    .setIsAmountReceived(isAmountReceived)
+                    .build();
+            responseObserver.onNext(reply);
+            responseObserver.onCompleted();
         } catch (Throwable cause) {
             exceptionHandler.handleException(log, cause, responseObserver);
         }
