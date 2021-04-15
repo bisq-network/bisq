@@ -108,7 +108,7 @@ GraphiteReporter.serviceUrl=k6evlhg44acpchtc.onion:2003
 
 ## Run
 
-The distribution ships with a systemd .desktop file. Validate/change the executable/config paths within the shipped `bisq-monitor.service` file and copy/move the file to your systemd directory (something along `/usr/lib/systemd/system/`). Now you can control your *Monitor Node* via the usual systemd start/stop commands
+The distribution ships with a systemd .service file. Validate/change the executable/config paths within the shipped `bisq-monitor.service` file and copy/move the file to your systemd directory (something along `/usr/lib/systemd/system/`). Now you can control your *Monitor Node* via the usual systemd start/stop commands
 
 ```
 systemctl start bisq-monitor.service
