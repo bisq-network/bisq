@@ -276,9 +276,9 @@ public class CliMain {
                     verifyStringIsValidDecimal(OPT_AMOUNT, amount);
 
                     var bsqWasSent = client.verifyBsqSentToAddress(address, amount);
-                    out.printf("%s bsq has %s been sent to address %s%n",
+                    out.printf("%s bsq %s sent to address %s%n",
                             amount,
-                            bsqWasSent ? "" : "not",
+                            bsqWasSent ? "has been" : "has not been",
                             address);
                     return;
                 }
