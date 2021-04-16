@@ -24,7 +24,7 @@ import bisq.asset.NetworkParametersAdapter;
 public class BitcoinRhodium extends Coin {
 
     public BitcoinRhodium() {
-        super("Bitcoin Rhodium", "XRC", new Base58AddressValidator(new BitcoinRhodiumParams()));
+        super("XRhodium", "XRC", new Base58AddressValidator(new BitcoinRhodiumParams()));
     }
 
     public static class BitcoinRhodiumParams extends NetworkParametersAdapter {
