@@ -135,21 +135,21 @@ public class SepaForm extends GeneralSepaForm {
         }
 
         ibanInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
-            if(ibanInputTextField.validate() ) {
+            if (ibanInputTextField.validate()) {
                 List<Country> countries = CountryUtil.getAllSepaCountries();
                 String ibanCountryCode = newValue.substring(0, 2).toUpperCase();
                 Optional<Country> ibanCountry = countries.stream()
                         .filter(c -> c.code.equals(ibanCountryCode)).findFirst();
-                if(ibanCountry.isPresent())
+                if (ibanCountry.isPresent())
                     countryComboBox.setValue(ibanCountry.get());
             }
         });
 
         countryComboBox.valueProperty().addListener((ov, oldValue, newValue) -> {
-            if(ibanInputTextField.validate()) {
+            if (ibanInputTextField.validate()) {
                 String ibanCountryCode = ibanInputTextField.getText(0, 2);
                 String comboBoxCountryCode = countryComboBox.getValue().code;
-                if(!ibanCountryCode.equals(comboBoxCountryCode)) {
+                if (!ibanCountryCode.equals(comboBoxCountryCode)) {
                     InputValidator.ValidationResult result = new InputValidator
                             .ValidationResult(false, "Country code must match country of bank");
                     ibanInputTextField.validationResultProperty().setValue(result);
