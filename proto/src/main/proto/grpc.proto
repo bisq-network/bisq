@@ -407,6 +407,7 @@ message TxFeeRateInfo {
     uint64 customTxFeeRate = 2;
     uint64 feeServiceRate = 3;
     uint64 lastFeeServiceRequestTs = 4;
+    uint64 minFeeServiceRate = 5;
 }
 
 message TxInfo {

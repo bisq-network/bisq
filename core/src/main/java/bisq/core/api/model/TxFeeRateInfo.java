@@ -28,15 +28,18 @@ public class TxFeeRateInfo implements Payload {
 
     private final boolean useCustomTxFeeRate;
     private final long customTxFeeRate;
+    private final long minFeeServiceRate;
     private final long feeServiceRate;
     private final long lastFeeServiceRequestTs;
 
     public TxFeeRateInfo(boolean useCustomTxFeeRate,
                          long customTxFeeRate,
+                         long minFeeServiceRate,
                          long feeServiceRate,
                          long lastFeeServiceRequestTs) {
         this.useCustomTxFeeRate = useCustomTxFeeRate;
         this.customTxFeeRate = customTxFeeRate;
+        this.minFeeServiceRate = minFeeServiceRate;
         this.feeServiceRate = feeServiceRate;
         this.lastFeeServiceRequestTs = lastFeeServiceRequestTs;
     }
@@ -50,6 +53,7 @@ public class TxFeeRateInfo implements Payload {
         return bisq.proto.grpc.TxFeeRateInfo.newBuilder()
                 .setUseCustomTxFeeRate(useCustomTxFeeRate)
                 .setCustomTxFeeRate(customTxFeeRate)
+                .setMinFeeServiceRate(minFeeServiceRate)
                 .setFeeServiceRate(feeServiceRate)
                 .setLastFeeServiceRequestTs(lastFeeServiceRequestTs)
                 .build();
@@ -59,6 +63,7 @@ public class TxFeeRateInfo implements Payload {
     public static TxFeeRateInfo fromProto(bisq.proto.grpc.TxFeeRateInfo proto) {
         return new TxFeeRateInfo(proto.getUseCustomTxFeeRate(),
                 proto.getCustomTxFeeRate(),
+                proto.getMinFeeServiceRate(),
                 proto.getFeeServiceRate(),
                 proto.getLastFeeServiceRequestTs());
     }
@@ -68,6 +73,7 @@ public class TxFeeRateInfo implements Payload {
         return "TxFeeRateInfo{" + "\n" +
                 "  useCustomTxFeeRate=" + useCustomTxFeeRate + "\n" +
                 ", customTxFeeRate=" + customTxFeeRate + " sats/byte" + "\n" +
+                ", minFeeServiceRate=" + minFeeServiceRate + " sats/byte" + "\n" +
                 ", feeServiceRate=" + feeServiceRate + " sats/byte" + "\n" +
                 ", lastFeeServiceRequestTs=" + lastFeeServiceRequestTs + "\n" +
                 '}';
