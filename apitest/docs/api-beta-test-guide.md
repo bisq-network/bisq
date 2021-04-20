@@ -19,7 +19,7 @@ option adjustments to compensate.
 
 **Java SDK**:  Version 10, 11, or 12
 
-**Bitcoin-Core**:  Version 0.19 or 0.20
+**Bitcoin-Core**:  Version 0.19, 0.20, or 0.21
 
 **Git Client**
 
@@ -151,25 +151,6 @@ The Api’s default server listening port is `9998`, and you do not need to spec
 CLI command unless you change the server’s `–apiPort=<listening-port>`.   In the test harness, Alice’s Api port is
 `9998`, Bob’s is `9999`.  When you manually test the Api using the test harness, be aware of the port numbers being
 used in the CLI commands, so you know which server (Bob’s or Alice’s) the CLI is sending requests to.
-
-### Registering Test Dispute Agents
-
-If you ran the `trade-simulation.sh` script in your currently running test harness, dispute agents have
-already been registered in the arbitration node, and you can run any of the commands described in the following
-sections.
-
-If you have not run the `trade-simulation.sh` script against the test harness, you will need to
-manually register dispute agents in the arbitration node before you can initiate a trade.  Copy, paste and run
-the following CLI commands to register a `mediator` and a `refundagent`.  Do not change the commands' port `9997`
-option (the test arbitration node's listening port).
-```
-$ ./bisq-cli --password=xyz --port=9997 registerdisputeagent --dispute-agent-type=mediator \
-    --registration-key=6ac43ea1df2a290c1c8391736aa42e4339c5cb4f110ff0257a13b63211977b7a
-
-$ ./bisq-cli --password=xyz --port=9997 registerdisputeagent --dispute-agent-type=refundagent \
-    --registration-key=6ac43ea1df2a290c1c8391736aa42e4339c5cb4f110ff0257a13b63211977b7a
-```
-_Note:  The API cannot be used to register dispute agents on nodes connected to `mainnet`._
 
 ### CLI Help
 

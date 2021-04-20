@@ -10,7 +10,7 @@
 #
 # Prerequisites:
 #
-#  - Linux or OSX with bash, Java 10, or Java 11-12 (JDK language compatibility 10), and bitcoin-core (v0.19, v0.20).
+#  - Linux or OSX with bash, Java 10, or Java 11-12 (JDK language compatibility 10), and bitcoin-core (v0.19, v0.20, v0.21).
 #
 #  - Bisq must be fully built with apitest dao setup files installed.
 #    Build command:  `./gradlew clean build :apitest:installDaoSetup`
