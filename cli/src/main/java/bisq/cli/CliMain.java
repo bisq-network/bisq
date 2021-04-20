@@ -76,6 +76,7 @@ import bisq.cli.opts.SetWalletPasswordOptionParser;
 import bisq.cli.opts.SimpleMethodOptionParser;
 import bisq.cli.opts.TakeOfferOptionParser;
 import bisq.cli.opts.UnlockWalletOptionParser;
+import bisq.cli.opts.VerifyBsqSentToAddressOptionParser;
 import bisq.cli.opts.WithdrawFundsOptionParser;
 
 /**
@@ -262,6 +263,23 @@ public class CliMain {
                             amount,
                             address,
                             txInfo.getTxId());
+                    return;
+                }
+                case verifybsqsenttoaddress: {
+                    var opts = new VerifyBsqSentToAddressOptionParser(args).parse();
+                    if (opts.isForHelp()) {
+                        out.println(client.getMethodHelp(method));
+                        return;
+                    }
+                    var address = opts.getAddress();
+                    var amount = opts.getAmount();
+                    verifyStringIsValidDecimal(OPT_AMOUNT, amount);
+
+                    var bsqWasSent = client.verifyBsqSentToAddress(address, amount);
+                    out.printf("%s bsq %s sent to address %s%n",
+                            amount,
+                            bsqWasSent ? "has been" : "has not been",
+                            address);
                     return;
                 }
                 case gettxfeerate: {
@@ -511,7 +529,7 @@ public class CliMain {
                         jsonString = new String(Files.readAllBytes(paymentAccountForm));
                     } catch (IOException e) {
                         throw new IllegalStateException(
-                                format("could not read %s", paymentAccountForm.toString()));
+                                format("could not read %s", paymentAccountForm));
                     }
                     var paymentAccount = client.createPaymentAccount(jsonString);
                     out.println("payment account saved");
@@ -716,6 +734,9 @@ public class CliMain {
             stream.format(rowFormat, sendbtc.name(), "--address=<btc-address> --amount=<btc-amount> \\", "Send BTC");
             stream.format(rowFormat, "", "[--tx-fee-rate=<sats/byte>]", "");
             stream.format(rowFormat, "", "[--memo=<\"memo\">]", "");
+            stream.println();
+            stream.format(rowFormat, verifybsqsenttoaddress.name(), "--address=<bsq-address> --amount=<bsq-amount>",
+                    "Verify amount was sent to BSQ wallet address");
             stream.println();
             stream.format(rowFormat, gettxfeerate.name(), "", "Get current tx fee rate in sats/byte");
             stream.println();

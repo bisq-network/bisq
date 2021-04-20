@@ -30,7 +30,6 @@ import java.io.PrintWriter;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static bisq.common.app.DevEnv.DEV_PRIVILEGE_PRIV_KEY;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.stream;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -42,28 +41,21 @@ import bisq.cli.GrpcClient;
 
 public class MethodTest extends ApiTestCase {
 
-    protected static final String ARBITRATOR = "arbitrator";
-    protected static final String MEDIATOR = "mediator";
-    protected static final String REFUND_AGENT = "refundagent";
-
     protected static final CoreProtoResolver CORE_PROTO_RESOLVER = new CoreProtoResolver();
 
     private static final Function<Enum<?>[], String> toNameList = (enums) ->
             stream(enums).map(Enum::name).collect(Collectors.joining(","));
 
     public static void startSupportingApps(File callRateMeteringConfigFile,
-                                           boolean registerDisputeAgents,
                                            boolean generateBtcBlock,
                                            Enum<?>... supportingApps) {
         startSupportingApps(callRateMeteringConfigFile,
-                registerDisputeAgents,
                 generateBtcBlock,
                 false,
                 supportingApps);
     }
 
     public static void startSupportingApps(File callRateMeteringConfigFile,
-                                           boolean registerDisputeAgents,
                                            boolean generateBtcBlock,
                                            boolean startSupportingAppsInDebugMode,
                                            Enum<?>... supportingApps) {
@@ -73,23 +65,20 @@ public class MethodTest extends ApiTestCase {
                     "--callRateMeteringConfigPath", callRateMeteringConfigFile.getAbsolutePath(),
                     "--enableBisqDebugging", startSupportingAppsInDebugMode ? "true" : "false"
             });
-            doPostStartup(registerDisputeAgents, generateBtcBlock);
+            doPostStartup(generateBtcBlock);
         } catch (Exception ex) {
             fail(ex);
         }
     }
 
-    public static void startSupportingApps(boolean registerDisputeAgents,
-                                           boolean generateBtcBlock,
+    public static void startSupportingApps(boolean generateBtcBlock,
                                            Enum<?>... supportingApps) {
-        startSupportingApps(registerDisputeAgents,
-                generateBtcBlock,
+        startSupportingApps(generateBtcBlock,
                 false,
                 supportingApps);
     }
 
-    public static void startSupportingApps(boolean registerDisputeAgents,
-                                           boolean generateBtcBlock,
+    public static void startSupportingApps(boolean generateBtcBlock,
                                            boolean startSupportingAppsInDebugMode,
                                            Enum<?>... supportingApps) {
         try {
@@ -100,18 +89,13 @@ public class MethodTest extends ApiTestCase {
                     "--callRateMeteringConfigPath", callRateMeteringConfigFile.getAbsolutePath(),
                     "--enableBisqDebugging", startSupportingAppsInDebugMode ? "true" : "false"
             });
-            doPostStartup(registerDisputeAgents, generateBtcBlock);
+            doPostStartup(generateBtcBlock);
         } catch (Exception ex) {
             fail(ex);
         }
     }
 
-    protected static void doPostStartup(boolean registerDisputeAgents,
-                                        boolean generateBtcBlock) {
-        if (registerDisputeAgents) {
-            registerDisputeAgents();
-        }
-
+    protected static void doPostStartup(boolean generateBtcBlock) {
         // Generate 1 regtest block for alice's and/or bob's wallet to
         // show 10 BTC balance, and allow time for daemons parse the new block.
         if (generateBtcBlock)
@@ -158,11 +142,6 @@ public class MethodTest extends ApiTestCase {
     }
 
     // Static conveniences for test methods and test case fixture setups.
-
-    protected static void registerDisputeAgents() {
-        arbClient.registerDisputeAgent(MEDIATOR, DEV_PRIVILEGE_PRIV_KEY);
-        arbClient.registerDisputeAgent(REFUND_AGENT, DEV_PRIVILEGE_PRIV_KEY);
-    }
 
     protected static String encodeToHex(String s) {
         return Utilities.bytesAsHexString(s.getBytes(UTF_8));

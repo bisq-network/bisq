@@ -19,7 +19,6 @@ package bisq.apitest.method.trade;
 
 import bisq.core.payment.PaymentAccount;
 
-import bisq.proto.grpc.BtcBalanceInfo;
 import bisq.proto.grpc.TradeInfo;
 
 import io.grpc.StatusRuntimeException;
@@ -35,9 +34,13 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.TestMethodOrder;
 
-import static bisq.cli.CurrencyFormat.formatSatoshis;
+import static bisq.apitest.config.ApiTestConfig.BTC;
+import static bisq.cli.TableFormat.formatBalancesTbls;
 import static bisq.core.btc.wallet.Restrictions.getDefaultBuyerSecurityDepositAsPercent;
-import static bisq.core.trade.Trade.Phase.*;
+import static bisq.core.trade.Trade.Phase.DEPOSIT_CONFIRMED;
+import static bisq.core.trade.Trade.Phase.FIAT_SENT;
+import static bisq.core.trade.Trade.Phase.PAYOUT_PUBLISHED;
+import static bisq.core.trade.Trade.Phase.WITHDRAWN;
 import static bisq.core.trade.Trade.State.*;
 import static java.lang.String.format;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -45,11 +48,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static protobuf.Offer.State.OFFER_FEE_PAID;
+import static protobuf.OfferPayload.Direction.SELL;
 import static protobuf.OpenOffer.State.AVAILABLE;
-
-
-
-import bisq.cli.TradeFormat;
 
 @Disabled
 @Slf4j
@@ -59,7 +59,7 @@ public class TakeSellBTCOfferTest extends AbstractTradeTest {
     // Alice is maker/seller, Bob is taker/buyer.
 
     // Maker and Taker fees are in BTC.
-    private static final String TRADE_FEE_CURRENCY_CODE = "btc";
+    private static final String TRADE_FEE_CURRENCY_CODE = BTC;
 
     private static final String WITHDRAWAL_TX_MEMO = "Bob's trade withdrawal";
 
@@ -68,10 +68,10 @@ public class TakeSellBTCOfferTest extends AbstractTradeTest {
     public void testTakeAlicesSellOffer(final TestInfo testInfo) {
         try {
             PaymentAccount alicesUsdAccount = createDummyF2FAccount(aliceClient, "US");
-            var alicesOffer = aliceClient.createMarketBasedPricedOffer("sell",
+            var alicesOffer = aliceClient.createMarketBasedPricedOffer(SELL.name(),
                     "usd",
-                    12500000L,
-                    12500000L, // min-amount = amount
+                    12_500_000L,
+                    12_500_000L, // min-amount = amount
                     0.00,
                     getDefaultBuyerSecurityDepositAsPercent(),
                     alicesUsdAccount.getId(),
@@ -83,7 +83,7 @@ public class TakeSellBTCOfferTest extends AbstractTradeTest {
             // Wait times vary;  my logs show >= 2 second delay, but taking sell offers
             // seems to require more time to prepare.
             sleep(3000); // TODO loop instead of hard code wait time
-            var alicesUsdOffers = aliceClient.getMyOffersSortedByDate("sell", "usd");
+            var alicesUsdOffers = aliceClient.getMyOffersSortedByDate(SELL.name(), "usd");
             assertEquals(1, alicesUsdOffers.size());
 
             PaymentAccount bobsUsdAccount = createDummyF2FAccount(bobClient, "US");
@@ -95,17 +95,8 @@ public class TakeSellBTCOfferTest extends AbstractTradeTest {
             tradeId = trade.getTradeId();
 
             genBtcBlocksThenWait(1, 4000);
-            var takeableUsdOffers = bobClient.getOffersSortedByDate("sell", "usd");
+            var takeableUsdOffers = bobClient.getOffersSortedByDate(SELL.name(), "usd");
             assertEquals(0, takeableUsdOffers.size());
-
-            if (!isLongRunningTest) {
-                trade = bobClient.getTrade(trade.getTradeId());
-                EXPECTED_PROTOCOL_STATUS.setState(BUYER_RECEIVED_DEPOSIT_TX_PUBLISHED_MSG)
-                        .setPhase(DEPOSIT_PUBLISHED)
-                        .setDepositPublished(true);
-                verifyExpectedProtocolStatus(trade);
-                logTrade(log, testInfo, "Bob's view after taking offer and sending deposit", trade);
-            }
 
             genBtcBlocksThenWait(1, 2500);
 
@@ -117,14 +108,15 @@ public class TakeSellBTCOfferTest extends AbstractTradeTest {
                             trade.getShortId(),
                             trade.getDepositTxId(),
                             i);
-                    sleep(5000);
+                    genBtcBlocksThenWait(1, 4000);
                     continue;
                 } else {
                     EXPECTED_PROTOCOL_STATUS.setState(DEPOSIT_CONFIRMED_IN_BLOCK_CHAIN)
                             .setPhase(DEPOSIT_CONFIRMED)
+                            .setDepositPublished(true)
                             .setDepositConfirmed(true);
                     verifyExpectedProtocolStatus(trade);
-                    logTrade(log, testInfo, "Bob's view after deposit is confirmed", trade);
+                    logTrade(log, testInfo, "Bob's view after deposit is confirmed", trade, true);
                     break;
                 }
             }
@@ -265,12 +257,19 @@ public class TakeSellBTCOfferTest extends AbstractTradeTest {
                     .setPhase(WITHDRAWN)
                     .setWithdrawn(true);
             verifyExpectedProtocolStatus(trade);
-            logTrade(log, testInfo, "Bob's view after withdrawing funds to external wallet", trade);
-            BtcBalanceInfo currentBalance = bobClient.getBtcBalances();
-            log.info("{} Bob's current available balance: {} BTC.  Last trade:\n{}",
+            logTrade(log, testInfo, "Bob's view after withdrawing BTC funds to external wallet", trade);
+
+            logTrade(log, testInfo, "Alice's Maker/Buyer View (Done)", aliceClient.getTrade(tradeId), true);
+            logTrade(log, testInfo, "Bob's Taker/Seller View (Done)", bobClient.getTrade(tradeId), true);
+
+            var alicesBalances = aliceClient.getBalances();
+            log.info("{} Alice's Current Balance:\n{}",
                     testName(testInfo),
-                    formatSatoshis(currentBalance.getAvailableBalance()),
-                    TradeFormat.format(bobClient.getTrade(tradeId)));
+                    formatBalancesTbls(alicesBalances));
+            var bobsBalances = bobClient.getBalances();
+            log.info("{} Bob's Current Balance:\n{}",
+                    testName(testInfo),
+                    formatBalancesTbls(bobsBalances));
         } catch (StatusRuntimeException e) {
             fail(e);
         }

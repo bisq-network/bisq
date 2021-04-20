@@ -174,6 +174,7 @@ class GrpcPaymentAccountsService extends PaymentAccountsImplBase {
                 .or(() -> Optional.of(CallRateMeteringInterceptor.valueOf(
                         new HashMap<>() {{
                             put(getCreatePaymentAccountMethod().getFullMethodName(), new GrpcCallRateMeter(1, MINUTES));
+                            put(getCreateCryptoCurrencyPaymentAccountMethod().getFullMethodName(), new GrpcCallRateMeter(1, MINUTES));
                             put(getGetPaymentAccountsMethod().getFullMethodName(), new GrpcCallRateMeter(1, SECONDS));
                             put(getGetPaymentMethodsMethod().getFullMethodName(), new GrpcCallRateMeter(1, SECONDS));
                             put(getGetPaymentAccountFormMethod().getFullMethodName(), new GrpcCallRateMeter(1, SECONDS));

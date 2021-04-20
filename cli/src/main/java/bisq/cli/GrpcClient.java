@@ -73,6 +73,7 @@ import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.cli.CryptoCurrencyUtil.isSupportedCryptoCurrency;
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.toList;
 import static protobuf.OfferPayload.Direction.BUY;
@@ -286,16 +287,20 @@ public final class GrpcClient {
     }
 
     public List<OfferInfo> getOffers(String direction, String currencyCode) {
-        var request = GetOffersRequest.newBuilder()
-                .setDirection(direction)
-                .setCurrencyCode(currencyCode)
-                .build();
-        return grpcStubs.offersService.getOffers(request).getOffersList();
+        if (isSupportedCryptoCurrency(currencyCode)) {
+            return getCryptoCurrencyOffers(direction, currencyCode);
+        } else {
+            var request = GetOffersRequest.newBuilder()
+                    .setDirection(direction)
+                    .setCurrencyCode(currencyCode)
+                    .build();
+            return grpcStubs.offersService.getOffers(request).getOffersList();
+        }
     }
 
-    public List<OfferInfo> getBsqOffers(String direction) {
+    public List<OfferInfo> getCryptoCurrencyOffers(String direction, String currencyCode) {
         return getOffers(direction, "BTC").stream()
-                .filter(o -> o.getBaseCurrencyCode().equals("BSQ"))
+                .filter(o -> o.getBaseCurrencyCode().equalsIgnoreCase(currencyCode))
                 .collect(toList());
     }
 
@@ -313,22 +318,26 @@ public final class GrpcClient {
 
     public List<OfferInfo> getBsqOffersSortedByDate() {
         ArrayList<OfferInfo> offers = new ArrayList<>();
-        offers.addAll(getBsqOffers(BUY.name()));
-        offers.addAll(getBsqOffers(SELL.name()));
+        offers.addAll(getCryptoCurrencyOffers(BUY.name(), "BSQ"));
+        offers.addAll(getCryptoCurrencyOffers(SELL.name(), "BSQ"));
         return sortOffersByDate(offers);
     }
 
     public List<OfferInfo> getMyOffers(String direction, String currencyCode) {
-        var request = GetMyOffersRequest.newBuilder()
-                .setDirection(direction)
-                .setCurrencyCode(currencyCode)
-                .build();
-        return grpcStubs.offersService.getMyOffers(request).getOffersList();
+        if (isSupportedCryptoCurrency(currencyCode)) {
+            return getMyCryptoCurrencyOffers(direction, currencyCode);
+        } else {
+            var request = GetMyOffersRequest.newBuilder()
+                    .setDirection(direction)
+                    .setCurrencyCode(currencyCode)
+                    .build();
+            return grpcStubs.offersService.getMyOffers(request).getOffersList();
+        }
     }
 
-    public List<OfferInfo> getMyBsqOffers(String direction) {
+    public List<OfferInfo> getMyCryptoCurrencyOffers(String direction, String currencyCode) {
         return getMyOffers(direction, "BTC").stream()
-                .filter(o -> o.getBaseCurrencyCode().equals("BSQ"))
+                .filter(o -> o.getBaseCurrencyCode().equalsIgnoreCase(currencyCode))
                 .collect(toList());
     }
 
@@ -346,8 +355,8 @@ public final class GrpcClient {
 
     public List<OfferInfo> getMyBsqOffersSortedByDate() {
         ArrayList<OfferInfo> offers = new ArrayList<>();
-        offers.addAll(getMyBsqOffers(BUY.name()));
-        offers.addAll(getMyBsqOffers(SELL.name()));
+        offers.addAll(getMyCryptoCurrencyOffers(BUY.name(), "BSQ"));
+        offers.addAll(getMyCryptoCurrencyOffers(SELL.name(), "BSQ"));
         return sortOffersByDate(offers);
     }
 

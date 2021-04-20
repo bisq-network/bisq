@@ -50,7 +50,7 @@ public class CreatePaymentAcctOptionParser extends AbstractMethodOptionParser im
         if (!path.toFile().exists())
             throw new IllegalStateException(
                     format("json payment account form '%s' could not be found",
-                            path.toString()));
+                            path));
 
         return this;
     }
