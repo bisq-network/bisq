@@ -17,7 +17,6 @@ import org.junit.jupiter.api.TestMethodOrder;
 import static bisq.apitest.Scaffold.BitcoinCoreApp.bitcoind;
 import static bisq.apitest.config.BisqAppConfig.alicedaemon;
 import static bisq.apitest.config.BisqAppConfig.seednode;
-import static bisq.common.config.BaseCurrencyNetwork.BTC_DAO_REGTEST;
 import static java.lang.String.format;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -56,22 +55,25 @@ public class BtcTxFeeRateTest extends MethodTest {
     @Test
     @Order(2)
     public void testSetInvalidTxFeeRateShouldThrowException(final TestInfo testInfo) {
+        var currentTxFeeRateInfo = TxFeeRateInfo.fromProto(aliceClient.getTxFeeRate());
         Throwable exception = assertThrows(StatusRuntimeException.class, () ->
                 aliceClient.setTxFeeRate(10));
         String expectedExceptionMessage =
                 format("UNKNOWN: tx fee rate preference must be >= %d sats/byte",
-                        BTC_DAO_REGTEST.getDefaultMinFeePerVbyte());
+                        currentTxFeeRateInfo.getMinFeeServiceRate());
         assertEquals(expectedExceptionMessage, exception.getMessage());
     }
 
     @Test
     @Order(3)
     public void testSetValidTxFeeRate(final TestInfo testInfo) {
-        var txFeeRateInfo = TxFeeRateInfo.fromProto(aliceClient.setTxFeeRate(15));
+        var currentTxFeeRateInfo = TxFeeRateInfo.fromProto(aliceClient.getTxFeeRate());
+        var customFeeRate = currentTxFeeRateInfo.getMinFeeServiceRate() + 5;
+        var txFeeRateInfo = TxFeeRateInfo.fromProto(aliceClient.setTxFeeRate(customFeeRate));
         log.debug("{} -> Fee rates with custom preference: {}", testName(testInfo), txFeeRateInfo);
 
         assertTrue(txFeeRateInfo.isUseCustomTxFeeRate());
-        assertEquals(15, txFeeRateInfo.getCustomTxFeeRate());
+        assertEquals(customFeeRate, txFeeRateInfo.getCustomTxFeeRate());
         assertTrue(txFeeRateInfo.getFeeServiceRate() > 0);
     }
 
