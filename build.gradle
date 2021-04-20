@@ -73,7 +73,6 @@ configure(subprojects) {
         protocVersion = protobufVersion
         pushyVersion = '0.13.2'
         qrgenVersion = '1.3'
-        sarxosVersion = '0.3.12'
         slf4jVersion = '1.7.30'
         sparkVersion = '2.5.2'
         springBootVersion = '1.5.10.RELEASE'
@@ -412,7 +411,6 @@ configure(project(':desktop')) {
         compile "de.jensd:fontawesomefx-materialdesignfont:$fontawesomefxMaterialdesignfontVersion"
         compile "com.google.guava:guava:$guavaVersion"
         compile "com.googlecode.jcsv:jcsv:$jcsvVersion"
-        compile "com.github.sarxos:webcam-capture:$sarxosVersion"
         compile "org.openjfx:javafx-controls:$javafxVersion:$os"
         compile "org.openjfx:javafx-fxml:$javafxVersion:$os"
         compile "org.openjfx:javafx-swing:$javafxVersion:$os"

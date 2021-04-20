@@ -311,9 +311,7 @@ task packageInstallers {
                         " libprism_es2.dylib"  +
                         " libdecora_sse.dylib" +
                         " libprism_sw.dylib" +
-                        " org/bridj/lib/darwin_universal/libbridj.dylib" +
-                        " META-INF/native/libio_grpc_netty_shaded_netty_tcnative_osx_x86_64.jnilib" +
-                        " com/github/sarxos/webcam/ds/buildin/lib/darwin_universal/libOpenIMAJGrabber.dylib"
+                        " META-INF/native/libio_grpc_netty_shaded_netty_tcnative_osx_x86_64.jnilib"
                 )
 
                 // macOS step 1: Sign dylibs and replace them in the shadow jar
