@@ -3,7 +3,6 @@ import org.apache.tools.ant.taskdefs.condition.Os
 
 import static groovy.io.FileType.*
 
-
 task jpackageSanityChecks {
     description 'Interactive sanity checks on the version of the code that will be packaged'
 
@@ -183,7 +182,6 @@ task packageInstallers {
 
     doLast {
         String jPackageFilePath = retrieveAndExtractJavaBinaries.property('jpackageFilePath')
-        String licenseFilePath = "${rootProject.projectDir}/LICENSE"
         File binariesFolderPath = file(getJavaBinariesDownloadURLs.property('binariesFolderPath'))
 
         File tempRootDir = getJavaBinariesDownloadURLs.property("tempRootDir") as File
@@ -253,8 +251,8 @@ task packageInstallers {
                 " --main-jar ${mainJarName}" +
                 " --main-class bisq.desktop.app.BisqAppMain" +
                 " --java-options -Xss1280k" +
-                " --java-options '-XX:MaxRAM=4g'" +
-                " --java-options '-Djava.net.preferIPv4Stack=true'"
+                " --java-options -XX:MaxRAM=4g" +
+                " --java-options -Djava.net.preferIPv4Stack=true"
                 // Warning: this will cause guice reflection exceptions and lead to issues with the guice internal cache
                 // resulting in the UI not loading
 //              " --java-options -Djdk.module.illegalAccess=deny" +
@@ -263,9 +261,8 @@ task packageInstallers {
         if (Os.isFamily(Os.FAMILY_WINDOWS)) {
             // TODO Found no benefit in using --resource-dir "..package/windows", it has the same outcome as opts below
             String windowsOpts = (
-                " --icon ${project(':desktop').projectDir}/package/windows/Bisq.ico" +
+                " --icon \"${project(':desktop').projectDir}/package/windows/Bisq.ico\"" +
 		        " --resource-dir \"${project(':desktop').projectDir}/package/windows\"" +
-                " --verbose" +
  		        " --win-dir-chooser" +
                 " --win-per-user-install" +
                 " --win-menu" +
