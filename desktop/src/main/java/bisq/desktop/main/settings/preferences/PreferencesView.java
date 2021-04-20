@@ -131,8 +131,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     private PasswordTextField rpcPwTextField;
     private TitledGroupBg daoOptionsTitledGroupBg;
 
-    private ChangeListener<Boolean> transactionFeeFocusedListener;
-    private ChangeListener<Boolean> autoConfServiceAddressFocusOutListener, autoConfRequiredConfirmationsFocusOutListener;
+    private ChangeListener<Boolean> transactionFeeFocusedListener, autoConfServiceAddressFocusOutListener, autoConfRequiredConfirmationsFocusOutListener;
     private final Preferences preferences;
     private final FeeService feeService;
     //private final ReferralIdService referralIdService;
@@ -808,7 +807,6 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
             transactionFeeInputTextField.setText(String.valueOf(feeService.getTxFeePerVbyte().value));
             feeService.feeUpdateCounterProperty().addListener(transactionFeeChangeListener);
         }
-
         transactionFeeInputTextField.setText(String.valueOf(getTxFeeForWithdrawalPerVbyte()));
         ignoreTradersListInputTextField.setText(String.join(", ", preferences.getIgnoreTradersList()));
         /* referralIdService.getOptionalReferralId().ifPresent(referralId -> referralIdInputTextField.setText(referralId));

@@ -23,6 +23,7 @@ import bisq.desktop.components.AutoTooltipCheckBox;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.ExternalHyperlink;
 import bisq.desktop.components.HyperlinkWithIcon;
+import bisq.desktop.components.InputTextField;
 import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.TxDetails;
@@ -38,6 +39,7 @@ import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.Restrictions;
 import bisq.core.locale.Res;
+import bisq.core.provider.fee.FeeService;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
 import bisq.core.user.DontShowAgainLookup;
@@ -45,7 +47,6 @@ import bisq.core.user.Preferences;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.ParsingUtils;
 import bisq.core.util.coin.CoinFormatter;
-import bisq.core.util.coin.CoinUtil;
 import bisq.core.util.validation.BtcAddressValidator;
 
 import bisq.network.p2p.P2PService;
@@ -79,6 +80,7 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Toggle;
+import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.GridPane;
@@ -124,7 +126,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
 
     private RadioButton useAllInputsRadioButton, useCustomInputsRadioButton, feeExcludedRadioButton, feeIncludedRadioButton;
     private Label amountLabel;
-    private TextField amountTextField, withdrawFromTextField, withdrawToTextField, withdrawMemoTextField;
+    private TextField amountTextField, withdrawFromTextField, withdrawToTextField, withdrawMemoTextField, transactionFeeInputTextField;
 
     private final BtcWalletService btcWalletService;
     private final TradeManager tradeManager;
@@ -142,12 +144,15 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     private Coin totalAvailableAmountOfSelectedItems = Coin.ZERO;
     private Coin amountAsCoin = Coin.ZERO;
     private ChangeListener<String> amountListener;
-    private ChangeListener<Boolean> amountFocusListener;
+    private ChangeListener<Boolean> amountFocusListener, useCustomFeeCheckboxListener, transactionFeeFocusedListener;
     private ChangeListener<Toggle> feeToggleGroupListener, inputsToggleGroupListener;
+    private ChangeListener<Number> transactionFeeChangeListener;
     private ToggleGroup feeToggleGroup, inputsToggleGroup;
+    private ToggleButton useCustomFee;
     private final BooleanProperty useAllInputs = new SimpleBooleanProperty(true);
     private boolean feeExcluded;
     private int rowIndex = 0;
+    private final FeeService feeService;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -162,7 +167,8 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                            @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter,
                            Preferences preferences,
                            BtcAddressValidator btcAddressValidator,
-                           WalletPasswordWindow walletPasswordWindow) {
+                           WalletPasswordWindow walletPasswordWindow,
+                           FeeService feeService) {
         this.btcWalletService = btcWalletService;
         this.tradeManager = tradeManager;
         this.p2PService = p2PService;
@@ -171,6 +177,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
         this.preferences = preferences;
         this.btcAddressValidator = btcAddressValidator;
         this.walletPasswordWindow = walletPasswordWindow;
+        this.feeService = feeService;
     }
 
     @Override
@@ -219,6 +226,52 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
 
         withdrawMemoTextField = addTopLabelInputTextField(gridPane, ++rowIndex,
                 Res.get("funds.withdrawal.memoLabel", Res.getBaseCurrencyCode())).second;
+
+        Tuple3<Label, InputTextField, ToggleButton> customFeeTuple = addTopLabelInputTextFieldSlideToggleButton(gridPane, ++rowIndex,
+                Res.get("funds.withdrawal.txFee"), Res.get("funds.withdrawal.useCustomFeeValue"));
+        transactionFeeInputTextField = customFeeTuple.second;
+        useCustomFee = customFeeTuple.third;
+
+        useCustomFeeCheckboxListener = (observable, oldValue, newValue) -> {
+            transactionFeeInputTextField.setEditable(newValue);
+            if (!newValue) {
+                try {
+                    transactionFeeInputTextField.setText(String.valueOf(feeService.getTxFeePerVbyte().value));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+
+        transactionFeeFocusedListener = (o, oldValue, newValue) -> {
+            if (oldValue && !newValue) {
+                String estimatedFee = String.valueOf(feeService.getTxFeePerVbyte().value);
+                try {
+                    int withdrawalTxFeePerVbyte = Integer.parseInt(transactionFeeInputTextField.getText());
+                    final long minFeePerVbyte = feeService.getMinFeePerVByte();
+                    if (withdrawalTxFeePerVbyte < minFeePerVbyte) {
+                        new Popup().warning(Res.get("funds.withdrawal.txFeeMin", minFeePerVbyte)).show();
+                        transactionFeeInputTextField.setText(estimatedFee);
+                    } else if (withdrawalTxFeePerVbyte > 5000) {
+                        new Popup().warning(Res.get("funds.withdrawal.txFeeTooLarge")).show();
+                        transactionFeeInputTextField.setText(estimatedFee);
+                    } else {
+                        preferences.setWithdrawalTxFeeInVbytes(withdrawalTxFeePerVbyte);
+                    }
+                } catch (NumberFormatException t) {
+                    log.error(t.toString());
+                    t.printStackTrace();
+                    new Popup().warning(Res.get("validation.integerOnly")).show();
+                    transactionFeeInputTextField.setText(estimatedFee);
+                } catch (Throwable t) {
+                    log.error(t.toString());
+                    t.printStackTrace();
+                    new Popup().warning(Res.get("validation.inputError", t.getMessage())).show();
+                    transactionFeeInputTextField.setText(estimatedFee);
+                }
+            }
+        };
+        transactionFeeChangeListener = (observable, oldValue, newValue) -> transactionFeeInputTextField.setText(String.valueOf(feeService.getTxFeePerVbyte().value));
 
         final Button withdrawButton = addButton(gridPane, ++rowIndex, Res.get("funds.withdrawal.withdrawButton"), 15);
 
@@ -303,6 +356,13 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
         if (inputsToggleGroup.getSelectedToggle() == null)
             inputsToggleGroup.selectToggle(useAllInputsRadioButton);
 
+        useCustomFee.setSelected(false);
+        transactionFeeInputTextField.setEditable(false);
+        transactionFeeInputTextField.setText(String.valueOf(feeService.getTxFeePerVbyte().value));
+        feeService.feeUpdateCounterProperty().addListener(transactionFeeChangeListener);
+        useCustomFee.selectedProperty().addListener(useCustomFeeCheckboxListener);
+        transactionFeeInputTextField.focusedProperty().addListener(transactionFeeFocusedListener);
+
         updateInputSelection();
         GUIUtil.requestFocus(withdrawToTextField);
     }
@@ -316,6 +376,10 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
         amountTextField.focusedProperty().removeListener(amountFocusListener);
         feeToggleGroup.selectedToggleProperty().removeListener(feeToggleGroupListener);
         inputsToggleGroup.selectedToggleProperty().removeListener(inputsToggleGroupListener);
+        transactionFeeInputTextField.focusedProperty().removeListener(transactionFeeFocusedListener);
+        if (transactionFeeChangeListener != null)
+            feeService.feeUpdateCounterProperty().removeListener(transactionFeeChangeListener);
+        useCustomFee.selectedProperty().removeListener(useCustomFeeCheckboxListener);
     }
 
 
@@ -362,7 +426,6 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                     log.info("Fee for tx with size {}: {} " + Res.getBaseCurrencyCode() + "", txVsize, fee.toPlainString());
 
                     if (receiverAmount.isPositive()) {
-                        double feePerVbyte = CoinUtil.getFeePerVbyte(fee, txVsize);
                         double vkb = txVsize / 1000d;
 
                         String messageText = Res.get("shared.sendFundsDetailsWithFee",
@@ -370,7 +433,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                                 withdrawFromTextField.getText(),
                                 withdrawToAddress,
                                 formatter.formatCoinWithCode(fee),
-                                feePerVbyte,
+                                Double.parseDouble(transactionFeeInputTextField.getText()),
                                 vkb,
                                 formatter.formatCoinWithCode(receiverAmount));
                         if (dust.isPositive()) {
@@ -549,6 +612,9 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
 
         withdrawMemoTextField.setText("");
         withdrawMemoTextField.setPromptText(Res.get("funds.withdrawal.memo"));
+
+        transactionFeeInputTextField.setText("");
+        transactionFeeInputTextField.setPromptText(Res.get("funds.withdrawal.useCustomFeeValueInfo"));
 
         selectedItems.clear();
         tableView.getSelectionModel().clearSelection();
