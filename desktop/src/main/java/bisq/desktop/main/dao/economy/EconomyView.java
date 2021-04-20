@@ -71,7 +71,7 @@ public class EconomyView extends ActivatableView<AnchorPane, Void> {
 
     @Override
     public void initialize() {
-        listener = viewPath -> {
+        listener = (viewPath, data) -> {
             if (viewPath.size() != 4 || viewPath.indexOf(EconomyView.class) != 2)
                 return;
 

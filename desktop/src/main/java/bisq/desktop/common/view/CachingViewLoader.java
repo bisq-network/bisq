@@ -43,4 +43,8 @@ public class CachingViewLoader implements ViewLoader {
         cache.put(viewClass, view);
         return view;
     }
+
+    public void removeFromCache(Class<? extends View> viewClass) {
+        cache.remove(viewClass);
+    }
 }

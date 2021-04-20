@@ -68,7 +68,7 @@ public class FundsView extends ActivatableView<TabPane, Void> {
         lockedTab.setText(Res.get("funds.tab.locked").toUpperCase());
         transactionsTab.setText(Res.get("funds.tab.transactions").toUpperCase());
 
-        navigationListener = viewPath -> {
+        navigationListener = (viewPath, data) -> {
             if (viewPath.size() == 3 && viewPath.indexOf(FundsView.class) == 1)
                 loadView(viewPath.tip());
         };

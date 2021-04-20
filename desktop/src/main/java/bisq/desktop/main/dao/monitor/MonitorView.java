@@ -67,7 +67,7 @@ public class MonitorView extends ActivatableView<AnchorPane, Void> {
 
     @Override
     public void initialize() {
-        navigationListener = viewPath -> {
+        navigationListener = (viewPath, data) -> {
             if (viewPath.size() != 4 || viewPath.indexOf(MonitorView.class) != 2)
                 return;
 

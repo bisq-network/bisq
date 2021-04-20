@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.portfolio.closedtrades;
 
+import bisq.desktop.Navigation;
 import bisq.desktop.common.view.ActivatableViewAndModel;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipButton;
@@ -25,14 +26,19 @@ import bisq.desktop.components.AutoTooltipTableColumn;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.components.PeerInfoIcon;
+import bisq.desktop.main.MainView;
+import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.ClosedTradesSummaryWindow;
 import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
 import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
+import bisq.desktop.main.portfolio.PortfolioView;
+import bisq.desktop.main.portfolio.duplicateoffer.DuplicateOfferView;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
+import bisq.core.offer.OfferPayload;
 import bisq.core.offer.OpenOffer;
 import bisq.core.trade.Contract;
 import bisq.core.trade.Tradable;
@@ -42,6 +48,7 @@ import bisq.core.user.Preferences;
 import bisq.network.p2p.NodeAddress;
 
 import bisq.common.config.Config;
+import bisq.common.crypto.KeyRing;
 
 import com.googlecode.jcsv.writer.CSVEntryConverter;
 
@@ -53,9 +60,12 @@ import javafx.fxml.FXML;
 import javafx.stage.Stage;
 
 import javafx.scene.Node;
+import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
@@ -66,6 +76,7 @@ import javafx.scene.layout.VBox;
 
 import javafx.geometry.Insets;
 
+import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.value.ChangeListener;
 
@@ -132,6 +143,8 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
     Region footerSpacer;
 
     private final OfferDetailsWindow offerDetailsWindow;
+    private final Navigation navigation;
+    private final KeyRing keyRing;
     private final Preferences preferences;
     private final TradeDetailsWindow tradeDetailsWindow;
     private final PrivateNotificationManager privateNotificationManager;
@@ -143,12 +156,16 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
     @Inject
     public ClosedTradesView(ClosedTradesViewModel model,
                             OfferDetailsWindow offerDetailsWindow,
+                            Navigation navigation,
+                            KeyRing keyRing,
                             Preferences preferences,
                             TradeDetailsWindow tradeDetailsWindow,
                             PrivateNotificationManager privateNotificationManager,
                             @Named(Config.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         super(model);
         this.offerDetailsWindow = offerDetailsWindow;
+        this.navigation = navigation;
+        this.keyRing = keyRing;
         this.preferences = preferences;
         this.tradeDetailsWindow = tradeDetailsWindow;
         this.privateNotificationManager = privateNotificationManager;
@@ -231,6 +248,31 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
 
         dateColumn.setSortType(TableColumn.SortType.DESCENDING);
         tableView.getSortOrder().add(dateColumn);
+
+        tableView.setRowFactory(
+                tableView -> {
+                    final TableRow<ClosedTradableListItem> row = new TableRow<>();
+                    final ContextMenu rowMenu = new ContextMenu();
+                    MenuItem editItem = new MenuItem(Res.get("portfolio.context.offerLikeThis"));
+                    editItem.setOnAction((event) -> {
+                        try {
+                            OfferPayload offerPayload = row.getItem().getTradable().getOffer().getOfferPayload();
+                            if (offerPayload.getPubKeyRing().equals(keyRing.getPubKeyRing())) {
+                                navigation.navigateToWithData(offerPayload, MainView.class, PortfolioView.class, DuplicateOfferView.class);
+                            } else {
+                                new Popup().warning(Res.get("portfolio.context.notYourOffer")).show();
+                            }
+                        } catch (NullPointerException e) {
+                            log.warn("Unable to get offerPayload - {}", e.toString());
+                        }
+                    });
+                    rowMenu.getItems().add(editItem);
+                    row.contextMenuProperty().bind(
+                            Bindings.when(Bindings.isNotNull(row.itemProperty()))
+                                    .then(rowMenu)
+                                    .otherwise((ContextMenu) null));
+                    return row;
+                });
 
         filterLabel.setText(Res.get("shared.filter"));
         HBox.setMargin(filterLabel, new Insets(5, 0, 0, 10));
