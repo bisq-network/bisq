@@ -73,14 +73,14 @@ task getJavaBinariesDownloadURLs {
         // -- macOS   ( -> use the tar.gz JDK link)
         // -- windows ( -> use the .zip JDK link)
         Map jdk15Binaries = [
-            'linux'   : 'https://github.com/AdoptOpenJDK/openjdk15-binaries/releases/download/jdk-15.0.2%2B7/OpenJDK15U-jdk_x64_linux_hotspot_15.0.2_7.tar.gz',
-            'linux-sha256'   : '94f20ca8ea97773571492e622563883b8869438a015d02df6028180dd9acc24d',
-            'mac'     : 'https://github.com/AdoptOpenJDK/openjdk15-binaries/releases/download/jdk-15.0.2%2B7/OpenJDK15U-jdk_x64_mac_hotspot_15.0.2_7.tar.gz',
-            'mac-sha256'     : 'd358a7ff03905282348c6c80562a4da2e04eb377b60ad2152be4c90f8d580b7f',
-            'windows' : 'https://github.com/AdoptOpenJDK/openjdk15-binaries/releases/download/jdk-15.0.2%2B7/OpenJDK15U-jdk_x64_windows_hotspot_15.0.2_7.zip',
-            'windows-sha256' : 'b80dde2b7f8374eff0f1726c1cbdb48fb095fdde21489046d92f7144baff5741'
+                'linux'         : 'https://github.com/AdoptOpenJDK/openjdk15-binaries/releases/download/jdk-15.0.2%2B7/OpenJDK15U-jdk_x64_linux_hotspot_15.0.2_7.tar.gz',
+                'linux-sha256'  : '94f20ca8ea97773571492e622563883b8869438a015d02df6028180dd9acc24d',
+                'mac'           : 'https://github.com/AdoptOpenJDK/openjdk15-binaries/releases/download/jdk-15.0.2%2B7/OpenJDK15U-jdk_x64_mac_hotspot_15.0.2_7.tar.gz',
+                'mac-sha256'    : 'd358a7ff03905282348c6c80562a4da2e04eb377b60ad2152be4c90f8d580b7f',
+                'windows'       : 'https://github.com/AdoptOpenJDK/openjdk15-binaries/releases/download/jdk-15.0.2%2B7/OpenJDK15U-jdk_x64_windows_hotspot_15.0.2_7.zip',
+                'windows-sha256': 'b80dde2b7f8374eff0f1726c1cbdb48fb095fdde21489046d92f7144baff5741'
 
-            // TODO For some reason, using "--runtime-image jdk-11" does NOT work with a v15 jpackage, but works with v14
+                // TODO For some reason, using "--runtime-image jdk-11" does NOT work with a v15 jpackage, but works with v14
         ]
 
         String osKey
@@ -135,7 +135,7 @@ task retrieveAndExtractJavaBinaries {
         }
     }
 
-    ext.downloadAndVerifyArchive = {String archiveURL, String archiveSHA256, File destinationArchiveFile ->
+    ext.downloadAndVerifyArchive = { String archiveURL, String archiveSHA256, File destinationArchiveFile ->
         println "Downloading ${archiveURL}"
         ant.get(src: archiveURL, dest: destinationArchiveFile)
         println 'Download saved to ' + destinationArchiveFile
@@ -149,7 +149,7 @@ task retrieveAndExtractJavaBinaries {
         println 'Checksum verified'
     }
 
-    ext.extractArchiveTarGz = {File tarGzFile, File destinationDir ->
+    ext.extractArchiveTarGz = { File tarGzFile, File destinationDir ->
         println "Extracting tar.gz ${tarGzFile}"
         // Gradle's tar extraction preserves permissions (crucial for jpackage to function correctly)
         copy {
@@ -159,7 +159,7 @@ task retrieveAndExtractJavaBinaries {
         println "Extracted to ${destinationDir}"
     }
 
-    ext.extractArchiveZip = {File zipFile, File destinationDir ->
+    ext.extractArchiveZip = { File zipFile, File destinationDir ->
         println "Extracting zip ${zipFile}..."
         ant.unzip(src: zipFile, dest: destinationDir)
         println "Extracted to ${destinationDir}"
@@ -230,25 +230,25 @@ task packageInstallers {
         String appCopyright = '© 2021 Bisq'
         String appNameAndVendor = 'Bisq'
 
-        String commonOpts = (
+        String commonOpts = new String(
                 // Generic options
                 " --dest \"${binariesFolderPath}\"" +
-                " --name ${appNameAndVendor}" +
-                " --description \"${appDescription}\"" +
-                " --app-version ${appVersion}" +
-                " --copyright \"${appCopyright}\"" +
-                " --vendor ${appNameAndVendor}" +
-                " --temp \"${jpackageTempDir}\"" +
+                        " --name ${appNameAndVendor}" +
+                        " --description \"${appDescription}\"" +
+                        " --app-version ${appVersion}" +
+                        " --copyright \"${appCopyright}\"" +
+                        " --vendor ${appNameAndVendor}" +
+                        " --temp \"${jpackageTempDir}\"" +
 
-                // Options for creating the application image
-                " --input ${fatJarFolderPath}" +
+                        // Options for creating the application image
+                        " --input ${fatJarFolderPath}" +
 
-                // Options for creating the application launcher
-                " --main-jar ${mainJarName}" +
-                " --main-class bisq.desktop.app.BisqAppMain" +
-                " --java-options -Xss1280k" +
-                " --java-options -XX:MaxRAM=4g" +
-                " --java-options -Djava.net.preferIPv4Stack=true"
+                        // Options for creating the application launcher
+                        " --main-jar ${mainJarName}" +
+                        " --main-class bisq.desktop.app.BisqAppMain" +
+                        " --java-options -Xss1280k" +
+                        " --java-options -XX:MaxRAM=4g" +
+                        " --java-options -Djava.net.preferIPv4Stack=true"
                 // Warning: this will cause guice reflection exceptions and lead to issues with the guice internal cache
                 // resulting in the UI not loading
 //              " --java-options -Djdk.module.illegalAccess=deny" +
@@ -256,13 +256,13 @@ task packageInstallers {
 
         if (Os.isFamily(Os.FAMILY_WINDOWS)) {
             // TODO Found no benefit in using --resource-dir "..package/windows", it has the same outcome as opts below
-            String windowsOpts = (
-                " --icon \"${project(':desktop').projectDir}/package/windows/Bisq.ico\"" +
-		        " --resource-dir \"${project(':desktop').projectDir}/package/windows\"" +
- 		        " --win-dir-chooser" +
-                " --win-per-user-install" +
-                " --win-menu" +
-                " --win-shortcut"
+            String windowsOpts = new String(
+                    " --icon \"${project(':desktop').projectDir}/package/windows/Bisq.ico\"" +
+                            " --resource-dir \"${project(':desktop').projectDir}/package/windows\"" +
+                            " --win-dir-chooser" +
+                            " --win-per-user-install" +
+                            " --win-menu" +
+                            " --win-shortcut"
             )
 
             executeCmd(jPackageFilePath + commonOpts + windowsOpts + " --type exe")
@@ -279,8 +279,8 @@ task packageInstallers {
             // See https://docs.oracle.com/en/java/javase/14/jpackage/override-jpackage-resources.html
             // for details of "--resource-dir"
 
-            String macOpts = (
-                " --resource-dir \"${project(':desktop').projectDir}/package/macosx\""
+            String macOpts = new String(
+                    " --resource-dir \"${project(':desktop').projectDir}/package/macosx\""
             )
 
             // Env variable can be set by calling "export BISQ_PACKAGE_SIGNING_IDENTITY='Some value'"
@@ -296,15 +296,15 @@ task packageInstallers {
                 tempDylibFolderPath.mkdirs()
 
                 // Dylibs relevant for signing (paths relative to the tempDylibFolderPath)
-                String dylibsToSign = (
+                String dylibsToSign = new String(
                         " libjavafx_iio.dylib" +
-                        " libglass.dylib" +
-                        " libjavafx_font.dylib" +
-                        " libprism_common.dylib" +
-                        " libprism_es2.dylib"  +
-                        " libdecora_sse.dylib" +
-                        " libprism_sw.dylib" +
-                        " META-INF/native/libio_grpc_netty_shaded_netty_tcnative_osx_x86_64.jnilib"
+                                " libglass.dylib" +
+                                " libjavafx_font.dylib" +
+                                " libprism_common.dylib" +
+                                " libprism_es2.dylib" +
+                                " libdecora_sse.dylib" +
+                                " libprism_sw.dylib" +
+                                " META-INF/native/libio_grpc_netty_shaded_netty_tcnative_osx_x86_64.jnilib"
                 )
 
                 // macOS step 1: Sign dylibs and replace them in the shadow jar
@@ -404,8 +404,7 @@ task packageInstallers {
                 // Every 1 minute, check the status
                 def notarizationEndedInSuccess = false
                 def notarizationEndedInFailure = false
-                while (!(notarizationEndedInSuccess || notarizationEndedInFailure))
-                {
+                while (!(notarizationEndedInSuccess || notarizationEndedInFailure)) {
                     println "Current time is:"
                     executeCmd('date')
                     println "Waiting for 1 minute..."
@@ -439,25 +438,25 @@ task packageInstallers {
                 executeCmd(jPackageFilePath + commonOpts + macOpts + " --type dmg")
             }
         } else {
-            String linuxOpts = (
-                " --icon ${project(':desktop').projectDir}/package/linux/icon.png" +
+            String linuxOpts = new String(
+                    " --icon ${project(':desktop').projectDir}/package/linux/icon.png" +
 
-                // This defines the first part of the resulting packages (the application name)
-                // deb requires lowercase letters, therefore the application name is written in lowercase
-                " --linux-package-name bisq" +
+                            // This defines the first part of the resulting packages (the application name)
+                            // deb requires lowercase letters, therefore the application name is written in lowercase
+                            " --linux-package-name bisq" +
 
-                // This represents the linux package version (revision)
-                // By convention, this is part of the deb/rpm package names, in addition to the software version
-                " --linux-app-release 1" +
+                            // This represents the linux package version (revision)
+                            // By convention, this is part of the deb/rpm package names, in addition to the software version
+                            " --linux-app-release 1" +
 
-                " --linux-menu-group Network" +
-                " --linux-shortcut"
+                            " --linux-menu-group Network" +
+                            " --linux-shortcut"
             )
 
             // Package deb
             executeCmd(jPackageFilePath + commonOpts + linuxOpts +
-                " --linux-deb-maintainer noreply@bisq.network" +
-                " --type deb")
+                    " --linux-deb-maintainer noreply@bisq.network" +
+                    " --type deb")
 
             // Clean jpackage temp folder, needs to be empty for the next packaging step (rpm)
             jpackageTempDir.deleteDir()
@@ -465,8 +464,8 @@ task packageInstallers {
 
             // Package rpm
             executeCmd(jPackageFilePath + commonOpts + linuxOpts +
-                " --linux-rpm-license-type AGPLv3" + // https://fedoraproject.org/wiki/Licensing:Main?rd=Licensing#Good_Licenses
-                " --type rpm")
+                    " --linux-rpm-license-type AGPLv3" + // https://fedoraproject.org/wiki/Licensing:Main?rd=Licensing#Good_Licenses
+                    " --type rpm")
         }
 
         // Env variable can be set by calling "export BISQ_SHARED_FOLDER='Some value'"
