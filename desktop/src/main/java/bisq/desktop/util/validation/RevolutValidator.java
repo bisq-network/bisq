@@ -24,7 +24,8 @@ public final class RevolutValidator extends LengthValidator {
         // that the old accountID as phone number or email is displayed at the username text field and we do not
         // want to break validation in those cases. So being too strict on the validators might cause more troubles
         // as its worth...
-        super(5, 100);
+        // UPDATE 04/2021: Revolut usernames could be edited (3-16 characters, lowercase a-z and numbers only)
+        super(3, 100);
     }
 
     public ValidationResult validate(String input) {
