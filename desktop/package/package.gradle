@@ -480,6 +480,7 @@ task packageInstallers {
                 from binariesFolderPath
                 into envVariableSharedFolder
             }
+            executeCmd("open " + envVariableSharedFolder)
         }
 
         println "The binaries are ready:"

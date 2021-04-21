@@ -38,8 +38,9 @@ Although performance of VMs might vary based on your hardware configuration foll
 
 Use VirtualBox > 6.1
 with following configuration:
-  * System > Motherboard > Base Memory: 2048 MB
-  * System > Processor > Processor(s): 2 CPUs
+
+* System > Motherboard > Base Memory: 4096 MB
+* System > Processor > Processor(s): 2 CPUs
   * System > Processor > Execution Cap: 90%
   * Display > Screen > Video Memory: 128 MB
   * Display > Screen > Scale Factor: 200%
@@ -65,46 +66,67 @@ with following configuration:
 #### For Windows
 
 * Update AntiVirus Software and virus definitions
-* Install unicode version of [Inno Tools](http://www.jrsoftware.org/isdl.php)
+* Install [WiX toolset](https://wixtoolset.org/releases/)
 * Run full AV system scan
 
 ### Build release
 
 #### macOS
 
-1. Make sure all version numbers are updated (update version variables and run [replace_version_number.sh](https://github.com/bisq-network/bisq/blob/master/desktop/package/macosx/replace_version_number.sh)).
-2. Set environment variable e.g. export BISQ_GPG_USER=manfred@bitsquare.io to ~/.profile file or the like... (one time effort)
-3. Update [vmPath variable](https://github.com/bisq-network/bisq/blob/b4b5d0bb12c36afbe1aa6611dd8451378df6db8c/desktop/package/macosx/create_app.sh#L42) if necessary
-4. Run [create_app.sh](https://github.com/bisq-network/bisq/blob/master/desktop/package/macosx/create_app.sh)
+To be able to generate a signed and notarized binary you have to have an Apple developer account and create the required
+certificate and provisioning file before running the build.
 
-Build output expected in deploy directory (opened after successful build process):
+1. Make sure all version numbers are updated (update version variables and
+   run [replace_version_number.sh](https://github.com/bisq-network/bisq/blob/master/desktop/package/macosx/replace_version_number.sh))
+   .
+2. Set environment variables to ~/.profile file or the like... (one time effort)
+    - `BISQ_GPG_USER`: e.g. export BISQ_GPG_USER=manfred@bitsquare.io
+    - `BISQ_SHARED_FOLDER`: shared folder that is used between your VM host and client system
+    - `BISQ_PACKAGE_SIGNING_IDENTITY`: e.g. "Developer ID Application: Christoph Atteneder (WQT93T6D6C)"
+    - `BISQ_PRIMARY_BUNDLE_ID`: e.g. "network.bisq.CAT"
+    - `BISQ_PACKAGE_NOTARIZATION_AC_USERNAME`: your Apple developer email address
+    - `BISQ_PACKAGE_NOTARIZATION_ASC_PROVIDER`: Your developer ID (e.g. WQT93T6D6C)
+3. Run `./gradlew --console=plain packageInstallers`
 
-1. `Bisq-${NEW_VERSION}.dmg` macOS signed installer
-2. `Bisq-${NEW_VERSION}.jar` Deterministic fat jar
-3. `Bisq-${NEW_VERSION}.jar.txt` sha256 sum of deterministic fat jar
+Build output expected in shared folder:
 
-The build script also copies over the deterministic fat jar into the shared folders for the other VMs (Windows & Linux).
-Before building the other binaries install the generated Bisq app on macOS and verify that everything works as expected.
+1. `Bisq-${NEW_VERSION}.dmg` macOS notarized and signed installer
+2. `desktop-${NEW_VERSION}-all.jar.SHA-256` sha256 sum of fat jar
+3. `jar-lib-for-raspberry-pi-${NEW_VERSION}.zip` Jar libraries for Raspberry Pi
+
+* Before building the other binaries install the generated Bisq app on macOS and verify that everything works as
+  expected.
 
 #### Linux
 
-* Run `desktop/package/linux/package.sh` from the shared VM folder
+1. Checkout the release tag in your VM
+2. Set environment variables to ~/.profile file or the like... (one time effort)
+    - `BISQ_SHARED_FOLDER`: shared folder that is used between your VM host and client system
+3. Run `./gradlew --console=plain packageInstallers`
 
 Build output expected:
 
-1. `Bisq-${NEW_VERSION}.deb` package for distributions that derive from Debian
-2. `Bisq-${NEW_VERSION}.rpm` package for distributions that derive from Redhat based distros
+1. `bisq_${NEW_VERSION}-1_amd64.deb` package for distributions that derive from Debian
+2. `bisq-${NEW_VERSION}-1.x86_64.rpm` package for distributions that derive from Redhat based distros
+3. `desktop-${NEW_VERSION}-all.jar.SHA-256` sha256 sum of fat jar
 
 * Install and run generated package
 
 #### Windows
 
-* Run `desktop/package/windows/package.bat` from the shared VM folder
+To be able to generate a signed binary you have to apply and install a developer certificate before running the build.
+
+1. Checkout the release tag in your VM
+2. Set environment variables to ~/.profile file or the like... (one time effort)
+    - `BISQ_SHARED_FOLDER`: shared folder that is used between your VM host and client system
+3. Run `./gradlew --console=plain packageInstallers`
 
 Build output expected:
 
-1. `Bisq-${NEW_VERSION}.exe` Windows unsigned installer
-2. `Bisq-${NEW_VERSION}.exe.txt` sha256 sum of installer
+1. `Bisq-${NEW_VERSION}.exe` Windows signed installer
+2. `desktop-${NEW_VERSION}-all.jar.SHA-256` sha256 sum of fat jar
+
+* Install and run generated package
 
 ### Sign release on macOS
 
@@ -116,15 +138,14 @@ Build output expected:
 2. `5BC5ED73.asc` Sig key of Chris Beams
 3. `29CDFD3B.asc`Sig key of Christoph Atteneder
 4. `signingkey.asc` Fingerprint of key that was used for these builds
-5. `Bisq-${NEW_VERSION}.jar.txt` Sha256 sum of deterministic fat jar
-6. `Bisq-${NEW_VERSION}.dmg` macOS installer
-7. `Bisq-${NEW_VERSION}.dmg.asc` Signature for macOS installer
-8. `Bisq-${NEW_VERSION}.deb` Debian package
-9. `Bisq-${NEW_VERSION}.deb.asc` Signature for Debian package
-10. `Bisq-${NEW_VERSION}.rpm` Redhat based distro package
-11. `Bisq-${NEW_VERSION}.rpm.asc` Signature for Redhat based distro package
-12. `Bisq-${NEW_VERSION}.exe` Windows installer
-13. `Bisq-${NEW_VERSION}.exe.asc` Signature for Windows installer
+5. `Bisq-${NEW_VERSION}.dmg` macOS installer
+6. `Bisq-${NEW_VERSION}.dmg.asc` Signature for macOS installer
+7. `Bisq-64bit-${NEW_VERSION}.deb` Debian package
+8. `Bisq-64bit-${NEW_VERSION}.deb.asc` Signature for Debian package
+9. `Bisq-64bit-${NEW_VERSION}.rpm` Redhat based distro package
+10. `Bisq-64bit-${NEW_VERSION}.rpm.asc` Signature for Redhat based distro package
+11. `Bisq-64bit-${NEW_VERSION}.exe` Windows installer
+12. `Bisq-64bit-${NEW_VERSION}.exe.asc` Signature for Windows installer
 
  * Run a AV scan over all files on the Windows VM where the files got copied over.
 
