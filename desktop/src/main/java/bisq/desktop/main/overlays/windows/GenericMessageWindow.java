@@ -59,6 +59,16 @@ public class GenericMessageWindow extends Overlay<GenericMessageWindow> {
         textArea.setEditable(false);
         textArea.setWrapText(true);
         // sizes the textArea to fit within its parent container
-        textArea.setPrefSize(Layout.INITIAL_WINDOW_WIDTH, Layout.INITIAL_WINDOW_HEIGHT * 0.9);
+        double verticalSizePercentage = ensureRange(countLines(message) / 20.0, 0.2, 0.7);
+        textArea.setPrefSize(Layout.INITIAL_WINDOW_WIDTH, Layout.INITIAL_WINDOW_HEIGHT * verticalSizePercentage);
+    }
+
+    private static int countLines(String str) {
+        String[] lines = str.split("\r\n|\r|\n");
+        return  lines.length;
+    }
+
+    private static double ensureRange(double value, double min, double max) {
+        return Math.min(Math.max(value, min), max);
     }
 }
