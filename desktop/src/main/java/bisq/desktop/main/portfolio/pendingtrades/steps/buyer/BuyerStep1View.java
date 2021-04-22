@@ -39,6 +39,7 @@ public class BuyerStep1View extends TradeStepView {
         super.onPendingTradesInitialized();
         validatePayoutTx();
         validateDepositInputs();
+        checkForTimeout();
     }
 
 
