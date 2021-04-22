@@ -50,7 +50,7 @@
    javac -version
    ```
 
-If your Java version is not 11, check out scripts in the [scripts](../scripts) directory (or online at https://github.com/bisq-network/bisq/tree/master/scripts).
+If you do not have JDK 11 installed, check out scripts in the [scripts](../scripts) directory or download it manually from https://jdk.java.net/archive/.
 
 ## Running Bisq
 
