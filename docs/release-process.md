@@ -200,11 +200,16 @@ If all was successful:
 #### Post GitHub release
 
 * Apply “A newer version is already available! Please don’t use this version anymore.” to old GitHub releases.
+
 * Merge the webpage PR and check if they got deployed properly.
+
 * Start the Alert sender app (CMD + M)  remove the old version and send the update message. Check the checkbox for
   update, set the version number (e.g. 0.9.4) and add the short version of the release notes.
+
 * After sending the Update message leave it running for about 1 minute to give time for good propagation.
+
 * Make a backup of that alert sender app data directory
+
 * To support source code signature verification for Arch Linux download `Source code (tar.gz)`, sign it and upload
   signature.
 
