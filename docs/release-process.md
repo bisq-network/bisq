@@ -180,6 +180,7 @@ If all was successful:
 * Revert back to SNAPSHOT where necessary (change version variable (e.g. 1.5.0) in shell
   script [insert_snapshot_version.sh](https://github.com/bisq-network/bisq/blob/master/desktop/package/macosx/insert_snapshot_version.sh)
   and run it) and commit these changes.
+
 * Push all commits to master including the new tag
 
 ```
@@ -192,9 +193,13 @@ If all was successful:
 
 * Check the fingerprint of the pgp key which was used for signing in signingkey.asc (e.g. 29CDFD3B for Christoph
   Atteneder)
+
 * Add all files including signingkey.asc and the gpg pub keys to GitHub release page
+
 * Check all uploaded files with [virustotal.com](https://www.virustotal.com)
+
 * Select the release tag as the source for the GitHub release.
+
 * Release on GitHub
 
 #### Post GitHub release
@@ -224,9 +229,14 @@ If all was successful:
 ### Announce the release
 
 * Forum
+
 * Keybase (#general channel)
+
 * Twitter
+
 * Optionally reddit /r/Bisq
+
 * Notify @freimair so that he can start
   updating [the Arch User Repository](https://aur.archlinux.org/cgit/aur.git/tree/PKGBUILD?h=bisq-git)
+
 * Celebrate
