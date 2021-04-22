@@ -74,24 +74,12 @@ public class BsqWalletView extends ActivatableView<AnchorPane, Void> {
 
     @Override
     public void initialize() {
-        listener = new Navigation.Listener() {
-            @Override
-            public void onNavigationRequested(ViewPath viewPath) {
-                if (viewPath.size() != 4 || viewPath.indexOf(BsqWalletView.class) != 2)
-                    return;
+        listener = (viewPath, data) -> {
+            if (viewPath.size() != 4 || viewPath.indexOf(BsqWalletView.class) != 2)
+                return;
 
-                selectedViewClass = viewPath.tip();
-                loadView(selectedViewClass);
-            }
-
-            @Override
-            public void onNavigationRequested(ViewPath viewPath, @Nullable Object data) {
-                if (viewPath.size() != 4 || viewPath.indexOf(BsqWalletView.class) != 2)
-                    return;
-
-                selectedViewClass = viewPath.tip();
-                loadView(selectedViewClass, data);
-            }
+            selectedViewClass = viewPath.tip();
+            loadView(selectedViewClass, data);
         };
 
         toggleGroup = new ToggleGroup();

@@ -68,7 +68,7 @@ public class BurnBsqView extends ActivatableView<AnchorPane, Void> {
 
     @Override
     public void initialize() {
-        listener = viewPath -> {
+        listener = (viewPath, data) -> {
             if (viewPath.size() != 4 || viewPath.indexOf(BurnBsqView.class) != 2)
                 return;
 

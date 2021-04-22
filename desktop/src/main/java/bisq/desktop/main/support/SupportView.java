@@ -133,7 +133,7 @@ public class SupportView extends ActivatableView<TabPane, Void> {
         if (tradersArbitrationDisputesTab != null) {
             tradersArbitrationDisputesTab.setText(Res.get("support.tab.legacyArbitration.support").toUpperCase());
         }
-        navigationListener = viewPath -> {
+        navigationListener = (viewPath, data) -> {
             if (viewPath.size() == 3 && viewPath.indexOf(SupportView.class) == 1)
                 loadView(viewPath.tip());
         };

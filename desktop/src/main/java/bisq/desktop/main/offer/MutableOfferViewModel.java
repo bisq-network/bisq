@@ -100,7 +100,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
     private final BtcValidator btcValidator;
     private final BsqValidator bsqValidator;
     protected final SecurityDepositValidator securityDepositValidator;
-    private final PriceFeedService priceFeedService;
+    protected final PriceFeedService priceFeedService;
     private final AccountAgeWitnessService accountAgeWitnessService;
     private final Navigation navigation;
     private final Preferences preferences;
@@ -179,7 +179,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
 
     private ChangeListener<Boolean> isWalletFundedListener;
     private ChangeListener<String> errorMessageListener;
-    private Offer offer;
+    protected Offer offer;
     private Timer timeoutTimer;
     private boolean inputIsMarketBasedPrice;
     private ChangeListener<Boolean> useMarketBasedPriceListener;

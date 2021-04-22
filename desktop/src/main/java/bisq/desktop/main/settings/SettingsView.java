@@ -66,7 +66,7 @@ public class SettingsView extends ActivatableView<TabPane, Void> {
         networkTab.setText(Res.get("settings.tab.network").toUpperCase());
         aboutTab.setText(Res.get("settings.tab.about").toUpperCase());
 
-        navigationListener = viewPath -> {
+        navigationListener = (viewPath, data) -> {
             if (viewPath.size() == 3 && viewPath.indexOf(SettingsView.class) == 1)
                 loadView(viewPath.tip());
         };

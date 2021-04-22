@@ -101,7 +101,7 @@ public class MarketView extends ActivatableView<TabPane, Void> {
         spreadTabPaymentMethod.setText(Res.get("market.tabs.spreadPayment").toUpperCase());
         tradesTab.setText(Res.get("market.tabs.trades").toUpperCase());
 
-        navigationListener = viewPath -> {
+        navigationListener = (viewPath, data) -> {
             if (viewPath.size() == 3 && viewPath.indexOf(MarketView.class) == 1)
                 loadView(viewPath.tip());
         };

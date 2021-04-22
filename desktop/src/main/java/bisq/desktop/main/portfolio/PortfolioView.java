@@ -22,15 +22,16 @@ import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.CachingViewLoader;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.common.view.View;
-import bisq.desktop.common.view.ViewLoader;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.portfolio.closedtrades.ClosedTradesView;
+import bisq.desktop.main.portfolio.duplicateoffer.DuplicateOfferView;
 import bisq.desktop.main.portfolio.editoffer.EditOfferView;
 import bisq.desktop.main.portfolio.failedtrades.FailedTradesView;
 import bisq.desktop.main.portfolio.openoffer.OpenOffersView;
 import bisq.desktop.main.portfolio.pendingtrades.PendingTradesView;
 
 import bisq.core.locale.Res;
+import bisq.core.offer.OfferPayload;
 import bisq.core.offer.OpenOffer;
 import bisq.core.trade.Trade;
 import bisq.core.trade.failed.FailedTradesManager;
@@ -48,22 +49,25 @@ import javafx.collections.ListChangeListener;
 
 import java.util.List;
 
+import javax.annotation.Nullable;
+
 @FxmlView
 public class PortfolioView extends ActivatableView<TabPane, Void> {
 
     @FXML
     Tab openOffersTab, pendingTradesTab, closedTradesTab;
-    private Tab editOpenOfferTab;
+    private Tab editOpenOfferTab, duplicateOfferTab;
     private final Tab failedTradesTab = new Tab(Res.get("portfolio.tab.failed").toUpperCase());
     private Tab currentTab;
     private Navigation.Listener navigationListener;
     private ChangeListener<Tab> tabChangeListener;
     private ListChangeListener<Tab> tabListChangeListener;
 
-    private final ViewLoader viewLoader;
+    private final CachingViewLoader viewLoader;
     private final Navigation navigation;
     private final FailedTradesManager failedTradesManager;
     private EditOfferView editOfferView;
+    private DuplicateOfferView duplicateOfferView;
     private boolean editOpenOfferViewOpen;
     private OpenOffer openOffer;
     private OpenOffersView openOffersView;
@@ -84,9 +88,9 @@ public class PortfolioView extends ActivatableView<TabPane, Void> {
         pendingTradesTab.setText(Res.get("portfolio.tab.pendingTrades").toUpperCase());
         closedTradesTab.setText(Res.get("portfolio.tab.history").toUpperCase());
 
-        navigationListener = viewPath -> {
+        navigationListener = (viewPath, data) -> {
             if (viewPath.size() == 3 && viewPath.indexOf(PortfolioView.class) == 1)
-                loadView(viewPath.tip());
+                loadView(viewPath.tip(), data);
         };
 
         tabChangeListener = (ov, oldValue, newValue) -> {
@@ -98,12 +102,16 @@ public class PortfolioView extends ActivatableView<TabPane, Void> {
                 navigation.navigateTo(MainView.class, PortfolioView.class, ClosedTradesView.class);
             else if (newValue == failedTradesTab)
                 navigation.navigateTo(MainView.class, PortfolioView.class, FailedTradesView.class);
-            else if (newValue == editOpenOfferTab) {
+            else if (newValue == editOpenOfferTab)
                 navigation.navigateTo(MainView.class, PortfolioView.class, EditOfferView.class);
+            else if (newValue == duplicateOfferTab) {
+                navigation.navigateTo(MainView.class, PortfolioView.class, DuplicateOfferView.class);
             }
 
             if (oldValue != null && oldValue == editOpenOfferTab)
                 editOfferView.onTabSelected(false);
+            if (oldValue != null && oldValue == duplicateOfferTab)
+                duplicateOfferView.onTabSelected(false);
 
         };
 
@@ -112,6 +120,8 @@ public class PortfolioView extends ActivatableView<TabPane, Void> {
             List<? extends Tab> removedTabs = change.getRemoved();
             if (removedTabs.size() == 1 && removedTabs.get(0).equals(editOpenOfferTab))
                 onEditOpenOfferRemoved();
+            if (removedTabs.size() == 1 && removedTabs.get(0).equals(duplicateOfferTab))
+                onDuplicateOfferRemoved();
         };
     }
 
@@ -120,6 +130,15 @@ public class PortfolioView extends ActivatableView<TabPane, Void> {
         if (editOfferView != null) {
             editOfferView.onClose();
             editOfferView = null;
+        }
+
+        navigation.navigateTo(MainView.class, this.getClass(), OpenOffersView.class);
+    }
+
+    private void onDuplicateOfferRemoved() {
+        if (duplicateOfferView != null) {
+            duplicateOfferView.onClose();
+            duplicateOfferView = null;
         }
 
         navigation.navigateTo(MainView.class, this.getClass(), OpenOffersView.class);
@@ -149,6 +168,9 @@ public class PortfolioView extends ActivatableView<TabPane, Void> {
         else if (root.getSelectionModel().getSelectedItem() == editOpenOfferTab) {
             navigation.navigateTo(MainView.class, PortfolioView.class, EditOfferView.class);
             if (editOfferView != null) editOfferView.onTabSelected(true);
+        } else if (root.getSelectionModel().getSelectedItem() == duplicateOfferTab) {
+            navigation.navigateTo(MainView.class, PortfolioView.class, DuplicateOfferView.class);
+            if (duplicateOfferView != null) duplicateOfferView.onTabSelected(true);
         }
     }
 
@@ -160,7 +182,7 @@ public class PortfolioView extends ActivatableView<TabPane, Void> {
         currentTab = null;
     }
 
-    private void loadView(Class<? extends View> viewClass) {
+    private void loadView(Class<? extends View> viewClass, @Nullable Object data) {
         // we want to get activate/deactivate called, so we remove the old view on tab change
         // TODO Don't understand the check for currentTab != editOpenOfferTab
         if (currentTab != null && currentTab != editOpenOfferTab)
@@ -191,6 +213,26 @@ public class PortfolioView extends ActivatableView<TabPane, Void> {
                     editOfferView.onTabSelected(true);
 
                 currentTab = editOpenOfferTab;
+            } else {
+                view = viewLoader.load(OpenOffersView.class);
+                selectOpenOffersView((OpenOffersView) view);
+            }
+        } else if (view instanceof DuplicateOfferView) {
+            if (duplicateOfferView == null && data instanceof OfferPayload && data != null) {
+                viewLoader.removeFromCache(viewClass);  // remove cached dialog
+                view = viewLoader.load(viewClass);      // and load a fresh one
+                duplicateOfferView = (DuplicateOfferView) view;
+                duplicateOfferView.initWithData((OfferPayload) data);
+                duplicateOfferTab = new Tab(Res.get("portfolio.tab.duplicateOffer").toUpperCase());
+                duplicateOfferView.setCloseHandler(() -> {
+                    root.getTabs().remove(duplicateOfferTab);
+                });
+                root.getTabs().add(duplicateOfferTab);
+            }
+            if (duplicateOfferView != null) {
+                if (currentTab != duplicateOfferTab)
+                    duplicateOfferView.onTabSelected(true);
+                currentTab = duplicateOfferTab;
             } else {
                 view = viewLoader.load(OpenOffersView.class);
                 selectOpenOffersView((OpenOffersView) view);

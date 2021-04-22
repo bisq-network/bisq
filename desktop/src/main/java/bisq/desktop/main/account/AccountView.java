@@ -106,7 +106,7 @@ public class AccountView extends ActivatableView<TabPane, Void> {
         walletInfoTab.setText(Res.get("account.menu.walletInfo").toUpperCase());
         backupTab.setText(Res.get("account.menu.backup").toUpperCase());
 
-        navigationListener = viewPath -> {
+        navigationListener = (viewPath, data) -> {
             if (viewPath.size() == 3 && viewPath.indexOf(AccountView.class) == 1) {
                 if (arbitratorRegistrationTab == null && viewPath.get(2).equals(ArbitratorRegistrationView.class)) {
                     navigation.navigateTo(MainView.class, AccountView.class, FiatAccountsView.class);

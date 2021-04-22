@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.portfolio.pendingtrades;
 
+import bisq.desktop.Navigation;
 import bisq.desktop.common.view.ActivatableViewAndModel;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipLabel;
@@ -25,6 +26,8 @@ import bisq.desktop.components.PeerInfoIcon;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
+import bisq.desktop.main.portfolio.PortfolioView;
+import bisq.desktop.main.portfolio.duplicateoffer.DuplicateOfferView;
 import bisq.desktop.main.shared.ChatView;
 import bisq.desktop.util.CssTheme;
 import bisq.desktop.util.DisplayUtils;
@@ -32,6 +35,7 @@ import bisq.desktop.util.FormBuilder;
 
 import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.locale.Res;
+import bisq.core.offer.OfferPayload;
 import bisq.core.support.dispute.mediation.MediationResultState;
 import bisq.core.support.messages.ChatMessage;
 import bisq.core.support.traderchat.TradeChatSession;
@@ -46,6 +50,7 @@ import bisq.network.p2p.NodeAddress;
 
 import bisq.common.UserThread;
 import bisq.common.config.Config;
+import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.util.Utilities;
 
@@ -67,8 +72,11 @@ import javafx.stage.Window;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.ContextMenu;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.Tooltip;
 import javafx.scene.input.KeyCode;
@@ -86,6 +94,7 @@ import javafx.geometry.Pos;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.value.ChangeListener;
 
@@ -108,6 +117,8 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     }
 
     private final TradeDetailsWindow tradeDetailsWindow;
+    private final Navigation navigation;
+    private final KeyRing keyRing;
     private final CoinFormatter formatter;
     private final PrivateNotificationManager privateNotificationManager;
     private final boolean useDevPrivilegeKeys;
@@ -149,6 +160,8 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     @Inject
     public PendingTradesView(PendingTradesViewModel model,
                              TradeDetailsWindow tradeDetailsWindow,
+                             Navigation navigation,
+                             KeyRing keyRing,
                              @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter,
                              PrivateNotificationManager privateNotificationManager,
                              Preferences preferences,
@@ -156,6 +169,8 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                              @Named(Config.USE_DEV_MODE_HEADER) boolean useDevModeHeader) {
         super(model);
         this.tradeDetailsWindow = tradeDetailsWindow;
+        this.navigation = navigation;
+        this.keyRing = keyRing;
         this.formatter = formatter;
         this.privateNotificationManager = privateNotificationManager;
         this.preferences = preferences;
@@ -213,6 +228,30 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         dateColumn.setSortType(TableColumn.SortType.DESCENDING);
         tableView.getSortOrder().add(dateColumn);
 
+        tableView.setRowFactory(
+                tableView -> {
+                    final TableRow<PendingTradesListItem> row = new TableRow<>();
+                    final ContextMenu rowMenu = new ContextMenu();
+                    MenuItem editItem = new MenuItem(Res.get("portfolio.context.offerLikeThis"));
+                    editItem.setOnAction((event) -> {
+                        try {
+                            OfferPayload offerPayload = row.getItem().getTrade().getOffer().getOfferPayload();
+                            if (offerPayload.getPubKeyRing().equals(keyRing.getPubKeyRing())) {
+                                navigation.navigateToWithData(offerPayload, MainView.class, PortfolioView.class, DuplicateOfferView.class);
+                            } else {
+                                new Popup().warning(Res.get("portfolio.context.notYourOffer")).show();
+                            }
+                        } catch (NullPointerException e) {
+                            log.warn("Unable to get offerPayload - {}", e.toString());
+                        }
+                    });
+                    rowMenu.getItems().add(editItem);
+                    row.contextMenuProperty().bind(
+                            Bindings.when(Bindings.isNotNull(row.itemProperty()))
+                                    .then(rowMenu)
+                                    .otherwise((ContextMenu) null));
+                    return row;
+                });
 
         // we use a hidden emergency shortcut to open support ticket
         keyEventEventHandler = keyEvent -> {

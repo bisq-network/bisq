@@ -81,7 +81,7 @@ public class GovernanceView extends ActivatableView<AnchorPane, Void> implements
 
     @Override
     public void initialize() {
-        navigationListener = viewPath -> {
+        navigationListener = (viewPath, data) -> {
             if (viewPath.size() != 4 || viewPath.indexOf(GovernanceView.class) != 2)
                 return;
 

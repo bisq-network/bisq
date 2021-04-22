@@ -73,19 +73,12 @@ public class BondingView extends ActivatableView<AnchorPane, Void> {
 
     @Override
     public void initialize() {
-        listener = new Navigation.Listener() {
-            @Override
-            public void onNavigationRequested(ViewPath path) {
-            }
+        listener = (viewPath, data) -> {
+            if (viewPath.size() != 4 || viewPath.indexOf(bisq.desktop.main.dao.bonding.BondingView.class) != 2)
+                return;
 
-            @Override
-            public void onNavigationRequested(ViewPath viewPath, @Nullable Object data) {
-                if (viewPath.size() != 4 || viewPath.indexOf(bisq.desktop.main.dao.bonding.BondingView.class) != 2)
-                    return;
-
-                selectedViewClass = viewPath.tip();
-                loadView(selectedViewClass, data);
-            }
+            selectedViewClass = viewPath.tip();
+            loadView(selectedViewClass, data);
         };
 
         toggleGroup = new ToggleGroup();
