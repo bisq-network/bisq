@@ -88,12 +88,12 @@ certificate and provisioning file before running the build.
    .
 
 2. Set environment variables to ~/.profile file or the like... (one time effort)
-    * `BISQ_GPG_USER`: e.g. export BISQ_GPG_USER=manfred@bitsquare.io
-    * `BISQ_SHARED_FOLDER`: shared folder that is used between your VM host and client system
-    * `BISQ_PACKAGE_SIGNING_IDENTITY`: e.g. "Developer ID Application: Christoph Atteneder (WQT93T6D6C)"
-    * `BISQ_PRIMARY_BUNDLE_ID`: e.g. "network.bisq.CAT"
-    * `BISQ_PACKAGE_NOTARIZATION_AC_USERNAME`: your Apple developer email address
-    * `BISQ_PACKAGE_NOTARIZATION_ASC_PROVIDER`: Your developer ID (e.g. WQT93T6D6C)
+   * `BISQ_GPG_USER`: e.g. export BISQ_GPG_USER=manfred@bitsquare.io
+   * `BISQ_SHARED_FOLDER`: shared folder that is used between your VM host and client system
+   * `BISQ_PACKAGE_SIGNING_IDENTITY`: e.g. "Developer ID Application: Christoph Atteneder (WQT93T6D6C)"
+   * `BISQ_PRIMARY_BUNDLE_ID`: e.g. "network.bisq.CAT"
+   * `BISQ_PACKAGE_NOTARIZATION_AC_USERNAME`: your Apple developer email address
+   * `BISQ_PACKAGE_NOTARIZATION_ASC_PROVIDER`: Your developer ID (e.g. WQT93T6D6C)
 
 3. Run `./gradlew --console=plain packageInstallers`
 
@@ -111,7 +111,7 @@ Build output expected in shared folder:
 1. Checkout the release tag in your VM
 
 2. Set environment variables to ~/.profile file or the like... (one time effort)
-    * `BISQ_SHARED_FOLDER`: shared folder that is used between your VM host and client system
+   * `BISQ_SHARED_FOLDER`: shared folder that is used between your VM host and client system
 
 3. Run `./gradlew --console=plain packageInstallers`
 
