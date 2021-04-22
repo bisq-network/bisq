@@ -167,7 +167,6 @@ public class ReceiptValidatorTest {
         when(predicates.isEqualPaymentMethods(offer, account)).thenReturn(true);
         when(predicates.isMatchingCountryCodes(offer, account)).thenReturn(true);
         when(predicates.isMatchingSepaOffer(offer, account)).thenReturn(false);
-        when(predicates.isMatchingSepaOffer(offer, account)).thenReturn(false);
         when(predicates.isMatchingSepaInstant(offer, account)).thenReturn(false);
         when(predicates.isOfferRequireSameOrSpecificBank(offer, account)).thenReturn(false);
 

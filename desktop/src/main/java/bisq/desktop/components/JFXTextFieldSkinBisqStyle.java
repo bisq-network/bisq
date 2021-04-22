@@ -120,7 +120,6 @@ public class JFXTextFieldSkinBisqStyle<T extends TextField & IFXLabelFloatContro
         promptText = new Text();
         promptText.setManaged(false);
         promptText.getStyleClass().add("text");
-        promptText.setTranslateX(-getSkinnable().getPadding().getLeft());
         promptText.visibleProperty().bind(linesWrapper.usePromptText);
         promptText.fontProperty().bind(getSkinnable().fontProperty());
         promptText.textProperty().bind(getSkinnable().promptTextProperty());

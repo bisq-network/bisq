@@ -10,8 +10,9 @@ target_dir="releases/$version"
 # Set BISQ_VM_PATH as environment var to the directory where your shared folders for virtual box are residing
 
 vmPath=$BISQ_VM_PATH
-linux64=$vmPath/vm_shared_ubuntu/desktop/package/linux
-win64=$vmPath/vm_shared_windows/desktop/package/windows
+linux64=$vmPath/vm_shared_ubuntu
+win64=$vmPath/vm_shared_windows
+macos=$vmPath/vm_shared_macosx
 
 deployDir=deploy
 
@@ -27,17 +28,15 @@ cp "$target_dir/../../package/5BC5ED73.asc" "$target_dir/"
 cp "$target_dir/../../package/29CDFD3B.asc" "$target_dir/"
 # signing key
 cp "$target_dir/../../package/signingkey.asc" "$target_dir/"
-# hash of jar file
-cp "deploy/Bisq-$version.jar.txt" "$target_dir/"
 
 dmg="Bisq-$version.dmg"
-cp "$deployDir/$dmg" "$target_dir/"
+cp "$macos/$dmg" "$target_dir/"
 
-deb="Bisq-$version.deb"
+deb="bisq_$version-1_amd64.deb"
 deb64="Bisq-64bit-$version.deb"
 cp "$linux64/$deb" "$target_dir/$deb64"
 
-rpm="Bisq-$version.rpm"
+rpm="bisq-$version-1.x86_64.rpm"
 rpm64="Bisq-64bit-$version.rpm"
 cp "$linux64/$rpm" "$target_dir/$rpm64"
 
