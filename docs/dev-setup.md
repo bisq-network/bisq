@@ -28,11 +28,13 @@ You can find more information about the Bitcoin regtest mode [here](https://bitc
 
 Navigate to the [bitcoin.conf](https://en.bitcoin.it/wiki/Running_Bitcoin#Bitcoin.conf_Configuration_File) file and set `regtest=1` and `peerbloomfilters=1`, or add `-regtest -peerbloomfilters=1` as a program arguments when starting Bitcoin Core.
 
-At first startup you need to create 101 blocks using the command `generate 101`* from the terminal inside Bitcoin Core. 101 blocks are required because of the coin maturity (100 blocks) so you need one more to have at least 50 BTC available for spending.
+At first startup you need to create 101 blocks using the command `generatetoaddress 101 address`* from the terminal inside Bitcoin Core, where `address` value could be obtained with the command `getnewaddress`. 101 blocks are required because of the coin maturity (100 blocks) so you need one more to have at least 50 BTC available for spending.
 
-Later you can create new blocks with `generate 1`*. 
+    generatetoaddress 101 bcrt1qhqn0t94uc269szakr4ez0zh7erdd6tlm4pv6mg
 
-*This method is deprecated in Bitcoin Core's v.0.18 and will be fully removed in v.0.19. Use instead `generatetoaddress amount address`.
+Later you can create new blocks with `generatetoaddress 1 address`*.
+
+*If you are using Bitcoin Core v.0.18 or less, use instead `generate 1`.
 
 ## Understand Bisq P2P network options
 
@@ -90,4 +92,4 @@ and
 
 At this point you can now perform trades between Alice and Bob using your local regtest environment and test from both the buyer's and seller's perspective. You can also open disputes with `cmd+o` and see how the arbitration system works (run the arbitrator in that case as well).
 
-_Remember to generate a new block in the Bitcoin Core console after taking an offer using the command `generate 1` to trigger a block confirmation._
+_Remember to generate a new block in the Bitcoin Core console after taking an offer using the command `generatetoaddress 1 address` to trigger a block confirmation._
