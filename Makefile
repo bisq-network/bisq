@@ -15,7 +15,7 @@
 #  - Linux, macOS or similar *nix with standard tools like `make`
 #  - bitcoind and bitcoin-cli (`brew install bitcoin` on macOS)
 #  - JDK 11 to build and run Bisq binaries; see
-#    https://www.oracle.com/java/technologies/java-archive-javase10-downloads.html
+#    https://jdk.java.net/archive/
 #
 #
 # USAGE
