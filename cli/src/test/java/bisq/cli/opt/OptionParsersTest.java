@@ -176,8 +176,12 @@ public class OptionParsersTest {
         };
         Throwable exception = assertThrows(RuntimeException.class, () ->
                 new CreatePaymentAcctOptionParser(args).parse());
-        assertEquals("json payment account form '/tmp/milkyway/solarsystem/mars' could not be found",
+        if (System.getProperty("os.name").toLowerCase().indexOf("win") >= 0)
+            assertEquals("json payment account form '\\tmp\\milkyway\\solarsystem\\mars' could not be found",
                 exception.getMessage());
+        else
+            assertEquals("json payment account form '/tmp/milkyway/solarsystem/mars' could not be found",
+                    exception.getMessage());
     }
 
     // createcryptopaymentacct parser tests
