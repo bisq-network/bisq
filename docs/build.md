@@ -39,6 +39,8 @@
    gradlew.bat build
    ```
 
+   If you prefer to skip tests to speed up the building process, just append _-x test_ to the previous commands.
+
 ### Important notes
 
 1. You do _not_ need to install Gradle to build Bisq. The `gradlew` shell script will install it for you, if necessary.
