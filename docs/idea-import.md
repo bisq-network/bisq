@@ -14,7 +14,6 @@ Most Bisq contributors use IDEA for development. The following instructions have
 ![edit_configurations.png](edit_configurations.png)
 
 9. Now you should be able to run Bisq by clicking on the _Play_ button or via `Run -> Run 'Bisq Desktop'`
-
 10. If you want to debug the application and execute breakpoints, use `Run -> Debug 'Bisq Desktop'`
 
 > TIP: If you encounter compilation errors in IDEA related to the `protobuf.*` classes, it is probably because you didn't build Bisq at the command line as instructed above. You need to run the `generateProto` task in the `other` project. You can do this via the Gradle tool window in IDEA, or you can do it the command line with `./gradlew :other:generateProto`. Once you've done that, run `Build -> Build Project` again and you should have no errors.
