@@ -45,14 +45,14 @@
 
 1. You do _not_ need to install Gradle to build Bisq. The `gradlew` shell script will install it for you, if necessary.
 
-2. Bisq currently works with JDK 10 and 11 only. JDK 12 and above are not supported. You can find out which
+2. Bisq currently works with JDK 11 only. JDK 12 and above are not supported. You can find out which
    version you have with:
 
    ```sh
    javac -version
    ```
 
-If your Java version is not 10 or 11, check out scripts in the [scripts](../scripts) directory (or online at https://github.com/bisq-network/bisq/tree/master/scripts).
+If you do not have JDK 11 installed, check out scripts in the [scripts](../scripts) directory or download it manually from https://jdk.java.net/archive/.
 
 ## Running Bisq
 

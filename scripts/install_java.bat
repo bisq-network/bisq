@@ -25,9 +25,9 @@ cd /D "%~dp0"
 
 title Install Java
 
-set jdk_version=10.0.2
+set jdk_version=11.0.2
 set jdk_filename=openjdk-%jdk_version%_windows-x64_bin
-set jdk_url=https://download.java.net/java/GA/jdk10/%jdk_version%/19aef61b38124481863b1413dce1855f/13/%jdk_filename%.tar.gz
+set jdk_url=https://download.java.net/java/GA/jdk11/9/GPL/openjdk-11.0.2_windows-x64_bin.zip
 
 if exist "%PROGRAMFILES%\Java\openjdk\jdk-%jdk_version%" (
     echo %PROGRAMFILES%\Java\openjdk\jdk-%jdk_version% already exists, skipping install
@@ -35,26 +35,16 @@ if exist "%PROGRAMFILES%\Java\openjdk\jdk-%jdk_version%" (
 )
 
 echo Downloading required files to %TEMP%
-powershell -Command "Invoke-WebRequest %jdk_url% -OutFile $env:temp\%jdk_filename%.tar.gz"
-if not exist "%TEMP%\7za920\7za.exe" (
-    :: Download 7zip ^(command line version^) in order to extract the tar.gz file since there is no native support in Windows
-    powershell -Command "Invoke-WebRequest https://www.7-zip.org/a/7za920.zip -OutFile $env:temp\7za920.zip"
-    powershell -Command "Expand-Archive $env:temp\7za920.zip -DestinationPath $env:temp\7za920 -Force"
-)
+powershell -Command "Invoke-WebRequest %jdk_url% -OutFile $env:temp\%jdk_filename%.zip"
 
 echo Extracting and installing JDK to %PROGRAMFILES%\Java\openjdk\jdk-%jdk_version%
-"%TEMP%\7za920\7za.exe" x "%TEMP%\%jdk_filename%.tar.gz" -o"%TEMP%" -r -y
-"%TEMP%\7za920\7za.exe" x "%TEMP%\%jdk_filename%.tar" -o"%TEMP%\openjdk-%jdk_version%" -r -y
+powershell -Command "Expand-Archive $env:temp\%jdk_filename%.zip -DestinationPath %TEMP%\openjdk-%jdk_version% -Force"
 md "%PROGRAMFILES%\Java\openjdk"
 move "%TEMP%\openjdk-%jdk_version%\jdk-%jdk_version%" "%PROGRAMFILES%\Java\openjdk"
 
 echo Removing downloaded files
-if exist "%TEMP%\7za920.zip" (
-    del /Q %TEMP%\7za920.zip
-)
 rmdir /S /Q %TEMP%\openjdk-%jdk_version%
-del /Q %TEMP%\%jdk_filename%.tar
-del /Q %TEMP%\%jdk_filename%.tar.gz
+del /Q %TEMP%\%jdk_filename%.zip
 
 :SetEnvVars
 echo Setting environment variables
