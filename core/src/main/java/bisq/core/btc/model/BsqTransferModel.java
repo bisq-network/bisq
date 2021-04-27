@@ -2,8 +2,8 @@ package bisq.core.btc.model;
 
 import bisq.core.dao.state.model.blockchain.TxType;
 
+import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.LegacyAddress;
 import org.bitcoinj.core.Transaction;
 
 import lombok.Getter;
@@ -11,7 +11,7 @@ import lombok.Getter;
 @Getter
 public final class BsqTransferModel {
 
-    private final LegacyAddress receiverAddress;
+    private final Address receiverAddress;
     private final Coin receiverAmount;
     private final Transaction preparedSendTx;
     private final Transaction txWithBtcFee;
@@ -20,7 +20,7 @@ public final class BsqTransferModel {
     private final int txSize;
     private final TxType txType;
 
-    public BsqTransferModel(LegacyAddress receiverAddress,
+    public BsqTransferModel(Address receiverAddress,
                             Coin receiverAmount,
                             Transaction preparedSendTx,
                             Transaction txWithBtcFee,

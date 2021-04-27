@@ -2,7 +2,7 @@ package bisq.apitest.method.wallet;
 
 import bisq.proto.grpc.BsqBalanceInfo;
 
-import org.bitcoinj.core.LegacyAddress;
+import org.bitcoinj.core.Address;
 import org.bitcoinj.core.NetworkParameters;
 
 import lombok.extern.slf4j.Slf4j;
@@ -64,7 +64,7 @@ public class BsqWalletTest extends MethodTest {
         assertFalse(address.isEmpty());
         assertTrue(address.startsWith("B"));
 
-        NetworkParameters networkParameters = LegacyAddress.getParametersFromAddress(address.substring(1));
+        NetworkParameters networkParameters = Address.fromString(null, address.substring(1)).getParameters();
         String addressNetwork = networkParameters.getPaymentProtocolId();
         assertNotEquals(PAYMENT_PROTOCOL_ID_MAINNET, addressNetwork);
         // TODO Fix bug causing the regtest bsq address network to be evaluated as 'testnet' here.

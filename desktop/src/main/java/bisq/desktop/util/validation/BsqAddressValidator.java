@@ -46,7 +46,7 @@ public final class BsqAddressValidator extends InputValidator {
         try {
             bsqFormatter.getAddressFromBsqAddress(input);
             return new ValidationResult(true);
-        } catch (Throwable e) {
+        } catch (RuntimeException e) {
             return new ValidationResult(false, Res.get("validation.bsq.invalidFormat"));
         }
     }

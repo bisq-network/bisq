@@ -523,10 +523,10 @@ public class BtcWalletService extends WalletService {
             }
 
             Transaction tx = new Transaction(params);
-            preparedBsqTxInputs.stream().forEach(tx::addInput);
+            preparedBsqTxInputs.forEach(tx::addInput);
 
             if (forcedChangeValue.isZero()) {
-                preparedBsqTxOutputs.stream().forEach(tx::addOutput);
+                preparedBsqTxOutputs.forEach(tx::addOutput);
             } else {
                 //TODO test that case
                 checkArgument(preparedBsqTxOutputs.size() == 0, "preparedBsqTxOutputs.size must be null in that code branch");
@@ -598,10 +598,10 @@ public class BtcWalletService extends WalletService {
             } else if (ScriptPattern.isP2WPKH(connectedOutput.getScriptPubKey())) {
                 numSegwitInputs++;
             } else {
-                throw new IllegalArgumentException("Inputs should spend a P2PKH, P2PK or P2WPKH ouput");
+                throw new IllegalArgumentException("Inputs should spend a P2PKH, P2PK or P2WPKH output");
             }
         }
-        return new Tuple2(numLegacyInputs, numSegwitInputs);
+        return new Tuple2<>(numLegacyInputs, numSegwitInputs);
     }
 
 
@@ -871,7 +871,7 @@ public class BtcWalletService extends WalletService {
                 log.debug("txToDoubleSpend no. of inputs " + txToDoubleSpend.getInputs().size());
 
                 Transaction newTransaction = new Transaction(params);
-                txToDoubleSpend.getInputs().stream().forEach(input -> {
+                txToDoubleSpend.getInputs().forEach(input -> {
                             final TransactionOutput connectedOutput = input.getConnectedOutput();
                             if (connectedOutput != null &&
                                     connectedOutput.isMine(wallet) &&
@@ -1073,8 +1073,7 @@ public class BtcWalletService extends WalletService {
                         addressEntryOptional = findAddressEntry(address, AddressEntry.Context.ARBITRATOR);
                     return addressEntryOptional;
                 })
-                .filter(Optional::isPresent)
-                .map(Optional::get)
+                .flatMap(Optional::stream)
                 .collect(Collectors.toSet());
         if (addressEntries.isEmpty())
             throw new AddressEntryException("No Addresses for withdraw  found in our wallet");
@@ -1255,8 +1254,7 @@ public class BtcWalletService extends WalletService {
                         addressEntryOptional = findAddressEntry(address, AddressEntry.Context.ARBITRATOR);
                     return addressEntryOptional;
                 })
-                .filter(Optional::isPresent)
-                .map(Optional::get)
+                .flatMap(Optional::stream)
                 .collect(Collectors.toSet());
         if (addressEntries.isEmpty())
             throw new AddressEntryException("No Addresses for withdraw found in our wallet");
