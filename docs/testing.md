@@ -13,6 +13,7 @@ In order to take part in the testing process, you will need to do the following:
 ## Communication Channels
 
 If you would like to discuss and/or contribute to Bisq's testing effort, join us in the #testing channel within the [Bisq Keybase team](https://keybase.io/team/bisq).
+Here you could also request access to TestPad (https://bisq.ontestpad.com).
 
 ## Compensation
 
@@ -35,7 +36,7 @@ Some definitions within the context of TestPad and how they apply to our specifi
 ### Test Structure
 
 Tests are written using Behaviour-Driven Development (BDD) style syntax (given/when/then).
-- **Given:** This states the preconditions that are assumed for the test. It is not a test step (one that requires a result to be recorded), but instead you must ensure the preconditions are satisfied in order to perform the test. 
+- **Given:** This states the preconditions that are assumed for the test. It is not a test step (one that requires a result to be recorded), but instead you must ensure the preconditions are satisfied in order to perform the test.
 - **When:** This states the actions to be performed for the test. This also does not require a result to be recorded.
 - **Then:** This states the expected results of the test. This requires a result to be recorded.
 
