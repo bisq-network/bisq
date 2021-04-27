@@ -11,7 +11,7 @@ Install Keybase and enter "bisq" from the teams tab. This is an "open" team, whi
 
 Discussion about code changes happens in GitHub issues and pull requests.
 
-Discussion about larger changes to the way Bisq works happens in issues the [bisq-network/proposals](https://github.com/bisq-network/proposals/issues) repository. See https://docs.bisq.network/proposals.html for details.
+Discussion about larger changes to the way Bisq works happens in issues the [bisq-network/proposals](https://github.com/bisq-network/proposals/issues) repository. See https://bisq.wiki/Proposals for details.
 
 
 ## Contributor Workflow
@@ -50,7 +50,7 @@ Bisq is not a company, but operates as a _decentralized autonomous organization_
 Since our [Q1 2020 update](https://bisq.network/blog/q1-2020-update/) contributions are NOT eligible for compensation unless they are allocated as part of the development budget. Fixes for [critical bugs](https://bisq.wiki/Critical_Bugs) are eligible for compensation when delivered.
 In any case please contact the team lead for development (@ripcurlx) upfront if you want to get compensated for your contributions.
 
-For any work that was approved and merged into Bisq's `master` branch, you can [submit a compensation request](https://docs.bisq.network/dao/phase-zero.html#how-to-request-compensation) and earn BSQ (the Bisq DAO native token). Learn more about the Bisq DAO and BSQ [here](https://docs.bisq.network/dao/phase-zero.html).
+For any work that was approved and merged into Bisq's `master` branch, you can [submit a compensation request](https://bisq.wiki/Making_a_compensation_request) and earn BSQ (the Bisq DAO native token). Learn more about the Bisq DAO and BSQ [here](https://bisq.wiki/Introduction_to_the_DAO).
 
 
 ## Style and Coding Conventions
@@ -95,7 +95,7 @@ See the issues in the [bisq-network/style](https://github.com/bisq-network/style
 
 ## See also
 
- - [contributor checklist](https://docs.bisq.network/contributor-checklist.html)
+ - [contributor checklist](https://bisq.wiki/Contributor_checklist)
  - [developer docs](docs#readme) including build and dev environment setup instructions
  - [project management process](https://bisq.wiki/Project_management)
 

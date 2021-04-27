@@ -17,7 +17,7 @@ Here you could also request access to TestPad (https://bisq.ontestpad.com).
 
 ## Compensation
 
-Testing activities are eligible for [compensation](https://docs.bisq.network/dao/phase-zero.html#how-to-request-compensation).
+Testing activities are eligible for [compensation](https://bisq.wiki/Making_a_compensation_request).
 When submitting a compensation request, please include links to artifacts on TestPad (results/reports) indicating the activities that were performed (e.g. tests that were executed), as well as any bugs that were discovered and entered as a result of testing.
 
 ## Testing Process
