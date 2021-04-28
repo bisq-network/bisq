@@ -54,7 +54,6 @@ import bisq.core.payment.AliPayAccount;
 import bisq.core.payment.AmazonGiftCardAccount;
 import bisq.core.payment.CryptoCurrencyAccount;
 import bisq.core.payment.RevolutAccount;
-import bisq.core.payment.payload.AssetsAccountPayload;
 import bisq.core.presentation.BalancePresentation;
 import bisq.core.presentation.SupportTicketsPresentation;
 import bisq.core.presentation.TradePresentation;
@@ -405,15 +404,6 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
         bisqSetup.setAmazonGiftCardAccountsUpdateHandler(amazonGiftCardAccountList -> {
             // We copy the array as we will mutate it later
             showAmazonGiftCardAccountUpdateWindow(new ArrayList<>(amazonGiftCardAccountList));
-        });
-        bisqSetup.setOsxKeyLoggerWarningHandler(() -> {
-            String key = "osxKeyLoggerWarning";
-            if (preferences.showAgain(key)) {
-                new Popup().warning(Res.get("popup.warning.osxKeyLoggerWarning"))
-                        .closeButtonText(Res.get("shared.iUnderstand"))
-                        .dontShowAgainId(key)
-                        .show();
-            }
         });
         bisqSetup.setQubesOSInfoHandler(() -> {
             String key = "qubesOSSetupInfo";
