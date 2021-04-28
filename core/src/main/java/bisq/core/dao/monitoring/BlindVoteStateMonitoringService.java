@@ -257,8 +257,10 @@ public class BlindVoteStateMonitoringService implements DaoSetupService, DaoStat
 
         periodService.getCycle(blockHeight).ifPresent(cycle -> {
             List<BlindVote> blindVotes = blindVoteListService.getConfirmedBlindVotes().stream()
-                    .filter(e -> periodService.isTxInCorrectCycle(e.getTxId(), blockHeight))
-                    .sorted(Comparator.comparing(BlindVote::getTxId)).collect(Collectors.toList());
+                    .filter(e -> periodService.isTxInPhaseAndCycle(e.getTxId(), DaoPhase.Phase.BLIND_VOTE, blockHeight))
+                    .filter(e -> e.getTxId() != null)
+                    .sorted(Comparator.comparing(BlindVote::getTxId))
+                    .collect(Collectors.toList());
 
             // We use MyBlindVoteList to get the serialized bytes from the blindVotes list
             byte[] serializedBlindVotes = new MyBlindVoteList(blindVotes).toProtoMessage().toByteArray();
