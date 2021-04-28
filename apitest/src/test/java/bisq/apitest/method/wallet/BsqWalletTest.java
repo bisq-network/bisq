@@ -25,11 +25,9 @@ import static bisq.apitest.method.wallet.WalletTestUtil.BOBS_INITIAL_BSQ_BALANCE
 import static bisq.apitest.method.wallet.WalletTestUtil.bsqBalanceModel;
 import static bisq.apitest.method.wallet.WalletTestUtil.verifyBsqBalances;
 import static bisq.cli.TableFormat.formatBsqBalanceInfoTbl;
-import static org.bitcoinj.core.NetworkParameters.PAYMENT_PROTOCOL_ID_MAINNET;
 import static org.bitcoinj.core.NetworkParameters.PAYMENT_PROTOCOL_ID_REGTEST;
 import static org.bitcoinj.core.NetworkParameters.PAYMENT_PROTOCOL_ID_TESTNET;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 
@@ -48,8 +46,8 @@ public class BsqWalletTest extends MethodTest {
 
     @BeforeAll
     public static void setUp() {
-        startSupportingApps(false,
-                true,
+        startSupportingApps(true,
+                false,
                 bitcoind,
                 seednode,
                 arbdaemon,
@@ -60,16 +58,14 @@ public class BsqWalletTest extends MethodTest {
     @Test
     @Order(1)
     public void testGetUnusedBsqAddress() {
-        var address = aliceClient.getUnusedBsqAddress();
-        assertFalse(address.isEmpty());
-        assertTrue(address.startsWith("B"));
-
-        NetworkParameters networkParameters = Address.fromString(null, address.substring(1)).getParameters();
+        String addressString = aliceClient.getUnusedBsqAddress();
+        assertFalse(addressString.isEmpty());
+        assertTrue(addressString.startsWith("B"));
+        Address address = Address.fromString(NetworkParameters.fromID(PAYMENT_PROTOCOL_ID_REGTEST), addressString.substring(1));
+        NetworkParameters networkParameters = address.getParameters();
         String addressNetwork = networkParameters.getPaymentProtocolId();
-        assertNotEquals(PAYMENT_PROTOCOL_ID_MAINNET, addressNetwork);
-        // TODO Fix bug causing the regtest bsq address network to be evaluated as 'testnet' here.
-        assertTrue(addressNetwork.equals(PAYMENT_PROTOCOL_ID_TESTNET)
-                || addressNetwork.equals(PAYMENT_PROTOCOL_ID_REGTEST));
+        log.warn("TODO Fix bug causing the regtest bsq address network being set to 'testnet'.");
+        assertTrue(addressNetwork.equals(PAYMENT_PROTOCOL_ID_TESTNET));
     }
 
     @Test
