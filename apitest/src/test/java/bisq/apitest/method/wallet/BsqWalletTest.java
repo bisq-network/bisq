@@ -25,8 +25,8 @@ import static bisq.apitest.method.wallet.WalletTestUtil.BOBS_INITIAL_BSQ_BALANCE
 import static bisq.apitest.method.wallet.WalletTestUtil.bsqBalanceModel;
 import static bisq.apitest.method.wallet.WalletTestUtil.verifyBsqBalances;
 import static bisq.cli.TableFormat.formatBsqBalanceInfoTbl;
+import static org.bitcoinj.core.NetworkParameters.ID_REGTEST;
 import static org.bitcoinj.core.NetworkParameters.PAYMENT_PROTOCOL_ID_REGTEST;
-import static org.bitcoinj.core.NetworkParameters.PAYMENT_PROTOCOL_ID_TESTNET;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
@@ -61,11 +61,10 @@ public class BsqWalletTest extends MethodTest {
         String addressString = aliceClient.getUnusedBsqAddress();
         assertFalse(addressString.isEmpty());
         assertTrue(addressString.startsWith("B"));
-        Address address = Address.fromString(NetworkParameters.fromID(PAYMENT_PROTOCOL_ID_REGTEST), addressString.substring(1));
+        Address address = Address.fromString(NetworkParameters.fromID(ID_REGTEST), addressString.substring(1));
         NetworkParameters networkParameters = address.getParameters();
         String addressNetwork = networkParameters.getPaymentProtocolId();
-        log.warn("TODO Fix bug causing the regtest bsq address network being set to 'testnet'.");
-        assertTrue(addressNetwork.equals(PAYMENT_PROTOCOL_ID_TESTNET));
+        assertTrue(addressNetwork.equals(PAYMENT_PROTOCOL_ID_REGTEST));
     }
 
     @Test
