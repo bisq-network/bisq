@@ -56,8 +56,7 @@ public class BtcTxFeeRateTest extends MethodTest {
     @Order(2)
     public void testSetInvalidTxFeeRateShouldThrowException(final TestInfo testInfo) {
         var currentTxFeeRateInfo = TxFeeRateInfo.fromProto(aliceClient.getTxFeeRate());
-        Throwable exception = assertThrows(StatusRuntimeException.class, () ->
-                aliceClient.setTxFeeRate(10));
+        Throwable exception = assertThrows(StatusRuntimeException.class, () -> aliceClient.setTxFeeRate(1));
         String expectedExceptionMessage =
                 format("UNKNOWN: tx fee rate preference must be >= %d sats/byte",
                         currentTxFeeRateInfo.getMinFeeServiceRate());
