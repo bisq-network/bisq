@@ -259,8 +259,8 @@ public class ProposalStateMonitoringService implements DaoSetupService, DaoState
 
         periodService.getCycle(blockHeight).ifPresent(cycle -> {
             List<Proposal> proposals = proposalService.getValidatedProposals().stream()
-                    .filter(e -> periodService.isTxInPhaseAndCycle(e.getTxId(), DaoPhase.Phase.PROPOSAL, blockHeight))
                     .filter(e -> e.getTxId() != null)
+                    .filter(e -> periodService.isTxInPhaseAndCycle(e.getTxId(), DaoPhase.Phase.PROPOSAL, blockHeight))
                     .sorted(Comparator.comparing(Proposal::getTxId))
                     .collect(Collectors.toList());
 

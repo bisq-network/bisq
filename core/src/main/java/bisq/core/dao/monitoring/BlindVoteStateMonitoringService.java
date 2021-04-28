@@ -257,8 +257,8 @@ public class BlindVoteStateMonitoringService implements DaoSetupService, DaoStat
 
         periodService.getCycle(blockHeight).ifPresent(cycle -> {
             List<BlindVote> blindVotes = blindVoteListService.getConfirmedBlindVotes().stream()
-                    .filter(e -> periodService.isTxInPhaseAndCycle(e.getTxId(), DaoPhase.Phase.BLIND_VOTE, blockHeight))
                     .filter(e -> e.getTxId() != null)
+                    .filter(e -> periodService.isTxInPhaseAndCycle(e.getTxId(), DaoPhase.Phase.BLIND_VOTE, blockHeight))
                     .sorted(Comparator.comparing(BlindVote::getTxId))
                     .collect(Collectors.toList());
 
