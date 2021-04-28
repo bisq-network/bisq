@@ -79,6 +79,7 @@ public abstract class AtomicSetupTxListener extends AtomicTradeTask {
             atomicTrade.setTxId(walletTx.getTxId().toString());
             WalletService.printTx("atomicTx received from network", walletTx);
             setState();
+            atomicProcessModel.getTradeManager().onTradeCompleted(atomicTrade);
         } else {
             log.info("We had the atomic tx already set. tradeId={}, state={}", atomicTrade.getId(),
                     atomicTrade.getState());

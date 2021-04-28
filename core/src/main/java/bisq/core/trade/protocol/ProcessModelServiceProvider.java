@@ -25,6 +25,7 @@ import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.dao.DaoFacade;
 import bisq.core.filter.FilterManager;
 import bisq.core.offer.OpenOfferManager;
+import bisq.core.provider.fee.FeeService;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 import bisq.core.support.dispute.mediation.mediator.MediatorManager;
 import bisq.core.support.dispute.refund.refundagent.RefundAgentManager;
@@ -58,6 +59,7 @@ public class ProcessModelServiceProvider {
     private final MediatorManager mediatorManager;
     private final RefundAgentManager refundAgentManager;
     private final KeyRing keyRing;
+    private final FeeService feeService;
 
     @Inject
     public ProcessModelServiceProvider(OpenOfferManager openOfferManager,
@@ -75,7 +77,8 @@ public class ProcessModelServiceProvider {
                                        ArbitratorManager arbitratorManager,
                                        MediatorManager mediatorManager,
                                        RefundAgentManager refundAgentManager,
-                                       KeyRing keyRing) {
+                                       KeyRing keyRing,
+                                       FeeService feeService) {
 
         this.openOfferManager = openOfferManager;
         this.p2PService = p2PService;
@@ -93,5 +96,6 @@ public class ProcessModelServiceProvider {
         this.mediatorManager = mediatorManager;
         this.refundAgentManager = refundAgentManager;
         this.keyRing = keyRing;
+        this.feeService = feeService;
     }
 }

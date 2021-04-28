@@ -17,6 +17,8 @@
 
 package bisq.core.trade.atomic;
 
+import bisq.core.monetary.Price;
+import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
 import bisq.core.proto.CoreProtoResolver;
 import bisq.core.trade.TradeModel;
@@ -101,11 +103,11 @@ public abstract class AtomicTrade extends TradeModel {
     @Getter
     private final long takerFee;
     @Getter
-    private AtomicProcessModel atomicProcessModel;
+    private final AtomicProcessModel atomicProcessModel;
     @Nullable
     private String errorMessage;
     @Getter
-    private State state = State.PREPARATION;
+    private State state;
 
     transient final private ObjectProperty<AtomicTrade.State> stateProperty = new SimpleObjectProperty<>(state);
     transient final private StringProperty errorMessageProperty = new SimpleStringProperty();
@@ -163,6 +165,7 @@ public abstract class AtomicTrade extends TradeModel {
                 .setIsCurrencyForTakerFeeBtc(isCurrencyForTakerFeeBtc)
                 .setMakerFee(makerFee)
                 .setTakerFee(takerFee)
+                .setAtomicProcessModel(atomicProcessModel.toProtoMessage())
                 .setState(State.toProtoMessage(state));
         Optional.ofNullable(txId).ifPresent(builder::setTxId);
         Optional.ofNullable(peerNodeAddress).ifPresent(e -> builder.setPeerNodeAddress(
@@ -221,13 +224,19 @@ public abstract class AtomicTrade extends TradeModel {
 
     @Override
     public String getId() {
-        return getUid();
+        return offer.getId();
     }
 
     @Override
     public String getShortId() {
         return getId();
     }
+
+    @Override
+    public boolean isCompleted() {
+        return state == State.TX_CONFIRMED;
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
@@ -248,6 +257,23 @@ public abstract class AtomicTrade extends TradeModel {
     @Nullable
     public String getErrorMessage() {
         return errorMessageProperty.get();
+    }
+
+    public Price getPrice() {
+        return Price.valueOf(offer.getCurrencyCode(), price);
+    }
+
+    @Nullable
+    public Volume getTradeVolume() {
+        try {
+            if (getAmount() != null && getPrice() != null) {
+                return getPrice().getVolumeByAmount(getAmount());
+            } else {
+                return null;
+            }
+        } catch (Throwable ignore) {
+            return null;
+        }
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

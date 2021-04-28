@@ -17,6 +17,7 @@
 
 package bisq.core.trade.atomic.messages;
 
+import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.trade.messages.TradeMessage;
 
 import bisq.network.p2p.DirectMessage;
@@ -27,24 +28,45 @@ import bisq.common.util.Utilities;
 
 import com.google.protobuf.ByteString;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 
 @EqualsAndHashCode(callSuper = true)
 @Value
-public final class CreateAtomicTxResponse extends TradeMessage implements DirectMessage {
-    private final NodeAddress senderNodeAddress;
-    private final byte[] atomicTx;
+public class CreateAtomicTxResponse extends TradeMessage implements DirectMessage {
+    NodeAddress senderNodeAddress;
+    byte[] atomicTx;
+    long makerBsqOutputValue;
+    String makerBsqOutputAddress;
+    long makerBtcOutputValue;
+    String makerBtcOutputAddress;
+    List<RawTransactionInput> makerBsqInputs;
+    List<RawTransactionInput> makerBtcInputs;
 
     public CreateAtomicTxResponse(String uid,
                                   String tradeId,
                                   NodeAddress senderNodeAddress,
-                                  byte[] atomicTx) {
+                                  byte[] atomicTx,
+                                  long makerBsqOutputValue,
+                                  String makerBsqOutputAddress,
+                                  long makerBtcOutputValue,
+                                  String makerBtcOutputAddress,
+                                  List<RawTransactionInput> makerBsqInputs,
+                                  List<RawTransactionInput> makerBtcInputs) {
         this(Version.getP2PMessageVersion(),
                 uid,
                 tradeId,
                 senderNodeAddress,
-                atomicTx);
+                atomicTx,
+                makerBsqOutputValue,
+                makerBsqOutputAddress,
+                makerBtcOutputValue,
+                makerBtcOutputAddress,
+                makerBsqInputs,
+                makerBtcInputs);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -55,10 +77,22 @@ public final class CreateAtomicTxResponse extends TradeMessage implements Direct
                                    String uid,
                                    String tradeId,
                                    NodeAddress senderNodeAddress,
-                                   byte[] atomicTx) {
+                                   byte[] atomicTx,
+                                   long makerBsqOutputValue,
+                                   String makerBsqOutputAddress,
+                                   long makerBtcOutputValue,
+                                   String makerBtcOutputAddress,
+                                   List<RawTransactionInput> makerBsqInputs,
+                                   List<RawTransactionInput> makerBtcInputs) {
         super(messageVersion, tradeId, uid);
         this.senderNodeAddress = senderNodeAddress;
         this.atomicTx = atomicTx;
+        this.makerBsqOutputValue = makerBsqOutputValue;
+        this.makerBsqOutputAddress = makerBsqOutputAddress;
+        this.makerBtcOutputValue = makerBtcOutputValue;
+        this.makerBtcOutputAddress = makerBtcOutputAddress;
+        this.makerBsqInputs = makerBsqInputs;
+        this.makerBtcInputs = makerBtcInputs;
     }
 
     @Override
@@ -69,6 +103,14 @@ public final class CreateAtomicTxResponse extends TradeMessage implements Direct
                         .setTradeId(tradeId)
                         .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
                         .setAtomicTx(ByteString.copyFrom(atomicTx))
+                        .setMakerBsqOutputValue(makerBsqOutputValue)
+                        .setMakerBsqOutputAddress(makerBsqOutputAddress)
+                        .setMakerBtcOutputValue(makerBtcOutputValue)
+                        .setMakerBtcOutputAddress(makerBtcOutputAddress)
+                        .addAllMakerBsqInputs(makerBsqInputs.stream().map(RawTransactionInput::toProtoMessage).collect(
+                                Collectors.toList()))
+                        .addAllMakerBtcInputs(makerBtcInputs.stream().map(RawTransactionInput::toProtoMessage).collect(
+                                Collectors.toList()))
                 ).build();
     }
 
@@ -77,7 +119,17 @@ public final class CreateAtomicTxResponse extends TradeMessage implements Direct
                 proto.getUid(),
                 proto.getTradeId(),
                 NodeAddress.fromProto(proto.getSenderNodeAddress()),
-                proto.getAtomicTx().toByteArray()
+                proto.getAtomicTx().toByteArray(),
+                proto.getMakerBsqOutputValue(),
+                proto.getMakerBsqOutputAddress(),
+                proto.getMakerBtcOutputValue(),
+                proto.getMakerBtcOutputAddress(),
+                proto.getMakerBsqInputsList().stream()
+                        .map(RawTransactionInput::fromProto)
+                        .collect(Collectors.toList()),
+                proto.getMakerBtcInputsList().stream()
+                        .map(RawTransactionInput::fromProto)
+                        .collect(Collectors.toList())
         );
     }
 
@@ -85,7 +137,13 @@ public final class CreateAtomicTxResponse extends TradeMessage implements Direct
     public String toString() {
         return "CreateAtomicTxResponse{" +
                 "\n     senderNodeAddress=" + senderNodeAddress +
-                "\n     depositTx=" + Utilities.bytesAsHexString(atomicTx) +
+                "\n     atomicTx=" + Utilities.bytesAsHexString(atomicTx) +
+                "\n     makerBsqOutputValue=" + makerBsqOutputValue +
+                "\n     makerBsqOutputAddress=" + makerBsqOutputAddress +
+                "\n     makerBtcOutputValue=" + makerBtcOutputValue +
+                "\n     makerBtcOutputAddress=" + makerBtcOutputAddress +
+                "\n     makerBsqInputs=" + makerBsqInputs +
+                "\n     makerBtcInputs=" + makerBtcInputs +
                 "\n} " + super.toString();
     }
 }

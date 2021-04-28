@@ -48,32 +48,17 @@ public class AtomicTakerSendsAtomicRequest extends AtomicTradeTask {
             runInterceptHook();
 
             checkArgument(!atomicProcessModel.getOffer().isMyOffer(atomicProcessModel.getKeyRing()), "must not take own offer");
-            var isBuyer = !atomicProcessModel.getOffer().isBuyOffer();
 
-            atomicProcessModel.initFromTrade(atomicTrade);
-            atomicProcessModel.setTakerBsqAddress(atomicProcessModel.getBsqWalletService().getUnusedBsqAddressAsString());
-            atomicProcessModel.setTakerBtcAddress(atomicProcessModel.getBtcWalletService().getFreshAddressEntry().
-                    getAddressString());
+            atomicProcessModel.getAtomicTxBuilder().setMyTradeFee(atomicTrade.isCurrencyForTakerFeeBtc(),
+                    Coin.valueOf(atomicTrade.getTakerFee()));
+            atomicProcessModel.getAtomicTxBuilder().setPeerTradeFee(atomicTrade.isCurrencyForMakerFeeBtc(),
+                    Coin.valueOf(atomicTrade.getMakerFee()));
+            atomicProcessModel.setTxFeePerVbyte(atomicProcessModel.getAtomicTxBuilder().getTxFeePerVbyte().getValue());
 
-            // Prepare BSQ inputs
-            var requiredBsq = atomicProcessModel.getBsqTradeFee() + (isBuyer ? atomicProcessModel.getBsqTradeAmount() : 0L);
-            var preparedBsq = atomicProcessModel.getBsqWalletService().prepareAtomicBsqInputs(Coin.valueOf(requiredBsq));
-            var takerBsqOutputAmount = preparedBsq.second.getValue() + (isBuyer ? 0L : atomicProcessModel.getBsqTradeAmount());
-            atomicProcessModel.setTakerBsqOutputAmount(takerBsqOutputAmount);
-
-            // Prepare BTC inputs
-            var preparedAtomicTxData = atomicProcessModel.getTradeWalletService().takerPreparesAtomicTx(
-                    preparedBsq.first,
-                    Coin.valueOf(isBuyer ? 0L : atomicProcessModel.getBtcTradeAmount()),
-                    Coin.valueOf(atomicProcessModel.getTxFeePerVbyte()),
-                    Coin.valueOf(atomicProcessModel.getBtcTradeFee()),
-                    Coin.valueOf(atomicProcessModel.getBsqTradeFee()));
-            atomicProcessModel.setRawTakerBsqInputs(preparedAtomicTxData.first);
-            atomicProcessModel.setRawTakerBtcInputs(preparedAtomicTxData.second);
-            atomicProcessModel.setTxFeePerVbyte(preparedAtomicTxData.third.getValue());
-            var takerBtcOutputAmount = preparedAtomicTxData.fourth.getValue() +
-                    (isBuyer ? atomicProcessModel.getBtcTradeAmount() : 0L);
-            atomicProcessModel.setTakerBtcOutputAmount(takerBtcOutputAmount);
+            if (!atomicProcessModel.takerPreparesTakerSide()) {
+                failed("Failed to prepare taker side of atomic tx");
+                return;
+            }
 
             var message = new CreateAtomicTxRequest(UUID.randomUUID().toString(),
                     atomicProcessModel.getOffer().getId(),
@@ -83,7 +68,9 @@ public class AtomicTakerSendsAtomicRequest extends AtomicTradeTask {
                     atomicProcessModel.getBtcTradeAmount(),
                     atomicProcessModel.getTradePrice(),
                     atomicProcessModel.getTxFeePerVbyte(),
+                    atomicTrade.getMakerFee(),
                     atomicTrade.getTakerFee(),
+                    atomicTrade.isCurrencyForMakerFeeBtc(),
                     atomicTrade.isCurrencyForTakerFeeBtc(),
                     atomicProcessModel.getTakerBsqOutputAmount(),
                     atomicProcessModel.getTakerBsqAddress(),

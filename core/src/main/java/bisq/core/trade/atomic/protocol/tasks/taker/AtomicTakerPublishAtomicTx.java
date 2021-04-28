@@ -46,12 +46,12 @@ public class AtomicTakerPublishAtomicTx extends AtomicTradeTask {
         try {
             runInterceptHook();
 
-            // Sign and publish atomicTx
+            // Publish atomicTx
             var atomicTx = atomicProcessModel.getVerifiedAtomicTx();
 
             checkNotNull(atomicTx, "Verified atomictx must not be null");
-            atomicProcessModel.getBsqWalletService().signTx(atomicTx);
-            atomicProcessModel.getBtcWalletService().signTx(atomicTx);
+//            atomicProcessModel.getBsqWalletService().signTx(atomicTx);
+//            atomicProcessModel.getBtcWalletService().signTx(atomicTx);
 
             log.info("AtomicTxBytes: {}", Utilities.bytesAsHexString(atomicTx.bitcoinSerialize()));
             atomicProcessModel.getWalletsManager().publishAndCommitBsqTx(atomicTx, TxType.TRANSFER_BSQ,

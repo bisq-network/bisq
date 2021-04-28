@@ -733,14 +733,20 @@ public abstract class Trade extends TradeModel {
     // TradeModel implementation
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @Override
     public ProcessModelI getProcessModelI() {
         return processModel;
     }
 
+    @Override
     public String getStateInfo() {
         return stateProperty().get().toString();
     }
 
+    @Override
+    public boolean isCompleted() {
+        return isWithdrawn();
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Abstract

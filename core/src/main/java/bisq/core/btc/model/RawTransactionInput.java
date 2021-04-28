@@ -23,6 +23,11 @@ import bisq.common.util.Utilities;
 
 import com.google.protobuf.ByteString;
 
+import org.bitcoinj.core.TransactionInput;
+
+import java.util.Arrays;
+import java.util.Objects;
+
 import lombok.EqualsAndHashCode;
 
 import javax.annotation.concurrent.Immutable;
@@ -46,6 +51,13 @@ public final class RawTransactionInput implements NetworkPayload, PersistablePay
         this.value = value;
     }
 
+    public RawTransactionInput(TransactionInput input) {
+        this(input.getOutpoint().getIndex(),
+                Objects.requireNonNull(Objects.requireNonNull(
+                        input.getConnectedOutput()).getParentTransaction()).bitcoinSerialize(false),
+                Objects.requireNonNull(input.getValue()).value);
+    }
+
     @Override
     public protobuf.RawTransactionInput toProtoMessage() {
         return protobuf.RawTransactionInput.newBuilder()
@@ -57,6 +69,16 @@ public final class RawTransactionInput implements NetworkPayload, PersistablePay
 
     public static RawTransactionInput fromProto(protobuf.RawTransactionInput proto) {
         return new RawTransactionInput(proto.getIndex(), proto.getParentTransaction().toByteArray(), proto.getValue());
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        RawTransactionInput rawTransactionInput = (RawTransactionInput) o;
+        return rawTransactionInput.index == index  &&
+                Arrays.equals(rawTransactionInput.parentTransaction, parentTransaction) &&
+                rawTransactionInput.value == value;
     }
 
     @Override

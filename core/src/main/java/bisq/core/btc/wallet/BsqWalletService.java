@@ -506,11 +506,13 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
         return tx;
     }
 
-    public Transaction signInputs(Transaction tx, List<TransactionInput> transactionInputs)
+    public Transaction signInputs(Transaction tx, List<RawTransactionInput> transactionInputs)
             throws WalletException, TransactionVerificationException {
+
         for (int i = 0; i < tx.getInputs().size(); i++) {
-            if (transactionInputs.contains(tx.getInput(i)))
+            if (transactionInputs.contains(new RawTransactionInput(tx.getInput(i)))) {
                 signInput(tx, i);
+            }
         }
 
         for (TransactionOutput txo : tx.getOutputs()) {
@@ -898,7 +900,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
                 .map(rawInput -> {
                     var tx = getTxFromSerializedTx(rawInput.parentTransaction);
                     return daoFacade.getUnspentTxOutputs().stream()
-                            .filter(output -> output.getTxId().equals(tx.getHashAsString()))
+                            .filter(output -> output.getTxId().equals(tx.getTxId().toString()))
                             .filter(output -> output.getIndex() == rawInput.index)
                             .map(BaseTxOutput::getValue)
                             .findAny()

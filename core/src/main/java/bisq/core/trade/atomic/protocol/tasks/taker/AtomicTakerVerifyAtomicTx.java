@@ -17,7 +17,6 @@
 
 package bisq.core.trade.atomic.protocol.tasks.taker;
 
-import bisq.core.trade.DonationAddressValidation;
 import bisq.core.trade.atomic.AtomicTrade;
 import bisq.core.trade.atomic.messages.CreateAtomicTxResponse;
 import bisq.core.trade.protocol.tasks.AtomicTradeTask;
@@ -26,16 +25,9 @@ import bisq.common.taskrunner.TaskRunner;
 
 import org.bitcoinj.core.TransactionInput;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
-import java.util.concurrent.atomic.AtomicBoolean;
-
 import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class AtomicTakerVerifyAtomicTx extends AtomicTradeTask {
@@ -69,131 +61,57 @@ public class AtomicTakerVerifyAtomicTx extends AtomicTradeTask {
              *   - BTC output to taker BTC address
              */
 
-            checkArgument(!atomicProcessModel.getOffer().isMyOffer(atomicProcessModel.getKeyRing()), "must not take own offer");
-            var isBuyer = !atomicProcessModel.getOffer().isBuyOffer();
+            checkArgument(!atomicProcessModel.getOffer().isMyOffer(atomicProcessModel.getKeyRing()),
+                    "must not take own offer");
+            checkArgument(atomicProcessModel.getTradeMessage() instanceof CreateAtomicTxResponse,
+                    "Expected CreateAtomicTxResponse");
 
-            if (!(atomicProcessModel.getTradeMessage() instanceof CreateAtomicTxResponse))
-                failed("Expected CreateAtomicTxResponse");
+            var message = (CreateAtomicTxResponse) atomicProcessModel.getTradeMessage();
+            atomicProcessModel.updateFromMessage(message);
 
+            var myTx = atomicProcessModel.createAtomicTx();
+            var makerTx = atomicProcessModel.getBtcWalletService().getTxFromSerializedTx(message.getAtomicTx());
+            // Strip sigs from maker tx and compare with myTx to make sure they are the same
+            makerTx.getInputs().forEach(TransactionInput::clearScriptBytes);
+            checkArgument(myTx.equals(makerTx), "Maker tx doesn't match my tx");
 
-            var serializedAtomicTx = ((CreateAtomicTxResponse) atomicProcessModel.getTradeMessage()).getAtomicTx();
-            var atomicTx = atomicProcessModel.getBtcWalletService().getTxFromSerializedTx(serializedAtomicTx);
-
-            var inputsSize = atomicTx.getInputs().size();
-            var outputsSize = atomicTx.getOutputs().size();
-
-            // Verify taker inputs are added as expected
-            int inputIndex = 0;
-            checkNotNull(atomicProcessModel.getRawTakerBsqInputs(), "Taker BSQ inputs must not be null");
-            List<TransactionInput> atomicTxInputs = new ArrayList<>();
-            for (var rawInput : atomicProcessModel.getRawTakerBsqInputs()) {
-                var verifiedInput = atomicProcessModel.getBsqWalletService().verifyTransactionInput(
-                        atomicTx.getInput(inputIndex), rawInput);
-                if (verifiedInput == null)
-                    failed("Taker BSQ input mismatch");
-                atomicTxInputs.add(verifiedInput);
-                inputIndex++;
-                if (inputIndex > inputsSize)
-                    failed("Not enough inputs");
-            }
-            if (atomicProcessModel.getRawTakerBtcInputs() != null) {
-                for (var rawInput : atomicProcessModel.getRawTakerBtcInputs()) {
-                    var verifiedInput = atomicProcessModel.getTradeWalletService().verifyTransactionInput(
-                            atomicTx.getInput(inputIndex), rawInput);
-                    if (verifiedInput == null)
-                        failed("Taker BTC input mismatch");
-                    atomicTxInputs.add(verifiedInput);
-                    inputIndex++;
-                    if (inputIndex > inputsSize)
-                        failed("Not enough inputs");
-                }
-            }
-            List<TransactionInput> makerInputs = new ArrayList<>();
-            for (; inputIndex < atomicTx.getInputs().size(); inputIndex++) {
-                makerInputs.add(atomicTx.getInput(inputIndex));
-                atomicTxInputs.add(atomicTx.getInput(inputIndex));
-            }
-
-            atomicTx.clearInputs();
-            atomicTxInputs.forEach(atomicTx::addInput);
-
-            // Verify makerInputs are not mine
-            if (makerInputs.stream().anyMatch(this::isMine))
-                failed("Maker input must not me mine");
-
-            var makerBsqInputAmount =
-                    atomicProcessModel.getBsqWalletService().getConfirmedBsqInputAmount(makerInputs, atomicProcessModel.getDaoFacade());
-
-            var expectedBsqTradeAmount = atomicProcessModel.getBsqTradeAmount();
-            var expectedMakerBsqOutAmount = isBuyer ? atomicProcessModel.getBsqTradeAmount() :
-                    makerBsqInputAmount - expectedBsqTradeAmount;
-            checkArgument(expectedMakerBsqOutAmount >= 0, "Maker BSQ input amount too low");
-            var expectedTakerBsqOutAmount = atomicProcessModel.getTakerBsqOutputAmount();
-            var expectedBsqTradeFeeAmount = atomicProcessModel.getBsqTradeFee();
-            var expectedBtcTradeFee = atomicProcessModel.getBtcTradeFee();
-            var expectedTakerBtcAmount = atomicProcessModel.getTakerBtcOutputAmount();
-
-            // Get BSQ and BTC input amounts
+            // Verify BSQ input and output amounts match
             var bsqInputAmount = atomicProcessModel.getBsqWalletService().getConfirmedBsqInputAmount(
-                    atomicTx.getInputs(), atomicProcessModel.getDaoFacade());
-            if (expectedBsqTradeFeeAmount + expectedTakerBsqOutAmount + expectedMakerBsqOutAmount != bsqInputAmount)
-                failed("Unexpected BSQ input amount");
+                    myTx.getInputs(), atomicProcessModel.getDaoFacade());
+            checkArgument(bsqInputAmount ==
+                            atomicProcessModel.getMakerBsqOutputAmount() +
+                                    atomicProcessModel.getTakerBsqOutputAmount() +
+                                    atomicProcessModel.getBsqMakerTradeFee() +
+                                    atomicProcessModel.getBsqTakerTradeFee(),
+                    "BSQ input doesn't match BSQ output amount");
 
-            var takerBtcOutputIndex = 0;
-            if (expectedMakerBsqOutAmount > 0)
-                takerBtcOutputIndex++;
-            if (expectedTakerBsqOutAmount > 0) {
-                takerBtcOutputIndex++;
-                // Verify taker BSQ output, always the output before taker BTC output
-                var takerBsqOutput = atomicTx.getOutput(takerBtcOutputIndex - 1);
-                var takerBsqOutputAddressInBtcFormat = Objects.requireNonNull(
-                        takerBsqOutput.getAddressFromP2PKHScript(atomicProcessModel.getBtcWalletService().getParams()));
-                var takerBsqOutputAddress = atomicProcessModel.getBsqWalletService().getBsqFormatter().
-                        getBsqAddressStringFromAddress(takerBsqOutputAddressInBtcFormat);
-                if (!takerBsqOutputAddress.equals(atomicProcessModel.getTakerBsqAddress()))
-                    failed("Taker BSQ address mismatch");
-                if (expectedTakerBsqOutAmount != takerBsqOutput.getValue().getValue())
-                    failed("Taker BSQ amount mismatch");
+            // Create signed tx and verify tx fee is not too low
+            // Sign my inputs on myTx
+            atomicProcessModel.getTradeWalletService().signInputs(myTx, atomicProcessModel.getRawTakerBtcInputs());
+            atomicProcessModel.getBsqWalletService().signInputs(myTx, atomicProcessModel.getRawTakerBsqInputs());
+
+            // Create fully signed atomic tx by combining signed inputs from maker tx and my tx
+            makerTx = atomicProcessModel.getBtcWalletService().getTxFromSerializedTx(message.getAtomicTx());
+            var signedTx = atomicProcessModel.createAtomicTx();
+            var txFee = signedTx.getFee().getValue();
+            signedTx.clearInputs();
+            int index = 0;
+            for (; index < atomicProcessModel.numTakerInputs(); ++index) {
+                signedTx.addInput(myTx.getInput(index));
+            }
+            for (;index < atomicProcessModel.numTakerInputs() + atomicProcessModel.numMakerInputs(); ++index) {
+                signedTx.addInput(makerTx.getInput(index));
             }
 
-            // Verify taker BTC output (vout index depends on the number of BSQ outputs, as calculated above)
-            var takerBtcOutput = atomicTx.getOutput(takerBtcOutputIndex);
-            var takerBtcOutputAddress = Objects.requireNonNull(takerBtcOutput.getAddressFromP2PKHScript(
-                    atomicProcessModel.getBtcWalletService().getParams())).toString();
-            if (!takerBtcOutputAddress.equals(atomicProcessModel.getTakerBtcAddress()))
-                failed("Taker BTC output address mismatch");
-            if (expectedTakerBtcAmount != takerBtcOutput.getValue().getValue())
-                failed("Taker BTC output amount mismatch");
+            checkArgument(txFee >= signedTx.getVsize() * atomicProcessModel.getTxFeePerVbyte(),
+                    "Tx fee too low");
 
-            if (expectedBtcTradeFee > 0) {
-                var tradeFeeOutput = atomicTx.getOutput(outputsSize - 1);
-                DonationAddressValidation.validateDonationAddress(tradeFeeOutput, atomicTx, atomicProcessModel.getDaoFacade(),
-                        atomicProcessModel.getBtcWalletService());
-                if (expectedBtcTradeFee != tradeFeeOutput.getValue().getValue())
-                    failed("Unexpected trade fee amount");
-            }
+            atomicProcessModel.setVerifiedAtomicTx(signedTx);
+            atomicProcessModel.setAtomicTx(signedTx.bitcoinSerialize());
 
-            atomicProcessModel.setVerifiedAtomicTx(atomicTx);
-            atomicProcessModel.setAtomicTx(atomicTx.bitcoinSerialize());
             complete();
         } catch (Throwable t) {
             failed(t);
         }
-    }
-
-    private boolean isMine(TransactionInput input) {
-        var result = new AtomicBoolean(false);
-        var walletServices = Arrays.asList(atomicProcessModel.getBtcWalletService(), atomicProcessModel.getBsqWalletService());
-
-        walletServices.forEach(walletService ->
-                walletService.getWallet().getWalletTransactions().forEach(tx -> {
-                    if (input.getOutpoint().getHash().toString().equals(tx.getTransaction().getHashAsString())) {
-                        var connectedOutput = tx.getTransaction().getOutput(input.getOutpoint().getIndex());
-                        if (walletService.isMine(connectedOutput))
-                            result.set(true);
-                    }
-                })
-        );
-        return result.get();
     }
 }

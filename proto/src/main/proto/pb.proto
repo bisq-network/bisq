@@ -387,14 +387,16 @@ message CreateAtomicTxRequest {
     int64 btc_trade_amount = 6;
     int64 trade_price = 7;
     int64 tx_fee_per_vbyte = 8;
-    int64 taker_fee = 9;
-    bool is_currency_for_taker_fee_btc = 10;
-    int64 taker_bsq_output_value = 11;
-    string taker_bsq_output_address = 12;
-    int64 taker_btc_output_value = 13;
-    string taker_btc_output_address = 14;
-    repeated RawTransactionInput taker_bsq_inputs = 15;
-    repeated RawTransactionInput taker_btc_inputs = 16;
+    int64 maker_fee = 9;
+    int64 taker_fee = 10;
+    bool is_currency_for_maker_fee_btc = 11;
+    bool is_currency_for_taker_fee_btc = 12;
+    int64 taker_bsq_output_value = 13;
+    string taker_bsq_output_address = 14;
+    int64 taker_btc_output_value = 15;
+    string taker_btc_output_address = 16;
+    repeated RawTransactionInput taker_bsq_inputs = 17;
+    repeated RawTransactionInput taker_btc_inputs = 18;
 }
 
 message CreateAtomicTxResponse {
@@ -402,6 +404,12 @@ message CreateAtomicTxResponse {
     string trade_id = 2;
     NodeAddress sender_node_address = 3;
     bytes atomic_tx = 4;
+    int64 maker_bsq_output_value = 5;
+    string maker_bsq_output_address = 6;
+    int64 maker_btc_output_value = 7;
+    string maker_btc_output_address = 8;
+    repeated RawTransactionInput maker_bsq_inputs = 9;
+    repeated RawTransactionInput maker_btc_inputs = 10;
 }
 
 // dispute

@@ -17,4 +17,6 @@ public abstract class TradeModel implements Tradable, Model {
     public abstract String getStateInfo();
 
     public abstract String getUid();
+
+    public abstract boolean isCompleted();
 }

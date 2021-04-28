@@ -17,7 +17,6 @@
 
 package bisq.core.trade.atomic.protocol.tasks.maker;
 
-import bisq.core.dao.governance.param.Param;
 import bisq.core.trade.atomic.AtomicTrade;
 import bisq.core.trade.atomic.messages.CreateAtomicTxResponse;
 import bisq.core.trade.protocol.tasks.AtomicTradeTask;
@@ -27,13 +26,9 @@ import bisq.network.p2p.SendDirectMessageListener;
 
 import bisq.common.taskrunner.TaskRunner;
 
-import org.bitcoinj.core.Coin;
-
 import java.util.UUID;
 
 import lombok.extern.slf4j.Slf4j;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class AtomicMakerCreatesAndSignsTx extends AtomicTradeTask {
@@ -47,40 +42,26 @@ public class AtomicMakerCreatesAndSignsTx extends AtomicTradeTask {
         try {
             runInterceptHook();
 
-            var makerBsqAddress = atomicProcessModel.getBsqWalletService().getUnusedAddress();
-            var makerBtcAddress = atomicProcessModel.getBtcWalletService().getFreshAddressEntry().getAddress();
-            checkNotNull(makerBtcAddress, "Maker address must not be null");
-            atomicProcessModel.setMakerBsqAddress(makerBsqAddress.toString());
-            atomicProcessModel.setMakerBtcAddress(makerBtcAddress.toString());
-            var takerBsqAddressInBtcFormat = atomicProcessModel.getBsqWalletService().getBsqFormatter().
-                    getAddressFromBsqAddress(atomicProcessModel.getTakerBsqAddress()).toString();
-
             // Create atomic tx with maker btc inputs signed
-            var makerSignedBtcAtomicTx = atomicProcessModel.getTradeWalletService().makerCreatesAndSignsAtomicTx(
-                    Coin.valueOf(atomicProcessModel.getMakerBsqOutputAmount()),
-                    Coin.valueOf(atomicProcessModel.getMakerBtcOutputAmount()),
-                    Coin.valueOf(atomicProcessModel.getTakerBsqOutputAmount()),
-                    Coin.valueOf(atomicProcessModel.getTakerBtcOutputAmount()),
-                    Coin.valueOf(atomicProcessModel.getBtcTradeFee()),
-                    makerBsqAddress.toString(),
-                    makerBtcAddress.toString(),
-                    takerBsqAddressInBtcFormat,
-                    atomicProcessModel.getTakerBtcAddress(),
-                    atomicProcessModel.getDaoFacade().getParamValue(Param.RECIPIENT_BTC_ADDRESS),
-                    atomicProcessModel.getMakerBsqInputs(),
-                    atomicProcessModel.getMakerBtcInputs(),
-                    atomicProcessModel.getRawTakerBsqInputs(),
-                    atomicProcessModel.getRawTakerBtcInputs());
+            var atomicTx = atomicProcessModel.createAtomicTx();
 
-            // Sign maker bsq inputs
-            var makerSignedAtomicTx = atomicProcessModel.getBsqWalletService().signInputs(
-                    makerSignedBtcAtomicTx, atomicProcessModel.getMakerBsqInputs());
+            // Sign inputs
+            atomicTx = atomicProcessModel.getTradeWalletService().signInputs(atomicTx,
+                    atomicProcessModel.getRawMakerBtcInputs());
+            atomicTx = atomicProcessModel.getBsqWalletService().signInputs(atomicTx,
+                    atomicProcessModel.getRawMakerBsqInputs());
 
-            atomicProcessModel.setAtomicTx(makerSignedAtomicTx.bitcoinSerialize());
+            atomicProcessModel.setAtomicTx(atomicTx.bitcoinSerialize());
             var message = new CreateAtomicTxResponse(UUID.randomUUID().toString(),
                     atomicProcessModel.getOffer().getId(),
                     atomicProcessModel.getMyNodeAddress(),
-                    atomicProcessModel.getAtomicTx());
+                    atomicProcessModel.getAtomicTx(),
+                    atomicProcessModel.getMakerBsqOutputAmount(),
+                    atomicProcessModel.getMakerBsqAddress(),
+                    atomicProcessModel.getMakerBtcOutputAmount(),
+                    atomicProcessModel.getMakerBtcAddress(),
+                    atomicProcessModel.getRawMakerBsqInputs(),
+                    atomicProcessModel.getRawMakerBtcInputs());
 
             NodeAddress peersNodeAddress = atomicTrade.getTradingPeerNodeAddress();
             log.info("Send {} to peer {}. tradeId={}, uid={}",

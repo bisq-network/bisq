@@ -23,6 +23,7 @@ import bisq.core.trade.atomic.AtomicTakerTrade;
 import bisq.core.trade.atomic.AtomicTrade;
 import bisq.core.trade.atomic.messages.CreateAtomicTxResponse;
 import bisq.core.trade.atomic.protocol.tasks.AtomicApplyFilter;
+import bisq.core.trade.atomic.protocol.tasks.taker.AtomicTakerPreparesData;
 import bisq.core.trade.atomic.protocol.tasks.taker.AtomicTakerPublishAtomicTx;
 import bisq.core.trade.atomic.protocol.tasks.taker.AtomicTakerSendsAtomicRequest;
 import bisq.core.trade.atomic.protocol.tasks.taker.AtomicTakerSetupTxListener;
@@ -63,6 +64,7 @@ public class AtomicTakerProtocol extends TradeProtocol implements TakerProtocol 
                 .with(TakerEvent.TAKE_OFFER))
                 .setup(tasks(
                         AtomicApplyFilter.class,
+                        AtomicTakerPreparesData.class,
                         AtomicTakerSendsAtomicRequest.class
                 ))
                 .run(() -> {

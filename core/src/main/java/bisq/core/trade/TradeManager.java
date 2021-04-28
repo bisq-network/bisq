@@ -30,8 +30,12 @@ import bisq.core.offer.availability.OfferAvailabilityModel;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 import bisq.core.support.dispute.mediation.mediator.MediatorManager;
+import bisq.core.trade.atomic.AtomicMakerTrade;
 import bisq.core.trade.atomic.AtomicTakerTrade;
 import bisq.core.trade.atomic.AtomicTrade;
+import bisq.core.trade.atomic.AtomicTradeManager;
+import bisq.core.trade.atomic.messages.CreateAtomicTxRequest;
+import bisq.core.trade.atomic.protocol.AtomicMakerProtocol;
 import bisq.core.trade.closed.ClosedTradableManager;
 import bisq.core.trade.failed.FailedTradesManager;
 import bisq.core.trade.handlers.TradeResultHandler;
@@ -120,6 +124,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
     private final BsqWalletService bsqWalletService;
     private final OpenOfferManager openOfferManager;
     private final ClosedTradableManager closedTradableManager;
+    private final AtomicTradeManager atomicTradeManager;
     private final FailedTradesManager failedTradesManager;
     private final P2PService p2PService;
     private final PriceFeedService priceFeedService;
@@ -158,6 +163,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                         BsqWalletService bsqWalletService,
                         OpenOfferManager openOfferManager,
                         ClosedTradableManager closedTradableManager,
+                        AtomicTradeManager atomicTradeManager,
                         FailedTradesManager failedTradesManager,
                         P2PService p2PService,
                         PriceFeedService priceFeedService,
@@ -177,6 +183,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         this.bsqWalletService = bsqWalletService;
         this.openOfferManager = openOfferManager;
         this.closedTradableManager = closedTradableManager;
+        this.atomicTradeManager = atomicTradeManager;
         this.failedTradesManager = failedTradesManager;
         this.p2PService = p2PService;
         this.priceFeedService = priceFeedService;
@@ -208,8 +215,8 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         persistenceManager.readPersisted(persisted -> {
                     tradableList.setAll(persisted.getList());
                     tradableList.stream()
-                            .filter(trade -> trade.getOffer() != null)
-                            .forEach(trade -> trade.getOffer().setPriceFeedService(priceFeedService));
+                            .filter(tradeModel -> tradeModel.getOffer() != null)
+                            .forEach(tradeModel -> tradeModel.getOffer().setPriceFeedService(priceFeedService));
                     dumpDelayedPayoutTx.maybeDumpDelayedPayoutTxs(tradableList, "delayed_payout_txs_pending");
                     completeHandler.run();
                 },
@@ -226,6 +233,8 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         NetworkEnvelope networkEnvelope = message.getNetworkEnvelope();
         if (networkEnvelope instanceof InputsForDepositTxRequest) {
             handleTakeOfferRequest(peer, (InputsForDepositTxRequest) networkEnvelope);
+        } else if (networkEnvelope instanceof CreateAtomicTxRequest) {
+            handleTakeAtomicOfferRequest(peer, (CreateAtomicTxRequest) networkEnvelope);
         }
     }
 
@@ -290,6 +299,58 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         requestPersistence();
     }
 
+    // The maker received a TakeOfferRequest
+    private void handleTakeAtomicOfferRequest(NodeAddress peer, CreateAtomicTxRequest createAtomicTxRequest) {
+        log.info("Received createAtomicTxRequest from {} with tradeId {} and uid {}",
+                peer, createAtomicTxRequest.getTradeId(), createAtomicTxRequest.getUid());
+
+        try {
+            Validator.nonEmptyStringOf(createAtomicTxRequest.getTradeId());
+        } catch (Throwable t) {
+            log.warn("Invalid inputsForDepositTxRequest " + createAtomicTxRequest.toString());
+            return;
+        }
+
+        Optional<OpenOffer> openOfferOptional = openOfferManager.getOpenOfferById(createAtomicTxRequest.getTradeId());
+        if (!openOfferOptional.isPresent()) {
+            return;
+        }
+
+        OpenOffer openOffer = openOfferOptional.get();
+        if (openOffer.getState() != OpenOffer.State.AVAILABLE) {
+            return;
+        }
+
+        Offer offer = openOffer.getOffer();
+        openOfferManager.reserveOpenOffer(openOffer);
+        AtomicTrade atomicTrade = new AtomicMakerTrade(
+                UUID.randomUUID().toString(),
+                offer,
+                Coin.valueOf(createAtomicTxRequest.getBtcTradeAmount()),
+                createAtomicTxRequest.getTradePrice(),
+                new Date().getTime(),
+                createAtomicTxRequest.getSenderNodeAddress(),
+                createAtomicTxRequest.getTxFeePerVbyte(),
+                createAtomicTxRequest.isCurrencyForMakerFeeBtc(),
+                createAtomicTxRequest.isCurrencyForTakerFeeBtc(),
+                createAtomicTxRequest.getMakerFee(),
+                createAtomicTxRequest.getTakerFee(),
+                new AtomicProcessModel(keyRing.getPubKeyRing()),
+                "",
+                AtomicTrade.State.PREPARATION);
+
+        TradeProtocol tradeProtocol = createTradeProtocol(atomicTrade);
+
+        initTradeAndProtocol(atomicTrade, tradeProtocol);
+
+        ((AtomicMakerProtocol) tradeProtocol).handleTakeAtomicRequest(createAtomicTxRequest, peer, errorMessage -> {
+            if (takeOfferRequestErrorMessageHandler != null)
+                takeOfferRequestErrorMessageHandler.handleErrorMessage(errorMessage);
+        });
+
+        requestPersistence();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Lifecycle
@@ -344,6 +405,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
 
         // We do not include failed trades as they should not be counted anyway in the trade statistics
         Set<TradeModel> allTrades = new HashSet<>(closedTradableManager.getClosedTrades());
+        allTrades.addAll(atomicTradeManager.getAtomicTrades());
         allTrades.addAll(tradableList.getList());
         String referralId = referralIdService.getOptionalReferralId().orElse(null);
         boolean isTorNetworkNode = p2PService.getNetworkNode() instanceof TorNetworkNode;
@@ -353,18 +415,17 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
     private void initPersistedTrade(TradeModel tradeModel) {
         initTradeAndProtocol(tradeModel, getTradeProtocol(tradeModel));
 
-        if (!(tradeModel instanceof Trade))
-            return;
-
-        Trade trade = (Trade) tradeModel;
-        trade.updateDepositTxFromWallet();
+        if (tradeModel instanceof Trade) {
+            ((Trade) tradeModel).updateDepositTxFromWallet();
+        }
         requestPersistence();
     }
 
-    private void initTradeAndProtocol(TradeModel trade, TradeProtocol tradeProtocol) {
-        tradeProtocol.initialize(processModelServiceProvider, this, trade.getOffer());
-        if (trade instanceof Trade)
-            ((Trade) trade).initialize(processModelServiceProvider);
+    private void initTradeAndProtocol(TradeModel tradeModel, TradeProtocol tradeProtocol) {
+        tradeProtocol.initialize(processModelServiceProvider, this, tradeModel.getOffer());
+        if (tradeModel instanceof Trade) {
+            ((Trade) tradeModel).initialize(processModelServiceProvider);
+        }
         requestPersistence();
     }
 
@@ -493,7 +554,6 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                                 "",
                                 AtomicTrade.State.PREPARATION);
 
-
                         TradeProtocol tradeProtocol = createTradeProtocol(atomicTrade);
 
                         initTradeAndProtocol(atomicTrade, tradeProtocol);
@@ -582,12 +642,15 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
     }
 
     // If trade was completed (closed without fault but might be closed by a dispute) we move it to the closed trades
-    public void onTradeCompleted(Trade trade) {
-        removeTrade(trade);
-        closedTradableManager.add(trade);
-
+    public void onTradeCompleted(TradeModel tradeModel) {
+        removeTrade(tradeModel);
+        if (tradeModel instanceof AtomicTrade) {
+            atomicTradeManager.add((AtomicTrade) tradeModel);
+        } else {
+            closedTradableManager.add(tradeModel);
+        }
         // TODO The address entry should have been removed already. Check and if its the case remove that.
-        btcWalletService.resetAddressEntriesForPendingTrade(trade.getId());
+        btcWalletService.resetAddressEntriesForPendingTrade(tradeModel.getId());
         requestPersistence();
     }
 
@@ -597,11 +660,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void closeDisputedTrade(String tradeId, Trade.DisputeState disputeState) {
-        getTradeById(tradeId).ifPresent(tradeModel -> {
-            if (!(tradeModel instanceof Trade))
-                return;
-
-            Trade trade = (Trade) tradeModel;
+        getTradeById(tradeId).ifPresent(trade -> {
             trade.setDisputeState(disputeState);
             onTradeCompleted(trade);
             btcWalletService.swapTradeEntryToAvailableEntry(trade.getId(), AddressEntry.Context.TRADE_PAYOUT);
@@ -767,7 +826,9 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                 .anyMatch(t -> t.getOffer().getId().equals(offerId));
         hasTaken &= failedTradesManager.getObservableList().stream()
                 .anyMatch(t -> t.getOffer().getId().equals(offerId));
-        return hasTaken && closedTradableManager.getObservableList().stream()
+        Stream<Tradable> oldTradables = Stream.concat(closedTradableManager.getObservableList().stream(),
+                atomicTradeManager.getObservableList().stream());
+        return hasTaken && oldTradables
                 .anyMatch(t -> t.getOffer().getId().equals(offerId));
     }
 
@@ -791,8 +852,8 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                 .map(tradeModel -> (Trade) tradeModel);
     }
 
-    private void removeTrade(TradeModel trade) {
-        if (tradableList.remove(trade)) {
+    private void removeTrade(TradeModel tradeModel) {
+        if (tradableList.remove(tradeModel)) {
             requestPersistence();
         }
     }

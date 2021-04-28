@@ -17,24 +17,19 @@
 
 package bisq.core.trade.atomic.protocol.tasks.maker;
 
-import bisq.core.btc.model.AddressEntry;
 import bisq.core.trade.atomic.AtomicTrade;
 import bisq.core.trade.atomic.messages.CreateAtomicTxRequest;
 import bisq.core.trade.protocol.tasks.AtomicTradeTask;
-import bisq.core.util.Validator;
 
+import bisq.common.config.Config;
 import bisq.common.taskrunner.TaskRunner;
 
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.TransactionInput;
-
-import java.util.ArrayList;
-import java.util.List;
+import org.bitcoinj.core.LegacyAddress;
 
 import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class AtomicMakerVerifiesTakerInputs extends AtomicTradeTask {
@@ -48,103 +43,55 @@ public class AtomicMakerVerifiesTakerInputs extends AtomicTradeTask {
         try {
             runInterceptHook();
 
-            /* Tx format:
-             * [1]     (BSQtradeAmount, makerBSQAddress)
-             * [0-1]   (BSQchange, takerBSQAddress)  (Change from BSQ for tradeAmount and/or tradeFee)
-             * [1]     (BTCtradeAmount + BTCchange, takerBTCAddress) (Change from BTC for txFee and/or tradeFee)
-             * [0-1]   (BTCchange, makerBTCAddress) (Change from BTC for tradeAmount payment)
+            /* Tx output format:
+             * At a minimum there will be 1 BSQ out and 1 BTC out
+             * [0-1]   (Maker BSQ)
+             * [0-1]   (Taker BSQ)
+             * [0-1]   (Taker BTC)
+             * [0-1]   (Maker BTC)
              * [0-1]   (BTCtradeFee)
              */
 
-            Validator.checkTradeId(atomicProcessModel.getOffer().getId(), atomicProcessModel.getTradeMessage());
-
-            checkArgument(atomicProcessModel.getOffer().isMyOffer(atomicProcessModel.getKeyRing()),
-                    "must process own offer");
-            var isBuyer = atomicProcessModel.getOffer().isBuyOffer();
-
-            if (!(atomicProcessModel.getTradeMessage() instanceof CreateAtomicTxRequest))
-                failed("Expected CreateAtomicTxRequest");
-
             var message = (CreateAtomicTxRequest) atomicProcessModel.getTradeMessage();
-            atomicProcessModel.updateFromCreateAtomicTxRequest(message);
 
-            if (message.getTradePrice() != atomicProcessModel.getTradePrice())
-                failed("Unexpected trade price");
-//            atomicTrade. setTradePrice(message.getTradePrice());
-            atomicProcessModel.getTradingPeer().setPubKeyRing(checkNotNull(message.getTakerPubKeyRing()));
-            atomicTrade.setPeerNodeAddress(atomicProcessModel.getTempTradingPeerNodeAddress());
-            atomicTrade.setAmount(Coin.valueOf(message.getBtcTradeAmount()));
-
-            if (message.getBsqTradeAmount() < atomicProcessModel.getBsqMinTradeAmount() ||
-                    message.getBsqTradeAmount() > atomicProcessModel.getBsqMaxTradeAmount())
-                failed("bsqTradeAmount not within range");
-            if (message.getBtcTradeAmount() < atomicProcessModel.getBtcMinTradeAmount() ||
-                    message.getBtcTradeAmount() > atomicProcessModel.getBtcMaxTradeAmount())
-                failed("btcTradeAmount not within range");
-            if (message.getTakerFee() !=
-                    (message.isCurrencyForTakerFeeBtc() ? atomicProcessModel.getBtcTradeFee() : atomicProcessModel.getBsqTradeFee()))
-                failed("Taker fee mismatch");
-//            var bsqAmount = atomicProcessModel.bsqAmountFromVolume(atomicTrade.getTradeVolume()).orElse(null);
-            var bsqAmount = atomicProcessModel.bsqAmountFromVolume(atomicTrade.getOffer().getVolume()).orElse(null);
-            if (bsqAmount == null || bsqAmount != message.getBsqTradeAmount())
-                failed("Amounts don't match price");
-            // TODO verify txFee is reasonable
+            atomicProcessModel.getAtomicTxBuilder().setMyTradeFee(atomicTrade.isCurrencyForMakerFeeBtc(),
+                    Coin.valueOf(atomicTrade.getMakerFee()));
+            atomicProcessModel.getAtomicTxBuilder().setPeerTradeFee(atomicTrade.isCurrencyForTakerFeeBtc(),
+                    Coin.valueOf(atomicTrade.getTakerFee()));
 
             // Verify taker bsq address
-            atomicProcessModel.getBsqWalletService().getBsqFormatter().getAddressFromBsqAddress(
-                    message.getTakerBsqOutputAddress());
+            LegacyAddress.fromBase58(Config.baseCurrencyNetworkParameters(), message.getTakerBsqOutputAddress());
 
-            var makerAddress = atomicProcessModel.getBtcWalletService().getOrCreateAddressEntry(
-                    atomicTrade.getId(), AddressEntry.Context.RESERVED_FOR_TRADE).getAddress();
-            List<TransactionInput> makerBtcInputs = new ArrayList<>();
-            if (!isBuyer) {
-                makerBtcInputs = atomicProcessModel.getTradeWalletService().getInputsForAddress(makerAddress,
-                        atomicTrade.getAmount());
-            }
+            checkArgument(atomicProcessModel.makerPreparesMakerSide(), "Failed to prepare maker inputs");
+
             // Inputs
-            var makerBsqInputAmount = 0L;
-            var makerBsqOutputAmount = message.getBsqTradeAmount();
-            if (isBuyer) {
-                // TODO Reserve BSQ for trade
-                // Prepare BSQ as it's not part of the prepared tx
-                var requiredBsq = atomicProcessModel.getBsqTradeAmount();
-                var preparedBsq = atomicProcessModel.getBsqWalletService().prepareAtomicBsqInputs(Coin.valueOf(requiredBsq));
-                makerBsqInputAmount = atomicProcessModel.getBsqWalletService().getConfirmedBsqInputAmount(
-                        preparedBsq.first.getInputs(), atomicProcessModel.getDaoFacade());
-                makerBsqOutputAmount = preparedBsq.second.getValue();
-                atomicProcessModel.setMakerBsqInputs(preparedBsq.first.getInputs());
-            }
-
+            var makerBsqInputAmount = atomicProcessModel.getBsqWalletService().getBsqRawInputAmount(
+                    atomicProcessModel.getRawMakerBsqInputs(), atomicProcessModel.getDaoFacade());
             var takerBsqInputAmount = atomicProcessModel.getBsqWalletService().getBsqRawInputAmount(
                     message.getTakerBsqInputs(), atomicProcessModel.getDaoFacade());
+            var makerBtcInputAmount = atomicProcessModel.getBtcWalletService().getBtcRawInputAmount(
+                    atomicProcessModel.getRawMakerBtcInputs());
             var takerBtcInputAmount = atomicProcessModel.getBtcWalletService().getBtcRawInputAmount(
-                    message.getTakerBtcInputs());
-            var makerBtcInputAmount = atomicProcessModel.getBtcWalletService().getBtcInputAmount(makerBtcInputs);
+                    atomicProcessModel.getRawTakerBtcInputs());
 
-            // Outputs and fees
-            var takerBsqOutputAmount = message.getTakerBsqOutputValue();
-            var takerBtcOutputAmount = message.getTakerBtcOutputValue();
-            var makerBtcOutputAmount = isBuyer ? message.getBtcTradeAmount() :
-                    makerBtcInputAmount - message.getBtcTradeAmount();
-            var btcTradeFeeAmount = atomicProcessModel.getBtcTradeFee();
-            var bsqTradeFee = atomicProcessModel.getBsqTradeFee();
-            var txFee = message.getTxFeePerVbyte();
+            // Outputs
+            var makerBsqOutputAmount = atomicProcessModel.getMakerBsqOutputAmount();
+            var takerBsqOutputAmount = atomicProcessModel.getTakerBsqOutputAmount();
+            var makerBtcOutputAmount = atomicProcessModel.getMakerBtcOutputAmount();
+            var takerBtcOutputAmount = atomicProcessModel.getTakerBtcOutputAmount();
+
+            // Trade fee
+            var btcTradeFeeAmount = atomicProcessModel.getBtcMakerTradeFee() + atomicProcessModel.getBtcTakerTradeFee();
+            var bsqTradeFeeAmount = atomicProcessModel.getBsqMakerTradeFee() + atomicProcessModel.getBsqTakerTradeFee();
 
             // Verify input sum equals output sum
             var bsqIn = takerBsqInputAmount + makerBsqInputAmount;
             var bsqOut = takerBsqOutputAmount + makerBsqOutputAmount;
-            if (bsqIn != bsqOut + bsqTradeFee)
-                failed("BSQ in does not match BSQ out");
-            var btcIn = takerBtcInputAmount + makerBtcInputAmount + bsqTradeFee;
-            var btcOut = takerBtcOutputAmount + makerBtcOutputAmount + btcTradeFeeAmount;
-            if (btcIn != btcOut + txFee)
-                failed("BTC in does not match BTC out");
+            checkArgument(bsqIn - bsqOut == bsqTradeFeeAmount, "BSQ in does not match BSQ out");
 
-            // Message data is verified as correct, update model with data from message
-            atomicProcessModel.setMakerBtcInputs(makerBtcInputs);
-            atomicProcessModel.setMakerBtcOutputAmount(makerBtcOutputAmount);
-            atomicProcessModel.setMakerBsqOutputAmount(makerBsqOutputAmount);
-            atomicProcessModel.setTxFeePerVbyte(message.getTxFeePerVbyte());
+            var btcIn = takerBtcInputAmount + makerBtcInputAmount + bsqTradeFeeAmount;
+            var btcOut = takerBtcOutputAmount + makerBtcOutputAmount + btcTradeFeeAmount;
+            atomicProcessModel.setTxFee(btcIn - btcOut);
 
             complete();
         } catch (Throwable t) {

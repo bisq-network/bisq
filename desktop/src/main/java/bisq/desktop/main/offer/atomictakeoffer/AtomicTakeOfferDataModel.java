@@ -27,6 +27,9 @@ import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.Restrictions;
+import bisq.core.btc.wallet.TradeWalletService;
+import bisq.core.dao.DaoFacade;
+import bisq.core.dao.governance.param.Param;
 import bisq.core.filter.FilterManager;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
@@ -79,6 +82,7 @@ class AtomicTakeOfferDataModel extends ActivatableDataModel {
     private final OfferBook offerBook;
     private final BtcWalletService btcWalletService;
     private final BsqWalletService bsqWalletService;
+    private final TradeWalletService tradeWalletService;
     private final User user;
     private final FeeService feeService;
     private final FilterManager filterManager;
@@ -86,6 +90,7 @@ class AtomicTakeOfferDataModel extends ActivatableDataModel {
     private final AccountAgeWitnessService accountAgeWitnessService;
     private final Navigation navigation;
     private final P2PService p2PService;
+    private final DaoFacade daoFacade;
 
     private Offer offer;
 
@@ -109,19 +114,22 @@ class AtomicTakeOfferDataModel extends ActivatableDataModel {
                              OfferUtil offerUtil,
                              BtcWalletService btcWalletService,
                              BsqWalletService bsqWalletService,
+                             TradeWalletService tradeWalletService,
                              User user,
                              FeeService feeService,
                              FilterManager filterManager,
                              Preferences preferences,
                              AccountAgeWitnessService accountAgeWitnessService,
                              Navigation navigation,
-                             P2PService p2PService
+                             P2PService p2PService,
+                             DaoFacade daoFacade
     ) {
         this.offerUtil = offerUtil;
         this.tradeManager = tradeManager;
         this.offerBook = offerBook;
         this.btcWalletService = btcWalletService;
         this.bsqWalletService = bsqWalletService;
+        this.tradeWalletService = tradeWalletService;
         this.user = user;
         this.feeService = feeService;
         this.filterManager = filterManager;
@@ -129,6 +137,7 @@ class AtomicTakeOfferDataModel extends ActivatableDataModel {
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.navigation = navigation;
         this.p2PService = p2PService;
+        this.daoFacade = daoFacade;
     }
 
     @Override
@@ -170,10 +179,19 @@ class AtomicTakeOfferDataModel extends ActivatableDataModel {
         this.amount.set(Coin.valueOf(Math.min(offer.getAmount().value, getMaxTradeLimit())));
 
         atomicTxBuilder = new AtomicTxBuilder(feeService,
+                btcWalletService,
+                bsqWalletService,
+                tradeWalletService,
                 offer.getDirection() == OfferPayloadI.Direction.SELL,
-                false);
-        atomicTxBuilder.setPrice(offer.getPrice());
-        atomicTxBuilder.setBtcAmount(amount.getValue());
+                false,
+                offer.getPrice(),
+                amount.getValue(),
+                null,
+                btcWalletService.getFreshAddressEntry().getAddressString(),
+                bsqWalletService.getUnusedAddress().toString(),
+                daoFacade.getParamValue(Param.RECIPIENT_BTC_ADDRESS),
+                null,
+                null);
 
         calculateVolume();
 
@@ -221,7 +239,7 @@ class AtomicTakeOfferDataModel extends ActivatableDataModel {
                     feeService.getTxFeePerVbyte().getValue(),
                     offer.isCurrencyForMakerFeeBtc(),
                     isCurrencyForTakerFeeBtc(),
-                    offer.getMakerFee().getValue(),
+                    getMakerFee(offer.isCurrencyForMakerFeeBtc()).getValue(),
                     getTakerFee().getValue(),
                     false,
                     tradeResultHandler,
@@ -302,20 +320,18 @@ class AtomicTakeOfferDataModel extends ActivatableDataModel {
     }
 
     Coin getTakerFee(boolean isCurrencyForTakerFeeBtc) {
-        Coin amount = this.amount.get();
-        if (amount != null) {
-            Coin feePerBtc = CoinUtil.getFeePerBtc(FeeService.getTakerFeePerBtc(isCurrencyForTakerFeeBtc), amount);
-            var fee = CoinUtil.maxCoin(feePerBtc, FeeService.getMinTakerFee(isCurrencyForTakerFeeBtc));
+        var fee = CoinUtil.getTakerFee(isCurrencyForTakerFeeBtc, this.amount.get());
+        atomicTxBuilder.setMyTradeFee(isCurrencyForTakerFeeBtc, fee);
 
-            atomicTxBuilder.setMyTradeFee(isCurrencyForTakerFeeBtc, fee);
-            return atomicTxBuilder.getMyTradeFee();
-        } else {
-            return Coin.ZERO;
-        }
+        return fee != null ? fee : Coin.ZERO;
     }
 
     public Coin getTakerFee() {
         return getTakerFee(isCurrencyForTakerFeeBtc());
+    }
+
+    public Coin getMakerFee(boolean isCurrencyForMakerFeeBtc) {
+        return CoinUtil.getMakerFee(isCurrencyForMakerFeeBtc, this.amount.get());
     }
 
     boolean isMinAmountLessOrEqualAmount() {

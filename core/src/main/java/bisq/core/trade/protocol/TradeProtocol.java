@@ -80,16 +80,12 @@ public abstract class TradeProtocol implements DecryptedDirectMessageListener,
     }
 
     protected void onInitialized() {
-        if (!(tradeModel instanceof Trade))
-            return;
-
-        Trade trade = (Trade) tradeModel;
-        if (!trade.isWithdrawn()) {
-            trade.getProcessModel().getP2PService().addDecryptedDirectMessageListener(this);
+        if (!tradeModel.isCompleted()) {
+            tradeModel.getProcessModelI().getP2PService().addDecryptedDirectMessageListener(this);
         }
 
         MailboxMessageService mailboxMessageService =
-                trade.getProcessModel().getP2PService().getMailboxMessageService();
+                tradeModel.getProcessModelI().getP2PService().getMailboxMessageService();
         // We delay a bit here as the trade gets updated from the wallet to update the trade
         // state (deposit confirmed) and that happens after our method is called.
         // TODO To fix that in a better way we would need to change the order of some routines
