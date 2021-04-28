@@ -55,7 +55,6 @@ import bisq.common.app.Log;
 import bisq.common.app.Version;
 import bisq.common.config.BaseCurrencyNetwork;
 import bisq.common.config.Config;
-import bisq.common.util.InvalidVersionException;
 import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Coin;
@@ -184,9 +183,6 @@ public class BisqSetup {
     private Consumer<List<AmazonGiftCardAccount>> amazonGiftCardAccountsUpdateHandler;
     @Setter
     @Nullable
-    private Runnable osxKeyLoggerWarningHandler;
-    @Setter
-    @Nullable
     private Runnable qubesOSInfoHandler;
     @Setter
     @Nullable
@@ -299,7 +295,6 @@ public class BisqSetup {
     private void step2() {
         readMapsFromResources(this::step3);
         checkForCorrectOSArchitecture();
-        checkOSXVersion();
         checkIfRunningOnQubesOS();
     }
 
@@ -624,19 +619,6 @@ public class BisqSetup {
                     osArchitecture,
                     Utilities.getJVMArchitecture(),
                     osArchitecture));
-        }
-    }
-
-    private void checkOSXVersion() {
-        if (Utilities.isOSX() && osxKeyLoggerWarningHandler != null) {
-            try {
-                // Seems it was introduced at 10.14: https://github.com/wesnoth/wesnoth/issues/4109
-                if (Utilities.getMajorVersion() >= 10 && Utilities.getMinorVersion() >= 14) {
-                    osxKeyLoggerWarningHandler.run();
-                }
-            } catch (InvalidVersionException | NumberFormatException e) {
-                log.warn(e.getMessage());
-            }
         }
     }
 
