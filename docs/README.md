@@ -8,4 +8,4 @@
  - [dao-setup.md](dao-setup.md): (deprecated) Set up a complete Bisq DAO development environment
  - [testing.md](testing.md): Learn about the Bisq testing process and how you can contribute.
 
-Looking for user-facing documentation? See https://docs.bisq.network.
+Looking for user-facing documentation? See https://bisq.wiki.
