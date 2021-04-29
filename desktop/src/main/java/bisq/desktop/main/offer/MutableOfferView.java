@@ -436,7 +436,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
             String key = "securityDepositInfo";
             new Popup().backgroundInfo(Res.get("popup.info.securityDepositInfo"))
                     .actionButtonText(Res.get("shared.faq"))
-                    .onAction(() -> GUIUtil.openWebPage("https://bisq.network/faq#6"))
+                    .onAction(() -> GUIUtil.openWebPage("https://bisq.wiki/Frequently_asked_questions#Why_does_Bisq_require_a_security_deposit_in_BTC.3F"))
                     .useIUnderstandButton()
                     .dontShowAgainId(key)
                     .show();
