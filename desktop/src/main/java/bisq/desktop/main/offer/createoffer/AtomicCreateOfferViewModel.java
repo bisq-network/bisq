@@ -20,7 +20,6 @@ package bisq.desktop.main.offer.createoffer;
 import bisq.desktop.Navigation;
 import bisq.desktop.common.model.ViewModel;
 import bisq.desktop.main.offer.AtomicOfferViewModel;
-import bisq.desktop.main.offer.MutableOfferViewModel;
 import bisq.desktop.util.validation.AltcoinValidator;
 import bisq.desktop.util.validation.BsqValidator;
 import bisq.desktop.util.validation.BtcValidator;
@@ -30,7 +29,6 @@ import bisq.desktop.util.validation.SecurityDepositValidator;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.offer.OfferUtil;
-import bisq.core.provider.price.PriceFeedService;
 import bisq.core.user.Preferences;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.BsqFormatter;
@@ -50,7 +48,6 @@ class AtomicCreateOfferViewModel extends AtomicOfferViewModel<AtomicCreateOfferD
                                       BtcValidator btcValidator,
                                       BsqValidator bsqValidator,
                                       SecurityDepositValidator securityDepositValidator,
-//                                      PriceFeedService priceFeedService,
                                       AccountAgeWitnessService accountAgeWitnessService,
                                       Navigation navigation,
                                       Preferences preferences,
@@ -64,7 +61,6 @@ class AtomicCreateOfferViewModel extends AtomicOfferViewModel<AtomicCreateOfferD
                 btcValidator,
                 bsqValidator,
                 securityDepositValidator,
-//                priceFeedService,
                 accountAgeWitnessService,
                 navigation,
                 preferences,

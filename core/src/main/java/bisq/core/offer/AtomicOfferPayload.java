@@ -56,6 +56,8 @@ public final class AtomicOfferPayload extends OfferPayloadI {
     private final long minAmount;
     private final String versionNr;
     private final int protocolVersion;
+    private final boolean isCurrencyForMakerFeeBtc;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -70,7 +72,8 @@ public final class AtomicOfferPayload extends OfferPayloadI {
                               long amount,
                               long minAmount,
                               String versionNr,
-                              int protocolVersion) {
+                              int protocolVersion,
+                              boolean isCurrencyForMakerFeeBtc) {
         this.id = id;
         this.date = date;
         this.ownerNodeAddress = ownerNodeAddress;
@@ -81,6 +84,7 @@ public final class AtomicOfferPayload extends OfferPayloadI {
         this.minAmount = minAmount;
         this.versionNr = versionNr;
         this.protocolVersion = protocolVersion;
+        this.isCurrencyForMakerFeeBtc = isCurrencyForMakerFeeBtc;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -106,7 +110,8 @@ public final class AtomicOfferPayload extends OfferPayloadI {
                 .setAmount(amount)
                 .setMinAmount(minAmount)
                 .setVersionNr(versionNr)
-                .setProtocolVersion(protocolVersion);
+                .setProtocolVersion(protocolVersion)
+                .setIsCurrencyForMakerFeeBtc(isCurrencyForMakerFeeBtc);
 
         return protobuf.StoragePayload.newBuilder().setAtomicOfferPayload(builder).build();
     }
@@ -121,7 +126,8 @@ public final class AtomicOfferPayload extends OfferPayloadI {
                 proto.getAmount(),
                 proto.getMinAmount(),
                 proto.getVersionNr(),
-                proto.getProtocolVersion());
+                proto.getProtocolVersion(),
+                proto.getIsCurrencyForMakerFeeBtc());
     }
 
 
@@ -146,15 +152,12 @@ public final class AtomicOfferPayload extends OfferPayloadI {
     }
 
     @Override
-    public boolean isCurrencyForMakerFeeBtc() {
-        return false;
-    }
-
-    @Override
     public boolean isPrivateOffer() {
         return false;
     }
 
+    // Cannot be used for offers without fee tx since the fee depends on the trade
+    // amount taken
     @Override
     public long getMakerFee() {
         return 0;

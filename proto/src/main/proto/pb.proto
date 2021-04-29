@@ -849,6 +849,7 @@ message AtomicOfferPayload {
     int64 min_amount = 8;
     string version_nr = 9;
     int32 protocol_version = 10;
+    bool is_currency_for_maker_fee_btc = 11;
 }
 
 message AccountAgeWitness {
