@@ -92,7 +92,7 @@ public final class AtomicMakerTrade extends AtomicTrade {
         if (uid == null) {
             uid = UUID.randomUUID().toString();
         }
-        return fromProto(new AtomicMakerTrade(
+        var atomicTrade = fromProto(new AtomicMakerTrade(
                         uid,
                         Offer.fromProto(proto.getOffer()),
                         Coin.valueOf(proto.getAmount()),
@@ -109,6 +109,8 @@ public final class AtomicMakerTrade extends AtomicTrade {
                         State.fromProto(proto.getState())),
                 proto,
                 coreProtoResolver);
+        atomicTrade.setTxId(proto.getTxId());
+        return atomicTrade;
     }
 
 

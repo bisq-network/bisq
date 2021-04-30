@@ -66,8 +66,8 @@ public class AtomicTradeManager implements PersistedDataHost {
         persistenceManager.readPersisted(persisted -> {
                     atomicTrades.setAll(persisted.getList());
                     atomicTrades.stream()
-                            .filter(tradable -> tradable.getOffer() != null)
-                            .forEach(tradable -> tradable.getOffer().setPriceFeedService(priceFeedService));
+                            .filter(atomicTrade -> atomicTrade.getOffer() != null)
+                            .forEach(atomicTrade -> atomicTrade.getOffer().setPriceFeedService(priceFeedService));
                     completeHandler.run();
                 },
                 completeHandler);
@@ -105,11 +105,6 @@ public class AtomicTradeManager implements PersistedDataHost {
     public Optional<AtomicTrade> getAtomicTradeById(String id) {
         return atomicTrades.stream().filter(e -> e.getId().equals(id)).findFirst();
     }
-
-//    public Stream<AtomicTrade> getTradesStreamWithFundsLockedIn() {
-//        return getAtomicTrades().stream()
-//                .filter(Trade::isFundsLockedIn);
-//    }
 
     private void requestPersistence() {
         persistenceManager.requestPersistence();

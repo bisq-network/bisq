@@ -256,7 +256,17 @@ class TransactionsListItem {
             } else if (tradable instanceof AtomicTrade) {
                 direction = amountAsCoin.isPositive() ? Res.get("funds.tx.direction.atomicBuy") :
                         Res.get("funds.tx.direction.atomicSell");
-                addressString = "";
+
+                // Find my BTC output address
+                var tx = btcWalletService.getTransaction(((AtomicTrade) tradable).getTxId());
+                addressString = tx != null ?
+                        tx.getOutputs().stream()
+                                .filter(output -> output.isMine(btcWalletService.getWallet()))
+                                .map(output -> output.getScriptPubKey().getToAddress(btcWalletService.getParams()))
+                                .map(Object::toString)
+                                .findFirst()
+                                .orElse("") :
+                        "";
                 details = Res.get("funds.tx.atomicTx", tradeId);
             }
         } else {

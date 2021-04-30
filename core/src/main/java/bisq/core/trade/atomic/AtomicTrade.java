@@ -28,6 +28,7 @@ import bisq.core.trade.protocol.ProcessModelI;
 import bisq.network.p2p.NodeAddress;
 
 import bisq.common.proto.ProtoUtil;
+import bisq.common.util.Utilities;
 
 import com.google.protobuf.Message;
 
@@ -229,7 +230,7 @@ public abstract class AtomicTrade extends TradeModel {
 
     @Override
     public String getShortId() {
-        return getId();
+        return Utilities.getShortId(getId());
     }
 
     @Override

@@ -239,6 +239,9 @@ public class AtomicTxBuilder {
             var requiredBsq = isBuyer ? buyerBsq : sellerBsq;
             var requiredBtc = isBuyer ? buyerBtc : sellerBtc;
             requiredBtc = requiredBtc.add(getTxFee(parent, payForOverhead)).subtract(getMyBsqTradeFee());
+            if (requiredBtc.isLessThan(Coin.ZERO)) {
+                requiredBtc = Coin.ZERO;
+            }
 
             // This might prepare a tx with no inputs if no BSQ is required
             var preparedBsq = bsqWalletService.prepareAtomicBsqInputs(requiredBsq);

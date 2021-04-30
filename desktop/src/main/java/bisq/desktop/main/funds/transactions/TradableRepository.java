@@ -20,6 +20,7 @@ package bisq.desktop.main.funds.transactions;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.trade.Tradable;
 import bisq.core.trade.TradeManager;
+import bisq.core.trade.atomic.AtomicTradeManager;
 import bisq.core.trade.closed.ClosedTradableManager;
 import bisq.core.trade.failed.FailedTradesManager;
 
@@ -36,16 +37,19 @@ public class TradableRepository {
     private final TradeManager tradeManager;
     private final ClosedTradableManager closedTradableManager;
     private final FailedTradesManager failedTradesManager;
+    private final AtomicTradeManager atomicTradeManager;
 
     @Inject
     TradableRepository(OpenOfferManager openOfferManager,
                        TradeManager tradeManager,
                        ClosedTradableManager closedTradableManager,
-                       FailedTradesManager failedTradesManager) {
+                       FailedTradesManager failedTradesManager,
+                       AtomicTradeManager atomicTradeManager) {
         this.openOfferManager = openOfferManager;
         this.tradeManager = tradeManager;
         this.closedTradableManager = closedTradableManager;
         this.failedTradesManager = failedTradesManager;
+        this.atomicTradeManager = atomicTradeManager;
     }
 
     public Set<Tradable> getAll() {
@@ -54,6 +58,7 @@ public class TradableRepository {
                 .addAll(tradeManager.getObservableList())
                 .addAll(closedTradableManager.getObservableList())
                 .addAll(failedTradesManager.getObservableList())
+                .addAll(atomicTradeManager.getObservableList())
                 .build();
     }
 }

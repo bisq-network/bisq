@@ -92,7 +92,7 @@ public final class AtomicTakerTrade extends AtomicTrade implements TakerTrade {
         if (uid == null) {
             uid = UUID.randomUUID().toString();
         }
-        return fromProto(new AtomicTakerTrade(
+        var atomicTrade = fromProto(new AtomicTakerTrade(
                         uid,
                         Offer.fromProto(proto.getOffer()),
                         Coin.valueOf(proto.getAmount()),
@@ -109,6 +109,8 @@ public final class AtomicTakerTrade extends AtomicTrade implements TakerTrade {
                         State.fromProto(proto.getState())),
                 proto,
                 coreProtoResolver);
+        atomicTrade.setTxId(proto.getTxId());
+        return atomicTrade;
     }
 
 
