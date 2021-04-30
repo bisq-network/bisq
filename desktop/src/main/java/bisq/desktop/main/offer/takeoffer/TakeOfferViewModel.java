@@ -696,7 +696,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                 dataModel.getAmount().get(),
                 true,
                 btcFormatter,
-                Coin.ZERO
+                Restrictions.getMinBuyerSecurityDepositAsCoin()
         );
     }
 

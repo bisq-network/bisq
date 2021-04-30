@@ -1011,7 +1011,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
                 dataModel.getAmount().get(),
                 true,
                 btcFormatter,
-                Coin.ZERO
+                Restrictions.getMinBuyerSecurityDepositAsCoin()
         );
     }
 
