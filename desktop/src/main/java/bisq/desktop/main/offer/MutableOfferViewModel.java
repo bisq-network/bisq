@@ -142,7 +142,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
     final StringProperty volumeDescriptionLabel = new SimpleStringProperty();
     final StringProperty volumePromptLabel = new SimpleStringProperty();
     final StringProperty tradeAmount = new SimpleStringProperty();
-    StringProperty totalToPay = new SimpleStringProperty();
+    final StringProperty totalToPay = new SimpleStringProperty();
     final StringProperty errorMessage = new SimpleStringProperty();
     final StringProperty tradeCurrencyCode = new SimpleStringProperty();
     final StringProperty waitingForFundsText = new SimpleStringProperty("");
