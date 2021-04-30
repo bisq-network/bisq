@@ -520,7 +520,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
             String tradeAmountText = model.isSeller() ? Res.get("takeOffer.takeOfferFundWalletInfo.tradeAmount", model.getTradeAmount()) : "";
             String message = Res.get("takeOffer.takeOfferFundWalletInfo.msg",
-                    model.totalToPay.get(),
+                    model.getTotalToPayInfo(),
                     tradeAmountText,
                     model.getSecurityDepositInfo(),
                     model.getTradeFee(),

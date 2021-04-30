@@ -684,14 +684,20 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     }
 
     String getTradeAmount() {
-        return btcFormatter.formatCoinWithCode(dataModel.getAmount().get());
+        return FeeUtil.getTradeFeeWithFiatEquivalent(offerUtil,
+                dataModel.getAmount().get(),
+                true,
+                btcFormatter);
     }
 
     public String getSecurityDepositInfo() {
-        return btcFormatter.formatCoinWithCode(dataModel.getSecurityDeposit()) +
-                GUIUtil.getPercentageOfTradeAmount(dataModel.getSecurityDeposit(),
-                        dataModel.getAmount().get(),
-                        Restrictions.getMinBuyerSecurityDepositAsCoin());
+        return FeeUtil.getTradeFeeWithFiatEquivalentAndPercentage(offerUtil,
+                dataModel.getSecurityDeposit(),
+                dataModel.getAmount().get(),
+                true,
+                btcFormatter,
+                Coin.ZERO
+        );
     }
 
     public String getSecurityDepositWithCode() {
@@ -725,11 +731,18 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     }
 
     public String getTotalToPayInfo() {
-        final String totalToPay = this.totalToPay.get();
-        if (dataModel.isCurrencyForTakerFeeBtc())
-            return totalToPay;
-        else
-            return totalToPay + " + " + bsqFormatter.formatCoinWithCode(dataModel.getTakerFee());
+        if (dataModel.isCurrencyForTakerFeeBtc()) {
+            return FeeUtil.getTradeFeeWithFiatEquivalent(offerUtil,
+                    dataModel.totalToPayAsCoin.get(),
+                    true,
+                    btcFormatter);
+        }
+        else {
+            return FeeUtil.getTradeFeeWithFiatEquivalent(offerUtil,
+                    dataModel.totalToPayAsCoin.get(),
+                    true,
+                    btcFormatter) + " + " + getTradeFee();
+        }
     }
 
     public String getTxFee() {

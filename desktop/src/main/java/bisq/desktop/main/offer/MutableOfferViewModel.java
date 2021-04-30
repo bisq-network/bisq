@@ -142,7 +142,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
     final StringProperty volumeDescriptionLabel = new SimpleStringProperty();
     final StringProperty volumePromptLabel = new SimpleStringProperty();
     final StringProperty tradeAmount = new SimpleStringProperty();
-    final StringProperty totalToPay = new SimpleStringProperty();
+    StringProperty totalToPay = new SimpleStringProperty();
     final StringProperty errorMessage = new SimpleStringProperty();
     final StringProperty tradeCurrencyCode = new SimpleStringProperty();
     final StringProperty waitingForFundsText = new SimpleStringProperty("");
@@ -1006,10 +1006,13 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
     }
 
     public String getSecurityDepositInfo() {
-        return btcFormatter.formatCoinWithCode(dataModel.getSecurityDeposit()) +
-                GUIUtil.getPercentageOfTradeAmount(dataModel.getSecurityDeposit(),
-                        dataModel.getAmount().get(),
-                        Restrictions.getMinBuyerSecurityDepositAsCoin());
+        return FeeUtil.getTradeFeeWithFiatEquivalentAndPercentage(offerUtil,
+                dataModel.getSecurityDeposit(),
+                dataModel.getAmount().get(),
+                true,
+                btcFormatter,
+                Coin.ZERO
+        );
     }
 
     public String getSecurityDepositWithCode() {
@@ -1044,11 +1047,18 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
     }
 
     public String getTotalToPayInfo() {
-        final String totalToPay = this.totalToPay.get();
-        if (dataModel.isCurrencyForMakerFeeBtc())
-            return totalToPay;
-        else
-            return totalToPay + " + " + bsqFormatter.formatCoinWithCode(dataModel.getMakerFee());
+        if (dataModel.isCurrencyForMakerFeeBtc()) {
+            return FeeUtil.getTradeFeeWithFiatEquivalent(offerUtil,
+                    dataModel.totalToPayAsCoin.get(),
+                    true,
+                    btcFormatter);
+        }
+        else {
+            return FeeUtil.getTradeFeeWithFiatEquivalent(offerUtil,
+                    dataModel.totalToPayAsCoin.get(),
+                    true,
+                    btcFormatter) + " + " + getTradeFee();
+        }
     }
 
     public String getFundsStructure() {
