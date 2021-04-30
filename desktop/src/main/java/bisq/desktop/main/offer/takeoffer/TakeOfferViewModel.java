@@ -736,8 +736,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                     dataModel.totalToPayAsCoin.get(),
                     true,
                     btcFormatter);
-        }
-        else {
+        } else {
             return FeeUtil.getTradeFeeWithFiatEquivalent(offerUtil,
                     dataModel.totalToPayAsCoin.get(),
                     true,

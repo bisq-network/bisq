@@ -1055,8 +1055,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
                     dataModel.totalToPayAsCoin.get(),
                     true,
                     btcFormatter);
-        }
-        else {
+        } else {
             return FeeUtil.getTradeFeeWithFiatEquivalent(offerUtil,
                     dataModel.totalToPayAsCoin.get(),
                     true,
