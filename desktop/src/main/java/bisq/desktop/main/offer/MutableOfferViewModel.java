@@ -992,7 +992,10 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
     }
 
     public String getTradeAmount() {
-        return btcFormatter.formatCoinWithCode(dataModel.getAmount().get());
+        return FeeUtil.getTradeFeeWithFiatEquivalent(offerUtil,
+                dataModel.getAmount().get(),
+                true,
+                btcFormatter);
     }
 
     public String getSecurityDepositLabel() {
