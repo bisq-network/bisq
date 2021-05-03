@@ -167,7 +167,7 @@ class AtomicTakeOfferViewModel extends ActivatableWithDataModel<AtomicTakeOfferD
                 : Res.get("takeOffer.amountPriceBox.sell.amountDescription");
 
         amountRange = btcFormatter.formatCoin(offer.getMinAmount()) + " - " + btcFormatter.formatCoin(offer.getAmount());
-        price = FormattingUtils.formatPrice(dataModel.tradePrice);
+        price = FormattingUtils.formatPrice(dataModel.getTradePrice());
 
         offerErrorListener = (observable, oldValue, newValue) -> {
             if (newValue != null)
@@ -343,7 +343,7 @@ class AtomicTakeOfferViewModel extends ActivatableWithDataModel<AtomicTakeOfferD
                 && dataModel.isMinAmountLessOrEqualAmount()
                 && !dataModel.isAmountLargerThanOfferAmount()
                 && isOfferAvailable.get()
-                && dataModel.isTxBuilderReady.get()
+                && dataModel.getIsTxBuilderReady().get()
                 && dataModel.hasEnoughBtc()
                 && dataModel.hasEnoughBsq();
         isAtomicTakeOfferButtonDisabled.set(!inputDataValid);
@@ -354,7 +354,8 @@ class AtomicTakeOfferViewModel extends ActivatableWithDataModel<AtomicTakeOfferD
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void addBindings() {
-        volume.bind(createStringBinding(() -> DisplayUtils.formatVolume(dataModel.volume.get()), dataModel.volume));
+        volume.bind(createStringBinding(
+                () -> DisplayUtils.formatVolume(dataModel.getVolume().get()), dataModel.getVolume()));
 
         if (dataModel.getDirection() == OfferPayloadI.Direction.SELL) {
             volumeDescriptionLabel.set(Res.get("createOffer.amountPriceBox.buy.volumeDescription", dataModel.getCurrencyCode()));
@@ -418,7 +419,7 @@ class AtomicTakeOfferViewModel extends ActivatableWithDataModel<AtomicTakeOfferD
         dataModel.getAmount().addListener(amountAsCoinListener);
 
         p2PService.getNetworkNode().addConnectionListener(connectionListener);
-        dataModel.isTxBuilderReady.addListener(isTxBuilderReadyListener);
+        dataModel.getIsTxBuilderReady().addListener(isTxBuilderReadyListener);
     }
 
     private void removeListeners() {
@@ -437,7 +438,7 @@ class AtomicTakeOfferViewModel extends ActivatableWithDataModel<AtomicTakeOfferD
             atomicTrade.errorMessageProperty().removeListener(tradeErrorListener);
         }
         p2PService.getNetworkNode().removeConnectionListener(connectionListener);
-        dataModel.isTxBuilderReady.removeListener(isTxBuilderReadyListener);
+        dataModel.getIsTxBuilderReady().removeListener(isTxBuilderReadyListener);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

@@ -17,40 +17,18 @@
 
 package bisq.desktop.main.offer.atomictakeoffer;
 
-import bisq.desktop.Navigation;
 import bisq.desktop.common.model.ActivatableDataModel;
 import bisq.desktop.main.offer.offerbook.OfferBook;
 import bisq.desktop.main.overlays.popups.Popup;
-import bisq.desktop.util.GUIUtil;
 
-import bisq.core.account.witness.AccountAgeWitnessService;
-import bisq.core.btc.wallet.BsqWalletService;
-import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.btc.wallet.Restrictions;
-import bisq.core.btc.wallet.TradeWalletService;
-import bisq.core.dao.DaoFacade;
-import bisq.core.dao.governance.param.Param;
-import bisq.core.filter.FilterManager;
-import bisq.core.locale.CurrencyUtil;
-import bisq.core.locale.Res;
 import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
-import bisq.core.offer.OfferPayloadI;
-import bisq.core.offer.OfferUtil;
+import bisq.core.offer.takeoffer.AtomicTakeOfferModel;
 import bisq.core.payment.PaymentAccount;
-import bisq.core.payment.payload.PaymentMethod;
-import bisq.core.provider.fee.FeeService;
-import bisq.core.trade.TradeManager;
 import bisq.core.trade.atomic.AtomicTrade;
-import bisq.core.trade.atomic.AtomicTxBuilder;
 import bisq.core.trade.handlers.TradeResultHandler;
-import bisq.core.user.Preferences;
-import bisq.core.user.User;
-import bisq.core.util.coin.CoinUtil;
-
-import bisq.network.p2p.P2PService;
 
 import org.bitcoinj.core.Coin;
 
@@ -59,49 +37,17 @@ import com.google.inject.Inject;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
-import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
-
-import java.util.Set;
 
 import lombok.Getter;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-/**
- * Domain for that UI element.
- * Note that the create offer domain has a deeper scope in the application domain (TradeManager).
- * That model is just responsible for the domain specific parts displayed needed in that UI element.
- */
 class AtomicTakeOfferDataModel extends ActivatableDataModel {
-    private final OfferUtil offerUtil;
+    private final AtomicTakeOfferModel atomicTakeOfferModel;
     @Getter
     private final ObjectProperty<Coin> totalToPayAsCoin = new SimpleObjectProperty<>();
-    private final TradeManager tradeManager;
     private final OfferBook offerBook;
-    private final BtcWalletService btcWalletService;
-    private final BsqWalletService bsqWalletService;
-    private final TradeWalletService tradeWalletService;
-    private final User user;
-    private final FeeService feeService;
-    private final FilterManager filterManager;
-    final Preferences preferences;
-    private final AccountAgeWitnessService accountAgeWitnessService;
-    private final Navigation navigation;
-    private final P2PService p2PService;
-    private final DaoFacade daoFacade;
-
-    private Offer offer;
-
-    private final ObjectProperty<Coin> amount = new SimpleObjectProperty<>();
-    final ObjectProperty<Volume> volume = new SimpleObjectProperty<>();
-    final BooleanProperty isTxBuilderReady = new SimpleBooleanProperty();
-
-
-    private PaymentAccount paymentAccount;
-    Price tradePrice;
-    private AtomicTxBuilder atomicTxBuilder;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -109,58 +55,21 @@ class AtomicTakeOfferDataModel extends ActivatableDataModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    AtomicTakeOfferDataModel(TradeManager tradeManager,
-                             OfferBook offerBook,
-                             OfferUtil offerUtil,
-                             BtcWalletService btcWalletService,
-                             BsqWalletService bsqWalletService,
-                             TradeWalletService tradeWalletService,
-                             User user,
-                             FeeService feeService,
-                             FilterManager filterManager,
-                             Preferences preferences,
-                             AccountAgeWitnessService accountAgeWitnessService,
-                             Navigation navigation,
-                             P2PService p2PService,
-                             DaoFacade daoFacade
+    AtomicTakeOfferDataModel(AtomicTakeOfferModel atomicTakeOfferModel,
+                             OfferBook offerBook
     ) {
-        this.offerUtil = offerUtil;
-        this.tradeManager = tradeManager;
+        this.atomicTakeOfferModel = atomicTakeOfferModel;
         this.offerBook = offerBook;
-        this.btcWalletService = btcWalletService;
-        this.bsqWalletService = bsqWalletService;
-        this.tradeWalletService = tradeWalletService;
-        this.user = user;
-        this.feeService = feeService;
-        this.filterManager = filterManager;
-        this.preferences = preferences;
-        this.accountAgeWitnessService = accountAgeWitnessService;
-        this.navigation = navigation;
-        this.p2PService = p2PService;
-        this.daoFacade = daoFacade;
     }
 
     @Override
     protected void activate() {
-        // when leaving screen we reset state
-        offer.setState(Offer.State.UNKNOWN);
-        addListeners();
-
-        if (canTakeOffer()) {
-            tradeManager.checkOfferAvailability(offer,
-                    false,
-                    () -> {
-                    },
-                    errorMessage -> new Popup().warning(errorMessage).show());
-        }
+        atomicTakeOfferModel.activate(errorMessage -> new Popup().warning(errorMessage).show());
     }
 
     @Override
     protected void deactivate() {
-        removeListeners();
-        if (offer != null) {
-            offer.cancelAvailabilityRequest();
-        }
+        atomicTakeOfferModel.deactivate();
     }
 
 
@@ -170,32 +79,7 @@ class AtomicTakeOfferDataModel extends ActivatableDataModel {
 
     // called before activate
     void initWithData(Offer offer) {
-        this.offer = offer;
-
-        tradePrice = offer.getPrice();
-        paymentAccount = getPaymentAccount();
-        checkNotNull(paymentAccount, "PaymentAccount must not be null");
-
-        this.amount.set(Coin.valueOf(Math.min(offer.getAmount().value, getMaxTradeLimit())));
-
-        atomicTxBuilder = new AtomicTxBuilder(feeService,
-                btcWalletService,
-                bsqWalletService,
-                tradeWalletService,
-                offer.getDirection() == OfferPayloadI.Direction.SELL,
-                false,
-                offer.getPrice(),
-                amount.getValue(),
-                null,
-                btcWalletService.getFreshAddressEntry().getAddressString(),
-                bsqWalletService.getUnusedAddress().toString(),
-                daoFacade.getParamValue(Param.RECIPIENT_BTC_ADDRESS),
-                null,
-                null);
-
-        calculateVolume();
-
-        offer.resetState();
+        atomicTakeOfferModel.initWithData(offer);
     }
 
     public void onClose(boolean removeOffer) {
@@ -206,7 +90,7 @@ class AtomicTakeOfferDataModel extends ActivatableDataModel {
         // only local effect. Other trader might see the offer for a few seconds
         // still (but cannot take it).
         if (removeOffer) {
-            offerBook.removeOffer(checkNotNull(offer));
+            offerBook.removeOffer(checkNotNull(atomicTakeOfferModel.getOffer()));
         }
     }
 
@@ -215,40 +99,14 @@ class AtomicTakeOfferDataModel extends ActivatableDataModel {
     // UI actions
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    // errorMessageHandler is used only in the check availability phase. As soon we have a trade we write the error msg in the trade object as we want to
-    // have it persisted as well.
     void onTakeOffer(TradeResultHandler<AtomicTrade> tradeResultHandler) {
-        checkArgument(atomicTxBuilder.getCanBuildMySide().get(), "Missing data to create transaction");
-
-        if (filterManager.isCurrencyBanned(offer.getCurrencyCode())) {
-            new Popup().warning(Res.get("offerbook.warning.currencyBanned")).show();
-        } else if (filterManager.isPaymentMethodBanned(offer.getPaymentMethod())) {
-            new Popup().warning(Res.get("offerbook.warning.paymentMethodBanned")).show();
-        } else if (filterManager.isOfferIdBanned(offer.getId())) {
-            new Popup().warning(Res.get("offerbook.warning.offerBlocked")).show();
-        } else if (filterManager.isNodeAddressBanned(offer.getMakerNodeAddress())) {
-            new Popup().warning(Res.get("offerbook.warning.nodeBlocked")).show();
-        } else if (filterManager.requireUpdateToNewVersionForTrading()) {
-            new Popup().warning(Res.get("offerbook.warning.requireUpdateToNewVersion")).show();
-        } else if (tradeManager.wasOfferAlreadyUsedInTrade(offer.getId())) {
-            new Popup().warning(Res.get("offerbook.warning.offerWasAlreadyUsedInTrade")).show();
-        } else {
-            tradeManager.onTakeAtomicOffer(offer,
-                    amount.get(),
-                    tradePrice.getValue(),
-                    feeService.getTxFeePerVbyte().getValue(),
-                    offer.isCurrencyForMakerFeeBtc(),
-                    isCurrencyForTakerFeeBtc(),
-                    getMakerFee(offer.isCurrencyForMakerFeeBtc()).getValue(),
-                    getTakerFee().getValue(),
-                    false,
-                    tradeResultHandler,
-                    errorMessage -> {
-                        log.warn(errorMessage);
-                        new Popup().warning(errorMessage).show();
-                    }
-            );
-        }
+        atomicTakeOfferModel.onTakeOffer(tradeResultHandler,
+                warningMessage -> new Popup().warning(warningMessage).show(),
+                errorMessage -> {
+                    log.warn(errorMessage);
+                    new Popup().warning(errorMessage).show();
+                }
+        );
     }
 
 
@@ -257,46 +115,31 @@ class AtomicTakeOfferDataModel extends ActivatableDataModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     OfferPayload.Direction getDirection() {
-        return offer.getDirection();
+        return atomicTakeOfferModel.getDirection();
     }
 
     public Offer getOffer() {
-        return offer;
+        return atomicTakeOfferModel.getOffer();
     }
 
     PaymentAccount getPaymentAccount() {
-        Set<PaymentAccount> paymentAccounts = user.getPaymentAccounts();
-        checkNotNull(paymentAccounts, "paymentAccounts must not be null");
-        return paymentAccounts.stream()
-                .filter(p -> p.getPaymentMethod().isAtomic())
-                .findAny()
-                .orElse(null);
+        return atomicTakeOfferModel.getPaymentAccount();
     }
 
     long getMaxTradeLimit() {
-        if (paymentAccount != null) {
-            return accountAgeWitnessService.getMyTradeLimit(paymentAccount, getCurrencyCode(),
-                    offer.getMirroredDirection());
-        } else {
-            return 0;
-        }
+        return atomicTakeOfferModel.getMaxTradeLimit();
     }
 
-    boolean canTakeOffer() {
-        return GUIUtil.canCreateOrTakeOfferOrShowPopup(user, navigation) &&
-                GUIUtil.isBootstrappedOrShowPopup(p2PService);
+    public BooleanProperty getIsTxBuilderReady() {
+        return atomicTakeOfferModel.getIsTxBuilderReady();
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Bindings, listeners
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private void addListeners() {
-        isTxBuilderReady.bind(atomicTxBuilder.getCanBuildMySide());
+    ObjectProperty<Volume> getVolume() {
+        return atomicTakeOfferModel.getVolume();
     }
 
-    private void removeListeners() {
-        isTxBuilderReady.unbind();
+    Price getTradePrice() {
+        return atomicTakeOfferModel.getTradePrice();
     }
 
 
@@ -305,104 +148,70 @@ class AtomicTakeOfferDataModel extends ActivatableDataModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     void calculateVolume() {
-        if (tradePrice != null && offer != null &&
-                amount.get() != null &&
-                !amount.get().isZero()) {
-            Volume volumeByAmount = tradePrice.getVolumeByAmount(amount.get());
-
-            volume.set(volumeByAmount);
-        }
+        atomicTakeOfferModel.calculateVolume();
     }
 
     void applyAmount(Coin amount) {
-        this.amount.set(Coin.valueOf(Math.min(amount.value, getMaxTradeLimit())));
-        atomicTxBuilder.setBtcAmount(amount);
+        atomicTakeOfferModel.applyAmount(amount);
     }
 
     Coin getTakerFee(boolean isCurrencyForTakerFeeBtc) {
-        var fee = CoinUtil.getTakerFee(isCurrencyForTakerFeeBtc, this.amount.get());
-        atomicTxBuilder.setMyTradeFee(isCurrencyForTakerFeeBtc, fee);
-
-        return fee != null ? fee : Coin.ZERO;
+        return atomicTakeOfferModel.getTakerFee(isCurrencyForTakerFeeBtc);
     }
 
     public Coin getTakerFee() {
-        return getTakerFee(isCurrencyForTakerFeeBtc());
-    }
-
-    public Coin getMakerFee(boolean isCurrencyForMakerFeeBtc) {
-        return CoinUtil.getMakerFee(isCurrencyForMakerFeeBtc, this.amount.get());
+        return atomicTakeOfferModel.getTakerFee();
     }
 
     boolean isMinAmountLessOrEqualAmount() {
-        //noinspection SimplifiableIfStatement
-        if (offer != null && amount.get() != null)
-            return !offer.getMinAmount().isGreaterThan(amount.get());
-        return true;
+        return atomicTakeOfferModel.isMinAmountLessOrEqualAmount();
     }
 
     boolean isAmountLargerThanOfferAmount() {
-        //noinspection SimplifiableIfStatement
-        if (amount.get() != null && offer != null)
-            return amount.get().isGreaterThan(offer.getAmount());
-        return true;
+        return atomicTakeOfferModel.isAmountLargerThanOfferAmount();
     }
 
     ReadOnlyObjectProperty<Coin> getAmount() {
-        return amount;
-    }
-
-    public PaymentMethod getPaymentMethod() {
-        return offer.getPaymentMethod();
+        return atomicTakeOfferModel.getAmount();
     }
 
     public String getCurrencyCode() {
-        return offer.getCurrencyCode();
+        return atomicTakeOfferModel.getCurrencyCode();
     }
 
     public String getCurrencyNameAndCode() {
-        return CurrencyUtil.getNameByCode(offer.getCurrencyCode());
+        return atomicTakeOfferModel.getCurrencyNameAndCode();
     }
 
     public Coin getUsableBsqBalance() {
-        // we have to keep a minimum amount of BSQ == bitcoin dust limit
-        // otherwise there would be dust violations for change UTXOs
-        // essentially means the minimum usable balance of BSQ is 5.46
-        Coin usableBsqBalance = bsqWalletService.getAvailableConfirmedBalance().subtract(Restrictions.getMinNonDustOutput());
-        if (usableBsqBalance.isNegative())
-            usableBsqBalance = Coin.ZERO;
-        return usableBsqBalance;
+        return atomicTakeOfferModel.getUsableBsqBalance();
     }
 
     public boolean isCurrencyForTakerFeeBtc() {
-        return offerUtil.isCurrencyForTakerFeeBtc(amount.get());
+        return atomicTakeOfferModel.isCurrencyForTakerFeeBtc();
     }
 
     public void setPreferredCurrencyForTakerFeeBtc(boolean isCurrencyForTakerFeeBtc) {
-        preferences.setPayFeeInBtc(isCurrencyForTakerFeeBtc);
-    }
-
-    public boolean isPreferredFeeCurrencyBtc() {
-        return preferences.isPayFeeInBtc();
+        atomicTakeOfferModel.setPreferredCurrencyForTakerFeeBtc(isCurrencyForTakerFeeBtc);
     }
 
     public Coin getTakerFeeInBtc() {
-        return offerUtil.getTakerFee(true, amount.get());
+        return atomicTakeOfferModel.getTakerFeeInBtc();
     }
 
     public Coin getTakerFeeInBsq() {
-        return offerUtil.getTakerFee(false, amount.get());
+        return atomicTakeOfferModel.getTakerFeeInBsq();
     }
 
     boolean isTakerFeeValid() {
-        return preferences.getPayFeeInBtc() || offerUtil.isBsqForTakerFeeAvailable(amount.get());
+        return atomicTakeOfferModel.isTakerFeeValid();
     }
 
     public boolean hasEnoughBtc() {
-        return !btcWalletService.getSavingWalletBalance().isLessThan(atomicTxBuilder.myBtc.get());
+        return atomicTakeOfferModel.hasEnoughBtc();
     }
 
     public boolean hasEnoughBsq() {
-        return !offerUtil.getUsableBsqBalance().isLessThan(atomicTxBuilder.myBsq.get());
+        return atomicTakeOfferModel.hasEnoughBsq();
     }
 }

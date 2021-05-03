@@ -290,10 +290,6 @@ public class AtomicTakeOfferView extends ActivatableViewAndModel<AnchorPane, Ato
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void onTakeOffer() {
-        if (!model.dataModel.canTakeOffer()) {
-            return;
-        }
-
         if (!model.dataModel.isTakerFeeValid()) {
             showInsufficientBsqFundsForBtcFeePaymentPopup();
             return;
@@ -306,7 +302,7 @@ public class AtomicTakeOfferView extends ActivatableViewAndModel<AnchorPane, Ato
                 })
         ).show(model.getOffer(),
                 model.dataModel.getAmount().get(),
-                model.dataModel.tradePrice);
+                model.dataModel.getTradePrice());
 
         offerDetailsWindowDisplayed = true;
     }
