@@ -20,10 +20,14 @@ package bisq.core.offer;
 import bisq.core.payment.payload.PaymentMethod;
 
 import bisq.network.p2p.NodeAddress;
+import bisq.network.p2p.storage.payload.ProofOfWorkPayload;
 
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.proto.ProtoUtil;
 import bisq.common.util.JsonExclude;
+import bisq.common.util.Utilities;
+
+import com.google.protobuf.ByteString;
 
 import java.security.PublicKey;
 
@@ -39,7 +43,7 @@ import org.jetbrains.annotations.Nullable;
 @EqualsAndHashCode(callSuper = true)
 @Getter
 @Slf4j
-public final class AtomicOfferPayload extends OfferPayloadI {
+public final class AtomicOfferPayload extends OfferPayloadI implements ProofOfWorkPayload {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Instance fields
@@ -57,6 +61,7 @@ public final class AtomicOfferPayload extends OfferPayloadI {
     private final String versionNr;
     private final int protocolVersion;
     private final boolean isCurrencyForMakerFeeBtc;
+    private final byte[] proofOfWork;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -73,7 +78,8 @@ public final class AtomicOfferPayload extends OfferPayloadI {
                               long minAmount,
                               String versionNr,
                               int protocolVersion,
-                              boolean isCurrencyForMakerFeeBtc) {
+                              boolean isCurrencyForMakerFeeBtc,
+                              byte[] proofOfWork) {
         this.id = id;
         this.date = date;
         this.ownerNodeAddress = ownerNodeAddress;
@@ -85,6 +91,7 @@ public final class AtomicOfferPayload extends OfferPayloadI {
         this.versionNr = versionNr;
         this.protocolVersion = protocolVersion;
         this.isCurrencyForMakerFeeBtc = isCurrencyForMakerFeeBtc;
+        this.proofOfWork = proofOfWork;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -94,6 +101,7 @@ public final class AtomicOfferPayload extends OfferPayloadI {
     public static protobuf.OfferDirection toProtoMessage(Direction direction) {
         return protobuf.OfferDirection.valueOf(direction.name());
     }
+
     public static Direction fromProto(protobuf.OfferDirection offerDirection) {
         return ProtoUtil.enumFromProto(Direction.class, offerDirection.name());
     }
@@ -111,7 +119,8 @@ public final class AtomicOfferPayload extends OfferPayloadI {
                 .setMinAmount(minAmount)
                 .setVersionNr(versionNr)
                 .setProtocolVersion(protocolVersion)
-                .setIsCurrencyForMakerFeeBtc(isCurrencyForMakerFeeBtc);
+                .setIsCurrencyForMakerFeeBtc(isCurrencyForMakerFeeBtc)
+                .setProofOfWork(ByteString.copyFrom(proofOfWork));
 
         return protobuf.StoragePayload.newBuilder().setAtomicOfferPayload(builder).build();
     }
@@ -127,7 +136,8 @@ public final class AtomicOfferPayload extends OfferPayloadI {
                 proto.getMinAmount(),
                 proto.getVersionNr(),
                 proto.getProtocolVersion(),
-                proto.getIsCurrencyForMakerFeeBtc());
+                proto.getIsCurrencyForMakerFeeBtc(),
+                proto.getProofOfWork().toByteArray());
     }
 
 
@@ -211,6 +221,7 @@ public final class AtomicOfferPayload extends OfferPayloadI {
                 ",\n     minAmount=" + minAmount +
                 ",\n     versionNr='" + versionNr +
                 ",\n     protocolVersion=" + protocolVersion +
+                ",\n     proofOfWork=" + Utilities.bytesAsHexString(proofOfWork) +
                 "\n}";
     }
 }

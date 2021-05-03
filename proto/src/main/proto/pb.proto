@@ -850,6 +850,7 @@ message AtomicOfferPayload {
     string version_nr = 9;
     int32 protocol_version = 10;
     bool is_currency_for_maker_fee_btc = 11;
+    bytes proof_of_work = 12;
 }
 
 message AccountAgeWitness {
