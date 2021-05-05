@@ -33,12 +33,15 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
+
+import org.jetbrains.annotations.Nullable;
 
 // If a new BaseCurrencyNetwork type gets added we need to add the resource file for it as well!
 @Slf4j
@@ -69,11 +72,12 @@ public class DefaultSeedNodeRepository implements SeedNodeRepository {
             List<NodeAddress> result = getSeedNodeAddressesFromPropertyFile(config.baseCurrencyNetwork.name().toLowerCase());
             cache.addAll(result);
 
-            // filter
+            // let values configured by filter fail more gracefully
             cache.removeAll(
                     config.bannedSeedNodes.stream()
                             .filter(n -> !n.isEmpty())
-                            .map(NodeAddress::new)
+                            .map(this::getNodeAddress)
+                            .filter(Objects::nonNull)
                             .collect(Collectors.toSet()));
 
             log.info("Seed nodes: {}", cache);
@@ -123,5 +127,15 @@ public class DefaultSeedNodeRepository implements SeedNodeRepository {
         if (cache.isEmpty())
             reload();
         return cache.contains(nodeAddress);
+    }
+
+    @Nullable
+    private NodeAddress getNodeAddress(String n) {
+        try {
+            return new NodeAddress(n);
+        } catch (Throwable t) {
+            log.error("exception when filtering banned seednodes", t);
+        }
+        return null;
     }
 }
