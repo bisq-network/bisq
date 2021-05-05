@@ -106,10 +106,12 @@ import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
@@ -155,6 +157,8 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
     // Don't convert to local variable as it might get GC'ed.
     private MonadicBinding<Boolean> readFromResourcesCompleteBinding;
 
+    @Setter
+    private Predicate<Object> messageFilter;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -781,6 +785,12 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         // If we have already seen an Entry with the same hash, verify the metadata is equal
         if (storedEntry != null && !protectedStorageEntry.matchesRelevantPubKey(storedEntry)) {
             log.trace("## !matchesRelevantPubKey hash={}", hashOfPayload);
+            return false;
+        }
+
+        // Check external filter
+        if (messageFilter != null && messageFilter.test(protectedStorageEntry.getProtectedStoragePayload())) {
+            log.error("## filtered by external filter, hash={}", hashOfPayload);
             return false;
         }
 

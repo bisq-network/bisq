@@ -101,6 +101,9 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
     // added at v1.6.0
     private final boolean disableMempoolValidation;
 
+    // added at Atomic
+    private final boolean disablePowMessage;
+
     // After we have created the signature from the filter data we clone it and apply the signature
     static Filter cloneWithSig(Filter filter, String signatureAsBase64) {
         return new Filter(filter.getBannedOfferIds(),
@@ -130,7 +133,8 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                 filter.getBannedAutoConfExplorers(),
                 filter.getNodeAddressesBannedFromNetwork(),
                 filter.isDisableMempoolValidation(),
-                filter.isDisableApi());
+                filter.isDisableApi(),
+                filter.isDisablePowMessage());
     }
 
     // Used for signature verification as we created the sig without the signatureAsBase64 field we set it to null again
@@ -162,7 +166,8 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                 filter.getBannedAutoConfExplorers(),
                 filter.getNodeAddressesBannedFromNetwork(),
                 filter.isDisableMempoolValidation(),
-                filter.isDisableApi());
+                filter.isDisableApi(),
+                filter.isDisablePowMessage());
     }
 
     public Filter(List<String> bannedOfferIds,
@@ -189,7 +194,8 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                   List<String> bannedAutoConfExplorers,
                   Set<String> nodeAddressesBannedFromNetwork,
                   boolean disableMempoolValidation,
-                  boolean disableApi) {
+                  boolean disableApi,
+                  boolean disablePowMessage) {
         this(bannedOfferIds,
                 nodeAddressesBannedFromTrading,
                 bannedPaymentAccounts,
@@ -217,7 +223,8 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                 bannedAutoConfExplorers,
                 nodeAddressesBannedFromNetwork,
                 disableMempoolValidation,
-                disableApi);
+                disableApi,
+                disablePowMessage);
     }
 
 
@@ -253,7 +260,8 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                   List<String> bannedAutoConfExplorers,
                   Set<String> nodeAddressesBannedFromNetwork,
                   boolean disableMempoolValidation,
-                  boolean disableApi) {
+                  boolean disableApi,
+                  boolean disablePowMessage) {
         this.bannedOfferIds = bannedOfferIds;
         this.nodeAddressesBannedFromTrading = nodeAddressesBannedFromTrading;
         this.bannedPaymentAccounts = bannedPaymentAccounts;
@@ -282,6 +290,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
         this.nodeAddressesBannedFromNetwork = nodeAddressesBannedFromNetwork;
         this.disableMempoolValidation = disableMempoolValidation;
         this.disableApi = disableApi;
+        this.disablePowMessage = disablePowMessage;
 
         // ownerPubKeyBytes can be null when called from tests
         if (ownerPubKeyBytes != null) {
@@ -322,7 +331,8 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                 .addAllBannedAutoConfExplorers(bannedAutoConfExplorers)
                 .addAllNodeAddressesBannedFromNetwork(nodeAddressesBannedFromNetwork)
                 .setDisableMempoolValidation(disableMempoolValidation)
-                .setDisableApi(disableApi);
+                .setDisableApi(disableApi)
+                .setDisablePowMessage(disablePowMessage);
 
         Optional.ofNullable(signatureAsBase64).ifPresent(builder::setSignatureAsBase64);
         Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraData);
@@ -363,7 +373,8 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                 ProtoUtil.protocolStringListToList(proto.getBannedAutoConfExplorersList()),
                 ProtoUtil.protocolStringListToSet(proto.getNodeAddressesBannedFromNetworkList()),
                 proto.getDisableMempoolValidation(),
-                proto.getDisableApi()
+                proto.getDisableApi(),
+                proto.getDisablePowMessage()
         );
     }
 
@@ -409,6 +420,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                 ",\n     nodeAddressesBannedFromNetwork=" + nodeAddressesBannedFromNetwork +
                 ",\n     disableMempoolValidation=" + disableMempoolValidation +
                 ",\n     disableApi=" + disableApi +
+                ",\n     disablePowMessage=" + disablePowMessage +
                 "\n}";
     }
 }

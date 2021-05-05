@@ -744,6 +744,7 @@ message Filter {
     repeated string node_addresses_banned_from_network = 26;
     bool disable_api = 27;
     bool disable_mempool_validation = 28;
+    bool disable_pow_message = 29;
 }
 
 // Deprecated
