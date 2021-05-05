@@ -2,8 +2,8 @@
 
 cd $(dirname $0)/../../../.
 
-oldVersion=1.6.2
-newVersion=1.6.3
+oldVersion=1.6.3
+newVersion=1.6.4
 
 find . -type f \( -name "finalize.sh" \
 -o -name "create_app.sh" \
