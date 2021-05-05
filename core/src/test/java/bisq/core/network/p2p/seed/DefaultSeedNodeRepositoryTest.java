@@ -21,6 +21,7 @@ import bisq.network.p2p.NodeAddress;
 
 import bisq.common.config.Config;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -44,5 +45,22 @@ public class DefaultSeedNodeRepositoryTest {
         Assert.assertEquals(2, DUT.getSeedNodeAddresses().size());
         Assert.assertTrue(DUT.getSeedNodeAddresses().contains(new NodeAddress(seed1)));
         Assert.assertTrue(DUT.getSeedNodeAddresses().contains(new NodeAddress(seed2)));
+    }
+
+    @Test
+    public void ignoreBannedSeedNodesWithWrongFormat() {
+        String seed1 = "asdfbroken";
+        String seed2 = "localhost:2002";
+        String baseCurrencyNetwork = format("--%s=%s", Config.BASE_CURRENCY_NETWORK, "btc_regtest");
+        String bannedSeedNodesOption = format("--%s=%s,%s", Config.BANNED_SEED_NODES, seed1, seed2);
+        Config config = new Config(baseCurrencyNetwork, bannedSeedNodesOption);
+        DefaultSeedNodeRepository DUT = new DefaultSeedNodeRepository(config);
+        Assert.assertFalse(DUT.getSeedNodeAddresses().contains(new NodeAddress(seed2)));
+    }
+
+    @After
+    public void tearDown() {
+        //restore default Config
+        new Config();
     }
 }
