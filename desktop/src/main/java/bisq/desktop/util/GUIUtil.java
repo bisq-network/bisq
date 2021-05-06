@@ -834,7 +834,11 @@ public class GUIUtil {
         return true;
     }
 
-    public static boolean canCreateOrTakeOfferOrShowPopup(User user, Navigation navigation) {
+    public static boolean canCreateOrTakeOfferOrShowPopup(User user, Navigation navigation, TradeCurrency currency) {
+        var bsq = CurrencyUtil.getCryptoCurrency("BSQ");
+        if (bsq.map(b -> b.equals(currency)).orElse(false))
+            return true;
+
         if (!user.hasAcceptedRefundAgents()) {
             new Popup().warning(Res.get("popup.warning.noArbitratorsAvailable")).show();
             return false;

@@ -570,7 +570,7 @@ public abstract class AtomicOfferDataModel extends ActivatableDataModel implemen
 
     boolean canPlaceOffer() {
         return GUIUtil.isBootstrappedOrShowPopup(p2PService) &&
-                GUIUtil.canCreateOrTakeOfferOrShowPopup(user, navigation);
+                GUIUtil.canCreateOrTakeOfferOrShowPopup(user, navigation, tradeCurrency);
     }
 
     public void setTriggerPrice(long triggerPrice) {

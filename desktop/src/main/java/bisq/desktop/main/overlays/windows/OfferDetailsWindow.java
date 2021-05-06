@@ -28,8 +28,8 @@ import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.locale.BankUtil;
 import bisq.core.locale.CountryUtil;
+import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.monetary.Price;
 import bisq.core.offer.Offer;
@@ -419,7 +419,8 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         placeOfferTuple.fourth.getChildren().add(cancelButton);
 
         button.setOnAction(e -> {
-            if (GUIUtil.canCreateOrTakeOfferOrShowPopup(user, navigation)) {
+            if (GUIUtil.canCreateOrTakeOfferOrShowPopup(user, navigation,
+                    CurrencyUtil.getTradeCurrency(offer.getCurrencyCode()).get())) {
                 button.setDisable(true);
                 cancelButton.setDisable(true);
                 // temporarily disabled due to high CPU usage (per issue #4649)

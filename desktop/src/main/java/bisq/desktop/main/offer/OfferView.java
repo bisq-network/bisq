@@ -151,7 +151,7 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
                 if (createOfferViewOpen) {
                     root.getTabs().remove(createOfferTab);
                 }
-                if (canCreateOrTakeOffer()) {
+                if (canCreateOrTakeOffer(tradeCurrency)) {
                     openCreateOffer(tradeCurrency);
                 }
             }
@@ -161,7 +161,7 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
                 if (takeOfferViewOpen) {
                     root.getTabs().remove(takeOfferTab);
                 }
-                if (canCreateOrTakeOffer()) {
+                if (canCreateOrTakeOffer(CurrencyUtil.getTradeCurrency(offer.getCurrencyCode()).get())) {
                     openTakeOffer(offer);
                 }
             }
@@ -275,9 +275,9 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
         }
     }
 
-    protected boolean canCreateOrTakeOffer() {
+    protected boolean canCreateOrTakeOffer(TradeCurrency tradeCurrency) {
         return GUIUtil.isBootstrappedOrShowPopup(p2PService) &&
-                GUIUtil.canCreateOrTakeOfferOrShowPopup(user, navigation);
+                GUIUtil.canCreateOrTakeOfferOrShowPopup(user, navigation, tradeCurrency);
     }
 
     private void showNoArbitratorForUserLocaleWarning() {
