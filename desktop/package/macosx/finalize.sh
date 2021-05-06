@@ -2,7 +2,7 @@
 
 cd ../../
 
-version="1.6.4"
+version="1.6.4-SNAPSHOT"
 
 target_dir="releases/$version"
 
@@ -45,7 +45,7 @@ exe64="Bisq-64bit-$version.exe"
 cp "$win64/$exe" "$target_dir/$exe64"
 
 rpi="jar-lib-for-raspberry-pi-$version.zip"
-cp "$deployDir/$rpi" "$target_dir/"
+cp "$macos/$rpi" "$target_dir/"
 
 cd "$target_dir"
 
