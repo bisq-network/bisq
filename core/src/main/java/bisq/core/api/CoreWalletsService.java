@@ -82,7 +82,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
-import static bisq.common.config.BaseCurrencyNetwork.BTC_DAO_REGTEST;
 import static bisq.core.btc.wallet.Restrictions.getMinNonDustOutput;
 import static bisq.core.util.ParsingUtils.parseToCoin;
 import static java.lang.String.format;

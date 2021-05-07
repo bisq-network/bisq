@@ -114,6 +114,16 @@ class CoreOffersService {
         this.user = user;
     }
 
+    Offer getAtomicOffer(String id) {
+        return offerBookService.getOffers().stream()
+                .filter(o -> o.getId().equals(id))
+                .filter(o -> !o.isMyOffer(keyRing))
+                .filter(o -> offerFilter.canTakeOffer(o, coreContext.isApiUser()).isValid())
+                .filter(o -> o.isAtomicOffer())
+                .findAny().orElseThrow(() ->
+                        new IllegalStateException(format("offer with id '%s' not found", id)));
+    }
+
     Offer getOffer(String id) {
         return offerBookService.getOffers().stream()
                 .filter(o -> o.getId().equals(id))
@@ -129,6 +139,26 @@ class CoreOffersService {
                 .filter(o -> o.getOffer().isMyOffer(keyRing))
                 .findAny().orElseThrow(() ->
                         new IllegalStateException(format("offer with id '%s' not found", id)));
+    }
+
+    Offer getMyAtomicOffer(String id) {
+        return offerBookService.getOffers().stream()
+                .filter(o -> o.getId().equals(id))
+                .filter(o -> o.isMyOffer(keyRing))
+                .filter(o -> o.isAtomicOffer())
+                .findAny().orElseThrow(() ->
+                        new IllegalStateException(format("offer with id '%s' not found", id)));
+    }
+
+
+    List<Offer> getAtomicOffers(String direction, String currencyCode) {
+        var offers = offerBookService.getOffers().stream()
+                .filter(o -> !o.isMyOffer(keyRing))
+                .filter(o -> offerMatchesDirectionAndCurrency(o, direction, currencyCode))
+                .filter(o -> o.isAtomicOffer())
+                .sorted(priceComparator(direction))
+                .collect(Collectors.toList());
+        return offers;
     }
 
     List<Offer> getOffers(String direction, String currencyCode) {
@@ -148,6 +178,24 @@ class CoreOffersService {
                 .collect(Collectors.toList());
     }
 
+    List<Offer> getMyAtomicOffers(String direction, String currencyCode) {
+        var offers = offerBookService.getOffers().stream()
+                .filter(o -> o.isMyOffer(keyRing))
+                .filter(o -> offerMatchesDirectionAndCurrency(o, direction, currencyCode))
+                .filter(o -> o.isAtomicOffer())
+                .sorted(priceComparator(direction))
+                .collect(Collectors.toList());
+        return offers;
+    }
+
+    OpenOffer getMyOpenAtomicOffer(String id) {
+        return openOfferManager.getOpenOfferById(id)
+                .filter(open -> open.getOffer().isMyOffer(keyRing))
+                .filter(open -> open.getOffer().isAtomicOffer())
+                .orElseThrow(() ->
+                        new IllegalStateException(format("openoffer with id '%s' not found", id)));
+    }
+
     OpenOffer getMyOpenOffer(String id) {
         return openOfferManager.getOpenOfferById(id)
                 .filter(open -> open.getOffer().isMyOffer(keyRing))
@@ -161,7 +209,35 @@ class CoreOffersService {
                 .isPresent();
     }
 
-    // Create and place new offer.
+    void createAndPlaceAtomicOffer(String directionAsString,
+                                   long amountAsLong,
+                                   long minAmountAsLong,
+                                   String priceAsString,
+                                   String paymentAccountId,
+                                   Consumer<Offer> resultHandler) {
+        coreWalletsService.verifyWalletsAreAvailable();
+        coreWalletsService.verifyEncryptedWalletIsUnlocked();
+
+        PaymentAccount paymentAccount = user.getPaymentAccount(paymentAccountId);
+        if (paymentAccount == null)
+            throw new IllegalArgumentException(format("payment account with id %s not found", paymentAccountId));
+
+        String currencyCode = paymentAccount.getSingleTradeCurrency().getCode();
+        String offerId = createOfferService.getRandomOfferId();
+        Direction direction = Direction.valueOf(directionAsString.toUpperCase());
+        Coin amount = Coin.valueOf(amountAsLong);
+        Coin minAmount = Coin.valueOf(minAmountAsLong);
+        Price price = Price.valueOf(currencyCode, priceStringToLong(priceAsString, currencyCode));
+        Offer offer = createOfferService.createAndGetAtomicOffer(offerId,
+                direction,
+                amount,
+                minAmount,
+                price,
+                paymentAccount);
+        verifyPaymentAccountIsValidForNewOffer(offer, paymentAccount);
+        placeAtomicOffer(offer, transaction -> resultHandler.accept(offer));
+    }
+
     void createAndPlaceOffer(String currencyCode,
                              String directionAsString,
                              String priceAsString,
@@ -275,6 +351,16 @@ class CoreOffersService {
                 () -> {
                 },
                 log::error);
+    }
+
+    private void placeAtomicOffer(Offer offer,
+                                  Consumer<Transaction> resultHandler) {
+        openOfferManager.placeAtomicOffer(offer,
+                resultHandler::accept,
+                log::error);
+
+        if (offer.getErrorMessage() != null)
+            throw new IllegalStateException(offer.getErrorMessage());
     }
 
     private void placeOffer(Offer offer,

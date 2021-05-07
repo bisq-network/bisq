@@ -21,12 +21,15 @@ import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferUtil;
+import bisq.core.offer.takeoffer.AtomicTakeOfferModel;
 import bisq.core.offer.takeoffer.TakeOfferModel;
 import bisq.core.trade.Tradable;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.TradeUtil;
+import bisq.core.trade.atomic.AtomicTrade;
 import bisq.core.trade.closed.ClosedTradableManager;
+import bisq.core.trade.handlers.TradeResultHandler;
 import bisq.core.trade.protocol.BuyerProtocol;
 import bisq.core.trade.protocol.SellerProtocol;
 import bisq.core.user.User;
@@ -60,6 +63,7 @@ class CoreTradesService {
     private final OfferUtil offerUtil;
     private final ClosedTradableManager closedTradableManager;
     private final TakeOfferModel takeOfferModel;
+    private final AtomicTakeOfferModel atomicTakeOfferModel;
     private final TradeManager tradeManager;
     private final TradeUtil tradeUtil;
     private final User user;
@@ -71,6 +75,7 @@ class CoreTradesService {
                              OfferUtil offerUtil,
                              ClosedTradableManager closedTradableManager,
                              TakeOfferModel takeOfferModel,
+                             AtomicTakeOfferModel atomicTakeOfferModel,
                              TradeManager tradeManager,
                              TradeUtil tradeUtil,
                              User user) {
@@ -80,9 +85,43 @@ class CoreTradesService {
         this.offerUtil = offerUtil;
         this.closedTradableManager = closedTradableManager;
         this.takeOfferModel = takeOfferModel;
+        this.atomicTakeOfferModel = atomicTakeOfferModel;
         this.tradeManager = tradeManager;
         this.tradeUtil = tradeUtil;
         this.user = user;
+    }
+
+    void takeAtomicOffer(Offer offer,
+                         String paymentAccountId,
+                         String takerFeeCurrencyCode,
+                         TradeResultHandler<AtomicTrade> tradeResultHandler,
+                         ErrorMessageHandler errorMessageHandler) {
+        coreWalletsService.verifyWalletsAreAvailable();
+        coreWalletsService.verifyEncryptedWalletIsUnlocked();
+
+        offerUtil.maybeSetFeePaymentCurrencyPreference(takerFeeCurrencyCode);
+
+        var paymentAccount = user.getPaymentAccount(paymentAccountId);
+        if (paymentAccount == null)
+            throw new IllegalArgumentException(format("payment account with id '%s' not found", paymentAccountId));
+
+        atomicTakeOfferModel.initWithData(offer);
+        log.info("Initiating take {} offer, {}",
+                offer.isBuyOffer() ? "buy" : "sell",
+                takeOfferModel);
+        var isMakerFeeBtc = offer.isCurrencyForMakerFeeBtc();
+        var isTakerFeeBtc = atomicTakeOfferModel.isCurrencyForTakerFeeBtc();
+        tradeManager.onTakeAtomicOffer(offer,
+                atomicTakeOfferModel.getAmount().getValue(),  // TODO get rid of jfx property dep?
+                atomicTakeOfferModel.getTradePrice().getValue(),
+                atomicTakeOfferModel.getAtomicTxBuilder().getTxFeePerVbyte().getValue(),
+                isMakerFeeBtc,
+                atomicTakeOfferModel.isCurrencyForTakerFeeBtc(),
+                atomicTakeOfferModel.getMakerFee(isMakerFeeBtc).getValue(),
+                atomicTakeOfferModel.getTakerFee(isTakerFeeBtc).getValue(),
+                coreContext.isApiUser(),
+                tradeResultHandler,
+                errorMessageHandler);
     }
 
     void takeOffer(Offer offer,
@@ -100,7 +139,7 @@ class CoreTradesService {
             throw new IllegalArgumentException(format("payment account with id '%s' not found", paymentAccountId));
 
         var useSavingsWallet = true;
-        //noinspection ConstantConditions
+
         takeOfferModel.initModel(offer, paymentAccount, useSavingsWallet);
         log.info("Initiating take {} offer, {}",
                 offer.isBuyOffer() ? "buy" : "sell",
@@ -203,6 +242,13 @@ class CoreTradesService {
                     log.error(errorMessage, throwable);
                     throw new IllegalStateException(errorMessage, throwable);
                 });
+    }
+
+    AtomicTrade getAtomicTrade(String tradeId) {
+        coreWalletsService.verifyWalletsAreAvailable();
+        coreWalletsService.verifyEncryptedWalletIsUnlocked();
+        return tradeManager.getAtomicTradeById(tradeId).orElseThrow(() ->
+                new IllegalArgumentException(format("trade with id '%s' not found", tradeId)));
     }
 
     String getTradeRole(String tradeId) {
