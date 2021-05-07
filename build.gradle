@@ -383,7 +383,7 @@ configure(project(':desktop')) {
     apply from: '../gradle/witness/gradle-witness.gradle'
     apply from: 'package/package.gradle'
 
-    version = '1.6.3-SNAPSHOT'
+    version = '1.6.4-SNAPSHOT'
 
     jar.manifest.attributes(
         "Implementation-Title": project.name,
