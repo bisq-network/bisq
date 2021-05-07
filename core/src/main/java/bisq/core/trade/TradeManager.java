@@ -846,6 +846,10 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                 .findFirst();
     }
 
+    public Optional<AtomicTrade> getAtomicTradeById(String tradeId) {
+        return atomicTradeManager.getAtomicTradeById(tradeId);
+    }
+
     public Optional<Trade> getTradeById(String tradeId) {
         return getTradeModelById(tradeId)
                 .filter(tradeModel -> tradeModel instanceof Trade)
