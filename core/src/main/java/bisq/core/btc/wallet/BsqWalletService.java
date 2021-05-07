@@ -679,7 +679,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
                 log.warn("We increased required input as change output was zero or dust: New change value={}", change);
                 String info = "Available BSQ balance=" + coinSelection.valueGathered.value / 100 + " BSQ. " +
                         "Intended fee to burn=" + fee.value / 100 + " BSQ. " +
-                        "Please increase your balance to at least " + (coinSelection.valueGathered.value + minDustThreshold.value) / 100 + " BSQ.";
+                        "Please increase your balance to at least " + (fee.value + minDustThreshold.value) / 100 + " BSQ.";
                 checkArgument(coinSelection.valueGathered.compareTo(fee) > 0,
                         "This transaction require a change output of at least " + minDustThreshold.value / 100 + " BSQ (dust limit). " +
                                 info);
