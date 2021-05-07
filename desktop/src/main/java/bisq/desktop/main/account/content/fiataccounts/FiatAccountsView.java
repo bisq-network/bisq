@@ -244,7 +244,7 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
             new Popup().information(Res.get("payment.f2f.info"))
                     .width(700)
                     .closeButtonText(Res.get("payment.f2f.info.openURL"))
-                    .onClose(() -> GUIUtil.openWebPage("https://docs.bisq.network/trading-rules.html#f2f-trading"))
+                    .onClose(() -> GUIUtil.openWebPage("https://bisq.wiki/Face-to-face_(payment_method)"))
                     .actionButtonText(Res.get("shared.iUnderstand"))
                     .onAction(() -> doSaveNewAccount(paymentAccount))
                     .show();
