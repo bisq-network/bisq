@@ -66,6 +66,16 @@ public abstract class AbstractOfferTest extends MethodTest {
                 bobdaemon);
     }
 
+    public static void createAtomicBsqPaymentAccounts() {
+        alicesBsqAcct = aliceClient.createCryptoCurrencyPaymentAccount("Alice's Atomic Account",
+                BSQ,
+                aliceClient.getUnusedBsqAddress(), // TODO refactor, bsq address not needed for atom acct
+                false);
+        bobsBsqAcct = bobClient.createCryptoCurrencyPaymentAccount("Bob's Atomic Account",
+                BSQ,
+                bobClient.getUnusedBsqAddress(),   // TODO refactor, bsq address not needed for atom acct
+                false);
+    }
 
     // Mkt Price Margin value of offer returned from server is scaled down by 10^-2.
     protected final Function<Double, Double> scaledDownMktPriceMargin = (mktPriceMargin) ->
