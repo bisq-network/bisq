@@ -18,6 +18,7 @@
 package bisq.daemon.grpc;
 
 import bisq.core.api.CoreApi;
+import bisq.core.api.model.AtomicTradeInfo;
 import bisq.core.api.model.TradeInfo;
 import bisq.core.trade.Trade;
 
@@ -25,10 +26,13 @@ import bisq.proto.grpc.ConfirmPaymentReceivedReply;
 import bisq.proto.grpc.ConfirmPaymentReceivedRequest;
 import bisq.proto.grpc.ConfirmPaymentStartedReply;
 import bisq.proto.grpc.ConfirmPaymentStartedRequest;
+import bisq.proto.grpc.GetAtomicTradeReply;
 import bisq.proto.grpc.GetTradeReply;
 import bisq.proto.grpc.GetTradeRequest;
 import bisq.proto.grpc.KeepFundsReply;
 import bisq.proto.grpc.KeepFundsRequest;
+import bisq.proto.grpc.TakeAtomicOfferReply;
+import bisq.proto.grpc.TakeAtomicOfferRequest;
 import bisq.proto.grpc.TakeOfferReply;
 import bisq.proto.grpc.TakeOfferRequest;
 import bisq.proto.grpc.WithdrawFundsReply;
@@ -45,6 +49,7 @@ import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 
 import static bisq.core.api.model.TradeInfo.toNewTradeInfo;
+import static bisq.core.api.model.AtomicTradeInfo.toAtomicTradeInfo;
 import static bisq.core.api.model.TradeInfo.toTradeInfo;
 import static bisq.daemon.grpc.interceptor.GrpcServiceRateMeteringConfig.getCustomRateMeteringInterceptor;
 import static bisq.proto.grpc.TradesGrpc.*;
@@ -69,6 +74,51 @@ class GrpcTradesService extends TradesImplBase {
     }
 
     @Override
+    public void getAtomicTrade(GetTradeRequest req,
+                               StreamObserver<GetAtomicTradeReply> responseObserver) {
+        try {
+            var atomicTrade = coreApi.getAtomicTrade(req.getTradeId());
+            // String role = coreApi.getAtomicTradeRole(req.getTradeId());
+            var reply = GetAtomicTradeReply.newBuilder()
+                    .setAtomicTrade(toAtomicTradeInfo(atomicTrade).toProtoMessage())
+                    .build();
+            responseObserver.onNext(reply);
+            responseObserver.onCompleted();
+        } catch (IllegalArgumentException cause) {
+            // Offer makers may call 'gettrade' many times before a trade exists.
+            // Log a 'trade not found' warning instead of a full stack trace.
+            exceptionHandler.handleExceptionAsWarning(log, "getAtomicTrade", cause, responseObserver);
+        } catch (Throwable cause) {
+            exceptionHandler.handleException(log, cause, responseObserver);
+        }
+    }
+
+    @Override
+    public void takeAtomicOffer(TakeAtomicOfferRequest req,
+                                StreamObserver<TakeAtomicOfferReply> responseObserver) {
+        GrpcErrorMessageHandler errorMessageHandler =
+                new GrpcErrorMessageHandler(getTakeOfferMethod().getFullMethodName(),
+                        responseObserver,
+                        exceptionHandler,
+                        log);
+        coreApi.takeAtomicOffer(req.getOfferId(),
+                req.getPaymentAccountId(),
+                req.getTakerFeeCurrencyCode(),
+                atomicTrade -> {
+                    AtomicTradeInfo atomicTradeInfo = toAtomicTradeInfo(atomicTrade);
+                    var reply = TakeAtomicOfferReply.newBuilder()
+                            .setAtomicTrade(atomicTradeInfo.toProtoMessage())
+                            .build();
+                    responseObserver.onNext(reply);
+                    responseObserver.onCompleted();
+                },
+                errorMessage -> {
+                    if (!errorMessageHandler.isErrorHandled())
+                        errorMessageHandler.handleErrorMessage(errorMessage);
+                });
+    }
+
+    @Override
     public void getTrade(GetTradeRequest req,
                          StreamObserver<GetTradeReply> responseObserver) {
         try {
@@ -88,6 +138,7 @@ class GrpcTradesService extends TradesImplBase {
             exceptionHandler.handleException(log, cause, responseObserver);
         }
     }
+
 
     @Override
     public void takeOffer(TakeOfferRequest req,
