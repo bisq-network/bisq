@@ -47,7 +47,7 @@ public abstract class OfferDataModel extends ActivatableDataModel {
     @Getter
     protected final BooleanProperty isBtcWalletFunded = new SimpleBooleanProperty();
     @Getter
-    protected final ObjectProperty<Coin> totalToPayAsCoin = new SimpleObjectProperty<>();
+    public final ObjectProperty<Coin> totalToPayAsCoin = new SimpleObjectProperty<>();
     @Getter
     protected final ObjectProperty<Coin> balance = new SimpleObjectProperty<>();
     @Getter
