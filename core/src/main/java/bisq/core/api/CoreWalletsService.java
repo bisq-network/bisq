@@ -31,7 +31,6 @@ import bisq.core.btc.exceptions.TransactionVerificationException;
 import bisq.core.btc.exceptions.WalletException;
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.model.BsqTransferModel;
-import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BsqTransferService;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
@@ -51,7 +50,6 @@ import bisq.common.util.Utilities;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.InsufficientMoneyException;
-import org.bitcoinj.core.LegacyAddress;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionConfidence;
@@ -98,7 +96,6 @@ class CoreWalletsService {
     private final CoreContext coreContext;
     private final Balances balances;
     private final WalletsManager walletsManager;
-    private final WalletsSetup walletsSetup;
     private final BsqWalletService bsqWalletService;
     private final BsqTransferService bsqTransferService;
     private final BsqFormatter bsqFormatter;
@@ -120,7 +117,6 @@ class CoreWalletsService {
                               CoreContext coreContext,
                               Balances balances,
                               WalletsManager walletsManager,
-                              WalletsSetup walletsSetup,
                               BsqWalletService bsqWalletService,
                               BsqTransferService bsqTransferService,
                               BsqFormatter bsqFormatter,
@@ -132,7 +128,6 @@ class CoreWalletsService {
         this.coreContext = coreContext;
         this.balances = balances;
         this.walletsManager = walletsManager;
-        this.walletsSetup = walletsSetup;
         this.bsqWalletService = bsqWalletService;
         this.bsqTransferService = bsqTransferService;
         this.bsqFormatter = bsqFormatter;
@@ -226,7 +221,7 @@ class CoreWalletsService {
         return bsqWalletService.getUnusedBsqAddressAsString();
     }
 
-    void sendBsq(String address,
+    void sendBsq(String addressStr,
                  String amount,
                  String txFeeRate,
                  TxBroadcaster.Callback callback) {
@@ -234,10 +229,10 @@ class CoreWalletsService {
         verifyEncryptedWalletIsUnlocked();
 
         try {
-            LegacyAddress legacyAddress = getValidBsqLegacyAddress(address);
+            Address address = getValidBsqAddress(addressStr);
             Coin receiverAmount = getValidTransferAmount(amount, bsqFormatter);
             Coin txFeePerVbyte = getTxFeeRateFromParamOrPreferenceOrFeeService(txFeeRate);
-            BsqTransferModel model = bsqTransferService.getBsqTransferModel(legacyAddress,
+            BsqTransferModel model = bsqTransferService.getBsqTransferModel(address,
                     receiverAmount,
                     txFeePerVbyte);
             log.info("Sending {} BSQ to {} with tx fee rate {} sats/byte.",
@@ -313,7 +308,7 @@ class CoreWalletsService {
     }
 
     boolean verifyBsqSentToAddress(String address, String amount) {
-        Address receiverAddress = getValidBsqLegacyAddress(address);
+        Address receiverAddress = getValidBsqAddress(address);
         NetworkParameters networkParameters = getNetworkParameters();
         Predicate<TransactionOutput> isTxOutputAddressMatch = (txOut) ->
                 txOut.getScriptPubKey().getToAddress(networkParameters).equals(receiverAddress);
@@ -551,12 +546,12 @@ class CoreWalletsService {
             throw new IllegalStateException("server is not fully initialized");
     }
 
-    // Returns a LegacyAddress for the string, or a RuntimeException if invalid.
-    LegacyAddress getValidBsqLegacyAddress(String address) {
+    // Returns an Address for the string, or a RuntimeException if invalid.
+    Address getValidBsqAddress(String address) {
         try {
             return bsqFormatter.getAddressFromBsqAddress(address);
-        } catch (Throwable t) {
-            log.error("", t);
+        } catch (RuntimeException e) {
+            log.error("", e);
             throw new IllegalStateException(format("%s is not a valid bsq address", address));
         }
     }
@@ -580,7 +575,7 @@ class CoreWalletsService {
         if (btcWalletService.getAesKey() == null || bsqWalletService.getAesKey() == null) {
             KeyParameter aesKey = new KeyParameter(tempAesKey.getKey());
             walletsManager.setAesKey(aesKey);
-            walletsSetup.getWalletConfig().maybeAddSegwitKeychain(walletsSetup.getWalletConfig().btcWallet(), aesKey);
+            walletsManager.maybeAddSegwitKeychains(aesKey);
         }
     }
 

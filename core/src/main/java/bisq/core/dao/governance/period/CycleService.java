@@ -134,8 +134,7 @@ public class CycleService implements DaoStateListener, DaoSetupService {
         // We add the default values from the Param enum to our StateChangeEvent list.
         List<DaoPhase> daoPhasesWithDefaultDuration = Arrays.stream(DaoPhase.Phase.values())
                 .map(this::getPhaseWithDefaultDuration)
-                .filter(Optional::isPresent)
-                .map(Optional::get)
+                .flatMap(Optional::stream)
                 .collect(Collectors.toList());
         return new Cycle(genesisBlockHeight, ImmutableList.copyOf(daoPhasesWithDefaultDuration));
     }

@@ -24,12 +24,9 @@ import bisq.core.dao.state.model.ImmutableDaoStateModel;
 import bisq.core.dao.state.model.blockchain.TxType;
 
 import bisq.common.app.Version;
-import bisq.common.config.Config;
 import bisq.common.util.CollectionUtils;
 
-import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.LegacyAddress;
 
 import java.util.Date;
 import java.util.Map;
@@ -113,16 +110,10 @@ public final class CompensationProposal extends Proposal implements IssuanceProp
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @Override
     public Coin getRequestedBsq() {
         return Coin.valueOf(requestedBsq);
     }
-
-    public LegacyAddress getAddress() throws AddressFormatException {
-        // Remove leading 'B'
-        String underlyingBtcAddress = bsqAddress.substring(1, bsqAddress.length());
-        return LegacyAddress.fromBase58(Config.baseCurrencyNetworkParameters(), underlyingBtcAddress);
-    }
-
 
     @Override
     public ProposalType getType() {

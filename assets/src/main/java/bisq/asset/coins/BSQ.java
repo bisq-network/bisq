@@ -18,7 +18,7 @@
 package bisq.asset.coins;
 
 import bisq.asset.AddressValidationResult;
-import bisq.asset.Base58AddressValidator;
+import bisq.asset.BitcoinAddressValidator;
 import bisq.asset.Coin;
 
 import org.bitcoinj.core.NetworkParameters;
@@ -57,7 +57,7 @@ public class BSQ extends Coin {
     }
 
 
-    public static class BSQAddressValidator extends Base58AddressValidator {
+    public static class BSQAddressValidator extends BitcoinAddressValidator {
 
         public BSQAddressValidator(NetworkParameters networkParameters) {
             super(networkParameters);
@@ -68,7 +68,7 @@ public class BSQ extends Coin {
             if (!address.startsWith("B"))
                 return AddressValidationResult.invalidAddress("BSQ address must start with 'B'");
 
-            String addressAsBtc = address.substring(1, address.length());
+            String addressAsBtc = address.substring(1);
 
             return super.validate(addressAsBtc);
         }

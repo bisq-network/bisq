@@ -17,10 +17,14 @@
 
 package bisq.core.dao.governance.proposal;
 
+import bisq.common.config.Config;
+
+import org.bitcoinj.core.Address;
+import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
 
 /**
- * Marker interface for proposals which can lead to new BSQ issuance
+ * Interface for proposals which can lead to new BSQ issuance
  */
 public interface IssuanceProposal {
     Coin getRequestedBsq();
@@ -28,4 +32,10 @@ public interface IssuanceProposal {
     String getBsqAddress();
 
     String getTxId();
+
+    default Address getAddress() throws AddressFormatException {
+        // Remove leading 'B'
+        String underlyingBtcAddress = getBsqAddress().substring(1);
+        return Address.fromString(Config.baseCurrencyNetworkParameters(), underlyingBtcAddress);
+    }
 }

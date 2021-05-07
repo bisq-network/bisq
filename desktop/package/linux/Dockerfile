@@ -8,7 +8,7 @@
 
 # pull base image
 FROM openjdk:8-jdk
-ENV version 1.6.2-SNAPSHOT
+ENV version 1.6.3-SNAPSHOT
 
 RUN apt-get update && apt-get install -y --no-install-recommends openjfx && rm -rf /var/lib/apt/lists/* &&
 apt-get install -y vim fakeroot

@@ -57,6 +57,7 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 
+import javafx.beans.binding.BooleanExpression;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 
@@ -143,7 +144,11 @@ public class WalletConfig extends AbstractIdleService {
     @Setter
     private int minBroadcastConnections;
     @Getter
-    private BooleanProperty migratedWalletToSegwit = new SimpleBooleanProperty(false);
+    private BooleanProperty migratedWalletToBtcSegwit = new SimpleBooleanProperty(false);
+    @Getter
+    private BooleanProperty migratedWalletToBsqSegwit = new SimpleBooleanProperty(false);
+    @Getter
+    private BooleanExpression migratedWalletToSegwit = migratedWalletToBtcSegwit.and(migratedWalletToBsqSegwit);
 
     /**
      * Creates a new WalletConfig, with a newly created {@link Context}. Files will be stored in the given directory.
@@ -406,15 +411,13 @@ public class WalletConfig extends AbstractIdleService {
             wallet = serializer.readWallet(params, extArray, proto);
             if (shouldReplayWallet)
                 wallet.reset();
-            if (!isBsqWallet) {
-                maybeAddSegwitKeychain(wallet, null);
-            }
+            maybeAddSegwitKeychain(wallet, null, isBsqWallet);
         }
         return wallet;
     }
 
     protected Wallet createWallet(boolean isBsqWallet) {
-        Script.ScriptType preferredOutputScriptType = isBsqWallet ? Script.ScriptType.P2PKH : Script.ScriptType.P2WPKH;
+        Script.ScriptType preferredOutputScriptType = Script.ScriptType.P2WPKH;
         KeyChainGroupStructure structure = new BisqKeyChainGroupStructure(isBsqWallet);
         KeyChainGroup.Builder kcgBuilder = KeyChainGroup.builder(params, structure);
         if (restoreFromSeed != null) {
@@ -545,21 +548,29 @@ public class WalletConfig extends AbstractIdleService {
         return directory;
     }
 
-    public void maybeAddSegwitKeychain(Wallet wallet, KeyParameter aesKey) {
-        if (BisqKeyChainGroupStructure.BIP44_BTC_NON_SEGWIT_ACCOUNT_PATH.equals(wallet.getActiveKeyChain().getAccountPath())) {
+    public void maybeAddSegwitKeychain(Wallet wallet, KeyParameter aesKey, boolean isBsqWallet) {
+        var nonSegwitAccountPath = isBsqWallet
+                ? BisqKeyChainGroupStructure.BIP44_BSQ_NON_SEGWIT_ACCOUNT_PATH
+                : BisqKeyChainGroupStructure.BIP44_BTC_NON_SEGWIT_ACCOUNT_PATH;
+        var preSegwitBackupFilename = isBsqWallet
+                ? WalletsSetup.PRE_SEGWIT_BSQ_WALLET_BACKUP
+                : WalletsSetup.PRE_SEGWIT_BTC_WALLET_BACKUP;
+        var walletFilename = isBsqWallet ? "bisq_BSQ.wallet" : "bisq_BTC.wallet";
+
+        if (nonSegwitAccountPath.equals(wallet.getActiveKeyChain().getAccountPath())) {
             if (wallet.isEncrypted() && aesKey == null) {
                 // wait for the aesKey to be set and this method to be invoked again.
                 return;
             }
             // Do a backup of the wallet
-            File backup = new File(directory, WalletsSetup.PRE_SEGWIT_WALLET_BACKUP);
+            File backup = new File(directory, preSegwitBackupFilename);
             try {
-                FileUtil.copyFile(new File(directory, "bisq_BTC.wallet"), backup);
+                FileUtil.copyFile(new File(directory, walletFilename), backup);
             } catch (IOException e) {
                 log.error(e.toString(), e);
             }
 
-            // Btc wallet does not have a native segwit keychain, we should add one.
+            // Wallet does not have a native segwit keychain, we should add one.
             DeterministicSeed seed = wallet.getKeyChainSeed();
             if (aesKey != null) {
                 // If wallet is encrypted, decrypt the seed.
@@ -568,7 +579,7 @@ public class WalletConfig extends AbstractIdleService {
             }
             DeterministicKeyChain nativeSegwitKeyChain = DeterministicKeyChain.builder().seed(seed)
                     .outputScriptType(Script.ScriptType.P2WPKH)
-                    .accountPath(new BisqKeyChainGroupStructure(false).accountPathFor(Script.ScriptType.P2WPKH)).build();
+                    .accountPath(new BisqKeyChainGroupStructure(isBsqWallet).accountPathFor(Script.ScriptType.P2WPKH)).build();
             if (aesKey != null) {
                 // If wallet is encrypted, encrypt the new keychain.
                 KeyCrypter keyCrypter = wallet.getKeyCrypter();
@@ -576,7 +587,11 @@ public class WalletConfig extends AbstractIdleService {
             }
             wallet.addAndActivateHDChain(nativeSegwitKeyChain);
         }
-        migratedWalletToSegwit.set(true);
+        if (isBsqWallet) {
+            migratedWalletToBsqSegwit.set(true);
+        } else {
+            migratedWalletToBtcSegwit.set(true);
+        }
     }
 
     public boolean stateStartingOrRunning() {

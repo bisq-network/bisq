@@ -51,8 +51,6 @@ public enum OpReturnType implements ImmutableDaoStateModel {
     public static Optional<OpReturnType> getOpReturnType(byte type) {
         return Arrays.stream(OpReturnType.values())
                 .filter(opReturnType -> opReturnType.type == type)
-                .map(Optional::of)
-                .findAny()
-                .orElse(Optional.empty());
+                .findAny();
     }
 }
