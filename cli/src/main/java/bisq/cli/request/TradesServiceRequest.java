@@ -17,6 +17,7 @@
 
 package bisq.cli.request;
 
+import bisq.proto.grpc.AtomicTradeInfo;
 import bisq.proto.grpc.ConfirmPaymentReceivedRequest;
 import bisq.proto.grpc.ConfirmPaymentStartedRequest;
 import bisq.proto.grpc.GetTradeRequest;
@@ -53,6 +54,13 @@ public class TradesServiceRequest {
             return reply.getTrade();
         else
             throw new IllegalStateException(reply.getFailureReason().getDescription());
+    }
+
+    public AtomicTradeInfo getAtomicTrade(String tradeId) {
+        var request = GetTradeRequest.newBuilder()
+                .setTradeId(tradeId)
+                .build();
+        return grpcStubs.tradesService.getAtomicTrade(request).getAtomicTrade();
     }
 
     public TradeInfo getTrade(String tradeId) {

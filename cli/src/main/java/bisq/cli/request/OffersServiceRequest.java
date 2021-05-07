@@ -17,6 +17,7 @@
 
 package bisq.cli.request;
 
+import bisq.proto.grpc.AtomicOfferInfo;
 import bisq.proto.grpc.CancelOfferRequest;
 import bisq.proto.grpc.CreateOfferRequest;
 import bisq.proto.grpc.EditOfferRequest;
@@ -207,6 +208,13 @@ public class OffersServiceRequest {
         grpcStubs.offersService.cancelOffer(request);
     }
 
+    public AtomicOfferInfo getAtomicOffer(String offerId) {
+        var request = GetOfferRequest.newBuilder()
+                .setId(offerId)
+                .build();
+        return grpcStubs.offersService.getAtomicOffer(request).getAtomicOffer();
+    }
+
     public OfferInfo getOffer(String offerId) {
         var request = GetOfferRequest.newBuilder()
                 .setId(offerId)
@@ -214,11 +222,28 @@ public class OffersServiceRequest {
         return grpcStubs.offersService.getOffer(request).getOffer();
     }
 
+    public AtomicOfferInfo getMyAtomicOffer(String offerId) {
+        var request = GetMyOfferRequest.newBuilder()
+                .setId(offerId)
+                .build();
+        return grpcStubs.offersService.getMyAtomicOffer(request).getAtomicOffer();
+
+    }
+
     public OfferInfo getMyOffer(String offerId) {
         var request = GetMyOfferRequest.newBuilder()
                 .setId(offerId)
                 .build();
         return grpcStubs.offersService.getMyOffer(request).getOffer();
+    }
+
+    public List<AtomicOfferInfo> getAtomicOffers(String direction, String currencyCode) {
+        var request = GetOffersRequest.newBuilder()
+                .setDirection(direction)
+                .setCurrencyCode(currencyCode)
+                .build();
+
+        return grpcStubs.offersService.getAtomicOffers(request).getAtomicOffersList();
     }
 
     public List<OfferInfo> getOffers(String direction, String currencyCode) {
@@ -251,11 +276,26 @@ public class OffersServiceRequest {
         return offers.isEmpty() ? offers : sortOffersByDate(offers);
     }
 
+    public List<AtomicOfferInfo> getAtomicOffersSortedByDate() {
+        ArrayList<AtomicOfferInfo> offers = new ArrayList<>();
+        offers.addAll(getAtomicOffers(BUY.name(), "BSQ"));
+        offers.addAll(getAtomicOffers(SELL.name(), "BSQ"));
+        return sortAtomicOffersByDate(offers);
+    }
+
     public List<OfferInfo> getBsqOffersSortedByDate() {
         ArrayList<OfferInfo> offers = new ArrayList<>();
         offers.addAll(getCryptoCurrencyOffers(BUY.name(), "BSQ"));
         offers.addAll(getCryptoCurrencyOffers(SELL.name(), "BSQ"));
         return sortOffersByDate(offers);
+    }
+
+    public List<AtomicOfferInfo> getMyAtomicOffers(String direction, String currencyCode) {
+        var request = GetMyOffersRequest.newBuilder()
+                .setDirection(direction)
+                .setCurrencyCode(currencyCode)
+                .build();
+        return grpcStubs.offersService.getMyAtomicOffers(request).getAtomicOffersList();
     }
 
     public List<OfferInfo> getMyOffers(String direction, String currencyCode) {
@@ -295,9 +335,23 @@ public class OffersServiceRequest {
         return sortOffersByDate(offers);
     }
 
+    public List<AtomicOfferInfo> getMyAtomicOffersSortedByDate() {
+        ArrayList<AtomicOfferInfo> offers = new ArrayList<>();
+        offers.addAll(getMyAtomicOffers(BUY.name(), "BSQ"));
+        offers.addAll(getMyAtomicOffers(SELL.name(), "BSQ"));
+        return sortAtomicOffersByDate(offers);
+    }
+
     public OfferInfo getMostRecentOffer(String direction, String currencyCode) {
         List<OfferInfo> offers = getOffersSortedByDate(direction, currencyCode);
         return offers.isEmpty() ? null : offers.get(offers.size() - 1);
+    }
+
+    public List<AtomicOfferInfo> sortAtomicOffersByDate(List<AtomicOfferInfo> offerInfoList) {
+        return offerInfoList.stream()
+                .sorted(comparing(AtomicOfferInfo::getDate))
+                .collect(toList());
+
     }
 
     public List<OfferInfo> sortOffersByDate(List<OfferInfo> offerInfoList) {

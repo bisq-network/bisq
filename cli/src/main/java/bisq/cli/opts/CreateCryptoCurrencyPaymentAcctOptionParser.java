@@ -20,10 +20,7 @@ package bisq.cli.opts;
 
 import joptsimple.OptionSpec;
 
-import static bisq.cli.opts.OptLabel.OPT_ACCOUNT_NAME;
-import static bisq.cli.opts.OptLabel.OPT_ADDRESS;
-import static bisq.cli.opts.OptLabel.OPT_CURRENCY_CODE;
-import static bisq.cli.opts.OptLabel.OPT_TRADE_INSTANT;
+import static bisq.cli.opts.OptLabel.*;
 
 public class CreateCryptoCurrencyPaymentAcctOptionParser extends AbstractMethodOptionParser implements MethodOpts {
 
@@ -37,6 +34,11 @@ public class CreateCryptoCurrencyPaymentAcctOptionParser extends AbstractMethodO
             .withRequiredArg();
 
     final OptionSpec<Boolean> tradeInstantOpt = parser.accepts(OPT_TRADE_INSTANT, "create trade instant account")
+            .withOptionalArg()
+            .ofType(boolean.class)
+            .defaultsTo(Boolean.FALSE);
+
+    final OptionSpec<Boolean> tradeAtomicOpt = parser.accepts(OPT_TRADE_ATOMIC, "create trade atomic account")
             .withOptionalArg()
             .ofType(boolean.class)
             .defaultsTo(Boolean.FALSE);
@@ -81,5 +83,9 @@ public class CreateCryptoCurrencyPaymentAcctOptionParser extends AbstractMethodO
 
     public boolean getIsTradeInstant() {
         return options.valueOf(tradeInstantOpt);
+    }
+
+    public boolean getIsTradeAtomic() {
+        return options.valueOf(tradeAtomicOpt);
     }
 }
