@@ -200,6 +200,7 @@ public class EditOfferView extends MutableOfferView<EditOfferViewModel> {
         editOfferConfirmationBox.getChildren().add(cancelButton);
 
         confirmButton.setOnAction(e -> {
+            confirmButton.requestFocus();   // fix issue #5460 (when enter key used, focus is wrong)
             if (model.isPriceInRange()) {
                 model.isNextButtonDisabled.setValue(true);
                 cancelButton.setDisable(true);
