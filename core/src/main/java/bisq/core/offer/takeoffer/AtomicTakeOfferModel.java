@@ -96,6 +96,7 @@ public class AtomicTakeOfferModel implements Model {
     private PaymentAccount paymentAccount;
     @Getter
     Price tradePrice;
+    @Getter
     private AtomicTxBuilder atomicTxBuilder;
 
 
