@@ -546,6 +546,10 @@ public class Offer implements NetworkPayload, PersistablePayload {
         return getOfferPayload().map(OfferPayload::isUseReOpenAfterAutoClose).orElse(false);
     }
 
+    public boolean isAtomicOffer() {
+        return getOfferPayloadI() instanceof AtomicOfferPayload;
+    }
+
     public boolean isXmrAutoConf() {
         if (!isXmr()) {
             return false;
