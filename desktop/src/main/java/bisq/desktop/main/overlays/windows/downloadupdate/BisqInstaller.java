@@ -69,8 +69,9 @@ public class BisqInstaller {
     public Optional<DownloadTask> download(String version) {
         String partialUrl = DOWNLOAD_HOST_URL + "v" + version + "/";
 
-        // Get installer filename on all platforms
+        // Get installer + checksum filename on all platforms
         FileDescriptor installerFileDescriptor = getInstallerDescriptor(version, partialUrl);
+        FileDescriptor installerHashFileDescriptor = getInstallerHashDescriptor(installerFileDescriptor, partialUrl);
 
         // tells us which key was used for signing
         FileDescriptor signingKeyDescriptor = getSigningKeyDescriptor(partialUrl);
@@ -83,6 +84,7 @@ public class BisqInstaller {
 
         List<FileDescriptor> allFiles = Lists.newArrayList();
         allFiles.add(installerFileDescriptor);
+        allFiles.add(installerHashFileDescriptor);
         allFiles.add(signingKeyDescriptor);
         allFiles.add(jarHashDescriptor);
         allFiles.addAll(keyFileDescriptors);
@@ -218,6 +220,17 @@ public class BisqInstaller {
 
         return FileDescriptor.builder()
                 .type(DownloadType.INSTALLER)
+                .fileName(fileName)
+                .id(fileName)
+                .loadUrl(partialUrl.concat(fileName))
+                .build();
+    }
+
+    @NotNull
+    private FileDescriptor getInstallerHashDescriptor(FileDescriptor installerDescriptor, String partialUrl) {
+        String fileName = installerDescriptor.getFileName() + ".SHA256";
+        return FileDescriptor.builder()
+                .type(DownloadType.JAR_HASH)
                 .fileName(fileName)
                 .id(fileName)
                 .loadUrl(partialUrl.concat(fileName))
