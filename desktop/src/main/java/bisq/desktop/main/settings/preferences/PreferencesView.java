@@ -295,10 +295,10 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
                     int withdrawalTxFeePerVbyte = Integer.parseInt(transactionFeeInputTextField.getText());
                     final long minFeePerVbyte = feeService.getMinFeePerVByte();
                     if (withdrawalTxFeePerVbyte < minFeePerVbyte) {
-                        new Popup().warning(Res.get("setting.preferences.txFeeMin", minFeePerVbyte)).show();
+                        new Popup().warning(Res.get("funds.withdrawal.txFeeMin", minFeePerVbyte)).show();
                         transactionFeeInputTextField.setText(estimatedFee);
                     } else if (withdrawalTxFeePerVbyte > 5000) {
-                        new Popup().warning(Res.get("setting.preferences.txFeeTooLarge")).show();
+                        new Popup().warning(Res.get("funds.withdrawal.txFeeTooLarge")).show();
                         transactionFeeInputTextField.setText(estimatedFee);
                     } else {
                         preferences.setWithdrawalTxFeeInVbytes(withdrawalTxFeePerVbyte);
