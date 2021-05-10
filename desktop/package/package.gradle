@@ -200,11 +200,8 @@ task packageInstallers {
         // We convert the fat jar into a deterministic one by stripping out comments with date, etc.
         // jar file created from https://github.com/ManfredKarrer/tools
         executeCmd("java -jar \"${project(':desktop').projectDir}/package/tools-1.0.jar\" ${fatJarFolderPath}/${mainJarName}")
-
-        // Store deterministic jar SHA-256
-        ant.checksum(file: "${fatJarFolderPath}/${mainJarName}", algorithm: 'SHA-256')
         copy {
-            from "${fatJarFolderPath}/${mainJarName}.SHA-256"
+            from "${fatJarFolderPath}/${mainJarName}"
             into binariesFolderPath
         }
 
@@ -483,10 +480,14 @@ task packageInstallers {
             executeCmd("open " + envVariableSharedFolder)
         }
 
-        println "The binaries are ready:"
-        binariesFolderPath.traverse {
-            println it.path
+        // Checksum each file in the resulting binaries folder
+        ant.checksum(algorithm: 'SHA-256') {
+            ant.fileset(dir: "${binariesFolderPath}")
         }
+
+        println "The binaries and checksums are ready:"
+        FileCollection collection = layout.files { binariesFolderPath.listFiles() }
+        collection.collect { it.path }.sort().each { println it }
     }
 }
 
