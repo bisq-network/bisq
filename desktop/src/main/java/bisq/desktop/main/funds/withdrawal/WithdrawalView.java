@@ -744,12 +744,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                                             useCustomFee.setSelected(false);
 
                                             transactionFeeInputTextField.setEditable(false);
-                                            transactionFeeInputTextField.setPromptText(Res.get("funds.withdrawal.useCustomFeeValueInfo"));
                                             transactionFeeInputTextField.setText(String.valueOf(feeService.getTxFeePerVbyte().value));
-                                            transactionFeeInputTextField.focusedProperty().addListener(transactionFeeFocusedListener);
-
-                                            feeService.feeUpdateCounterProperty().addListener(transactionFeeChangeListener);
-                                            useCustomFee.selectedProperty().addListener(useCustomFeeCheckboxListener);
 
                                             inputsToggleGroup.selectedToggleProperty().addListener(inputsToggleGroupListener);
                                         }
