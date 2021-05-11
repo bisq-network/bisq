@@ -76,6 +76,7 @@ public class BlockParser {
      * @throws BlockHeightNotConnectingException If new block height is not current chain Height + 1
      */
     public Block parseBlock(RawBlock rawBlock) throws BlockHashNotConnectingException, BlockHeightNotConnectingException {
+        long startTs = System.currentTimeMillis();
         int blockHeight = rawBlock.getHeight();
         log.trace("Parse block at height={} ", blockHeight);
 
@@ -102,7 +103,6 @@ public class BlockParser {
         // There are some blocks with testing such dependency chains like block 130768 where at each iteration only
         // one get resolved.
         // Lately there is a patter with 24 iterations observed
-        long startTs = System.currentTimeMillis();
 
         rawBlock.getRawTxs().forEach(rawTx ->
                 txParser.findTx(rawTx,
@@ -111,10 +111,9 @@ public class BlockParser {
                         genesisTotalSupply)
                         .ifPresent(tx -> daoStateService.onNewTxForLastBlock(block, tx)));
 
+        daoStateService.onParseBlockComplete(block);
         log.info("Parsing {} transactions at block height {} took {} ms", rawBlock.getRawTxs().size(),
                 blockHeight, System.currentTimeMillis() - startTs);
-
-        daoStateService.onParseBlockComplete(block);
         return block;
     }
 
