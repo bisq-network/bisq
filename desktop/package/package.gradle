@@ -200,10 +200,6 @@ task packageInstallers {
         // We convert the fat jar into a deterministic one by stripping out comments with date, etc.
         // jar file created from https://github.com/ManfredKarrer/tools
         executeCmd("java -jar \"${project(':desktop').projectDir}/package/tools-1.0.jar\" ${fatJarFolderPath}/${mainJarName}")
-        copy {
-            from "${fatJarFolderPath}/${mainJarName}"
-            into binariesFolderPath
-        }
 
         // TODO For non-modular applications: use jlink to create a custom runtime containing only the modules required
 
@@ -465,6 +461,12 @@ task packageInstallers {
                     " --type rpm")
         }
 
+        // After binaries have been generated, copy the (deterministic, signed) fat jar to the binaries folder
+        copy {
+            from "${fatJarFolderPath}/${mainJarName}"
+            into binariesFolderPath
+        }
+
         // Env variable can be set by calling "export BISQ_SHARED_FOLDER='Some value'"
         // This is to copy the final binary/ies to a shared folder for further processing if a VM is used.
         String envVariableSharedFolder = "$System.env.BISQ_SHARED_FOLDER"
@@ -480,7 +482,7 @@ task packageInstallers {
             executeCmd("open " + envVariableSharedFolder)
         }
 
-        // Checksum each file in the resulting binaries folder
+        // Checksum each file present in the binaries folder
         ant.checksum(algorithm: 'SHA-256') {
             ant.fileset(dir: "${binariesFolderPath}")
         }
