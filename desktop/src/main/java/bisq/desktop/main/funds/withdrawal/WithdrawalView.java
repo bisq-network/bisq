@@ -190,6 +190,16 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
         inputsToggleGroupListener = (observable, oldValue, newValue) -> {
             useAllInputs.set(newValue == useAllInputsRadioButton);
 
+            useCustomFee.setSelected(false);
+
+            transactionFeeInputTextField.setEditable(false);
+            transactionFeeInputTextField.setPromptText(Res.get("funds.withdrawal.useCustomFeeValueInfo"));
+            transactionFeeInputTextField.setText(String.valueOf(feeService.getTxFeePerVbyte().value));
+            transactionFeeInputTextField.focusedProperty().addListener(transactionFeeFocusedListener);
+
+            feeService.feeUpdateCounterProperty().addListener(transactionFeeChangeListener);
+            useCustomFee.selectedProperty().addListener(useCustomFeeCheckboxListener);
+
             updateInputSelection();
         };
 
@@ -613,9 +623,6 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
         withdrawMemoTextField.setText("");
         withdrawMemoTextField.setPromptText(Res.get("funds.withdrawal.memo"));
 
-        transactionFeeInputTextField.setText("");
-        transactionFeeInputTextField.setPromptText(Res.get("funds.withdrawal.useCustomFeeValueInfo"));
-
         selectedItems.clear();
         tableView.getSelectionModel().clearSelection();
     }
@@ -733,6 +740,12 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                                             inputsToggleGroup.selectedToggleProperty().removeListener(inputsToggleGroupListener);
                                             inputsToggleGroup.selectToggle(useCustomInputsRadioButton);
                                             useAllInputs.set(false);
+
+                                            useCustomFee.setSelected(false);
+
+                                            transactionFeeInputTextField.setEditable(false);
+                                            transactionFeeInputTextField.setText(String.valueOf(feeService.getTxFeePerVbyte().value));
+
                                             inputsToggleGroup.selectedToggleProperty().addListener(inputsToggleGroupListener);
                                         }
                                     });
