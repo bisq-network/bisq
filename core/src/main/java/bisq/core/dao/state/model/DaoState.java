@@ -278,7 +278,9 @@ public class DaoState implements PersistablePayload {
         return Collections.unmodifiableSet(blockHashCache);
     }
 
-    public Map<Integer, Block> getBlockHeightCache() { return Collections.unmodifiableMap(blockHeightCache); }
+    public Map<Integer, Block> getBlockHeightCache() {
+        return Collections.unmodifiableMap(blockHeightCache);
+    }
 
     @Override
     public String toString() {
