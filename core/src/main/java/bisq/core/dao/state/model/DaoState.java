@@ -41,6 +41,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -107,7 +108,8 @@ public class DaoState implements PersistablePayload {
     // Transient data used only as an index - must be kept in sync with the block list
     @JsonExclude
     private transient final Map<String, Tx> txCache; // key is txId
-
+    @JsonExclude
+    private transient final Set<String> blockHashCache;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -159,6 +161,10 @@ public class DaoState implements PersistablePayload {
         txCache = blocks.stream()
                 .flatMap(block -> block.getTxs().stream())
                 .collect(Collectors.toMap(Tx::getId, Function.identity(), (x, y) -> x, HashMap::new));
+
+        blockHashCache = blocks.stream()
+                .map(Block::getHash)
+                .collect(Collectors.toSet());
     }
 
     @Override
@@ -249,8 +255,17 @@ public class DaoState implements PersistablePayload {
         this.txCache.putAll(txCache);
     }
 
+    public void setBlockHashCache(Set<String> blockHashCache) {
+        this.blockHashCache.clear();
+        this.blockHashCache.addAll(blockHashCache);
+    }
+
     public Map<String, Tx> getTxCache() {
         return Collections.unmodifiableMap(txCache);
+    }
+
+    public Set<String> getBlockHashCache() {
+        return Collections.unmodifiableSet(blockHashCache);
     }
 
     @Override

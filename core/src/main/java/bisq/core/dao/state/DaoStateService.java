@@ -119,6 +119,7 @@ public class DaoStateService implements DaoSetupService {
 
         daoState.getBlocks().clear();
         daoState.getBlocks().addAll(snapshot.getBlocks());
+        daoState.setBlockHashCache(snapshot.getBlockHashCache());
 
         daoState.getCycles().clear();
         daoState.getCycles().addAll(snapshot.getCycles());
@@ -295,7 +296,7 @@ public class DaoStateService implements DaoSetupService {
      * {@code false}.
      */
     public boolean isBlockHashKnown(String blockHash) {
-        return getBlocks().stream().anyMatch(block -> block.getHash().equals(blockHash));
+        return daoState.getBlockHashCache().contains(blockHash);
     }
 
     public Optional<Block> getLastBlock() {
