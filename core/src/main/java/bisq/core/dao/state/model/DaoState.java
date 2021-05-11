@@ -109,6 +109,8 @@ public class DaoState implements PersistablePayload {
     @JsonExclude
     private transient final Map<String, Tx> txCache; // key is txId
     @JsonExclude
+    private transient final Map<Integer, Block> blockHeightCache; // key is block height
+    @JsonExclude
     private transient final Set<String> blockHashCache;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -165,6 +167,9 @@ public class DaoState implements PersistablePayload {
         blockHashCache = blocks.stream()
                 .map(Block::getHash)
                 .collect(Collectors.toSet());
+
+        blockHeightCache = blocks.stream()
+                .collect(Collectors.toMap(Block::getHeight, Function.identity(), (x, y) -> x, HashMap::new));
     }
 
     @Override
@@ -260,6 +265,11 @@ public class DaoState implements PersistablePayload {
         this.blockHashCache.addAll(blockHashCache);
     }
 
+    public void setBlockHeightCache(Map<Integer, Block> blockHeightCache) {
+        this.blockHeightCache.clear();
+        this.blockHeightCache.putAll(blockHeightCache);
+    }
+
     public Map<String, Tx> getTxCache() {
         return Collections.unmodifiableMap(txCache);
     }
@@ -267,6 +277,8 @@ public class DaoState implements PersistablePayload {
     public Set<String> getBlockHashCache() {
         return Collections.unmodifiableSet(blockHashCache);
     }
+
+    public Map<Integer, Block> getBlockHeightCache() { return Collections.unmodifiableMap(blockHeightCache); }
 
     @Override
     public String toString() {

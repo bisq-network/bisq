@@ -120,6 +120,7 @@ public class DaoStateService implements DaoSetupService {
         daoState.getBlocks().clear();
         daoState.getBlocks().addAll(snapshot.getBlocks());
         daoState.setBlockHashCache(snapshot.getBlockHashCache());
+        daoState.setBlockHeightCache(snapshot.getBlockHeightCache());
 
         daoState.getCycles().clear();
         daoState.getCycles().addAll(snapshot.getCycles());
@@ -311,9 +312,7 @@ public class DaoStateService implements DaoSetupService {
     }
 
     public Optional<Block> getBlockAtHeight(int height) {
-        return getBlocks().stream()
-                .filter(block -> block.getHeight() == height)
-                .findAny();
+        return Optional.ofNullable(daoState.getBlockHeightCache().get(height));
     }
 
     public boolean containsBlock(Block block) {
