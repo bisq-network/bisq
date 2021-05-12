@@ -85,7 +85,7 @@ abstract class MempoolFeeRateProvider extends FeeRateProvider {
             log.error("Error retrieving bitcoin mining fee estimation: " + e.getMessage());
         }
 
-        return new FeeRate("BTC", MIN_FEE_RATE, MIN_FEE_RATE, Instant.now().getEpochSecond());
+        return new FeeRate("BTC", MIN_FEE_RATE_FOR_TRADING, MIN_FEE_RATE_FOR_WITHDRAWAL, Instant.now().getEpochSecond());
     }
 
     private FeeRate getEstimatedFeeRate() {
@@ -94,15 +94,15 @@ abstract class MempoolFeeRateProvider extends FeeRateProvider {
                 .filter(p -> p.getKey().equalsIgnoreCase("halfHourFee"))
                 .map(Map.Entry::getValue)
                 .findFirst()
-                .map(r -> Math.max(r, MIN_FEE_RATE))
+                .map(r -> Math.max(r, MIN_FEE_RATE_FOR_TRADING))
                 .map(r -> Math.min(r, MAX_FEE_RATE))
-                .orElse(MIN_FEE_RATE);
+                .orElse(MIN_FEE_RATE_FOR_TRADING);
         long minimumFee = feeRatePredictions.stream()
                 .filter(p -> p.getKey().equalsIgnoreCase("minimumFee"))
                 .map(Map.Entry::getValue)
                 .findFirst()
                 .map(r -> Math.multiplyExact(r, 2)) // multiply the minimumFee by 2 (per wiz)
-                .orElse(MIN_FEE_RATE);
+                .orElse(MIN_FEE_RATE_FOR_WITHDRAWAL);
         log.info("Retrieved estimated mining fee of {} sat/vB and minimumFee of {} sat/vB from {}", estimatedFeeRate, minimumFee, getMempoolApiHostname());
         return new FeeRate("BTC", estimatedFeeRate, minimumFee, Instant.now().getEpochSecond());
     }

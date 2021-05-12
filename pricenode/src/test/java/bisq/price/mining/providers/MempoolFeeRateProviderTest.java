@@ -50,7 +50,7 @@ public class MempoolFeeRateProviderTest {
         FeeRate retrievedFeeRate = feeRateProvider.doGet();
 
         // Check that the FeeRateProvider returns a fee within the defined parameters
-        assertTrue(retrievedFeeRate.getPrice() >= FeeRateProvider.MIN_FEE_RATE);
+        assertTrue(retrievedFeeRate.getPrice() >= FeeRateProvider.MIN_FEE_RATE_FOR_TRADING);
         assertTrue(retrievedFeeRate.getPrice() <= FeeRateProvider.MAX_FEE_RATE);
     }
 
@@ -61,7 +61,7 @@ public class MempoolFeeRateProviderTest {
         MempoolFeeRateProvider dummyProvider = new MempoolFeeRateProvider.First(env) {
             @Override
             protected FeeRate doGet() {
-                return new FeeRate("BTC", feeRate, MIN_FEE_RATE, Instant.now().getEpochSecond());
+                return new FeeRate("BTC", feeRate, MIN_FEE_RATE_FOR_WITHDRAWAL, Instant.now().getEpochSecond());
             }
         };
 
