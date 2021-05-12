@@ -137,7 +137,7 @@ public class CurrencyUtil {
 
     public static List<CryptoCurrency> getMainCryptoCurrencies() {
         final List<CryptoCurrency> result = new ArrayList<>();
-        result.add(new CryptoCurrency("XRC", "Bitcoin Rhodium"));
+        result.add(new CryptoCurrency("XRC", "XRhodium"));
 
         if (DevEnv.isDaoTradingActivated())
             result.add(new CryptoCurrency("BSQ", "BSQ"));
