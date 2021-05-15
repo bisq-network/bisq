@@ -76,7 +76,9 @@ public class DaoState implements PersistablePayload {
 
     @Getter
     private int chainHeight; // Is set initially to genesis height
-    @Getter
+
+    // We override the getter so callers can't modify the list without also updating
+    // the block caches and indices below
     private final LinkedList<Block> blocks;
     @Getter
     private final LinkedList<Cycle> cycles;
@@ -109,9 +111,9 @@ public class DaoState implements PersistablePayload {
     @JsonExclude
     private transient final Map<String, Tx> txCache; // key is txId
     @JsonExclude
-    private transient final Map<Integer, Block> blockHeightCache; // key is block height
+    private transient final Map<Integer, Block> blocksByHeight; // Blocks indexed by height
     @JsonExclude
-    private transient final Set<String> blockHashCache;
+    private transient final Set<String> blocksByHash; // Blocks indexed by hash
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -164,11 +166,11 @@ public class DaoState implements PersistablePayload {
                 .flatMap(block -> block.getTxs().stream())
                 .collect(Collectors.toMap(Tx::getId, Function.identity(), (x, y) -> x, HashMap::new));
 
-        blockHashCache = blocks.stream()
+        blocksByHash = blocks.stream()
                 .map(Block::getHash)
                 .collect(Collectors.toSet());
 
-        blockHeightCache = blocks.stream()
+        blocksByHeight = blocks.stream()
                 .collect(Collectors.toMap(Block::getHeight, Function.identity(), (x, y) -> x, HashMap::new));
     }
 
@@ -246,7 +248,7 @@ public class DaoState implements PersistablePayload {
         // Reorgs are handled by rebuilding the hash chain from last snapshot.
         // Using the full blocks list becomes quite heavy. 7000 blocks are
         // about 1.4 MB and creating the hash takes 30 sec. By using just the last block we reduce the time to 7 sec.
-        return getBsqStateBuilderExcludingBlocks().addBlocks(getBlocks().getLast().toProtoMessage()).build().toByteArray();
+        return getBsqStateBuilderExcludingBlocks().addBlocks(getLastBlock().toProtoMessage()).build().toByteArray();
     }
 
     public void addToTxCache(Tx tx) {
@@ -260,26 +262,57 @@ public class DaoState implements PersistablePayload {
         this.txCache.putAll(txCache);
     }
 
-    public void setBlockHashCache(Set<String> blockHashCache) {
-        this.blockHashCache.clear();
-        this.blockHashCache.addAll(blockHashCache);
-    }
-
-    public void setBlockHeightCache(Map<Integer, Block> blockHeightCache) {
-        this.blockHeightCache.clear();
-        this.blockHeightCache.putAll(blockHeightCache);
-    }
-
     public Map<String, Tx> getTxCache() {
         return Collections.unmodifiableMap(txCache);
     }
 
-    public Set<String> getBlockHashCache() {
-        return Collections.unmodifiableSet(blockHashCache);
+    public Set<String> getBlocksByHash() {
+        return Collections.unmodifiableSet(blocksByHash);
     }
 
-    public Map<Integer, Block> getBlockHeightCache() {
-        return Collections.unmodifiableMap(blockHeightCache);
+    public Map<Integer, Block> getBlocksByHeight() {
+        return Collections.unmodifiableMap(blocksByHeight);
+    }
+
+    /**
+     * @return Unmodifiable view of the list of blocks. This prevents callers from
+     * directly modifying the list. We need to do this to make sure the block list is only
+     * modified together with the corresponding caches and indices.
+     *
+     * @see #addBlock(Block) to add a single block
+     * @see #addBlocks(List) to add a list of blocks
+     * @see #clearAndSetBlocks(List)  to replace existing blocks with a new list
+     */
+    public List<Block> getBlocks() {
+        return Collections.unmodifiableList(blocks);
+    }
+
+    // Wrapper that directly accesses the LinkedList, such that we don't have to expose
+    // the LinkedList
+    public Block getLastBlock() {
+        return blocks.getLast();
+    }
+
+    public void addBlock(Block block) {
+        blocks.add(block);
+        blocksByHash.add(block.getHash());
+        blocksByHeight.put(block.getHeight(), block);
+    }
+
+    public void addBlocks(List<Block> newBlocks) {
+        newBlocks.forEach(b -> addBlock(b));
+    }
+
+    /**
+     * Clears the existing block list and caches, and repopulates them with the new list
+     * @param newBlocks
+     */
+    public void clearAndSetBlocks(List<Block> newBlocks) {
+        blocks.clear();
+        blocksByHeight.clear();
+        blocksByHash.clear();
+
+        addBlocks(newBlocks);
     }
 
     @Override

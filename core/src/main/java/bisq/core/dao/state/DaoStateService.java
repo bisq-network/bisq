@@ -117,10 +117,7 @@ public class DaoStateService implements DaoSetupService {
 
         daoState.setTxCache(snapshot.getTxCache());
 
-        daoState.getBlocks().clear();
-        daoState.getBlocks().addAll(snapshot.getBlocks());
-        daoState.setBlockHashCache(snapshot.getBlockHashCache());
-        daoState.setBlockHeightCache(snapshot.getBlockHeightCache());
+        daoState.clearAndSetBlocks(snapshot.getBlocks());
 
         daoState.getCycles().clear();
         daoState.getCycles().addAll(snapshot.getCycles());
@@ -223,7 +220,7 @@ public class DaoStateService implements DaoSetupService {
                     "We ignore that block as the first block need to be the genesis block. " +
                     "That might happen in edge cases at reorgs. Received block={}", block);
         } else {
-            daoState.getBlocks().add(block);
+            daoState.addBlock(block);
 
             if (parseBlockChainComplete)
                 log.info("New Block added at blockHeight {}", block.getHeight());
@@ -285,7 +282,7 @@ public class DaoStateService implements DaoSetupService {
     }
 
 
-    public LinkedList<Block> getBlocks() {
+    public List<Block> getBlocks() {
         return daoState.getBlocks();
     }
 
@@ -297,12 +294,12 @@ public class DaoStateService implements DaoSetupService {
      * {@code false}.
      */
     public boolean isBlockHashKnown(String blockHash) {
-        return daoState.getBlockHashCache().contains(blockHash);
+        return daoState.getBlocksByHash().contains(blockHash);
     }
 
     public Optional<Block> getLastBlock() {
         if (!getBlocks().isEmpty())
-            return Optional.of(getBlocks().getLast());
+            return Optional.of(daoState.getLastBlock());
         else
             return Optional.empty();
     }
@@ -311,8 +308,12 @@ public class DaoStateService implements DaoSetupService {
         return getLastBlock().map(Block::getHeight).orElse(0);
     }
 
+    public String getBlockHashOfLastBlock() {
+        return getLastBlock().map(Block::getHash).orElse("");
+    }
+
     public Optional<Block> getBlockAtHeight(int height) {
-        return Optional.ofNullable(daoState.getBlockHeightCache().get(height));
+        return Optional.ofNullable(daoState.getBlocksByHeight().get(height));
     }
 
     public boolean containsBlock(Block block) {

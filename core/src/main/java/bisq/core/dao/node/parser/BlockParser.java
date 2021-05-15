@@ -29,7 +29,7 @@ import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
 
-import java.util.LinkedList;
+import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -118,16 +118,15 @@ public class BlockParser {
     }
 
     private void validateIfBlockIsConnecting(RawBlock rawBlock) throws BlockHashNotConnectingException, BlockHeightNotConnectingException {
-        LinkedList<Block> blocks = daoStateService.getBlocks();
+        List<Block> blocks = daoStateService.getBlocks();
 
         if (blocks.isEmpty())
             return;
 
-        Block last = blocks.getLast();
-        if (last.getHeight() + 1 != rawBlock.getHeight())
+        if (daoStateService.getBlockHeightOfLastBlock() + 1 != rawBlock.getHeight())
             throw new BlockHeightNotConnectingException(rawBlock);
 
-        if (!last.getHash().equals(rawBlock.getPreviousBlockHash()))
+        if (!daoStateService.getBlockHashOfLastBlock().equals(rawBlock.getPreviousBlockHash()))
             throw new BlockHashNotConnectingException(rawBlock);
     }
 
