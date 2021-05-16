@@ -25,6 +25,7 @@ import bisq.core.payment.payload.AdvancedCashAccountPayload;
 import bisq.core.payment.payload.AliPayAccountPayload;
 import bisq.core.payment.payload.AmazonGiftCardAccountPayload;
 import bisq.core.payment.payload.AustraliaPayidPayload;
+import bisq.core.payment.payload.CapitualAccountPayload;
 import bisq.core.payment.payload.CashAppAccountPayload;
 import bisq.core.payment.payload.CashByMailAccountPayload;
 import bisq.core.payment.payload.CashDepositAccountPayload;
@@ -159,6 +160,8 @@ public class CoreProtoResolver implements ProtoResolver {
                     return AmazonGiftCardAccountPayload.fromProto(proto);
                 case INSTANT_CRYPTO_CURRENCY_ACCOUNT_PAYLOAD:
                     return InstantCryptoCurrencyPayload.fromProto(proto);
+                case CAPITUAL_ACCOUNT_PAYLOAD:
+                    return CapitualAccountPayload.fromProto(proto);
 
                 // Cannot be deleted as it would break old trade history entries
                 case O_K_PAY_ACCOUNT_PAYLOAD:

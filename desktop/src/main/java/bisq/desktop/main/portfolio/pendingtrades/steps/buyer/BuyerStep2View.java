@@ -25,6 +25,7 @@ import bisq.desktop.components.paymentmethods.AdvancedCashForm;
 import bisq.desktop.components.paymentmethods.AliPayForm;
 import bisq.desktop.components.paymentmethods.AmazonGiftCardForm;
 import bisq.desktop.components.paymentmethods.AssetsForm;
+import bisq.desktop.components.paymentmethods.CapitualForm;
 import bisq.desktop.components.paymentmethods.CashByMailForm;
 import bisq.desktop.components.paymentmethods.CashDepositForm;
 import bisq.desktop.components.paymentmethods.ChaseQuickPayForm;
@@ -322,6 +323,9 @@ public class BuyerStep2View extends TradeStepView {
                 break;
             case PaymentMethod.AMAZON_GIFT_CARD_ID:
                 gridRow = AmazonGiftCardForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
+                break;
+            case PaymentMethod.CAPITUAL_ID:
+                gridRow = CapitualForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
                 break;
             default:
                 log.error("Not supported PaymentMethod: " + paymentMethodId);
