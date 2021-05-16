@@ -23,6 +23,7 @@ import bisq.desktop.components.paymentmethods.AdvancedCashForm;
 import bisq.desktop.components.paymentmethods.AliPayForm;
 import bisq.desktop.components.paymentmethods.AmazonGiftCardForm;
 import bisq.desktop.components.paymentmethods.AustraliaPayidForm;
+import bisq.desktop.components.paymentmethods.CapitualForm;
 import bisq.desktop.components.paymentmethods.CashByMailForm;
 import bisq.desktop.components.paymentmethods.CashDepositForm;
 import bisq.desktop.components.paymentmethods.ChaseQuickPayForm;
@@ -59,6 +60,7 @@ import bisq.desktop.util.validation.AdvancedCashValidator;
 import bisq.desktop.util.validation.AliPayValidator;
 import bisq.desktop.util.validation.AustraliaPayidValidator;
 import bisq.desktop.util.validation.BICValidator;
+import bisq.desktop.util.validation.CapitualValidator;
 import bisq.desktop.util.validation.ChaseQuickPayValidator;
 import bisq.desktop.util.validation.ClearXchangeValidator;
 import bisq.desktop.util.validation.F2FValidator;
@@ -83,6 +85,7 @@ import bisq.core.locale.Res;
 import bisq.core.offer.OfferRestrictions;
 import bisq.core.payment.AmazonGiftCardAccount;
 import bisq.core.payment.AustraliaPayid;
+import bisq.core.payment.CapitualAccount;
 import bisq.core.payment.CashByMailAccount;
 import bisq.core.payment.CashDepositAccount;
 import bisq.core.payment.ClearXchangeAccount;
@@ -135,6 +138,7 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
 
     private final IBANValidator ibanValidator;
     private final BICValidator bicValidator;
+    private final CapitualValidator capitualValidator;
     private final LengthValidator inputValidator;
     private final UpholdValidator upholdValidator;
     private final MoneyBeamValidator moneyBeamValidator;
@@ -166,6 +170,7 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
     public FiatAccountsView(FiatAccountsViewModel model,
                             IBANValidator ibanValidator,
                             BICValidator bicValidator,
+                            CapitualValidator capitualValidator,
                             LengthValidator inputValidator,
                             UpholdValidator upholdValidator,
                             MoneyBeamValidator moneyBeamValidator,
@@ -192,6 +197,7 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
 
         this.ibanValidator = ibanValidator;
         this.bicValidator = bicValidator;
+        this.capitualValidator = capitualValidator;
         this.inputValidator = inputValidator;
         this.inputValidator.setMaxLength(100); // restrict general field entry length
         this.inputValidator.setMinLength(2);
@@ -339,7 +345,15 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
                                     .actionButtonText(Res.get("shared.iUnderstand"))
                                     .onAction(() -> doSaveNewAccount(paymentAccount))
                                     .show();
-                        } else {
+                        } else if (paymentAccount instanceof CapitualAccount) {
+                            new Popup().information(Res.get("payment.capitual.info", currencyName, currencyName))
+                                    .width(900)
+                                    .closeButtonText(Res.get("shared.cancel"))
+                                    .actionButtonText(Res.get("shared.iUnderstand"))
+                                    .onAction(() -> doSaveNewAccount(paymentAccount))
+                                    .show();
+                        }
+                        else {
                             doSaveNewAccount(paymentAccount);
                         }
                     })
@@ -530,6 +544,8 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
                 return new TransferwiseForm(paymentAccount, accountAgeWitnessService, transferwiseValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.AMAZON_GIFT_CARD_ID:
                 return new AmazonGiftCardForm(paymentAccount, accountAgeWitnessService, inputValidator, root, gridRow, formatter);
+            case PaymentMethod.CAPITUAL_ID:
+                return new CapitualForm(paymentAccount, accountAgeWitnessService, capitualValidator, inputValidator, root, gridRow, formatter);
             default:
                 log.error("Not supported PaymentMethod: " + paymentMethod);
                 return null;

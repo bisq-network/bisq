@@ -86,6 +86,8 @@ public class PaymentAccountFactory {
                 return new AmazonGiftCardAccount();
             case PaymentMethod.BLOCK_CHAINS_INSTANT_ID:
                 return new InstantCryptoCurrencyAccount();
+            case PaymentMethod.CAPITUAL_ID:
+                return new CapitualAccount();
 
             // Cannot be deleted as it would break old trade history entries
             case PaymentMethod.OK_PAY_ID:
