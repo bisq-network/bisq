@@ -44,4 +44,13 @@ public final class UpholdAccount extends PaymentAccount {
     public String getAccountId() {
         return ((UpholdAccountPayload) paymentAccountPayload).getAccountId();
     }
+
+    public String getAccountOwner() {
+        return ((UpholdAccountPayload) paymentAccountPayload).getAccountOwner();
+    }
+
+    public void setAccountOwner(String accountOwner) {
+        if (accountOwner == null) accountOwner = "";
+        ((UpholdAccountPayload) paymentAccountPayload).setAccountOwner(accountOwner);
+    }
 }
