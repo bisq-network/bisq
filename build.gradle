@@ -1,11 +1,12 @@
 buildscript {
     repositories {
-        jcenter()
+        mavenCentral()
+        maven { url "https://jitpack.io" }
     }
     dependencies {
         classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.10'
         classpath 'com.google.gradle:osdetector-gradle-plugin:1.6.0'
-        classpath 'com.github.jengelman.gradle.plugins:shadow:5.2.0'
+        classpath 'com.github.johnrengelman:shadow:5.2.0'
         classpath files('gradle/witness/gradle-witness.jar')
         classpath 'org.springframework.boot:spring-boot-gradle-plugin:1.5.10.RELEASE'
     }
