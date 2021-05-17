@@ -99,7 +99,7 @@ public class DaoStateSnapshotService {
                 daoStateSnapshotCandidate.getChainHeight() != chainHeight;
         if (isSnapshotHeight(chainHeight) &&
                 !daoStateService.getBlocks().isEmpty() &&
-                isValidHeight(daoStateService.getBlocks().getLast().getHeight()) &&
+                isValidHeight(daoStateService.getBlockHeightOfLastBlock()) &&
                 noSnapshotCandidateOrDifferentHeight) {
             // At trigger event we store the latest snapshotCandidate to disc
             long ts = System.currentTimeMillis();
@@ -126,10 +126,9 @@ public class DaoStateSnapshotService {
         DaoState persistedBsqState = daoStateStorageService.getPersistedBsqState();
         LinkedList<DaoStateHash> persistedDaoStateHashChain = daoStateStorageService.getPersistedDaoStateHashChain();
         if (persistedBsqState != null) {
-            LinkedList<Block> blocks = persistedBsqState.getBlocks();
             int chainHeightOfPersisted = persistedBsqState.getChainHeight();
-            if (!blocks.isEmpty()) {
-                int heightOfLastBlock = blocks.getLast().getHeight();
+            if (!persistedBsqState.getBlocks().isEmpty()) {
+                int heightOfLastBlock = persistedBsqState.getLastBlock().getHeight();
                 log.debug("applySnapshot from persistedBsqState daoState with height of last block {}", heightOfLastBlock);
                 if (isValidHeight(heightOfLastBlock)) {
                     if (chainHeightOfLastApplySnapshot != chainHeightOfPersisted) {

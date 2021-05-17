@@ -29,7 +29,7 @@ import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
 
-import java.util.LinkedList;
+import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -76,6 +76,7 @@ public class BlockParser {
      * @throws BlockHeightNotConnectingException If new block height is not current chain Height + 1
      */
     public Block parseBlock(RawBlock rawBlock) throws BlockHashNotConnectingException, BlockHeightNotConnectingException {
+        long startTs = System.currentTimeMillis();
         int blockHeight = rawBlock.getHeight();
         log.trace("Parse block at height={} ", blockHeight);
 
@@ -102,7 +103,6 @@ public class BlockParser {
         // There are some blocks with testing such dependency chains like block 130768 where at each iteration only
         // one get resolved.
         // Lately there is a patter with 24 iterations observed
-        long startTs = System.currentTimeMillis();
 
         rawBlock.getRawTxs().forEach(rawTx ->
                 txParser.findTx(rawTx,
@@ -111,24 +111,22 @@ public class BlockParser {
                         genesisTotalSupply)
                         .ifPresent(tx -> daoStateService.onNewTxForLastBlock(block, tx)));
 
+        daoStateService.onParseBlockComplete(block);
         log.info("Parsing {} transactions at block height {} took {} ms", rawBlock.getRawTxs().size(),
                 blockHeight, System.currentTimeMillis() - startTs);
-
-        daoStateService.onParseBlockComplete(block);
         return block;
     }
 
     private void validateIfBlockIsConnecting(RawBlock rawBlock) throws BlockHashNotConnectingException, BlockHeightNotConnectingException {
-        LinkedList<Block> blocks = daoStateService.getBlocks();
+        List<Block> blocks = daoStateService.getBlocks();
 
         if (blocks.isEmpty())
             return;
 
-        Block last = blocks.getLast();
-        if (last.getHeight() + 1 != rawBlock.getHeight())
+        if (daoStateService.getBlockHeightOfLastBlock() + 1 != rawBlock.getHeight())
             throw new BlockHeightNotConnectingException(rawBlock);
 
-        if (!last.getHash().equals(rawBlock.getPreviousBlockHash()))
+        if (!daoStateService.getBlockHashOfLastBlock().equals(rawBlock.getPreviousBlockHash()))
             throw new BlockHashNotConnectingException(rawBlock);
     }
 
