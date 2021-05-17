@@ -294,7 +294,7 @@ public class DaoStateService implements DaoSetupService {
      * {@code false}.
      */
     public boolean isBlockHashKnown(String blockHash) {
-        return daoState.getBlocksByHash().contains(blockHash);
+        return daoState.getBlockHashes().contains(blockHash);
     }
 
     public Optional<Block> getLastBlock() {

@@ -113,7 +113,7 @@ public class DaoState implements PersistablePayload {
     @JsonExclude
     private transient final Map<Integer, Block> blocksByHeight; // Blocks indexed by height
     @JsonExclude
-    private transient final Set<String> blocksByHash; // Blocks indexed by hash
+    private transient final Set<String> blockHashes; // Cache of known block hashes
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -166,7 +166,7 @@ public class DaoState implements PersistablePayload {
                 .flatMap(block -> block.getTxs().stream())
                 .collect(Collectors.toMap(Tx::getId, Function.identity(), (x, y) -> x, HashMap::new));
 
-        blocksByHash = blocks.stream()
+        blockHashes = blocks.stream()
                 .map(Block::getHash)
                 .collect(Collectors.toSet());
 
@@ -266,8 +266,8 @@ public class DaoState implements PersistablePayload {
         return Collections.unmodifiableMap(txCache);
     }
 
-    public Set<String> getBlocksByHash() {
-        return Collections.unmodifiableSet(blocksByHash);
+    public Set<String> getBlockHashes() {
+        return Collections.unmodifiableSet(blockHashes);
     }
 
     public Map<Integer, Block> getBlocksByHeight() {
@@ -295,7 +295,7 @@ public class DaoState implements PersistablePayload {
 
     public void addBlock(Block block) {
         blocks.add(block);
-        blocksByHash.add(block.getHash());
+        blockHashes.add(block.getHash());
         blocksByHeight.put(block.getHeight(), block);
     }
 
@@ -310,7 +310,7 @@ public class DaoState implements PersistablePayload {
     public void clearAndSetBlocks(List<Block> newBlocks) {
         blocks.clear();
         blocksByHeight.clear();
-        blocksByHash.clear();
+        blockHashes.clear();
 
         addBlocks(newBlocks);
     }
