@@ -58,7 +58,7 @@ public class TxFeeEstimationService {
     public static int TYPICAL_TX_WITH_1_INPUT_VSIZE = 175;
     private static int DEPOSIT_TX_VSIZE = 233;
 
-    private static int BSQ_INPUT_INCREASE = 150;
+    private static int BSQ_INPUT_INCREASE = 70;
     private static int MAX_ITERATIONS = 10;
 
     private final FeeService feeService;
