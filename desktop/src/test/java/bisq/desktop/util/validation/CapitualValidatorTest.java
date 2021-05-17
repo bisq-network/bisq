@@ -24,7 +24,7 @@ public class CapitualValidatorTest {
     }
 
     @Test
-    public void validate(){
+    public void validate() {
         CapitualValidator validator = new CapitualValidator(
                 new RegexValidator()
         );
