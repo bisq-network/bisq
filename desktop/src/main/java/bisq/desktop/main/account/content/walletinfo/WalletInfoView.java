@@ -92,10 +92,11 @@ public class WalletInfoView extends ActivatableView<GridPane, Void> {
         btcTextField = addTopLabelTextField(root, ++gridRow, "BTC", -Layout.FLOATING_LABEL_DISTANCE).second;
         bsqTextField = addTopLabelTextField(root, ++gridRow, "BSQ", -Layout.FLOATING_LABEL_DISTANCE).second;
 
-        addTitledGroupBg(root, ++gridRow, 3, Res.get("account.menu.walletInfo.xpub.headLine"), Layout.GROUP_DISTANCE);
+        addTitledGroupBg(root, ++gridRow, 4, Res.get("account.menu.walletInfo.xpub.headLine"), Layout.GROUP_DISTANCE);
         addXpubKeys(btcWalletService, "BTC", gridRow, Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         ++gridRow; // update gridRow
         addXpubKeys(bsqWalletService, "BSQ", ++gridRow, -Layout.FLOATING_LABEL_DISTANCE);
+        ++gridRow; // update gridRow
 
         addTitledGroupBg(root, ++gridRow, 4, Res.get("account.menu.walletInfo.path.headLine"), Layout.GROUP_DISTANCE);
         addMultilineLabel(root, gridRow, Res.get("account.menu.walletInfo.path.info"), Layout.FIRST_ROW_AND_GROUP_DISTANCE, Double.MAX_VALUE);
