@@ -19,6 +19,8 @@ package bisq.core.payment.payload;
 
 import bisq.core.locale.Res;
 
+import bisq.common.util.JsonExclude;
+
 import com.google.protobuf.Message;
 
 import java.nio.charset.StandardCharsets;
@@ -39,6 +41,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public final class UpholdAccountPayload extends PaymentAccountPayload {
     private String accountId = "";
+
+    // For backward compatibility we need to exclude the new field from the contract json.
+    @JsonExclude
     private String accountOwner = "";
 
     public UpholdAccountPayload(String paymentMethod, String id) {
@@ -95,9 +100,15 @@ public final class UpholdAccountPayload extends PaymentAccountPayload {
 
     @Override
     public String getPaymentDetailsForTradePopup() {
-        return
-                Res.get("payment.account") + ": " + accountId + "\n" +
-                        Res.get("payment.account.owner") + ": " + accountOwner;
+                if (accountOwner != "") {
+                    return
+                            Res.get("payment.account") + ": " + accountId + "\n" +
+                                    Res.get("payment.account.owner") + ": " + accountOwner;
+                } else {
+                    return
+                            Res.get("payment.account") + ": " + accountId + "\n" +
+                                    Res.get("payment.account.owner") + ": N/A";
+                }
     }
 
     @Override

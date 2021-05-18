@@ -47,10 +47,16 @@ public class UpholdForm extends PaymentMethodForm {
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow,
                                       PaymentAccountPayload paymentAccountPayload) {
+        String accountOwner = ((UpholdAccountPayload) paymentAccountPayload).getAccountOwner();
+        if (accountOwner.isEmpty()) {
+            accountOwner = Res.get("payment.ask");
+        }
         addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.account.owner"),
-                ((UpholdAccountPayload) paymentAccountPayload).getAccountOwner());
+                accountOwner);
+
         addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.uphold.accountId"),
                 ((UpholdAccountPayload) paymentAccountPayload).getAccountId());
+
         return gridRow;
     }
 

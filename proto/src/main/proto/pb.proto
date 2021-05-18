@@ -1132,8 +1132,8 @@ message OKPayAccountPayload {
 }
 
 message UpholdAccountPayload {
-    string account_owner = 1;
-    string account_id = 2;
+    string account_id = 1;
+    string account_owner = 2;
 }
 
 // Deprecated, not used anymore
