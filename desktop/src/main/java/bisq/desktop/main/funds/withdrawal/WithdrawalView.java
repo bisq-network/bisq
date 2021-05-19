@@ -86,6 +86,7 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 
+import javafx.geometry.HPos;
 import javafx.geometry.Pos;
 
 import javafx.beans.property.BooleanProperty;
@@ -189,17 +190,6 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
         inputsToggleGroup = new ToggleGroup();
         inputsToggleGroupListener = (observable, oldValue, newValue) -> {
             useAllInputs.set(newValue == useAllInputsRadioButton);
-
-            useCustomFee.setSelected(false);
-
-            transactionFeeInputTextField.setEditable(false);
-            transactionFeeInputTextField.setPromptText(Res.get("funds.withdrawal.useCustomFeeValueInfo"));
-            transactionFeeInputTextField.setText(String.valueOf(feeService.getTxFeePerVbyte().value));
-            transactionFeeInputTextField.focusedProperty().addListener(transactionFeeFocusedListener);
-
-            feeService.feeUpdateCounterProperty().addListener(transactionFeeChangeListener);
-            useCustomFee.selectedProperty().addListener(useCustomFeeCheckboxListener);
-
             updateInputSelection();
         };
 
@@ -237,7 +227,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
         withdrawMemoTextField = addTopLabelInputTextField(gridPane, ++rowIndex,
                 Res.get("funds.withdrawal.memoLabel", Res.getBaseCurrencyCode())).second;
 
-        Tuple3<Label, InputTextField, ToggleButton> customFeeTuple = addTopLabelInputTextFieldSlideToggleButton(gridPane, ++rowIndex,
+        Tuple3<Label, InputTextField, ToggleButton> customFeeTuple = addTopLabelInputTextFieldSlideToggleButtonRight(gridPane, ++rowIndex,
                 Res.get("funds.withdrawal.txFee"), Res.get("funds.withdrawal.useCustomFeeValue"));
         transactionFeeInputTextField = customFeeTuple.second;
         useCustomFee = customFeeTuple.third;
@@ -281,9 +271,14 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                 }
             }
         };
-        transactionFeeChangeListener = (observable, oldValue, newValue) -> transactionFeeInputTextField.setText(String.valueOf(feeService.getTxFeePerVbyte().value));
+        transactionFeeChangeListener = (observable, oldValue, newValue) -> {
+            if (!useCustomFee.isSelected()) {
+                transactionFeeInputTextField.setText(String.valueOf(feeService.getTxFeePerVbyte().value));
+            }
+        };
 
-        final Button withdrawButton = addButton(gridPane, ++rowIndex, Res.get("funds.withdrawal.withdrawButton"), 15);
+        final Button withdrawButton = addPrimaryActionButton(gridPane, rowIndex, Res.get("funds.withdrawal.withdrawButton"), 15);
+        GridPane.setHalignment(withdrawButton, HPos.RIGHT);
 
         withdrawButton.setOnAction(event -> onWithdraw());
 
@@ -740,12 +735,6 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                                             inputsToggleGroup.selectedToggleProperty().removeListener(inputsToggleGroupListener);
                                             inputsToggleGroup.selectToggle(useCustomInputsRadioButton);
                                             useAllInputs.set(false);
-
-                                            useCustomFee.setSelected(false);
-
-                                            transactionFeeInputTextField.setEditable(false);
-                                            transactionFeeInputTextField.setText(String.valueOf(feeService.getTxFeePerVbyte().value));
-
                                             inputsToggleGroup.selectedToggleProperty().addListener(inputsToggleGroupListener);
                                         }
                                     });
