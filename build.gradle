@@ -8,6 +8,7 @@ buildscript {
         classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.10'
         classpath 'com.google.gradle:osdetector-gradle-plugin:1.6.0'
         classpath 'com.github.jengelman.gradle.plugins:shadow:5.2.0'
+        classpath 'org.openjfx:javafx-plugin:0.0.10'
         classpath files('gradle/witness/gradle-witness.jar')
         classpath 'org.springframework.boot:spring-boot-gradle-plugin:1.5.10.RELEASE'
     }
@@ -231,6 +232,13 @@ configure(project(':assets')) {
 
 
 configure(project(':common')) {
+    apply plugin: 'org.openjfx.javafxplugin'
+
+    javafx {
+        version = "$javafxVersion"
+        modules =  ['javafx.graphics']
+    }
+
     dependencies {
         compile project(':proto')
         implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion"
@@ -265,18 +273,18 @@ configure(project(':common')) {
         compileOnly "org.projectlombok:lombok:$lombokVersion"
         annotationProcessor "org.projectlombok:lombok:$lombokVersion"
         testCompile "org.hamcrest:hamcrest-all:$hamcrestVersion"
-
-        implementation group: 'org.openjfx', name: 'javafx-base', version: "$javafxVersion", classifier: 'win'
-        implementation group: 'org.openjfx', name: 'javafx-base', version: "$javafxVersion", classifier: 'mac'
-        implementation group: 'org.openjfx', name: 'javafx-base', version: "$javafxVersion", classifier: 'linux'
-        implementation group: 'org.openjfx', name: 'javafx-graphics', version: "$javafxVersion", classifier: 'win'
-        implementation group: 'org.openjfx', name: 'javafx-graphics', version: "$javafxVersion", classifier: 'mac'
-        implementation group: 'org.openjfx', name: 'javafx-graphics', version: "$javafxVersion", classifier: 'linux'
     }
 }
 
 
 configure(project(':p2p')) {
+    apply plugin: 'org.openjfx.javafxplugin'
+
+    javafx {
+        version = "$javafxVersion"
+        modules =  ['javafx.base']
+    }
+
     dependencies {
         compile project(':common')
         compile("com.github.bisq-network.netlayer:tor.native:$netlayerVersion") {
@@ -294,10 +302,6 @@ configure(project(':p2p')) {
         testCompileOnly "org.projectlombok:lombok:$lombokVersion"
         testAnnotationProcessor "org.projectlombok:lombok:$lombokVersion"
         testCompile("org.mockito:mockito-core:$mockitoVersion")
-
-        implementation group: 'org.openjfx', name: 'javafx-base', version: "$javafxVersion", classifier: 'win'
-        implementation group: 'org.openjfx', name: 'javafx-base', version: "$javafxVersion", classifier: 'mac'
-        implementation group: 'org.openjfx', name: 'javafx-base', version: "$javafxVersion", classifier: 'linux'
     }
 
     processResources.doFirst {
@@ -314,6 +318,13 @@ configure(project(':p2p')) {
 
 
 configure(project(':core')) {
+    apply plugin: 'org.openjfx.javafxplugin'
+
+    javafx {
+        version = "$javafxVersion"
+        modules =  ['javafx.base']
+    }
+
     dependencies {
         compile project(':proto')
         compile project(':assets')
@@ -343,10 +354,6 @@ configure(project(':core')) {
         testCompile "com.natpryce:make-it-easy:$easyVersion"
         testCompileOnly "org.projectlombok:lombok:$lombokVersion"
         testAnnotationProcessor "org.projectlombok:lombok:$lombokVersion"
-
-        implementation group: 'org.openjfx', name: 'javafx-base', version: "$javafxVersion", classifier: 'win'
-        implementation group: 'org.openjfx', name: 'javafx-base', version: "$javafxVersion", classifier: 'mac'
-        implementation group: 'org.openjfx', name: 'javafx-base', version: "$javafxVersion", classifier: 'linux'
     }
 
     test {
@@ -395,9 +402,15 @@ configure(project(':cli')) {
 
 configure(project(':desktop')) {
     apply plugin: 'com.github.johnrengelman.shadow'
+    apply plugin: 'org.openjfx.javafxplugin'
     apply plugin: 'witness'
     apply from: '../gradle/witness/gradle-witness.gradle'
     apply from: 'package/package.gradle'
+
+    javafx {
+        version = "$javafxVersion"
+        modules =  ['javafx.controls', 'javafx.fxml']
+    }
 
     version = '1.6.4-SNAPSHOT'
 
@@ -431,19 +444,6 @@ configure(project(':desktop')) {
         testCompile "com.natpryce:make-it-easy:$easyVersion"
         testCompileOnly "org.projectlombok:lombok:$lombokVersion"
         testAnnotationProcessor "org.projectlombok:lombok:$lombokVersion"
-
-        implementation group: 'org.openjfx', name: 'javafx-base', version: "$javafxVersion", classifier: 'win'
-        implementation group: 'org.openjfx', name: 'javafx-base', version: "$javafxVersion", classifier: 'mac'
-        implementation group: 'org.openjfx', name: 'javafx-base', version: "$javafxVersion", classifier: 'linux'
-        implementation group: 'org.openjfx', name: 'javafx-controls', version: "$javafxVersion", classifier: 'win'
-        implementation group: 'org.openjfx', name: 'javafx-controls', version: "$javafxVersion", classifier: 'mac'
-        implementation group: 'org.openjfx', name: 'javafx-controls', version: "$javafxVersion", classifier: 'linux'
-        implementation group: 'org.openjfx', name: 'javafx-fxml', version: "$javafxVersion", classifier: 'win'
-        implementation group: 'org.openjfx', name: 'javafx-fxml', version: "$javafxVersion", classifier: 'mac'
-        implementation group: 'org.openjfx', name: 'javafx-fxml', version: "$javafxVersion", classifier: 'linux'
-        implementation group: 'org.openjfx', name: 'javafx-graphics', version: "$javafxVersion", classifier: 'win'
-        implementation group: 'org.openjfx', name: 'javafx-graphics', version: "$javafxVersion", classifier: 'mac'
-        implementation group: 'org.openjfx', name: 'javafx-graphics', version: "$javafxVersion", classifier: 'linux'
     }
 
     test {
@@ -453,6 +453,13 @@ configure(project(':desktop')) {
 
 
 configure(project(':monitor')) {
+    apply plugin: 'org.openjfx.javafxplugin'
+
+    javafx {
+        version = "$javafxVersion"
+        modules =  ['javafx.base']
+    }
+
     mainClassName = 'bisq.monitor.Monitor'
 
     test {
@@ -477,10 +484,6 @@ configure(project(':monitor')) {
         testCompileOnly "org.projectlombok:lombok:$lombokVersion"
         testAnnotationProcessor "org.projectlombok:lombok:$lombokVersion"
         testRuntime("org.junit.jupiter:junit-jupiter-engine:$jupiterVersion")
-
-        implementation group: 'org.openjfx', name: 'javafx-base', version: "$javafxVersion", classifier: 'win'
-        implementation group: 'org.openjfx', name: 'javafx-base', version: "$javafxVersion", classifier: 'mac'
-        implementation group: 'org.openjfx', name: 'javafx-base', version: "$javafxVersion", classifier: 'linux'
     }
 }
 
