@@ -469,6 +469,16 @@ task packageInstallers {
             rename { String fileName -> fileName.replace('-all.jar', "-all-" + os + ".jar") }
         }
 
+        // Checksum each file present in the binaries folder
+        ant.checksum(algorithm: 'SHA-256') {
+            ant.fileset(dir: "${binariesFolderPath}")
+        }
+
+        println "The binaries and checksums are ready:"
+        FileCollection collection = layout.files { binariesFolderPath.listFiles() }
+        collection.collect { it.path }.sort().each { println it }
+
+        // After binaries are ready, copy them to shared folder
         // Env variable can be set by calling "export BISQ_SHARED_FOLDER='Some value'"
         // This is to copy the final binary/ies to a shared folder for further processing if a VM is used.
         String envVariableSharedFolder = "$System.env.BISQ_SHARED_FOLDER"
@@ -481,17 +491,16 @@ task packageInstallers {
                 from binariesFolderPath
                 into envVariableSharedFolder
             }
-            executeCmd("open " + envVariableSharedFolder)
-        }
 
-        // Checksum each file present in the binaries folder
-        ant.checksum(algorithm: 'SHA-256') {
-            ant.fileset(dir: "${binariesFolderPath}")
+            // Try to open a native file explorer window at the shared folder location
+            if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+                executeCmd("start '${envVariableSharedFolder}'")
+            } else if (Os.isFamily(Os.FAMILY_MAC)) {
+                executeCmd("open '${envVariableSharedFolder}'")
+            } else {
+                executeCmd("nautilus '${envVariableSharedFolder}'")
+            }
         }
-
-        println "The binaries and checksums are ready:"
-        FileCollection collection = layout.files { binariesFolderPath.listFiles() }
-        collection.collect { it.path }.sort().each { println it }
     }
 }
 
