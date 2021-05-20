@@ -201,13 +201,6 @@ task packageInstallers {
         // jar file created from https://github.com/ManfredKarrer/tools
         executeCmd("java -jar \"${project(':desktop').projectDir}/package/tools-1.0.jar\" ${fatJarFolderPath}/${mainJarName}")
 
-        // Store deterministic jar SHA-256
-        ant.checksum(file: "${fatJarFolderPath}/${mainJarName}", algorithm: 'SHA-256')
-        copy {
-            from "${fatJarFolderPath}/${mainJarName}.SHA-256"
-            into binariesFolderPath
-        }
-
         // TODO For non-modular applications: use jlink to create a custom runtime containing only the modules required
 
         // See jpackager argument documentation:
@@ -468,6 +461,12 @@ task packageInstallers {
                     " --type rpm")
         }
 
+        // After binaries have been generated, copy the (deterministic, signed) fat jar to the binaries folder
+        copy {
+            from "${fatJarFolderPath}/${mainJarName}"
+            into binariesFolderPath
+        }
+
         // Env variable can be set by calling "export BISQ_SHARED_FOLDER='Some value'"
         // This is to copy the final binary/ies to a shared folder for further processing if a VM is used.
         String envVariableSharedFolder = "$System.env.BISQ_SHARED_FOLDER"
@@ -483,10 +482,14 @@ task packageInstallers {
             executeCmd("open " + envVariableSharedFolder)
         }
 
-        println "The binaries are ready:"
-        binariesFolderPath.traverse {
-            println it.path
+        // Checksum each file present in the binaries folder
+        ant.checksum(algorithm: 'SHA-256') {
+            ant.fileset(dir: "${binariesFolderPath}")
         }
+
+        println "The binaries and checksums are ready:"
+        FileCollection collection = layout.files { binariesFolderPath.listFiles() }
+        collection.collect { it.path }.sort().each { println it }
     }
 }
 
