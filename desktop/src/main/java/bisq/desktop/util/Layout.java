@@ -25,7 +25,7 @@ public class Layout {
     public static final double FIRST_ROW_DISTANCE = 20d;
     public static final double COMPACT_FIRST_ROW_DISTANCE = 10d;
     public static final double TWICE_FIRST_ROW_DISTANCE = 20d * 2;
-    public static final double FLOATING_LABEL_DISTANCE = 20d;
+    public static final double FLOATING_LABEL_DISTANCE = 18d;
     public static final double GROUP_DISTANCE = 40d;
     public static final double COMPACT_GROUP_DISTANCE = 30d;
     public static final double GROUP_DISTANCE_WITHOUT_SEPARATOR = 20d;
