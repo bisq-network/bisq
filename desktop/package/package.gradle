@@ -465,6 +465,8 @@ task packageInstallers {
         copy {
             from "${fatJarFolderPath}/${mainJarName}"
             into binariesFolderPath
+            // desktop-1.6.4-SNAPSHOT-all.jar => desktop-1.6.4-SNAPSHOT-all-mac.jar (or -win.jar, or -linux.jar)
+            rename { String fileName -> fileName.replace('-all.jar', "-all-" + os + ".jar") }
         }
 
         // Env variable can be set by calling "export BISQ_SHARED_FOLDER='Some value'"
