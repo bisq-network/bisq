@@ -639,7 +639,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
         this.volume.set(volume);
     }
 
-    void setBuyerSecurityDeposit(double value) {
+    protected void setBuyerSecurityDeposit(double value) {
         this.buyerSecurityDeposit.set(value);
     }
 

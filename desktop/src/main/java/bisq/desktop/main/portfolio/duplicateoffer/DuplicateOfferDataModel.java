@@ -24,6 +24,7 @@ import bisq.desktop.main.offer.MutableOfferDataModel;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.btc.wallet.Restrictions;
 import bisq.core.offer.CreateOfferService;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferUtil;
@@ -35,6 +36,7 @@ import bisq.core.user.Preferences;
 import bisq.core.user.User;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.CoinFormatter;
+import bisq.core.util.coin.CoinUtil;
 
 import bisq.network.p2p.P2PService;
 
@@ -85,6 +87,13 @@ class DuplicateOfferDataModel extends MutableOfferDataModel {
         setPrice(offer.getPrice());
         setVolume(offer.getVolume());
         setUseMarketBasedPrice(offer.isUseMarketBasedPrice());
+
+        if (offer.getBuyerSecurityDeposit().value == Restrictions.getMinBuyerSecurityDepositAsCoin().getValue()) {
+            setBuyerSecurityDeposit(Restrictions.getMinBuyerSecurityDepositAsPercent());
+        } else {
+            setBuyerSecurityDeposit(CoinUtil.getAsPercentPerBtc(offer.getBuyerSecurityDeposit(), offer.getAmount()));
+        }
+
         if (offer.isUseMarketBasedPrice()) {
             setMarketPriceMargin(offer.getMarketPriceMargin());
         }

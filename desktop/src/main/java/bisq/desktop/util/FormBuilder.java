@@ -821,6 +821,25 @@ public class FormBuilder {
     }
 
 
+    public static Tuple3<Label, InputTextField, ToggleButton> addTopLabelInputTextFieldSlideToggleButtonRight(GridPane gridPane,
+                                                                                                         int rowIndex,
+                                                                                                         String title,
+                                                                                                         String toggleButtonTitle) {
+
+        InputTextField inputTextField = new InputTextField();
+        Tuple2<Label, VBox> topLabelWithVBox = addTopLabelWithVBox(gridPane, rowIndex, title, inputTextField, 0);
+        ToggleButton toggleButton = new JFXToggleButton();
+        toggleButton.setText(toggleButtonTitle);
+        HBox hBox = new HBox();
+        hBox.getChildren().addAll(topLabelWithVBox.second, toggleButton);
+        HBox.setMargin(toggleButton, new Insets(9, 0, 0, 0));
+        gridPane.add(hBox, 0, rowIndex);
+        GridPane.setMargin(hBox, new Insets(Layout.FLOATING_LABEL_DISTANCE, 0, 0, 0));
+        return new Tuple3<>(topLabelWithVBox.first, inputTextField, toggleButton);
+    }
+
+
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Label  + InputTextField + Button
     ///////////////////////////////////////////////////////////////////////////////////////////
