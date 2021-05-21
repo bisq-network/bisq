@@ -22,6 +22,8 @@ import bisq.core.user.Preferences;
 import bisq.common.config.Config;
 import bisq.common.util.Utilities;
 
+import javax.inject.Named;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -34,9 +36,12 @@ public class BtcNodesSetupPreferences {
     private static final Logger log = LoggerFactory.getLogger(BtcNodesSetupPreferences.class);
 
     private final Preferences preferences;
+    private final int numConnectionsForBtc;
 
-    public BtcNodesSetupPreferences(Preferences preferences) {
+    public BtcNodesSetupPreferences(Preferences preferences,
+                                    int numConnectionsForBtc) {
         this.preferences = preferences;
+        this.numConnectionsForBtc = numConnectionsForBtc;
     }
 
     public List<BtcNodes.BtcNode> selectPreferredNodes(BtcNodes nodes) {
@@ -83,7 +88,7 @@ public class BtcNodesSetupPreferences {
                 break;
             case PUBLIC:
                 // We keep the empty nodes
-                result = (int) Math.floor(Config.DEFAULT_NUM_CONNECTIONS_FOR_BTC * 0.8);
+                result = (int) Math.floor(numConnectionsForBtc * 0.8);
                 break;
             case PROVIDED:
             default:
