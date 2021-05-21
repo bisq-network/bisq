@@ -19,10 +19,7 @@ package bisq.core.btc.nodes;
 
 import bisq.core.user.Preferences;
 
-import bisq.common.config.Config;
 import bisq.common.util.Utilities;
-
-import javax.inject.Named;
 
 import java.util.Collections;
 import java.util.List;
