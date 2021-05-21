@@ -129,7 +129,8 @@ public class Config {
     // Default values for certain options
     public static final int UNSPECIFIED_PORT = -1;
     public static final String DEFAULT_REGTEST_HOST = "localhost";
-    public static final int DEFAULT_NUM_CONNECTIONS_FOR_BTC = 9; // down from BitcoinJ default of 12
+    public static final int DEFAULT_NUM_CONNECTIONS_FOR_BTC = 7; // down from BitcoinJ default of 12
+    public static final int DEFAULT_NUM_CONNECTIONS_FOR_BTC_PUBLIC = 9;
     public static final boolean DEFAULT_FULL_DAO_NODE = false;
     static final String DEFAULT_CONFIG_FILE_NAME = "bisq.properties";
 
