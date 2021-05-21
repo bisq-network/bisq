@@ -83,7 +83,7 @@ public class BtcNodesSetupPreferences {
                 break;
             case PUBLIC:
                 // We keep the empty nodes
-                result = (int) Math.floor(Config.DEFAULT_NUM_CONNECTIONS_FOR_BTC * 0.8);
+                result = Config.DEFAULT_NUM_CONNECTIONS_FOR_BTC;
                 break;
             case PROVIDED:
             default:
