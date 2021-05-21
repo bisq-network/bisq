@@ -162,9 +162,8 @@ task retrieveAndExtractJavaBinaries {
 task packageInstallers {
     description 'Call jpackage to prepare platform-specific binaries for this platform'
     dependsOn 'retrieveAndExtractJavaBinaries'
-    // Clean all previous artefacts and create a fresh shadowJar for the installers
     dependsOn rootProject.clean
-    dependsOn ':desktop:shadowJar'
+    dependsOn ':desktop:build' // Full build needed for "desktop/build/app/lib", used for raspi package
 
     doLast {
         String jPackageFilePath = retrieveAndExtractJavaBinaries.property('jpackageFilePath')
@@ -204,8 +203,7 @@ task packageInstallers {
         String appVersion = version.replaceAll("-SNAPSHOT", "")
         println "Packaging Bisq version ${appVersion}"
 
-        // zip jar lib for Raspberry Pi only on macOS as there are path issues on Windows and it is only needed once
-        // for the release
+        // zip jar lib for Raspberry Pi only on macOS as it is only needed once for the release
         if (Os.isFamily(Os.FAMILY_MAC)) {
             println "Zipping jar lib for raspberry pi"
             ant.zip(basedir: "${project(':desktop').buildDir}/app/lib",
