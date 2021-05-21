@@ -7,6 +7,9 @@ task jpackageSanityChecks {
     description 'Interactive sanity checks on the version of the code that will be packaged'
 
     doLast {
+        // Enforce JDK 11 for compiling and building
+        assert JavaVersion.current().isJava11(): "JDK 11 is required"
+
         executeCmd("git --no-pager log -5 --oneline")
         ant.input(message: "Above you see the current HEAD and its recent history.\n" +
                 "Is this the right commit for packaging? (y=continue, n=abort)",
@@ -23,16 +26,6 @@ task jpackageSanityChecks {
                 addproperty: "sanity-check-2",
                 validargs: "y,n")
         if (ant.properties['sanity-check-2'] == 'n') {
-            ant.fail('Aborting')
-        }
-
-        // TODO Evtl check programmatically in gradle (i.e. fail if below v11)
-        executeCmd("java --version")
-        ant.input(message: "Above you see the installed java version, which will be used to compile and build Bisq.\n" +
-                "Is this java version ok for that? (y=continue, n=abort)",
-                addproperty: "sanity-check-3",
-                validargs: "y,n")
-        if (ant.properties['sanity-check-3'] == 'n') {
             ant.fail('Aborting')
         }
     }
