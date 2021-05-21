@@ -50,7 +50,9 @@ public final class UpholdAccount extends PaymentAccount {
     }
 
     public void setAccountOwner(String accountOwner) {
-        if (accountOwner == null) accountOwner = "";
+        if (accountOwner == null) {
+            accountOwner = "";
+        }
         ((UpholdAccountPayload) paymentAccountPayload).setAccountOwner(accountOwner);
     }
 }
