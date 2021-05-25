@@ -15,3 +15,8 @@ cp "$dbDir/TradeStatistics3Store" "$resDir/TradeStatistics3Store_${version}_BTC_
 cp "$dbDir/AccountAgeWitnessStore" "$resDir/AccountAgeWitnessStore_${version}_BTC_MAINNET"
 cp "$dbDir/DaoStateStore" "$resDir/DaoStateStore_BTC_MAINNET"
 cp "$dbDir/SignedWitnessStore" "$resDir/SignedWitnessStore_BTC_MAINNET"
+
+# Only to be updated when required
+# cp "$dbDir/ProposalStore" "$resDir/ProposalStore_BTC_MAINNET"
+# cp "$dbDir/TempProposalStore" "$resDir/TempProposalStore_BTC_MAINNET"
+# cp "$dbDir/BlindVoteStore" "$resDir/BlindVoteStore_BTC_MAINNET"
