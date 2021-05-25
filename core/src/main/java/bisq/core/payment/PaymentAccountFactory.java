@@ -19,6 +19,7 @@ package bisq.core.payment;
 
 import bisq.core.payment.payload.PaymentMethod;
 
+// comment
 public class PaymentAccountFactory {
     public static PaymentAccount getPaymentAccount(PaymentMethod paymentMethod) {
         switch (paymentMethod.getId()) {
