@@ -648,7 +648,7 @@ tree-table-view:focused {
 }
 
 .top-navigation .separator:vertical .line {
-    -fx-border-color: transparent transparent transparent -bs-rd-nav-border-color;
+    -fx-border-color: transparent transparent transparent transparent;
     -fx-border-width: 1;
     -fx-border-insets: 0 0 0 1;
 }
