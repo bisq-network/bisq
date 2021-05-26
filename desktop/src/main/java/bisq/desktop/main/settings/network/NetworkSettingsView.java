@@ -44,6 +44,8 @@ import bisq.network.p2p.network.Statistic;
 
 import bisq.common.ClockWatcher;
 import bisq.common.UserThread;
+import bisq.common.config.Config;
+import bisq.common.config.ConfigFileEditor;
 
 import org.bitcoinj.core.PeerGroup;
 
@@ -118,6 +120,7 @@ public class NetworkSettingsView extends ActivatableView<GridPane, Void> {
     private final ClockWatcher clockWatcher;
     private final WalletsSetup walletsSetup;
     private final P2PService p2PService;
+    private final ConfigFileEditor configFileEditor;
 
     private final ObservableList<P2pNetworkListItem> p2pNetworkListItems = FXCollections.observableArrayList();
     private final SortedList<P2pNetworkListItem> p2pSortedList = new SortedList<>(p2pNetworkListItems);
@@ -144,7 +147,8 @@ public class NetworkSettingsView extends ActivatableView<GridPane, Void> {
                                FilterManager filterManager,
                                LocalBitcoinNode localBitcoinNode,
                                TorNetworkSettingsWindow torNetworkSettingsWindow,
-                               ClockWatcher clockWatcher) {
+                               ClockWatcher clockWatcher,
+                               Config config) {
         super();
         this.walletsSetup = walletsSetup;
         this.p2PService = p2PService;
@@ -154,6 +158,7 @@ public class NetworkSettingsView extends ActivatableView<GridPane, Void> {
         this.localBitcoinNode = localBitcoinNode;
         this.torNetworkSettingsWindow = torNetworkSettingsWindow;
         this.clockWatcher = clockWatcher;
+        this.configFileEditor = new ConfigFileEditor(config.configFile);
     }
 
     public void initialize() {
@@ -413,6 +418,7 @@ public class NetworkSettingsView extends ActivatableView<GridPane, Void> {
                         && btcNodesInputTextField.validate()
                         && currentBitcoinNodesOption != BtcNodes.BitcoinNodesOption.CUSTOM) {
                     preferences.setBitcoinNodesOptionOrdinal(selectedBitcoinNodesOption.ordinal());
+                    configFileEditor.clearOption(Config.NUM_CONNECTIONS_FOR_BTC);
                     if (calledFromUser) {
                         if (isPreventPublicBtcNetwork()) {
                             new Popup().warning(Res.get("settings.net.warn.useCustomNodes.B2XWarning"))
@@ -428,6 +434,8 @@ public class NetworkSettingsView extends ActivatableView<GridPane, Void> {
                 btcNodesLabel.setDisable(true);
                 if (currentBitcoinNodesOption != BtcNodes.BitcoinNodesOption.PUBLIC) {
                     preferences.setBitcoinNodesOptionOrdinal(selectedBitcoinNodesOption.ordinal());
+                    configFileEditor.setOption(Config.NUM_CONNECTIONS_FOR_BTC,
+                            String.valueOf(Config.DEFAULT_NUM_CONNECTIONS_FOR_BTC_PUBLIC));
                     if (calledFromUser) {
                         new Popup()
                                 .warning(Res.get("settings.net.warn.usePublicNodes"))
@@ -435,6 +443,7 @@ public class NetworkSettingsView extends ActivatableView<GridPane, Void> {
                                 .onAction(() -> UserThread.runAfter(() -> {
                                     selectedBitcoinNodesOption = BtcNodes.BitcoinNodesOption.PROVIDED;
                                     preferences.setBitcoinNodesOptionOrdinal(selectedBitcoinNodesOption.ordinal());
+                                    configFileEditor.clearOption(Config.NUM_CONNECTIONS_FOR_BTC);
                                     selectBitcoinPeersToggle();
                                     onBitcoinPeersToggleSelected(false);
                                 }, 300, TimeUnit.MILLISECONDS))
@@ -451,6 +460,7 @@ public class NetworkSettingsView extends ActivatableView<GridPane, Void> {
                     btcNodesLabel.setDisable(true);
                     if (currentBitcoinNodesOption != BtcNodes.BitcoinNodesOption.PROVIDED) {
                         preferences.setBitcoinNodesOptionOrdinal(selectedBitcoinNodesOption.ordinal());
+                        configFileEditor.clearOption(Config.NUM_CONNECTIONS_FOR_BTC);
                         if (calledFromUser) {
                             showShutDownPopup();
                         }
@@ -458,6 +468,8 @@ public class NetworkSettingsView extends ActivatableView<GridPane, Void> {
                 } else {
                     selectedBitcoinNodesOption = BtcNodes.BitcoinNodesOption.PUBLIC;
                     preferences.setBitcoinNodesOptionOrdinal(selectedBitcoinNodesOption.ordinal());
+                    configFileEditor.setOption(Config.NUM_CONNECTIONS_FOR_BTC,
+                            String.valueOf(Config.DEFAULT_NUM_CONNECTIONS_FOR_BTC_PUBLIC));
                     selectBitcoinPeersToggle();
                     onBitcoinPeersToggleSelected(false);
                 }

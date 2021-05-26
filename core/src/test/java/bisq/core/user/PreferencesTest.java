@@ -24,6 +24,7 @@ import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.FiatCurrency;
 import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.Res;
+import bisq.core.locale.TradeCurrency;
 
 import bisq.common.config.Config;
 import bisq.common.persistence.PersistenceManager;
@@ -36,6 +37,7 @@ import java.util.List;
 import java.util.Locale;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -77,6 +79,28 @@ public class PreferencesTest {
 
         preferences.addFiatCurrency(usd2);
 
+        assertEquals(1, fiatCurrencies.size());
+    }
+
+    @Test
+    public void testRemoveFiatCurrency() {
+        final FiatCurrency usd = new FiatCurrency("USD");
+        final FiatCurrency jpy = new FiatCurrency("JPY");
+
+        final ObservableList<FiatCurrency> fiatCurrencies = preferences.getFiatCurrenciesAsObservable();
+        final ObservableList<TradeCurrency> tradeCurrencies = preferences.getTradeCurrenciesAsObservable();
+
+        preferences.addFiatCurrency(usd);
+        preferences.addFiatCurrency(jpy);
+        tradeCurrencies.addAll(preferences.getFiatCurrencies());
+        assertEquals(2, fiatCurrencies.size());
+
+        preferences.removeFiatCurrency(usd);
+        tradeCurrencies.remove(usd);
+        assertEquals(1, fiatCurrencies.size());
+
+        preferences.removeFiatCurrency(jpy);
+        tradeCurrencies.remove(jpy);
         assertEquals(1, fiatCurrencies.size());
     }
 
