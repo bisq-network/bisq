@@ -7,6 +7,9 @@ task jpackageSanityChecks {
     description 'Interactive sanity checks on the version of the code that will be packaged'
 
     doLast {
+        // Enforce JDK 11 for compiling and building
+        assert JavaVersion.current().isJava11(): "JDK 11 is required"
+
         executeCmd("git --no-pager log -5 --oneline")
         ant.input(message: "Above you see the current HEAD and its recent history.\n" +
                 "Is this the right commit for packaging? (y=continue, n=abort)",
@@ -23,16 +26,6 @@ task jpackageSanityChecks {
                 addproperty: "sanity-check-2",
                 validargs: "y,n")
         if (ant.properties['sanity-check-2'] == 'n') {
-            ant.fail('Aborting')
-        }
-
-        // TODO Evtl check programmatically in gradle (i.e. fail if below v11)
-        executeCmd("java --version")
-        ant.input(message: "Above you see the installed java version, which will be used to compile and build Bisq.\n" +
-                "Is this java version ok for that? (y=continue, n=abort)",
-                addproperty: "sanity-check-3",
-                validargs: "y,n")
-        if (ant.properties['sanity-check-3'] == 'n') {
             ant.fail('Aborting')
         }
     }
@@ -465,8 +458,20 @@ task packageInstallers {
         copy {
             from "${fatJarFolderPath}/${mainJarName}"
             into binariesFolderPath
+            // desktop-1.6.4-SNAPSHOT-all.jar => desktop-1.6.4-SNAPSHOT-all-mac.jar (or -win.jar, or -linux.jar)
+            rename { String fileName -> fileName.replace('-all.jar', "-all-" + os + ".jar") }
         }
 
+        // Checksum each file present in the binaries folder
+        ant.checksum(algorithm: 'SHA-256') {
+            ant.fileset(dir: "${binariesFolderPath}")
+        }
+
+        println "The binaries and checksums are ready:"
+        FileCollection collection = layout.files { binariesFolderPath.listFiles() }
+        collection.collect { it.path }.sort().each { println it }
+
+        // After binaries are ready, copy them to shared folder
         // Env variable can be set by calling "export BISQ_SHARED_FOLDER='Some value'"
         // This is to copy the final binary/ies to a shared folder for further processing if a VM is used.
         String envVariableSharedFolder = "$System.env.BISQ_SHARED_FOLDER"
@@ -479,17 +484,16 @@ task packageInstallers {
                 from binariesFolderPath
                 into envVariableSharedFolder
             }
-            executeCmd("open " + envVariableSharedFolder)
-        }
 
-        // Checksum each file present in the binaries folder
-        ant.checksum(algorithm: 'SHA-256') {
-            ant.fileset(dir: "${binariesFolderPath}")
+            // Try to open a native file explorer window at the shared folder location
+            if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+                executeCmd("start '${envVariableSharedFolder}'")
+            } else if (Os.isFamily(Os.FAMILY_MAC)) {
+                executeCmd("open '${envVariableSharedFolder}'")
+            } else {
+                executeCmd("nautilus '${envVariableSharedFolder}'")
+            }
         }
-
-        println "The binaries and checksums are ready:"
-        FileCollection collection = layout.files { binariesFolderPath.listFiles() }
-        collection.collect { it.path }.sort().each { println it }
     }
 }
 
