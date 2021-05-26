@@ -90,8 +90,8 @@ public class PaymentAccountFactoryTest {
         PaymentMethod cashByMail = PaymentMethod.CASH_BY_MAIL;
         Assert.assertEquals(new CashByMailAccount(), PaymentAccountFactory.getPaymentAccount(cashByMail));
 
-//        PaymentMethod prompt = PaymentMethod.PROMPT_PAY;
-//        Assert.assertEquals(new PromptPayAccount(), prompt);
+        PaymentMethod prompt = PaymentMethod.PROMPT_PAY;
+        Assert.assertEquals(new PromptPayAccount(), PaymentAccountFactory.getPaymentAccount(prompt));
 
         PaymentMethod advancedCash = PaymentMethod.ADVANCED_CASH;
         Assert.assertEquals(new AdvancedCashAccount(), PaymentAccountFactory.getPaymentAccount(advancedCash));

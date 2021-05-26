@@ -22,69 +22,69 @@ import bisq.core.payment.payload.PaymentMethod;
 public class PaymentAccountFactory {
     public static PaymentAccount getPaymentAccount(PaymentMethod paymentMethod) {
         switch (paymentMethod.getId()) {
-            case PaymentMethod.UPHOLD_ID: //done
+            case PaymentMethod.UPHOLD_ID:
                 return new UpholdAccount();
-            case PaymentMethod.MONEY_BEAM_ID: //done
+            case PaymentMethod.MONEY_BEAM_ID:
                 return new MoneyBeamAccount();
-            case PaymentMethod.POPMONEY_ID: //done
+            case PaymentMethod.POPMONEY_ID:
                 return new PopmoneyAccount();
-            case PaymentMethod.REVOLUT_ID: //done
+            case PaymentMethod.REVOLUT_ID:
                 return new RevolutAccount();
-            case PaymentMethod.PERFECT_MONEY_ID: //done
+            case PaymentMethod.PERFECT_MONEY_ID:
                 return new PerfectMoneyAccount();
-            case PaymentMethod.SEPA_ID: //done
+            case PaymentMethod.SEPA_ID:
                 return new SepaAccount();
-            case PaymentMethod.SEPA_INSTANT_ID: //done
+            case PaymentMethod.SEPA_INSTANT_ID:
                 return new SepaInstantAccount();
-            case PaymentMethod.FASTER_PAYMENTS_ID: //done
+            case PaymentMethod.FASTER_PAYMENTS_ID:
                 return new FasterPaymentsAccount();
-            case PaymentMethod.NATIONAL_BANK_ID: //done
+            case PaymentMethod.NATIONAL_BANK_ID:
                 return new NationalBankAccount();
-            case PaymentMethod.SAME_BANK_ID: //done
+            case PaymentMethod.SAME_BANK_ID:
                 return new SameBankAccount();
-            case PaymentMethod.SPECIFIC_BANKS_ID: //done
+            case PaymentMethod.SPECIFIC_BANKS_ID:
                 return new SpecificBanksAccount();
-            case PaymentMethod.JAPAN_BANK_ID://done
+            case PaymentMethod.JAPAN_BANK_ID:
                 return new JapanBankAccount();
-            case PaymentMethod.AUSTRALIA_PAYID_ID: //done
+            case PaymentMethod.AUSTRALIA_PAYID_ID:
                 return new AustraliaPayid();
-            case PaymentMethod.ALI_PAY_ID: //done
+            case PaymentMethod.ALI_PAY_ID:
                 return new AliPayAccount();
-            case PaymentMethod.WECHAT_PAY_ID: // done
+            case PaymentMethod.WECHAT_PAY_ID:
                 return new WeChatPayAccount();
-            case PaymentMethod.SWISH_ID: //done
+            case PaymentMethod.SWISH_ID:
                 return new SwishAccount();
-            case PaymentMethod.CLEAR_X_CHANGE_ID:// done
+            case PaymentMethod.CLEAR_X_CHANGE_ID:
                 return new ClearXchangeAccount();
-            case PaymentMethod.CHASE_QUICK_PAY_ID: // done
+            case PaymentMethod.CHASE_QUICK_PAY_ID:
                 return new ChaseQuickPayAccount();
-            case PaymentMethod.INTERAC_E_TRANSFER_ID://done
+            case PaymentMethod.INTERAC_E_TRANSFER_ID:
                 return new InteracETransferAccount();
-            case PaymentMethod.US_POSTAL_MONEY_ORDER_ID: //done
+            case PaymentMethod.US_POSTAL_MONEY_ORDER_ID:
                 return new USPostalMoneyOrderAccount();
-            case PaymentMethod.CASH_DEPOSIT_ID: //done
+            case PaymentMethod.CASH_DEPOSIT_ID:
                 return new CashDepositAccount();
-            case PaymentMethod.BLOCK_CHAINS_ID://done
+            case PaymentMethod.BLOCK_CHAINS_ID:
                 return new CryptoCurrencyAccount();
-            case PaymentMethod.MONEY_GRAM_ID: // done
+            case PaymentMethod.MONEY_GRAM_ID:
                 return new MoneyGramAccount();
-            case PaymentMethod.WESTERN_UNION_ID:// done
+            case PaymentMethod.WESTERN_UNION_ID:
                 return new WesternUnionAccount();
-            case PaymentMethod.HAL_CASH_ID: //done
+            case PaymentMethod.HAL_CASH_ID:
                 return new HalCashAccount();
-            case PaymentMethod.F2F_ID: // done
+            case PaymentMethod.F2F_ID:
                 return new F2FAccount();
-            case PaymentMethod.CASH_BY_MAIL_ID: //done
+            case PaymentMethod.CASH_BY_MAIL_ID:
                 return new CashByMailAccount();
-            case PaymentMethod.PROMPT_PAY_ID: // done
+            case PaymentMethod.PROMPT_PAY_ID:
                 return new PromptPayAccount();
-            case PaymentMethod.ADVANCED_CASH_ID: //done
+            case PaymentMethod.ADVANCED_CASH_ID:
                 return new AdvancedCashAccount();
-            case PaymentMethod.TRANSFERWISE_ID: // done
+            case PaymentMethod.TRANSFERWISE_ID:
                 return new TransferwiseAccount();
-            case PaymentMethod.AMAZON_GIFT_CARD_ID: //done
+            case PaymentMethod.AMAZON_GIFT_CARD_ID:
                 return new AmazonGiftCardAccount();
-            case PaymentMethod.BLOCK_CHAINS_INSTANT_ID: //done
+            case PaymentMethod.BLOCK_CHAINS_INSTANT_ID:
                 return new InstantCryptoCurrencyAccount();
 
             // Cannot be deleted as it would break old trade history entries
