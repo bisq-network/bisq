@@ -106,7 +106,6 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     final String shortOfferId;
     private final AccountAgeWitnessService accountAgeWitnessService;
     private final FeeService feeService;
-    private final CoinFormatter btcFormatter;
     private final Navigation navigation;
     private final String offerId;
     private final BalanceListener btcBalanceListener;
@@ -121,9 +120,12 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     protected final ObjectProperty<Price> price = new SimpleObjectProperty<>();
     protected final ObjectProperty<Volume> volume = new SimpleObjectProperty<>();
     protected final ObjectProperty<Volume> minVolume = new SimpleObjectProperty<>();
+    protected final CoinFormatter btcFormatter;
 
     // Percentage value of buyer security deposit. E.g. 0.01 means 1% of trade amount
     protected final DoubleProperty buyerSecurityDeposit = new SimpleDoubleProperty();
+
+    protected final StringProperty buyerSecurityDepositInBTC = new SimpleStringProperty();
 
     protected final ObservableList<PaymentAccount> paymentAccounts = FXCollections.observableArrayList();
 

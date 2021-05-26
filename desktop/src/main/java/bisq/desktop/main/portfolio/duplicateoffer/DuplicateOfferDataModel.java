@@ -89,9 +89,9 @@ class DuplicateOfferDataModel extends MutableOfferDataModel {
         setUseMarketBasedPrice(offer.isUseMarketBasedPrice());
 
         if (offer.getBuyerSecurityDeposit().value == Restrictions.getMinBuyerSecurityDepositAsCoin().getValue()) {
-            setBuyerSecurityDeposit(Restrictions.getMinBuyerSecurityDepositAsPercent());
+            buyerSecurityDepositInBTC.set(btcFormatter.formatCoinWithCode(Restrictions.getMinBuyerSecurityDepositAsCoin()));
         } else {
-            setBuyerSecurityDeposit(CoinUtil.getAsPercentPerBtc(offer.getBuyerSecurityDeposit(), offer.getAmount()));
+            buyerSecurityDeposit.set(CoinUtil.getAsPercentPerBtc(offer.getBuyerSecurityDeposit(), offer.getAmount()));
         }
 
         if (offer.isUseMarketBasedPrice()) {
