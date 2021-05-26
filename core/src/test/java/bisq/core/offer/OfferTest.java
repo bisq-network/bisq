@@ -19,6 +19,7 @@ package bisq.core.offer;
 
 import org.junit.Test;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -44,5 +45,15 @@ public class OfferTest {
 
         Offer offer = new Offer(payload);
         assertTrue(offer.isRange());
+    }
+
+    @Test
+    public void testResetState() {
+        OfferPayload payload = mock(OfferPayload.class);
+        Offer offer = new Offer(payload);
+        offer.setState(Offer.State.AVAILABLE);
+
+        offer.resetState();
+        assertEquals(Offer.State.UNKNOWN, offer.getState());
     }
 }
