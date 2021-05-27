@@ -41,6 +41,8 @@ import javafx.beans.property.SimpleIntegerProperty;
 
 import java.time.Instant;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -101,6 +103,7 @@ public class FeeService {
     @Getter
     private long minFeePerVByte;
     private long epochInSecondAtLastRequest;
+    private List<Tuple2<Runnable, FaultHandler>> callBacks = new ArrayList<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -138,54 +141,74 @@ public class FeeService {
     }
 
     public void requestFees(@Nullable Runnable resultHandler, @Nullable FaultHandler faultHandler) {
-        if (feeProvider.getHttpClient().hasPendingRequest()) {
-            log.warn("We have a pending request open. We ignore that request. httpClient {}", feeProvider.getHttpClient());
+        callBacks.add(new Tuple2<>(resultHandler, faultHandler));
+        if (hasPendingRequest()) {
             return;
         }
 
         long now = Instant.now().getEpochSecond();
-        // We all requests only each 2 minutes
-        if (now - lastRequest > MIN_PAUSE_BETWEEN_REQUESTS_IN_MIN * 60) {
-            lastRequest = now;
-            FeeRequest feeRequest = new FeeRequest();
-            SettableFuture<Tuple2<Map<String, Long>, Map<String, Long>>> future = feeRequest.getFees(feeProvider);
-            Futures.addCallback(future, new FutureCallback<Tuple2<Map<String, Long>, Map<String, Long>>>() {
-                @Override
-                public void onSuccess(@Nullable Tuple2<Map<String, Long>, Map<String, Long>> result) {
-                    UserThread.execute(() -> {
-                        checkNotNull(result, "Result must not be null at getFees");
-                        timeStampMap = result.first;
-                        epochInSecondAtLastRequest = timeStampMap.get(Config.BTC_FEES_TS);
-                        final Map<String, Long> map = result.second;
-                        txFeePerVbyte = map.get(Config.BTC_TX_FEE);
-                        minFeePerVByte = map.get(Config.BTC_MIN_TX_FEE);
-
-                        if (txFeePerVbyte < minFeePerVByte) {
-                            log.warn("The delivered fee of {} sat/vbyte is smaller than the min. default fee of {} sat/vbyte", txFeePerVbyte, minFeePerVByte);
-                            txFeePerVbyte = minFeePerVByte;
-                        }
-
-                        feeUpdateCounter.set(feeUpdateCounter.get() + 1);
-                        log.info("BTC tx fee: txFeePerVbyte={} minFeePerVbyte={}", txFeePerVbyte, minFeePerVByte);
-                        if (resultHandler != null)
-                            resultHandler.run();
-                    });
-                }
-
-                @Override
-                public void onFailure(@NotNull Throwable throwable) {
-                    log.warn("Could not load fees. feeProvider={}, error={}", feeProvider.toString(), throwable.toString());
-                    if (faultHandler != null)
-                        UserThread.execute(() -> faultHandler.handleFault("Could not load fees", throwable));
-                }
-            }, MoreExecutors.directExecutor());
-        } else {
-            log.debug("We got a requestFees called again before min pause of {} minutes has passed.", MIN_PAUSE_BETWEEN_REQUESTS_IN_MIN);
-            UserThread.execute(() -> {
-                if (resultHandler != null)
-                    resultHandler.run();
-            });
+        // Allow 1 request per 2 minutes
+        if (now - lastRequest <= MIN_PAUSE_BETWEEN_REQUESTS_IN_MIN * 60) {
+            log.debug("We got a requestFees called again before min pause of {} minutes has passed.",
+                    MIN_PAUSE_BETWEEN_REQUESTS_IN_MIN);
+            success();
         }
+
+        lastRequest = now;
+        FeeRequest feeRequest = new FeeRequest();
+        SettableFuture<Tuple2<Map<String, Long>, Map<String, Long>>> future = feeRequest.getFees(feeProvider);
+        Futures.addCallback(future, new FutureCallback<>() {
+            @Override
+            public void onSuccess(@Nullable Tuple2<Map<String, Long>, Map<String, Long>> result) {
+                UserThread.execute(() -> {
+                    checkNotNull(result, "Result must not be null at getFees");
+                    timeStampMap = result.first;
+                    epochInSecondAtLastRequest = timeStampMap.get(Config.BTC_FEES_TS);
+                    final Map<String, Long> map = result.second;
+                    txFeePerVbyte = map.get(Config.BTC_TX_FEE);
+                    minFeePerVByte = map.get(Config.BTC_MIN_TX_FEE);
+
+                    if (txFeePerVbyte < minFeePerVByte) {
+                        log.warn("The delivered fee of {} sat/vbyte is smaller than the min. default fee of {} sat/vbyte", txFeePerVbyte, minFeePerVByte);
+                        txFeePerVbyte = minFeePerVByte;
+                    }
+
+                    feeUpdateCounter.set(feeUpdateCounter.get() + 1);
+                    log.info("BTC tx fee: txFeePerVbyte={} minFeePerVbyte={}", txFeePerVbyte, minFeePerVByte);
+                    success();
+                });
+            }
+
+            @Override
+            public void onFailure(@NotNull Throwable throwable) {
+                log.warn("Could not load fees. feeProvider={}, error={}", feeProvider.toString(), throwable.toString());
+                fail(throwable);
+            }
+        }, MoreExecutors.directExecutor());
+    }
+
+    // Clone callbacks, clear list and call all resultHandlers
+    private void success() {
+        var cloned = new ArrayList<>(callBacks);
+        callBacks.clear();
+
+        cloned.forEach(tuple -> {
+            if (tuple.first != null) {
+                UserThread.execute(tuple.first);
+            }
+        });
+    }
+
+    // Clone callbacks, clear list and call all faultHandlers
+    private void fail(Throwable throwable) {
+        var cloned = new ArrayList<>(callBacks);
+        callBacks.clear();
+
+        cloned.forEach(tuple -> {
+            if (tuple.second != null) {
+                UserThread.execute(() -> tuple.second.handleFault("Could not load fees", throwable));
+            }
+        });
     }
 
     public Coin getTxFee(int vsizeInVbytes) {
@@ -202,5 +225,9 @@ public class FeeService {
 
     public boolean isFeeAvailable() {
         return feeUpdateCounter.get() > 0;
+    }
+
+    public boolean hasPendingRequest() {
+        return feeProvider.getHttpClient().hasPendingRequest();
     }
 }
