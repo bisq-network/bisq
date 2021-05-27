@@ -52,7 +52,6 @@ import org.bitcoinj.core.TransactionOutput;
 import org.bitcoinj.script.Script;
 import org.bitcoinj.script.ScriptException;
 import org.bitcoinj.wallet.CoinSelection;
-import org.bitcoinj.wallet.CoinSelector;
 import org.bitcoinj.wallet.SendRequest;
 
 import javax.inject.Inject;
@@ -562,38 +561,38 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
         return getPreparedSendTx(receiverAddress, receiverAmount, nonBsqCoinSelector);
     }
 
-    private Transaction getPreparedSendTx(String receiverAddress, Coin receiverAmount, CoinSelector coinSelector)
+    private Transaction getPreparedSendTx(String receiverAddress,
+                                          Coin receiverAmount,
+                                          BisqDefaultCoinSelector coinSelector)
             throws AddressFormatException, InsufficientBsqException, WalletException, TransactionVerificationException, BsqChangeBelowDustException {
         daoKillSwitch.assertDaoIsNotDisabled();
         Transaction tx = new Transaction(params);
         checkArgument(Restrictions.isAboveDust(receiverAmount),
                 "The amount is too low (dust limit).");
         tx.addOutput(receiverAmount, Address.fromString(params, receiverAddress));
-        SendRequest sendRequest = SendRequest.forTx(tx);
-        sendRequest.fee = Coin.ZERO;
-        sendRequest.feePerKb = Coin.ZERO;
-        sendRequest.ensureMinRequiredFee = false;
-        sendRequest.aesKey = aesKey;
-        sendRequest.shuffleOutputs = false;
-        sendRequest.signInputs = false;
-        sendRequest.changeAddress = getChangeAddress();
-        sendRequest.coinSelector = coinSelector;
         try {
+            var selection = coinSelector.select(receiverAmount, wallet.calculateAllSpendCandidates());
+            var change = coinSelector.getChange(receiverAmount, selection);
+            if (Restrictions.isAboveDust(change)) {
+                tx.addOutput(change, getChangeAddress());
+            } else if (!change.isZero()) {
+                String msg = "BSQ change output is below dust limit. outputValue=" + change.value / 100 + " BSQ";
+                log.warn(msg);
+                throw new BsqChangeBelowDustException(msg, change);
+            }
+
+            SendRequest sendRequest = SendRequest.forTx(tx);
+            sendRequest.fee = Coin.ZERO;
+            sendRequest.feePerKb = Coin.ZERO;
+            sendRequest.ensureMinRequiredFee = false;
+            sendRequest.aesKey = aesKey;
+            sendRequest.shuffleOutputs = false;
+            sendRequest.signInputs = false;
+            sendRequest.changeAddress = getChangeAddress();
+            sendRequest.coinSelector = coinSelector;
             wallet.completeTx(sendRequest);
             checkWalletConsistency(wallet);
             verifyTransaction(tx);
-            // printTx("prepareSendTx", tx);
-
-            // Tx has as first output BSQ and an optional second BSQ change output.
-            // At that stage we do not have added the BTC inputs so there is no BTC change output here.
-            if (tx.getOutputs().size() == 2) {
-                Coin bsqChangeOutputValue = tx.getOutputs().get(1).getValue();
-                if (!Restrictions.isAboveDust(bsqChangeOutputValue)) {
-                    String msg = "BSQ change output is below dust limit. outputValue=" + bsqChangeOutputValue.value / 100 + " BSQ";
-                    log.warn(msg);
-                    throw new BsqChangeBelowDustException(msg, bsqChangeOutputValue);
-                }
-            }
 
             return tx;
         } catch (InsufficientMoneyException e) {
