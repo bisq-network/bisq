@@ -481,8 +481,10 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
         securityDepositAsDoubleListener = (ov, oldValue, newValue) -> {
             if (newValue != null) {
                 buyerSecurityDeposit.set(FormattingUtils.formatToPercent((double) newValue));
-                if (dataModel.getAmount().get() != null)
+                if (dataModel.getAmount().get() != null) {
                     buyerSecurityDepositInBTC.set(btcFormatter.formatCoinWithCode(dataModel.getBuyerSecurityDepositAsCoin()));
+                }
+                updateBuyerSecurityDeposit();
             } else {
                 buyerSecurityDeposit.set("");
                 buyerSecurityDepositInBTC.set("");
