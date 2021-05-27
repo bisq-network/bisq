@@ -40,6 +40,8 @@ import bisq.core.util.coin.CoinUtil;
 
 import bisq.network.p2p.P2PService;
 
+import org.bitcoinj.core.Coin;
+
 import com.google.inject.Inject;
 
 import javax.inject.Named;
@@ -88,14 +90,18 @@ class DuplicateOfferDataModel extends MutableOfferDataModel {
         setVolume(offer.getVolume());
         setUseMarketBasedPrice(offer.isUseMarketBasedPrice());
 
-        if (offer.getBuyerSecurityDeposit().value == Restrictions.getMinBuyerSecurityDepositAsCoin().getValue()) {
-            setBuyerSecurityDeposit(Restrictions.getMinBuyerSecurityDepositAsPercent());
-        } else {
-            setBuyerSecurityDeposit(CoinUtil.getAsPercentPerBtc(offer.getBuyerSecurityDeposit(), offer.getAmount()));
-        }
+        setBuyerSecurityDeposit(getBuyerSecurityAsPercent(offer));
 
         if (offer.isUseMarketBasedPrice()) {
             setMarketPriceMargin(offer.getMarketPriceMargin());
         }
+    }
+
+    private double getBuyerSecurityAsPercent(Offer offer) {
+        Coin offerBuyerSecurityDeposit = getBoundedBuyerSecurityDepositAsCoin(offer.getBuyerSecurityDeposit());
+        double offerBuyerSecurityDepositAsPercent = CoinUtil.getAsPercentPerBtc(offerBuyerSecurityDeposit,
+                offer.getAmount());
+        return Math.min(offerBuyerSecurityDepositAsPercent,
+                Restrictions.getMaxBuyerSecurityDepositAsPercent());
     }
 }

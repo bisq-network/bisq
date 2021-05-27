@@ -714,7 +714,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
         return getBoundedSellerSecurityDepositAsCoin(percentOfAmountAsCoin);
     }
 
-    private Coin getBoundedBuyerSecurityDepositAsCoin(Coin value) {
+    protected Coin getBoundedBuyerSecurityDepositAsCoin(Coin value) {
         // We need to ensure that for small amount values we don't get a too low BTC amount. We limit it with using the
         // MinBuyerSecurityDepositAsCoin from Restrictions.
         return Coin.valueOf(Math.max(Restrictions.getMinBuyerSecurityDepositAsCoin().value, value.value));
