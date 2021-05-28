@@ -484,7 +484,6 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
                 if (dataModel.getAmount().get() != null) {
                     buyerSecurityDepositInBTC.set(btcFormatter.formatCoinWithCode(dataModel.getBuyerSecurityDepositAsCoin()));
                 }
-                updateBuyerSecurityDeposit();
             } else {
                 buyerSecurityDeposit.set("");
                 buyerSecurityDepositInBTC.set("");
