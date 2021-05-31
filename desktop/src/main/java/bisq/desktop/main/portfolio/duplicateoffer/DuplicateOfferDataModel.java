@@ -24,6 +24,7 @@ import bisq.desktop.main.offer.MutableOfferDataModel;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.btc.wallet.Restrictions;
 import bisq.core.offer.CreateOfferService;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferUtil;
@@ -35,8 +36,11 @@ import bisq.core.user.Preferences;
 import bisq.core.user.User;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.CoinFormatter;
+import bisq.core.util.coin.CoinUtil;
 
 import bisq.network.p2p.P2PService;
+
+import org.bitcoinj.core.Coin;
 
 import com.google.inject.Inject;
 
@@ -86,8 +90,18 @@ class DuplicateOfferDataModel extends MutableOfferDataModel {
         setVolume(offer.getVolume());
         setUseMarketBasedPrice(offer.isUseMarketBasedPrice());
 
+        setBuyerSecurityDeposit(getBuyerSecurityAsPercent(offer));
+
         if (offer.isUseMarketBasedPrice()) {
             setMarketPriceMargin(offer.getMarketPriceMargin());
         }
+    }
+
+    private double getBuyerSecurityAsPercent(Offer offer) {
+        Coin offerBuyerSecurityDeposit = getBoundedBuyerSecurityDepositAsCoin(offer.getBuyerSecurityDeposit());
+        double offerBuyerSecurityDepositAsPercent = CoinUtil.getAsPercentPerBtc(offerBuyerSecurityDeposit,
+                offer.getAmount());
+        return Math.min(offerBuyerSecurityDepositAsPercent,
+                Restrictions.getMaxBuyerSecurityDepositAsPercent());
     }
 }
