@@ -190,7 +190,6 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
         JFXBadge portfolioButtonWithBadge = new JFXBadge(portfolioButton);
         JFXBadge supportButtonWithBadge = new JFXBadge(supportButton);
         JFXBadge settingsButtonWithBadge = new JFXBadge(settingsButton);
-        settingsButtonWithBadge.getStyleClass().add("new");
 
         Locale locale = GlobalSettings.getLocale();
         DecimalFormat currencyFormat = (DecimalFormat) NumberFormat.getNumberInstance(locale);
