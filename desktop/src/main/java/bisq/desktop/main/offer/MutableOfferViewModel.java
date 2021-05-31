@@ -188,6 +188,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
     final IntegerProperty marketPriceAvailableProperty = new SimpleIntegerProperty(-1);
     private ChangeListener<Number> currenciesUpdateListener;
     protected boolean syncMinAmountWithAmount = true;
+    private boolean makeOfferFromUnsignedAccountWarningDisplayed;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -1236,10 +1237,12 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
     }
 
     private void maybeShowMakeOfferToUnsignedAccountWarning() {
-        if (dataModel.getDirection() == OfferPayload.Direction.SELL &&
+        if (!makeOfferFromUnsignedAccountWarningDisplayed &&
+                dataModel.getDirection() == OfferPayload.Direction.SELL &&
                 PaymentMethod.hasChargebackRisk(dataModel.getPaymentAccount().getPaymentMethod(), dataModel.getTradeCurrency().getCode())) {
             Coin checkAmount = dataModel.getMinAmount().get() == null ? dataModel.getAmount().get() : dataModel.getMinAmount().get();
             if (checkAmount != null && !checkAmount.isGreaterThan(OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT)) {
+                makeOfferFromUnsignedAccountWarningDisplayed = true;
                 GUIUtil.showMakeOfferToUnsignedAccountWarning();
             }
         }
