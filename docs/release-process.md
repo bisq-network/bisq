@@ -70,9 +70,9 @@ Use VirtualBox > 6.1 with following configuration:
 
 * Install latest security updates
 * Install/Upgrade to latest Java 11 SDK
-    * macOS (brew option): `brew upgrade openjdk@11`
-    * Ubuntu (brew option): `brew upgrade java11`
-    * Windows: Download latest version from https://www.oracle.com/java/technologies/javase-jdk11-downloads.html
+  * macOS (brew option): `brew upgrade openjdk@11`
+  * Ubuntu (brew option): `brew upgrade java11`
+  * Windows: Download latest version from https://www.oracle.com/java/technologies/javase-jdk11-downloads.html
 
 #### For Windows
 
@@ -92,12 +92,13 @@ certificate and provisioning file before running the build.
    .
 
 2. Set environment variables to ~/.profile file or the like... (one time effort)
-    * `BISQ_GPG_USER`: e.g. export BISQ_GPG_USER=manfred@bitsquare.io
-    * `BISQ_SHARED_FOLDER`: shared folder that is used between your VM host and client system
-    * `BISQ_PACKAGE_SIGNING_IDENTITY`: e.g. "Developer ID Application: Christoph Atteneder (WQT93T6D6C)"
-    * `BISQ_PRIMARY_BUNDLE_ID`: e.g. "network.bisq.CAT"
-    * `BISQ_PACKAGE_NOTARIZATION_AC_USERNAME`: your Apple developer email address
-    * `BISQ_PACKAGE_NOTARIZATION_ASC_PROVIDER`: Your developer ID (e.g. WQT93T6D6C)
+
+* `BISQ_GPG_USER`: e.g. export BISQ_GPG_USER=manfred@bitsquare.io
+* `BISQ_SHARED_FOLDER`: shared folder that is used between your VM host and client system
+* `BISQ_PACKAGE_SIGNING_IDENTITY`: e.g. "Developer ID Application: Christoph Atteneder (WQT93T6D6C)"
+* `BISQ_PRIMARY_BUNDLE_ID`: e.g. "network.bisq.CAT"
+* `BISQ_PACKAGE_NOTARIZATION_AC_USERNAME`: your Apple developer email address
+* `BISQ_PACKAGE_NOTARIZATION_ASC_PROVIDER`: Your developer ID (e.g. WQT93T6D6C)
 
 3. Run `./gradlew packageInstallers`
 
