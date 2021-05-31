@@ -69,6 +69,10 @@ Use VirtualBox > 6.1 with following configuration:
 #### For every OS
 
 * Install latest security updates
+* Install/Upgrade to latest Java 11 SDK
+  * macOS (brew option): `brew upgrade openjdk@11`
+  * Ubuntu (brew option): `brew upgrade java11`
+  * Windows: Download latest version from https://www.oracle.com/java/technologies/javase-jdk11-downloads.html
 
 #### For Windows
 
@@ -88,19 +92,20 @@ certificate and provisioning file before running the build.
    .
 
 2. Set environment variables to ~/.profile file or the like... (one time effort)
-   * `BISQ_GPG_USER`: e.g. export BISQ_GPG_USER=manfred@bitsquare.io
-   * `BISQ_SHARED_FOLDER`: shared folder that is used between your VM host and client system
-   * `BISQ_PACKAGE_SIGNING_IDENTITY`: e.g. "Developer ID Application: Christoph Atteneder (WQT93T6D6C)"
-   * `BISQ_PRIMARY_BUNDLE_ID`: e.g. "network.bisq.CAT"
-   * `BISQ_PACKAGE_NOTARIZATION_AC_USERNAME`: your Apple developer email address
-   * `BISQ_PACKAGE_NOTARIZATION_ASC_PROVIDER`: Your developer ID (e.g. WQT93T6D6C)
 
-3. Run `./gradlew --console=plain packageInstallers`
+* `BISQ_GPG_USER`: e.g. export BISQ_GPG_USER=manfred@bitsquare.io
+* `BISQ_SHARED_FOLDER`: shared folder that is used between your VM host and client system
+* `BISQ_PACKAGE_SIGNING_IDENTITY`: e.g. "Developer ID Application: Christoph Atteneder (WQT93T6D6C)"
+* `BISQ_PRIMARY_BUNDLE_ID`: e.g. "network.bisq.CAT"
+* `BISQ_PACKAGE_NOTARIZATION_AC_USERNAME`: your Apple developer email address
+* `BISQ_PACKAGE_NOTARIZATION_ASC_PROVIDER`: Your developer ID (e.g. WQT93T6D6C)
+
+3. Run `./gradlew packageInstallers`
 
 Build output expected in shared folder:
 
 1. `Bisq-${NEW_VERSION}.dmg` macOS notarized and signed installer
-2. `desktop-${NEW_VERSION}-all.jar.SHA-256` sha256 sum of fat jar
+2. `desktop-${NEW_VERSION}-all-mac.jar.SHA-256` sha256 sum of fat jar
 3. `jar-lib-for-raspberry-pi-${NEW_VERSION}.zip` Jar libraries for Raspberry Pi
 
 * Before building the other binaries install the generated Bisq app on macOS and verify that everything works as
@@ -111,15 +116,15 @@ Build output expected in shared folder:
 1. Checkout the release tag in your VM
 
 2. Set environment variables to ~/.profile file or the like... (one time effort)
-   * `BISQ_SHARED_FOLDER`: shared folder that is used between your VM host and client system
+    * `BISQ_SHARED_FOLDER`: shared folder that is used between your VM host and client system
 
-3. Run `./gradlew --console=plain packageInstallers`
+3. Run `./gradlew packageInstallers`
 
 Build output expected:
 
 1. `bisq_${NEW_VERSION}-1_amd64.deb` package for distributions that derive from Debian
 2. `bisq-${NEW_VERSION}-1.x86_64.rpm` package for distributions that derive from Redhat based distros
-3. `desktop-${NEW_VERSION}-all.jar.SHA-256` sha256 sum of fat jar
+3. `desktop-${NEW_VERSION}-all-linux.jar.SHA-256` sha256 sum of fat jar
 
 * Install and run generated package
 
@@ -132,12 +137,12 @@ To be able to generate a signed binary you have to apply and install a developer
 2. Set environment variables to ~/.profile file or the like... (one time effort)
     * `BISQ_SHARED_FOLDER`: shared folder that is used between your VM host and client system
 
-3. Run `./gradlew --console=plain packageInstallers`
+3. Run `./gradlew packageInstallers`
 
 Build output expected:
 
 1. `Bisq-${NEW_VERSION}.exe` Windows signed installer
-2. `desktop-${NEW_VERSION}-all.jar.SHA-256` sha256 sum of fat jar
+2. `desktop-${NEW_VERSION}-all-windows.jar.SHA-256` sha256 sum of fat jar
 
 * Install and run generated package
 
@@ -193,6 +198,9 @@ If all was successful:
 
 * Check the fingerprint of the pgp key which was used for signing in signingkey.asc (e.g. 29CDFD3B for Christoph
   Atteneder)
+
+* Manually add all hashes (macOS, linux, windows) to the `Bisq-${NEW_VERSION}.jar.txt` file.
+  (TODO: Automate file creation after process has been proven in v1.6.5)
 
 * Add all files including signingkey.asc and the gpg pub keys to GitHub release page
 
