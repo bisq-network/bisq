@@ -17,6 +17,7 @@
 
 package bisq.core.support.messages;
 
+import bisq.core.locale.Res;
 import bisq.core.support.SupportType;
 import bisq.core.support.dispute.Attachment;
 import bisq.core.support.dispute.Dispute;
@@ -24,6 +25,7 @@ import bisq.core.support.dispute.DisputeResult;
 
 import bisq.network.p2p.NodeAddress;
 
+import bisq.common.UserThread;
 import bisq.common.app.Version;
 import bisq.common.util.Utilities;
 
@@ -295,6 +297,16 @@ public final class ChatMessage extends SupportMessage {
     public void setAcknowledged(boolean acknowledged) {
         this.acknowledgedProperty.set(acknowledged);
         notifyChangeListener();
+    }
+
+    // each chat message notifies the user if an ACK is not received in time
+    public void startAckTimer() {
+        UserThread.runAfter(() -> {
+            if (!this.getAcknowledgedProperty().get()) {
+                this.setArrived(false);
+                this.setAckError(Res.get("support.errorTimeout"));
+            }
+        }, 5, TimeUnit.SECONDS);
     }
 
     public ReadOnlyBooleanProperty acknowledgedProperty() {
