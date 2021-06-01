@@ -19,6 +19,8 @@ package bisq.core.payment.payload;
 
 import bisq.core.locale.Res;
 
+import bisq.common.util.JsonExclude;
+
 import com.google.protobuf.Message;
 
 import java.nio.charset.StandardCharsets;
@@ -40,6 +42,10 @@ import lombok.extern.slf4j.Slf4j;
 public final class UpholdAccountPayload extends PaymentAccountPayload {
     private String accountId = "";
 
+    // For backward compatibility we need to exclude the new field from the contract json.
+    @JsonExclude
+    private String accountOwner = "";
+
     public UpholdAccountPayload(String paymentMethod, String id) {
         super(paymentMethod, id);
     }
@@ -52,6 +58,7 @@ public final class UpholdAccountPayload extends PaymentAccountPayload {
     private UpholdAccountPayload(String paymentMethod,
                                  String id,
                                  String accountId,
+                                 String accountOwner,
                                  long maxTradePeriod,
                                  Map<String, String> excludeFromJsonDataMap) {
         super(paymentMethod,
@@ -60,12 +67,14 @@ public final class UpholdAccountPayload extends PaymentAccountPayload {
                 excludeFromJsonDataMap);
 
         this.accountId = accountId;
+        this.accountOwner = accountOwner;
     }
 
     @Override
     public Message toProtoMessage() {
         return getPaymentAccountPayloadBuilder()
                 .setUpholdAccountPayload(protobuf.UpholdAccountPayload.newBuilder()
+                        .setAccountOwner(accountOwner)
                         .setAccountId(accountId))
                 .build();
     }
@@ -74,6 +83,7 @@ public final class UpholdAccountPayload extends PaymentAccountPayload {
         return new UpholdAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),
                 proto.getUpholdAccountPayload().getAccountId(),
+                proto.getUpholdAccountPayload().getAccountOwner(),
                 proto.getMaxTradePeriod(),
                 new HashMap<>(proto.getExcludeFromJsonDataMap()));
     }
@@ -85,12 +95,20 @@ public final class UpholdAccountPayload extends PaymentAccountPayload {
 
     @Override
     public String getPaymentDetails() {
-        return Res.get(paymentMethodId) + " - " + Res.getWithCol("payment.account") + " " + accountId;
+        return Res.get(paymentMethodId) + " - " + getPaymentDetailsForTradePopup().replace("\n", ", ");
     }
 
     @Override
     public String getPaymentDetailsForTradePopup() {
-        return getPaymentDetails();
+        if (accountOwner.isEmpty()) {
+            return
+                    Res.get("payment.account") + ": " + accountId + "\n" +
+                            Res.get("payment.account.owner") + ": N/A";
+        } else {
+            return
+                    Res.get("payment.account") + ": " + accountId + "\n" +
+                            Res.get("payment.account.owner") + ": " + accountOwner;
+        }
     }
 
     @Override

@@ -47,8 +47,16 @@ public class UpholdForm extends PaymentMethodForm {
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow,
                                       PaymentAccountPayload paymentAccountPayload) {
+        String accountOwner = ((UpholdAccountPayload) paymentAccountPayload).getAccountOwner();
+        if (accountOwner.isEmpty()) {
+            accountOwner = Res.get("payment.ask");
+        }
+        addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.account.owner"),
+                accountOwner);
+
         addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.uphold.accountId"),
                 ((UpholdAccountPayload) paymentAccountPayload).getAccountId());
+
         return gridRow;
     }
 
@@ -63,6 +71,14 @@ public class UpholdForm extends PaymentMethodForm {
     @Override
     public void addFormForAddAccount() {
         gridRowFrom = gridRow + 1;
+
+        InputTextField holderNameInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow,
+                Res.get("payment.account.owner"));
+        holderNameInputTextField.setValidator(inputValidator);
+        holderNameInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
+            upholdAccount.setAccountOwner(newValue);
+            updateFromInputs();
+        });
 
         accountIdInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.uphold.accountId"));
         accountIdInputTextField.setValidator(upholdValidator);
@@ -102,6 +118,8 @@ public class UpholdForm extends PaymentMethodForm {
                 upholdAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
                 Res.get(upholdAccount.getPaymentMethod().getId()));
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner"),
+                Res.get(upholdAccount.getAccountOwner()));
         TextField field = addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.uphold.accountId"),
                 upholdAccount.getAccountId()).second;
         field.setMouseTransparent(false);
