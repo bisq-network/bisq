@@ -100,7 +100,7 @@ public final class UpholdAccountPayload extends PaymentAccountPayload {
 
     @Override
     public String getPaymentDetailsForTradePopup() {
-        if (accountOwner.equals("")) {
+        if (accountOwner.isEmpty()) {
             return
                     Res.get("payment.account") + ": " + accountId + "\n" +
                             Res.get("payment.account.owner") + ": N/A";
