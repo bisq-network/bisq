@@ -23,6 +23,8 @@ import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.AutoTooltipTableColumn;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.components.InputTextField;
+import bisq.desktop.components.PeerInfoIcon;
+import bisq.desktop.components.PeerInfoIconDispute;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.ContractWindow;
 import bisq.desktop.main.overlays.windows.DisputeSummaryWindow;
@@ -119,7 +121,7 @@ import javax.annotation.Nullable;
 import static bisq.desktop.util.FormBuilder.getIconForLabel;
 import static bisq.desktop.util.FormBuilder.getRegularIconButton;
 
-public abstract class DisputeView extends ActivatableView<VBox, Void> {
+public abstract class DisputeView extends ActivatableView<VBox, Void> implements PeerInfoIcon.notify {
     public enum FilterResult {
         NO_MATCH("No Match"),
         NO_FILTER("No filter text"),
@@ -183,6 +185,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
     private Map<String, Button> chatButtonByDispute = new HashMap<>();
     private Map<String, JFXBadge> chatBadgeByDispute = new HashMap<>();
     private Map<String, JFXBadge> newBadgeByDispute = new HashMap<>();
+    private Map<String, PeerInfoIconDispute> avatarMap = new HashMap<>();
     protected DisputeChatPopup chatPopup;
 
 
@@ -1182,10 +1185,14 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
                             @Override
                             public void updateItem(final Dispute item, boolean empty) {
                                 super.updateItem(item, empty);
-                                if (item != null && !empty)
+                                if (item != null && !empty) {
                                     setText(getBuyerOnionAddressColumnLabel(item));
-                                else
+                                    PeerInfoIconDispute peerInfoIconDispute = findOrCreateAvatar(tableRowProperty().get().getIndex(), item.getContract(), true);
+                                    setGraphic(peerInfoIconDispute);
+                                } else {
                                     setText("");
+                                    setGraphic(null);
+                                }
                             }
                         };
                     }
@@ -1208,10 +1215,14 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
                             @Override
                             public void updateItem(final Dispute item, boolean empty) {
                                 super.updateItem(item, empty);
-                                if (item != null && !empty)
+                                if (item != null && !empty) {
                                     setText(getSellerOnionAddressColumnLabel(item));
-                                else
+                                    PeerInfoIconDispute peerInfoIconDispute = findOrCreateAvatar(tableRowProperty().get().getIndex(), item.getContract(), false);
+                                    setGraphic(peerInfoIconDispute);
+                                } else {
                                     setText("");
+                                    setGraphic(null);
+                                }
                             }
                         };
                     }
@@ -1229,7 +1240,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
                 long accountAge = accountAgeWitnessService.getAccountAge(contract.getBuyerPaymentAccountPayload(), contract.getBuyerPubKeyRing());
                 String age = DisplayUtils.formatAccountAge(accountAge);
                 String postFix = CurrencyUtil.isFiatCurrency(item.getContract().getOfferPayload().getCurrencyCode()) ? " / " + age : "";
-                return buyerNodeAddress.getHostNameWithoutPostFix() + " (" + nrOfDisputes + postFix + ")";
+                return buyerNodeAddress.getHostNameForDisplay() + " (" + nrOfDisputes + postFix + ")";
             } else
                 return Res.get("shared.na");
         } else {
@@ -1246,7 +1257,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
                 long accountAge = accountAgeWitnessService.getAccountAge(contract.getSellerPaymentAccountPayload(), contract.getSellerPubKeyRing());
                 String age = DisplayUtils.formatAccountAge(accountAge);
                 String postFix = CurrencyUtil.isFiatCurrency(item.getContract().getOfferPayload().getCurrencyCode()) ? " / " + age : "";
-                return sellerNodeAddress.getHostNameWithoutPostFix() + " (" + nrOfDisputes + postFix + ")";
+                return sellerNodeAddress.getHostNameForDisplay() + " (" + nrOfDisputes + postFix + ")";
             } else
                 return Res.get("shared.na");
         } else {
@@ -1432,4 +1443,32 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
             return (disputeManager instanceof MediationManager) ? Res.get("shared.mediator") : Res.get("shared.refundAgent");
         }
     }
+
+    private PeerInfoIconDispute findOrCreateAvatar(Integer tableRowId, Contract contract, boolean isBuyer) {
+        NodeAddress nodeAddress = isBuyer ? contract.getBuyerNodeAddress() : contract.getSellerNodeAddress();
+        String key = tableRowId + nodeAddress.getHostNameWithoutPostFix() + (isBuyer ? "BUYER" : "SELLER");
+        Long accountAge = isBuyer ?
+                accountAgeWitnessService.getAccountAge(contract.getBuyerPaymentAccountPayload(), contract.getBuyerPubKeyRing()) :
+                accountAgeWitnessService.getAccountAge(contract.getSellerPaymentAccountPayload(), contract.getSellerPubKeyRing());
+        PeerInfoIconDispute peerInfoIcon = new PeerInfoIconDispute(
+                nodeAddress,
+                disputeManager.getNrOfDisputes(isBuyer, contract),
+                accountAge,
+                preferences);
+        peerInfoIcon.setCallback(this);
+        avatarMap.put(key, peerInfoIcon);
+        log.warn("Creating avatar for {}, map size is now {}", key, avatarMap.size());
+        return peerInfoIcon;
+    }
+
+    @Override
+    public void avatarTagUpdated() {
+        // callback from one avatar letting us know that the user updated the tag text.
+        // we update all avatars, as some could be sharing the same tag
+        log.info("Updating avatar tags, the avatarMap size is {}", avatarMap.size());
+        avatarMap.forEach((key, avatarIcon) -> {
+            avatarIcon.refreshTag();
+        });
+    }
+
 }

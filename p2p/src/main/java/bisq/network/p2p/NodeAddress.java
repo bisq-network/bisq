@@ -79,6 +79,17 @@ public final class NodeAddress implements PersistablePayload, NetworkPayload, Us
         return hostName.replace(".onion", "");
     }
 
+    // tor v3 onions are too long to display for example in a table grid, so this convenience method
+    // produces a display-friendly format which includes [first 7]..[last 7] characters.
+    // tor v2 and localhost will be displayed in full, as they are 16 chars or less.
+    public String getHostNameForDisplay() {
+        String work = getHostNameWithoutPostFix();
+        if (work.length() > 16) {
+            return work.substring(0, 7) + ".." + work.substring(work.length() - 7);
+        }
+        return work;
+    }
+
     // We use just a few chars from the full address to blur the potential receiver for sent network_messages
     public byte[] getAddressPrefixHash() {
         if (addressPrefixHash == null)
