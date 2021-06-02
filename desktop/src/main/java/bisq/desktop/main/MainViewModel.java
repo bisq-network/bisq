@@ -422,7 +422,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
                     .show();
         });
 
-        bisqSetup.setDaoRequiresRestartHandler(() -> new Popup().warning("popup.warn.daoRequiresRestart")
+        bisqSetup.setDaoRequiresRestartHandler(() -> new Popup().warning(Res.get("popup.warn.daoRequiresRestart"))
                 .useShutDownButton()
                 .hideCloseButton()
                 .show());
