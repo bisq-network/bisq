@@ -26,6 +26,9 @@ import bisq.desktop.components.indicator.TxConfidenceIndicator;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.account.AccountView;
 import bisq.desktop.main.account.content.fiataccounts.FiatAccountsView;
+import bisq.desktop.main.dao.DaoView;
+import bisq.desktop.main.dao.monitor.MonitorView;
+import bisq.desktop.main.dao.monitor.daostate.DaoStateMonitorView;
 import bisq.desktop.main.overlays.popups.Popup;
 
 import bisq.core.account.witness.AccountAgeWitness;
@@ -755,6 +758,15 @@ public class GUIUtil {
         }
 
         return true;
+    }
+
+    public static void showDaoNeedsResyncPopup(Navigation navigation) {
+        UserThread.runAfter(() -> new Popup().warning(Res.get("popup.warning.daoNeedsResync"))
+                    .actionButtonTextWithGoTo("navigation.dao.networkMonitor")
+                    .onAction(() -> {
+                            navigation.navigateTo(MainView.class, DaoView.class, MonitorView.class, DaoStateMonitorView.class);
+                    })
+                    .show(), 5, TimeUnit.SECONDS);
     }
 
     public static boolean isReadyForTxBroadcastOrShowPopup(P2PService p2PService, WalletsSetup walletsSetup) {
