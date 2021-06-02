@@ -274,18 +274,6 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
         }
 
         getShowAppScreen().set(true);
-
-        // We only show the popup if the user has already set up any fiat account. For new users it is not a rule
-        // change and for altcoins its not relevant.
-        String key = "newFeatureDuplicateOffer";
-        if (DontShowAgainLookup.showAgain(key)) {
-            UserThread.runAfter(() -> {
-                new Popup().attention(Res.get("popup.attention.newFeatureDuplicateOffer")).
-                        dontShowAgainId(key)
-                        .closeButtonText(Res.get("shared.iUnderstand"))
-                        .show();
-            }, 1);
-        }
     }
 
 
