@@ -26,8 +26,6 @@ import bisq.asset.BitcoinAddressValidator;
 import bisq.common.config.Config;
 import bisq.common.taskrunner.TaskRunner;
 
-import org.bitcoinj.core.Coin;
-
 import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -54,11 +52,6 @@ public class AtomicMakerVerifiesTakerInputs extends AtomicTradeTask {
              */
 
             var message = (CreateAtomicTxRequest) atomicProcessModel.getTradeMessage();
-
-            atomicProcessModel.getAtomicTxBuilder().setMyTradeFee(atomicTrade.isCurrencyForMakerFeeBtc(),
-                    Coin.valueOf(atomicTrade.getMakerFee()));
-            atomicProcessModel.getAtomicTxBuilder().setPeerTradeFee(atomicTrade.isCurrencyForTakerFeeBtc(),
-                    Coin.valueOf(atomicTrade.getTakerFee()));
 
             checkArgument(new BitcoinAddressValidator(Config.baseCurrencyNetworkParameters()).validate(
                     message.getTakerBsqOutputAddress()).isValid(),

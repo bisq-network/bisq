@@ -26,6 +26,7 @@ import bisq.core.trade.atomic.protocol.tasks.maker.AtomicMakerCreatesAndSignsTx;
 import bisq.core.trade.atomic.protocol.tasks.maker.AtomicMakerRemovesOpenOffer;
 import bisq.core.trade.atomic.protocol.tasks.maker.AtomicMakerSetupTxListener;
 import bisq.core.trade.atomic.protocol.tasks.maker.AtomicMakerVerifiesAmounts;
+import bisq.core.trade.atomic.protocol.tasks.maker.AtomicMakerVerifiesMiningFee;
 import bisq.core.trade.atomic.protocol.tasks.maker.AtomicMakerVerifiesTakerInputs;
 import bisq.core.trade.messages.TradeMessage;
 import bisq.core.trade.protocol.TradeProtocol;
@@ -61,6 +62,7 @@ public class AtomicMakerProtocol extends TradeProtocol {
                 .from(sender))
                 .setup(tasks(
                         AtomicApplyFilter.class,
+                        AtomicMakerVerifiesMiningFee.class,
                         AtomicMakerVerifiesAmounts.class,
                         AtomicMakerVerifiesTakerInputs.class,
                         AtomicMakerRemovesOpenOffer.class,

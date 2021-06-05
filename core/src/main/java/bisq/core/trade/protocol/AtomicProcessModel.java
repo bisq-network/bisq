@@ -41,8 +41,6 @@ import bisq.network.p2p.P2PService;
 
 import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.PubKeyRing;
-import bisq.common.handlers.FaultHandler;
-import bisq.common.handlers.ResultHandler;
 import bisq.common.proto.persistable.PersistablePayload;
 import bisq.common.taskrunner.Model;
 
@@ -302,7 +300,7 @@ public class AtomicProcessModel implements ProcessModelI, Model, PersistablePayl
     // Build tx
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void initTxBuilder(boolean isMaker, ResultHandler resultHandler, FaultHandler faultHandler) {
+    public void initTxBuilder(boolean isMaker) {
         atomicTxBuilder = new AtomicTxBuilder(getProvider().getFeeService(),
                 getBtcWalletService(),
                 getBsqWalletService(),
@@ -311,12 +309,22 @@ public class AtomicProcessModel implements ProcessModelI, Model, PersistablePayl
                 isMaker,
                 atomicTrade.getPrice(),
                 atomicTrade.getAmount(),
-                null,
+                Coin.valueOf(txFeePerVbyte),
                 isMaker ? makerBtcAddress : takerBtcAddress,
                 isMaker ? makerBsqAddress : takerBsqAddress,
-                getDaoFacade().getParamValue(Param.RECIPIENT_BTC_ADDRESS),
-                resultHandler,
-                faultHandler);
+                getDaoFacade().getParamValue(Param.RECIPIENT_BTC_ADDRESS));
+
+        if (isMaker) {
+            atomicTxBuilder.setMyTradeFee(atomicTrade.isCurrencyForMakerFeeBtc(),
+                    Coin.valueOf(atomicTrade.getMakerFee()));
+            atomicTxBuilder.setPeerTradeFee(atomicTrade.isCurrencyForTakerFeeBtc(),
+                    Coin.valueOf(atomicTrade.getTakerFee()));
+        } else {
+            atomicTxBuilder.setMyTradeFee(atomicTrade.isCurrencyForTakerFeeBtc(),
+                    Coin.valueOf(atomicTrade.getTakerFee()));
+            atomicTxBuilder.setPeerTradeFee(atomicTrade.isCurrencyForMakerFeeBtc(),
+                    Coin.valueOf(atomicTrade.getMakerFee()));
+        }
     }
 
     public boolean takerPreparesTakerSide() {

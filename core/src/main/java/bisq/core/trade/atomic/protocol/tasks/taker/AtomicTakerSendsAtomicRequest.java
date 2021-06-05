@@ -26,8 +26,6 @@ import bisq.network.p2p.SendDirectMessageListener;
 
 import bisq.common.taskrunner.TaskRunner;
 
-import org.bitcoinj.core.Coin;
-
 import java.util.UUID;
 
 import lombok.extern.slf4j.Slf4j;
@@ -47,18 +45,10 @@ public class AtomicTakerSendsAtomicRequest extends AtomicTradeTask {
         try {
             runInterceptHook();
 
-            checkArgument(!atomicProcessModel.getOffer().isMyOffer(atomicProcessModel.getKeyRing()), "must not take own offer");
-
-            atomicProcessModel.getAtomicTxBuilder().setMyTradeFee(atomicTrade.isCurrencyForTakerFeeBtc(),
-                    Coin.valueOf(atomicTrade.getTakerFee()));
-            atomicProcessModel.getAtomicTxBuilder().setPeerTradeFee(atomicTrade.isCurrencyForMakerFeeBtc(),
-                    Coin.valueOf(atomicTrade.getMakerFee()));
-            atomicProcessModel.setTxFeePerVbyte(atomicProcessModel.getAtomicTxBuilder().getTxFeePerVbyte().getValue());
-
-            if (!atomicProcessModel.takerPreparesTakerSide()) {
-                failed("Failed to prepare taker side of atomic tx");
-                return;
-            }
+            checkArgument(!atomicProcessModel.getOffer().isMyOffer(atomicProcessModel.getKeyRing()),
+                    "must not take own offer");
+            checkArgument(atomicProcessModel.takerPreparesTakerSide(),
+                    "Failed to prepare taker side of atomic tx");
 
             var message = new CreateAtomicTxRequest(UUID.randomUUID().toString(),
                     atomicProcessModel.getOffer().getId(),

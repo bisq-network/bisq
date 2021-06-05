@@ -165,7 +165,6 @@ public class AtomicTakeOfferModel implements Model {
         checkNotNull(paymentAccount, "PaymentAccount must not be null");
 
         this.amount.set(Coin.valueOf(Math.min(offer.getAmount().value, getMaxTradeLimit())));
-
         atomicTxBuilder = new AtomicTxBuilder(feeService,
                 btcWalletService,
                 bsqWalletService,
@@ -174,12 +173,11 @@ public class AtomicTakeOfferModel implements Model {
                 false,
                 offer.getPrice(),
                 amount.getValue(),
-                null,
+                Coin.ZERO,
                 btcWalletService.getFreshAddressEntry().getAddressString(),
                 bsqWalletService.getUnusedAddress().toString(),
-                daoFacade.getParamValue(Param.RECIPIENT_BTC_ADDRESS),
-                null,
-                null);
+                daoFacade.getParamValue(Param.RECIPIENT_BTC_ADDRESS));
+        feeService.requestFees(() -> atomicTxBuilder.setTxFeePerVbyte(feeService.getTxFeePerVbyte()));
 
         calculateVolume();
 

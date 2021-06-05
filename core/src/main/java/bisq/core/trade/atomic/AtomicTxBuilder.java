@@ -25,8 +25,6 @@ import bisq.core.monetary.Price;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.trade.protocol.TxData;
 
-import bisq.common.handlers.FaultHandler;
-import bisq.common.handlers.ResultHandler;
 import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Coin;
@@ -37,15 +35,12 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 
-import java.text.MessageFormat;
-
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static java.lang.Math.abs;
 
 
 // Helper for creating atomic transactions.
@@ -83,8 +78,6 @@ public class AtomicTxBuilder {
     private final BtcWalletService btcWalletService;
     private final BsqWalletService bsqWalletService;
     private final TradeWalletService tradeWalletService;
-    //    private Coin myTxFeePerVbyte = Coin.ZERO;
-//    private Coin agreedTxFeePerVbyte = Coin.ZERO;
     @Getter
     private Coin txFeePerVbyte;
     @Getter
@@ -131,8 +124,6 @@ public class AtomicTxBuilder {
      * @param txFeePerVbyte tx fee per vbyte, null to use fee from feeService, otherwise
      *                      check that the given value doesn't differ too much from
      *                      feeService
-     * @param resultHandler result handler
-     * @param faultHandler  fault handler
      */
     public AtomicTxBuilder(FeeService feeService,
                            BtcWalletService btcWalletService,
@@ -145,9 +136,7 @@ public class AtomicTxBuilder {
                            Coin txFeePerVbyte,
                            String myBtcAddress,
                            String myBsqAddress,
-                           String btcTradeFeeAddress,
-                           @Nullable ResultHandler resultHandler,
-                           @Nullable FaultHandler faultHandler) {
+                           String btcTradeFeeAddress) {
         this.feeService = feeService;
         this.btcWalletService = btcWalletService;
         this.bsqWalletService = bsqWalletService;
@@ -157,13 +146,11 @@ public class AtomicTxBuilder {
         this.price = price;
         this.btcAmount = btcAmount;
         this.txFeePerVbyte = txFeePerVbyte;
-        if (txFeePerVbyte == null)
-            this.txFeePerVbyte = Coin.ZERO;
         this.myBtcAddress = myBtcAddress;
         this.myBsqAddress = myBsqAddress;
         this.btcTradeFeeAddress = btcTradeFeeAddress;
 
-        updateFee(resultHandler, faultHandler);
+        updateAmounts();
     }
 
     public void setBtcAmount(Coin btcAmount) {
@@ -287,32 +274,14 @@ public class AtomicTxBuilder {
         return Coin.valueOf(price.getVolumeByAmount(btcAmount).getMonetary().getValue() / 1_000_000);
     }
 
+    public void setTxFeePerVbyte(Coin txFeePerVbyte) {
+        this.txFeePerVbyte = txFeePerVbyte;
+        updateAmounts();
+    }
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private void updateFee(@Nullable ResultHandler resultHandler, @Nullable FaultHandler faultHandler) {
-        log.info("Start requestTxFee: txFeePerVbyte={}", txFeePerVbyte);
-        feeService.requestFees(() -> {
-                    if (txFeePerVbyte.isZero()) {
-                        // Use fee from fee service
-                        txFeePerVbyte = feeService.getTxFeePerVbyte();
-                    } else if (!isAcceptableTxFee(feeService.getTxFeePerVbyte(), txFeePerVbyte)) {
-                        var errorMessage = MessageFormat.format("TxFee disagreement myFee={0} otherFee={1}",
-                                feeService.getTxFeePerVbyte(), txFeePerVbyte);
-                        if (faultHandler != null) {
-                            faultHandler.handleFault(errorMessage, null);
-                        }
-                        return;
-                    }
-                    log.info("Completed requestTxFee: txFeePerVbyte={}", txFeePerVbyte);
-                    updateAmounts();
-                    if (resultHandler != null) {
-                        resultHandler.handleResult();
-                    }
-                },
-                faultHandler);
-    }
 
     private void updateAmounts() {
         if (price == null ||
@@ -372,16 +341,8 @@ public class AtomicTxBuilder {
             myBtc.setValue(sellerBtc);
             myBsq.setValue(sellerBsq);
         }
-        canBuildMySide.set(myBtc.get().isPositive() || myBsq.get().isPositive());
-    }
-
-    private boolean isAcceptableTxFee(Coin myFee, Coin peerFee) {
-        var fee1 = (double) myFee.getValue();
-        var fee2 = (double) peerFee.getValue();
-        // Allow for 10% diff in mining fee, ie, maker will accept taker fee that's 10%
-        // off their own fee from service. Both parties will use the same fee while
-        // creating the atomic tx
-        return abs(1 - fee1 / fee2) < 0.1;
+        canBuildMySide.set(!txFeePerVbyte.isZero() &&
+                (myBtc.get().isPositive() || myBsq.get().isPositive()));
     }
 
     private Coin getMyBtcTradeFee() {
@@ -425,5 +386,4 @@ public class AtomicTxBuilder {
 
         return txFeePerVbyte.multiply(size);
     }
-
 }

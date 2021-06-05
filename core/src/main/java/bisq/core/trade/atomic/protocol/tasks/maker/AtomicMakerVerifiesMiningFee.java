@@ -15,22 +15,26 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.atomic.protocol.tasks.taker;
+package bisq.core.trade.atomic.protocol.tasks.maker;
 
 import bisq.core.trade.atomic.AtomicTrade;
-import bisq.core.trade.protocol.tasks.AtomicTradeTask;
+import bisq.core.trade.atomic.messages.CreateAtomicTxRequest;
+import bisq.core.trade.atomic.protocol.tasks.AtomicSetupTxListener;
 
 import bisq.common.taskrunner.TaskRunner;
+
+import org.bitcoinj.core.Coin;
 
 import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static java.lang.Math.abs;
 
 @Slf4j
-public class AtomicTakerPreparesData extends AtomicTradeTask {
+public class AtomicMakerVerifiesMiningFee extends AtomicSetupTxListener {
 
     @SuppressWarnings({"unused"})
-    public AtomicTakerPreparesData(TaskRunner<AtomicTrade> taskHandler, AtomicTrade atomicTrade) {
+    public AtomicMakerVerifiesMiningFee(TaskRunner<AtomicTrade> taskHandler, AtomicTrade atomicTrade) {
         super(taskHandler, atomicTrade);
     }
 
@@ -39,19 +43,16 @@ public class AtomicTakerPreparesData extends AtomicTradeTask {
         try {
             runInterceptHook();
 
-            checkArgument(!atomicProcessModel.getOffer().isMyOffer(atomicProcessModel.getKeyRing()), "must not take own offer");
+            var message = (CreateAtomicTxRequest) atomicProcessModel.getTradeMessage();
 
-            atomicProcessModel.initFromTrade(atomicTrade);
-            atomicProcessModel.setTakerBsqAddress(
-                    atomicProcessModel.getBsqWalletService().getUnusedAddress().toString());
-            atomicProcessModel.setTakerBtcAddress(
-                    atomicProcessModel.getBtcWalletService().getFreshAddressEntry().getAddressString());
-
-            // Set mining fee and init AtomicTxBuilder
+            // Verify mining fee
             var feeService = atomicProcessModel.getProvider().getFeeService();
             feeService.requestFees(() -> {
-                        atomicProcessModel.setTxFeePerVbyte(feeService.getTxFeePerVbyte().getValue());
-                        atomicProcessModel.initTxBuilder(false);
+                var myFee = feeService.getTxFeePerVbyte();
+                var peerFee = Coin.valueOf(message.getTxFeePerVbyte());
+                        checkArgument(isAcceptableTxFee(myFee, peerFee),
+                                "Miner fee disagreement, myFee={} peerFee={}", myFee, peerFee);
+                        atomicProcessModel.setTxFeePerVbyte(peerFee.getValue());
                         complete();
                     },
                     (String errorMessage, Throwable throwable) -> {
@@ -64,8 +65,20 @@ public class AtomicTakerPreparesData extends AtomicTradeTask {
                         }
                     }
             );
+
+
         } catch (Throwable t) {
             failed(t);
         }
     }
+
+    private boolean isAcceptableTxFee(Coin myFee, Coin peerFee) {
+        var fee1 = (double) myFee.getValue();
+        var fee2 = (double) peerFee.getValue();
+        // Allow for 10% diff in mining fee, ie, maker will accept taker fee that's 10%
+        // off their own fee from service. Both parties will use the same fee while
+        // creating the atomic tx
+        return abs(1 - fee1 / fee2) < 0.1;
+    }
+
 }

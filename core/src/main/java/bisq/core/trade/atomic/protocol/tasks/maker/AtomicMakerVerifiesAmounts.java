@@ -48,7 +48,6 @@ public class AtomicMakerVerifiesAmounts extends AtomicSetupTxListener {
             // AtomicTrade is initialized with values from CreateAtomicTxRequest on creation
             // Verify that AtomicTrade values don't disagree with the offer
 
-
             // Verify offer and message
             Validator.checkTradeId(atomicProcessModel.getOffer().getId(), atomicProcessModel.getTradeMessage());
             checkArgument(atomicProcessModel.getOffer().isMyOffer(atomicProcessModel.getKeyRing()),
@@ -85,19 +84,9 @@ public class AtomicMakerVerifiesAmounts extends AtomicSetupTxListener {
                     "Taker fee mismatch");
 
             atomicProcessModel.updateFromMessage(message);
+            atomicProcessModel.initTxBuilder(true);
 
-            atomicProcessModel.initTxBuilder(
-                    true,
-                    this::complete,
-                    (String errorMessage, Throwable throwable) -> {
-                        if (throwable != null) {
-                            failed(throwable);
-                        } else if (!errorMessage.isEmpty()) {
-                            failed(errorMessage);
-                        } else {
-                            failed();
-                        }
-                    });
+            complete();
         } catch (Throwable t) {
             failed(t);
         }

@@ -99,12 +99,13 @@ public class AtomicTakerVerifyAtomicTx extends AtomicTradeTask {
             for (; index < atomicProcessModel.numTakerInputs(); ++index) {
                 signedTx.addInput(myTx.getInput(index));
             }
-            for (;index < atomicProcessModel.numTakerInputs() + atomicProcessModel.numMakerInputs(); ++index) {
+            for (; index < atomicProcessModel.numTakerInputs() + atomicProcessModel.numMakerInputs(); ++index) {
                 signedTx.addInput(makerTx.getInput(index));
             }
 
             checkArgument(txFee >= signedTx.getVsize() * atomicProcessModel.getTxFeePerVbyte(),
-                    "Tx fee too low");
+                    "Tx fee too low txFee={} vsize*fee={}", txFee,
+                    signedTx.getVsize() * atomicProcessModel.getTxFeePerVbyte());
 
             atomicProcessModel.setVerifiedAtomicTx(signedTx);
             atomicProcessModel.setAtomicTx(signedTx.bitcoinSerialize());
