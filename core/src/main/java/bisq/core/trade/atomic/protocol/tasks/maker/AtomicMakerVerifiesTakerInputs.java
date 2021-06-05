@@ -21,11 +21,12 @@ import bisq.core.trade.atomic.AtomicTrade;
 import bisq.core.trade.atomic.messages.CreateAtomicTxRequest;
 import bisq.core.trade.protocol.tasks.AtomicTradeTask;
 
+import bisq.asset.BitcoinAddressValidator;
+
 import bisq.common.config.Config;
 import bisq.common.taskrunner.TaskRunner;
 
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.LegacyAddress;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -59,9 +60,9 @@ public class AtomicMakerVerifiesTakerInputs extends AtomicTradeTask {
             atomicProcessModel.getAtomicTxBuilder().setPeerTradeFee(atomicTrade.isCurrencyForTakerFeeBtc(),
                     Coin.valueOf(atomicTrade.getTakerFee()));
 
-            // Verify taker bsq address
-            LegacyAddress.fromBase58(Config.baseCurrencyNetworkParameters(), message.getTakerBsqOutputAddress());
-
+            checkArgument(new BitcoinAddressValidator(Config.baseCurrencyNetworkParameters()).validate(
+                    message.getTakerBsqOutputAddress()).isValid(),
+                    "Failed to validate taker BSQ outputs address");
             checkArgument(atomicProcessModel.makerPreparesMakerSide(), "Failed to prepare maker inputs");
 
             // Inputs

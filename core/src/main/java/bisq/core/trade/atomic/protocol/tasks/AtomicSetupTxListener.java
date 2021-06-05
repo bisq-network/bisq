@@ -102,7 +102,6 @@ public abstract class AtomicSetupTxListener extends AtomicTradeTask {
 
     protected void setState() {
         atomicTrade.setState(AtomicTrade.State.TX_CONFIRMED);
-//        atomicProcessModel.getTradeManager(). addTradeToClosedTrades(atomicTrade);
     }
 
 }

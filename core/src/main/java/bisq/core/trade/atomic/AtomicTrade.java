@@ -205,6 +205,9 @@ public abstract class AtomicTrade extends TradeModel {
 
     @Override
     public String getStateInfo() {
+        if (stateProperty.get() == null) {
+            return State.FAILED.toString();
+        }
         return stateProperty().get().toString();
     }
 
