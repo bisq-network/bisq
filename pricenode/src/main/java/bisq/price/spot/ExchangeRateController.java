@@ -18,6 +18,9 @@
 package bisq.price.spot;
 
 import bisq.price.PriceController;
+import bisq.price.mining.FeeRateService;
+
+import bisq.common.config.Config;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -28,13 +31,28 @@ import java.util.Map;
 class ExchangeRateController extends PriceController {
 
     private final ExchangeRateService exchangeRateService;
+    private final FeeRateService feeRateService;
 
-    public ExchangeRateController(ExchangeRateService exchangeRateService) {
+    public ExchangeRateController(ExchangeRateService exchangeRateService, FeeRateService feeRateService) {
         this.exchangeRateService = exchangeRateService;
+        this.feeRateService = feeRateService;
     }
 
     @GetMapping(path = "/getAllMarketPrices")
     public Map<String, Object> getAllMarketPrices() {
-        return exchangeRateService.getAllMarketPrices();
+        Map<String, Object> retVal = exchangeRateService.getAllMarketPrices();
+
+        // add the fee info to results
+        feeRateService.getFees().forEach((key, value) -> {
+            retVal.put(translateFieldName(key), value);
+        });
+
+        return retVal;
+    }
+
+    static String translateFieldName(String name) {
+        if (name.equals(Config.LEGACY_FEE_DATAMAP))
+            name = Config.BTC_FEE_INFO;                 // name changed for clarity
+        return name;
     }
 }

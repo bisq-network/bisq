@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory;
  * High-level mining {@link FeeRate} operations.
  */
 @Service
-class FeeRateService {
+public class FeeRateService {
 
     private final List<FeeRateProvider> providers;
     protected final Logger log = LoggerFactory.getLogger(this.getClass());
@@ -101,7 +101,7 @@ class FeeRateService {
         // Build response
         return new HashMap<>() {{
             putAll(metadata);
-            put("dataMap", allFeeRates);
+            put(Config.LEGACY_FEE_DATAMAP, allFeeRates);
         }};
     }
 }

@@ -103,7 +103,7 @@ public class FeeRateServiceTest {
         // providers), we always expect a non-zero timestamp
         assertNotEquals(0L, retrievedData.get(Config.BTC_FEES_TS));
 
-        Map<String, String> retrievedDataMap = (Map<String, String>) retrievedData.get("dataMap");
+        Map<String, String> retrievedDataMap = (Map<String, String>) retrievedData.get(Config.LEGACY_FEE_DATAMAP);
         assertEquals(2, retrievedDataMap.size());
         assertEquals(expectedFeeRate, retrievedDataMap.get(Config.BTC_TX_FEE));
     }
