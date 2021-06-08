@@ -24,6 +24,9 @@ import bisq.core.payment.payload.PaymentMethod;
 
 import lombok.EqualsAndHashCode;
 
+// Removed due to QuickPay becoming Zelle
+// Cannot be deleted as it would break old trade history entries
+@Deprecated
 @EqualsAndHashCode(callSuper = true)
 public final class ChaseQuickPayAccount extends PaymentAccount {
     public ChaseQuickPayAccount() {

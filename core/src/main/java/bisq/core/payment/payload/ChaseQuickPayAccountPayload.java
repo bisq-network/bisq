@@ -32,6 +32,9 @@ import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+// Removed due to QuickPay becoming Zelle
+// Cannot be deleted as it would break old trade history entries
+@Deprecated
 @EqualsAndHashCode(callSuper = true)
 @ToString
 @Setter

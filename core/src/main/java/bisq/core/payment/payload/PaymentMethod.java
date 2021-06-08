@@ -81,7 +81,10 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
     public static final String ALI_PAY_ID = "ALI_PAY";
     public static final String WECHAT_PAY_ID = "WECHAT_PAY";
     public static final String CLEAR_X_CHANGE_ID = "CLEAR_X_CHANGE";
-    public static final String CHASE_QUICK_PAY_ID = "CHASE_QUICK_PAY";
+
+    @Deprecated
+    public static final String CHASE_QUICK_PAY_ID = "CHASE_QUICK_PAY"; // Removed due to QuickPay becoming Zelle
+
     public static final String INTERAC_E_TRANSFER_ID = "INTERAC_E_TRANSFER";
     public static final String US_POSTAL_MONEY_ORDER_ID = "US_POSTAL_MONEY_ORDER";
     public static final String CASH_DEPOSIT_ID = "CASH_DEPOSIT";
@@ -165,7 +168,6 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
             CLEAR_X_CHANGE = new PaymentMethod(CLEAR_X_CHANGE_ID, 4 * DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
 
             POPMONEY = new PaymentMethod(POPMONEY_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
-            CHASE_QUICK_PAY = new PaymentMethod(CHASE_QUICK_PAY_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
             US_POSTAL_MONEY_ORDER = new PaymentMethod(US_POSTAL_MONEY_ORDER_ID, 8 * DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
 
             // Canada
