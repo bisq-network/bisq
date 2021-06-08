@@ -52,6 +52,7 @@ import bisq.core.dao.governance.proposal.reimbursement.ReimbursementConsensus;
 import bisq.core.dao.governance.proposal.reimbursement.ReimbursementProposalFactory;
 import bisq.core.dao.governance.proposal.removeAsset.RemoveAssetProposalFactory;
 import bisq.core.dao.governance.proposal.role.RoleProposalFactory;
+import bisq.core.dao.monitoring.DaoStateMonitoringService;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.BaseTx;
@@ -124,6 +125,7 @@ public class DaoFacade implements DaoSetupService {
     private final BallotListPresentation ballotListPresentation;
     private final MyProposalListService myProposalListService;
     private final DaoStateService daoStateService;
+    private final DaoStateMonitoringService daoStateMonitoringService;
     private final PeriodService periodService;
     private final MyBlindVoteListService myBlindVoteListService;
     private final MyVoteListService myVoteListService;
@@ -150,6 +152,7 @@ public class DaoFacade implements DaoSetupService {
                      BallotListService ballotListService,
                      BallotListPresentation ballotListPresentation,
                      DaoStateService daoStateService,
+                     DaoStateMonitoringService daoStateMonitoringService,
                      PeriodService periodService,
                      MyBlindVoteListService myBlindVoteListService,
                      MyVoteListService myVoteListService,
@@ -172,6 +175,7 @@ public class DaoFacade implements DaoSetupService {
         this.ballotListPresentation = ballotListPresentation;
         this.myProposalListService = myProposalListService;
         this.daoStateService = daoStateService;
+        this.daoStateMonitoringService = daoStateMonitoringService;
         this.periodService = periodService;
         this.myBlindVoteListService = myBlindVoteListService;
         this.myVoteListService = myVoteListService;
@@ -522,6 +526,9 @@ public class DaoFacade implements DaoSetupService {
         return daoStateService.getBlockAtHeight(chainHeight);
     }
 
+    public boolean isInConflictWithSeedNode() {
+        return daoStateMonitoringService.isInConflictWithSeedNode();
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Use case: Bonding

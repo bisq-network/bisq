@@ -1,5 +1,8 @@
 package bisq.desktop.main.presentation;
 
+import bisq.desktop.Navigation;
+import bisq.desktop.util.GUIUtil;
+
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.dao.DaoFacade;
@@ -32,6 +35,7 @@ public class DaoPresentation implements DaoStateListener {
     public static final String DAO_NEWS = "daoNewsVersion1.0.0";
 
     private final Preferences preferences;
+    private final Navigation navigation;
     private final BtcWalletService btcWalletService;
     private final DaoFacade daoFacade;
     private final BsqWalletService bsqWalletService;
@@ -44,14 +48,17 @@ public class DaoPresentation implements DaoStateListener {
     @Getter
     private final StringProperty bsqInfo = new SimpleStringProperty("");
     private final SimpleBooleanProperty showNotification = new SimpleBooleanProperty(false);
+    private boolean daoConflictWarningShown = false;    // allow only one conflict warning per session
 
     @Inject
     public DaoPresentation(Preferences preferences,
+                           Navigation navigation,
                            BtcWalletService btcWalletService,
                            BsqWalletService bsqWalletService,
                            DaoStateService daoStateService,
                            DaoFacade daoFacade) {
         this.preferences = preferences;
+        this.navigation = navigation;
         this.btcWalletService = btcWalletService;
         this.bsqWalletService = bsqWalletService;
         this.daoFacade = daoFacade;
@@ -91,6 +98,10 @@ public class DaoPresentation implements DaoStateListener {
 
             if (synced) {
                 bsqInfo.set("");
+                if (daoFacade.isInConflictWithSeedNode() && !daoConflictWarningShown) {
+                    daoConflictWarningShown = true;     // only warn max 1 time per session so as not to annoy
+                    GUIUtil.showDaoNeedsResyncPopup(navigation);
+                }
             } else {
                 bsqInfo.set(Res.get("mainView.footer.bsqInfo.synchronizing"));
             }
