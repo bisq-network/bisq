@@ -57,6 +57,7 @@ import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.CoinFormatter;
 
 import bisq.network.p2p.NodeAddress;
+import bisq.network.p2p.P2PService;
 
 import bisq.common.UserThread;
 import bisq.common.crypto.KeyRing;
@@ -108,6 +109,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -149,6 +151,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
 
     protected final DisputeManager<? extends DisputeList<Dispute>> disputeManager;
     protected final KeyRing keyRing;
+    private final P2PService p2PService;
     private final TradeManager tradeManager;
     protected final CoinFormatter formatter;
     protected final Preferences preferences;
@@ -192,6 +195,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
 
     public DisputeView(DisputeManager<? extends DisputeList<Dispute>> disputeManager,
                        KeyRing keyRing,
+                       P2PService p2PService,
                        TradeManager tradeManager,
                        CoinFormatter formatter,
                        Preferences preferences,
@@ -206,6 +210,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
                        boolean useDevPrivilegeKeys) {
         this.disputeManager = disputeManager;
         this.keyRing = keyRing;
+        this.p2PService = p2PService;
         this.tradeManager = tradeManager;
         this.formatter = formatter;
         this.preferences = preferences;
@@ -495,8 +500,9 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
     // a derived version in the ClientView for users pops up an "Are you sure" box first.
     // this version includes the sending of an automatic message to the user, see addMediationReOpenedMessage
     protected void reOpenDisputeFromButton() {
-        reOpenDispute();
-        disputeManager.addMediationReOpenedMessage(selectedDispute, false);
+        if (reOpenDispute()) {
+            disputeManager.addMediationReOpenedMessage(selectedDispute, false);
+        }
     }
 
     // only applicable to traders
@@ -517,13 +523,26 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
         // overridden by clients that use it (dispute agents)
     }
 
-    protected void reOpenDispute() {
-        if (selectedDispute != null && selectedDispute.isClosed()) {
+    protected boolean reOpenDispute() {
+        if (selectedDispute != null &&
+                selectedDispute.isClosed() &&
+                isDisputeWithSameCurrentNodeAddress(selectedDispute,
+                        !disputeManager.isTrader(selectedDispute))) {
             selectedDispute.reOpen();
             handleOnProcessDispute(selectedDispute);
             disputeManager.requestPersistence();
             onSelectDispute(selectedDispute);
+            return true;
+        } else {
+            new Popup().warning(Res.get("support.reOpenByTrader.failed")).show();
+            return false;
         }
+    }
+
+    private boolean isDisputeWithSameCurrentNodeAddress(Dispute dispute, boolean isMediator) {
+        NodeAddress disputeNodeAddress = isMediator ? dispute.getContract().getMediatorNodeAddress() :
+                dispute.getContract().getMyNodeAddress(keyRing.getPubKeyRing());
+        return Objects.equals(p2PService.getNetworkNode().getNodeAddress(), disputeNodeAddress);
     }
 
 

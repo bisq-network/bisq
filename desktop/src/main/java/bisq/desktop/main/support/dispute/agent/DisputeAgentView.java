@@ -40,6 +40,8 @@ import bisq.core.user.DontShowAgainLookup;
 import bisq.core.user.Preferences;
 import bisq.core.util.coin.CoinFormatter;
 
+import bisq.network.p2p.P2PService;
+
 import bisq.common.crypto.KeyRing;
 import bisq.common.util.Utilities;
 
@@ -72,7 +74,7 @@ public abstract class DisputeAgentView extends DisputeView implements MultipleHo
 
     public DisputeAgentView(DisputeManager<? extends DisputeList<Dispute>> disputeManager,
                             KeyRing keyRing,
-                            TradeManager tradeManager,
+                            P2PService p2PService, TradeManager tradeManager,
                             CoinFormatter formatter,
                             Preferences preferences,
                             DisputeSummaryWindow disputeSummaryWindow,
@@ -86,6 +88,7 @@ public abstract class DisputeAgentView extends DisputeView implements MultipleHo
                             boolean useDevPrivilegeKeys) {
         super(disputeManager,
                 keyRing,
+                p2PService,
                 tradeManager,
                 formatter,
                 preferences,
