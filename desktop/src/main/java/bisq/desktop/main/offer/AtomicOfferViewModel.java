@@ -17,11 +17,7 @@
 
 package bisq.desktop.main.offer;
 
-import bisq.desktop.Navigation;
 import bisq.desktop.common.model.ActivatableWithDataModel;
-import bisq.desktop.main.MainView;
-import bisq.desktop.main.funds.FundsView;
-import bisq.desktop.main.funds.deposit.DepositView;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.GUIUtil;
@@ -29,7 +25,6 @@ import bisq.desktop.util.validation.AltcoinValidator;
 import bisq.desktop.util.validation.BsqValidator;
 import bisq.desktop.util.validation.BtcValidator;
 import bisq.desktop.util.validation.FiatPriceValidator;
-import bisq.desktop.util.validation.FiatVolumeValidator;
 import bisq.desktop.util.validation.MonetaryValidator;
 import bisq.desktop.util.validation.SecurityDepositValidator;
 
@@ -45,14 +40,9 @@ import bisq.core.offer.OfferPayload;
 import bisq.core.offer.OfferRestrictions;
 import bisq.core.offer.OfferUtil;
 import bisq.core.payment.PaymentAccount;
-import bisq.core.provider.fee.FeeService;
-import bisq.core.provider.price.PriceFeedService;
-import bisq.core.user.Preferences;
 import bisq.core.util.FormattingUtils;
-import bisq.core.util.VolumeUtil;
 import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.coin.CoinFormatter;
-import bisq.core.util.coin.CoinUtil;
 import bisq.core.util.validation.InputValidator;
 
 import bisq.common.Timer;
@@ -89,36 +79,19 @@ public abstract class AtomicOfferViewModel<M extends AtomicOfferDataModel> exten
     private final BtcValidator btcValidator;
     private final BsqValidator bsqValidator;
     protected final SecurityDepositValidator securityDepositValidator;
-//    private final PriceFeedService priceFeedService;
     private final AccountAgeWitnessService accountAgeWitnessService;
-//    private final Navigation navigation;
-//    private final Preferences preferences;
     protected final CoinFormatter btcFormatter;
     private final BsqFormatter bsqFormatter;
-    private final FiatVolumeValidator fiatVolumeValidator;
     private final FiatPriceValidator fiatPriceValidator;
     private final AltcoinValidator altcoinValidator;
     protected final OfferUtil offerUtil;
 
     private String amountDescription;
-//    private String addressAsString;
     private final String paymentLabel;
-    private boolean createOfferRequested;
 
     public final StringProperty amount = new SimpleStringProperty();
     public final StringProperty minAmount = new SimpleStringProperty();
-
-    // Price in the viewModel is always dependent on fiat/altcoin: Fiat Fiat/BTC, for altcoins we use inverted price.
-    // The domain (dataModel) uses always the same price model (otherCurrencyBTC)
-    // If we would change the price representation in the domain we would not be backward compatible
     public final StringProperty price = new SimpleStringProperty();
-    final StringProperty tradeFee = new SimpleStringProperty();
-    final StringProperty tradeFeeInBtcWithFiat = new SimpleStringProperty();
-    final StringProperty tradeFeeInBsqWithFiat = new SimpleStringProperty();
-    final StringProperty tradeFeeCurrencyCode = new SimpleStringProperty();
-    final StringProperty tradeFeeDescription = new SimpleStringProperty();
-    final BooleanProperty isTradeFeeVisible = new SimpleBooleanProperty(false);
-
     public final StringProperty volume = new SimpleStringProperty();
     final StringProperty volumeDescriptionLabel = new SimpleStringProperty();
     final StringProperty volumePromptLabel = new SimpleStringProperty();
@@ -129,7 +102,6 @@ public abstract class AtomicOfferViewModel<M extends AtomicOfferDataModel> exten
     final StringProperty waitingForFundsText = new SimpleStringProperty("");
 
     final BooleanProperty isPlaceOfferButtonDisabled = new SimpleBooleanProperty(true);
-//    final BooleanProperty cancelButtonDisabled = new SimpleBooleanProperty();
     final BooleanProperty placeOfferCompleted = new SimpleBooleanProperty();
     final BooleanProperty showPayFundsScreenDisplayed = new SimpleBooleanProperty();
     private final BooleanProperty showTransactionPublishedScreen = new SimpleBooleanProperty();
@@ -150,12 +122,10 @@ public abstract class AtomicOfferViewModel<M extends AtomicOfferDataModel> exten
     private ChangeListener<Price> priceListener;
     private ChangeListener<Volume> volumeListener;
 
-//    private ChangeListener<Boolean> isWalletFundedListener;
     private ChangeListener<String> errorMessageListener;
     private Offer offer;
     private Timer timeoutTimer;
     private boolean ignorePriceStringListener, ignoreVolumeStringListener, ignoreAmountStringListener;
-//    private ChangeListener<Number> currenciesUpdateListener;
     protected boolean syncMinAmountWithAmount = true;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -164,40 +134,29 @@ public abstract class AtomicOfferViewModel<M extends AtomicOfferDataModel> exten
 
     @Inject
     public AtomicOfferViewModel(M dataModel,
-                                FiatVolumeValidator fiatVolumeValidator,
                                 FiatPriceValidator fiatPriceValidator,
                                 AltcoinValidator altcoinValidator,
                                 BtcValidator btcValidator,
                                 BsqValidator bsqValidator,
                                 SecurityDepositValidator securityDepositValidator,
-//                                PriceFeedService priceFeedService,
                                 AccountAgeWitnessService accountAgeWitnessService,
-                                Navigation navigation,
-                                Preferences preferences,
                                 @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
                                 BsqFormatter bsqFormatter,
                                 OfferUtil offerUtil) {
         super(dataModel);
 
-        this.fiatVolumeValidator = fiatVolumeValidator;
         this.fiatPriceValidator = fiatPriceValidator;
         this.altcoinValidator = altcoinValidator;
         this.btcValidator = btcValidator;
         this.bsqValidator = bsqValidator;
         this.securityDepositValidator = securityDepositValidator;
-//        this.priceFeedService = priceFeedService;
         this.accountAgeWitnessService = accountAgeWitnessService;
-//        this.navigation = navigation;
-//        this.preferences = preferences;
         this.btcFormatter = btcFormatter;
         this.bsqFormatter = bsqFormatter;
         this.offerUtil = offerUtil;
 
         paymentLabel = Res.get("createOffer.fundsBox.paymentLabel", dataModel.shortOfferId);
 
-//        if (dataModel.getAddressEntry() != null) {
-//            addressAsString = dataModel.getAddressEntry().getAddressString();
-//        }
         createListeners();
     }
 
@@ -340,32 +299,9 @@ public abstract class AtomicOfferViewModel<M extends AtomicOfferDataModel> exten
         };
 
 //        isWalletFundedListener = (ov, oldValue, newValue) -> updateButtonDisableState();
-
-//        currenciesUpdateListener = (observable, oldValue, newValue) -> {
-//            updateButtonDisableState();
-//        };
     }
 
     private void applyMakerFee() {
-        tradeFeeCurrencyCode.set(dataModel.isCurrencyForMakerFeeBtc() ? Res.getBaseCurrencyCode() : "BSQ");
-        tradeFeeDescription.set(DevEnv.isDaoActivated() ? Res.get("createOffer.tradeFee.descriptionBSQEnabled") :
-                Res.get("createOffer.tradeFee.descriptionBTCOnly"));
-
-        Coin makerFeeAsCoin = dataModel.getMakerFee();
-        if (makerFeeAsCoin == null) {
-            return;
-        }
-
-        isTradeFeeVisible.setValue(true);
-        tradeFee.set(getFormatterForMakerFee().formatCoin(makerFeeAsCoin));
-        tradeFeeInBtcWithFiat.set(FeeUtil.getTradeFeeWithFiatEquivalent(offerUtil,
-                dataModel.getMakerFeeInBtc(),
-                true,
-                btcFormatter));
-        tradeFeeInBsqWithFiat.set(FeeUtil.getTradeFeeWithFiatEquivalent(offerUtil,
-                dataModel.getMakerFeeInBsq(),
-                false,
-                bsqFormatter));
     }
 
     private void addListeners() {
@@ -381,8 +317,6 @@ public abstract class AtomicOfferViewModel<M extends AtomicOfferDataModel> exten
         dataModel.getMinAmount().addListener(minAmountAsCoinListener);
         dataModel.getPrice().addListener(priceListener);
         dataModel.getVolume().addListener(volumeListener);
-
-//        priceFeedService.updateCounterProperty().addListener(currenciesUpdateListener);
     }
 
     private void removeListeners() {
@@ -399,8 +333,6 @@ public abstract class AtomicOfferViewModel<M extends AtomicOfferDataModel> exten
 
         if (offer != null && errorMessageListener != null)
             offer.getErrorMessageProperty().removeListener(errorMessageListener);
-
-//        priceFeedService.updateCounterProperty().removeListener(currenciesUpdateListener);
     }
 
 
@@ -432,12 +364,10 @@ public abstract class AtomicOfferViewModel<M extends AtomicOfferDataModel> exten
 
     void onPlaceOffer(Offer offer, Runnable resultHandler) {
         errorMessage.set(null);
-        createOfferRequested = true;
 
         if (timeoutTimer == null) {
             timeoutTimer = UserThread.runAfter(() -> {
                 stopTimeoutTimer();
-                createOfferRequested = false;
                 errorMessage.set(Res.get("createOffer.timeoutAtPublishing"));
 
                 updateButtonDisableState();
@@ -449,7 +379,6 @@ public abstract class AtomicOfferViewModel<M extends AtomicOfferDataModel> exten
         errorMessageListener = (observable, oldValue, newValue) -> {
             if (newValue != null) {
                 stopTimeoutTimer();
-                createOfferRequested = false;
                 if (offer.getState() == Offer.State.OFFER_FEE_PAID)
                     errorMessage.set(newValue + Res.get("createOffer.errorInfo"));
                 else
@@ -491,30 +420,6 @@ public abstract class AtomicOfferViewModel<M extends AtomicOfferDataModel> exten
         updateButtonDisableState();
     }
 
-    void onShowPayFundsScreen(Runnable actionHandler) {
-        dataModel.updateEstimatedFeeAndTxVsize();
-        dataModel.requestTxFee(actionHandler);
-        showPayFundsScreenDisplayed.set(true);
-        updateSpinnerInfo();
-    }
-
-//    boolean fundFromSavingsWallet() {
-//        dataModel.fundFromSavingsWallet();
-//        if (dataModel.getIsBtcWalletFunded().get()) {
-//            updateButtonDisableState();
-//            return true;
-//        } else {
-//            new Popup().warning(Res.get("shared.notEnoughFunds",
-//                    btcFormatter.formatCoinWithCode(dataModel.totalToPayAsCoinProperty().get()),
-//                    btcFormatter.formatCoinWithCode(dataModel.getTotalAvailableBalance())))
-//                    .actionButtonTextWithGoTo("navigation.funds.depositFunds")
-//                    .onAction(() -> navigation.navigateTo(MainView.class, FundsView.class, DepositView.class))
-//                    .show();
-//            return false;
-//        }
-//
-//    }
-
     public void setIsCurrencyForMakerFeeBtc(boolean isCurrencyForMakerFeeBtc) {
         dataModel.setPreferredCurrencyForMakerFeeBtc(isCurrencyForMakerFeeBtc);
         applyMakerFee();
@@ -543,7 +448,8 @@ public abstract class AtomicOfferViewModel<M extends AtomicOfferDataModel> exten
 
                 if (minAmount.get() != null)
                     minAmountValidationResult.set(isBtcInputValid(minAmount.get()));
-            } else if (amount.get() != null && btcValidator.getMaxTradeLimit() != null && btcValidator.getMaxTradeLimit().value == OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT.value) {
+            } else if (amount.get() != null && btcValidator.getMaxTradeLimit() != null &&
+                    btcValidator.getMaxTradeLimit().value == OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT.value) {
                 amount.set(btcFormatter.formatCoin(btcValidator.getMaxTradeLimit()));
                 new Popup().information(Res.get("popup.warning.tradeLimitDueAccountAgeRestriction.buyer",
                         btcFormatter.formatCoinWithCode(OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT),
@@ -565,7 +471,8 @@ public abstract class AtomicOfferViewModel<M extends AtomicOfferDataModel> exten
             minAmountValidationResult.set(result);
             if (result.isValid) {
                 Coin minAmountAsCoin = dataModel.getMinAmount().get();
-                syncMinAmountWithAmount = minAmountAsCoin != null && minAmountAsCoin.equals(dataModel.getAmount().get());
+                syncMinAmountWithAmount = minAmountAsCoin != null &&
+                        minAmountAsCoin.equals(dataModel.getAmount().get());
                 setMinAmountToModel();
 
                 dataModel.calculateMinVolume();
@@ -670,55 +577,6 @@ public abstract class AtomicOfferViewModel<M extends AtomicOfferDataModel> exten
         return btcFormatter.formatCoinWithCode(dataModel.getAmount().get());
     }
 
-    public String getTradeFee() {
-        if (dataModel.isCurrencyForMakerFeeBtc()) {
-            return FeeUtil.getTradeFeeWithFiatEquivalentAndPercentage(offerUtil,
-                    dataModel.getMakerFeeInBtc(),
-                    dataModel.getAmount().get(),
-                    true,
-                    btcFormatter,
-                    FeeService.getMinMakerFee(dataModel.isCurrencyForMakerFeeBtc()));
-        } else {
-            // For BSQ we use the fiat equivalent only. Calculating the % value would require to
-            // calculate the BTC value of the BSQ fee and use that...
-            return FeeUtil.getTradeFeeWithFiatEquivalent(offerUtil,
-                    dataModel.getMakerFeeInBsq(),
-                    false,
-                    bsqFormatter);
-        }
-    }
-
-    public String getMakerFeePercentage() {
-        final Coin makerFeeAsCoin = dataModel.getMakerFee();
-        if (dataModel.isCurrencyForMakerFeeBtc())
-            return GUIUtil.getPercentage(makerFeeAsCoin, dataModel.getAmount().get());
-        else
-            return Res.get("dao.paidWithBsq");
-    }
-
-    public String getTotalToPayInfo() {
-        final String totalToPay = this.totalToPay.get();
-        if (dataModel.isCurrencyForMakerFeeBtc())
-            return totalToPay;
-        else
-            return totalToPay + " + " + bsqFormatter.formatCoinWithCode(dataModel.getMakerFee());
-    }
-
-    public String getTxFee() {
-        return FeeUtil.getTradeFeeWithFiatEquivalentAndPercentage(offerUtil,
-                dataModel.getTxFee(),
-                dataModel.getAmount().get(),
-                true,
-                btcFormatter,
-                Coin.ZERO
-        );
-    }
-
-    public String getTxFeePercentage() {
-        Coin txFeeAsCoin = dataModel.getTxFee();
-        return GUIUtil.getPercentage(txFeeAsCoin, dataModel.getAmount().get());
-    }
-
     public PaymentAccount getPaymentAccount() {
         return dataModel.getPaymentAccount();
     }
@@ -726,10 +584,6 @@ public abstract class AtomicOfferViewModel<M extends AtomicOfferDataModel> exten
     public String getAmountDescription() {
         return amountDescription;
     }
-
-//    public String getAddressAsString() {
-//        return addressAsString;
-//    }
 
     public String getPaymentLabel() {
         return paymentLabel;
@@ -811,20 +665,11 @@ public abstract class AtomicOfferViewModel<M extends AtomicOfferDataModel> exten
     }
 
     private InputValidator.ValidationResult isVolumeInputValid(String input) {
-        return getVolumeValidator().validate(input);
+        return bsqValidator.validate(input);
     }
 
     private MonetaryValidator getPriceValidator() {
         return CurrencyUtil.isCryptoCurrency(getTradeCurrency().getCode()) ? altcoinValidator : fiatPriceValidator;
-    }
-
-    private MonetaryValidator getVolumeValidator() {
-        final String code = getTradeCurrency().getCode();
-        if (CurrencyUtil.isCryptoCurrency(code)) {
-            return code.equals("BSQ") ? bsqValidator : altcoinValidator;
-        } else {
-            return fiatVolumeValidator;
-        }
     }
 
     private void updateSpinnerInfo() {
@@ -832,8 +677,6 @@ public abstract class AtomicOfferViewModel<M extends AtomicOfferDataModel> exten
                 errorMessage.get() != null ||
                 showTransactionPublishedScreen.get()) {
             waitingForFundsText.set("");
-//        } else if (dataModel.getIsBtcWalletFunded().get()) {
-//            waitingForFundsText.set("");
         } else {
             waitingForFundsText.set(Res.get("shared.waitingForFunds"));
         }
@@ -859,9 +702,5 @@ public abstract class AtomicOfferViewModel<M extends AtomicOfferDataModel> exten
             timeoutTimer.stop();
             timeoutTimer = null;
         }
-    }
-
-    private CoinFormatter getFormatterForMakerFee() {
-        return dataModel.isCurrencyForMakerFeeBtc() ? btcFormatter : bsqFormatter;
     }
 }

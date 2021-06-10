@@ -155,10 +155,6 @@ class AtomicTakeOfferDataModel extends ActivatableDataModel {
         atomicTakeOfferModel.applyAmount(amount);
     }
 
-    public Coin getTakerFee() {
-        return atomicTakeOfferModel.getTakerFee();
-    }
-
     boolean isMinAmountLessOrEqualAmount() {
         return atomicTakeOfferModel.isMinAmountLessOrEqualAmount();
     }
@@ -181,26 +177,6 @@ class AtomicTakeOfferDataModel extends ActivatableDataModel {
 
     public Coin getUsableBsqBalance() {
         return atomicTakeOfferModel.getUsableBsqBalance();
-    }
-
-    public boolean isCurrencyForTakerFeeBtc() {
-        return atomicTakeOfferModel.isCurrencyForTakerFeeBtc();
-    }
-
-    public void setPreferredCurrencyForTakerFeeBtc(boolean isCurrencyForTakerFeeBtc) {
-        atomicTakeOfferModel.setPreferredCurrencyForTakerFeeBtc(isCurrencyForTakerFeeBtc);
-    }
-
-    public Coin getTakerFeeInBtc() {
-        return atomicTakeOfferModel.getTakerFeeInBtc();
-    }
-
-    public Coin getTakerFeeInBsq() {
-        return atomicTakeOfferModel.getTakerFeeInBsq();
-    }
-
-    boolean isTakerFeeValid() {
-        return atomicTakeOfferModel.isTakerFeeValid();
     }
 
     public boolean hasEnoughBtc() {

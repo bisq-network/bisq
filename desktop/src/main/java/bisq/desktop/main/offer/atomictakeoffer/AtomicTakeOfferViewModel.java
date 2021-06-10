@@ -19,7 +19,6 @@ package bisq.desktop.main.offer.atomictakeoffer;
 
 import bisq.desktop.common.model.ActivatableWithDataModel;
 import bisq.desktop.common.model.ViewModel;
-import bisq.desktop.main.offer.FeeUtil;
 import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.validation.BtcValidator;
 
@@ -38,8 +37,6 @@ import bisq.network.p2p.P2PService;
 import bisq.network.p2p.network.CloseConnectionReason;
 import bisq.network.p2p.network.Connection;
 import bisq.network.p2p.network.ConnectionListener;
-
-import bisq.common.app.DevEnv;
 
 import org.bitcoinj.core.Coin;
 
@@ -61,7 +58,6 @@ import static javafx.beans.binding.Bindings.createStringBinding;
 
 class AtomicTakeOfferViewModel extends ActivatableWithDataModel<AtomicTakeOfferDataModel> implements ViewModel {
     final AtomicTakeOfferDataModel dataModel;
-    private final OfferUtil offerUtil;
     private final BtcValidator btcValidator;
     private final P2PService p2PService;
     private final CoinFormatter btcFormatter;
@@ -80,11 +76,6 @@ class AtomicTakeOfferViewModel extends ActivatableWithDataModel<AtomicTakeOfferD
     final StringProperty totalToPay = new SimpleStringProperty();
     final StringProperty errorMessage = new SimpleStringProperty();
     final StringProperty offerWarning = new SimpleStringProperty();
-    final StringProperty tradeFee = new SimpleStringProperty();
-    final StringProperty tradeFeeInBtcWithFiat = new SimpleStringProperty();
-    final StringProperty tradeFeeInBsqWithFiat = new SimpleStringProperty();
-    final StringProperty tradeFeeDescription = new SimpleStringProperty();
-    final BooleanProperty isTradeFeeVisible = new SimpleBooleanProperty(false);
 
     final BooleanProperty isOfferAvailable = new SimpleBooleanProperty();
     final BooleanProperty isAtomicTakeOfferButtonDisabled = new SimpleBooleanProperty(true);
@@ -117,7 +108,6 @@ class AtomicTakeOfferViewModel extends ActivatableWithDataModel<AtomicTakeOfferD
                                     BsqFormatter bsqFormatter) {
         super(dataModel);
         this.dataModel = dataModel;
-        this.offerUtil = offerUtil;
         this.btcValidator = btcValidator;
         this.p2PService = p2PService;
         this.btcFormatter = btcFormatter;
@@ -141,10 +131,6 @@ class AtomicTakeOfferViewModel extends ActivatableWithDataModel<AtomicTakeOfferD
         applyOfferState(offer.stateProperty().get());
 
         updateButtonDisableState();
-
-        if (!DevEnv.isDaoActivated()) {
-            isTradeFeeVisible.setValue(false);
-        }
     }
 
     @Override
@@ -201,30 +187,6 @@ class AtomicTakeOfferViewModel extends ActivatableWithDataModel<AtomicTakeOfferD
         updateButtonDisableState();
     }
 
-    public void setIsCurrencyForTakerFeeBtc(boolean isCurrencyForTakerFeeBtc) {
-        dataModel.setPreferredCurrencyForTakerFeeBtc(isCurrencyForTakerFeeBtc);
-        applyTakerFee();
-    }
-
-    private void applyTakerFee() {
-        tradeFeeDescription.set(Res.get("createOffer.tradeFee.descriptionBSQEnabled"));
-        Coin takerFeeAsCoin = dataModel.getTakerFee();
-        if (takerFeeAsCoin == null) {
-            return;
-        }
-
-        isTradeFeeVisible.setValue(true);
-        tradeFee.set(getFormatterForTakerFee().formatCoin(takerFeeAsCoin));
-        tradeFeeInBtcWithFiat.set(FeeUtil.getTradeFeeWithFiatEquivalent(offerUtil,
-                dataModel.getTakerFeeInBtc(),
-                true,
-                btcFormatter));
-        tradeFeeInBsqWithFiat.set(FeeUtil.getTradeFeeWithFiatEquivalent(offerUtil,
-                dataModel.getTakerFeeInBsq(),
-                false,
-                bsqFormatter));
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Handle focus
@@ -267,7 +229,8 @@ class AtomicTakeOfferViewModel extends ActivatableWithDataModel<AtomicTakeOfferD
 
         // We have 2 situations handled here:
         // 1. when clicking take offer in the offerbook screen, we do the availability check
-        // 2. Before actually taking the offer in the take offer screen, we check again the availability as some time might have passed in the meantime
+        // 2. Before actually taking the offer in the take offer screen, we check again
+        //    the availability as some time might have passed in the meantime
         // So we use the takeOfferRequested flag to display different network_messages depending on the context.
         switch (state) {
             case UNKNOWN:
@@ -378,14 +341,10 @@ class AtomicTakeOfferViewModel extends ActivatableWithDataModel<AtomicTakeOfferD
             if (isBtcInputValid(newValue).isValid) {
                 setAmountToModel();
                 calculateVolume();
-                applyTakerFee();
             }
             updateButtonDisableState();
         };
-        amountAsCoinListener = (ov, oldValue, newValue) -> {
-            amount.set(btcFormatter.formatCoin(newValue));
-            applyTakerFee();
-        };
+        amountAsCoinListener = (ov, oldValue, newValue) -> amount.set(btcFormatter.formatCoin(newValue));
         isTxBuilderReadyListener = (ov, oldValue, newValue) -> updateButtonDisableState();
 
         tradeStateListener = (ov, oldValue, newValue) -> applyTradeState();
@@ -478,7 +437,6 @@ class AtomicTakeOfferViewModel extends ActivatableWithDataModel<AtomicTakeOfferD
         return amountRange;
     }
 
-
     public String getPrice() {
         return price;
     }
@@ -501,9 +459,5 @@ class AtomicTakeOfferViewModel extends ActivatableWithDataModel<AtomicTakeOfferD
 
     public void resetErrorMessage() {
         offer.setErrorMessage(null);
-    }
-
-    private CoinFormatter getFormatterForTakerFee() {
-        return dataModel.isCurrencyForTakerFeeBtc() ? btcFormatter : bsqFormatter;
     }
 }

@@ -21,7 +21,6 @@ import bisq.desktop.Navigation;
 import bisq.desktop.common.view.ActivatableViewAndModel;
 import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipLabel;
-import bisq.desktop.components.AutoTooltipSlideToggleButton;
 import bisq.desktop.components.InfoInputTextField;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.components.TitledGroupBg;
@@ -99,17 +98,12 @@ public abstract class AtomicOfferView<M extends AtomicOfferViewModel<?>> extends
     private Label priceCurrencyLabel;
     private Label priceDescriptionLabel;
     private Label volumeDescriptionLabel;
-    private Label tradeFeeDescriptionLabel;
-    private Label tradeFeeInBtcLabel;
-    private Label tradeFeeInBsqLabel;
     protected Label amountBtcLabel, volumeCurrencyLabel, minAmountBtcLabel;
     private ComboBox<PaymentAccount> paymentAccountsComboBox;
     private VBox currencyTextFieldBox;
 
     private ChangeListener<Boolean> amountFocusedListener, minAmountFocusedListener, volumeFocusedListener,
-            priceFocusedListener, placeOfferCompletedListener,
-            getShowWalletFundedNotificationListener, tradeFeeInBtcToggleListener, tradeFeeInBsqToggleListener,
-            tradeFeeVisibleListener;
+            priceFocusedListener, placeOfferCompletedListener;
     private ChangeListener<String> tradeCurrencyCodeListener, errorMessageListener, volumeListener;
     private EventHandler<ActionEvent> paymentAccountsComboBoxSelectionHandler;
     private OfferView.CloseHandler closeHandler;
@@ -118,7 +112,6 @@ public abstract class AtomicOfferView<M extends AtomicOfferViewModel<?>> extends
     private final List<Node> editOfferElements = new ArrayList<>();
     private boolean isActivated;
     private InfoInputTextField volumeInfoInputTextField;
-    private AutoTooltipSlideToggleButton tradeFeeInBtcToggle, tradeFeeInBsqToggle;
 
     @Setter
     private OfferView.OfferActionHandler offerActionHandler;
@@ -179,17 +172,6 @@ public abstract class AtomicOfferView<M extends AtomicOfferViewModel<?>> extends
 
         paymentAccountsComboBox.setItems(model.getDataModel().getPaymentAccounts());
         paymentAccountsComboBox.getSelectionModel().select(model.getPaymentAccount());
-
-        boolean currencyForMakerFeeBtc = model.getDataModel().isCurrencyForMakerFeeBtc();
-        tradeFeeInBtcToggle.setSelected(currencyForMakerFeeBtc);
-        tradeFeeInBsqToggle.setSelected(!currencyForMakerFeeBtc);
-
-        if (!DevEnv.isDaoActivated()) {
-            tradeFeeInBtcToggle.setVisible(false);
-            tradeFeeInBtcToggle.setManaged(false);
-            tradeFeeInBsqToggle.setVisible(false);
-            tradeFeeInBsqToggle.setManaged(false);
-        }
     }
 
     @Override
@@ -311,12 +293,6 @@ public abstract class AtomicOfferView<M extends AtomicOfferViewModel<?>> extends
         fixedPriceTextField.textProperty().bindBidirectional(model.price);
         volumeTextField.textProperty().bindBidirectional(model.volume);
         volumeTextField.promptTextProperty().bind(model.volumePromptLabel);
-        tradeFeeInBtcLabel.textProperty().bind(model.tradeFeeInBtcWithFiat);
-        tradeFeeInBsqLabel.textProperty().bind(model.tradeFeeInBsqWithFiat);
-        tradeFeeDescriptionLabel.textProperty().bind(model.tradeFeeDescription);
-        tradeFeeInBtcLabel.visibleProperty().bind(model.isTradeFeeVisible);
-        tradeFeeInBsqLabel.visibleProperty().bind(model.isTradeFeeVisible);
-        tradeFeeDescriptionLabel.visibleProperty().bind(model.isTradeFeeVisible);
 
         // Validation
         amountTextField.validationResultProperty().bind(model.amountValidationResult);
@@ -343,12 +319,6 @@ public abstract class AtomicOfferView<M extends AtomicOfferViewModel<?>> extends
         fixedPriceTextField.textProperty().unbindBidirectional(model.price);
         volumeTextField.textProperty().unbindBidirectional(model.volume);
         volumeTextField.promptTextProperty().unbindBidirectional(model.volume);
-        tradeFeeInBtcLabel.textProperty().unbind();
-        tradeFeeInBsqLabel.textProperty().unbind();
-        tradeFeeDescriptionLabel.textProperty().unbind();
-        tradeFeeInBtcLabel.visibleProperty().unbind();
-        tradeFeeInBsqLabel.visibleProperty().unbind();
-        tradeFeeDescriptionLabel.visibleProperty().unbind();
 
         // Validation
         amountTextField.validationResultProperty().unbind();
@@ -431,49 +401,11 @@ public abstract class AtomicOfferView<M extends AtomicOfferViewModel<?>> extends
                 volumeInfoInputTextField.hideIcon();
             }
         };
-
-        tradeFeeInBtcToggleListener = (observable, oldValue, newValue) -> {
-            if (newValue && tradeFeeInBsqToggle.isSelected())
-                tradeFeeInBsqToggle.setSelected(false);
-
-            if (!newValue && !tradeFeeInBsqToggle.isSelected())
-                tradeFeeInBsqToggle.setSelected(true);
-
-            setIsCurrencyForMakerFeeBtc(newValue);
-        };
-        tradeFeeInBsqToggleListener = (observable, oldValue, newValue) -> {
-            if (newValue && tradeFeeInBtcToggle.isSelected())
-                tradeFeeInBtcToggle.setSelected(false);
-
-            if (!newValue && !tradeFeeInBtcToggle.isSelected())
-                tradeFeeInBtcToggle.setSelected(true);
-
-            setIsCurrencyForMakerFeeBtc(!newValue);
-        };
-
-        tradeFeeVisibleListener = (observable, oldValue, newValue) -> {
-            if (DevEnv.isDaoActivated()) {
-                tradeFeeInBtcToggle.setVisible(newValue);
-                tradeFeeInBsqToggle.setVisible(newValue);
-            }
-        };
-    }
-
-    private void setIsCurrencyForMakerFeeBtc(boolean isCurrencyForMakerFeeBtc) {
-        model.setIsCurrencyForMakerFeeBtc(isCurrencyForMakerFeeBtc);
-        if (DevEnv.isDaoActivated()) {
-            tradeFeeInBtcLabel.setOpacity(isCurrencyForMakerFeeBtc ? 1 : 0.3);
-            tradeFeeInBsqLabel.setOpacity(isCurrencyForMakerFeeBtc ? 0.3 : 1);
-        }
     }
 
     private void addListeners() {
         model.tradeCurrencyCode.addListener(tradeCurrencyCodeListener);
         model.volume.addListener(volumeListener);
-        model.isTradeFeeVisible.addListener(tradeFeeVisibleListener);
-
-        tradeFeeInBtcToggle.selectedProperty().addListener(tradeFeeInBtcToggleListener);
-        tradeFeeInBsqToggle.selectedProperty().addListener(tradeFeeInBsqToggleListener);
 
         // focus out
         amountTextField.focusedProperty().addListener(amountFocusedListener);
@@ -493,9 +425,6 @@ public abstract class AtomicOfferView<M extends AtomicOfferViewModel<?>> extends
     private void removeListeners() {
         model.tradeCurrencyCode.removeListener(tradeCurrencyCodeListener);
         model.volume.removeListener(volumeListener);
-        model.isTradeFeeVisible.removeListener(tradeFeeVisibleListener);
-        tradeFeeInBtcToggle.selectedProperty().removeListener(tradeFeeInBtcToggleListener);
-        tradeFeeInBsqToggle.selectedProperty().removeListener(tradeFeeInBsqToggleListener);
 
         // focus out
         amountTextField.focusedProperty().removeListener(amountFocusedListener);
@@ -591,8 +520,9 @@ public abstract class AtomicOfferView<M extends AtomicOfferViewModel<?>> extends
     }
 
     private void addOptionsGroup() {
-        TitledGroupBg optionsTitledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 1,
-                Res.get("shared.advancedOptions"), Layout.COMPACT_GROUP_DISTANCE);
+        // TODO(sq): Add option for max tx fee
+//        TitledGroupBg optionsTitledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 1,
+//                Res.get("shared.advancedOptions"), Layout.COMPACT_GROUP_DISTANCE);
 
         HBox advancedOptionsBox = new HBox();
         advancedOptionsBox.setSpacing(40);
@@ -710,44 +640,6 @@ public abstract class AtomicOfferView<M extends AtomicOfferViewModel<?>> extends
     }
 
     private VBox getTradeFeeFieldsBox() {
-        tradeFeeInBtcLabel = new Label();
-        tradeFeeInBtcLabel.setMouseTransparent(true);
-        tradeFeeInBtcLabel.setId("trade-fee-textfield");
-
-        tradeFeeInBsqLabel = new Label();
-        tradeFeeInBsqLabel.setMouseTransparent(true);
-        tradeFeeInBsqLabel.setId("trade-fee-textfield");
-
-        VBox vBox = new VBox();
-        vBox.setSpacing(6);
-        vBox.setMaxWidth(300);
-        vBox.setAlignment(DevEnv.isDaoActivated() ? Pos.CENTER_RIGHT : Pos.CENTER_LEFT);
-        vBox.getChildren().addAll(tradeFeeInBtcLabel, tradeFeeInBsqLabel);
-
-        tradeFeeInBtcToggle = new AutoTooltipSlideToggleButton();
-        tradeFeeInBtcToggle.setText("BTC");
-        tradeFeeInBtcToggle.setVisible(false);
-        tradeFeeInBtcToggle.setPadding(new Insets(-8, 5, -10, 5));
-
-        tradeFeeInBsqToggle = new AutoTooltipSlideToggleButton();
-        tradeFeeInBsqToggle.setText("BSQ");
-        tradeFeeInBsqToggle.setVisible(false);
-        tradeFeeInBsqToggle.setPadding(new Insets(-9, 5, -9, 5));
-
-        VBox tradeFeeToggleButtonBox = new VBox();
-        tradeFeeToggleButtonBox.getChildren().addAll(tradeFeeInBtcToggle, tradeFeeInBsqToggle);
-
-        HBox hBox = new HBox();
-        hBox.getChildren().addAll(vBox, tradeFeeToggleButtonBox);
-        hBox.setMinHeight(47);
-        hBox.setMaxHeight(hBox.getMinHeight());
-        HBox.setHgrow(vBox, Priority.ALWAYS);
-        HBox.setHgrow(tradeFeeToggleButtonBox, Priority.NEVER);
-
-        final Tuple2<Label, VBox> tradeInputBox = getTradeInputBox(hBox, Res.get("createOffer.tradeFee.descriptionBSQEnabled"));
-
-        tradeFeeDescriptionLabel = tradeInputBox.first;
-
-        return tradeInputBox.second;
+        return new VBox();
     }
 }

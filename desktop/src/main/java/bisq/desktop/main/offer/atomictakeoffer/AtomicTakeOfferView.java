@@ -21,15 +21,11 @@ import bisq.desktop.Navigation;
 import bisq.desktop.common.view.ActivatableViewAndModel;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipLabel;
-import bisq.desktop.components.AutoTooltipSlideToggleButton;
 import bisq.desktop.components.BusyAnimation;
 import bisq.desktop.components.InfoInputTextField;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.main.MainView;
-import bisq.desktop.main.dao.DaoView;
-import bisq.desktop.main.dao.wallet.BsqWalletView;
-import bisq.desktop.main.dao.wallet.receive.BsqReceiveView;
 import bisq.desktop.main.funds.FundsView;
 import bisq.desktop.main.funds.withdrawal.WithdrawalView;
 import bisq.desktop.main.offer.OfferView;
@@ -51,8 +47,6 @@ import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple3;
-
-import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
 
@@ -95,30 +89,15 @@ public class AtomicTakeOfferView extends ActivatableViewAndModel<AnchorPane, Ato
 
     private ScrollPane scrollPane;
     private GridPane gridPane;
-    private TitledGroupBg
-            paymentAccountTitledGroupBg;
     private VBox
             amountRangeBox;
-    private HBox
-            amountValueCurrencyBox,
-            priceValueCurrencyBox,
-            volumeValueCurrencyBox,
-            minAmountValueCurrencyBox,
-            advancedOptionsBox,
-            buttonBox,
-            firstRowHBox;
-    private Label amountDescriptionLabel,
-            priceCurrencyLabel,
-            volumeCurrencyLabel,
-            priceDescriptionLabel,
-            volumeDescriptionLabel,
-            offerAvailabilityLabel,
-            tradeFeeDescriptionLabel,
-            resultLabel,
-            tradeFeeInBtcLabel,
-            tradeFeeInBsqLabel,
-            xLabel,
-            fakeXLabel;
+    private HBox buttonBox;
+    private Label amountDescriptionLabel;
+    private Label priceCurrencyLabel;
+    private Label volumeCurrencyLabel;
+    private Label priceDescriptionLabel;
+    private Label volumeDescriptionLabel;
+    private Label offerAvailabilityLabel;
     private InputTextField amountTextField;
     private TextField
             paymentMethodTextField,
@@ -126,8 +105,7 @@ public class AtomicTakeOfferView extends ActivatableViewAndModel<AnchorPane, Ato
             priceTextField,
             volumeTextField,
             amountRangeTextField;
-    private Text xIcon, fakeXIcon;
-    private Button takeAtomicOfferButton, cancelButton1;
+    private Button takeAtomicOfferButton;
     private BusyAnimation offerAvailabilityBusyAnimation;
     private OfferView.CloseHandler closeHandler;
     private Subscription
@@ -141,11 +119,6 @@ public class AtomicTakeOfferView extends ActivatableViewAndModel<AnchorPane, Ato
     private boolean offerDetailsWindowDisplayed;
     private SimpleBooleanProperty errorPopupDisplayed;
     private ChangeListener<Boolean> amountFocusedListener;
-    private AutoTooltipSlideToggleButton tradeFeeInBtcToggle,
-            tradeFeeInBsqToggle;
-    private ChangeListener<Boolean> tradeFeeInBtcToggleListener,
-            tradeFeeInBsqToggleListener,
-            tradeFeeVisibleListener;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -178,41 +151,7 @@ public class AtomicTakeOfferView extends ActivatableViewAndModel<AnchorPane, Ato
             amountTextField.setText(model.amount.get());
         };
 
-        tradeFeeInBtcToggleListener = (observable, oldValue, newValue) -> {
-            if (newValue && tradeFeeInBsqToggle.isSelected())
-                tradeFeeInBsqToggle.setSelected(false);
-
-            if (!newValue && !tradeFeeInBsqToggle.isSelected())
-                tradeFeeInBsqToggle.setSelected(true);
-
-            setIsCurrencyForMakerFeeBtc(newValue);
-        };
-        tradeFeeInBsqToggleListener = (observable, oldValue, newValue) -> {
-            if (newValue && tradeFeeInBtcToggle.isSelected())
-                tradeFeeInBtcToggle.setSelected(false);
-
-            if (!newValue && !tradeFeeInBtcToggle.isSelected())
-                tradeFeeInBtcToggle.setSelected(true);
-
-            setIsCurrencyForMakerFeeBtc(!newValue);
-        };
-
-        tradeFeeVisibleListener = (observable, oldValue, newValue) -> {
-            if (DevEnv.isDaoActivated()) {
-                tradeFeeInBtcToggle.setVisible(newValue);
-                tradeFeeInBsqToggle.setVisible(newValue);
-            }
-        };
-
         GUIUtil.focusWhenAddedToScene(amountTextField);
-    }
-
-    private void setIsCurrencyForMakerFeeBtc(boolean isCurrencyForMakerFeeBtc) {
-        model.setIsCurrencyForTakerFeeBtc(isCurrencyForMakerFeeBtc);
-        if (DevEnv.isDaoActivated()) {
-            tradeFeeInBtcLabel.setOpacity(isCurrencyForMakerFeeBtc ? 1 : 0.3);
-            tradeFeeInBsqLabel.setOpacity(isCurrencyForMakerFeeBtc ? 0.3 : 1);
-        }
     }
 
     @Override
@@ -233,10 +172,6 @@ public class AtomicTakeOfferView extends ActivatableViewAndModel<AnchorPane, Ato
         volumeCurrencyLabel.setText(currencyCode);
         priceDescriptionLabel.setText(CurrencyUtil.getPriceWithCurrencyCode(currencyCode));
         volumeDescriptionLabel.setText(model.volumeDescriptionLabel.get());
-
-        boolean currencyForMakerFeeBtc = model.dataModel.isCurrencyForTakerFeeBtc();
-        tradeFeeInBtcToggle.setSelected(currencyForMakerFeeBtc);
-        tradeFeeInBsqToggle.setSelected(!currencyForMakerFeeBtc);
     }
 
     @Override
@@ -290,11 +225,6 @@ public class AtomicTakeOfferView extends ActivatableViewAndModel<AnchorPane, Ato
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void onTakeOffer() {
-        if (!model.dataModel.isTakerFeeValid()) {
-            showInsufficientBsqFundsForBtcFeePaymentPopup();
-            return;
-        }
-
         offerDetailsWindow.onTakeOffer(() ->
                 model.onTakeOffer(() -> {
                     offerDetailsWindow.hide();
@@ -331,13 +261,6 @@ public class AtomicTakeOfferView extends ActivatableViewAndModel<AnchorPane, Ato
         amountTextField.validationResultProperty().bind(model.amountValidationResult);
         priceCurrencyLabel.textProperty().bind(createStringBinding(() -> CurrencyUtil.getCounterCurrency(model.dataModel.getCurrencyCode())));
         takeAtomicOfferButton.disableProperty().bind(model.isAtomicTakeOfferButtonDisabled);
-        tradeFeeInBtcLabel.textProperty().bind(model.tradeFeeInBtcWithFiat);
-        tradeFeeInBsqLabel.textProperty().bind(model.tradeFeeInBsqWithFiat);
-        tradeFeeDescriptionLabel.textProperty().bind(model.tradeFeeDescription);
-        tradeFeeInBtcLabel.visibleProperty().bind(model.isTradeFeeVisible);
-        tradeFeeInBsqLabel.visibleProperty().bind(model.isTradeFeeVisible);
-        tradeFeeDescriptionLabel.visibleProperty().bind(model.isTradeFeeVisible);
-        tradeFeeDescriptionLabel.managedProperty().bind(tradeFeeDescriptionLabel.visibleProperty());
     }
 
     private void removeBindings() {
@@ -346,13 +269,6 @@ public class AtomicTakeOfferView extends ActivatableViewAndModel<AnchorPane, Ato
         amountTextField.validationResultProperty().unbind();
         priceCurrencyLabel.textProperty().unbind();
         takeAtomicOfferButton.disableProperty().unbind();
-        tradeFeeInBtcLabel.textProperty().unbind();
-        tradeFeeInBsqLabel.textProperty().unbind();
-        tradeFeeDescriptionLabel.textProperty().unbind();
-        tradeFeeInBtcLabel.visibleProperty().unbind();
-        tradeFeeInBsqLabel.visibleProperty().unbind();
-        tradeFeeDescriptionLabel.visibleProperty().unbind();
-        tradeFeeDescriptionLabel.managedProperty().unbind();
     }
 
     private void addSubscriptions() {
@@ -444,16 +360,10 @@ public class AtomicTakeOfferView extends ActivatableViewAndModel<AnchorPane, Ato
 
     private void addListeners() {
         amountTextField.focusedProperty().addListener(amountFocusedListener);
-        model.isTradeFeeVisible.addListener(tradeFeeVisibleListener);
-        tradeFeeInBtcToggle.selectedProperty().addListener(tradeFeeInBtcToggleListener);
-        tradeFeeInBsqToggle.selectedProperty().addListener(tradeFeeInBsqToggleListener);
     }
 
     private void removeListeners() {
         amountTextField.focusedProperty().removeListener(amountFocusedListener);
-        model.isTradeFeeVisible.removeListener(tradeFeeVisibleListener);
-        tradeFeeInBtcToggle.selectedProperty().removeListener(tradeFeeInBtcToggleListener);
-        tradeFeeInBsqToggle.selectedProperty().removeListener(tradeFeeInBsqToggleListener);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -490,7 +400,7 @@ public class AtomicTakeOfferView extends ActivatableViewAndModel<AnchorPane, Ato
     }
 
     private void addPaymentGroup() {
-        paymentAccountTitledGroupBg = addTitledGroupBg(gridPane, gridRow, 1, Res.get("takeOffer.paymentInfo"));
+        TitledGroupBg paymentAccountTitledGroupBg = addTitledGroupBg(gridPane, gridRow, 1, Res.get("takeOffer.paymentInfo"));
         GridPane.setColumnSpan(paymentAccountTitledGroupBg, 2);
 
         final var paymentAccountTuple = addTopLabelTextFieldWithHbox(gridPane,
@@ -529,9 +439,7 @@ public class AtomicTakeOfferView extends ActivatableViewAndModel<AnchorPane, Ato
     }
 
     private void addOptionsGroup() {
-        addTitledGroupBg(gridPane, ++gridRow, 1, Res.get("shared.advancedOptions"), Layout.COMPACT_GROUP_DISTANCE);
-
-        advancedOptionsBox = new HBox();
+        HBox advancedOptionsBox = new HBox();
         advancedOptionsBox.setSpacing(40);
 
         GridPane.setRowIndex(advancedOptionsBox, gridRow);
@@ -540,6 +448,7 @@ public class AtomicTakeOfferView extends ActivatableViewAndModel<AnchorPane, Ato
         GridPane.setMargin(advancedOptionsBox, new Insets(Layout.COMPACT_FIRST_ROW_AND_GROUP_DISTANCE, 0, 0, 0));
         gridPane.getChildren().add(advancedOptionsBox);
 
+        // TODO(sq): Show tx fee and trade fee
         advancedOptionsBox.getChildren().addAll(getTradeFeeFieldsBox());
     }
 
@@ -554,7 +463,7 @@ public class AtomicTakeOfferView extends ActivatableViewAndModel<AnchorPane, Ato
         takeAtomicOfferButton.setDefaultButton(true);
         takeAtomicOfferButton.setOnAction(e -> onTakeOffer());
 
-        cancelButton1 = tuple.second;
+        Button cancelButton1 = tuple.second;
         cancelButton1.setMaxWidth(200);
         cancelButton1.setDefaultButton(false);
         cancelButton1.setOnAction(e -> close(false));
@@ -570,21 +479,21 @@ public class AtomicTakeOfferView extends ActivatableViewAndModel<AnchorPane, Ato
     private void addAmountPriceFields() {
         // amountBox
         Tuple3<HBox, InputTextField, Label> amountValueCurrencyBoxTuple = getEditableValueBox(Res.get("takeOffer.amount.prompt"));
-        amountValueCurrencyBox = amountValueCurrencyBoxTuple.first;
+        HBox amountValueCurrencyBox = amountValueCurrencyBoxTuple.first;
         amountTextField = amountValueCurrencyBoxTuple.second;
         Tuple2<Label, VBox> amountInputBoxTuple = getTradeInputBox(amountValueCurrencyBox, model.getAmountDescription());
         amountDescriptionLabel = amountInputBoxTuple.first;
         VBox amountBox = amountInputBoxTuple.second;
 
         // x
-        xLabel = new Label();
-        xIcon = getIconForLabel(MaterialDesignIcon.CLOSE, "2em", xLabel);
+        Label xLabel = new Label();
+        Text xIcon = getIconForLabel(MaterialDesignIcon.CLOSE, "2em", xLabel);
         xIcon.getStyleClass().add("opaque-icon");
         xLabel.getStyleClass().addAll("opaque-icon-character");
 
         // price
         Tuple3<HBox, TextField, Label> priceValueCurrencyBoxTuple = getNonEditableValueBox();
-        priceValueCurrencyBox = priceValueCurrencyBoxTuple.first;
+        HBox priceValueCurrencyBox = priceValueCurrencyBoxTuple.first;
         priceTextField = priceValueCurrencyBoxTuple.second;
         priceCurrencyLabel = priceValueCurrencyBoxTuple.third;
         Tuple2<Label, VBox> priceInputBoxTuple = getTradeInputBox(priceValueCurrencyBox,
@@ -596,12 +505,12 @@ public class AtomicTakeOfferView extends ActivatableViewAndModel<AnchorPane, Ato
         VBox priceBox = priceInputBoxTuple.second;
 
         // =
-        resultLabel = new AutoTooltipLabel("=");
+        Label resultLabel = new AutoTooltipLabel("=");
         resultLabel.getStyleClass().addAll("opaque-icon-character");
 
         // volume
         Tuple3<HBox, InfoInputTextField, Label> volumeValueCurrencyBoxTuple = getNonEditableValueBoxWithInfo();
-        volumeValueCurrencyBox = volumeValueCurrencyBoxTuple.first;
+        HBox volumeValueCurrencyBox = volumeValueCurrencyBoxTuple.first;
 
         InfoInputTextField volumeInfoTextField = volumeValueCurrencyBoxTuple.second;
         volumeTextField = volumeInfoTextField.getInputTextField();
@@ -610,7 +519,7 @@ public class AtomicTakeOfferView extends ActivatableViewAndModel<AnchorPane, Ato
         volumeDescriptionLabel = volumeInputBoxTuple.first;
         VBox volumeBox = volumeInputBoxTuple.second;
 
-        firstRowHBox = new HBox();
+        HBox firstRowHBox = new HBox();
         firstRowHBox.setSpacing(5);
         firstRowHBox.setAlignment(Pos.CENTER_LEFT);
         firstRowHBox.getChildren().addAll(amountBox, xLabel, priceBox, resultLabel, volumeBox);
@@ -624,15 +533,15 @@ public class AtomicTakeOfferView extends ActivatableViewAndModel<AnchorPane, Ato
         Tuple3<HBox, TextField, Label> amountValueCurrencyBoxTuple = getNonEditableValueBox();
         amountRangeTextField = amountValueCurrencyBoxTuple.second;
 
-        minAmountValueCurrencyBox = amountValueCurrencyBoxTuple.first;
+        HBox minAmountValueCurrencyBox = amountValueCurrencyBoxTuple.first;
         Tuple2<Label, VBox> amountInputBoxTuple = getTradeInputBox(minAmountValueCurrencyBox,
                 Res.get("takeOffer.amountPriceBox.amountRangeDescription"));
 
         amountRangeBox = amountInputBoxTuple.second;
         amountRangeBox.setVisible(false);
 
-        fakeXLabel = new Label();
-        fakeXIcon = getIconForLabel(MaterialDesignIcon.CLOSE, "2em", fakeXLabel);
+        Label fakeXLabel = new Label();
+        Text fakeXIcon = getIconForLabel(MaterialDesignIcon.CLOSE, "2em", fakeXLabel);
         fakeXLabel.setVisible(false); // we just use it to get the same layout as the upper row
         fakeXLabel.getStyleClass().add("opaque-icon-character");
 
@@ -647,43 +556,7 @@ public class AtomicTakeOfferView extends ActivatableViewAndModel<AnchorPane, Ato
     }
 
     private VBox getTradeFeeFieldsBox() {
-        tradeFeeInBtcLabel = new Label();
-        tradeFeeInBtcLabel.setMouseTransparent(true);
-        tradeFeeInBtcLabel.setId("trade-fee-textfield");
-
-        tradeFeeInBsqLabel = new Label();
-        tradeFeeInBsqLabel.setMouseTransparent(true);
-        tradeFeeInBsqLabel.setId("trade-fee-textfield");
-
-        VBox vBox = new VBox();
-        vBox.setSpacing(6);
-        vBox.setMaxWidth(300);
-        vBox.setAlignment(DevEnv.isDaoActivated() ? Pos.CENTER_RIGHT : Pos.CENTER_LEFT);
-        vBox.getChildren().addAll(tradeFeeInBtcLabel, tradeFeeInBsqLabel);
-
-        tradeFeeInBtcToggle = new AutoTooltipSlideToggleButton();
-        tradeFeeInBtcToggle.setText("BTC");
-        tradeFeeInBtcToggle.setPadding(new Insets(-8, 5, -10, 5));
-
-        tradeFeeInBsqToggle = new AutoTooltipSlideToggleButton();
-        tradeFeeInBsqToggle.setText("BSQ");
-        tradeFeeInBsqToggle.setPadding(new Insets(-9, 5, -9, 5));
-
-        VBox tradeFeeToggleButtonBox = new VBox();
-        tradeFeeToggleButtonBox.getChildren().addAll(tradeFeeInBtcToggle, tradeFeeInBsqToggle);
-
-        HBox hBox = new HBox();
-        hBox.getChildren().addAll(vBox, tradeFeeToggleButtonBox);
-        hBox.setMinHeight(47);
-        hBox.setMaxHeight(hBox.getMinHeight());
-        HBox.setHgrow(vBox, Priority.ALWAYS);
-        HBox.setHgrow(tradeFeeToggleButtonBox, Priority.NEVER);
-
-        final Tuple2<Label, VBox> tradeInputBox = getTradeInputBox(hBox, Res.get("createOffer.tradeFee.descriptionBSQEnabled"));
-
-        tradeFeeDescriptionLabel = tradeInputBox.first;
-
-        return tradeInputBox.second;
+        return new VBox();
     }
 
 
@@ -691,23 +564,6 @@ public class AtomicTakeOfferView extends ActivatableViewAndModel<AnchorPane, Ato
     // Utils
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-
-    private void showInsufficientBsqFundsForBtcFeePaymentPopup() {
-        Coin takerFee = model.dataModel.getTakerFee();
-        String message = null;
-        if (takerFee != null)
-            message = Res.get("popup.warning.insufficientBsqFundsForBtcFeePayment",
-                    bsqFormatter.formatCoinWithCode(takerFee.subtract(model.dataModel.getUsableBsqBalance())));
-
-        else if (model.dataModel.getUsableBsqBalance().isZero())
-            message = Res.get("popup.warning.noBsqFundsForBtcFeePayment");
-
-        if (message != null)
-            new Popup().warning(message)
-                    .actionButtonTextWithGoTo("navigation.dao.wallet.receive")
-                    .onAction(() -> navigation.navigateTo(MainView.class, DaoView.class, BsqWalletView.class, BsqReceiveView.class))
-                    .show();
-    }
 
     private Tuple2<Label, VBox> getTradeInputBox(HBox amountValueBox, String promptText) {
         Label descriptionLabel = new AutoTooltipLabel(promptText);

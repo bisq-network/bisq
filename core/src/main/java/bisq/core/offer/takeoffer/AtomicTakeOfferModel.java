@@ -331,26 +331,6 @@ public class AtomicTakeOfferModel implements Model {
         return usableBsqBalance;
     }
 
-    public boolean isCurrencyForTakerFeeBtc() {
-        return offerUtil.isCurrencyForTakerFeeBtc(amount.get());
-    }
-
-    public void setPreferredCurrencyForTakerFeeBtc(boolean isCurrencyForTakerFeeBtc) {
-        preferences.setPayFeeInBtc(isCurrencyForTakerFeeBtc);
-    }
-
-    public Coin getTakerFeeInBtc() {
-        return offerUtil.getTakerFee(true, amount.get());
-    }
-
-    public Coin getTakerFeeInBsq() {
-        return offerUtil.getTakerFee(false, amount.get());
-    }
-
-    public boolean isTakerFeeValid() {
-        return preferences.getPayFeeInBtc() || offerUtil.isBsqForTakerFeeAvailable(amount.get());
-    }
-
     public boolean hasEnoughBtc() {
         return !btcWalletService.getSavingWalletBalance().isLessThan(atomicTxBuilder.myBtc.get());
     }

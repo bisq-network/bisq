@@ -23,7 +23,6 @@ import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
-import bisq.core.btc.TxFeeEstimationService;
 import bisq.core.btc.listeners.BsqBalanceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
@@ -44,13 +43,11 @@ import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
 import bisq.core.util.FormattingUtils;
-import bisq.core.util.VolumeUtil;
 import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.coin.CoinUtil;
 
 import bisq.network.p2p.P2PService;
 
-import bisq.common.util.Tuple2;
 import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Coin;
@@ -77,8 +74,6 @@ import java.util.Optional;
 import java.util.function.Predicate;
 
 import lombok.Getter;
-
-import javax.annotation.Nullable;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.Comparator.comparing;
@@ -118,8 +113,6 @@ public abstract class AtomicOfferDataModel extends ActivatableDataModel implemen
     protected PaymentAccount paymentAccount;
     boolean isTabSelected;
     protected double marketPriceMargin = 0;
-    private Coin txFeeFromFeeService = Coin.ZERO;
-    private int feeTxVsize = TxFeeEstimationService.TYPICAL_TX_WITH_1_INPUT_VSIZE;
     protected boolean allowAmountUpdate = true;
 
     private final Predicate<ObjectProperty<Coin>> isNonZeroAmount = (c) -> c.get() != null && !c.get().isZero();
@@ -238,11 +231,7 @@ public abstract class AtomicOfferDataModel extends ActivatableDataModel implemen
         priceFeedService.setCurrencyCode(tradeCurrencyCode.get());
 
         // We request to get the actual estimated fee
-        requestTxFee(null);
-
-        // Set the default values (in rare cases if the fee request was not done yet we get the hard coded default values)
-        // But offer creation happens usually after that so we should have already the value from the estimation service.
-        txFeeFromFeeService = feeService.getTxFee(feeTxVsize);
+        requestTxFee();
 
         calculateVolume();
         calculateTotalToPay();
@@ -271,14 +260,6 @@ public abstract class AtomicOfferDataModel extends ActivatableDataModel implemen
                 minAmount.get(),
                 price.get(),
                 paymentAccount);
-    }
-
-    // This works only if we have already funds in the wallet
-    public void updateEstimatedFeeAndTxVsize() {
-        Tuple2<Coin, Integer> estimatedFeeAndTxVsize = createOfferService.getEstimatedFeeAndTxVsize(amount.get(),
-                direction, 0, 0);
-        txFeeFromFeeService = estimatedFeeAndTxVsize.first;
-        feeTxVsize = estimatedFeeAndTxVsize.second;
     }
 
     void onPlaceOffer(Offer offer, TransactionResultHandler resultHandler) {
@@ -355,13 +336,8 @@ public abstract class AtomicOfferDataModel extends ActivatableDataModel implemen
         this.marketPriceMargin = marketPriceMargin;
     }
 
-    void requestTxFee(@Nullable Runnable actionHandler) {
-        feeService.requestFees(() -> {
-            txFeeFromFeeService = feeService.getTxFee(feeTxVsize);
-            calculateTotalToPay();
-            if (actionHandler != null)
-                actionHandler.run();
-        });
+    void requestTxFee() {
+        feeService.requestFees(this::calculateTotalToPay);
     }
 
     void setPreferredCurrencyForMakerFeeBtc(boolean preferredCurrencyForMakerFeeBtc) {
@@ -382,14 +358,6 @@ public abstract class AtomicOfferDataModel extends ActivatableDataModel implemen
 
     OfferPayload.Direction getDirection() {
         return direction;
-    }
-
-    boolean isSellOffer() {
-        return direction == OfferPayload.Direction.SELL;
-    }
-
-    boolean isBuyOffer() {
-        return direction == OfferPayload.Direction.BUY;
     }
 
     protected TradeCurrency getTradeCurrency() {
@@ -424,9 +392,7 @@ public abstract class AtomicOfferDataModel extends ActivatableDataModel implemen
         if (isNonZeroPrice.test(price) && isNonZeroAmount.test(amount)) {
             try {
                 Volume volumeByAmount = calculateVolumeForAmount(amount);
-
                 volume.set(volumeByAmount);
-
                 calculateMinVolume();
             } catch (Throwable t) {
                 log.error(t.toString());
@@ -438,9 +404,7 @@ public abstract class AtomicOfferDataModel extends ActivatableDataModel implemen
         if (isNonZeroPrice.test(price) && isNonZeroAmount.test(minAmount)) {
             try {
                 Volume volumeByAmount = calculateVolumeForAmount(minAmount);
-
                 minVolume.set(volumeByAmount);
-
             } catch (Throwable t) {
                 log.error(t.toString());
             }
@@ -456,7 +420,6 @@ public abstract class AtomicOfferDataModel extends ActivatableDataModel implemen
             try {
                 Coin value = DisplayUtils.reduceTo4Decimals(price.get().getAmountByVolume(volume.get()), btcFormatter);
                 calculateVolume();
-
                 amount.set(value);
                 calculateTotalToPay();
             } catch (Throwable t) {
@@ -466,24 +429,13 @@ public abstract class AtomicOfferDataModel extends ActivatableDataModel implemen
     }
 
     void calculateTotalToPay() {
-        // A maker should pay the maker fee and the trade amount
-        // Taker pays taker fee, trade amount and mining fee
-        final Coin makerFee = getMakerFee();
-        if (direction != null && amount.get() != null && makerFee != null) {
-            var total = Coin.ZERO;
-            if (isCurrencyForMakerFeeBtc())
-                total = total.add(makerFee);
-            if (isBuyOffer())
-                total = total.add(amount.get());
-            totalToPayAsCoin.set(total);
-        }
+        // TODO(sq): use AtomicTxBuilder to get accurate required amount
+        totalToPayAsCoin.set(Coin.ZERO);
     }
 
     public Coin getTxFee() {
-        if (isCurrencyForMakerFeeBtc())
-            return txFeeFromFeeService;
-        else
-            return txFeeFromFeeService.subtract(getMakerFee());
+        // TODO(sq): use AtomicTxBuilder to get accurate tx fee
+        return Coin.ZERO;
     }
 
     private void fillPaymentAccounts() {
@@ -548,24 +500,8 @@ public abstract class AtomicOfferDataModel extends ActivatableDataModel implemen
         return offerUtil.getUsableBsqBalance();
     }
 
-    public Coin getMakerFee(boolean isCurrencyForMakerFeeBtc) {
-        return CoinUtil.getMakerFee(isCurrencyForMakerFeeBtc, amount.get());
-    }
-
     public Coin getMakerFee() {
-        return offerUtil.getMakerFee(amount.get());
-    }
-
-    public Coin getMakerFeeInBtc() {
-        return CoinUtil.getMakerFee(true, amount.get());
-    }
-
-    public Coin getMakerFeeInBsq() {
         return CoinUtil.getMakerFee(false, amount.get());
-    }
-
-    public boolean isCurrencyForMakerFeeBtc() {
-        return offerUtil.isCurrencyForMakerFeeBtc(amount.get());
     }
 
     boolean canPlaceOffer() {
