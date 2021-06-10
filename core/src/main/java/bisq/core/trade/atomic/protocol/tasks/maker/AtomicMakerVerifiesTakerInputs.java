@@ -48,7 +48,6 @@ public class AtomicMakerVerifiesTakerInputs extends AtomicTradeTask {
              * [0-1]   (Taker BSQ)
              * [0-1]   (Taker BTC)
              * [0-1]   (Maker BTC)
-             * [0-1]   (BTCtradeFee)
              */
 
             var message = (CreateAtomicTxRequest) atomicProcessModel.getTradeMessage();
@@ -75,7 +74,6 @@ public class AtomicMakerVerifiesTakerInputs extends AtomicTradeTask {
             var takerBtcOutputAmount = atomicProcessModel.getTakerBtcOutputAmount();
 
             // Trade fee
-            var btcTradeFeeAmount = atomicProcessModel.getBtcMakerTradeFee() + atomicProcessModel.getBtcTakerTradeFee();
             var bsqTradeFeeAmount = atomicProcessModel.getBsqMakerTradeFee() + atomicProcessModel.getBsqTakerTradeFee();
 
             // Verify input sum equals output sum
@@ -84,7 +82,7 @@ public class AtomicMakerVerifiesTakerInputs extends AtomicTradeTask {
             checkArgument(bsqIn - bsqOut == bsqTradeFeeAmount, "BSQ in does not match BSQ out");
 
             var btcIn = takerBtcInputAmount + makerBtcInputAmount + bsqTradeFeeAmount;
-            var btcOut = takerBtcOutputAmount + makerBtcOutputAmount + btcTradeFeeAmount;
+            var btcOut = takerBtcOutputAmount + makerBtcOutputAmount;
             atomicProcessModel.setTxFee(btcIn - btcOut);
 
             complete();

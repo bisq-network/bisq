@@ -155,10 +155,6 @@ class AtomicTakeOfferDataModel extends ActivatableDataModel {
         atomicTakeOfferModel.applyAmount(amount);
     }
 
-    Coin getTakerFee(boolean isCurrencyForTakerFeeBtc) {
-        return atomicTakeOfferModel.getTakerFee(isCurrencyForTakerFeeBtc);
-    }
-
     public Coin getTakerFee() {
         return atomicTakeOfferModel.getTakerFee();
     }

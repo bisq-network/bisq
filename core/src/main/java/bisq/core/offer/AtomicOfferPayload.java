@@ -60,7 +60,6 @@ public final class AtomicOfferPayload extends OfferPayloadI implements ProofOfWo
     private final long minAmount;
     private final String versionNr;
     private final int protocolVersion;
-    private final boolean isCurrencyForMakerFeeBtc;
     private final byte[] proofOfWork;
 
 
@@ -78,7 +77,6 @@ public final class AtomicOfferPayload extends OfferPayloadI implements ProofOfWo
                               long minAmount,
                               String versionNr,
                               int protocolVersion,
-                              boolean isCurrencyForMakerFeeBtc,
                               byte[] proofOfWork) {
         this.id = id;
         this.date = date;
@@ -90,7 +88,6 @@ public final class AtomicOfferPayload extends OfferPayloadI implements ProofOfWo
         this.minAmount = minAmount;
         this.versionNr = versionNr;
         this.protocolVersion = protocolVersion;
-        this.isCurrencyForMakerFeeBtc = isCurrencyForMakerFeeBtc;
         this.proofOfWork = proofOfWork;
     }
 
@@ -119,7 +116,6 @@ public final class AtomicOfferPayload extends OfferPayloadI implements ProofOfWo
                 .setMinAmount(minAmount)
                 .setVersionNr(versionNr)
                 .setProtocolVersion(protocolVersion)
-                .setIsCurrencyForMakerFeeBtc(isCurrencyForMakerFeeBtc)
                 .setProofOfWork(ByteString.copyFrom(proofOfWork));
 
         return protobuf.StoragePayload.newBuilder().setAtomicOfferPayload(builder).build();
@@ -136,7 +132,6 @@ public final class AtomicOfferPayload extends OfferPayloadI implements ProofOfWo
                 proto.getMinAmount(),
                 proto.getVersionNr(),
                 proto.getProtocolVersion(),
-                proto.getIsCurrencyForMakerFeeBtc(),
                 proto.getProofOfWork().toByteArray());
     }
 
@@ -159,6 +154,11 @@ public final class AtomicOfferPayload extends OfferPayloadI implements ProofOfWo
     @Override
     public String getHashOfChallenge() {
         return null;
+    }
+
+    @Override
+    public boolean isCurrencyForMakerFeeBtc() {
+        return false;
     }
 
     @Override

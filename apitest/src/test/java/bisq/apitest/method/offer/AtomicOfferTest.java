@@ -34,7 +34,6 @@ import static bisq.cli.TableFormat.formatBalancesTbls;
 import static java.lang.String.format;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static protobuf.OfferPayload.Direction.BUY;
 
@@ -103,7 +102,6 @@ public class AtomicOfferTest extends AbstractOfferTest {
         // assertEquals(alicesBsqAcct.getId(), atomicOffer.getMakerPaymentAccountId());
         assertEquals(BSQ, atomicOffer.getBaseCurrencyCode());
         assertEquals(BTC, atomicOffer.getCounterCurrencyCode());
-        assertTrue(atomicOffer.getIsCurrencyForMakerFeeBtc());
 
         testGetMyAtomicOffer(atomicOffer);
         testGetAtomicOffer(atomicOffer);

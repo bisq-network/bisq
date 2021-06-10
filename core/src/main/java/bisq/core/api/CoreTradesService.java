@@ -109,16 +109,12 @@ class CoreTradesService {
         log.info("Initiating take {} offer, {}",
                 offer.isBuyOffer() ? "buy" : "sell",
                 takeOfferModel);
-        var isMakerFeeBtc = offer.isCurrencyForMakerFeeBtc();
-        var isTakerFeeBtc = atomicTakeOfferModel.isCurrencyForTakerFeeBtc();
         tradeManager.onTakeAtomicOffer(offer,
                 atomicTakeOfferModel.getAmount().getValue(),  // TODO get rid of jfx property dep?
                 atomicTakeOfferModel.getTradePrice().getValue(),
                 atomicTakeOfferModel.getAtomicTxBuilder().getTxFeePerVbyte().getValue(),
-                isMakerFeeBtc,
-                atomicTakeOfferModel.isCurrencyForTakerFeeBtc(),
-                atomicTakeOfferModel.getMakerFee(isMakerFeeBtc).getValue(),
-                atomicTakeOfferModel.getTakerFee(isTakerFeeBtc).getValue(),
+                atomicTakeOfferModel.getMakerFee().getValue(),
+                atomicTakeOfferModel.getTakerFee().getValue(),
                 coreContext.isApiUser(),
                 tradeResultHandler,
                 errorMessageHandler);

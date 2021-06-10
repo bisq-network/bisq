@@ -221,7 +221,6 @@ message AtomicOfferInfo {
     string pubKeyRing = 14;
     string versionNr = 15;
     int32 protocolVersion = 16;
-    bool isCurrencyForMakerFeeBtc = 17;
 }
 
 message OfferInfo {

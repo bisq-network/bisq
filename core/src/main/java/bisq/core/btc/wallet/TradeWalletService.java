@@ -1190,9 +1190,6 @@ public class TradeWalletService {
      * @param bsqOut                    my BSQ output amount
      * @param btcAddress                my BTC address
      * @param btcOut                    my BTC output amount
-     * @param btcFeeAddress             my BTC trade fee address
-     * @param btcFeeOut                 my BTC trade fee amount
-     *
      * @return TxData of transaction
      * @throws AddressFormatException if the taker base58 change address doesn't parse or its checksum is invalid
      * @throws InsufficientMoneyException if there aren't enough BTC in the wallet
@@ -1204,9 +1201,7 @@ public class TradeWalletService {
             String bsqAddress,
             Coin bsqOut,
             String btcAddress,
-            Coin btcOut,
-            String btcFeeAddress,
-            Coin btcFeeOut)
+            Coin btcOut)
             throws AddressFormatException, InsufficientMoneyException, SigningException {
 
         // Gather bsq raw inputs
@@ -1246,8 +1241,6 @@ public class TradeWalletService {
             mySideTx.addOutput(bsqOut, Address.fromString(params, bsqAddress));
         if (btcOut.isPositive())
             mySideTx.addOutput(btcOut, Address.fromString(params, btcAddress));
-        if (btcFeeOut.isPositive())
-            mySideTx.addOutput(btcFeeOut, Address.fromString(params, btcFeeAddress));
 
         // Sign BTC inputs,
         for (int i = preparedAtomicBsqTx.getInputs().size(); i < mySideTx.getInputs().size(); i++) {
@@ -1274,12 +1267,10 @@ public class TradeWalletService {
      * @param makerBtcPayout            BTC out for maker
      * @param takerBsqPayout            BSQ out for taker
      * @param takerBtcPayout            BTC out for taker
-     * @param btcTradeFee               BTC trade fee
      * @param makerBsqAddress           BSQ address for maker
      * @param makerBtcAddress           BTC address for maker
      * @param takerBsqAddress           BSQ address for taker
      * @param takerBtcAddress           BTC address for taker
-     * @param btcTradeFeeAddress        donation address
      * @param makerBsqInputs            BSQ inputs for maker
      * @param makerBtcInputs            BTC inputs for maker
      * @param takerBsqInputs            BSQ raw inputs for taker
@@ -1293,17 +1284,15 @@ public class TradeWalletService {
                                       Coin makerBtcPayout,
                                       Coin takerBsqPayout,
                                       Coin takerBtcPayout,
-                                      Coin btcTradeFee,
                                       String makerBsqAddress,
                                       String makerBtcAddress,
                                       String takerBsqAddress,
                                       String takerBtcAddress,
-                                      String btcTradeFeeAddress,
                                       List<RawTransactionInput> makerBsqInputs,
                                       List<RawTransactionInput> makerBtcInputs,
                                       List<RawTransactionInput> takerBsqInputs,
                                       List<RawTransactionInput> takerBtcInputs)
-            throws AddressFormatException/*, SigningException*/ {
+            throws AddressFormatException {
 
         var atomicTx = new Transaction(params);
 
@@ -1322,8 +1311,6 @@ public class TradeWalletService {
             atomicTx.addOutput(takerBtcPayout, Address.fromString(params, takerBtcAddress));
         if (makerBtcPayout.isPositive())
             atomicTx.addOutput(makerBtcPayout, Address.fromString(params, makerBtcAddress));
-        if (btcTradeFee.isPositive())
-            atomicTx.addOutput(btcTradeFee, Address.fromString(params, btcTradeFeeAddress));
 
         return atomicTx;
     }

@@ -96,10 +96,6 @@ public abstract class AtomicTrade extends TradeModel {
     @Getter
     private final long miningFeePerByte;
     @Getter
-    private final boolean isCurrencyForMakerFeeBtc;
-    @Getter
-    private final boolean isCurrencyForTakerFeeBtc;
-    @Getter
     private final long makerFee;
     @Getter
     private final long takerFee;
@@ -125,8 +121,6 @@ public abstract class AtomicTrade extends TradeModel {
                           long takeOfferDate,
                           @Nullable NodeAddress peerNodeAddress,
                           long miningFeePerByte,
-                          boolean isCurrencyForMakerFeeBtc,
-                          boolean isCurrencyForTakerFeeBtc,
                           long makerFee,
                           long takerFee,
                           AtomicProcessModel atomicProcessModel,
@@ -139,8 +133,6 @@ public abstract class AtomicTrade extends TradeModel {
         this.takeOfferDate = takeOfferDate;
         this.peerNodeAddress = peerNodeAddress;
         this.miningFeePerByte = miningFeePerByte;
-        this.isCurrencyForMakerFeeBtc = isCurrencyForMakerFeeBtc;
-        this.isCurrencyForTakerFeeBtc = isCurrencyForTakerFeeBtc;
         this.makerFee = makerFee;
         this.takerFee = takerFee;
         this.atomicProcessModel = atomicProcessModel;
@@ -162,8 +154,6 @@ public abstract class AtomicTrade extends TradeModel {
                 .setPrice(price)
                 .setTakeOfferDate(takeOfferDate)
                 .setMiningFeePerByte(miningFeePerByte)
-                .setIsCurrencyForMakerFeeBtc(isCurrencyForMakerFeeBtc)
-                .setIsCurrencyForTakerFeeBtc(isCurrencyForTakerFeeBtc)
                 .setMakerFee(makerFee)
                 .setTakerFee(takerFee)
                 .setAtomicProcessModel(atomicProcessModel.toProtoMessage())

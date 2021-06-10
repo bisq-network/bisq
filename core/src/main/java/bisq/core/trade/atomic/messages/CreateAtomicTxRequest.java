@@ -43,8 +43,6 @@ public class CreateAtomicTxRequest extends TradeMessage implements DirectMessage
     long txFeePerVbyte;
     long makerFee;
     long takerFee;
-    boolean isCurrencyForMakerFeeBtc;
-    boolean isCurrencyForTakerFeeBtc;
     long takerBsqOutputValue;
     String takerBsqOutputAddress;
     long takerBtcOutputValue;
@@ -62,8 +60,6 @@ public class CreateAtomicTxRequest extends TradeMessage implements DirectMessage
                                  long txFeePerVbyte,
                                  long makerFee,
                                  long takerFee,
-                                 boolean isCurrencyForMakerFeeBtc,
-                                 boolean isCurrencyForTakerFeeBtc,
                                  long takerBsqOutputValue,
                                  String takerBsqOutputAddress,
                                  long takerBtcOutputValue,
@@ -81,8 +77,6 @@ public class CreateAtomicTxRequest extends TradeMessage implements DirectMessage
                 txFeePerVbyte,
                 makerFee,
                 takerFee,
-                isCurrencyForMakerFeeBtc,
-                isCurrencyForTakerFeeBtc,
                 takerBsqOutputValue,
                 takerBsqOutputAddress,
                 takerBtcOutputValue,
@@ -106,8 +100,6 @@ public class CreateAtomicTxRequest extends TradeMessage implements DirectMessage
                                   long txFeePerVbyte,
                                   long makerFee,
                                   long takerFee,
-                                  boolean isCurrencyForMakerFeeBtc,
-                                  boolean isCurrencyForTakerFeeBtc,
                                   long takerBsqOutputValue,
                                   String takerBsqOutputAddress,
                                   long takerBtcOutputValue,
@@ -123,8 +115,6 @@ public class CreateAtomicTxRequest extends TradeMessage implements DirectMessage
         this.txFeePerVbyte = txFeePerVbyte;
         this.makerFee = makerFee;
         this.takerFee = takerFee;
-        this.isCurrencyForMakerFeeBtc = isCurrencyForMakerFeeBtc;
-        this.isCurrencyForTakerFeeBtc = isCurrencyForTakerFeeBtc;
         this.takerBsqOutputValue = takerBsqOutputValue;
         this.takerBsqOutputAddress = takerBsqOutputAddress;
         this.takerBtcOutputValue = takerBtcOutputValue;
@@ -147,8 +137,6 @@ public class CreateAtomicTxRequest extends TradeMessage implements DirectMessage
                         .setTxFeePerVbyte(txFeePerVbyte)
                         .setMakerFee(makerFee)
                         .setTakerFee(takerFee)
-                        .setIsCurrencyForMakerFeeBtc(isCurrencyForMakerFeeBtc)
-                        .setIsCurrencyForTakerFeeBtc(isCurrencyForTakerFeeBtc)
                         .setTakerBsqOutputValue(takerBsqOutputValue)
                         .setTakerBsqOutputAddress(takerBsqOutputAddress)
                         .setTakerBtcOutputValue(takerBtcOutputValue)
@@ -172,8 +160,6 @@ public class CreateAtomicTxRequest extends TradeMessage implements DirectMessage
                 proto.getTxFeePerVbyte(),
                 proto.getMakerFee(),
                 proto.getTakerFee(),
-                proto.getIsCurrencyForMakerFeeBtc(),
-                proto.getIsCurrencyForTakerFeeBtc(),
                 proto.getTakerBsqOutputValue(),
                 proto.getTakerBsqOutputAddress(),
                 proto.getTakerBtcOutputValue(),
@@ -198,8 +184,6 @@ public class CreateAtomicTxRequest extends TradeMessage implements DirectMessage
                 "\n     txFeePerVbyte=" + txFeePerVbyte +
                 "\n     makerFee=" + makerFee +
                 "\n     takerFee=" + takerFee +
-                "\n     isCurrencyForMakerFeeBtc=" + isCurrencyForMakerFeeBtc +
-                "\n     isCurrencyForTakerFeeBtc=" + isCurrencyForTakerFeeBtc +
                 "\n     takerBsqOutputValue=" + takerBsqOutputValue +
                 "\n     takerBsqOutputAddress=" + takerBsqOutputAddress +
                 "\n     takerBtcOutputValue=" + takerBtcOutputValue +

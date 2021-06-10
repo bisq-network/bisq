@@ -96,11 +96,9 @@ class AtomicTradesViewModel extends ActivatableWithDataModel<AtomicTradeDataMode
             return "";
 
         if (wasMyOffer(item.getAtomicTrade())) {
-            CoinFormatter formatter = item.getAtomicTrade().isCurrencyForMakerFeeBtc() ? btcFormatter : bsqFormatter;
-            return formatter.formatCoinWithCode(item.getAtomicTrade().getMakerFee());
+            return bsqFormatter.formatCoinWithCode(item.getAtomicTrade().getMakerFee());
         } else {
-            CoinFormatter formatter = item.getAtomicTrade().isCurrencyForTakerFeeBtc() ? btcFormatter : bsqFormatter;
-            return formatter.formatCoinWithCode(item.getAtomicTrade().getTakerFee());
+            return bsqFormatter.formatCoinWithCode(item.getAtomicTrade().getTakerFee());
         }
     }
 

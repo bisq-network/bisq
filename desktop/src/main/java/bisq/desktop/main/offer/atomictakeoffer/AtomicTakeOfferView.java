@@ -693,7 +693,7 @@ public class AtomicTakeOfferView extends ActivatableViewAndModel<AnchorPane, Ato
 
 
     private void showInsufficientBsqFundsForBtcFeePaymentPopup() {
-        Coin takerFee = model.dataModel.getTakerFee(false);
+        Coin takerFee = model.dataModel.getTakerFee();
         String message = null;
         if (takerFee != null)
             message = Res.get("popup.warning.insufficientBsqFundsForBtcFeePayment",

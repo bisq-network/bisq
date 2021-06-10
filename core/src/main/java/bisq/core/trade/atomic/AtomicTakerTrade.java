@@ -49,8 +49,6 @@ public final class AtomicTakerTrade extends AtomicTrade implements TakerTrade {
                             long takeOfferDate,
                             @Nullable NodeAddress peerNodeAddress,
                             long miningFeePerByte,
-                            boolean isCurrencyForMakerFeeBtc,
-                            boolean isCurrencyForTakerFeeBtc,
                             long makerFee,
                             long takerFee,
                             AtomicProcessModel atomicProcessModel,
@@ -63,8 +61,6 @@ public final class AtomicTakerTrade extends AtomicTrade implements TakerTrade {
                 takeOfferDate,
                 peerNodeAddress,
                 miningFeePerByte,
-                isCurrencyForMakerFeeBtc,
-                isCurrencyForTakerFeeBtc,
                 makerFee,
                 takerFee,
                 atomicProcessModel,
@@ -100,8 +96,6 @@ public final class AtomicTakerTrade extends AtomicTrade implements TakerTrade {
                         proto.getTakeOfferDate(),
                         proto.hasPeerNodeAddress() ? NodeAddress.fromProto(proto.getPeerNodeAddress()) : null,
                         proto.getMiningFeePerByte(),
-                        proto.getIsCurrencyForMakerFeeBtc(),
-                        proto.getIsCurrencyForTakerFeeBtc(),
                         proto.getMakerFee(),
                         proto.getTakerFee(),
                         AtomicProcessModel.fromProto(proto.getAtomicProcessModel(), coreProtoResolver),
@@ -112,28 +106,4 @@ public final class AtomicTakerTrade extends AtomicTrade implements TakerTrade {
         atomicTrade.setTxId(proto.getTxId());
         return atomicTrade;
     }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // API
-    ///////////////////////////////////////////////////////////////////////////////////////////
-//
-//    @Override
-//    protected void createTradeProtocol() {
-//        tradeProtocol = new AtomicTakerProtocol(this);
-//    }
-//
-//    @Override
-//    public Coin getPayoutAmount() {
-//        // There is no payout for atomic trades. Either the trade goes through and both parties get what the want,
-//        // or the trade fails and no funds are transferred
-//        return Coin.ZERO;
-//    }
-//
-//    @Override
-//    public void onTakeOffer() {
-//        checkArgument(tradeProtocol instanceof AtomicTakerProtocol,
-//                "tradeProtocol NOT instanceof AtomicTakerProtocol");
-//        ((AtomicTakerProtocol) tradeProtocol).takeAvailableOffer();
-//    }
 }

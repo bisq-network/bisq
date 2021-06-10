@@ -19,10 +19,10 @@ package bisq.core.trade.atomic;
 
 
 import bisq.core.btc.wallet.BsqWalletService;
-import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
+import bisq.core.monetary.Altcoin;
 import bisq.core.monetary.Price;
-import bisq.core.provider.fee.FeeService;
+import bisq.core.monetary.Volume;
 import bisq.core.trade.protocol.TxData;
 
 import bisq.common.util.Utilities;
@@ -40,42 +40,24 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 
-// Helper for creating atomic transactions.
-//
-// Takes BTC amount and BSQ Price to calculate BSQ amount be exchanged for BTC.
-//
-// TODO(sq)
-// Creates complete atomic tx using BTC and BSQ inputs from buyer and seller and output
-// to corresponding addresses
-// TODO(sq)
-// Creates partial tx from local wallets when the counterparty inputs and outputs are
-// unknown by gathering inputs and creating the appropriate outputs
-//
-// TODO(sq)
-// Verification checks that input amounts match output amounts and minging fee. Only
-// confirmed BSQ can be used as inputs since the amounts and validity needs be verified.
-//
-// TODO(sq)
-// Calculate fee required by each party separately, using the agreed fee.
-//
-// Present total amount of BTC and BSQ required locally as ObjectProperties
-
-/* Tx format:
- * [1]     (BSQtradeAmount + BSQchange seller, sellerBSQAddress)
- * [0-1]   (BSQchange buyer, buyerBSQAddress)
- * [1]     (BTCtradeAmount + BTCchange, buyerBTCAddress) (Change from BTC for txFee and/or tradeFee)
- * [0-1]   (BTCchange, sellerBTCAddress) (Change from BTC for tradeAmount payment)
- * [0-1]   (BTCtradeFee, tradeFeeAddress)
- * [0]     (BTC txFee)
+/*  Helper for creating atomic transactions.
+ * Tx output format:
+ * At a minimum there will be 1 BSQ out and 1 BTC out
+ * [0-1]   (Maker BSQ)
+ * [0-1]   (Taker BSQ)
+ * [0-1]   (Taker BTC)
+ * [0-1]   (Maker BTC)
+ *
+ * BTC buyer pays trade fee for both parties since they already have BSQ.
+ * BTC seller pays buyer in BTC for the burnt BSQ
  */
 
 @Slf4j
 public class AtomicTxBuilder {
-    private final FeeService feeService;
-    private final BtcWalletService btcWalletService;
     private final BsqWalletService bsqWalletService;
     private final TradeWalletService tradeWalletService;
     @Getter
@@ -83,26 +65,19 @@ public class AtomicTxBuilder {
     @Getter
     private final BooleanProperty canBuildMySide = new SimpleBooleanProperty(false);
     private final boolean isBuyer;
-    private final boolean isMaker;
     // My required amounts
     public final ObjectProperty<Coin> myBtc = new SimpleObjectProperty<>();
     public final ObjectProperty<Coin> myBsq = new SimpleObjectProperty<>();
 
     // Required input amounts per role
-    private Coin buyerBtc = Coin.ZERO;
-    private Coin buyerBsq = Coin.ZERO;
-    private Coin sellerBtc = Coin.ZERO;
-    private Coin sellerBsq = Coin.ZERO;
+    private Coin buyerBsqIn = Coin.ZERO;
+    private Coin sellerBtcIn = Coin.ZERO;
     @Getter
     private Coin buyerTradeFee;
     @Getter
-    private boolean buyerTradeFeeIsBtc = true;
-    @Getter
     private Coin sellerTradeFee;
-    @Getter
-    private boolean sellerTradeFeeIsBtc = true;
 
-    // Trade data
+    // Amounts traded
     @Nullable
     private Coin btcAmount;
     @Nullable
@@ -112,43 +87,35 @@ public class AtomicTxBuilder {
 
     private final String myBtcAddress;
     private final String myBsqAddress;
-    private final String btcTradeFeeAddress;
 
 
     /**
-     * @param feeService    feeService
-     * @param isBuyer       user is buyer
-     * @param isMaker       user is maker
-     * @param price         trade price
-     * @param btcAmount     trade amount
-     * @param txFeePerVbyte tx fee per vbyte, null to use fee from feeService, otherwise
-     *                      check that the given value doesn't differ too much from
-     *                      feeService
+     * @param bsqWalletService      bsqWalletService
+     * @param tradeWalletService    tradeWalletService
+     * @param isBuyer               user is buyer
+     * @param price                 trade price
+     * @param btcAmount             trade amount
+     * @param txFeePerVbyte         tx fee per vbyte
+     * @param myBtcAddress          my BTC address
+     * @param myBsqAddress          my BSQ address
+     *
      */
-    public AtomicTxBuilder(FeeService feeService,
-                           BtcWalletService btcWalletService,
-                           BsqWalletService bsqWalletService,
+    public AtomicTxBuilder(BsqWalletService bsqWalletService,
                            TradeWalletService tradeWalletService,
                            boolean isBuyer,
-                           boolean isMaker,
                            @Nullable Price price,
                            @Nullable Coin btcAmount,
                            Coin txFeePerVbyte,
                            String myBtcAddress,
-                           String myBsqAddress,
-                           String btcTradeFeeAddress) {
-        this.feeService = feeService;
-        this.btcWalletService = btcWalletService;
+                           String myBsqAddress) {
         this.bsqWalletService = bsqWalletService;
         this.tradeWalletService = tradeWalletService;
         this.isBuyer = isBuyer;
-        this.isMaker = isMaker;
         this.price = price;
         this.btcAmount = btcAmount;
         this.txFeePerVbyte = txFeePerVbyte;
         this.myBtcAddress = myBtcAddress;
         this.myBsqAddress = myBsqAddress;
-        this.btcTradeFeeAddress = btcTradeFeeAddress;
 
         updateAmounts();
     }
@@ -163,31 +130,29 @@ public class AtomicTxBuilder {
         updateAmounts();
     }
 
-    public void setBuyerTradeFee(boolean feeIsBtc, Coin amount) {
-        buyerTradeFeeIsBtc = feeIsBtc;
+    public void setBuyerTradeFee(Coin amount) {
         buyerTradeFee = amount;
         updateAmounts();
     }
 
-    public void setSellerTradeFee(boolean feeIsBtc, Coin amount) {
-        sellerTradeFeeIsBtc = feeIsBtc;
+    public void setSellerTradeFee(Coin amount) {
         sellerTradeFee = amount;
         updateAmounts();
     }
 
-    public void setMyTradeFee(boolean feeIsBtc, Coin amount) {
+    public void setMyTradeFee(Coin amount) {
         if (isBuyer) {
-            setBuyerTradeFee(feeIsBtc, amount);
+            setBuyerTradeFee(amount);
         } else {
-            setSellerTradeFee(feeIsBtc, amount);
+            setSellerTradeFee(amount);
         }
     }
 
-    public void setPeerTradeFee(boolean feeIsBtc, Coin amount) {
+    public void setPeerTradeFee(Coin amount) {
         if (isBuyer) {
-            setSellerTradeFee(feeIsBtc, amount);
+            setSellerTradeFee(amount);
         } else {
-            setBuyerTradeFee(feeIsBtc, amount);
+            setBuyerTradeFee(amount);
         }
     }
 
@@ -223,20 +188,28 @@ public class AtomicTxBuilder {
         checkNotNull(btcAmount, "btcAmount must not be null");
         checkNotNull(bsqAmount, "bsqAmount must not be null");
         try {
-            var requiredBsq = isBuyer ? buyerBsq : sellerBsq;
-            var requiredBtc = isBuyer ? buyerBtc : sellerBtc;
-            requiredBtc = requiredBtc.add(getTxFee(parent, payForOverhead)).subtract(getMyBsqTradeFee());
-            if (requiredBtc.isLessThan(Coin.ZERO)) {
-                requiredBtc = Coin.ZERO;
-            }
+            // Buyer pays trade fee by burning BSQ
+            // Seller pays trade fee by buying extra BSQ for buyer to burn
+            // This is calculated in updateAmounts()
+            var txFee = getTxFee(parent, payForOverhead);
+            var requiredBsq = isBuyer ? buyerBsqIn : Coin.ZERO;
+            var requiredBtc = isBuyer ? Coin.ZERO : sellerBtcIn.add(txFee);
+            checkArgument(!requiredBsq.isNegative(), "required BSQ cannot be negative");
+            checkArgument(!requiredBtc.isNegative(), "required BTC cannot be negative");
 
-            // This might prepare a tx with no inputs if no BSQ is required
+            // This prepares a tx with no inputs if no BSQ is required
             var preparedBsq = bsqWalletService.prepareAtomicBsqInputs(requiredBsq);
 
             // Set outputs to change from inputs plus amount to receive in the trade
             var bsqOut = preparedBsq.second.add(isBuyer ? Coin.ZERO : bsqAmount);
             var btcOut = parent == null ? Coin.ZERO : parent.btcChange;
-            btcOut = btcOut.add(isBuyer ? btcAmount : Coin.ZERO);
+            if (isBuyer) {
+                // Buyer pays tx fee by using the burnt BSQ satoshis, and if that's not
+                // enough, reducing the BTC output received in the trade (or increasing
+                // if more BSQ is burnt than the tx fee)
+                var txFeeAdjustment = txFee.subtract(buyerTradeFee).subtract(sellerTradeFee);
+                btcOut = btcOut.add(btcAmount).subtract(txFeeAdjustment);
+            }
 
             // Build my side of tx with signed BTC inputs
             var txData = tradeWalletService.buildMySideAtomicTx(
@@ -245,9 +218,8 @@ public class AtomicTxBuilder {
                     myBsqAddress,
                     bsqOut,
                     myBtcAddress,
-                    btcOut,
-                    btcTradeFeeAddress,
-                    getMyBtcTradeFee());
+                    btcOut
+            );
 
             // Sign BSQ inputs
             txData.setTx(bsqWalletService.signInputs(txData.tx, txData.bsqInputs));
@@ -269,9 +241,14 @@ public class AtomicTxBuilder {
         return null;
     }
 
-    public static Coin bsqFromBtc(Coin btcAmount, Price price) {
+    private static Coin bsqFromBtc(Coin btcAmount, Price price) {
         // Round BSQ down
         return Coin.valueOf(price.getVolumeByAmount(btcAmount).getMonetary().getValue() / 1_000_000);
+    }
+
+    public static Coin btcFromBsq(Coin bsqAmount, Price price) {
+        var monetary = Altcoin.valueOf(price.getCurrencyCode(), bsqAmount.getValue());
+        return price.getAmountByVolume(new Volume(monetary));
     }
 
     public void setTxFeePerVbyte(Coin txFeePerVbyte) {
@@ -286,77 +263,41 @@ public class AtomicTxBuilder {
     private void updateAmounts() {
         if (price == null ||
                 btcAmount == null ||
-                txFeePerVbyte.isZero()) {
+                txFeePerVbyte.isZero() ||
+                buyerTradeFee == null ||
+                sellerTradeFee == null) {
             bsqAmount = null;
-            resetBuyerValues();
-            resetSellerValues();
+            resetValues();
             updateMyValues();
             return;
         }
 
         bsqAmount = bsqFromBtc(btcAmount, price);
 
-        if (buyerTradeFee != null) {
-            buyerBtc = Coin.ZERO;
-            buyerBsq = bsqAmount;
-            if (buyerTradeFeeIsBtc) {
-                buyerBtc = buyerBtc.add(buyerTradeFee);
-            } else {
-                buyerBsq = buyerBsq.add(buyerTradeFee);
-            }
-        } else {
-            resetBuyerValues();
-        }
-
-        if (sellerTradeFee != null) {
-            sellerBtc = btcAmount;
-            sellerBsq = Coin.ZERO;
-            if (sellerTradeFeeIsBtc) {
-                sellerBtc = sellerBtc.add(sellerTradeFee);
-            } else {
-                sellerBsq = sellerBsq.add(sellerTradeFee);
-            }
-        } else {
-            resetSellerValues();
-        }
+        // BTC buyer pays trade fee for both buyer and seller by burning BSQ
+        buyerBsqIn = bsqAmount.add(buyerTradeFee).add(sellerTradeFee);
+        // BTC seller pays buyer for the trade fee, basically selling some extra BTC to
+        // get some more BSQ that are burnt
+        sellerBtcIn = btcAmount.add(btcFromBsq(sellerTradeFee, price));
 
         updateMyValues();
     }
 
-    private void resetBuyerValues() {
-        buyerBtc = Coin.ZERO;
-        buyerBsq = Coin.ZERO;
-    }
-
-    private void resetSellerValues() {
-        sellerBtc = Coin.ZERO;
-        sellerBsq = Coin.ZERO;
+    private void resetValues() {
+        buyerBsqIn = Coin.ZERO;
+        sellerBtcIn = Coin.ZERO;
     }
 
     private void updateMyValues() {
         if (isBuyer) {
-            myBtc.setValue(buyerBtc);
-            myBsq.setValue(buyerBsq);
+            myBtc.setValue(Coin.ZERO);
+            myBsq.setValue(buyerBsqIn);
         } else {
-            myBtc.setValue(sellerBtc);
-            myBsq.setValue(sellerBsq);
+            myBtc.setValue(sellerBtcIn);
+            myBsq.setValue(Coin.ZERO);
         }
         canBuildMySide.set(!txFeePerVbyte.isZero() &&
                 (myBtc.get().isPositive() || myBsq.get().isPositive()));
-    }
-
-    private Coin getMyBtcTradeFee() {
-        if (isBuyer) {
-            return buyerTradeFeeIsBtc ? buyerTradeFee : Coin.ZERO;
-        }
-        return sellerTradeFeeIsBtc ? sellerTradeFee : Coin.ZERO;
-    }
-
-    private Coin getMyBsqTradeFee() {
-        if (isBuyer) {
-            return buyerTradeFeeIsBtc ? Coin.ZERO : buyerTradeFee;
-        }
-        return sellerTradeFeeIsBtc ? Coin.ZERO : sellerTradeFee;
     }
 
     /* Tx size:

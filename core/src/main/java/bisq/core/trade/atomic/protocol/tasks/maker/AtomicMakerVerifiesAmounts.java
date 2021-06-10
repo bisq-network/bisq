@@ -72,15 +72,11 @@ public class AtomicMakerVerifiesAmounts extends AtomicSetupTxListener {
             checkArgument(message.getBsqTradeAmount() >= atomicProcessModel.getBsqMinTradeAmount() &&
                             message.getBsqTradeAmount() <= atomicProcessModel.getBsqMaxTradeAmount(),
                     "bsqTradeAmount not within range");
-            checkArgument(atomicTrade.isCurrencyForMakerFeeBtc() == offer.isCurrencyForMakerFeeBtc(),
-                    "Maker fee type mismatch");
             checkArgument(atomicTrade.getMakerFee() ==
-                            Objects.requireNonNull(CoinUtil.getMakerFee(offer.isCurrencyForMakerFeeBtc(),
-                                    atomicTrade.getAmount())).getValue(),
+                    Objects.requireNonNull(CoinUtil.getMakerFee(false, atomicTrade.getAmount())).getValue(),
                     "Maker fee mismatch");
             checkArgument(atomicTrade.getTakerFee() ==
-                            Objects.requireNonNull(CoinUtil.getTakerFee(atomicTrade.isCurrencyForTakerFeeBtc(),
-                                    atomicTrade.getAmount())).getValue(),
+                            Objects.requireNonNull(CoinUtil.getTakerFee(false, atomicTrade.getAmount())).getValue(),
                     "Taker fee mismatch");
 
             atomicProcessModel.updateFromMessage(message);

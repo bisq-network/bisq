@@ -44,12 +44,8 @@ public class AtomicTradeInfo implements Payload {
     private final long btcMaxTradeAmount;
     private final long btcMinTradeAmount;
     private final long tradePrice;
-    private final boolean isCurrencyForMakerFeeBtc;
-    private final boolean isCurrencyForTakerFeeBtc;
     private final long bsqMakerTradeFee;
-    private final long btcMakerTradeFee;
     private final long bsqTakerTradeFee;
-    private final long btcTakerTradeFee;
     private final long txFeePerVbyte;
     private final long txFee;
     private final String makerBsqAddress;
@@ -73,12 +69,8 @@ public class AtomicTradeInfo implements Payload {
         this.btcMaxTradeAmount = builder.btcMaxTradeAmount;
         this.btcMinTradeAmount = builder.btcMinTradeAmount;
         this.tradePrice = builder.tradePrice;
-        this.isCurrencyForMakerFeeBtc = builder.isCurrencyForMakerFeeBtc;
-        this.isCurrencyForTakerFeeBtc = builder.isCurrencyForTakerFeeBtc;
         this.bsqMakerTradeFee = builder.bsqMakerTradeFee;
-        this.btcMakerTradeFee = builder.btcMakerTradeFee;
         this.bsqTakerTradeFee = builder.bsqTakerTradeFee;
-        this.btcTakerTradeFee = builder.btcTakerTradeFee;
         this.txFeePerVbyte = builder.txFeePerVbyte;
         this.txFee = builder.txFee;
         this.makerBsqAddress = builder.makerBsqAddress;
@@ -108,12 +100,8 @@ public class AtomicTradeInfo implements Payload {
                 .withBtcMaxTradeAmount(trade.getAtomicProcessModel().getBtcMaxTradeAmount())
                 .withBtcMinTradeAmount(trade.getAtomicProcessModel().getBtcMinTradeAmount())
                 .withTradePrice(trade.getAtomicProcessModel().getTradePrice())
-                .withIsCurrencyForMakerFeeBtc(trade.isCurrencyForMakerFeeBtc())
-                .withIsCurrencyForTakerFeeBtc(trade.isCurrencyForTakerFeeBtc())
                 .withBsqMakerTradeFee(trade.getAtomicProcessModel().getBsqMakerTradeFee())
-                .withBtcMakerTradeFee(trade.getAtomicProcessModel().getBtcMakerTradeFee())
                 .withBsqTakerTradeFee(trade.getAtomicProcessModel().getBsqTakerTradeFee())
-                .withBtcTakerTradeFee(trade.getAtomicProcessModel().getBtcTakerTradeFee())
                 .withTxFeePerVbyte(trade.getAtomicProcessModel().getTxFeePerVbyte())
                 .withTxFee(trade.getAtomicProcessModel().getTxFee())
                 .withMakerBsqAddress(trade.getAtomicProcessModel().getMakerBsqAddress())
@@ -145,12 +133,8 @@ public class AtomicTradeInfo implements Payload {
                 .setBtcMaxTradeAmount(btcMaxTradeAmount)
                 .setBtcMinTradeAmount(btcMinTradeAmount)
                 .setTradePrice(tradePrice)
-                .setIsCurrencyForMakerFeeBtc(isCurrencyForMakerFeeBtc)
-                .setIsCurrencyForTakerFeeBtc(isCurrencyForTakerFeeBtc)
                 .setBsqMakerTradeFee(bsqMakerTradeFee)
-                .setBtcMakerTradeFee(btcMakerTradeFee)
                 .setBsqTakerTradeFee(bsqTakerTradeFee)
-                .setBtcTakerTradeFee(btcTakerTradeFee)
                 .setTxFeePerVbyte(txFeePerVbyte)
                 .setTxFee(txFee)
                 .setMakerBsqAddress(makerBsqAddress != null ? makerBsqAddress : "")
@@ -177,12 +161,8 @@ public class AtomicTradeInfo implements Payload {
                 .withBtcMaxTradeAmount(proto.getBtcMaxTradeAmount())
                 .withBtcMinTradeAmount(proto.getBtcMinTradeAmount())
                 .withTradePrice(proto.getTradePrice())
-                .withIsCurrencyForMakerFeeBtc(proto.getIsCurrencyForMakerFeeBtc())
-                .withIsCurrencyForTakerFeeBtc(proto.getIsCurrencyForTakerFeeBtc())
                 .withBsqMakerTradeFee(proto.getBsqMakerTradeFee())
-                .withBtcMakerTradeFee(proto.getBtcMakerTradeFee())
                 .withBsqTakerTradeFee(proto.getBsqTakerTradeFee())
-                .withBtcTakerTradeFee(proto.getBtcTakerTradeFee())
                 .withTxFeePerVbyte(proto.getTxFeePerVbyte())
                 .withTxFee(proto.getTxFee())
                 .withMakerBsqAddress(proto.getMakerBsqAddress())
@@ -208,12 +188,8 @@ public class AtomicTradeInfo implements Payload {
         private long btcMaxTradeAmount;
         private long btcMinTradeAmount;
         private long tradePrice;
-        private boolean isCurrencyForMakerFeeBtc;
-        private boolean isCurrencyForTakerFeeBtc;
         private long bsqMakerTradeFee;
-        private long btcMakerTradeFee;
         private long bsqTakerTradeFee;
-        private long btcTakerTradeFee;
         private long txFeePerVbyte;
         private long txFee;
         private String makerBsqAddress;
@@ -284,33 +260,13 @@ public class AtomicTradeInfo implements Payload {
             return this;
         }
 
-        public AtomicTradeInfoBuilder withIsCurrencyForMakerFeeBtc(boolean isCurrencyForMakerFeeBtc) {
-            this.isCurrencyForMakerFeeBtc = isCurrencyForMakerFeeBtc;
-            return this;
-        }
-
-        public AtomicTradeInfoBuilder withIsCurrencyForTakerFeeBtc(boolean isCurrencyForTakerFeeBtc) {
-            this.isCurrencyForTakerFeeBtc = isCurrencyForTakerFeeBtc;
-            return this;
-        }
-
         public AtomicTradeInfoBuilder withBsqMakerTradeFee(long bsqMakerTradeFee) {
             this.bsqMakerTradeFee = bsqMakerTradeFee;
             return this;
         }
 
-        public AtomicTradeInfoBuilder withBtcMakerTradeFee(long btcMakerTradeFee) {
-            this.btcMakerTradeFee = btcMakerTradeFee;
-            return this;
-        }
-
         public AtomicTradeInfoBuilder withBsqTakerTradeFee(long bsqTakerTradeFee) {
             this.bsqTakerTradeFee = bsqTakerTradeFee;
-            return this;
-        }
-
-        public AtomicTradeInfoBuilder withBtcTakerTradeFee(long btcTakerTradeFee) {
-            this.btcTakerTradeFee = btcTakerTradeFee;
             return this;
         }
 

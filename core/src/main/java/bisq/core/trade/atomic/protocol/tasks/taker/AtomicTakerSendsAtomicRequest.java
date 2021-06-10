@@ -60,8 +60,6 @@ public class AtomicTakerSendsAtomicRequest extends AtomicTradeTask {
                     atomicProcessModel.getTxFeePerVbyte(),
                     atomicTrade.getMakerFee(),
                     atomicTrade.getTakerFee(),
-                    atomicTrade.isCurrencyForMakerFeeBtc(),
-                    atomicTrade.isCurrencyForTakerFeeBtc(),
                     atomicProcessModel.getTakerBsqOutputAmount(),
                     atomicProcessModel.getTakerBsqAddress(),
                     atomicProcessModel.getTakerBtcOutputAmount(),

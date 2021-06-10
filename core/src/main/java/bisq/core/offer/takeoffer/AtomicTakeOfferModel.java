@@ -23,7 +23,6 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.Restrictions;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.dao.DaoFacade;
-import bisq.core.dao.governance.param.Param;
 import bisq.core.filter.FilterManager;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
@@ -165,18 +164,16 @@ public class AtomicTakeOfferModel implements Model {
         checkNotNull(paymentAccount, "PaymentAccount must not be null");
 
         this.amount.set(Coin.valueOf(Math.min(offer.getAmount().value, getMaxTradeLimit())));
-        atomicTxBuilder = new AtomicTxBuilder(feeService,
-                btcWalletService,
+        atomicTxBuilder = new AtomicTxBuilder(
                 bsqWalletService,
                 tradeWalletService,
                 offer.getDirection() == OfferPayloadI.Direction.SELL,
-                false,
                 offer.getPrice(),
                 amount.getValue(),
                 Coin.ZERO,
                 btcWalletService.getFreshAddressEntry().getAddressString(),
-                bsqWalletService.getUnusedAddress().toString(),
-                daoFacade.getParamValue(Param.RECIPIENT_BTC_ADDRESS));
+                bsqWalletService.getUnusedAddress().toString()
+        );
         feeService.requestFees(() -> atomicTxBuilder.setTxFeePerVbyte(feeService.getTxFeePerVbyte()));
 
         calculateVolume();
@@ -215,9 +212,7 @@ public class AtomicTakeOfferModel implements Model {
                     amount.get(),
                     tradePrice.getValue(),
                     feeService.getTxFeePerVbyte().getValue(),
-                    offer.isCurrencyForMakerFeeBtc(),
-                    isCurrencyForTakerFeeBtc(),
-                    getMakerFee(offer.isCurrencyForMakerFeeBtc()).getValue(),
+                    getMakerFee().getValue(),
                     getTakerFee().getValue(),
                     false,
                     tradeResultHandler,
@@ -287,21 +282,16 @@ public class AtomicTakeOfferModel implements Model {
     public void applyAmount(Coin amount) {
         this.amount.set(Coin.valueOf(Math.min(amount.value, getMaxTradeLimit())));
         atomicTxBuilder.setBtcAmount(amount);
-    }
-
-    public Coin getTakerFee(boolean isCurrencyForTakerFeeBtc) {
-        var fee = CoinUtil.getTakerFee(isCurrencyForTakerFeeBtc, this.amount.get());
-        atomicTxBuilder.setMyTradeFee(isCurrencyForTakerFeeBtc, fee);
-
-        return fee != null ? fee : Coin.ZERO;
+        atomicTxBuilder.setMyTradeFee(getTakerFee());
+        atomicTxBuilder.setPeerTradeFee(getMakerFee());
     }
 
     public Coin getTakerFee() {
-        return getTakerFee(isCurrencyForTakerFeeBtc());
+        return CoinUtil.getTakerFee(false, this.amount.get());
     }
 
-    public Coin getMakerFee(boolean isCurrencyForMakerFeeBtc) {
-        return CoinUtil.getMakerFee(isCurrencyForMakerFeeBtc, this.amount.get());
+    public Coin getMakerFee() {
+        return CoinUtil.getMakerFee(false, this.amount.get());
     }
 
     public boolean isMinAmountLessOrEqualAmount() {

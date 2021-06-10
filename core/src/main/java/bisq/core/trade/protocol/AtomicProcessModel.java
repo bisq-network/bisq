@@ -23,7 +23,6 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.dao.DaoFacade;
-import bisq.core.dao.governance.param.Param;
 import bisq.core.filter.FilterManager;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
@@ -105,11 +104,7 @@ public class AtomicProcessModel implements ProcessModelI, Model, PersistablePayl
     @Setter
     private long bsqTakerTradeFee;
     @Setter
-    private long btcTakerTradeFee;
-    @Setter
     private long bsqMakerTradeFee;
-    @Setter
-    private long btcMakerTradeFee;
     @Setter
     private long txFeePerVbyte;
     @Setter
@@ -229,10 +224,8 @@ public class AtomicProcessModel implements ProcessModelI, Model, PersistablePayl
             setBtcTradeAmount(trade.getAmount().getValue());
         setBtcMaxTradeAmount(offer.getAmount().getValue());
         setBtcMinTradeAmount(offer.getMinAmount().getValue());
-        setBsqTakerTradeFee(trade.isCurrencyForTakerFeeBtc() ? 0 : trade.getTakerFee());
-        setBtcTakerTradeFee(trade.isCurrencyForTakerFeeBtc() ? trade.getTakerFee() : 0);
-        setBsqMakerTradeFee(trade.isCurrencyForMakerFeeBtc() ? 0 : trade.getMakerFee());
-        setBtcMakerTradeFee(trade.isCurrencyForMakerFeeBtc() ? trade.getMakerFee() : 0);
+        setBsqTakerTradeFee(trade.getTakerFee());
+        setBsqMakerTradeFee(trade.getMakerFee());
     }
 
     public void updateFromMessage(CreateAtomicTxRequest message) {
@@ -301,29 +294,23 @@ public class AtomicProcessModel implements ProcessModelI, Model, PersistablePayl
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void initTxBuilder(boolean isMaker) {
-        atomicTxBuilder = new AtomicTxBuilder(getProvider().getFeeService(),
-                getBtcWalletService(),
+        atomicTxBuilder = new AtomicTxBuilder(
                 getBsqWalletService(),
                 getTradeWalletService(),
                 offer.isBuyOffer() == isMaker,
-                isMaker,
                 atomicTrade.getPrice(),
                 atomicTrade.getAmount(),
                 Coin.valueOf(txFeePerVbyte),
                 isMaker ? makerBtcAddress : takerBtcAddress,
-                isMaker ? makerBsqAddress : takerBsqAddress,
-                getDaoFacade().getParamValue(Param.RECIPIENT_BTC_ADDRESS));
+                isMaker ? makerBsqAddress : takerBsqAddress
+        );
 
         if (isMaker) {
-            atomicTxBuilder.setMyTradeFee(atomicTrade.isCurrencyForMakerFeeBtc(),
-                    Coin.valueOf(atomicTrade.getMakerFee()));
-            atomicTxBuilder.setPeerTradeFee(atomicTrade.isCurrencyForTakerFeeBtc(),
-                    Coin.valueOf(atomicTrade.getTakerFee()));
+            atomicTxBuilder.setMyTradeFee(Coin.valueOf(atomicTrade.getMakerFee()));
+            atomicTxBuilder.setPeerTradeFee(Coin.valueOf(atomicTrade.getTakerFee()));
         } else {
-            atomicTxBuilder.setMyTradeFee(atomicTrade.isCurrencyForTakerFeeBtc(),
-                    Coin.valueOf(atomicTrade.getTakerFee()));
-            atomicTxBuilder.setPeerTradeFee(atomicTrade.isCurrencyForMakerFeeBtc(),
-                    Coin.valueOf(atomicTrade.getMakerFee()));
+            atomicTxBuilder.setMyTradeFee(Coin.valueOf(atomicTrade.getTakerFee()));
+            atomicTxBuilder.setPeerTradeFee(Coin.valueOf(atomicTrade.getMakerFee()));
         }
     }
 
@@ -361,12 +348,10 @@ public class AtomicProcessModel implements ProcessModelI, Model, PersistablePayl
                 Coin.valueOf(makerBtcOutputAmount),
                 Coin.valueOf(takerBsqOutputAmount),
                 Coin.valueOf(takerBtcOutputAmount),
-                Coin.valueOf(btcMakerTradeFee + btcTakerTradeFee),
                 makerBsqAddress,
                 makerBtcAddress,
                 takerBsqAddress,
                 takerBtcAddress,
-                getDaoFacade().getParamValue(Param.RECIPIENT_BTC_ADDRESS),
                 rawMakerBsqInputs,
                 rawMakerBtcInputs,
                 rawTakerBsqInputs,

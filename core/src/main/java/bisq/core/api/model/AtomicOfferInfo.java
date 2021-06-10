@@ -46,7 +46,6 @@ public class AtomicOfferInfo implements Payload {
     private final String pubKeyRing; // TODO ?
     private final String versionNumber;
     private final int protocolVersion;
-    private final boolean isCurrencyForMakerFeeBtc;
 
     public AtomicOfferInfo(AtomicOfferInfoBuilder builder) {
         this.id = builder.id;
@@ -64,7 +63,6 @@ public class AtomicOfferInfo implements Payload {
         this.pubKeyRing = builder.pubKeyRing;
         this.versionNumber = builder.versionNumber;
         this.protocolVersion = builder.protocolVersion;
-        this.isCurrencyForMakerFeeBtc = builder.isCurrencyForMakerFeeBtc;
     }
 
     public static AtomicOfferInfo toAtomicOfferInfo(Offer offer) {
@@ -88,8 +86,7 @@ public class AtomicOfferInfo implements Payload {
                 .withOwnerNodeAddress(offer.getOfferPayloadI().getOwnerNodeAddress().getFullAddress())
                 .withPubKeyRing(offer.getOfferPayloadI().getPubKeyRing().toString())
                 .withVersionNumber(offer.getOfferPayloadI().getVersionNr())
-                .withProtocolVersion(offer.getOfferPayloadI().getProtocolVersion())
-                .withIsCurrencyForMakerFeeBtc(offer.isCurrencyForMakerFeeBtc());
+                .withProtocolVersion(offer.getOfferPayloadI().getProtocolVersion());
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -114,7 +111,6 @@ public class AtomicOfferInfo implements Payload {
                 .setPubKeyRing(pubKeyRing)
                 .setVersionNr(versionNumber)
                 .setProtocolVersion(protocolVersion)
-                .setIsCurrencyForMakerFeeBtc(isCurrencyForMakerFeeBtc)
                 .build();
     }
 
@@ -135,7 +131,6 @@ public class AtomicOfferInfo implements Payload {
                 .withPubKeyRing(proto.getPubKeyRing())
                 .withVersionNumber(proto.getVersionNr())
                 .withProtocolVersion(proto.getProtocolVersion())
-                .withIsCurrencyForMakerFeeBtc(proto.getIsCurrencyForMakerFeeBtc())
                 .build();
     }
 
@@ -155,7 +150,6 @@ public class AtomicOfferInfo implements Payload {
         private String pubKeyRing;
         private String versionNumber;
         private int protocolVersion;
-        private boolean isCurrencyForMakerFeeBtc;
 
         public AtomicOfferInfoBuilder withId(String id) {
             this.id = id;
@@ -229,11 +223,6 @@ public class AtomicOfferInfo implements Payload {
 
         public AtomicOfferInfoBuilder withProtocolVersion(int protocolVersion) {
             this.protocolVersion = protocolVersion;
-            return this;
-        }
-
-        public AtomicOfferInfoBuilder withIsCurrencyForMakerFeeBtc(boolean isCurrencyForMakerFeeBtc) {
-            this.isCurrencyForMakerFeeBtc = isCurrencyForMakerFeeBtc;
             return this;
         }
 
