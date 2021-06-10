@@ -344,6 +344,14 @@ public class SellerStep3View extends TradeStepView {
         confirmButton.setDisable(!trade.confirmPermitted());
     }
 
+    @Override
+    protected void updateMediationResultState(boolean blockOpeningOfResultAcceptedPopup) {
+        super.updateMediationResultState(blockOpeningOfResultAcceptedPopup);
+
+        if (hasSelfAccepted()) {
+            confirmButton.setDisable(true);
+        }
+    }
 
     ////////////////////////////////////////////////////////////////////////////////////////
     // UI Handlers
