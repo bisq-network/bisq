@@ -18,6 +18,7 @@
 package bisq.desktop.main.overlays.windows;
 
 import bisq.desktop.components.BisqTextArea;
+import bisq.desktop.components.TxIdTextField;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.util.DisplayUtils;
@@ -45,6 +46,7 @@ import bisq.network.p2p.NodeAddress;
 
 import bisq.common.UserThread;
 import bisq.common.crypto.PubKeyRing;
+import bisq.common.util.Tuple2;
 
 import org.bitcoinj.core.Utils;
 
@@ -256,8 +258,9 @@ public class ContractWindow extends Overlay<ContractWindow> {
             addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.delayedPayoutTxId"), dispute.getDelayedPayoutTxId());
 
         if (dispute.getDonationAddressOfDelayedPayoutTx() != null) {
-            addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.delayedPayoutTxReceiverAddress"),
+            Tuple2<Label, TxIdTextField> field = addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.delayedPayoutTxReceiverAddress"),
                     dispute.getDonationAddressOfDelayedPayoutTx());
+            field.second.setAddress(true);
         }
 
         if (dispute.getPayoutTxSerialized() != null)
