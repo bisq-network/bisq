@@ -193,6 +193,12 @@ public class PeerInfoIcon extends Group {
         return 1;
     }
 
+    protected String getAccountAgeTooltip(Long accountAge) {
+        return accountAge > -1 ?
+                Res.get("peerInfoIcon.tooltip.age", DisplayUtils.formatAccountAge(accountAge)) :
+                Res.get("peerInfoIcon.tooltip.unknownAge");
+    }
+
     protected void updatePeerInfoIcon() {
         String tag;
         Map<String, String> peerTagMap = preferences.getPeerTagMap();

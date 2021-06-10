@@ -24,4 +24,10 @@ public class Colors {
     public static final Paint BLUE = Color.valueOf("#0f87c3");
     public static final Paint LIGHT_GREY = Color.valueOf("#CCCCCC");
     public static final Paint GREEN = Color.valueOf("#00aa33");
+
+    public static final Color AVATAR_RED = Color.rgb(255, 0, 0);
+    public static final Color AVATAR_ORANGE = Color.rgb(255, 140, 0);
+    public static final Color AVATAR_BLUE = Color.rgb(0, 139, 205);
+    public static final Color AVATAR_GREEN = Color.rgb(0, 225, 0);
+    public static final Color AVATAR_GREY = Color.rgb(128, 128, 128);
 }

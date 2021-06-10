@@ -17,8 +17,6 @@
 
 package bisq.desktop.components;
 
-import bisq.desktop.util.DisplayUtils;
-
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.locale.CurrencyUtil;
@@ -42,6 +40,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
+import static bisq.desktop.util.Colors.*;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -115,37 +114,37 @@ public class PeerInfoIconTrading extends PeerInfoIcon {
         Long accountAge = peersAccount.first;
         Long signAge = peersAccount.second;
 
-        String accountAgeTooltip = isFiatCurrency ?
-                accountAge > -1 ? Res.get("peerInfoIcon.tooltip.age", DisplayUtils.formatAccountAge(accountAge)) :
-                        Res.get("peerInfoIcon.tooltip.unknownAge") :
-                "";
         tooltipText = hasTraded ?
-                Res.get("peerInfoIcon.tooltip.trade.traded", role, fullAddress, numTrades, accountAgeTooltip) :
-                Res.get("peerInfoIcon.tooltip.trade.notTraded", role, fullAddress, accountAgeTooltip);
+                Res.get("peerInfoIcon.tooltip.trade.traded", role, fullAddress, numTrades, getAccountAgeTooltip(accountAge)) :
+                Res.get("peerInfoIcon.tooltip.trade.notTraded", role, fullAddress, getAccountAgeTooltip(accountAge));
 
         createAvatar(getRingColor(offer, trade, accountAge, signAge));
         addMouseListener(numTrades, privateNotificationManager, trade, offer, preferences, useDevPrivilegeKeys,
                 isFiatCurrency, accountAge, signAge, peersAccount.third, peersAccount.fourth, peersAccount.fifth);
     }
 
+    protected String getAccountAgeTooltip(Long accountAge) {
+        return isFiatCurrency ? super.getAccountAgeTooltip(accountAge) : "";
+    }
+
     protected Color getRingColor(Offer offer, Trade trade, Long accountAge, Long signAge) {
         // outer circle
         // for altcoins we always display green
-        Color ringColor = Color.rgb(0, 225, 0);
+        Color ringColor = AVATAR_GREEN;
         if (isFiatCurrency) {
             switch (accountAgeWitnessService.getPeersAccountAgeCategory(hasChargebackRisk(trade, offer) ? signAge : accountAge)) {
                 case TWO_MONTHS_OR_MORE:
-                    ringColor = Color.rgb(0, 225, 0); // > 2 months green
+                    ringColor = AVATAR_GREEN;
                     break;
                 case ONE_TO_TWO_MONTHS:
-                    ringColor = Color.rgb(0, 139, 205); // 1-2 months blue
+                    ringColor = AVATAR_BLUE;
                     break;
                 case LESS_ONE_MONTH:
-                    ringColor = Color.rgb(255, 140, 0); //< 1 month orange
+                    ringColor = AVATAR_ORANGE;
                     break;
                 case UNVERIFIED:
                 default:
-                    ringColor = Color.rgb(255, 0, 0); // not signed, red
+                    ringColor = AVATAR_RED;
                     break;
             }
         }

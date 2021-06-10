@@ -17,16 +17,14 @@
 
 package bisq.desktop.components;
 
-import bisq.desktop.util.DisplayUtils;
-
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
 
 import bisq.network.p2p.NodeAddress;
 
-import javafx.scene.paint.Color;
-
 import lombok.extern.slf4j.Slf4j;
+
+import static bisq.desktop.util.Colors.AVATAR_GREY;
 
 @Slf4j
 public class PeerInfoIconDispute extends PeerInfoIcon {
@@ -37,15 +35,10 @@ public class PeerInfoIconDispute extends PeerInfoIcon {
                          Preferences preferences) {
         super(nodeAddress, preferences);
 
-        String accountAgeTooltip = accountAge > -1 ?
-                Res.get("peerInfoIcon.tooltip.age", DisplayUtils.formatAccountAge(accountAge)) :
-                Res.get("peerInfoIcon.tooltip.unknownAge");
-
-        tooltipText = Res.get("peerInfoIcon.tooltip.dispute", fullAddress, nrOfDisputes, accountAgeTooltip);
+        tooltipText = Res.get("peerInfoIcon.tooltip.dispute", fullAddress, nrOfDisputes, getAccountAgeTooltip(accountAge));
 
         // outer circle always display gray
-        Color ringColor = Color.rgb(128, 128, 128);
-        createAvatar(ringColor);
+        createAvatar(AVATAR_GREY);
         addMouseListener(numTrades, null, null, null, preferences, false,
                 false, accountAge, 0L, null, null, null);
     }

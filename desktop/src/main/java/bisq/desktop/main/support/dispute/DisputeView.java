@@ -1457,7 +1457,6 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> implements
                 preferences);
         peerInfoIcon.setCallback(this);
         avatarMap.put(key, peerInfoIcon);
-        log.warn("Creating avatar for {}, map size is now {}", key, avatarMap.size());
         return peerInfoIcon;
     }
 
