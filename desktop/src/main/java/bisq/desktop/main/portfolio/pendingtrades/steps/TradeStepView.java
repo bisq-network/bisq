@@ -519,7 +519,7 @@ public abstract class TradeStepView extends AnchorPane {
         }
     }
 
-    private void updateMediationResultState(boolean blockOpeningOfResultAcceptedPopup) {
+    protected void updateMediationResultState(boolean blockOpeningOfResultAcceptedPopup) {
         if (isInArbitration()) {
             if (isRefundRequestStartedByPeer()) {
                 tradeStepInfo.setState(TradeStepInfo.State.IN_REFUND_REQUEST_PEER_REQUESTED);
@@ -565,7 +565,7 @@ public abstract class TradeStepView extends AnchorPane {
         return Trade.TradePeriodState.TRADE_PERIOD_OVER == trade.tradePeriodStateProperty().get();
     }
 
-    private boolean hasSelfAccepted() {
+    protected boolean hasSelfAccepted() {
         return trade.getProcessModel().getMediatedPayoutTxSignature() != null;
     }
 
