@@ -66,8 +66,6 @@ public class TxIdTextField extends AnchorPane {
     private TxConfidenceListener txConfidenceListener;
     @Setter
     private boolean isBsq;
-    @Setter
-    private boolean isAddress = false;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -175,8 +173,7 @@ public class TxIdTextField extends AnchorPane {
             BlockChainExplorer blockChainExplorer = isBsq ?
                     preferences.getBsqBlockChainExplorer() :
                     preferences.getBlockChainExplorer();
-            String url = this.isAddress ? blockChainExplorer.addressUrl : blockChainExplorer.txUrl;
-            GUIUtil.openWebPage(url + txId, false);
+            GUIUtil.openWebPage(blockChainExplorer.txUrl + txId, false);
         }
     }
 
