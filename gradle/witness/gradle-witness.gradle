@@ -12,7 +12,6 @@
 // Note: The checksums are SHA-256.
 //
 // See https://github.com/signalapp/gradle-witness#using-witness for further details.
-
 dependencyVerification {
     verify = [
         'aopalliance:aopalliance:0addec670fedcd3f113c5c8091d783280d23f75e3acb841b61a9cdb079376a08',
@@ -41,7 +40,7 @@ dependencyVerification {
         'com.google.guava:failureaccess:a171ee4c734dd2da837e4b16be9df4661afab72a41adaf31eb84dfdaf936ca26',
         'com.google.guava:guava:fc3aa363ad87223d1fbea584eee015a862150f6d34c71f24dc74088a635f08ef',
         'com.google.guava:listenablefuture:b372a037d4230aa57fbeffdef30fd6123f9c0c2db85d0aced00c91b974f33f99',
-        'com.google.inject:guice:d258ff1bd9b8b527872f8402648226658ad3149f1f40e74b0566d69e7e042fbc',
+        'com.google.inject:guice:3bae18be3e0f0940375d1ebdd2f3b84d87ae16026ae663b2f5d4667fe5b04036',
         'com.google.j2objc:j2objc-annotations:21af30c92267bd6122c0e0b4d20cccb6641a37eaf956c6540ec471d584e64a7b',
         'com.google.protobuf:protobuf-java:161d7d61a8cb3970891c299578702fd079646e032329d6c2cabf998d191437c9',
         'com.google.zxing:core:11aae8fd974ab25faa8208be50468eb12349cd239e93e7c797377fa13e381729',
