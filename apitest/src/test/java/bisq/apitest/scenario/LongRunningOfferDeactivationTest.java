@@ -82,7 +82,7 @@ public class LongRunningOfferDeactivationTest extends AbstractOfferTest {
         int numIterations = 0;
         while (++numIterations < MAX_ITERATIONS) {
             offer = aliceClient.getMyOffer(offer.getId());
-            ;
+
             var mktPrice = aliceClient.getBtcPrice("USD");
             if (offer.getIsActivated()) {
                 log.info("Offer still enabled at mkt price {} > {} trigger price",

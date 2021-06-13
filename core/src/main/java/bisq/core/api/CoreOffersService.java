@@ -55,6 +55,7 @@ import static bisq.common.util.MathUtils.exactMultiply;
 import static bisq.common.util.MathUtils.roundDoubleToLong;
 import static bisq.common.util.MathUtils.scaleUpByPowerOf10;
 import static bisq.core.locale.CurrencyUtil.isCryptoCurrency;
+import static bisq.core.offer.Offer.State;
 import static bisq.core.offer.OfferPayload.Direction;
 import static bisq.core.offer.OfferPayload.Direction.BUY;
 import static bisq.core.offer.OpenOffer.State.AVAILABLE;
@@ -225,7 +226,7 @@ class CoreOffersService {
         Offer editedOffer = new Offer(editedPayload);
         priceFeedService.setCurrencyCode(openOffer.getOffer().getOfferPayload().getCurrencyCode());
         editedOffer.setPriceFeedService(priceFeedService);
-        editedOffer.setState(Offer.State.AVAILABLE);
+        editedOffer.setState(State.AVAILABLE);
         openOfferManager.editOpenOfferStart(openOffer,
                 () -> {
                     log.info("EditOpenOfferStart: offer {}", openOffer.getId());

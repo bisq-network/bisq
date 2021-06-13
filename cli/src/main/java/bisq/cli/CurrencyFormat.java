@@ -40,7 +40,6 @@ public class CurrencyFormat {
 
     // Formats numbers for internal use, i.e., grpc request parameters.
     private static final DecimalFormat INTERNAL_FIAT_DECIMAL_FORMAT = new DecimalFormat("##############0.0000");
-    private static final DecimalFormat INTERNAL_ALTCOIN_DECIMAL_FORMAT = new DecimalFormat("##############0.00000000");
 
     static final BigDecimal SATOSHI_DIVISOR = new BigDecimal(100_000_000);
     static final DecimalFormat BTC_FORMAT = new DecimalFormat("###,##0.00000000");

@@ -57,13 +57,10 @@ class EditOfferValidator {
             case MKT_PRICE_MARGIN_ONLY:
             case MKT_PRICE_MARGIN_AND_ACTIVATION_STATE:
             case TRIGGER_PRICE_ONLY:
-            case TRIGGER_PRICE_AND_ACTIVATION_STATE: {
-                // Make sure the edited trigger price is OK, even if not being changed.
-                validateEditedTriggerPrice();
-                // Continue, no break.
-            }
+            case TRIGGER_PRICE_AND_ACTIVATION_STATE:
             case MKT_PRICE_MARGIN_AND_TRIGGER_PRICE:
             case MKT_PRICE_MARGIN_AND_TRIGGER_PRICE_AND_ACTIVATION_STATE: {
+                validateEditedTriggerPrice();
                 validateEditedMarketPriceMargin();
                 break;
             }
