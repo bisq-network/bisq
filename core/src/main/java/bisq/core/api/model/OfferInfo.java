@@ -18,6 +18,7 @@
 package bisq.core.api.model;
 
 import bisq.core.offer.Offer;
+import bisq.core.offer.OpenOffer;
 
 import bisq.common.Payload;
 
@@ -61,7 +62,7 @@ public class OfferInfo implements Payload {
     private final String counterCurrencyCode;
     private final long date;
     private final String state;
-
+    private final boolean isActivated;
 
     public OfferInfo(OfferInfoBuilder builder) {
         this.id = builder.id;
@@ -87,17 +88,18 @@ public class OfferInfo implements Payload {
         this.counterCurrencyCode = builder.counterCurrencyCode;
         this.date = builder.date;
         this.state = builder.state;
-
+        this.isActivated = builder.isActivated;
     }
 
     public static OfferInfo toOfferInfo(Offer offer) {
         return getOfferInfoBuilder(offer).build();
     }
 
-    public static OfferInfo toOfferInfo(Offer offer, long triggerPrice) {
-        // The Offer does not have a triggerPrice attribute, so we get
-        // the base OfferInfoBuilder, then add the OpenOffer's triggerPrice.
-        return getOfferInfoBuilder(offer).withTriggerPrice(triggerPrice).build();
+    public static OfferInfo toOfferInfo(OpenOffer openOffer) {
+        return getOfferInfoBuilder(openOffer.getOffer())
+                .withTriggerPrice(openOffer.getTriggerPrice())
+                .withIsActivated(!openOffer.isDeactivated())
+                .build();
     }
 
     private static OfferInfoBuilder getOfferInfoBuilder(Offer offer) {
@@ -156,6 +158,7 @@ public class OfferInfo implements Payload {
                 .setCounterCurrencyCode(counterCurrencyCode)
                 .setDate(date)
                 .setState(state)
+                .setIsActivated(isActivated)
                 .build();
     }
 
@@ -185,6 +188,7 @@ public class OfferInfo implements Payload {
                 .withCounterCurrencyCode(proto.getCounterCurrencyCode())
                 .withDate(proto.getDate())
                 .withState(proto.getState())
+                .withIsActivated(proto.getIsActivated())
                 .build();
     }
 
@@ -218,6 +222,7 @@ public class OfferInfo implements Payload {
         private String counterCurrencyCode;
         private long date;
         private String state;
+        private boolean isActivated;
 
         public OfferInfoBuilder withId(String id) {
             this.id = id;
@@ -331,6 +336,11 @@ public class OfferInfo implements Payload {
 
         public OfferInfoBuilder withState(String state) {
             this.state = state;
+            return this;
+        }
+
+        public OfferInfoBuilder withIsActivated(boolean isActivated) {
+            this.isActivated = isActivated;
             return this;
         }
 

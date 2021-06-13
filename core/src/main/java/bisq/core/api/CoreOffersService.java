@@ -20,13 +20,16 @@ package bisq.core.api;
 import bisq.core.monetary.Altcoin;
 import bisq.core.monetary.Price;
 import bisq.core.offer.CreateOfferService;
+import bisq.core.offer.MutableOfferPayloadFields;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferBookService;
 import bisq.core.offer.OfferFilter;
+import bisq.core.offer.OfferPayload;
 import bisq.core.offer.OfferUtil;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.payment.PaymentAccount;
+import bisq.core.provider.price.PriceFeedService;
 import bisq.core.user.User;
 
 import bisq.common.crypto.KeyRing;
@@ -54,7 +57,10 @@ import static bisq.common.util.MathUtils.scaleUpByPowerOf10;
 import static bisq.core.locale.CurrencyUtil.isCryptoCurrency;
 import static bisq.core.offer.OfferPayload.Direction;
 import static bisq.core.offer.OfferPayload.Direction.BUY;
+import static bisq.core.offer.OpenOffer.State.AVAILABLE;
+import static bisq.core.offer.OpenOffer.State.DEACTIVATED;
 import static bisq.core.payment.PaymentAccountUtil.isPaymentAccountValidForOffer;
+import static bisq.proto.grpc.EditOfferRequest.EditType;
 import static java.lang.String.format;
 import static java.util.Comparator.comparing;
 
@@ -62,8 +68,11 @@ import static java.util.Comparator.comparing;
 @Slf4j
 class CoreOffersService {
 
-    private final Supplier<Comparator<Offer>> priceComparator = () -> comparing(Offer::getPrice);
-    private final Supplier<Comparator<Offer>> reversePriceComparator = () -> comparing(Offer::getPrice).reversed();
+    private final Supplier<Comparator<Offer>> priceComparator = () ->
+            comparing(Offer::getPrice);
+
+    private final Supplier<Comparator<OpenOffer>> openOfferPriceComparator = () ->
+            comparing(openOffer -> openOffer.getOffer().getPrice());
 
     private final CoreContext coreContext;
     private final KeyRing keyRing;
@@ -76,6 +85,7 @@ class CoreOffersService {
     private final OfferFilter offerFilter;
     private final OpenOfferManager openOfferManager;
     private final OfferUtil offerUtil;
+    private final PriceFeedService priceFeedService;
     private final User user;
 
     @Inject
@@ -87,6 +97,7 @@ class CoreOffersService {
                              OfferFilter offerFilter,
                              OpenOfferManager openOfferManager,
                              OfferUtil offerUtil,
+                             PriceFeedService priceFeedService,
                              User user) {
         this.coreContext = coreContext;
         this.keyRing = keyRing;
@@ -96,6 +107,7 @@ class CoreOffersService {
         this.offerFilter = offerFilter;
         this.openOfferManager = openOfferManager;
         this.offerUtil = offerUtil;
+        this.priceFeedService = priceFeedService;
         this.user = user;
     }
 
@@ -108,10 +120,10 @@ class CoreOffersService {
                         new IllegalStateException(format("offer with id '%s' not found", id)));
     }
 
-    Offer getMyOffer(String id) {
-        return offerBookService.getOffers().stream()
+    OpenOffer getMyOffer(String id) {
+        return openOfferManager.getObservableList().stream()
                 .filter(o -> o.getId().equals(id))
-                .filter(o -> o.isMyOffer(keyRing))
+                .filter(o -> o.getOffer().isMyOffer(keyRing))
                 .findAny().orElseThrow(() ->
                         new IllegalStateException(format("offer with id '%s' not found", id)));
     }
@@ -125,11 +137,11 @@ class CoreOffersService {
                 .collect(Collectors.toList());
     }
 
-    List<Offer> getMyOffers(String direction, String currencyCode) {
-        return offerBookService.getOffers().stream()
-                .filter(o -> o.isMyOffer(keyRing))
-                .filter(o -> offerMatchesDirectionAndCurrency(o, direction, currencyCode))
-                .sorted(priceComparator(direction))
+    List<OpenOffer> getMyOffers(String direction, String currencyCode) {
+        return openOfferManager.getObservableList().stream()
+                .filter(o -> o.getOffer().isMyOffer(keyRing))
+                .filter(o -> offerMatchesDirectionAndCurrency(o.getOffer(), direction, currencyCode))
+                .sorted(openOfferPriceComparator(direction))
                 .collect(Collectors.toList());
     }
 
@@ -137,7 +149,7 @@ class CoreOffersService {
         return openOfferManager.getOpenOfferById(id)
                 .filter(open -> open.getOffer().isMyOffer(keyRing))
                 .orElseThrow(() ->
-                        new IllegalStateException(format("openoffer with id '%s' not found", id)));
+                        new IllegalStateException(format("offer with id '%s' not found", id)));
     }
 
     // Create and place new offer.
@@ -193,47 +205,56 @@ class CoreOffersService {
     }
 
     // Edit a placed offer.
-    Offer editOffer(String offerId,
-                    String currencyCode,
-                    Direction direction,
-                    Price price,
-                    boolean useMarketBasedPrice,
-                    double marketPriceMargin,
-                    Coin amount,
-                    Coin minAmount,
-                    double buyerSecurityDeposit,
-                    PaymentAccount paymentAccount) {
-        Coin useDefaultTxFee = Coin.ZERO;
-        return createOfferService.createAndGetOffer(offerId,
-                direction,
-                currencyCode.toUpperCase(),
-                amount,
-                minAmount,
-                price,
-                useDefaultTxFee,
-                useMarketBasedPrice,
-                exactMultiply(marketPriceMargin, 0.01),
-                buyerSecurityDeposit,
-                paymentAccount);
+    void editOffer(String offerId,
+                   String editedPriceAsString,
+                   boolean editedUseMarketBasedPrice,
+                   double editedMarketPriceMargin,
+                   long editedTriggerPrice,
+                   int editedEnable,
+                   EditType editType) {
+        OpenOffer openOffer = getMyOpenOffer(offerId);
+        new EditOfferValidator(openOffer,
+                editedPriceAsString,
+                editedUseMarketBasedPrice,
+                editedMarketPriceMargin,
+                editedTriggerPrice,
+                editType).validate();
+        OfferPayload editedPayload = getMergedOfferPayload(openOffer, editedPriceAsString,
+                editedUseMarketBasedPrice,
+                editedMarketPriceMargin);
+        Offer editedOffer = new Offer(editedPayload);
+        priceFeedService.setCurrencyCode(openOffer.getOffer().getOfferPayload().getCurrencyCode());
+        editedOffer.setPriceFeedService(priceFeedService);
+        editedOffer.setState(Offer.State.AVAILABLE);
+        openOfferManager.editOpenOfferStart(openOffer,
+                () -> {
+                    log.info("EditOpenOfferStart: offer {}", openOffer.getId());
+                },
+                errorMessage -> {
+                    log.error(errorMessage);
+                });
+        // Client sent (sint32) newEnable, not a bool (with default=false).
+        // If newEnable = -1, do not change activation state
+        // If newEnable =  0, set state = AVAILABLE
+        // If newEnable =  1, set state = DEACTIVATED
+        OpenOffer.State newOfferState = editedEnable < 0
+                ? openOffer.getState()
+                : editedEnable > 0 ? AVAILABLE : DEACTIVATED;
+        openOfferManager.editOpenOfferPublish(editedOffer,
+                editedTriggerPrice,
+                newOfferState,
+                () -> {
+                    log.info("EditOpenOfferPublish: offer {}", openOffer.getId());
+                },
+                log::error);
     }
 
     void cancelOffer(String id) {
-        Offer offer = getMyOffer(id);
-        openOfferManager.removeOffer(offer,
+        OpenOffer openOffer = getMyOffer(id);
+        openOfferManager.removeOffer(openOffer.getOffer(),
                 () -> {
                 },
-                errorMessage -> {
-                    throw new IllegalStateException(errorMessage);
-                });
-    }
-
-    private void verifyPaymentAccountIsValidForNewOffer(Offer offer, PaymentAccount paymentAccount) {
-        if (!isPaymentAccountValidForOffer(offer, paymentAccount)) {
-            String error = format("cannot create %s offer with payment account %s",
-                    offer.getOfferPayload().getCounterCurrencyCode(),
-                    paymentAccount.getId());
-            throw new IllegalStateException(error);
-        }
+                log::error);
     }
 
     private void placeOffer(Offer offer,
@@ -252,6 +273,39 @@ class CoreOffersService {
             throw new IllegalStateException(offer.getErrorMessage());
     }
 
+    private OfferPayload getMergedOfferPayload(OpenOffer openOffer,
+                                               String editedPriceAsString,
+                                               boolean editedUseMarketBasedPrice,
+                                               double editedMarketPriceMargin) {
+        // API supports editing price, marketPriceMargin, useMarketBasedPrice payload
+        // fields.  API does not support editing payment acct or currency code fields.
+        Offer offer = openOffer.getOffer();
+        String currencyCode = offer.getOfferPayload().getCurrencyCode();
+        Price editedPrice = Price.valueOf(currencyCode, priceStringToLong(editedPriceAsString, currencyCode));
+        MutableOfferPayloadFields mutableOfferPayloadFields = new MutableOfferPayloadFields(
+                editedPrice.getValue(),
+                exactMultiply(editedMarketPriceMargin, 0.01),
+                editedUseMarketBasedPrice,
+                offer.getOfferPayload().getBaseCurrencyCode(),
+                offer.getOfferPayload().getCounterCurrencyCode(),
+                offer.getPaymentMethod().getId(),
+                offer.getMakerPaymentAccountId(),
+                offer.getOfferPayload().getCountryCode(),
+                offer.getOfferPayload().getAcceptedCountryCodes(),
+                offer.getOfferPayload().getBankId(),
+                offer.getOfferPayload().getAcceptedBankIds());
+        return offerUtil.getMergedOfferPayload(openOffer, mutableOfferPayloadFields);
+    }
+
+    private void verifyPaymentAccountIsValidForNewOffer(Offer offer, PaymentAccount paymentAccount) {
+        if (!isPaymentAccountValidForOffer(offer, paymentAccount)) {
+            String error = format("cannot create %s offer with payment account %s",
+                    offer.getOfferPayload().getCounterCurrencyCode(),
+                    paymentAccount.getId());
+            throw new IllegalStateException(error);
+        }
+    }
+
     private boolean offerMatchesDirectionAndCurrency(Offer offer,
                                                      String direction,
                                                      String currencyCode) {
@@ -261,11 +315,19 @@ class CoreOffersService {
         return offerOfWantedDirection && offerInWantedCurrency;
     }
 
+    private Comparator<OpenOffer> openOfferPriceComparator(String direction) {
+        // A buyer probably wants to see sell orders in price ascending order.
+        // A seller probably wants to see buy orders in price descending order.
+        return direction.equalsIgnoreCase(BUY.name())
+                ? openOfferPriceComparator.get().reversed()
+                : openOfferPriceComparator.get();
+    }
+
     private Comparator<Offer> priceComparator(String direction) {
         // A buyer probably wants to see sell orders in price ascending order.
         // A seller probably wants to see buy orders in price descending order.
         return direction.equalsIgnoreCase(BUY.name())
-                ? reversePriceComparator.get()
+                ? priceComparator.get().reversed()
                 : priceComparator.get();
     }
 
