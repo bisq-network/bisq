@@ -397,7 +397,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                 model,
                 transaction -> {
                     OpenOffer openOffer = new OpenOffer(offer, triggerPrice);
-                    openOffers.add(openOffer);
+                    addOpenOffer(openOffer);
                     requestPersistence();
                     resultHandler.handleResult(transaction);
                     if (!stopped) {
@@ -426,7 +426,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         var atomicPlaceOfferProtocol = new AtomicPlaceOfferProtocol(atomicModel,
                 transaction -> {
                     OpenOffer openOffer = new OpenOffer(offer, 0);
-                    openOffers.add(openOffer);
+                    addOpenOffer(openOffer);
                     requestPersistence();
                     resultHandler.handleResult(transaction);
                     if (!stopped) {
@@ -540,12 +540,12 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
 
             openOffer.getOffer().setState(Offer.State.REMOVED);
             openOffer.setState(OpenOffer.State.CANCELED);
-            openOffers.remove(openOffer);
+            removeOpenOffer(openOffer);
 
             OpenOffer editedOpenOffer = new OpenOffer(editedOffer, triggerPrice);
             editedOpenOffer.setState(originalState);
 
-            openOffers.add(editedOpenOffer);
+            addOpenOffer(editedOpenOffer);
 
             if (!editedOpenOffer.isDeactivated())
                 republishOffer(editedOpenOffer);
@@ -577,7 +577,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     private void onRemoved(@NotNull OpenOffer openOffer, ResultHandler resultHandler, Offer offer) {
         offer.setState(Offer.State.REMOVED);
         openOffer.setState(OpenOffer.State.CANCELED);
-        openOffers.remove(openOffer);
+        removeOpenOffer(openOffer);
         closedTradableManager.add(openOffer);
         log.info("onRemoved offerId={}", offer.getId());
         btcWalletService.resetAddressEntriesForOpenOffer(offer.getId());
@@ -588,7 +588,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     // Close openOffer after deposit published
     public void closeOpenOffer(Offer offer) {
         getOpenOfferById(offer.getId()).ifPresent(openOffer -> {
-            openOffers.remove(openOffer);
+            removeOpenOffer(openOffer);
             openOffer.setState(OpenOffer.State.CLOSED);
             offerBookService.removeOffer(openOffer.getOffer().getOfferPayloadI(),
                     () -> log.trace("Successful removed offer"),
@@ -917,7 +917,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                 // remove old offer
                 originalOffer.setState(Offer.State.REMOVED);
                 originalOpenOffer.setState(OpenOffer.State.CANCELED);
-                openOffers.remove(originalOpenOffer);
+                removeOpenOffer(originalOpenOffer);
 
                 // Create new Offer
                 Offer updatedOffer = new Offer(updatedPayload);
@@ -926,7 +926,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
 
                 OpenOffer updatedOpenOffer = new OpenOffer(updatedOffer, originalOpenOffer.getTriggerPrice());
                 updatedOpenOffer.setState(originalOpenOfferState);
-                openOffers.add(updatedOpenOffer);
+                addOpenOffer(updatedOpenOffer);
                 requestPersistence();
 
                 log.info("Updating offer completed. id={}", originalOffer.getId());
@@ -1095,5 +1095,13 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
             retryRepublishOffersTimer.stop();
             retryRepublishOffersTimer = null;
         }
+    }
+
+    private void addOpenOffer(OpenOffer openOffer) {
+        openOffers.add(openOffer);
+    }
+
+    private void removeOpenOffer(OpenOffer openOffer) {
+        openOffers.remove(openOffer);
     }
 }
