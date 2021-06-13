@@ -83,7 +83,7 @@ class EditOfferValidator {
 
     private void validateEditedFixedPrice() {
         if (currentlyOpenOffer.getOffer().isUseMarketBasedPrice())
-            log.info("Attempting to change mkt price margin based offer with id '%s' to fixed price offer.",
+            log.info("Attempting to change mkt price margin based offer with id '{}' to fixed price offer.",
                     currentlyOpenOffer.getId());
 
         if (editedUseMarketBasedPrice)
@@ -104,7 +104,7 @@ class EditOfferValidator {
 
     private void validateEditedMarketPriceMargin() {
         if (!currentlyOpenOffer.getOffer().isUseMarketBasedPrice())
-            log.info("Attempting to change fixed price offer with id '%s' to mkt price margin based offer.",
+            log.info("Attempting to change fixed price offer with id '{}' to mkt price margin based offer.",
                     currentlyOpenOffer.getId());
 
         if (!editedUseMarketBasedPrice && !isZeroEditedTriggerPrice)
