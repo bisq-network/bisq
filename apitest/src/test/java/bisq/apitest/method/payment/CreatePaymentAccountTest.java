@@ -22,7 +22,6 @@ import bisq.core.payment.AdvancedCashAccount;
 import bisq.core.payment.AliPayAccount;
 import bisq.core.payment.AustraliaPayid;
 import bisq.core.payment.CashDepositAccount;
-import bisq.core.payment.ChaseQuickPayAccount;
 import bisq.core.payment.ClearXchangeAccount;
 import bisq.core.payment.F2FAccount;
 import bisq.core.payment.FasterPaymentsAccount;
