@@ -51,6 +51,7 @@ public class PaymentAccountTest extends AbstractPaymentAccountTest {
         test.testCreateAustraliaPayidAccount(testInfo);
         test.testCreateCashDepositAccount(testInfo);
         test.testCreateBrazilNationalBankAccount(testInfo);
+        test.testCreateChaseQuickPayAccount(testInfo);
         test.testCreateClearXChangeAccount(testInfo);
         test.testCreateF2FAccount(testInfo);
         test.testCreateFasterPaymentsAccount(testInfo);
