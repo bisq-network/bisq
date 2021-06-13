@@ -254,28 +254,6 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
     }
 
     @Test
-    public void testCreateChaseQuickPayAccount(TestInfo testInfo) {
-        File emptyForm = getEmptyForm(testInfo, CHASE_QUICK_PAY_ID);
-        verifyEmptyForm(emptyForm,
-                CHASE_QUICK_PAY_ID,
-                PROPERTY_NAME_EMAIL,
-                PROPERTY_NAME_HOLDER_NAME);
-        COMPLETED_FORM_MAP.put(PROPERTY_NAME_PAYMENT_METHOD_ID, CHASE_QUICK_PAY_ID);
-        COMPLETED_FORM_MAP.put(PROPERTY_NAME_ACCOUNT_NAME, "Quick Pay Acct");
-        COMPLETED_FORM_MAP.put(PROPERTY_NAME_EMAIL, "johndoe@quickpay.com");
-        COMPLETED_FORM_MAP.put(PROPERTY_NAME_HOLDER_NAME, "John Doe");
-        COMPLETED_FORM_MAP.put(PROPERTY_NAME_SALT, "");
-        String jsonString = getCompletedFormAsJsonString();
-        ChaseQuickPayAccount paymentAccount = (ChaseQuickPayAccount) createPaymentAccount(aliceClient, jsonString);
-        verifyUserPayloadHasPaymentAccountWithId(aliceClient, paymentAccount.getId());
-        verifyAccountSingleTradeCurrency("USD", paymentAccount);
-        verifyCommonFormEntries(paymentAccount);
-        assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_EMAIL), paymentAccount.getEmail());
-        assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_HOLDER_NAME), paymentAccount.getHolderName());
-        print(paymentAccount);
-    }
-
-    @Test
     public void testCreateClearXChangeAccount(TestInfo testInfo) {
         File emptyForm = getEmptyForm(testInfo, CLEAR_X_CHANGE_ID);
         verifyEmptyForm(emptyForm,
