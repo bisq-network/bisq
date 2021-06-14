@@ -19,6 +19,7 @@ package bisq.core.offer;
 
 import bisq.common.app.Capabilities;
 import bisq.common.app.Capability;
+import bisq.common.config.Config;
 import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Coin;
@@ -33,7 +34,7 @@ public class OfferRestrictions {
     private static final Date REQUIRE_TOR_NODE_ADDRESS_V3_DATE = Utilities.getUTCDate(2021, GregorianCalendar.AUGUST, 15);
 
     public static boolean requiresNodeAddressUpdate() {
-        return new Date().after(REQUIRE_TOR_NODE_ADDRESS_V3_DATE);
+        return Config.baseCurrencyNetwork().isRegtest() || new Date().after(REQUIRE_TOR_NODE_ADDRESS_V3_DATE);
     }
 
     public static Coin TOLERATED_SMALL_TRADE_AMOUNT = Coin.parseCoin("0.01");
