@@ -20,7 +20,10 @@ package bisq.desktop.main.offer.offerbook;
 import bisq.core.filter.FilterManager;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferBookService;
+import bisq.core.offer.OfferRestrictions;
 import bisq.core.trade.TradeManager;
+
+import bisq.network.utils.Utils;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -75,6 +78,11 @@ public class OfferBook {
                     return;
                 }
 
+                if (OfferRestrictions.requiresNodeAddressUpdate() && !Utils.isV3Address(offer.getMakerNodeAddress().getHostName())) {
+                    log.debug("Ignored offer with Tor v2 node address. ID={}", offer.getId());
+                    return;
+                }
+
                 boolean hasSameOffer = offerBookListItems.stream()
                         .anyMatch(item -> item.getOffer().equals(offer));
                 if (!hasSameOffer) {
@@ -126,6 +134,7 @@ public class OfferBook {
             offerBookListItems.clear();
             offerBookListItems.addAll(offerBookService.getOffers().stream()
                     .filter(o -> !filterManager.isOfferIdBanned(o.getId()))
+                    .filter(o -> !OfferRestrictions.requiresNodeAddressUpdate() || Utils.isV3Address(o.getMakerNodeAddress().getHostName()))
                     .map(OfferBookListItem::new)
                     .collect(Collectors.toList()));
 

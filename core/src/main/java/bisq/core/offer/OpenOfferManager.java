@@ -52,6 +52,7 @@ import bisq.network.p2p.P2PService;
 import bisq.network.p2p.SendDirectMessageListener;
 import bisq.network.p2p.peers.Broadcaster;
 import bisq.network.p2p.peers.PeerManager;
+import bisq.network.utils.Utils;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
@@ -597,6 +598,13 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
 
         boolean result = false;
         String errorMessage = null;
+
+        if (OfferRestrictions.requiresNodeAddressUpdate() && !Utils.isV3Address(peer.getHostName())) {
+            errorMessage = "We got a handleOfferAvailabilityRequest from a Tor node v2 address where a Tor node v3 address is required.";
+            log.info(errorMessage);
+            sendAckMessage(request, peer, false, errorMessage);
+            return;
+        }
 
         if (!p2PService.isBootstrapped()) {
             errorMessage = "We got a handleOfferAvailabilityRequest but we have not bootstrapped yet.";
