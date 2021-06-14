@@ -38,6 +38,7 @@ import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.dao.DaoFacade;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
+import bisq.core.offer.OfferRestrictions;
 import bisq.core.support.SupportType;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeList;
@@ -58,6 +59,7 @@ import bisq.core.util.coin.CoinFormatter;
 
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
+import bisq.network.utils.Utils;
 
 import bisq.common.UserThread;
 import bisq.common.crypto.KeyRing;
@@ -542,6 +544,11 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
     private boolean isDisputeWithSameCurrentNodeAddress(Dispute dispute, boolean isMediator) {
         NodeAddress disputeNodeAddress = isMediator ? dispute.getContract().getMediatorNodeAddress() :
                 dispute.getContract().getMyNodeAddress(keyRing.getPubKeyRing());
+
+        if (OfferRestrictions.requiresNodeAddressUpdate() && !Utils.isV3Address(disputeNodeAddress.getHostName())) {
+            return false;
+        }
+
         return Objects.equals(p2PService.getNetworkNode().getNodeAddress(), disputeNodeAddress);
     }
 
