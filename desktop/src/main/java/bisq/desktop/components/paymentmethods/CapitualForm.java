@@ -89,7 +89,7 @@ public class CapitualForm extends PaymentMethodForm {
         else
             flowPane.setId("flow-pane-checkboxes-non-editable-bg");
 
-        CurrencyUtil.getAllCapitualCurrencies().stream().forEach(e ->
+        CurrencyUtil.getAllCapitualCurrencies().forEach(e ->
                 fillUpFlowPaneWithCurrencies(isEditable, flowPane, e, capitualAccount));
     }
 
@@ -120,7 +120,7 @@ public class CapitualForm extends PaymentMethodForm {
     public void updateAllInputsValid() {
         allInputsValid.set(isAccountNameValid()
                 && capitualValidator.validate(capitualAccount.getAccountNr()).isValid
-                && capitualAccount.getTradeCurrencies().size() > 0);
+                && !capitualAccount.getTradeCurrencies().isEmpty());
     }
 
 }
