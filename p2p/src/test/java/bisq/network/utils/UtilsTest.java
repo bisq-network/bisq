@@ -17,25 +17,20 @@
 
 package bisq.network.utils;
 
-import java.net.ServerSocket;
+import org.junit.Test;
 
-import java.io.IOException;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
-import java.util.Random;
+public class UtilsTest {
 
-public class Utils {
-    public static int findFreeSystemPort() {
-        try {
-            ServerSocket server = new ServerSocket(0);
-            int port = server.getLocalPort();
-            server.close();
-            return port;
-        } catch (IOException ignored) {
-            return new Random().nextInt(10000) + 50000;
-        }
+    @Test
+    public void checkV2Address() {
+        assertFalse(Utils.isV3Address("xmh57jrzrnw6insl.onion"));
     }
 
-    public static boolean isV3Address(String address) {
-        return address.matches("[a-z2-7]{56}.onion");
+    @Test
+    public void checkV3Address() {
+        assertTrue(Utils.isV3Address("vww6ybal4bd7szmgncyruucpgfkqahzddi37ktceo3ah7ngmcopnpyyd.onion"));
     }
 }
