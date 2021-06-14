@@ -41,23 +41,6 @@ public class PaymentAccountsTest {
         assertNull(actual);
     }
 
-//    @Test
-//    public void testGetOldestPaymentAccountForOffer() {
-//        AccountAgeWitnessService service = mock(AccountAgeWitnessService.class);
-//
-//        PaymentAccount oldest = createAccountWithAge(service, 3);
-//        Set<PaymentAccount> accounts = Sets.newHashSet(
-//                oldest,
-//                createAccountWithAge(service, 2),
-//                createAccountWithAge(service, 1));
-//
-//        BiFunction<Offer, PaymentAccount, Boolean> dummyValidator = (offer, account) -> true;
-//        PaymentAccounts testedEntity = new PaymentAccounts(accounts, service, dummyValidator);
-//
-//        PaymentAccount actual = testedEntity.getOldestPaymentAccountForOffer(mock(Offer.class));
-//        assertEquals(oldest, actual);
-//    }
-
     private static PaymentAccount createAccountWithAge(AccountAgeWitnessService service, long age) {
         PaymentAccountPayload payload = mock(PaymentAccountPayload.class);
 
