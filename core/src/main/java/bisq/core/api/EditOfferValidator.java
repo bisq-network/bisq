@@ -18,6 +18,7 @@ class EditOfferValidator {
     private final boolean editedUseMarketBasedPrice;
     private final double editedMarketPriceMargin;
     private final long editedTriggerPrice;
+    private final int editedEnable;
     private final EditOfferRequest.EditType editType;
 
     private final boolean isZeroEditedFixedPriceString;
@@ -29,12 +30,14 @@ class EditOfferValidator {
                        boolean editedUseMarketBasedPrice,
                        double editedMarketPriceMargin,
                        long editedTriggerPrice,
+                       int editedEnable,
                        EditOfferRequest.EditType editType) {
         this.currentlyOpenOffer = currentlyOpenOffer;
         this.editedPriceAsString = editedPriceAsString;
         this.editedUseMarketBasedPrice = editedUseMarketBasedPrice;
         this.editedMarketPriceMargin = editedMarketPriceMargin;
         this.editedTriggerPrice = editedTriggerPrice;
+        this.editedEnable = editedEnable;
         this.editType = editType;
 
         this.isZeroEditedFixedPriceString = new BigDecimal(editedPriceAsString).doubleValue() == 0;
@@ -70,14 +73,10 @@ class EditOfferValidator {
     }
 
     private void validateEditedActivationState() {
-        if (!isZeroEditedFixedPriceString || !isZeroEditedMarketPriceMargin || !isZeroEditedTriggerPrice)
+        if (editedEnable < 0)
             throw new IllegalStateException(
-                    format("programmer error: cannot change fixed price (%s), "
-                                    + " mkt price margin (%s), or trigger price (%s) "
-                                    + " in offer with id '%s' when only changing activation state",
-                            editedPriceAsString,
-                            editedMarketPriceMargin,
-                            editedTriggerPrice,
+                    format("programmer error: the 'enable' request parameter does not"
+                                    + " indicate activation state of offer with id '{}' should be changed.",
                             currentlyOpenOffer.getId()));
     }
 
@@ -107,13 +106,6 @@ class EditOfferValidator {
             log.info("Attempting to change fixed price offer with id '{}' to mkt price margin based offer.",
                     currentlyOpenOffer.getId());
 
-        if (!editedUseMarketBasedPrice && !isZeroEditedTriggerPrice)
-            throw new IllegalStateException(
-                    format("programmer error: cannot set a trigger price (%s)"
-                                    + " in fixed price offer with id '%s'",
-                            editedTriggerPrice,
-                            currentlyOpenOffer.getId()));
-
         if (!isZeroEditedFixedPriceString)
             throw new IllegalStateException(
                     format("programmer error: cannot set fixed price (%s)"
@@ -123,6 +115,15 @@ class EditOfferValidator {
     }
 
     private void validateEditedTriggerPrice() {
+        if (!currentlyOpenOffer.getOffer().isUseMarketBasedPrice()
+                && !editedUseMarketBasedPrice
+                && !isZeroEditedTriggerPrice)
+            throw new IllegalStateException(
+                    format("programmer error: cannot set a trigger price (%s)"
+                                    + " in fixed price offer with id '%s'",
+                            editedTriggerPrice,
+                            currentlyOpenOffer.getId()));
+
         if (editedTriggerPrice < 0)
             throw new IllegalStateException(
                     format("programmer error: cannot set trigger price to a negative value"

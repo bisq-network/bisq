@@ -56,13 +56,13 @@ import static bisq.common.util.MathUtils.roundDoubleToLong;
 import static bisq.common.util.MathUtils.scaleUpByPowerOf10;
 import static bisq.core.locale.CurrencyUtil.isCryptoCurrency;
 import static bisq.core.offer.Offer.State;
-import static bisq.core.offer.Offer.State.*;
 import static bisq.core.offer.OfferPayload.Direction;
 import static bisq.core.offer.OfferPayload.Direction.BUY;
 import static bisq.core.offer.OpenOffer.State.AVAILABLE;
 import static bisq.core.offer.OpenOffer.State.DEACTIVATED;
 import static bisq.core.payment.PaymentAccountUtil.isPaymentAccountValidForOffer;
 import static bisq.proto.grpc.EditOfferRequest.EditType;
+import static bisq.proto.grpc.EditOfferRequest.EditType.*;
 import static java.lang.String.format;
 import static java.util.Comparator.comparing;
 
@@ -220,34 +220,45 @@ class CoreOffersService {
                 editedUseMarketBasedPrice,
                 editedMarketPriceMargin,
                 editedTriggerPrice,
+                editedEnable,
                 editType).validate();
-        OfferPayload editedPayload = getMergedOfferPayload(openOffer, editedPriceAsString,
+        log.info("'editoffer' params OK for offerId={}"
+                        + "\n\teditedPriceAsString={}"
+                        + "\n\teditedUseMarketBasedPrice={}"
+                        + "\n\teditedMarketPriceMargin={}"
+                        + "\n\teditedTriggerPrice={}"
+                        + "\n\teditedEnable={}"
+                        + "\n\teditType={}",
+                offerId,
+                editedPriceAsString,
                 editedUseMarketBasedPrice,
-                editedMarketPriceMargin);
+                editedMarketPriceMargin,
+                editedTriggerPrice,
+                editedEnable,
+                editType);
+        OpenOffer.State currentOfferState = openOffer.getState();
+        // Client sent (sint32) editedEnable, not a bool (with default=false).
+        // If editedEnable = -1, do not change current state
+        // If editedEnable =  0, set state = AVAILABLE
+        // If editedEnable =  1, set state = DEACTIVATED
+        OpenOffer.State newOfferState = editedEnable < 0
+                ? currentOfferState
+                : editedEnable > 0 ? AVAILABLE : DEACTIVATED;
+        OfferPayload editedPayload = getMergedOfferPayload(openOffer,
+                editedPriceAsString,
+                editedMarketPriceMargin,
+                editType);
         Offer editedOffer = new Offer(editedPayload);
         priceFeedService.setCurrencyCode(openOffer.getOffer().getOfferPayload().getCurrencyCode());
         editedOffer.setPriceFeedService(priceFeedService);
         editedOffer.setState(State.AVAILABLE);
         openOfferManager.editOpenOfferStart(openOffer,
-                () -> {
-                    log.info("EditOpenOfferStart: offer {}", openOffer.getId());
-                },
-                errorMessage -> {
-                    log.error(errorMessage);
-                });
-        // Client sent (sint32) newEnable, not a bool (with default=false).
-        // If newEnable = -1, do not change activation state
-        // If newEnable =  0, set state = AVAILABLE
-        // If newEnable =  1, set state = DEACTIVATED
-        OpenOffer.State newOfferState = editedEnable < 0
-                ? openOffer.getState()
-                : editedEnable > 0 ? AVAILABLE : DEACTIVATED;
+                () -> log.info("EditOpenOfferStart: offer {}", openOffer.getId()),
+                log::error);
         openOfferManager.editOpenOfferPublish(editedOffer,
                 editedTriggerPrice,
                 newOfferState,
-                () -> {
-                    log.info("EditOpenOfferPublish: offer {}", openOffer.getId());
-                },
+                () -> log.info("EditOpenOfferPublish: offer {}", openOffer.getId()),
                 log::error);
     }
 
@@ -277,17 +288,31 @@ class CoreOffersService {
 
     private OfferPayload getMergedOfferPayload(OpenOffer openOffer,
                                                String editedPriceAsString,
-                                               boolean editedUseMarketBasedPrice,
-                                               double editedMarketPriceMargin) {
-        // API supports editing price, marketPriceMargin, useMarketBasedPrice payload
-        // fields.  API does not support editing payment acct or currency code fields.
+                                               double editedMarketPriceMargin,
+                                               EditType editType) {
+        // API supports editing (1) price, OR (2) marketPriceMargin & useMarketBasedPrice
+        // OfferPayload fields.  API does not support editing payment acct or currency
+        // code fields.  Note: triggerPrice isDeactivated fields are in OpenOffer, not
+        // in OfferPayload.
         Offer offer = openOffer.getOffer();
         String currencyCode = offer.getOfferPayload().getCurrencyCode();
-        Price editedPrice = Price.valueOf(currencyCode, priceStringToLong(editedPriceAsString, currencyCode));
+        boolean isEditingPrice = editType.equals(FIXED_PRICE_ONLY) || editType.equals(FIXED_PRICE_AND_ACTIVATION_STATE);
+        Price editedPrice;
+        if (isEditingPrice) {
+            editedPrice = Price.valueOf(currencyCode, priceStringToLong(editedPriceAsString, currencyCode));
+        } else {
+            editedPrice = offer.getPrice();
+        }
+        boolean isUsingMktPriceMargin = editType.equals(MKT_PRICE_MARGIN_ONLY)
+                || editType.equals(MKT_PRICE_MARGIN_AND_ACTIVATION_STATE)
+                || editType.equals(TRIGGER_PRICE_ONLY)
+                || editType.equals(TRIGGER_PRICE_AND_ACTIVATION_STATE)
+                || editType.equals(MKT_PRICE_MARGIN_AND_TRIGGER_PRICE)
+                || editType.equals(MKT_PRICE_MARGIN_AND_TRIGGER_PRICE_AND_ACTIVATION_STATE);
         MutableOfferPayloadFields mutableOfferPayloadFields = new MutableOfferPayloadFields(
                 editedPrice.getValue(),
-                exactMultiply(editedMarketPriceMargin, 0.01),
-                editedUseMarketBasedPrice,
+                isUsingMktPriceMargin ? exactMultiply(editedMarketPriceMargin, 0.01) : 0.00,
+                isUsingMktPriceMargin,
                 offer.getOfferPayload().getBaseCurrencyCode(),
                 offer.getOfferPayload().getCounterCurrencyCode(),
                 offer.getPaymentMethod().getId(),
@@ -296,6 +321,7 @@ class CoreOffersService {
                 offer.getOfferPayload().getAcceptedCountryCodes(),
                 offer.getOfferPayload().getBankId(),
                 offer.getOfferPayload().getAcceptedBankIds());
+        log.info("Merging OfferPayload with {}", mutableOfferPayloadFields);
         return offerUtil.getMergedOfferPayload(openOffer, mutableOfferPayloadFields);
     }
 
