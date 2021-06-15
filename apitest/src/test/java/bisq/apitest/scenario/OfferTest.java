@@ -98,6 +98,7 @@ public class OfferTest extends AbstractOfferTest {
         test.testEditMktPriceMargin();
         test.testEditFixedPrice();
         test.testEditFixedPriceAndDeactivation();
+        test.testEditMktPriceMarginAndDeactivation();
         test.testEditMktPriceMarginAndTriggerPriceAndDeactivation();
         test.testEditingFixedPriceInMktPriceMarginBasedOfferShouldThrowException();
         test.testEditingTriggerPriceInFixedPriceOfferShouldThrowException();

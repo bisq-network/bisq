@@ -39,10 +39,7 @@ import org.junit.jupiter.api.TestMethodOrder;
 
 import static bisq.apitest.config.ApiTestConfig.BSQ;
 import static bisq.core.btc.wallet.Restrictions.getDefaultBuyerSecurityDepositAsPercent;
-import static bisq.proto.grpc.EditOfferRequest.EditType.FIXED_PRICE_AND_ACTIVATION_STATE;
-import static bisq.proto.grpc.EditOfferRequest.EditType.MKT_PRICE_MARGIN_AND_TRIGGER_PRICE;
-import static bisq.proto.grpc.EditOfferRequest.EditType.MKT_PRICE_MARGIN_AND_TRIGGER_PRICE_AND_ACTIVATION_STATE;
-import static bisq.proto.grpc.EditOfferRequest.EditType.MKT_PRICE_MARGIN_ONLY;
+import static bisq.proto.grpc.EditOfferRequest.EditType.*;
 import static java.lang.String.format;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -51,6 +48,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static protobuf.OfferPayload.Direction.BUY;
 import static protobuf.OfferPayload.Direction.SELL;
 
+@SuppressWarnings("ALL")
 @Disabled
 @Slf4j
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -175,6 +173,7 @@ public class EditOfferTest extends AbstractOfferTest {
         OfferInfo editedOffer = aliceClient.getMyOffer(originalOffer.getId());
         var expectedNewFixedPrice = scaledUpFiatPrice.apply(new BigDecimal(editedFixedPriceAsString));
         assertEquals(expectedNewFixedPrice, editedOffer.getPrice());
+        assertFalse(editedOffer.getUseMarketBasedPrice());
 
         doSanityCheck(originalOffer, editedOffer);
     }
@@ -211,6 +210,40 @@ public class EditOfferTest extends AbstractOfferTest {
 
     @Test
     @Order(7)
+    public void testEditMktPriceMarginAndDeactivation() {
+        PaymentAccount paymentAcct = getOrCreatePaymentAccount("US");
+
+        var originalMktPriceMargin = new BigDecimal("0.0").doubleValue();
+        OfferInfo originalOffer = createMktPricedOfferForEdit(SELL.name(),
+                DOLLAR,
+                paymentAcct.getId(),
+                originalMktPriceMargin,
+                0);
+        genBtcBlocksThenWait(1, 2500); // Wait for offer book entry.
+        originalOffer = aliceClient.getMyOffer(originalOffer.getId());
+        assertEquals(scaledDownMktPriceMargin.apply(originalMktPriceMargin), originalOffer.getMarketPriceMargin());
+
+        // Edit the offer's price margin and trigger price, and deactivate it.
+        var newMktPriceMargin = new BigDecimal("1.50").doubleValue();
+        aliceClient.editOffer(originalOffer.getId(),
+                "0.00",
+                originalOffer.getUseMarketBasedPrice(),
+                newMktPriceMargin,
+                0,
+                DEACTIVATE_OFFER,
+                MKT_PRICE_MARGIN_AND_ACTIVATION_STATE);
+        // Wait for edited offer to be removed from offer-book, edited, and re-published.
+        genBtcBlocksThenWait(1, 2500);
+        OfferInfo editedOffer = aliceClient.getMyOffer(originalOffer.getId());
+        assertEquals(scaledDownMktPriceMargin.apply(newMktPriceMargin), editedOffer.getMarketPriceMargin());
+        assertEquals(0, editedOffer.getTriggerPrice());
+        assertFalse(editedOffer.getIsActivated());
+
+        doSanityCheck(originalOffer, editedOffer);
+    }
+
+    @Test
+    @Order(8)
     public void testEditMktPriceMarginAndTriggerPriceAndDeactivation() {
         PaymentAccount paymentAcct = getOrCreatePaymentAccount("US");
 
@@ -249,7 +282,7 @@ public class EditOfferTest extends AbstractOfferTest {
     }
 
     @Test
-    @Order(8)
+    @Order(9)
     public void testEditingFixedPriceInMktPriceMarginBasedOfferShouldThrowException() {
         PaymentAccount paymentAcct = getOrCreatePaymentAccount("US");
         var originalMktPriceMargin = new BigDecimal("0.0").doubleValue();
@@ -279,7 +312,7 @@ public class EditOfferTest extends AbstractOfferTest {
     }
 
     @Test
-    @Order(9)
+    @Order(10)
     public void testEditingTriggerPriceInFixedPriceOfferShouldThrowException() {
         PaymentAccount paymentAcct = getOrCreatePaymentAccount("RU");
         double mktPriceAsDouble = aliceClient.getBtcPrice(RUBLE);
@@ -301,7 +334,7 @@ public class EditOfferTest extends AbstractOfferTest {
     }
 
     @Test
-    @Order(10)
+    @Order(11)
     public void testChangeFixedPriceOfferToPriceMarginBasedOfferWithTriggerPrice() {
         PaymentAccount paymentAcct = getOrCreatePaymentAccount("MX");
         double mktPriceAsDouble = aliceClient.getBtcPrice("MXN");
@@ -335,7 +368,7 @@ public class EditOfferTest extends AbstractOfferTest {
     }
 
     @Test
-    @Order(11)
+    @Order(12)
     public void testChangePriceMarginBasedOfferToFixedPriceOfferAndDeactivateIt() {
         PaymentAccount paymentAcct = getOrCreatePaymentAccount("GB");
         double mktPriceAsDouble = aliceClient.getBtcPrice("GBP");
@@ -360,10 +393,10 @@ public class EditOfferTest extends AbstractOfferTest {
         // Wait for edited offer to be removed from offer-book, edited, and re-published.
         genBtcBlocksThenWait(1, 2500);
         OfferInfo editedOffer = aliceClient.getMyOffer(originalOffer.getId());
+        assertEquals(scaledUpFiatPrice.apply(new BigDecimal(fixedPriceAsString)), editedOffer.getPrice());
         assertFalse(editedOffer.getUseMarketBasedPrice());
         assertEquals(0.00, editedOffer.getMarketPriceMargin());
         assertEquals(0, editedOffer.getTriggerPrice());
-        assertEquals(scaledUpFiatPrice.apply(new BigDecimal(fixedPriceAsString)), editedOffer.getPrice());
         assertFalse(editedOffer.getIsActivated());
     }
 

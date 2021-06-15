@@ -126,6 +126,7 @@ public class OffersServiceRequest {
     // TODO Make sure this is not duplicated anywhere on CLI side.
     private final Function<Long, String> scaledPriceStringFormat = (price) -> {
         BigDecimal factor = new BigDecimal(10).pow(4);
+        //noinspection BigDecimalMethodWithoutRoundingCalled
         return new BigDecimal(price).divide(factor).toPlainString();
     };
 
@@ -195,6 +196,7 @@ public class OffersServiceRequest {
                 .setEnable(enable)
                 .setEditType(editType)
                 .build();
+        //noinspection ResultOfMethodCallIgnored
         grpcStubs.offersService.editOffer(request);
     }
 
@@ -202,6 +204,7 @@ public class OffersServiceRequest {
         var request = CancelOfferRequest.newBuilder()
                 .setId(offerId)
                 .build();
+        //noinspection ResultOfMethodCallIgnored
         grpcStubs.offersService.cancelOffer(request);
     }
 
