@@ -25,7 +25,7 @@ import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.AutoTooltipTableColumn;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.components.InputTextField;
-import bisq.desktop.components.PeerInfoIcon;
+import bisq.desktop.components.PeerInfoIconTrading;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.ClosedTradesSummaryWindow;
@@ -575,7 +575,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                                     int numPastTrades = model.getNumPastTrades(trade);
                                     final NodeAddress tradingPeerNodeAddress = trade.getTradingPeerNodeAddress();
                                     String role = Res.get("peerInfoIcon.tooltip.tradePeer");
-                                    Node peerInfoIcon = new PeerInfoIcon(tradingPeerNodeAddress,
+                                    Node peerInfoIcon = new PeerInfoIconTrading(tradingPeerNodeAddress,
                                             role,
                                             numPastTrades,
                                             privateNotificationManager,
