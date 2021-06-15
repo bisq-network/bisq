@@ -63,6 +63,7 @@ public class OfferInfo implements Payload {
     private final long date;
     private final String state;
     private final boolean isActivated;
+    private final boolean isMyOffer;
 
     public OfferInfo(OfferInfoBuilder builder) {
         this.id = builder.id;
@@ -89,20 +90,23 @@ public class OfferInfo implements Payload {
         this.date = builder.date;
         this.state = builder.state;
         this.isActivated = builder.isActivated;
+        this.isMyOffer = builder.isMyOffer;
     }
 
     public static OfferInfo toOfferInfo(Offer offer) {
-        return getOfferInfoBuilder(offer).build();
+        // Offer is not mine.
+        return getOfferInfoBuilder(offer, false).build();
     }
 
     public static OfferInfo toOfferInfo(OpenOffer openOffer) {
-        return getOfferInfoBuilder(openOffer.getOffer())
+        // OpenOffer is mine.
+        return getOfferInfoBuilder(openOffer.getOffer(), true)
                 .withTriggerPrice(openOffer.getTriggerPrice())
                 .withIsActivated(!openOffer.isDeactivated())
                 .build();
     }
 
-    private static OfferInfoBuilder getOfferInfoBuilder(Offer offer) {
+    private static OfferInfoBuilder getOfferInfoBuilder(Offer offer, boolean isMyOffer) {
         return new OfferInfoBuilder()
                 .withId(offer.getId())
                 .withDirection(offer.getDirection().name())
@@ -125,7 +129,8 @@ public class OfferInfo implements Payload {
                 .withBaseCurrencyCode(offer.getOfferPayload().getBaseCurrencyCode())
                 .withCounterCurrencyCode(offer.getOfferPayload().getCounterCurrencyCode())
                 .withDate(offer.getDate().getTime())
-                .withState(offer.getState().name());
+                .withState(offer.getState().name())
+                .withIsMyOffer(isMyOffer);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -159,6 +164,7 @@ public class OfferInfo implements Payload {
                 .setDate(date)
                 .setState(state)
                 .setIsActivated(isActivated)
+                .setIsMyOffer(isMyOffer)
                 .build();
     }
 
@@ -189,6 +195,7 @@ public class OfferInfo implements Payload {
                 .withDate(proto.getDate())
                 .withState(proto.getState())
                 .withIsActivated(proto.getIsActivated())
+                .withIsMyOffer(proto.getIsMyOffer())
                 .build();
     }
 
@@ -223,6 +230,7 @@ public class OfferInfo implements Payload {
         private long date;
         private String state;
         private boolean isActivated;
+        private boolean isMyOffer;
 
         public OfferInfoBuilder withId(String id) {
             this.id = id;
@@ -341,6 +349,11 @@ public class OfferInfo implements Payload {
 
         public OfferInfoBuilder withIsActivated(boolean isActivated) {
             this.isActivated = isActivated;
+            return this;
+        }
+
+        public OfferInfoBuilder withIsMyOffer(boolean isMyOffer) {
+            this.isMyOffer = isMyOffer;
             return this;
         }
 

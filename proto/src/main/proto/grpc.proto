@@ -191,6 +191,7 @@ message OfferInfo {
     uint64 txFee = 22;
     uint64 makerFee = 23;
     bool isActivated = 24;
+    bool isMyOffer = 25;
 }
 
 message AvailabilityResultWithDescription {
