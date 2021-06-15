@@ -370,7 +370,7 @@ public class CliMain {
                             triggerPrice,
                             enable,
                             editOfferType);
-                    out.println("edited offer being re-added to offer book");
+                    out.println("offer has been edited");
                     return;
                 }
                 case canceloffer: {
