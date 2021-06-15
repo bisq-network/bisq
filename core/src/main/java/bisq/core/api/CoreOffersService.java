@@ -17,7 +17,6 @@
 
 package bisq.core.api;
 
-import bisq.core.locale.CurrencyUtil;
 import bisq.core.monetary.Altcoin;
 import bisq.core.monetary.Price;
 import bisq.core.offer.CreateOfferService;
@@ -218,7 +217,7 @@ class CoreOffersService {
                    EditType editType) {
         OpenOffer openOffer = getMyOpenOffer(offerId);
 
-        boolean isCryptoCurrency = CurrencyUtil.isCryptoCurrency(openOffer.getOffer().getCurrencyCode());
+        boolean isCryptoCurrency = isCryptoCurrency(openOffer.getOffer().getCurrencyCode());
         if (isCryptoCurrency)
             throw new IllegalStateException("editing altcoin offer not supported");
 
