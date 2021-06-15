@@ -1,19 +1,19 @@
-package bisq.cli.opt;
+package bisq.cli.opts;
 
 import org.junit.jupiter.api.Test;
 
 import static bisq.cli.Method.editoffer;
+import static bisq.cli.opts.EditOfferOptionParser.OPT_ENABLE_IGNORED;
+import static bisq.cli.opts.EditOfferOptionParser.OPT_ENABLE_OFF;
+import static bisq.cli.opts.EditOfferOptionParser.OPT_ENABLE_ON;
 import static bisq.cli.opts.OptLabel.*;
 import static bisq.proto.grpc.EditOfferRequest.EditType.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-
-
-import bisq.cli.opts.EditOfferOptionParser;
-
-// This opt parser test has the most thorough coverage,
+// This opt parser test ahs the most thorough coverage,
 // and is a reference for other opt parser tests.
 public class EditOfferOptionParserTest {
 
@@ -124,7 +124,7 @@ public class EditOfferOptionParserTest {
         };
         EditOfferOptionParser parser = new EditOfferOptionParser(args).parse();
         assertEquals(ACTIVATION_STATE_ONLY, parser.getOfferEditType());
-        assertEquals(1, parser.getEnableAsSignedInt());
+        assertEquals(OPT_ENABLE_ON, parser.getEnableAsSignedInt());
     }
 
     @Test
@@ -167,6 +167,9 @@ public class EditOfferOptionParserTest {
         EditOfferOptionParser parser = new EditOfferOptionParser(args).parse();
         assertEquals(FIXED_PRICE_ONLY, parser.getOfferEditType());
         assertEquals(fixedPriceAsString, parser.getFixedPrice());
+        assertFalse(parser.isUsingMktPriceMargin());
+        assertEquals("0.00", parser.getMktPriceMargin());
+        assertEquals(OPT_ENABLE_IGNORED, parser.getEnableAsSignedInt());
     }
 
     @Test
@@ -182,7 +185,9 @@ public class EditOfferOptionParserTest {
         EditOfferOptionParser parser = new EditOfferOptionParser(args).parse();
         assertEquals(FIXED_PRICE_AND_ACTIVATION_STATE, parser.getOfferEditType());
         assertEquals(fixedPriceAsString, parser.getFixedPrice());
-        assertEquals(0, parser.getEnableAsSignedInt());
+        assertFalse(parser.isUsingMktPriceMargin());
+        assertEquals("0.00", parser.getMktPriceMargin());
+        assertEquals(OPT_ENABLE_OFF, parser.getEnableAsSignedInt());
     }
 
     @Test
@@ -196,7 +201,10 @@ public class EditOfferOptionParserTest {
         };
         EditOfferOptionParser parser = new EditOfferOptionParser(args).parse();
         assertEquals(MKT_PRICE_MARGIN_ONLY, parser.getOfferEditType());
+        assertTrue(parser.isUsingMktPriceMargin());
         assertEquals(mktPriceMarginAsString, parser.getMktPriceMargin());
+        assertEquals("0", parser.getTriggerPrice());
+        assertEquals(OPT_ENABLE_IGNORED, parser.getEnableAsSignedInt());
     }
 
     @Test
@@ -225,8 +233,10 @@ public class EditOfferOptionParserTest {
         };
         EditOfferOptionParser parser = new EditOfferOptionParser(args).parse();
         assertEquals(MKT_PRICE_MARGIN_AND_ACTIVATION_STATE, parser.getOfferEditType());
+        assertTrue(parser.isUsingMktPriceMargin());
         assertEquals(mktPriceMarginAsString, parser.getMktPriceMargin());
-        assertEquals(0, parser.getEnableAsSignedInt());
+        assertEquals("0", parser.getTriggerPrice());
+        assertEquals(OPT_ENABLE_OFF, parser.getEnableAsSignedInt());
     }
 
     @Test
@@ -241,6 +251,9 @@ public class EditOfferOptionParserTest {
         EditOfferOptionParser parser = new EditOfferOptionParser(args).parse();
         assertEquals(TRIGGER_PRICE_ONLY, parser.getOfferEditType());
         assertEquals(triggerPriceAsString, parser.getTriggerPrice());
+        assertTrue(parser.isUsingMktPriceMargin());
+        assertEquals("0.00", parser.getMktPriceMargin());
+        assertEquals(OPT_ENABLE_IGNORED, parser.getEnableAsSignedInt());
     }
 
     @Test
@@ -284,7 +297,10 @@ public class EditOfferOptionParserTest {
         EditOfferOptionParser parser = new EditOfferOptionParser(args).parse();
         assertEquals(TRIGGER_PRICE_AND_ACTIVATION_STATE, parser.getOfferEditType());
         assertEquals(triggerPriceAsString, parser.getTriggerPrice());
-        assertEquals(1, parser.getEnableAsSignedInt());
+        assertTrue(parser.isUsingMktPriceMargin());
+        assertEquals("0.00", parser.getMktPriceMargin());
+        assertEquals("0", parser.getFixedPrice());
+        assertEquals(OPT_ENABLE_ON, parser.getEnableAsSignedInt());
     }
 
     @Test
@@ -300,8 +316,11 @@ public class EditOfferOptionParserTest {
         };
         EditOfferOptionParser parser = new EditOfferOptionParser(args).parse();
         assertEquals(MKT_PRICE_MARGIN_AND_TRIGGER_PRICE, parser.getOfferEditType());
-        assertEquals(mktPriceMarginAsString, parser.getMktPriceMargin());
         assertEquals(triggerPriceAsString, parser.getTriggerPrice());
+        assertTrue(parser.isUsingMktPriceMargin());
+        assertEquals(mktPriceMarginAsString, parser.getMktPriceMargin());
+        assertEquals("0", parser.getFixedPrice());
+        assertEquals(OPT_ENABLE_IGNORED, parser.getEnableAsSignedInt());
     }
 
     @Test
@@ -318,8 +337,10 @@ public class EditOfferOptionParserTest {
         };
         EditOfferOptionParser parser = new EditOfferOptionParser(args).parse();
         assertEquals(MKT_PRICE_MARGIN_AND_TRIGGER_PRICE_AND_ACTIVATION_STATE, parser.getOfferEditType());
-        assertEquals(mktPriceMarginAsString, parser.getMktPriceMargin());
         assertEquals(triggerPriceAsString, parser.getTriggerPrice());
-        assertFalse(parser.isEnable());
+        assertTrue(parser.isUsingMktPriceMargin());
+        assertEquals(mktPriceMarginAsString, parser.getMktPriceMargin());
+        assertEquals("0", parser.getFixedPrice());
+        assertEquals(OPT_ENABLE_OFF, parser.getEnableAsSignedInt());
     }
 }

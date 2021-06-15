@@ -34,6 +34,10 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class EditOfferOptionParser extends AbstractMethodOptionParser implements MethodOpts {
 
+    static int OPT_ENABLE_ON = 1;
+    static int OPT_ENABLE_OFF = 0;
+    static int OPT_ENABLE_IGNORED = -1;
+
     final OptionSpec<String> offerIdOpt = parser.accepts(OPT_OFFER_ID, "id of offer to cancel")
             .withRequiredArg();
 
@@ -106,11 +110,7 @@ public class EditOfferOptionParser extends AbstractMethodOptionParser implements
                 throw new IllegalArgumentException("no fixed price specified");
 
             String fixedPriceAsString = options.valueOf(fixedPriceOpt);
-            try {
-                Double.valueOf(fixedPriceAsString);
-            } catch (NumberFormatException ex) {
-                throw new IllegalArgumentException(format("%s is not a number", fixedPriceAsString));
-            }
+            verifyStringIsValidDouble(fixedPriceAsString);
 
             boolean fixedPriceOptIsOnlyOpt = !options.has(mktPriceMarginOpt)
                     && !options.has(triggerPriceOpt)
@@ -137,11 +137,7 @@ public class EditOfferOptionParser extends AbstractMethodOptionParser implements
             if (priceMarginAsString.isEmpty())
                 throw new IllegalArgumentException("no market price margin specified");
 
-            try {
-                Double.valueOf(priceMarginAsString);
-            } catch (NumberFormatException ex) {
-                throw new IllegalArgumentException(format("%s is not a number", priceMarginAsString));
-            }
+            verifyStringIsValidDouble(priceMarginAsString);
 
             boolean mktPriceMarginOptIsOnlyOpt = !options.has(triggerPriceOpt)
                     && !options.has(fixedPriceOpt)
@@ -167,11 +163,7 @@ public class EditOfferOptionParser extends AbstractMethodOptionParser implements
             if (triggerPriceAsString.isEmpty())
                 throw new IllegalArgumentException("trigger price not specified");
 
-            try {
-                Double.valueOf(triggerPriceAsString);
-            } catch (NumberFormatException ex) {
-                throw new IllegalArgumentException(format("%s is not a number", triggerPriceAsString));
-            }
+            verifyStringIsValidDouble(triggerPriceAsString);
 
             boolean triggerPriceOptIsOnlyOpt = !options.has(mktPriceMarginOpt)
                     && !options.has(fixedPriceOpt)
@@ -214,11 +206,22 @@ public class EditOfferOptionParser extends AbstractMethodOptionParser implements
     }
 
     public String getFixedPrice() {
-        return options.has(fixedPriceOpt) ? options.valueOf(fixedPriceOpt) : "0";
+        if (offerEditType.equals(FIXED_PRICE_ONLY) || offerEditType.equals(FIXED_PRICE_AND_ACTIVATION_STATE)) {
+            return options.has(fixedPriceOpt) ? options.valueOf(fixedPriceOpt) : "0";
+        } else {
+            return "0";
+        }
     }
 
     public String getTriggerPrice() {
-        return options.has(triggerPriceOpt) ? options.valueOf(triggerPriceOpt) : "0";
+        if (offerEditType.equals(TRIGGER_PRICE_ONLY)
+                || offerEditType.equals(TRIGGER_PRICE_AND_ACTIVATION_STATE)
+                || offerEditType.equals(MKT_PRICE_MARGIN_AND_TRIGGER_PRICE)
+                || offerEditType.equals(MKT_PRICE_MARGIN_AND_TRIGGER_PRICE_AND_ACTIVATION_STATE)) {
+            return options.has(triggerPriceOpt) ? options.valueOf(triggerPriceOpt) : "0";
+        } else {
+            return "0";
+        }
     }
 
     public BigDecimal getTriggerPriceAsBigDecimal() {
@@ -226,17 +229,23 @@ public class EditOfferOptionParser extends AbstractMethodOptionParser implements
     }
 
     public String getMktPriceMargin() {
-        return isUsingMktPriceMargin() ? options.valueOf(mktPriceMarginOpt) : "0.00";
+        if (offerEditType.equals(MKT_PRICE_MARGIN_ONLY)
+                || offerEditType.equals(MKT_PRICE_MARGIN_AND_ACTIVATION_STATE)
+                || offerEditType.equals(MKT_PRICE_MARGIN_AND_TRIGGER_PRICE)
+                || offerEditType.equals(MKT_PRICE_MARGIN_AND_TRIGGER_PRICE_AND_ACTIVATION_STATE)) {
+            return isUsingMktPriceMargin() ? options.valueOf(mktPriceMarginOpt) : "0.00";
+        } else {
+            return "0.00";
+        }
     }
 
     public BigDecimal getMktPriceMarginAsBigDecimal() {
-        return isUsingMktPriceMargin()
-                ? new BigDecimal(options.valueOf(mktPriceMarginOpt))
-                : BigDecimal.ZERO;
+        return new BigDecimal(options.valueOf(mktPriceMarginOpt));
     }
 
     public boolean isUsingMktPriceMargin() {
-        return options.has(mktPriceMarginOpt);
+        return !offerEditType.equals(FIXED_PRICE_ONLY)
+                && !offerEditType.equals(FIXED_PRICE_AND_ACTIVATION_STATE);
     }
 
     public int getEnableAsSignedInt() {
@@ -247,8 +256,8 @@ public class EditOfferOptionParser extends AbstractMethodOptionParser implements
         @Nullable
         Boolean input = isEnable();
         return input == null
-                ? -1
-                : input ? 1 : 0;
+                ? OPT_ENABLE_IGNORED
+                : input ? OPT_ENABLE_ON : OPT_ENABLE_OFF;
     }
 
     @Nullable
@@ -260,5 +269,13 @@ public class EditOfferOptionParser extends AbstractMethodOptionParser implements
 
     public EditOfferRequest.EditType getOfferEditType() {
         return offerEditType;
+    }
+
+    private void verifyStringIsValidDouble(String string) {
+        try {
+            Double.valueOf(string);
+        } catch (NumberFormatException ex) {
+            throw new IllegalArgumentException(format("%s is not a number", string));
+        }
     }
 }
