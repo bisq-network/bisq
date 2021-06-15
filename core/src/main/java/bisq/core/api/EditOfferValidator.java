@@ -22,7 +22,6 @@ class EditOfferValidator {
     private final EditOfferRequest.EditType editType;
 
     private final boolean isZeroEditedFixedPriceString;
-    private final boolean isZeroEditedMarketPriceMargin;
     private final boolean isZeroEditedTriggerPrice;
 
     EditOfferValidator(OpenOffer currentlyOpenOffer,
@@ -41,7 +40,6 @@ class EditOfferValidator {
         this.editType = editType;
 
         this.isZeroEditedFixedPriceString = new BigDecimal(editedPriceAsString).doubleValue() == 0;
-        this.isZeroEditedMarketPriceMargin = editedMarketPriceMargin == 0;
         this.isZeroEditedTriggerPrice = editedTriggerPrice == 0;
     }
 
@@ -76,7 +74,7 @@ class EditOfferValidator {
         if (editedEnable < 0)
             throw new IllegalStateException(
                     format("programmer error: the 'enable' request parameter does not"
-                                    + " indicate activation state of offer with id '{}' should be changed.",
+                                    + " indicate activation state of offer with id '%s' should be changed.",
                             currentlyOpenOffer.getId()));
     }
 
