@@ -104,5 +104,7 @@ public class OfferTest extends AbstractOfferTest {
         test.testEditingTriggerPriceInFixedPriceOfferShouldThrowException();
         test.testChangeFixedPriceOfferToPriceMarginBasedOfferWithTriggerPrice();
         test.testChangePriceMarginBasedOfferToFixedPriceOfferAndDeactivateIt();
+        // TODO Allow editing BSQ offer fixed-price, enable/disable.
+        test.testEditBsqOfferShouldThrowException();
     }
 }

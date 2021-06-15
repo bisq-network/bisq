@@ -400,6 +400,26 @@ public class EditOfferTest extends AbstractOfferTest {
         assertFalse(editedOffer.getIsActivated());
     }
 
+    @Test
+    @Order(13)
+    public void testEditBsqOfferShouldThrowException() {
+        createBsqPaymentAccounts();
+        var newOffer = aliceClient.createFixedPricedOffer(BUY.name(),
+                BSQ,
+                100_000_000L,
+                100_000_000L,
+                "0.00005",   // FIXED PRICE IN BTC (satoshis) FOR 1 BSQ
+                getDefaultBuyerSecurityDepositAsPercent(),
+                alicesBsqAcct.getId(),
+                BSQ);
+        // TODO Allow editing BSQ offer fixed-price, enable/disable.
+        Throwable exception = assertThrows(StatusRuntimeException.class, () ->
+                aliceClient.editOfferActivationState(newOffer.getId(), DEACTIVATE_OFFER));
+        String expectedExceptionMessage = format("UNKNOWN: editing altcoin offer not supported");
+        assertEquals(expectedExceptionMessage, exception.getMessage());
+    }
+
+
     private OfferInfo createMktPricedOfferForEdit(String direction,
                                                   String currencyCode,
                                                   String paymentAccountId,

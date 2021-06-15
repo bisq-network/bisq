@@ -17,6 +17,7 @@
 
 package bisq.core.api;
 
+import bisq.core.locale.CurrencyUtil;
 import bisq.core.monetary.Altcoin;
 import bisq.core.monetary.Price;
 import bisq.core.offer.CreateOfferService;
@@ -45,6 +46,7 @@ import java.math.BigDecimal;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -215,6 +217,11 @@ class CoreOffersService {
                    int editedEnable,
                    EditType editType) {
         OpenOffer openOffer = getMyOpenOffer(offerId);
+
+        boolean isCryptoCurrency = CurrencyUtil.isCryptoCurrency(openOffer.getOffer().getCurrencyCode());
+        if (isCryptoCurrency)
+            throw new IllegalStateException("editing altcoin offer not supported");
+
         new EditOfferValidator(openOffer,
                 editedPriceAsString,
                 editedUseMarketBasedPrice,
@@ -310,7 +317,7 @@ class CoreOffersService {
                 || editType.equals(MKT_PRICE_MARGIN_AND_TRIGGER_PRICE)
                 || editType.equals(MKT_PRICE_MARGIN_AND_TRIGGER_PRICE_AND_ACTIVATION_STATE);
         MutableOfferPayloadFields mutableOfferPayloadFields = new MutableOfferPayloadFields(
-                editedPrice.getValue(),
+                Objects.requireNonNull(editedPrice).getValue(),
                 isUsingMktPriceMargin ? exactMultiply(editedMarketPriceMargin, 0.01) : 0.00,
                 isUsingMktPriceMargin,
                 offer.getOfferPayload().getBaseCurrencyCode(),
