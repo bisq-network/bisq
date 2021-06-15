@@ -62,11 +62,11 @@ public class ExplorerAddressTextField extends AnchorPane {
         copyIcon = new Label();
         copyIcon.setLayoutY(3);
         copyIcon.getStyleClass().addAll("icon", "highlight");
-        copyIcon.setTooltip(new Tooltip(Res.get("txIdTextField.copyIcon.tooltip")));
+        copyIcon.setTooltip(new Tooltip(Res.get("explorerAddressTextField.copyToClipboard")));
         AwesomeDude.setIcon(copyIcon, AwesomeIcon.COPY);
         AnchorPane.setRightAnchor(copyIcon, 30.0);
 
-        Tooltip tooltip = new Tooltip(Res.get("txIdTextField.blockExplorerIcon.tooltip"));
+        Tooltip tooltip = new Tooltip(Res.get("explorerAddressTextField.blockExplorerIcon.tooltip"));
 
         blockExplorerIcon = new Label();
         blockExplorerIcon.getStyleClass().addAll("icon", "highlight");
@@ -79,7 +79,7 @@ public class ExplorerAddressTextField extends AnchorPane {
         missingAddressWarningIcon = new Label();
         missingAddressWarningIcon.getStyleClass().addAll("icon", "error-icon");
         AwesomeDude.setIcon(missingAddressWarningIcon, AwesomeIcon.WARNING_SIGN);
-        missingAddressWarningIcon.setTooltip(new Tooltip(Res.get("txIdTextField.missingTx.warning.tooltip")));
+        missingAddressWarningIcon.setTooltip(new Tooltip(Res.get("explorerAddressTextField.missingTx.warning.tooltip")));
         missingAddressWarningIcon.setMinWidth(20);
         AnchorPane.setRightAnchor(missingAddressWarningIcon, 52.0);
         AnchorPane.setTopAnchor(missingAddressWarningIcon, 4.0);
@@ -96,8 +96,8 @@ public class ExplorerAddressTextField extends AnchorPane {
         getChildren().addAll(textField, missingAddressWarningIcon, blockExplorerIcon, copyIcon);
     }
 
-    public void setup(@Nullable String addressId) {
-        if (addressId == null) {
+    public void setup(@Nullable String address) {
+        if (address == null) {
             textField.setText(Res.get("shared.na"));
             textField.setId("address-text-field-error");
             blockExplorerIcon.setVisible(false);
@@ -109,10 +109,10 @@ public class ExplorerAddressTextField extends AnchorPane {
             return;
         }
 
-        textField.setText(addressId);
-        textField.setOnMouseClicked(mouseEvent -> openBlockExplorer(addressId));
-        blockExplorerIcon.setOnMouseClicked(mouseEvent -> openBlockExplorer(addressId));
-        copyIcon.setOnMouseClicked(e -> Utilities.copyToClipboard(addressId));
+        textField.setText(address);
+        textField.setOnMouseClicked(mouseEvent -> openBlockExplorer(address));
+        blockExplorerIcon.setOnMouseClicked(mouseEvent -> openBlockExplorer(address));
+        copyIcon.setOnMouseClicked(e -> Utilities.copyToClipboard(address));
     }
 
     public void cleanup() {
@@ -126,12 +126,12 @@ public class ExplorerAddressTextField extends AnchorPane {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void openBlockExplorer(String addressId) {
+    private void openBlockExplorer(String address) {
         if (preferences != null) {
             BlockChainExplorer blockChainExplorer = isBsq ?
                     preferences.getBsqBlockChainExplorer() :
                     preferences.getBlockChainExplorer();
-            GUIUtil.openWebPage(blockChainExplorer.addressUrl + addressId, false);
+            GUIUtil.openWebPage(blockChainExplorer.addressUrl + address, false);
         }
     }
 }
