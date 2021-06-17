@@ -41,11 +41,8 @@ import lombok.Setter;
 import javax.annotation.Nullable;
 
 public class ExplorerAddressTextField extends AnchorPane {
+    @Setter
     private static Preferences preferences;
-
-    public static void setPreferences(Preferences preferences) {
-        ExplorerAddressTextField.preferences = preferences;
-    }
 
     @Getter
     private final TextField textField;
