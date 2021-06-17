@@ -228,7 +228,7 @@ class CoreOffersService {
                 editedTriggerPrice,
                 editedEnable,
                 editType).validate();
-        log.info("'editoffer' params OK for offerId={}"
+        log.info("Validated 'editoffer' params offerId={}"
                         + "\n\teditedPriceAsString={}"
                         + "\n\teditedUseMarketBasedPrice={}"
                         + "\n\teditedMarketPriceMargin={}"
