@@ -1045,7 +1045,10 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                         canTakeOfferResult = model.offerFilter.canTakeOffer(offer, false);
                                         tableRow.setOpacity(canTakeOfferResult.isValid() || myOffer ? 1 : 0.4);
 
-                                        if (canTakeOfferResult.isValid()) {
+                                        if (myOffer) {
+                                            button.setDefaultButton(false);
+                                            tableRow.setOnMousePressed(null);
+                                        } else if (canTakeOfferResult.isValid()) {
                                             // set first row button as default
                                             button.setDefaultButton(getIndex() == 0);
                                             tableRow.setOnMousePressed(null);
