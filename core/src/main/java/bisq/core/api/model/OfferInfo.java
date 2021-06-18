@@ -63,7 +63,7 @@ public class OfferInfo implements Payload {
     private final long date;
     private final String state;
     private final boolean isActivated;
-    private final boolean isMyOffer;
+    private boolean isMyOffer;
 
     public OfferInfo(OfferInfoBuilder builder) {
         this.id = builder.id;
@@ -93,13 +93,19 @@ public class OfferInfo implements Payload {
         this.isMyOffer = builder.isMyOffer;
     }
 
+    // Allow isMyOffer to be set on new offers' OfferInfo instances.
+    public void setIsMyOffer(boolean myOffer) {
+        isMyOffer = myOffer;
+    }
+
     public static OfferInfo toOfferInfo(Offer offer) {
-        // Offer is not mine.
+        // Assume the offer is not mine, but isMyOffer can be reset to true, i.e., when
+        // calling TradeInfo toTradeInfo(Trade trade, String role, boolean isMyOffer);
         return getOfferInfoBuilder(offer, false).build();
     }
 
     public static OfferInfo toOfferInfo(OpenOffer openOffer) {
-        // OpenOffer is mine.
+        // An OpenOffer is always my offer.
         return getOfferInfoBuilder(openOffer.getOffer(), true)
                 .withTriggerPrice(openOffer.getTriggerPrice())
                 .withIsActivated(!openOffer.isDeactivated())
