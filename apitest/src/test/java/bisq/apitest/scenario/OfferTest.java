@@ -92,6 +92,7 @@ public class OfferTest extends AbstractOfferTest {
     @Order(6)
     public void testEditOffer() {
         EditOfferTest test = new EditOfferTest();
+        // Edit fiat offer tests
         test.testOfferDisableAndEnable();
         test.testEditTriggerPrice();
         test.testSetTriggerPriceToNegativeValueShouldThrowException();
@@ -104,7 +105,12 @@ public class OfferTest extends AbstractOfferTest {
         test.testEditingTriggerPriceInFixedPriceOfferShouldThrowException();
         test.testChangeFixedPriceOfferToPriceMarginBasedOfferWithTriggerPrice();
         test.testChangePriceMarginBasedOfferToFixedPriceOfferAndDeactivateIt();
-        // TODO Allow editing BSQ offer fixed-price, enable/disable.
-        test.testEditBsqOfferShouldThrowException();
+        test.testChangeFixedPriceOfferToPriceMarginBasedOfferWithTriggerPrice();
+        // Edit bsq offer tests
+        test.testChangeFixedPricedBsqOfferToPriceMarginBasedOfferShouldThrowException();
+        test.testEditTriggerPriceOnFixedPriceBsqOfferShouldThrowException();
+        test.testEditFixedPriceOnBsqOffer();
+        test.testDisableBsqOffer();
+        test.testEditFixedPriceAndDisableBsqOffer();
     }
 }

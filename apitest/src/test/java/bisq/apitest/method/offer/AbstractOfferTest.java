@@ -71,23 +71,31 @@ public abstract class AbstractOfferTest extends MethodTest {
     protected final Function<Double, Double> scaledDownMktPriceMargin = (mktPriceMargin) ->
             exactMultiply(mktPriceMargin, 0.01);
 
-    // Price value of offer returned from server is scaled up by 10^4.
-    protected final Function<BigDecimal, Long> scaledUpFiatPrice = (price) -> {
+    // Price value of fiat offer returned from server will be scaled up by 10^4.
+    protected final Function<BigDecimal, Long> scaledUpFiatOfferPrice = (price) -> {
         BigDecimal factor = new BigDecimal(10).pow(4);
         return price.multiply(factor).longValue();
     };
 
-    protected final BiFunction<Double, Double, Long> calcTriggerPriceAsLong = (base, delta) -> {
-        var triggerPriceAsDouble = new BigDecimal(base).add(new BigDecimal(delta)).doubleValue();
-        return Double.valueOf(exactMultiply(triggerPriceAsDouble, 10_000)).longValue();
+    // Price value of altcoin offer returned from server will be scaled up by 10^8.
+    protected final Function<String, Long> scaledUpAltcoinOfferPrice = (altcoinPriceAsString) -> {
+        BigDecimal factor = new BigDecimal(10).pow(8);
+        BigDecimal priceAsBigDecimal = new BigDecimal(altcoinPriceAsString);
+        return priceAsBigDecimal.multiply(factor).longValue();
     };
 
-    protected final BiFunction<Double, Double, String> calcFixedPriceAsString = (base, delta) -> {
-        var fixedPriceAsBigDecimal = new BigDecimal(Double.toString(base))
+    protected final BiFunction<Double, Double, Long> calcPriceAsLong = (base, delta) -> {
+        var priceAsDouble = new BigDecimal(base).add(new BigDecimal(delta)).doubleValue();
+        return Double.valueOf(exactMultiply(priceAsDouble, 10_000)).longValue();
+    };
+
+    protected final BiFunction<Double, Double, String> calcPriceAsString = (base, delta) -> {
+        var priceAsBigDecimal = new BigDecimal(Double.toString(base))
                 .add(new BigDecimal(Double.toString(delta)));
-        return fixedPriceAsBigDecimal.toPlainString();
+        return priceAsBigDecimal.toPlainString();
     };
 
+    @SuppressWarnings("ConstantConditions")
     public static void createBsqPaymentAccounts() {
         alicesBsqAcct = aliceClient.createCryptoCurrencyPaymentAccount("Alice's BSQ Account",
                 BSQ,
