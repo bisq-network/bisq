@@ -155,6 +155,12 @@ class CoreOffersService {
                         new IllegalStateException(format("offer with id '%s' not found", id)));
     }
 
+    boolean isMyOffer(String id) {
+        return openOfferManager.getOpenOfferById(id)
+                .filter(open -> open.getOffer().isMyOffer(keyRing))
+                .isPresent();
+    }
+
     // Create and place new offer.
     void createAndPlaceOffer(String currencyCode,
                              String directionAsString,
@@ -216,11 +222,6 @@ class CoreOffersService {
                    int editedEnable,
                    EditType editType) {
         OpenOffer openOffer = getMyOpenOffer(offerId);
-
-        boolean isCryptoCurrency = isCryptoCurrency(openOffer.getOffer().getCurrencyCode());
-        if (isCryptoCurrency)
-            throw new IllegalStateException("editing altcoin offer not supported");
-
         new EditOfferValidator(openOffer,
                 editedPriceAsString,
                 editedUseMarketBasedPrice,

@@ -161,6 +161,7 @@ class GrpcOffersService extends OffersImplBase {
                         // This result handling consumer's accept operation will return
                         // the new offer to the gRPC client after async placement is done.
                         OfferInfo offerInfo = toOfferInfo(offer);
+                        offerInfo.setIsMyOffer(true);
                         CreateOfferReply reply = CreateOfferReply.newBuilder()
                                 .setOffer(offerInfo.toProtoMessage())
                                 .build();
