@@ -153,7 +153,7 @@ public class TableFormat {
         boolean isMyOffer = offers.get(0).getIsMyOffer();
         return baseCurrencyCode.equalsIgnoreCase("BTC")
                 ? formatFiatOfferTable(offers, currencyCode, isMyOffer)
-                : formatCryptoCurrencyOfferTable(offers, baseCurrencyCode);
+                : formatCryptoCurrencyOfferTable(offers, baseCurrencyCode, isMyOffer);
     }
 
     private static String formatFiatOfferTable(List<OfferInfo> offers,
@@ -252,14 +252,21 @@ public class TableFormat {
         }
     }
 
-    private static String formatCryptoCurrencyOfferTable(List<OfferInfo> offers, String cryptoCurrencyCode) {
+    private static String formatCryptoCurrencyOfferTable(List<OfferInfo> offers,
+                                                         String cryptoCurrencyCode,
+                                                         boolean isMyOffer) {
         // Some column values might be longer than header, so we need to calculate them.
         int directionColWidth = getLongestDirectionColWidth(offers);
         int amountColWith = getLongestAmountColWidth(offers);
         int volumeColWidth = getLongestCryptoCurrencyVolumeColWidth(offers);
         int paymentMethodColWidth = getLongestPaymentMethodColWidth(offers);
+        // "Enabled" column is displayed for my offers only.
+        String enabledHeaderFormat = isMyOffer ?
+                COL_HEADER_ENABLED + COL_HEADER_DELIMITER
+                : "";
         // TODO use memoize function to avoid duplicate the formatting done above?
-        String headersFormat = padEnd(COL_HEADER_DIRECTION, directionColWidth, ' ') + COL_HEADER_DELIMITER
+        String headersFormat = enabledHeaderFormat
+                + padEnd(COL_HEADER_DIRECTION, directionColWidth, ' ') + COL_HEADER_DELIMITER
                 + COL_HEADER_PRICE_OF_ALTCOIN + COL_HEADER_DELIMITER   // includes %s -> cryptoCurrencyCode
                 + padStart(COL_HEADER_AMOUNT, amountColWith, ' ') + COL_HEADER_DELIMITER
                 // COL_HEADER_VOLUME  includes %s -> cryptoCurrencyCode
@@ -270,24 +277,51 @@ public class TableFormat {
         String headerLine = format(headersFormat,
                 cryptoCurrencyCode.toUpperCase(),
                 cryptoCurrencyCode.toUpperCase());
-        String colDataFormat = "%-" + directionColWidth + "s"
-                + "%" + (COL_HEADER_PRICE_OF_ALTCOIN.length() + 1) + "s"
-                + "  %" + amountColWith + "s"
-                + "  %" + (volumeColWidth - 1) + "s"
-                + "  %-" + paymentMethodColWidth + "s"
-                + "  %-" + (COL_HEADER_CREATION_DATE.length()) + "s"
-                + "  %-" + COL_HEADER_UUID.length() + "s";
-        return headerLine
-                + offers.stream()
-                .map(o -> format(colDataFormat,
-                        directionFormat.apply(o),
-                        formatCryptoCurrencyPrice(o.getPrice()),
-                        formatAmountRange(o.getMinAmount(), o.getAmount()),
-                        formatCryptoCurrencyVolumeRange(o.getMinVolume(), o.getVolume()),
-                        o.getPaymentMethodShortName(),
-                        formatTimestamp(o.getDate()),
-                        o.getId()))
-                .collect(Collectors.joining("\n"));
+        String colDataFormat;
+        if (isMyOffer) {
+            colDataFormat = "%-" + (COL_HEADER_ENABLED.length() + COL_HEADER_DELIMITER.length()) + "s"
+                    + "%-" + directionColWidth + "s"
+                    + "%" + (COL_HEADER_PRICE_OF_ALTCOIN.length() + 1) + "s"
+                    + "  %" + amountColWith + "s"
+                    + "  %" + (volumeColWidth - 1) + "s"
+                    + "  %-" + paymentMethodColWidth + "s"
+                    + "  %-" + (COL_HEADER_CREATION_DATE.length()) + "s"
+                    + "  %-" + COL_HEADER_UUID.length() + "s";
+        } else {
+            colDataFormat = "%-" + directionColWidth + "s"
+                    + "%" + (COL_HEADER_PRICE_OF_ALTCOIN.length() + 1) + "s"
+                    + "  %" + amountColWith + "s"
+                    + "  %" + (volumeColWidth - 1) + "s"
+                    + "  %-" + paymentMethodColWidth + "s"
+                    + "  %-" + (COL_HEADER_CREATION_DATE.length()) + "s"
+                    + "  %-" + COL_HEADER_UUID.length() + "s";
+        }
+        if (isMyOffer) {
+            return headerLine
+                    + offers.stream()
+                    .map(o -> format(colDataFormat,
+                            o.getIsActivated() ? "YES" : "NO",
+                            directionFormat.apply(o),
+                            formatCryptoCurrencyPrice(o.getPrice()),
+                            formatAmountRange(o.getMinAmount(), o.getAmount()),
+                            formatCryptoCurrencyVolumeRange(o.getMinVolume(), o.getVolume()),
+                            o.getPaymentMethodShortName(),
+                            formatTimestamp(o.getDate()),
+                            o.getId()))
+                    .collect(Collectors.joining("\n"));
+        } else {
+            return headerLine
+                    + offers.stream()
+                    .map(o -> format(colDataFormat,
+                            directionFormat.apply(o),
+                            formatCryptoCurrencyPrice(o.getPrice()),
+                            formatAmountRange(o.getMinAmount(), o.getAmount()),
+                            formatCryptoCurrencyVolumeRange(o.getMinVolume(), o.getVolume()),
+                            o.getPaymentMethodShortName(),
+                            formatTimestamp(o.getDate()),
+                            o.getId()))
+                    .collect(Collectors.joining("\n"));
+        }
     }
 
     private static int getLongestPaymentMethodColWidth(List<OfferInfo> offers) {
