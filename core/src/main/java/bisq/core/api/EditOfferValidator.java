@@ -8,6 +8,7 @@ import java.math.BigDecimal;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.core.locale.CurrencyUtil.isCryptoCurrency;
 import static java.lang.String.format;
 
 @Slf4j
@@ -61,6 +62,7 @@ class EditOfferValidator {
             case TRIGGER_PRICE_AND_ACTIVATION_STATE:
             case MKT_PRICE_MARGIN_AND_TRIGGER_PRICE:
             case MKT_PRICE_MARGIN_AND_TRIGGER_PRICE_AND_ACTIVATION_STATE: {
+                checkNotAltcoinOffer();
                 validateEditedTriggerPrice();
                 validateEditedMarketPriceMargin();
                 break;
@@ -127,5 +129,13 @@ class EditOfferValidator {
                     format("programmer error: cannot set trigger price to a negative value"
                                     + " in offer with id '%s'",
                             currentlyOpenOffer.getId()));
+    }
+
+    private void checkNotAltcoinOffer() {
+        if (isCryptoCurrency(currentlyOpenOffer.getOffer().getCurrencyCode())) {
+            throw new IllegalStateException(
+                    format("cannot set mkt price margin or trigger price on fixed price altcoin offer with id '%s'",
+                            currentlyOpenOffer.getId()));
+        }
     }
 }
