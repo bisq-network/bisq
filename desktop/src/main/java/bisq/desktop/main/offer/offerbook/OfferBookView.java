@@ -28,7 +28,7 @@ import bisq.desktop.components.AutocompleteComboBox;
 import bisq.desktop.components.ColoredDecimalPlacesWithZerosText;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.components.InfoAutoTooltipLabel;
-import bisq.desktop.components.PeerInfoIcon;
+import bisq.desktop.components.PeerInfoIconTrading;
 import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.account.AccountView;
@@ -1045,7 +1045,10 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                         canTakeOfferResult = model.offerFilter.canTakeOffer(offer, false);
                                         tableRow.setOpacity(canTakeOfferResult.isValid() || myOffer ? 1 : 0.4);
 
-                                        if (canTakeOfferResult.isValid()) {
+                                        if (myOffer) {
+                                            button.setDefaultButton(false);
+                                            tableRow.setOnMousePressed(null);
+                                        } else if (canTakeOfferResult.isValid()) {
                                             // set first row button as default
                                             button.setDefaultButton(getIndex() == 0);
                                             tableRow.setOnMousePressed(null);
@@ -1175,7 +1178,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                     final NodeAddress makersNodeAddress = offer.getOwnerNodeAddress();
                                     String role = Res.get("peerInfoIcon.tooltip.maker");
                                     int numTrades = model.getNumTrades(offer);
-                                    PeerInfoIcon peerInfoIcon = new PeerInfoIcon(makersNodeAddress,
+                                    PeerInfoIconTrading peerInfoIcon = new PeerInfoIconTrading(makersNodeAddress,
                                             role,
                                             numTrades,
                                             privateNotificationManager,
