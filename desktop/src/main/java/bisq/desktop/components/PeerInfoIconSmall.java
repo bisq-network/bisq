@@ -10,7 +10,7 @@ import bisq.network.p2p.NodeAddress;
 
 import javax.annotation.Nullable;
 
-public class PeerInfoIconSmall extends PeerInfoIcon {
+public class PeerInfoIconSmall extends PeerInfoIconTrading {
     public PeerInfoIconSmall(NodeAddress nodeAddress,
                              String role,
                              Offer offer,

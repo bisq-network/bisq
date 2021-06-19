@@ -491,8 +491,8 @@ public class ChatView extends AnchorPane {
                             statusInfoLabel.getStyleClass().add("error-text");
                         } else if (message.arrivedProperty().get()) {
                             visible = true;
-                            icon = AwesomeIcon.OK;
-                            text = Res.get("support.arrived");
+                            icon = AwesomeIcon.MAIL_REPLY;
+                            text = Res.get("support.transient");
                         } else if (message.storedInMailboxProperty().get()) {
                             visible = true;
                             icon = AwesomeIcon.ENVELOPE;
@@ -609,6 +609,8 @@ public class ChatView extends AnchorPane {
 
         inputTextArea.setDisable(true);
         inputTextArea.clear();
+
+        chatMessage.startAckTimer();
 
         Timer timer = UserThread.runAfter(() -> {
             sendMsgInfoLabel.setVisible(true);

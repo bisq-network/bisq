@@ -20,22 +20,15 @@ package bisq.desktop.components;
 import bisq.desktop.main.overlays.editor.PeerInfoWithTagEditor;
 import bisq.desktop.util.DisplayUtils;
 
-import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.alert.PrivateNotificationManager;
-import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
-import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.trade.Trade;
 import bisq.core.user.Preferences;
 
 import bisq.network.p2p.NodeAddress;
 
-import bisq.common.util.Tuple5;
-
 import com.google.common.base.Charsets;
-
-import org.apache.commons.lang3.StringUtils;
 
 import javafx.scene.Group;
 import javafx.scene.canvas.Canvas;
@@ -51,132 +44,37 @@ import javafx.geometry.Point2D;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
-import java.util.Date;
 import java.util.Map;
 
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 @Slf4j
 public class PeerInfoIcon extends Group {
-    private final String tooltipText;
-    private final int numTrades;
-    private final AccountAgeWitnessService accountAgeWitnessService;
-    private final Map<String, String> peerTagMap;
-    private final Label numTradesLabel;
-    private final Label tagLabel;
-    final Pane tagPane;
-    final Pane numTradesPane;
-    private final String fullAddress;
-
-    public PeerInfoIcon(NodeAddress nodeAddress,
-                        String role,
-                        int numTrades,
-                        PrivateNotificationManager privateNotificationManager,
-                        Offer offer,
-                        Preferences preferences,
-                        AccountAgeWitnessService accountAgeWitnessService,
-                        boolean useDevPrivilegeKeys) {
-        this(nodeAddress,
-                role,
-                numTrades,
-                privateNotificationManager,
-                offer,
-                null,
-                preferences,
-                accountAgeWitnessService,
-                useDevPrivilegeKeys);
-
+    public interface notify {
+        void avatarTagUpdated();
     }
 
-    public PeerInfoIcon(NodeAddress nodeAddress,
-                        String role,
-                        int numTrades,
-                        PrivateNotificationManager privateNotificationManager,
-                        Trade trade,
-                        Preferences preferences,
-                        AccountAgeWitnessService accountAgeWitnessService,
-                        boolean useDevPrivilegeKeys) {
-        this(nodeAddress,
-                role,
-                numTrades,
-                privateNotificationManager,
-                trade.getOffer(),
-                trade,
-                preferences,
-                accountAgeWitnessService,
-                useDevPrivilegeKeys);
+    @Setter
+    private notify callback;
+    protected Preferences preferences;
+    protected final String fullAddress;
+    protected String tooltipText;
+    protected Label tagLabel;
+    private Label numTradesLabel;
+    protected Pane tagPane;
+    protected Pane numTradesPane;
+    protected int numTrades = 0;
+
+    public PeerInfoIcon(NodeAddress nodeAddress, Preferences preferences) {
+        this.preferences = preferences;
+        this.fullAddress = nodeAddress != null ? nodeAddress.getFullAddress() : "";
     }
 
-    private PeerInfoIcon(NodeAddress nodeAddress,
-                         String role,
-                         int numTrades,
-                         PrivateNotificationManager privateNotificationManager,
-                         @Nullable Offer offer,
-                         @Nullable Trade trade,
-                         Preferences preferences,
-                         AccountAgeWitnessService accountAgeWitnessService,
-                         boolean useDevPrivilegeKeys) {
-        this.numTrades = numTrades;
-        this.accountAgeWitnessService = accountAgeWitnessService;
-
+    protected void createAvatar(Color ringColor) {
         double scaleFactor = getScaleFactor();
-        fullAddress = nodeAddress != null ? nodeAddress.getFullAddress() : "";
-
-        peerTagMap = preferences.getPeerTagMap();
-
-        boolean hasTraded = numTrades > 0;
-        Tuple5<Long, Long, String, String, String> peersAccount = getPeersAccountAge(trade, offer);
-
-        Long accountAge = peersAccount.first;
-        Long signAge = peersAccount.second;
-
-        if (offer == null) {
-            checkNotNull(trade, "Trade must not be null if offer is null.");
-            offer = trade.getOffer();
-        }
-
-        checkNotNull(offer, "Offer must not be null");
-
-        boolean isFiatCurrency = CurrencyUtil.isFiatCurrency(offer.getCurrencyCode());
-
-        String accountAgeTooltip = isFiatCurrency ?
-                accountAge > -1 ? Res.get("peerInfoIcon.tooltip.age", DisplayUtils.formatAccountAge(accountAge)) :
-                        Res.get("peerInfoIcon.tooltip.unknownAge") :
-                "";
-        tooltipText = hasTraded ?
-                Res.get("peerInfoIcon.tooltip.trade.traded", role, fullAddress, numTrades, accountAgeTooltip) :
-                Res.get("peerInfoIcon.tooltip.trade.notTraded", role, fullAddress, accountAgeTooltip);
-
-        // outer circle
-        Color ringColor;
-        if (isFiatCurrency) {
-
-            switch (accountAgeWitnessService.getPeersAccountAgeCategory(hasChargebackRisk(trade, offer) ? signAge : accountAge)) {
-                case TWO_MONTHS_OR_MORE:
-                    ringColor = Color.rgb(0, 225, 0); // > 2 months green
-                    break;
-                case ONE_TO_TWO_MONTHS:
-                    ringColor = Color.rgb(0, 139, 205); // 1-2 months blue
-                    break;
-                case LESS_ONE_MONTH:
-                    ringColor = Color.rgb(255, 140, 0); //< 1 month orange
-                    break;
-                case UNVERIFIED:
-                default:
-                    ringColor = Color.rgb(255, 0, 0); // not signed, red
-                    break;
-            }
-
-
-        } else {
-            // for altcoins we always display green
-            ringColor = Color.rgb(0, 225, 0);
-        }
-
         double outerSize = 26 * scaleFactor;
         Canvas outerBackground = new Canvas(outerSize, outerSize);
         GraphicsContext outerBackgroundGc = outerBackground.getGraphicsContext2D();
@@ -245,54 +143,6 @@ public class PeerInfoIcon extends Group {
         updatePeerInfoIcon();
 
         getChildren().addAll(outerBackground, innerBackground, avatarImageView, tagPane, numTradesPane);
-
-        addMouseListener(numTrades, privateNotificationManager, trade, offer, preferences, useDevPrivilegeKeys,
-                isFiatCurrency, accountAge, signAge, peersAccount.third, peersAccount.fourth, peersAccount.fifth);
-    }
-
-    /**
-     * @param trade Open trade for trading peer info to be shown
-     * @param offer Open offer for trading peer info to be shown
-     * @return account age, sign age, account info, sign info, sign state
-     */
-    private Tuple5<Long, Long, String, String, String> getPeersAccountAge(@Nullable Trade trade,
-                                                                          @Nullable Offer offer) {
-        AccountAgeWitnessService.SignState signState;
-        long signAge = -1L;
-        long accountAge = -1L;
-
-        if (trade != null) {
-            offer = trade.getOffer();
-            if (offer == null) {
-                // unexpected
-                return new Tuple5<>(signAge, accountAge, Res.get("peerInfo.age.noRisk"), null, null);
-            }
-            signState = accountAgeWitnessService.getSignState(trade);
-            signAge = accountAgeWitnessService.getWitnessSignAge(trade, new Date());
-            accountAge = accountAgeWitnessService.getAccountAge(trade);
-        } else {
-            checkNotNull(offer, "Offer must not be null if trade is null.");
-            signState = accountAgeWitnessService.getSignState(offer);
-            signAge = accountAgeWitnessService.getWitnessSignAge(offer, new Date());
-            accountAge = accountAgeWitnessService.getAccountAge(offer);
-        }
-
-        if (hasChargebackRisk(trade, offer)) {
-            String signAgeInfo = Res.get("peerInfo.age.chargeBackRisk");
-            String accountSigningState = StringUtils.capitalize(signState.getDisplayString());
-            if (signState.equals(AccountAgeWitnessService.SignState.UNSIGNED))
-                signAgeInfo = null;
-
-            return new Tuple5<>(accountAge, signAge, Res.get("peerInfo.age.noRisk"), signAgeInfo, accountSigningState);
-        }
-        return new Tuple5<>(accountAge, signAge, Res.get("peerInfo.age.noRisk"), null, null);
-    }
-
-    private boolean hasChargebackRisk(@Nullable Trade trade, @Nullable Offer offer) {
-        Offer offerToCheck = trade != null ? trade.getOffer() : offer;
-
-        return offerToCheck != null &&
-                PaymentMethod.hasChargebackRisk(offerToCheck.getPaymentMethod(), offerToCheck.getCurrencyCode());
     }
 
     protected void addMouseListener(int numTrades,
@@ -332,6 +182,9 @@ public class PeerInfoIcon extends Group {
                 .onSave(newTag -> {
                     preferences.setTagForPeer(fullAddress, newTag);
                     updatePeerInfoIcon();
+                    if (callback != null) {
+                        callback.avatarTagUpdated();
+                    }
                 })
                 .show());
     }
@@ -340,8 +193,15 @@ public class PeerInfoIcon extends Group {
         return 1;
     }
 
+    protected String getAccountAgeTooltip(Long accountAge) {
+        return accountAge > -1 ?
+                Res.get("peerInfoIcon.tooltip.age", DisplayUtils.formatAccountAge(accountAge)) :
+                Res.get("peerInfoIcon.tooltip.unknownAge");
+    }
+
     protected void updatePeerInfoIcon() {
         String tag;
+        Map<String, String> peerTagMap = preferences.getPeerTagMap();
         if (peerTagMap.containsKey(fullAddress)) {
             tag = peerTagMap.get(fullAddress);
             final String text = !tag.isEmpty() ? Res.get("peerInfoIcon.tooltip", tooltipText, tag) : tooltipText;
