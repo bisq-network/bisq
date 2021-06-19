@@ -508,7 +508,7 @@ To remove a trigger price on a market price margin based offer, set the trigger 
     --trigger-price=0
 ```
 
-#### Change Pricing Model And Disable Offer
+#### Change Disabled Offer's Pricing Model and Enable It
 You can use `editoffer` to simultaneously change an offer's price details and disable or re-enable it.
 
 Suppose you have a disabled, fixed price offer, and want to change it to a market price margin based offer, set
