@@ -31,6 +31,10 @@
     -fx-text-fill: -bs-rd-error-red;
 }
 
+.text-gray-ddd {
+    -fx-text-fill: -bs-color-gray-ddd;
+}
+
 .error {
     -fx-accent: -bs-rd-error-red;
 }
@@ -607,6 +611,11 @@ tree-table-view:focused {
 
 .default-text {
     -fx-font-size: 13;
+}
+
+.bold-text,
+.bold-text .text {
+    -fx-font-weight: bold;
 }
 
 /* Splash */
