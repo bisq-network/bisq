@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.presentation;
 
+import bisq.desktop.components.ExplorerAddressTextField;
 import bisq.desktop.components.TxIdTextField;
 import bisq.desktop.main.shared.PriceFeedComboBoxItem;
 import bisq.desktop.util.GUIUtil;
@@ -94,6 +95,7 @@ public class MarketPricePresentation {
         this.preferences = preferences;
 
         TxIdTextField.setPreferences(preferences);
+        ExplorerAddressTextField.setPreferences(preferences);
 
         // TODO
         TxIdTextField.setWalletService(btcWalletService);

@@ -256,7 +256,7 @@ public class ContractWindow extends Overlay<ContractWindow> {
             addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.delayedPayoutTxId"), dispute.getDelayedPayoutTxId());
 
         if (dispute.getDonationAddressOfDelayedPayoutTx() != null) {
-            addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.delayedPayoutTxReceiverAddress"),
+            addLabelExplorerAddressTextField(gridPane, ++rowIndex, Res.get("shared.delayedPayoutTxReceiverAddress"),
                     dispute.getDonationAddressOfDelayedPayoutTx());
         }
 

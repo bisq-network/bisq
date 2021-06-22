@@ -29,6 +29,7 @@ import bisq.desktop.components.BisqTextArea;
 import bisq.desktop.components.BisqTextField;
 import bisq.desktop.components.BsqAddressTextField;
 import bisq.desktop.components.BusyAnimation;
+import bisq.desktop.components.ExplorerAddressTextField;
 import bisq.desktop.components.ExternalHyperlink;
 import bisq.desktop.components.FundsTextField;
 import bisq.desktop.components.HyperlinkWithIcon;
@@ -697,6 +698,24 @@ public class FormBuilder {
         gridPane.getChildren().add(txTextField);
 
         return new Tuple2<>(label, txTextField);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Label  + ExplorerAddressTextField
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    public static void addLabelExplorerAddressTextField(GridPane gridPane,
+                                                        int rowIndex,
+                                                        String title,
+                                                        String address) {
+        Label label = addLabel(gridPane, rowIndex, title, 0);
+        label.getStyleClass().add("confirmation-label");
+        GridPane.setHalignment(label, HPos.LEFT);
+
+        ExplorerAddressTextField addressTextField = new ExplorerAddressTextField();
+        addressTextField.setup(address);
+        GridPane.setRowIndex(addressTextField, rowIndex);
+        GridPane.setColumnIndex(addressTextField, 1);
+        gridPane.getChildren().add(addressTextField);
     }
 
 
