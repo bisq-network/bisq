@@ -22,6 +22,7 @@ import bisq.price.spot.ExchangeRateProvider;
 
 import org.knowm.xchange.paribu.ParibuExchange;
 
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
@@ -31,8 +32,8 @@ import java.util.Set;
 @Component
 class Paribu extends ExchangeRateProvider {
 
-    public Paribu() {
-        super("PARIBU", "paribu", Duration.ofMinutes(1));
+    public Paribu(Environment env) {
+        super(env, "PARIBU", "paribu", Duration.ofMinutes(1));
     }
 
     @Override

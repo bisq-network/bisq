@@ -22,6 +22,7 @@ import bisq.price.spot.ExchangeRateProvider;
 import bisq.price.util.coinpaprika.CoinpaprikaMarketData;
 
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.core.env.Environment;
 import org.springframework.http.RequestEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
@@ -55,8 +56,8 @@ class Coinpaprika extends ExchangeRateProvider {
             "INR, MYR, NOK, PKR, SEK, TWD, ZAR, VND, BOB, COP, PEN, ARS, ISK")
             .replace(" ", ""); // Strip any spaces
 
-    public Coinpaprika() {
-        super("COINPAPRIKA", "coinpaprika", Duration.ofMinutes(1));
+    public Coinpaprika(Environment env) {
+        super(env, "COINPAPRIKA", "coinpaprika", Duration.ofMinutes(1));
     }
 
     @Override
@@ -67,7 +68,7 @@ class Coinpaprika extends ExchangeRateProvider {
 
         Set<ExchangeRate> result = new HashSet<ExchangeRate>();
 
-        Predicate<Map.Entry> isDesiredFiatPair = t -> SUPPORTED_FIAT_CURRENCIES.contains(t.getKey());
+        Predicate<Map.Entry> isDesiredFiatPair = t -> getSupportedFiatCurrencies().contains(t.getKey());
 
         getMarketData().getQuotes().entrySet().stream()
                 .filter(isDesiredFiatPair)

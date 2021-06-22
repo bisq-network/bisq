@@ -22,6 +22,7 @@ import bisq.price.spot.ExchangeRateProvider;
 
 import org.knowm.xchange.mercadobitcoin.MercadoBitcoinExchange;
 
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
@@ -31,8 +32,8 @@ import java.util.Set;
 @Component
 class MercadoBitcoin extends ExchangeRateProvider {
 
-    public MercadoBitcoin() {
-        super("MercadoBitcoin", "mercadobitcoin", Duration.ofMinutes(1));
+    public MercadoBitcoin(Environment env) {
+        super(env, "MercadoBitcoin", "mercadobitcoin", Duration.ofMinutes(1));
     }
 
     @Override

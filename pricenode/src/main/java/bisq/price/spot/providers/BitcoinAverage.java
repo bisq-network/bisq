@@ -20,6 +20,7 @@ package bisq.price.spot.providers;
 import bisq.price.spot.ExchangeRate;
 import bisq.price.spot.ExchangeRateProvider;
 
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
@@ -34,12 +35,12 @@ import java.util.Set;
 @Component
 class BitcoinAverage extends ExchangeRateProvider {
 
-    public BitcoinAverage() {
+    public BitcoinAverage(Environment env) {
         // Simulate a deactivated BitcoinAverage provider
         // We still need the class to exist and be registered as a provider though,
         // because the returned data structure must contain the "btcAverageTs" key
         // for backward compatibility with Bisq clients which hardcode that key
-        super("BA", "btcAverage", Duration.ofMinutes(100));
+        super(env, "BA", "btcAverage", Duration.ofMinutes(100));
     }
 
     /**

@@ -22,6 +22,7 @@ import bisq.price.spot.ExchangeRateProvider;
 
 import org.knowm.xchange.binance.BinanceExchange;
 
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
@@ -31,8 +32,8 @@ import java.util.Set;
 @Component
 class Binance extends ExchangeRateProvider {
 
-    public Binance() {
-        super("BINANCE", "binance", Duration.ofMinutes(1));
+    public Binance(Environment env) {
+        super(env, "BINANCE", "binance", Duration.ofMinutes(1));
     }
 
     @Override
