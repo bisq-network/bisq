@@ -34,7 +34,7 @@ public class OfferRestrictions {
     private static final Date REQUIRE_TOR_NODE_ADDRESS_V3_DATE = Utilities.getUTCDate(2021, GregorianCalendar.AUGUST, 15);
 
     public static boolean requiresNodeAddressUpdate() {
-        return Config.baseCurrencyNetwork().isRegtest() || new Date().after(REQUIRE_TOR_NODE_ADDRESS_V3_DATE);
+        return new Date().after(REQUIRE_TOR_NODE_ADDRESS_V3_DATE) && !Config.baseCurrencyNetwork().isRegtest();
     }
 
     public static Coin TOLERATED_SMALL_TRADE_AMOUNT = Coin.parseCoin("0.01");

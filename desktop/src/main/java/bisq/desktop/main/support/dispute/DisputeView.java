@@ -528,7 +528,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
     protected boolean reOpenDispute() {
         if (selectedDispute != null &&
                 selectedDispute.isClosed() &&
-                isDisputeWithSameCurrentNodeAddress(selectedDispute,
+                isNodeAddressOk(selectedDispute,
                         !disputeManager.isTrader(selectedDispute))) {
             selectedDispute.reOpen();
             handleOnProcessDispute(selectedDispute);
@@ -541,7 +541,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
         }
     }
 
-    private boolean isDisputeWithSameCurrentNodeAddress(Dispute dispute, boolean isMediator) {
+    private boolean isNodeAddressOk(Dispute dispute, boolean isMediator) {
         NodeAddress disputeNodeAddress = isMediator ? dispute.getContract().getMediatorNodeAddress() :
                 dispute.getContract().getMyNodeAddress(keyRing.getPubKeyRing());
 

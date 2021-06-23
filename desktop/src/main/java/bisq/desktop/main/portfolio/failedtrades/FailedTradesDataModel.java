@@ -91,13 +91,13 @@ class FailedTradesDataModel extends ActivatableDataModel {
     }
 
     public boolean onMoveTradeToPendingTrades(Trade trade) {
-        if (isTradeWithSameCurrentNodeAddress(trade)) {
-            failedTradesManager.removeTrade(trade);
-            tradeManager.addFailedTradeToPendingTrades(trade);
-            return true;
-        } else {
+        if (!isTradeWithSameCurrentNodeAddress(trade)) {
             return false;
         }
+
+        failedTradesManager.removeTrade(trade);
+        tradeManager.addFailedTradeToPendingTrades(trade);
+        return true;
     }
 
     private boolean isTradeWithSameCurrentNodeAddress(Trade trade) {

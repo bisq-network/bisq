@@ -74,7 +74,8 @@ public abstract class DisputeAgentView extends DisputeView implements MultipleHo
 
     public DisputeAgentView(DisputeManager<? extends DisputeList<Dispute>> disputeManager,
                             KeyRing keyRing,
-                            P2PService p2PService, TradeManager tradeManager,
+                            P2PService p2PService,
+                            TradeManager tradeManager,
                             CoinFormatter formatter,
                             Preferences preferences,
                             DisputeSummaryWindow disputeSummaryWindow,
