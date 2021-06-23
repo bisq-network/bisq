@@ -40,6 +40,8 @@ import bisq.core.user.Preferences;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.CoinFormatter;
 
+import bisq.network.p2p.P2PService;
+
 import bisq.common.config.Config;
 import bisq.common.crypto.KeyRing;
 
@@ -52,6 +54,7 @@ public class ArbitratorView extends DisputeAgentView {
     @Inject
     public ArbitratorView(ArbitrationManager arbitrationManager,
                           KeyRing keyRing,
+                          P2PService p2PService,
                           TradeManager tradeManager,
                           @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter,
                           Preferences preferences,
@@ -66,6 +69,7 @@ public class ArbitratorView extends DisputeAgentView {
                           @Named(Config.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         super(arbitrationManager,
                 keyRing,
+                p2PService,
                 tradeManager,
                 formatter,
                 preferences,

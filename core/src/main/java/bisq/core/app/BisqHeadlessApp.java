@@ -102,6 +102,7 @@ public class BisqHeadlessApp implements HeadlessApp {
             gracefulShutDownHandler.gracefulShutDown(() -> {
             });
         });
+        bisqSetup.setTorAddressUpgradeHandler(() -> log.info("setTorAddressUpgradeHandler"));
 
         corruptedStorageFileHandler.getFiles().ifPresent(files -> log.warn("getCorruptedDatabaseFiles. files={}", files));
         tradeManager.setTakeOfferRequestErrorMessageHandler(errorMessage -> log.error("onTakeOfferRequestErrorMessageHandler"));

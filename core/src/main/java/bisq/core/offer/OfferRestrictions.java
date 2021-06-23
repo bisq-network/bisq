@@ -19,6 +19,7 @@ package bisq.core.offer;
 
 import bisq.common.app.Capabilities;
 import bisq.common.app.Capability;
+import bisq.common.config.Config;
 import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Coin;
@@ -28,12 +29,12 @@ import java.util.GregorianCalendar;
 import java.util.Map;
 
 public class OfferRestrictions {
-    // The date when traders who have not updated cannot take offers from updated clients and their offers become
-    // invisible for updated clients.
-    private static final Date REQUIRE_UPDATE_DATE = Utilities.getUTCDate(2019, GregorianCalendar.SEPTEMBER, 19);
+    // The date when traders who have not upgraded to a Tor v3 Node Address cannot take offers and their offers become
+    // invisible.
+    private static final Date REQUIRE_TOR_NODE_ADDRESS_V3_DATE = Utilities.getUTCDate(2021, GregorianCalendar.AUGUST, 15);
 
-    static boolean requiresUpdate() {
-        return new Date().after(REQUIRE_UPDATE_DATE);
+    public static boolean requiresNodeAddressUpdate() {
+        return new Date().after(REQUIRE_TOR_NODE_ADDRESS_V3_DATE) && !Config.baseCurrencyNetwork().isRegtest();
     }
 
     public static Coin TOLERATED_SMALL_TRADE_AMOUNT = Coin.parseCoin("0.01");
