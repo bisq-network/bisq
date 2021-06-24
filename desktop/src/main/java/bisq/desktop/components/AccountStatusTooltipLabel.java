@@ -62,7 +62,7 @@ public class AccountStatusTooltipLabel extends AutoTooltipLabel {
     private void positionAndActivateIcon() {
         textIcon.setOpacity(0.4);
         textIcon.getStyleClass().add("tooltip-icon");
-        textIcon.setOnMouseEntered(e -> popoverWrapper.showPopOver(() -> createPopOver()));
+        textIcon.setOnMouseEntered(e -> popoverWrapper.showPopOver(this::createPopOver));
         textIcon.setOnMouseExited(e -> popoverWrapper.hidePopOver());
 
         setGraphic(textIcon);
