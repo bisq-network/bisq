@@ -119,7 +119,7 @@ public class AccountStatusTooltipLabel extends AutoTooltipLabel {
         if (active) {
             icon.getStyleClass().add("highlight");
         } else {
-            icon.getStyleClass().add("text-gray-ddd");
+            icon.getStyleClass().add("account-status-inactive-info-item");
         }
 
         Label label = new Label(text, icon);
@@ -130,7 +130,7 @@ public class AccountStatusTooltipLabel extends AutoTooltipLabel {
         if (active) {
             label.getStyleClass().add("success-text");
         } else {
-            label.getStyleClass().add("text-gray-ddd");
+            label.getStyleClass().add("account-status-inactive-info-item");
         }
         return label;
     }
