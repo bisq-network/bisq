@@ -76,12 +76,12 @@ public abstract class ExchangeRateProvider extends PriceProvider<Set<ExchangeRat
     }
 
     public Set<String> getSupportedFiatCurrencies() {
-        if (SUPPORTED_FIAT_CURRENCIES.size() == 0) {         // one-time initialization
+        if (SUPPORTED_FIAT_CURRENCIES.isEmpty()) {         // one-time initialization
             List<String> excludedFiatCurrencies =
                     Arrays.asList(env.getProperty("bisq.price.fiatcurrency.excluded", "")
                             .toUpperCase().trim().split("\\s*,\\s*"));
             String validatedExclusionList = excludedFiatCurrencies.stream()
-                    .filter(ccy -> ccy.length() > 0)
+                    .filter(ccy -> !ccy.isEmpty())
                     .filter(CurrencyUtil::isFiatCurrency)
                     .collect(Collectors.toList()).toString();
             SUPPORTED_FIAT_CURRENCIES = CurrencyUtil.getAllSortedFiatCurrencies().stream()
@@ -95,12 +95,12 @@ public abstract class ExchangeRateProvider extends PriceProvider<Set<ExchangeRat
     }
 
     public Set<String> getSupportedCryptoCurrencies() {
-        if (SUPPORTED_CRYPTO_CURRENCIES.size() == 0) {        // one-time initialization
+        if (SUPPORTED_CRYPTO_CURRENCIES.isEmpty()) {        // one-time initialization
             List<String> excludedCryptoCurrencies =
                     Arrays.asList(env.getProperty("bisq.price.cryptocurrency.excluded", "")
                             .toUpperCase().trim().split("\\s*,\\s*"));
             String validatedExclusionList = excludedCryptoCurrencies.stream()
-                    .filter(ccy -> ccy.length() > 0)
+                    .filter(ccy -> !ccy.isEmpty())
                     .filter(CurrencyUtil::isCryptoCurrency)
                     .collect(Collectors.toList()).toString();
             SUPPORTED_CRYPTO_CURRENCIES = CurrencyUtil.getAllSortedCryptoCurrencies().stream()
