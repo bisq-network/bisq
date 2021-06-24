@@ -97,9 +97,7 @@ public class AccountStatusTooltipLabel extends AutoTooltipLabel {
         learnMoreLink.setWrapText(true);
         learnMoreLink.setPadding(new Insets(10, 10, 2, 10));
         learnMoreLink.getStyleClass().add("very-small-text");
-        learnMoreLink.setOnAction((e) -> {
-            GUIUtil.openWebPage("https://bisq.wiki/Account_limits");
-        });
+        learnMoreLink.setOnAction((e) -> GUIUtil.openWebPage("https://bisq.wiki/Account_limits"));
 
         VBox vBox = new VBox(2, titleLabel, infoLabel, buyLabel, waitLabel, learnMoreLink);
         vBox.setPadding(new Insets(2, 0, 2, 0));
