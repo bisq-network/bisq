@@ -40,6 +40,7 @@ import org.bitcoinj.core.Coin;
 
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.Objects;
 import java.util.Optional;
 
 import lombok.EqualsAndHashCode;
@@ -296,7 +297,8 @@ public final class Contract implements NetworkPayload {
     }
 
     public String getPaymentMethodId() {
-        return makerPaymentMethodId;
+        // Either makerPaymentMethodId is set or available in makerPaymentAccountPayload
+        return makerPaymentMethodId != null ? makerPaymentMethodId : Objects.requireNonNull(makerPaymentAccountPayload).getPaymentMethodId();
     }
 
     public Coin getTradeAmount() {
