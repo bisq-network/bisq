@@ -19,9 +19,9 @@ package bisq.core.trade.protocol.tasks.taker;
 
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.trade.Trade;
 import bisq.core.trade.messages.InputsForDepositTxRequest;
+import bisq.core.trade.protocol.ProcessModel;
 import bisq.core.trade.protocol.tasks.TradeTask;
 import bisq.core.user.User;
 
@@ -91,14 +91,20 @@ public class TakerSendInputsForDepositTxRequest extends TradeTask {
 
             String offerId = processModel.getOfferId();
 
+            // From 1.7.0 on we do not send the payment account data but only the hash.
+            // For backward compatibility we still keep the fields but set it to null
+            byte[] hashOfTakersPaymentAccountPayload = ProcessModel.hashOfPaymentAccountPayload(processModel.getPaymentAccountPayload(trade));
+
+            // We still send the signatureOfNonce below to not get too many changes. It will be needed later but it
+            // does no harm to have that data earlier.
+
             // Taker has to use offerId as nonce (he cannot manipulate that - so we avoid to have a challenge
             // protocol for passing the nonce we want to get signed)
             // This is used for verifying the peers account age witness
-            PaymentAccountPayload paymentAccountPayload = checkNotNull(processModel.getPaymentAccountPayload(trade),
-                    "processModel.getPaymentAccountPayload(trade) must not be null");
             byte[] signatureOfNonce = Sig.sign(processModel.getKeyRing().getSignatureKeyPair().getPrivate(),
                     offerId.getBytes(Charsets.UTF_8));
 
+            String takersPaymentMethodId = checkNotNull(processModel.getPaymentAccountPayload(trade)).getPaymentMethodId();
             InputsForDepositTxRequest request = new InputsForDepositTxRequest(
                     offerId,
                     processModel.getMyNodeAddress(),
@@ -113,7 +119,7 @@ public class TakerSendInputsForDepositTxRequest extends TradeTask {
                     takerMultiSigPubKey,
                     takerPayoutAddressString,
                     processModel.getPubKeyRing(),
-                    paymentAccountPayload,
+                    null,
                     processModel.getAccountId(),
                     takerFeeTxId,
                     acceptedArbitratorAddresses,
@@ -125,7 +131,9 @@ public class TakerSendInputsForDepositTxRequest extends TradeTask {
                     UUID.randomUUID().toString(),
                     Version.getP2PMessageVersion(),
                     signatureOfNonce,
-                    new Date().getTime());
+                    new Date().getTime(),
+                    hashOfTakersPaymentAccountPayload,
+                    takersPaymentMethodId);
             log.info("Send {} with offerId {} and uid {} to peer {}",
                     request.getClass().getSimpleName(), request.getTradeId(),
                     request.getUid(), trade.getTradingPeerNodeAddress());

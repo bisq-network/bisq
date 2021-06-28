@@ -376,8 +376,7 @@ public class TradeWalletService {
         return new InputsAndChangeOutput(new ArrayList<>(rawTransactionInputList), 0, null);
     }
 
-    public PreparedDepositTxAndMakerInputs sellerAsMakerCreatesDepositTx(byte[] contractHash,
-                                                                         Coin makerInputAmount,
+    public PreparedDepositTxAndMakerInputs sellerAsMakerCreatesDepositTx(Coin makerInputAmount,
                                                                          Coin msOutputAmount,
                                                                          List<RawTransactionInput> takerRawTransactionInputs,
                                                                          long takerChangeOutputValue,
@@ -388,7 +387,6 @@ public class TradeWalletService {
                                                                          byte[] sellerPubKey)
             throws SigningException, TransactionVerificationException, WalletException, AddressFormatException {
         return makerCreatesDepositTx(false,
-                contractHash,
                 makerInputAmount,
                 msOutputAmount,
                 takerRawTransactionInputs,
@@ -400,8 +398,7 @@ public class TradeWalletService {
                 sellerPubKey);
     }
 
-    public PreparedDepositTxAndMakerInputs buyerAsMakerCreatesAndSignsDepositTx(byte[] contractHash,
-                                                                                Coin makerInputAmount,
+    public PreparedDepositTxAndMakerInputs buyerAsMakerCreatesAndSignsDepositTx(Coin makerInputAmount,
                                                                                 Coin msOutputAmount,
                                                                                 List<RawTransactionInput> takerRawTransactionInputs,
                                                                                 long takerChangeOutputValue,
@@ -412,7 +409,6 @@ public class TradeWalletService {
                                                                                 byte[] sellerPubKey)
             throws SigningException, TransactionVerificationException, WalletException, AddressFormatException {
         return makerCreatesDepositTx(true,
-                contractHash,
                 makerInputAmount,
                 msOutputAmount,
                 takerRawTransactionInputs,
@@ -428,7 +424,6 @@ public class TradeWalletService {
      * The maker creates the deposit transaction using the takers input(s) and optional output and signs his input(s).
      *
      * @param makerIsBuyer              the flag indicating if we are in the maker as buyer role or the opposite
-     * @param contractHash              the hash of the contract to be added to the OP_RETURN output
      * @param makerInputAmount          the input amount of the maker
      * @param msOutputAmount            the output amount to our MS output
      * @param takerRawTransactionInputs raw data for the connected outputs for all inputs of the taker (normally 1 input)
@@ -445,7 +440,6 @@ public class TradeWalletService {
      * @throws WalletException if the maker's wallet is null or there was an error choosing deposit tx input(s) from it
      */
     private PreparedDepositTxAndMakerInputs makerCreatesDepositTx(boolean makerIsBuyer,
-                                                                  byte[] contractHash,
                                                                   Coin makerInputAmount,
                                                                   Coin msOutputAmount,
                                                                   List<RawTransactionInput> takerRawTransactionInputs,
@@ -515,11 +509,6 @@ public class TradeWalletService {
                 hashedMultiSigOutputScript.getProgram());
         preparedDepositTx.addOutput(hashedMultiSigOutput);
 
-        // We add the hash ot OP_RETURN with a 0 amount output
-        TransactionOutput contractHashOutput = new TransactionOutput(params, preparedDepositTx, Coin.ZERO,
-                ScriptBuilder.createOpReturnScript(contractHash).getProgram());
-        preparedDepositTx.addOutput(contractHashOutput);
-
         TransactionOutput takerTransactionOutput = null;
         if (takerChangeOutputValue > 0 && takerChangeAddressString != null) {
             takerTransactionOutput = new TransactionOutput(params, preparedDepositTx, Coin.valueOf(takerChangeOutputValue),
@@ -568,7 +557,6 @@ public class TradeWalletService {
      * The taker signs the deposit transaction he received from the maker and publishes it.
      *
      * @param takerIsSeller             the flag indicating if we are in the taker as seller role or the opposite
-     * @param contractHash              the hash of the contract to be added to the OP_RETURN output
      * @param makersDepositTxSerialized the prepared deposit transaction signed by the maker
      * @param msOutputAmount            the MultiSig output amount, as determined by the taker
      * @param buyerInputs               the connected outputs for all inputs of the buyer
@@ -582,7 +570,6 @@ public class TradeWalletService {
      * @throws WalletException if the taker's wallet is null or structurally inconsistent
      */
     public Transaction takerSignsDepositTx(boolean takerIsSeller,
-                                           byte[] contractHash,
                                            byte[] makersDepositTxSerialized,
                                            Coin msOutputAmount,
                                            List<RawTransactionInput> buyerInputs,
@@ -645,16 +632,6 @@ public class TradeWalletService {
                 // We get the deposit tx unsigned if maker is seller
                 depositTx.addInput(getTransactionInput(depositTx, new byte[]{}, sellerInputs.get(k)));
             }
-        }
-
-        // Check if OP_RETURN output with contract hash matches the one from the maker
-        TransactionOutput contractHashOutput = new TransactionOutput(params, makersDepositTx, Coin.ZERO,
-                ScriptBuilder.createOpReturnScript(contractHash).getProgram());
-        log.debug("contractHashOutput {}", contractHashOutput);
-        TransactionOutput makersContractHashOutput = makersDepositTx.getOutputs().get(1);
-        log.debug("makersContractHashOutput {}", makersContractHashOutput);
-        if (!makersContractHashOutput.getScriptPubKey().equals(contractHashOutput.getScriptPubKey())) {
-            throw new TransactionVerificationException("Maker's transaction output for the contract hash is not matching taker's version.");
         }
 
         // Add all outputs from makersDepositTx to depositTx

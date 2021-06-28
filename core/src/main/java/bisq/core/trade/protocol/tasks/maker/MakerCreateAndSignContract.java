@@ -22,6 +22,7 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.trade.BuyerAsMakerTrade;
 import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
+import bisq.core.trade.protocol.ProcessModel;
 import bisq.core.trade.protocol.TradingPeer;
 import bisq.core.trade.protocol.tasks.TradeTask;
 
@@ -61,6 +62,12 @@ public class MakerCreateAndSignContract extends TradeTask {
             byte[] makerMultiSigPubKey = makerAddressEntry.getPubKey();
 
             AddressEntry takerAddressEntry = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.TRADE_PAYOUT);
+
+            byte[] hashOfMakersPaymentAccountPayload = ProcessModel.hashOfPaymentAccountPayload(processModel.getPaymentAccountPayload(trade));
+            byte[] hashOfTakersPaymentAccountPayload = taker.getHashOfPaymentAccountPayload();
+            String makersPaymentMethodId = checkNotNull(processModel.getPaymentAccountPayload(trade)).getPaymentMethodId();
+            String takersPaymentMethodId = checkNotNull(taker.getPaymentMethodId());
+
             Contract contract = new Contract(
                     processModel.getOffer().getOfferPayload(),
                     checkNotNull(trade.getTradeAmount()).value,
@@ -72,8 +79,8 @@ public class MakerCreateAndSignContract extends TradeTask {
                     isBuyerMakerAndSellerTaker,
                     processModel.getAccountId(),
                     checkNotNull(taker.getAccountId()),
-                    checkNotNull(processModel.getPaymentAccountPayload(trade)),
-                    checkNotNull(taker.getPaymentAccountPayload()),
+                    null,
+                    null,
                     processModel.getPubKeyRing(),
                     checkNotNull(taker.getPubKeyRing()),
                     takerAddressEntry.getAddressString(),
@@ -81,7 +88,11 @@ public class MakerCreateAndSignContract extends TradeTask {
                     makerMultiSigPubKey,
                     checkNotNull(taker.getMultiSigPubKey()),
                     trade.getLockTime(),
-                    trade.getRefundAgentNodeAddress()
+                    trade.getRefundAgentNodeAddress(),
+                    hashOfMakersPaymentAccountPayload,
+                    hashOfTakersPaymentAccountPayload,
+                    makersPaymentMethodId,
+                    takersPaymentMethodId
             );
             String contractAsJson = Utilities.objectToJson(contract);
             String signature = Sig.sign(processModel.getKeyRing().getSignatureKeyPair().getPrivate(), contractAsJson);

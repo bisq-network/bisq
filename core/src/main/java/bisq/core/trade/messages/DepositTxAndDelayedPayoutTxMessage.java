@@ -17,6 +17,9 @@
 
 package bisq.core.trade.messages;
 
+import bisq.core.payment.payload.PaymentAccountPayload;
+import bisq.core.proto.CoreProtoResolver;
+
 import bisq.network.p2p.NodeAddress;
 
 import bisq.common.app.Version;
@@ -24,29 +27,39 @@ import bisq.common.util.Utilities;
 
 import com.google.protobuf.ByteString;
 
+import java.util.Optional;
+
 import lombok.EqualsAndHashCode;
-import lombok.Value;
+import lombok.Getter;
+
+import javax.annotation.Nullable;
 
 // It is the last message in the take offer phase. We use MailboxMessage instead of DirectMessage to add more tolerance
 // in case of network issues and as the message does not trigger further protocol execution.
 @EqualsAndHashCode(callSuper = true)
-@Value
+@Getter
 public final class DepositTxAndDelayedPayoutTxMessage extends TradeMailboxMessage {
     private final NodeAddress senderNodeAddress;
     private final byte[] depositTx;
     private final byte[] delayedPayoutTx;
 
+    // Added at v1.7.0
+    @Nullable
+    private final PaymentAccountPayload sellerPaymentAccountPayload;
+
     public DepositTxAndDelayedPayoutTxMessage(String uid,
                                               String tradeId,
                                               NodeAddress senderNodeAddress,
                                               byte[] depositTx,
-                                              byte[] delayedPayoutTx) {
+                                              byte[] delayedPayoutTx,
+                                              @Nullable PaymentAccountPayload sellerPaymentAccountPayload) {
         this(Version.getP2PMessageVersion(),
                 uid,
                 tradeId,
                 senderNodeAddress,
                 depositTx,
-                delayedPayoutTx);
+                delayedPayoutTx,
+                sellerPaymentAccountPayload);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -58,33 +71,42 @@ public final class DepositTxAndDelayedPayoutTxMessage extends TradeMailboxMessag
                                                String tradeId,
                                                NodeAddress senderNodeAddress,
                                                byte[] depositTx,
-                                               byte[] delayedPayoutTx) {
+                                               byte[] delayedPayoutTx,
+                                               @Nullable PaymentAccountPayload sellerPaymentAccountPayload) {
         super(messageVersion, tradeId, uid);
         this.senderNodeAddress = senderNodeAddress;
         this.depositTx = depositTx;
         this.delayedPayoutTx = delayedPayoutTx;
+        this.sellerPaymentAccountPayload = sellerPaymentAccountPayload;
     }
 
     @Override
     public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
-        return getNetworkEnvelopeBuilder()
-                .setDepositTxAndDelayedPayoutTxMessage(protobuf.DepositTxAndDelayedPayoutTxMessage.newBuilder()
-                        .setUid(uid)
-                        .setTradeId(tradeId)
-                        .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
-                        .setDepositTx(ByteString.copyFrom(depositTx))
-                        .setDelayedPayoutTx(ByteString.copyFrom(delayedPayoutTx)))
-                .build();
+        protobuf.DepositTxAndDelayedPayoutTxMessage.Builder builder = protobuf.DepositTxAndDelayedPayoutTxMessage.newBuilder()
+                .setUid(uid)
+                .setTradeId(tradeId)
+                .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
+                .setDepositTx(ByteString.copyFrom(depositTx))
+                .setDelayedPayoutTx(ByteString.copyFrom(delayedPayoutTx));
+
+        Optional.ofNullable(sellerPaymentAccountPayload)
+                .ifPresent(e -> builder.setSellerPaymentAccountPayload((protobuf.PaymentAccountPayload) sellerPaymentAccountPayload.toProtoMessage()));
+
+        return getNetworkEnvelopeBuilder().setDepositTxAndDelayedPayoutTxMessage(builder).build();
     }
 
     public static DepositTxAndDelayedPayoutTxMessage fromProto(protobuf.DepositTxAndDelayedPayoutTxMessage proto,
+                                                               CoreProtoResolver coreProtoResolver,
                                                                int messageVersion) {
+        PaymentAccountPayload sellerPaymentAccountPayload = proto.hasSellerPaymentAccountPayload() ?
+                coreProtoResolver.fromProto(proto.getSellerPaymentAccountPayload()) : null;
         return new DepositTxAndDelayedPayoutTxMessage(messageVersion,
                 proto.getUid(),
                 proto.getTradeId(),
                 NodeAddress.fromProto(proto.getSenderNodeAddress()),
                 proto.getDepositTx().toByteArray(),
-                proto.getDelayedPayoutTx().toByteArray());
+                proto.getDelayedPayoutTx().toByteArray(),
+                sellerPaymentAccountPayload);
     }
 
     @Override

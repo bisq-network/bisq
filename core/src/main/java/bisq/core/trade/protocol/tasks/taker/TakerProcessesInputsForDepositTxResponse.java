@@ -26,6 +26,8 @@ import bisq.core.trade.protocol.tasks.TradeTask;
 import bisq.common.config.Config;
 import bisq.common.taskrunner.TaskRunner;
 
+import java.util.Optional;
+
 import lombok.extern.slf4j.Slf4j;
 
 import static bisq.core.util.Validator.checkTradeId;
@@ -48,7 +50,15 @@ public class TakerProcessesInputsForDepositTxResponse extends TradeTask {
             checkNotNull(response);
 
             TradingPeer tradingPeer = processModel.getTradingPeer();
-            tradingPeer.setPaymentAccountPayload(checkNotNull(response.getMakerPaymentAccountPayload()));
+
+            // 1.7.0: We do not expect the payment account anymore but in case peer has not updated we still process it.
+            Optional.ofNullable(response.getMakerPaymentAccountPayload())
+                    .ifPresent(e -> tradingPeer.setPaymentAccountPayload(response.getMakerPaymentAccountPayload()));
+            Optional.ofNullable(response.getHashOfMakersPaymentAccountPayload())
+                    .ifPresent(e -> tradingPeer.setHashOfPaymentAccountPayload(response.getHashOfMakersPaymentAccountPayload()));
+            Optional.ofNullable(response.getMakersPaymentMethodId())
+                    .ifPresent(e -> tradingPeer.setPaymentMethodId(response.getMakersPaymentMethodId()));
+
             tradingPeer.setAccountId(nonEmptyStringOf(response.getMakerAccountId()));
             tradingPeer.setMultiSigPubKey(checkNotNull(response.getMakerMultiSigPubKey()));
             tradingPeer.setContractAsJson(nonEmptyStringOf(response.getMakerContractAsJson()));

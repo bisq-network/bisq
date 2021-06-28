@@ -19,10 +19,10 @@ package bisq.core.trade.protocol.tasks.taker;
 
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.trade.Contract;
 import bisq.core.trade.SellerAsTakerTrade;
 import bisq.core.trade.Trade;
+import bisq.core.trade.protocol.ProcessModel;
 import bisq.core.trade.protocol.TradingPeer;
 import bisq.core.trade.protocol.tasks.TradeTask;
 
@@ -55,8 +55,6 @@ public class TakerVerifyAndSignContract extends TradeTask {
 
             String takerFeeTxId = checkNotNull(processModel.getTakeOfferFeeTxId());
             TradingPeer maker = processModel.getTradingPeer();
-            PaymentAccountPayload makerPaymentAccountPayload = checkNotNull(maker.getPaymentAccountPayload());
-            PaymentAccountPayload takerPaymentAccountPayload = checkNotNull(processModel.getPaymentAccountPayload(trade));
 
             boolean isBuyerMakerAndSellerTaker = trade instanceof SellerAsTakerTrade;
             NodeAddress buyerNodeAddress = isBuyerMakerAndSellerTaker ?
@@ -76,6 +74,11 @@ public class TakerVerifyAndSignContract extends TradeTask {
                     takerMultiSigAddressEntry.getPubKey()),
                     "takerMultiSigPubKey from AddressEntry must match the one from the trade data. trade id =" + id);
 
+            byte[] hashOfMakersPaymentAccountPayload = maker.getHashOfPaymentAccountPayload();
+            byte[] hashOfTakersPaymentAccountPayload = ProcessModel.hashOfPaymentAccountPayload(processModel.getPaymentAccountPayload(trade));
+            String makersPaymentMethodId = checkNotNull(maker.getPaymentMethodId());
+            String takersPaymentMethodId = checkNotNull(processModel.getPaymentAccountPayload(trade)).getPaymentMethodId();
+
             Coin tradeAmount = checkNotNull(trade.getTradeAmount());
             Contract contract = new Contract(
                     processModel.getOffer().getOfferPayload(),
@@ -88,8 +91,8 @@ public class TakerVerifyAndSignContract extends TradeTask {
                     isBuyerMakerAndSellerTaker,
                     maker.getAccountId(),
                     processModel.getAccountId(),
-                    makerPaymentAccountPayload,
-                    takerPaymentAccountPayload,
+                    null,
+                    null,
                     maker.getPubKeyRing(),
                     processModel.getPubKeyRing(),
                     maker.getPayoutAddressString(),
@@ -97,7 +100,11 @@ public class TakerVerifyAndSignContract extends TradeTask {
                     maker.getMultiSigPubKey(),
                     takerMultiSigPubKey,
                     trade.getLockTime(),
-                    trade.getRefundAgentNodeAddress()
+                    trade.getRefundAgentNodeAddress(),
+                    hashOfMakersPaymentAccountPayload,
+                    hashOfTakersPaymentAccountPayload,
+                    makersPaymentMethodId,
+                    takersPaymentMethodId
             );
             String contractAsJson = Utilities.objectToJson(contract);
 
