@@ -85,7 +85,6 @@ import bisq.core.locale.Res;
 import bisq.core.offer.OfferRestrictions;
 import bisq.core.payment.AmazonGiftCardAccount;
 import bisq.core.payment.AustraliaPayid;
-import bisq.core.payment.CapitualAccount;
 import bisq.core.payment.CashByMailAccount;
 import bisq.core.payment.CashDepositAccount;
 import bisq.core.payment.ClearXchangeAccount;
