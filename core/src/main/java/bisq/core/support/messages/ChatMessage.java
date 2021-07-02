@@ -302,7 +302,7 @@ public final class ChatMessage extends SupportMessage {
     // each chat message notifies the user if an ACK is not received in time
     public void startAckTimer() {
         UserThread.runAfter(() -> {
-            if (!this.getAcknowledgedProperty().get()) {
+            if (!this.getAcknowledgedProperty().get() && !this.getStoredInMailboxProperty().get()) {
                 this.setArrived(false);
                 this.setAckError(Res.get("support.errorTimeout"));
             }
