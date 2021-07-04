@@ -55,7 +55,7 @@ public abstract class BsqNode implements DaoSetupService {
     protected final DaoStateService daoStateService;
     private final String genesisTxId;
     private final int genesisBlockHeight;
-    private final ExportJsonFilesService exportJsonFilesService;
+    protected final ExportJsonFilesService exportJsonFilesService;
     private final DaoStateSnapshotService daoStateSnapshotService;
     private final P2PServiceListener p2PServiceListener;
     protected boolean parseBlockchainComplete;
@@ -209,7 +209,7 @@ public abstract class BsqNode implements DaoSetupService {
         parseBlockchainComplete = true;
         daoStateService.onParseBlockChainComplete();
 
-        maybeExportToJson();
+        exportJsonFilesService.onParseBlockChainComplete();
     }
 
     @SuppressWarnings("WeakerAccess")
@@ -288,9 +288,5 @@ public abstract class BsqNode implements DaoSetupService {
             throw new RequiredReorgFromSnapshotException(rawBlock);
         }
         return Optional.empty();
-    }
-
-    protected void maybeExportToJson() {
-        exportJsonFilesService.maybeExportToJson();
     }
 }
