@@ -27,6 +27,7 @@ import bisq.core.dao.state.model.blockchain.TxOutput;
 import bisq.core.dao.state.model.blockchain.TxType;
 
 import bisq.common.config.Config;
+import bisq.common.file.FileUtil;
 import bisq.common.file.JsonFileManager;
 import bisq.common.util.Utilities;
 
@@ -44,6 +45,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 import java.nio.file.Paths;
 
 import java.io.File;
+import java.io.IOException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -56,6 +58,7 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * Writes chain height, blocks, txs and txOutputs as json to disk.
  * Only writes new blocks and txs/txOutputs from new blocks.
+ * On reorg we delete all blocks, txs and txos from above the chain height of the last persisted snapshot.
  */
 @Slf4j
 public class ExportJsonFilesService implements DaoSetupService {
@@ -66,6 +69,7 @@ public class ExportJsonFilesService implements DaoSetupService {
     private final ListeningExecutorService executor = Utilities.getListeningExecutorService("JsonExporter",
             1, 1, 1200);
     private JsonFileManager txFileManager, txOutputFileManager, blocksFileManager, chainHeightFileManager;
+    private File jsonDir;
 
     @Inject
     public ExportJsonFilesService(DaoStateService daoStateService,
@@ -88,7 +92,7 @@ public class ExportJsonFilesService implements DaoSetupService {
     @Override
     public void start() {
         if (dumpBlockchainData) {
-            File jsonDir = new File(Paths.get(storageDir.getAbsolutePath(), "json").toString());
+            jsonDir = new File(Paths.get(storageDir.getAbsolutePath(), "json").toString());
             File txDir = new File(Paths.get(storageDir.getAbsolutePath(), "json", "tx").toString());
             File txOutputDir = new File(Paths.get(storageDir.getAbsolutePath(), "json", "txo").toString());
             File blocksDir = new File(Paths.get(storageDir.getAbsolutePath(), "json", "block").toString());
@@ -147,6 +151,41 @@ public class ExportJsonFilesService implements DaoSetupService {
 
         if (!blocks.isEmpty()) {
             process(blocks, daoState);
+        }
+    }
+
+    public void onReOrg(Optional<Integer> chainHeightOfPersistedState) {
+        if (!dumpBlockchainData || !daoStateService.isParseBlockChainComplete()) {
+            return;
+        }
+
+        if (chainHeightOfPersistedState.isPresent()) {
+            // We will restore the dao state from that chain height from the snapshots.
+            // We delete all json files from the blocks above that height.
+            int chainHeight = chainHeightOfPersistedState.get();
+            DaoState daoState = daoStateService.getClone();
+            List<Block> blocks = daoState.getBlocks().stream()
+                    .filter(block -> block.getHeight() > chainHeight)
+                    .collect(Collectors.toList());
+
+            List<TxOutput> txOutputs = new ArrayList<>();
+            List<Tx> txs = blocks.stream()
+                    .flatMap(block -> block.getTxs().stream())
+                    .peek(tx -> txOutputs.addAll(tx.getTxOutputs()))
+                    .collect(Collectors.toList());
+
+            chainHeightFileManager.write(String.valueOf(chainHeight), "chainHeight");
+            blocks.forEach(block -> blocksFileManager.delete(block.getHeight() + "_" + block.getHash()));
+            txs.forEach(tx -> txFileManager.delete(tx.getId()));
+            txOutputs.forEach(txo -> txOutputFileManager.delete(txo.getKey().toString()));
+        } else {
+            try {
+                if (jsonDir.exists()) {
+                    FileUtil.deleteDirectory(jsonDir);
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 

@@ -131,4 +131,9 @@ public class JsonFileManager {
                 printWriter.close();
         }
     }
+
+    public boolean delete(String fileName) {
+        File file = new File(Paths.get(dir.getAbsolutePath(), fileName + ".json").toString());
+        return file.delete();
+    }
 }

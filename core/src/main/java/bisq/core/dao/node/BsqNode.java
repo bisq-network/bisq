@@ -214,9 +214,9 @@ public abstract class BsqNode implements DaoSetupService {
 
     @SuppressWarnings("WeakerAccess")
     protected void startReOrgFromLastSnapshot() {
+        exportJsonFilesService.onReOrg(daoStateSnapshotService.getChainHeightOfPersistedState());
         daoStateSnapshotService.applySnapshot(true);
     }
-
 
     protected Optional<Block> doParseBlock(RawBlock rawBlock) throws RequiredReorgFromSnapshotException {
         // We check if we have a block with that height. If so we return. We do not use the chainHeight as with genesis
