@@ -41,7 +41,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.TreeMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -76,9 +75,7 @@ public class DaoState implements PersistablePayload {
 
     @Getter
     private int chainHeight; // Is set initially to genesis height
-
-    // We override the getter so callers can't modify the list without also updating
-    // the block caches and indices below
+    @Getter
     private final LinkedList<Block> blocks;
     @Getter
     private final LinkedList<Cycle> cycles;
@@ -110,10 +107,7 @@ public class DaoState implements PersistablePayload {
     // Transient data used only as an index - must be kept in sync with the block list
     @JsonExclude
     private transient final Map<String, Tx> txCache; // key is txId
-    @JsonExclude
-    private transient final Map<Integer, Block> blocksByHeight; // Blocks indexed by height
-    @JsonExclude
-    private transient final Set<String> blockHashes; // Cache of known block hashes
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -165,13 +159,6 @@ public class DaoState implements PersistablePayload {
         txCache = blocks.stream()
                 .flatMap(block -> block.getTxs().stream())
                 .collect(Collectors.toMap(Tx::getId, Function.identity(), (x, y) -> x, HashMap::new));
-
-        blockHashes = blocks.stream()
-                .map(Block::getHash)
-                .collect(Collectors.toSet());
-
-        blocksByHeight = blocks.stream()
-                .collect(Collectors.toMap(Block::getHeight, Function.identity(), (x, y) -> x, HashMap::new));
     }
 
     @Override
@@ -248,7 +235,7 @@ public class DaoState implements PersistablePayload {
         // Reorgs are handled by rebuilding the hash chain from last snapshot.
         // Using the full blocks list becomes quite heavy. 7000 blocks are
         // about 1.4 MB and creating the hash takes 30 sec. By using just the last block we reduce the time to 7 sec.
-        return getBsqStateBuilderExcludingBlocks().addBlocks(getLastBlock().toProtoMessage()).build().toByteArray();
+        return getBsqStateBuilderExcludingBlocks().addBlocks(getBlocks().getLast().toProtoMessage()).build().toByteArray();
     }
 
     public void addToTxCache(Tx tx) {
@@ -264,55 +251,6 @@ public class DaoState implements PersistablePayload {
 
     public Map<String, Tx> getTxCache() {
         return Collections.unmodifiableMap(txCache);
-    }
-
-    public Set<String> getBlockHashes() {
-        return Collections.unmodifiableSet(blockHashes);
-    }
-
-    public Map<Integer, Block> getBlocksByHeight() {
-        return Collections.unmodifiableMap(blocksByHeight);
-    }
-
-    /**
-     * @return Unmodifiable view of the list of blocks. This prevents callers from
-     * directly modifying the list. We need to do this to make sure the block list is only
-     * modified together with the corresponding caches and indices.
-     *
-     * @see #addBlock(Block) to add a single block
-     * @see #addBlocks(List) to add a list of blocks
-     * @see #clearAndSetBlocks(List)  to replace existing blocks with a new list
-     */
-    public List<Block> getBlocks() {
-        return Collections.unmodifiableList(blocks);
-    }
-
-    // Wrapper that directly accesses the LinkedList, such that we don't have to expose
-    // the LinkedList
-    public Block getLastBlock() {
-        return blocks.getLast();
-    }
-
-    public void addBlock(Block block) {
-        blocks.add(block);
-        blockHashes.add(block.getHash());
-        blocksByHeight.put(block.getHeight(), block);
-    }
-
-    public void addBlocks(List<Block> newBlocks) {
-        newBlocks.forEach(b -> addBlock(b));
-    }
-
-    /**
-     * Clears the existing block list and caches, and repopulates them with the new list
-     * @param newBlocks
-     */
-    public void clearAndSetBlocks(List<Block> newBlocks) {
-        blocks.clear();
-        blocksByHeight.clear();
-        blockHashes.clear();
-
-        addBlocks(newBlocks);
     }
 
     @Override

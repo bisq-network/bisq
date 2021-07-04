@@ -117,7 +117,8 @@ public class DaoStateService implements DaoSetupService {
 
         daoState.setTxCache(snapshot.getTxCache());
 
-        daoState.clearAndSetBlocks(snapshot.getBlocks());
+        daoState.getBlocks().clear();
+        daoState.getBlocks().addAll(snapshot.getBlocks());
 
         daoState.getCycles().clear();
         daoState.getCycles().addAll(snapshot.getCycles());
@@ -220,7 +221,7 @@ public class DaoStateService implements DaoSetupService {
                     "We ignore that block as the first block need to be the genesis block. " +
                     "That might happen in edge cases at reorgs. Received block={}", block);
         } else {
-            daoState.addBlock(block);
+            daoState.getBlocks().add(block);
 
             if (parseBlockChainComplete)
                 log.info("New Block added at blockHeight {}", block.getHeight());
@@ -282,7 +283,7 @@ public class DaoStateService implements DaoSetupService {
     }
 
 
-    public List<Block> getBlocks() {
+    public LinkedList<Block> getBlocks() {
         return daoState.getBlocks();
     }
 
@@ -294,12 +295,12 @@ public class DaoStateService implements DaoSetupService {
      * {@code false}.
      */
     public boolean isBlockHashKnown(String blockHash) {
-        return daoState.getBlockHashes().contains(blockHash);
+        return getBlocks().stream().anyMatch(block -> block.getHash().equals(blockHash));
     }
 
     public Optional<Block> getLastBlock() {
         if (!getBlocks().isEmpty())
-            return Optional.of(daoState.getLastBlock());
+            return Optional.of(getBlocks().getLast());
         else
             return Optional.empty();
     }
@@ -308,16 +309,18 @@ public class DaoStateService implements DaoSetupService {
         return getLastBlock().map(Block::getHeight).orElse(0);
     }
 
-    public String getBlockHashOfLastBlock() {
-        return getLastBlock().map(Block::getHash).orElse("");
-    }
-
     public Optional<Block> getBlockAtHeight(int height) {
-        return Optional.ofNullable(daoState.getBlocksByHeight().get(height));
+        return getBlocks().stream()
+                .filter(block -> block.getHeight() == height)
+                .findAny();
     }
 
     public boolean containsBlock(Block block) {
         return getBlocks().contains(block);
+    }
+
+    public boolean containsBlockHash(String blockHash) {
+        return getBlocks().stream().anyMatch(block -> block.getHash().equals(blockHash));
     }
 
     public long getBlockTime(int height) {
