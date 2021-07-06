@@ -31,6 +31,8 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 
 
@@ -40,12 +42,13 @@ public class DaoStateStore implements PersistableEnvelope {
     // the snapshot!
     @Getter
     @Setter
+    @Nullable
     private DaoState daoState;
     @Getter
     @Setter
     private LinkedList<DaoStateHash> daoStateHashChain;
 
-    DaoStateStore(DaoState daoState, LinkedList<DaoStateHash> daoStateHashChain) {
+    DaoStateStore(@Nullable DaoState daoState, LinkedList<DaoStateHash> daoStateHashChain) {
         this.daoState = daoState;
         this.daoStateHashChain = daoStateHashChain;
     }
