@@ -29,6 +29,7 @@ import bisq.core.util.VolumeUtil;
 import bisq.network.p2p.NodeAddress;
 
 import bisq.common.crypto.PubKeyRing;
+import bisq.common.proto.ProtoUtil;
 import bisq.common.proto.network.NetworkPayload;
 import bisq.common.util.JsonExclude;
 import bisq.common.util.Utilities;
@@ -39,15 +40,21 @@ import org.bitcoinj.core.Coin;
 
 import org.apache.commons.lang3.StringUtils;
 
-import lombok.Value;
+import java.util.Objects;
+import java.util.Optional;
+
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-@Value
+@Getter
+@EqualsAndHashCode
 public final class Contract implements NetworkPayload {
     private final OfferPayload offerPayload;
     private final long tradeAmount;
@@ -59,8 +66,15 @@ public final class Contract implements NetworkPayload {
     private final boolean isBuyerMakerAndSellerTaker;
     private final String makerAccountId;
     private final String takerAccountId;
-    private final PaymentAccountPayload makerPaymentAccountPayload;
-    private final PaymentAccountPayload takerPaymentAccountPayload;
+
+    // Changed in v1.7.0: Not a final field anymore but initially set to null and later once the data is transmitted
+    // set via a setter. This breaks the immutability of the contract but as there are several areas where we access
+    // that data it is the less painful solution.
+    @Nullable
+    private PaymentAccountPayload makerPaymentAccountPayload;
+    @Nullable
+    private PaymentAccountPayload takerPaymentAccountPayload;
+
     @JsonExclude
     private final PubKeyRing makerPubKeyRing;
     @JsonExclude
@@ -73,8 +87,19 @@ public final class Contract implements NetworkPayload {
     private final byte[] takerMultiSigPubKey;
 
     // Added in v1.2.0
-    private long lockTime;
+    private final long lockTime;
     private final NodeAddress refundAgentNodeAddress;
+
+
+    // Added in v1.7.0
+    @Nullable
+    private final byte[] hashOfMakersPaymentAccountPayload;
+    @Nullable
+    private final byte[] hashOfTakersPaymentAccountPayload;
+    @Nullable
+    private final String makerPaymentMethodId;
+    @Nullable
+    private final String takerPaymentMethodId;
 
     public Contract(OfferPayload offerPayload,
                     long tradeAmount,
@@ -86,8 +111,8 @@ public final class Contract implements NetworkPayload {
                     boolean isBuyerMakerAndSellerTaker,
                     String makerAccountId,
                     String takerAccountId,
-                    PaymentAccountPayload makerPaymentAccountPayload,
-                    PaymentAccountPayload takerPaymentAccountPayload,
+                    @Nullable PaymentAccountPayload makerPaymentAccountPayload,
+                    @Nullable PaymentAccountPayload takerPaymentAccountPayload,
                     PubKeyRing makerPubKeyRing,
                     PubKeyRing takerPubKeyRing,
                     String makerPayoutAddressString,
@@ -95,7 +120,11 @@ public final class Contract implements NetworkPayload {
                     byte[] makerMultiSigPubKey,
                     byte[] takerMultiSigPubKey,
                     long lockTime,
-                    NodeAddress refundAgentNodeAddress) {
+                    NodeAddress refundAgentNodeAddress,
+                    @Nullable byte[] hashOfMakersPaymentAccountPayload,
+                    @Nullable byte[] hashOfTakersPaymentAccountPayload,
+                    @Nullable String makerPaymentMethodId,
+                    @Nullable String takerPaymentMethodId) {
         this.offerPayload = offerPayload;
         this.tradeAmount = tradeAmount;
         this.tradePrice = tradePrice;
@@ -116,9 +145,21 @@ public final class Contract implements NetworkPayload {
         this.takerMultiSigPubKey = takerMultiSigPubKey;
         this.lockTime = lockTime;
         this.refundAgentNodeAddress = refundAgentNodeAddress;
+        this.hashOfMakersPaymentAccountPayload = hashOfMakersPaymentAccountPayload;
+        this.hashOfTakersPaymentAccountPayload = hashOfTakersPaymentAccountPayload;
+        this.makerPaymentMethodId = makerPaymentMethodId;
+        this.takerPaymentMethodId = takerPaymentMethodId;
 
-        String makerPaymentMethodId = makerPaymentAccountPayload.getPaymentMethodId();
-        String takerPaymentMethodId = takerPaymentAccountPayload.getPaymentMethodId();
+        // Either makerPaymentAccountPayload is set or makerPaymentMethodId
+        if (makerPaymentMethodId == null) {
+            makerPaymentMethodId = checkNotNull(makerPaymentAccountPayload).getPaymentMethodId();
+        }
+        if (takerPaymentMethodId == null) {
+            takerPaymentMethodId = checkNotNull(takerPaymentAccountPayload).getPaymentMethodId();
+        }
+        checkNotNull(makerPaymentMethodId);
+        checkNotNull(takerPaymentMethodId);
+
         // For SEPA offers we accept also SEPA_INSTANT takers
         // Otherwise both ids need to be the same
         boolean result = (makerPaymentMethodId.equals(PaymentMethod.SEPA_ID) && takerPaymentMethodId.equals(PaymentMethod.SEPA_INSTANT_ID)) ||
@@ -134,6 +175,10 @@ public final class Contract implements NetworkPayload {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public static Contract fromProto(protobuf.Contract proto, CoreProtoResolver coreProtoResolver) {
+        PaymentAccountPayload makerPaymentAccountPayload = proto.hasMakerPaymentAccountPayload() ?
+                coreProtoResolver.fromProto(proto.getMakerPaymentAccountPayload()) : null;
+        PaymentAccountPayload takerPaymentAccountPayload = proto.hasTakerPaymentAccountPayload() ?
+                coreProtoResolver.fromProto(proto.getTakerPaymentAccountPayload()) : null;
         return new Contract(OfferPayload.fromProto(proto.getOfferPayload()),
                 proto.getTradeAmount(),
                 proto.getTradePrice(),
@@ -144,8 +189,8 @@ public final class Contract implements NetworkPayload {
                 proto.getIsBuyerMakerAndSellerTaker(),
                 proto.getMakerAccountId(),
                 proto.getTakerAccountId(),
-                coreProtoResolver.fromProto(proto.getMakerPaymentAccountPayload()),
-                coreProtoResolver.fromProto(proto.getTakerPaymentAccountPayload()),
+                makerPaymentAccountPayload,
+                takerPaymentAccountPayload,
                 PubKeyRing.fromProto(proto.getMakerPubKeyRing()),
                 PubKeyRing.fromProto(proto.getTakerPubKeyRing()),
                 proto.getMakerPayoutAddressString(),
@@ -153,12 +198,17 @@ public final class Contract implements NetworkPayload {
                 proto.getMakerMultiSigPubKey().toByteArray(),
                 proto.getTakerMultiSigPubKey().toByteArray(),
                 proto.getLockTime(),
-                NodeAddress.fromProto(proto.getRefundAgentNodeAddress()));
+                NodeAddress.fromProto(proto.getRefundAgentNodeAddress()),
+                ProtoUtil.byteArrayOrNullFromProto(proto.getHashOfMakersPaymentAccountPayload()),
+                ProtoUtil.byteArrayOrNullFromProto(proto.getHashOfTakersPaymentAccountPayload()),
+                ProtoUtil.stringOrNullFromProto(proto.getMakerPaymentMethodId()),
+                ProtoUtil.stringOrNullFromProto(proto.getTakerPaymentMethodId())
+        );
     }
 
     @Override
     public protobuf.Contract toProtoMessage() {
-        return protobuf.Contract.newBuilder()
+        protobuf.Contract.Builder builder = protobuf.Contract.newBuilder()
                 .setOfferPayload(offerPayload.toProtoMessage().getOfferPayload())
                 .setTradeAmount(tradeAmount)
                 .setTradePrice(tradePrice)
@@ -169,8 +219,6 @@ public final class Contract implements NetworkPayload {
                 .setIsBuyerMakerAndSellerTaker(isBuyerMakerAndSellerTaker)
                 .setMakerAccountId(makerAccountId)
                 .setTakerAccountId(takerAccountId)
-                .setMakerPaymentAccountPayload((protobuf.PaymentAccountPayload) makerPaymentAccountPayload.toProtoMessage())
-                .setTakerPaymentAccountPayload((protobuf.PaymentAccountPayload) takerPaymentAccountPayload.toProtoMessage())
                 .setMakerPubKeyRing(makerPubKeyRing.toProtoMessage())
                 .setTakerPubKeyRing(takerPubKeyRing.toProtoMessage())
                 .setMakerPayoutAddressString(makerPayoutAddressString)
@@ -178,8 +226,19 @@ public final class Contract implements NetworkPayload {
                 .setMakerMultiSigPubKey(ByteString.copyFrom(makerMultiSigPubKey))
                 .setTakerMultiSigPubKey(ByteString.copyFrom(takerMultiSigPubKey))
                 .setLockTime(lockTime)
-                .setRefundAgentNodeAddress(refundAgentNodeAddress.toProtoMessage())
-                .build();
+                .setRefundAgentNodeAddress(refundAgentNodeAddress.toProtoMessage());
+
+        Optional.ofNullable(hashOfMakersPaymentAccountPayload)
+                .ifPresent(e -> builder.setHashOfMakersPaymentAccountPayload(ByteString.copyFrom(hashOfMakersPaymentAccountPayload)));
+        Optional.ofNullable(hashOfTakersPaymentAccountPayload)
+                .ifPresent(e -> builder.setHashOfTakersPaymentAccountPayload(ByteString.copyFrom(hashOfTakersPaymentAccountPayload)));
+        Optional.ofNullable(makerPaymentAccountPayload)
+                .ifPresent(e -> builder.setMakerPaymentAccountPayload((protobuf.PaymentAccountPayload) makerPaymentAccountPayload.toProtoMessage()));
+        Optional.ofNullable(takerPaymentAccountPayload)
+                .ifPresent(e -> builder.setTakerPaymentAccountPayload((protobuf.PaymentAccountPayload) takerPaymentAccountPayload.toProtoMessage()));
+        Optional.ofNullable(makerPaymentMethodId).ifPresent(e -> builder.setMakerPaymentMethodId(makerPaymentMethodId));
+        Optional.ofNullable(takerPaymentMethodId).ifPresent(e -> builder.setTakerPaymentMethodId(takerPaymentMethodId));
+        return builder.build();
     }
 
 
@@ -211,16 +270,35 @@ public final class Contract implements NetworkPayload {
         return isBuyerMakerAndSellerTaker ? takerMultiSigPubKey : makerMultiSigPubKey;
     }
 
+    @Nullable
     public PaymentAccountPayload getBuyerPaymentAccountPayload() {
         return isBuyerMakerAndSellerTaker ? makerPaymentAccountPayload : takerPaymentAccountPayload;
     }
 
+    @Nullable
     public PaymentAccountPayload getSellerPaymentAccountPayload() {
         return isBuyerMakerAndSellerTaker ? takerPaymentAccountPayload : makerPaymentAccountPayload;
     }
 
+    public void setPaymentAccountPayloads(PaymentAccountPayload peersPaymentAccountPayload,
+                                          PaymentAccountPayload myPaymentAccountPayload,
+                                          PubKeyRing myPubKeyRing) {
+        if (isMyRoleMaker(myPubKeyRing)) {
+            makerPaymentAccountPayload = myPaymentAccountPayload;
+            takerPaymentAccountPayload = peersPaymentAccountPayload;
+        } else {
+            takerPaymentAccountPayload = myPaymentAccountPayload;
+            makerPaymentAccountPayload = peersPaymentAccountPayload;
+        }
+    }
+
+    public byte[] getHashOfPeersPaymentAccountPayload(PubKeyRing myPubKeyRing) {
+        return isMyRoleMaker(myPubKeyRing) ? hashOfTakersPaymentAccountPayload : hashOfMakersPaymentAccountPayload;
+    }
+
     public String getPaymentMethodId() {
-        return makerPaymentAccountPayload.getPaymentMethodId();
+        // Either makerPaymentMethodId is set or available in makerPaymentAccountPayload
+        return makerPaymentMethodId != null ? makerPaymentMethodId : Objects.requireNonNull(makerPaymentAccountPayload).getPaymentMethodId();
     }
 
     public Coin getTradeAmount() {
@@ -304,8 +382,6 @@ public final class Contract implements NetworkPayload {
                 ",\n     isBuyerMakerAndSellerTaker=" + isBuyerMakerAndSellerTaker +
                 ",\n     makerAccountId='" + makerAccountId + '\'' +
                 ",\n     takerAccountId='" + takerAccountId + '\'' +
-                ",\n     makerPaymentAccountPayload=" + makerPaymentAccountPayload +
-                ",\n     takerPaymentAccountPayload=" + takerPaymentAccountPayload +
                 ",\n     makerPubKeyRing=" + makerPubKeyRing +
                 ",\n     takerPubKeyRing=" + takerPubKeyRing +
                 ",\n     makerPayoutAddressString='" + makerPayoutAddressString + '\'' +
@@ -315,6 +391,10 @@ public final class Contract implements NetworkPayload {
                 ",\n     buyerMultiSigPubKey=" + Utilities.bytesAsHexString(getBuyerMultiSigPubKey()) +
                 ",\n     sellerMultiSigPubKey=" + Utilities.bytesAsHexString(getSellerMultiSigPubKey()) +
                 ",\n     lockTime=" + lockTime +
+                ",\n     hashOfMakersPaymentAccountPayload=" + Utilities.bytesAsHexString(hashOfMakersPaymentAccountPayload) +
+                ",\n     hashOfTakersPaymentAccountPayload=" + Utilities.bytesAsHexString(hashOfTakersPaymentAccountPayload) +
+                ",\n     makerPaymentMethodId=" + makerPaymentMethodId +
+                ",\n     takerPaymentMethodId=" + takerPaymentMethodId +
                 "\n}";
     }
 }

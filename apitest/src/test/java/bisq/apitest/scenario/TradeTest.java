@@ -31,6 +31,7 @@ import org.junit.jupiter.api.TestMethodOrder;
 import bisq.apitest.method.trade.AbstractTradeTest;
 import bisq.apitest.method.trade.TakeBuyBSQOfferTest;
 import bisq.apitest.method.trade.TakeBuyBTCOfferTest;
+import bisq.apitest.method.trade.TakeBuyBTCOfferWithNationalBankAcctTest;
 import bisq.apitest.method.trade.TakeSellBSQOfferTest;
 import bisq.apitest.method.trade.TakeSellBTCOfferTest;
 
@@ -77,6 +78,17 @@ public class TradeTest extends AbstractTradeTest {
 
     @Test
     @Order(4)
+    public void testTakeBuyBTCOfferWithNationalBankAcct(final TestInfo testInfo) {
+        TakeBuyBTCOfferWithNationalBankAcctTest test = new TakeBuyBTCOfferWithNationalBankAcctTest();
+        test.testTakeAlicesBuyOffer(testInfo);
+        test.testBankAcctDetailsIncludedInContracts(testInfo);
+        test.testAlicesConfirmPaymentStarted(testInfo);
+        test.testBobsConfirmPaymentReceived(testInfo);
+        test.testAlicesKeepFunds(testInfo);
+    }
+
+    @Test
+    @Order(5)
     public void testTakeSellBSQOffer(final TestInfo testInfo) {
         TakeSellBSQOfferTest test = new TakeSellBSQOfferTest();
         TakeSellBSQOfferTest.createBsqPaymentAccounts();

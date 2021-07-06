@@ -86,7 +86,6 @@ public class BuyerAsTakerSignsDepositTx extends TradeTask {
             byte[] sellerMultiSigPubKey = tradingPeer.getMultiSigPubKey();
             Transaction depositTx = processModel.getTradeWalletService().takerSignsDepositTx(
                     false,
-                    contractHash,
                     processModel.getPreparedDepositTx(),
                     msOutputAmount,
                     buyerInputs,

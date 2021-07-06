@@ -30,7 +30,7 @@ public class Version {
     // VERSION = 0.5.0 introduces proto buffer for the P2P network and local DB and is a not backward compatible update
     // Therefore all sub versions start again with 1
     // We use semantic versioning with major, minor and patch
-    public static final String VERSION = "1.6.5";
+    public static final String VERSION = "1.7.0";
 
     /**
      * Holds a list of the tagged resource files for optimizing the getData requests.
@@ -99,7 +99,8 @@ public class Version {
     // VERSION = 0.5.0 -> TRADE_PROTOCOL_VERSION = 1
     // Version 1.2.2 -> TRADE_PROTOCOL_VERSION = 2
     // Version 1.5.0 -> TRADE_PROTOCOL_VERSION = 3
-    public static final int TRADE_PROTOCOL_VERSION = 3;
+    // Version 1.7.0 -> TRADE_PROTOCOL_VERSION = 4
+    public static final int TRADE_PROTOCOL_VERSION = 4;
     private static int p2pMessageVersion;
 
     public static final String BSQ_TX_VERSION = "1";

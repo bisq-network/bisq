@@ -79,7 +79,6 @@ public class SellerAsTakerSignsDepositTx extends TradeTask {
 
             Transaction depositTx = processModel.getTradeWalletService().takerSignsDepositTx(
                     true,
-                    trade.getContractHash(),
                     processModel.getPreparedDepositTx(),
                     msOutputAmount,
                     checkNotNull(tradingPeer.getRawTransactionInputs()),

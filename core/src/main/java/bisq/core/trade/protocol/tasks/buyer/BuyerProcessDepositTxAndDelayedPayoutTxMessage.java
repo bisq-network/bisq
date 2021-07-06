@@ -20,11 +20,16 @@ package bisq.core.trade.protocol.tasks.buyer;
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletService;
+import bisq.core.payment.payload.PaymentAccountPayload;
+import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
 import bisq.core.trade.messages.DepositTxAndDelayedPayoutTxMessage;
+import bisq.core.trade.protocol.ProcessModel;
 import bisq.core.trade.protocol.tasks.TradeTask;
 import bisq.core.util.Validator;
 
+import bisq.common.crypto.Hash;
+import bisq.common.crypto.Sig;
 import bisq.common.taskrunner.TaskRunner;
 import bisq.common.util.Utilities;
 
@@ -70,6 +75,34 @@ public class BuyerProcessDepositTxAndDelayedPayoutTxMessage extends TradeTask {
             trade.applyDelayedPayoutTxBytes(delayedPayoutTxBytes);
 
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
+
+            PaymentAccountPayload sellerPaymentAccountPayload = message.getSellerPaymentAccountPayload();
+            if (sellerPaymentAccountPayload != null) {
+                byte[] sellerPaymentAccountPayloadHash = ProcessModel.hashOfPaymentAccountPayload(sellerPaymentAccountPayload);
+                Contract contract = trade.getContract();
+                byte[] peersPaymentAccountPayloadHash = checkNotNull(contract).getHashOfPeersPaymentAccountPayload(processModel.getPubKeyRing());
+                checkArgument(Arrays.equals(sellerPaymentAccountPayloadHash, peersPaymentAccountPayloadHash),
+                        "Hash of payment account is invalid");
+
+                processModel.getTradingPeer().setPaymentAccountPayload(sellerPaymentAccountPayload);
+                contract.setPaymentAccountPayloads(sellerPaymentAccountPayload,
+                        processModel.getPaymentAccountPayload(trade),
+                        processModel.getPubKeyRing());
+
+                // As we have added the payment accounts we need to update the json. We also update the signature
+                // thought that has less relevance with the changes of 1.7.0
+                String contractAsJson = Utilities.objectToJson(contract);
+                String signature = Sig.sign(processModel.getKeyRing().getSignatureKeyPair().getPrivate(), contractAsJson);
+                trade.setContractAsJson(contractAsJson);
+                if (contract.isBuyerMakerAndSellerTaker()) {
+                    trade.setMakerContractSignature(signature);
+                } else {
+                    trade.setTakerContractSignature(signature);
+                }
+
+                byte[] contractHash = Hash.getSha256Hash(checkNotNull(trade.getContractAsJson()));
+                trade.setContractHash(contractHash);
+            }
 
             // If we got already the confirmation we don't want to apply an earlier state
             if (trade.getState().ordinal() < Trade.State.BUYER_SAW_DEPOSIT_TX_IN_NETWORK.ordinal()) {

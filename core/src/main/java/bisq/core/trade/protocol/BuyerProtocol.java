@@ -25,9 +25,11 @@ import bisq.core.trade.messages.PayoutTxPublishedMessage;
 import bisq.core.trade.messages.TradeMessage;
 import bisq.core.trade.protocol.tasks.ApplyFilter;
 import bisq.core.trade.protocol.tasks.TradeTask;
+import bisq.core.trade.protocol.tasks.VerifyPeersAccountAgeWitness;
 import bisq.core.trade.protocol.tasks.buyer.BuyerProcessDepositTxAndDelayedPayoutTxMessage;
 import bisq.core.trade.protocol.tasks.buyer.BuyerProcessPayoutTxPublishedMessage;
 import bisq.core.trade.protocol.tasks.buyer.BuyerSendCounterCurrencyTransferStartedMessage;
+import bisq.core.trade.protocol.tasks.buyer.BuyerSendsShareBuyerPaymentAccountMessage;
 import bisq.core.trade.protocol.tasks.buyer.BuyerSetupDepositTxListener;
 import bisq.core.trade.protocol.tasks.buyer.BuyerSetupPayoutTxListener;
 import bisq.core.trade.protocol.tasks.buyer.BuyerSignPayoutTx;
@@ -113,6 +115,9 @@ public abstract class BuyerProtocol extends DisputeProtocol {
                             removeMailboxMessageAfterProcessing(message);
                         }))
                 .setup(tasks(BuyerProcessDepositTxAndDelayedPayoutTxMessage.class,
+                        ApplyFilter.class,
+                        VerifyPeersAccountAgeWitness.class,
+                        BuyerSendsShareBuyerPaymentAccountMessage.class,
                         BuyerVerifiesFinalDelayedPayoutTx.class)
                         .using(new TradeTaskRunner(trade,
                                 () -> {
@@ -120,7 +125,6 @@ public abstract class BuyerProtocol extends DisputeProtocol {
                                     handleTaskRunnerSuccess(message);
                                 },
                                 errorMessage -> handleTaskRunnerFault(message, errorMessage))))
-                .run(() -> processModel.witnessDebugLog(trade))
                 .executeTasks();
     }
 

@@ -34,6 +34,8 @@ import org.bitcoinj.core.Coin;
 
 import com.google.common.base.Charsets;
 
+import java.util.Optional;
+
 import lombok.extern.slf4j.Slf4j;
 
 import static bisq.core.util.Validator.checkTradeId;
@@ -56,7 +58,15 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
             checkTradeId(processModel.getOfferId(), request);
 
             TradingPeer tradingPeer = processModel.getTradingPeer();
-            tradingPeer.setPaymentAccountPayload(checkNotNull(request.getTakerPaymentAccountPayload()));
+
+            // 1.7.0: We do not expect the payment account anymore but in case peer has not updated we still process it.
+            Optional.ofNullable(request.getTakerPaymentAccountPayload())
+                    .ifPresent(e -> tradingPeer.setPaymentAccountPayload(request.getTakerPaymentAccountPayload()));
+            Optional.ofNullable(request.getHashOfTakersPaymentAccountPayload())
+                    .ifPresent(e -> tradingPeer.setHashOfPaymentAccountPayload(request.getHashOfTakersPaymentAccountPayload()));
+            Optional.ofNullable(request.getTakersPaymentMethodId())
+                    .ifPresent(e -> tradingPeer.setPaymentMethodId(request.getTakersPaymentMethodId()));
+
             tradingPeer.setRawTransactionInputs(checkNotNull(request.getRawTransactionInputs()));
             checkArgument(request.getRawTransactionInputs().size() > 0);
 

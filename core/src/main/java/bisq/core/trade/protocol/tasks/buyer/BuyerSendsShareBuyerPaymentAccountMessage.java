@@ -15,12 +15,29 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.protocol.tasks.seller;
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package bisq.core.trade.protocol.tasks.buyer;
 
 import bisq.core.network.MessageState;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.trade.Trade;
-import bisq.core.trade.messages.DepositTxAndDelayedPayoutTxMessage;
+import bisq.core.trade.messages.ShareBuyerPaymentAccountMessage;
 import bisq.core.trade.messages.TradeMailboxMessage;
 import bisq.core.trade.messages.TradeMessage;
 import bisq.core.trade.protocol.tasks.SendMailboxMessageTask;
@@ -35,60 +52,39 @@ import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
-/**
- * We send the buyer the deposit and delayed payout tx. We wait to receive a ACK message back and resend the message
- * in case that does not happen in 4 seconds or if the message was stored in mailbox or failed. We keep repeating that
- * with doubling the interval each time and until the MAX_RESEND_ATTEMPTS is reached. If never successful we fail and
- * do not continue the protocol with publishing the deposit tx. That way we avoid that a deposit tx is published but the
- * buyer does not have the delayed payout tx and would not be able to open arbitration.
- */
 @Slf4j
-public class SellerSendsDepositTxAndDelayedPayoutTxMessage extends SendMailboxMessageTask {
+public class BuyerSendsShareBuyerPaymentAccountMessage extends SendMailboxMessageTask {
     private static final int MAX_RESEND_ATTEMPTS = 7;
     private int delayInSec = 4;
     private int resendCounter = 0;
-    private DepositTxAndDelayedPayoutTxMessage message;
+    private ShareBuyerPaymentAccountMessage message;
     private ChangeListener<MessageState> listener;
     private Timer timer;
 
-    public SellerSendsDepositTxAndDelayedPayoutTxMessage(TaskRunner<Trade> taskHandler, Trade trade) {
+    public BuyerSendsShareBuyerPaymentAccountMessage(TaskRunner<Trade> taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
     @Override
     protected TradeMailboxMessage getTradeMailboxMessage(String tradeId) {
         if (message == null) {
-            // We do not use a real unique ID here as we want to be able to re-send the exact same message in case the
-            // peer does not respond with an ACK msg in a certain time interval. To avoid that we get dangling mailbox
-            // messages where only the one which gets processed by the peer would be removed we use the same uid. All
-            // other data stays the same when we re-send the message at any time later.
             String deterministicId = tradeId + processModel.getMyNodeAddress().getFullAddress();
-            PaymentAccountPayload sellerPaymentAccountPayload = processModel.getPaymentAccountPayload(trade);
-            message = new DepositTxAndDelayedPayoutTxMessage(
+            PaymentAccountPayload buyerPaymentAccountPayload = processModel.getPaymentAccountPayload(trade);
+            message = new ShareBuyerPaymentAccountMessage(
                     deterministicId,
                     processModel.getOfferId(),
                     processModel.getMyNodeAddress(),
-                    checkNotNull(processModel.getDepositTx()).bitcoinSerialize(),
-                    checkNotNull(trade.getDelayedPayoutTx()).bitcoinSerialize(),
-                    sellerPaymentAccountPayload);
+                    buyerPaymentAccountPayload);
         }
         return message;
     }
 
     @Override
     protected void setStateSent() {
-        trade.setStateIfValidTransitionTo(Trade.State.SELLER_SENT_DEPOSIT_TX_PUBLISHED_MSG);
-
-        processModel.getTradeManager().requestPersistence();
     }
 
     @Override
     protected void setStateArrived() {
-        trade.setStateIfValidTransitionTo(Trade.State.SELLER_SAW_ARRIVED_DEPOSIT_TX_PUBLISHED_MSG);
-
-        processModel.getTradeManager().requestPersistence();
         cleanup();
         // Complete is called in base class
     }
@@ -101,17 +97,6 @@ public class SellerSendsDepositTxAndDelayedPayoutTxMessage extends SendMailboxMe
 
     @Override
     protected void setStateStoredInMailbox() {
-        trade.setStateIfValidTransitionTo(Trade.State.SELLER_STORED_IN_MAILBOX_DEPOSIT_TX_PUBLISHED_MSG);
-
-        processModel.getTradeManager().requestPersistence();
-        // The DepositTxAndDelayedPayoutTxMessage is a mailbox message as earlier we use only the deposit tx which can
-        // be also received from the network once published.
-        // Now we send the delayed payout tx as well and with that this message is mandatory for continuing the protocol.
-        // We do not support mailbox message handling during the take offer process as it is expected that both peers
-        // are online.
-        // For backward compatibility and extra resilience we still keep DepositTxAndDelayedPayoutTxMessage as a
-        // mailbox message but the stored in mailbox case is not expected and the seller would try to send the message again
-        // in the hope to reach the buyer directly.
         if (!trade.isDepositConfirmed()) {
             tryToSendAgainLater();
         }
@@ -125,12 +110,9 @@ public class SellerSendsDepositTxAndDelayedPayoutTxMessage extends SendMailboxMe
 
     @Override
     protected void setStateFault() {
-        trade.setStateIfValidTransitionTo(Trade.State.SELLER_SEND_FAILED_DEPOSIT_TX_PUBLISHED_MSG);
         if (!trade.isDepositConfirmed()) {
             tryToSendAgainLater();
         }
-
-        processModel.getTradeManager().requestPersistence();
     }
 
     @Override
@@ -183,9 +165,6 @@ public class SellerSendsDepositTxAndDelayedPayoutTxMessage extends SendMailboxMe
     private void onMessageStateChange(MessageState newValue) {
         // Once we receive an ACK from our msg we know the peer has received the msg and we stop.
         if (newValue == MessageState.ACKNOWLEDGED) {
-            // We treat a ACK like SELLER_SAW_ARRIVED_DEPOSIT_TX_PUBLISHED_MSG
-            trade.setStateIfValidTransitionTo(Trade.State.SELLER_SAW_ARRIVED_DEPOSIT_TX_PUBLISHED_MSG);
-
             processModel.getTradeManager().requestPersistence();
             cleanup();
             complete();

@@ -46,7 +46,11 @@ public class PaymentAccountPayloadInfo implements Payload {
         this.address = address;
     }
 
-    public static PaymentAccountPayloadInfo toPaymentAccountPayloadInfo(PaymentAccountPayload paymentAccountPayload) {
+    public static PaymentAccountPayloadInfo toPaymentAccountPayloadInfo(
+            @Nullable PaymentAccountPayload paymentAccountPayload) {
+        if (paymentAccountPayload == null)
+            return emptyPaymentAccountPayload.get();
+
         Optional<String> address = Optional.empty();
         if (paymentAccountPayload instanceof CryptoCurrencyAccountPayload)
             address = Optional.of(((CryptoCurrencyAccountPayload) paymentAccountPayload).getAddress());
@@ -58,7 +62,7 @@ public class PaymentAccountPayloadInfo implements Payload {
                 address.orElse(""));
     }
 
-    // For transmitting TradeInfo messages when no contract & payloads are available.
+    // For transmitting TradeInfo messages when the contract or the contract's payload is not yet available.
     public static Supplier<PaymentAccountPayloadInfo> emptyPaymentAccountPayload = () ->
             new PaymentAccountPayloadInfo("", "", "");
 
