@@ -281,7 +281,6 @@ public class DaoStateService implements DaoSetupService {
         daoStateListeners.forEach(DaoStateListener::onParseBlockChainComplete);
     }
 
-
     public List<Block> getBlocks() {
         return daoState.getBlocks();
     }
@@ -535,9 +534,7 @@ public class DaoStateService implements DaoSetupService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private Set<TxOutput> getTxOutputsByTxOutputType(TxOutputType txOutputType) {
-        return getUnorderedTxOutputStream()
-                .filter(txOutput -> txOutput.getTxOutputType() == txOutputType)
-                .collect(Collectors.toSet());
+        return daoState.getTxOutputByTxOutputType(txOutputType);
     }
 
     public boolean isBsqTxOutputType(TxOutput txOutput) {

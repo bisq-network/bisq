@@ -22,6 +22,7 @@ import bisq.core.dao.state.model.blockchain.SpentInfo;
 import bisq.core.dao.state.model.blockchain.Tx;
 import bisq.core.dao.state.model.blockchain.TxOutput;
 import bisq.core.dao.state.model.blockchain.TxOutputKey;
+import bisq.core.dao.state.model.blockchain.TxOutputType;
 import bisq.core.dao.state.model.governance.Cycle;
 import bisq.core.dao.state.model.governance.DecryptedBallotsWithMerits;
 import bisq.core.dao.state.model.governance.EvaluatedProposal;
@@ -38,6 +39,7 @@ import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -114,6 +116,9 @@ public class DaoState implements PersistablePayload {
     private transient final Map<Integer, Block> blocksByHeight; // Blocks indexed by height
     @JsonExclude
     private transient final Set<String> blockHashes; // Cache of known block hashes
+    @JsonExclude
+    private transient final Map<TxOutputType, Set<TxOutput>> txOutputsByTxOutputType = new HashMap<>();
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -164,6 +169,7 @@ public class DaoState implements PersistablePayload {
 
         txCache = blocks.stream()
                 .flatMap(block -> block.getTxs().stream())
+                .peek(this::addToTxOutputsByTxOutputTypeMap)
                 .collect(Collectors.toMap(Tx::getId, Function.identity(), (x, y) -> x, HashMap::new));
 
         blockHashes = blocks.stream()
@@ -255,11 +261,32 @@ public class DaoState implements PersistablePayload {
         // We shouldn't get duplicate txIds, but use putIfAbsent instead of put for consistency with the map merge
         // function used in the constructor to initialise txCache (and to exactly match the pre-caching behaviour).
         txCache.putIfAbsent(tx.getId(), tx);
+
+        addToTxOutputsByTxOutputTypeMap(tx);
     }
 
     public void setTxCache(Map<String, Tx> txCache) {
         this.txCache.clear();
         this.txCache.putAll(txCache);
+
+        txOutputsByTxOutputType.clear();
+        this.txCache.values().forEach(this::addToTxOutputsByTxOutputTypeMap);
+    }
+
+    private void addToTxOutputsByTxOutputTypeMap(Tx tx) {
+        tx.getTxOutputs().forEach(txOutput -> {
+            TxOutputType txOutputType = txOutput.getTxOutputType();
+            txOutputsByTxOutputType.putIfAbsent(txOutputType, new HashSet<>());
+            txOutputsByTxOutputType.get(txOutputType).add(txOutput);
+        });
+    }
+
+    public Set<TxOutput> getTxOutputByTxOutputType(TxOutputType txOutputType) {
+        if (txOutputsByTxOutputType.containsKey(txOutputType)) {
+            return Collections.unmodifiableSet(txOutputsByTxOutputType.get(txOutputType));
+        } else {
+            return new HashSet<>();
+        }
     }
 
     public Map<String, Tx> getTxCache() {
@@ -300,7 +327,7 @@ public class DaoState implements PersistablePayload {
     }
 
     public void addBlocks(List<Block> newBlocks) {
-        newBlocks.forEach(b -> addBlock(b));
+        newBlocks.forEach(this::addBlock);
     }
 
     /**
@@ -329,6 +356,7 @@ public class DaoState implements PersistablePayload {
                 ",\n     evaluatedProposalList=" + evaluatedProposalList +
                 ",\n     decryptedBallotsWithMeritsList=" + decryptedBallotsWithMeritsList +
                 ",\n     txCache=" + txCache +
+                ",\n     txOutputsByTxOutputType=" + txOutputsByTxOutputType +
                 "\n}";
     }
 }
