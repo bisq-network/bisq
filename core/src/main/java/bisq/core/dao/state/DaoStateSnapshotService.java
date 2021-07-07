@@ -24,6 +24,7 @@ import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.dao.state.storage.DaoStateStorageService;
 
 import bisq.common.config.Config;
+import bisq.common.util.GcUtil;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -114,8 +115,7 @@ public class DaoStateSnapshotService {
                 return;
             }
 
-            // No guarantee that it runs but helps to lower memory allocation before we get heavier load
-            System.gc();
+            GcUtil.maybeReleaseMemory();
 
             // At trigger event we store the latest snapshotCandidate to disc
             long ts = System.currentTimeMillis();
@@ -130,8 +130,7 @@ public class DaoStateSnapshotService {
 
                         long ts2 = System.currentTimeMillis();
 
-                        // No guarantee that it runs but helps to lower memory allocation before we get heavier load
-                        System.gc();
+                        GcUtil.maybeReleaseMemory();
 
                         // Now we clone and keep it in memory for the next trigger event
                         daoStateSnapshotCandidate = daoStateService.getClone();
@@ -139,6 +138,7 @@ public class DaoStateSnapshotService {
 
                         log.info("Cloned new snapshotCandidate at height {} took {} ms", chainHeight, System.currentTimeMillis() - ts2);
                         requestPersistenceCalled = false;
+                        GcUtil.maybeReleaseMemory();
                     });
         }
     }

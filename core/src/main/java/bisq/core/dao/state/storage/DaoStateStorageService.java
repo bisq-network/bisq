@@ -97,8 +97,6 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
                 // the daoState data in memory.
                 store.setDaoState(null);
 
-                // Hint the system for garbage collection. No guarantee if and when it will be executed...
-                System.gc();
                 completeHandler.run();
             });
         }).start();
