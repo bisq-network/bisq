@@ -114,6 +114,9 @@ public class DaoStateSnapshotService {
                 return;
             }
 
+            // No guarantee that it runs but helps to lower memory allocation before we get heavier load
+            System.gc();
+
             // At trigger event we store the latest snapshotCandidate to disc
             long ts = System.currentTimeMillis();
             requestPersistenceCalled = true;
@@ -126,6 +129,9 @@ public class DaoStateSnapshotService {
                                 System.currentTimeMillis() - ts);
 
                         long ts2 = System.currentTimeMillis();
+
+                        // No guarantee that it runs but helps to lower memory allocation before we get heavier load
+                        System.gc();
 
                         // Now we clone and keep it in memory for the next trigger event
                         daoStateSnapshotCandidate = daoStateService.getClone();

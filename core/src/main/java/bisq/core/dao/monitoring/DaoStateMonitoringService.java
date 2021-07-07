@@ -59,6 +59,7 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
@@ -335,6 +336,9 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
 
     private boolean processPeersDaoStateHash(DaoStateHash daoStateHash, Optional<NodeAddress> peersNodeAddress,
                                              boolean notifyListeners) {
+        // No guarantee that it runs but helps to lower memory allocation before we get heavier load
+        System.gc();
+
         AtomicBoolean changed = new AtomicBoolean(false);
         AtomicBoolean inConflictWithNonSeedNode = new AtomicBoolean(this.isInConflictWithNonSeedNode);
         AtomicBoolean inConflictWithSeedNode = new AtomicBoolean(this.isInConflictWithSeedNode);
@@ -378,6 +382,9 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
         if (notifyListeners && changed.get()) {
             listeners.forEach(Listener::onChangeAfterBatchProcessing);
         }
+
+        // No guarantee that it runs but helps to lower memory allocation before we get heavier load
+        UserThread.runAfter(System::gc, 300, TimeUnit.MILLISECONDS);
 
         return changed.get();
     }

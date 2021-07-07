@@ -26,6 +26,7 @@ import bisq.core.dao.state.model.blockchain.Tx;
 import bisq.core.dao.state.model.blockchain.TxOutput;
 import bisq.core.dao.state.model.blockchain.TxType;
 
+import bisq.common.UserThread;
 import bisq.common.config.Config;
 import bisq.common.file.FileUtil;
 import bisq.common.file.JsonFileManager;
@@ -51,6 +52,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
@@ -144,6 +146,9 @@ public class ExportJsonFilesService implements DaoSetupService {
                         return jsonTx;
                     }).collect(Collectors.toList());
 
+            // No guarantee that it runs but helps to lower memory allocation before we get heavier load
+            System.gc();
+
             DaoState daoState = daoStateService.getClone();
             List<JsonBlock> jsonBlockList = daoState.getBlocks().stream()
                     .map(this::getJsonBlock)
@@ -154,6 +159,10 @@ public class ExportJsonFilesService implements DaoSetupService {
                 bsqStateFileManager.writeToDisc(Utilities.objectToJson(jsonBlocks), "blocks");
                 allJsonTxOutputs.forEach(jsonTxOutput -> txOutputFileManager.writeToDisc(Utilities.objectToJson(jsonTxOutput), jsonTxOutput.getId()));
                 jsonTxs.forEach(jsonTx -> txFileManager.writeToDisc(Utilities.objectToJson(jsonTx), jsonTx.getId()));
+
+                // No guarantee that it runs but helps to lower memory allocation before we get heavier load
+                UserThread.runAfter(System::gc, 300, TimeUnit.MILLISECONDS);
+
                 return null;
             });
 
