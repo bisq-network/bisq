@@ -92,9 +92,8 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
         new Thread(() -> {
             Thread.currentThread().setName("Serialize and write DaoState");
             persistenceManager.persistNow(() -> {
-                // After we have written to disk we remove the reference to the daoState. We have in the meantime
-                // already cloned the next daoState and if we would not release the reference we would have 3 times
-                // the daoState data in memory.
+                // After we have written to disk we remove the the daoState in the store to avoid that it stays in
+                // memory there until the next persist call.
                 store.setDaoState(null);
 
                 completeHandler.run();
