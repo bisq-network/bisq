@@ -54,6 +54,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static protobuf.OfferPayload.Direction.BUY;
 import static protobuf.OfferPayload.Direction.SELL;
 
+@SuppressWarnings("ConstantConditions")
 @Disabled
 @Slf4j
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -256,16 +257,6 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractOfferTest {
         newOffer = aliceClient.getMyOffer(newOffer.getId());
         log.info("OFFER #5:\n{}", formatOfferTable(singletonList(newOffer), "usd"));
         assertEquals(triggerPriceAsLong, newOffer.getTriggerPrice());
-    }
-
-    public static void main(String[] args) {
-        // TODO DELETE ME
-        String triggerPriceAsString = "10.1111";
-        Price price = Price.parse("USD", triggerPriceAsString);
-        long triggerPriceAsLong = price.getValue();
-        log.info("triggerPriceAsString: {}", triggerPriceAsString);
-        log.info("triggerPriceAsPrice:  {}", price);
-        log.info("triggerPriceAsLong:   {}", triggerPriceAsLong);
     }
 
     private void assertCalculatedPriceIsCorrect(OfferInfo offer, double priceMarginPctInput) {
