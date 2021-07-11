@@ -247,7 +247,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         ProtectedStoragePayload protectedStoragePayload = protectedStorageEntry.getProtectedStoragePayload();
         ByteArray hashOfPayload = get32ByteHashAsByteArray(protectedStoragePayload);
         map.put(hashOfPayload, protectedStorageEntry);
-        log.trace("## addProtectedMailboxStorageEntryToMap hashOfPayload={}, map={}", hashOfPayload, printMap());
+        //log.trace("## addProtectedMailboxStorageEntryToMap hashOfPayload={}, map={}", hashOfPayload, printMap());
     }
 
 
@@ -280,14 +280,14 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
         Map<ByteArray, PersistableNetworkPayload> mapForDataRequest = getMapForDataRequest();
         Set<byte[]> excludedKeys = getKeysAsByteSet(mapForDataRequest);
-        log.trace("## getKnownPayloadHashes map of PersistableNetworkPayloads={}, excludedKeys={}",
+       /* log.trace("## getKnownPayloadHashes map of PersistableNetworkPayloads={}, excludedKeys={}",
                 printPersistableNetworkPayloadMap(mapForDataRequest),
-                excludedKeys.stream().map(Utilities::encodeToHex).toArray());
+                excludedKeys.stream().map(Utilities::encodeToHex).toArray());*/
 
         Set<byte[]> excludedKeysFromProtectedStorageEntryMap = getKeysAsByteSet(map);
-        log.trace("## getKnownPayloadHashes map of ProtectedStorageEntrys={}, excludedKeys={}",
+        /*log.trace("## getKnownPayloadHashes map of ProtectedStorageEntrys={}, excludedKeys={}",
                 printMap(),
-                excludedKeysFromProtectedStorageEntryMap.stream().map(Utilities::encodeToHex).toArray());
+                excludedKeysFromProtectedStorageEntryMap.stream().map(Utilities::encodeToHex).toArray());*/
 
         excludedKeys.addAll(excludedKeysFromProtectedStorageEntryMap);
         return excludedKeys;
@@ -742,7 +742,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         ProtectedStoragePayload protectedStoragePayload = protectedStorageEntry.getProtectedStoragePayload();
         ByteArray hashOfPayload = get32ByteHashAsByteArray(protectedStoragePayload);
 
-        log.trace("## call addProtectedStorageEntry hash={}, map={}", hashOfPayload, printMap());
+        //log.trace("## call addProtectedStorageEntry hash={}, map={}", hashOfPayload, printMap());
 
         // We do that check early as it is a very common case for returning, so we return early
         // If we have seen a more recent operation for this payload and we have a payload locally, ignore it
@@ -795,7 +795,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         sequenceNumberMap.put(hashOfPayload, new MapValue(protectedStorageEntry.getSequenceNumber(), this.clock.millis()));
         requestPersistence();
 
-        log.trace("## ProtectedStorageEntry added to map. hash={}, map={}", hashOfPayload, printMap());
+        //log.trace("## ProtectedStorageEntry added to map. hash={}, map={}", hashOfPayload, printMap());
 
         // Optionally, broadcast the add/update depending on the calling environment
         if (allowBroadcast) {
@@ -823,7 +823,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         ProtectedStoragePayload protectedStoragePayload = protectedMailboxStorageEntry.getProtectedStoragePayload();
         ByteArray hashOfPayload = get32ByteHashAsByteArray(protectedStoragePayload);
 
-        log.trace("## call republishProtectedStorageEntry hash={}, map={}", hashOfPayload, printMap());
+        //log.trace("## call republishProtectedStorageEntry hash={}, map={}", hashOfPayload, printMap());
 
         if (hasAlreadyRemovedAddOncePayload(protectedStoragePayload, hashOfPayload)) {
             log.trace("## We have already removed that AddOncePayload by a previous removeDataMessage. " +
@@ -1023,9 +1023,9 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
             ByteArray hashOfPayload = entry.getKey();
             ProtectedStorageEntry protectedStorageEntry = entry.getValue();
 
-            log.trace("## removeFromMapAndDataStore: hashOfPayload={}, map before remove={}", hashOfPayload, printMap());
+            //log.trace("## removeFromMapAndDataStore: hashOfPayload={}, map before remove={}", hashOfPayload, printMap());
             map.remove(hashOfPayload);
-            log.trace("## removeFromMapAndDataStore: map after remove={}", printMap());
+            //log.trace("## removeFromMapAndDataStore: map after remove={}", printMap());
 
             // We inform listeners even the entry was not found in our map
             removedProtectedStorageEntries.add(protectedStorageEntry);

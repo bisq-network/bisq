@@ -29,6 +29,7 @@ import bisq.core.dao.state.model.blockchain.TxType;
 import bisq.common.config.Config;
 import bisq.common.file.FileUtil;
 import bisq.common.file.JsonFileManager;
+import bisq.common.util.GcUtil;
 import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Utils;
@@ -144,6 +145,8 @@ public class ExportJsonFilesService implements DaoSetupService {
                         return jsonTx;
                     }).collect(Collectors.toList());
 
+            GcUtil.maybeReleaseMemory();
+
             DaoState daoState = daoStateService.getClone();
             List<JsonBlock> jsonBlockList = daoState.getBlocks().stream()
                     .map(this::getJsonBlock)
@@ -154,6 +157,9 @@ public class ExportJsonFilesService implements DaoSetupService {
                 bsqStateFileManager.writeToDisc(Utilities.objectToJson(jsonBlocks), "blocks");
                 allJsonTxOutputs.forEach(jsonTxOutput -> txOutputFileManager.writeToDisc(Utilities.objectToJson(jsonTxOutput), jsonTxOutput.getId()));
                 jsonTxs.forEach(jsonTx -> txFileManager.writeToDisc(Utilities.objectToJson(jsonTx), jsonTx.getId()));
+
+                GcUtil.maybeReleaseMemory();
+
                 return null;
             });
 
