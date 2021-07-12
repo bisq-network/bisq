@@ -39,11 +39,6 @@ import bisq.cli.GrpcClient;
 
 /**
  * Convenience GrpcClient wrapper for bots using gRPC services.
- *
- * TODO Consider if the duplication smell is bad enough to force a BotClient user
- *  to use the GrpcClient instead (and delete this class).  But right now, I think it is
- *  OK because moving some of the non-gRPC related methods to GrpcClient is even smellier.
- *
  */
 @SuppressWarnings({"JavaDoc", "unused"})
 @Slf4j
