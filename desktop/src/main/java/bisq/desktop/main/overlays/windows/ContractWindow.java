@@ -189,9 +189,11 @@ public class ContractWindow extends Overlay<ContractWindow> {
                 nrOfDisputesAsBuyer + " / " + nrOfDisputesAsSeller);
 
         addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("shared.paymentDetails", Res.get("shared.buyer")),
-                contract.getBuyerPaymentAccountPayload().getPaymentDetails()).second.setMouseTransparent(false);
+                contract.getBuyerPaymentAccountPayload() != null ?
+                        contract.getBuyerPaymentAccountPayload().getPaymentDetails() : "NA").second.setMouseTransparent(false);
         addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("shared.paymentDetails", Res.get("shared.seller")),
-                sellerPaymentAccountPayload.getPaymentDetails()).second.setMouseTransparent(false);
+                sellerPaymentAccountPayload != null ?
+                        sellerPaymentAccountPayload.getPaymentDetails() : "NA").second.setMouseTransparent(false);
 
         String title = "";
         String agentKeyBaseUserName = "";

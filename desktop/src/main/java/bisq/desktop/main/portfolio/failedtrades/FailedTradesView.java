@@ -298,8 +298,10 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
             if (contract != null) {
                 isBuyerOnion = contract.getBuyerNodeAddress().getFullAddress().contains(filterString);
                 isSellerOnion = contract.getSellerNodeAddress().getFullAddress().contains(filterString);
-                matchesBuyersPaymentAccountData = contract.getBuyerPaymentAccountPayload().getPaymentDetails().contains(filterString);
-                matchesSellersPaymentAccountData = contract.getSellerPaymentAccountPayload().getPaymentDetails().contains(filterString);
+                matchesBuyersPaymentAccountData = contract.getBuyerPaymentAccountPayload() != null &&
+                        contract.getBuyerPaymentAccountPayload().getPaymentDetails().contains(filterString);
+                matchesSellersPaymentAccountData = contract.getSellerPaymentAccountPayload() != null &&
+                        contract.getSellerPaymentAccountPayload().getPaymentDetails().contains(filterString);
             }
             return isBuyerOnion || isSellerOnion ||
                     matchesBuyersPaymentAccountData || matchesSellersPaymentAccountData;
