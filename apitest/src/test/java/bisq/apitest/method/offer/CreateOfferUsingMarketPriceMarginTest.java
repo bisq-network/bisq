@@ -241,7 +241,6 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractOfferTest {
         double mktPriceAsDouble = aliceClient.getBtcPrice("usd");
         BigDecimal mktPrice = new BigDecimal(Double.toString(mktPriceAsDouble));
         BigDecimal triggerPrice = mktPrice.add(new BigDecimal("1000.9999"));
-        // TODO Duplicate this Price class logic in CLI.
         long triggerPriceAsLong = Price.parse("USD", triggerPrice.toString()).getValue();
 
         var newOffer = aliceClient.createMarketBasedPricedOffer(BUY.name(),
