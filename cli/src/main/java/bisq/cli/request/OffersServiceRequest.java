@@ -47,6 +47,12 @@ import bisq.cli.GrpcStubs;
 
 public class OffersServiceRequest {
 
+    private final Function<Long, String> scaledPriceStringRequestFormat = (price) -> {
+        BigDecimal factor = new BigDecimal(10).pow(4);
+        //noinspection BigDecimalMethodWithoutRoundingCalled
+        return new BigDecimal(price).divide(factor).toPlainString();
+    };
+
     private final GrpcStubs grpcStubs;
 
     public OffersServiceRequest(GrpcStubs grpcStubs) {
@@ -123,18 +129,11 @@ public class OffersServiceRequest {
         return grpcStubs.offersService.createOffer(request).getOffer();
     }
 
-    // TODO Make sure this is not duplicated anywhere on CLI side.
-    private final Function<Long, String> scaledPriceStringFormat = (price) -> {
-        BigDecimal factor = new BigDecimal(10).pow(4);
-        //noinspection BigDecimalMethodWithoutRoundingCalled
-        return new BigDecimal(price).divide(factor).toPlainString();
-    };
-
     public void editOfferActivationState(String offerId, int enable) {
         var offer = getMyOffer(offerId);
         var scaledPriceString = offer.getUseMarketBasedPrice()
                 ? "0.00"
-                : scaledPriceStringFormat.apply(offer.getPrice());
+                : scaledPriceStringRequestFormat.apply(offer.getPrice());
         editOffer(offerId,
                 scaledPriceString,
                 offer.getUseMarketBasedPrice(),
