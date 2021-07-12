@@ -221,15 +221,18 @@ public class SellerStep3View extends TradeStepView {
                     // Not expected
                     myPaymentDetails = ((AssetsAccountPayload) myPaymentAccountPayload).getAddress();
                 }
-                peersPaymentDetails = ((AssetsAccountPayload) peersPaymentAccountPayload).getAddress();
+                peersPaymentDetails = peersPaymentAccountPayload != null ?
+                        ((AssetsAccountPayload) peersPaymentAccountPayload).getAddress() : "NA";
                 myTitle = Res.get("portfolio.pending.step3_seller.yourAddress", currencyName);
                 peersTitle = Res.get("portfolio.pending.step3_seller.buyersAddress", currencyName);
             } else {
                 if (myPaymentDetails.isEmpty()) {
                     // Not expected
-                    myPaymentDetails = myPaymentAccountPayload.getPaymentDetails();
+                    myPaymentDetails = myPaymentAccountPayload != null ?
+                            myPaymentAccountPayload.getPaymentDetails() : "NA";
                 }
-                peersPaymentDetails = peersPaymentAccountPayload.getPaymentDetails();
+                peersPaymentDetails = peersPaymentAccountPayload != null ?
+                        peersPaymentAccountPayload.getPaymentDetails() : "NA";
                 myTitle = Res.get("portfolio.pending.step3_seller.yourAccount");
                 peersTitle = Res.get("portfolio.pending.step3_seller.buyersAccount");
             }

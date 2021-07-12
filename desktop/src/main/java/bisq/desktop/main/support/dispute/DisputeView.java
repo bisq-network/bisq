@@ -782,11 +782,11 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> implements
                         .append(")\n");
 
                 String buyerPaymentAccountPayload = Utilities.toTruncatedString(
-                        contract.getBuyerPaymentAccountPayload().getPaymentDetails().
-                                replace("\n", " ").replace(";", "."), 100);
+                        contract.getBuyerPaymentAccountPayload() != null ? contract.getBuyerPaymentAccountPayload().getPaymentDetails().
+                                replace("\n", " ").replace(";", ".") : "NA", 100);
                 String sellerPaymentAccountPayload = Utilities.toTruncatedString(
-                        contract.getSellerPaymentAccountPayload().getPaymentDetails()
-                                .replace("\n", " ").replace(";", "."), 100);
+                        contract.getSellerPaymentAccountPayload() != null ? contract.getSellerPaymentAccountPayload().getPaymentDetails()
+                                .replace("\n", " ").replace(";", ".") : "NA", 100);
                 String buyerNodeAddress = contract.getBuyerNodeAddress().getFullAddress();
                 String sellerNodeAddress = contract.getSellerNodeAddress().getFullAddress();
                 csvStringBuilder.append(currency).append(";")
