@@ -25,18 +25,17 @@ public class RSKSmartBitcoinTest extends AbstractAssetTest {
         super(new RSKSmartBitcoin());
     }
 
-	@Override
-	public void testValidAddresses() {
-		assertValidAddress("0x353c13b940aa5eed75aa97d477954289e7880bb8");
-		assertValidAddress("0x9f5304DA62A5408416Ea58A17a92611019bD5ce3");
-		assertValidAddress("0x180826b05452ce96E157F0708c43381Fee64a6B8");
+    @Override
+    public void testValidAddresses() {
+        assertValidAddress("0x353c13b940aa5eed75aa97d477954289e7880bb8");
+        assertValidAddress("0x9f5304DA62A5408416Ea58A17a92611019bD5ce3");
+        assertValidAddress("0x180826b05452ce96E157F0708c43381Fee64a6B8");
+    }
 
-	}
-
-	@Override
-	public void testInvalidAddresses() {
-		assertInvalidAddress("MxmFPEPzF19JFPU3VPrRXvUbPjMQXnQerY");
-		assertInvalidAddress("N22FRU9f3fx7Hty641D5cg95kRK6S3sbf3");
-		assertInvalidAddress("MxmFPEPzF19JFPU3VPrRXvUbPjMQXnQerY");
-	}
+    @Override
+    public void testInvalidAddresses() {
+        assertInvalidAddress("MxmFPEPzF19JFPU3VPrRXvUbPjMQXnQerY");
+        assertInvalidAddress("N22FRU9f3fx7Hty641D5cg95kRK6S3sbf3");
+        assertInvalidAddress("MxmFPEPzF19JFPU3VPrRXvUbPjMQXnQerY");
+    }
 }
