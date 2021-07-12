@@ -464,11 +464,13 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> implements
             return FilterResult.SELLER_NODE_ADDRESS;
         }
 
-        if (dispute.getContract().getBuyerPaymentAccountPayload().getPaymentDetails().toLowerCase().contains(filter)) {
+        if (dispute.getContract().getBuyerPaymentAccountPayload() != null &&
+                dispute.getContract().getBuyerPaymentAccountPayload().getPaymentDetails().toLowerCase().contains(filter)) {
             return FilterResult.BUYER_ACCOUNT_DETAILS;
         }
 
-        if (dispute.getContract().getSellerPaymentAccountPayload().getPaymentDetails().toLowerCase().contains(filter)) {
+        if (dispute.getContract().getSellerPaymentAccountPayload() != null &&
+                dispute.getContract().getSellerPaymentAccountPayload().getPaymentDetails().toLowerCase().contains(filter)) {
             return FilterResult.SELLER_ACCOUNT_DETAILS;
         }
 
