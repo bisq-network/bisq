@@ -412,7 +412,7 @@ configure(project(':desktop')) {
         modules =  ['javafx.controls', 'javafx.fxml']
     }
 
-    version = '1.7.0'
+    version = '1.7.1'
 
     jar.manifest.attributes(
         "Implementation-Title": project.name,
