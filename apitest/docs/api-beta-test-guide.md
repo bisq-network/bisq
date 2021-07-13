@@ -432,14 +432,14 @@ To disable an offer:
 ```
 ./bisq-cli --password=xyz --port=9998 editoffer \
     --offer-id=83e8b2e2-51b6-4f39-a748-3ebd29c22aea \
-    --enabled=false
+    --enable=false
 ```
 
 To enable an offer:
 ```
 ./bisq-cli --password=xyz --port=9998 editoffer \
     --offer-id=83e8b2e2-51b6-4f39-a748-3ebd29c22aea \
-    --enabled=true
+    --enable=true
 ```
 
 #### Change Offer Pricing Model
