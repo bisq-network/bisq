@@ -110,18 +110,23 @@ public abstract class PaymentAccount implements PersistablePayload {
         // We cannot remove it in the stream as it would cause a concurrentModificationException
         ngnTwOptional.ifPresent(tradeCurrencies::remove);
 
-        PaymentAccount account = PaymentAccountFactory.getPaymentAccount(PaymentMethod.getPaymentMethodById(paymentMethodId));
-        account.getTradeCurrencies().clear();
-        account.setId(proto.getId());
-        account.setCreationDate(proto.getCreationDate());
-        account.setAccountName(proto.getAccountName());
-        account.getTradeCurrencies().addAll(tradeCurrencies);
-        account.setPaymentAccountPayload(coreProtoResolver.fromProto(proto.getPaymentAccountPayload()));
+        try {
+            PaymentAccount account = PaymentAccountFactory.getPaymentAccount(PaymentMethod.getPaymentMethodById(paymentMethodId));
+            account.getTradeCurrencies().clear();
+            account.setId(proto.getId());
+            account.setCreationDate(proto.getCreationDate());
+            account.setAccountName(proto.getAccountName());
+            account.getTradeCurrencies().addAll(tradeCurrencies);
+            account.setPaymentAccountPayload(coreProtoResolver.fromProto(proto.getPaymentAccountPayload()));
 
-        if (proto.hasSelectedTradeCurrency())
-            account.setSelectedTradeCurrency(TradeCurrency.fromProto(proto.getSelectedTradeCurrency()));
+            if (proto.hasSelectedTradeCurrency())
+                account.setSelectedTradeCurrency(TradeCurrency.fromProto(proto.getSelectedTradeCurrency()));
 
-        return account;
+            return account;
+        } catch (RuntimeException e) {
+            log.warn("Could not load account: {}, exception: {}", paymentMethodId, e.toString());
+            return null;
+        }
     }
 
 
