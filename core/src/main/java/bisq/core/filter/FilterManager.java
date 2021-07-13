@@ -452,6 +452,7 @@ public class FilterManager {
 
     public boolean arePeersPaymentAccountDataBanned(PaymentAccountPayload paymentAccountPayload) {
         return getFilter() != null &&
+                paymentAccountPayload != null &&
                 getFilter().getBannedPaymentAccounts().stream()
                         .filter(paymentAccountFilter -> paymentAccountFilter.getPaymentMethodId().equals(
                                 paymentAccountPayload.getPaymentMethodId()))

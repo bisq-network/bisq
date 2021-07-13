@@ -285,6 +285,10 @@ public class AccountAgeWitnessService {
 
     Optional<AccountAgeWitness> findWitness(PaymentAccountPayload paymentAccountPayload,
                                             PubKeyRing pubKeyRing) {
+        if (paymentAccountPayload == null) {
+            return Optional.empty();
+        }
+
         byte[] accountInputDataWithSalt = getAccountInputDataWithSalt(paymentAccountPayload);
         byte[] hash = Hash.getSha256Ripemd160hash(Utilities.concatenateByteArrays(accountInputDataWithSalt,
                 pubKeyRing.getSignaturePubKeyBytes()));
