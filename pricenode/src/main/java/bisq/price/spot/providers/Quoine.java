@@ -22,6 +22,7 @@ import bisq.price.spot.ExchangeRateProvider;
 
 import org.knowm.xchange.quoine.QuoineExchange;
 
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
@@ -31,8 +32,8 @@ import java.util.Set;
 @Component
 class Quoine extends ExchangeRateProvider {
 
-    public Quoine() {
-        super("QUOINE", "quoine", Duration.ofMinutes(1));
+    public Quoine(Environment env) {
+        super(env, "QUOINE", "quoine", Duration.ofMinutes(1));
     }
 
     @Override

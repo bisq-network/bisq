@@ -22,6 +22,7 @@ import bisq.price.spot.ExchangeRateProvider;
 
 import org.knowm.xchange.bitbay.BitbayExchange;
 
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
@@ -31,8 +32,8 @@ import java.util.Set;
 @Component
 class Bitbay extends ExchangeRateProvider {
 
-    public Bitbay() {
-        super("BITBAY", "bitbay", Duration.ofMinutes(1));
+    public Bitbay(Environment env) {
+        super(env, "BITBAY", "bitbay", Duration.ofMinutes(1));
     }
 
     @Override

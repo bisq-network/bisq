@@ -536,6 +536,7 @@ configure(project(':pricenode')) {
         testRuntime("org.junit.jupiter:junit-jupiter-engine:$jupiterVersion")
         testCompileOnly "org.projectlombok:lombok:$lombokVersion"
         testAnnotationProcessor "org.projectlombok:lombok:$lombokVersion"
+        testCompile "org.mockito:mockito-core:$mockitoVersion"
     }
 
     test {

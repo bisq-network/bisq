@@ -22,6 +22,7 @@ import bisq.price.spot.ExchangeRateProvider;
 
 import org.knowm.xchange.btcmarkets.BTCMarketsExchange;
 
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
@@ -31,8 +32,8 @@ import java.util.Set;
 @Component
 class BTCMarkets extends ExchangeRateProvider {
 
-    public BTCMarkets() {
-        super("BTCMARKETS", "btcmarkets", Duration.ofMinutes(1));
+    public BTCMarkets(Environment env) {
+        super(env, "BTCMARKETS", "btcmarkets", Duration.ofMinutes(1));
     }
 
     @Override

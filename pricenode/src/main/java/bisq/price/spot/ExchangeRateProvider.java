@@ -33,11 +33,14 @@ import org.knowm.xchange.service.marketdata.MarketDataService;
 import org.knowm.xchange.service.marketdata.params.CurrencyPairsParam;
 import org.knowm.xchange.service.marketdata.params.Params;
 
+import org.springframework.core.env.Environment;
+
 import java.time.Duration;
 
 import java.io.IOException;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -59,21 +62,55 @@ import java.util.stream.Stream;
  */
 public abstract class ExchangeRateProvider extends PriceProvider<Set<ExchangeRate>> {
 
-    public static final Set<String> SUPPORTED_CRYPTO_CURRENCIES = CurrencyUtil.getAllSortedCryptoCurrencies().stream()
-            .map(TradeCurrency::getCode)
-            .collect(Collectors.toSet());
-
-    public static final Set<String> SUPPORTED_FIAT_CURRENCIES = CurrencyUtil.getAllSortedFiatCurrencies().stream()
-            .map(TradeCurrency::getCode)
-            .collect(Collectors.toSet());
-
+    private static Set<String> SUPPORTED_CRYPTO_CURRENCIES = new HashSet<>();
+    private static Set<String> SUPPORTED_FIAT_CURRENCIES = new HashSet<>();
     private final String name;
     private final String prefix;
+    private final Environment env;
 
-    public ExchangeRateProvider(String name, String prefix, Duration refreshInterval) {
+    public ExchangeRateProvider(Environment env, String name, String prefix, Duration refreshInterval) {
         super(refreshInterval);
         this.name = name;
         this.prefix = prefix;
+        this.env = env;
+    }
+
+    public Set<String> getSupportedFiatCurrencies() {
+        if (SUPPORTED_FIAT_CURRENCIES.isEmpty()) {         // one-time initialization
+            List<String> excludedFiatCurrencies =
+                    Arrays.asList(env.getProperty("bisq.price.fiatcurrency.excluded", "")
+                            .toUpperCase().trim().split("\\s*,\\s*"));
+            String validatedExclusionList = excludedFiatCurrencies.stream()
+                    .filter(ccy -> !ccy.isEmpty())
+                    .filter(CurrencyUtil::isFiatCurrency)
+                    .collect(Collectors.toList()).toString();
+            SUPPORTED_FIAT_CURRENCIES = CurrencyUtil.getAllSortedFiatCurrencies().stream()
+                    .map(TradeCurrency::getCode)
+                    .filter(ccy -> !validatedExclusionList.contains(ccy.toUpperCase()))
+                    .collect(Collectors.toSet());
+            log.info("fiat currencies excluded: {}", validatedExclusionList);
+            log.info("fiat currencies supported: {}", SUPPORTED_FIAT_CURRENCIES.size());
+        }
+        return SUPPORTED_FIAT_CURRENCIES;
+    }
+
+    public Set<String> getSupportedCryptoCurrencies() {
+        if (SUPPORTED_CRYPTO_CURRENCIES.isEmpty()) {        // one-time initialization
+            List<String> excludedCryptoCurrencies =
+                    Arrays.asList(env.getProperty("bisq.price.cryptocurrency.excluded", "")
+                            .toUpperCase().trim().split("\\s*,\\s*"));
+            String validatedExclusionList = excludedCryptoCurrencies.stream()
+                    .filter(ccy -> !ccy.isEmpty())
+                    .filter(CurrencyUtil::isCryptoCurrency)
+                    .collect(Collectors.toList()).toString();
+            SUPPORTED_CRYPTO_CURRENCIES = CurrencyUtil.getAllSortedCryptoCurrencies().stream()
+                    .map(TradeCurrency::getCode)
+                    .filter(ccy -> !validatedExclusionList.contains(ccy.toUpperCase()))
+                    .collect(Collectors.toSet());
+            log.info("crypto currencies excluded: {}", validatedExclusionList);
+            log.info("crypto currencies supported: {}", SUPPORTED_CRYPTO_CURRENCIES.size());
+        }
+        return SUPPORTED_CRYPTO_CURRENCIES;
     }
 
     public String getName() {
@@ -119,13 +156,13 @@ public abstract class ExchangeRateProvider extends PriceProvider<Set<ExchangeRat
         // Find the desired fiat pairs (pair format is BTC-FIAT)
         List<CurrencyPair> desiredFiatPairs = allCurrencyPairsOnExchange.stream()
                 .filter(cp -> cp.base.equals(Currency.BTC))
-                .filter(cp -> SUPPORTED_FIAT_CURRENCIES.contains(cp.counter.getCurrencyCode()))
+                .filter(cp -> getSupportedFiatCurrencies().contains(cp.counter.getCurrencyCode()))
                 .collect(Collectors.toList());
 
         // Find the desired altcoin pairs (pair format is ALT-BTC)
         List<CurrencyPair> desiredCryptoPairs = allCurrencyPairsOnExchange.stream()
                 .filter(cp -> cp.counter.equals(Currency.BTC))
-                .filter(cp -> SUPPORTED_CRYPTO_CURRENCIES.contains(cp.base.getCurrencyCode()))
+                .filter(cp -> getSupportedCryptoCurrencies().contains(cp.base.getCurrencyCode()))
                 .collect(Collectors.toList());
 
         // Retrieve in bulk all tickers offered by the exchange
