@@ -22,6 +22,7 @@ import bisq.proto.grpc.TxFeeRateInfo;
 import com.google.common.annotations.VisibleForTesting;
 
 import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.text.NumberFormat;
 
 import java.math.BigDecimal;
@@ -35,6 +36,9 @@ import static java.math.RoundingMode.UNNECESSARY;
 @VisibleForTesting
 public class CurrencyFormat {
 
+    // Use the US locale for all DecimalFormat objects.
+    private static final DecimalFormatSymbols DECIMAL_FORMAT_SYMBOLS = DecimalFormatSymbols.getInstance(Locale.US);
+
     // Formats numbers in US locale, human friendly style.
     private static final NumberFormat FRIENDLY_NUMBER_FORMAT = NumberFormat.getInstance(Locale.US);
 
@@ -42,12 +46,12 @@ public class CurrencyFormat {
     private static final DecimalFormat INTERNAL_FIAT_DECIMAL_FORMAT = new DecimalFormat("##############0.0000");
 
     static final BigDecimal SATOSHI_DIVISOR = new BigDecimal(100_000_000);
-    static final DecimalFormat BTC_FORMAT = new DecimalFormat("###,##0.00000000");
-    static final DecimalFormat BTC_TX_FEE_FORMAT = new DecimalFormat("###,###,##0");
+    static final DecimalFormat BTC_FORMAT = new DecimalFormat("###,##0.00000000", DECIMAL_FORMAT_SYMBOLS);
+    static final DecimalFormat BTC_TX_FEE_FORMAT = new DecimalFormat("###,###,##0", DECIMAL_FORMAT_SYMBOLS);
 
     static final BigDecimal BSQ_SATOSHI_DIVISOR = new BigDecimal(100);
-    static final DecimalFormat BSQ_FORMAT = new DecimalFormat("###,###,###,##0.00");
-    static final DecimalFormat SEND_BSQ_FORMAT = new DecimalFormat("###########0.00");
+    static final DecimalFormat BSQ_FORMAT = new DecimalFormat("###,###,###,##0.00", DECIMAL_FORMAT_SYMBOLS);
+    static final DecimalFormat SEND_BSQ_FORMAT = new DecimalFormat("###########0.00", DECIMAL_FORMAT_SYMBOLS);
 
     static final BigDecimal SECURITY_DEPOSIT_MULTIPLICAND = new BigDecimal("0.01");
 
@@ -62,7 +66,6 @@ public class CurrencyFormat {
     }
 
     public static String formatBsqAmount(long bsqSats) {
-        // BSQ sats = trade.getOffer().getVolume()
         FRIENDLY_NUMBER_FORMAT.setMinimumFractionDigits(2);
         FRIENDLY_NUMBER_FORMAT.setMaximumFractionDigits(2);
         FRIENDLY_NUMBER_FORMAT.setRoundingMode(HALF_UP);
