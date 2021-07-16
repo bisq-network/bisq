@@ -22,6 +22,7 @@ import bisq.price.spot.ExchangeRateProvider;
 
 import org.knowm.xchange.bitfinex.BitfinexExchange;
 
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
@@ -31,8 +32,8 @@ import java.util.Set;
 @Component
 class Bitfinex extends ExchangeRateProvider {
 
-    public Bitfinex() {
-        super("BITFINEX", "bitfinex", Duration.ofMinutes(1));
+    public Bitfinex(Environment env) {
+        super(env, "BITFINEX", "bitfinex", Duration.ofMinutes(1));
     }
 
     @Override

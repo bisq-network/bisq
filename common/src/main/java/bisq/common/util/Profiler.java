@@ -17,18 +17,30 @@
 
 package bisq.common.util;
 
+import bisq.common.UserThread;
+
+import java.util.concurrent.TimeUnit;
+
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class Profiler {
+    public static void printSystemLoadPeriodically(long delay, TimeUnit timeUnit) {
+        UserThread.runPeriodically(Profiler::printSystemLoad, delay, timeUnit);
+    }
+
     public static void printSystemLoad() {
         Runtime runtime = Runtime.getRuntime();
-        long free = runtime.freeMemory() / 1024 / 1024;
-        long total = runtime.totalMemory() / 1024 / 1024;
+        long free = runtime.freeMemory();
+        long total = runtime.totalMemory();
         long used = total - free;
 
-        log.info("System report: Used memory: {} MB; Free memory: {} MB; Total memory: {} MB; No. of threads: {}",
-                used, free, total, Thread.activeCount());
+        log.info("Total memory: {}; Used memory: {}; Free memory: {}; Max memory: {}; No. of threads: {}",
+                Utilities.readableFileSize(total),
+                Utilities.readableFileSize(used),
+                Utilities.readableFileSize(free),
+                Utilities.readableFileSize(runtime.maxMemory()),
+                Thread.activeCount());
     }
 
     public static long getUsedMemoryInMB() {

@@ -23,6 +23,7 @@ import bisq.common.app.DevEnv;
 import bisq.common.app.Log;
 import bisq.common.app.Version;
 import bisq.common.config.Config;
+import bisq.common.util.GcUtil;
 import bisq.common.util.Profiler;
 import bisq.common.util.Utilities;
 
@@ -54,15 +55,14 @@ public class CommonSetup {
         Version.printVersion();
         maybePrintPathOfCodeSource();
         Profiler.printSystemLoad();
+        Profiler.printSystemLoadPeriodically(10, TimeUnit.MINUTES);
+
+        GcUtil.autoReleaseMemory();
 
         setSystemProperties();
         setupSigIntHandlers(gracefulShutDownHandler);
 
         DevEnv.setup(config);
-    }
-
-    public static void printSystemLoadPeriodically(int delayMin) {
-        UserThread.runPeriodically(Profiler::printSystemLoad, delayMin, TimeUnit.MINUTES);
     }
 
     public static void setupUncaughtExceptionHandler(UncaughtExceptionHandler uncaughtExceptionHandler) {

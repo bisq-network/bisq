@@ -15,22 +15,15 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.price.spot.providers;
+package bisq.asset.coins;
 
-import bisq.price.AbstractExchangeRateProviderTest;
+import bisq.asset.Coin;
+import bisq.asset.EtherAddressValidator;
+import bisq.asset.I18n;
 
-import org.springframework.core.env.StandardEnvironment;
+public class RSKSmartBitcoin extends Coin {
 
-import lombok.extern.slf4j.Slf4j;
-
-import org.junit.jupiter.api.Test;
-
-@Slf4j
-public class CoinpaprikaTest extends AbstractExchangeRateProviderTest {
-
-    @Test
-    public void doGet_successfulCall() {
-        doGet_successfulCall(new Coinpaprika(new StandardEnvironment()));
+    public RSKSmartBitcoin() {
+        super("RSK Smart Bitcoin", "R-BTC", new EtherAddressValidator(I18n.DISPLAY_STRINGS.getString("account.altcoin.popup.validation.RBTC")));
     }
-
 }

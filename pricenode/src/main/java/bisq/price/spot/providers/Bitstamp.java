@@ -22,6 +22,7 @@ import bisq.price.spot.ExchangeRateProvider;
 
 import org.knowm.xchange.bitstamp.BitstampExchange;
 
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
@@ -31,8 +32,8 @@ import java.util.Set;
 @Component
 class Bitstamp extends ExchangeRateProvider {
 
-    public Bitstamp() {
-        super("BITSTAMP", "bitstamp", Duration.ofMinutes(1));
+    public Bitstamp(Environment env) {
+        super(env, "BITSTAMP", "bitstamp", Duration.ofMinutes(1));
     }
 
     @Override

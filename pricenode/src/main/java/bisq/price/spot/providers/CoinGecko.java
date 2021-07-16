@@ -22,6 +22,7 @@ import bisq.price.spot.ExchangeRateProvider;
 import bisq.price.util.coingecko.CoinGeckoMarketData;
 
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.core.env.Environment;
 import org.springframework.http.RequestEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
@@ -44,8 +45,8 @@ class CoinGecko extends ExchangeRateProvider {
 
     private final RestTemplate restTemplate = new RestTemplate();
 
-    public CoinGecko() {
-        super("COINGECKO", "coingecko", Duration.ofMinutes(1));
+    public CoinGecko(Environment env) {
+        super(env, "COINGECKO", "coingecko", Duration.ofMinutes(1));
     }
 
     @Override
@@ -56,8 +57,8 @@ class CoinGecko extends ExchangeRateProvider {
 
         Set<ExchangeRate> result = new HashSet<ExchangeRate>();
 
-        Predicate<Map.Entry> isDesiredFiatPair = t -> SUPPORTED_FIAT_CURRENCIES.contains(t.getKey());
-        Predicate<Map.Entry> isDesiredCryptoPair = t -> SUPPORTED_CRYPTO_CURRENCIES.contains(t.getKey());
+        Predicate<Map.Entry> isDesiredFiatPair = t -> getSupportedFiatCurrencies().contains(t.getKey());
+        Predicate<Map.Entry> isDesiredCryptoPair = t -> getSupportedCryptoCurrencies().contains(t.getKey());
 
         getMarketData().getRates().entrySet().stream()
                 .filter(isDesiredFiatPair.or(isDesiredCryptoPair))
@@ -65,7 +66,7 @@ class CoinGecko extends ExchangeRateProvider {
                 .forEach((key, ticker) -> {
 
                     boolean useInverseRate = false;
-                    if (SUPPORTED_CRYPTO_CURRENCIES.contains(key)) {
+                    if (getSupportedCryptoCurrencies().contains(key)) {
                         // Use inverse rate for alts, because the API returns the
                         // conversion rate in the opposite direction than what we need
                         // API returns the BTC/Alt rate, we need the Alt/BTC rate

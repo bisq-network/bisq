@@ -22,6 +22,7 @@ import bisq.price.spot.ExchangeRateProvider;
 
 import org.knowm.xchange.luno.LunoExchange;
 
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
@@ -31,8 +32,8 @@ import java.util.Set;
 @Component
 class Luno extends ExchangeRateProvider {
 
-    public Luno() {
-        super("LUNO", "luno", Duration.ofMinutes(1));
+    public Luno(Environment env) {
+        super(env, "LUNO", "luno", Duration.ofMinutes(1));
     }
 
     @Override

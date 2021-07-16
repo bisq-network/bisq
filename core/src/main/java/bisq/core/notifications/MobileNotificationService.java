@@ -62,8 +62,8 @@ public class MobileNotificationService {
     // duplicated in relay and here. Must not be changed.
     private static final String SUCCESS = "success";
     private static final String DEV_URL_LOCALHOST = "http://localhost:8080/";
-    private static final String DEV_URL = "http://165.227.40.124:8080/";
-    private static final String URL = "http://jtboonrvwmq7frkj.onion/";
+    private static final String DEV_URL = "http://172.105.9.31:8080/";
+    private static final String URL = "http://bisqpushv56wo32w2dv7xacvvcrnow6gud5vkvftwsgevczmspzvqgad.onion/";
     private static final String BISQ_MESSAGE_IOS_MAGIC = "BisqMessageiOS";
     private static final String BISQ_MESSAGE_ANDROID_MAGIC = "BisqMessageAndroid";
 

@@ -26,6 +26,7 @@ import bisq.common.file.FileUtil;
 import bisq.common.handlers.ResultHandler;
 import bisq.common.proto.persistable.PersistableEnvelope;
 import bisq.common.proto.persistable.PersistenceProtoResolver;
+import bisq.common.util.GcUtil;
 import bisq.common.util.Utilities;
 
 import com.google.inject.Inject;
@@ -319,7 +320,11 @@ public class PersistenceManager<T extends PersistableEnvelope> {
         new Thread(() -> {
             T persisted = getPersisted(fileName);
             if (persisted != null) {
-                UserThread.execute(() -> resultHandler.accept(persisted));
+                UserThread.execute(() -> {
+                    resultHandler.accept(persisted);
+
+                    GcUtil.maybeReleaseMemory();
+                });
             } else {
                 UserThread.execute(orElse);
             }
@@ -496,6 +501,8 @@ public class PersistenceManager<T extends PersistableEnvelope> {
             if (completeHandler != null) {
                 UserThread.execute(completeHandler);
             }
+
+            GcUtil.maybeReleaseMemory();
         }
     }
 

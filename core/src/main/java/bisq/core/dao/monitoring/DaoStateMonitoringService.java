@@ -40,6 +40,7 @@ import bisq.common.UserThread;
 import bisq.common.config.Config;
 import bisq.common.crypto.Hash;
 import bisq.common.file.FileUtil;
+import bisq.common.util.GcUtil;
 import bisq.common.util.Utilities;
 
 import javax.inject.Inject;
@@ -303,10 +304,10 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
                     height, daoStateBlockChain.getLast().getHeight());
             prevHash = daoStateBlockChain.getLast().getHash();
         }
-        byte[] stateHash = daoStateService.getSerializedStateForHashChain();
+        byte[] stateAsBytes = daoStateService.getSerializedStateForHashChain();
         // We include the prev. hash in our new hash so we can be sure that if one hash is matching all the past would
         // match as well.
-        byte[] combined = ArrayUtils.addAll(prevHash, stateHash);
+        byte[] combined = ArrayUtils.addAll(prevHash, stateAsBytes);
         byte[] hash = Hash.getSha256Ripemd160hash(combined);
 
         DaoStateHash myDaoStateHash = new DaoStateHash(height, hash, prevHash);
@@ -333,8 +334,11 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
         numCalls++;
     }
 
-    private boolean processPeersDaoStateHash(DaoStateHash daoStateHash, Optional<NodeAddress> peersNodeAddress,
+    private boolean processPeersDaoStateHash(DaoStateHash daoStateHash,
+                                             Optional<NodeAddress> peersNodeAddress,
                                              boolean notifyListeners) {
+        GcUtil.maybeReleaseMemory();
+
         AtomicBoolean changed = new AtomicBoolean(false);
         AtomicBoolean inConflictWithNonSeedNode = new AtomicBoolean(this.isInConflictWithNonSeedNode);
         AtomicBoolean inConflictWithSeedNode = new AtomicBoolean(this.isInConflictWithSeedNode);
@@ -374,10 +378,11 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
                 log.debug("Conflict with non-seed nodes: {}", conflictMsg);
         }
 
-
         if (notifyListeners && changed.get()) {
             listeners.forEach(Listener::onChangeAfterBatchProcessing);
         }
+
+        GcUtil.maybeReleaseMemory();
 
         return changed.get();
     }

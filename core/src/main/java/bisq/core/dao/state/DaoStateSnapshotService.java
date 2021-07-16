@@ -24,6 +24,7 @@ import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.dao.state.storage.DaoStateStorageService;
 
 import bisq.common.config.Config;
+import bisq.common.util.GcUtil;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -63,6 +64,7 @@ public class DaoStateSnapshotService {
     @Setter
     @Nullable
     private Runnable daoRequiresRestartHandler;
+    private boolean requestPersistenceCalled;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -101,24 +103,43 @@ public class DaoStateSnapshotService {
                 !daoStateService.getBlocks().isEmpty() &&
                 isValidHeight(daoStateService.getBlockHeightOfLastBlock()) &&
                 noSnapshotCandidateOrDifferentHeight) {
-            // At trigger event we store the latest snapshotCandidate to disc
-            long ts = System.currentTimeMillis();
-            if (daoStateSnapshotCandidate != null) {
-                // Serialisation happens on the userThread so we do not need to clone the data. Write to disk happens
-                // in a thread but does not interfere with our objects as they got already serialized when passed to the
-                // write thread. We use requestPersistence so we do not write immediately but at next scheduled interval.
-                // This avoids frequent write at dao sync and better performance.
-                daoStateStorageService.requestPersistence(daoStateSnapshotCandidate, daoStateHashChainSnapshotCandidate);
-                log.info("Serializing snapshotCandidate for writing to Disc with height {} at height {} took {} ms",
-                        daoStateSnapshotCandidate.getChainHeight(), chainHeight, System.currentTimeMillis() - ts);
+
+            // We protect to get called while we are not completed with persisting the daoState. This can take about
+            // 20 seconds and it is not expected that we get triggered another snapshot event in that period, but this
+            // check guards that we would skip such calls..
+            if (requestPersistenceCalled) {
+                log.warn("We try to persist a daoState but the previous call has not completed yet. " +
+                        "We ignore that call and skip that snapshot. " +
+                        "Snapshot will be created at next snapshot height again. This is not to be expected with live " +
+                        "blockchain data.");
+                return;
             }
 
-            ts = System.currentTimeMillis();
-            // Now we clone and keep it in memory for the next trigger event
-            daoStateSnapshotCandidate = daoStateService.getClone();
-            daoStateHashChainSnapshotCandidate = new LinkedList<>(daoStateMonitoringService.getDaoStateHashChain());
+            GcUtil.maybeReleaseMemory();
 
-            log.debug("Cloned new snapshotCandidate at height {} took {} ms", chainHeight, System.currentTimeMillis() - ts);
+            // At trigger event we store the latest snapshotCandidate to disc
+            long ts = System.currentTimeMillis();
+            requestPersistenceCalled = true;
+            daoStateStorageService.requestPersistence(daoStateSnapshotCandidate,
+                    daoStateHashChainSnapshotCandidate,
+                    () -> {
+                        log.info("Serializing snapshotCandidate for writing to Disc with height {} at height {} took {} ms",
+                                daoStateSnapshotCandidate != null ? daoStateSnapshotCandidate.getChainHeight() : "N/A",
+                                chainHeight,
+                                System.currentTimeMillis() - ts);
+
+                        long ts2 = System.currentTimeMillis();
+
+                        GcUtil.maybeReleaseMemory();
+
+                        // Now we clone and keep it in memory for the next trigger event
+                        daoStateSnapshotCandidate = daoStateService.getClone();
+                        daoStateHashChainSnapshotCandidate = new LinkedList<>(daoStateMonitoringService.getDaoStateHashChain());
+
+                        log.info("Cloned new snapshotCandidate at height {} took {} ms", chainHeight, System.currentTimeMillis() - ts2);
+                        requestPersistenceCalled = false;
+                        GcUtil.maybeReleaseMemory();
+                    });
         }
     }
 
