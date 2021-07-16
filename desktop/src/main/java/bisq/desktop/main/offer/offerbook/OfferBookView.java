@@ -1052,11 +1052,13 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                             tableRow.setOnMousePressed(null);
                                         } else {
                                             button.setDefaultButton(false);
-                                            tableRow.setOnMousePressed(e -> {
-                                                // ugly hack to get the icon clickable when deactivated
-                                                if (!(e.getTarget() instanceof ImageView || e.getTarget() instanceof Canvas))
-                                                    onShowInfo(offer, canTakeOfferResult);
-                                            });
+                                            if (!myOffer) {
+                                                tableRow.setOnMousePressed(e -> {
+                                                    // ugly hack to get the icon clickable when deactivated
+                                                    if (!(e.getTarget() instanceof ImageView || e.getTarget() instanceof Canvas))
+                                                        onShowInfo(offer, canTakeOfferResult);
+                                                });
+                                            }
                                         }
                                     }
 
