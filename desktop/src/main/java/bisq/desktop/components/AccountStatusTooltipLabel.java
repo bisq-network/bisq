@@ -27,25 +27,32 @@ import bisq.core.locale.Res;
 import bisq.core.offer.OfferRestrictions;
 import bisq.core.util.coin.CoinFormatter;
 
-import de.jensd.fx.fontawesome.AwesomeIcon;
+import bisq.common.UserThread;
+
+import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 
 import javafx.scene.Node;
 import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
 
+import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+
+import java.util.concurrent.TimeUnit;
 
 
 public class AccountStatusTooltipLabel extends AutoTooltipLabel {
 
     public static final int DEFAULT_WIDTH = 300;
     private final Node textIcon;
-    private final PopOverWrapper popoverWrapper = new PopOverWrapper();
     private final OfferBookListItem.WitnessAgeData witnessAgeData;
     private final String popupTitle;
+    private PopOver popOver;
+    private boolean keepPopOverVisible = false;
 
     public AccountStatusTooltipLabel(OfferBookListItem.WitnessAgeData witnessAgeData,
                                      CoinFormatter formatter) {
@@ -62,8 +69,15 @@ public class AccountStatusTooltipLabel extends AutoTooltipLabel {
     private void positionAndActivateIcon() {
         textIcon.setOpacity(0.4);
         textIcon.getStyleClass().add("tooltip-icon");
-        textIcon.setOnMouseEntered(e -> popoverWrapper.showPopOver(this::createPopOver));
-        textIcon.setOnMouseExited(e -> popoverWrapper.hidePopOver());
+        popOver = createPopOver();
+        textIcon.setOnMouseEntered(e -> showPopup(textIcon));
+
+        textIcon.setOnMouseExited(e -> UserThread.runAfter(() -> {
+                    if (!keepPopOverVisible) {
+                        popOver.hide();
+                    }
+                }, 200, TimeUnit.MILLISECONDS)
+        );
 
         setGraphic(textIcon);
         setContentDisplay(ContentDisplay.RIGHT);
@@ -73,15 +87,14 @@ public class AccountStatusTooltipLabel extends AutoTooltipLabel {
         Label titleLabel = new Label(popupTitle);
         titleLabel.setMaxWidth(DEFAULT_WIDTH);
         titleLabel.setWrapText(true);
-        titleLabel.setPadding(new Insets(10, 10, 2, 10));
-        titleLabel.getStyleClass().add("bold-text");
-        titleLabel.getStyleClass().add("default-text");
+        titleLabel.setPadding(new Insets(10, 10, 0, 10));
+        titleLabel.getStyleClass().add("account-status-title");
 
         Label infoLabel = new Label(witnessAgeData.getInfo());
         infoLabel.setMaxWidth(DEFAULT_WIDTH);
         infoLabel.setWrapText(true);
-        infoLabel.setPadding(new Insets(2, 10, 2, 10));
-        infoLabel.getStyleClass().add("default-text");
+        infoLabel.setPadding(new Insets(0, 10, 4, 10));
+        infoLabel.getStyleClass().add("small-text");
 
         Label buyLabel = createDetailsItem(
                 Res.get("offerbook.timeSinceSigning.tooltip.checkmark.buyBtc"),
@@ -92,46 +105,60 @@ public class AccountStatusTooltipLabel extends AutoTooltipLabel {
                 witnessAgeData.isLimitLifted()
         );
 
-        Hyperlink learnMoreLink = new Hyperlink(Res.get("offerbook.timeSinceSigning.tooltip.learnMore"));
+        Hyperlink learnMoreLink = new ExternalHyperlink(Res.get("offerbook.timeSinceSigning.tooltip.learnMore"),
+                null,
+                "0.769em");
         learnMoreLink.setMaxWidth(DEFAULT_WIDTH);
         learnMoreLink.setWrapText(true);
         learnMoreLink.setPadding(new Insets(10, 10, 2, 10));
-        learnMoreLink.getStyleClass().add("very-small-text");
+        learnMoreLink.getStyleClass().addAll("very-small-text");
         learnMoreLink.setOnAction((e) -> GUIUtil.openWebPage("https://bisq.wiki/Account_limits"));
 
         VBox vBox = new VBox(2, titleLabel, infoLabel, buyLabel, waitLabel, learnMoreLink);
         vBox.setPadding(new Insets(2, 0, 2, 0));
         vBox.setAlignment(Pos.CENTER_LEFT);
 
+
         PopOver popOver = new PopOver(vBox);
-        if (textIcon.getScene() != null) {
-            popOver.setDetachable(false);
-            popOver.setArrowLocation(PopOver.ArrowLocation.LEFT_CENTER);
-            popOver.show(textIcon, -10);
-        }
+        popOver.setArrowLocation(PopOver.ArrowLocation.LEFT_CENTER);
+
+        vBox.setOnMouseEntered(mouseEvent -> keepPopOverVisible = true);
+
+        vBox.setOnMouseExited(mouseEvent -> {
+            keepPopOverVisible = false;
+            popOver.hide();
+        });
+
         return popOver;
     }
 
+    private void showPopup(Node textIcon) {
+        Bounds bounds = textIcon.localToScreen(textIcon.getBoundsInLocal());
+        popOver.show(textIcon, bounds.getMaxX() + 10, (bounds.getMinY() + bounds.getHeight() / 2) - 10);
+    }
+
     private Label createDetailsItem(String text, boolean active) {
-        Label icon = FormBuilder.getIcon(active ? AwesomeIcon.OK_SIGN : AwesomeIcon.REMOVE_SIGN);
-        icon.setLayoutY(4);
-        icon.getStyleClass().add("icon");
+        Label label = new Label(text);
+        label.setMaxWidth(DEFAULT_WIDTH);
+        label.setWrapText(true);
+        label.setPadding(new Insets(0, 10, 0, 10));
+        label.getStyleClass().add("small-text");
         if (active) {
-            icon.getStyleClass().add("highlight");
+            label.setStyle("-fx-text-fill: -fx-accent");
+        } else {
+            label.setStyle("-fx-text-fill: -bs-color-gray-dim");
+        }
+
+        Text icon = FormBuilder.getSmallIconForLabel(active ?
+                MaterialDesignIcon.CHECKBOX_MARKED_CIRCLE : MaterialDesignIcon.CLOSE_CIRCLE, label);
+        icon.setLayoutY(4);
+
+        if (active) {
+            icon.getStyleClass().add("account-status-active-info-item");
         } else {
             icon.getStyleClass().add("account-status-inactive-info-item");
         }
 
-        Label label = new Label(text, icon);
-        label.setMaxWidth(DEFAULT_WIDTH);
-        label.setWrapText(true);
-        label.setPadding(new Insets(0, 10, 0, 10));
-        label.getStyleClass().addAll("small-text");
-        if (active) {
-            label.getStyleClass().add("success-text");
-        } else {
-            label.getStyleClass().add("account-status-inactive-info-item");
-        }
         return label;
     }
 }
