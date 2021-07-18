@@ -40,6 +40,7 @@ import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.dao.DaoFacade;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
+import bisq.core.offer.OfferRestrictions;
 import bisq.core.support.SupportType;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeList;
@@ -59,6 +60,8 @@ import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.CoinFormatter;
 
 import bisq.network.p2p.NodeAddress;
+import bisq.network.p2p.P2PService;
+import bisq.network.utils.Utils;
 
 import bisq.common.UserThread;
 import bisq.common.crypto.KeyRing;
@@ -110,6 +113,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -151,6 +155,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> implements
 
     protected final DisputeManager<? extends DisputeList<Dispute>> disputeManager;
     protected final KeyRing keyRing;
+    private final P2PService p2PService;
     private final TradeManager tradeManager;
     protected final CoinFormatter formatter;
     protected final Preferences preferences;
@@ -195,6 +200,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> implements
 
     public DisputeView(DisputeManager<? extends DisputeList<Dispute>> disputeManager,
                        KeyRing keyRing,
+                       P2PService p2PService,
                        TradeManager tradeManager,
                        CoinFormatter formatter,
                        Preferences preferences,
@@ -209,6 +215,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> implements
                        boolean useDevPrivilegeKeys) {
         this.disputeManager = disputeManager;
         this.keyRing = keyRing;
+        this.p2PService = p2PService;
         this.tradeManager = tradeManager;
         this.formatter = formatter;
         this.preferences = preferences;
@@ -457,11 +464,13 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> implements
             return FilterResult.SELLER_NODE_ADDRESS;
         }
 
-        if (dispute.getContract().getBuyerPaymentAccountPayload().getPaymentDetails().toLowerCase().contains(filter)) {
+        if (dispute.getContract().getBuyerPaymentAccountPayload() != null &&
+                dispute.getContract().getBuyerPaymentAccountPayload().getPaymentDetails().toLowerCase().contains(filter)) {
             return FilterResult.BUYER_ACCOUNT_DETAILS;
         }
 
-        if (dispute.getContract().getSellerPaymentAccountPayload().getPaymentDetails().toLowerCase().contains(filter)) {
+        if (dispute.getContract().getSellerPaymentAccountPayload() != null &&
+                dispute.getContract().getSellerPaymentAccountPayload().getPaymentDetails().toLowerCase().contains(filter)) {
             return FilterResult.SELLER_ACCOUNT_DETAILS;
         }
 
@@ -498,8 +507,9 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> implements
     // a derived version in the ClientView for users pops up an "Are you sure" box first.
     // this version includes the sending of an automatic message to the user, see addMediationReOpenedMessage
     protected void reOpenDisputeFromButton() {
-        reOpenDispute();
-        disputeManager.addMediationReOpenedMessage(selectedDispute, false);
+        if (reOpenDispute()) {
+            disputeManager.addMediationReOpenedMessage(selectedDispute, false);
+        }
     }
 
     // only applicable to traders
@@ -520,13 +530,31 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> implements
         // overridden by clients that use it (dispute agents)
     }
 
-    protected void reOpenDispute() {
-        if (selectedDispute != null && selectedDispute.isClosed()) {
+    protected boolean reOpenDispute() {
+        if (selectedDispute != null &&
+                selectedDispute.isClosed() &&
+                isNodeAddressOk(selectedDispute,
+                        !disputeManager.isTrader(selectedDispute))) {
             selectedDispute.reOpen();
             handleOnProcessDispute(selectedDispute);
             disputeManager.requestPersistence();
             onSelectDispute(selectedDispute);
+            return true;
+        } else {
+            new Popup().warning(Res.get("support.reOpenByTrader.failed")).show();
+            return false;
         }
+    }
+
+    private boolean isNodeAddressOk(Dispute dispute, boolean isMediator) {
+        NodeAddress disputeNodeAddress = isMediator ? dispute.getContract().getMediatorNodeAddress() :
+                dispute.getContract().getMyNodeAddress(keyRing.getPubKeyRing());
+
+        if (OfferRestrictions.requiresNodeAddressUpdate() && !Utils.isV3Address(disputeNodeAddress.getHostName())) {
+            return false;
+        }
+
+        return Objects.equals(p2PService.getNetworkNode().getNodeAddress(), disputeNodeAddress);
     }
 
 
@@ -754,11 +782,11 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> implements
                         .append(")\n");
 
                 String buyerPaymentAccountPayload = Utilities.toTruncatedString(
-                        contract.getBuyerPaymentAccountPayload().getPaymentDetails().
-                                replace("\n", " ").replace(";", "."), 100);
+                        contract.getBuyerPaymentAccountPayload() != null ? contract.getBuyerPaymentAccountPayload().getPaymentDetails().
+                                replace("\n", " ").replace(";", ".") : "NA", 100);
                 String sellerPaymentAccountPayload = Utilities.toTruncatedString(
-                        contract.getSellerPaymentAccountPayload().getPaymentDetails()
-                                .replace("\n", " ").replace(";", "."), 100);
+                        contract.getSellerPaymentAccountPayload() != null ? contract.getSellerPaymentAccountPayload().getPaymentDetails()
+                                .replace("\n", " ").replace(";", ".") : "NA", 100);
                 String buyerNodeAddress = contract.getBuyerNodeAddress().getFullAddress();
                 String sellerNodeAddress = contract.getSellerNodeAddress().getFullAddress();
                 csvStringBuilder.append(currency).append(";")

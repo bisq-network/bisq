@@ -22,6 +22,7 @@ import bisq.price.spot.ExchangeRateProvider;
 
 import org.knowm.xchange.bitflyer.BitflyerExchange;
 
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
@@ -31,8 +32,8 @@ import java.util.Set;
 @Component
 class Bitflyer extends ExchangeRateProvider {
 
-    public Bitflyer() {
-        super("BITFLYER", "bitflyer", Duration.ofMinutes(1));
+    public Bitflyer(Environment env) {
+        super(env, "BITFLYER", "bitflyer", Duration.ofMinutes(1));
     }
 
     @Override

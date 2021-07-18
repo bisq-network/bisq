@@ -33,6 +33,7 @@ import bisq.common.proto.persistable.PersistableEnvelope;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -132,6 +133,7 @@ public class UserPayload implements PersistableEnvelope {
                 ProtoUtil.stringOrNullFromProto(proto.getAccountId()),
                 proto.getPaymentAccountsList().isEmpty() ? new HashSet<>() : new HashSet<>(proto.getPaymentAccountsList().stream()
                         .map(e -> PaymentAccount.fromProto(e, coreProtoResolver))
+                        .filter(Objects::nonNull)
                         .collect(Collectors.toSet())),
                 proto.hasCurrentPaymentAccount() ? PaymentAccount.fromProto(proto.getCurrentPaymentAccount(), coreProtoResolver) : null,
                 proto.getAcceptedLanguageLocaleCodesList().isEmpty() ? new ArrayList<>() : new ArrayList<>(proto.getAcceptedLanguageLocaleCodesList()),

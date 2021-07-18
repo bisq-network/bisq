@@ -21,6 +21,7 @@ import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.trade.Trade;
 import bisq.core.trade.messages.InputsForDepositTxResponse;
+import bisq.core.trade.protocol.ProcessModel;
 import bisq.core.trade.protocol.tasks.TradeTask;
 
 import bisq.network.p2p.NodeAddress;
@@ -72,9 +73,14 @@ public abstract class MakerSendsInputsForDepositTxResponse extends TradeTask {
             // This is used for verifying the peers account age witness
             PrivateKey privateKey = processModel.getKeyRing().getSignatureKeyPair().getPrivate();
             byte[] signatureOfNonce = Sig.sign(privateKey, preparedDepositTx);
+
+            // From 1.7.0 on we do not send the payment account data but only the hash.
+            // For backward compatibility we still keep the fields but set it to null
+            byte[] hashOfMakersPaymentAccountPayload = ProcessModel.hashOfPaymentAccountPayload(processModel.getPaymentAccountPayload(trade));
+            String makersPaymentMethodId = checkNotNull(processModel.getPaymentAccountPayload(trade)).getPaymentMethodId();
             InputsForDepositTxResponse message = new InputsForDepositTxResponse(
                     processModel.getOfferId(),
-                    checkNotNull(processModel.getPaymentAccountPayload(trade)),
+                    null,
                     processModel.getAccountId(),
                     makerMultiSigPubKey,
                     trade.getContractAsJson(),
@@ -86,7 +92,9 @@ public abstract class MakerSendsInputsForDepositTxResponse extends TradeTask {
                     UUID.randomUUID().toString(),
                     signatureOfNonce,
                     new Date().getTime(),
-                    trade.getLockTime());
+                    trade.getLockTime(),
+                    hashOfMakersPaymentAccountPayload,
+                    makersPaymentMethodId);
 
             trade.setState(Trade.State.MAKER_SENT_PUBLISH_DEPOSIT_TX_REQUEST);
             processModel.getTradeManager().requestPersistence();

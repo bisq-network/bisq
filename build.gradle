@@ -412,7 +412,7 @@ configure(project(':desktop')) {
         modules =  ['javafx.controls', 'javafx.fxml']
     }
 
-    version = '1.6.5-SNAPSHOT'
+    version = '1.7.1-SNAPSHOT'
 
     jar.manifest.attributes(
         "Implementation-Title": project.name,
@@ -536,6 +536,7 @@ configure(project(':pricenode')) {
         testRuntime("org.junit.jupiter:junit-jupiter-engine:$jupiterVersion")
         testCompileOnly "org.projectlombok:lombok:$lombokVersion"
         testAnnotationProcessor "org.projectlombok:lombok:$lombokVersion"
+        testCompile "org.mockito:mockito-core:$mockitoVersion"
     }
 
     test {

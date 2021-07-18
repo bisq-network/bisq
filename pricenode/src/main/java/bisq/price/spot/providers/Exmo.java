@@ -22,6 +22,7 @@ import bisq.price.spot.ExchangeRateProvider;
 
 import org.knowm.xchange.exmo.ExmoExchange;
 
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
@@ -31,9 +32,9 @@ import java.util.Set;
 @Component
 class Exmo extends ExchangeRateProvider {
 
-    public Exmo() {
+    public Exmo(Environment env) {
         // API rate limit = 10 calls / second from the same IP ( see https://exmo.com/en/api )
-        super("EXMO", "exmo", Duration.ofMinutes(1));
+        super(env, "EXMO", "exmo", Duration.ofMinutes(1));
     }
 
     @Override

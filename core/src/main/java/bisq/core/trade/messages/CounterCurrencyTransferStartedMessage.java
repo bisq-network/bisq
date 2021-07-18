@@ -28,12 +28,12 @@ import com.google.protobuf.ByteString;
 import java.util.Optional;
 
 import lombok.EqualsAndHashCode;
-import lombok.Value;
+import lombok.Getter;
 
 import javax.annotation.Nullable;
 
 @EqualsAndHashCode(callSuper = true)
-@Value
+@Getter
 public final class CounterCurrencyTransferStartedMessage extends TradeMailboxMessage {
     private final String buyerPayoutAddress;
     private final NodeAddress senderNodeAddress;
@@ -110,7 +110,6 @@ public final class CounterCurrencyTransferStartedMessage extends TradeMailboxMes
                 proto.getUid(),
                 messageVersion);
     }
-
 
     @Override
     public String toString() {

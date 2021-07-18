@@ -27,7 +27,6 @@ import bisq.core.trade.messages.InputsForDepositTxRequest;
 import bisq.core.trade.messages.TradeMessage;
 import bisq.core.trade.protocol.tasks.ApplyFilter;
 import bisq.core.trade.protocol.tasks.TradeTask;
-import bisq.core.trade.protocol.tasks.VerifyPeersAccountAgeWitness;
 import bisq.core.trade.protocol.tasks.maker.MakerCreateAndSignContract;
 import bisq.core.trade.protocol.tasks.maker.MakerProcessesInputsForDepositTxRequest;
 import bisq.core.trade.protocol.tasks.maker.MakerRemovesOpenOffer;
@@ -74,7 +73,6 @@ public class SellerAsMakerProtocol extends SellerProtocol implements MakerProtoc
                 .setup(tasks(
                         MakerProcessesInputsForDepositTxRequest.class,
                         ApplyFilter.class,
-                        VerifyPeersAccountAgeWitness.class,
                         getVerifyPeersFeePaymentClass(),
                         MakerSetsLockTime.class,
                         MakerCreateAndSignContract.class,

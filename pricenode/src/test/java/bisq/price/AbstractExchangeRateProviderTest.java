@@ -30,7 +30,7 @@ public abstract class AbstractExchangeRateProviderTest {
 
         // Sanity checks
         assertTrue(retrievedExchangeRates.size() > 0);
-        checkProviderCurrencyPairs(retrievedExchangeRates);
+        checkProviderCurrencyPairs(exchangeProvider, retrievedExchangeRates);
     }
 
     /**
@@ -40,24 +40,24 @@ public abstract class AbstractExchangeRateProviderTest {
      *
      * @param retrievedExchangeRates Exchange rates retrieved from the provider
      */
-    private void checkProviderCurrencyPairs(Set<ExchangeRate> retrievedExchangeRates) {
+    private void checkProviderCurrencyPairs(ExchangeRateProvider exchangeProvider, Set<ExchangeRate> retrievedExchangeRates) {
         Set<String> retrievedRatesCurrencies = retrievedExchangeRates.stream()
                 .map(ExchangeRate::getCurrency)
                 .collect(Collectors.toSet());
 
-        Set<String> supportedFiatCurrenciesRetrieved = ExchangeRateProvider.SUPPORTED_FIAT_CURRENCIES.stream()
+        Set<String> supportedFiatCurrenciesRetrieved = exchangeProvider.getSupportedFiatCurrencies().stream()
                 .filter(f -> retrievedRatesCurrencies.contains(f))
                 .collect(Collectors.toCollection(TreeSet::new));
         log.info("Retrieved rates for supported fiat currencies: " + supportedFiatCurrenciesRetrieved);
 
-        Set<String> supportedCryptoCurrenciesRetrieved = ExchangeRateProvider.SUPPORTED_CRYPTO_CURRENCIES.stream()
+        Set<String> supportedCryptoCurrenciesRetrieved = exchangeProvider.getSupportedCryptoCurrencies().stream()
                 .filter(c -> retrievedRatesCurrencies.contains(c))
                 .collect(Collectors.toCollection(TreeSet::new));
         log.info("Retrieved rates for supported altcoins: " + supportedCryptoCurrenciesRetrieved);
 
         Set<String> supportedCurrencies = Sets.union(
-                ExchangeRateProvider.SUPPORTED_CRYPTO_CURRENCIES,
-                ExchangeRateProvider.SUPPORTED_FIAT_CURRENCIES);
+                exchangeProvider.getSupportedCryptoCurrencies(),
+                exchangeProvider.getSupportedFiatCurrencies());
 
         Set unsupportedCurrencies = Sets.difference(retrievedRatesCurrencies, supportedCurrencies);
         assertTrue("Retrieved exchange rates contain unsupported currencies: " + unsupportedCurrencies,

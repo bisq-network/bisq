@@ -41,6 +41,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
@@ -84,14 +86,15 @@ public class MultipleHolderNameDetection {
         return buyerSigPubKeyHashAsHex.equals(traderSigPubKeyHashAsHex);
     }
 
-    private static PayloadWithHolderName getPayloadWithHolderName(Dispute dispute) {
-        return (PayloadWithHolderName) getPaymentAccountPayload(dispute);
+    private static Optional<PayloadWithHolderName> getPayloadWithHolderName(Dispute dispute) {
+        Optional<PaymentAccountPayload> paymentAccountPayload = getPaymentAccountPayload(dispute);
+        return paymentAccountPayload.map(accountPayload -> (PayloadWithHolderName) accountPayload);
     }
 
-    public static PaymentAccountPayload getPaymentAccountPayload(Dispute dispute) {
-        return isBuyer(dispute) ?
+    public static Optional<PaymentAccountPayload> getPaymentAccountPayload(Dispute dispute) {
+        return Optional.ofNullable(isBuyer(dispute) ?
                 dispute.getContract().getBuyerPaymentAccountPayload() :
-                dispute.getContract().getSellerPaymentAccountPayload();
+                dispute.getContract().getSellerPaymentAccountPayload());
     }
 
     public static String getAddress(Dispute dispute) {
@@ -146,7 +149,11 @@ public class MultipleHolderNameDetection {
         String previous = suspiciousDisputesByTraderMap.toString();
         getAllDisputesByTraderMap().forEach((key, value) -> {
             Set<String> userNames = value.stream()
-                    .map(dispute -> getPayloadWithHolderName(dispute).getHolderName())
+                    .map(dispute -> {
+                        Optional<PayloadWithHolderName> payloadWithHolderName = getPayloadWithHolderName(dispute);
+                        return payloadWithHolderName.map(PayloadWithHolderName::getHolderName).orElse(null);
+                    })
+                    .filter(Objects::nonNull)
                     .collect(Collectors.toSet());
             if (userNames.size() > 1) {
                 // As we compare previous results we need to make sorting deterministic
@@ -232,17 +239,20 @@ public class MultipleHolderNameDetection {
                                 if (!DontShowAgainLookup.showAgain(ackKey)) {
                                     ackSubString = "[ACK]   ";
                                 }
-                                String holderName = getPayloadWithHolderName(dispute).getHolderName();
+                                Optional<PayloadWithHolderName> payloadWithHolderName = getPayloadWithHolderName(dispute);
+                                String holderName = payloadWithHolderName.isPresent() ? payloadWithHolderName.get().getHolderName() : "NA";
                                 names.add(holderName);
                                 boolean isBuyer = isBuyer(dispute);
                                 isBuyerHashSet.add(isBuyer);
                                 String isBuyerSubString = getIsBuyerSubString(isBuyer);
                                 DisputeResult disputeResult = dispute.disputeResultProperty().get();
                                 String summaryNotes = disputeResult != null ? disputeResult.getSummaryNotesProperty().get().trim() : "Not closed yet";
+                                Optional<PaymentAccountPayload> paymentAccountPayload = getPaymentAccountPayload(dispute);
                                 return ackSubString +
                                         "Trade ID: '" + dispute.getShortTradeId() +
                                         "'\n        Account holder name: '" + holderName +
-                                        "'\n        Payment method: '" + Res.get(getPaymentAccountPayload(dispute).getPaymentMethodId()) +
+                                        "'\n        Payment method: '" + Res.get(paymentAccountPayload.isPresent() ?
+                                        paymentAccountPayload.get().getPaymentMethodId() : "NA") +
                                         isBuyerSubString +
                                         "'\n        Summary: '" + summaryNotes;
                             })

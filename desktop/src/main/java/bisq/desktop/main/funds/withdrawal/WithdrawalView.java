@@ -395,13 +395,14 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     private void onWithdraw() {
         if (GUIUtil.isReadyForTxBroadcastOrShowPopup(p2PService, walletsSetup)) {
             try {
+                Coin feeRate = Coin.valueOf(Integer.parseInt(transactionFeeInputTextField.getText()));
                 final String withdrawToAddress = withdrawToTextField.getText();
                 final Coin sendersAmount;
 
                 // We do not know sendersAmount if senderPaysFee is true. We repeat fee calculation after first attempt if senderPaysFee is true.
-                Transaction feeEstimationTransaction = btcWalletService.getFeeEstimationTransactionForMultipleAddresses(fromAddresses, amountAsCoin);
+                Transaction feeEstimationTransaction = btcWalletService.getFeeEstimationTransactionForMultipleAddresses(fromAddresses, amountAsCoin, feeRate);
                 if (feeExcluded && feeEstimationTransaction != null) {
-                    feeEstimationTransaction = btcWalletService.getFeeEstimationTransactionForMultipleAddresses(fromAddresses, amountAsCoin.add(feeEstimationTransaction.getFee()));
+                    feeEstimationTransaction = btcWalletService.getFeeEstimationTransactionForMultipleAddresses(fromAddresses, amountAsCoin.add(feeEstimationTransaction.getFee()), feeRate);
                 }
                 checkNotNull(feeEstimationTransaction, "feeEstimationTransaction must not be null");
 
@@ -438,7 +439,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                                 withdrawFromTextField.getText(),
                                 withdrawToAddress,
                                 formatter.formatCoinWithCode(fee),
-                                Double.parseDouble(transactionFeeInputTextField.getText()),
+                                (double) fee.longValue() / txVsize,    // no risk of div/0 since txVsize is always positive
                                 vkb,
                                 formatter.formatCoinWithCode(receiverAmount));
                         if (dust.isPositive()) {

@@ -22,6 +22,7 @@ import bisq.price.spot.ExchangeRateProvider;
 
 import org.knowm.xchange.kraken.KrakenExchange;
 
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
@@ -31,8 +32,8 @@ import java.util.Set;
 @Component
 class Kraken extends ExchangeRateProvider {
 
-    public Kraken() {
-        super("KRAKEN", "kraken", Duration.ofMinutes(1));
+    public Kraken(Environment env) {
+        super(env, "KRAKEN", "kraken", Duration.ofMinutes(1));
     }
 
     @Override

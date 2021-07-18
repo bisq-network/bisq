@@ -60,6 +60,7 @@ import bisq.core.trade.messages.MediatedPayoutTxSignatureMessage;
 import bisq.core.trade.messages.PayoutTxPublishedMessage;
 import bisq.core.trade.messages.PeerPublishedDelayedPayoutTxMessage;
 import bisq.core.trade.messages.RefreshTradeStateRequest;
+import bisq.core.trade.messages.ShareBuyerPaymentAccountMessage;
 import bisq.core.trade.messages.TraderSignedWitnessMessage;
 
 import bisq.network.p2p.AckMessage;
@@ -158,7 +159,9 @@ public class CoreNetworkProtoResolver extends CoreProtoResolver implements Netwo
                 case DELAYED_PAYOUT_TX_SIGNATURE_RESPONSE:
                     return DelayedPayoutTxSignatureResponse.fromProto(proto.getDelayedPayoutTxSignatureResponse(), messageVersion);
                 case DEPOSIT_TX_AND_DELAYED_PAYOUT_TX_MESSAGE:
-                    return DepositTxAndDelayedPayoutTxMessage.fromProto(proto.getDepositTxAndDelayedPayoutTxMessage(), messageVersion);
+                    return DepositTxAndDelayedPayoutTxMessage.fromProto(proto.getDepositTxAndDelayedPayoutTxMessage(), this, messageVersion);
+                case SHARE_BUYER_PAYMENT_ACCOUNT_MESSAGE:
+                    return ShareBuyerPaymentAccountMessage.fromProto(proto.getShareBuyerPaymentAccountMessage(), this, messageVersion);
 
                 case COUNTER_CURRENCY_TRANSFER_STARTED_MESSAGE:
                     return CounterCurrencyTransferStartedMessage.fromProto(proto.getCounterCurrencyTransferStartedMessage(), messageVersion);

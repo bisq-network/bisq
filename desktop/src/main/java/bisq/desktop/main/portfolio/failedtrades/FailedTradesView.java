@@ -298,8 +298,10 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
             if (contract != null) {
                 isBuyerOnion = contract.getBuyerNodeAddress().getFullAddress().contains(filterString);
                 isSellerOnion = contract.getSellerNodeAddress().getFullAddress().contains(filterString);
-                matchesBuyersPaymentAccountData = contract.getBuyerPaymentAccountPayload().getPaymentDetails().contains(filterString);
-                matchesSellersPaymentAccountData = contract.getSellerPaymentAccountPayload().getPaymentDetails().contains(filterString);
+                matchesBuyersPaymentAccountData = contract.getBuyerPaymentAccountPayload() != null &&
+                        contract.getBuyerPaymentAccountPayload().getPaymentDetails().contains(filterString);
+                matchesSellersPaymentAccountData = contract.getSellerPaymentAccountPayload() != null &&
+                        contract.getSellerPaymentAccountPayload().getPaymentDetails().contains(filterString);
             }
             return isBuyerOnion || isSellerOnion ||
                     matchesBuyersPaymentAccountData || matchesSellersPaymentAccountData;
@@ -334,14 +336,18 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
 
     private void onRevertTrade(Trade trade) {
         new Popup().attention(Res.get("portfolio.failed.revertToPending.popup"))
-                .onAction(() -> onMoveTradeToPendingTrades(trade))
+                .onAction(() -> {
+                    if (!onMoveTradeToPendingTrades(trade)) {
+                        new Popup().warning(Res.get("portfolio.failed.revertToPending.failed")).show();
+                    }
+                })
                 .actionButtonText(Res.get("shared.yes"))
                 .closeButtonText(Res.get("shared.no"))
                 .show();
     }
 
-    private void onMoveTradeToPendingTrades(Trade trade) {
-        model.dataModel.onMoveTradeToPendingTrades(trade);
+    private boolean onMoveTradeToPendingTrades(Trade trade) {
+       return model.dataModel.onMoveTradeToPendingTrades(trade);
     }
 
     private void setTradeIdColumnCellFactory() {

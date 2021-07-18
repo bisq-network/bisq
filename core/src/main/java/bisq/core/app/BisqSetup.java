@@ -37,6 +37,10 @@ import bisq.core.payment.AmazonGiftCardAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.RevolutAccount;
 import bisq.core.payment.payload.PaymentMethod;
+import bisq.core.support.dispute.Dispute;
+import bisq.core.support.dispute.arbitration.ArbitrationManager;
+import bisq.core.support.dispute.mediation.MediationManager;
+import bisq.core.support.dispute.refund.RefundManager;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.TradeTxException;
 import bisq.core.user.Preferences;
@@ -47,6 +51,7 @@ import bisq.core.util.coin.CoinFormatter;
 import bisq.network.Socks5ProxyProvider;
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
+import bisq.network.utils.Utils;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
@@ -84,6 +89,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -135,10 +141,12 @@ public class BisqSetup {
     private final UnconfirmedBsqChangeOutputListService unconfirmedBsqChangeOutputListService;
     private final Config config;
     private final AccountAgeWitnessService accountAgeWitnessService;
-    private final TorSetup torSetup;
     private final CoinFormatter formatter;
     private final LocalBitcoinNode localBitcoinNode;
     private final AppStartupState appStartupState;
+    private final MediationManager mediationManager;
+    private final RefundManager refundManager;
+    private final ArbitrationManager arbitrationManager;
 
     @Setter
     @Nullable
@@ -189,6 +197,9 @@ public class BisqSetup {
     private Runnable daoRequiresRestartHandler;
     @Setter
     @Nullable
+    private Runnable torAddressUpgradeHandler;
+    @Setter
+    @Nullable
     private Consumer<String> downGradePreventionHandler;
 
     @Getter
@@ -217,11 +228,13 @@ public class BisqSetup {
                      UnconfirmedBsqChangeOutputListService unconfirmedBsqChangeOutputListService,
                      Config config,
                      AccountAgeWitnessService accountAgeWitnessService,
-                     TorSetup torSetup,
                      @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter,
                      LocalBitcoinNode localBitcoinNode,
                      AppStartupState appStartupState,
-                     Socks5ProxyProvider socks5ProxyProvider) {
+                     Socks5ProxyProvider socks5ProxyProvider,
+                     MediationManager mediationManager,
+                     RefundManager refundManager,
+                     ArbitrationManager arbitrationManager) {
         this.domainInitialisation = domainInitialisation;
         this.p2PNetworkSetup = p2PNetworkSetup;
         this.walletAppSetup = walletAppSetup;
@@ -238,10 +251,12 @@ public class BisqSetup {
         this.unconfirmedBsqChangeOutputListService = unconfirmedBsqChangeOutputListService;
         this.config = config;
         this.accountAgeWitnessService = accountAgeWitnessService;
-        this.torSetup = torSetup;
         this.formatter = formatter;
         this.localBitcoinNode = localBitcoinNode;
         this.appStartupState = appStartupState;
+        this.mediationManager = mediationManager;
+        this.refundManager = refundManager;
+        this.arbitrationManager = arbitrationManager;
 
         MemPoolSpaceTxBroadcaster.init(socks5ProxyProvider, preferences, localBitcoinNode);
     }
@@ -312,6 +327,7 @@ public class BisqSetup {
         maybeShowSecurityRecommendation();
         maybeShowLocalhostRunningInfo();
         maybeShowAccountSigningStateInfo();
+        maybeShowTorAddressUpgradeInformation();
     }
 
 
@@ -563,8 +579,6 @@ public class BisqSetup {
     }
 
 
-
-
     private static File getVersionFile() {
         return new File(Config.appDataDir(), VERSION_FILE_NAME);
     }
@@ -699,6 +713,31 @@ public class BisqSetup {
         if (signingStateFound && preferences.showAgain(key) &&
                 displayHandler != null) {
             displayHandler.accept(key);
+        }
+    }
+
+    private void maybeShowTorAddressUpgradeInformation() {
+        if (Config.baseCurrencyNetwork().isRegtest() ||
+                Utils.isV3Address(Objects.requireNonNull(p2PService.getNetworkNode().getNodeAddress()).getHostName())) {
+            return;
+        }
+
+        maybeRunTorNodeAddressUpgradeHandler();
+
+        tradeManager.getNumPendingTrades().addListener((observable, oldValue, newValue) -> {
+            long numPendingTrades = (long) newValue;
+            if (numPendingTrades == 0) {
+                maybeRunTorNodeAddressUpgradeHandler();
+            }
+        });
+    }
+
+    private void maybeRunTorNodeAddressUpgradeHandler() {
+        if (mediationManager.getDisputesAsObservableList().stream().allMatch(Dispute::isClosed) &&
+                refundManager.getDisputesAsObservableList().stream().allMatch(Dispute::isClosed) &&
+                arbitrationManager.getDisputesAsObservableList().stream().allMatch(Dispute::isClosed) &&
+                tradeManager.getNumPendingTrades().isEqualTo(0).get()) {
+            Objects.requireNonNull(torAddressUpgradeHandler).run();
         }
     }
 

@@ -38,6 +38,8 @@ import bisq.core.user.Preferences;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.CoinFormatter;
 
+import bisq.network.p2p.P2PService;
+
 import bisq.common.config.Config;
 import bisq.common.crypto.KeyRing;
 
@@ -50,6 +52,7 @@ public class MediatorView extends DisputeAgentView {
     @Inject
     public MediatorView(MediationManager mediationManager,
                         KeyRing keyRing,
+                        P2PService p2PService,
                         TradeManager tradeManager,
                         @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter,
                         Preferences preferences,
@@ -64,6 +67,7 @@ public class MediatorView extends DisputeAgentView {
                         @Named(Config.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         super(mediationManager,
                 keyRing,
+                p2PService,
                 tradeManager,
                 formatter,
                 preferences,
