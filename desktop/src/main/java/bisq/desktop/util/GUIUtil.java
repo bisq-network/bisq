@@ -761,12 +761,16 @@ public class GUIUtil {
     }
 
     public static void showDaoNeedsResyncPopup(Navigation navigation) {
-        UserThread.runAfter(() -> new Popup().warning(Res.get("popup.warning.daoNeedsResync"))
+        String key = "showDaoNeedsResyncPopup";
+        if (DontShowAgainLookup.showAgain(key)) {
+            UserThread.runAfter(() -> new Popup().warning(Res.get("popup.warning.daoNeedsResync"))
+                    .dontShowAgainId(key)
                     .actionButtonTextWithGoTo("navigation.dao.networkMonitor")
                     .onAction(() -> {
                             navigation.navigateTo(MainView.class, DaoView.class, MonitorView.class, DaoStateMonitorView.class);
                     })
                     .show(), 5, TimeUnit.SECONDS);
+        }
     }
 
     public static boolean isReadyForTxBroadcastOrShowPopup(P2PService p2PService, WalletsSetup walletsSetup) {
