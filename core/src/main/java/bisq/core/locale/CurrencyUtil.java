@@ -348,6 +348,15 @@ public class CurrencyUtil {
         return currencies;
     }
 
+    public static List<TradeCurrency> getAllCapitualCurrencies() {
+        return new ArrayList<>(Arrays.asList(
+                new FiatCurrency("BRL"),
+                new FiatCurrency("EUR"),
+                new FiatCurrency("GBP"),
+                new FiatCurrency("USD")
+        ));
+    }
+
     // https://www.revolut.com/help/getting-started/exchanging-currencies/what-fiat-currencies-are-supported-for-holding-and-exchange
     public static List<TradeCurrency> getAllRevolutCurrencies() {
         ArrayList<TradeCurrency> currencies = new ArrayList<>(Arrays.asList(

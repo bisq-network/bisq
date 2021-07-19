@@ -996,6 +996,7 @@ message PaymentAccountPayload {
         AustraliaPayidPayload australia_payid_payload = 30;
         AmazonGiftCardAccountPayload amazon_gift_card_account_payload = 31;
         CashByMailAccountPayload cash_by_mail_account_payload = 32;
+        CapitualAccountPayload capitual_account_payload = 33;
     }
     map<string, string> exclude_from_json_data = 15;
 }
@@ -1215,6 +1216,10 @@ message AdvancedCashAccountPayload {
 
 message TransferwiseAccountPayload {
     string email = 1;
+}
+
+message CapitualAccountPayload {
+    string account_nr = 1;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
