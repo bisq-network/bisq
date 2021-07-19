@@ -145,7 +145,7 @@ configure([project(':cli'),
             if (applicationName == 'desktop') {
                 def script = file("${rootProject.projectDir}/bisq-$applicationName")
                 script.text = script.text.replace(
-                    'DEFAULT_JVM_OPTS=""', 'DEFAULT_JVM_OPTS="-XX:MaxRAM=4g"')
+                    'DEFAULT_JVM_OPTS=""', 'DEFAULT_JVM_OPTS="-XX:MaxRAM=6g"')
             }
 
             if (applicationName == 'apitest') {
