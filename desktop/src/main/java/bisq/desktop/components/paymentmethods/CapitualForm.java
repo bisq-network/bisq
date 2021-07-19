@@ -56,8 +56,13 @@ public class CapitualForm extends PaymentMethodForm {
         return gridRow;
     }
 
-    public CapitualForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, CapitualValidator capitualValidator,
-                        InputValidator inputValidator, GridPane gridPane, int gridRow, CoinFormatter formatter) {
+    public CapitualForm(PaymentAccount paymentAccount,
+                        AccountAgeWitnessService accountAgeWitnessService,
+                        CapitualValidator capitualValidator,
+                        InputValidator inputValidator,
+                        GridPane gridPane,
+                        int gridRow,
+                        CoinFormatter formatter) {
         super(paymentAccount, accountAgeWitnessService, inputValidator, gridPane, gridRow, formatter);
         this.capitualAccount = (CapitualAccount) paymentAccount;
         this.capitualValidator = capitualValidator;
