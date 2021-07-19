@@ -7,7 +7,7 @@ import bisq.core.util.validation.RegexValidator;
 import javax.inject.Inject;
 
 public class CapitualValidator extends InputValidator {
-    private RegexValidator regexValidator;
+    private final RegexValidator regexValidator;
 
     @Inject
     public CapitualValidator(RegexValidator regexValidator) {
@@ -18,8 +18,7 @@ public class CapitualValidator extends InputValidator {
 
     @Override
     public ValidationResult validate(String input) {
-        ValidationResult result = regexValidator.validate(input);
 
-        return result;
+        return regexValidator.validate(input);
     }
 }
