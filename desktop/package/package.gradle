@@ -231,7 +231,7 @@ task packageInstallers {
                         " --main-jar ${mainJarName}" +
                         " --main-class bisq.desktop.app.BisqAppMain" +
                         " --java-options -Xss1280k" +
-                        " --java-options -XX:MaxRAM=6g" +
+                        " --java-options -XX:MaxRAM=8g" +
                         " --java-options -XX:+UseG1GC" +
                         " --java-options -XX:MaxHeapFreeRatio=10" +
                         " --java-options -XX:MinHeapFreeRatio=5" +
