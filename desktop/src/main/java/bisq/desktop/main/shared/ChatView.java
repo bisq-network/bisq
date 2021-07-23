@@ -130,7 +130,7 @@ public class ChatView extends AnchorPane {
     private ListChangeListener<ChatMessage> disputeDirectMessageListListener;
     private Subscription inputTextAreaTextSubscription;
     private final List<Attachment> tempAttachments = new ArrayList<>();
-    private ChangeListener<Boolean> storedInMailboxPropertyListener, arrivedPropertyListener;
+    private ChangeListener<Boolean> storedInMailboxPropertyListener, acknowledgedPropertyListener;
     private ChangeListener<String> sendMessageErrorPropertyListener;
 
     protected final CoinFormatter formatter;
@@ -483,6 +483,10 @@ public class ChatView extends AnchorPane {
                             visible = true;
                             icon = AwesomeIcon.OK_SIGN;
                             text = Res.get("support.acknowledged");
+                        } else if (message.storedInMailboxProperty().get()) {
+                            visible = true;
+                            icon = AwesomeIcon.ENVELOPE;
+                            text = Res.get("support.savedInMailbox");
                         } else if (message.ackErrorProperty().get() != null) {
                             visible = true;
                             icon = AwesomeIcon.EXCLAMATION_SIGN;
@@ -493,10 +497,6 @@ public class ChatView extends AnchorPane {
                             visible = true;
                             icon = AwesomeIcon.MAIL_REPLY;
                             text = Res.get("support.transient");
-                        } else if (message.storedInMailboxProperty().get()) {
-                            visible = true;
-                            icon = AwesomeIcon.ENVELOPE;
-                            text = Res.get("support.savedInMailbox");
                         } else {
                             visible = false;
                             log.debug("updateMsgState called but no msg state available. message={}", message);
@@ -598,7 +598,7 @@ public class ChatView extends AnchorPane {
 
     private void onSendMessage(String inputText) {
         if (chatMessage != null) {
-            chatMessage.arrivedProperty().removeListener(arrivedPropertyListener);
+            chatMessage.acknowledgedProperty().removeListener(acknowledgedPropertyListener);
             chatMessage.storedInMailboxProperty().removeListener(storedInMailboxPropertyListener);
             chatMessage.sendMessageErrorProperty().removeListener(sendMessageErrorPropertyListener);
         }
@@ -620,8 +620,9 @@ public class ChatView extends AnchorPane {
             sendMsgBusyAnimation.play();
         }, 500, TimeUnit.MILLISECONDS);
 
-        arrivedPropertyListener = (observable, oldValue, newValue) -> {
+        acknowledgedPropertyListener = (observable, oldValue, newValue) -> {
             if (newValue) {
+                sendMsgInfoLabel.setVisible(false);
                 hideSendMsgInfo(timer);
             }
         };
@@ -642,7 +643,7 @@ public class ChatView extends AnchorPane {
             }
         };
         if (chatMessage != null) {
-            chatMessage.arrivedProperty().addListener(arrivedPropertyListener);
+            chatMessage.acknowledgedProperty().addListener(acknowledgedPropertyListener);
             chatMessage.storedInMailboxProperty().addListener(storedInMailboxPropertyListener);
             chatMessage.sendMessageErrorProperty().addListener(sendMessageErrorPropertyListener);
         }
@@ -715,8 +716,8 @@ public class ChatView extends AnchorPane {
             chatMessages.removeListener(disputeDirectMessageListListener);
 
         if (chatMessage != null) {
-            if (arrivedPropertyListener != null)
-                chatMessage.arrivedProperty().removeListener(arrivedPropertyListener);
+            if (acknowledgedPropertyListener != null)
+                chatMessage.arrivedProperty().removeListener(acknowledgedPropertyListener);
             if (storedInMailboxPropertyListener != null)
                 chatMessage.storedInMailboxProperty().removeListener(storedInMailboxPropertyListener);
         }
