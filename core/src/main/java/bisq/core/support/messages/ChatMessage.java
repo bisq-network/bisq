@@ -306,7 +306,7 @@ public final class ChatMessage extends SupportMessage {
                 this.setArrived(false);
                 this.setAckError(Res.get("support.errorTimeout"));
             }
-        }, 5, TimeUnit.SECONDS);
+        }, 60, TimeUnit.SECONDS);
     }
 
     public ReadOnlyBooleanProperty acknowledgedProperty() {
