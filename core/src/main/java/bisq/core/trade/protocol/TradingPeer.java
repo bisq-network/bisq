@@ -88,6 +88,11 @@ public final class TradingPeer implements PersistablePayload {
     @Nullable
     private byte[] mediatedPayoutTxSignature;
 
+    // Added at 1.7.0
+    @Nullable
+    private byte[] hashOfPaymentAccountPayload;
+    @Nullable
+    private String paymentMethodId;
 
     public TradingPeer() {
     }
@@ -110,6 +115,7 @@ public final class TradingPeer implements PersistablePayload {
         Optional.ofNullable(accountAgeWitnessNonce).ifPresent(e -> builder.setAccountAgeWitnessNonce(ByteString.copyFrom(e)));
         Optional.ofNullable(accountAgeWitnessSignature).ifPresent(e -> builder.setAccountAgeWitnessSignature(ByteString.copyFrom(e)));
         Optional.ofNullable(mediatedPayoutTxSignature).ifPresent(e -> builder.setMediatedPayoutTxSignature(ByteString.copyFrom(e)));
+        Optional.ofNullable(hashOfPaymentAccountPayload).ifPresent(e -> builder.setHashOfPaymentAccountPayload(ByteString.copyFrom(e)));
         builder.setCurrentDate(currentDate);
         return builder.build();
     }
@@ -139,6 +145,7 @@ public final class TradingPeer implements PersistablePayload {
             tradingPeer.setAccountAgeWitnessSignature(ProtoUtil.byteArrayOrNullFromProto(proto.getAccountAgeWitnessSignature()));
             tradingPeer.setCurrentDate(proto.getCurrentDate());
             tradingPeer.setMediatedPayoutTxSignature(ProtoUtil.byteArrayOrNullFromProto(proto.getMediatedPayoutTxSignature()));
+            tradingPeer.setHashOfPaymentAccountPayload(ProtoUtil.byteArrayOrNullFromProto(proto.getHashOfPaymentAccountPayload()));
             return tradingPeer;
         }
     }

@@ -76,10 +76,29 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
         return FILE_NAME;
     }
 
-    public void requestPersistence(DaoState daoState, LinkedList<DaoStateHash> daoStateHashChain) {
+    public void requestPersistence(DaoState daoState,
+                                   LinkedList<DaoStateHash> daoStateHashChain,
+                                   Runnable completeHandler) {
+        if (daoState == null) {
+            completeHandler.run();
+            return;
+        }
+
         store.setDaoState(daoState);
         store.setDaoStateHashChain(daoStateHashChain);
-        persistenceManager.requestPersistence();
+
+        // We let the persistence run in a thread to avoid the slow protobuf serialisation to happen on the user
+        // thread. We also call it immediately to get notified about the completion event.
+        new Thread(() -> {
+            Thread.currentThread().setName("Serialize and write DaoState");
+            persistenceManager.persistNow(() -> {
+                // After we have written to disk we remove the the daoState in the store to avoid that it stays in
+                // memory there until the next persist call.
+                store.setDaoState(null);
+
+                completeHandler.run();
+            });
+        }).start();
     }
 
     public DaoState getPersistedBsqState() {
@@ -125,7 +144,7 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
 
     @Override
     protected DaoStateStore createStore() {
-        return new DaoStateStore(DaoState.getClone(daoState), new LinkedList<>(daoStateMonitoringService.getDaoStateHashChain()));
+        return new DaoStateStore(null, new LinkedList<>(daoStateMonitoringService.getDaoStateHashChain()));
     }
 
     @Override

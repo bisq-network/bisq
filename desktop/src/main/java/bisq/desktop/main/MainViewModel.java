@@ -17,9 +17,13 @@
 
 package bisq.desktop.main;
 
+import bisq.desktop.Navigation;
 import bisq.desktop.app.BisqApp;
 import bisq.desktop.common.model.ViewModel;
+import bisq.desktop.components.ExplorerAddressTextField;
 import bisq.desktop.components.TxIdTextField;
+import bisq.desktop.main.account.AccountView;
+import bisq.desktop.main.account.content.backup.BackupView;
 import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.notifications.NotificationCenter;
 import bisq.desktop.main.overlays.popups.Popup;
@@ -135,6 +139,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
     @Getter
     private final TorNetworkSettingsWindow torNetworkSettingsWindow;
     private final CorruptedStorageFileHandler corruptedStorageFileHandler;
+    private final Navigation navigation;
 
     @Getter
     private final BooleanProperty showAppScreen = new SimpleBooleanProperty();
@@ -178,7 +183,8 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
                          LocalBitcoinNode localBitcoinNode,
                          AccountAgeWitnessService accountAgeWitnessService,
                          TorNetworkSettingsWindow torNetworkSettingsWindow,
-                         CorruptedStorageFileHandler corruptedStorageFileHandler) {
+                         CorruptedStorageFileHandler corruptedStorageFileHandler,
+                         Navigation navigation) {
         this.bisqSetup = bisqSetup;
         this.walletsSetup = walletsSetup;
         this.user = user;
@@ -203,8 +209,10 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.torNetworkSettingsWindow = torNetworkSettingsWindow;
         this.corruptedStorageFileHandler = corruptedStorageFileHandler;
+        this.navigation = navigation;
 
         TxIdTextField.setPreferences(preferences);
+        ExplorerAddressTextField.setPreferences(preferences);
 
         TxIdTextField.setWalletService(btcWalletService);
 
@@ -414,6 +422,13 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
                 .useShutDownButton()
                 .hideCloseButton()
                 .show());
+
+        bisqSetup.setTorAddressUpgradeHandler(() -> new Popup().information(Res.get("popup.info.torMigration.msg"))
+                .actionButtonTextWithGoTo("navigation.account.backup")
+                .onAction(() -> {
+                    navigation.setReturnPath(navigation.getCurrentPath());
+                    navigation.navigateTo(MainView.class, AccountView.class, BackupView.class);
+                }).show());
 
         corruptedStorageFileHandler.getFiles().ifPresent(files -> new Popup()
                 .warning(Res.get("popup.warning.incompatibleDB", files.toString(), config.appDataDir))

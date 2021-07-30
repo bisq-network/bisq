@@ -35,12 +35,12 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import lombok.EqualsAndHashCode;
-import lombok.Value;
+import lombok.Getter;
 
 import javax.annotation.Nullable;
 
 @EqualsAndHashCode(callSuper = true)
-@Value
+@Getter
 public final class InputsForDepositTxRequest extends TradeMessage implements DirectMessage {
     private final NodeAddress senderNodeAddress;
     private final long tradeAmount;
@@ -55,7 +55,11 @@ public final class InputsForDepositTxRequest extends TradeMessage implements Dir
     private final byte[] takerMultiSigPubKey;
     private final String takerPayoutAddressString;
     private final PubKeyRing takerPubKeyRing;
+
+    // Removed with 1.7.0
+    @Nullable
     private final PaymentAccountPayload takerPaymentAccountPayload;
+
     private final String takerAccountId;
     private final String takerFeeTxId;
     private final List<NodeAddress> acceptedArbitratorNodeAddresses;
@@ -68,6 +72,12 @@ public final class InputsForDepositTxRequest extends TradeMessage implements Dir
 
     private final byte[] accountAgeWitnessSignatureOfOfferId;
     private final long currentDate;
+
+    // Added at 1.7.0
+    @Nullable
+    private final byte[] hashOfTakersPaymentAccountPayload;
+    @Nullable
+    private final String takersPaymentMethodId;
 
     public InputsForDepositTxRequest(String tradeId,
                                      NodeAddress senderNodeAddress,
@@ -82,7 +92,7 @@ public final class InputsForDepositTxRequest extends TradeMessage implements Dir
                                      byte[] takerMultiSigPubKey,
                                      String takerPayoutAddressString,
                                      PubKeyRing takerPubKeyRing,
-                                     PaymentAccountPayload takerPaymentAccountPayload,
+                                     @Nullable PaymentAccountPayload takerPaymentAccountPayload,
                                      String takerAccountId,
                                      String takerFeeTxId,
                                      List<NodeAddress> acceptedArbitratorNodeAddresses,
@@ -94,7 +104,9 @@ public final class InputsForDepositTxRequest extends TradeMessage implements Dir
                                      String uid,
                                      int messageVersion,
                                      byte[] accountAgeWitnessSignatureOfOfferId,
-                                     long currentDate) {
+                                     long currentDate,
+                                     @Nullable byte[] hashOfTakersPaymentAccountPayload,
+                                     @Nullable String takersPaymentMethodId) {
         super(messageVersion, tradeId, uid);
         this.senderNodeAddress = senderNodeAddress;
         this.tradeAmount = tradeAmount;
@@ -119,6 +131,8 @@ public final class InputsForDepositTxRequest extends TradeMessage implements Dir
         this.refundAgentNodeAddress = refundAgentNodeAddress;
         this.accountAgeWitnessSignatureOfOfferId = accountAgeWitnessSignatureOfOfferId;
         this.currentDate = currentDate;
+        this.hashOfTakersPaymentAccountPayload = hashOfTakersPaymentAccountPayload;
+        this.takersPaymentMethodId = takersPaymentMethodId;
     }
 
 
@@ -142,7 +156,6 @@ public final class InputsForDepositTxRequest extends TradeMessage implements Dir
                 .setTakerMultiSigPubKey(ByteString.copyFrom(takerMultiSigPubKey))
                 .setTakerPayoutAddressString(takerPayoutAddressString)
                 .setTakerPubKeyRing(takerPubKeyRing.toProtoMessage())
-                .setTakerPaymentAccountPayload((protobuf.PaymentAccountPayload) takerPaymentAccountPayload.toProtoMessage())
                 .setTakerAccountId(takerAccountId)
                 .setTakerFeeTxId(takerFeeTxId)
                 .addAllAcceptedArbitratorNodeAddresses(acceptedArbitratorNodeAddresses.stream()
@@ -159,6 +172,9 @@ public final class InputsForDepositTxRequest extends TradeMessage implements Dir
 
         Optional.ofNullable(changeOutputAddress).ifPresent(builder::setChangeOutputAddress);
         Optional.ofNullable(arbitratorNodeAddress).ifPresent(e -> builder.setArbitratorNodeAddress(arbitratorNodeAddress.toProtoMessage()));
+        Optional.ofNullable(takerPaymentAccountPayload).ifPresent(e -> builder.setTakerPaymentAccountPayload((protobuf.PaymentAccountPayload) takerPaymentAccountPayload.toProtoMessage()));
+        Optional.ofNullable(hashOfTakersPaymentAccountPayload).ifPresent(e -> builder.setHashOfTakersPaymentAccountPayload(ByteString.copyFrom(hashOfTakersPaymentAccountPayload)));
+        Optional.ofNullable(takersPaymentMethodId).ifPresent(e -> builder.setTakersPayoutMethodId(takersPaymentMethodId));
         return getNetworkEnvelopeBuilder().setInputsForDepositTxRequest(builder).build();
     }
 
@@ -176,6 +192,10 @@ public final class InputsForDepositTxRequest extends TradeMessage implements Dir
         List<NodeAddress> acceptedRefundAgentNodeAddresses = proto.getAcceptedRefundAgentNodeAddressesList().stream()
                 .map(NodeAddress::fromProto).collect(Collectors.toList());
 
+        PaymentAccountPayload takerPaymentAccountPayload = proto.hasTakerPaymentAccountPayload() ?
+                coreProtoResolver.fromProto(proto.getTakerPaymentAccountPayload()) : null;
+        byte[] hashOfTakersPaymentAccountPayload = ProtoUtil.byteArrayOrNullFromProto(proto.getHashOfTakersPaymentAccountPayload());
+
         return new InputsForDepositTxRequest(proto.getTradeId(),
                 NodeAddress.fromProto(proto.getSenderNodeAddress()),
                 proto.getTradeAmount(),
@@ -189,7 +209,7 @@ public final class InputsForDepositTxRequest extends TradeMessage implements Dir
                 proto.getTakerMultiSigPubKey().toByteArray(),
                 proto.getTakerPayoutAddressString(),
                 PubKeyRing.fromProto(proto.getTakerPubKeyRing()),
-                coreProtoResolver.fromProto(proto.getTakerPaymentAccountPayload()),
+                takerPaymentAccountPayload,
                 proto.getTakerAccountId(),
                 proto.getTakerFeeTxId(),
                 acceptedArbitratorNodeAddresses,
@@ -201,7 +221,9 @@ public final class InputsForDepositTxRequest extends TradeMessage implements Dir
                 proto.getUid(),
                 messageVersion,
                 ProtoUtil.byteArrayOrNullFromProto(proto.getAccountAgeWitnessSignatureOfOfferId()),
-                proto.getCurrentDate());
+                proto.getCurrentDate(),
+                hashOfTakersPaymentAccountPayload,
+                ProtoUtil.stringOrNullFromProto(proto.getTakersPayoutMethodId()));
     }
 
     @Override
@@ -219,7 +241,6 @@ public final class InputsForDepositTxRequest extends TradeMessage implements Dir
                 ",\n     takerMultiSigPubKey=" + Utilities.bytesAsHexString(takerMultiSigPubKey) +
                 ",\n     takerPayoutAddressString='" + takerPayoutAddressString + '\'' +
                 ",\n     takerPubKeyRing=" + takerPubKeyRing +
-                ",\n     takerPaymentAccountPayload=" + takerPaymentAccountPayload +
                 ",\n     takerAccountId='" + takerAccountId + '\'' +
                 ",\n     takerFeeTxId='" + takerFeeTxId + '\'' +
                 ",\n     acceptedArbitratorNodeAddresses=" + acceptedArbitratorNodeAddresses +
@@ -230,6 +251,8 @@ public final class InputsForDepositTxRequest extends TradeMessage implements Dir
                 ",\n     refundAgentNodeAddress=" + refundAgentNodeAddress +
                 ",\n     accountAgeWitnessSignatureOfOfferId=" + Utilities.bytesAsHexString(accountAgeWitnessSignatureOfOfferId) +
                 ",\n     currentDate=" + currentDate +
+                ",\n     hashOfTakersPaymentAccountPayload=" + Utilities.bytesAsHexString(hashOfTakersPaymentAccountPayload) +
+                ",\n     takersPaymentMethodId=" + takersPaymentMethodId +
                 "\n} " + super.toString();
     }
 }

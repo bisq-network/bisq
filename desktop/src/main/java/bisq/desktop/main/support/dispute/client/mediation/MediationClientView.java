@@ -42,6 +42,7 @@ import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.CoinFormatter;
 
 import bisq.network.p2p.NodeAddress;
+import bisq.network.p2p.P2PService;
 
 import bisq.common.config.Config;
 import bisq.common.crypto.KeyRing;
@@ -54,6 +55,7 @@ public class MediationClientView extends DisputeClientView {
     @Inject
     public MediationClientView(MediationManager mediationManager,
                                KeyRing keyRing,
+                               P2PService p2PService,
                                TradeManager tradeManager,
                                @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter,
                                Preferences preferences,
@@ -66,7 +68,7 @@ public class MediationClientView extends DisputeClientView {
                                RefundAgentManager refundAgentManager,
                                DaoFacade daoFacade,
                                @Named(Config.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
-        super(mediationManager, keyRing, tradeManager, formatter, preferences, disputeSummaryWindow,
+        super(mediationManager, keyRing, p2PService, tradeManager, formatter, preferences, disputeSummaryWindow,
                 privateNotificationManager, contractWindow, tradeDetailsWindow, accountAgeWitnessService,
                 mediatorManager, refundAgentManager, daoFacade, useDevPrivilegeKeys);
     }

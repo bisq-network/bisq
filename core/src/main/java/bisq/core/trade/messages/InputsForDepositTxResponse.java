@@ -36,14 +36,17 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import lombok.EqualsAndHashCode;
-import lombok.Value;
+import lombok.Getter;
 
 import javax.annotation.Nullable;
 
 @EqualsAndHashCode(callSuper = true)
-@Value
+@Getter
 public final class InputsForDepositTxResponse extends TradeMessage implements DirectMessage {
+    // Removed with 1.7.0
+    @Nullable
     private final PaymentAccountPayload makerPaymentAccountPayload;
+
     private final String makerAccountId;
     private final byte[] makerMultiSigPubKey;
     private final String makerContractAsJson;
@@ -59,8 +62,14 @@ public final class InputsForDepositTxResponse extends TradeMessage implements Di
     private final long currentDate;
     private final long lockTime;
 
+    // Added at 1.7.0
+    @Nullable
+    private final byte[] hashOfMakersPaymentAccountPayload;
+    @Nullable
+    private final String makersPaymentMethodId;
+
     public InputsForDepositTxResponse(String tradeId,
-                                      PaymentAccountPayload makerPaymentAccountPayload,
+                                      @Nullable PaymentAccountPayload makerPaymentAccountPayload,
                                       String makerAccountId,
                                       byte[] makerMultiSigPubKey,
                                       String makerContractAsJson,
@@ -72,7 +81,9 @@ public final class InputsForDepositTxResponse extends TradeMessage implements Di
                                       String uid,
                                       @Nullable byte[] accountAgeWitnessSignatureOfPreparedDepositTx,
                                       long currentDate,
-                                      long lockTime) {
+                                      long lockTime,
+                                      @Nullable byte[] hashOfMakersPaymentAccountPayload,
+                                      @Nullable String makersPaymentMethodId) {
         this(tradeId,
                 makerPaymentAccountPayload,
                 makerAccountId,
@@ -87,7 +98,9 @@ public final class InputsForDepositTxResponse extends TradeMessage implements Di
                 Version.getP2PMessageVersion(),
                 accountAgeWitnessSignatureOfPreparedDepositTx,
                 currentDate,
-                lockTime);
+                lockTime,
+                hashOfMakersPaymentAccountPayload,
+                makersPaymentMethodId);
     }
 
 
@@ -96,7 +109,7 @@ public final class InputsForDepositTxResponse extends TradeMessage implements Di
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private InputsForDepositTxResponse(String tradeId,
-                                       PaymentAccountPayload makerPaymentAccountPayload,
+                                       @Nullable PaymentAccountPayload makerPaymentAccountPayload,
                                        String makerAccountId,
                                        byte[] makerMultiSigPubKey,
                                        String makerContractAsJson,
@@ -109,7 +122,9 @@ public final class InputsForDepositTxResponse extends TradeMessage implements Di
                                        int messageVersion,
                                        @Nullable byte[] accountAgeWitnessSignatureOfPreparedDepositTx,
                                        long currentDate,
-                                       long lockTime) {
+                                       long lockTime,
+                                       @Nullable byte[] hashOfMakersPaymentAccountPayload,
+                                       @Nullable String makersPaymentMethodId) {
         super(messageVersion, tradeId, uid);
         this.makerPaymentAccountPayload = makerPaymentAccountPayload;
         this.makerAccountId = makerAccountId;
@@ -123,13 +138,14 @@ public final class InputsForDepositTxResponse extends TradeMessage implements Di
         this.accountAgeWitnessSignatureOfPreparedDepositTx = accountAgeWitnessSignatureOfPreparedDepositTx;
         this.currentDate = currentDate;
         this.lockTime = lockTime;
+        this.hashOfMakersPaymentAccountPayload = hashOfMakersPaymentAccountPayload;
+        this.makersPaymentMethodId = makersPaymentMethodId;
     }
 
     @Override
     public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
         final protobuf.InputsForDepositTxResponse.Builder builder = protobuf.InputsForDepositTxResponse.newBuilder()
                 .setTradeId(tradeId)
-                .setMakerPaymentAccountPayload((protobuf.PaymentAccountPayload) makerPaymentAccountPayload.toProtoMessage())
                 .setMakerAccountId(makerAccountId)
                 .setMakerMultiSigPubKey(ByteString.copyFrom(makerMultiSigPubKey))
                 .setMakerContractAsJson(makerContractAsJson)
@@ -143,19 +159,27 @@ public final class InputsForDepositTxResponse extends TradeMessage implements Di
 
         Optional.ofNullable(accountAgeWitnessSignatureOfPreparedDepositTx).ifPresent(e -> builder.setAccountAgeWitnessSignatureOfPreparedDepositTx(ByteString.copyFrom(e)));
         builder.setCurrentDate(currentDate);
-
+        Optional.ofNullable(makerPaymentAccountPayload).ifPresent(e -> builder.setMakerPaymentAccountPayload((protobuf.PaymentAccountPayload) makerPaymentAccountPayload.toProtoMessage()));
+        Optional.ofNullable(hashOfMakersPaymentAccountPayload).ifPresent(e -> builder.setHashOfMakersPaymentAccountPayload(ByteString.copyFrom(hashOfMakersPaymentAccountPayload)));
+        Optional.ofNullable(makersPaymentMethodId).ifPresent(e -> builder.setMakersPayoutMethodId(makersPaymentMethodId));
         return getNetworkEnvelopeBuilder()
                 .setInputsForDepositTxResponse(builder)
                 .build();
     }
 
-    public static InputsForDepositTxResponse fromProto(protobuf.InputsForDepositTxResponse proto, CoreProtoResolver coreProtoResolver, int messageVersion) {
+    public static InputsForDepositTxResponse fromProto(protobuf.InputsForDepositTxResponse proto,
+                                                       CoreProtoResolver coreProtoResolver,
+                                                       int messageVersion) {
         List<RawTransactionInput> makerInputs = proto.getMakerInputsList().stream()
                 .map(RawTransactionInput::fromProto)
                 .collect(Collectors.toList());
 
+        PaymentAccountPayload makerPaymentAccountPayload = proto.hasMakerPaymentAccountPayload() ?
+                coreProtoResolver.fromProto(proto.getMakerPaymentAccountPayload()) : null;
+        byte[] hashOfMakersPaymentAccountPayload = ProtoUtil.byteArrayOrNullFromProto(proto.getHashOfMakersPaymentAccountPayload());
+
         return new InputsForDepositTxResponse(proto.getTradeId(),
-                coreProtoResolver.fromProto(proto.getMakerPaymentAccountPayload()),
+                makerPaymentAccountPayload,
                 proto.getMakerAccountId(),
                 proto.getMakerMultiSigPubKey().toByteArray(),
                 proto.getMakerContractAsJson(),
@@ -168,14 +192,14 @@ public final class InputsForDepositTxResponse extends TradeMessage implements Di
                 messageVersion,
                 ProtoUtil.byteArrayOrNullFromProto(proto.getAccountAgeWitnessSignatureOfPreparedDepositTx()),
                 proto.getCurrentDate(),
-                proto.getLockTime());
+                proto.getLockTime(),
+                hashOfMakersPaymentAccountPayload,
+                ProtoUtil.stringOrNullFromProto(proto.getMakersPayoutMethodId()));
     }
-
 
     @Override
     public String toString() {
         return "InputsForDepositTxResponse{" +
-                "\n     makerPaymentAccountPayload=" + makerPaymentAccountPayload +
                 ",\n     makerAccountId='" + makerAccountId + '\'' +
                 ",\n     makerMultiSigPubKey=" + Utilities.bytesAsHexString(makerMultiSigPubKey) +
                 ",\n     makerContractAsJson='" + makerContractAsJson + '\'' +
@@ -188,6 +212,8 @@ public final class InputsForDepositTxResponse extends TradeMessage implements Di
                 ",\n     accountAgeWitnessSignatureOfPreparedDepositTx=" + Utilities.bytesAsHexString(accountAgeWitnessSignatureOfPreparedDepositTx) +
                 ",\n     currentDate=" + new Date(currentDate) +
                 ",\n     lockTime=" + lockTime +
+                ",\n     hashOfMakersPaymentAccountPayload=" + Utilities.bytesAsHexString(hashOfMakersPaymentAccountPayload) +
+                ",\n     makersPaymentMethodId=" + makersPaymentMethodId +
                 "\n} " + super.toString();
     }
 }

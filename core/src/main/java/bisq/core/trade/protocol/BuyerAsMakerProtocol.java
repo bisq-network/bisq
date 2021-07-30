@@ -25,7 +25,6 @@ import bisq.core.trade.messages.InputsForDepositTxRequest;
 import bisq.core.trade.messages.PayoutTxPublishedMessage;
 import bisq.core.trade.protocol.tasks.ApplyFilter;
 import bisq.core.trade.protocol.tasks.TradeTask;
-import bisq.core.trade.protocol.tasks.VerifyPeersAccountAgeWitness;
 import bisq.core.trade.protocol.tasks.buyer.BuyerFinalizesDelayedPayoutTx;
 import bisq.core.trade.protocol.tasks.buyer.BuyerProcessDelayedPayoutTxSignatureRequest;
 import bisq.core.trade.protocol.tasks.buyer.BuyerSendsDelayedPayoutTxSignatureResponse;
@@ -73,7 +72,6 @@ public class BuyerAsMakerProtocol extends BuyerProtocol implements MakerProtocol
                 .setup(tasks(
                         MakerProcessesInputsForDepositTxRequest.class,
                         ApplyFilter.class,
-                        VerifyPeersAccountAgeWitness.class,
                         getVerifyPeersFeePaymentClass(),
                         MakerSetsLockTime.class,
                         MakerCreateAndSignContract.class,

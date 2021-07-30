@@ -22,6 +22,7 @@ import bisq.price.spot.ExchangeRateProvider;
 
 import org.knowm.xchange.independentreserve.IndependentReserveExchange;
 
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
@@ -31,8 +32,8 @@ import java.util.Set;
 @Component
 class IndependentReserve extends ExchangeRateProvider {
 
-    public IndependentReserve() {
-        super("IndependentReserve", "independentreserve", Duration.ofMinutes(1));
+    public IndependentReserve(Environment env) {
+        super(env, "IndependentReserve", "independentreserve", Duration.ofMinutes(1));
     }
 
     @Override

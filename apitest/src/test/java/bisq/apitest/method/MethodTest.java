@@ -19,6 +19,7 @@ package bisq.apitest.method;
 
 import bisq.core.api.model.PaymentAccountForm;
 import bisq.core.payment.F2FAccount;
+import bisq.core.payment.NationalBankAccount;
 import bisq.core.proto.CoreProtoResolver;
 
 import bisq.common.util.Utilities;
@@ -131,6 +132,28 @@ public class MethodTest extends ApiTestCase {
                 "}\n";
         F2FAccount f2FAccount = (F2FAccount) createPaymentAccount(grpcClient, f2fAccountJsonString);
         return f2FAccount;
+    }
+
+
+    protected bisq.core.payment.PaymentAccount createDummyBRLAccount(GrpcClient grpcClient,
+                                                                     String holderName,
+                                                                     String nationalAccountId,
+                                                                     String holderTaxId) {
+        String nationalBankAccountJsonString = "{\n" +
+                "  \"_COMMENTS_\": [ \"Dummy Account\" ],\n" +
+                "  \"paymentMethodId\": \"NATIONAL_BANK\",\n" +
+                "  \"accountName\": \"Banco do Brasil\",\n" +
+                "  \"country\": \"BR\",\n" +
+                "  \"bankName\": \"Banco do Brasil\",\n" +
+                "  \"branchId\": \"456789-10\",\n" +
+                "  \"holderName\": \"" + holderName + "\",\n" +
+                "  \"accountNr\": \"456789-87\",\n" +
+                "  \"nationalAccountId\": \"" + nationalAccountId + "\",\n" +
+                "  \"holderTaxId\": \"" + holderTaxId + "\"\n" +
+                "}\n";
+        NationalBankAccount nationalBankAccount =
+                (NationalBankAccount) createPaymentAccount(grpcClient, nationalBankAccountJsonString);
+        return nationalBankAccount;
     }
 
     protected final bisq.core.payment.PaymentAccount createPaymentAccount(GrpcClient grpcClient, String jsonString) {

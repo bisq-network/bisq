@@ -22,6 +22,7 @@ import bisq.price.spot.ExchangeRateProvider;
 
 import org.knowm.xchange.poloniex.PoloniexExchange;
 
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
@@ -31,8 +32,8 @@ import java.util.Set;
 @Component
 class Poloniex extends ExchangeRateProvider {
 
-    public Poloniex() {
-        super("POLO", "poloniex", Duration.ofMinutes(1));
+    public Poloniex(Environment env) {
+        super(env, "POLO", "poloniex", Duration.ofMinutes(1));
     }
 
     @Override

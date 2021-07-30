@@ -34,11 +34,14 @@ import bisq.core.trade.TradeManager;
 import bisq.core.user.Preferences;
 import bisq.core.util.coin.CoinFormatter;
 
+import bisq.network.p2p.P2PService;
+
 import bisq.common.crypto.KeyRing;
 
 public abstract class DisputeClientView extends DisputeView {
     public DisputeClientView(DisputeManager<? extends DisputeList<Dispute>> DisputeManager,
                              KeyRing keyRing,
+                             P2PService p2PService,
                              TradeManager tradeManager,
                              CoinFormatter formatter,
                              Preferences preferences,
@@ -51,9 +54,9 @@ public abstract class DisputeClientView extends DisputeView {
                              RefundAgentManager refundAgentManager,
                              DaoFacade daoFacade,
                              boolean useDevPrivilegeKeys) {
-        super(DisputeManager, keyRing, tradeManager, formatter, preferences, disputeSummaryWindow, privateNotificationManager,
-                contractWindow, tradeDetailsWindow, accountAgeWitnessService,
-                mediatorManager, refundAgentManager, daoFacade, useDevPrivilegeKeys);
+        super(DisputeManager, keyRing, p2PService, tradeManager, formatter, preferences, disputeSummaryWindow,
+                privateNotificationManager, contractWindow, tradeDetailsWindow,
+                accountAgeWitnessService, mediatorManager, refundAgentManager, daoFacade, useDevPrivilegeKeys);
     }
 
     @Override

@@ -22,6 +22,7 @@ import bisq.price.spot.ExchangeRateProvider;
 
 import org.knowm.xchange.huobi.HuobiExchange;
 
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
@@ -31,8 +32,8 @@ import java.util.Set;
 @Component
 class Huobi extends ExchangeRateProvider {
 
-    public Huobi() {
-        super("HUOBI", "huobi", Duration.ofMinutes(1));
+    public Huobi(Environment env) {
+        super(env, "HUOBI", "huobi", Duration.ofMinutes(1));
     }
 
     @Override

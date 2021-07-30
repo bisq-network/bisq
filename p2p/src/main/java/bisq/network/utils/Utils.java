@@ -34,4 +34,8 @@ public class Utils {
             return new Random().nextInt(10000) + 50000;
         }
     }
+
+    public static boolean isV3Address(String address) {
+        return address.matches("[a-z2-7]{56}.onion");
+    }
 }

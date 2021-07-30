@@ -92,7 +92,6 @@ public class SellerAsMakerCreatesUnsignedDepositTx extends TradeTask {
                     "sellerPubKey from AddressEntry must match the one from the trade data. trade id =" + id);
 
             PreparedDepositTxAndMakerInputs result = processModel.getTradeWalletService().sellerAsMakerCreatesDepositTx(
-                    contractHash,
                     makerInputAmount,
                     msOutputAmount,
                     takerRawTransactionInputs,

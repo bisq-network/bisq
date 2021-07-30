@@ -40,6 +40,7 @@ import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.CoinFormatter;
 
 import bisq.network.p2p.NodeAddress;
+import bisq.network.p2p.P2PService;
 
 import bisq.common.config.Config;
 import bisq.common.crypto.KeyRing;
@@ -52,6 +53,7 @@ public class RefundClientView extends DisputeClientView {
     @Inject
     public RefundClientView(RefundManager refundManager,
                             KeyRing keyRing,
+                            P2PService p2PService,
                             TradeManager tradeManager,
                             @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter,
                             Preferences preferences,
@@ -64,7 +66,7 @@ public class RefundClientView extends DisputeClientView {
                             RefundAgentManager refundAgentManager,
                             DaoFacade daoFacade,
                             @Named(Config.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
-        super(refundManager, keyRing, tradeManager, formatter, preferences, disputeSummaryWindow,
+        super(refundManager, keyRing, p2PService, tradeManager, formatter, preferences, disputeSummaryWindow,
                 privateNotificationManager, contractWindow, tradeDetailsWindow, accountAgeWitnessService,
                 mediatorManager, refundAgentManager, daoFacade, useDevPrivilegeKeys);
     }

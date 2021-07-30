@@ -17,6 +17,11 @@
 
 package bisq.price.spot;
 
+import bisq.core.locale.CurrencyUtil;
+
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.StandardEnvironment;
+
 import com.google.common.collect.Sets;
 
 import org.apache.commons.lang3.RandomStringUtils;
@@ -46,10 +51,9 @@ import org.junit.jupiter.api.Test;
 
 import static java.lang.Thread.sleep;
 import static java.util.Arrays.asList;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 public class ExchangeRateServiceTest {
 
@@ -157,6 +161,72 @@ public class ExchangeRateServiceTest {
     }
 
     /**
+     * Tests the scenario when currencies are excluded from the PriceNode feed via configuration settings
+     */
+    @Test
+    public void getAllMarketPrices_withMultipleProviders_excludedCurrencyCodes() {
+        String excludedCcyString = "LBP,USD,EUR";
+        Environment mockedEnvironment = mock(Environment.class);
+        when(mockedEnvironment.getProperty(eq("bisq.price.fiatcurrency.excluded"), anyString())).thenReturn(excludedCcyString);
+
+        class MockedExchangeRateProvider extends ExchangeRateProvider {
+            MockedExchangeRateProvider() {
+                super(mockedEnvironment, "ExchangeName", "EXCH", Duration.ofDays(1));
+            }
+
+            @Override
+            public boolean isRunning() {
+                return true;
+            }
+
+            @Override
+            public Set<ExchangeRate> doGet() {
+                HashSet<ExchangeRate> exchangeRates = new HashSet<>();
+                // Simulate rates for all the supported ccys
+                for (String rateCurrencyCode : getSupportedFiatCurrencies()) {
+                    exchangeRates.add(new ExchangeRate(
+                            rateCurrencyCode,
+                            RandomUtils.nextDouble(1, 1000), // random price
+                            System.currentTimeMillis(),
+                            getName())); // ExchangeRateProvider name
+                }
+                return exchangeRates;
+            }
+        }
+
+        Logger exchangeRateProviderLogger;
+        String LIST_APPENDER_NAME2 = "testListAppender2";
+        exchangeRateProviderLogger = (Logger) LoggerFactory.getLogger(MockedExchangeRateProvider.class);
+        ListAppender<ILoggingEvent> listAppender2 = new ListAppender<>();
+        listAppender2.setName(LIST_APPENDER_NAME2);
+        listAppender2.start();
+        exchangeRateProviderLogger.addAppender(listAppender2);
+
+        // we request rates for all currencies, and check that:
+        //   (a) the provider supplies more currency rates than the number of currencies we are trying to exclude (sanity test),
+        //   (b) the number of missing currency rates equals the number of currencies we told PriceNode to exclude,
+        //   (c) none of the rates supplied are for an excluded currency.
+
+        Set<String> excludedFiatCurrencies = new HashSet<>(asList(excludedCcyString.split(",")));
+        MockedExchangeRateProvider mockedExchangeRateProvider = new MockedExchangeRateProvider();
+        Set<ExchangeRate> exchangeRates = mockedExchangeRateProvider.doGet();
+        assertTrue(exchangeRates.size() > excludedFiatCurrencies.size());
+        int numSortedFiatCurrencies = CurrencyUtil.getAllSortedFiatCurrencies().size();
+        int numCurrenciesFromProvider = mockedExchangeRateProvider.getSupportedFiatCurrencies().size();
+        int missingCurrencyCount = numSortedFiatCurrencies - numCurrenciesFromProvider;
+        assertEquals(missingCurrencyCount, excludedFiatCurrencies.size());
+        for (ExchangeRate exchangeRate : exchangeRates) {
+            assertFalse(excludedCcyString.contains(exchangeRate.getCurrency()));
+        }
+        List<ILoggingEvent> logsList = ((ListAppender) exchangeRateProviderLogger.getAppender(LIST_APPENDER_NAME2)).list;
+        assertEquals(3, logsList.size());
+        assertEquals(Level.INFO, logsList.get(1).getLevel());
+        assertTrue(logsList.get(0).getFormattedMessage().endsWith("will refresh every PT24H"));
+        assertTrue(logsList.get(1).getFormattedMessage().endsWith("fiat currencies excluded: [LBP, USD, EUR]"));
+        assertTrue(logsList.get(2).getFormattedMessage().endsWith("fiat currencies supported: " + numCurrenciesFromProvider));
+    }
+
+    /**
      * Performs generic sanity checks on the response format and contents.
      *
      * @param retrievedData Response data retrieved from the {@link ExchangeRateService}
@@ -259,6 +329,7 @@ public class ExchangeRateServiceTest {
      */
     private ExchangeRateProvider buildDummyExchangeRateProvider(int numberOfRatesAvailable) {
         ExchangeRateProvider dummyProvider = new ExchangeRateProvider(
+                new StandardEnvironment(),
                 "ExchangeName-" + getRandomAlphaNumericString(5),
                 "EXCH-" + getRandomAlphaNumericString(3),
                 Duration.ofDays(1)) {
@@ -298,6 +369,7 @@ public class ExchangeRateServiceTest {
 
     private ExchangeRateProvider buildDummyExchangeRateProvider(Set<String> rateCurrencyCodes) {
         ExchangeRateProvider dummyProvider = new ExchangeRateProvider(
+                new StandardEnvironment(),
                 "ExchangeName-" + getRandomAlphaNumericString(5),
                 "EXCH-" + getRandomAlphaNumericString(3),
                 Duration.ofDays(1)) {

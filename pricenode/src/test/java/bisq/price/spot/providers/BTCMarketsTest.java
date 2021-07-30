@@ -19,6 +19,8 @@ package bisq.price.spot.providers;
 
 import bisq.price.AbstractExchangeRateProviderTest;
 
+import org.springframework.core.env.StandardEnvironment;
+
 import lombok.extern.slf4j.Slf4j;
 
 import org.junit.jupiter.api.Test;
@@ -28,7 +30,7 @@ public class BTCMarketsTest extends AbstractExchangeRateProviderTest {
 
     @Test
     public void doGet_successfulCall() {
-        doGet_successfulCall(new BTCMarkets());
+        doGet_successfulCall(new BTCMarkets(new StandardEnvironment()));
     }
 
 }

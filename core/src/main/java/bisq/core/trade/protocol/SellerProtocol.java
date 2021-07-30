@@ -21,13 +21,16 @@ import bisq.core.trade.SellerTrade;
 import bisq.core.trade.Trade;
 import bisq.core.trade.messages.CounterCurrencyTransferStartedMessage;
 import bisq.core.trade.messages.DelayedPayoutTxSignatureResponse;
+import bisq.core.trade.messages.ShareBuyerPaymentAccountMessage;
 import bisq.core.trade.messages.TradeMessage;
 import bisq.core.trade.protocol.tasks.ApplyFilter;
 import bisq.core.trade.protocol.tasks.TradeTask;
+import bisq.core.trade.protocol.tasks.VerifyPeersAccountAgeWitness;
 import bisq.core.trade.protocol.tasks.seller.SellerBroadcastPayoutTx;
 import bisq.core.trade.protocol.tasks.seller.SellerFinalizesDelayedPayoutTx;
 import bisq.core.trade.protocol.tasks.seller.SellerProcessCounterCurrencyTransferStartedMessage;
 import bisq.core.trade.protocol.tasks.seller.SellerProcessDelayedPayoutTxSignatureResponse;
+import bisq.core.trade.protocol.tasks.seller.SellerProcessShareBuyerPaymentAccountMessage;
 import bisq.core.trade.protocol.tasks.seller.SellerPublishesDepositTx;
 import bisq.core.trade.protocol.tasks.seller.SellerPublishesTradeStatistics;
 import bisq.core.trade.protocol.tasks.seller.SellerSendPayoutTxPublishedMessage;
@@ -80,17 +83,25 @@ public abstract class SellerProtocol extends DisputeProtocol {
                         SellerSendsDepositTxAndDelayedPayoutTxMessage.class,
                         SellerPublishesDepositTx.class,
                         SellerPublishesTradeStatistics.class))
+                .executeTasks();
+    }
+
+    protected void handle(ShareBuyerPaymentAccountMessage message, NodeAddress peer) {
+        expect(anyPhase(Trade.Phase.DEPOSIT_PUBLISHED, Trade.Phase.DEPOSIT_CONFIRMED)
+                .with(message)
+                .from(peer))
+                .setup(tasks(SellerProcessShareBuyerPaymentAccountMessage.class,
+                        ApplyFilter.class,
+                        VerifyPeersAccountAgeWitness.class))
                 .run(() -> {
                     // We stop timeout here and don't start a new one as the
                     // SellerSendsDepositTxAndDelayedPayoutTxMessage repeats the send the message and has it's own
                     // timeout if it never succeeds.
                     stopTimeout();
-
-                    //TODO still needed? If so move to witness domain
-                    processModel.witnessDebugLog(trade);
                 })
                 .executeTasks();
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Incoming message when buyer has clicked payment started button
@@ -161,6 +172,8 @@ public abstract class SellerProtocol extends DisputeProtocol {
 
         if (message instanceof DelayedPayoutTxSignatureResponse) {
             handle((DelayedPayoutTxSignatureResponse) message, peer);
+        } else if (message instanceof ShareBuyerPaymentAccountMessage) {
+            handle((ShareBuyerPaymentAccountMessage) message, peer);
         } else if (message instanceof CounterCurrencyTransferStartedMessage) {
             handle((CounterCurrencyTransferStartedMessage) message, peer);
         }

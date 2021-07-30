@@ -52,6 +52,7 @@ import bisq.core.trade.txproof.AssetTxProofResult;
 import bisq.core.user.DontShowAgainLookup;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
+import bisq.core.user.UserPayload;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.coin.CoinFormatter;
@@ -270,7 +271,40 @@ public class GUIUtil {
                             new Popup().warning(Res.get("guiUtil.accountImport.noAccountsFound", path, fileName)).show();
                         });
             } else {
-                log.error("The selected file is not the expected file for import. The expected file name is: " + fileName + ".");
+                /* =============================================================================
+                 * TEMP CODE TO ALLOW USERS RECOVERY OF ACCOUNTS FROM BACKED-UP USER PAYLOAD.
+                 * typical location of backed-up user payload: ~/.local/share/Bisq/btc_mainnet/db/backup/backups_UserPayload
+                 * TODO: remove this once issue #5613 has been resolved (est. 2021-Q4)
+                 * =============================================================================
+                 */
+                String chosenFile = Paths.get(path).getFileName().toString();
+                String matchingRegex = "[0-9]{13}_UserPayload";
+                if (chosenFile.matches(matchingRegex)) {
+                    String directory = Paths.get(path).getParent().toString();
+                    preferences.setDirectoryChooserPath(directory);
+                    PersistenceManager<UserPayload> persistenceManager = new PersistenceManager<>(new File(directory), persistenceProtoResolver, corruptedStorageFileHandler);
+                    persistenceManager.readPersisted(chosenFile, persisted -> {
+                                StringBuilder msg = new StringBuilder();
+                                HashSet<PaymentAccount> paymentAccounts = new HashSet<>();
+                                persisted.getPaymentAccounts().forEach(paymentAccount -> {
+                                    String id = paymentAccount.getId();
+                                    if (user.getPaymentAccount(id) == null) {
+                                        paymentAccounts.add(paymentAccount);
+                                        msg.append(Res.get("guiUtil.accountExport.tradingAccount", id));
+                                    } else {
+                                        msg.append(Res.get("guiUtil.accountImport.noImport", id));
+                                    }
+                                });
+                                user.addImportedPaymentAccounts(paymentAccounts);
+                                new Popup().feedback(Res.get("guiUtil.accountImport.imported", path, msg)).show();
+                            },
+                            () -> {
+                                new Popup().warning(Res.get("guiUtil.accountImport.noAccountsFound", path, chosenFile)).show();
+                            });
+
+                } else {
+                    log.error("The selected file is not the expected file for import. The expected file name is: {} or {}", fileName, matchingRegex);
+                }
             }
         }
     }
@@ -761,12 +795,16 @@ public class GUIUtil {
     }
 
     public static void showDaoNeedsResyncPopup(Navigation navigation) {
-        UserThread.runAfter(() -> new Popup().warning(Res.get("popup.warning.daoNeedsResync"))
+        String key = "showDaoNeedsResyncPopup";
+        if (DontShowAgainLookup.showAgain(key)) {
+            UserThread.runAfter(() -> new Popup().warning(Res.get("popup.warning.daoNeedsResync"))
+                    .dontShowAgainId(key)
                     .actionButtonTextWithGoTo("navigation.dao.networkMonitor")
                     .onAction(() -> {
                             navigation.navigateTo(MainView.class, DaoView.class, MonitorView.class, DaoStateMonitorView.class);
                     })
                     .show(), 5, TimeUnit.SECONDS);
+        }
     }
 
     public static boolean isReadyForTxBroadcastOrShowPopup(P2PService p2PService, WalletsSetup walletsSetup) {

@@ -18,6 +18,7 @@
 package bisq.core.trade.protocol.tasks.seller;
 
 import bisq.core.network.MessageState;
+import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.trade.Trade;
 import bisq.core.trade.messages.DepositTxAndDelayedPayoutTxMessage;
 import bisq.core.trade.messages.TradeMailboxMessage;
@@ -64,12 +65,14 @@ public class SellerSendsDepositTxAndDelayedPayoutTxMessage extends SendMailboxMe
             // messages where only the one which gets processed by the peer would be removed we use the same uid. All
             // other data stays the same when we re-send the message at any time later.
             String deterministicId = tradeId + processModel.getMyNodeAddress().getFullAddress();
+            PaymentAccountPayload sellerPaymentAccountPayload = processModel.getPaymentAccountPayload(trade);
             message = new DepositTxAndDelayedPayoutTxMessage(
                     deterministicId,
                     processModel.getOfferId(),
                     processModel.getMyNodeAddress(),
                     checkNotNull(processModel.getDepositTx()).bitcoinSerialize(),
-                    checkNotNull(trade.getDelayedPayoutTx()).bitcoinSerialize());
+                    checkNotNull(trade.getDelayedPayoutTx()).bitcoinSerialize(),
+                    sellerPaymentAccountPayload);
         }
         return message;
     }

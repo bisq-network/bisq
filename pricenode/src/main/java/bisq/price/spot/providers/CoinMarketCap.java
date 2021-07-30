@@ -20,6 +20,7 @@ package bisq.price.spot.providers;
 import bisq.price.spot.ExchangeRate;
 import bisq.price.spot.ExchangeRateProvider;
 
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
@@ -33,8 +34,8 @@ import java.util.Set;
 @Component
 class CoinMarketCap extends ExchangeRateProvider {
 
-    public CoinMarketCap() {
-        super("CMC", "coinmarketcap", Duration.ofMinutes(5)); // large data structure, so don't request it too often
+    public CoinMarketCap(Environment env) {
+        super(env, "CMC", "coinmarketcap", Duration.ofMinutes(5)); // large data structure, so don't request it too often
     }
 
     /**

@@ -25,26 +25,39 @@ import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.failed.FailedTradesManager;
 
+import bisq.network.p2p.NodeAddress;
+import bisq.network.p2p.P2PService;
+
+import bisq.common.crypto.KeyRing;
+
 import com.google.inject.Inject;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 class FailedTradesDataModel extends ActivatableDataModel {
 
     private final FailedTradesManager failedTradesManager;
     private final TradeManager tradeManager;
+    private final P2PService p2PService;
+    private final KeyRing keyRing;
 
     private final ObservableList<FailedTradesListItem> list = FXCollections.observableArrayList();
     private final ListChangeListener<Trade> tradesListChangeListener;
 
     @Inject
-    public FailedTradesDataModel(FailedTradesManager failedTradesManager, TradeManager tradeManager) {
+    public FailedTradesDataModel(FailedTradesManager failedTradesManager,
+                                 TradeManager tradeManager,
+                                 P2PService p2PService,
+                                 KeyRing keyRing) {
         this.failedTradesManager = failedTradesManager;
         this.tradeManager = tradeManager;
+        this.p2PService = p2PService;
+        this.keyRing = keyRing;
 
         tradesListChangeListener = change -> applyList();
     }
@@ -77,9 +90,19 @@ class FailedTradesDataModel extends ActivatableDataModel {
         list.sort((o1, o2) -> o2.getTrade().getDate().compareTo(o1.getTrade().getDate()));
     }
 
-    public void onMoveTradeToPendingTrades(Trade trade) {
+    public boolean onMoveTradeToPendingTrades(Trade trade) {
+        if (!isTradeWithSameCurrentNodeAddress(trade)) {
+            return false;
+        }
+
         failedTradesManager.removeTrade(trade);
         tradeManager.addFailedTradeToPendingTrades(trade);
+        return true;
+    }
+
+    private boolean isTradeWithSameCurrentNodeAddress(Trade trade) {
+        NodeAddress tradeNodeAddress = trade.getContract().getMyNodeAddress(keyRing.getPubKeyRing());
+        return Objects.equals(p2PService.getNetworkNode().getNodeAddress(), tradeNodeAddress);
     }
 
     public void unfailTrade(Trade trade) {

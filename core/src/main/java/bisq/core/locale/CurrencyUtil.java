@@ -151,6 +151,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("LTC", "Litecoin"));
         result.add(new CryptoCurrency("XMR", "Monero"));
         result.add(new CryptoCurrency("NMC", "Namecoin"));
+        result.add(new CryptoCurrency("R-BTC", "RSK Smart Bitcoin"));
         result.add(new CryptoCurrency("SF", "Siafund"));
         result.add(new CryptoCurrency("ZEC", "Zcash"));
         result.sort(TradeCurrency::compareTo);
@@ -345,6 +346,15 @@ public class CurrencyUtil {
         ));
         currencies.sort(Comparator.comparing(TradeCurrency::getCode));
         return currencies;
+    }
+
+    public static List<TradeCurrency> getAllCapitualCurrencies() {
+        return new ArrayList<>(Arrays.asList(
+                new FiatCurrency("BRL"),
+                new FiatCurrency("EUR"),
+                new FiatCurrency("GBP"),
+                new FiatCurrency("USD")
+        ));
     }
 
     // https://www.revolut.com/help/getting-started/exchanging-currencies/what-fiat-currencies-are-supported-for-holding-and-exchange
