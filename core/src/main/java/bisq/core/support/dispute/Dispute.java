@@ -148,6 +148,8 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
     private transient String uid;
     @Setter
     private transient long payoutTxConfirms = -1;
+    @Setter
+    private transient boolean payoutDone = false;
 
     private transient final BooleanProperty isClosedProperty = new SimpleBooleanProperty();
     private transient final IntegerProperty badgeCountProperty = new SimpleIntegerProperty();

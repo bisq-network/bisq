@@ -673,6 +673,13 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     }
 
     private void showPayoutTxConfirmation(Contract contract, DisputeResult disputeResult, ResultHandler resultHandler) {
+        if (dispute.isPayoutDone()) {
+            new Popup().headLine(Res.get("disputeSummaryWindow.close.alreadyPaid.headline"))
+                    .confirmation(Res.get("disputeSummaryWindow.close.alreadyPaid.text"))
+                    .closeButtonText(Res.get("shared.cancel"))
+                    .show();
+        }
+
         Coin buyerPayoutAmount = disputeResult.getBuyerPayoutAmount();
         String buyerPayoutAddressString = contract.getBuyerPayoutAddressString();
         Coin sellerPayoutAmount = disputeResult.getSellerPayoutAmount();
@@ -734,6 +741,12 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                           String buyerPayoutAddressString,
                           String sellerPayoutAddressString,
                           ResultHandler resultHandler) {
+        if (dispute.isPayoutDone()) {
+            log.error("Payout already processed, returning to avoid double payout for dispute of trade {}",
+                    dispute.getTradeId());
+            return;
+        }
+        dispute.setPayoutDone(true);
         try {
             Transaction tx = btcWalletService.createRefundPayoutTx(buyerPayoutAmount,
                     sellerPayoutAmount,
