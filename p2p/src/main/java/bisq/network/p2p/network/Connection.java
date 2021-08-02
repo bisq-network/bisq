@@ -67,7 +67,6 @@ import java.io.StreamCorruptedException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -440,7 +439,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
 
     private void onBundleOfEnvelopes(BundleOfEnvelopes bundleOfEnvelopes, Connection connection) {
         Map<P2PDataStorage.ByteArray, Set<NetworkEnvelope>> itemsByHash = new HashMap<>();
-        Set<NetworkEnvelope> envelopesToProcess = new LinkedHashSet<>();
+        Set<NetworkEnvelope> envelopesToProcess = new HashSet<>();
         List<NetworkEnvelope> networkEnvelopes = bundleOfEnvelopes.getEnvelopes();
         for (NetworkEnvelope networkEnvelope : networkEnvelopes) {
             // If SendersNodeAddressMessage we do some verifications and apply if successful, otherwise we return false.
