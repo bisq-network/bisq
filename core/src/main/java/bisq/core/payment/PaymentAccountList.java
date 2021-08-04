@@ -25,6 +25,7 @@ import com.google.protobuf.Message;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import lombok.EqualsAndHashCode;
@@ -47,6 +48,7 @@ public class PaymentAccountList extends PersistableList<PaymentAccount> {
     public static PaymentAccountList fromProto(protobuf.PaymentAccountList proto, CoreProtoResolver coreProtoResolver) {
         return new PaymentAccountList(new ArrayList<>(proto.getPaymentAccountList().stream()
                 .map(e -> PaymentAccount.fromProto(e, coreProtoResolver))
+                .filter(Objects::nonNull)
                 .collect(Collectors.toList())));
     }
 }
