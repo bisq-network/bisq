@@ -621,10 +621,14 @@ class TakeOfferDataModel extends OfferDataModel {
 
     public Coin getTotalTxFee() {
         Coin totalTxFees = txFeeFromFeeService.add(getTxFeeForDepositTx()).add(getTxFeeForPayoutTx());
-        if (isCurrencyForTakerFeeBtc())
+        if (isCurrencyForTakerFeeBtc()) {
             return totalTxFees;
-        else
-            return totalTxFees.subtract(getTakerFee() != null ? getTakerFee() : Coin.ZERO);
+        } else {
+            // when BSQ is burnt to pay the Bisq taker fee, it has the benefit of those sats also going to the miners.
+            // so that reduces the explicit mining fee for the taker transaction
+            Coin takerFee = getTakerFee() != null ? getTakerFee() : Coin.ZERO;
+            return totalTxFees.subtract(Coin.valueOf(Math.min(takerFee.longValue(), txFeeFromFeeService.longValue())));
+        }
     }
 
     @NotNull
