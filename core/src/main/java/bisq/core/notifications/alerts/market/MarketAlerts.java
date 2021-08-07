@@ -32,6 +32,8 @@ import bisq.core.provider.price.PriceFeedService;
 import bisq.core.user.User;
 import bisq.core.util.FormattingUtils;
 
+import bisq.network.p2p.storage.P2PDataStorage;
+
 import bisq.common.crypto.KeyRing;
 import bisq.common.util.MathUtils;
 
@@ -72,12 +74,12 @@ public class MarketAlerts {
     public void onAllServicesInitialized() {
         offerBookService.addOfferBookChangedListener(new OfferBookService.OfferBookChangedListener() {
             @Override
-            public void onAdded(Offer offer) {
+            public void onAdded(Offer offer, P2PDataStorage.ByteArray hashOfPayload, int sequenceNumber) {
                 onOfferAdded(offer);
             }
 
             @Override
-            public void onRemoved(Offer offer) {
+            public void onRemoved(Offer offer, P2PDataStorage.ByteArray hashOfPayload, int sequenceNumber) {
             }
         });
         applyFilterOnAllOffers();

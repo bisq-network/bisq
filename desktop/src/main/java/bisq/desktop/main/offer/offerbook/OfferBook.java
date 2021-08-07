@@ -21,8 +21,8 @@ import bisq.core.filter.FilterManager;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferBookService;
 import bisq.core.offer.OfferRestrictions;
-import bisq.core.trade.TradeManager;
 
+import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.utils.Utils;
 
 import javax.inject.Inject;
@@ -32,6 +32,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -52,8 +53,8 @@ import static bisq.core.offer.OfferPayload.Direction.BUY;
 public class OfferBook {
     private final OfferBookService offerBookService;
     private final ObservableList<OfferBookListItem> offerBookListItems = FXCollections.observableArrayList();
-    private final Map<String, Integer> buyOfferCountMap = new HashMap<>();
-    private final Map<String, Integer> sellOfferCountMap = new HashMap<>();
+    private final Map<String, Integer> buyOfferCountMap = new HashMap<>();  // TODO what is this for?
+    private final Map<String, Integer> sellOfferCountMap = new HashMap<>(); // TODO what is this for?
     private final FilterManager filterManager;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -61,13 +62,14 @@ public class OfferBook {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    OfferBook(OfferBookService offerBookService, TradeManager tradeManager, FilterManager filterManager) {
+    OfferBook(OfferBookService offerBookService, FilterManager filterManager) {
         this.offerBookService = offerBookService;
         this.filterManager = filterManager;
 
         offerBookService.addOfferBookChangedListener(new OfferBookService.OfferBookChangedListener() {
             @Override
-            public void onAdded(Offer offer) {
+            public void onAdded(Offer offer, P2PDataStorage.ByteArray hashOfPayload, int sequenceNumber) {
+                printOfferBookListItems("Before onAdded");
                 // We get onAdded called every time a new ProtectedStorageEntry is received.
                 // Mostly it is the same OfferPayload but the ProtectedStorageEntry is different.
                 // We filter here to only add new offers if the same offer (using equals) was not already added and it
@@ -83,44 +85,138 @@ public class OfferBook {
                     return;
                 }
 
-                boolean hasSameOffer = offerBookListItems.stream()
-                        .anyMatch(item -> item.getOffer().equals(offer));
+                // Use offer.equals(offer) to see if the OfferBook list contains an exact
+                // match -- offer.equals(offer) includes comparisons of payload, state
+                // and errorMessage.
+                boolean hasSameOffer = offerBookListItems.stream().anyMatch(item -> item.getOffer().equals(offer));
                 if (!hasSameOffer) {
-                    OfferBookListItem offerBookListItem = new OfferBookListItem(offer);
-                    // We don't use the contains method as the equals method in Offer takes state and errorMessage into account.
-                    // If we have an offer with same ID we remove it and add the new offer as it might have a changed state.
-                    Optional<OfferBookListItem> candidateWithSameId = offerBookListItems.stream()
-                            .filter(item -> item.getOffer().getId().equals(offer.getId()))
-                            .findAny();
-                    if (candidateWithSameId.isPresent()) {
-                        log.warn("We had an old offer in the list with the same Offer ID. We remove the old one. " +
-                                "old offerBookListItem={}, new offerBookListItem={}", candidateWithSameId.get(), offerBookListItem);
-                        offerBookListItems.remove(candidateWithSameId.get());
+                    OfferBookListItem newOfferBookListItem = new OfferBookListItem(offer, hashOfPayload, sequenceNumber);
+                    removeAnyOldOfferBookListItemsBeforeAddingReplacement(newOfferBookListItem);
+                    offerBookListItems.add(newOfferBookListItem);  // Add replacement.
+                    if (log.isDebugEnabled()) {
+                        log.debug("onAdded: Added new offer {}\n"
+                                        + "\t\tonAdded.seqNo {}  newItem.seqNo: {}  newItem.payloadHash: {}",
+                                offer.getId(),
+                                sequenceNumber,
+                                newOfferBookListItem.getSequenceNumber(),
+                                newOfferBookListItem.hashOfPayload == null ? "null" : newOfferBookListItem.hashOfPayload.getHex());
                     }
-
-                    offerBookListItems.add(offerBookListItem);
                 } else {
                     log.debug("We have the exact same offer already in our list and ignore the onAdded call. ID={}", offer.getId());
                 }
+                printOfferBookListItems("After onAdded");
             }
 
             @Override
-            public void onRemoved(Offer offer) {
-                removeOffer(offer, tradeManager);
+            public void onRemoved(Offer offer, P2PDataStorage.ByteArray hashOfPayload, int sequenceNumber) {
+                printOfferBookListItems("Before onRemoved");
+                removeOffer(offer, hashOfPayload, sequenceNumber);
+                printOfferBookListItems("After onRemoved");
             }
         });
     }
 
-    public void removeOffer(Offer offer, TradeManager tradeManager) {
+    private void removeAnyOldOfferBookListItemsBeforeAddingReplacement(OfferBookListItem newOfferBookListItem) {
+        String offerId = newOfferBookListItem.getOffer().getId();
+        List<OfferBookListItem> offerItemsWithSameIdAndDifferentHash = offerBookListItems.stream()
+                .filter(item -> item.getOffer().getId().equals(offerId) && (
+                        item.hashOfPayload == null
+                                || !item.hashOfPayload.equals(newOfferBookListItem.hashOfPayload))
+                )
+                .collect(Collectors.toList());
+        if (offerItemsWithSameIdAndDifferentHash.size() > 0) {
+            offerItemsWithSameIdAndDifferentHash.forEach(oldOfferItem -> {
+                offerBookListItems.remove(oldOfferItem);
+                if (log.isDebugEnabled()) {
+                    log.debug("onAdded: Removed old offer {} from list\n"
+                                    + "\told.seqNo = {} old.payloadHash  = {}\n"
+                                    + "\tThis may make a subsequent onRemoved( {} ) call redundant.",
+                            offerId,
+                            oldOfferItem.getSequenceNumber(),
+                            oldOfferItem.getHashOfPayload() == null ? "null" : oldOfferItem.getHashOfPayload().getHex(),
+                            oldOfferItem.getOffer().getId());
+                }
+            });
+        }
+    }
+
+    public void removeOffer(Offer offer, P2PDataStorage.ByteArray hashOfPayload, int sequenceNumber) {
         // Update state in case that that offer is used in the take offer screen, so it gets updated correctly
         offer.setState(Offer.State.REMOVED);
-
         offer.cancelAvailabilityRequest();
-        // We don't use the contains method as the equals method in Offer takes state and errorMessage into account.
+
+        if (log.isDebugEnabled()) {
+            log.debug("onRemoved: id={} \n\tpayload-hash={} \n\tseq-no={}",
+                    offer.getId(),
+                    hashOfPayload.getHex(),
+                    sequenceNumber);
+        }
+
+        // Find the removal candidate in the OfferBook list with matching offer-id and payload-hash.
         Optional<OfferBookListItem> candidateToRemove = offerBookListItems.stream()
-                .filter(item -> item.getOffer().getId().equals(offer.getId()))
+                .filter(item -> item.getOffer().getId().equals(offer.getId()) && (
+                        item.hashOfPayload == null
+                                || item.hashOfPayload.equals(hashOfPayload))
+                )
                 .findAny();
-        candidateToRemove.ifPresent(offerBookListItems::remove);
+
+        if (!candidateToRemove.isPresent()) {
+            // Candidate is not in list, print reason and return.
+            if (log.isDebugEnabled()) {
+                log.debug("List does not contain offer with id {} and payload-hash {}",
+                        offer.getId(),
+                        hashOfPayload.getHex());
+            }
+            return;
+        }
+
+        OfferBookListItem candidate = candidateToRemove.get();
+
+        // Remove the candidate only if the storage sequenceNumber has increased, and the candidate's
+        // storage payload hash matches the onRemoved hashOfPayload parameter.  We may receive add/remove
+        // messages out of order (from api 'editoffer'), so we use the sequenceNumber and payload hash to
+        // ensure we do not remove an edited offer immediately after it was added.
+
+        if (candidate.getSequenceNumber() >= sequenceNumber) {
+            // Candidate's seq-no is not < onRemoved.seq-no, print reason for not removing candidate and return.
+            if (log.isDebugEnabled()) {
+                log.debug("Candidate.seqNo: {} < onRemoved.seqNo: {} ?"
+                                + " No, old offer not removed",
+                        candidate.getSequenceNumber(),
+                        sequenceNumber);
+            }
+            return;
+        }
+
+        // The seq-no test for removal has passed;  ensure the candidate is removed
+        // only if its payload hash matches the method arg (payload hash.).
+        if (log.isDebugEnabled()) {
+            // Print the seq-no test has passed.
+            log.debug("Candidate.seqNo: {} < onRemoved.seqNo: {} ? Yes",
+                    candidate.getSequenceNumber(),
+                    sequenceNumber);
+        }
+
+        if ((candidate.getHashOfPayload() == null || candidate.getHashOfPayload().equals(hashOfPayload))) {
+            // The payload-hash test passed, remove the candidate and print reason.
+            offerBookListItems.remove(candidate);
+
+            if (log.isDebugEnabled()) {
+                log.debug("Candidate.payload-hash: {} is null or == onRemoved.payload-hash: {} ?"
+                                + " Yes, removed old offer",
+                        candidate.hashOfPayload == null ? "null" : candidate.hashOfPayload.getHex(),
+                        hashOfPayload == null ? "null" : hashOfPayload.getHex());
+            }
+        } else {
+            if (log.isDebugEnabled()) {
+                // Candidate's payload-hash test failed:  payload-hash != onRemoved.payload-hash.
+                // Print reason for not removing candidate.
+                log.debug("Candidate.payload-hash: {} == onRemoved.payload-hash: {} ?"
+                                + " No, old offer not removed",
+                        candidate.hashOfPayload == null ? "null" : candidate.hashOfPayload.getHex(),
+                        hashOfPayload == null ? "null" : hashOfPayload.getHex());
+            }
+        }
     }
 
     public ObservableList<OfferBookListItem> getOfferBookListItems() {
@@ -141,8 +237,21 @@ public class OfferBook {
             log.debug("offerBookListItems.size {}", offerBookListItems.size());
             fillOfferCountMaps();
         } catch (Throwable t) {
-            t.printStackTrace();
-            log.error("Error at fillOfferBookListItems: " + t.toString());
+            log.error("Error at fillOfferBookListItems: " + t);
+        }
+    }
+
+    public void printOfferBookListItems(String msg) {
+        if (log.isDebugEnabled()) {
+            if (offerBookListItems.size() == 0) {
+                log.debug("{} -> OfferBookListItems:  none", msg);
+                return;
+            }
+
+            StringBuilder stringBuilder = new StringBuilder(msg + " -> ").append("OfferBookListItems:").append("\n");
+            offerBookListItems.forEach(i -> stringBuilder.append("\t").append(i.toString()).append("\n"));
+            stringBuilder.deleteCharAt(stringBuilder.length() - 1);
+            log.debug(stringBuilder.toString());
         }
     }
 
