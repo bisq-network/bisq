@@ -611,10 +611,14 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     }
 
     public Coin getTxFee() {
-        if (isCurrencyForMakerFeeBtc())
+        if (isCurrencyForMakerFeeBtc()) {
             return txFeeFromFeeService;
-        else
-            return txFeeFromFeeService.subtract(getMakerFee());
+        } else {
+            // when BSQ is burnt to pay the Bisq maker fee, it has the benefit of those sats also going to the miners.
+            // so that reduces the explicit mining fee for the maker transaction
+            Coin makerFee = getMakerFee() != null ? getMakerFee() : Coin.ZERO;
+            return txFeeFromFeeService.isGreaterThan(makerFee) ? txFeeFromFeeService.subtract(makerFee) : Coin.ZERO;
+        }
     }
 
     void swapTradeToSavings() {
