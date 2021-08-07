@@ -1,14 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<configuration debug="true">
+<configuration>
     <appender name="CONSOLE_APPENDER" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <pattern>%highlight(%d{MMM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{30}: %msg %xEx%n)</pattern>
         </encoder>
     </appender>
-
-    <logger name="bisq.desktop" level="TRACE" additivity="false">
-        <appender-ref ref="CONSOLE_APPENDER" />
-    </logger>
 
     <root level="TRACE">
         <appender-ref ref="CONSOLE_APPENDER"/>
