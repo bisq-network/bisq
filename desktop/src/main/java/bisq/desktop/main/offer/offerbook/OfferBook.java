@@ -53,8 +53,8 @@ import static bisq.core.offer.OfferPayload.Direction.BUY;
 public class OfferBook {
     private final OfferBookService offerBookService;
     private final ObservableList<OfferBookListItem> offerBookListItems = FXCollections.observableArrayList();
-    private final Map<String, Integer> buyOfferCountMap = new HashMap<>();  // TODO what is this for?
-    private final Map<String, Integer> sellOfferCountMap = new HashMap<>(); // TODO what is this for?
+    private final Map<String, Integer> buyOfferCountMap = new HashMap<>();
+    private final Map<String, Integer> sellOfferCountMap = new HashMap<>();
     private final FilterManager filterManager;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
