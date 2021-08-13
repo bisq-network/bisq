@@ -148,35 +148,52 @@ public class OfferBook {
         if (log.isDebugEnabled()) {
             log.debug("onRemoved: id={} \n\tpayload-hash={} \n\tseq-no={}",
                     offer.getId(),
-                    hashOfPayload.getHex(),
+                    hashOfPayload == null ? "null" : hashOfPayload.getHex(),
                     sequenceNumber);
         }
 
-        // Find the removal candidate in the OfferBook list with matching offer-id and payload-hash.
-        Optional<OfferBookListItem> candidateToRemove = offerBookListItems.stream()
+        // Find the removal candidate in the OfferBook list with matching offerId and payload-hash.
+        Optional<OfferBookListItem> candidateWithMatchingPayloadHash = offerBookListItems.stream()
                 .filter(item -> item.getOffer().getId().equals(offer.getId()) && (
                         item.hashOfPayload == null
                                 || item.hashOfPayload.equals(hashOfPayload))
                 )
                 .findAny();
 
-        if (!candidateToRemove.isPresent()) {
-            // Candidate is not in list, print reason and return.
+        if (!candidateWithMatchingPayloadHash.isPresent()) {
             if (log.isDebugEnabled()) {
-                log.debug("List does not contain offer with id {} and payload-hash {}",
+                log.debug("UI view list does not contain offer with id {} and payload-hash {}",
                         offer.getId(),
-                        hashOfPayload.getHex());
+                        hashOfPayload == null ? "null" : hashOfPayload.getHex());
             }
+
+            // The OfferBookListItem with a null or matching payload-hash was not found.
+            // However, when the API's CLI is used to edit and deactivate an offer
+            // in the same command, the edited offer is not re-published (and cannot be
+            // found in local storage).  In this case, we need to remove the deactivated
+            // offer from the list if the local store does not contain an offer with a
+            // matching offerId.
+            if (!isStoredLocally(offer)) {
+                Optional<OfferBookListItem> viewItem = getOfferBookListItem(offer);
+                viewItem.ifPresent((item) -> {
+                    offerBookListItems.remove(item);
+                    if (log.isDebugEnabled()) {
+                        log.debug("Storage does not contain an offer with id {} either;"
+                                        + "  it is removed from UI view list.",
+                                offer.getId());
+                    }
+                });
+            }
+
             return;
         }
 
-        OfferBookListItem candidate = candidateToRemove.get();
+        OfferBookListItem candidate = candidateWithMatchingPayloadHash.get();
 
         // Remove the candidate only if the storage sequenceNumber has increased, and the candidate's
         // storage payload hash matches the onRemoved hashOfPayload parameter.  We may receive add/remove
         // messages out of order (from api 'editoffer'), so we use the sequenceNumber and payload hash to
         // ensure we do not remove an edited offer immediately after it was added.
-
         if (candidate.getSequenceNumber() >= sequenceNumber) {
             // Candidate's seq-no is not < onRemoved.seq-no, print reason for not removing candidate and return.
             if (log.isDebugEnabled()) {
@@ -185,18 +202,19 @@ public class OfferBook {
                         candidate.getSequenceNumber(),
                         sequenceNumber);
             }
+
             return;
         }
 
-        // The seq-no test for removal has passed;  ensure the candidate is removed
-        // only if its payload hash matches the method arg (payload hash.).
+        // The seq-no test for removal has passed.
         if (log.isDebugEnabled()) {
             // Print the seq-no test has passed.
             log.debug("Candidate.seqNo: {} < onRemoved.seqNo: {} ? Yes",
                     candidate.getSequenceNumber(),
                     sequenceNumber);
         }
-
+        // Ensure the candidate is removed only if its payload hash matches the
+        // method's hashOfPayload param.
         if ((candidate.getHashOfPayload() == null || candidate.getHashOfPayload().equals(hashOfPayload))) {
             // The payload-hash test passed, remove the candidate and print reason.
             offerBookListItems.remove(candidate);
@@ -229,8 +247,8 @@ public class OfferBook {
             // Investigate why....
             offerBookListItems.clear();
             offerBookListItems.addAll(offerBookService.getOffers().stream()
-                    .filter(o -> !filterManager.isOfferIdBanned(o.getId()))
-                    .filter(o -> !OfferRestrictions.requiresNodeAddressUpdate() || Utils.isV3Address(o.getMakerNodeAddress().getHostName()))
+                    .filter(o -> !isOfferIdBanned(o))
+                    .filter(o -> isV3NodeAddressCompliant(o))
                     .map(OfferBookListItem::new)
                     .collect(Collectors.toList()));
 
@@ -261,6 +279,30 @@ public class OfferBook {
 
     public Map<String, Integer> getSellOfferCountMap() {
         return sellOfferCountMap;
+    }
+
+
+    private Optional<OfferBookListItem> getOfferBookListItem(Offer offer) {
+        return offerBookListItems.stream()
+                .filter(item -> item.getOffer().getId().equals(offer.getId()))
+                .findFirst();
+    }
+
+    private boolean isOfferIdBanned(Offer offer) {
+        return filterManager.isOfferIdBanned(offer.getId());
+    }
+
+    private boolean isV3NodeAddressCompliant(Offer offer) {
+        return !OfferRestrictions.requiresNodeAddressUpdate()
+                || Utils.isV3Address(offer.getMakerNodeAddress().getHostName());
+    }
+
+    private boolean isStoredLocally(Offer offer) {
+        return offerBookService.getOffers().stream()
+                .anyMatch(o -> o.getId().equals(offer.getId())
+                        && !isOfferIdBanned(o)
+                        && isV3NodeAddressCompliant(o)
+                );
     }
 
     private void fillOfferCountMaps() {
