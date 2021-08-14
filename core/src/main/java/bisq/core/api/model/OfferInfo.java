@@ -63,7 +63,8 @@ public class OfferInfo implements Payload {
     private final long date;
     private final String state;
     private final boolean isActivated;
-    private boolean isMyOffer;
+    private boolean isMyOffer; // Not final -- may be re-set after instantiation.
+    private final boolean isMyPendingOffer;
 
     public OfferInfo(OfferInfoBuilder builder) {
         this.id = builder.id;
@@ -91,17 +92,28 @@ public class OfferInfo implements Payload {
         this.state = builder.state;
         this.isActivated = builder.isActivated;
         this.isMyOffer = builder.isMyOffer;
+        this.isMyPendingOffer = builder.isMyPendingOffer;
     }
 
-    // Allow isMyOffer to be set on new offers' OfferInfo instances.
-    public void setIsMyOffer(boolean myOffer) {
-        isMyOffer = myOffer;
+    // Allow isMyOffer to be set on a new offer's OfferInfo instance.
+    public void setIsMyOffer(boolean isMyOffer) {
+        this.isMyOffer = isMyOffer;
     }
 
     public static OfferInfo toOfferInfo(Offer offer) {
         // Assume the offer is not mine, but isMyOffer can be reset to true, i.e., when
         // calling TradeInfo toTradeInfo(Trade trade, String role, boolean isMyOffer);
         return getOfferInfoBuilder(offer, false).build();
+    }
+
+    public static OfferInfo toPendingOfferInfo(Offer myNewOffer) {
+        // Use this to build an OfferInfo instance when a new OpenOffer is being
+        // prepared, and no valid OpenOffer state (AVAILABLE, DEACTIVATED) exists.
+        // It is needed for the CLI's 'createoffer' output, which has a boolean 'ENABLED'
+        // column that will show a PENDING value when this.isMyPendingOffer = true.
+        return getOfferInfoBuilder(myNewOffer, true)
+                .withIsMyPendingOffer(true)
+                .build();
     }
 
     public static OfferInfo toOfferInfo(OpenOffer openOffer) {
@@ -171,6 +183,7 @@ public class OfferInfo implements Payload {
                 .setState(state)
                 .setIsActivated(isActivated)
                 .setIsMyOffer(isMyOffer)
+                .setIsMyPendingOffer(isMyPendingOffer)
                 .build();
     }
 
@@ -202,6 +215,7 @@ public class OfferInfo implements Payload {
                 .withState(proto.getState())
                 .withIsActivated(proto.getIsActivated())
                 .withIsMyOffer(proto.getIsMyOffer())
+                .withIsMyPendingOffer(proto.getIsMyPendingOffer())
                 .build();
     }
 
@@ -237,6 +251,7 @@ public class OfferInfo implements Payload {
         private String state;
         private boolean isActivated;
         private boolean isMyOffer;
+        private boolean isMyPendingOffer;
 
         public OfferInfoBuilder withId(String id) {
             this.id = id;
@@ -360,6 +375,11 @@ public class OfferInfo implements Payload {
 
         public OfferInfoBuilder withIsMyOffer(boolean isMyOffer) {
             this.isMyOffer = isMyOffer;
+            return this;
+        }
+
+        public OfferInfoBuilder withIsMyPendingOffer(boolean isMyPendingOffer) {
+            this.isMyPendingOffer = isMyPendingOffer;
             return this;
         }
 

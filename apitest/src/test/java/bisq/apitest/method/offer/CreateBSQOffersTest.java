@@ -39,6 +39,7 @@ import static java.util.Collections.singletonList;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static protobuf.OfferPayload.Direction.BUY;
 import static protobuf.OfferPayload.Direction.SELL;
 
@@ -70,6 +71,9 @@ public class CreateBSQOffersTest extends AbstractOfferTest {
                 alicesBsqAcct.getId(),
                 MAKER_FEE_CURRENCY_CODE);
         log.info("Sell BSQ (Buy BTC) OFFER:\n{}", formatOfferTable(singletonList(newOffer), BSQ));
+        assertTrue(newOffer.getIsMyOffer());
+        assertTrue(newOffer.getIsMyPendingOffer());
+
         String newOfferId = newOffer.getId();
         assertNotEquals("", newOfferId);
         assertEquals(BUY.name(), newOffer.getDirection());
@@ -86,6 +90,8 @@ public class CreateBSQOffersTest extends AbstractOfferTest {
         genBtcBlockAndWaitForOfferPreparation();
 
         newOffer = aliceClient.getMyOffer(newOfferId);
+        assertTrue(newOffer.getIsMyOffer());
+        assertFalse(newOffer.getIsMyPendingOffer());
         assertEquals(newOfferId, newOffer.getId());
         assertEquals(BUY.name(), newOffer.getDirection());
         assertFalse(newOffer.getUseMarketBasedPrice());
@@ -112,6 +118,9 @@ public class CreateBSQOffersTest extends AbstractOfferTest {
                 alicesBsqAcct.getId(),
                 MAKER_FEE_CURRENCY_CODE);
         log.info("SELL 20K BSQ OFFER:\n{}", formatOfferTable(singletonList(newOffer), BSQ));
+        assertTrue(newOffer.getIsMyOffer());
+        assertTrue(newOffer.getIsMyPendingOffer());
+
         String newOfferId = newOffer.getId();
         assertNotEquals("", newOfferId);
         assertEquals(SELL.name(), newOffer.getDirection());
@@ -128,6 +137,8 @@ public class CreateBSQOffersTest extends AbstractOfferTest {
         genBtcBlockAndWaitForOfferPreparation();
 
         newOffer = aliceClient.getMyOffer(newOfferId);
+        assertTrue(newOffer.getIsMyOffer());
+        assertFalse(newOffer.getIsMyPendingOffer());
         assertEquals(newOfferId, newOffer.getId());
         assertEquals(SELL.name(), newOffer.getDirection());
         assertFalse(newOffer.getUseMarketBasedPrice());
@@ -154,6 +165,9 @@ public class CreateBSQOffersTest extends AbstractOfferTest {
                 alicesBsqAcct.getId(),
                 MAKER_FEE_CURRENCY_CODE);
         log.info("BUY 1-2K BSQ OFFER:\n{}", formatOfferTable(singletonList(newOffer), BSQ));
+        assertTrue(newOffer.getIsMyOffer());
+        assertTrue(newOffer.getIsMyPendingOffer());
+
         String newOfferId = newOffer.getId();
         assertNotEquals("", newOfferId);
         assertEquals(BUY.name(), newOffer.getDirection());
@@ -170,6 +184,8 @@ public class CreateBSQOffersTest extends AbstractOfferTest {
         genBtcBlockAndWaitForOfferPreparation();
 
         newOffer = aliceClient.getMyOffer(newOfferId);
+        assertTrue(newOffer.getIsMyOffer());
+        assertFalse(newOffer.getIsMyPendingOffer());
         assertEquals(newOfferId, newOffer.getId());
         assertEquals(BUY.name(), newOffer.getDirection());
         assertFalse(newOffer.getUseMarketBasedPrice());
@@ -196,6 +212,9 @@ public class CreateBSQOffersTest extends AbstractOfferTest {
                 alicesBsqAcct.getId(),
                 MAKER_FEE_CURRENCY_CODE);
         log.info("SELL 5-10K BSQ OFFER:\n{}", formatOfferTable(singletonList(newOffer), BSQ));
+        assertTrue(newOffer.getIsMyOffer());
+        assertTrue(newOffer.getIsMyPendingOffer());
+
         String newOfferId = newOffer.getId();
         assertNotEquals("", newOfferId);
         assertEquals(SELL.name(), newOffer.getDirection());
@@ -212,6 +231,8 @@ public class CreateBSQOffersTest extends AbstractOfferTest {
         genBtcBlockAndWaitForOfferPreparation();
 
         newOffer = aliceClient.getMyOffer(newOfferId);
+        assertTrue(newOffer.getIsMyOffer());
+        assertFalse(newOffer.getIsMyPendingOffer());
         assertEquals(newOfferId, newOffer.getId());
         assertEquals(SELL.name(), newOffer.getDirection());
         assertFalse(newOffer.getUseMarketBasedPrice());

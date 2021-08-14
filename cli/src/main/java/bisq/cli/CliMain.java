@@ -509,7 +509,7 @@ public class CliMain {
                     }
                     var tradeId = opts.getTradeId();
                     var address = opts.getAddress();
-                    // Multi-word memos must be double quoted.
+                    // Multi-word memos must be double-quoted.
                     var memo = opts.getMemo();
                     client.withdrawFunds(tradeId, address, memo);
                     out.printf("trade %s funds sent to btc address %s%n", tradeId, address);

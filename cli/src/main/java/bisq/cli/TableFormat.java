@@ -202,7 +202,7 @@ public class TableFormat {
             return headerLine
                     + offers.stream()
                     .map(o -> format(colDataFormat,
-                            o.getIsActivated() ? "YES" : "NO",
+                            formatEnabled(o),
                             o.getDirection(),
                             formatPrice(o.getPrice()),
                             formatAmountRange(o.getMinAmount(), o.getAmount()),
@@ -300,7 +300,7 @@ public class TableFormat {
             return headerLine
                     + offers.stream()
                     .map(o -> format(colDataFormat,
-                            o.getIsActivated() ? "YES" : "NO",
+                            formatEnabled(o),
                             directionFormat.apply(o),
                             formatCryptoCurrencyPrice(o.getPrice()),
                             formatAmountRange(o.getMinAmount(), o.getAmount()),
@@ -322,6 +322,14 @@ public class TableFormat {
                             o.getId()))
                     .collect(Collectors.joining("\n"));
         }
+    }
+
+
+    private static String formatEnabled(OfferInfo offerInfo) {
+        if (offerInfo.getIsMyOffer() && offerInfo.getIsMyPendingOffer())
+            return "PENDING";
+        else
+            return offerInfo.getIsActivated() ? "YES" : "NO";
     }
 
     private static int getLongestPaymentMethodColWidth(List<OfferInfo> offers) {

@@ -50,6 +50,7 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 import static bisq.core.api.model.OfferInfo.toOfferInfo;
+import static bisq.core.api.model.OfferInfo.toPendingOfferInfo;
 import static bisq.daemon.grpc.interceptor.GrpcServiceRateMeteringConfig.getCustomRateMeteringInterceptor;
 import static bisq.proto.grpc.OffersGrpc.*;
 import static java.util.concurrent.TimeUnit.MINUTES;
@@ -160,8 +161,7 @@ class GrpcOffersService extends OffersImplBase {
                     offer -> {
                         // This result handling consumer's accept operation will return
                         // the new offer to the gRPC client after async placement is done.
-                        OfferInfo offerInfo = toOfferInfo(offer);
-                        offerInfo.setIsMyOffer(true);
+                        OfferInfo offerInfo = toPendingOfferInfo(offer);
                         CreateOfferReply reply = CreateOfferReply.newBuilder()
                                 .setOffer(offerInfo.toProtoMessage())
                                 .build();

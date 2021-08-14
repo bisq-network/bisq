@@ -192,6 +192,7 @@ message OfferInfo {
     uint64 makerFee = 23;
     bool isActivated = 24;
     bool isMyOffer = 25;
+    bool isMyPendingOffer = 26;
 }
 
 message AvailabilityResultWithDescription {
