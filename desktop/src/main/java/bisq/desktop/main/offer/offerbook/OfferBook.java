@@ -91,7 +91,7 @@ public class OfferBook {
                 boolean hasSameOffer = offerBookListItems.stream().anyMatch(item -> item.getOffer().equals(offer));
                 if (!hasSameOffer) {
                     OfferBookListItem newOfferBookListItem = new OfferBookListItem(offer, hashOfPayload, sequenceNumber);
-                    removeAnyOldOfferBookListItemsBeforeAddingReplacement(newOfferBookListItem);
+                    removeDuplicateItem(newOfferBookListItem);
                     offerBookListItems.add(newOfferBookListItem);  // Add replacement.
                     if (log.isDebugEnabled()) {
                         log.debug("onAdded: Added new offer {}\n"
@@ -116,7 +116,7 @@ public class OfferBook {
         });
     }
 
-    private void removeAnyOldOfferBookListItemsBeforeAddingReplacement(OfferBookListItem newOfferBookListItem) {
+    private void removeDuplicateItem(OfferBookListItem newOfferBookListItem) {
         String offerId = newOfferBookListItem.getOffer().getId();
         List<OfferBookListItem> offerItemsWithSameIdAndDifferentHash = offerBookListItems.stream()
                 .filter(item -> item.getOffer().getId().equals(offerId) && (
