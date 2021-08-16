@@ -407,7 +407,7 @@ public class OfferUtil {
                 originalOfferPayload.getUpperClosePrice(),
                 originalOfferPayload.isPrivateOffer(),
                 originalOfferPayload.getHashOfChallenge(),
-                originalOfferPayload.getExtraDataMap(),
+                mutableOfferPayloadFields.getExtraDataMap(),
                 originalOfferPayload.getProtocolVersion());
     }
 

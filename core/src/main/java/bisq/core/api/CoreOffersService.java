@@ -327,7 +327,8 @@ class CoreOffersService {
                 offer.getOfferPayload().getCountryCode(),
                 offer.getOfferPayload().getAcceptedCountryCodes(),
                 offer.getOfferPayload().getBankId(),
-                offer.getOfferPayload().getAcceptedBankIds());
+                offer.getOfferPayload().getAcceptedBankIds(),
+                offer.getOfferPayload().getExtraDataMap());
         log.info("Merging OfferPayload with {}", mutableOfferPayloadFields);
         return offerUtil.getMergedOfferPayload(openOffer, mutableOfferPayloadFields);
     }

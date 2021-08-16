@@ -18,6 +18,7 @@
 package bisq.core.offer;
 
 import java.util.List;
+import java.util.Map;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -48,6 +49,8 @@ public final class MutableOfferPayloadFields {
     private final String bankId;
     @Nullable
     private final List<String> acceptedBankIds;
+    @Nullable
+    private final Map<String, String> extraDataMap;
 
     public MutableOfferPayloadFields(OfferPayload offerPayload) {
         this(offerPayload.getPrice(),
@@ -60,7 +63,8 @@ public final class MutableOfferPayloadFields {
                 offerPayload.getCountryCode(),
                 offerPayload.getAcceptedCountryCodes(),
                 offerPayload.getBankId(),
-                offerPayload.getAcceptedBankIds());
+                offerPayload.getAcceptedBankIds(),
+                offerPayload.getExtraDataMap());
     }
 
     public MutableOfferPayloadFields(long price,
@@ -73,7 +77,8 @@ public final class MutableOfferPayloadFields {
                                      @Nullable String countryCode,
                                      @Nullable List<String> acceptedCountryCodes,
                                      @Nullable String bankId,
-                                     @Nullable List<String> acceptedBankIds) {
+                                     @Nullable List<String> acceptedBankIds,
+                                     @Nullable Map<String, String> extraDataMap) {
         this.price = price;
         this.marketPriceMargin = marketPriceMargin;
         this.useMarketBasedPrice = useMarketBasedPrice;
@@ -85,5 +90,6 @@ public final class MutableOfferPayloadFields {
         this.acceptedCountryCodes = acceptedCountryCodes;
         this.bankId = bankId;
         this.acceptedBankIds = acceptedBankIds;
+        this.extraDataMap = extraDataMap;
     }
 }
