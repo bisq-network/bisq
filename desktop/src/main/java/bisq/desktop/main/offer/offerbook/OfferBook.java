@@ -247,8 +247,7 @@ public class OfferBook {
             // Investigate why....
             offerBookListItems.clear();
             offerBookListItems.addAll(offerBookService.getOffers().stream()
-                    .filter(o -> !isOfferIdBanned(o))
-                    .filter(o -> isV3NodeAddressCompliant(o))
+                    .filter(o -> isOfferAllowed(o))
                     .map(OfferBookListItem::new)
                     .collect(Collectors.toList()));
 
@@ -288,21 +287,16 @@ public class OfferBook {
                 .findFirst();
     }
 
-    private boolean isOfferIdBanned(Offer offer) {
-        return filterManager.isOfferIdBanned(offer.getId());
-    }
-
-    private boolean isV3NodeAddressCompliant(Offer offer) {
-        return !OfferRestrictions.requiresNodeAddressUpdate()
+    private boolean isOfferAllowed(Offer offer) {
+        boolean isBanned = filterManager.isOfferIdBanned(offer.getId());
+        boolean isV3NodeAddressCompliant = !OfferRestrictions.requiresNodeAddressUpdate()
                 || Utils.isV3Address(offer.getMakerNodeAddress().getHostName());
+        return !isBanned && isV3NodeAddressCompliant;
     }
 
     private boolean isStoredLocally(Offer offer) {
         return offerBookService.getOffers().stream()
-                .anyMatch(o -> o.getId().equals(offer.getId())
-                        && !isOfferIdBanned(o)
-                        && isV3NodeAddressCompliant(o)
-                );
+                .anyMatch(o -> o.getId().equals(offer.getId()) && isOfferAllowed(o));
     }
 
     private void fillOfferCountMaps() {
