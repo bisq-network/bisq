@@ -261,23 +261,11 @@ public class OfferBook {
         return sellOfferCountMap;
     }
 
-
-    private Optional<OfferBookListItem> getOfferBookListItem(Offer offer) {
-        return offerBookListItems.stream()
-                .filter(item -> item.getOffer().getId().equals(offer.getId()))
-                .findFirst();
-    }
-
     private boolean isOfferAllowed(Offer offer) {
         boolean isBanned = filterManager.isOfferIdBanned(offer.getId());
         boolean isV3NodeAddressCompliant = !OfferRestrictions.requiresNodeAddressUpdate()
                 || Utils.isV3Address(offer.getMakerNodeAddress().getHostName());
         return !isBanned && isV3NodeAddressCompliant;
-    }
-
-    private boolean isStoredLocally(Offer offer) {
-        return offerBookService.getOffers().stream()
-                .anyMatch(o -> o.getId().equals(offer.getId()) && isOfferAllowed(o));
     }
 
     private void fillOfferCountMaps() {
