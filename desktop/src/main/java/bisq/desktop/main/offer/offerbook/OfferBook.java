@@ -166,25 +166,6 @@ public class OfferBook {
                         offer.getId(),
                         hashOfPayload == null ? "null" : hashOfPayload.getHex());
             }
-
-            // The OfferBookListItem with a null or matching payload-hash was not found.
-            // However, when the API's CLI is used to edit and deactivate an offer
-            // in the same command, the edited offer is not re-published (and cannot be
-            // found in local storage).  In this case, we need to remove the deactivated
-            // offer from the list if the local store does not contain an offer with a
-            // matching offerId.
-            if (!isStoredLocally(offer)) {
-                Optional<OfferBookListItem> viewItem = getOfferBookListItem(offer);
-                viewItem.ifPresent((item) -> {
-                    offerBookListItems.remove(item);
-                    if (log.isDebugEnabled()) {
-                        log.debug("Storage does not contain an offer with id {} either;"
-                                        + "  it is removed from UI view list.",
-                                offer.getId());
-                    }
-                });
-            }
-
             return;
         }
 

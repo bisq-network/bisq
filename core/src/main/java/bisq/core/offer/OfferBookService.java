@@ -94,7 +94,7 @@ public class OfferBookService {
                         OfferPayload offerPayload = (OfferPayload) protectedStorageEntry.getProtectedStoragePayload();
                         Offer offer = new Offer(offerPayload);
                         offer.setPriceFeedService(priceFeedService);
-                        P2PDataStorage.ByteArray hashOfPayload = get32ByteHashAsByteArray(protectedStorageEntry);
+                        P2PDataStorage.ByteArray hashOfPayload = get32ByteHashAsByteArray(offerPayload);
                         listener.onAdded(offer, hashOfPayload, protectedStorageEntry.getSequenceNumber());
                     }
                 }));
@@ -107,7 +107,7 @@ public class OfferBookService {
                         OfferPayload offerPayload = (OfferPayload) protectedStorageEntry.getProtectedStoragePayload();
                         Offer offer = new Offer(offerPayload);
                         offer.setPriceFeedService(priceFeedService);
-                        P2PDataStorage.ByteArray hashOfPayload = get32ByteHashAsByteArray(protectedStorageEntry);
+                        P2PDataStorage.ByteArray hashOfPayload = get32ByteHashAsByteArray(offerPayload);
                         listener.onRemoved(offer, hashOfPayload, protectedStorageEntry.getSequenceNumber());
                     }
                 }));
