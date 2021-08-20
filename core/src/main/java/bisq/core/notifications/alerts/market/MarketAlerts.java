@@ -74,12 +74,12 @@ public class MarketAlerts {
     public void onAllServicesInitialized() {
         offerBookService.addOfferBookChangedListener(new OfferBookService.OfferBookChangedListener() {
             @Override
-            public void onAdded(Offer offer, P2PDataStorage.ByteArray hashOfPayload, int sequenceNumber) {
+            public void onAdded(Offer offer, P2PDataStorage.ByteArray hashOfPayload) {
                 onOfferAdded(offer);
             }
 
             @Override
-            public void onRemoved(Offer offer, P2PDataStorage.ByteArray hashOfPayload, int sequenceNumber) {
+            public void onRemoved(Offer offer, P2PDataStorage.ByteArray hashOfPayload) {
             }
         });
         applyFilterOnAllOffers();

@@ -49,40 +49,34 @@ public class OfferBookListItem {
     @Getter
     private final Offer offer;
 
-    // The protected storage payload hash helps prevent edited offers from being
-    // mistakenly removed from a UI user's OfferBook list when onRemoved(offer) is called
-    // after onAdded(offer).  (Checking the offer-id is not enough.)  This msg order
-    // problem does not happen when the UI edits an offer because the remove/add msgs are
-    // always sent in separate envelope bundles, but it can happen when the API is used to
-    // edit an offer because the remove/add msgs are sent in the same envelope bundle.
-    // A null value indicates the item's payload hash has not been set by onAdded or
-    // onRemoved since the most recent OfferBook view refresh.
+    /**
+     * The protected storage (offer) payload hash helps prevent edited offers from being
+     * mistakenly removed from a UI user's OfferBook list if the API's 'editoffer'
+     * command results in onRemoved(offer) being called after onAdded(offer) on peers.
+     * (Checking the offer-id is not enough.)  This msg order problem does not happen
+     * when the UI edits an offer because the remove/add msgs are always sent in separate
+     * envelope bundles.  It can happen when the API is used to edit an offer because
+     * the remove/add msgs are received in the same envelope bundle, then processed in
+     * unpredictable order.
+     *
+     * A null value indicates the item's payload hash has not been set by onAdded or
+     * onRemoved since the most recent OfferBook view refresh.
+     */
     @Nullable
     @Getter
     P2PDataStorage.ByteArray hashOfPayload;
-
-    // The sequence number should also be checked with the hashOfPayload, to
-    // prevent offers from being mistakenly removed from a UI user's OfferBook list
-    // when onRemoved(offer) is called immediately after onAdded(offer).
-    // A -1 value indicates the seq-no has not been set by onAdded or onRemoved
-    // since the most recent OfferBook view refresh.
-    @Getter
-    private final int sequenceNumber;
 
     // We cache the data once created for performance reasons. AccountAgeWitnessService calls can
     // be a bit expensive.
     private WitnessAgeData witnessAgeData;
 
     public OfferBookListItem(Offer offer) {
-        this(offer, null, -1);
+        this(offer, null);
     }
 
-    public OfferBookListItem(Offer offer,
-                             @Nullable P2PDataStorage.ByteArray hashOfPayload,
-                             int sequenceNumber) {
+    public OfferBookListItem(Offer offer, @Nullable P2PDataStorage.ByteArray hashOfPayload) {
         this.offer = offer;
         this.hashOfPayload = hashOfPayload;
-        this.sequenceNumber = sequenceNumber;
     }
 
     public WitnessAgeData getWitnessAgeData(AccountAgeWitnessService accountAgeWitnessService,
@@ -131,7 +125,6 @@ public class OfferBookListItem {
         return "OfferBookListItem{" +
                 "offerId=" + offer.getId() +
                 ", hashOfPayload=" + (hashOfPayload == null ? "null" : hashOfPayload.getHex()) +
-                ", sequenceNumber=" + sequenceNumber +
                 ", witnessAgeData=" + (witnessAgeData == null ? "null" : witnessAgeData.displayString) +
                 '}';
     }

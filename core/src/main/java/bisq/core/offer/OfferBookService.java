@@ -59,9 +59,9 @@ import static bisq.network.p2p.storage.P2PDataStorage.get32ByteHashAsByteArray;
 public class OfferBookService {
 
     public interface OfferBookChangedListener {
-        void onAdded(Offer offer, P2PDataStorage.ByteArray hashOfPayload, int sequenceNumber);
+        void onAdded(Offer offer, P2PDataStorage.ByteArray hashOfPayload);
 
-        void onRemoved(Offer offer, P2PDataStorage.ByteArray hashOfPayload, int sequenceNumber);
+        void onRemoved(Offer offer, P2PDataStorage.ByteArray hashOfPayload);
     }
 
     private final P2PService p2PService;
@@ -95,7 +95,7 @@ public class OfferBookService {
                         Offer offer = new Offer(offerPayload);
                         offer.setPriceFeedService(priceFeedService);
                         P2PDataStorage.ByteArray hashOfPayload = get32ByteHashAsByteArray(offerPayload);
-                        listener.onAdded(offer, hashOfPayload, protectedStorageEntry.getSequenceNumber());
+                        listener.onAdded(offer, hashOfPayload);
                     }
                 }));
             }
@@ -108,7 +108,7 @@ public class OfferBookService {
                         Offer offer = new Offer(offerPayload);
                         offer.setPriceFeedService(priceFeedService);
                         P2PDataStorage.ByteArray hashOfPayload = get32ByteHashAsByteArray(offerPayload);
-                        listener.onRemoved(offer, hashOfPayload, protectedStorageEntry.getSequenceNumber());
+                        listener.onRemoved(offer, hashOfPayload);
                     }
                 }));
             }
@@ -120,12 +120,12 @@ public class OfferBookService {
                 public void onUpdatedDataReceived() {
                     addOfferBookChangedListener(new OfferBookChangedListener() {
                         @Override
-                        public void onAdded(Offer offer, P2PDataStorage.ByteArray hashOfPayload, int sequenceNumber) {
+                        public void onAdded(Offer offer, P2PDataStorage.ByteArray hashOfPayload) {
                             doDumpStatistics();
                         }
 
                         @Override
-                        public void onRemoved(Offer offer, P2PDataStorage.ByteArray hashOfPayload, int sequenceNumber) {
+                        public void onRemoved(Offer offer, P2PDataStorage.ByteArray hashOfPayload) {
                             doDumpStatistics();
                         }
                     });

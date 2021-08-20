@@ -298,7 +298,7 @@ class TakeOfferDataModel extends OfferDataModel {
         // only local effect. Other trader might see the offer for a few seconds
         // still (but cannot take it).
         if (removeOffer) {
-            offerBook.removeOffer(checkNotNull(offer), null, -1);
+            offerBook.removeOffer(checkNotNull(offer), null);
         }
 
         btcWalletService.resetAddressEntriesForOpenOffer(offer.getId());
