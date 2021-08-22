@@ -116,18 +116,17 @@ public class OfferBook {
 
     private void removeDuplicateItem(OfferBookListItem newOfferBookListItem) {
         String offerId = newOfferBookListItem.getOffer().getId();
-        List<OfferBookListItem> offerItemsWithSameIdAndDifferentHash = offerBookListItems.stream()
-                .filter(item -> item.getOffer().getId().equals(offerId) && (
-                        item.hashOfPayload == null
-                                || !item.hashOfPayload.equals(newOfferBookListItem.hashOfPayload))
-                )
+        // We need to remove any view items with a matching offerId before
+        // a newOfferBookListItem is added to the view.
+        List<OfferBookListItem> duplicateItems = offerBookListItems.stream()
+                .filter(item -> item.getOffer().getId().equals(offerId))
                 .collect(Collectors.toList());
-        if (offerItemsWithSameIdAndDifferentHash.size() > 0) {
-            offerItemsWithSameIdAndDifferentHash.forEach(oldOfferItem -> {
+        if (duplicateItems.size() > 0) {
+            duplicateItems.forEach(oldOfferItem -> {
                 offerBookListItems.remove(oldOfferItem);
                 if (log.isDebugEnabled()) {
                     log.debug("onAdded: Removed old offer {}\n"
-                                    + "\twith old payloadHash = {} from list.\n"
+                                    + "\twith payload hash {} from list.\n"
                                     + "\tThis may make a subsequent onRemoved( {} ) call redundant.",
                             offerId,
                             oldOfferItem.getHashOfPayload() == null ? "null" : oldOfferItem.getHashOfPayload().getHex(),
