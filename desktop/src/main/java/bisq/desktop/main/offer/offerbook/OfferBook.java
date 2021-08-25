@@ -121,19 +121,17 @@ public class OfferBook {
         List<OfferBookListItem> duplicateItems = offerBookListItems.stream()
                 .filter(item -> item.getOffer().getId().equals(offerId))
                 .collect(Collectors.toList());
-        if (duplicateItems.size() > 0) {
-            duplicateItems.forEach(oldOfferItem -> {
-                offerBookListItems.remove(oldOfferItem);
-                if (log.isDebugEnabled()) {
-                    log.debug("onAdded: Removed old offer {}\n"
-                                    + "\twith payload hash {} from list.\n"
-                                    + "\tThis may make a subsequent onRemoved( {} ) call redundant.",
-                            offerId,
-                            oldOfferItem.getHashOfPayload() == null ? "null" : oldOfferItem.getHashOfPayload().getHex(),
-                            oldOfferItem.getOffer().getId());
-                }
-            });
-        }
+        duplicateItems.forEach(oldOfferItem -> {
+            offerBookListItems.remove(oldOfferItem);
+            if (log.isDebugEnabled()) {
+                log.debug("onAdded: Removed old offer {}\n"
+                                + "\twith payload hash {} from list.\n"
+                                + "\tThis may make a subsequent onRemoved( {} ) call redundant.",
+                        offerId,
+                        oldOfferItem.getHashOfPayload() == null ? "null" : oldOfferItem.getHashOfPayload().getHex(),
+                        oldOfferItem.getOffer().getId());
+            }
+        });
     }
 
     public void removeOffer(Offer offer, P2PDataStorage.ByteArray hashOfPayload) {
