@@ -93,7 +93,7 @@ public class OfferBook {
                     OfferBookListItem newOfferBookListItem = new OfferBookListItem(offer, hashOfPayload);
                     removeDuplicateItem(newOfferBookListItem);
                     offerBookListItems.add(newOfferBookListItem);  // Add replacement.
-                    if (log.isDebugEnabled()) {
+                    if (log.isDebugEnabled()) {  // TODO delete debug stmt in future PR.
                         log.debug("onAdded: Added new offer {}\n"
                                         + "\twith newItem.payloadHash: {}",
                                 offer.getId(),
@@ -123,7 +123,7 @@ public class OfferBook {
                 .collect(Collectors.toList());
         duplicateItems.forEach(oldOfferItem -> {
             offerBookListItems.remove(oldOfferItem);
-            if (log.isDebugEnabled()) {
+            if (log.isDebugEnabled()) {  // TODO delete debug stmt in future PR.
                 log.debug("onAdded: Removed old offer {}\n"
                                 + "\twith payload hash {} from list.\n"
                                 + "\tThis may make a subsequent onRemoved( {} ) call redundant.",
@@ -139,7 +139,7 @@ public class OfferBook {
         offer.setState(Offer.State.REMOVED);
         offer.cancelAvailabilityRequest();
 
-        if (log.isDebugEnabled()) {
+        if (log.isDebugEnabled()) {  // TODO delete debug stmt in future PR.
             log.debug("onRemoved: id = {}\n"
                             + "\twith payload-hash = {}",
                     offer.getId(),
@@ -155,7 +155,7 @@ public class OfferBook {
                 .findAny();
 
         if (!candidateWithMatchingPayloadHash.isPresent()) {
-            if (log.isDebugEnabled()) {
+            if (log.isDebugEnabled()) {  // TODO delete debug stmt in future PR.
                 log.debug("UI view list does not contain offer with id {} and payload-hash {}",
                         offer.getId(),
                         hashOfPayload == null ? "null" : hashOfPayload.getHex());
@@ -174,14 +174,14 @@ public class OfferBook {
             // The payload-hash test passed, remove the candidate and print reason.
             offerBookListItems.remove(candidate);
 
-            if (log.isDebugEnabled()) {
+            if (log.isDebugEnabled()) {  // TODO delete debug stmt in future PR.
                 log.debug("Candidate.payload-hash: {} is null or == onRemoved.payload-hash: {} ?"
                                 + " Yes, removed old offer",
                         candidate.hashOfPayload == null ? "null" : candidate.hashOfPayload.getHex(),
                         hashOfPayload == null ? "null" : hashOfPayload.getHex());
             }
         } else {
-            if (log.isDebugEnabled()) {
+            if (log.isDebugEnabled()) {  // TODO delete debug stmt in future PR.
                 // Candidate's payload-hash test failed:  payload-hash != onRemoved.payload-hash.
                 // Print reason for not removing candidate.
                 log.debug("Candidate.payload-hash: {} == onRemoved.payload-hash: {} ?"
