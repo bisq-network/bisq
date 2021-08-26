@@ -330,6 +330,74 @@ public class CurrencyUtil {
         return currencies;
     }
 
+    // https://github.com/bisq-network/growth/issues/233
+    public static List<TradeCurrency> getAllPayseraCurrencies() {
+        ArrayList<TradeCurrency> currencies = new ArrayList<>(Arrays.asList(
+                new FiatCurrency("AUD"),
+                new FiatCurrency("BGN"),
+                new FiatCurrency("BYN"),
+                new FiatCurrency("CAD"),
+                new FiatCurrency("CHF"),
+                new FiatCurrency("CNY"),
+                new FiatCurrency("CZK"),
+                new FiatCurrency("DKK"),
+                new FiatCurrency("EUR"),
+                new FiatCurrency("GBP"),
+                new FiatCurrency("GEL"),
+                new FiatCurrency("HKD"),
+                new FiatCurrency("HRK"),
+                new FiatCurrency("HUF"),
+                new FiatCurrency("ILS"),
+                new FiatCurrency("INR"),
+                new FiatCurrency("JPY"),
+                new FiatCurrency("KZT"),
+                new FiatCurrency("MXN"),
+                new FiatCurrency("NOK"),
+                new FiatCurrency("NZD"),
+                new FiatCurrency("PHP"),
+                new FiatCurrency("PLN"),
+                new FiatCurrency("RON"),
+                new FiatCurrency("RSD"),
+                new FiatCurrency("RUB"),
+                new FiatCurrency("SEK"),
+                new FiatCurrency("SGD"),
+                new FiatCurrency("THB"),
+                new FiatCurrency("TRY"),
+                new FiatCurrency("USD"),
+                new FiatCurrency("ZAR")
+        ));
+
+        currencies.sort(Comparator.comparing(TradeCurrency::getCode));
+        return currencies;
+    }
+
+    // https://github.com/bisq-network/growth/issues/235
+    public static List<TradeCurrency> getAllPaxumCurrencies() {
+        ArrayList<TradeCurrency> currencies = new ArrayList<>(Arrays.asList(
+                new FiatCurrency("USD"),
+                new FiatCurrency("CAD"),
+                new FiatCurrency("EUR"),
+                new FiatCurrency("DKK"),
+                new FiatCurrency("CZK"),
+                new FiatCurrency("AUD"),
+                new FiatCurrency("ZAR"),
+                new FiatCurrency("THB"),
+                new FiatCurrency("CHF"),
+                new FiatCurrency("SEK"),
+                new FiatCurrency("RON"),
+                new FiatCurrency("PLN"),
+                new FiatCurrency("NZD"),
+                new FiatCurrency("NOK"),
+                new FiatCurrency("INR"),
+                new FiatCurrency("IDR"),
+                new FiatCurrency("HUF"),
+                new FiatCurrency("GBP")
+        ));
+
+        currencies.sort(Comparator.comparing(TradeCurrency::getCode));
+        return currencies;
+    }
+
     public static List<TradeCurrency> getAllAmazonGiftCardCurrencies() {
         List<TradeCurrency> currencies = new ArrayList<>(Arrays.asList(
                 new FiatCurrency("AUD"),

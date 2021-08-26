@@ -153,7 +153,9 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
         TRANSFERWISE,
         AMAZON_GIFT_CARD,
         CASH_BY_MAIL,
-        CAPITUAL
+        CAPITUAL,
+        PAYSERA,
+        PAXUM
     }
 
     @Getter

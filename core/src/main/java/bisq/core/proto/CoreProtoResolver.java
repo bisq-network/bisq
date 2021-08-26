@@ -42,7 +42,9 @@ import bisq.core.payment.payload.MoneyBeamAccountPayload;
 import bisq.core.payment.payload.MoneyGramAccountPayload;
 import bisq.core.payment.payload.NationalBankAccountPayload;
 import bisq.core.payment.payload.OKPayAccountPayload;
+import bisq.core.payment.payload.PaxumAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
+import bisq.core.payment.payload.PayseraAccountPayload;
 import bisq.core.payment.payload.PerfectMoneyAccountPayload;
 import bisq.core.payment.payload.PopmoneyAccountPayload;
 import bisq.core.payment.payload.PromptPayAccountPayload;
@@ -156,6 +158,10 @@ public class CoreProtoResolver implements ProtoResolver {
                     return AdvancedCashAccountPayload.fromProto(proto);
                 case TRANSFERWISE_ACCOUNT_PAYLOAD:
                     return TransferwiseAccountPayload.fromProto(proto);
+                case PAYSERA_ACCOUNT_PAYLOAD:
+                    return PayseraAccountPayload.fromProto(proto);
+                case PAXUM_ACCOUNT_PAYLOAD:
+                    return PaxumAccountPayload.fromProto(proto);
                 case AMAZON_GIFT_CARD_ACCOUNT_PAYLOAD:
                     return AmazonGiftCardAccountPayload.fromProto(proto);
                 case INSTANT_CRYPTO_CURRENCY_ACCOUNT_PAYLOAD:
