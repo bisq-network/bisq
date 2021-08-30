@@ -102,6 +102,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
     public static final String BLOCK_CHAINS_INSTANT_ID = "BLOCK_CHAINS_INSTANT";
     public static final String CASH_BY_MAIL_ID = "CASH_BY_MAIL";
     public static final String CAPITUAL_ID = "CAPITUAL";
+    public static final String SWIFT_ID = "SWIFT";
 
     // Cannot be deleted as it would break old trade history entries
     @Deprecated
@@ -146,6 +147,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
     public static PaymentMethod BLOCK_CHAINS_INSTANT;
     public static PaymentMethod CASH_BY_MAIL;
     public static PaymentMethod CAPITUAL;
+    public static PaymentMethod SWIFT;
 
     // Cannot be deleted as it would break old trade history entries
     @Deprecated
@@ -200,7 +202,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
             PAYSERA = new PaymentMethod(PAYSERA_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
             PAXUM = new PaymentMethod(PAXUM_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
             CAPITUAL = new PaymentMethod(CAPITUAL_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
-
+            SWIFT = new PaymentMethod(SWIFT_ID, 7 * DAY, DEFAULT_TRADE_LIMIT_MID_RISK),
 
             // Japan
             JAPAN_BANK = new PaymentMethod(JAPAN_BANK_ID, DAY, DEFAULT_TRADE_LIMIT_LOW_RISK),

@@ -168,7 +168,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
 
     protected int gridRow = 0;
     private final List<Node> editOfferElements = new ArrayList<>();
-    private boolean clearXchangeWarningDisplayed, fasterPaymentsWarningDisplayed, isActivated;
+    private boolean clearXchangeWarningDisplayed, fasterPaymentsWarningDisplayed, swiftWarningDisplayed, isActivated;
     private InfoInputTextField marketBasedPriceInfoInputTextField, volumeInfoInputTextField,
             buyerSecurityDepositInfoInputTextField, triggerPriceInfoInputTextField;
     private AutoTooltipSlideToggleButton tradeFeeInBtcToggle, tradeFeeInBsqToggle;
@@ -499,6 +499,19 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
         }
     }
 
+    private void maybeShowSwiftWarning(PaymentAccount paymentAccount) {
+        if (paymentAccount.getPaymentMethod().getId().equals(PaymentMethod.SWIFT_ID) && !swiftWarningDisplayed) {
+            swiftWarningDisplayed = true;
+            UserThread.runAfter(() -> {
+                if (model.getDataModel().isBuyOffer()) {
+                    GUIUtil.showSwiftWarningToBuyer();
+                } else {
+                    GUIUtil.showSwiftWarningToSeller();
+                }
+            }, 500, TimeUnit.MILLISECONDS);
+        }
+    }
+
     protected void onPaymentAccountsComboBoxSelected() {
         // Temporary deactivate handler as the payment account change can populate a new currency list and causes
         // unwanted selection events (item 0)
@@ -508,6 +521,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
         if (paymentAccount != null) {
             maybeShowClearXchangeWarning(paymentAccount);
             maybeShowFasterPaymentsWarning(paymentAccount);
+            maybeShowSwiftWarning(paymentAccount);
 
             currencySelection.setVisible(paymentAccount.hasMultipleCurrencies());
             currencySelection.setManaged(paymentAccount.hasMultipleCurrencies());

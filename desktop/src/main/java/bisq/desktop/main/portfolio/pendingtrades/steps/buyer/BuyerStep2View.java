@@ -48,6 +48,7 @@ import bisq.desktop.components.paymentmethods.SameBankForm;
 import bisq.desktop.components.paymentmethods.SepaForm;
 import bisq.desktop.components.paymentmethods.SepaInstantForm;
 import bisq.desktop.components.paymentmethods.SpecificBankForm;
+import bisq.desktop.components.paymentmethods.SwiftForm;
 import bisq.desktop.components.paymentmethods.SwishForm;
 import bisq.desktop.components.paymentmethods.TransferwiseForm;
 import bisq.desktop.components.paymentmethods.USPostalMoneyOrderForm;
@@ -334,6 +335,9 @@ public class BuyerStep2View extends TradeStepView {
                 break;
             case PaymentMethod.CAPITUAL_ID:
                 gridRow = CapitualForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
+                break;
+            case PaymentMethod.SWIFT_ID:
+                gridRow = SwiftForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload, trade);
                 break;
             default:
                 log.error("Not supported PaymentMethod: " + paymentMethodId);

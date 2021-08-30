@@ -45,6 +45,7 @@ import bisq.desktop.components.paymentmethods.SameBankForm;
 import bisq.desktop.components.paymentmethods.SepaForm;
 import bisq.desktop.components.paymentmethods.SepaInstantForm;
 import bisq.desktop.components.paymentmethods.SpecificBankForm;
+import bisq.desktop.components.paymentmethods.SwiftForm;
 import bisq.desktop.components.paymentmethods.SwishForm;
 import bisq.desktop.components.paymentmethods.TransferwiseForm;
 import bisq.desktop.components.paymentmethods.PayseraForm;
@@ -543,6 +544,8 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
                 return new AmazonGiftCardForm(paymentAccount, accountAgeWitnessService, inputValidator, root, gridRow, formatter);
             case PaymentMethod.CAPITUAL_ID:
                 return new CapitualForm(paymentAccount, accountAgeWitnessService, capitualValidator, inputValidator, root, gridRow, formatter);
+            case PaymentMethod.SWIFT_ID:
+                return new SwiftForm(paymentAccount, accountAgeWitnessService, inputValidator, root, gridRow, formatter);
             default:
                 log.error("Not supported PaymentMethod: " + paymentMethod);
                 return null;
