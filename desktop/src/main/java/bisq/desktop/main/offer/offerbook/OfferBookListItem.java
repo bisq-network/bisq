@@ -27,6 +27,8 @@ import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.payment.payload.PaymentMethod;
 
+import bisq.network.p2p.storage.P2PDataStorage;
+
 import de.jensd.fx.glyphs.GlyphIcons;
 import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 
@@ -40,18 +42,41 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.jetbrains.annotations.NotNull;
 
-@Slf4j
+import javax.annotation.Nullable;
 
+@Slf4j
 public class OfferBookListItem {
     @Getter
     private final Offer offer;
+
+    /**
+     * The protected storage (offer) payload hash helps prevent edited offers from being
+     * mistakenly removed from a UI user's OfferBook list if the API's 'editoffer'
+     * command results in onRemoved(offer) being called after onAdded(offer) on peers.
+     * (Checking the offer-id is not enough.)  This msg order problem does not happen
+     * when the UI edits an offer because the remove/add msgs are always sent in separate
+     * envelope bundles.  It can happen when the API is used to edit an offer because
+     * the remove/add msgs are received in the same envelope bundle, then processed in
+     * unpredictable order.
+     *
+     * A null value indicates the item's payload hash has not been set by onAdded or
+     * onRemoved since the most recent OfferBook view refresh.
+     */
+    @Nullable
+    @Getter
+    P2PDataStorage.ByteArray hashOfPayload;
 
     // We cache the data once created for performance reasons. AccountAgeWitnessService calls can
     // be a bit expensive.
     private WitnessAgeData witnessAgeData;
 
     public OfferBookListItem(Offer offer) {
+        this(offer, null);
+    }
+
+    public OfferBookListItem(Offer offer, @Nullable P2PDataStorage.ByteArray hashOfPayload) {
         this.offer = offer;
+        this.hashOfPayload = hashOfPayload;
     }
 
     public WitnessAgeData getWitnessAgeData(AccountAgeWitnessService accountAgeWitnessService,
@@ -93,6 +118,15 @@ public class OfferBookListItem {
             }
         }
         return witnessAgeData;
+    }
+
+    @Override
+    public String toString() {
+        return "OfferBookListItem{" +
+                "offerId=" + offer.getId() +
+                ", hashOfPayload=" + (hashOfPayload == null ? "null" : hashOfPayload.getHex()) +
+                ", witnessAgeData=" + (witnessAgeData == null ? "null" : witnessAgeData.displayString) +
+                '}';
     }
 
     @Value

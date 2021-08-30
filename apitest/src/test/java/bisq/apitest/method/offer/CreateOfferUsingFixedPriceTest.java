@@ -35,6 +35,7 @@ import static java.util.Collections.singletonList;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static protobuf.OfferPayload.Direction.BUY;
 import static protobuf.OfferPayload.Direction.SELL;
 
@@ -58,6 +59,9 @@ public class CreateOfferUsingFixedPriceTest extends AbstractOfferTest {
                 audAccount.getId(),
                 MAKER_FEE_CURRENCY_CODE);
         log.info("OFFER #1:\n{}", formatOfferTable(singletonList(newOffer), "AUD"));
+        assertTrue(newOffer.getIsMyOffer());
+        assertTrue(newOffer.getIsMyPendingOffer());
+
         String newOfferId = newOffer.getId();
         assertNotEquals("", newOfferId);
         assertEquals(BUY.name(), newOffer.getDirection());
@@ -72,6 +76,8 @@ public class CreateOfferUsingFixedPriceTest extends AbstractOfferTest {
         assertFalse(newOffer.getIsCurrencyForMakerFeeBtc());
 
         newOffer = aliceClient.getMyOffer(newOfferId);
+        assertTrue(newOffer.getIsMyOffer());
+        assertFalse(newOffer.getIsMyPendingOffer());
         assertEquals(newOfferId, newOffer.getId());
         assertEquals(BUY.name(), newOffer.getDirection());
         assertFalse(newOffer.getUseMarketBasedPrice());
@@ -98,6 +104,9 @@ public class CreateOfferUsingFixedPriceTest extends AbstractOfferTest {
                 usdAccount.getId(),
                 MAKER_FEE_CURRENCY_CODE);
         log.info("OFFER #2:\n{}", formatOfferTable(singletonList(newOffer), "USD"));
+        assertTrue(newOffer.getIsMyOffer());
+        assertTrue(newOffer.getIsMyPendingOffer());
+
         String newOfferId = newOffer.getId();
         assertNotEquals("", newOfferId);
         assertEquals(BUY.name(), newOffer.getDirection());
@@ -112,6 +121,8 @@ public class CreateOfferUsingFixedPriceTest extends AbstractOfferTest {
         assertFalse(newOffer.getIsCurrencyForMakerFeeBtc());
 
         newOffer = aliceClient.getMyOffer(newOfferId);
+        assertTrue(newOffer.getIsMyOffer());
+        assertFalse(newOffer.getIsMyPendingOffer());
         assertEquals(newOfferId, newOffer.getId());
         assertEquals(BUY.name(), newOffer.getDirection());
         assertFalse(newOffer.getUseMarketBasedPrice());
@@ -138,6 +149,9 @@ public class CreateOfferUsingFixedPriceTest extends AbstractOfferTest {
                 eurAccount.getId(),
                 MAKER_FEE_CURRENCY_CODE);
         log.info("OFFER #3:\n{}", formatOfferTable(singletonList(newOffer), "EUR"));
+        assertTrue(newOffer.getIsMyOffer());
+        assertTrue(newOffer.getIsMyPendingOffer());
+
         String newOfferId = newOffer.getId();
         assertNotEquals("", newOfferId);
         assertEquals(SELL.name(), newOffer.getDirection());
@@ -152,6 +166,8 @@ public class CreateOfferUsingFixedPriceTest extends AbstractOfferTest {
         assertFalse(newOffer.getIsCurrencyForMakerFeeBtc());
 
         newOffer = aliceClient.getMyOffer(newOfferId);
+        assertTrue(newOffer.getIsMyOffer());
+        assertFalse(newOffer.getIsMyPendingOffer());
         assertEquals(newOfferId, newOffer.getId());
         assertEquals(SELL.name(), newOffer.getDirection());
         assertFalse(newOffer.getUseMarketBasedPrice());

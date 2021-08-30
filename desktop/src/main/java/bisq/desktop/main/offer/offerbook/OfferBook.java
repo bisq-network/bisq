@@ -21,8 +21,8 @@ import bisq.core.filter.FilterManager;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferBookService;
 import bisq.core.offer.OfferRestrictions;
-import bisq.core.trade.TradeManager;
 
+import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.utils.Utils;
 
 import javax.inject.Inject;
@@ -32,6 +32,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -61,13 +62,14 @@ public class OfferBook {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    OfferBook(OfferBookService offerBookService, TradeManager tradeManager, FilterManager filterManager) {
+    OfferBook(OfferBookService offerBookService, FilterManager filterManager) {
         this.offerBookService = offerBookService;
         this.filterManager = filterManager;
 
         offerBookService.addOfferBookChangedListener(new OfferBookService.OfferBookChangedListener() {
             @Override
-            public void onAdded(Offer offer) {
+            public void onAdded(Offer offer, P2PDataStorage.ByteArray hashOfPayload) {
+                printOfferBookListItems("Before onAdded");
                 // We get onAdded called every time a new ProtectedStorageEntry is received.
                 // Mostly it is the same OfferPayload but the ProtectedStorageEntry is different.
                 // We filter here to only add new offers if the same offer (using equals) was not already added and it
@@ -83,44 +85,111 @@ public class OfferBook {
                     return;
                 }
 
-                boolean hasSameOffer = offerBookListItems.stream()
-                        .anyMatch(item -> item.getOffer().equals(offer));
+                // Use offer.equals(offer) to see if the OfferBook list contains an exact
+                // match -- offer.equals(offer) includes comparisons of payload, state
+                // and errorMessage.
+                boolean hasSameOffer = offerBookListItems.stream().anyMatch(item -> item.getOffer().equals(offer));
                 if (!hasSameOffer) {
-                    OfferBookListItem offerBookListItem = new OfferBookListItem(offer);
-                    // We don't use the contains method as the equals method in Offer takes state and errorMessage into account.
-                    // If we have an offer with same ID we remove it and add the new offer as it might have a changed state.
-                    Optional<OfferBookListItem> candidateWithSameId = offerBookListItems.stream()
-                            .filter(item -> item.getOffer().getId().equals(offer.getId()))
-                            .findAny();
-                    if (candidateWithSameId.isPresent()) {
-                        log.warn("We had an old offer in the list with the same Offer ID. We remove the old one. " +
-                                "old offerBookListItem={}, new offerBookListItem={}", candidateWithSameId.get(), offerBookListItem);
-                        offerBookListItems.remove(candidateWithSameId.get());
+                    OfferBookListItem newOfferBookListItem = new OfferBookListItem(offer, hashOfPayload);
+                    removeDuplicateItem(newOfferBookListItem);
+                    offerBookListItems.add(newOfferBookListItem);  // Add replacement.
+                    if (log.isDebugEnabled()) {  // TODO delete debug stmt in future PR.
+                        log.debug("onAdded: Added new offer {}\n"
+                                        + "\twith newItem.payloadHash: {}",
+                                offer.getId(),
+                                newOfferBookListItem.hashOfPayload == null ? "null" : newOfferBookListItem.hashOfPayload.getHex());
                     }
-
-                    offerBookListItems.add(offerBookListItem);
                 } else {
                     log.debug("We have the exact same offer already in our list and ignore the onAdded call. ID={}", offer.getId());
                 }
+                printOfferBookListItems("After onAdded");
             }
 
             @Override
-            public void onRemoved(Offer offer) {
-                removeOffer(offer, tradeManager);
+            public void onRemoved(Offer offer, P2PDataStorage.ByteArray hashOfPayload) {
+                printOfferBookListItems("Before onRemoved");
+                removeOffer(offer, hashOfPayload);
+                printOfferBookListItems("After onRemoved");
             }
         });
     }
 
-    public void removeOffer(Offer offer, TradeManager tradeManager) {
+    private void removeDuplicateItem(OfferBookListItem newOfferBookListItem) {
+        String offerId = newOfferBookListItem.getOffer().getId();
+        // We need to remove any view items with a matching offerId before
+        // a newOfferBookListItem is added to the view.
+        List<OfferBookListItem> duplicateItems = offerBookListItems.stream()
+                .filter(item -> item.getOffer().getId().equals(offerId))
+                .collect(Collectors.toList());
+        duplicateItems.forEach(oldOfferItem -> {
+            offerBookListItems.remove(oldOfferItem);
+            if (log.isDebugEnabled()) {  // TODO delete debug stmt in future PR.
+                log.debug("onAdded: Removed old offer {}\n"
+                                + "\twith payload hash {} from list.\n"
+                                + "\tThis may make a subsequent onRemoved( {} ) call redundant.",
+                        offerId,
+                        oldOfferItem.getHashOfPayload() == null ? "null" : oldOfferItem.getHashOfPayload().getHex(),
+                        oldOfferItem.getOffer().getId());
+            }
+        });
+    }
+
+    public void removeOffer(Offer offer, P2PDataStorage.ByteArray hashOfPayload) {
         // Update state in case that that offer is used in the take offer screen, so it gets updated correctly
         offer.setState(Offer.State.REMOVED);
-
         offer.cancelAvailabilityRequest();
-        // We don't use the contains method as the equals method in Offer takes state and errorMessage into account.
-        Optional<OfferBookListItem> candidateToRemove = offerBookListItems.stream()
-                .filter(item -> item.getOffer().getId().equals(offer.getId()))
+
+        if (log.isDebugEnabled()) {  // TODO delete debug stmt in future PR.
+            log.debug("onRemoved: id = {}\n"
+                            + "\twith payload-hash = {}",
+                    offer.getId(),
+                    hashOfPayload == null ? "null" : hashOfPayload.getHex());
+        }
+
+        // Find the removal candidate in the OfferBook list with matching offerId and payload-hash.
+        Optional<OfferBookListItem> candidateWithMatchingPayloadHash = offerBookListItems.stream()
+                .filter(item -> item.getOffer().getId().equals(offer.getId()) && (
+                        item.hashOfPayload == null
+                                || item.hashOfPayload.equals(hashOfPayload))
+                )
                 .findAny();
-        candidateToRemove.ifPresent(offerBookListItems::remove);
+
+        if (!candidateWithMatchingPayloadHash.isPresent()) {
+            if (log.isDebugEnabled()) {  // TODO delete debug stmt in future PR.
+                log.debug("UI view list does not contain offer with id {} and payload-hash {}",
+                        offer.getId(),
+                        hashOfPayload == null ? "null" : hashOfPayload.getHex());
+            }
+            return;
+        }
+
+        OfferBookListItem candidate = candidateWithMatchingPayloadHash.get();
+
+        // Remove the candidate only if the candidate's offer payload is null (after list
+        // is populated by 'fillOfferBookListItems()'), or the hash matches the onRemoved
+        // hashOfPayload parameter.  We may receive add/remove messages out of order
+        // (from api's 'editoffer'), and use the offer payload hash to ensure we do not
+        // remove an edited offer immediately after it was added.
+        if ((candidate.getHashOfPayload() == null || candidate.getHashOfPayload().equals(hashOfPayload))) {
+            // The payload-hash test passed, remove the candidate and print reason.
+            offerBookListItems.remove(candidate);
+
+            if (log.isDebugEnabled()) {  // TODO delete debug stmt in future PR.
+                log.debug("Candidate.payload-hash: {} is null or == onRemoved.payload-hash: {} ?"
+                                + " Yes, removed old offer",
+                        candidate.hashOfPayload == null ? "null" : candidate.hashOfPayload.getHex(),
+                        hashOfPayload == null ? "null" : hashOfPayload.getHex());
+            }
+        } else {
+            if (log.isDebugEnabled()) {  // TODO delete debug stmt in future PR.
+                // Candidate's payload-hash test failed:  payload-hash != onRemoved.payload-hash.
+                // Print reason for not removing candidate.
+                log.debug("Candidate.payload-hash: {} == onRemoved.payload-hash: {} ?"
+                                + " No, old offer not removed",
+                        candidate.hashOfPayload == null ? "null" : candidate.hashOfPayload.getHex(),
+                        hashOfPayload == null ? "null" : hashOfPayload.getHex());
+            }
+        }
     }
 
     public ObservableList<OfferBookListItem> getOfferBookListItems() {
@@ -133,16 +202,28 @@ public class OfferBook {
             // Investigate why....
             offerBookListItems.clear();
             offerBookListItems.addAll(offerBookService.getOffers().stream()
-                    .filter(o -> !filterManager.isOfferIdBanned(o.getId()))
-                    .filter(o -> !OfferRestrictions.requiresNodeAddressUpdate() || Utils.isV3Address(o.getMakerNodeAddress().getHostName()))
+                    .filter(o -> isOfferAllowed(o))
                     .map(OfferBookListItem::new)
                     .collect(Collectors.toList()));
 
             log.debug("offerBookListItems.size {}", offerBookListItems.size());
             fillOfferCountMaps();
         } catch (Throwable t) {
-            t.printStackTrace();
-            log.error("Error at fillOfferBookListItems: " + t.toString());
+            log.error("Error at fillOfferBookListItems: " + t);
+        }
+    }
+
+    public void printOfferBookListItems(String msg) {
+        if (log.isDebugEnabled()) {
+            if (offerBookListItems.size() == 0) {
+                log.debug("{} -> OfferBookListItems:  none", msg);
+                return;
+            }
+
+            StringBuilder stringBuilder = new StringBuilder(msg + " -> ").append("OfferBookListItems:").append("\n");
+            offerBookListItems.forEach(i -> stringBuilder.append("\t").append(i.toString()).append("\n"));
+            stringBuilder.deleteCharAt(stringBuilder.length() - 1);
+            log.debug(stringBuilder.toString());
         }
     }
 
@@ -152,6 +233,13 @@ public class OfferBook {
 
     public Map<String, Integer> getSellOfferCountMap() {
         return sellOfferCountMap;
+    }
+
+    private boolean isOfferAllowed(Offer offer) {
+        boolean isBanned = filterManager.isOfferIdBanned(offer.getId());
+        boolean isV3NodeAddressCompliant = !OfferRestrictions.requiresNodeAddressUpdate()
+                || Utils.isV3Address(offer.getMakerNodeAddress().getHostName());
+        return !isBanned && isV3NodeAddressCompliant;
     }
 
     private void fillOfferCountMaps() {

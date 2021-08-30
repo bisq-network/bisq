@@ -9,5 +9,4 @@
     <root level="TRACE">
         <appender-ref ref="CONSOLE_APPENDER"/>
     </root>
-
 </configuration>
