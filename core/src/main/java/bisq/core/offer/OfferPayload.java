@@ -22,10 +22,12 @@ import bisq.network.p2p.storage.payload.ExpirablePayload;
 import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 import bisq.network.p2p.storage.payload.RequiresOwnerIsOnlinePayload;
 
+import bisq.common.crypto.Hash;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.proto.ProtoUtil;
 import bisq.common.util.CollectionUtils;
 import bisq.common.util.ExtraDataMapValidator;
+import bisq.common.util.Hex;
 import bisq.common.util.JsonExclude;
 
 import java.security.PublicKey;
@@ -121,16 +123,16 @@ public final class OfferPayload implements ProtectedStoragePayload, ExpirablePay
     private final String counterCurrencyCode;
 
     @Deprecated
-    // Not used anymore but we cannot set it Nullable or remove it to not break backward compatibility (diff. hash)
+    // Not used anymore, but we cannot set it Nullable or remove it to not break backward compatibility (diff. hash)
     private final List<NodeAddress> arbitratorNodeAddresses;
     @Deprecated
-    // Not used anymore but we cannot set it Nullable or remove it to not break backward compatibility (diff. hash)
+    // Not used anymore, but we cannot set it Nullable or remove it to not break backward compatibility (diff. hash)
     private final List<NodeAddress> mediatorNodeAddresses;
     private final String paymentMethodId;
     private final String makerPaymentAccountId;
-    // Mutable property. Has to be set before offer is save in P2P network as it changes the objects hash!
-    @Nullable
+    // Mutable property. Has to be set before offer is saved in P2P network as it changes the payload hash!
     @Setter
+    @Nullable
     private String offerFeePaymentTxId;
     @Nullable
     private final String countryCode;
@@ -174,6 +176,10 @@ public final class OfferPayload implements ProtectedStoragePayload, ExpirablePay
     @Nullable
     private final Map<String, String> extraDataMap;
     private final int protocolVersion;
+
+    // Cache the payload hash to avoid some repeated calculations.
+    // Take care to calculate it only after the offerFeePaymentTxId is set.
+    private transient byte[] hash;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -256,7 +262,18 @@ public final class OfferPayload implements ProtectedStoragePayload, ExpirablePay
         this.hashOfChallenge = hashOfChallenge;
         this.extraDataMap = ExtraDataMapValidator.getValidatedExtraDataMap(extraDataMap);
         this.protocolVersion = protocolVersion;
+        this.hash = null; // Do not calculate hash before offerFeePaymentTxId is set.
     }
+
+    public byte[] getHash() {
+        if (this.hash == null && this.offerFeePaymentTxId != null) {
+            // A proto message can be created only after the offerFeePaymentTxId is
+            // set to a non-null value;  now is the time to cache the payload hash.
+            this.hash = Hash.getSha256Hash(this.toProtoMessage().toByteArray());
+        }
+        return this.hash;
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // PROTO BUFFER
@@ -431,6 +448,7 @@ public final class OfferPayload implements ProtectedStoragePayload, ExpirablePay
                 ",\n     hashOfChallenge='" + hashOfChallenge + '\'' +
                 ",\n     extraDataMap=" + extraDataMap +
                 ",\n     protocolVersion=" + protocolVersion +
+                ",\n     hash=" + (getHash() == null ? "null" : Hex.encode(getHash())) +
                 "\n}";
     }
 }
