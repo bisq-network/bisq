@@ -493,12 +493,13 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         }
         Trade.DisputeState disputeState = trade.getDisputeState();
         DisputeManager<? extends DisputeList<Dispute>> disputeManager;
-        boolean useMediation;
-        boolean useRefundAgent;
+        long remainingLockTime = trade.getDelayedPayoutTx().getLockTime() - btcWalletService.getBestChainHeight();
         // In case we re-open a dispute we allow Trade.DisputeState.MEDIATION_REQUESTED
-        useMediation = disputeState == Trade.DisputeState.NO_DISPUTE || disputeState == Trade.DisputeState.MEDIATION_REQUESTED;
+        boolean useMediation = disputeState == Trade.DisputeState.NO_DISPUTE ||
+                (disputeState == Trade.DisputeState.MEDIATION_REQUESTED && remainingLockTime > 0);
         // In case we re-open a dispute we allow Trade.DisputeState.REFUND_REQUESTED
-        useRefundAgent = disputeState == Trade.DisputeState.MEDIATION_CLOSED || disputeState == Trade.DisputeState.REFUND_REQUESTED;
+        boolean useRefundAgent = disputeState == Trade.DisputeState.MEDIATION_CLOSED ||
+                disputeState == Trade.DisputeState.REFUND_REQUESTED || remainingLockTime <= 0;
 
         AtomicReference<String> donationAddressString = new AtomicReference<>("");
         Transaction delayedPayoutTx = trade.getDelayedPayoutTx();
@@ -579,12 +580,9 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                 return;
             }
 
-            long lockTime = delayedPayoutTx.getLockTime();
-            int bestChainHeight = btcWalletService.getBestChainHeight();
-            long remaining = lockTime - bestChainHeight;
-            if (remaining > 0) {
+            if (remainingLockTime > 0) {
                 new Popup().instruction(Res.get("portfolio.pending.timeLockNotOver",
-                        FormattingUtils.getDateFromBlockHeight(remaining), remaining))
+                        FormattingUtils.getDateFromBlockHeight(remainingLockTime), remainingLockTime))
                         .show();
                 return;
             }
@@ -621,7 +619,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
             mediationManager.findDispute(tradeId)
                     .ifPresent(mediatorsDispute -> {
                         DisputeResult mediatorsDisputeResult = mediatorsDispute.getDisputeResultProperty().get();
-                        ChatMessage mediatorsResultMessage = mediatorsDisputeResult.getChatMessage();
+                        ChatMessage mediatorsResultMessage = mediatorsDisputeResult == null ? null : mediatorsDisputeResult.getChatMessage();
                         if (mediatorsResultMessage != null) {
                             String mediatorAddress = Res.get("support.mediatorsAddress",
                                     mediatorsDispute.getContract().getRefundAgentNodeAddress().getFullAddress());
