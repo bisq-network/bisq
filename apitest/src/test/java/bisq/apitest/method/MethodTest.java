@@ -31,6 +31,7 @@ import java.io.PrintWriter;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static bisq.apitest.config.ApiTestRateMeterInterceptorConfig.getTestRateMeterInterceptorConfig;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.stream;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -49,15 +50,6 @@ public class MethodTest extends ApiTestCase {
 
     public static void startSupportingApps(File callRateMeteringConfigFile,
                                            boolean generateBtcBlock,
-                                           Enum<?>... supportingApps) {
-        startSupportingApps(callRateMeteringConfigFile,
-                generateBtcBlock,
-                false,
-                supportingApps);
-    }
-
-    public static void startSupportingApps(File callRateMeteringConfigFile,
-                                           boolean generateBtcBlock,
                                            boolean startSupportingAppsInDebugMode,
                                            Enum<?>... supportingApps) {
         try {
@@ -73,18 +65,11 @@ public class MethodTest extends ApiTestCase {
     }
 
     public static void startSupportingApps(boolean generateBtcBlock,
-                                           Enum<?>... supportingApps) {
-        startSupportingApps(generateBtcBlock,
-                false,
-                supportingApps);
-    }
-
-    public static void startSupportingApps(boolean generateBtcBlock,
                                            boolean startSupportingAppsInDebugMode,
                                            Enum<?>... supportingApps) {
         try {
             // Disable call rate metering where there is no callRateMeteringConfigFile.
-            File callRateMeteringConfigFile = defaultRateMeterInterceptorConfig();
+            File callRateMeteringConfigFile = getTestRateMeterInterceptorConfig();
             setUpScaffold(new String[]{
                     "--supportingApps", toNameList.apply(supportingApps),
                     "--callRateMeteringConfigPath", callRateMeteringConfigFile.getAbsolutePath(),
