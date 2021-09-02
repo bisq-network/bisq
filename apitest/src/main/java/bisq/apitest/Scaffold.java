@@ -191,7 +191,7 @@ public class Scaffold {
                     MILLISECONDS.sleep(1000);
                     if (p.hasShutdownExceptions()) {
                         // We log shutdown exceptions, but do not throw any from here
-                        // because all of the background instances must be shut down.
+                        // because all the background instances must be shut down.
                         p.logExceptions(p.getShutdownExceptions(), log);
 
                         // We cache only the 1st shutdown exception and move on to the
@@ -227,27 +227,28 @@ public class Scaffold {
                 throw new IllegalStateException("Could not install bitcoin regtest dir");
 
             String aliceDataDir = daoSetupDir + "/" + alicedaemon.appName;
+            if (!config.callRateMeteringConfigPath.isEmpty()) {
+                installCallRateMeteringConfiguration(aliceDataDir);
+            }
             BashCommand copyAliceDataDir = new BashCommand(
                     "cp -rf " + aliceDataDir + " " + config.rootAppDataDir);
             if (copyAliceDataDir.run().getExitStatus() != 0)
                 throw new IllegalStateException("Could not install alice data dir");
 
             String bobDataDir = daoSetupDir + "/" + bobdaemon.appName;
+            if (!config.callRateMeteringConfigPath.isEmpty()) {
+                installCallRateMeteringConfiguration(bobDataDir);
+            }
             BashCommand copyBobDataDir = new BashCommand(
                     "cp -rf " + bobDataDir + " " + config.rootAppDataDir);
             if (copyBobDataDir.run().getExitStatus() != 0)
                 throw new IllegalStateException("Could not install bob data dir");
 
-            log.info("Installed dao-setup files into {}", buildDataDir);
-
-            if (!config.callRateMeteringConfigPath.isEmpty()) {
-                installCallRateMeteringConfiguration(aliceDataDir);
-                installCallRateMeteringConfiguration(bobDataDir);
-            }
+            log.info("Copied all dao-setup files to {}", buildDataDir);
 
             // Copy the blocknotify script from the src resources dir to the build
             // resources dir.  Users may want to edit comment out some lines when all
-            // of the default block notifcation ports being will not be used (to avoid
+            // the default block notifcation ports being will not be used (to avoid
             // seeing rpc notifcation warnings in log files).
             installBitcoinBlocknotify();
 
