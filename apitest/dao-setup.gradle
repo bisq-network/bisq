@@ -79,5 +79,10 @@ task cleanDaoSetup {
         delete file(buildResourcesDir + '/bisq-BTC_REGTEST_Arb_dao')
         delete file(buildResourcesDir + '/bisq-BTC_REGTEST_Alice_dao')
         delete file(buildResourcesDir + '/bisq-BTC_REGTEST_Bob_dao')
+
+        def mainResourcesDir = layout.projectDirectory.dir('src/main/resources').asFile.path
+        println "Deleting test call rate metering config files in src main resources dir $mainResourcesDir ..."
+        delete file(mainResourcesDir + '/dao-setup/bisq-BTC_REGTEST_Alice_dao/ratemeters.json')
+        delete file(mainResourcesDir + '/dao-setup/bisq-BTC_REGTEST_Bob_dao/ratemeters.json')
     }
 }

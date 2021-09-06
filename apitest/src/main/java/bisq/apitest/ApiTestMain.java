@@ -17,10 +17,15 @@
 
 package bisq.apitest;
 
+import java.io.File;
+
 import lombok.extern.slf4j.Slf4j;
 
 import static bisq.apitest.Scaffold.EXIT_FAILURE;
 import static bisq.apitest.Scaffold.EXIT_SUCCESS;
+import static bisq.apitest.config.ApiTestRateMeterInterceptorConfig.appendCallRateMeteringConfigPathOpt;
+import static bisq.apitest.config.ApiTestRateMeterInterceptorConfig.getTestRateMeterInterceptorConfig;
+import static bisq.apitest.config.ApiTestRateMeterInterceptorConfig.hasCallRateMeteringConfigPathOpt;
 import static java.lang.System.err;
 import static java.lang.System.exit;
 
@@ -32,7 +37,7 @@ import bisq.apitest.config.ApiTestConfig;
  * ApiTestMain is a placeholder for the gradle build file, which requires a valid
  * 'mainClassName' property in the :apitest subproject configuration.
  *
- * It does has some uses:
+ * It has some uses:
  *
  * It can be used to print test scaffolding options:  bisq-apitest --help.
  *
@@ -41,7 +46,7 @@ import bisq.apitest.config.ApiTestConfig;
  * It can be used to run the regtest/dao environment for release testing:
  * bisq-test --shutdownAfterTests=false
  *
- * All method, scenario and end to end tests are found in the test sources folder.
+ * All method, scenario and end-to-end tests are found in the test sources folder.
  *
  * Requires bitcoind v0.19, v0.20, or v0.21.
  */
@@ -49,11 +54,15 @@ import bisq.apitest.config.ApiTestConfig;
 public class ApiTestMain {
 
     public static void main(String[] args) {
-        new ApiTestMain().execute(args);
+        if (!hasCallRateMeteringConfigPathOpt(args))
+            new ApiTestMain().execute(getAppendedArgs(args));
+        else
+            new ApiTestMain().execute(args);
     }
 
-    public void execute(@SuppressWarnings("unused") String[] args) {
+    public void execute(String[] args) {
         try {
+            log.info("Configuring test harness with options:\n\t{}", String.join("\n\t", args));
             Scaffold scaffold = new Scaffold(args).setUp();
             ApiTestConfig config = scaffold.config;
 
@@ -76,5 +85,10 @@ public class ApiTestMain {
             ex.printStackTrace(err);
             exit(EXIT_FAILURE);
         }
+    }
+
+    private static String[] getAppendedArgs(String[] args) {
+        File rateMeterInterceptorConfig = getTestRateMeterInterceptorConfig();
+        return appendCallRateMeteringConfigPathOpt(args, rateMeterInterceptorConfig);
     }
 }

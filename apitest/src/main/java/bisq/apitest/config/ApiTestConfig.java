@@ -149,7 +149,7 @@ public class ApiTestConfig {
 
         ArgumentAcceptingOptionSpec<String> configFileOpt =
                 parser.accepts(CONFIG_FILE, format("Specify configuration file. " +
-                        "Relative paths will be prefixed by %s location.", userDir))
+                                "Relative paths will be prefixed by %s location.", userDir))
                         .withRequiredArg()
                         .ofType(String.class)
                         .defaultsTo(DEFAULT_CONFIG_FILE_NAME);
@@ -206,55 +206,55 @@ public class ApiTestConfig {
 
         ArgumentAcceptingOptionSpec<Boolean> runSubprojectJarsOpt =
                 parser.accepts(RUN_SUBPROJECT_JARS,
-                        "Run subproject build jars instead of full build jars")
+                                "Run subproject build jars instead of full build jars")
                         .withRequiredArg()
                         .ofType(Boolean.class)
                         .defaultsTo(false);
 
         ArgumentAcceptingOptionSpec<Long> bisqAppInitTimeOpt =
                 parser.accepts(BISQ_APP_INIT_TIME,
-                        "Amount of time (ms) to wait on a Bisq instance's initialization")
+                                "Amount of time (ms) to wait on a Bisq instance's initialization")
                         .withRequiredArg()
                         .ofType(Long.class)
                         .defaultsTo(5000L);
 
         ArgumentAcceptingOptionSpec<Boolean> skipTestsOpt =
                 parser.accepts(SKIP_TESTS,
-                        "Start apps, but skip tests")
+                                "Start apps, but skip tests")
                         .withRequiredArg()
                         .ofType(Boolean.class)
                         .defaultsTo(false);
 
         ArgumentAcceptingOptionSpec<Boolean> shutdownAfterTestsOpt =
                 parser.accepts(SHUTDOWN_AFTER_TESTS,
-                        "Terminate all processes after tests")
+                                "Terminate all processes after tests")
                         .withRequiredArg()
                         .ofType(Boolean.class)
                         .defaultsTo(true);
 
         ArgumentAcceptingOptionSpec<String> supportingAppsOpt =
                 parser.accepts(SUPPORTING_APPS,
-                        "Comma delimited list of supporting apps (bitcoind,seednode,arbdaemon,...")
+                                "Comma delimited list of supporting apps (bitcoind,seednode,arbdaemon,...")
                         .withRequiredArg()
                         .ofType(String.class)
                         .defaultsTo("bitcoind,seednode,arbdaemon,alicedaemon,bobdaemon");
 
         ArgumentAcceptingOptionSpec<String> callRateMeteringConfigPathOpt =
                 parser.accepts(CALL_RATE_METERING_CONFIG_PATH,
-                        "Install a ratemeters.json file to configure call rate metering interceptors")
+                                "Install a ratemeters.json file to configure call rate metering interceptors")
                         .withRequiredArg()
                         .defaultsTo(EMPTY);
 
         ArgumentAcceptingOptionSpec<Boolean> enableBisqDebuggingOpt =
                 parser.accepts(ENABLE_BISQ_DEBUGGING,
-                        "Start Bisq apps with remote debug options")
+                                "Start Bisq apps with remote debug options")
                         .withRequiredArg()
                         .ofType(Boolean.class)
                         .defaultsTo(false);
 
         ArgumentAcceptingOptionSpec<Boolean> registerDisputeAgentsOpt =
                 parser.accepts(REGISTER_DISPUTE_AGENTS,
-                        "Register dispute agents in arbitration daemon")
+                                "Register dispute agents in arbitration daemon")
                         .withRequiredArg()
                         .ofType(Boolean.class)
                         .defaultsTo(true);
