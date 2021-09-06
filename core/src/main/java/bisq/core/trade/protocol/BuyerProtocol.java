@@ -93,21 +93,22 @@ public abstract class BuyerProtocol extends DisputeProtocol {
 
     protected abstract void handle(DelayedPayoutTxSignatureRequest message, NodeAddress peer);
 
-    // The DepositTxAndDelayedPayoutTxMessage is a mailbox message as earlier we use only the deposit tx which can
-    // be also with from the network once published.
+    // The DepositTxAndDelayedPayoutTxMessage is a mailbox message. Earlier we used only the deposit tx which can
+    // be set also when received by the network once published by the peer so that message was not mandatory and could
+    // have arrived as mailbox message.
     // Now we send the delayed payout tx as well and with that this message is mandatory for continuing the protocol.
     // We do not support mailbox message handling during the take offer process as it is expected that both peers
     // are online.
     // For backward compatibility and extra resilience we still keep DepositTxAndDelayedPayoutTxMessage as a
     // mailbox message but the stored in mailbox case is not expected and the seller would try to send the message again
-    // in the hope to reach the buyer directly.
+    // in the hope to reach the buyer directly in case of network issues.
     protected void handle(DepositTxAndDelayedPayoutTxMessage message, NodeAddress peer) {
         expect(anyPhase(Trade.Phase.TAKER_FEE_PUBLISHED, Trade.Phase.DEPOSIT_PUBLISHED)
                 .with(message)
                 .from(peer)
-                .preCondition(trade.getDepositTx() == null || trade.getDelayedPayoutTx() == null,
+                .preCondition(trade.getDepositTx() == null || processModel.getTradingPeer().getPaymentAccountPayload() == null,
                         () -> {
-                            log.warn("We with a DepositTxAndDelayedPayoutTxMessage but we have already processed the deposit and " +
+                            log.warn("We received a DepositTxAndDelayedPayoutTxMessage but we have already processed the deposit and " +
                                     "delayed payout tx so we ignore the message. This can happen if the ACK message to the peer did not " +
                                     "arrive and the peer repeats sending us the message. We send another ACK msg.");
                             stopTimeout();
