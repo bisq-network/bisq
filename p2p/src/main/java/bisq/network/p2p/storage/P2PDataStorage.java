@@ -1182,17 +1182,25 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         // That object is saved to disc. We need to take care of changes to not break deserialization.
         public final byte[] bytes;
 
+        public ByteArray(byte[] bytes) {
+            this.bytes = bytes;
+            verifyBytesNotEmpty();
+        }
+
+        public void verifyBytesNotEmpty() {
+            if (this.bytes == null)
+                throw new IllegalArgumentException("Cannot create P2PDataStorage.ByteArray with null byte[] array argument.");
+
+            if (this.bytes.length == 0)
+                throw new IllegalArgumentException("Cannot create P2PDataStorage.ByteArray with empty byte[] array argument.");
+        }
+
         @Override
         public String toString() {
             return "ByteArray{" +
                     "bytes as Hex=" + Hex.encode(bytes) +
                     '}';
         }
-
-        public ByteArray(byte[] bytes) {
-            this.bytes = bytes;
-        }
-
 
         ///////////////////////////////////////////////////////////////////////////////////////////
         // Protobuffer

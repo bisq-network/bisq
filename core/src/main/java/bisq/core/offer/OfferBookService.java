@@ -24,7 +24,6 @@ import bisq.core.provider.price.PriceFeedService;
 import bisq.network.p2p.BootstrapListener;
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.storage.HashMapChangedListener;
-import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 
 import bisq.common.UserThread;
@@ -49,8 +48,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
-import static bisq.network.p2p.storage.P2PDataStorage.get32ByteHashAsByteArray;
-
 /**
  * Handles storage and retrieval of offers.
  * Uses an invalidation flag to only request the full offer map in case there was a change (anyone has added or removed an offer).
@@ -59,9 +56,9 @@ import static bisq.network.p2p.storage.P2PDataStorage.get32ByteHashAsByteArray;
 public class OfferBookService {
 
     public interface OfferBookChangedListener {
-        void onAdded(Offer offer, P2PDataStorage.ByteArray hashOfPayload);
+        void onAdded(Offer offer);
 
-        void onRemoved(Offer offer, P2PDataStorage.ByteArray hashOfPayload);
+        void onRemoved(Offer offer);
     }
 
     private final P2PService p2PService;
@@ -94,8 +91,7 @@ public class OfferBookService {
                         OfferPayload offerPayload = (OfferPayload) protectedStorageEntry.getProtectedStoragePayload();
                         Offer offer = new Offer(offerPayload);
                         offer.setPriceFeedService(priceFeedService);
-                        P2PDataStorage.ByteArray hashOfPayload = get32ByteHashAsByteArray(offerPayload);
-                        listener.onAdded(offer, hashOfPayload);
+                        listener.onAdded(offer);
                     }
                 }));
             }
@@ -107,8 +103,7 @@ public class OfferBookService {
                         OfferPayload offerPayload = (OfferPayload) protectedStorageEntry.getProtectedStoragePayload();
                         Offer offer = new Offer(offerPayload);
                         offer.setPriceFeedService(priceFeedService);
-                        P2PDataStorage.ByteArray hashOfPayload = get32ByteHashAsByteArray(offerPayload);
-                        listener.onRemoved(offer, hashOfPayload);
+                        listener.onRemoved(offer);
                     }
                 }));
             }
@@ -120,12 +115,12 @@ public class OfferBookService {
                 public void onUpdatedDataReceived() {
                     addOfferBookChangedListener(new OfferBookChangedListener() {
                         @Override
-                        public void onAdded(Offer offer, P2PDataStorage.ByteArray hashOfPayload) {
+                        public void onAdded(Offer offer) {
                             doDumpStatistics();
                         }
 
                         @Override
-                        public void onRemoved(Offer offer, P2PDataStorage.ByteArray hashOfPayload) {
+                        public void onRemoved(Offer offer) {
                             doDumpStatistics();
                         }
                     });

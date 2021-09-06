@@ -77,6 +77,7 @@ import static com.natpryce.makeiteasy.MakeItEasy.make;
 import static com.natpryce.makeiteasy.MakeItEasy.with;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -391,12 +392,19 @@ public class OfferBookViewModelTest {
         when(priceFeedService.updateCounterProperty()).thenReturn(new SimpleIntegerProperty());
 
         final OfferBookListItem item1 = make(item);
+        assertNotNull(item1.getHashOfPayload());
         item1.getOffer().setPriceFeedService(priceFeedService);
+
         final OfferBookListItem item2 = make(item.but(with(marketPriceMargin, 0.0197)));
+        assertNotNull(item2.getHashOfPayload());
         item2.getOffer().setPriceFeedService(priceFeedService);
+
         final OfferBookListItem item3 = make(item.but(with(marketPriceMargin, 0.1)));
+        assertNotNull(item3.getHashOfPayload());
         item3.getOffer().setPriceFeedService(priceFeedService);
+
         final OfferBookListItem item4 = make(item.but(with(marketPriceMargin, -0.1)));
+        assertNotNull(item4.getHashOfPayload());
         item4.getOffer().setPriceFeedService(priceFeedService);
         offerBookListItems.addAll(item1, item2);
 
@@ -427,12 +435,15 @@ public class OfferBookViewModelTest {
         final OfferBookListItem item = make(btcBuyItem.but(
                 with(useMarketBasedPrice, true),
                 with(marketPriceMargin, -0.12)));
+        assertNotNull(item.getHashOfPayload());
 
         final OfferBookListItem lowItem = make(btcBuyItem.but(
                 with(useMarketBasedPrice, true),
                 with(marketPriceMargin, 0.01)));
+        assertNotNull(lowItem.getHashOfPayload());
 
         final OfferBookListItem fixedItem = make(btcBuyItem);
+        assertNotNull(fixedItem.getHashOfPayload());
 
         item.getOffer().setPriceFeedService(priceFeedService);
         lowItem.getOffer().setPriceFeedService(priceFeedService);
