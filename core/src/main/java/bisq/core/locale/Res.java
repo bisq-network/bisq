@@ -33,6 +33,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.MissingResourceException;
 import java.util.PropertyResourceBundle;
@@ -41,6 +43,9 @@ import java.util.ResourceBundle;
 import lombok.extern.slf4j.Slf4j;
 
 import org.jetbrains.annotations.NotNull;
+
+import static bisq.common.util.Utilities.toListOfWrappedStrings;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 @Slf4j
 public class Res {
@@ -125,13 +130,30 @@ public class Res {
             return key;
         }
     }
+
+    public static List<String> getWrappedAsList(String key, int wrapLength) {
+        String[] raw = get(key).split("\n");
+        List<String> wrapped = new ArrayList<>();
+        for (String s : raw) {
+            List<String> list = toListOfWrappedStrings(s, wrapLength);
+            for (String line : list) {
+                if (!line.isEmpty())
+                    wrapped.add(line);
+            }
+        }
+        return wrapped;
+    }
 }
 
 // Adds UTF8 support for property files
 class UTF8Control extends ResourceBundle.Control {
 
-    public ResourceBundle newBundle(String baseName, @NotNull Locale locale, @NotNull String format, ClassLoader loader, boolean reload)
-            throws IllegalAccessException, InstantiationException, IOException {
+    public ResourceBundle newBundle(String baseName,
+                                    @NotNull Locale locale,
+                                    @NotNull String format,
+                                    ClassLoader loader,
+                                    boolean reload)
+            throws IOException {
         // Below is a copy of the default implementation.
         final String bundleName = toBundleName(baseName, locale);
         final String resourceName = toResourceName(bundleName, "properties");
@@ -152,7 +174,7 @@ class UTF8Control extends ResourceBundle.Control {
         if (stream != null) {
             try {
                 // Only this line is changed to make it read properties files as UTF-8.
-                bundle = new PropertyResourceBundle(new InputStreamReader(stream, "UTF-8"));
+                bundle = new PropertyResourceBundle(new InputStreamReader(stream, UTF_8));
             } finally {
                 stream.close();
             }

@@ -52,9 +52,11 @@ import java.nio.file.Paths;
 import java.io.File;
 import java.io.IOException;
 
+import java.util.Arrays;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
@@ -337,12 +339,12 @@ public class Utilities {
 
     public static void openURI(URI uri) throws IOException {
         if (!DesktopUtil.browse(uri))
-            throw new IOException("Failed to open URI: " + uri.toString());
+            throw new IOException("Failed to open URI: " + uri);
     }
 
     public static void openFile(File file) throws IOException {
         if (!DesktopUtil.open(file))
-            throw new IOException("Failed to open file: " + file.toString());
+            throw new IOException("Failed to open file: " + file);
     }
 
     public static String getDownloadOfHomeDir() {
@@ -478,6 +480,16 @@ public class Utilities {
 
         return result;
 
+    }
+
+    public static List<String> toListOfWrappedStrings(String s, int wrapLength) {
+        StringBuilder sb = new StringBuilder(s);
+        int i = 0;
+        while (i + wrapLength < sb.length() && (i = sb.lastIndexOf(" ", i + wrapLength)) != -1) {
+            sb.replace(i, i + 1, "\n");
+        }
+        String[] splitLine = sb.toString().split("\n");
+        return Arrays.asList(splitLine);
     }
 
     public static String getRandomPrefix(int minLength, int maxLength) {
