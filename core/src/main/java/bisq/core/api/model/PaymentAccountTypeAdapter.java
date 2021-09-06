@@ -53,10 +53,8 @@ import lombok.extern.slf4j.Slf4j;
 import static bisq.common.util.ReflectionUtils.*;
 import static bisq.common.util.Utilities.decodeFromHex;
 import static bisq.core.locale.CountryUtil.findCountryByCode;
-import static bisq.core.locale.CurrencyUtil.getAllTransferwiseCurrencies;
-import static bisq.core.locale.CurrencyUtil.getCurrencyByCountryCode;
-import static bisq.core.locale.CurrencyUtil.getTradeCurrencies;
-import static bisq.core.locale.CurrencyUtil.getTradeCurrenciesInList;
+import static bisq.core.locale.CurrencyUtil.*;
+import static bisq.core.payment.payload.PaymentMethod.*;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.String.format;
 import static java.util.Arrays.stream;
@@ -110,13 +108,7 @@ class PaymentAccountTypeAdapter extends TypeAdapter<PaymentAccount> {
         // We're not serializing a real payment account instance here.
         out.beginObject();
 
-        // All json forms start with immutable _COMMENTS_ and paymentMethodId fields.
-        out.name("_COMMENTS_");
-        out.beginArray();
-        for (String s : JSON_COMMENTS) {
-            out.value(s);
-        }
-        out.endArray();
+        writeComments(out, account);
 
         out.name("paymentMethodId");
         out.value(account.getPaymentMethod().getId());
@@ -131,9 +123,32 @@ class PaymentAccountTypeAdapter extends TypeAdapter<PaymentAccount> {
         out.endObject();
     }
 
+    private void writeComments(JsonWriter out, PaymentAccount account) throws IOException {
+        // All json forms start with immutable _COMMENTS_ and paymentMethodId fields.
+        out.name("_COMMENTS_");
+        out.beginArray();
+        for (String s : JSON_COMMENTS) {
+            out.value(s);
+        }
+        /*
+        if (account.isSwiftAccount()) {
+            // Add extra comments for more complex swift account form.
+            List<String> wrappedSwiftComments = Res.getWrappedAsList("payment.swift.info", 110);
+            for (String line : wrappedSwiftComments) {
+                out.value(line);
+            }
+            out.value("See https://bisq.wiki/SWIFT");
+        }
+         */
+        out.endArray();
+    }
+
+
     private void writeInnerMutableFields(JsonWriter out, PaymentAccount account) {
-        if (account.isTransferwiseAccount())
+        if (account.canSupportMultipleCurrencies()) {
             writeTradeCurrenciesField(out, account);
+            writeSelectedTradeCurrencyField(out, account);
+        }
 
         fieldSettersMap.forEach((field, value) -> {
             try {
@@ -170,7 +185,7 @@ class PaymentAccountTypeAdapter extends TypeAdapter<PaymentAccount> {
             String fieldName = "tradeCurrencies";
             log.debug("Append form with non-settable field: {}", fieldName);
             out.name(fieldName);
-            out.value("comma delimited currency code list, e.g., gbp,eur");
+            out.value("comma delimited currency code list, e.g., gbp,eur,jpy,usd");
         } catch (Exception ex) {
             String errMsg = format("cannot create a new %s json form",
                     account.getClass().getSimpleName());
@@ -179,6 +194,22 @@ class PaymentAccountTypeAdapter extends TypeAdapter<PaymentAccount> {
         }
     }
 
+    // PaymentAccounts that support multiple 'tradeCurrencies' need to define a
+    // 'selectedTradeCurrency' field (not simply defaulting to first in list).
+    // Write this field to the form.
+    private void writeSelectedTradeCurrencyField(JsonWriter out, PaymentAccount account) {
+        try {
+            String fieldName = "selectedTradeCurrency";
+            log.debug("Append form with settable field: {}", fieldName);
+            out.name(fieldName);
+            out.value("primary trading currency code, e.g., eur");
+        } catch (Exception ex) {
+            String errMsg = format("cannot create a new %s json form",
+                    account.getClass().getSimpleName());
+            log.error(StringUtils.capitalize(errMsg) + ".", ex);
+            throw new IllegalStateException("programmer error: " + errMsg);
+        }
+    }
 
     @Override
     public PaymentAccount read(JsonReader in) throws IOException {
@@ -187,12 +218,17 @@ class PaymentAccountTypeAdapter extends TypeAdapter<PaymentAccount> {
         while (in.hasNext()) {
             String currentFieldName = in.nextName();
 
-            // The tradeCurrency field is common to all payment account types,
+            // The tradeCurrencies field is common to all payment account types,
             // but has no setter.
             if (didReadTradeCurrenciesField(in, account, currentFieldName))
                 continue;
 
-            // Some of the fields are common to all payment account types.
+            // The selectedTradeCurrency field is common to all payment account types,
+            // but is @Nullable, and may not need to be explicitly defined by user.
+            if (didReadSelectedTradeCurrencyField(in, account, currentFieldName))
+                continue;
+
+            // Some fields are common to all payment account types.
             if (didReadCommonField(in, account, currentFieldName))
                 continue;
 
@@ -318,32 +354,71 @@ class PaymentAccountTypeAdapter extends TypeAdapter<PaymentAccount> {
                                                 PaymentAccount account,
                                                 String fieldName) {
         // The PaymentAccount.tradeCurrencies field is a special case because it has
-        // no setter, and we add currencies to the List here.  Normally, it is an
-        // excluded field, TransferwiseAccount excepted.
+        // no setter, so we add currencies to the List here if the payment account
+        // supports multiple trade currencies.
         if (fieldName.equals("tradeCurrencies")) {
             String fieldValue = nextStringOrNull(in);
             List<String> currencyCodes = commaDelimitedCodesToList.apply(fieldValue);
-
-            Optional<List<TradeCurrency>> tradeCurrencies;
-            if (account.isTransferwiseAccount())
-                tradeCurrencies = getTradeCurrenciesInList(currencyCodes, getAllTransferwiseCurrencies());
-            else
-                tradeCurrencies = getTradeCurrencies(currencyCodes);
-
+            Optional<List<TradeCurrency>> tradeCurrencies = getReconciledTradeCurrencies(currencyCodes, account);
             if (tradeCurrencies.isPresent()) {
                 for (TradeCurrency tradeCurrency : tradeCurrencies.get()) {
                     account.addCurrency(tradeCurrency);
                 }
-                // For api users, define a selected currency.
-                account.setSelectedTradeCurrency(account.getTradeCurrency().orElse(null));
             } else {
                 // Log a warning.  We should not throw an exception here because the
-                // gson library will not pass it up to the calling Bisq class as it
-                // would be defined here.  Do a check in a calling class to make sure
-                // the tradeCurrencies field is populated in the PaymentAccount
-                // object, if it is required for the payment account method.
+                // gson library will not pass it up to the calling Bisq object exactly as
+                // it would be defined here (causing confusion).  Do a check in a calling
+                // class to make sure the tradeCurrencies field is populated in the
+                // PaymentAccount object, if it is required for the payment account method.
                 log.warn("No trade currencies were found in the {} account form.",
                         account.getPaymentMethod().getDisplayString());
+            }
+            return true;
+        }
+        return false;
+    }
+
+    private Optional<List<TradeCurrency>> getReconciledTradeCurrencies(List<String> currencyCodes,
+                                                                       PaymentAccount account) {
+        if (account.hasPaymentMethodWithId(ADVANCED_CASH_ID))
+            return getTradeCurrenciesInList(currencyCodes, getAllAdvancedCashCurrencies());
+        else if (account.hasPaymentMethodWithId(AMAZON_GIFT_CARD_ID))
+            return getTradeCurrenciesInList(currencyCodes, getAllAmazonGiftCardCurrencies());
+        else if (account.hasPaymentMethodWithId(CAPITUAL_ID))
+            return getTradeCurrenciesInList(currencyCodes, getAllCapitualCurrencies());
+        else if (account.hasPaymentMethodWithId(MONEY_GRAM_ID))
+            return getTradeCurrenciesInList(currencyCodes, getAllMoneyGramCurrencies());
+        else if (account.hasPaymentMethodWithId(PAXUM_ID))
+            return getTradeCurrenciesInList(currencyCodes, getAllPaxumCurrencies());
+        else if (account.hasPaymentMethodWithId(PAYSERA_ID))
+            return getTradeCurrenciesInList(currencyCodes, getAllPayseraCurrencies());
+        else if (account.hasPaymentMethodWithId(REVOLUT_ID))
+            return getTradeCurrenciesInList(currencyCodes, getAllRevolutCurrencies());
+        /*else if (account.hasPaymentMethodWithId(SWIFT_ID))
+            return getTradeCurrenciesInList(currencyCodes, new ArrayList<>(getAllSortedFiatCurrencies()));*/
+        else if (account.hasPaymentMethodWithId(TRANSFERWISE_ID))
+            return getTradeCurrenciesInList(currencyCodes, getAllTransferwiseCurrencies());
+        else if (account.hasPaymentMethodWithId(UPHOLD_ID))
+            return getTradeCurrenciesInList(currencyCodes, getAllUpholdCurrencies());
+        else
+            return Optional.empty();
+    }
+
+    private boolean didReadSelectedTradeCurrencyField(JsonReader in,
+                                                      PaymentAccount account,
+                                                      String fieldName) {
+        if (fieldName.equals("selectedTradeCurrency")) {
+            String fieldValue = nextStringOrNull(in);
+            if (fieldValue != null && !fieldValue.isEmpty()) {
+                Optional<TradeCurrency> tradeCurrency = getTradeCurrency(fieldValue.toUpperCase());
+                if (tradeCurrency.isPresent()) {
+                    account.setSelectedTradeCurrency(tradeCurrency.get());
+                } else {
+                    // Log an error.  We should not throw an exception here because the
+                    // gson library will not pass it up to the calling Bisq object exactly as
+                    // it would be defined here (causing confusion).
+                    log.error("{} is not a valid trade currency code.", fieldValue);
+                }
             }
             return true;
         }
@@ -356,8 +431,8 @@ class PaymentAccountTypeAdapter extends TypeAdapter<PaymentAccount> {
         switch (fieldName) {
             case "_COMMENTS_":
             case "paymentMethodId":
-                // Skip over the the comments and paymentMethodId, which is already
-                // set on the PaymentAccount instance.
+                // Skip over comments and paymentMethodId field, which
+                // are already set on the PaymentAccount instance.
                 in.skipValue();
                 return true;
             case "accountName":
@@ -388,7 +463,7 @@ class PaymentAccountTypeAdapter extends TypeAdapter<PaymentAccount> {
                 ((CountryBasedPaymentAccount) account).setCountry(country.get());
                 FiatCurrency fiatCurrency = getCurrencyByCountryCode(checkNotNull(countryCode));
                 account.setSingleTradeCurrency(fiatCurrency);
-            } else if (account.isMoneyGramAccount()) {
+            } else if (account.hasPaymentMethodWithId(MONEY_GRAM_ID)) {
                 ((MoneyGramAccount) account).setCountry(country.get());
             } else {
                 String errMsg = format("cannot set the country on a %s",
