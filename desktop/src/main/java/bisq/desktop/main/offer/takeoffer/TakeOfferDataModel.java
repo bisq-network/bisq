@@ -77,6 +77,7 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 
+import static bisq.core.payment.payload.PaymentMethod.HAL_CASH_ID;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -678,8 +679,8 @@ class TakeOfferDataModel extends OfferDataModel {
         return usableBsqBalance;
     }
 
-    public boolean isHalCashAccount() {
-        return paymentAccount.isHalCashAccount();
+    public boolean isUsingHalCashAccount() {
+        return paymentAccount.hasPaymentMethodWithId(HAL_CASH_ID);
     }
 
     public boolean isCurrencyForTakerFeeBtc() {

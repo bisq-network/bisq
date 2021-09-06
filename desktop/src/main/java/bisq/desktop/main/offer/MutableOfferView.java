@@ -117,6 +117,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.jetbrains.annotations.NotNull;
 
+import static bisq.core.payment.payload.PaymentMethod.HAL_CASH_ID;
 import static bisq.desktop.util.FormBuilder.*;
 import static javafx.beans.binding.Bindings.createStringBinding;
 
@@ -345,7 +346,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
                 Offer offer = model.createAndGetOffer();
                 if (!DevEnv.isDevMode()) {
                     offerDetailsWindow.onPlaceOffer(() ->
-                            model.onPlaceOffer(offer, offerDetailsWindow::hide))
+                                    model.onPlaceOffer(offer, offerDetailsWindow::hide))
                             .show(offer);
                 } else {
                     balanceSubscription.unsubscribe();
@@ -881,7 +882,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
         int marketPriceAvailableValue = model.marketPriceAvailableProperty.get();
         if (marketPriceAvailableValue > -1) {
             boolean showPriceToggle = marketPriceAvailableValue == 1 &&
-                    !model.getDataModel().paymentAccount.isHalCashAccount();
+                    !model.getDataModel().paymentAccount.hasPaymentMethodWithId(HAL_CASH_ID);
             percentagePriceBox.setVisible(showPriceToggle);
             priceTypeToggleButton.setVisible(showPriceToggle);
             boolean fixedPriceSelected = !model.getDataModel().getUseMarketBasedPrice().get() || !showPriceToggle;

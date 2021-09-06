@@ -92,6 +92,7 @@ import lombok.Getter;
 
 import javax.annotation.Nullable;
 
+import static bisq.core.payment.payload.PaymentMethod.HAL_CASH_ID;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.Comparator.comparing;
 
@@ -565,7 +566,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
         Volume volumeByAmount = price.get().getVolumeByAmount(minAmount.get());
 
         // For HalCash we want multiple of 10 EUR
-        if (paymentAccount.isHalCashAccount())
+        if (isUsingHalCashAccount())
             volumeByAmount = VolumeUtil.getAdjustedVolumeForHalCash(volumeByAmount);
         else if (CurrencyUtil.isFiatCurrency(tradeCurrencyCode.get()))
             volumeByAmount = VolumeUtil.getRoundedFiatVolume(volumeByAmount);
@@ -576,7 +577,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
         if (isNonZeroPrice.test(price) && isNonZeroVolume.test(volume) && allowAmountUpdate) {
             try {
                 Coin value = DisplayUtils.reduceTo4Decimals(price.get().getAmountByVolume(volume.get()), btcFormatter);
-                if (paymentAccount.isHalCashAccount())
+                if (isUsingHalCashAccount())
                     value = CoinUtil.getAdjustedAmountForHalCash(value, price.get(), getMaxTradeLimit());
                 else if (CurrencyUtil.isFiatCurrency(tradeCurrencyCode.get()))
                     value = CoinUtil.getRoundedFiatAmount(value, price.get(), getMaxTradeLimit());
@@ -645,10 +646,6 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
 
     protected void setBuyerSecurityDeposit(double value) {
         this.buyerSecurityDeposit.set(value);
-    }
-
-    protected boolean isUseMarketBasedPriceValue() {
-        return marketPriceAvailable && useMarketBasedPrice.get() && !paymentAccount.isHalCashAccount();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -781,5 +778,9 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
 
     public void setTriggerPrice(long triggerPrice) {
         this.triggerPrice = triggerPrice;
+    }
+
+    public boolean isUsingHalCashAccount() {
+        return paymentAccount.hasPaymentMethodWithId(HAL_CASH_ID);
     }
 }
