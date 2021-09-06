@@ -49,6 +49,7 @@ public class PaymentAccountTest extends AbstractPaymentAccountTest {
         test.testCreateAdvancedCashAccount(testInfo);
         test.testCreateAliPayAccount(testInfo);
         test.testCreateAustraliaPayidAccount(testInfo);
+        test.testCreateCapitualAccount(testInfo);
         test.testCreateCashDepositAccount(testInfo);
         test.testCreateBrazilNationalBankAccount(testInfo);
         test.testCreateClearXChangeAccount(testInfo);
@@ -60,6 +61,8 @@ public class PaymentAccountTest extends AbstractPaymentAccountTest {
         test.testCreateMoneyBeamAccount(testInfo);
         test.testCreateMoneyGramAccount(testInfo);
         test.testCreatePerfectMoneyAccount(testInfo);
+        test.testCreatePaxumAccount(testInfo);
+        test.testCreatePayseraAccount(testInfo);
         test.testCreatePopmoneyAccount(testInfo);
         test.testCreatePromptPayAccount(testInfo);
         test.testCreateRevolutAccount(testInfo);
@@ -67,12 +70,12 @@ public class PaymentAccountTest extends AbstractPaymentAccountTest {
         test.testCreateSepaInstantAccount(testInfo);
         test.testCreateSepaAccount(testInfo);
         test.testCreateSpecificBanksAccount(testInfo);
+        // test.testCreateSwiftAccount(testInfo);
         test.testCreateSwishAccount(testInfo);
 
-        // TransferwiseAccount is only PaymentAccount with a
-        // tradeCurrencies field in the json form.
         test.testCreateTransferwiseAccountWith1TradeCurrency(testInfo);
         test.testCreateTransferwiseAccountWith10TradeCurrencies(testInfo);
+        test.testCreateTransferwiseAccountWithSupportedTradeCurrencies(testInfo);
         test.testCreateTransferwiseAccountWithInvalidBrlTradeCurrencyShouldThrowException(testInfo);
         test.testCreateTransferwiseAccountWithoutTradeCurrenciesShouldThrowException(testInfo);
 
