@@ -138,9 +138,12 @@ class CorePaymentAccountsService {
     }
 
     private void verifyPaymentAccountHasRequiredFields(PaymentAccount paymentAccount) {
-        // Do checks here to make sure required fields are populated.
-        if (paymentAccount.isTransferwiseAccount() && paymentAccount.getTradeCurrencies().isEmpty())
+        if (paymentAccount.canSupportMultipleCurrencies() && paymentAccount.getTradeCurrencies().isEmpty())
             throw new IllegalArgumentException(format("no trade currencies defined for %s payment account",
+                    paymentAccount.getPaymentMethod().getDisplayString().toLowerCase()));
+
+        if (!paymentAccount.canSupportMultipleCurrencies() && paymentAccount.getSingleTradeCurrency() == null)
+            throw new IllegalArgumentException(format("no trade currency defined for %s payment account",
                     paymentAccount.getPaymentMethod().getDisplayString().toLowerCase()));
     }
 }
