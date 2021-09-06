@@ -54,6 +54,8 @@ import java.util.UUID;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.core.payment.payload.PaymentMethod.HAL_CASH_ID;
+
 @Slf4j
 @Singleton
 public class CreateOfferService {
@@ -133,7 +135,7 @@ public class CreateOfferService {
         NodeAddress makerAddress = p2PService.getAddress();
         boolean useMarketBasedPriceValue = useMarketBasedPrice &&
                 isMarketPriceAvailable(currencyCode) &&
-                !paymentAccount.isHalCashAccount();
+                !paymentAccount.hasPaymentMethodWithId(HAL_CASH_ID);
 
         long priceAsLong = price != null && !useMarketBasedPriceValue ? price.getValue() : 0L;
         double marketPriceMarginParam = useMarketBasedPriceValue ? marketPriceMargin : 0;
