@@ -1002,7 +1002,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
 
         Throwable exception = assertThrows(StatusRuntimeException.class, () ->
                 createPaymentAccount(aliceClient, jsonString));
-        assertEquals("INVALID_ARGUMENT: no trade currencies defined for transferwise payment account",
+        assertEquals("INVALID_ARGUMENT: no trade currency defined for transferwise payment account",
                 exception.getMessage());
     }
 

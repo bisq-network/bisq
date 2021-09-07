@@ -138,11 +138,7 @@ class CorePaymentAccountsService {
     }
 
     private void verifyPaymentAccountHasRequiredFields(PaymentAccount paymentAccount) {
-        if (paymentAccount.canSupportMultipleCurrencies() && paymentAccount.getTradeCurrencies().isEmpty())
-            throw new IllegalArgumentException(format("no trade currencies defined for %s payment account",
-                    paymentAccount.getPaymentMethod().getDisplayString().toLowerCase()));
-
-        if (!paymentAccount.canSupportMultipleCurrencies() && paymentAccount.getSingleTradeCurrency() == null)
+        if (!paymentAccount.hasMultipleCurrencies() && paymentAccount.getSingleTradeCurrency() == null)
             throw new IllegalArgumentException(format("no trade currency defined for %s payment account",
                     paymentAccount.getPaymentMethod().getDisplayString().toLowerCase()));
     }

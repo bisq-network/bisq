@@ -145,7 +145,7 @@ class PaymentAccountTypeAdapter extends TypeAdapter<PaymentAccount> {
 
 
     private void writeInnerMutableFields(JsonWriter out, PaymentAccount account) {
-        if (account.canSupportMultipleCurrencies()) {
+        if (account.hasMultipleCurrencies()) {
             writeTradeCurrenciesField(out, account);
             writeSelectedTradeCurrencyField(out, account);
         }

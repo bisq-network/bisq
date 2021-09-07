@@ -41,7 +41,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
-import static bisq.core.payment.payload.PaymentMethod.*;
+import static bisq.core.payment.payload.PaymentMethod.TRANSFERWISE_ID;
+import static bisq.core.payment.payload.PaymentMethod.getPaymentMethodById;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @EqualsAndHashCode
@@ -150,19 +151,6 @@ public abstract class PaymentAccount implements PersistablePayload {
 
     public boolean hasMultipleCurrencies() {
         return tradeCurrencies.size() > 1;
-    }
-
-    public boolean canSupportMultipleCurrencies() {
-        return this.hasPaymentMethodWithId(ADVANCED_CASH_ID)
-                || this.hasPaymentMethodWithId(AMAZON_GIFT_CARD_ID)
-                || this.hasPaymentMethodWithId(CAPITUAL_ID)
-                || this.hasPaymentMethodWithId(MONEY_GRAM_ID)
-                || this.hasPaymentMethodWithId(PAYSERA_ID)
-                || this.hasPaymentMethodWithId(PAXUM_ID)
-                || this.hasPaymentMethodWithId(REVOLUT_ID)
-                // || this.hasPaymentMethodWithId(SWIFT_ID)
-                || this.hasPaymentMethodWithId(TRANSFERWISE_ID)
-                || this.hasPaymentMethodWithId(UPHOLD_ID);
     }
 
     public void setSingleTradeCurrency(TradeCurrency tradeCurrency) {
