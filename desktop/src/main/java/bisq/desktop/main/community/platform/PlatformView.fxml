@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  ~ This file is part of Bisq.
+  ~
+  ~ Bisq is free software: you can redistribute it and/or modify it
+  ~ under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or (at
+  ~ your option) any later version.
+  ~
+  ~ Bisq is distributed in the hope that it will be useful, but WITHOUT
+  ~ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+  ~ FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+  ~ License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.HBox?>
+<?import com.jfoenix.controls.JFXButton?>
+<HBox
+        fx:id="root"
+        fx:controller="bisq.desktop.main.community.platform.PlatformView"
+        styleClass="community-platform-item"
+        prefWidth="400"
+        xmlns:fx="http://javafx.com/fxml"
+>
+    <Label fx:id="imageLabel" />
+    <VBox spacing="15">
+        <Label fx:id="titleLabel" styleClass="community-platform-item-title" />
+        <Label fx:id="descriptionLabel" styleClass="community-platform-item-description" wrapText="true" />
+        <HBox spacing="50">
+            <JFXButton fx:id="openURLButton" styleClass="community-platform-item-button" />
+            <JFXButton fx:id="copyURLButton" styleClass="community-platform-item-button" />
+        </HBox>
+    </VBox>
+</HBox>
+
+
