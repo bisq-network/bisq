@@ -17,6 +17,7 @@
 package bisq.desktop.components.paymentmethods;
 
 import bisq.desktop.components.AutoTooltipButton;
+import bisq.desktop.components.AutoTooltipCheckBox;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.SwiftPaymentDetails;
@@ -40,7 +41,6 @@ import com.jfoenix.controls.JFXTextArea;
 
 import javafx.scene.Node;
 import javafx.scene.control.Button;
-import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TitledPane;
@@ -51,23 +51,26 @@ import javafx.geometry.Insets;
 import java.util.function.Consumer;
 
 import static bisq.common.util.Utilities.cleanString;
-import static bisq.desktop.util.FormBuilder.*;
 import static bisq.core.payment.payload.SwiftAccountPayload.*;
+import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextField;
+import static bisq.desktop.util.FormBuilder.addInputTextField;
+import static bisq.desktop.util.FormBuilder.addTopLabelTextArea;
+import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
 
 public class SwiftForm extends PaymentMethodForm {
     private final SwiftAccountPayload formData;
-    private CheckBox useIntermediaryCheck;
-    private LengthValidator defaultValidator = new LengthValidator(2, 34);
-    private LengthValidator swiftValidator = new LengthValidator(11, 11);
-    private LengthValidator accountNrValidator = new LengthValidator(2, 40);
-    private LengthValidator addressValidator = new LengthValidator(1, 100);
+    private final AutoTooltipCheckBox useIntermediaryCheck;
+    private final LengthValidator defaultValidator = new LengthValidator(2, 34);
+    private final LengthValidator swiftValidator = new LengthValidator(11, 11);
+    private final LengthValidator accountNrValidator = new LengthValidator(2, 40);
+    private final LengthValidator addressValidator = new LengthValidator(1, 100);
 
     public SwiftForm(PaymentAccount paymentAccount,
                      AccountAgeWitnessService accountAgeWitnessService,
                      InputValidator defaultValidator, GridPane gridPane, int gridRow, CoinFormatter formatter) {
         super(paymentAccount, accountAgeWitnessService, defaultValidator, gridPane, gridRow, formatter);
         this.formData = ((SwiftAccount) paymentAccount).getPayload();
-        this.useIntermediaryCheck = new CheckBox(Res.get("payment.swift.use.intermediary"));
+        this.useIntermediaryCheck = new AutoTooltipCheckBox(Res.get("payment.swift.use.intermediary"));
     }
 
     @Override
@@ -94,7 +97,7 @@ public class SwiftForm extends PaymentMethodForm {
     public void addFormForDisplayAccount() {
         gridRowFrom = gridRow;
         addTopLabelTextField(gridPane, gridRow, Res.get("payment.account.name"), paymentAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"), Res.get(((SwiftAccount) paymentAccount).getPaymentMethod().getId()));
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"), Res.get(paymentAccount.getPaymentMethod().getId()));
 
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get(SWIFT_CODE + BANKPOSTFIX), formData.getBankSwiftCode());
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get(COUNTRY + BANKPOSTFIX), CountryUtil.getNameAndCode(formData.getBankCountryCode()));
@@ -162,13 +165,15 @@ public class SwiftForm extends PaymentMethodForm {
         GridPane.setColumnIndex(button, 1);
         gridPane.getChildren().add(button);
         GridPane.setMargin(button, new Insets(Layout.TWICE_FIRST_ROW_AND_GROUP_DISTANCE, 0, 0, Layout.FLOATING_LABEL_DISTANCE));
-        button.setOnAction((e) -> {
-            new SwiftPaymentDetails(swiftAccountPayload, trade).show();
-        });
+        button.setOnAction((e) -> new SwiftPaymentDetails(swiftAccountPayload, trade).show());
         return gridRow;
     }
 
-    private void addFieldsForBankEdit(boolean isPrimary, Consumer<String> onSwiftCodeSelected, Consumer<String> onNameSelected, Consumer<String> onBranchSelected, Consumer<String> onAddressSelected) {
+    private void addFieldsForBankEdit(boolean isPrimary,
+                                      Consumer<String> onSwiftCodeSelected,
+                                      Consumer<String> onNameSelected,
+                                      Consumer<String> onBranchSelected,
+                                      Consumer<String> onAddressSelected) {
         GridPane gridPane2 = new GridPane();
         gridPane2.getColumnConstraints().add(gridPane.getColumnConstraints().get(0));
         TitledPane titledPane = new TitledPane(isPrimary ? Res.get("payment.swift.title" + BANKPOSTFIX) : Res.get("payment.swift.title" + INTERMEDIARYPOSTFIX), gridPane2);
@@ -280,7 +285,7 @@ public class SwiftForm extends PaymentMethodForm {
             updateFromInputs();
         });
 
-        label = Res.get("payment.shared.optionalExtraInfo");
+        label = Res.get("payment.shared.optionalExtra");
         TextArea extraTextArea = addTopLabelTextArea(gridPane, ++gridRow, label, label).second;
         extraTextArea.setMinHeight(70);
         ((JFXTextArea) extraTextArea).setLabelFloat(false);
