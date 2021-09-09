@@ -8,13 +8,13 @@ SYNOPSIS
 --------
 createcryptopaymentacct
 		--account-name=<account-name>
-		--currency-code=<bsq>
-		--address=<unused-bsq-address>
+		--currency-code=<bsq|xmr>
+		--address=<unused-altcoin-address>
 		[--trade-instant=<true|false default=false>]
 
 DESCRIPTION
 -----------
-Create an cryptocurrency (altcoin) payment account.  Only BSQ payment accounts are currently supported.
+Create an cryptocurrency (altcoin) payment account.  Only BSQ and XMR payment accounts are currently supported.
 
 OPTIONS
 -------
@@ -22,7 +22,7 @@ OPTIONS
 		The name of the cryptocurrency payment account used to create and take altcoin offers.
 
 --currency-code
-		The three letter code for the altcoin, e.g., BSQ.
+		The three-letter code for the altcoin, e.g., BSQ.
 
 --address
 		The altcoin address to be used receive cryptocurrency payment when selling BTC.
@@ -40,8 +40,8 @@ $ ./bisq-cli --password=xyz --port=9998 createcryptopaymentacct --account-name="
     --address=Bn3PCQgRwhkrGnaMp1RYwt9tFwL51YELqne \
     --trade-instant=false
 
-To create a BSQ Instant Altcoin payment account:
-$ ./bisq-cli --password=xyz --port=9998 createcryptopaymentacct --account-name="My Instant BSQ Account" \
-    --currency-code=bsq \
-    --address=Bn3PCQgRwhkrGnaMp1RYwt9tFwL51YELqne \
+To create an XMR Instant Altcoin payment account:
+$ ./bisq-cli --password=xyz --port=9998 createcryptopaymentacct --account-name="My Instant XMR Account" \
+    --currency-code=xmr \
+    --address=42eKMxqFEexaHUB5KScZvVXBHYcrn5wo4Tm6Zp1PoHyvieRkZdkg7rFRm3Z2KNZ28vZzFrpTcSTpQa8m7LJXv97ARfSbPJo \
     --trade-instant=true
