@@ -4,6 +4,9 @@ import bisq.core.api.model.PaymentAccountForm;
 import bisq.core.locale.FiatCurrency;
 import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
+import bisq.core.payment.AssetAccount;
+import bisq.core.payment.CryptoCurrencyAccount;
+import bisq.core.payment.InstantCryptoCurrencyAccount;
 import bisq.core.payment.PaymentAccount;
 
 import com.google.gson.Gson;
@@ -31,6 +34,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestInfo;
 
+import static bisq.apitest.config.ApiTestConfig.BSQ;
+import static bisq.apitest.config.ApiTestConfig.XMR;
+import static bisq.core.locale.CurrencyUtil.getTradeCurrency;
+import static bisq.core.payment.payload.PaymentMethod.BLOCK_CHAINS_ID;
+import static bisq.core.payment.payload.PaymentMethod.BLOCK_CHAINS_INSTANT_ID;
 import static java.lang.String.format;
 import static java.lang.System.getProperty;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -117,6 +125,11 @@ public class AbstractPaymentAccountTest extends MethodTest {
 
     // A payment account serializer / deserializer.
     static final PaymentAccountForm PAYMENT_ACCOUNT_FORM = new PaymentAccountForm();
+
+    @SuppressWarnings("OptionalGetWithoutIsPresent")
+    static final TradeCurrency tradeCurrencyBSQ = getTradeCurrency(BSQ).get();
+    @SuppressWarnings("OptionalGetWithoutIsPresent")
+    static final TradeCurrency tradeCurrencyXMR = getTradeCurrency(XMR).get();
 
     @BeforeEach
     public void setup() {
@@ -223,17 +236,43 @@ public class AbstractPaymentAccountTest extends MethodTest {
     protected final String getCommaDelimitedTradeCurrencyCodes(List<TradeCurrency> tradeCurrencies) {
         return tradeCurrencies.stream()
                 .sorted(Comparator.comparing(TradeCurrency::getCode)) // sorted by code
-                .map(c -> c.getCode())
+                .map(TradeCurrency::getCode)
                 .collect(Collectors.joining(","));
     }
 
     protected final List<String> getSwiftFormComments() {
-        List<String> comments = new ArrayList<>();
-        comments.addAll(PROPERTY_VALUE_JSON_COMMENTS);
+        List<String> comments = new ArrayList<>(PROPERTY_VALUE_JSON_COMMENTS);
         // List<String> wrappedSwiftComments = Res.getWrappedAsList("payment.swift.info", 110);
         // comments.addAll(wrappedSwiftComments);
         // comments.add("See https://bisq.wiki/SWIFT");
         return comments;
+    }
+
+    protected final void checkCryptoCurrencyAccount(CryptoCurrencyAccount cryptoCurrencyAccount,
+                                                    String expectedAccountName,
+                                                    String expectedTradeCurrencyCode,
+                                                    String expectedAddress) {
+        assertEquals(BLOCK_CHAINS_ID, cryptoCurrencyAccount.getPaymentMethod().getId());
+        checkAssetAccount(cryptoCurrencyAccount, expectedAccountName, expectedTradeCurrencyCode, expectedAddress);
+    }
+
+    protected final void checkInstantCryptoCurrencyAccount(InstantCryptoCurrencyAccount instantCryptoAccount,
+                                                           String expectedAccountName,
+                                                           String expectedTradeCurrencyCode,
+                                                           String expectedAddress) {
+        assertEquals(BLOCK_CHAINS_INSTANT_ID, instantCryptoAccount.getPaymentMethod().getId());
+        checkAssetAccount(instantCryptoAccount, expectedAccountName, expectedTradeCurrencyCode, expectedAddress);
+    }
+
+    protected final void checkAssetAccount(AssetAccount assetAccount,
+                                           String expectedAccountName,
+                                           String expectedTradeCurrencyCode,
+                                           String expectedAddress) {
+        assertEquals(expectedAccountName, assetAccount.getAccountName());
+        assertEquals(1, assetAccount.getTradeCurrencies().size());
+        assertNotNull(assetAccount.getSelectedTradeCurrency());
+        assertEquals(expectedTradeCurrencyCode, assetAccount.getSelectedTradeCurrency().getCode());
+        assertEquals(expectedAddress, assetAccount.getAddress());
     }
 
     private File fillPaymentAccountForm(List<String> comments) {

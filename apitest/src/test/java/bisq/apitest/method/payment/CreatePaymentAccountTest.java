@@ -24,9 +24,11 @@ import bisq.core.payment.AustraliaPayid;
 import bisq.core.payment.CapitualAccount;
 import bisq.core.payment.CashDepositAccount;
 import bisq.core.payment.ClearXchangeAccount;
+import bisq.core.payment.CryptoCurrencyAccount;
 import bisq.core.payment.F2FAccount;
 import bisq.core.payment.FasterPaymentsAccount;
 import bisq.core.payment.HalCashAccount;
+import bisq.core.payment.InstantCryptoCurrencyAccount;
 import bisq.core.payment.InteracETransferAccount;
 import bisq.core.payment.JapanBankAccount;
 import bisq.core.payment.MoneyBeamAccount;
@@ -67,12 +69,13 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.TestMethodOrder;
 
 import static bisq.apitest.Scaffold.BitcoinCoreApp.bitcoind;
+import static bisq.apitest.config.ApiTestConfig.BSQ;
+import static bisq.apitest.config.ApiTestConfig.XMR;
 import static bisq.apitest.config.BisqAppConfig.alicedaemon;
 import static bisq.cli.TableFormat.formatPaymentAcctTbl;
 import static bisq.core.locale.CurrencyUtil.*;
@@ -84,7 +87,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 import static org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 
 @SuppressWarnings({"OptionalGetWithoutIsPresent", "ConstantConditions"})
-@Disabled
+// @Disabled
 @Slf4j
 @TestMethodOrder(OrderAnnotation.class)
 public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
@@ -97,6 +100,8 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
             fail(ex);
         }
     }
+
+    // Fiat Payment Accounts
 
     @Test
     public void testCreateAdvancedCashAccount(TestInfo testInfo) {
@@ -1105,6 +1110,76 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_COUNTRY),
                 Objects.requireNonNull(paymentAccount.getCountry()).code);
         print(paymentAccount);
+    }
+
+    // AltCoin Payment Accounts
+
+    @Test
+    public void testCreateBSQAccount(TestInfo testInfo) {
+        String bsqAddress = aliceClient.getUnusedBsqAddress();
+        protobuf.PaymentAccount proto =
+                aliceClient.createCryptoCurrencyPaymentAccount(BSQ,
+                        BSQ,
+                        bsqAddress,
+                        false);
+        CryptoCurrencyAccount cryptoAccount = toCryptoCurrencyAccount.apply(proto);
+        checkCryptoCurrencyAccount(cryptoAccount, BSQ, BSQ, bsqAddress);
+        print(cryptoAccount);
+    }
+
+    @Test
+    public void testCreateBSQAccountWithInvalidAddressShouldThrowException(TestInfo testInfo) {
+        String bsqAddress = "BADADDRESSrmtxtzpwt25zq2pmeeu6qk8029w404ad0xn";
+        Throwable exception = assertThrows(StatusRuntimeException.class,
+                () -> aliceClient.createCryptoCurrencyPaymentAccount(BSQ, BSQ, bsqAddress, false));
+        assertEquals("INVALID_ARGUMENT: " + bsqAddress + " is not a valid bsq address",
+                exception.getMessage());
+    }
+
+    @Test
+    public void testCreateInstantBSQAccount(TestInfo testInfo) {
+        String bsqAddress = aliceClient.getUnusedBsqAddress();
+        protobuf.PaymentAccount proto =
+                aliceClient.createCryptoCurrencyPaymentAccount(BSQ, BSQ, bsqAddress, true);
+        InstantCryptoCurrencyAccount instantCryptoAccount = toInstantCryptoCurrencyAccount.apply(proto);
+        checkInstantCryptoCurrencyAccount(instantCryptoAccount, BSQ, BSQ, bsqAddress);
+        print(instantCryptoAccount);
+    }
+
+    @Test
+    public void testCreateXMRAccount(TestInfo testInfo) {
+        // Bisq does not support XMR$Testnet or XMR$Stagenet assets.
+        // All test XMR addresses must contain XMR$Mainnet prefixes.
+        String mainnetXMRAddress =
+                "4Azaj6jNxbx8Tu3GgN5wAxCmaVNx4LWPJBw9UGeb2cKoBkoUP9r7VQqAGjkn7QzzYNEzr7RJ3URhy3fy6C4BoKhB5UdtDuM";
+        protobuf.PaymentAccount proto =
+                aliceClient.createCryptoCurrencyPaymentAccount(XMR, XMR, mainnetXMRAddress, false);
+        CryptoCurrencyAccount cryptoAccount = toCryptoCurrencyAccount.apply(proto);
+        checkCryptoCurrencyAccount(cryptoAccount, XMR, XMR, mainnetXMRAddress);
+        print(cryptoAccount);
+    }
+
+    @Test
+    public void testCreateInstantXMRAccount(TestInfo testInfo) {
+        String mainnetXMRAddress =
+                "49nifJSHL4uPxKCMWseH6MacYHjw3a2Ly9Xs86w4xuUb61ufRbRSHR1BGad56K8xYNfpCCTyLYmxJWYxTtw6dD5HFsEvoLd";
+        protobuf.PaymentAccount proto =
+                aliceClient.createCryptoCurrencyPaymentAccount(XMR,
+                        XMR,
+                        mainnetXMRAddress,
+                        true);
+        InstantCryptoCurrencyAccount instantCryptoAccount = toInstantCryptoCurrencyAccount.apply(proto);
+        checkInstantCryptoCurrencyAccount(instantCryptoAccount, XMR, XMR, mainnetXMRAddress);
+        print(instantCryptoAccount);
+    }
+
+    @Test
+    public void testCreateInstantXMRAccountWithInvalidAddressShouldThrowException(TestInfo testInfo) {
+        String mainnetXMRAddress = "BADADDRESSuPxKCMWseH6MacYHjw3a2Ly9Xs86w4xuUb61ufRbRSHR1BGad56K8xYNfpCCTyLYmxJWYxTtw6dD5HFsEvoLd";
+        Throwable exception = assertThrows(StatusRuntimeException.class,
+                () -> aliceClient.createCryptoCurrencyPaymentAccount(XMR, XMR, mainnetXMRAddress, true));
+        assertEquals("INVALID_ARGUMENT: " + mainnetXMRAddress + " is not a valid xmr address",
+                exception.getMessage());
     }
 
     @AfterAll

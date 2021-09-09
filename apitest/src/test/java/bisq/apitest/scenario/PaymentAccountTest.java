@@ -83,6 +83,13 @@ public class PaymentAccountTest extends AbstractPaymentAccountTest {
         test.testCreateUSPostalMoneyOrderAccount(testInfo);
         test.testCreateWeChatPayAccount(testInfo);
         test.testCreateWesternUnionAccount(testInfo);
+
+        test.testCreateBSQAccount(testInfo);
+        test.testCreateBSQAccountWithInvalidAddressShouldThrowException(testInfo);
+        test.testCreateInstantBSQAccount(testInfo);
+        test.testCreateXMRAccount(testInfo);
+        test.testCreateInstantXMRAccount(testInfo);
+        test.testCreateInstantXMRAccountWithInvalidAddressShouldThrowException(testInfo);
     }
 
     @AfterAll

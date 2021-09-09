@@ -18,8 +18,11 @@
 package bisq.apitest.method;
 
 import bisq.core.api.model.PaymentAccountForm;
+import bisq.core.payment.CryptoCurrencyAccount;
 import bisq.core.payment.F2FAccount;
+import bisq.core.payment.InstantCryptoCurrencyAccount;
 import bisq.core.payment.NationalBankAccount;
+import bisq.core.payment.PaymentAccount;
 import bisq.core.proto.CoreProtoResolver;
 
 import bisq.common.util.Utilities;
@@ -103,6 +106,11 @@ public class MethodTest extends ApiTestCase {
         return jsonFile;
     }
 
+    protected final Function<protobuf.PaymentAccount, CryptoCurrencyAccount> toCryptoCurrencyAccount = (proto) ->
+            (CryptoCurrencyAccount) PaymentAccount.fromProto(proto, CORE_PROTO_RESOLVER);
+
+    protected final Function<protobuf.PaymentAccount, InstantCryptoCurrencyAccount> toInstantCryptoCurrencyAccount = (proto) ->
+            (InstantCryptoCurrencyAccount) PaymentAccount.fromProto(proto, CORE_PROTO_RESOLVER);
 
     protected bisq.core.payment.PaymentAccount createDummyF2FAccount(GrpcClient grpcClient,
                                                                      String countryCode) {
@@ -118,7 +126,6 @@ public class MethodTest extends ApiTestCase {
         F2FAccount f2FAccount = (F2FAccount) createPaymentAccount(grpcClient, f2fAccountJsonString);
         return f2FAccount;
     }
-
 
     protected bisq.core.payment.PaymentAccount createDummyBRLAccount(GrpcClient grpcClient,
                                                                      String holderName,
@@ -144,7 +151,7 @@ public class MethodTest extends ApiTestCase {
     protected final bisq.core.payment.PaymentAccount createPaymentAccount(GrpcClient grpcClient, String jsonString) {
         // Normally, we do asserts on the protos from the gRPC service, but in this
         // case we need a bisq.core.payment.PaymentAccount so it can be cast to its
-        // sub type.
+        // subtype.
         var paymentAccount = grpcClient.createPaymentAccount(jsonString);
         return bisq.core.payment.PaymentAccount.fromProto(paymentAccount, CORE_PROTO_RESOLVER);
     }
