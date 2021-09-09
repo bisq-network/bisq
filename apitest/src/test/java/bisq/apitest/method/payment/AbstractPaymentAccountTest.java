@@ -34,9 +34,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestInfo;
 
-import static bisq.apitest.config.ApiTestConfig.BSQ;
-import static bisq.apitest.config.ApiTestConfig.XMR;
-import static bisq.core.locale.CurrencyUtil.getTradeCurrency;
 import static bisq.core.payment.payload.PaymentMethod.BLOCK_CHAINS_ID;
 import static bisq.core.payment.payload.PaymentMethod.BLOCK_CHAINS_INSTANT_ID;
 import static java.lang.String.format;
@@ -125,11 +122,6 @@ public class AbstractPaymentAccountTest extends MethodTest {
 
     // A payment account serializer / deserializer.
     static final PaymentAccountForm PAYMENT_ACCOUNT_FORM = new PaymentAccountForm();
-
-    @SuppressWarnings("OptionalGetWithoutIsPresent")
-    static final TradeCurrency tradeCurrencyBSQ = getTradeCurrency(BSQ).get();
-    @SuppressWarnings("OptionalGetWithoutIsPresent")
-    static final TradeCurrency tradeCurrencyXMR = getTradeCurrency(XMR).get();
 
     @BeforeEach
     public void setup() {
