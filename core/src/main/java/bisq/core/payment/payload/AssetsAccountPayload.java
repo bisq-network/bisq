@@ -26,11 +26,9 @@ import java.util.Map;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 @EqualsAndHashCode(callSuper = true)
-@ToString
 @Setter
 @Getter
 @Slf4j
@@ -76,5 +74,16 @@ public abstract class AssetsAccountPayload extends PaymentAccountPayload {
     @Override
     public byte[] getAgeWitnessInputData() {
         return super.getAgeWitnessInputData(address.getBytes(StandardCharsets.UTF_8));
+    }
+
+    @Override
+    public String toString() {
+        return this.getClass().getSimpleName() + "{" +
+                "id='" + id + '\'' +
+                ", paymentMethodId='" + paymentMethodId + '\'' +
+                ", address='" + address + '\'' +
+                ", maxTradePeriod=" + maxTradePeriod +
+                ", excludeFromJsonDataMap=" + excludeFromJsonDataMap +
+                '}';
     }
 }
