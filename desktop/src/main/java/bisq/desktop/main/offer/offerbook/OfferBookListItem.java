@@ -42,8 +42,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.jetbrains.annotations.NotNull;
 
-import javax.annotation.Nullable;
-
 @Slf4j
 public class OfferBookListItem {
     @Getter
@@ -58,11 +56,7 @@ public class OfferBookListItem {
      * envelope bundles.  It can happen when the API is used to edit an offer because
      * the remove/add msgs are received in the same envelope bundle, then processed in
      * unpredictable order.
-     *
-     * A null value indicates the item's payload hash has not been set by onAdded or
-     * onRemoved since the most recent OfferBook view refresh.
      */
-    @Nullable
     @Getter
     P2PDataStorage.ByteArray hashOfPayload;
 
@@ -71,12 +65,8 @@ public class OfferBookListItem {
     private WitnessAgeData witnessAgeData;
 
     public OfferBookListItem(Offer offer) {
-        this(offer, null);
-    }
-
-    public OfferBookListItem(Offer offer, @Nullable P2PDataStorage.ByteArray hashOfPayload) {
         this.offer = offer;
-        this.hashOfPayload = hashOfPayload;
+        this.hashOfPayload = new P2PDataStorage.ByteArray(offer.getOfferPayload().getHash());
     }
 
     public WitnessAgeData getWitnessAgeData(AccountAgeWitnessService accountAgeWitnessService,
@@ -124,7 +114,7 @@ public class OfferBookListItem {
     public String toString() {
         return "OfferBookListItem{" +
                 "offerId=" + offer.getId() +
-                ", hashOfPayload=" + (hashOfPayload == null ? "null" : hashOfPayload.getHex()) +
+                ", hashOfPayload=" + hashOfPayload.getHex() +
                 ", witnessAgeData=" + (witnessAgeData == null ? "null" : witnessAgeData.displayString) +
                 '}';
     }

@@ -68,7 +68,7 @@ public class OfferBook {
 
         offerBookService.addOfferBookChangedListener(new OfferBookService.OfferBookChangedListener() {
             @Override
-            public void onAdded(Offer offer, P2PDataStorage.ByteArray hashOfPayload) {
+            public void onAdded(Offer offer) {
                 printOfferBookListItems("Before onAdded");
                 // We get onAdded called every time a new ProtectedStorageEntry is received.
                 // Mostly it is the same OfferPayload but the ProtectedStorageEntry is different.
@@ -90,14 +90,14 @@ public class OfferBook {
                 // and errorMessage.
                 boolean hasSameOffer = offerBookListItems.stream().anyMatch(item -> item.getOffer().equals(offer));
                 if (!hasSameOffer) {
-                    OfferBookListItem newOfferBookListItem = new OfferBookListItem(offer, hashOfPayload);
+                    OfferBookListItem newOfferBookListItem = new OfferBookListItem(offer);
                     removeDuplicateItem(newOfferBookListItem);
                     offerBookListItems.add(newOfferBookListItem);  // Add replacement.
                     if (log.isDebugEnabled()) {  // TODO delete debug stmt in future PR.
                         log.debug("onAdded: Added new offer {}\n"
                                         + "\twith newItem.payloadHash: {}",
                                 offer.getId(),
-                                newOfferBookListItem.hashOfPayload == null ? "null" : newOfferBookListItem.hashOfPayload.getHex());
+                                newOfferBookListItem.hashOfPayload.getHex());
                     }
                 } else {
                     log.debug("We have the exact same offer already in our list and ignore the onAdded call. ID={}", offer.getId());
@@ -106,9 +106,9 @@ public class OfferBook {
             }
 
             @Override
-            public void onRemoved(Offer offer, P2PDataStorage.ByteArray hashOfPayload) {
+            public void onRemoved(Offer offer) {
                 printOfferBookListItems("Before onRemoved");
-                removeOffer(offer, hashOfPayload);
+                removeOffer(offer);
                 printOfferBookListItems("After onRemoved");
             }
         });
@@ -128,57 +128,56 @@ public class OfferBook {
                                 + "\twith payload hash {} from list.\n"
                                 + "\tThis may make a subsequent onRemoved( {} ) call redundant.",
                         offerId,
-                        oldOfferItem.getHashOfPayload() == null ? "null" : oldOfferItem.getHashOfPayload().getHex(),
+                        oldOfferItem.getHashOfPayload().getHex(),
                         oldOfferItem.getOffer().getId());
             }
         });
     }
 
-    public void removeOffer(Offer offer, P2PDataStorage.ByteArray hashOfPayload) {
+    public void removeOffer(Offer offer) {
         // Update state in case that that offer is used in the take offer screen, so it gets updated correctly
         offer.setState(Offer.State.REMOVED);
         offer.cancelAvailabilityRequest();
+
+        P2PDataStorage.ByteArray hashOfPayload = new P2PDataStorage.ByteArray(offer.getOfferPayload().getHash());
 
         if (log.isDebugEnabled()) {  // TODO delete debug stmt in future PR.
             log.debug("onRemoved: id = {}\n"
                             + "\twith payload-hash = {}",
                     offer.getId(),
-                    hashOfPayload == null ? "null" : hashOfPayload.getHex());
+                    hashOfPayload.getHex());
         }
 
         // Find the removal candidate in the OfferBook list with matching offerId and payload-hash.
         Optional<OfferBookListItem> candidateWithMatchingPayloadHash = offerBookListItems.stream()
-                .filter(item -> item.getOffer().getId().equals(offer.getId()) && (
-                        item.hashOfPayload == null
-                                || item.hashOfPayload.equals(hashOfPayload))
-                )
+                .filter(item -> item.getOffer().getId().equals(offer.getId())
+                        && item.hashOfPayload.equals(hashOfPayload))
                 .findAny();
 
         if (!candidateWithMatchingPayloadHash.isPresent()) {
             if (log.isDebugEnabled()) {  // TODO delete debug stmt in future PR.
                 log.debug("UI view list does not contain offer with id {} and payload-hash {}",
                         offer.getId(),
-                        hashOfPayload == null ? "null" : hashOfPayload.getHex());
+                        hashOfPayload.getHex());
             }
             return;
         }
 
         OfferBookListItem candidate = candidateWithMatchingPayloadHash.get();
 
-        // Remove the candidate only if the candidate's offer payload is null (after list
-        // is populated by 'fillOfferBookListItems()'), or the hash matches the onRemoved
-        // hashOfPayload parameter.  We may receive add/remove messages out of order
-        // (from api's 'editoffer'), and use the offer payload hash to ensure we do not
-        // remove an edited offer immediately after it was added.
-        if ((candidate.getHashOfPayload() == null || candidate.getHashOfPayload().equals(hashOfPayload))) {
+        // Remove the candidate only if the candidate's offer payload the hash matches the
+        // onRemoved hashOfPayload parameter.  We may receive add/remove messages out of
+        // order from the API's 'editoffer' method, and use the offer payload hash to
+        // ensure we do not remove an edited offer immediately after it was added.
+        if (candidate.getHashOfPayload().equals(hashOfPayload)) {
             // The payload-hash test passed, remove the candidate and print reason.
             offerBookListItems.remove(candidate);
 
             if (log.isDebugEnabled()) {  // TODO delete debug stmt in future PR.
-                log.debug("Candidate.payload-hash: {} is null or == onRemoved.payload-hash: {} ?"
+                log.debug("Candidate.payload-hash: {} == onRemoved.payload-hash: {} ?"
                                 + " Yes, removed old offer",
-                        candidate.hashOfPayload == null ? "null" : candidate.hashOfPayload.getHex(),
-                        hashOfPayload == null ? "null" : hashOfPayload.getHex());
+                        candidate.hashOfPayload.getHex(),
+                        hashOfPayload.getHex());
             }
         } else {
             if (log.isDebugEnabled()) {  // TODO delete debug stmt in future PR.
@@ -186,8 +185,8 @@ public class OfferBook {
                 // Print reason for not removing candidate.
                 log.debug("Candidate.payload-hash: {} == onRemoved.payload-hash: {} ?"
                                 + " No, old offer not removed",
-                        candidate.hashOfPayload == null ? "null" : candidate.hashOfPayload.getHex(),
-                        hashOfPayload == null ? "null" : hashOfPayload.getHex());
+                        candidate.hashOfPayload.getHex(),
+                        hashOfPayload.getHex());
             }
         }
     }
