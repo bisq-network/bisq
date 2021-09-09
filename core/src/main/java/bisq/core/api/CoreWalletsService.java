@@ -82,7 +82,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
-import static bisq.common.config.BaseCurrencyNetwork.BTC_DAO_REGTEST;
 import static bisq.core.btc.wallet.Restrictions.getMinNonDustOutput;
 import static bisq.core.util.ParsingUtils.parseToCoin;
 import static java.lang.String.format;
@@ -210,10 +209,10 @@ class CoreWalletsService {
         }
 
         return addressStrings.stream().map(address ->
-                new AddressBalanceInfo(address,
-                        balances.getUnchecked(address),
-                        getNumConfirmationsForMostRecentTransaction(address),
-                        btcWalletService.isAddressUnused(getAddressEntry(address).getAddress())))
+                        new AddressBalanceInfo(address,
+                                balances.getUnchecked(address),
+                                getNumConfirmationsForMostRecentTransaction(address),
+                                btcWalletService.isAddressUnused(getAddressEntry(address).getAddress())))
                 .collect(Collectors.toList());
     }
 
@@ -552,7 +551,7 @@ class CoreWalletsService {
             return bsqFormatter.getAddressFromBsqAddress(address);
         } catch (RuntimeException e) {
             log.error("", e);
-            throw new IllegalStateException(format("%s is not a valid bsq address", address));
+            throw new IllegalArgumentException(format("%s is not a valid bsq address", address));
         }
     }
 

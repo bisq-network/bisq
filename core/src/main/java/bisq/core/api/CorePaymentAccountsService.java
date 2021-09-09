@@ -27,6 +27,9 @@ import bisq.core.payment.PaymentAccountFactory;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.user.User;
 
+import bisq.asset.Asset;
+import bisq.asset.AssetRegistry;
+
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
@@ -36,10 +39,14 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.common.app.DevEnv.isDaoTradingActivated;
+import static bisq.common.config.Config.baseCurrencyNetwork;
+import static bisq.core.locale.CurrencyUtil.findAsset;
 import static bisq.core.locale.CurrencyUtil.getCryptoCurrency;
 import static java.lang.String.format;
 
@@ -103,12 +110,9 @@ class CorePaymentAccountsService {
                                                       String currencyCode,
                                                       String address,
                                                       boolean tradeInstant) {
-        String bsqCode = currencyCode.toUpperCase();
-        if (!bsqCode.equals("BSQ"))
-            throw new IllegalArgumentException("api does not currently support " + currencyCode + " accounts");
-
-        // Validate the BSQ address string but ignore the return value.
-        coreWalletsService.getValidBsqAddress(address);
+        String cryptoCurrencyCode = currencyCode.toUpperCase();
+        verifyApiDoesSupportCryptoCurrencyAccount(cryptoCurrencyCode);
+        verifyCryptoCurrencyAddress(cryptoCurrencyCode, address);
 
         var cryptoCurrencyAccount = tradeInstant
                 ? (InstantCryptoCurrencyAccount) PaymentAccountFactory.getPaymentAccount(PaymentMethod.BLOCK_CHAINS_INSTANT)
@@ -116,7 +120,7 @@ class CorePaymentAccountsService {
         cryptoCurrencyAccount.init();
         cryptoCurrencyAccount.setAccountName(accountName);
         cryptoCurrencyAccount.setAddress(address);
-        Optional<CryptoCurrency> cryptoCurrency = getCryptoCurrency(bsqCode);
+        Optional<CryptoCurrency> cryptoCurrency = getCryptoCurrency(cryptoCurrencyCode);
         cryptoCurrency.ifPresent(cryptoCurrencyAccount::setSingleTradeCurrency);
         user.addPaymentAccount(cryptoCurrencyAccount);
         accountAgeWitnessService.publishMyAccountAgeWitness(cryptoCurrencyAccount.getPaymentAccountPayload());
@@ -135,6 +139,41 @@ class CorePaymentAccountsService {
                 .filter(PaymentMethod::isAsset)
                 .sorted(Comparator.comparing(PaymentMethod::getId))
                 .collect(Collectors.toList());
+    }
+
+    private void verifyCryptoCurrencyAddress(String cryptoCurrencyCode, String address) {
+        if (cryptoCurrencyCode.equals("BSQ")) {
+            // Validate the BSQ address, but ignore the return value.
+            coreWalletsService.getValidBsqAddress(address);
+        } else {
+            Asset asset = getAsset(cryptoCurrencyCode);
+            if (!asset.validateAddress(address).isValid())
+                throw new IllegalArgumentException(
+                        format("%s is not a valid %s address",
+                                address,
+                                cryptoCurrencyCode.toLowerCase()));
+        }
+    }
+
+    private final Predicate<String> apiDoesSupportCryptoCurrencyAccount = (c) ->
+            c.equals("BSQ") || c.equals("XMR");
+
+    private void verifyApiDoesSupportCryptoCurrencyAccount(String cryptoCurrencyCode) {
+        if (!apiDoesSupportCryptoCurrencyAccount.test(cryptoCurrencyCode))
+            throw new IllegalArgumentException(
+                    format("api does not currently support %s accounts",
+                            cryptoCurrencyCode.toLowerCase()));
+
+    }
+
+    private Asset getAsset(String cryptoCurrencyCode) {
+        return findAsset(new AssetRegistry(),
+                cryptoCurrencyCode,
+                baseCurrencyNetwork(),
+                isDaoTradingActivated())
+                .orElseThrow(() -> new IllegalStateException(
+                        format("crypto currency with code '%s' not found",
+                                cryptoCurrencyCode.toLowerCase())));
     }
 
     private void verifyPaymentAccountHasRequiredFields(PaymentAccount paymentAccount) {
