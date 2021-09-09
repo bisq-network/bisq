@@ -20,15 +20,16 @@ package bisq.cli;
 import java.util.ArrayList;
 import java.util.List;
 
-class CryptoCurrencyUtil {
+public class CryptoCurrencyUtil {
 
-    public static boolean isSupportedCryptoCurrency(String currencyCode) {
+    public static boolean apiDoesSupportCryptoCurrency(String currencyCode) {
         return getSupportedCryptoCurrencies().contains(currencyCode.toUpperCase());
     }
 
     public static List<String> getSupportedCryptoCurrencies() {
         final List<String> result = new ArrayList<>();
         result.add("BSQ");
+        result.add("XMR");
         result.sort(String::compareTo);
         return result;
     }

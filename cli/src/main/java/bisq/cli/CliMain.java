@@ -560,7 +560,8 @@ public class CliMain {
                     return;
                 }
                 case createcryptopaymentacct: {
-                    var opts = new CreateCryptoCurrencyPaymentAcctOptionParser(args).parse();
+                    var opts =
+                            new CreateCryptoCurrencyPaymentAcctOptionParser(args).parse();
                     if (opts.isForHelp()) {
                         out.println(client.getMethodHelp(method));
                         return;
@@ -821,8 +822,8 @@ public class CliMain {
             stream.format(rowFormat, createpaymentacct.name(), "--payment-account-form=<path>", "Create a new payment account");
             stream.println();
             stream.format(rowFormat, createcryptopaymentacct.name(), "--account-name=<name> \\", "Create a new cryptocurrency payment account");
-            stream.format(rowFormat, "", "--currency-code=<bsq> \\", "");
-            stream.format(rowFormat, "", "--address=<bsq-address>", "");
+            stream.format(rowFormat, "", "--currency-code=<bsq|xmr> \\", "");
+            stream.format(rowFormat, "", "--address=<altcoin-address>", "");
             stream.format(rowFormat, "", "--trade-instant=<true|false>", "");
             stream.println();
             stream.format(rowFormat, getpaymentaccts.name(), "", "Get user payment accounts");

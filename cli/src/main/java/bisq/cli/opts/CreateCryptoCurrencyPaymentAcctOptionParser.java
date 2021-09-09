@@ -20,20 +20,22 @@ package bisq.cli.opts;
 
 import joptsimple.OptionSpec;
 
+import static bisq.cli.CryptoCurrencyUtil.apiDoesSupportCryptoCurrency;
 import static bisq.cli.opts.OptLabel.OPT_ACCOUNT_NAME;
 import static bisq.cli.opts.OptLabel.OPT_ADDRESS;
 import static bisq.cli.opts.OptLabel.OPT_CURRENCY_CODE;
 import static bisq.cli.opts.OptLabel.OPT_TRADE_INSTANT;
+import static java.lang.String.format;
 
 public class CreateCryptoCurrencyPaymentAcctOptionParser extends AbstractMethodOptionParser implements MethodOpts {
 
     final OptionSpec<String> accountNameOpt = parser.accepts(OPT_ACCOUNT_NAME, "crypto currency account name")
             .withRequiredArg();
 
-    final OptionSpec<String> currencyCodeOpt = parser.accepts(OPT_CURRENCY_CODE, "crypto currency code (bsq only)")
+    final OptionSpec<String> currencyCodeOpt = parser.accepts(OPT_CURRENCY_CODE, "crypto currency code (bsq|xmr)")
             .withRequiredArg();
 
-    final OptionSpec<String> addressOpt = parser.accepts(OPT_ADDRESS, "bsq address")
+    final OptionSpec<String> addressOpt = parser.accepts(OPT_ADDRESS, "altcoin address")
             .withRequiredArg();
 
     final OptionSpec<Boolean> tradeInstantOpt = parser.accepts(OPT_TRADE_INSTANT, "create trade instant account")
@@ -58,11 +60,14 @@ public class CreateCryptoCurrencyPaymentAcctOptionParser extends AbstractMethodO
         if (!options.has(currencyCodeOpt) || options.valueOf(currencyCodeOpt).isEmpty())
             throw new IllegalArgumentException("no currency code specified");
 
-        if (!options.valueOf(currencyCodeOpt).equalsIgnoreCase("bsq"))
-            throw new IllegalArgumentException("api only supports bsq crypto currency payment accounts");
+        String cryptoCurrencyCode = options.valueOf(currencyCodeOpt);
+        if (!apiDoesSupportCryptoCurrency(cryptoCurrencyCode))
+            throw new IllegalArgumentException(format("api does not support %s payment accounts",
+                    cryptoCurrencyCode.toLowerCase()));
 
         if (!options.has(addressOpt) || options.valueOf(addressOpt).isEmpty())
-            throw new IllegalArgumentException("no bsq address specified");
+            throw new IllegalArgumentException(format("no %s address specified",
+                    cryptoCurrencyCode.toLowerCase()));
 
         return this;
     }

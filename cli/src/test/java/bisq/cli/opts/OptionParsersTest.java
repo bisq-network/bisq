@@ -219,12 +219,12 @@ public class OptionParsersTest {
         String[] args = new String[]{
                 PASSWORD_OPT,
                 createcryptopaymentacct.name(),
-                "--" + OPT_ACCOUNT_NAME + "=" + "bsq payment account",
-                "--" + OPT_CURRENCY_CODE + "=" + "xmr"
+                "--" + OPT_ACCOUNT_NAME + "=" + "bch payment account",
+                "--" + OPT_CURRENCY_CODE + "=" + "bch"
         };
         Throwable exception = assertThrows(RuntimeException.class, () ->
                 new CreateCryptoCurrencyPaymentAcctOptionParser(args).parse());
-        assertEquals("api only supports bsq crypto currency payment accounts", exception.getMessage());
+        assertEquals("api does not support bch payment accounts", exception.getMessage());
     }
 
     @Test
@@ -232,12 +232,12 @@ public class OptionParsersTest {
         String[] args = new String[]{
                 PASSWORD_OPT,
                 createcryptopaymentacct.name(),
-                "--" + OPT_ACCOUNT_NAME + "=" + "bsq payment account",
-                "--" + OPT_CURRENCY_CODE + "=" + "bsq"
+                "--" + OPT_ACCOUNT_NAME + "=" + "xmr payment account",
+                "--" + OPT_CURRENCY_CODE + "=" + "xmr"
         };
         Throwable exception = assertThrows(RuntimeException.class, () ->
                 new CreateCryptoCurrencyPaymentAcctOptionParser(args).parse());
-        assertEquals("no bsq address specified", exception.getMessage());
+        assertEquals("no xmr address specified", exception.getMessage());
     }
 
     @Test
