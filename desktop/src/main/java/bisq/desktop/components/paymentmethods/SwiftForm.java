@@ -249,7 +249,7 @@ public class SwiftForm extends PaymentMethodForm {
             updateFromInputs();
         });
 
-        label = Res.get(Res.get(SWIFT_ACCOUNT));
+        label = Res.get(SWIFT_ACCOUNT);
         InputTextField beneficiaryAccountNrField = addInputTextField(gridPane, ++gridRow, label);
         beneficiaryAccountNrField.setPromptText(label);
         beneficiaryAccountNrField.setValidator(defaultValidator);
@@ -267,7 +267,7 @@ public class SwiftForm extends PaymentMethodForm {
             updateFromInputs();
         });
 
-        label = Res.get(Res.get("payment.account.city"));
+        label = Res.get("payment.account.city");
         InputTextField beneficiaryCityField = addInputTextField(gridPane, ++gridRow, label);
         beneficiaryCityField.setPromptText(label);
         beneficiaryCityField.setValidator(defaultValidator);
@@ -276,7 +276,7 @@ public class SwiftForm extends PaymentMethodForm {
             updateFromInputs();
         });
 
-        label = Res.get(Res.get(PHONE + BENEFICIARYPOSTFIX));
+        label = Res.get(PHONE + BENEFICIARYPOSTFIX);
         InputTextField beneficiaryPhoneField = addInputTextField(gridPane, ++gridRow, label);
         beneficiaryPhoneField.setPromptText(label);
         beneficiaryPhoneField.setValidator(defaultValidator);

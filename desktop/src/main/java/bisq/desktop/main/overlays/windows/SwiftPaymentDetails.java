@@ -19,26 +19,28 @@ package bisq.desktop.main.overlays.windows;
 
 import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.util.DisplayUtils;
-import bisq.desktop.util.Layout;
 
 import bisq.core.locale.CountryUtil;
 import bisq.core.locale.Res;
 import bisq.core.payment.payload.SwiftAccountPayload;
 import bisq.core.trade.Trade;
 
-import javafx.scene.control.Button;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.Region;
-
+import javafx.scene.control.Label;
 import javafx.geometry.Insets;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import static bisq.common.util.Utilities.cleanString;
-import static bisq.desktop.util.FormBuilder.*;
+import static bisq.common.util.Utilities.copyToClipboard;
 import static bisq.core.payment.payload.SwiftAccountPayload.*;
+import static bisq.desktop.util.FormBuilder.addConfirmationLabelLabel;
+import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 
 public class SwiftPaymentDetails extends Overlay<SwiftPaymentDetails> {
-    private SwiftAccountPayload payload;
-    private Trade trade;
+    private final SwiftAccountPayload payload;
+    private final Trade trade;
+    private final List<String> copyToClipboardData = new ArrayList<>();
 
     public SwiftPaymentDetails(SwiftAccountPayload swiftAccountPayload, Trade trade) {
         this.payload = swiftAccountPayload;
@@ -50,6 +52,7 @@ public class SwiftPaymentDetails extends Overlay<SwiftPaymentDetails> {
         width = 918;
         createGridPane();
         addContent();
+        addButtons();
         display();
     }
 
@@ -65,39 +68,47 @@ public class SwiftPaymentDetails extends Overlay<SwiftPaymentDetails> {
     }
 
     private void addContent() {
-        int rows = 20;
+        int rows = payload.usesIntermediaryBank() ? 22 : 16;
         addTitledGroupBg(gridPane, ++rowIndex, rows, Res.get("payment.swift.headline"));
 
-        addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("portfolio.pending.step2_buyer.amountToTransfer"),
-                DisplayUtils.formatVolumeWithCode(trade.getTradeVolume()), Layout.TWICE_FIRST_ROW_DISTANCE);
-        addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get(SWIFT_CODE + BANKPOSTFIX), payload.getBankSwiftCode());
-        addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get(SNAME + BANKPOSTFIX), payload.getBankName());
-        addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get(BRANCH + BANKPOSTFIX), payload.getBankBranch());
-        addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get(ADDRESS + BANKPOSTFIX), cleanString(payload.getBankAddress()));
-        addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get(COUNTRY + BANKPOSTFIX), CountryUtil.getNameAndCode(payload.getBankCountryCode()));
+        gridPane.add(new Label(""), 0, ++rowIndex);  // spacer
+        addLabelsAndCopy(Res.get("portfolio.pending.step2_buyer.amountToTransfer"), DisplayUtils.formatVolumeWithCode(trade.getTradeVolume()));
+        addLabelsAndCopy(Res.get(SWIFT_CODE + BANKPOSTFIX), payload.getBankSwiftCode());
+        addLabelsAndCopy(Res.get(SNAME + BANKPOSTFIX), payload.getBankName());
+        addLabelsAndCopy(Res.get(BRANCH + BANKPOSTFIX), payload.getBankBranch());
+        addLabelsAndCopy(Res.get(ADDRESS + BANKPOSTFIX), cleanString(payload.getBankAddress()));
+        addLabelsAndCopy(Res.get(COUNTRY + BANKPOSTFIX), CountryUtil.getNameAndCode(payload.getBankCountryCode()));
 
         if (payload.usesIntermediaryBank()) {
-            addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get(SWIFT_CODE + INTERMEDIARYPOSTFIX), payload.getIntermediarySwiftCode(), Layout.GROUP_DISTANCE_WITHOUT_SEPARATOR);
-            addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get(SNAME + INTERMEDIARYPOSTFIX), payload.getIntermediaryName());
-            addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get(BRANCH + INTERMEDIARYPOSTFIX), payload.getIntermediaryBranch());
-            addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get(ADDRESS + INTERMEDIARYPOSTFIX), cleanString(payload.getIntermediaryAddress()));
-            addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get(COUNTRY + INTERMEDIARYPOSTFIX), CountryUtil.getNameAndCode(payload.getIntermediaryCountryCode()));
+            gridPane.add(new Label(""), 0, ++rowIndex);  // spacer
+            addLabelsAndCopy(Res.get(SWIFT_CODE + INTERMEDIARYPOSTFIX), payload.getIntermediarySwiftCode());
+            addLabelsAndCopy(Res.get(SNAME + INTERMEDIARYPOSTFIX), payload.getIntermediaryName());
+            addLabelsAndCopy(Res.get(BRANCH + INTERMEDIARYPOSTFIX), payload.getIntermediaryBranch());
+            addLabelsAndCopy(Res.get(ADDRESS + INTERMEDIARYPOSTFIX), cleanString(payload.getIntermediaryAddress()));
+            addLabelsAndCopy(Res.get(COUNTRY + INTERMEDIARYPOSTFIX), CountryUtil.getNameAndCode(payload.getIntermediaryCountryCode()));
         }
 
-        addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("payment.account.owner"), payload.getBeneficiaryName(), Layout.GROUP_DISTANCE_WITHOUT_SEPARATOR);
-        addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get(SWIFT_ACCOUNT), payload.getBeneficiaryAccountNr());
-        addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get(ADDRESS + BENEFICIARYPOSTFIX), cleanString(payload.getBeneficiaryAddress()));
-        addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get(PHONE + BENEFICIARYPOSTFIX), payload.getBeneficiaryPhone());
-        addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("payment.account.city"), payload.getBeneficiaryCity());
-        addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("payment.country"), CountryUtil.getNameAndCode(payload.getBankCountryCode()));
-        addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("payment.shared.extraInfo"), cleanString(payload.getSpecialInstructions()));
+        gridPane.add(new Label(""), 0, ++rowIndex);  // spacer
+        addLabelsAndCopy(Res.get("payment.account.owner"), payload.getBeneficiaryName());
+        addLabelsAndCopy(Res.get(SWIFT_ACCOUNT), payload.getBeneficiaryAccountNr());
+        addLabelsAndCopy(Res.get(ADDRESS + BENEFICIARYPOSTFIX), cleanString(payload.getBeneficiaryAddress()));
+        addLabelsAndCopy(Res.get(PHONE + BENEFICIARYPOSTFIX), payload.getBeneficiaryPhone());
+        addLabelsAndCopy(Res.get("payment.account.city"), payload.getBeneficiaryCity());
+        addLabelsAndCopy(Res.get("payment.country"), CountryUtil.getNameAndCode(payload.getBankCountryCode()));
+        addLabelsAndCopy(Res.get("payment.shared.extraInfo"), cleanString(payload.getSpecialInstructions()));
 
-        Button closeButton = addButton(gridPane, ++rowIndex, Res.get("shared.close"));
-        closeButton.setMaxWidth(Region.USE_COMPUTED_SIZE);
-        GridPane.setColumnIndex(closeButton, 2);
-        closeButton.setOnAction(e -> {
-            closeHandlerOptional.ifPresent(Runnable::run);
-            hide();
+        actionButtonText(Res.get("shared.copyToClipboard"));
+        onAction(() -> {
+            StringBuilder work = new StringBuilder();
+            for (String s : copyToClipboardData) {
+                work.append(s).append(System.lineSeparator());
+            }
+            copyToClipboard(work.toString());
         });
+    }
+
+    private void addLabelsAndCopy(String title, String value) {
+        addConfirmationLabelLabel(gridPane, ++rowIndex, title, value);
+        copyToClipboardData.add(title + " : " + value);
     }
 }
