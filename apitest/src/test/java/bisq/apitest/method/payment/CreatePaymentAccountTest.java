@@ -69,6 +69,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.TestMethodOrder;
@@ -87,7 +88,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 import static org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 
 @SuppressWarnings({"OptionalGetWithoutIsPresent", "ConstantConditions"})
-// @Disabled
+@Disabled
 @Slf4j
 @TestMethodOrder(OrderAnnotation.class)
 public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
