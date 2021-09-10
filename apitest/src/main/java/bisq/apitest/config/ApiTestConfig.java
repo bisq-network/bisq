@@ -58,6 +58,9 @@ public class ApiTestConfig {
     public static final String BSQ = "BSQ";
     public static final String BTC = "BTC";
     public static final String XMR = "XMR";
+    public static final String EUR = "EUR";
+    public static final String RUBLE = "RUB";
+    public static final String USD = "USD";
     public static final String ARBITRATOR = "arbitrator";
     public static final String MEDIATOR = "mediator";
     public static final String REFUND_AGENT = "refundagent";

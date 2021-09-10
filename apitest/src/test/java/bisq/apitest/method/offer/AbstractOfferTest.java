@@ -32,6 +32,7 @@ import org.junit.jupiter.api.BeforeAll;
 
 import static bisq.apitest.Scaffold.BitcoinCoreApp.bitcoind;
 import static bisq.apitest.config.ApiTestConfig.BSQ;
+import static bisq.apitest.config.ApiTestConfig.XMR;
 import static bisq.apitest.config.BisqAppConfig.alicedaemon;
 import static bisq.apitest.config.BisqAppConfig.arbdaemon;
 import static bisq.apitest.config.BisqAppConfig.bobdaemon;
@@ -54,6 +55,8 @@ public abstract class AbstractOfferTest extends MethodTest {
 
     protected static PaymentAccount alicesBsqAcct;
     protected static PaymentAccount bobsBsqAcct;
+    protected static PaymentAccount alicesXmrAcct;
+    protected static PaymentAccount bobsXmrAcct;
 
     @BeforeAll
     public static void setUp() {
@@ -95,6 +98,7 @@ public abstract class AbstractOfferTest extends MethodTest {
         return priceAsBigDecimal.toPlainString();
     };
 
+
     @SuppressWarnings("ConstantConditions")
     public static void createBsqPaymentAccounts() {
         alicesBsqAcct = aliceClient.createCryptoCurrencyPaymentAccount("Alice's BSQ Account",
@@ -104,6 +108,18 @@ public abstract class AbstractOfferTest extends MethodTest {
         bobsBsqAcct = bobClient.createCryptoCurrencyPaymentAccount("Bob's BSQ Account",
                 BSQ,
                 bobClient.getUnusedBsqAddress(),
+                false);
+    }
+
+    @SuppressWarnings("ConstantConditions")
+    public static void createXmrPaymentAccounts() {
+        alicesXmrAcct = aliceClient.createCryptoCurrencyPaymentAccount("Alice's XMR Account",
+                XMR,
+                "44G4jWmSvTEfifSUZzTDnJVLPvYATmq9XhhtDqUof1BGCLceG82EQsVYG9Q9GN4bJcjbAJEc1JD1m5G7iK4UPZqACubV4Mq",
+                false);
+        bobsXmrAcct = bobClient.createCryptoCurrencyPaymentAccount("Bob's XMR Account",
+                XMR,
+                "4BDRhdSBKZqAXs3PuNTbMtaXBNqFj5idC2yMVnQj8Rm61AyKY8AxLTt9vGRJ8pwcG4EtpyD8YpGqdZWCZ2VZj6yVBN2RVKs",
                 false);
     }
 

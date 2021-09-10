@@ -108,7 +108,7 @@ public class TakeBuyBSQOfferTest extends AbstractTradeTest {
             tradeId = trade.getTradeId();
 
             genBtcBlocksThenWait(1, 6000);
-            alicesBsqOffers = aliceClient.getMyBsqOffersSortedByDate();
+            alicesBsqOffers = aliceClient.getMyCryptoCurrencyOffersSortedByDate(BSQ);
             assertEquals(0, alicesBsqOffers.size());
 
             for (int i = 1; i <= maxTradeStateAndPhaseChecks.get(); i++) {

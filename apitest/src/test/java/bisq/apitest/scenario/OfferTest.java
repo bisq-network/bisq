@@ -32,6 +32,7 @@ import bisq.apitest.method.offer.CancelOfferTest;
 import bisq.apitest.method.offer.CreateBSQOffersTest;
 import bisq.apitest.method.offer.CreateOfferUsingFixedPriceTest;
 import bisq.apitest.method.offer.CreateOfferUsingMarketPriceMarginTest;
+import bisq.apitest.method.offer.CreateXMROffersTest;
 import bisq.apitest.method.offer.EditOfferTest;
 import bisq.apitest.method.offer.ValidateCreateOfferTest;
 
@@ -90,6 +91,17 @@ public class OfferTest extends AbstractOfferTest {
 
     @Test
     @Order(6)
+    public void testCreateXMROffers() {
+        CreateXMROffersTest test = new CreateXMROffersTest();
+        CreateXMROffersTest.createXmrPaymentAccounts();
+        test.testCreateBuy1BTCFor200KXMROffer();
+        test.testCreateSell1BTCFor200KXMROffer();
+        test.testGetAllMyXMROffers();
+        test.testGetAvailableXMROffers();
+    }
+
+    @Test
+    @Order(7)
     public void testEditOffer() {
         EditOfferTest test = new EditOfferTest();
         // Edit fiat offer tests
@@ -112,5 +124,11 @@ public class OfferTest extends AbstractOfferTest {
         test.testEditFixedPriceOnBsqOffer();
         test.testDisableBsqOffer();
         test.testEditFixedPriceAndDisableBsqOffer();
+        // Edit xmr offer tests
+        test.testChangeFixedPricedXmrOfferToPriceMarginBasedOfferShouldThrowException();
+        test.testEditTriggerPriceOnFixedPriceXmrOfferShouldThrowException();
+        test.testEditFixedPriceOnXmrOffer();
+        test.testDisableXmrOffer();
+        test.testEditFixedPriceAndDisableXmrOffer();
     }
 }

@@ -76,6 +76,8 @@ import org.junit.jupiter.api.TestMethodOrder;
 
 import static bisq.apitest.Scaffold.BitcoinCoreApp.bitcoind;
 import static bisq.apitest.config.ApiTestConfig.BSQ;
+import static bisq.apitest.config.ApiTestConfig.EUR;
+import static bisq.apitest.config.ApiTestConfig.RUBLE;
 import static bisq.apitest.config.ApiTestConfig.XMR;
 import static bisq.apitest.config.BisqAppConfig.alicedaemon;
 import static bisq.cli.TableFormat.formatPaymentAcctTbl;
@@ -117,7 +119,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
                 .stream()
                 .map(TradeCurrency::getCode)
                 .collect(Collectors.joining(",")));
-        COMPLETED_FORM_MAP.put(PROPERTY_NAME_SELECTED_TRADE_CURRENCY, "RUB");
+        COMPLETED_FORM_MAP.put(PROPERTY_NAME_SELECTED_TRADE_CURRENCY, RUBLE);
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_SALT, encodeToHex("Restored Advanced Cash Acct Salt"));
         String jsonString = getCompletedFormAsJsonString();
         AdvancedCashAccount paymentAccount = (AdvancedCashAccount) createPaymentAccount(aliceClient, jsonString);
@@ -232,7 +234,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         String jsonString = getCompletedFormAsJsonString();
         CashDepositAccount paymentAccount = (CashDepositAccount) createPaymentAccount(aliceClient, jsonString);
         verifyUserPayloadHasPaymentAccountWithId(aliceClient, paymentAccount.getId());
-        verifyAccountSingleTradeCurrency("EUR", paymentAccount);
+        verifyAccountSingleTradeCurrency(EUR, paymentAccount);
         verifyCommonFormEntries(paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_COUNTRY),
                 Objects.requireNonNull(paymentAccount.getCountry()).code);
@@ -384,7 +386,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         String jsonString = getCompletedFormAsJsonString();
         HalCashAccount paymentAccount = (HalCashAccount) createPaymentAccount(aliceClient, jsonString);
         verifyUserPayloadHasPaymentAccountWithId(aliceClient, paymentAccount.getId());
-        verifyAccountSingleTradeCurrency("EUR", paymentAccount);
+        verifyAccountSingleTradeCurrency(EUR, paymentAccount);
         verifyCommonFormEntries(paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_MOBILE_NR), paymentAccount.getMobileNr());
         print(paymentAccount);
@@ -469,7 +471,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         String jsonString = getCompletedFormAsJsonString();
         MoneyBeamAccount paymentAccount = (MoneyBeamAccount) createPaymentAccount(aliceClient, jsonString);
         verifyUserPayloadHasPaymentAccountWithId(aliceClient, paymentAccount.getId());
-        verifyAccountSingleTradeCurrency("EUR", paymentAccount);
+        verifyAccountSingleTradeCurrency(EUR, paymentAccount);
         verifyCommonFormEntries(paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_ACCOUNT_ID), paymentAccount.getAccountId());
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_SALT), paymentAccount.getSaltAsHex());
@@ -718,7 +720,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         verifyUserPayloadHasPaymentAccountWithId(aliceClient, paymentAccount.getId());
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_COUNTRY),
                 Objects.requireNonNull(paymentAccount.getCountry()).code);
-        verifyAccountSingleTradeCurrency("EUR", paymentAccount);
+        verifyAccountSingleTradeCurrency(EUR, paymentAccount);
         verifyCommonFormEntries(paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_HOLDER_NAME), paymentAccount.getHolderName());
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_IBAN), paymentAccount.getIban());
@@ -749,7 +751,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         verifyUserPayloadHasPaymentAccountWithId(aliceClient, paymentAccount.getId());
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_COUNTRY),
                 Objects.requireNonNull(paymentAccount.getCountry()).code);
-        verifyAccountSingleTradeCurrency("EUR", paymentAccount);
+        verifyAccountSingleTradeCurrency(EUR, paymentAccount);
         verifyCommonFormEntries(paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_HOLDER_NAME), paymentAccount.getHolderName());
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_IBAN), paymentAccount.getIban());
@@ -819,7 +821,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_ACCOUNT_NAME, "IT Swift Acct w/ DE Intermediary");
         String allFiatCodes = getCommaDelimitedFiatCurrencyCodes(getAllSortedFiatCurrencies());
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_TRADE_CURRENCIES, allFiatCodes);
-        COMPLETED_FORM_MAP.put(PROPERTY_NAME_SELECTED_TRADE_CURRENCY, "EUR");
+        COMPLETED_FORM_MAP.put(PROPERTY_NAME_SELECTED_TRADE_CURRENCY, EUR);
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_BANK_SWIFT_CODE, "PASCITMMFIR");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_BANK_COUNTRY_CODE, "IT");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_BANK_NAME, "BANCA MONTE DEI PASCHI DI SIENA S.P.A.");

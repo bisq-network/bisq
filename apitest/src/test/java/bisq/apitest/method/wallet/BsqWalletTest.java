@@ -100,19 +100,19 @@ public class BsqWalletTest extends MethodTest {
                 alicedaemon);
 
         verifyBsqBalances(bsqBalanceModel(150000000,
-                2500050,
-                0,
-                0,
-                0,
-                0),
+                        2500050,
+                        0,
+                        0,
+                        0,
+                        0),
                 bobsBsqBalances);
 
         verifyBsqBalances(bsqBalanceModel(97499950,
-                97499950,
-                97499950,
-                0,
-                0,
-                0),
+                        97499950,
+                        97499950,
+                        0,
+                        0,
+                        0),
                 alicesBsqBalances);
     }
 
@@ -133,19 +133,19 @@ public class BsqWalletTest extends MethodTest {
                 alicedaemon);
 
         verifyBsqBalances(bsqBalanceModel(152500050,
-                0,
-                0,
-                0,
-                0,
-                0),
+                        0,
+                        0,
+                        0,
+                        0,
+                        0),
                 bobsBsqBalances);
 
         verifyBsqBalances(bsqBalanceModel(97499950,
-                0,
-                0,
-                0,
-                0,
-                0),
+                        0,
+                        0,
+                        0,
+                        0,
+                        0),
                 alicesBsqBalances);
     }
 

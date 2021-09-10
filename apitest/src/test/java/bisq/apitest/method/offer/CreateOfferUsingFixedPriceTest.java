@@ -29,6 +29,7 @@ import org.junit.jupiter.api.TestMethodOrder;
 
 import static bisq.apitest.config.ApiTestConfig.BSQ;
 import static bisq.apitest.config.ApiTestConfig.BTC;
+import static bisq.apitest.config.ApiTestConfig.EUR;
 import static bisq.cli.TableFormat.formatOfferTable;
 import static bisq.core.btc.wallet.Restrictions.getDefaultBuyerSecurityDepositAsPercent;
 import static java.util.Collections.singletonList;
@@ -148,7 +149,7 @@ public class CreateOfferUsingFixedPriceTest extends AbstractOfferTest {
                 getDefaultBuyerSecurityDepositAsPercent(),
                 eurAccount.getId(),
                 MAKER_FEE_CURRENCY_CODE);
-        log.info("OFFER #3:\n{}", formatOfferTable(singletonList(newOffer), "EUR"));
+        log.info("OFFER #3:\n{}", formatOfferTable(singletonList(newOffer), EUR));
         assertTrue(newOffer.getIsMyOffer());
         assertTrue(newOffer.getIsMyPendingOffer());
 
@@ -162,7 +163,7 @@ public class CreateOfferUsingFixedPriceTest extends AbstractOfferTest {
         assertEquals(1_500_000, newOffer.getBuyerSecurityDeposit());
         assertEquals(eurAccount.getId(), newOffer.getPaymentAccountId());
         assertEquals(BTC, newOffer.getBaseCurrencyCode());
-        assertEquals("EUR", newOffer.getCounterCurrencyCode());
+        assertEquals(EUR, newOffer.getCounterCurrencyCode());
         assertFalse(newOffer.getIsCurrencyForMakerFeeBtc());
 
         newOffer = aliceClient.getMyOffer(newOfferId);
@@ -177,7 +178,7 @@ public class CreateOfferUsingFixedPriceTest extends AbstractOfferTest {
         assertEquals(1_500_000, newOffer.getBuyerSecurityDeposit());
         assertEquals(eurAccount.getId(), newOffer.getPaymentAccountId());
         assertEquals(BTC, newOffer.getBaseCurrencyCode());
-        assertEquals("EUR", newOffer.getCounterCurrencyCode());
+        assertEquals(EUR, newOffer.getCounterCurrencyCode());
         assertFalse(newOffer.getIsCurrencyForMakerFeeBtc());
     }
 }
