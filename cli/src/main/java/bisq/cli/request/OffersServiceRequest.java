@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 
+import static bisq.cli.CryptoCurrencyUtil.apiDoesSupportCryptoCurrency;
 import static bisq.proto.grpc.EditOfferRequest.EditType.ACTIVATION_STATE_ONLY;
 import static bisq.proto.grpc.EditOfferRequest.EditType.FIXED_PRICE_ONLY;
 import static bisq.proto.grpc.EditOfferRequest.EditType.MKT_PRICE_MARGIN_ONLY;
@@ -222,7 +223,7 @@ public class OffersServiceRequest {
     }
 
     public List<OfferInfo> getOffers(String direction, String currencyCode) {
-        if (isSupportedCryptoCurrency(currencyCode)) {
+        if (apiDoesSupportCryptoCurrency(currencyCode)) {
             return getCryptoCurrencyOffers(direction, currencyCode);
         } else {
             var request = GetOffersRequest.newBuilder()
@@ -259,7 +260,7 @@ public class OffersServiceRequest {
     }
 
     public List<OfferInfo> getMyOffers(String direction, String currencyCode) {
-        if (isSupportedCryptoCurrency(currencyCode)) {
+        if (apiDoesSupportCryptoCurrency(currencyCode)) {
             return getMyCryptoCurrencyOffers(direction, currencyCode);
         } else {
             var request = GetMyOffersRequest.newBuilder()
@@ -297,16 +298,5 @@ public class OffersServiceRequest {
         return offerInfoList.stream()
                 .sorted(comparing(OfferInfo::getDate))
                 .collect(toList());
-    }
-
-    private static boolean isSupportedCryptoCurrency(String currencyCode) {
-        return getSupportedCryptoCurrencies().contains(currencyCode.toUpperCase());
-    }
-
-    private static List<String> getSupportedCryptoCurrencies() {
-        final List<String> result = new ArrayList<>();
-        result.add("BSQ");
-        result.sort(String::compareTo);
-        return result;
     }
 }
