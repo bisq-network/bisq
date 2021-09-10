@@ -267,8 +267,8 @@ public final class GrpcClient {
         return offersServiceRequest.getOffersSortedByDate(direction, currencyCode);
     }
 
-    public List<OfferInfo> getBsqOffersSortedByDate() {
-        return offersServiceRequest.getBsqOffersSortedByDate();
+    public List<OfferInfo> getCryptoCurrencyOffersSortedByDate(String currencyCode) {
+        return offersServiceRequest.getCryptoCurrencyOffersSortedByDate(currencyCode);
     }
 
     public List<OfferInfo> getMyOffers(String direction, String currencyCode) {
@@ -283,12 +283,8 @@ public final class GrpcClient {
         return offersServiceRequest.getMyOffersSortedByDate(direction, currencyCode);
     }
 
-    public List<OfferInfo> getMyOffersSortedByDate(String currencyCode) {
-        return offersServiceRequest.getMyOffersSortedByDate(currencyCode);
-    }
-
-    public List<OfferInfo> getMyBsqOffersSortedByDate() {
-        return offersServiceRequest.getMyBsqOffersSortedByDate();
+    public List<OfferInfo> getMyCryptoCurrencyOffersSortedByDate(String currencyCode) {
+        return offersServiceRequest.getMyCryptoCurrencyOffersSortedByDate(currencyCode);
     }
 
     public OfferInfo getMostRecentOffer(String direction, String currencyCode) {

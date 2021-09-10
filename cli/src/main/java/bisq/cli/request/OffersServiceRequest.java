@@ -251,10 +251,10 @@ public class OffersServiceRequest {
         return offers.isEmpty() ? offers : sortOffersByDate(offers);
     }
 
-    public List<OfferInfo> getBsqOffersSortedByDate() {
+    public List<OfferInfo> getCryptoCurrencyOffersSortedByDate(String currencyCode) {
         ArrayList<OfferInfo> offers = new ArrayList<>();
-        offers.addAll(getCryptoCurrencyOffers(BUY.name(), "BSQ"));
-        offers.addAll(getCryptoCurrencyOffers(SELL.name(), "BSQ"));
+        offers.addAll(getCryptoCurrencyOffers(BUY.name(), currencyCode));
+        offers.addAll(getCryptoCurrencyOffers(SELL.name(), currencyCode));
         return sortOffersByDate(offers);
     }
 
@@ -281,17 +281,10 @@ public class OffersServiceRequest {
         return offers.isEmpty() ? offers : sortOffersByDate(offers);
     }
 
-    public List<OfferInfo> getMyOffersSortedByDate(String currencyCode) {
+    public List<OfferInfo> getMyCryptoCurrencyOffersSortedByDate(String currencyCode) {
         ArrayList<OfferInfo> offers = new ArrayList<>();
-        offers.addAll(getMyOffers(BUY.name(), currencyCode));
-        offers.addAll(getMyOffers(SELL.name(), currencyCode));
-        return sortOffersByDate(offers);
-    }
-
-    public List<OfferInfo> getMyBsqOffersSortedByDate() {
-        ArrayList<OfferInfo> offers = new ArrayList<>();
-        offers.addAll(getMyCryptoCurrencyOffers(BUY.name(), "BSQ"));
-        offers.addAll(getMyCryptoCurrencyOffers(SELL.name(), "BSQ"));
+        offers.addAll(getMyCryptoCurrencyOffers(BUY.name(), currencyCode));
+        offers.addAll(getMyCryptoCurrencyOffers(SELL.name(), currencyCode));
         return sortOffersByDate(offers);
     }
 

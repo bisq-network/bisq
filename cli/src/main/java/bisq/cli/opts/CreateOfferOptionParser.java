@@ -28,14 +28,14 @@ import static joptsimple.internal.Strings.EMPTY;
 public class CreateOfferOptionParser extends AbstractMethodOptionParser implements MethodOpts {
 
     final OptionSpec<String> paymentAccountIdOpt = parser.accepts(OPT_PAYMENT_ACCOUNT,
-            "id of payment account used for offer")
+                    "id of payment account used for offer")
             .withRequiredArg()
             .defaultsTo(EMPTY);
 
     final OptionSpec<String> directionOpt = parser.accepts(OPT_DIRECTION, "offer direction (buy|sell)")
             .withRequiredArg();
 
-    final OptionSpec<String> currencyCodeOpt = parser.accepts(OPT_CURRENCY_CODE, "currency code (eur|usd|...)")
+    final OptionSpec<String> currencyCodeOpt = parser.accepts(OPT_CURRENCY_CODE, "currency code (bsq|xmr|eur|usd|...)")
             .withRequiredArg();
 
     final OptionSpec<String> amountOpt = parser.accepts(OPT_AMOUNT, "amount of btc to buy or sell")
