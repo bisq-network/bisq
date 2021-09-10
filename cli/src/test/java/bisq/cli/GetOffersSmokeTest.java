@@ -11,6 +11,7 @@ import static java.lang.System.out;
 
  This can be run on mainnet.
  */
+@SuppressWarnings("unused")
 public class GetOffersSmokeTest {
 
     private static final String PASSWORD_OPT = "--password=xyz";            // Both daemons
