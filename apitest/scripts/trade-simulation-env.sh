@@ -7,6 +7,8 @@ export ARBITRATOR_PORT=9997
 export ALICE_PORT=9998
 export BOB_PORT=9999
 export F2F_ACCT_FORM="f2f-acct.json"
+export ALICE_XMR_ADDRESS="44i8xZbd8ecaD6nQQrHjr1BwTp6QfGL22iWqHZKmU4QYSyr1F64XAxM4HgvQHxbny7ehfxemaA9LPDLz2wY3fxhB1bbMEco"
+export BOB_XMR_ADDRESS="48xdBkXaCosPxcWwXRZdSGc33M9tYu6k9ga56dqkNrgsjQuJX16xW2qTyWTZstJpXXj87dj5p4H3y1xAfoVjAysoAYrXh2N"
 
 checkos() {
     LINUX=FALSE
@@ -176,6 +178,44 @@ parselimitorderopts() {
     elif [ "$w" -lt 20 ]; then
         printdate "The -w <price-poll-interval(s)> option is too low, minimum allowed is 20s.  Using default 120s."
         WAIT=120
+    fi
+}
+
+parsexmrscriptopts() {
+    usage() {
+        echo "Usage: $0 [-d buy|sell] [-f <fixed-price> [-a <amount in btc>]" 1>&2
+        exit 1;
+    }
+
+    local OPTIND o d f a
+    while getopts "d:f:a:" o; do
+        case "${o}" in
+            d) d=$(echo "${OPTARG}" | tr '[:lower:]' '[:upper:]')
+                ((d == "BUY" || d == "SELL")) || usage
+                export DIRECTION=${d}
+                ;;
+            f) f=${OPTARG}
+               export FIXED_PRICE=${f}
+               ;;
+            a) a=${OPTARG}
+               export AMOUNT=${a}
+               ;;
+            *) usage ;;
+        esac
+    done
+    shift $((OPTIND-1))
+
+    if [ -z "${d}" ] || [ -z "${f}" ] || [ -z "${a}" ]; then
+        usage
+    fi
+
+    if [ "$DIRECTION" = "SELL" ]
+    then
+        export BOB_ROLE="(taker/buyer)"
+        export ALICE_ROLE="(maker/seller)"
+    else
+        export BOB_ROLE="(taker/seller)"
+        export ALICE_ROLE="(maker/buyer)"
     fi
 }
 
