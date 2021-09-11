@@ -59,9 +59,9 @@ public class TradeFormat {
                 "%" + (COL_HEADER_TRADE_TAKER_FEE.length() + 2) + "s"
                 : "";
 
-        boolean showBsqBuyerAddress = shouldShowBsqBuyerAddress(tradeInfo, isTaker);
-        Supplier<String> bsqBuyerAddressHeader = () -> showBsqBuyerAddress ? COL_HEADER_TRADE_BSQ_BUYER_ADDRESS : "";
-        Supplier<String> bsqBuyerAddressHeaderSpec = () -> showBsqBuyerAddress ? "%s" : "";
+        boolean showAltCoinBuyerAddress = shouldShowAltCoinBuyerAddress(tradeInfo, isTaker);
+        Supplier<String> altCoinBuyerAddressHeader = () -> showAltCoinBuyerAddress ? COL_HEADER_TRADE_ALTCOIN_BUYER_ADDRESS : "";
+        Supplier<String> altCoinBuyerAddressHeaderSpec = () -> showAltCoinBuyerAddress ? "%s" : "";
 
         String headersFormat = padEnd(COL_HEADER_TRADE_SHORT_ID, shortIdColWidth, ' ') + COL_HEADER_DELIMITER
                 + padEnd(COL_HEADER_TRADE_ROLE, roleColWidth, ' ') + COL_HEADER_DELIMITER
@@ -78,7 +78,7 @@ public class TradeFormat {
                 + COL_HEADER_TRADE_PAYMENT_RECEIVED + COL_HEADER_DELIMITER
                 + COL_HEADER_TRADE_PAYOUT_PUBLISHED + COL_HEADER_DELIMITER
                 + COL_HEADER_TRADE_WITHDRAWN + COL_HEADER_DELIMITER
-                + bsqBuyerAddressHeader.get()
+                + altCoinBuyerAddressHeader.get()
                 + "%n";
 
         String counterCurrencyCode = tradeInfo.getOffer().getCounterCurrencyCode();
@@ -90,7 +90,8 @@ public class TradeFormat {
                 /* COL_HEADER_TRADE_(M||T)AKER_FEE */ makerTakerFeeHeaderCurrencyCode.apply(tradeInfo, isTaker),
                 /* COL_HEADER_TRADE_BUYER_COST */ counterCurrencyCode,
                 /* COL_HEADER_TRADE_PAYMENT_SENT */ paymentStatusHeaderCurrencyCode.apply(tradeInfo),
-                /* COL_HEADER_TRADE_PAYMENT_RECEIVED */  paymentStatusHeaderCurrencyCode.apply(tradeInfo));
+                /* COL_HEADER_TRADE_PAYMENT_RECEIVED */  paymentStatusHeaderCurrencyCode.apply(tradeInfo),
+                /* COL_HEADER_TRADE_ALTCOIN_BUYER_ADDRESS */  paymentStatusHeaderCurrencyCode.apply(tradeInfo));
 
         String colDataFormat = "%-" + shortIdColWidth + "s"                 // lt justify
                 + "  %-" + (roleColWidth + COL_HEADER_DELIMITER.length()) + "s" // left
@@ -107,15 +108,15 @@ public class TradeFormat {
                 + "  %-" + (COL_HEADER_TRADE_PAYMENT_RECEIVED.length() - 1) + "s" // left
                 + "  %-" + COL_HEADER_TRADE_PAYOUT_PUBLISHED.length() + "s" // lt justify
                 + "  %-" + (COL_HEADER_TRADE_WITHDRAWN.length() + 2) + "s"
-                + bsqBuyerAddressHeaderSpec.get();
+                + altCoinBuyerAddressHeaderSpec.get();
 
-        return headerLine + formatTradeData(colDataFormat, tradeInfo, isTaker, showBsqBuyerAddress);
+        return headerLine + formatTradeData(colDataFormat, tradeInfo, isTaker, showAltCoinBuyerAddress);
     }
 
     private static String formatTradeData(String format,
                                           TradeInfo tradeInfo,
                                           boolean isTaker,
-                                          boolean showBsqBuyerAddress) {
+                                          boolean showAltCoinBuyerAddress) {
         return String.format(format,
                 tradeInfo.getShortId(),
                 tradeInfo.getRole(),
@@ -130,7 +131,7 @@ public class TradeFormat {
                 tradeInfo.getIsFiatReceived() ? YES : NO,
                 tradeInfo.getIsPayoutPublished() ? YES : NO,
                 tradeInfo.getIsWithdrawn() ? YES : NO,
-                bsqReceiveAddress.apply(tradeInfo, showBsqBuyerAddress));
+                altCoinReceiveAddress.apply(tradeInfo, showAltCoinBuyerAddress));
     }
 
     private static final Function<TradeInfo, String> priceHeader = (t) ->
@@ -191,8 +192,8 @@ public class TradeFormat {
                     ? formatOfferVolume(t.getOffer().getVolume())
                     : formatSatoshis(t.getTradeAmountAsLong());
 
-    private static final BiFunction<TradeInfo, Boolean, String> bsqReceiveAddress = (t, showBsqBuyerAddress) -> {
-        if (showBsqBuyerAddress) {
+    private static final BiFunction<TradeInfo, Boolean, String> altCoinReceiveAddress = (t, showBuyerAddress) -> {
+        if (showBuyerAddress) {
             ContractInfo contract = t.getContract();
             boolean isBuyerMakerAndSellerTaker = contract.getIsBuyerMakerAndSellerTaker();
             return isBuyerMakerAndSellerTaker  // (is BTC buyer / maker)
@@ -203,13 +204,13 @@ public class TradeFormat {
         }
     };
 
-    private static boolean shouldShowBsqBuyerAddress(TradeInfo tradeInfo, boolean isTaker) {
+    private static boolean shouldShowAltCoinBuyerAddress(TradeInfo tradeInfo, boolean isTaker) {
         if (tradeInfo.getOffer().getBaseCurrencyCode().equals("BTC")) {
             return false;
         } else {
             ContractInfo contract = tradeInfo.getContract();
-            // Do not forget buyer and seller refer to BTC buyer and seller, not BSQ
-            // buyer and seller.  If you are buying BSQ, you are the (BTC) seller.
+            // Do not forget buyer and seller refer to BTC buyer and seller, not AltCoin
+            // buyer and seller.  If you are buying AltCoin, you are the (BTC) seller.
             boolean isBuyerMakerAndSellerTaker = contract.getIsBuyerMakerAndSellerTaker();
             if (isTaker) {
                 return !isBuyerMakerAndSellerTaker;
