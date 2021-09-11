@@ -7,7 +7,7 @@
 #
 # Prerequisites:
 #
-#  - Linux or OSX with bash, Java 10, or Java 11-12 (JDK language compatibility 10), and bitcoin-core (v0.19, v0.20, or v0.21).
+#  - Linux or OSX with bash, Java 11-15 (JDK language compatibility 10), and bitcoin-core (v0.19, v0.20, or v0.21).
 #
 #  - Bisq must be fully built with apitest dao setup files installed.
 #    Build command:  `./gradlew clean build :apitest:installDaoSetup`
@@ -26,7 +26,7 @@
 #
 #     `$ apitest/scripts/trade-simulation.sh -d buy -c fr -m 3.00 -a 0.125`
 #
-#  Script options:  -d <direction> -c <country-code> -m <mkt-price-margin(%)> - f <fixed-price> -a <amount(btc)>
+#  Script options:  -d <direction> -c <country-code> -m <mkt-price-margin(%)> -f <fixed-price> -a <amount(btc)>
 #
 # Examples:
 #
