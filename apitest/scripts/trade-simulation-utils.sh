@@ -368,7 +368,7 @@ waitfortradepaymentsent() {
 
         IS_TRADE_PAYMENT_SENT=$(istradepaymentsent "$TRADE_DETAIL")
         exitoncommandalert $?
-        printdate "$SELLER:  Has buyer's fiat payment been initiated?  $IS_TRADE_PAYMENT_SENT"
+        printdate "$SELLER:  Has buyer's payment been initiated?  $IS_TRADE_PAYMENT_SENT"
         if [ "$IS_TRADE_PAYMENT_SENT" = "YES" ]
         then
             DONE=1
@@ -407,7 +407,7 @@ waitfortradepaymentreceived() {
         # but we do not need to simulate that in this regtest script.
         IS_TRADE_PAYMENT_SENT=$(istradepaymentreceived "$TRADE_DETAIL")
         exitoncommandalert $?
-        printdate "$SELLER:  Has buyer's payment been transferred to seller's fiat account?  $IS_TRADE_PAYMENT_SENT"
+        printdate "$SELLER:  Has buyer's payment been transferred to seller's account?  $IS_TRADE_PAYMENT_SENT"
         if [ "$IS_TRADE_PAYMENT_SENT" = "YES" ]
         then
             DONE=1
@@ -427,7 +427,7 @@ delayconfirmpaymentstarted() {
     PORT="$2"
     OFFER_ID="$3"
     RANDOM_WAIT=$(echo $[$RANDOM % 5 + 1])
-    printdate "$PAYER:  Sending fiat payment sent message to seller in $RANDOM_WAIT seconds..."
+    printdate "$PAYER:  Sending payment sent message to seller in $RANDOM_WAIT seconds..."
     sleeptraced "$RANDOM_WAIT"
     CMD="$CLI_BASE --port=$PORT confirmpaymentstarted --trade-id=$OFFER_ID"
     printdate "$PAYER_CLI: $CMD"
@@ -446,7 +446,7 @@ delayconfirmpaymentreceived() {
     PORT="$2"
     OFFER_ID="$3"
     RANDOM_WAIT=$(echo $[$RANDOM % 5 + 1])
-    printdate "$PAYEE:  Sending fiat payment sent message to seller in $RANDOM_WAIT seconds..."
+    printdate "$PAYEE:  Sending payment sent message to seller in $RANDOM_WAIT seconds..."
     sleeptraced "$RANDOM_WAIT"
     CMD="$CLI_BASE --port=$PORT confirmpaymentreceived --trade-id=$OFFER_ID"
     printdate "$PAYEE_CLI: $CMD"
@@ -532,7 +532,7 @@ executetrade() {
     fi
 
     # Generate some btc blocks
-    printdate "Generating btc blocks after fiat transfer."
+    printdate "Generating btc blocks after funds transfer."
     genbtcblocks 2 2
     printbreak
 
