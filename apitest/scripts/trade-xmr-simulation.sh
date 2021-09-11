@@ -39,6 +39,8 @@ export APP_BASE_NAME=$(basename "$0")
 export APP_HOME=$(pwd -P)
 export APITEST_SCRIPTS_HOME="$APP_HOME/apitest/scripts"
 export CURRENCY_CODE="XMR"
+export ALICE_XMR_ADDRESS="44i8xZbd8ecaD6nQQrHjr1BwTp6QfGL22iWqHZKmU4QYSyr1F64XAxM4HgvQHxbny7ehfxemaA9LPDLz2wY3fxhB1bbMEco"
+export BOB_XMR_ADDRESS="48xdBkXaCosPxcWwXRZdSGc33M9tYu6k9ga56dqkNrgsjQuJX16xW2qTyWTZstJpXXj87dj5p4H3y1xAfoVjAysoAYrXh2N"
 
 source "$APITEST_SCRIPTS_HOME/trade-simulation-env.sh"
 source "$APITEST_SCRIPTS_HOME/trade-simulation-utils.sh"

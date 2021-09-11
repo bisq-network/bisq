@@ -7,8 +7,6 @@ export ARBITRATOR_PORT=9997
 export ALICE_PORT=9998
 export BOB_PORT=9999
 export F2F_ACCT_FORM="f2f-acct.json"
-export ALICE_XMR_ADDRESS="44i8xZbd8ecaD6nQQrHjr1BwTp6QfGL22iWqHZKmU4QYSyr1F64XAxM4HgvQHxbny7ehfxemaA9LPDLz2wY3fxhB1bbMEco"
-export BOB_XMR_ADDRESS="48xdBkXaCosPxcWwXRZdSGc33M9tYu6k9ga56dqkNrgsjQuJX16xW2qTyWTZstJpXXj87dj5p4H3y1xAfoVjAysoAYrXh2N"
 
 checkos() {
     LINUX=FALSE
