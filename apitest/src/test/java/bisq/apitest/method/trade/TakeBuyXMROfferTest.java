@@ -17,12 +17,11 @@
 
 package bisq.apitest.method.trade;
 
-import bisq.core.payment.PaymentAccount;
-
 import io.grpc.StatusRuntimeException;
 
 import lombok.extern.slf4j.Slf4j;
 
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
@@ -30,59 +29,69 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.TestMethodOrder;
 
-import static bisq.apitest.config.ApiTestConfig.BTC;
+import static bisq.apitest.config.ApiTestConfig.BSQ;
+import static bisq.apitest.config.ApiTestConfig.XMR;
+import static bisq.cli.TableFormat.formatOfferTable;
 import static bisq.core.btc.wallet.Restrictions.getDefaultBuyerSecurityDepositAsPercent;
 import static bisq.core.trade.Trade.Phase.PAYOUT_PUBLISHED;
-import static bisq.core.trade.Trade.Phase.WITHDRAWN;
+import static bisq.core.trade.Trade.State.BUYER_RECEIVED_PAYOUT_TX_PUBLISHED_MSG;
 import static bisq.core.trade.Trade.State.SELLER_SAW_ARRIVED_PAYOUT_TX_PUBLISHED_MSG;
-import static bisq.core.trade.Trade.State.WITHDRAW_COMPLETED;
+import static java.util.Collections.singletonList;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.fail;
 import static protobuf.Offer.State.OFFER_FEE_PAID;
 import static protobuf.OfferPayload.Direction.SELL;
 
+
+
+import bisq.apitest.method.offer.AbstractOfferTest;
+
 @Disabled
 @Slf4j
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class TakeSellBTCOfferTest extends AbstractTradeTest {
+public class TakeBuyXMROfferTest extends AbstractTradeTest {
 
-    // Alice is maker/seller, Bob is taker/buyer.
+    // Alice is maker / xmr buyer (btc seller), Bob is taker / xmr seller (btc buyer).
 
-    // Maker and Taker fees are in BTC.
-    private static final String TRADE_FEE_CURRENCY_CODE = BTC;
+    // Maker and Taker fees are in BSQ.
+    private static final String TRADE_FEE_CURRENCY_CODE = BSQ;
 
-    private static final String WITHDRAWAL_TX_MEMO = "Bob's trade withdrawal";
+    @BeforeAll
+    public static void setUp() {
+        AbstractOfferTest.setUp();
+        createXmrPaymentAccounts();
+        EXPECTED_PROTOCOL_STATUS.init();
+    }
 
     @Test
     @Order(1)
-    public void testTakeAlicesSellOffer(final TestInfo testInfo) {
+    public void testTakeAlicesSellBTCForXMROffer(final TestInfo testInfo) {
         try {
-            PaymentAccount alicesUsdAccount = createDummyF2FAccount(aliceClient, "US");
-            var alicesOffer = aliceClient.createMarketBasedPricedOffer(SELL.name(),
-                    "usd",
-                    12_500_000L,
-                    12_500_000L, // min-amount = amount
-                    0.00,
+            // Alice is going to BUY XMR, but the Offer direction = SELL because it is a
+            // BTC trade;  Alice will SELL BTC for XMR.  Bob will send Alice XMR.
+            // Confused me, but just need to remember there are only BTC offers.
+            var btcTradeDirection = SELL.name();
+            var alicesOffer = aliceClient.createFixedPricedOffer(btcTradeDirection,
+                    XMR,
+                    15_000_000L,
+                    7_500_000L,
+                    "0.00455500",   // FIXED PRICE IN BTC (satoshis) FOR 1 XMR
                     getDefaultBuyerSecurityDepositAsPercent(),
-                    alicesUsdAccount.getId(),
-                    TRADE_FEE_CURRENCY_CODE,
-                    NO_TRIGGER_PRICE);
+                    alicesXmrAcct.getId(),
+                    TRADE_FEE_CURRENCY_CODE);
+            log.info("ALICE'S BUY XMR (SELL BTC) OFFER:\n{}", formatOfferTable(singletonList(alicesOffer), XMR));
+            genBtcBlocksThenWait(1, 5000);
             var offerId = alicesOffer.getId();
-            assertTrue(alicesOffer.getIsCurrencyForMakerFeeBtc());
+            assertFalse(alicesOffer.getIsCurrencyForMakerFeeBtc());
 
-            // Wait for Alice's AddToOfferBook task.
-            // Wait times vary;  my logs show >= 2 second delay, but taking sell offers
-            // seems to require more time to prepare.
-            sleep(3_000); // TODO loop instead of hard code wait time
-            var alicesUsdOffers = aliceClient.getMyOffersSortedByDate(SELL.name(), "usd");
-            assertEquals(1, alicesUsdOffers.size());
+            var alicesXmrOffers = aliceClient.getMyCryptoCurrencyOffers(btcTradeDirection, XMR);
+            assertEquals(1, alicesXmrOffers.size());
 
-            PaymentAccount bobsUsdAccount = createDummyF2FAccount(bobClient, "US");
-            var trade = takeAlicesOffer(offerId, bobsUsdAccount.getId(), TRADE_FEE_CURRENCY_CODE);
+            var trade = takeAlicesOffer(offerId, bobsXmrAcct.getId(), TRADE_FEE_CURRENCY_CODE);
 
-            var takeableUsdOffers = bobClient.getOffersSortedByDate(SELL.name(), "usd");
-            assertEquals(0, takeableUsdOffers.size());
+            alicesXmrOffers = aliceClient.getMyCryptoCurrencyOffersSortedByDate(XMR);
+            assertEquals(0, alicesXmrOffers.size());
 
             genBtcBlocksThenWait(1, 2_500);
 
@@ -105,10 +114,14 @@ public class TakeSellBTCOfferTest extends AbstractTradeTest {
 
             verifyTakerDepositConfirmed(trade);
 
-            bobClient.confirmPaymentStarted(tradeId);
-            sleep(6_000);
+            log.info("Bob sends XMR payment to Alice for trade {}", trade.getTradeId());
+            bobClient.confirmPaymentStarted(trade.getTradeId());
+            sleep(3500);
 
             waitForBuyerSeesPaymentInitiatedMessage(log, testInfo, bobClient, tradeId);
+
+            logTrade(log, testInfo, "Alice's Maker/Buyer View (Payment Sent)", aliceClient.getTrade(tradeId), true);
+            logTrade(log, testInfo, "Bob's Taker/Seller View (Payment Sent)", bobClient.getTrade(tradeId), true);
         } catch (StatusRuntimeException e) {
             fail(e);
         }
@@ -120,7 +133,14 @@ public class TakeSellBTCOfferTest extends AbstractTradeTest {
         try {
             waitForSellerSeesPaymentInitiatedMessage(log, testInfo, aliceClient, tradeId);
 
+            sleep(2_000);
             var trade = aliceClient.getTrade(tradeId);
+
+            // If we were trading BSQ, Alice would verify payment has been sent to her
+            // Bisq / BSQ wallet, but we can do no such checks for XMR payments.
+            // All XMR transfers are done outside Bisq.
+            log.info("Alice verifies XMR payment was received from Bob, for trade {}", trade.getTradeId());
+
             aliceClient.confirmPaymentReceived(trade.getTradeId());
             sleep(3_000);
 
@@ -131,7 +151,8 @@ public class TakeSellBTCOfferTest extends AbstractTradeTest {
                     .setPayoutPublished(true)
                     .setFiatReceived(true);
             verifyExpectedProtocolStatus(trade);
-            logTrade(log, testInfo, "Alice's view after confirming fiat payment received", trade);
+            logTrade(log, testInfo, "Alice's Maker/Buyer View (Payment Received)", aliceClient.getTrade(tradeId), true);
+            logTrade(log, testInfo, "Bob's Taker/Seller View (Payment Received)", bobClient.getTrade(tradeId), true);
         } catch (StatusRuntimeException e) {
             fail(e);
         }
@@ -139,22 +160,19 @@ public class TakeSellBTCOfferTest extends AbstractTradeTest {
 
     @Test
     @Order(4)
-    public void testBobsBtcWithdrawalToExternalAddress(final TestInfo testInfo) {
+    public void testBobsKeepFunds(final TestInfo testInfo) {
         try {
             genBtcBlocksThenWait(1, 1_000);
 
             var trade = bobClient.getTrade(tradeId);
-            logTrade(log, testInfo, "Bob's view before withdrawing funds to external wallet", trade);
+            logTrade(log, testInfo, "Alice's view before keeping funds", trade);
 
-            String toAddress = bitcoinCli.getNewBtcAddress();
-            bobClient.withdrawFunds(tradeId, toAddress, WITHDRAWAL_TX_MEMO);
-
+            bobClient.keepFunds(tradeId);
             genBtcBlocksThenWait(1, 1_000);
 
             trade = bobClient.getTrade(tradeId);
-            EXPECTED_PROTOCOL_STATUS.setState(WITHDRAW_COMPLETED)
-                    .setPhase(WITHDRAWN)
-                    .setWithdrawn(true);
+            EXPECTED_PROTOCOL_STATUS.setState(BUYER_RECEIVED_PAYOUT_TX_PUBLISHED_MSG)
+                    .setPhase(PAYOUT_PUBLISHED);
             verifyExpectedProtocolStatus(trade);
             logTrade(log, testInfo, "Alice's Maker/Buyer View (Done)", aliceClient.getTrade(tradeId), true);
             logTrade(log, testInfo, "Bob's Taker/Seller View (Done)", bobClient.getTrade(tradeId), true);

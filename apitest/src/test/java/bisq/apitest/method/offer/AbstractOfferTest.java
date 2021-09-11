@@ -105,10 +105,12 @@ public abstract class AbstractOfferTest extends MethodTest {
                 BSQ,
                 aliceClient.getUnusedBsqAddress(),
                 false);
+        log.debug("Alices BSQ Account: {}", alicesBsqAcct);
         bobsBsqAcct = bobClient.createCryptoCurrencyPaymentAccount("Bob's BSQ Account",
                 BSQ,
                 bobClient.getUnusedBsqAddress(),
                 false);
+        log.debug("Bob's BSQ Account: {}", bobsBsqAcct);
     }
 
     @SuppressWarnings("ConstantConditions")
@@ -117,10 +119,12 @@ public abstract class AbstractOfferTest extends MethodTest {
                 XMR,
                 "44G4jWmSvTEfifSUZzTDnJVLPvYATmq9XhhtDqUof1BGCLceG82EQsVYG9Q9GN4bJcjbAJEc1JD1m5G7iK4UPZqACubV4Mq",
                 false);
+        log.debug("Alices XMR Account: {}", alicesXmrAcct);
         bobsXmrAcct = bobClient.createCryptoCurrencyPaymentAccount("Bob's XMR Account",
                 XMR,
                 "4BDRhdSBKZqAXs3PuNTbMtaXBNqFj5idC2yMVnQj8Rm61AyKY8AxLTt9vGRJ8pwcG4EtpyD8YpGqdZWCZ2VZj6yVBN2RVKs",
                 false);
+        log.debug("Bob's XMR Account: {}", bobsXmrAcct);
     }
 
     @AfterAll

@@ -32,8 +32,10 @@ import bisq.apitest.method.trade.AbstractTradeTest;
 import bisq.apitest.method.trade.TakeBuyBSQOfferTest;
 import bisq.apitest.method.trade.TakeBuyBTCOfferTest;
 import bisq.apitest.method.trade.TakeBuyBTCOfferWithNationalBankAcctTest;
+import bisq.apitest.method.trade.TakeBuyXMROfferTest;
 import bisq.apitest.method.trade.TakeSellBSQOfferTest;
 import bisq.apitest.method.trade.TakeSellBTCOfferTest;
+import bisq.apitest.method.trade.TakeSellXMROfferTest;
 
 
 @Slf4j
@@ -67,17 +69,6 @@ public class TradeTest extends AbstractTradeTest {
 
     @Test
     @Order(3)
-    public void testTakeBuyBSQOffer(final TestInfo testInfo) {
-        TakeBuyBSQOfferTest test = new TakeBuyBSQOfferTest();
-        TakeBuyBSQOfferTest.createBsqPaymentAccounts();
-        test.testTakeAlicesSellBTCForBSQOffer(testInfo);
-        test.testBobsConfirmPaymentStarted(testInfo);
-        test.testAlicesConfirmPaymentReceived(testInfo);
-        test.testBobsKeepFunds(testInfo);
-    }
-
-    @Test
-    @Order(4)
     public void testTakeBuyBTCOfferWithNationalBankAcct(final TestInfo testInfo) {
         TakeBuyBTCOfferWithNationalBankAcctTest test = new TakeBuyBTCOfferWithNationalBankAcctTest();
         test.testTakeAlicesBuyOffer(testInfo);
@@ -88,11 +79,46 @@ public class TradeTest extends AbstractTradeTest {
     }
 
     @Test
+    @Order(4)
+    public void testTakeBuyBSQOffer(final TestInfo testInfo) {
+        TakeBuyBSQOfferTest test = new TakeBuyBSQOfferTest();
+        TakeBuyBSQOfferTest.createBsqPaymentAccounts();
+        test.testTakeAlicesSellBTCForBSQOffer(testInfo);
+        test.testBobsConfirmPaymentStarted(testInfo);
+        test.testAlicesConfirmPaymentReceived(testInfo);
+        test.testBobsKeepFunds(testInfo);
+    }
+
+    @Test
     @Order(5)
     public void testTakeSellBSQOffer(final TestInfo testInfo) {
         TakeSellBSQOfferTest test = new TakeSellBSQOfferTest();
         TakeSellBSQOfferTest.createBsqPaymentAccounts();
         test.testTakeAlicesBuyBTCForBSQOffer(testInfo);
+        test.testAlicesConfirmPaymentStarted(testInfo);
+        test.testBobsConfirmPaymentReceived(testInfo);
+        test.testAlicesBtcWithdrawalToExternalAddress(testInfo);
+    }
+
+    @Test
+    @Order(6)
+    public void testTakeBuyXMROffer(final TestInfo testInfo) {
+        TakeBuyXMROfferTest test = new TakeBuyXMROfferTest();
+        TakeBuyXMROfferTest.createXmrPaymentAccounts();
+        TakeBuyXMROfferTest.createBsqPaymentAccounts();
+        test.testTakeAlicesSellBTCForXMROffer(testInfo);
+        test.testBobsConfirmPaymentStarted(testInfo);
+        test.testAlicesConfirmPaymentReceived(testInfo);
+        test.testBobsKeepFunds(testInfo);
+    }
+
+    @Test
+    @Order(7)
+    public void testTakeSellXMROffer(final TestInfo testInfo) {
+        TakeSellXMROfferTest test = new TakeSellXMROfferTest();
+        TakeBuyXMROfferTest.createXmrPaymentAccounts();
+        TakeSellXMROfferTest.createBsqPaymentAccounts();
+        test.testTakeAlicesBuyBTCForXMROffer(testInfo);
         test.testAlicesConfirmPaymentStarted(testInfo);
         test.testBobsConfirmPaymentReceived(testInfo);
         test.testAlicesBtcWithdrawalToExternalAddress(testInfo);

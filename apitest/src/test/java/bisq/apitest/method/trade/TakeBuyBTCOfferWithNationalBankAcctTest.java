@@ -37,11 +37,7 @@ package bisq.apitest.method.trade;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.NationalBankAccountPayload;
 
-import bisq.proto.grpc.TradeInfo;
-
 import io.grpc.StatusRuntimeException;
-
-import java.util.function.Predicate;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -53,13 +49,10 @@ import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.TestMethodOrder;
 
 import static bisq.apitest.config.ApiTestConfig.BSQ;
-import static bisq.cli.TableFormat.formatBalancesTbls;
 import static bisq.core.btc.wallet.Restrictions.getDefaultBuyerSecurityDepositAsPercent;
-import static bisq.core.trade.Trade.Phase.DEPOSIT_CONFIRMED;
-import static bisq.core.trade.Trade.Phase.FIAT_SENT;
 import static bisq.core.trade.Trade.Phase.PAYOUT_PUBLISHED;
-import static bisq.core.trade.Trade.State.*;
-import static java.lang.String.format;
+import static bisq.core.trade.Trade.State.BUYER_RECEIVED_PAYOUT_TX_PUBLISHED_MSG;
+import static bisq.core.trade.Trade.State.SELLER_SAW_ARRIVED_PAYOUT_TX_PUBLISHED_MSG;
 import static org.junit.jupiter.api.Assertions.*;
 import static protobuf.Offer.State.OFFER_FEE_PAID;
 import static protobuf.OfferPayload.Direction.BUY;
@@ -110,17 +103,15 @@ public class TakeBuyBTCOfferWithNationalBankAcctTest extends AbstractTradeTest {
 
             // Wait for Alice's AddToOfferBook task.
             // Wait times vary;  my logs show >= 2 second delay.
-            sleep(3000); // TODO loop instead of hard code wait time
+            sleep(3_000); // TODO loop instead of hard code wait time
             var alicesOffers = aliceClient.getMyOffersSortedByDate(BUY.name(), BRL);
             assertEquals(1, alicesOffers.size());
 
 
-            var trade = takeAlicesOffer(offerId, bobsPaymentAccount.getId(), TRADE_FEE_CURRENCY_CODE);
-            assertNotNull(trade);
-            assertEquals(offerId, trade.getTradeId());
-            assertFalse(trade.getIsCurrencyForTakerFeeBtc());
-            // Cache the trade id for the other tests.
-            tradeId = trade.getTradeId();
+            var trade = takeAlicesOffer(offerId,
+                    bobsPaymentAccount.getId(),
+                    TRADE_FEE_CURRENCY_CODE,
+                    false);
 
             // Before generating a blk and confirming deposit tx, make sure there
             // are no bank acct details in the either side's contract.
@@ -149,35 +140,14 @@ public class TakeBuyBTCOfferWithNationalBankAcctTest extends AbstractTradeTest {
             alicesOffers = aliceClient.getMyOffersSortedByDate(BUY.name(), BRL);
             assertEquals(0, alicesOffers.size());
 
-            genBtcBlocksThenWait(1, 2500);
+            genBtcBlocksThenWait(1, 2_500);
 
-            for (int i = 1; i <= maxTradeStateAndPhaseChecks.get(); i++) {
-                trade = bobClient.getTrade(trade.getTradeId());
+            waitForDepositConfirmation(log, testInfo, bobClient, trade.getTradeId());
 
-                if (!trade.getIsDepositConfirmed()) {
-                    log.warn("Bob still waiting on trade {} tx {}: DEPOSIT_CONFIRMED_IN_BLOCK_CHAIN, attempt # {}",
-                            trade.getShortId(),
-                            trade.getDepositTxId(),
-                            i);
-                    genBtcBlocksThenWait(1, 4000);
-                } else {
-                    EXPECTED_PROTOCOL_STATUS.setState(DEPOSIT_CONFIRMED_IN_BLOCK_CHAIN)
-                            .setPhase(DEPOSIT_CONFIRMED)
-                            .setDepositPublished(true)
-                            .setDepositConfirmed(true);
-                    verifyExpectedProtocolStatus(trade);
-                    logTrade(log, testInfo, "Bob's view after deposit is confirmed", trade, true);
-                    break;
-                }
-            }
-
-            if (!trade.getIsDepositConfirmed()) {
-                fail(format("INVALID_PHASE for Bob's trade %s in STATE=%s PHASE=%s, deposit tx was never confirmed.",
-                        trade.getShortId(),
-                        trade.getState(),
-                        trade.getPhase()));
-            }
-
+            trade = bobClient.getTrade(tradeId);
+            verifyTakerDepositConfirmed(trade);
+            logTrade(log, testInfo, "Alice's Maker/Buyer View", aliceClient.getTrade(tradeId), true);
+            logTrade(log, testInfo, "Bob's Taker/Seller View", bobClient.getTrade(tradeId), true);
         } catch (StatusRuntimeException e) {
             fail(e);
         }
@@ -204,52 +174,18 @@ public class TakeBuyBTCOfferWithNationalBankAcctTest extends AbstractTradeTest {
         try {
             var trade = aliceClient.getTrade(tradeId);
 
-            Predicate<TradeInfo> tradeStateAndPhaseCorrect = (t) ->
-                    t.getState().equals(DEPOSIT_CONFIRMED_IN_BLOCK_CHAIN.name())
-                            && t.getPhase().equals(DEPOSIT_CONFIRMED.name());
-
-
-            for (int i = 1; i <= maxTradeStateAndPhaseChecks.get(); i++) {
-                if (!tradeStateAndPhaseCorrect.test(trade)) {
-                    log.warn("INVALID_PHASE for Alice's trade {} in STATE={} PHASE={}, cannot confirm payment started yet.",
-                            trade.getShortId(),
-                            trade.getState(),
-                            trade.getPhase());
-                    sleep(1000 * 10);
-                    trade = aliceClient.getTrade(tradeId);
-                } else {
-                    break;
-                }
-            }
-
-            if (!tradeStateAndPhaseCorrect.test(trade)) {
-                fail(format("INVALID_PHASE for Alice's trade %s in STATE=%s PHASE=%s, could not confirm payment started.",
-                        trade.getShortId(),
-                        trade.getState(),
-                        trade.getPhase()));
-            }
+            waitForDepositConfirmation(log, testInfo, aliceClient, trade.getTradeId());
 
             aliceClient.confirmPaymentStarted(trade.getTradeId());
-            sleep(6000);
+            sleep(6_000);
 
-            for (int i = 1; i <= maxTradeStateAndPhaseChecks.get(); i++) {
-                trade = aliceClient.getTrade(tradeId);
+            waitForBuyerSeesPaymentInitiatedMessage(log, testInfo, aliceClient, tradeId);
 
-                if (!trade.getIsFiatSent()) {
-                    log.warn("Alice still waiting for trade {} BUYER_SAW_ARRIVED_FIAT_PAYMENT_INITIATED_MSG, attempt # {}",
-                            trade.getShortId(),
-                            i);
-                    sleep(5000);
-                } else {
-                    assertEquals(OFFER_FEE_PAID.name(), trade.getOffer().getState());
-                    EXPECTED_PROTOCOL_STATUS.setState(BUYER_SAW_ARRIVED_FIAT_PAYMENT_INITIATED_MSG)
-                            .setPhase(FIAT_SENT)
-                            .setFiatSent(true);
-                    verifyExpectedProtocolStatus(trade);
-                    logTrade(log, testInfo, "Alice's view after confirming fiat payment sent", trade);
-                    break;
-                }
-            }
+            trade = aliceClient.getTrade(tradeId);
+            assertEquals(OFFER_FEE_PAID.name(), trade.getOffer().getState());
+
+            logTrade(log, testInfo, "Alice's Maker/Buyer View (Payment Sent)", aliceClient.getTrade(tradeId), true);
+            logTrade(log, testInfo, "Bob's Taker/Seller View (Payment Sent)", bobClient.getTrade(tradeId), true);
         } catch (StatusRuntimeException e) {
             fail(e);
         }
@@ -259,34 +195,11 @@ public class TakeBuyBTCOfferWithNationalBankAcctTest extends AbstractTradeTest {
     @Order(4)
     public void testBobsConfirmPaymentReceived(final TestInfo testInfo) {
         try {
+            waitForSellerSeesPaymentInitiatedMessage(log, testInfo, bobClient, tradeId);
+
             var trade = bobClient.getTrade(tradeId);
-
-            Predicate<TradeInfo> tradeStateAndPhaseCorrect = (t) ->
-                    t.getState().equals(SELLER_RECEIVED_FIAT_PAYMENT_INITIATED_MSG.name())
-                            && (t.getPhase().equals(PAYOUT_PUBLISHED.name()) || t.getPhase().equals(FIAT_SENT.name()));
-
-            for (int i = 1; i <= maxTradeStateAndPhaseChecks.get(); i++) {
-                if (!tradeStateAndPhaseCorrect.test(trade)) {
-                    log.warn("INVALID_PHASE for Bob's trade {} in STATE={} PHASE={}, cannot confirm payment received yet.",
-                            trade.getShortId(),
-                            trade.getState(),
-                            trade.getPhase());
-                    sleep(1000 * 10);
-                    trade = bobClient.getTrade(tradeId);
-                } else {
-                    break;
-                }
-            }
-
-            if (!tradeStateAndPhaseCorrect.test(trade)) {
-                fail(format("INVALID_PHASE for Bob's trade %s in STATE=%s PHASE=%s, cannot confirm payment received.",
-                        trade.getShortId(),
-                        trade.getState(),
-                        trade.getPhase()));
-            }
-
             bobClient.confirmPaymentReceived(trade.getTradeId());
-            sleep(3000);
+            sleep(3_000);
 
             trade = bobClient.getTrade(tradeId);
             // Note: offer.state == available
@@ -297,7 +210,6 @@ public class TakeBuyBTCOfferWithNationalBankAcctTest extends AbstractTradeTest {
                     .setFiatReceived(true);
             verifyExpectedProtocolStatus(trade);
             logTrade(log, testInfo, "Bob's view after confirming fiat payment received", trade);
-
         } catch (StatusRuntimeException e) {
             fail(e);
         }
@@ -307,32 +219,22 @@ public class TakeBuyBTCOfferWithNationalBankAcctTest extends AbstractTradeTest {
     @Order(5)
     public void testAlicesKeepFunds(final TestInfo testInfo) {
         try {
-            genBtcBlocksThenWait(1, 1000);
+            genBtcBlocksThenWait(1, 1_000);
 
             var trade = aliceClient.getTrade(tradeId);
             logTrade(log, testInfo, "Alice's view before keeping funds", trade);
 
             aliceClient.keepFunds(tradeId);
 
-            genBtcBlocksThenWait(1, 1000);
+            genBtcBlocksThenWait(1, 1_000);
 
             trade = aliceClient.getTrade(tradeId);
             EXPECTED_PROTOCOL_STATUS.setState(BUYER_RECEIVED_PAYOUT_TX_PUBLISHED_MSG)
                     .setPhase(PAYOUT_PUBLISHED);
             verifyExpectedProtocolStatus(trade);
-            logTrade(log, testInfo, "Alice's view after keeping funds", trade);
-
             logTrade(log, testInfo, "Alice's Maker/Buyer View (Done)", aliceClient.getTrade(tradeId), true);
             logTrade(log, testInfo, "Bob's Taker/Seller View (Done)", bobClient.getTrade(tradeId), true);
-
-            var alicesBalances = aliceClient.getBalances();
-            log.info("{} Alice's Current Balance:\n{}",
-                    testName(testInfo),
-                    formatBalancesTbls(alicesBalances));
-            var bobsBalances = bobClient.getBalances();
-            log.info("{} Bob's Current Balance:\n{}",
-                    testName(testInfo),
-                    formatBalancesTbls(bobsBalances));
+            logBalances(log, testInfo);
         } catch (StatusRuntimeException e) {
             fail(e);
         }
