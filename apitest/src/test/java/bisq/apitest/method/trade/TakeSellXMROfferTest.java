@@ -74,14 +74,16 @@ public class TakeSellXMROfferTest extends AbstractTradeTest {
             // BTC trade;  Alice will BUY BTC for XMR.  Alice will send Bob XMR.
             // Confused me, but just need to remember there are only BTC offers.
             var btcTradeDirection = BUY.name();
-            var alicesOffer = aliceClient.createFixedPricedOffer(btcTradeDirection,
+            double priceMarginPctInput = 1.50;
+            var alicesOffer = aliceClient.createMarketBasedPricedOffer(btcTradeDirection,
                     XMR,
                     20_000_000L,
                     10_500_000L,
-                    "0.005",   // FIXED PRICE IN BTC (satoshis) FOR 1 XMR
+                    priceMarginPctInput,
                     getDefaultBuyerSecurityDepositAsPercent(),
                     alicesXmrAcct.getId(),
-                    TRADE_FEE_CURRENCY_CODE);
+                    TRADE_FEE_CURRENCY_CODE,
+                    NO_TRIGGER_PRICE);
             log.info("ALICE'S SELL XMR (BUY BTC) OFFER:\n{}", formatOfferTable(singletonList(alicesOffer), XMR));
             genBtcBlocksThenWait(1, 4000);
             var offerId = alicesOffer.getId();
