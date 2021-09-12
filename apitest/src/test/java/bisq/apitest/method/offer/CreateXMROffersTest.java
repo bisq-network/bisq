@@ -44,6 +44,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static protobuf.OfferPayload.Direction.BUY;
 import static protobuf.OfferPayload.Direction.SELL;
 
+@SuppressWarnings("ConstantConditions")
 @Disabled
 @Slf4j
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -59,7 +60,7 @@ public class CreateXMROffersTest extends AbstractOfferTest {
 
     @Test
     @Order(1)
-    public void testCreateBuy1BTCFor200KXMROffer() {
+    public void testCreateFixedPriceBuy1BTCFor200KXMROffer() {
         // Remember alt coin trades are BTC trades.  When placing an offer, you are
         // offering to buy or sell BTC, not BSQ, XMR, etc.  In this test case,
         // Alice places an offer to BUY BTC with BSQ.
@@ -108,7 +109,7 @@ public class CreateXMROffersTest extends AbstractOfferTest {
 
     @Test
     @Order(2)
-    public void testCreateSell1BTCFor200KXMROffer() {
+    public void testCreateFixedPriceSell1BTCFor200KXMROffer() {
         // Alice places an offer to SELL BTC for XMR.
         var newOffer = aliceClient.createFixedPricedOffer(SELL.name(),
                 XMR,
@@ -155,19 +156,112 @@ public class CreateXMROffersTest extends AbstractOfferTest {
 
     @Test
     @Order(3)
-    public void testGetAllMyXMROffers() {
-        List<OfferInfo> offers = aliceClient.getMyCryptoCurrencyOffersSortedByDate(XMR);
-        log.info("ALL ALICE'S XMR OFFERS:\n{}", formatOfferTable(offers, XMR));
-        assertEquals(2, offers.size());
-        log.info("ALICE'S BALANCES\n{}", formatBalancesTbls(aliceClient.getBalances()));
+    public void testCreatePriceMarginBasedBuy1BTCOffer() {
+        double priceMarginPctInput = 1.00;
+        var newOffer = aliceClient.createMarketBasedPricedOffer(BUY.name(),
+                XMR,
+                100_000_000L,
+                75_000_000L,
+                priceMarginPctInput,
+                getDefaultBuyerSecurityDepositAsPercent(),
+                alicesXmrAcct.getId(),
+                MAKER_FEE_CURRENCY_CODE,
+                NO_TRIGGER_PRICE);
+        log.info("Sell XMR (Buy BTC) OFFER:\n{}", formatOfferTable(singletonList(newOffer), XMR));
+        assertTrue(newOffer.getIsMyOffer());
+        assertTrue(newOffer.getIsMyPendingOffer());
+
+        String newOfferId = newOffer.getId();
+        assertNotEquals("", newOfferId);
+        assertEquals(BUY.name(), newOffer.getDirection());
+        assertTrue(newOffer.getUseMarketBasedPrice());
+        assertEquals(100_000_000L, newOffer.getAmount());
+        assertEquals(75_000_000L, newOffer.getMinAmount());
+        assertEquals(15_000_000, newOffer.getBuyerSecurityDeposit());
+        assertEquals(alicesXmrAcct.getId(), newOffer.getPaymentAccountId());
+        assertEquals(XMR, newOffer.getBaseCurrencyCode());
+        assertEquals(BTC, newOffer.getCounterCurrencyCode());
+        assertFalse(newOffer.getIsCurrencyForMakerFeeBtc());
+
+        genBtcBlockAndWaitForOfferPreparation();
+
+        newOffer = aliceClient.getMyOffer(newOfferId);
+        assertTrue(newOffer.getIsMyOffer());
+        assertFalse(newOffer.getIsMyPendingOffer());
+        assertEquals(newOfferId, newOffer.getId());
+        assertEquals(BUY.name(), newOffer.getDirection());
+        assertTrue(newOffer.getUseMarketBasedPrice());
+        assertEquals(100_000_000L, newOffer.getAmount());
+        assertEquals(75_000_000L, newOffer.getMinAmount());
+        assertEquals(15_000_000, newOffer.getBuyerSecurityDeposit());
+        assertEquals(alicesXmrAcct.getId(), newOffer.getPaymentAccountId());
+        assertEquals(XMR, newOffer.getBaseCurrencyCode());
+        assertEquals(BTC, newOffer.getCounterCurrencyCode());
+        assertFalse(newOffer.getIsCurrencyForMakerFeeBtc());
     }
 
     @Test
     @Order(4)
+    public void testCreatePriceMarginBasedSell1BTCOffer() {
+        // Alice places an offer to SELL BTC for XMR.
+        double priceMarginPctInput = 0.50;
+        var newOffer = aliceClient.createMarketBasedPricedOffer(SELL.name(),
+                XMR,
+                100_000_000L,
+                50_000_000L,
+                priceMarginPctInput,
+                getDefaultBuyerSecurityDepositAsPercent(),
+                alicesXmrAcct.getId(),
+                MAKER_FEE_CURRENCY_CODE,
+                NO_TRIGGER_PRICE);
+        log.info("Buy XMR (Sell BTC) OFFER:\n{}", formatOfferTable(singletonList(newOffer), XMR));
+        assertTrue(newOffer.getIsMyOffer());
+        assertTrue(newOffer.getIsMyPendingOffer());
+
+        String newOfferId = newOffer.getId();
+        assertNotEquals("", newOfferId);
+        assertEquals(SELL.name(), newOffer.getDirection());
+        assertTrue(newOffer.getUseMarketBasedPrice());
+        assertEquals(100_000_000L, newOffer.getAmount());
+        assertEquals(50_000_000L, newOffer.getMinAmount());
+        assertEquals(15_000_000, newOffer.getBuyerSecurityDeposit());
+        assertEquals(alicesXmrAcct.getId(), newOffer.getPaymentAccountId());
+        assertEquals(XMR, newOffer.getBaseCurrencyCode());
+        assertEquals(BTC, newOffer.getCounterCurrencyCode());
+        assertFalse(newOffer.getIsCurrencyForMakerFeeBtc());
+
+        genBtcBlockAndWaitForOfferPreparation();
+
+        newOffer = aliceClient.getMyOffer(newOfferId);
+        assertTrue(newOffer.getIsMyOffer());
+        assertFalse(newOffer.getIsMyPendingOffer());
+        assertEquals(newOfferId, newOffer.getId());
+        assertEquals(SELL.name(), newOffer.getDirection());
+        assertTrue(newOffer.getUseMarketBasedPrice());
+        assertEquals(100_000_000L, newOffer.getAmount());
+        assertEquals(50_000_000L, newOffer.getMinAmount());
+        assertEquals(15_000_000, newOffer.getBuyerSecurityDeposit());
+        assertEquals(alicesXmrAcct.getId(), newOffer.getPaymentAccountId());
+        assertEquals(XMR, newOffer.getBaseCurrencyCode());
+        assertEquals(BTC, newOffer.getCounterCurrencyCode());
+        assertFalse(newOffer.getIsCurrencyForMakerFeeBtc());
+    }
+
+    @Test
+    @Order(5)
+    public void testGetAllMyXMROffers() {
+        List<OfferInfo> offers = aliceClient.getMyCryptoCurrencyOffersSortedByDate(XMR);
+        log.info("ALL ALICE'S XMR OFFERS:\n{}", formatOfferTable(offers, XMR));
+        assertEquals(4, offers.size());
+        log.info("ALICE'S BALANCES\n{}", formatBalancesTbls(aliceClient.getBalances()));
+    }
+
+    @Test
+    @Order(6)
     public void testGetAvailableXMROffers() {
         List<OfferInfo> offers = bobClient.getCryptoCurrencyOffersSortedByDate(XMR);
         log.info("ALL BOB'S AVAILABLE XMR OFFERS:\n{}", formatOfferTable(offers, XMR));
-        assertEquals(2, offers.size());
+        assertEquals(4, offers.size());
         log.info("BOB'S BALANCES\n{}", formatBalancesTbls(bobClient.getBalances()));
     }
 
