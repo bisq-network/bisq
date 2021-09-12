@@ -23,7 +23,7 @@
 #
 #     `$ apitest/scripts/trade-xmr-simulation.sh -d buy -f 0.05 -a 0.125`
 #
-#  Script options:  -d <direction> -f <fixed-price> -a <amount(btc)>
+#  Script options:  -d <direction> -m <mkt-price-margin(%)> -f <fixed-price> -a <amount(btc)>
 #
 # Examples:
 #
@@ -31,9 +31,9 @@
 #
 #       `$ apitest/scripts/trade-xmr-simulation.sh -d buy -f 0.05 -a 0.125`
 #
-#    Create a sell/xmr offer to sell 0.125 btc at an xmr fixed-price of 0.05 btc, using using an xmr payment account:
+#    Create a sell/xmr offer to sell 0.125 btc at at an xmr mkt-price-margin of 0%, using using an xmr payment account:
 #
-#       `$ apitest/scripts/trade-xmr-simulation.sh -d sell -f 0.05 -a 0.125`
+#       `$ apitest/scripts/trade-xmr-simulation.sh -d sell -m 0.00 -a 0.125`
 
 export APP_BASE_NAME=$(basename "$0")
 export APP_HOME=$(pwd -P)

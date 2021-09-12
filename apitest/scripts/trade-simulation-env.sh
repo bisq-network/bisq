@@ -181,12 +181,12 @@ parselimitorderopts() {
 
 parsexmrscriptopts() {
     usage() {
-        echo "Usage: $0 [-d buy|sell] [-f <fixed-price> [-a <amount in btc>]" 1>&2
+        echo "Usage: $0 [-d buy|sell] [-f <fixed-price> || -m <margin-from-price>] [-a <amount in btc>]" 1>&2
         exit 1;
     }
 
-    local OPTIND o d f a
-    while getopts "d:f:a:" o; do
+    local OPTIND o d f m a
+    while getopts "d:f:m:a:" o; do
         case "${o}" in
             d) d=$(echo "${OPTARG}" | tr '[:lower:]' '[:upper:]')
                 ((d == "BUY" || d == "SELL")) || usage
@@ -195,6 +195,9 @@ parsexmrscriptopts() {
             f) f=${OPTARG}
                export FIXED_PRICE=${f}
                ;;
+             m) m=${OPTARG}
+                export MKT_PRICE_MARGIN=${m}
+                ;;
             a) a=${OPTARG}
                export AMOUNT=${a}
                ;;
@@ -203,7 +206,11 @@ parsexmrscriptopts() {
     done
     shift $((OPTIND-1))
 
-    if [ -z "${d}" ] || [ -z "${f}" ] || [ -z "${a}" ]; then
+    if [ -z "${d}" ] ||  [ -z "${a}" ]; then
+        usage
+    fi
+
+    if [ -z "${f}" ] && [ -z "${m}" ]; then
         usage
     fi
 
