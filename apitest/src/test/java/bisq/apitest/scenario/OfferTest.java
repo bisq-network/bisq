@@ -94,8 +94,10 @@ public class OfferTest extends AbstractOfferTest {
     public void testCreateXMROffers() {
         CreateXMROffersTest test = new CreateXMROffersTest();
         CreateXMROffersTest.createXmrPaymentAccounts();
-        test.testCreateBuy1BTCFor200KXMROffer();
-        test.testCreateSell1BTCFor200KXMROffer();
+        test.testCreateFixedPriceBuy1BTCFor200KXMROffer();
+        test.testCreateFixedPriceSell1BTCFor200KXMROffer();
+        test.testCreatePriceMarginBasedBuy1BTCOffer();
+        test.testCreatePriceMarginBasedSell1BTCOffer();
         test.testGetAllMyXMROffers();
         test.testGetAvailableXMROffers();
     }

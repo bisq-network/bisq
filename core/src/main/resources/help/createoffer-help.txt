@@ -95,14 +95,14 @@ $ ./bisq-cli --password=xyz --port=9998 createoffer --payment-account=1473d263-2
     --fee-currency=btc
 
 To create a SELL 0.025 BTC for XMR offer
-	at a fixed XMR price of 0.005 BTC,
+	at a market price margin of 0.50 percent above current XMR market price,
 	using a payment account with ID 1373d263-225a-4f1b-837a-1e3094dc0e32,
-	putting up a 30 percent security deposit,
+	putting up a 25 percent security deposit,
 	and paying the Bisq maker trading fee in BSQ:
 $ ./bisq-cli --password=xyz --port=9998 createoffer --payment-account=1373d263-225a-4f1b-837a-1e3094dc0e32 \
     --direction=sell \
     --currency-code=xmr \
     --amount=0.025 \
-    --fixed-price=0.005 \
-    --security-deposit=30.0 \
+    --market-price-margin=0.50 \
+    --security-deposit=25.0 \
     --fee-currency=bsq
