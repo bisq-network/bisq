@@ -59,6 +59,7 @@ public class ApiTestConfig {
     public static final String BTC = "BTC";
     public static final String XMR = "XMR";
     public static final String EUR = "EUR";
+    public static final String GBP = "GBP";
     public static final String RUBLE = "RUB";
     public static final String USD = "USD";
     public static final String ARBITRATOR = "arbitrator";
