@@ -8,7 +8,6 @@ import java.math.BigDecimal;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.core.locale.CurrencyUtil.isCryptoCurrency;
 import static java.lang.String.format;
 
 @Slf4j
@@ -62,7 +61,7 @@ class EditOfferValidator {
             case TRIGGER_PRICE_AND_ACTIVATION_STATE:
             case MKT_PRICE_MARGIN_AND_TRIGGER_PRICE:
             case MKT_PRICE_MARGIN_AND_TRIGGER_PRICE_AND_ACTIVATION_STATE: {
-                checkNotAltcoinOffer();
+                checkNotBsqOffer();
                 validateEditedTriggerPrice();
                 validateEditedMarketPriceMargin();
                 break;
@@ -119,9 +118,7 @@ class EditOfferValidator {
                 && !editedUseMarketBasedPrice
                 && !isZeroEditedTriggerPrice)
             throw new IllegalStateException(
-                    format("programmer error: cannot set a trigger price (%s)"
-                                    + " in fixed price offer with id '%s'",
-                            editedTriggerPrice,
+                    format("programmer error: cannot set a trigger price in fixed price offer with id '%s'",
                             currentlyOpenOffer.getId()));
 
         if (editedTriggerPrice < 0)
@@ -131,10 +128,10 @@ class EditOfferValidator {
                             currentlyOpenOffer.getId()));
     }
 
-    private void checkNotAltcoinOffer() {
-        if (isCryptoCurrency(currentlyOpenOffer.getOffer().getCurrencyCode())) {
+    private void checkNotBsqOffer() {
+        if ("BSQ".equals(currentlyOpenOffer.getOffer().getCurrencyCode())) {
             throw new IllegalStateException(
-                    format("cannot set mkt price margin or trigger price on fixed price altcoin offer with id '%s'",
+                    format("cannot set mkt price margin or trigger price on fixed price bsq offer with id '%s'",
                             currentlyOpenOffer.getId()));
         }
     }
