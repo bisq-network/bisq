@@ -34,6 +34,8 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 
+import java.math.BigDecimal;
+
 import java.util.Date;
 import java.util.List;
 
@@ -41,12 +43,14 @@ import lombok.extern.slf4j.Slf4j;
 
 import static bisq.cli.CurrencyFormat.*;
 import static bisq.cli.Method.*;
+import static bisq.cli.OfferFormat.formatOfferTable;
 import static bisq.cli.TableFormat.*;
 import static bisq.cli.opts.OptLabel.*;
 import static java.lang.String.format;
 import static java.lang.System.err;
 import static java.lang.System.exit;
 import static java.lang.System.out;
+import static java.math.BigDecimal.ZERO;
 import static java.util.Collections.singletonList;
 
 
@@ -360,7 +364,7 @@ public class CliMain {
                     var fixedPrice = opts.getFixedPrice();
                     var isUsingMktPriceMargin = opts.isUsingMktPriceMargin();
                     var marketPriceMargin = opts.getMktPriceMarginAsBigDecimal();
-                    var triggerPrice = toInternalFiatPrice(opts.getTriggerPriceAsBigDecimal());
+                    var triggerPrice = toInternalTriggerPrice(client, offerId, opts.getTriggerPriceAsBigDecimal());
                     var enable = opts.getEnableAsSignedInt();
                     var editOfferType = opts.getOfferEditType();
                     client.editOffer(offerId,
@@ -706,6 +710,25 @@ public class CliMain {
             return Long.parseLong(param);
         } catch (NumberFormatException ex) {
             throw new IllegalArgumentException(format("'%s' is not a number", param));
+        }
+    }
+
+    private static long toInternalTriggerPrice(GrpcClient client,
+                                               String offerId,
+                                               BigDecimal unscaledTriggerPrice) {
+        if (unscaledTriggerPrice.compareTo(ZERO) >= 0) {
+            // Unfortunately, the EditOffer proto triggerPrice field was declared as
+            // a long instead of a string, so the CLI has to look at the offer to know
+            // how to scale the trigger-price (for a fiat or altcoin offer) param sent
+            // to the server in its 'editoffer' request.  That means a preliminary round
+            // trip to the server:  a 'getmyoffer' request.
+            var offer = client.getMyOffer(offerId);
+            if (offer.getCounterCurrencyCode().equals("BTC"))
+                return toInternalCryptoCurrencyPrice(unscaledTriggerPrice);
+            else
+                return toInternalFiatPrice(unscaledTriggerPrice);
+        } else {
+            return 0L;
         }
     }
 

@@ -142,8 +142,12 @@ public class CurrencyFormat {
         return FRIENDLY_NUMBER_FORMAT.format((double) volume / SATOSHI_DIVISOR.doubleValue());
     }
 
-    public static long toInternalFiatPrice(BigDecimal humanFriendlyFiatPrice) {
-        return humanFriendlyFiatPrice.multiply(new BigDecimal(10_000)).longValue();
+    public static long toInternalFiatPrice(BigDecimal fiatPrice) {
+        return fiatPrice.multiply(new BigDecimal(10_000)).longValue();
+    }
+
+    public static long toInternalCryptoCurrencyPrice(BigDecimal altcoinPrice) {
+        return altcoinPrice.multiply(new BigDecimal(100_000_000)).longValue();
     }
 
     public static long toSatoshis(String btc) {
