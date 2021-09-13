@@ -155,7 +155,8 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
         CASH_BY_MAIL,
         CAPITUAL,
         PAYSERA,
-        PAXUM
+        PAXUM,
+        SWIFT
     }
 
     @Getter

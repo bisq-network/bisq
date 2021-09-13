@@ -163,7 +163,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
     private int gridRow = 0;
     private boolean offerDetailsWindowDisplayed, clearXchangeWarningDisplayed, fasterPaymentsWarningDisplayed,
-            takeOfferFromUnsignedAccountWarningDisplayed, cashByMailWarningDisplayed;
+            swiftWarningDisplayed, takeOfferFromUnsignedAccountWarningDisplayed, cashByMailWarningDisplayed;
     private SimpleBooleanProperty errorPopupDisplayed;
     private ChangeListener<Boolean> amountFocusedListener, getShowWalletFundedNotificationListener;
 
@@ -309,6 +309,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         maybeShowTakeOfferFromUnsignedAccountWarning(model.dataModel.getOffer());
         maybeShowClearXchangeWarning(lastPaymentAccount);
         maybeShowFasterPaymentsWarning(lastPaymentAccount);
+        maybeShowSwiftWarning(lastPaymentAccount);
         maybeShowCashByMailWarning(lastPaymentAccount, model.dataModel.getOffer());
 
         if (!DevEnv.isDaoActivated() && !model.isRange()) {
@@ -831,6 +832,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             if (paymentAccount != null) {
                 maybeShowClearXchangeWarning(paymentAccount);
                 maybeShowFasterPaymentsWarning(paymentAccount);
+                maybeShowSwiftWarning(paymentAccount);
             }
             model.onPaymentAccountSelected(paymentAccount);
         });
@@ -1269,6 +1271,19 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                 !fasterPaymentsWarningDisplayed) {
             fasterPaymentsWarningDisplayed = true;
             UserThread.runAfter(() -> GUIUtil.showFasterPaymentsWarning(navigation), 500, TimeUnit.MILLISECONDS);
+        }
+    }
+
+    private void maybeShowSwiftWarning(PaymentAccount paymentAccount) {
+        if (paymentAccount.getPaymentMethod().getId().equals(PaymentMethod.SWIFT_ID) && !swiftWarningDisplayed) {
+            swiftWarningDisplayed = true;
+            UserThread.runAfter(() -> {
+                if (model.getOffer().getDirection() == OfferPayload.Direction.BUY) {
+                    GUIUtil.showSwiftWarningToSeller();  // taking an offer to buy, we are the seller
+                } else {
+                    GUIUtil.showSwiftWarningToBuyer();  // taking an offer to sell, we are the buyer
+                }
+            }, 500, TimeUnit.MILLISECONDS);
         }
     }
 

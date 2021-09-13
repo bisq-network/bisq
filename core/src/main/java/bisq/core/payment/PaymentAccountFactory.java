@@ -92,6 +92,8 @@ public class PaymentAccountFactory {
                 return new InstantCryptoCurrencyAccount();
             case PaymentMethod.CAPITUAL_ID:
                 return new CapitualAccount();
+            case PaymentMethod.SWIFT_ID:
+                return new SwiftAccount();
 
             // Cannot be deleted as it would break old trade history entries
             case PaymentMethod.OK_PAY_ID:
