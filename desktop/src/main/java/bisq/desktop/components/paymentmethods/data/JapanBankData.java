@@ -861,7 +861,9 @@ public class JapanBankData {
                 return "[" + // match any of these characters:
                         // "Ａ-ｚ" + // full-width alphabet
                         // "０-９" + // full-width numerals
-                        "一-龯" + // all Japanese kanji (0x4e00 ~ 0x9fcf)
+                        "一-龯" + // common Japanese kanji (0x4e00 ~ 0x9faf)
+                        "々" + // kanji iteration mark (0x3005)
+                        "〇" + // kanji number zero (0x3007)
                         "ぁ-ゔ" + // full-width hiragana (0x3041 ~ 0x3094)
                         "ァ-・" + // full-width katakana (0x30a1 ~ 0x30fb)
                         "ぁ-ゞ" + // half-width hiragana
