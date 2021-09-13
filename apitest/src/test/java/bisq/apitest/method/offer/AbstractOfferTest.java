@@ -87,9 +87,14 @@ public abstract class AbstractOfferTest extends MethodTest {
         return priceAsBigDecimal.multiply(factor).longValue();
     };
 
-    protected final BiFunction<Double, Double, Long> calcPriceAsLong = (base, delta) -> {
+    protected final BiFunction<Double, Double, Long> calcFiatTriggerPriceAsLong = (base, delta) -> {
         var priceAsDouble = new BigDecimal(base).add(new BigDecimal(delta)).doubleValue();
         return Double.valueOf(exactMultiply(priceAsDouble, 10_000)).longValue();
+    };
+
+    protected final BiFunction<Double, Double, Long> calcAltcoinTriggerPriceAsLong = (base, delta) -> {
+        var priceAsDouble = new BigDecimal(base).add(new BigDecimal(delta)).doubleValue();
+        return Double.valueOf(exactMultiply(priceAsDouble, 100_000_000)).longValue();
     };
 
     protected final BiFunction<Double, Double, String> calcPriceAsString = (base, delta) -> {

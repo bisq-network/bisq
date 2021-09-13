@@ -127,7 +127,7 @@ public class OfferTest extends AbstractOfferTest {
         test.testDisableBsqOffer();
         test.testEditFixedPriceAndDisableBsqOffer();
         // Edit xmr offer tests
-        test.testChangeFixedPricedXmrOfferToPriceMarginBasedOfferShouldThrowException();
+        // test.testChangeFixedPricedXmrOfferToPriceMarginBasedOfferWithTriggerPrice();
         test.testEditTriggerPriceOnFixedPriceXmrOfferShouldThrowException();
         test.testEditFixedPriceOnXmrOffer();
         test.testDisableXmrOffer();

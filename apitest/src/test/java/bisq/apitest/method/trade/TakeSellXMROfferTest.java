@@ -31,7 +31,7 @@ import org.junit.jupiter.api.TestMethodOrder;
 
 import static bisq.apitest.config.ApiTestConfig.BTC;
 import static bisq.apitest.config.ApiTestConfig.XMR;
-import static bisq.cli.TableFormat.formatOfferTable;
+import static bisq.cli.OfferFormat.formatOfferTable;
 import static bisq.core.btc.wallet.Restrictions.getDefaultBuyerSecurityDepositAsPercent;
 import static bisq.core.trade.Trade.Phase.PAYOUT_PUBLISHED;
 import static bisq.core.trade.Trade.Phase.WITHDRAWN;

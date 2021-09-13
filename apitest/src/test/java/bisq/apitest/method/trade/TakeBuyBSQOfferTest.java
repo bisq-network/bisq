@@ -30,8 +30,8 @@ import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.TestMethodOrder;
 
 import static bisq.apitest.config.ApiTestConfig.BSQ;
+import static bisq.cli.OfferFormat.formatOfferTable;
 import static bisq.cli.TableFormat.formatBalancesTbls;
-import static bisq.cli.TableFormat.formatOfferTable;
 import static bisq.core.btc.wallet.Restrictions.getDefaultBuyerSecurityDepositAsPercent;
 import static bisq.core.trade.Trade.Phase.PAYOUT_PUBLISHED;
 import static bisq.core.trade.Trade.State.BUYER_RECEIVED_PAYOUT_TX_PUBLISHED_MSG;

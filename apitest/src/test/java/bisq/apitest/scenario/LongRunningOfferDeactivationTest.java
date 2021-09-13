@@ -59,7 +59,7 @@ public class LongRunningOfferDeactivationTest extends AbstractOfferTest {
     public void testSellOfferAutoDisable(final TestInfo testInfo) {
         PaymentAccount paymentAcct = createDummyF2FAccount(aliceClient, "US");
         double mktPriceAsDouble = aliceClient.getBtcPrice("USD");
-        long triggerPrice = calcPriceAsLong.apply(mktPriceAsDouble, -50.0000);
+        long triggerPrice = calcFiatTriggerPriceAsLong.apply(mktPriceAsDouble, -50.0000);
         log.info("Current USD mkt price = {}  Trigger Price = {}", mktPriceAsDouble, formatPrice(triggerPrice));
         OfferInfo offer = aliceClient.createMarketBasedPricedOffer(SELL.name(),
                 "USD",
@@ -107,7 +107,7 @@ public class LongRunningOfferDeactivationTest extends AbstractOfferTest {
     public void testBuyOfferAutoDisable(final TestInfo testInfo) {
         PaymentAccount paymentAcct = createDummyF2FAccount(aliceClient, "US");
         double mktPriceAsDouble = aliceClient.getBtcPrice("USD");
-        long triggerPrice = calcPriceAsLong.apply(mktPriceAsDouble, 50.0000);
+        long triggerPrice = calcFiatTriggerPriceAsLong.apply(mktPriceAsDouble, 50.0000);
         log.info("Current USD mkt price = {}  Trigger Price = {}", mktPriceAsDouble, formatPrice(triggerPrice));
         OfferInfo offer = aliceClient.createMarketBasedPricedOffer(BUY.name(),
                 "USD",
