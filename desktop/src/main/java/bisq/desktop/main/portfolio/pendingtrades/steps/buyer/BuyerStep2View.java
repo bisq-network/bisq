@@ -82,6 +82,7 @@ import bisq.core.payment.payload.HalCashAccountPayload;
 import bisq.core.payment.payload.MoneyGramAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
+import bisq.core.payment.payload.SwiftAccountPayload;
 import bisq.core.payment.payload.USPostalMoneyOrderAccountPayload;
 import bisq.core.payment.payload.WesternUnionAccountPayload;
 import bisq.core.trade.Trade;
@@ -608,6 +609,10 @@ public class BuyerStep2View extends TradeStepView {
             } else if (paymentAccountPayload instanceof CashByMailAccountPayload ||
                     paymentAccountPayload instanceof HalCashAccountPayload) {
                 message += Res.get("portfolio.pending.step2_buyer.pay", amount);
+            } else if (paymentAccountPayload instanceof SwiftAccountPayload) {
+                message += Res.get("portfolio.pending.step2_buyer.pay", amount) +
+                        refTextWarn + "\n\n" +
+                        Res.get("portfolio.pending.step2_buyer.fees.swift");
             } else {
                 message += Res.get("portfolio.pending.step2_buyer.pay", amount) +
                         refTextWarn + "\n\n" +
