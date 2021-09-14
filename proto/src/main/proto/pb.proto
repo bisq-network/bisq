@@ -999,6 +999,7 @@ message PaymentAccountPayload {
         CapitualAccountPayload capitual_account_payload = 33;
         PayseraAccountPayload Paysera_account_payload = 34;
         PaxumAccountPayload Paxum_account_payload = 35;
+        SwiftAccountPayload swift_account_payload = 36;
     }
     map<string, string> exclude_from_json_data = 15;
 }
@@ -1230,6 +1231,27 @@ message PaxumAccountPayload {
 
 message CapitualAccountPayload {
     string account_nr = 1;
+}
+
+message SwiftAccountPayload {
+    string beneficiary_name = 1;
+    string beneficiary_account_nr = 2;
+    string beneficiary_address = 3;
+    string beneficiary_city = 4;
+    string beneficiary_phone = 5;
+    string special_instructions = 6;
+
+    string bank_swift_code = 7;
+    string bank_country_code = 8;
+    string bank_name = 9;
+    string bank_branch = 10;
+    string bank_address = 11;
+
+    string intermediary_swift_code = 12;
+    string intermediary_country_code = 13;
+    string intermediary_name = 14;
+    string intermediary_branch = 15;
+    string intermediary_address = 16;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////

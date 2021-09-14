@@ -603,4 +603,8 @@ public class Utilities {
         }
         return result;
     }
+
+    public static String cleanString(String string) {
+        return string.replaceAll("[\\t\\n\\r]+", " ");
+    }
 }
