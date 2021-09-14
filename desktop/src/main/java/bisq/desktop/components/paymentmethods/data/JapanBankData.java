@@ -864,11 +864,10 @@ public class JapanBankData {
                         "一-龯" + // common Japanese kanji (0x4e00 ~ 0x9faf)
                         "々" + // kanji iteration mark (0x3005)
                         "〇" + // kanji number zero (0x3007)
-                        "ぁ-ゔ" + // full-width hiragana (0x3041 ~ 0x3094)
+                        "ぁ-ゞ" + // hiragana (0x3041 ~ 0x309e)
                         "ァ-・" + // full-width katakana (0x30a1 ~ 0x30fb)
-                        "ぁ-ゞ" + // half-width hiragana
                         "ｧ-ﾝﾞﾟ" + // half-width katakana
-                        "ヽヾ゛゜ー" + // 0x309e, 0x309b, 0x309c, 0x30fc
+                        "ヽヾ゛゜ー" + // 0x30fd, 0x30fe, 0x309b, 0x309c, 0x30fc
                         "　" + // full-width space
                         " " + // half-width space
                         "]+"; // for any length
