@@ -96,7 +96,7 @@ public class OfferTest extends AbstractOfferTest {
         CreateXMROffersTest.createXmrPaymentAccounts();
         test.testCreateFixedPriceBuy1BTCFor200KXMROffer();
         test.testCreateFixedPriceSell1BTCFor200KXMROffer();
-        test.testCreatePriceMarginBasedBuy1BTCOffer();
+        test.testCreatePriceMarginBasedBuy1BTCOfferWithTriggerPrice();
         test.testCreatePriceMarginBasedSell1BTCOffer();
         test.testGetAllMyXMROffers();
         test.testGetAvailableXMROffers();
@@ -127,7 +127,8 @@ public class OfferTest extends AbstractOfferTest {
         test.testDisableBsqOffer();
         test.testEditFixedPriceAndDisableBsqOffer();
         // Edit xmr offer tests
-        // test.testChangeFixedPricedXmrOfferToPriceMarginBasedOfferWithTriggerPrice();
+        test.testChangePriceMarginBasedXmrOfferWithTriggerPriceToFixedPricedAndDeactivateIt();
+        test.testChangeFixedPricedXmrOfferToPriceMarginBasedOfferWithTriggerPrice();
         test.testEditTriggerPriceOnFixedPriceXmrOfferShouldThrowException();
         test.testEditFixedPriceOnXmrOffer();
         test.testDisableXmrOffer();

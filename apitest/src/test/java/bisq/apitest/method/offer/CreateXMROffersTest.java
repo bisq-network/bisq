@@ -156,8 +156,10 @@ public class CreateXMROffersTest extends AbstractOfferTest {
 
     @Test
     @Order(3)
-    public void testCreatePriceMarginBasedBuy1BTCOffer() {
+    public void testCreatePriceMarginBasedBuy1BTCOfferWithTriggerPrice() {
         double priceMarginPctInput = 1.00;
+        double mktPriceAsDouble = aliceClient.getBtcPrice(XMR);
+        long triggerPriceAsLong = calcAltcoinTriggerPriceAsLong.apply(mktPriceAsDouble, -0.001);
         var newOffer = aliceClient.createMarketBasedPricedOffer(BUY.name(),
                 XMR,
                 100_000_000L,
@@ -166,8 +168,8 @@ public class CreateXMROffersTest extends AbstractOfferTest {
                 getDefaultBuyerSecurityDepositAsPercent(),
                 alicesXmrAcct.getId(),
                 MAKER_FEE_CURRENCY_CODE,
-                NO_TRIGGER_PRICE);
-        log.info("Sell XMR (Buy BTC) OFFER:\n{}", formatOfferTable(singletonList(newOffer), XMR));
+                triggerPriceAsLong);
+        log.info("PENDING Sell XMR (Buy BTC) OFFER:\n{}", formatOfferTable(singletonList(newOffer), XMR));
         assertTrue(newOffer.getIsMyOffer());
         assertTrue(newOffer.getIsMyPendingOffer());
 
@@ -175,6 +177,10 @@ public class CreateXMROffersTest extends AbstractOfferTest {
         assertNotEquals("", newOfferId);
         assertEquals(BUY.name(), newOffer.getDirection());
         assertTrue(newOffer.getUseMarketBasedPrice());
+
+        // There is no trigger price while offer is pending.
+        assertEquals(0, newOffer.getTriggerPrice());
+
         assertEquals(100_000_000L, newOffer.getAmount());
         assertEquals(75_000_000L, newOffer.getMinAmount());
         assertEquals(15_000_000, newOffer.getBuyerSecurityDeposit());
@@ -186,11 +192,16 @@ public class CreateXMROffersTest extends AbstractOfferTest {
         genBtcBlockAndWaitForOfferPreparation();
 
         newOffer = aliceClient.getMyOffer(newOfferId);
+        log.info("AVAILABLE Sell XMR (Buy BTC) OFFER:\n{}", formatOfferTable(singletonList(newOffer), XMR));
         assertTrue(newOffer.getIsMyOffer());
         assertFalse(newOffer.getIsMyPendingOffer());
         assertEquals(newOfferId, newOffer.getId());
         assertEquals(BUY.name(), newOffer.getDirection());
         assertTrue(newOffer.getUseMarketBasedPrice());
+
+        // The trigger price should exist on the prepared offer.
+        assertEquals(triggerPriceAsLong, newOffer.getTriggerPrice());
+
         assertEquals(100_000_000L, newOffer.getAmount());
         assertEquals(75_000_000L, newOffer.getMinAmount());
         assertEquals(15_000_000, newOffer.getBuyerSecurityDeposit());

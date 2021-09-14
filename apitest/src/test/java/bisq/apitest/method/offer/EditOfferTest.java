@@ -588,23 +588,66 @@ public class EditOfferTest extends AbstractOfferTest {
 
     @Test
     @Order(18)
+    public void testChangePriceMarginBasedXmrOfferWithTriggerPriceToFixedPricedAndDeactivateIt() {
+        createXmrPaymentAccounts();
+        double mktPriceAsDouble = aliceClient.getBtcPrice(XMR);
+        long triggerPriceAsLong = calcAltcoinTriggerPriceAsLong.apply(mktPriceAsDouble, 0.001);
+        OfferInfo originalOffer = createMktPricedOfferForEdit(SELL.name(),
+                XMR,
+                alicesXmrAcct.getId(),
+                0.0,
+                triggerPriceAsLong);
+        log.info("PENDING XMR OFFER:\n{}", formatOfferTable(singletonList(originalOffer), XMR));
+        genBtcBlocksThenWait(1, 2500); // Wait for offer book entry.
+
+        originalOffer = aliceClient.getMyOffer(originalOffer.getId());
+        log.info("ORIGINAL XMR OFFER:\n{}", formatOfferTable(singletonList(originalOffer), XMR));
+
+        String newFixedPriceAsString = calcPriceAsString.apply(mktPriceAsDouble, -0.001);
+        aliceClient.editOffer(originalOffer.getId(),
+                newFixedPriceAsString,
+                false,
+                0.00,
+                0,
+                DEACTIVATE_OFFER,
+                FIXED_PRICE_AND_ACTIVATION_STATE);
+        // Wait for edited offer to be removed from offer-book, edited & not re-published.
+        genBtcBlocksThenWait(1, 2500);
+        OfferInfo editedOffer = aliceClient.getMyOffer(originalOffer.getId());
+        log.info("EDITED XMR OFFER:\n{}", formatOfferTable(singletonList(editedOffer), XMR));
+        assertEquals(scaledUpAltcoinOfferPrice.apply(newFixedPriceAsString), editedOffer.getPrice());
+        assertFalse(editedOffer.getUseMarketBasedPrice());
+        assertEquals(0.00, editedOffer.getMarketPriceMargin());
+        assertEquals(0, editedOffer.getTriggerPrice());
+        assertFalse(editedOffer.getIsActivated());
+
+        doSanityCheck(originalOffer, editedOffer);
+    }
+
+    @Test
+    @Order(19)
     public void testChangeFixedPricedXmrOfferToPriceMarginBasedOfferWithTriggerPrice() {
         createXmrPaymentAccounts();
+        double mktPriceAsDouble = aliceClient.getBtcPrice(XMR);
+        String fixedPriceAsString = calcPriceAsString.apply(mktPriceAsDouble, 0.00);
         OfferInfo originalOffer = aliceClient.createFixedPricedOffer(BUY.name(),
                 XMR,
                 100_000_000L,
                 50_000_000L,
-                "0.006",   // FIXED PRICE IN BTC (satoshis) FOR 1 XMR
+                fixedPriceAsString,   // FIXED PRICE IN BTC (satoshis) FOR 1 XMR
                 getDefaultBuyerSecurityDepositAsPercent(),
                 alicesXmrAcct.getId(),
                 BSQ);
-        log.info("ORIGINAL XMR OFFER:\n{}", formatOfferTable(singletonList(originalOffer), XMR));
+        log.info("PENDING XMR OFFER:\n{}", formatOfferTable(singletonList(originalOffer), XMR));
         genBtcBlocksThenWait(1, 2500); // Wait for offer book entry.
 
+        originalOffer = aliceClient.getMyOffer(originalOffer.getId());
+        log.info("ORIGINAL XMR OFFER:\n{}", formatOfferTable(singletonList(originalOffer), XMR));
+
         // Change the offer to mkt price based and set a trigger price.
-        var newMktPriceMargin = 0.05;
-        // TODO Get current mkt XMR price and add delta to calc trigger price.
-        var newTriggerPriceAsLong = calcAltcoinTriggerPriceAsLong.apply(0.0065, 0.00);
+        var newMktPriceMargin = new BigDecimal("0.05").doubleValue();
+        var delta = -0.00100000;
+        var newTriggerPriceAsLong = calcAltcoinTriggerPriceAsLong.apply(mktPriceAsDouble, delta);
         aliceClient.editOffer(originalOffer.getId(),
                 "0.00",
                 true,
@@ -625,7 +668,7 @@ public class EditOfferTest extends AbstractOfferTest {
     }
 
     @Test
-    @Order(19)
+    @Order(20)
     public void testEditTriggerPriceOnFixedPriceXmrOfferShouldThrowException() {
         createXmrPaymentAccounts();
         OfferInfo originalOffer = aliceClient.createFixedPricedOffer(BUY.name(),
@@ -656,7 +699,7 @@ public class EditOfferTest extends AbstractOfferTest {
 
 
     @Test
-    @Order(20)
+    @Order(21)
     public void testEditFixedPriceOnXmrOffer() {
         createXmrPaymentAccounts();
         String fixedPriceAsString = "0.008"; // FIXED PRICE IN BTC (satoshis) FOR 1 BSQ
@@ -690,7 +733,7 @@ public class EditOfferTest extends AbstractOfferTest {
     }
 
     @Test
-    @Order(21)
+    @Order(22)
     public void testDisableXmrOffer() {
         createXmrPaymentAccounts();
         String fixedPriceAsString = "0.008"; // FIXED PRICE IN BTC (satoshis) FOR 1 BSQ
@@ -723,7 +766,7 @@ public class EditOfferTest extends AbstractOfferTest {
     }
 
     @Test
-    @Order(22)
+    @Order(23)
     public void testEditFixedPriceAndDisableXmrOffer() {
         createXmrPaymentAccounts();
         String fixedPriceAsString = "0.004"; // FIXED PRICE IN BTC (satoshis) FOR 1 BSQ
