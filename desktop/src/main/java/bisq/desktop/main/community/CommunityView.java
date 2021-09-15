@@ -3,6 +3,7 @@ package bisq.desktop.main.community;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.common.view.InitializableView;
 import bisq.desktop.common.view.ViewLoader;
+import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.main.community.platform.Platform;
 import bisq.desktop.main.community.platform.PlatformView;
 
@@ -12,29 +13,21 @@ import javax.inject.Inject;
 
 import javafx.fxml.FXML;
 
-import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @FxmlView
-public class CommunityView extends InitializableView<VBox, Void> {
-    @FXML
-    Label joinTitle,
-            joinDescription1,
-            joinDescription2,
-            getInTouchTitle,
-            getInTouchDescription,
-            askTitle,
-            updatesTitle,
-            chatTitle,
-            getStartedTitle,
-            documentationTitle;
+public class CommunityView extends InitializableView<ScrollPane, Void> {
 
     @FXML
-    HBox getInTouchBox, askBox, updatesBox1, updatesBox2, chatBox, getStartedBox, documentationBox;
+    VBox content;
 
     private final ViewLoader viewLoader;
 
@@ -156,41 +149,61 @@ public class CommunityView extends InitializableView<VBox, Void> {
 
     @Override
     public void initialize() {
-        joinTitle.setText(Res.get("community.join.title"));
-        joinDescription1.setText(Res.get("community.join.description.part1"));
-        joinDescription2.setText(Res.get("community.join.description.part2"));
+        addLabel(content, Res.get("community.join.title"), "community-heading-1");
+        addLabel(content, Res.get("community.join.description.part1"));
+        addLabel(content, Res.get("community.join.description.part2"));
 
-        getInTouchTitle.setText(Res.get("community.section.getInTouch.title"));
-        getInTouchDescription.setText(Res.get("community.section.getInTouch.description"));
-        addPlatform(getInTouchBox, PLATFORMS.get("github"), true);
-        addPlatform(getInTouchBox, PLATFORMS.get("keybase"), true);
+        addSectionLabel(content, Res.get("community.section.getInTouch.title"));
+        addLabel(content, Res.get("community.section.getInTouch.description"));
+        addPlatformsBox(content, Arrays.asList("github", "keybase"), true);
 
-        askTitle.setText(Res.get("community.section.ask.title"));
-        addPlatform(askBox, PLATFORMS.get("forum"), false);
-        addPlatform(askBox, PLATFORMS.get("reddit"), false);
+        addSectionLabel(content, Res.get("community.section.ask.title"));
+        addPlatformsBox(content, Arrays.asList("forum", "reddit"));
 
-        updatesTitle.setText(Res.get("community.section.updates.title"));
-        addPlatform(updatesBox1, PLATFORMS.get("twitter"), false);
-        addPlatform(updatesBox1, PLATFORMS.get("youtube"), false);
-        addPlatform(updatesBox1, PLATFORMS.get("mastadon"), false);
-        addPlatform(updatesBox2, PLATFORMS.get("blog"), false);
-        addPlatform(updatesBox2, PLATFORMS.get("markets"), false);
+        addSectionLabel(content, Res.get("community.section.updates.title"));
+        addPlatformsBox(content, Arrays.asList("twitter", "youtube", "mastadon"));
+        addPlatformsBox(content, Arrays.asList("blog", "markets"));
 
-        chatTitle.setText(Res.get("community.section.chat.title"));
-        addPlatform(chatBox, PLATFORMS.get("telegram"), false);
-        addPlatform(chatBox, PLATFORMS.get("irc"), false);
-        addPlatform(chatBox, PLATFORMS.get("matrix"), false);
+        addSectionLabel(content, Res.get("community.section.chat.title"));
+        addPlatformsBox(content, Arrays.asList("telegram", "irc", "matrix"));
 
-        getStartedTitle.setText(Res.get("community.section.getStarted.title"));
-        addPlatform(getStartedBox, PLATFORMS.get("website"), false);
+        addSectionLabel(content, Res.get("community.section.getStarted.title"));
+        addPlatformsBox(content, Arrays.asList("website"));
 
-        documentationTitle.setText(Res.get("community.section.documentation.title"));
-        addPlatform(documentationBox, PLATFORMS.get("wiki"), false);
+        addSectionLabel(content, Res.get("community.section.documentation.title"));
+        addPlatformsBox(content, Arrays.asList("wiki"));
+    }
+
+    private void addPlatformsBox(VBox content, List<String> slugs, boolean wider) {
+        HBox platformsBox = new HBox();
+        platformsBox.setSpacing(20);
+        slugs.forEach(slug -> addPlatform(platformsBox, PLATFORMS.get(slug), wider));
+        content.getChildren().add(platformsBox);
+    }
+
+    private void addPlatformsBox(VBox content, List<String> slugs) {
+        addPlatformsBox(content, slugs, false);
     }
 
     private void addPlatform(HBox box, Platform platform, boolean wider) {
         PlatformView platformView = (PlatformView) viewLoader.load(PlatformView.class);
         platformView.setData(platform, wider);
         box.getChildren().add(platformView.getRoot());
+    }
+
+    private void addLabel(Pane pane, String message, String styleClass) {
+        AutoTooltipLabel label = new AutoTooltipLabel(message);
+        if (styleClass != null) {
+            label.getStyleClass().add(styleClass);
+        }
+        pane.getChildren().add(label);
+    }
+
+    private void addLabel(Pane pane, String message) {
+        addLabel(pane, message, null);
+    }
+
+    private void addSectionLabel(Pane pane, String message) {
+        addLabel(pane, message, "community-heading-2");
     }
 }

@@ -17,11 +17,9 @@
   ~ along with Bisq. If not, see <http://www.gnu.org/licenses/>.
   -->
 
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.layout.VBox?>
-<?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.layout.VBox?>
 <ScrollPane
         fx:id="root"
         fx:controller="bisq.desktop.main.community.CommunityView"
@@ -33,29 +31,5 @@
         AnchorPane.topAnchor="0.0"
         xmlns:fx="http://javafx.com/fxml"
 >
-    <VBox spacing="20" styleClass="community-tab">
-        <Label fx:id="joinTitle" styleClass="community-heading-1" />
-        <Label fx:id="joinDescription1" />
-        <Label fx:id="joinDescription2" />
-
-        <Label fx:id="getInTouchTitle" styleClass="community-heading-2"/>
-        <Label fx:id="getInTouchDescription" />
-        <HBox fx:id="getInTouchBox" spacing="20"/>
-
-        <Label fx:id="askTitle" styleClass="community-heading-2" />
-        <HBox fx:id="askBox"  spacing="20" />
-
-        <Label fx:id="updatesTitle" styleClass="community-heading-2" />
-        <HBox fx:id="updatesBox1"  spacing="20" />
-        <HBox fx:id="updatesBox2"  spacing="20" />
-
-        <Label fx:id="chatTitle" styleClass="community-heading-2" />
-        <HBox fx:id="chatBox"  spacing="20" />
-
-        <Label fx:id="getStartedTitle" styleClass="community-heading-2" />
-        <HBox fx:id="getStartedBox" />
-
-        <Label fx:id="documentationTitle" styleClass="community-heading-2" />
-        <HBox fx:id="documentationBox" />
-    </VBox>
+    <VBox fx:id="content" spacing="20" styleClass="community-tab" />
 </ScrollPane>

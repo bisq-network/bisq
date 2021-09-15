@@ -17,26 +17,12 @@
   ~ along with Bisq. If not, see <http://www.gnu.org/licenses/>.
   -->
 
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.layout.VBox?>
 <?import javafx.scene.layout.HBox?>
-<?import com.jfoenix.controls.JFXButton?>
 <HBox
         fx:id="root"
         fx:controller="bisq.desktop.main.community.platform.PlatformView"
         styleClass="community-platform-item"
         prefWidth="400"
         xmlns:fx="http://javafx.com/fxml"
->
-    <Label fx:id="imageLabel" />
-    <VBox spacing="15">
-        <Label fx:id="titleLabel" styleClass="community-platform-item-title" />
-        <Label fx:id="descriptionLabel" styleClass="community-platform-item-description" wrapText="true" />
-        <HBox spacing="50">
-            <JFXButton fx:id="openURLButton" styleClass="community-platform-item-button" />
-            <JFXButton fx:id="copyURLButton" styleClass="community-platform-item-button" />
-        </HBox>
-    </VBox>
-</HBox>
-
+/>
 
