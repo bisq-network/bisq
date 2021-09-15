@@ -31,16 +31,20 @@ import bisq.desktop.components.paymentmethods.ClearXchangeForm;
 import bisq.desktop.components.paymentmethods.F2FForm;
 import bisq.desktop.components.paymentmethods.FasterPaymentsForm;
 import bisq.desktop.components.paymentmethods.HalCashForm;
+import bisq.desktop.components.paymentmethods.ImpsForm;
 import bisq.desktop.components.paymentmethods.InteracETransferForm;
 import bisq.desktop.components.paymentmethods.JapanBankTransferForm;
 import bisq.desktop.components.paymentmethods.MoneyBeamForm;
 import bisq.desktop.components.paymentmethods.MoneyGramForm;
 import bisq.desktop.components.paymentmethods.NationalBankForm;
+import bisq.desktop.components.paymentmethods.NeftForm;
 import bisq.desktop.components.paymentmethods.PaymentMethodForm;
+import bisq.desktop.components.paymentmethods.PaytmForm;
 import bisq.desktop.components.paymentmethods.PerfectMoneyForm;
 import bisq.desktop.components.paymentmethods.PopmoneyForm;
 import bisq.desktop.components.paymentmethods.PromptPayForm;
 import bisq.desktop.components.paymentmethods.RevolutForm;
+import bisq.desktop.components.paymentmethods.RtgsForm;
 import bisq.desktop.components.paymentmethods.SameBankForm;
 import bisq.desktop.components.paymentmethods.SepaForm;
 import bisq.desktop.components.paymentmethods.SepaInstantForm;
@@ -52,6 +56,7 @@ import bisq.desktop.components.paymentmethods.PayseraForm;
 import bisq.desktop.components.paymentmethods.PaxumForm;
 import bisq.desktop.components.paymentmethods.USPostalMoneyOrderForm;
 import bisq.desktop.components.paymentmethods.UpholdForm;
+import bisq.desktop.components.paymentmethods.UpiForm;
 import bisq.desktop.components.paymentmethods.WeChatPayForm;
 import bisq.desktop.components.paymentmethods.WesternUnionForm;
 import bisq.desktop.main.account.content.PaymentAccountsView;
@@ -540,6 +545,16 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
                 return new PayseraForm(paymentAccount, accountAgeWitnessService, inputValidator, root, gridRow, formatter);
             case PaymentMethod.PAXUM_ID:
                 return new PaxumForm(paymentAccount, accountAgeWitnessService, inputValidator, root, gridRow, formatter);
+            case PaymentMethod.NEFT_ID:
+                return new NeftForm(paymentAccount, accountAgeWitnessService, inputValidator, root, gridRow, formatter);
+            case PaymentMethod.RTGS_ID:
+                return new RtgsForm(paymentAccount, accountAgeWitnessService, inputValidator, root, gridRow, formatter);
+            case PaymentMethod.IMPS_ID:
+                return new ImpsForm(paymentAccount, accountAgeWitnessService, inputValidator, root, gridRow, formatter);
+            case PaymentMethod.UPI_ID:
+                return new UpiForm(paymentAccount, accountAgeWitnessService, inputValidator, root, gridRow, formatter);
+            case PaymentMethod.PAYTM_ID:
+                return new PaytmForm(paymentAccount, accountAgeWitnessService, inputValidator, root, gridRow, formatter);
             case PaymentMethod.AMAZON_GIFT_CARD_ID:
                 return new AmazonGiftCardForm(paymentAccount, accountAgeWitnessService, inputValidator, root, gridRow, formatter);
             case PaymentMethod.CAPITUAL_ID:
