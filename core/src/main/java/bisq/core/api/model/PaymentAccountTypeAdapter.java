@@ -353,29 +353,29 @@ class PaymentAccountTypeAdapter extends TypeAdapter<PaymentAccount> {
     private boolean didReadTradeCurrenciesField(JsonReader in,
                                                 PaymentAccount account,
                                                 String fieldName) {
+        if (!fieldName.equals("tradeCurrencies"))
+            return false;
+
         // The PaymentAccount.tradeCurrencies field is a special case because it has
         // no setter, so we add currencies to the List here if the payment account
         // supports multiple trade currencies.
-        if (fieldName.equals("tradeCurrencies")) {
-            String fieldValue = nextStringOrNull(in);
-            List<String> currencyCodes = commaDelimitedCodesToList.apply(fieldValue);
-            Optional<List<TradeCurrency>> tradeCurrencies = getReconciledTradeCurrencies(currencyCodes, account);
-            if (tradeCurrencies.isPresent()) {
-                for (TradeCurrency tradeCurrency : tradeCurrencies.get()) {
-                    account.addCurrency(tradeCurrency);
-                }
-            } else {
-                // Log a warning.  We should not throw an exception here because the
-                // gson library will not pass it up to the calling Bisq object exactly as
-                // it would be defined here (causing confusion).  Do a check in a calling
-                // class to make sure the tradeCurrencies field is populated in the
-                // PaymentAccount object, if it is required for the payment account method.
-                log.warn("No trade currencies were found in the {} account form.",
-                        account.getPaymentMethod().getDisplayString());
+        String fieldValue = nextStringOrNull(in);
+        List<String> currencyCodes = commaDelimitedCodesToList.apply(fieldValue);
+        Optional<List<TradeCurrency>> tradeCurrencies = getReconciledTradeCurrencies(currencyCodes, account);
+        if (tradeCurrencies.isPresent()) {
+            for (TradeCurrency tradeCurrency : tradeCurrencies.get()) {
+                account.addCurrency(tradeCurrency);
             }
-            return true;
+        } else {
+            // Log a warning.  We should not throw an exception here because the
+            // gson library will not pass it up to the calling Bisq object exactly as
+            // it would be defined here (causing confusion).  Do a check in a calling
+            // class to make sure the tradeCurrencies field is populated in the
+            // PaymentAccount object, if it is required for the payment account method.
+            log.warn("No trade currencies were found in the {} account form.",
+                    account.getPaymentMethod().getDisplayString());
         }
-        return false;
+        return true;
     }
 
     private Optional<List<TradeCurrency>> getReconciledTradeCurrencies(List<String> currencyCodes,
@@ -407,22 +407,22 @@ class PaymentAccountTypeAdapter extends TypeAdapter<PaymentAccount> {
     private boolean didReadSelectedTradeCurrencyField(JsonReader in,
                                                       PaymentAccount account,
                                                       String fieldName) {
-        if (fieldName.equals("selectedTradeCurrency")) {
-            String fieldValue = nextStringOrNull(in);
-            if (fieldValue != null && !fieldValue.isEmpty()) {
-                Optional<TradeCurrency> tradeCurrency = getTradeCurrency(fieldValue.toUpperCase());
-                if (tradeCurrency.isPresent()) {
-                    account.setSelectedTradeCurrency(tradeCurrency.get());
-                } else {
-                    // Log an error.  We should not throw an exception here because the
-                    // gson library will not pass it up to the calling Bisq object exactly as
-                    // it would be defined here (causing confusion).
-                    log.error("{} is not a valid trade currency code.", fieldValue);
-                }
+        if (!fieldName.equals("selectedTradeCurrency"))
+            return false;
+
+        String fieldValue = nextStringOrNull(in);
+        if (fieldValue != null && !fieldValue.isEmpty()) {
+            Optional<TradeCurrency> tradeCurrency = getTradeCurrency(fieldValue.toUpperCase());
+            if (tradeCurrency.isPresent()) {
+                account.setSelectedTradeCurrency(tradeCurrency.get());
+            } else {
+                // Log an error.  We should not throw an exception here because the
+                // gson library will not pass it up to the calling Bisq object exactly as
+                // it would be defined here (causing confusion).
+                log.error("{} is not a valid trade currency code.", fieldValue);
             }
-            return true;
         }
-        return false;
+        return true;
     }
 
     private boolean didReadCommonField(JsonReader in,
