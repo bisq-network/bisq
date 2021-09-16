@@ -151,6 +151,7 @@ public class AbstractPaymentAccountTest extends MethodTest {
                 Object.class);
         assertNotNull(emptyForm);
 
+        // TODO remove 'false' condition to enable creation of SWIFT accounts in future PR.
         if (false && paymentMethodId.equals("SWIFT_ID")) {
             assertEquals(getSwiftFormComments(), emptyForm.get(PROPERTY_NAME_JSON_COMMENTS));
         } else {
