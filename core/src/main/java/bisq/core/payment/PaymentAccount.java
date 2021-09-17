@@ -41,6 +41,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
+import static bisq.core.payment.payload.PaymentMethod.TRANSFERWISE_ID;
+import static bisq.core.payment.payload.PaymentMethod.getPaymentMethodById;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @EqualsAndHashCode
@@ -104,14 +106,14 @@ public abstract class PaymentAccount implements PersistablePayload {
 
         // We need to remove NGN for Transferwise
         Optional<TradeCurrency> ngnTwOptional = tradeCurrencies.stream()
-                .filter(e -> paymentMethodId.equals(PaymentMethod.TRANSFERWISE_ID))
+                .filter(e -> paymentMethodId.equals(TRANSFERWISE_ID))
                 .filter(e -> e.getCode().equals("NGN"))
                 .findAny();
         // We cannot remove it in the stream as it would cause a concurrentModificationException
         ngnTwOptional.ifPresent(tradeCurrencies::remove);
 
         try {
-            PaymentAccount account = PaymentAccountFactory.getPaymentAccount(PaymentMethod.getPaymentMethodById(paymentMethodId));
+            PaymentAccount account = PaymentAccountFactory.getPaymentAccount(getPaymentMethodById(paymentMethodId));
             account.getTradeCurrencies().clear();
             account.setId(proto.getId());
             account.setCreationDate(proto.getCreationDate());
@@ -195,23 +197,15 @@ public abstract class PaymentAccount implements PersistablePayload {
         return this instanceof CountryBasedPaymentAccount;
     }
 
-    public boolean isHalCashAccount() {
-        return this instanceof HalCashAccount;
-    }
-
-    public boolean isMoneyGramAccount() {
-        return this instanceof MoneyGramAccount;
-    }
-
-    public boolean isTransferwiseAccount() {
-        return this instanceof TransferwiseAccount;
+    public boolean hasPaymentMethodWithId(String paymentMethodId) {
+        return this.getPaymentMethod().getId().equals(paymentMethodId);
     }
 
     /**
      * Return an Optional of the trade currency for this payment account, or
      * Optional.empty() if none is found.  If this payment account has a selected
      * trade currency, that is returned, else its single trade currency is returned,
-     * else the first trade currency in the this payment account's tradeCurrencies
+     * else the first trade currency in this payment account's tradeCurrencies
      * list is returned.
      *
      * @return Optional of the trade currency for the given payment account

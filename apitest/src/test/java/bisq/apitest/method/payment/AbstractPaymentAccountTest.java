@@ -1,6 +1,7 @@
 package bisq.apitest.method.payment;
 
 import bisq.core.api.model.PaymentAccountForm;
+import bisq.core.locale.FiatCurrency;
 import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.payment.PaymentAccount;
@@ -17,10 +18,13 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -57,14 +61,23 @@ public class AbstractPaymentAccountTest extends MethodTest {
     static final String PROPERTY_NAME_BANK_ACCOUNT_NAME = "bankAccountName";
     static final String PROPERTY_NAME_BANK_ACCOUNT_NUMBER = "bankAccountNumber";
     static final String PROPERTY_NAME_BANK_ACCOUNT_TYPE = "bankAccountType";
+    static final String PROPERTY_NAME_BANK_ADDRESS = "bankAddress";
+    static final String PROPERTY_NAME_BANK_BRANCH = "bankBranch";
     static final String PROPERTY_NAME_BANK_BRANCH_CODE = "bankBranchCode";
     static final String PROPERTY_NAME_BANK_BRANCH_NAME = "bankBranchName";
     static final String PROPERTY_NAME_BANK_CODE = "bankCode";
+    static final String PROPERTY_NAME_BANK_COUNTRY_CODE = "bankCountryCode";
     @SuppressWarnings("unused")
     static final String PROPERTY_NAME_BANK_ID = "bankId";
     static final String PROPERTY_NAME_BANK_NAME = "bankName";
+    static final String PROPERTY_NAME_BANK_SWIFT_CODE = "bankSwiftCode";
     static final String PROPERTY_NAME_BRANCH_ID = "branchId";
     static final String PROPERTY_NAME_BIC = "bic";
+    static final String PROPERTY_NAME_BENEFICIARY_NAME = "beneficiaryName";
+    static final String PROPERTY_NAME_BENEFICIARY_ACCOUNT_NR = "beneficiaryAccountNr";
+    static final String PROPERTY_NAME_BENEFICIARY_ADDRESS = "beneficiaryAddress";
+    static final String PROPERTY_NAME_BENEFICIARY_CITY = "beneficiaryCity";
+    static final String PROPERTY_NAME_BENEFICIARY_PHONE = "beneficiaryPhone";
     static final String PROPERTY_NAME_COUNTRY = "country";
     static final String PROPERTY_NAME_CITY = "city";
     static final String PROPERTY_NAME_CONTACT = "contact";
@@ -75,6 +88,11 @@ public class AbstractPaymentAccountTest extends MethodTest {
     static final String PROPERTY_NAME_HOLDER_NAME = "holderName";
     static final String PROPERTY_NAME_HOLDER_TAX_ID = "holderTaxId";
     static final String PROPERTY_NAME_IBAN = "iban";
+    static final String PROPERTY_NAME_INTERMEDIARY_ADDRESS = "intermediaryAddress";
+    static final String PROPERTY_NAME_INTERMEDIARY_BRANCH = "intermediaryBranch";
+    static final String PROPERTY_NAME_INTERMEDIARY_COUNTRY_CODE = "intermediaryCountryCode";
+    static final String PROPERTY_NAME_INTERMEDIARY_NAME = "intermediaryName";
+    static final String PROPERTY_NAME_INTERMEDIARY_SWIFT_CODE = "intermediarySwiftCode";
     static final String PROPERTY_NAME_MOBILE_NR = "mobileNr";
     static final String PROPERTY_NAME_NATIONAL_ACCOUNT_ID = "nationalAccountId";
     static final String PROPERTY_NAME_PAY_ID = "payid";
@@ -83,7 +101,9 @@ public class AbstractPaymentAccountTest extends MethodTest {
     static final String PROPERTY_NAME_QUESTION = "question";
     static final String PROPERTY_NAME_REQUIREMENTS = "requirements";
     static final String PROPERTY_NAME_SALT = "salt";
+    static final String PROPERTY_NAME_SELECTED_TRADE_CURRENCY = "selectedTradeCurrency";
     static final String PROPERTY_NAME_SORT_CODE = "sortCode";
+    static final String PROPERTY_NAME_SPECIAL_INSTRUCTIONS = "specialInstructions";
     static final String PROPERTY_NAME_STATE = "state";
     static final String PROPERTY_NAME_TRADE_CURRENCIES = "tradeCurrencies";
     static final String PROPERTY_NAME_USERNAME = "userName";
@@ -110,7 +130,7 @@ public class AbstractPaymentAccountTest extends MethodTest {
         COMPLETED_FORM_MAP.clear();
 
         File emptyForm = getPaymentAccountForm(aliceClient, paymentMethodId);
-        // A short cut over the API:
+        // A shortcut over the API:
         // File emptyForm = PAYMENT_ACCOUNT_FORM.getPaymentAccountForm(paymentMethodId);
         log.debug("{} Empty form saved to {}",
                 testName(testInfo),
@@ -125,7 +145,14 @@ public class AbstractPaymentAccountTest extends MethodTest {
                 PAYMENT_ACCOUNT_FORM.toJsonString(jsonForm),
                 Object.class);
         assertNotNull(emptyForm);
-        assertEquals(PROPERTY_VALUE_JSON_COMMENTS, emptyForm.get(PROPERTY_NAME_JSON_COMMENTS));
+
+        // TODO remove 'false' condition to enable creation of SWIFT accounts in future PR.
+        if (false && paymentMethodId.equals("SWIFT_ID")) {
+            assertEquals(getSwiftFormComments(), emptyForm.get(PROPERTY_NAME_JSON_COMMENTS));
+        } else {
+            assertEquals(PROPERTY_VALUE_JSON_COMMENTS, emptyForm.get(PROPERTY_NAME_JSON_COMMENTS));
+        }
+
         assertEquals(paymentMethodId, emptyForm.get(PROPERTY_NAME_PAYMENT_METHOD_ID));
         assertEquals("your accountname", emptyForm.get(PROPERTY_NAME_ACCOUNT_NAME));
         for (String field : fields) {
@@ -149,6 +176,15 @@ public class AbstractPaymentAccountTest extends MethodTest {
         assertEquals(expectedCurrencyCode, paymentAccount.getSingleTradeCurrency().getCode());
     }
 
+    protected final void verifyAccountTradeCurrencies(Collection<FiatCurrency> expectedFiatCurrencies,
+                                                      PaymentAccount paymentAccount) {
+        assertNotNull(paymentAccount.getTradeCurrencies());
+        List<TradeCurrency> expectedTradeCurrencies = new ArrayList<>() {{
+            addAll(expectedFiatCurrencies);
+        }};
+        assertArrayEquals(expectedTradeCurrencies.toArray(), paymentAccount.getTradeCurrencies().toArray());
+    }
+
     protected final void verifyAccountTradeCurrencies(List<TradeCurrency> expectedTradeCurrencies,
                                                       PaymentAccount paymentAccount) {
         assertNotNull(paymentAccount.getTradeCurrencies());
@@ -164,14 +200,44 @@ public class AbstractPaymentAccountTest extends MethodTest {
         assertTrue(paymentAccount.isPresent());
     }
 
-    protected final String getCompletedFormAsJsonString() {
-        File completedForm = fillPaymentAccountForm();
+    protected final String getCompletedFormAsJsonString(List<String> comments) {
+        File completedForm = fillPaymentAccountForm(comments);
         String jsonString = PAYMENT_ACCOUNT_FORM.toJsonString(completedForm);
         log.debug("Completed form: {}", jsonString);
         return jsonString;
     }
 
-    private File fillPaymentAccountForm() {
+    protected final String getCompletedFormAsJsonString() {
+        File completedForm = fillPaymentAccountForm(PROPERTY_VALUE_JSON_COMMENTS);
+        String jsonString = PAYMENT_ACCOUNT_FORM.toJsonString(completedForm);
+        log.debug("Completed form: {}", jsonString);
+        return jsonString;
+    }
+
+    protected final String getCommaDelimitedFiatCurrencyCodes(Collection<FiatCurrency> fiatCurrencies) {
+        return fiatCurrencies.stream()
+                .sorted(TradeCurrency::compareTo) // note: sorted by ccy name, not ccy code
+                .map(c -> c.getCurrency().getCurrencyCode())
+                .collect(Collectors.joining(","));
+    }
+
+    protected final String getCommaDelimitedTradeCurrencyCodes(List<TradeCurrency> tradeCurrencies) {
+        return tradeCurrencies.stream()
+                .sorted(Comparator.comparing(TradeCurrency::getCode)) // sorted by code
+                .map(c -> c.getCode())
+                .collect(Collectors.joining(","));
+    }
+
+    protected final List<String> getSwiftFormComments() {
+        List<String> comments = new ArrayList<>();
+        comments.addAll(PROPERTY_VALUE_JSON_COMMENTS);
+        // List<String> wrappedSwiftComments = Res.getWrappedAsList("payment.swift.info", 110);
+        // comments.addAll(wrappedSwiftComments);
+        // comments.add("See https://bisq.wiki/SWIFT");
+        return comments;
+    }
+
+    private File fillPaymentAccountForm(List<String> comments) {
         File tmpJsonForm = null;
         try {
             tmpJsonForm = File.createTempFile("temp_acct_form_",
@@ -182,7 +248,7 @@ public class AbstractPaymentAccountTest extends MethodTest {
 
             writer.name(PROPERTY_NAME_JSON_COMMENTS);
             writer.beginArray();
-            for (String s : PROPERTY_VALUE_JSON_COMMENTS) {
+            for (String s : comments) {
                 writer.value(s);
             }
             writer.endArray();

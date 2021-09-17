@@ -138,9 +138,8 @@ class CorePaymentAccountsService {
     }
 
     private void verifyPaymentAccountHasRequiredFields(PaymentAccount paymentAccount) {
-        // Do checks here to make sure required fields are populated.
-        if (paymentAccount.isTransferwiseAccount() && paymentAccount.getTradeCurrencies().isEmpty())
-            throw new IllegalArgumentException(format("no trade currencies defined for %s payment account",
+        if (!paymentAccount.hasMultipleCurrencies() && paymentAccount.getSingleTradeCurrency() == null)
+            throw new IllegalArgumentException(format("no trade currency defined for %s payment account",
                     paymentAccount.getPaymentMethod().getDisplayString().toLowerCase()));
     }
 }

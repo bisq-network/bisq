@@ -134,11 +134,11 @@ public class PaymentAccountForm {
             "maxTradePeriod",
             "paymentAccountPayload",
             "paymentMethod",
-            "paymentMethodId",  // This field will be included, but handled differently.
-            "selectedTradeCurrency",
-            "tradeCurrencies",  // This field may be included, but handled differently.
+            "paymentMethodId",          // Will be included, but handled differently.
+            "selectedTradeCurrency",    // May be included, but handled differently.
+            "tradeCurrencies",          // May be included, but handled differently.
             "HOLDER_NAME",
-            "SALT"              // This field will be included, but handled differently.
+            "SALT"                      // Will be included, but handled differently.
     };
 
     /**
