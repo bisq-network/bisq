@@ -188,7 +188,7 @@ public class TradeFormat {
 
     private static final Function<TradeInfo, String> tradeCostFormat = (t) ->
             t.getOffer().getBaseCurrencyCode().equals("BTC")
-                    ? formatOfferVolume(t.getOffer().getVolume())
+                    ? formatOfferVolume(t.getTradeVolume())
                     : formatSatoshis(t.getTradeAmountAsLong());
 
     private static final BiFunction<TradeInfo, Boolean, String> bsqReceiveAddress = (t, showBsqBuyerAddress) -> {
