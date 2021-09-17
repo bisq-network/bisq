@@ -164,7 +164,7 @@ public class TradeFormat {
     private static final Function<TradeInfo, String> amountFormat = (t) ->
             t.getOffer().getBaseCurrencyCode().equals("BTC")
                     ? formatSatoshis(t.getTradeAmountAsLong())
-                    : formatCryptoCurrencyOfferVolume(t.getOffer().getVolume());
+                    : formatCryptoCurrencyOfferVolume(t.getTradeVolume());
 
     private static final BiFunction<TradeInfo, Boolean, String> makerTakerMinerTxFeeFormat = (t, isTaker) -> {
         if (isTaker) {
