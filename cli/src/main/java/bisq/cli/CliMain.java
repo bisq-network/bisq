@@ -781,7 +781,7 @@ public class CliMain {
             stream.println();
             stream.format(rowFormat, editoffer.name(), "--offer-id=<offer-id> \\", "Edit offer with id");
             stream.format(rowFormat, "", "[--fixed-price=<price>] \\", "");
-            stream.format(rowFormat, "", "[--market-price=margin=<percent>] \\", "");
+            stream.format(rowFormat, "", "[--market-price-margin=<percent>] \\", "");
             stream.format(rowFormat, "", "[--trigger-price=<price>] \\", "");
             stream.format(rowFormat, "", "[--enabled=<true|false>]", "");
             stream.println();
