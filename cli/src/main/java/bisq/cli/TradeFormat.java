@@ -159,7 +159,7 @@ public class TradeFormat {
     private static final Function<TradeInfo, String> priceFormat = (t) ->
             t.getOffer().getBaseCurrencyCode().equals("BTC")
                     ? formatPrice(t.getTradePrice())
-                    : formatCryptoCurrencyPrice(t.getOffer().getPrice());
+                    : formatCryptoCurrencyPrice(t.getTradePrice());
 
     private static final Function<TradeInfo, String> amountFormat = (t) ->
             t.getOffer().getBaseCurrencyCode().equals("BTC")
