@@ -822,7 +822,6 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         String allFiatCodes = getCommaDelimitedFiatCurrencyCodes(getAllSortedFiatCurrencies());
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_TRADE_CURRENCIES, allFiatCodes);
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_SELECTED_TRADE_CURRENCY, EUR);
-        COMPLETED_FORM_MAP.put(PROPERTY_NAME_SELECTED_TRADE_CURRENCY, "EUR");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_BANK_SWIFT_CODE, "PASCITMMFIR");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_BANK_COUNTRY_CODE, "IT");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_BANK_NAME, "BANCA MONTE DEI PASCHI DI SIENA S.P.A.");
