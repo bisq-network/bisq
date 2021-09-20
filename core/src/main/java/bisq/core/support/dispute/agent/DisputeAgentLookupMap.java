@@ -30,7 +30,7 @@ public class DisputeAgentLookupMap {
     @Nullable
     public static String getKeyBaseUserName(String fullAddress) {
         switch (fullAddress) {
-            case "sjlho4zwp3gecspf.onion:9999":
+            case "7hkpotiyaukuzcfy6faihjaols5r2mkysz7bm3wrhhbpbphzz3zbwyqd.onion:9999":
                 return "leo816";
             case "wizbisqzd7ku25di7p2ztsajioabihlnyp5lq5av66tmu7do2dke2tid.onion:9999":
                 return "wiz";
