@@ -536,17 +536,20 @@ executetrade() {
     genbtcblocks 2 2
     printbreak
 
-    # Complete the trade on the seller side.
-    if [ "$DIRECTION" = "BUY" ]
-    then
-        printdate "BOB $BOB_ROLE:  Closing trade by keeping funds in Bisq wallet."
-        CMD="$CLI_BASE --port=$BOB_PORT keepfunds --trade-id=$OFFER_ID"
-        printdate "BOB CLI: $CMD"
-    else
-        printdate "ALICE (taker):  Closing trade by keeping funds in Bisq wallet."
-        CMD="$CLI_BASE --port=$ALICE_PORT keepfunds --trade-id=$OFFER_ID"
-        printdate "ALICE CLI: $CMD"
-    fi
+    # Complete the trade on both sides
+    printdate "BOB $BOB_ROLE:  Closing trade by keeping funds in Bisq wallet."
+    CMD="$CLI_BASE --port=$BOB_PORT keepfunds --trade-id=$OFFER_ID"
+    printdate "BOB CLI: $CMD"
+    KEEP_FUNDS_MSG=$($CMD)
+    commandalert $? "Could close trade with keepfunds command."
+    # Print the keepfunds command's console output.
+    printdate "$KEEP_FUNDS_MSG"
+    sleeptraced 3
+    printbreak
+
+    printdate "ALICE (taker):  Closing trade by keeping funds in Bisq wallet."
+    CMD="$CLI_BASE --port=$ALICE_PORT keepfunds --trade-id=$OFFER_ID"
+    printdate "ALICE CLI: $CMD"
     KEEP_FUNDS_MSG=$($CMD)
     commandalert $? "Could close trade with keepfunds command."
     # Print the keepfunds command's console output.
