@@ -39,7 +39,7 @@ public class AppendOnlyDataStoreServiceFake extends AppendOnlyDataStoreService {
         return super.getMap();
     }
 
-    public void put(P2PDataStorage.ByteArray hashAsByteArray, PersistableNetworkPayload payload) {
-        super.put(hashAsByteArray, payload);
+    public boolean put(P2PDataStorage.ByteArray hashAsByteArray, PersistableNetworkPayload payload) {
+        return super.put(hashAsByteArray, payload);
     }
 }
