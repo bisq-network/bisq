@@ -622,7 +622,7 @@ public class Config {
                         .defaultsTo(-1L);
 
         ArgumentAcceptingOptionSpec<Boolean> daoActivatedOpt =
-                parser.accepts(DAO_ACTIVATED, "Developer flag. If true it enables dao phase 2 features.")
+                parser.accepts(DAO_ACTIVATED, "If set to true dao is activated.")
                         .withRequiredArg()
                         .ofType(boolean.class)
                         .defaultsTo(true);
