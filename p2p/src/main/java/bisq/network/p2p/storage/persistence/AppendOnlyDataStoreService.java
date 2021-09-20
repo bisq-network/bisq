@@ -25,8 +25,10 @@ import javax.inject.Inject;
 import com.google.common.annotations.VisibleForTesting;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -75,6 +77,18 @@ public class AppendOnlyDataStoreService {
         services.forEach(service -> service.readFromResourcesSync(postFix));
     }
 
+    public Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> getMap(PersistableNetworkPayload payload) {
+        return services.stream()
+                .filter(service -> service.canHandle(payload))
+                .map(service -> {
+                    Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> map = service instanceof HistoricalDataStoreService ?
+                            ((HistoricalDataStoreService) service).getMapOfAllData() :
+                            service.getMap();
+                    return map;
+                })
+                .findAny()
+                .orElse(new HashMap<>());
+    }
 
     public Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> getMap() {
         return services.stream()
@@ -87,9 +101,14 @@ public class AppendOnlyDataStoreService {
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
-    public void put(P2PDataStorage.ByteArray hashAsByteArray, PersistableNetworkPayload payload) {
+    public boolean put(P2PDataStorage.ByteArray hashAsByteArray, PersistableNetworkPayload payload) {
+        AtomicBoolean canHandle = new AtomicBoolean(false);
         services.stream()
-                .filter(service -> service.canHandle(payload))
+                .filter(service -> {
+                    canHandle.set(service.canHandle(payload));
+                    return canHandle.get();
+                })
                 .forEach(service -> service.putIfAbsent(hashAsByteArray, payload));
+        return canHandle.get();
     }
 }
