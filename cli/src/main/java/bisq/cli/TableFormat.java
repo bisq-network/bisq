@@ -42,6 +42,7 @@ import static java.util.Collections.max;
 import static java.util.Comparator.comparing;
 import static java.util.TimeZone.getTimeZone;
 
+@Deprecated
 @VisibleForTesting
 public class TableFormat {
 

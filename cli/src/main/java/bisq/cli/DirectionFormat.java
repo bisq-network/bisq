@@ -27,6 +27,7 @@ import static java.lang.String.format;
 import static protobuf.OfferPayload.Direction.BUY;
 import static protobuf.OfferPayload.Direction.SELL;
 
+@Deprecated
 class DirectionFormat {
 
     static int getLongestDirectionColWidth(List<OfferInfo> offers) {

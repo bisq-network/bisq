@@ -30,6 +30,7 @@ import static bisq.cli.ColumnHeaderConstants.*;
 import static bisq.cli.CurrencyFormat.*;
 import static com.google.common.base.Strings.padEnd;
 
+@Deprecated
 @VisibleForTesting
 public class TradeFormat {
 

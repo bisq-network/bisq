@@ -18,6 +18,7 @@ import static com.google.common.base.Strings.padEnd;
 import static com.google.common.base.Strings.padStart;
 import static java.lang.String.format;
 
+@Deprecated
 @VisibleForTesting
 public class OfferFormat {
 
