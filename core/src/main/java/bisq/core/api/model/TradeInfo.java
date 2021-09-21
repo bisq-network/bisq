@@ -51,6 +51,7 @@ public class TradeInfo implements Payload {
     private final String payoutTxId;
     private final long tradeAmountAsLong;
     private final long tradePrice;
+    private final long tradeVolume;
     private final String tradingPeerNodeAddress;
     private final String state;
     private final String phase;
@@ -78,6 +79,7 @@ public class TradeInfo implements Payload {
         this.payoutTxId = builder.payoutTxId;
         this.tradeAmountAsLong = builder.tradeAmountAsLong;
         this.tradePrice = builder.tradePrice;
+        this.tradeVolume = builder.tradeVolume;
         this.tradingPeerNodeAddress = builder.tradingPeerNodeAddress;
         this.state = builder.state;
         this.phase = builder.phase;
@@ -133,6 +135,7 @@ public class TradeInfo implements Payload {
                 .withPayoutTxId(trade.getPayoutTxId())
                 .withTradeAmountAsLong(trade.getTradeAmountAsLong())
                 .withTradePrice(trade.getTradePrice().getValue())
+                .withTradeVolume(trade.getTradeVolume() == null ? 0 : trade.getTradeVolume().getValue())
                 .withTradingPeerNodeAddress(Objects.requireNonNull(
                         trade.getTradingPeerNodeAddress()).getHostNameWithoutPostFix())
                 .withState(trade.getState().name())
@@ -169,6 +172,7 @@ public class TradeInfo implements Payload {
                 .setPayoutTxId(payoutTxId == null ? "" : payoutTxId)
                 .setTradeAmountAsLong(tradeAmountAsLong)
                 .setTradePrice(tradePrice)
+                .setTradeVolume(tradeVolume)
                 .setTradingPeerNodeAddress(tradingPeerNodeAddress)
                 .setState(state)
                 .setPhase(phase)
@@ -199,6 +203,7 @@ public class TradeInfo implements Payload {
                 .withPayoutTxId(proto.getPayoutTxId())
                 .withTradeAmountAsLong(proto.getTradeAmountAsLong())
                 .withTradePrice(proto.getTradePrice())
+                .withTradeVolume(proto.getTradeVolume())
                 .withTradePeriodState(proto.getTradePeriodState())
                 .withState(proto.getState())
                 .withPhase(proto.getPhase())
@@ -234,6 +239,7 @@ public class TradeInfo implements Payload {
         private String payoutTxId;
         private long tradeAmountAsLong;
         private long tradePrice;
+        private long tradeVolume;
         private String tradingPeerNodeAddress;
         private String state;
         private String phase;
@@ -309,6 +315,11 @@ public class TradeInfo implements Payload {
 
         public TradeInfoBuilder withTradePrice(long tradePrice) {
             this.tradePrice = tradePrice;
+            return this;
+        }
+
+        public TradeInfoBuilder withTradeVolume(long tradeVolume) {
+            this.tradeVolume = tradeVolume;
             return this;
         }
 
@@ -392,6 +403,7 @@ public class TradeInfo implements Payload {
                 ", payoutTxId='" + payoutTxId + '\'' + "\n" +
                 ", tradeAmountAsLong='" + tradeAmountAsLong + '\'' + "\n" +
                 ", tradePrice='" + tradePrice + '\'' + "\n" +
+                ", tradeVolume='" + tradeVolume + '\'' + "\n" +
                 ", tradingPeerNodeAddress='" + tradingPeerNodeAddress + '\'' + "\n" +
                 ", state='" + state + '\'' + "\n" +
                 ", phase='" + phase + '\'' + "\n" +

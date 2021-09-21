@@ -409,6 +409,7 @@ message TradeInfo {
     bool isWithdrawn = 23;
     string contractAsJson = 24;
     ContractInfo contract = 25;
+    uint64 tradeVolume = 26;
 }
 
 message ContractInfo {
