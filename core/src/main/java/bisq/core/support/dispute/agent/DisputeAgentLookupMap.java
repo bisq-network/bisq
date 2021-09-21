@@ -29,6 +29,9 @@ public class DisputeAgentLookupMap {
     // See also: https://bisq.wiki/Finding_your_mediator
     @Nullable
     public static String getKeyBaseUserName(String fullAddress) {
+        if (fullAddress.matches("localhost(.*)")) {
+            return fullAddress; // on regtest, agent displays as localhost
+        }
         switch (fullAddress) {
             case "7hkpotiyaukuzcfy6faihjaols5r2mkysz7bm3wrhhbpbphzz3zbwyqd.onion:9999":
                 return "leo816";
@@ -46,5 +49,13 @@ public class DisputeAgentLookupMap {
                 log.warn("No user name for dispute agent with address {} found.", fullAddress);
                 return Res.get("shared.na");
         }
+    }
+
+    public static String getKeybaseLinkForAgent(String onion) {
+        // when a new mediator starts or an onion address changes, mediator name won't be known until
+        // the table above is updated in the software.
+        // as a stopgap measure, replace unknonwn ones with a link to the bisq team
+        String agentName = getKeyBaseUserName(onion).replaceAll(Res.get("shared.na"), "bisq");
+        return "https://keybase.io/" + agentName;
     }
 }
