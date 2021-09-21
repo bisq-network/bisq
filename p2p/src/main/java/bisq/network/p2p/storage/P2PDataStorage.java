@@ -129,7 +129,8 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
     private boolean initialRequestApplied = false;
 
     private final Broadcaster broadcaster;
-    private final AppendOnlyDataStoreService appendOnlyDataStoreService;
+    @VisibleForTesting
+    final AppendOnlyDataStoreService appendOnlyDataStoreService;
     private final ProtectedDataStoreService protectedDataStoreService;
     private final ResourceDataStoreService resourceDataStoreService;
 
@@ -563,13 +564,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
     public void onBootstrapped() {
         removeExpiredEntriesTimer = UserThread.runPeriodically(this::removeExpiredEntries, CHECK_TTL_INTERVAL_SEC);
-    }
-
-    // Domain access should use the concrete appendOnlyDataStoreService if available. The Historical data store require
-    // care which data should be accessed (live data or all data).
-    @VisibleForTesting
-    Map<ByteArray, PersistableNetworkPayload> getAppendOnlyDataStoreMap() {
-        return appendOnlyDataStoreService.getMap();
     }
 
 
