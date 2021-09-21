@@ -34,6 +34,7 @@ configure(subprojects) {
         bcVersion = '1.63'
         bitcoinjVersion = '3186b20'
         codecVersion = '1.13'
+        cowwocVersion = '1.2'
         easybindVersion = '1.0.3'
         easyVersion = '4.0.1'
         findbugsVersion = '3.0.2'
@@ -395,6 +396,7 @@ configure(project(':cli')) {
         testAnnotationProcessor "org.projectlombok:lombok:$lombokVersion"
         testCompileOnly "org.projectlombok:lombok:$lombokVersion"
         testRuntime "javax.annotation:javax.annotation-api:$javaxAnnotationVersion"
+        testImplementation "org.bitbucket.cowwoc:diff-match-patch:$cowwocVersion"
     }
 
     test {
