@@ -28,12 +28,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Used for PersistableNetworkPayload data which gets appended to a map storage.
@@ -78,37 +79,24 @@ public class AppendOnlyDataStoreService {
     }
 
     public Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> getMap(PersistableNetworkPayload payload) {
-        return services.stream()
-                .filter(service -> service.canHandle(payload))
-                .map(service -> {
-                    Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> map = service instanceof HistoricalDataStoreService ?
-                            ((HistoricalDataStoreService) service).getMapOfAllData() :
-                            service.getMap();
-                    return map;
-                })
-                .findAny()
+        return findService(payload)
+                .map(service -> service instanceof HistoricalDataStoreService ?
+                        ((HistoricalDataStoreService<?>) service).getMapOfAllData() :
+                        service.getMap())
                 .orElse(new HashMap<>());
     }
 
-    public Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> getMap() {
-        return services.stream()
-                .flatMap(service -> {
-                    Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> map = service instanceof HistoricalDataStoreService ?
-                            ((HistoricalDataStoreService) service).getMapOfAllData() :
-                            service.getMap();
-                    return map.entrySet().stream();
-                })
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+    public boolean put(P2PDataStorage.ByteArray hashAsByteArray, PersistableNetworkPayload payload) {
+        Optional<MapStoreService<? extends PersistableNetworkPayloadStore<? extends PersistableNetworkPayload>, PersistableNetworkPayload>> optionalService = findService(payload);
+        optionalService.ifPresent(service -> service.putIfAbsent(hashAsByteArray, payload));
+        return optionalService.isPresent();
     }
 
-    public boolean put(P2PDataStorage.ByteArray hashAsByteArray, PersistableNetworkPayload payload) {
-        AtomicBoolean canHandle = new AtomicBoolean(false);
-        services.stream()
-                .filter(service -> {
-                    canHandle.set(service.canHandle(payload));
-                    return canHandle.get();
-                })
-                .forEach(service -> service.putIfAbsent(hashAsByteArray, payload));
-        return canHandle.get();
+    @NotNull
+    private Optional<MapStoreService<? extends PersistableNetworkPayloadStore<? extends PersistableNetworkPayload>, PersistableNetworkPayload>> findService(
+            PersistableNetworkPayload payload) {
+        return services.stream()
+                .filter(service -> service.canHandle(payload))
+                .findAny();
     }
 }
