@@ -73,15 +73,15 @@ public class BtcNodes {
                         new BtcNode(null, "devinbtcmwkuitvxl3tfi5of4zau46ymeannkjv6fpnylkgf3q5fa3id.onion", null, BtcNode.DEFAULT_PORT, "@devinbileck"),
 
                         // m52go
-                        new BtcNode(null, "rss2u4embqa6fzuaiuvpp6szklkdckrcfgv6zer3ngclkzclvstywjyd.onion", null, BtcNode.DEFAULT_PORT, "@m52go"),
+                        new BtcNode(null, "rss2u4embqa6fzuaiuvpp6szklkdckrcfgv6zer3ngclkzclvstywjyd.onion", null, BtcNode.DEFAULT_PORT, "@m52go")
                         // wiz
-                        new BtcNode("node100.hnl.wiz.biz", "m3yqzythryowgedc.onion", "103.99.168.100", BtcNode.DEFAULT_PORT, "@wiz"),
-                        new BtcNode("node140.hnl.wiz.biz", "jiuuuislm7ooesic.onion", "103.99.168.140", BtcNode.DEFAULT_PORT, "@wiz"),
-                        new BtcNode("node210.fmt.wiz.biz", "orsy2v63ecrmdj55.onion", "103.99.170.210", BtcNode.DEFAULT_PORT, "@wiz"),
-                        new BtcNode("node220.fmt.wiz.biz", "z6mbqq7llxlrn4kq.onion", "103.99.170.220", BtcNode.DEFAULT_PORT, "@wiz"),
+//                        new BtcNode("node100.hnl.wiz.biz", "m3yqzythryowgedc.onion", "103.99.168.100", BtcNode.DEFAULT_PORT, "@wiz"),
+//                        new BtcNode("node140.hnl.wiz.biz", "jiuuuislm7ooesic.onion", "103.99.168.140", BtcNode.DEFAULT_PORT, "@wiz"),
+//                        new BtcNode("node210.fmt.wiz.biz", "orsy2v63ecrmdj55.onion", "103.99.170.210", BtcNode.DEFAULT_PORT, "@wiz"),
+//                        new BtcNode("node220.fmt.wiz.biz", "z6mbqq7llxlrn4kq.onion", "103.99.170.220", BtcNode.DEFAULT_PORT, "@wiz"),
 
                         // Rob Kaandorp
-                        new BtcNode(null, "2pj2o2mrawj7yotg.onion", null, BtcNode.DEFAULT_PORT, "@robkaandorp") // cannot provide IP because no static IP
+//                        new BtcNode(null, "2pj2o2mrawj7yotg.onion", null, BtcNode.DEFAULT_PORT, "@robkaandorp") // cannot provide IP because no static IP
                 ) :
                 new ArrayList<>();
     }
