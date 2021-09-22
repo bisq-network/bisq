@@ -18,6 +18,9 @@ import bisq.cli.table.builder.TableBuilder;
 @SuppressWarnings("unused")
 public class GetOffersSmokeTest extends AbstractSmokeTest {
 
+    // "My" offers are always Alice's offers.
+    // "Available" offers are always Alice's offers available to Bob.
+
     public static void main(String[] args) {
         GetOffersSmokeTest test = new GetOffersSmokeTest();
 
