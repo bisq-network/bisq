@@ -4,6 +4,7 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 
 import java.util.LinkedList;
+import java.util.function.Predicate;
 
 import static bisq.cli.opts.OptLabel.OPT_HOST;
 import static bisq.cli.opts.OptLabel.OPT_PASSWORD;
@@ -66,24 +67,21 @@ abstract class AbstractSmokeTest {
     }
 
     protected void showDiffsIgnoreWhitespace(String oldOutput, String newOutput) {
+        Predicate<DiffMatchPatch.Operation> isInsertOrDelete = (operation) ->
+                operation.equals(INSERT) || operation.equals(DELETE);
+        Predicate<String> isWhitespace = (text) -> text.trim().isEmpty();
         boolean hasNonWhitespaceDiffs = false;
         if (!oldOutput.equals(newOutput)) {
             DiffMatchPatch dmp = new DiffMatchPatch();
             LinkedList<DiffMatchPatch.Diff> diff = dmp.diffMain(oldOutput, newOutput, true);
             for (DiffMatchPatch.Diff d : diff) {
-                if (d.operation.equals(DELETE)) {
-                    if (!d.text.trim().isEmpty()) {
-                        hasNonWhitespaceDiffs = true;
-                        err.println(">>> NON WHITESPACE DIFF >>> " + d);
-                    }
-                } else if (d.operation.equals(INSERT)) {
-                    if (!d.text.trim().isEmpty()) {
-                        hasNonWhitespaceDiffs = true;
-                        err.println(">>> NON WHITESPACE DIFF >>> " + d);
-                    }
+                if (isInsertOrDelete.test(d.operation) && !isWhitespace.test(d.text)) {
+                    hasNonWhitespaceDiffs = true;
+                    err.println(">>> DIFF " + d);
                 }
             }
         }
+
         if (hasNonWhitespaceDiffs)
             err.println("THERE ARE DIFFS");
         else
