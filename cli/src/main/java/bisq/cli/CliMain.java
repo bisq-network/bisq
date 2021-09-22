@@ -43,15 +43,13 @@ import lombok.extern.slf4j.Slf4j;
 
 import static bisq.cli.CurrencyFormat.*;
 import static bisq.cli.Method.*;
-import static bisq.cli.OfferFormat.formatOfferTable;
-import static bisq.cli.TableFormat.*;
 import static bisq.cli.opts.OptLabel.*;
+import static bisq.cli.table.builder.TableType.*;
 import static java.lang.String.format;
 import static java.lang.System.err;
 import static java.lang.System.exit;
 import static java.lang.System.out;
 import static java.math.BigDecimal.ZERO;
-import static java.util.Collections.singletonList;
 
 
 
@@ -80,6 +78,7 @@ import bisq.cli.opts.TakeOfferOptionParser;
 import bisq.cli.opts.UnlockWalletOptionParser;
 import bisq.cli.opts.VerifyBsqSentToAddressOptionParser;
 import bisq.cli.opts.WithdrawFundsOptionParser;
+import bisq.cli.table.builder.TableBuilder;
 
 /**
  * A command-line client for the Bisq gRPC API.
@@ -171,15 +170,19 @@ public class CliMain {
                     var balances = client.getBalances(currencyCode);
                     switch (currencyCode.toUpperCase()) {
                         case "BSQ":
-                            out.println(formatBsqBalanceInfoTbl(balances.getBsq()));
+                            new TableBuilder(BSQ_BALANCE_TBL, balances.getBsq()).build().print(out);
                             break;
                         case "BTC":
-                            out.println(formatBtcBalanceInfoTbl(balances.getBtc()));
+                            new TableBuilder(BTC_BALANCE_TBL, balances.getBtc()).build().print(out);
                             break;
                         case "":
-                        default:
-                            out.println(formatBalancesTbls(balances));
+                        default: {
+                            out.println("BTC");
+                            new TableBuilder(BTC_BALANCE_TBL, balances.getBtc()).build().print(out);
+                            out.println("BSQ");
+                            new TableBuilder(BSQ_BALANCE_TBL, balances.getBsq()).build().print(out);
                             break;
+                        }
                     }
                     return;
                 }
@@ -191,7 +194,7 @@ public class CliMain {
                     }
                     var address = opts.getAddress();
                     var addressBalance = client.getAddressBalance(address);
-                    out.println(formatAddressBalanceTbl(singletonList(addressBalance)));
+                    new TableBuilder(ADDRESS_BALANCE_TBL, addressBalance).build().print(out);
                     return;
                 }
                 case getbtcprice: {
@@ -211,7 +214,7 @@ public class CliMain {
                         return;
                     }
                     var fundingAddresses = client.getFundingAddresses();
-                    out.println(formatAddressBalanceTbl(fundingAddresses));
+                    new TableBuilder(ADDRESS_BALANCE_TBL, fundingAddresses).build().print(out);
                     return;
                 }
                 case getunusedbsqaddress: {
@@ -320,7 +323,7 @@ public class CliMain {
                     }
                     var txId = opts.getTxId();
                     var tx = client.getTransaction(txId);
-                    out.println(TransactionFormat.format(tx));
+                    new TableBuilder(TRANSACTION_TBL, tx).build().print(out);
                     return;
                 }
                 case createoffer: {
@@ -351,7 +354,7 @@ public class CliMain {
                             paymentAcctId,
                             makerFeeCurrencyCode,
                             triggerPrice);
-                    out.println(formatOfferTable(singletonList(offer), currencyCode));
+                    out.println(new TableBuilder(OFFER_TBL, offer).build());
                     return;
                 }
                 case editoffer: {
@@ -396,7 +399,7 @@ public class CliMain {
                     }
                     var offerId = opts.getOfferId();
                     var offer = client.getOffer(offerId);
-                    out.println(formatOfferTable(singletonList(offer), offer.getCounterCurrencyCode()));
+                    out.println(new TableBuilder(OFFER_TBL, offer).build());
                     return;
                 }
                 case getmyoffer: {
@@ -407,7 +410,7 @@ public class CliMain {
                     }
                     var offerId = opts.getOfferId();
                     var offer = client.getMyOffer(offerId);
-                    out.println(formatOfferTable(singletonList(offer), offer.getCounterCurrencyCode()));
+                    out.println(new TableBuilder(OFFER_TBL, offer).build());
                     return;
                 }
                 case getoffers: {
@@ -422,7 +425,7 @@ public class CliMain {
                     if (offers.isEmpty())
                         out.printf("no %s %s offers found%n", direction, currencyCode);
                     else
-                        out.println(formatOfferTable(offers, currencyCode));
+                        out.println(new TableBuilder(OFFER_TBL, offers).build());
 
                     return;
                 }
@@ -438,7 +441,7 @@ public class CliMain {
                     if (offers.isEmpty())
                         out.printf("no %s %s offers found%n", direction, currencyCode);
                     else
-                        out.println(formatOfferTable(offers, currencyCode));
+                        out.println(new TableBuilder(OFFER_TBL, offers).build());
 
                     return;
                 }
@@ -468,7 +471,7 @@ public class CliMain {
                     if (showContract)
                         out.println(trade.getContractAsJson());
                     else
-                        out.println(TradeFormat.format(trade));
+                        new TableBuilder(TRADE_TBL, trade).build().print(out);
 
                     return;
                 }
@@ -560,7 +563,7 @@ public class CliMain {
                     }
                     var paymentAccount = client.createPaymentAccount(jsonString);
                     out.println("payment account saved");
-                    out.println(formatPaymentAcctTbl(singletonList(paymentAccount)));
+                    new TableBuilder(PAYMENT_ACCOUNT_TBL, paymentAccount).build().print(out);
                     return;
                 }
                 case createcryptopaymentacct: {
@@ -579,7 +582,7 @@ public class CliMain {
                             address,
                             isTradeInstant);
                     out.println("payment account saved");
-                    out.println(formatPaymentAcctTbl(singletonList(paymentAccount)));
+                    new TableBuilder(PAYMENT_ACCOUNT_TBL, paymentAccount).build().print(out);
                     return;
                 }
                 case getpaymentaccts: {
@@ -589,7 +592,7 @@ public class CliMain {
                     }
                     var paymentAccounts = client.getPaymentAccounts();
                     if (paymentAccounts.size() > 0)
-                        out.println(formatPaymentAcctTbl(paymentAccounts));
+                        new TableBuilder(PAYMENT_ACCOUNT_TBL, paymentAccounts).build().print(out);
                     else
                         out.println("no payment accounts are saved");
 
