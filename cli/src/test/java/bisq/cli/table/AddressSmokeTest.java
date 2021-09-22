@@ -10,7 +10,6 @@ import static java.util.Collections.singletonList;
 
 
 
-import bisq.cli.TableFormat;
 import bisq.cli.table.builder.TableBuilder;
 
 @SuppressWarnings("unused")
@@ -29,11 +28,11 @@ public class AddressSmokeTest extends AbstractSmokeTest {
     private void getFundingAddresses() {
         var fundingAddresses = aliceClient.getFundingAddresses();
         if (fundingAddresses.size() > 0) {
-            var oldTbl = TableFormat.formatAddressBalanceTbl(fundingAddresses);
+            // var oldTbl = TODO
             var newTbl = new TableBuilder(ADDRESS_BALANCE_TBL, fundingAddresses).build().toString();
-            printOldTbl(oldTbl);
+            // printOldTbl(oldTbl);
             printNewTbl(newTbl);
-            showDiffsIgnoreWhitespace(oldTbl, newTbl);
+            // showDiffsIgnoreWhitespace(oldTbl, newTbl);
         } else {
             err.println("no funding addresses found");
         }
@@ -51,10 +50,10 @@ public class AddressSmokeTest extends AbstractSmokeTest {
 
     private void getAddressBalance(String address) {
         var addressBalance = singletonList(aliceClient.getAddressBalance(address));
-        var oldTbl = TableFormat.formatAddressBalanceTbl(addressBalance);
+        // var oldTbl = TODO
         var newTbl = new TableBuilder(ADDRESS_BALANCE_TBL, addressBalance).build().toString();
-        printOldTbl(oldTbl);
+        // printOldTbl(oldTbl);
         printNewTbl(newTbl);
-        showDiffsIgnoreWhitespace(oldTbl, newTbl);
+        // showDiffsIgnoreWhitespace(oldTbl, newTbl);
     }
 }

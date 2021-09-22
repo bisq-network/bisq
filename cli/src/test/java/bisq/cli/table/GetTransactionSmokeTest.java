@@ -4,7 +4,6 @@ import static bisq.cli.table.builder.TableType.TRANSACTION_TBL;
 
 
 
-import bisq.cli.TransactionFormat;
 import bisq.cli.table.builder.TableBuilder;
 
 @SuppressWarnings("unused")
@@ -27,11 +26,11 @@ public class GetTransactionSmokeTest extends AbstractSmokeTest {
 
     private void getTransaction() {
         var tx = aliceClient.getTransaction(transactionId);
-        var oldTbl = TransactionFormat.format(tx);
+        // var oldTbl = TODO
         var newTbl = new TableBuilder(TRANSACTION_TBL, tx).build().toString();
-        printOldTbl(oldTbl);
+        // printOldTbl(oldTbl);
         printNewTbl(newTbl);
         // Should show 1 diff due to new 'Is Confirmed' column being left justified (fixed).
-        showDiffsIgnoreWhitespace(oldTbl, newTbl);
+        // showDiffsIgnoreWhitespace(oldTbl, newTbl);
     }
 }

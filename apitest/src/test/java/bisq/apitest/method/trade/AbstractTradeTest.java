@@ -13,8 +13,7 @@ import org.junit.jupiter.api.TestInfo;
 
 import static bisq.apitest.config.ApiTestConfig.BTC;
 import static bisq.cli.CurrencyFormat.formatBsqAmount;
-import static bisq.cli.TableFormat.formatBalancesTbls;
-import static bisq.cli.TradeFormat.format;
+import static bisq.cli.table.builder.TableType.TRADE_TBL;
 import static bisq.core.trade.Trade.Phase.DEPOSIT_CONFIRMED;
 import static bisq.core.trade.Trade.Phase.FIAT_SENT;
 import static bisq.core.trade.Trade.Phase.PAYOUT_PUBLISHED;
@@ -27,6 +26,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import bisq.apitest.method.offer.AbstractOfferTest;
 import bisq.cli.GrpcClient;
+import bisq.cli.table.builder.TableBuilder;
 
 public class AbstractTradeTest extends AbstractOfferTest {
 
@@ -257,12 +257,12 @@ public class AbstractTradeTest extends AbstractOfferTest {
             log.info(String.format("%s %s%n%s",
                     testName(testInfo),
                     description.toUpperCase(),
-                    format(trade)));
+                    new TableBuilder(TRADE_TBL, trade).build()));
         else if (log.isDebugEnabled()) {
             log.debug(String.format("%s %s%n%s",
                     testName(testInfo),
                     description.toUpperCase(),
-                    format(trade)));
+                    new TableBuilder(TRADE_TBL, trade).build()));
         }
     }
 }

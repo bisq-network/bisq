@@ -27,6 +27,8 @@ import bisq.core.proto.CoreProtoResolver;
 
 import bisq.common.util.Utilities;
 
+import bisq.proto.grpc.BalancesInfo;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -35,6 +37,8 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static bisq.apitest.config.ApiTestRateMeterInterceptorConfig.getTestRateMeterInterceptorConfig;
+import static bisq.cli.table.builder.TableType.BSQ_BALANCE_TBL;
+import static bisq.cli.table.builder.TableType.BTC_BALANCE_TBL;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.stream;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -43,6 +47,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 import bisq.apitest.ApiTestCase;
 import bisq.cli.GrpcClient;
+import bisq.cli.table.builder.TableBuilder;
 
 public class MethodTest extends ApiTestCase {
 
@@ -157,6 +162,14 @@ public class MethodTest extends ApiTestCase {
     }
 
     // Static conveniences for test methods and test case fixture setups.
+
+    public static String formatBalancesTbls(BalancesInfo allBalances) {
+        StringBuilder balances = new StringBuilder("BTC");
+        balances.append(new TableBuilder(BTC_BALANCE_TBL, allBalances.getBtc()).build());
+        balances.append("BSQ");
+        balances.append(new TableBuilder(BSQ_BALANCE_TBL, allBalances.getBsq()).build());
+        return balances.toString();
+    }
 
     protected static String encodeToHex(String s) {
         return Utilities.bytesAsHexString(s.getBytes(UTF_8));

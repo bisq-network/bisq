@@ -12,7 +12,6 @@ import static protobuf.OfferPayload.Direction.SELL;
 
 
 
-import bisq.cli.OfferFormat;
 import bisq.cli.table.builder.TableBuilder;
 
 @SuppressWarnings("unused")
@@ -110,13 +109,13 @@ public class GetOffersSmokeTest extends AbstractSmokeTest {
         if (offers.isEmpty()) {
             out.println(format("No %s %s offers to print.", direction, currencyCode));
         } else {
-            out.println(format("Checking for diffs in %s %s offers.", direction, currencyCode));
-            var oldTbl = OfferFormat.formatOfferTable(offers, currencyCode);
+            // out.println(format("Checking for diffs in %s %s offers.", direction, currencyCode));
+            // var oldTbl = TODO
             var newTbl = new TableBuilder(OFFER_TBL, offers).build().toString();
-            printOldTbl(oldTbl);
+            // printOldTbl(oldTbl);
             printNewTbl(newTbl);
             out.flush();
-            showDiffsIgnoreWhitespace(oldTbl, newTbl);
+            // showDiffsIgnoreWhitespace(oldTbl, newTbl);
         }
     }
 }

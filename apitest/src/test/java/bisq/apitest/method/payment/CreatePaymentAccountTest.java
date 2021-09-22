@@ -80,14 +80,17 @@ import static bisq.apitest.config.ApiTestConfig.EUR;
 import static bisq.apitest.config.ApiTestConfig.RUBLE;
 import static bisq.apitest.config.ApiTestConfig.XMR;
 import static bisq.apitest.config.BisqAppConfig.alicedaemon;
-import static bisq.cli.TableFormat.formatPaymentAcctTbl;
+import static bisq.cli.table.builder.TableType.PAYMENT_ACCOUNT_TBL;
 import static bisq.core.locale.CurrencyUtil.*;
 import static bisq.core.payment.payload.PaymentMethod.*;
-import static java.util.Collections.singletonList;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
+
+
+
+import bisq.cli.table.builder.TableBuilder;
 
 @SuppressWarnings({"OptionalGetWithoutIsPresent", "ConstantConditions"})
 @Disabled
@@ -1193,7 +1196,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
     private void print(PaymentAccount paymentAccount) {
         if (log.isDebugEnabled()) {
             log.debug("Deserialized {}: {}", paymentAccount.getClass().getSimpleName(), paymentAccount);
-            log.debug("\n{}", formatPaymentAcctTbl(singletonList(paymentAccount.toProtoMessage())));
+            log.debug("\n{}", new TableBuilder(PAYMENT_ACCOUNT_TBL, paymentAccount.toProtoMessage()).build());
         }
     }
 }

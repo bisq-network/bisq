@@ -20,9 +20,9 @@ package bisq.apitest.scenario.bot;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.apitest.method.MethodTest.formatBalancesTbls;
 import static bisq.apitest.scenario.bot.protocol.ProtocolStep.DONE;
 import static bisq.apitest.scenario.bot.shutdown.ManualShutdown.isShutdownCalled;
-import static bisq.cli.TableFormat.formatBalancesTbls;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 

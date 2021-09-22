@@ -17,7 +17,7 @@ import static bisq.apitest.scenario.bot.protocol.ProtocolStep.DONE;
 import static bisq.apitest.scenario.bot.protocol.ProtocolStep.FIND_OFFER;
 import static bisq.apitest.scenario.bot.protocol.ProtocolStep.TAKE_OFFER;
 import static bisq.apitest.scenario.bot.shutdown.ManualShutdown.checkIfShutdownCalled;
-import static bisq.cli.OfferFormat.formatOfferTable;
+import static bisq.cli.table.builder.TableType.OFFER_TBL;
 import static bisq.core.payment.payload.PaymentMethod.F2F_ID;
 
 
@@ -26,6 +26,7 @@ import bisq.apitest.method.BitcoinCliHelper;
 import bisq.apitest.scenario.bot.BotClient;
 import bisq.apitest.scenario.bot.script.BashScriptGenerator;
 import bisq.apitest.scenario.bot.shutdown.ManualBotShutdownException;
+import bisq.cli.table.builder.TableBuilder;
 
 @Slf4j
 public class TakerBotProtocol extends BotProtocol {
@@ -64,7 +65,7 @@ public class TakerBotProtocol extends BotProtocol {
     private final Supplier<Optional<OfferInfo>> firstOffer = () -> {
         var offers = botClient.getOffers(currencyCode);
         if (offers.size() > 0) {
-            log.info("Offers found:\n{}", formatOfferTable(offers, currencyCode));
+            log.info("Offers found:\n{}", new TableBuilder(OFFER_TBL, offers).build());
             OfferInfo offer = offers.get(0);
             log.info("Will take first offer {}", offer.getId());
             return Optional.of(offer);

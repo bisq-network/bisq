@@ -39,6 +39,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import static bisq.apitest.scenario.bot.protocol.ProtocolStep.*;
 import static bisq.apitest.scenario.bot.shutdown.ManualShutdown.checkIfShutdownCalled;
+import static bisq.cli.table.builder.TableType.TRADE_TBL;
 import static java.lang.String.format;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Arrays.stream;
@@ -50,7 +51,7 @@ import bisq.apitest.method.BitcoinCliHelper;
 import bisq.apitest.scenario.bot.BotClient;
 import bisq.apitest.scenario.bot.script.BashScriptGenerator;
 import bisq.apitest.scenario.bot.shutdown.ManualBotShutdownException;
-import bisq.cli.TradeFormat;
+import bisq.cli.table.builder.TableBuilder;
 
 @Slf4j
 public abstract class BotProtocol {
@@ -133,7 +134,8 @@ public abstract class BotProtocol {
                 try {
                     var t = this.getBotClient().getTrade(trade.getTradeId());
                     if (t.getIsFiatSent()) {
-                        log.info("Buyer has started payment for trade:\n{}", TradeFormat.format(t));
+                        log.info("Buyer has started payment for trade:\n{}",
+                                new TableBuilder(TRADE_TBL, t).build());
                         return t;
                     }
                 } catch (Exception ex) {
@@ -167,7 +169,8 @@ public abstract class BotProtocol {
                 try {
                     var t = this.getBotClient().getTrade(trade.getTradeId());
                     if (t.getIsFiatReceived()) {
-                        log.info("Seller has received payment for trade:\n{}", TradeFormat.format(t));
+                        log.info("Seller has received payment for trade:\n{}",
+                                new TableBuilder(TRADE_TBL, t).build());
                         return t;
                     }
                 } catch (Exception ex) {
@@ -202,7 +205,7 @@ public abstract class BotProtocol {
                     if (t.getIsPayoutPublished()) {
                         log.info("Payout tx {} has been published for trade:\n{}",
                                 t.getPayoutTxId(),
-                                TradeFormat.format(t));
+                                new TableBuilder(TRADE_TBL, t).build());
                         return t;
                     }
                 } catch (Exception ex) {

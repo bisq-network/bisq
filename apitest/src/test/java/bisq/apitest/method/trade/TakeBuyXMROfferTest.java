@@ -31,12 +31,11 @@ import org.junit.jupiter.api.TestMethodOrder;
 
 import static bisq.apitest.config.ApiTestConfig.BSQ;
 import static bisq.apitest.config.ApiTestConfig.XMR;
-import static bisq.cli.OfferFormat.formatOfferTable;
+import static bisq.cli.table.builder.TableType.OFFER_TBL;
 import static bisq.core.btc.wallet.Restrictions.getDefaultBuyerSecurityDepositAsPercent;
 import static bisq.core.trade.Trade.Phase.PAYOUT_PUBLISHED;
 import static bisq.core.trade.Trade.State.BUYER_RECEIVED_PAYOUT_TX_PUBLISHED_MSG;
 import static bisq.core.trade.Trade.State.SELLER_SAW_ARRIVED_PAYOUT_TX_PUBLISHED_MSG;
-import static java.util.Collections.singletonList;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -46,6 +45,7 @@ import static protobuf.OfferPayload.Direction.SELL;
 
 
 import bisq.apitest.method.offer.AbstractOfferTest;
+import bisq.cli.table.builder.TableBuilder;
 
 @Disabled
 @Slf4j
@@ -80,7 +80,7 @@ public class TakeBuyXMROfferTest extends AbstractTradeTest {
                     getDefaultBuyerSecurityDepositAsPercent(),
                     alicesXmrAcct.getId(),
                     TRADE_FEE_CURRENCY_CODE);
-            log.info("ALICE'S BUY XMR (SELL BTC) OFFER:\n{}", formatOfferTable(singletonList(alicesOffer), XMR));
+            log.info("ALICE'S BUY XMR (SELL BTC) OFFER:\n{}", new TableBuilder(OFFER_TBL, alicesOffer).build());
             genBtcBlocksThenWait(1, 5000);
             var offerId = alicesOffer.getId();
             assertFalse(alicesOffer.getIsCurrencyForMakerFeeBtc());

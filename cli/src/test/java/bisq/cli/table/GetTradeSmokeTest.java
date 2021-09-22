@@ -6,7 +6,6 @@ import static java.lang.System.out;
 
 
 import bisq.cli.GrpcClient;
-import bisq.cli.TradeFormat;
 import bisq.cli.table.builder.TableBuilder;
 
 @SuppressWarnings("unused")
@@ -39,10 +38,10 @@ public class GetTradeSmokeTest extends AbstractSmokeTest {
 
     private void getTrade(GrpcClient client) {
         var trade = client.getTrade(tradeId);
-        var oldTbl = TradeFormat.format(trade);
+        // var oldTbl = TODO
         var newTbl = new TableBuilder(TRADE_TBL, trade).build().toString();
-        printOldTbl(oldTbl);
+        // printOldTbl(oldTbl);
         printNewTbl(newTbl);
-        showDiffsIgnoreWhitespace(oldTbl, newTbl);
+        // showDiffsIgnoreWhitespace(oldTbl, newTbl);
     }
 }

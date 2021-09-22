@@ -16,8 +16,8 @@ import lombok.extern.slf4j.Slf4j;
 import static bisq.apitest.scenario.bot.protocol.ProtocolStep.DONE;
 import static bisq.apitest.scenario.bot.protocol.ProtocolStep.WAIT_FOR_OFFER_TAKER;
 import static bisq.apitest.scenario.bot.shutdown.ManualShutdown.checkIfShutdownCalled;
-import static bisq.cli.OfferFormat.formatOfferTable;
-import static java.util.Collections.singletonList;
+import static bisq.cli.table.builder.TableType.OFFER_TBL;
+import static bisq.cli.table.builder.TableType.TRADE_TBL;
 
 
 
@@ -26,7 +26,7 @@ import bisq.apitest.scenario.bot.BotClient;
 import bisq.apitest.scenario.bot.RandomOffer;
 import bisq.apitest.scenario.bot.script.BashScriptGenerator;
 import bisq.apitest.scenario.bot.shutdown.ManualBotShutdownException;
-import bisq.cli.TradeFormat;
+import bisq.cli.table.builder.TableBuilder;
 
 @Slf4j
 public class MakerBotProtocol extends BotProtocol {
@@ -65,7 +65,7 @@ public class MakerBotProtocol extends BotProtocol {
     private final Supplier<OfferInfo> randomOffer = () -> {
         checkIfShutdownCalled("Interrupted before creating random offer.");
         OfferInfo offer = new RandomOffer(botClient, paymentAccount).create().getOffer();
-        log.info("Created random {} offer\n{}", currencyCode, formatOfferTable(singletonList(offer), currencyCode));
+        log.info("Created random {} offer\n{}", currencyCode, new TableBuilder(OFFER_TBL, offer).build());
         return offer;
     };
 
@@ -98,7 +98,8 @@ public class MakerBotProtocol extends BotProtocol {
     private Optional<TradeInfo> getNewTrade(String offerId) {
         try {
             var trade = botClient.getTrade(offerId);
-            log.info("Offer {} was taken, new trade:\n{}", offerId, TradeFormat.format(trade));
+            log.info("Offer {} was taken, new trade:\n{}", offerId,
+                    new TableBuilder(TRADE_TBL, trade).build());
             return Optional.of(trade);
         } catch (Exception ex) {
             // Get trade will throw a non-fatal gRPC exception if not found.

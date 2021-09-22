@@ -1,6 +1,5 @@
 package bisq.cli.table;
 
-import static bisq.cli.TableFormat.formatPaymentAcctTbl;
 import static bisq.cli.table.builder.TableType.PAYMENT_ACCOUNT_TBL;
 import static java.lang.System.out;
 
@@ -23,11 +22,11 @@ public class PaymentAccountsSmokeTest extends AbstractSmokeTest {
     private void getPaymentAccounts() {
         var paymentAccounts = aliceClient.getPaymentAccounts();
         if (paymentAccounts.size() > 0) {
-            var oldTbl = formatPaymentAcctTbl(paymentAccounts);
+            // var oldTbl = TODO
             var newTbl = new TableBuilder(PAYMENT_ACCOUNT_TBL, paymentAccounts).build().toString();
-            printOldTbl(oldTbl);
+            // printOldTbl(oldTbl);
             printNewTbl(newTbl);
-            showDiffsIgnoreWhitespace(oldTbl, newTbl);
+            // showDiffsIgnoreWhitespace(oldTbl, newTbl);
         } else {
             out.println("no payment accounts are saved");
         }

@@ -32,16 +32,18 @@ import org.junit.jupiter.api.TestMethodOrder;
 
 import static bisq.apitest.config.ApiTestConfig.BSQ;
 import static bisq.apitest.config.ApiTestConfig.BTC;
-import static bisq.cli.OfferFormat.formatOfferTable;
-import static bisq.cli.TableFormat.formatBalancesTbls;
+import static bisq.cli.table.builder.TableType.OFFER_TBL;
 import static bisq.core.btc.wallet.Restrictions.getDefaultBuyerSecurityDepositAsPercent;
-import static java.util.Collections.singletonList;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static protobuf.OfferPayload.Direction.BUY;
 import static protobuf.OfferPayload.Direction.SELL;
+
+
+
+import bisq.cli.table.builder.TableBuilder;
 
 @Disabled
 @Slf4j
@@ -70,7 +72,7 @@ public class CreateBSQOffersTest extends AbstractOfferTest {
                 getDefaultBuyerSecurityDepositAsPercent(),
                 alicesBsqAcct.getId(),
                 MAKER_FEE_CURRENCY_CODE);
-        log.info("Sell BSQ (Buy BTC) OFFER:\n{}", formatOfferTable(singletonList(newOffer), BSQ));
+        log.info("Sell BSQ (Buy BTC) OFFER:\n{}", new TableBuilder(OFFER_TBL, newOffer).build());
         assertTrue(newOffer.getIsMyOffer());
         assertTrue(newOffer.getIsMyPendingOffer());
 
@@ -117,7 +119,7 @@ public class CreateBSQOffersTest extends AbstractOfferTest {
                 getDefaultBuyerSecurityDepositAsPercent(),
                 alicesBsqAcct.getId(),
                 MAKER_FEE_CURRENCY_CODE);
-        log.info("SELL 20K BSQ OFFER:\n{}", formatOfferTable(singletonList(newOffer), BSQ));
+        log.info("SELL 20K BSQ OFFER:\n{}", new TableBuilder(OFFER_TBL, newOffer).build());
         assertTrue(newOffer.getIsMyOffer());
         assertTrue(newOffer.getIsMyPendingOffer());
 
@@ -164,7 +166,7 @@ public class CreateBSQOffersTest extends AbstractOfferTest {
                 getDefaultBuyerSecurityDepositAsPercent(),
                 alicesBsqAcct.getId(),
                 MAKER_FEE_CURRENCY_CODE);
-        log.info("BUY 1-2K BSQ OFFER:\n{}", formatOfferTable(singletonList(newOffer), BSQ));
+        log.info("BUY 1-2K BSQ OFFER:\n{}", new TableBuilder(OFFER_TBL, newOffer).build());
         assertTrue(newOffer.getIsMyOffer());
         assertTrue(newOffer.getIsMyPendingOffer());
 
@@ -211,7 +213,7 @@ public class CreateBSQOffersTest extends AbstractOfferTest {
                 getDefaultBuyerSecurityDepositAsPercent(),
                 alicesBsqAcct.getId(),
                 MAKER_FEE_CURRENCY_CODE);
-        log.info("SELL 5-10K BSQ OFFER:\n{}", formatOfferTable(singletonList(newOffer), BSQ));
+        log.info("SELL 5-10K BSQ OFFER:\n{}", new TableBuilder(OFFER_TBL, newOffer).build());
         assertTrue(newOffer.getIsMyOffer());
         assertTrue(newOffer.getIsMyPendingOffer());
 
@@ -250,7 +252,7 @@ public class CreateBSQOffersTest extends AbstractOfferTest {
     @Order(5)
     public void testGetAllMyBsqOffers() {
         List<OfferInfo> offers = aliceClient.getMyCryptoCurrencyOffersSortedByDate(BSQ);
-        log.info("ALL ALICE'S BSQ OFFERS:\n{}", formatOfferTable(offers, BSQ));
+        log.info("ALL ALICE'S BSQ OFFERS:\n{}", new TableBuilder(OFFER_TBL, offers).build());
         assertEquals(4, offers.size());
         log.info("ALICE'S BALANCES\n{}", formatBalancesTbls(aliceClient.getBalances()));
     }
@@ -259,7 +261,7 @@ public class CreateBSQOffersTest extends AbstractOfferTest {
     @Order(6)
     public void testGetAvailableBsqOffers() {
         List<OfferInfo> offers = bobClient.getCryptoCurrencyOffersSortedByDate(BSQ);
-        log.info("ALL BOB'S AVAILABLE BSQ OFFERS:\n{}", formatOfferTable(offers, BSQ));
+        log.info("ALL BOB'S AVAILABLE BSQ OFFERS:\n{}", new TableBuilder(OFFER_TBL, offers).build());
         assertEquals(4, offers.size());
         log.info("BOB'S BALANCES\n{}", formatBalancesTbls(bobClient.getBalances()));
     }

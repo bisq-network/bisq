@@ -31,13 +31,12 @@ import org.junit.jupiter.api.TestMethodOrder;
 
 import static bisq.apitest.config.ApiTestConfig.BSQ;
 import static bisq.apitest.config.ApiTestConfig.BTC;
-import static bisq.cli.OfferFormat.formatOfferTable;
+import static bisq.cli.table.builder.TableType.OFFER_TBL;
 import static bisq.core.btc.wallet.Restrictions.getDefaultBuyerSecurityDepositAsPercent;
 import static bisq.core.trade.Trade.Phase.PAYOUT_PUBLISHED;
 import static bisq.core.trade.Trade.Phase.WITHDRAWN;
 import static bisq.core.trade.Trade.State.SELLER_SAW_ARRIVED_PAYOUT_TX_PUBLISHED_MSG;
 import static bisq.core.trade.Trade.State.WITHDRAW_COMPLETED;
-import static java.util.Collections.singletonList;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -46,6 +45,7 @@ import static protobuf.OfferPayload.Direction.BUY;
 
 
 import bisq.apitest.method.offer.AbstractOfferTest;
+import bisq.cli.table.builder.TableBuilder;
 
 @Disabled
 @Slf4j
@@ -82,7 +82,7 @@ public class TakeSellBSQOfferTest extends AbstractTradeTest {
                     getDefaultBuyerSecurityDepositAsPercent(),
                     alicesBsqAcct.getId(),
                     TRADE_FEE_CURRENCY_CODE);
-            log.info("ALICE'S SELL BSQ (BUY BTC) OFFER:\n{}", formatOfferTable(singletonList(alicesOffer), BSQ));
+            log.info("ALICE'S SELL BSQ (BUY BTC) OFFER:\n{}", new TableBuilder(OFFER_TBL, alicesOffer).build());
             genBtcBlocksThenWait(1, 4000);
             var offerId = alicesOffer.getId();
             assertTrue(alicesOffer.getIsCurrencyForMakerFeeBtc());
