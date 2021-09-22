@@ -22,7 +22,6 @@ import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.Restrictions;
 import bisq.core.btc.wallet.TradeWalletService;
-import bisq.core.dao.DaoFacade;
 import bisq.core.filter.FilterManager;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
@@ -41,8 +40,6 @@ import bisq.core.trade.handlers.TradeResultHandler;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
 import bisq.core.util.coin.CoinUtil;
-
-import bisq.network.p2p.P2PService;
 
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.taskrunner.Model;
@@ -70,7 +67,6 @@ public class AtomicTakeOfferModel implements Model {
     private final ObjectProperty<Coin> totalToPayAsCoin = new SimpleObjectProperty<>();
     @Getter
     private final TradeManager tradeManager;
-    //    private final OfferBook offerBook;
     private final BtcWalletService btcWalletService;
     private final BsqWalletService bsqWalletService;
     private final TradeWalletService tradeWalletService;
@@ -79,9 +75,6 @@ public class AtomicTakeOfferModel implements Model {
     private final FilterManager filterManager;
     final Preferences preferences;
     private final AccountAgeWitnessService accountAgeWitnessService;
-    //    private final Navigation navigation;
-    private final P2PService p2PService;
-    private final DaoFacade daoFacade;
 
     private Offer offer;
 
@@ -113,9 +106,7 @@ public class AtomicTakeOfferModel implements Model {
                          FeeService feeService,
                          FilterManager filterManager,
                          Preferences preferences,
-                         AccountAgeWitnessService accountAgeWitnessService,
-                         P2PService p2PService,
-                         DaoFacade daoFacade
+                         AccountAgeWitnessService accountAgeWitnessService
     ) {
         this.offerUtil = offerUtil;
         this.tradeManager = tradeManager;
@@ -127,8 +118,6 @@ public class AtomicTakeOfferModel implements Model {
         this.filterManager = filterManager;
         this.preferences = preferences;
         this.accountAgeWitnessService = accountAgeWitnessService;
-        this.p2PService = p2PService;
-        this.daoFacade = daoFacade;
     }
 
     public void activate(ErrorMessageHandler errorMessageHandler) {
@@ -281,7 +270,7 @@ public class AtomicTakeOfferModel implements Model {
 
     public void applyAmount(Coin amount) {
         this.amount.set(Coin.valueOf(Math.min(amount.value, getMaxTradeLimit())));
-        atomicTxBuilder.setBtcAmount(amount);
+        atomicTxBuilder.setBtcAmount(this.amount.get());
         atomicTxBuilder.setMyTradeFee(getTakerFee());
         atomicTxBuilder.setPeerTradeFee(getMakerFee());
     }

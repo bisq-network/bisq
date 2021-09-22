@@ -90,6 +90,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import lombok.Getter;
+import lombok.Setter;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -99,6 +100,31 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMessageListener, PersistedDataHost {
+    class FundingListener implements AtomicOfferFunding.Listener {
+        OpenOffer openOffer;
+
+        FundingListener(OpenOffer openOffer) {
+            this.openOffer = openOffer;
+        }
+
+        public void isFunded(boolean funded) {
+            if (!funded && !openOffer.isDeactivated()) {
+                deactivateOpenOffer(openOffer,
+                        () -> log.info("Deactivated open offer {}", openOffer.getShortId()),
+                        errorMessage -> log.warn("Failed to deactivate open offer {}", openOffer.getShortId()));
+            }
+            if (funded && openOffer.isDeactivated()) {
+                activateOpenOffer(openOffer,
+                        () -> log.info("Activated open offer {}", openOffer.getShortId()),
+                        errorMessage -> log.warn("Failed to activate open offer {}", openOffer.getShortId()));
+            }
+        }
+
+        public Offer getOffer() {
+            return openOffer.getOffer();
+        }
+    }
+
     private static final Logger log = LoggerFactory.getLogger(OpenOfferManager.class);
 
     private static final long RETRY_REPUBLISH_DELAY_SEC = 10;
@@ -132,6 +158,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     private Timer periodicRepublishOffersTimer, periodicRefreshOffersTimer, retryRepublishOffersTimer;
     @Getter
     private final ObservableList<Tuple2<OpenOffer, String>> invalidOffers = FXCollections.observableArrayList();
+    private final AtomicOfferFunding atomicOfferFunding;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -158,7 +185,8 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                             DaoFacade daoFacade,
                             FilterManager filterManager,
                             Broadcaster broadcaster,
-                            PersistenceManager<TradableList<OpenOffer>> persistenceManager) {
+                            PersistenceManager<TradableList<OpenOffer>> persistenceManager,
+                            AtomicOfferFunding atomicOfferFunding) {
         this.coreContext = coreContext;
         this.createOfferService = createOfferService;
         this.keyRing = keyRing;
@@ -179,6 +207,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         this.filterManager = filterManager;
         this.broadcaster = broadcaster;
         this.persistenceManager = persistenceManager;
+        this.atomicOfferFunding = atomicOfferFunding;
 
         this.persistenceManager.initialize(openOffers, "OpenOffers", PersistenceManager.Source.PRIVATE);
     }
@@ -210,8 +239,11 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         cleanUpAddressEntries();
 
         openOffers.stream()
-                .forEach(openOffer -> OfferUtil.getInvalidMakerFeeTxErrorMessage(openOffer.getOffer(), btcWalletService)
-                        .ifPresent(errorMsg -> invalidOffers.add(new Tuple2<>(openOffer, errorMsg))));
+                .forEach(openOffer -> {
+                    OfferUtil.getInvalidMakerFeeTxErrorMessage(openOffer.getOffer(), btcWalletService)
+                            .ifPresent(errorMsg -> invalidOffers.add(new Tuple2<>(openOffer, errorMsg)));
+                    addAtomicFundingListener(openOffer);
+                });
     }
 
     private void cleanUpAddressEntries() {
@@ -1099,9 +1131,17 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
 
     private void addOpenOffer(OpenOffer openOffer) {
         openOffers.add(openOffer);
+        addAtomicFundingListener(openOffer);
+    }
+
+    private void addAtomicFundingListener(OpenOffer openOffer) {
+        if (!openOffer.getOffer().isAtomicOffer())
+            return;
+        atomicOfferFunding.addListener(new FundingListener(openOffer));
     }
 
     private void removeOpenOffer(OpenOffer openOffer) {
+        atomicOfferFunding.removeListener(openOffer.getOffer());
         openOffers.remove(openOffer);
     }
 }

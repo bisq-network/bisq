@@ -85,7 +85,6 @@ public abstract class AtomicTrade extends TradeModel {
     @Getter
     @Setter
     private Coin amount;
-    @Getter
     private final long price;
     @Getter
     private final long takeOfferDate;

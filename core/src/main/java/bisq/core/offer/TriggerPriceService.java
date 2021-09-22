@@ -159,7 +159,7 @@ public class TriggerPriceService {
         } else if (openOffer.getState() == OpenOffer.State.AVAILABLE) {
             // check the mempool if it has not been done before
             var offerPayload = openOffer.getOffer().getOfferPayloadI();
-            if (openOffer.getMempoolStatus() < 0 && offerPayload instanceof OfferPayload  &&
+            if (openOffer.getMempoolStatus() < 0 && offerPayload instanceof OfferPayload &&
                     mempoolService.canRequestBeMade((OfferPayload) offerPayload)) {
                 mempoolService.validateOfferMakerTx((OfferPayload) offerPayload, (txValidator -> {
                     openOffer.setMempoolStatus(txValidator.isFail() ? 0 : 1);

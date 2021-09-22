@@ -69,11 +69,15 @@ class OpenOffersDataModel extends ActivatableDataModel {
         priceFeedService.updateCounterProperty().removeListener(currenciesUpdateFlagPropertyListener);
     }
 
-    void onActivateOpenOffer(OpenOffer openOffer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+    void onActivateOpenOffer(OpenOffer openOffer,
+                             ResultHandler resultHandler,
+                             ErrorMessageHandler errorMessageHandler) {
         openOfferManager.activateOpenOffer(openOffer, resultHandler, errorMessageHandler);
     }
 
-    void onDeactivateOpenOffer(OpenOffer openOffer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+    void onDeactivateOpenOffer(OpenOffer openOffer,
+                               ResultHandler resultHandler,
+                               ErrorMessageHandler errorMessageHandler) {
         openOfferManager.deactivateOpenOffer(openOffer, resultHandler, errorMessageHandler);
     }
 
@@ -100,6 +104,7 @@ class OpenOffersDataModel extends ActivatableDataModel {
     }
 
     boolean wasTriggered(OpenOffer openOffer) {
-        return TriggerPriceService.wasTriggered(priceFeedService.getMarketPrice(openOffer.getOffer().getCurrencyCode()), openOffer);
+        return TriggerPriceService.wasTriggered(priceFeedService.getMarketPrice(openOffer.getOffer().getCurrencyCode()),
+                openOffer);
     }
 }

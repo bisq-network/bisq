@@ -33,6 +33,7 @@ import bisq.core.notifications.alerts.MyOfferTakenEvents;
 import bisq.core.notifications.alerts.TradeEvents;
 import bisq.core.notifications.alerts.market.MarketAlerts;
 import bisq.core.notifications.alerts.price.PriceAlert;
+import bisq.core.offer.AtomicOfferFunding;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.offer.TriggerPriceService;
 import bisq.core.payment.AmazonGiftCardAccount;
@@ -114,6 +115,7 @@ public class DomainInitialisation {
     private final DaoStateSnapshotService daoStateSnapshotService;
     private final TriggerPriceService triggerPriceService;
     private final MempoolService mempoolService;
+    private final AtomicOfferFunding atomicOfferFunding;
 
     @Inject
     public DomainInitialisation(ClockWatcher clockWatcher,
@@ -152,7 +154,8 @@ public class DomainInitialisation {
                                 User user,
                                 DaoStateSnapshotService daoStateSnapshotService,
                                 TriggerPriceService triggerPriceService,
-                                MempoolService mempoolService) {
+                                MempoolService mempoolService,
+                                AtomicOfferFunding atomicOfferFunding) {
         this.clockWatcher = clockWatcher;
         this.tradeLimits = tradeLimits;
         this.arbitrationManager = arbitrationManager;
@@ -190,6 +193,7 @@ public class DomainInitialisation {
         this.daoStateSnapshotService = daoStateSnapshotService;
         this.triggerPriceService = triggerPriceService;
         this.mempoolService = mempoolService;
+        this.atomicOfferFunding = atomicOfferFunding;
     }
 
     public void initDomainServices(Consumer<String> rejectedTxErrorMessageHandler,
@@ -274,6 +278,7 @@ public class DomainInitialisation {
         marketAlerts.onAllServicesInitialized();
         triggerPriceService.onAllServicesInitialized();
         mempoolService.onAllServicesInitialized();
+        atomicOfferFunding.onAllServicesInitialized();
 
         if (revolutAccountsUpdateHandler != null) {
             revolutAccountsUpdateHandler.accept(user.getPaymentAccountsAsObservable().stream()
