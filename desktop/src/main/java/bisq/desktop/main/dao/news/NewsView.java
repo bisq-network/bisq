@@ -2,29 +2,26 @@ package bisq.desktop.main.dao.news;
 
 import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
-import bisq.desktop.components.BsqAddressTextField;
 import bisq.desktop.components.TitledGroupBg;
-import bisq.desktop.util.GUIUtil;
+import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.Layout;
 
-import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.locale.Res;
-import bisq.core.util.coin.BsqFormatter;
 
-import bisq.common.util.Tuple3;
+import bisq.common.config.Config;
+import bisq.common.config.ConfigFileEditor;
 
 import javax.inject.Inject;
 
-import javafx.scene.control.Button;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.Separator;
+import javafx.scene.control.ToggleButton;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
-import javafx.scene.layout.VBox;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
@@ -34,14 +31,12 @@ import static bisq.desktop.util.FormBuilder.*;
 @FxmlView
 public class NewsView extends ActivatableView<HBox, Void> {
 
-    private final BsqWalletService bsqWalletService;
-    private final BsqFormatter bsqFormatter;
-    private BsqAddressTextField addressTextField;
+    private final ConfigFileEditor configFileEditor;
+    private ToggleButton daoActivatedToggleButton;
 
     @Inject
-    private NewsView(BsqWalletService bsqWalletService, BsqFormatter bsqFormatter) {
-        this.bsqWalletService = bsqWalletService;
-        this.bsqFormatter = bsqFormatter;
+    private NewsView(Config config) {
+        configFileEditor = new ConfigFileEditor(config.configFile);
     }
 
     @Override
@@ -67,15 +62,14 @@ public class NewsView extends ActivatableView<HBox, Void> {
 
         int rowIndex = 0;
 
-        TitledGroupBg titledGroupBg = addTitledGroupBg(gridPane, rowIndex, 14, Res.get("dao.news.DAOOnTestnet.title"));
+        TitledGroupBg titledGroupBg = addTitledGroupBg(gridPane, rowIndex, 14, Res.get("dao.news.daoInfo.title"));
         titledGroupBg.getStyleClass().addAll("last", "dao-news-titled-group");
-        Label daoTestnetDescription = addMultilineLabel(gridPane, ++rowIndex, Res.get("dao.news.DAOOnTestnet.description"), 0, 370);
+        Label daoTestnetDescription = addMultilineLabel(gridPane, ++rowIndex, Res.get("dao.news.daoInfo.description"), 0, 370);
         GridPane.setMargin(daoTestnetDescription, new Insets(Layout.FLOATING_LABEL_DISTANCE, 0, 8, 0));
         daoTestnetDescription.getStyleClass().add("dao-news-content");
 
-        rowIndex = addInfoSection(gridPane, rowIndex, Res.get("dao.news.DAOOnTestnet.firstSection.title"),
-                Res.get("dao.news.DAOOnTestnet.firstSection.content"),
-                "https://docs.bisq.network/getting-started-dao.html#switch-to-testnet-mode");
+        rowIndex = addInfoSectionEnableDao(gridPane, rowIndex, Res.get("dao.news.daoInfo.firstSection.title"),
+                Res.get("dao.news.daoInfo.firstSection.content"));
         rowIndex = addInfoSection(gridPane, rowIndex, Res.get("dao.news.DAOOnTestnet.secondSection.title"),
                 Res.get("dao.news.DAOOnTestnet.secondSection.content"),
                 "https://docs.bisq.network/getting-started-dao.html#acquire-some-bsq");
@@ -108,6 +102,19 @@ public class NewsView extends ActivatableView<HBox, Void> {
         return rowIndex;
     }
 
+    private int addInfoSectionEnableDao(GridPane gridPane, int rowIndex, String title, String content) {
+        Label titleLabel = addLabel(gridPane, ++rowIndex, title);
+        GridPane.setMargin(titleLabel, new Insets(6, 0, 0, 0));
+
+        titleLabel.getStyleClass().add("dao-news-section-header");
+        Label contentLabel = addMultilineLabel(gridPane, ++rowIndex, content, -Layout.FLOATING_LABEL_DISTANCE, 370);
+        contentLabel.getStyleClass().add("dao-news-section-content");
+
+        daoActivatedToggleButton = addSlideToggleButton(gridPane, ++rowIndex, Res.get("setting.preferences.dao.activated"));
+
+        return rowIndex;
+    }
+
     private AnchorPane createBisqDAOContent() {
         AnchorPane anchorPane = new AnchorPane();
         anchorPane.setMinWidth(373);
@@ -125,37 +132,22 @@ public class NewsView extends ActivatableView<HBox, Void> {
         Hyperlink hyperlink = addHyperlinkWithIcon(bisqDAOPane, ++rowIndex, Res.get("dao.news.bisqDAO.readMoreLink"), "https://bisq.network/docs/dao");
         hyperlink.getStyleClass().add("dao-news-link");
 
-        GridPane pastContributorsPane = new GridPane();
-        AnchorPane.setBottomAnchor(pastContributorsPane, 0d);
-
-        pastContributorsPane.setVgap(5);
-        pastContributorsPane.setMaxWidth(373);
-
-        rowIndex = 0;
-        TitledGroupBg contributorsTitledGroup = addTitledGroupBg(pastContributorsPane, rowIndex, 4, Res.get("dao.news.pastContribution.title"));
-        contributorsTitledGroup.getStyleClass().addAll("last", "dao-news-titled-group");
-        Label pastContributionDescription = addMultilineLabel(pastContributorsPane, ++rowIndex, Res.get("dao.news.pastContribution.description"));
-        pastContributionDescription.getStyleClass().add("dao-news-content");
-        Tuple3<Label, BsqAddressTextField, VBox> tuple = addLabelBsqAddressTextField(pastContributorsPane, ++rowIndex,
-                Res.get("dao.news.pastContribution.yourAddress"),
-                Layout.FIRST_ROW_DISTANCE);
-        addressTextField = tuple.second;
-        Button requestNowButton = addPrimaryActionButton(pastContributorsPane, ++rowIndex, Res.get("dao.news.pastContribution.requestNow"), 0);
-        requestNowButton.setMaxWidth(Double.MAX_VALUE);
-        GridPane.setHgrow(requestNowButton, Priority.ALWAYS);
-        requestNowButton.setOnAction(e -> GUIUtil.openWebPage("https://bisq.network/docs/dao/genesis"));
-
-        anchorPane.getChildren().addAll(bisqDAOPane, pastContributorsPane);
+        anchorPane.getChildren().add(bisqDAOPane);
 
         return anchorPane;
     }
 
     @Override
     protected void activate() {
-        addressTextField.setAddress(bsqFormatter.getBsqAddressStringFromAddress(bsqWalletService.getUnusedAddress()));
+        daoActivatedToggleButton.setSelected(false);
+        daoActivatedToggleButton.setOnAction(e -> {
+            configFileEditor.setOption("daoActivated", Boolean.toString(daoActivatedToggleButton.isSelected()));
+            new Popup().information(Res.get("setting.preferences.dao.activated.popup")).useShutDownButton().show();
+        });
     }
 
     @Override
     protected void deactivate() {
+        daoActivatedToggleButton.setOnAction(null);
     }
 }
