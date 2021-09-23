@@ -102,6 +102,8 @@ public class PaymentAccountFactory {
                 return new InstantCryptoCurrencyAccount();
             case PaymentMethod.CAPITUAL_ID:
                 return new CapitualAccount();
+            case PaymentMethod.CELPAY_ID:
+                return new CelPayAccount();
             case PaymentMethod.SWIFT_ID:
                 return new SwiftAccount();
 

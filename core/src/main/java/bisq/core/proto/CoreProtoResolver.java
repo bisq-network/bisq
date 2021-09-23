@@ -29,6 +29,7 @@ import bisq.core.payment.payload.CapitualAccountPayload;
 import bisq.core.payment.payload.CashAppAccountPayload;
 import bisq.core.payment.payload.CashByMailAccountPayload;
 import bisq.core.payment.payload.CashDepositAccountPayload;
+import bisq.core.payment.payload.CelPayAccountPayload;
 import bisq.core.payment.payload.ChaseQuickPayAccountPayload;
 import bisq.core.payment.payload.ClearXchangeAccountPayload;
 import bisq.core.payment.payload.CryptoCurrencyAccountPayload;
@@ -192,6 +193,8 @@ public class CoreProtoResolver implements ProtoResolver {
                     return InstantCryptoCurrencyPayload.fromProto(proto);
                 case CAPITUAL_ACCOUNT_PAYLOAD:
                     return CapitualAccountPayload.fromProto(proto);
+                case CEL_PAY_ACCOUNT_PAYLOAD:
+                    return CelPayAccountPayload.fromProto(proto);
                 case SWIFT_ACCOUNT_PAYLOAD:
                     return SwiftAccountPayload.fromProto(proto);
 

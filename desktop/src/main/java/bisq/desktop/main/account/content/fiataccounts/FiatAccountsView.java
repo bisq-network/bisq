@@ -26,6 +26,7 @@ import bisq.desktop.components.paymentmethods.AustraliaPayidForm;
 import bisq.desktop.components.paymentmethods.CapitualForm;
 import bisq.desktop.components.paymentmethods.CashByMailForm;
 import bisq.desktop.components.paymentmethods.CashDepositForm;
+import bisq.desktop.components.paymentmethods.CelPayForm;
 import bisq.desktop.components.paymentmethods.ChaseQuickPayForm;
 import bisq.desktop.components.paymentmethods.ClearXchangeForm;
 import bisq.desktop.components.paymentmethods.F2FForm;
@@ -565,6 +566,8 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
                 return new AmazonGiftCardForm(paymentAccount, accountAgeWitnessService, inputValidator, root, gridRow, formatter);
             case PaymentMethod.CAPITUAL_ID:
                 return new CapitualForm(paymentAccount, accountAgeWitnessService, capitualValidator, inputValidator, root, gridRow, formatter);
+            case PaymentMethod.CELPAY_ID:
+                return new CelPayForm(paymentAccount, accountAgeWitnessService, inputValidator, root, gridRow, formatter);
             case PaymentMethod.SWIFT_ID:
                 return new SwiftForm(paymentAccount, accountAgeWitnessService, inputValidator, root, gridRow, formatter);
             default:
