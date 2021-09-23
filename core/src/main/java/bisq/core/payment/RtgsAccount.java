@@ -33,4 +33,16 @@ public final class RtgsAccount extends CountryBasedPaymentAccount {
     protected PaymentAccountPayload createPayload() {
         return new RtgsAccountPayload(paymentMethod.getId(), id);
     }
+
+    public String getMessageForBuyer() {
+        return "payment.rtgs.info.buyer";
+    }
+
+    public String getMessageForSeller() {
+        return "payment.rtgs.info.seller";
+    }
+
+    public String getMessageForAccountCreation() {
+        return "payment.rtgs.info.account";
+    }
 }

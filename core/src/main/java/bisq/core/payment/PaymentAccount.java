@@ -231,4 +231,27 @@ public abstract class PaymentAccount implements PersistablePayload {
         // We are in the process to get added to the user. This is called just before saving the account and the
         // last moment we could apply some special handling if needed (e.g. as it happens for Revolut)
     }
+
+    public String getPreTradeMessage(boolean isBuyer) {
+        if (isBuyer) {
+            return getMessageForBuyer();
+        } else {
+            return getMessageForSeller();
+        }
+    }
+
+    // will be overridden by specific account when necessary
+    public String getMessageForBuyer() {
+        return null;
+    }
+
+    // will be overridden by specific account when necessary
+    public String getMessageForSeller() {
+        return null;
+    }
+
+    // will be overridden by specific account when necessary
+    public String getMessageForAccountCreation() {
+        return null;
+    }
 }

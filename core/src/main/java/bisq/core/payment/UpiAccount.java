@@ -41,4 +41,16 @@ public final class UpiAccount extends CountryBasedPaymentAccount {
     public String getVirtualPaymentAddress() {
         return ((UpiAccountPayload) paymentAccountPayload).getVirtualPaymentAddress();
     }
+
+    public String getMessageForBuyer() {
+        return "payment.upi.info.buyer";
+    }
+
+    public String getMessageForSeller() {
+        return "payment.upi.info.seller";
+    }
+
+    public String getMessageForAccountCreation() {
+        return "payment.upi.info.account";
+    }
 }

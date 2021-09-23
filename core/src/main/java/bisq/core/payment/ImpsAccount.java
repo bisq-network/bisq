@@ -33,4 +33,16 @@ public final class ImpsAccount extends CountryBasedPaymentAccount {
     protected PaymentAccountPayload createPayload() {
         return new ImpsAccountPayload(paymentMethod.getId(), id);
     }
+
+    public String getMessageForBuyer() {
+        return "payment.imps.info.buyer";
+    }
+
+    public String getMessageForSeller() {
+        return "payment.imps.info.seller";
+    }
+
+    public String getMessageForAccountCreation() {
+        return "payment.imps.info.account";
+    }
 }

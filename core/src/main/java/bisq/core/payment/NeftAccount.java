@@ -33,4 +33,16 @@ public final class NeftAccount extends CountryBasedPaymentAccount {
     protected PaymentAccountPayload createPayload() {
         return new NeftAccountPayload(paymentMethod.getId(), id);
     }
+
+    public String getMessageForBuyer() {
+        return "payment.neft.info.buyer";
+    }
+
+    public String getMessageForSeller() {
+        return "payment.neft.info.seller";
+    }
+
+    public String getMessageForAccountCreation() {
+        return "payment.neft.info.account";
+    }
 }

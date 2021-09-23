@@ -41,4 +41,16 @@ public final class PaytmAccount extends CountryBasedPaymentAccount {
     public String getEmailOrMobileNr() {
         return ((PaytmAccountPayload) paymentAccountPayload).getEmailOrMobileNr();
     }
+
+    public String getMessageForBuyer() {
+        return "payment.paytm.info.buyer";
+    }
+
+    public String getMessageForSeller() {
+        return "payment.paytm.info.seller";
+    }
+
+    public String getMessageForAccountCreation() {
+        return "payment.paytm.info.account";
+    }
 }

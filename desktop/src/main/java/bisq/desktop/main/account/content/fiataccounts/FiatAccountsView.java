@@ -433,6 +433,12 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
             gridRow = 2;
             paymentMethodForm = getPaymentMethodForm(paymentMethodComboBox.getSelectionModel().getSelectedItem());
             if (paymentMethodForm != null) {
+                if (paymentMethodForm.getPaymentAccount().getMessageForAccountCreation() != null) {
+                    new Popup().information(Res.get(paymentMethodForm.getPaymentAccount().getMessageForAccountCreation()))
+                            .width(900)
+                            .closeButtonText(Res.get("shared.iUnderstand"))
+                            .show();
+                }
                 paymentMethodForm.addFormForAddAccount();
                 gridRow = paymentMethodForm.getGridRow();
                 Tuple2<Button, Button> tuple2 = add2ButtonsAfterGroup(root, ++gridRow, Res.get("shared.saveNewAccount"), Res.get("shared.cancel"));
