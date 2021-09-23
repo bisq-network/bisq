@@ -161,7 +161,8 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
         RTGS,
         IMPS,
         UPI,
-        PAYTM
+        PAYTM,
+        CELPAY
     }
 
     @Getter

@@ -107,6 +107,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
     public static final String BLOCK_CHAINS_INSTANT_ID = "BLOCK_CHAINS_INSTANT";
     public static final String CASH_BY_MAIL_ID = "CASH_BY_MAIL";
     public static final String CAPITUAL_ID = "CAPITUAL";
+    public static final String CELPAY_ID = "CELPAY";
     public static final String SWIFT_ID = "SWIFT";
 
     // Cannot be deleted as it would break old trade history entries
@@ -157,6 +158,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
     public static PaymentMethod BLOCK_CHAINS_INSTANT;
     public static PaymentMethod CASH_BY_MAIL;
     public static PaymentMethod CAPITUAL;
+    public static PaymentMethod CELPAY;
     public static PaymentMethod SWIFT;
 
     // Cannot be deleted as it would break old trade history entries
@@ -217,6 +219,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
             UPI = new PaymentMethod(UPI_ID, DAY, Coin.parseCoin("0.05")),
             PAYTM = new PaymentMethod(PAYTM_ID, DAY, Coin.parseCoin("0.05")),
             CAPITUAL = new PaymentMethod(CAPITUAL_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
+            CELPAY = new PaymentMethod(CELPAY_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
             SWIFT = new PaymentMethod(SWIFT_ID, 7 * DAY, DEFAULT_TRADE_LIMIT_MID_RISK),
 
             // Japan
