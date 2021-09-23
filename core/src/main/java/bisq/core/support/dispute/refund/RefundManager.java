@@ -29,6 +29,7 @@ import bisq.core.support.SupportType;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeManager;
 import bisq.core.support.dispute.DisputeResult;
+import bisq.core.support.dispute.agent.DisputeAgentLookupMap;
 import bisq.core.support.dispute.messages.DisputeResultMessage;
 import bisq.core.support.dispute.messages.OpenNewDisputeMessage;
 import bisq.core.support.dispute.messages.PeerOpenedDisputeMessage;
@@ -133,8 +134,10 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
     @Override
     protected String getDisputeInfo(Dispute dispute) {
         String role = Res.get("shared.refundAgent").toLowerCase();
+        String roleContextMsg = Res.get("support.initialArbitratorMsg",
+                DisputeAgentLookupMap.getKeybaseLinkForAgent(getAgentNodeAddress(dispute).getFullAddress()));
         String link = "https://bisq.wiki/Dispute_resolution#Level_3:_Arbitration";
-        return Res.get("support.initialInfo", role, role, link);
+        return Res.get("support.initialInfo", role, roleContextMsg, role, link);
     }
 
     @Override
