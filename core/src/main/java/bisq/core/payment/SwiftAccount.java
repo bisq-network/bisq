@@ -20,9 +20,9 @@ package bisq.core.payment;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.FiatCurrency;
 import bisq.core.locale.TradeCurrency;
-import bisq.core.payment.payload.SwiftAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
+import bisq.core.payment.payload.SwiftAccountPayload;
 
 import java.util.Comparator;
 import java.util.List;
@@ -34,6 +34,7 @@ import lombok.EqualsAndHashCode;
 public final class SwiftAccount extends PaymentAccount {
     public SwiftAccount() {
         super(PaymentMethod.SWIFT);
+        addAllTradeCurrencies();
     }
 
     @Override
@@ -45,7 +46,7 @@ public final class SwiftAccount extends PaymentAccount {
         return ((SwiftAccountPayload) this.paymentAccountPayload);
     }
 
-    public void selectAllTradeCurrencies() {
+    private void addAllTradeCurrencies() {
         List<FiatCurrency> currencyCodesSorted = CurrencyUtil.getAllSortedFiatCurrencies().stream()
                 .sorted(Comparator.comparing(TradeCurrency::getCode))
                 .collect(Collectors.toList());
