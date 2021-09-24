@@ -20,6 +20,7 @@ package bisq.core.api.model;
 
 import bisq.core.locale.Country;
 import bisq.core.locale.FiatCurrency;
+import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.payment.CountryBasedPaymentAccount;
 import bisq.core.payment.MoneyGramAccount;
@@ -130,16 +131,13 @@ class PaymentAccountTypeAdapter extends TypeAdapter<PaymentAccount> {
         for (String s : JSON_COMMENTS) {
             out.value(s);
         }
-        /*
-        if (account.isSwiftAccount()) {
-            // Add extra comments for more complex swift account form.
+
+        if (account.hasPaymentMethodWithId(SWIFT_ID)) {
+            // Add extra comments to more complex swift account form.
             List<String> wrappedSwiftComments = Res.getWrappedAsList("payment.swift.info", 110);
-            for (String line : wrappedSwiftComments) {
+            for (String line : wrappedSwiftComments)
                 out.value(line);
-            }
-            out.value("See https://bisq.wiki/SWIFT");
         }
-         */
         out.endArray();
     }
 
@@ -394,8 +392,8 @@ class PaymentAccountTypeAdapter extends TypeAdapter<PaymentAccount> {
             return getTradeCurrenciesInList(currencyCodes, getAllPayseraCurrencies());
         else if (account.hasPaymentMethodWithId(REVOLUT_ID))
             return getTradeCurrenciesInList(currencyCodes, getAllRevolutCurrencies());
-        /*else if (account.hasPaymentMethodWithId(SWIFT_ID))
-            return getTradeCurrenciesInList(currencyCodes, new ArrayList<>(getAllSortedFiatCurrencies()));*/
+        else if (account.hasPaymentMethodWithId(SWIFT_ID))
+            return getTradeCurrenciesInList(currencyCodes, new ArrayList<>(getAllSortedFiatCurrencies()));
         else if (account.hasPaymentMethodWithId(TRANSFERWISE_ID))
             return getTradeCurrenciesInList(currencyCodes, getAllTransferwiseCurrencies());
         else if (account.hasPaymentMethodWithId(UPHOLD_ID))
@@ -458,7 +456,6 @@ class PaymentAccountTypeAdapter extends TypeAdapter<PaymentAccount> {
         String countryCode = nextStringOrNull(in);
         Optional<Country> country = findCountryByCode(countryCode);
         if (country.isPresent()) {
-
             if (account.isCountryBasedPaymentAccount()) {
                 ((CountryBasedPaymentAccount) account).setCountry(country.get());
                 FiatCurrency fiatCurrency = getCurrencyByCountryCode(checkNotNull(countryCode));
@@ -471,9 +468,7 @@ class PaymentAccountTypeAdapter extends TypeAdapter<PaymentAccount> {
                 log.error(StringUtils.capitalize(errMsg) + ".");
                 throw new IllegalStateException("programmer error: " + errMsg);
             }
-
             return true;
-
         } else {
             throw new IllegalArgumentException(
                     format("'%s' is an invalid country code.", countryCode));
