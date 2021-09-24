@@ -227,24 +227,31 @@ public class Scaffold {
                 throw new IllegalStateException("Could not install bitcoin regtest dir");
 
             String aliceDataDir = daoSetupDir + "/" + alicedaemon.appName;
-            if (!config.callRateMeteringConfigPath.isEmpty()) {
-                installCallRateMeteringConfiguration(aliceDataDir);
-            }
+            installCallRateMeteringConfiguration(aliceDataDir);
             BashCommand copyAliceDataDir = new BashCommand(
                     "cp -rf " + aliceDataDir + " " + config.rootAppDataDir);
             if (copyAliceDataDir.run().getExitStatus() != 0)
                 throw new IllegalStateException("Could not install alice data dir");
 
             String bobDataDir = daoSetupDir + "/" + bobdaemon.appName;
-            if (!config.callRateMeteringConfigPath.isEmpty()) {
-                installCallRateMeteringConfiguration(bobDataDir);
-            }
+            installCallRateMeteringConfiguration(bobDataDir);
             BashCommand copyBobDataDir = new BashCommand(
                     "cp -rf " + bobDataDir + " " + config.rootAppDataDir);
             if (copyBobDataDir.run().getExitStatus() != 0)
                 throw new IllegalStateException("Could not install bob data dir");
 
             log.info("Copied all dao-setup files to {}", buildDataDir);
+
+            // Try to avoid confusion about which 'bisq.properties' file is or was loaded
+            // by a Bisq instance:  delete the 'bisq.properties' file automatically copied
+            // to the 'apitest/build/resources/main' directory during IDE or Gradle build.
+            // Note:  there is no way to prevent this deleted file from being re-copied
+            // from 'src/main/resources' to the buildDataDir each time you hit the build
+            // button in the IDE.
+            BashCommand rmRedundantBisqPropertiesFile =
+                    new BashCommand("rm -rf " + buildDataDir + "/bisq.properties");
+            if (rmRedundantBisqPropertiesFile.run().getExitStatus() != 0)
+                throw new IllegalStateException("Could not delete redundant bisq.properties file");
 
             // Copy the blocknotify script from the src resources dir to the build
             // resources dir.  Users may want to edit comment out some lines when all
@@ -302,6 +309,9 @@ public class Scaffold {
     }
 
     private void installCallRateMeteringConfiguration(String dataDir) throws IOException, InterruptedException {
+        if (config.callRateMeteringConfigPath.isEmpty())
+            return;
+
         File testRateMeteringFile = new File(config.callRateMeteringConfigPath);
         if (!testRateMeteringFile.exists())
             throw new FileNotFoundException(

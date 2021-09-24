@@ -158,7 +158,7 @@ public final class ArbitrationManager extends DisputeManager<ArbitrationDisputeL
     protected String getDisputeInfo(Dispute dispute) {
         String role = Res.get("shared.arbitrator").toLowerCase();
         String link = "https://bisq.wiki/Arbitrator#Arbitrator_versus_Legacy_Arbitrator";
-        return Res.get("support.initialInfo", role, role, link);
+        return Res.get("support.initialInfo", role, "", role, link);        // Arbitration is not used anymore
     }
 
     @Override
