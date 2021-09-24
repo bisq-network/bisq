@@ -57,8 +57,8 @@ class SystemCommandExecutor {
     private ThreadedStreamHandler errorStreamHandler;
 
     public SystemCommandExecutor(final List<String> cmdOptions) {
-        if (log.isDebugEnabled())
-            log.debug("cmd options {}", cmdOptions.toString());
+        if (log.isTraceEnabled())
+            log.trace("cmd options {}", cmdOptions.toString());
 
         if (cmdOptions.isEmpty())
             throw new IllegalStateException("No command params specified.");
@@ -82,9 +82,9 @@ class SystemCommandExecutor {
     public int exec(boolean waitOnErrStream) throws IOException, InterruptedException {
         Process process = new ProcessBuilder(cmdOptions).start();
 
-        // I'm currently doing these on a separate line here in case i need to set them to null
-        // to get the threads to stop.
-        // see http://java.sun.com/j2se/1.5.0/docs/guide/misc/threadPrimitiveDeprecation.html
+        // I'm currently doing these on a separate line here in case I need to set
+        // them to null to get the threads to stop.
+        // See http://java.sun.com/j2se/1.5.0/docs/guide/misc/threadPrimitiveDeprecation.html
         InputStream inputStream = process.getInputStream();
         InputStream errorStream = process.getErrorStream();
 
