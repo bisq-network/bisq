@@ -44,6 +44,7 @@ import bisq.core.payment.payload.MoneyBeamAccountPayload;
 import bisq.core.payment.payload.MoneyGramAccountPayload;
 import bisq.core.payment.payload.NationalBankAccountPayload;
 import bisq.core.payment.payload.NeftAccountPayload;
+import bisq.core.payment.payload.NequiAccountPayload;
 import bisq.core.payment.payload.OKPayAccountPayload;
 import bisq.core.payment.payload.PaxumAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
@@ -128,6 +129,8 @@ public class CoreProtoResolver implements ProtoResolver {
                             return UpiAccountPayload.fromProto(proto);
                         case PAYTM_ACCOUNT_PAYLOAD:
                             return PaytmAccountPayload.fromProto(proto);
+                        case NEQUI_ACCOUNT_PAYLOAD:
+                            return NequiAccountPayload.fromProto(proto);
                         case IFSC_BASED_ACCOUNT_PAYLOAD:
                             final protobuf.IfscBasedAccountPayload.MessageCase messageCaseIfsc = proto.getCountryBasedPaymentAccountPayload().getIfscBasedAccountPayload().getMessageCase();
                             switch (messageCaseIfsc) {

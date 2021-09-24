@@ -1035,6 +1035,7 @@ message CountryBasedPaymentAccountPayload {
         UpiAccountPayload upi_account_payload = 9;
         PaytmAccountPayload paytm_account_payload = 10;
         IfscBasedAccountPayload ifsc_based_account_payload = 11;
+        NequiAccountPayload nequi_account_payload = 12;
     }
 }
 
@@ -1267,6 +1268,10 @@ message CapitualAccountPayload {
 
 message CelPayAccountPayload {
     string email = 1;
+}
+
+message NequiAccountPayload {
+    string mobile_nr = 1;
 }
 
 message SwiftAccountPayload {

@@ -96,6 +96,8 @@ public class PaymentAccountFactory {
                 return new UpiAccount();
             case PaymentMethod.PAYTM_ID:
                 return new PaytmAccount();
+            case PaymentMethod.NEQUI_ID:
+                return new NequiAccount();
             case PaymentMethod.AMAZON_GIFT_CARD_ID:
                 return new AmazonGiftCardAccount();
             case PaymentMethod.BLOCK_CHAINS_INSTANT_ID:

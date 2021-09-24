@@ -41,6 +41,7 @@ import bisq.desktop.components.paymentmethods.MoneyBeamForm;
 import bisq.desktop.components.paymentmethods.MoneyGramForm;
 import bisq.desktop.components.paymentmethods.NationalBankForm;
 import bisq.desktop.components.paymentmethods.NeftForm;
+import bisq.desktop.components.paymentmethods.NequiForm;
 import bisq.desktop.components.paymentmethods.PaxumForm;
 import bisq.desktop.components.paymentmethods.PayseraForm;
 import bisq.desktop.components.paymentmethods.PaytmForm;
@@ -351,6 +352,9 @@ public class BuyerStep2View extends TradeStepView {
                 break;
             case PaymentMethod.PAYTM_ID:
                 gridRow = PaytmForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
+                break;
+            case PaymentMethod.NEQUI_ID:
+                gridRow = NequiForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
                 break;
             case PaymentMethod.AMAZON_GIFT_CARD_ID:
                 gridRow = AmazonGiftCardForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
