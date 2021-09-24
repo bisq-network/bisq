@@ -1,6 +1,7 @@
 package bisq.apitest.method.payment;
 
 import bisq.core.api.model.PaymentAccountForm;
+import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.FiatCurrency;
 import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
@@ -36,6 +37,7 @@ import org.junit.jupiter.api.TestInfo;
 
 import static bisq.core.payment.payload.PaymentMethod.BLOCK_CHAINS_ID;
 import static bisq.core.payment.payload.PaymentMethod.BLOCK_CHAINS_INSTANT_ID;
+import static bisq.core.payment.payload.PaymentMethod.SWIFT_ID;
 import static java.lang.String.format;
 import static java.lang.System.getProperty;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -151,8 +153,7 @@ public class AbstractPaymentAccountTest extends MethodTest {
                 Object.class);
         assertNotNull(emptyForm);
 
-        // TODO remove 'false' condition to enable creation of SWIFT accounts in future PR.
-        if (false && paymentMethodId.equals("SWIFT_ID")) {
+        if (paymentMethodId.equals(SWIFT_ID)) {
             assertEquals(getSwiftFormComments(), emptyForm.get(PROPERTY_NAME_JSON_COMMENTS));
         } else {
             assertEquals(PROPERTY_VALUE_JSON_COMMENTS, emptyForm.get(PROPERTY_NAME_JSON_COMMENTS));
@@ -219,25 +220,22 @@ public class AbstractPaymentAccountTest extends MethodTest {
         return jsonString;
     }
 
-    protected final String getCommaDelimitedFiatCurrencyCodes(Collection<FiatCurrency> fiatCurrencies) {
-        return fiatCurrencies.stream()
-                .sorted(TradeCurrency::compareTo) // note: sorted by ccy name, not ccy code
-                .map(c -> c.getCurrency().getCurrencyCode())
-                .collect(Collectors.joining(","));
+    protected final List<FiatCurrency> getAllFiatCurrenciesSortedByCurrencyCode() {
+        return CurrencyUtil.getAllSortedFiatCurrencies().stream()
+                .sorted(Comparator.comparing(TradeCurrency::getCode))
+                .collect(Collectors.toList());
     }
 
-    protected final String getCommaDelimitedTradeCurrencyCodes(List<TradeCurrency> tradeCurrencies) {
-        return tradeCurrencies.stream()
-                .sorted(Comparator.comparing(TradeCurrency::getCode)) // sorted by code
-                .map(TradeCurrency::getCode)
+    protected final String getCommaDelimitedFiatCurrencyCodes(Collection<FiatCurrency> fiatCurrencies) {
+        return fiatCurrencies.stream()
+                .map(c -> c.getCurrency().getCurrencyCode())
                 .collect(Collectors.joining(","));
     }
 
     protected final List<String> getSwiftFormComments() {
         List<String> comments = new ArrayList<>(PROPERTY_VALUE_JSON_COMMENTS);
-        // List<String> wrappedSwiftComments = Res.getWrappedAsList("payment.swift.info", 110);
-        // comments.addAll(wrappedSwiftComments);
-        // comments.add("See https://bisq.wiki/SWIFT");
+        List<String> wrappedSwiftComments = Res.getWrappedAsList("payment.swift.info", 110);
+        comments.addAll(wrappedSwiftComments);
         return comments;
     }
 

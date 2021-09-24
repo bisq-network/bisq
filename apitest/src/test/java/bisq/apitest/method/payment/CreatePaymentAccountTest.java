@@ -17,6 +17,7 @@
 
 package bisq.apitest.method.payment;
 
+import bisq.core.locale.FiatCurrency;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.payment.AdvancedCashAccount;
 import bisq.core.payment.AliPayAccount;
@@ -45,6 +46,7 @@ import bisq.core.payment.SameBankAccount;
 import bisq.core.payment.SepaAccount;
 import bisq.core.payment.SepaInstantAccount;
 import bisq.core.payment.SpecificBanksAccount;
+import bisq.core.payment.SwiftAccount;
 import bisq.core.payment.SwishAccount;
 import bisq.core.payment.TransferwiseAccount;
 import bisq.core.payment.USPostalMoneyOrderAccount;
@@ -55,6 +57,7 @@ import bisq.core.payment.payload.BankAccountPayload;
 import bisq.core.payment.payload.CashDepositAccountPayload;
 import bisq.core.payment.payload.SameBankAccountPayload;
 import bisq.core.payment.payload.SpecificBanksAccountPayload;
+import bisq.core.payment.payload.SwiftAccountPayload;
 
 import io.grpc.StatusRuntimeException;
 
@@ -812,7 +815,6 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         print(paymentAccount);
     }
 
-    /*
     @Test
     public void testCreateSwiftAccount(TestInfo testInfo) {
         // https://www.theswiftcodes.com
@@ -822,7 +824,8 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
                 PROPERTY_NAME_BANK_SWIFT_CODE);
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_PAYMENT_METHOD_ID, SWIFT_ID);
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_ACCOUNT_NAME, "IT Swift Acct w/ DE Intermediary");
-        String allFiatCodes = getCommaDelimitedFiatCurrencyCodes(getAllSortedFiatCurrencies());
+        List<FiatCurrency> codeSortedTradeCurrencies = getAllFiatCurrenciesSortedByCurrencyCode();
+        String allFiatCodes = getCommaDelimitedFiatCurrencyCodes(codeSortedTradeCurrencies);
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_TRADE_CURRENCIES, allFiatCodes);
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_SELECTED_TRADE_CURRENCY, EUR);
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_BANK_SWIFT_CODE, "PASCITMMFIR");
@@ -845,7 +848,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         String jsonString = getCompletedFormAsJsonString(getSwiftFormComments());
         SwiftAccount paymentAccount = (SwiftAccount) createPaymentAccount(aliceClient, jsonString);
         verifyUserPayloadHasPaymentAccountWithId(aliceClient, paymentAccount.getId());
-        verifyAccountTradeCurrencies(getAllSortedFiatCurrencies(), paymentAccount);
+        verifyAccountTradeCurrencies(codeSortedTradeCurrencies, paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_SELECTED_TRADE_CURRENCY),
                 paymentAccount.getSelectedTradeCurrency().getCode());
         verifyCommonFormEntries(paymentAccount);
@@ -869,7 +872,6 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_SALT), paymentAccount.getSaltAsHex());
         print(paymentAccount);
     }
-     */
 
     @Test
     public void testCreateSwishAccount(TestInfo testInfo) {
