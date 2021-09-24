@@ -30,7 +30,6 @@ import org.junit.jupiter.api.TestMethodOrder;
 import static bisq.apitest.config.ApiTestConfig.BSQ;
 import static bisq.apitest.config.ApiTestConfig.BTC;
 import static bisq.apitest.config.ApiTestConfig.EUR;
-import static bisq.cli.table.builder.TableType.OFFER_TBL;
 import static bisq.core.btc.wallet.Restrictions.getDefaultBuyerSecurityDepositAsPercent;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -38,10 +37,6 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static protobuf.OfferPayload.Direction.BUY;
 import static protobuf.OfferPayload.Direction.SELL;
-
-
-
-import bisq.cli.table.builder.TableBuilder;
 
 @Disabled
 @Slf4j
@@ -62,7 +57,7 @@ public class CreateOfferUsingFixedPriceTest extends AbstractOfferTest {
                 getDefaultBuyerSecurityDepositAsPercent(),
                 audAccount.getId(),
                 MAKER_FEE_CURRENCY_CODE);
-        log.info("OFFER #1:\n{}", new TableBuilder(OFFER_TBL, newOffer).build());
+        log.debug("OFFER #1:\n{}", toOfferTable.apply(newOffer));
         assertTrue(newOffer.getIsMyOffer());
         assertTrue(newOffer.getIsMyPendingOffer());
 
@@ -107,7 +102,7 @@ public class CreateOfferUsingFixedPriceTest extends AbstractOfferTest {
                 getDefaultBuyerSecurityDepositAsPercent(),
                 usdAccount.getId(),
                 MAKER_FEE_CURRENCY_CODE);
-        log.info("OFFER #2:\n{}", new TableBuilder(OFFER_TBL, newOffer).build());
+        log.debug("OFFER #2:\n{}", toOfferTable.apply(newOffer));
         assertTrue(newOffer.getIsMyOffer());
         assertTrue(newOffer.getIsMyPendingOffer());
 
@@ -152,7 +147,7 @@ public class CreateOfferUsingFixedPriceTest extends AbstractOfferTest {
                 getDefaultBuyerSecurityDepositAsPercent(),
                 eurAccount.getId(),
                 MAKER_FEE_CURRENCY_CODE);
-        log.info("OFFER #3:\n{}", new TableBuilder(OFFER_TBL, newOffer).build());
+        log.debug("OFFER #3:\n{}", toOfferTable.apply(newOffer));
         assertTrue(newOffer.getIsMyOffer());
         assertTrue(newOffer.getIsMyPendingOffer());
 

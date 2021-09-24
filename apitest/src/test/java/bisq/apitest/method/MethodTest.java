@@ -164,9 +164,10 @@ public class MethodTest extends ApiTestCase {
     // Static conveniences for test methods and test case fixture setups.
 
     public static String formatBalancesTbls(BalancesInfo allBalances) {
-        StringBuilder balances = new StringBuilder("BTC");
+        StringBuilder balances = new StringBuilder("BTC").append("\n");
         balances.append(new TableBuilder(BTC_BALANCE_TBL, allBalances.getBtc()).build());
-        balances.append("BSQ");
+        balances.append("\n");
+        balances.append("BSQ").append("\n");
         balances.append(new TableBuilder(BSQ_BALANCE_TBL, allBalances.getBsq()).build());
         return balances.toString();
     }

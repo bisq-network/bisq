@@ -33,7 +33,6 @@ import org.junit.jupiter.api.TestMethodOrder;
 import static bisq.apitest.config.ApiTestConfig.BSQ;
 import static bisq.apitest.config.ApiTestConfig.BTC;
 import static bisq.apitest.config.ApiTestConfig.XMR;
-import static bisq.cli.table.builder.TableType.OFFER_TBL;
 import static bisq.core.btc.wallet.Restrictions.getDefaultBuyerSecurityDepositAsPercent;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -41,10 +40,6 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static protobuf.OfferPayload.Direction.BUY;
 import static protobuf.OfferPayload.Direction.SELL;
-
-
-
-import bisq.cli.table.builder.TableBuilder;
 
 @SuppressWarnings("ConstantConditions")
 @Disabled
@@ -74,7 +69,7 @@ public class CreateXMROffersTest extends AbstractOfferTest {
                 getDefaultBuyerSecurityDepositAsPercent(),
                 alicesXmrAcct.getId(),
                 MAKER_FEE_CURRENCY_CODE);
-        log.info("Sell XMR (Buy BTC) OFFER:\n{}", new TableBuilder(OFFER_TBL, newOffer).build());
+        log.debug("Sell XMR (Buy BTC) OFFER:\n{}", toOfferTable.apply(newOffer));
         assertTrue(newOffer.getIsMyOffer());
         assertTrue(newOffer.getIsMyPendingOffer());
 
@@ -121,7 +116,7 @@ public class CreateXMROffersTest extends AbstractOfferTest {
                 getDefaultBuyerSecurityDepositAsPercent(),
                 alicesXmrAcct.getId(),
                 MAKER_FEE_CURRENCY_CODE);
-        log.info("Buy XMR (Sell BTC) OFFER:\n{}", new TableBuilder(OFFER_TBL, newOffer).build());
+        log.debug("Buy XMR (Sell BTC) OFFER:\n{}", toOfferTable.apply(newOffer));
         assertTrue(newOffer.getIsMyOffer());
         assertTrue(newOffer.getIsMyPendingOffer());
 
@@ -171,7 +166,7 @@ public class CreateXMROffersTest extends AbstractOfferTest {
                 alicesXmrAcct.getId(),
                 MAKER_FEE_CURRENCY_CODE,
                 triggerPriceAsLong);
-        log.info("PENDING Sell XMR (Buy BTC) OFFER:\n{}", new TableBuilder(OFFER_TBL, newOffer).build());
+        log.debug("PENDING Sell XMR (Buy BTC) OFFER:\n{}", toOfferTable.apply(newOffer));
         assertTrue(newOffer.getIsMyOffer());
         assertTrue(newOffer.getIsMyPendingOffer());
 
@@ -194,7 +189,7 @@ public class CreateXMROffersTest extends AbstractOfferTest {
         genBtcBlockAndWaitForOfferPreparation();
 
         newOffer = aliceClient.getMyOffer(newOfferId);
-        log.info("AVAILABLE Sell XMR (Buy BTC) OFFER:\n{}", new TableBuilder(OFFER_TBL, newOffer).build());
+        log.debug("AVAILABLE Sell XMR (Buy BTC) OFFER:\n{}", toOfferTable.apply(newOffer));
         assertTrue(newOffer.getIsMyOffer());
         assertFalse(newOffer.getIsMyPendingOffer());
         assertEquals(newOfferId, newOffer.getId());
@@ -227,7 +222,7 @@ public class CreateXMROffersTest extends AbstractOfferTest {
                 alicesXmrAcct.getId(),
                 MAKER_FEE_CURRENCY_CODE,
                 NO_TRIGGER_PRICE);
-        log.info("Buy XMR (Sell BTC) OFFER:\n{}", new TableBuilder(OFFER_TBL, newOffer).build());
+        log.debug("Buy XMR (Sell BTC) OFFER:\n{}", toOfferTable.apply(newOffer));
         assertTrue(newOffer.getIsMyOffer());
         assertTrue(newOffer.getIsMyPendingOffer());
 
@@ -264,18 +259,18 @@ public class CreateXMROffersTest extends AbstractOfferTest {
     @Order(5)
     public void testGetAllMyXMROffers() {
         List<OfferInfo> offers = aliceClient.getMyCryptoCurrencyOffersSortedByDate(XMR);
-        log.info("ALL ALICE'S XMR OFFERS:\n{}", new TableBuilder(OFFER_TBL, offers).build());
+        log.debug("ALL ALICE'S XMR OFFERS:\n{}", toOffersTable.apply(offers));
         assertEquals(4, offers.size());
-        log.info("ALICE'S BALANCES\n{}", formatBalancesTbls(aliceClient.getBalances()));
+        log.debug("ALICE'S BALANCES\n{}", formatBalancesTbls(aliceClient.getBalances()));
     }
 
     @Test
     @Order(6)
     public void testGetAvailableXMROffers() {
         List<OfferInfo> offers = bobClient.getCryptoCurrencyOffersSortedByDate(XMR);
-        log.info("ALL BOB'S AVAILABLE XMR OFFERS:\n{}", new TableBuilder(OFFER_TBL, offers).build());
+        log.debug("ALL BOB'S AVAILABLE XMR OFFERS:\n{}", toOffersTable.apply(offers));
         assertEquals(4, offers.size());
-        log.info("BOB'S BALANCES\n{}", formatBalancesTbls(bobClient.getBalances()));
+        log.debug("BOB'S BALANCES\n{}", formatBalancesTbls(bobClient.getBalances()));
     }
 
     private void genBtcBlockAndWaitForOfferPreparation() {

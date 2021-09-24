@@ -17,10 +17,13 @@
 
 package bisq.apitest.method.offer;
 
+import bisq.proto.grpc.OfferInfo;
+
 import protobuf.PaymentAccount;
 
 import java.math.BigDecimal;
 
+import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -37,11 +40,13 @@ import static bisq.apitest.config.BisqAppConfig.alicedaemon;
 import static bisq.apitest.config.BisqAppConfig.arbdaemon;
 import static bisq.apitest.config.BisqAppConfig.bobdaemon;
 import static bisq.apitest.config.BisqAppConfig.seednode;
+import static bisq.cli.table.builder.TableType.OFFER_TBL;
 import static bisq.common.util.MathUtils.exactMultiply;
 
 
 
 import bisq.apitest.method.MethodTest;
+import bisq.cli.table.builder.TableBuilder;
 
 @Slf4j
 public abstract class AbstractOfferTest extends MethodTest {
@@ -103,6 +108,11 @@ public abstract class AbstractOfferTest extends MethodTest {
         return priceAsBigDecimal.toPlainString();
     };
 
+    protected final Function<OfferInfo, String> toOfferTable = (offer) ->
+            new TableBuilder(OFFER_TBL, offer).build().toString();
+
+    protected final Function<List<OfferInfo>, String> toOffersTable = (offers) ->
+            new TableBuilder(OFFER_TBL, offers).build().toString();
 
     @SuppressWarnings("ConstantConditions")
     public static void createBsqPaymentAccounts() {

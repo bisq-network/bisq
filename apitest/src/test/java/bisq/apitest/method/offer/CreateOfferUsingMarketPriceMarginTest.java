@@ -38,7 +38,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 
 import static bisq.apitest.config.ApiTestConfig.BTC;
-import static bisq.cli.table.builder.TableType.OFFER_TBL;
 import static bisq.common.util.MathUtils.roundDouble;
 import static bisq.common.util.MathUtils.scaleDownByPowerOf10;
 import static bisq.common.util.MathUtils.scaleUpByPowerOf10;
@@ -53,10 +52,6 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static protobuf.OfferPayload.Direction.BUY;
 import static protobuf.OfferPayload.Direction.SELL;
-
-
-
-import bisq.cli.table.builder.TableBuilder;
 
 @SuppressWarnings("ConstantConditions")
 @Disabled
@@ -84,7 +79,7 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractOfferTest {
                 usdAccount.getId(),
                 MAKER_FEE_CURRENCY_CODE,
                 NO_TRIGGER_PRICE);
-        log.info("OFFER #1:\n{}", new TableBuilder(OFFER_TBL, newOffer).build());
+        log.debug("OFFER #1:\n{}", toOfferTable.apply(newOffer));
         assertTrue(newOffer.getIsMyOffer());
         assertTrue(newOffer.getIsMyPendingOffer());
 
@@ -131,7 +126,7 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractOfferTest {
                 nzdAccount.getId(),
                 MAKER_FEE_CURRENCY_CODE,
                 NO_TRIGGER_PRICE);
-        log.info("OFFER #2:\n{}", new TableBuilder(OFFER_TBL, newOffer).build());
+        log.debug("OFFER #2:\n{}", toOfferTable.apply(newOffer));
         assertTrue(newOffer.getIsMyOffer());
         assertTrue(newOffer.getIsMyPendingOffer());
 
@@ -178,7 +173,7 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractOfferTest {
                 gbpAccount.getId(),
                 MAKER_FEE_CURRENCY_CODE,
                 NO_TRIGGER_PRICE);
-        log.info("OFFER #3:\n{}", new TableBuilder(OFFER_TBL, newOffer).build());
+        log.debug("OFFER #3:\n{}", toOfferTable.apply(newOffer));
         assertTrue(newOffer.getIsMyOffer());
         assertTrue(newOffer.getIsMyPendingOffer());
 
@@ -225,7 +220,7 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractOfferTest {
                 brlAccount.getId(),
                 MAKER_FEE_CURRENCY_CODE,
                 NO_TRIGGER_PRICE);
-        log.info("OFFER #4:\n{}", new TableBuilder(OFFER_TBL, newOffer).build());
+        log.debug("OFFER #4:\n{}", toOfferTable.apply(newOffer));
         assertTrue(newOffer.getIsMyOffer());
         assertTrue(newOffer.getIsMyPendingOffer());
 
@@ -281,7 +276,7 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractOfferTest {
 
         genBtcBlocksThenWait(1, 4000); // give time to add to offer book
         newOffer = aliceClient.getMyOffer(newOffer.getId());
-        log.info("OFFER #5:\n{}", new TableBuilder(OFFER_TBL, newOffer).build());
+        log.debug("OFFER #5:\n{}", toOfferTable.apply(newOffer));
         assertTrue(newOffer.getIsMyOffer());
         assertFalse(newOffer.getIsMyPendingOffer());
         assertEquals(triggerPriceAsLong, newOffer.getTriggerPrice());
