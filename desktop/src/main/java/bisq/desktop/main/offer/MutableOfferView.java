@@ -506,8 +506,8 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
         if (msgKey == null || paymentAccountWarningDisplayed.getOrDefault(msgKey, false)) {
             return;
         }
+        paymentAccountWarningDisplayed.put(msgKey, true);
         UserThread.runAfter(() -> {
-            paymentAccountWarningDisplayed.put(msgKey, true);
             new Popup().information(Res.get(msgKey))
                     .width(900)
                     .closeButtonText(Res.get("shared.iConfirm"))
