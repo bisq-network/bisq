@@ -187,9 +187,9 @@ public class TestState {
         P2PDataStorage.ByteArray hash = new P2PDataStorage.ByteArray(persistableNetworkPayload.getHash());
 
         if (expectedHashMapAndDataStoreUpdated)
-            Assert.assertEquals(persistableNetworkPayload, this.mockedStorage.getAppendOnlyDataStoreMap().get(hash));
+            Assert.assertEquals(persistableNetworkPayload, this.mockedStorage.appendOnlyDataStoreService.getMap(persistableNetworkPayload).get(hash));
         else
-            Assert.assertEquals(beforeState.persistableNetworkPayloadBeforeOp, this.mockedStorage.getAppendOnlyDataStoreMap().get(hash));
+            Assert.assertEquals(beforeState.persistableNetworkPayloadBeforeOp, this.mockedStorage.appendOnlyDataStoreService.getMap(persistableNetworkPayload).get(hash));
 
         if (expectedListenersSignaled)
             verify(this.appendOnlyDataStoreListener).onAdded(persistableNetworkPayload);
@@ -398,7 +398,7 @@ public class TestState {
         private SavedTestState(TestState testState, PersistableNetworkPayload persistableNetworkPayload) {
             this(testState);
             P2PDataStorage.ByteArray hash = new P2PDataStorage.ByteArray(persistableNetworkPayload.getHash());
-            this.persistableNetworkPayloadBeforeOp = testState.mockedStorage.getAppendOnlyDataStoreMap().get(hash);
+            this.persistableNetworkPayloadBeforeOp = testState.mockedStorage.appendOnlyDataStoreService.getMap(persistableNetworkPayload).get(hash);
         }
 
         private SavedTestState(TestState testState, ProtectedStorageEntry protectedStorageEntry) {
