@@ -22,6 +22,8 @@ import java.io.PrintStream;
 
 import java.util.stream.IntStream;
 
+import static bisq.cli.table.column.Column.JUSTIFICATION.RIGHT;
+import static com.google.common.base.Strings.padStart;
 import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -30,7 +32,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import bisq.cli.table.column.Column;
 
 /**
- * A simple table of formatted data for the CLI's output  console.  A table must be
+ * A simple table of formatted data for the CLI's output console.  A table must be
  * created with at least one populated column, and each column passed to the constructor
  * must contain the same number of rows.  Null checking is omitted because tables
  * consume protobufs, which do not support null.
@@ -81,10 +83,13 @@ public class Table {
     private void printColumnNames(PrintStream printStream) {
         IntStream.range(0, columns.length).forEachOrdered(colIndex -> {
             var c = columns[colIndex];
+            var justifiedName = c.getJustification().equals(RIGHT)
+                    ? padStart(c.getName(), c.getWidth(), ' ')
+                    : c.getName();
             var paddedWidth = colIndex == columns.length - 1
                     ? c.getName().length()
                     : c.getWidth() + columnDelimiterLength;
-            printStream.printf("%-" + paddedWidth + "s", c.getName());
+            printStream.printf("%-" + paddedWidth + "s", justifiedName);
         });
         printStream.println();
     }
@@ -101,8 +106,7 @@ public class Table {
                     ? c.getWidth()
                     : c.getWidth() + columnDelimiterLength;
             printStream.printf("%-" + paddedWidth + "s", c.getRow(rowIndex));
-            // Print a newline only if now the last column of the last row.
-            if (colIndex == columns.length - 1 && rowIndex < this.rowCount - 1)
+            if (colIndex == columns.length - 1)
                 printStream.println();
         });
     }

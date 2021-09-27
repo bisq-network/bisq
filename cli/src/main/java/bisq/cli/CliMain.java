@@ -354,7 +354,7 @@ public class CliMain {
                             paymentAcctId,
                             makerFeeCurrencyCode,
                             triggerPrice);
-                    out.println(new TableBuilder(OFFER_TBL, offer).build());
+                    new TableBuilder(OFFER_TBL, offer).build().print(out);
                     return;
                 }
                 case editoffer: {
@@ -399,7 +399,7 @@ public class CliMain {
                     }
                     var offerId = opts.getOfferId();
                     var offer = client.getOffer(offerId);
-                    out.println(new TableBuilder(OFFER_TBL, offer).build());
+                    new TableBuilder(OFFER_TBL, offer).build().print(out);
                     return;
                 }
                 case getmyoffer: {
@@ -410,7 +410,7 @@ public class CliMain {
                     }
                     var offerId = opts.getOfferId();
                     var offer = client.getMyOffer(offerId);
-                    out.println(new TableBuilder(OFFER_TBL, offer).build());
+                    new TableBuilder(OFFER_TBL, offer).build().print(out);
                     return;
                 }
                 case getoffers: {
@@ -425,7 +425,7 @@ public class CliMain {
                     if (offers.isEmpty())
                         out.printf("no %s %s offers found%n", direction, currencyCode);
                     else
-                        out.println(new TableBuilder(OFFER_TBL, offers).build());
+                        new TableBuilder(OFFER_TBL, offers).build().print(out);
 
                     return;
                 }
@@ -441,7 +441,7 @@ public class CliMain {
                     if (offers.isEmpty())
                         out.printf("no %s %s offers found%n", direction, currencyCode);
                     else
-                        out.println(new TableBuilder(OFFER_TBL, offers).build());
+                        new TableBuilder(OFFER_TBL, offers).build().print(out);
 
                     return;
                 }
