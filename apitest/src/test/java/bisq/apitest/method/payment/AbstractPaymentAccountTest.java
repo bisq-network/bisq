@@ -234,7 +234,7 @@ public class AbstractPaymentAccountTest extends MethodTest {
 
     protected final List<String> getSwiftFormComments() {
         List<String> comments = new ArrayList<>(PROPERTY_VALUE_JSON_COMMENTS);
-        List<String> wrappedSwiftComments = Res.getWrappedAsList("payment.swift.info", 110);
+        List<String> wrappedSwiftComments = Res.getWrappedAsList("payment.swift.info.account", 110);
         comments.addAll(wrappedSwiftComments);
         return comments;
     }

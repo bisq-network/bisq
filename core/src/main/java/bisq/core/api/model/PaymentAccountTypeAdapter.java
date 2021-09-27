@@ -134,7 +134,7 @@ class PaymentAccountTypeAdapter extends TypeAdapter<PaymentAccount> {
 
         if (account.hasPaymentMethodWithId(SWIFT_ID)) {
             // Add extra comments to more complex swift account form.
-            List<String> wrappedSwiftComments = Res.getWrappedAsList("payment.swift.info", 110);
+            List<String> wrappedSwiftComments = Res.getWrappedAsList("payment.swift.info.account", 110);
             for (String line : wrappedSwiftComments)
                 out.value(line);
         }
