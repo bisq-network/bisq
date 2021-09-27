@@ -159,12 +159,12 @@ public class TradeFormat {
     private static final Function<TradeInfo, String> priceFormat = (t) ->
             t.getOffer().getBaseCurrencyCode().equals("BTC")
                     ? formatPrice(t.getTradePrice())
-                    : formatCryptoCurrencyPrice(t.getOffer().getPrice());
+                    : formatCryptoCurrencyPrice(t.getTradePrice());
 
     private static final Function<TradeInfo, String> amountFormat = (t) ->
             t.getOffer().getBaseCurrencyCode().equals("BTC")
                     ? formatSatoshis(t.getTradeAmountAsLong())
-                    : formatCryptoCurrencyOfferVolume(t.getOffer().getVolume());
+                    : formatCryptoCurrencyOfferVolume(t.getTradeVolume());
 
     private static final BiFunction<TradeInfo, Boolean, String> makerTakerMinerTxFeeFormat = (t, isTaker) -> {
         if (isTaker) {
@@ -188,7 +188,7 @@ public class TradeFormat {
 
     private static final Function<TradeInfo, String> tradeCostFormat = (t) ->
             t.getOffer().getBaseCurrencyCode().equals("BTC")
-                    ? formatOfferVolume(t.getOffer().getVolume())
+                    ? formatOfferVolume(t.getTradeVolume())
                     : formatSatoshis(t.getTradeAmountAsLong());
 
     private static final BiFunction<TradeInfo, Boolean, String> bsqReceiveAddress = (t, showBsqBuyerAddress) -> {
