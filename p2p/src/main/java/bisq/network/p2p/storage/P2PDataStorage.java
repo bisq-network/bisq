@@ -129,7 +129,8 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
     private boolean initialRequestApplied = false;
 
     private final Broadcaster broadcaster;
-    private final AppendOnlyDataStoreService appendOnlyDataStoreService;
+    @VisibleForTesting
+    final AppendOnlyDataStoreService appendOnlyDataStoreService;
     private final ProtectedDataStoreService protectedDataStoreService;
     private final ResourceDataStoreService resourceDataStoreService;
 
@@ -565,13 +566,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         removeExpiredEntriesTimer = UserThread.runPeriodically(this::removeExpiredEntries, CHECK_TTL_INTERVAL_SEC);
     }
 
-    // Domain access should use the concrete appendOnlyDataStoreService if available. The Historical data store require
-    // care which data should be accessed (live data or all data).
-    @VisibleForTesting
-    Map<ByteArray, PersistableNetworkPayload> getAppendOnlyDataStoreMap() {
-        return appendOnlyDataStoreService.getMap();
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // MessageListener implementation
@@ -676,7 +670,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         }
 
         ByteArray hashAsByteArray = new ByteArray(payload.getHash());
-        boolean payloadHashAlreadyInStore = appendOnlyDataStoreService.getMap().containsKey(hashAsByteArray);
+        boolean payloadHashAlreadyInStore = appendOnlyDataStoreService.getMap(payload).containsKey(hashAsByteArray);
 
         // Store already knows about this payload. Ignore it unless the caller specifically requests a republish.
         if (payloadHashAlreadyInStore && !reBroadcast) {
@@ -693,13 +687,16 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         }
 
         // Add the payload and publish the state update to the appendOnlyDataStoreListeners
+        boolean wasAdded = false;
         if (!payloadHashAlreadyInStore) {
-            appendOnlyDataStoreService.put(hashAsByteArray, payload);
-            appendOnlyDataStoreListeners.forEach(e -> e.onAdded(payload));
+            wasAdded = appendOnlyDataStoreService.put(hashAsByteArray, payload);
+            if (wasAdded) {
+                appendOnlyDataStoreListeners.forEach(e -> e.onAdded(payload));
+            }
         }
 
         // Broadcast the payload if requested by caller
-        if (allowBroadcast)
+        if (allowBroadcast && wasAdded)
             broadcaster.broadcast(new AddPersistableNetworkPayloadMessage(payload), sender);
 
         return true;

@@ -112,6 +112,7 @@ import java.net.URI;
 import java.io.ByteArrayInputStream;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -169,7 +170,8 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
 
     protected int gridRow = 0;
     private final List<Node> editOfferElements = new ArrayList<>();
-    private boolean clearXchangeWarningDisplayed, fasterPaymentsWarningDisplayed, swiftWarningDisplayed, isActivated;
+    private HashMap<String, Boolean> paymentAccountWarningDisplayed = new HashMap<>();
+    private boolean clearXchangeWarningDisplayed, fasterPaymentsWarningDisplayed, isActivated;
     private InfoInputTextField marketBasedPriceInfoInputTextField, volumeInfoInputTextField,
             buyerSecurityDepositInfoInputTextField, triggerPriceInfoInputTextField;
     private AutoTooltipSlideToggleButton tradeFeeInBtcToggle, tradeFeeInBsqToggle;
@@ -500,17 +502,19 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
         }
     }
 
-    private void maybeShowSwiftWarning(PaymentAccount paymentAccount) {
-        if (paymentAccount.getPaymentMethod().getId().equals(PaymentMethod.SWIFT_ID) && !swiftWarningDisplayed) {
-            swiftWarningDisplayed = true;
-            UserThread.runAfter(() -> {
-                if (model.getDataModel().isBuyOffer()) {
-                    GUIUtil.showSwiftWarningToBuyer();
-                } else {
-                    GUIUtil.showSwiftWarningToSeller();
-                }
-            }, 500, TimeUnit.MILLISECONDS);
+    private void maybeShowAccountWarning(PaymentAccount paymentAccount, boolean isBuyer) {
+        String msgKey = paymentAccount.getPreTradeMessage(isBuyer);
+        if (msgKey == null || paymentAccountWarningDisplayed.getOrDefault(msgKey, false)) {
+            return;
         }
+        paymentAccountWarningDisplayed.put(msgKey, true);
+        UserThread.runAfter(() -> {
+            new Popup().information(Res.get(msgKey))
+                    .width(900)
+                    .closeButtonText(Res.get("shared.iConfirm"))
+                    .dontShowAgainId(msgKey)
+                    .show();
+        }, 500, TimeUnit.MILLISECONDS);
     }
 
     protected void onPaymentAccountsComboBoxSelected() {
@@ -522,7 +526,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
         if (paymentAccount != null) {
             maybeShowClearXchangeWarning(paymentAccount);
             maybeShowFasterPaymentsWarning(paymentAccount);
-            maybeShowSwiftWarning(paymentAccount);
+            maybeShowAccountWarning(paymentAccount, model.getDataModel().isBuyOffer());
 
             currencySelection.setVisible(paymentAccount.hasMultipleCurrencies());
             currencySelection.setManaged(paymentAccount.hasMultipleCurrencies());

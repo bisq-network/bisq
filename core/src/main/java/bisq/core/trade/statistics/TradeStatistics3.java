@@ -156,7 +156,12 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
         CAPITUAL,
         PAYSERA,
         PAXUM,
-        SWIFT
+        SWIFT,
+        NEFT,
+        RTGS,
+        IMPS,
+        UPI,
+        PAYTM
     }
 
     @Getter

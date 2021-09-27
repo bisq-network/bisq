@@ -86,6 +86,16 @@ public class PaymentAccountFactory {
                 return new PayseraAccount();
             case PaymentMethod.PAXUM_ID:
                 return new PaxumAccount();
+            case PaymentMethod.NEFT_ID:
+                return new NeftAccount();
+            case PaymentMethod.RTGS_ID:
+                return new RtgsAccount();
+            case PaymentMethod.IMPS_ID:
+                return new ImpsAccount();
+            case PaymentMethod.UPI_ID:
+                return new UpiAccount();
+            case PaymentMethod.PAYTM_ID:
+                return new PaytmAccount();
             case PaymentMethod.AMAZON_GIFT_CARD_ID:
                 return new AmazonGiftCardAccount();
             case PaymentMethod.BLOCK_CHAINS_INSTANT_ID:

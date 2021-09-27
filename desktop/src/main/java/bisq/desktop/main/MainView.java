@@ -28,6 +28,7 @@ import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.AutoTooltipToggleButton;
 import bisq.desktop.components.BusyAnimation;
 import bisq.desktop.main.account.AccountView;
+import bisq.desktop.main.community.CommunityView;
 import bisq.desktop.main.dao.DaoView;
 import bisq.desktop.main.funds.FundsView;
 import bisq.desktop.main.market.MarketView;
@@ -186,6 +187,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
         ToggleButton settingsButton = new NavButton(SettingsView.class, Res.get("mainView.menu.settings"));
         ToggleButton accountButton = new NavButton(AccountView.class, Res.get("mainView.menu.account"));
         ToggleButton daoButton = new NavButton(DaoView.class, Res.get("mainView.menu.dao"));
+        ToggleButton communityButton = new NavButton(CommunityView.class, Res.get("mainView.menu.community"));
 
         JFXBadge portfolioButtonWithBadge = new JFXBadge(portfolioButton);
         JFXBadge supportButtonWithBadge = new JFXBadge(supportButton);
@@ -321,7 +323,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
         HBox.setHgrow(primaryNav, Priority.SOMETIMES);
 
         HBox secondaryNav = new HBox(supportButtonWithBadge, getNavigationSpacer(), settingsButtonWithBadge,
-                getNavigationSpacer(), accountButton, getNavigationSpacer(), daoButton);
+                getNavigationSpacer(), accountButton, getNavigationSpacer(), daoButton, getNavigationSpacer(), communityButton);
         secondaryNav.getStyleClass().add("nav-secondary");
         HBox.setHgrow(secondaryNav, Priority.SOMETIMES);
 

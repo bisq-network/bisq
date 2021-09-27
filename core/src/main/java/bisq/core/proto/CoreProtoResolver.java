@@ -35,20 +35,24 @@ import bisq.core.payment.payload.CryptoCurrencyAccountPayload;
 import bisq.core.payment.payload.F2FAccountPayload;
 import bisq.core.payment.payload.FasterPaymentsAccountPayload;
 import bisq.core.payment.payload.HalCashAccountPayload;
+import bisq.core.payment.payload.ImpsAccountPayload;
 import bisq.core.payment.payload.InstantCryptoCurrencyPayload;
 import bisq.core.payment.payload.InteracETransferAccountPayload;
 import bisq.core.payment.payload.JapanBankAccountPayload;
 import bisq.core.payment.payload.MoneyBeamAccountPayload;
 import bisq.core.payment.payload.MoneyGramAccountPayload;
 import bisq.core.payment.payload.NationalBankAccountPayload;
+import bisq.core.payment.payload.NeftAccountPayload;
 import bisq.core.payment.payload.OKPayAccountPayload;
 import bisq.core.payment.payload.PaxumAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PayseraAccountPayload;
+import bisq.core.payment.payload.PaytmAccountPayload;
 import bisq.core.payment.payload.PerfectMoneyAccountPayload;
 import bisq.core.payment.payload.PopmoneyAccountPayload;
 import bisq.core.payment.payload.PromptPayAccountPayload;
 import bisq.core.payment.payload.RevolutAccountPayload;
+import bisq.core.payment.payload.RtgsAccountPayload;
 import bisq.core.payment.payload.SameBankAccountPayload;
 import bisq.core.payment.payload.SepaAccountPayload;
 import bisq.core.payment.payload.SepaInstantAccountPayload;
@@ -58,6 +62,7 @@ import bisq.core.payment.payload.SwishAccountPayload;
 import bisq.core.payment.payload.TransferwiseAccountPayload;
 import bisq.core.payment.payload.USPostalMoneyOrderAccountPayload;
 import bisq.core.payment.payload.UpholdAccountPayload;
+import bisq.core.payment.payload.UpiAccountPayload;
 import bisq.core.payment.payload.VenmoAccountPayload;
 import bisq.core.payment.payload.WeChatPayAccountPayload;
 import bisq.core.payment.payload.WesternUnionAccountPayload;
@@ -118,6 +123,24 @@ public class CoreProtoResolver implements ProtoResolver {
                             return SepaInstantAccountPayload.fromProto(proto);
                         case F2F_ACCOUNT_PAYLOAD:
                             return F2FAccountPayload.fromProto(proto);
+                        case UPI_ACCOUNT_PAYLOAD:
+                            return UpiAccountPayload.fromProto(proto);
+                        case PAYTM_ACCOUNT_PAYLOAD:
+                            return PaytmAccountPayload.fromProto(proto);
+                        case IFSC_BASED_ACCOUNT_PAYLOAD:
+                            final protobuf.IfscBasedAccountPayload.MessageCase messageCaseIfsc = proto.getCountryBasedPaymentAccountPayload().getIfscBasedAccountPayload().getMessageCase();
+                            switch (messageCaseIfsc) {
+                                case NEFT_ACCOUNT_PAYLOAD:
+                                    return NeftAccountPayload.fromProto(proto);
+                                case RTGS_ACCOUNT_PAYLOAD:
+                                    return RtgsAccountPayload.fromProto(proto);
+                                case IMPS_ACCOUNT_PAYLOAD:
+                                    return ImpsAccountPayload.fromProto(proto);
+                                default:
+                                    throw new ProtobufferRuntimeException("Unknown proto message case" +
+                                            "(PB.PaymentAccountPayload.CountryBasedPaymentAccountPayload.IfscBasedPaymentAccount). " +
+                                            "messageCase=" + messageCaseIfsc);
+                            }
                         default:
                             throw new ProtobufferRuntimeException("Unknown proto message case" +
                                     "(PB.PaymentAccountPayload.CountryBasedPaymentAccountPayload)." +

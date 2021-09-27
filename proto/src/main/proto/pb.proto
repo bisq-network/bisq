@@ -1031,6 +1031,9 @@ message CountryBasedPaymentAccountPayload {
         WesternUnionAccountPayload western_union_account_payload = 5;
         SepaInstantAccountPayload sepa_instant_account_payload = 6;
         F2FAccountPayload f2f_account_payload = 7;
+        UpiAccountPayload upi_account_payload = 9;
+        PaytmAccountPayload paytm_account_payload = 10;
+        IfscBasedAccountPayload ifsc_based_account_payload = 11;
     }
 }
 
@@ -1201,6 +1204,34 @@ message F2FAccountPayload {
     string contact = 1;
     string city = 2;
     string extra_info = 3;
+}
+
+message IfscBasedAccountPayload {
+    string holder_name = 1;
+    string account_nr = 2;
+    string ifsc = 3;
+    oneof message {
+        NeftAccountPayload neft_account_payload = 4;
+        RtgsAccountPayload rtgs_account_payload = 5;
+        ImpsAccountPayload imps_account_payload = 6;
+    }
+}
+
+message NeftAccountPayload {
+}
+
+message RtgsAccountPayload {
+}
+
+message ImpsAccountPayload {
+}
+
+message UpiAccountPayload {
+    string virtual_payment_address = 1;
+}
+
+message PaytmAccountPayload {
+    string email_or_mobile_nr = 1;
 }
 
 message CashByMailAccountPayload {
