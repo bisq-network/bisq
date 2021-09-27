@@ -1,3 +1,20 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package bisq.desktop.main.community;
 
 import bisq.desktop.common.view.FxmlView;
@@ -168,10 +185,10 @@ public class CommunityView extends InitializableView<ScrollPane, Void> {
         addPlatformsBox(content, Arrays.asList("telegram", "irc", "matrix"));
 
         addSectionLabel(content, Res.get("community.section.getStarted.title"));
-        addPlatformsBox(content, Arrays.asList("website"));
+        addPlatformsBox(content, List.of("website"));
 
         addSectionLabel(content, Res.get("community.section.documentation.title"));
-        addPlatformsBox(content, Arrays.asList("wiki"));
+        addPlatformsBox(content, List.of("wiki"));
     }
 
     private void addPlatformsBox(VBox content, List<String> slugs, boolean wider) {
