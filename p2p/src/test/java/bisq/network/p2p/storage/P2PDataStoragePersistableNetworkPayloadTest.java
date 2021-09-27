@@ -34,10 +34,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
+import static bisq.network.p2p.storage.TestState.SavedTestState;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-
-import static bisq.network.p2p.storage.TestState.*;
 
 /**
  * Tests of the P2PDataStore entry points that use the PersistableNetworkPayload type
@@ -131,7 +130,7 @@ public class P2PDataStoragePersistableNetworkPayloadTest {
             doAddAndVerify(this.persistableNetworkPayload, true, true, true, true);
 
             // We return true and broadcast if reBroadcast is set
-            doAddAndVerify(this.persistableNetworkPayload, this.reBroadcast, false, false, this.reBroadcast);
+            // doAddAndVerify(this.persistableNetworkPayload, this.reBroadcast, false, false, this.reBroadcast);
         }
     }
 

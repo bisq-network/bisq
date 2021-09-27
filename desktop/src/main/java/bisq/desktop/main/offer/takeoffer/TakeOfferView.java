@@ -113,6 +113,7 @@ import java.net.URI;
 
 import java.io.ByteArrayInputStream;
 
+import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 
 import org.jetbrains.annotations.NotNull;
@@ -162,8 +163,9 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             isOfferAvailableSubscription;
 
     private int gridRow = 0;
+    private HashMap<String, Boolean> paymentAccountWarningDisplayed = new HashMap<>();
     private boolean offerDetailsWindowDisplayed, clearXchangeWarningDisplayed, fasterPaymentsWarningDisplayed,
-            swiftWarningDisplayed, takeOfferFromUnsignedAccountWarningDisplayed, cashByMailWarningDisplayed;
+            takeOfferFromUnsignedAccountWarningDisplayed, cashByMailWarningDisplayed;
     private SimpleBooleanProperty errorPopupDisplayed;
     private ChangeListener<Boolean> amountFocusedListener, getShowWalletFundedNotificationListener;
 
@@ -309,7 +311,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         maybeShowTakeOfferFromUnsignedAccountWarning(model.dataModel.getOffer());
         maybeShowClearXchangeWarning(lastPaymentAccount);
         maybeShowFasterPaymentsWarning(lastPaymentAccount);
-        maybeShowSwiftWarning(lastPaymentAccount);
+        maybeShowAccountWarning(lastPaymentAccount, model.dataModel.isBuyOffer());
         maybeShowCashByMailWarning(lastPaymentAccount, model.dataModel.getOffer());
 
         if (!DevEnv.isDaoActivated() && !model.isRange()) {
@@ -832,7 +834,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             if (paymentAccount != null) {
                 maybeShowClearXchangeWarning(paymentAccount);
                 maybeShowFasterPaymentsWarning(paymentAccount);
-                maybeShowSwiftWarning(paymentAccount);
+                maybeShowAccountWarning(paymentAccount, model.dataModel.isBuyOffer());
             }
             model.onPaymentAccountSelected(paymentAccount);
         });
@@ -1274,17 +1276,19 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         }
     }
 
-    private void maybeShowSwiftWarning(PaymentAccount paymentAccount) {
-        if (paymentAccount.getPaymentMethod().getId().equals(PaymentMethod.SWIFT_ID) && !swiftWarningDisplayed) {
-            swiftWarningDisplayed = true;
-            UserThread.runAfter(() -> {
-                if (model.getOffer().getDirection() == OfferPayload.Direction.BUY) {
-                    GUIUtil.showSwiftWarningToSeller();  // taking an offer to buy, we are the seller
-                } else {
-                    GUIUtil.showSwiftWarningToBuyer();  // taking an offer to sell, we are the buyer
-                }
-            }, 500, TimeUnit.MILLISECONDS);
+    private void maybeShowAccountWarning(PaymentAccount paymentAccount, boolean isBuyer) {
+        String msgKey = paymentAccount.getPreTradeMessage(!isBuyer);
+        if (msgKey == null || paymentAccountWarningDisplayed.getOrDefault(msgKey, false)) {
+            return;
         }
+        paymentAccountWarningDisplayed.put(msgKey, true);
+        UserThread.runAfter(() -> {
+            new Popup().information(Res.get(msgKey))
+                    .width(900)
+                    .closeButtonText(Res.get("shared.iConfirm"))
+                    .dontShowAgainId(msgKey)
+                    .show();
+        }, 500, TimeUnit.MILLISECONDS);
     }
 
     private void maybeShowCashByMailWarning(PaymentAccount paymentAccount, Offer offer) {

@@ -51,4 +51,16 @@ public final class SwiftAccount extends PaymentAccount {
                 .collect(Collectors.toList());
         tradeCurrencies.addAll(currencyCodesSorted);
     }
+
+    public String getMessageForBuyer() {
+        return "payment.swift.info.buyer";
+    }
+
+    public String getMessageForSeller() {
+        return "payment.swift.info.seller";
+    }
+
+    public String getMessageForAccountCreation() {
+        return "payment.swift.info.account";
+    }
 }

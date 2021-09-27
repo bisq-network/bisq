@@ -60,6 +60,7 @@ import bisq.core.util.validation.RegexValidatorFactory;
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
 import bisq.common.config.Config;
+import bisq.common.config.ConfigFileEditor;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple3;
 import bisq.common.util.Utilities;
@@ -127,7 +128,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     private InputTextField transactionFeeInputTextField, ignoreTradersListInputTextField, ignoreDustThresholdInputTextField,
             autoConfRequiredConfirmationsTf, autoConfServiceAddressTf, autoConfTradeLimitTf, /*referralIdInputTextField,*/
             rpcUserTextField, blockNotifyPortTextField;
-    private ToggleButton isDaoFullNodeToggleButton;
+    private ToggleButton isDaoFullNodeToggleButton, daoActivatedToggleButton;
     private PasswordTextField rpcPwTextField;
     private TitledGroupBg daoOptionsTitledGroupBg;
 
@@ -163,6 +164,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     private final boolean daoOptionsSet;
     private final boolean displayStandbyModeFeature;
     private ChangeListener<Filter> filterChangeListener;
+    private final ConfigFileEditor configFileEditor;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -197,6 +199,8 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
                 !rpcPassword.isEmpty() &&
                 rpcBlockNotificationPort != Config.UNSPECIFIED_PORT;
         this.displayStandbyModeFeature = Utilities.isLinux() || Utilities.isOSX() || Utilities.isWindows();
+
+        this.configFileEditor = new ConfigFileEditor(config.configFile);
     }
 
     @Override
@@ -212,8 +216,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
 
         initializeGeneralOptions();
         initializeDisplayOptions();
-        if (DevEnv.isDaoActivated())
-            initializeDaoOptions();
+        initializeDaoOptions();
         initializeSeparator();
         initializeAutoConfirmOptions();
         initializeDisplayCurrencies();
@@ -230,8 +233,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         activateDisplayCurrencies();
         activateDisplayPreferences();
         activateAutoConfirmPreferences();
-        if (DevEnv.isDaoActivated())
-            activateDaoPreferences();
+        activateDaoPreferences();
     }
 
     @Override
@@ -240,8 +242,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         deactivateDisplayCurrencies();
         deactivateDisplayPreferences();
         deactivateAutoConfirmPreferences();
-        if (DevEnv.isDaoActivated())
-            deactivateDaoPreferences();
+        deactivateDaoPreferences();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -603,7 +604,8 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     }
 
     private void initializeDisplayOptions() {
-        TitledGroupBg titledGroupBg = addTitledGroupBg(root, ++gridRow, 7, Res.get("setting.preferences.displayOptions"), Layout.GROUP_DISTANCE);
+        TitledGroupBg titledGroupBg = addTitledGroupBg(root, ++gridRow, 8,
+                Res.get("setting.preferences.displayOptions"), Layout.GROUP_DISTANCE);
         GridPane.setColumnSpan(titledGroupBg, 1);
 
         showOwnOffersInOfferBook = addSlideToggleButton(root, gridRow, Res.get("setting.preferences.showOwnOffers"), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
@@ -621,8 +623,16 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     }
 
     private void initializeDaoOptions() {
-        daoOptionsTitledGroupBg = addTitledGroupBg(root, ++gridRow, 4, Res.get("setting.preferences.daoOptions"), Layout.GROUP_DISTANCE);
-        resyncDaoFromResourcesButton = addButton(root, gridRow, Res.get("setting.preferences.dao.resyncFromResources.label"), Layout.TWICE_FIRST_ROW_AND_GROUP_DISTANCE);
+        int rowSpan = DevEnv.isDaoActivated() ? 5 : 1;
+        daoOptionsTitledGroupBg = addTitledGroupBg(root, ++gridRow, rowSpan,
+                Res.get("setting.preferences.daoOptions"), Layout.GROUP_DISTANCE);
+        daoActivatedToggleButton = addSlideToggleButton(root, gridRow,
+                Res.get("setting.preferences.dao.activated"), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        if (!DevEnv.isDaoActivated()) {
+            return;
+        }
+
+        resyncDaoFromResourcesButton = addButton(root, ++gridRow, Res.get("setting.preferences.dao.resyncFromResources.label"));
         resyncDaoFromResourcesButton.setMaxWidth(Double.MAX_VALUE);
         GridPane.setHgrow(resyncDaoFromResourcesButton, Priority.ALWAYS);
 
@@ -998,6 +1008,19 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     }
 
     private void activateDaoPreferences() {
+        daoActivatedToggleButton.setSelected(DevEnv.isDaoActivated());
+        daoActivatedToggleButton.setOnAction(e -> {
+            // We do not use preferences as we need to handle the value at startup before preferences are loaded,
+            // so we write the option to the properties file. If the program argument is set it has higher priority
+            // and the property file value is ignored.
+            configFileEditor.setOption("daoActivated", Boolean.toString(daoActivatedToggleButton.isSelected()));
+            new Popup().information(Res.get("setting.preferences.dao.activated.popup")).useShutDownButton().show();
+        });
+
+        if (!DevEnv.isDaoActivated()) {
+            return;
+        }
+
         boolean daoFullNode = preferences.isDaoFullNode();
         isDaoFullNodeToggleButton.setSelected(daoFullNode);
 
@@ -1145,6 +1168,11 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     }
 
     private void deactivateDaoPreferences() {
+        daoActivatedToggleButton.setOnAction(null);
+        if (!DevEnv.isDaoActivated()) {
+            return;
+        }
+
         resyncDaoFromResourcesButton.setOnAction(null);
         resyncDaoFromGenesisButton.setOnAction(null);
         bsqAverageTrimThresholdTextField.textProperty().removeListener(bsqAverageTrimThresholdListener);

@@ -39,7 +39,9 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import static bisq.network.p2p.storage.TestState.*;
+import static bisq.network.p2p.storage.TestState.MAX_SEQUENCE_NUMBER_MAP_SIZE_BEFORE_PURGE;
+import static bisq.network.p2p.storage.TestState.SavedTestState;
+import static bisq.network.p2p.storage.TestState.getTestNodeAddress;
 
 /**
  * Tests of the P2PDataStore behavior that expires old Entrys periodically.
@@ -79,7 +81,7 @@ public class P2PDataStorageRemoveExpiredTest {
 
         this.testState.mockedStorage.removeExpiredEntries();
 
-        Assert.assertTrue(this.testState.mockedStorage.getAppendOnlyDataStoreMap().containsKey(new P2PDataStorage.ByteArray(persistableNetworkPayload.getHash())));
+        Assert.assertTrue(this.testState.mockedStorage.appendOnlyDataStoreService.getMap(persistableNetworkPayload).containsKey(new P2PDataStorage.ByteArray(persistableNetworkPayload.getHash())));
     }
 
     // TESTCASE: Correctly skips non-persistable entries that are not expired

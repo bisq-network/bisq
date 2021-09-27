@@ -778,24 +778,6 @@ public class GUIUtil {
                 .show();
     }
 
-    public static void showSwiftWarningToBuyer() {
-        String key = "confirmSwiftRequirementsBuyer";
-        new Popup().information(Res.get("payment.swift.info.buyer"))
-                .width(900)
-                .closeButtonText(Res.get("shared.iConfirm"))
-                .dontShowAgainId(key)
-                .show();
-    }
-
-    public static void showSwiftWarningToSeller() {
-        String key = "confirmSwiftRequirementsSeller";
-        new Popup().information(Res.get("payment.swift.info.seller"))
-                .width(900)
-                .closeButtonText(Res.get("shared.iConfirm"))
-                .dontShowAgainId(key)
-                .show();
-    }
-
     public static String getBitcoinURI(String address, Coin amount, String label) {
         return address != null ?
                 BitcoinURI.convertToBitcoinURI(Address.fromString(Config.baseCurrencyNetworkParameters(),
