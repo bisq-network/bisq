@@ -22,6 +22,7 @@ import bisq.core.payment.payload.PaymentMethod;
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.storage.payload.ProofOfWorkPayload;
 
+import bisq.common.crypto.Hash;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.proto.ProtoUtil;
 import bisq.common.util.JsonExclude;
@@ -62,6 +63,7 @@ public final class AtomicOfferPayload extends OfferPayloadI implements ProofOfWo
     private final int protocolVersion;
     private final byte[] proofOfWork;
 
+    private transient byte[] hash;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -207,6 +209,14 @@ public final class AtomicOfferPayload extends OfferPayloadI implements ProofOfWo
     @Override
     public Map<String, String> getExtraDataMap() {
         return null;
+    }
+
+    @Override
+    public byte[] getHash() {
+        if (this.hash == null) {
+            this.hash = Hash.getSha256Hash(this.toProtoMessage().toByteArray());
+        }
+        return this.hash;
     }
 
     @Override

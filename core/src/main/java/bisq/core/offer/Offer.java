@@ -588,7 +588,7 @@ public class Offer implements NetworkPayload, PersistablePayload {
     }
 
     public byte[] getOfferPayloadHash() {
-        return getOfferPayload().map(OfferPayload::getHash).orElse(new byte[0]);
+        return offerPayloadI.getHash();
     }
 
 

@@ -21,6 +21,7 @@ import bisq.network.p2p.storage.payload.ExpirablePayload;
 import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 import bisq.network.p2p.storage.payload.RequiresOwnerIsOnlinePayload;
 
+import bisq.common.crypto.Hash;
 import bisq.common.crypto.PubKeyRing;
 
 import java.util.concurrent.TimeUnit;
@@ -91,4 +92,5 @@ public abstract class OfferPayloadI implements ProtectedStoragePayload, Expirabl
         return getBaseCurrencyCode().equals("BTC") ? getCounterCurrencyCode() : getBaseCurrencyCode();
     }
 
+    abstract public byte[] getHash();
 }

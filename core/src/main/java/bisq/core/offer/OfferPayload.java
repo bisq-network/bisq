@@ -250,6 +250,7 @@ public final class OfferPayload extends OfferPayloadI {
         this.hash = null; // Do not calculate hash before offerFeePaymentTxId is set.
     }
 
+    @Override
     public byte[] getHash() {
         if (this.hash == null && this.offerFeePaymentTxId != null) {
             // A proto message can be created only after the offerFeePaymentTxId is
