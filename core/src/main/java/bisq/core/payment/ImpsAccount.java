@@ -17,50 +17,32 @@
 
 package bisq.core.payment;
 
-import bisq.core.locale.CurrencyUtil;
-import bisq.core.locale.FiatCurrency;
-import bisq.core.locale.TradeCurrency;
-import bisq.core.payment.payload.SwiftAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
-
-import java.util.Comparator;
-import java.util.List;
-import java.util.stream.Collectors;
+import bisq.core.payment.payload.ImpsAccountPayload;
 
 import lombok.EqualsAndHashCode;
 
 @EqualsAndHashCode(callSuper = true)
-public final class SwiftAccount extends PaymentAccount {
-    public SwiftAccount() {
-        super(PaymentMethod.SWIFT);
+public final class ImpsAccount extends CountryBasedPaymentAccount {
+    public ImpsAccount() {
+        super(PaymentMethod.IMPS);
     }
 
     @Override
     protected PaymentAccountPayload createPayload() {
-        return new SwiftAccountPayload(paymentMethod.getId(), id);
-    }
-
-    public SwiftAccountPayload getPayload() {
-        return ((SwiftAccountPayload) this.paymentAccountPayload);
-    }
-
-    public void selectAllTradeCurrencies() {
-        List<FiatCurrency> currencyCodesSorted = CurrencyUtil.getAllSortedFiatCurrencies().stream()
-                .sorted(Comparator.comparing(TradeCurrency::getCode))
-                .collect(Collectors.toList());
-        tradeCurrencies.addAll(currencyCodesSorted);
+        return new ImpsAccountPayload(paymentMethod.getId(), id);
     }
 
     public String getMessageForBuyer() {
-        return "payment.swift.info.buyer";
+        return "payment.imps.info.buyer";
     }
 
     public String getMessageForSeller() {
-        return "payment.swift.info.seller";
+        return "payment.imps.info.seller";
     }
 
     public String getMessageForAccountCreation() {
-        return "payment.swift.info.account";
+        return "payment.imps.info.account";
     }
 }

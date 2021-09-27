@@ -76,10 +76,6 @@ public class SwiftForm extends PaymentMethodForm {
     @Override
     public void addFormForAddAccount() {
         ((SwiftAccount) paymentAccount).selectAllTradeCurrencies();
-        new Popup().information(Res.get("payment.swift.info"))
-                .width(900)
-                .closeButtonText(Res.get("shared.iUnderstand"))
-                .show();
         gridRowFrom = gridRow + 1;
         addFieldsForBankEdit(true, this::setBankSwiftCode, this::setBankName, this::setBankBranch, this::setBankAddress);
         addFieldsForBankEdit(false, this::setIntermediarySwiftCode, this::setIntermediaryName, this::setIntermediaryBranch, this::setIntermediaryAddress);

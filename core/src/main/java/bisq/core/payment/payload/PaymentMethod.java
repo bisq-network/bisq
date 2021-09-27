@@ -98,6 +98,11 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
     public static final String TRANSFERWISE_ID = "TRANSFERWISE";
     public static final String PAYSERA_ID = "PAYSERA";
     public static final String PAXUM_ID = "PAXUM";
+    public static final String NEFT_ID = "NEFT";
+    public static final String RTGS_ID = "RTGS";
+    public static final String IMPS_ID = "IMPS";
+    public static final String UPI_ID = "UPI";
+    public static final String PAYTM_ID = "PAYTM";
     public static final String AMAZON_GIFT_CARD_ID = "AMAZON_GIFT_CARD";
     public static final String BLOCK_CHAINS_INSTANT_ID = "BLOCK_CHAINS_INSTANT";
     public static final String CASH_BY_MAIL_ID = "CASH_BY_MAIL";
@@ -143,6 +148,11 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
     public static PaymentMethod TRANSFERWISE;
     public static PaymentMethod PAYSERA;
     public static PaymentMethod PAXUM;
+    public static PaymentMethod NEFT;
+    public static PaymentMethod RTGS;
+    public static PaymentMethod IMPS;
+    public static PaymentMethod UPI;
+    public static PaymentMethod PAYTM;
     public static PaymentMethod AMAZON_GIFT_CARD;
     public static PaymentMethod BLOCK_CHAINS_INSTANT;
     public static PaymentMethod CASH_BY_MAIL;
@@ -201,6 +211,11 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
             TRANSFERWISE = new PaymentMethod(TRANSFERWISE_ID, 4 * DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
             PAYSERA = new PaymentMethod(PAYSERA_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
             PAXUM = new PaymentMethod(PAXUM_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
+            NEFT = new PaymentMethod(NEFT_ID, DAY, Coin.parseCoin("0.02")),
+            RTGS = new PaymentMethod(RTGS_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
+            IMPS = new PaymentMethod(IMPS_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
+            UPI = new PaymentMethod(UPI_ID, DAY, Coin.parseCoin("0.05")),
+            PAYTM = new PaymentMethod(PAYTM_ID, DAY, Coin.parseCoin("0.05")),
             CAPITUAL = new PaymentMethod(CAPITUAL_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
             SWIFT = new PaymentMethod(SWIFT_ID, 7 * DAY, DEFAULT_TRADE_LIMIT_MID_RISK),
 
@@ -319,6 +334,10 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
         // Hack for SF as the smallest unit is 1 SF ;-( and price is about 3 BTC!
         if (currencyCode.equals("SF"))
             return Coin.parseCoin("4");
+        // payment methods which define their own trade limits
+        if (id.equals(NEFT_ID) || id.equals(UPI_ID) || id.equals(PAYTM_ID)) {
+            return Coin.valueOf(maxTradeLimit);
+        }
 
         // We use the class field maxTradeLimit only for mapping the risk factor.
         long riskFactor;

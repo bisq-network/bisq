@@ -17,50 +17,40 @@
 
 package bisq.core.payment;
 
-import bisq.core.locale.CurrencyUtil;
-import bisq.core.locale.FiatCurrency;
-import bisq.core.locale.TradeCurrency;
-import bisq.core.payment.payload.SwiftAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
-
-import java.util.Comparator;
-import java.util.List;
-import java.util.stream.Collectors;
+import bisq.core.payment.payload.PaytmAccountPayload;
 
 import lombok.EqualsAndHashCode;
 
 @EqualsAndHashCode(callSuper = true)
-public final class SwiftAccount extends PaymentAccount {
-    public SwiftAccount() {
-        super(PaymentMethod.SWIFT);
+public final class PaytmAccount extends CountryBasedPaymentAccount {
+    public PaytmAccount() {
+        super(PaymentMethod.PAYTM);
     }
 
     @Override
     protected PaymentAccountPayload createPayload() {
-        return new SwiftAccountPayload(paymentMethod.getId(), id);
+        return new PaytmAccountPayload(paymentMethod.getId(), id);
     }
 
-    public SwiftAccountPayload getPayload() {
-        return ((SwiftAccountPayload) this.paymentAccountPayload);
+    public void setEmailOrMobileNr(String emailOrMobileNr) {
+        ((PaytmAccountPayload) paymentAccountPayload).setEmailOrMobileNr(emailOrMobileNr);
     }
 
-    public void selectAllTradeCurrencies() {
-        List<FiatCurrency> currencyCodesSorted = CurrencyUtil.getAllSortedFiatCurrencies().stream()
-                .sorted(Comparator.comparing(TradeCurrency::getCode))
-                .collect(Collectors.toList());
-        tradeCurrencies.addAll(currencyCodesSorted);
+    public String getEmailOrMobileNr() {
+        return ((PaytmAccountPayload) paymentAccountPayload).getEmailOrMobileNr();
     }
 
     public String getMessageForBuyer() {
-        return "payment.swift.info.buyer";
+        return "payment.paytm.info.buyer";
     }
 
     public String getMessageForSeller() {
-        return "payment.swift.info.seller";
+        return "payment.paytm.info.seller";
     }
 
     public String getMessageForAccountCreation() {
-        return "payment.swift.info.account";
+        return "payment.paytm.info.account";
     }
 }
