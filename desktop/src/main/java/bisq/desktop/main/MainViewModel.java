@@ -71,6 +71,7 @@ import bisq.core.user.User;
 import bisq.network.p2p.BootstrapListener;
 import bisq.network.p2p.P2PService;
 
+import bisq.common.ClockWatcher;
 import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
@@ -139,6 +140,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
     @Getter
     private final TorNetworkSettingsWindow torNetworkSettingsWindow;
     private final CorruptedStorageFileHandler corruptedStorageFileHandler;
+    private final ClockWatcher clockWatcher;
     private final Navigation navigation;
 
     @Getter
@@ -184,6 +186,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
                          AccountAgeWitnessService accountAgeWitnessService,
                          TorNetworkSettingsWindow torNetworkSettingsWindow,
                          CorruptedStorageFileHandler corruptedStorageFileHandler,
+                         ClockWatcher clockWatcher,
                          Navigation navigation) {
         this.bisqSetup = bisqSetup;
         this.walletsSetup = walletsSetup;
@@ -209,6 +212,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.torNetworkSettingsWindow = torNetworkSettingsWindow;
         this.corruptedStorageFileHandler = corruptedStorageFileHandler;
+        this.clockWatcher = clockWatcher;
         this.navigation = navigation;
 
         TxIdTextField.setPreferences(preferences);
@@ -270,6 +274,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
 
         setupP2PNumPeersWatcher();
         setupBtcNumPeersWatcher();
+        setupClockWatcherPopup();
 
         marketPricePresentation.setup();
         daoPresentation.setup();
@@ -543,6 +548,34 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
                 getWalletServiceErrorMsg().set(null);
             }
         });
+    }
+
+    private void setupClockWatcherPopup() {
+        ClockWatcher.Listener clockListener = new ClockWatcher.Listener() {
+            @Override
+            public void onSecondTick() {
+            }
+
+            @Override
+            public void onMinuteTick() {
+            }
+
+            @Override
+            public void onAwakeFromStandby(long missedMs) {
+                if (missedMs > TimeUnit.SECONDS.toMillis(10)) {
+                    String key = "clockWatcherWarning";
+                    if (DontShowAgainLookup.showAgain(key)) {
+                        new Popup().warning(Res.get("mainView.networkWarning.clockWatcher", missedMs / 1000))
+                                .actionButtonText(Res.get("shared.iUnderstand"))
+                                .useIUnderstandButton()
+                                .dontShowAgainId(key)
+                                .hideCloseButton()
+                                .show();
+                    }
+                }
+            }
+        };
+        clockWatcher.addListener(clockListener);
     }
 
     private void showFirstPopupIfResyncSPVRequested() {
