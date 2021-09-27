@@ -57,6 +57,9 @@ public class CommonSetup {
         Profiler.printSystemLoad();
         Profiler.printSystemLoadPeriodically(10, TimeUnit.MINUTES);
 
+        // Full DAO nodes (like seed nodes) do not use the GC triggers as it is expected they have sufficient RAM allocated.
+        GcUtil.setDISABLE_GC_CALLS(config.fullDaoNode);
+
         GcUtil.autoReleaseMemory();
 
         setSystemProperties();

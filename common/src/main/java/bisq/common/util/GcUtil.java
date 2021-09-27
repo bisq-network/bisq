@@ -19,29 +19,41 @@ package bisq.common.util;
 
 import bisq.common.UserThread;
 
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class GcUtil {
-    public static void autoReleaseMemory() {
-        autoReleaseMemory(1000);
-    }
+    @Setter
+    private static boolean DISABLE_GC_CALLS = false;
+    private static int TRIGGER_MEM = 1000;
+    private static int TRIGGER_MAX_MEM = 3000;
 
-    /**
-     * @param trigger  Threshold for free memory in MB when we invoke the garbage collector
-     */
-    public static void autoReleaseMemory(long trigger) {
-        UserThread.runPeriodically(() -> maybeReleaseMemory(trigger), 60);
+    public static void autoReleaseMemory() {
+        if (DISABLE_GC_CALLS)
+            return;
+
+        autoReleaseMemory(TRIGGER_MEM);
     }
 
     public static void maybeReleaseMemory() {
-        maybeReleaseMemory(3000);
+        if (DISABLE_GC_CALLS)
+            return;
+
+        maybeReleaseMemory(TRIGGER_MAX_MEM);
     }
 
     /**
      * @param trigger  Threshold for free memory in MB when we invoke the garbage collector
      */
-    public static void maybeReleaseMemory(long trigger) {
+    private static void autoReleaseMemory(long trigger) {
+        UserThread.runPeriodically(() -> maybeReleaseMemory(trigger), 60);
+    }
+
+    /**
+     * @param trigger  Threshold for free memory in MB when we invoke the garbage collector
+     */
+    private static void maybeReleaseMemory(long trigger) {
         long totalMemory = Runtime.getRuntime().totalMemory();
         if (totalMemory > trigger * 1024 * 1024) {
             log.info("Invoke garbage collector. Total memory: {} {} {}", Utilities.readableFileSize(totalMemory), totalMemory, trigger * 1024 * 1024);
