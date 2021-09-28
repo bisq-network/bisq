@@ -199,9 +199,6 @@ If all was successful:
 * Check the fingerprint of the pgp key which was used for signing in signingkey.asc (e.g. 29CDFD3B for Christoph
   Atteneder)
 
-* Manually add all hashes (macOS, linux, windows) to the `Bisq-${NEW_VERSION}.jar.txt` file.
-  (TODO: Automate file creation after process has been proven in v1.6.5)
-
 * Add all files including signingkey.asc and the gpg pub keys to GitHub release page
 
 * Check all uploaded files with [virustotal.com](https://www.virustotal.com)
