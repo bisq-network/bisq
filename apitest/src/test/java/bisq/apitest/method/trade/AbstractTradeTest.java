@@ -13,7 +13,7 @@ import org.junit.jupiter.api.TestInfo;
 
 import static bisq.apitest.config.ApiTestConfig.BTC;
 import static bisq.cli.CurrencyFormat.formatBsqAmount;
-import static bisq.cli.table.builder.TableType.TRADE_TBL;
+import static bisq.cli.table.builder.TableType.TRADE_DETAIL_TBL;
 import static bisq.core.trade.Trade.Phase.DEPOSIT_CONFIRMED;
 import static bisq.core.trade.Trade.Phase.FIAT_SENT;
 import static bisq.core.trade.Trade.Phase.PAYOUT_PUBLISHED;
@@ -106,8 +106,7 @@ public class AbstractTradeTest extends AbstractOfferTest {
                 logTrade(log,
                         testInfo,
                         userName + "'s view after deposit is confirmed",
-                        trade,
-                        true);
+                        trade);
                 break;
             }
         }
@@ -204,7 +203,7 @@ public class AbstractTradeTest extends AbstractOfferTest {
                 ? contract.getTakerPaymentAccountPayload().getAddress()
                 : contract.getMakerPaymentAccountPayload().getAddress();
         String sendBsqAmount = formatBsqAmount(trade.getOffer().getVolume());
-        log.info("Sending {} BSQ to address {}", sendBsqAmount, receiverAddress);
+        log.debug("Sending {} BSQ to address {}", sendBsqAmount, receiverAddress);
         grpcClient.sendBsq(receiverAddress, sendBsqAmount, "");
     }
 
@@ -219,7 +218,7 @@ public class AbstractTradeTest extends AbstractOfferTest {
                 : contract.getMakerPaymentAccountPayload().getAddress();
         boolean receivedBsqSatoshis = grpcClient.verifyBsqSentToAddress(address, receiveAmountAsString);
         if (receivedBsqSatoshis)
-            log.info("Payment of {} BSQ was received to address {} for trade with id {}.",
+            log.debug("Payment of {} BSQ was received to address {} for trade with id {}.",
                     receiveAmountAsString,
                     address,
                     trade.getTradeId());
@@ -232,11 +231,11 @@ public class AbstractTradeTest extends AbstractOfferTest {
 
     protected final void logBalances(Logger log, TestInfo testInfo) {
         var alicesBalances = aliceClient.getBalances();
-        log.info("{} Alice's Current Balance:\n{}",
+        log.debug("{} Alice's Current Balance:\n{}",
                 testName(testInfo),
                 formatBalancesTbls(alicesBalances));
         var bobsBalances = bobClient.getBalances();
-        log.info("{} Bob's Current Balance:\n{}",
+        log.debug("{} Bob's Current Balance:\n{}",
                 testName(testInfo),
                 formatBalancesTbls(bobsBalances));
     }
@@ -245,24 +244,11 @@ public class AbstractTradeTest extends AbstractOfferTest {
                                   TestInfo testInfo,
                                   String description,
                                   TradeInfo trade) {
-        logTrade(log, testInfo, description, trade, false);
-    }
-
-    protected final void logTrade(Logger log,
-                                  TestInfo testInfo,
-                                  String description,
-                                  TradeInfo trade,
-                                  boolean force) {
-        if (force)
-            log.info(String.format("%s %s%n%s",
-                    testName(testInfo),
-                    description.toUpperCase(),
-                    new TableBuilder(TRADE_TBL, trade).build()));
-        else if (log.isDebugEnabled()) {
+        if (log.isDebugEnabled()) {
             log.debug(String.format("%s %s%n%s",
                     testName(testInfo),
                     description.toUpperCase(),
-                    new TableBuilder(TRADE_TBL, trade).build()));
+                    new TableBuilder(TRADE_DETAIL_TBL, trade).build()));
         }
     }
 }

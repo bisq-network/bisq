@@ -66,7 +66,7 @@ public class TakeBuyBSQOfferTest extends AbstractTradeTest {
     @Test
     @Order(1)
     public void testTakeAlicesSellBTCForBSQOffer(final TestInfo testInfo) {
-        log.info("Bob's Balance @ Test Start :\n{}", formatBalancesTbls(bobClient.getBalances()));
+        log.debug("Bob's Balance @ Test Start :\n{}", formatBalancesTbls(bobClient.getBalances()));
         try {
             // Alice is going to BUY BSQ, but the Offer direction = SELL because it is a
             // BTC trade;  Alice will SELL BTC for BSQ.  Bob will send Alice BSQ.
@@ -80,7 +80,7 @@ public class TakeBuyBSQOfferTest extends AbstractTradeTest {
                     getDefaultBuyerSecurityDepositAsPercent(),
                     alicesBsqAcct.getId(),
                     TRADE_FEE_CURRENCY_CODE);
-            log.info("ALICE'S BUY BSQ (SELL BTC) OFFER:\n{}", new TableBuilder(OFFER_TBL, alicesOffer).build());
+            log.debug("ALICE'S BUY BSQ (SELL BTC) OFFER:\n{}", new TableBuilder(OFFER_TBL, alicesOffer).build());
             genBtcBlocksThenWait(1, 5000);
             var offerId = alicesOffer.getId();
             assertFalse(alicesOffer.getIsCurrencyForMakerFeeBtc());
@@ -102,8 +102,8 @@ public class TakeBuyBSQOfferTest extends AbstractTradeTest {
 
             trade = bobClient.getTrade(tradeId);
             verifyTakerDepositConfirmed(trade);
-            logTrade(log, testInfo, "Alice's Maker/Buyer View", aliceClient.getTrade(tradeId), true);
-            logTrade(log, testInfo, "Bob's Taker/Seller View", bobClient.getTrade(tradeId), true);
+            logTrade(log, testInfo, "Alice's Maker/Buyer View", aliceClient.getTrade(tradeId));
+            logTrade(log, testInfo, "Bob's Taker/Seller View", bobClient.getTrade(tradeId));
         } catch (StatusRuntimeException e) {
             fail(e);
         }
@@ -125,8 +125,8 @@ public class TakeBuyBSQOfferTest extends AbstractTradeTest {
 
             waitForBuyerSeesPaymentInitiatedMessage(log, testInfo, bobClient, tradeId);
 
-            logTrade(log, testInfo, "Alice's Maker/Buyer View (Payment Sent)", aliceClient.getTrade(tradeId), true);
-            logTrade(log, testInfo, "Bob's Taker/Seller View (Payment Sent)", bobClient.getTrade(tradeId), true);
+            logTrade(log, testInfo, "Alice's Maker/Buyer View (Payment Sent)", aliceClient.getTrade(tradeId));
+            logTrade(log, testInfo, "Bob's Taker/Seller View (Payment Sent)", bobClient.getTrade(tradeId));
         } catch (StatusRuntimeException e) {
             fail(e);
         }
@@ -153,8 +153,8 @@ public class TakeBuyBSQOfferTest extends AbstractTradeTest {
                     .setPayoutPublished(true)
                     .setFiatReceived(true);
             verifyExpectedProtocolStatus(trade);
-            logTrade(log, testInfo, "Alice's Maker/Buyer View (Payment Received)", aliceClient.getTrade(tradeId), true);
-            logTrade(log, testInfo, "Bob's Taker/Seller View (Payment Received)", bobClient.getTrade(tradeId), true);
+            logTrade(log, testInfo, "Alice's Maker/Buyer View (Payment Received)", aliceClient.getTrade(tradeId));
+            logTrade(log, testInfo, "Bob's Taker/Seller View (Payment Received)", bobClient.getTrade(tradeId));
         } catch (StatusRuntimeException e) {
             fail(e);
         }
@@ -162,13 +162,14 @@ public class TakeBuyBSQOfferTest extends AbstractTradeTest {
 
     @Test
     @Order(4)
-    public void testBobsKeepFunds(final TestInfo testInfo) {
+    public void testKeepFunds(final TestInfo testInfo) {
         try {
             genBtcBlocksThenWait(1, 1_000);
 
             var trade = bobClient.getTrade(tradeId);
             logTrade(log, testInfo, "Alice's view before keeping funds", trade);
 
+            aliceClient.keepFunds(tradeId);
             bobClient.keepFunds(tradeId);
             genBtcBlocksThenWait(1, 1_000);
 
@@ -176,8 +177,8 @@ public class TakeBuyBSQOfferTest extends AbstractTradeTest {
             EXPECTED_PROTOCOL_STATUS.setState(BUYER_RECEIVED_PAYOUT_TX_PUBLISHED_MSG)
                     .setPhase(PAYOUT_PUBLISHED);
             verifyExpectedProtocolStatus(trade);
-            logTrade(log, testInfo, "Alice's Maker/Buyer View (Done)", aliceClient.getTrade(tradeId), true);
-            logTrade(log, testInfo, "Bob's Taker/Seller View (Done)", bobClient.getTrade(tradeId), true);
+            logTrade(log, testInfo, "Alice's Maker/Buyer View (Done)", aliceClient.getTrade(tradeId));
+            logTrade(log, testInfo, "Bob's Taker/Seller View (Done)", bobClient.getTrade(tradeId));
             logBalances(log, testInfo);
         } catch (StatusRuntimeException e) {
             fail(e);

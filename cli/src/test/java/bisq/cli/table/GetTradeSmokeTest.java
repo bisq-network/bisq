@@ -1,6 +1,6 @@
 package bisq.cli.table;
 
-import static bisq.cli.table.builder.TableType.TRADE_TBL;
+import static bisq.cli.table.builder.TableType.TRADE_DETAIL_TBL;
 import static java.lang.System.out;
 
 
@@ -39,7 +39,7 @@ public class GetTradeSmokeTest extends AbstractSmokeTest {
     private void getTrade(GrpcClient client) {
         var trade = client.getTrade(tradeId);
         // var oldTbl = TODO
-        var newTbl = new TableBuilder(TRADE_TBL, trade).build().toString();
+        var newTbl = new TableBuilder(TRADE_DETAIL_TBL, trade).build().toString();
         // printOldTbl(oldTbl);
         printNewTbl(newTbl);
         // showDiffsIgnoreWhitespace(oldTbl, newTbl);

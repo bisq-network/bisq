@@ -146,8 +146,8 @@ public class TakeBuyBTCOfferWithNationalBankAcctTest extends AbstractTradeTest {
 
             trade = bobClient.getTrade(tradeId);
             verifyTakerDepositConfirmed(trade);
-            logTrade(log, testInfo, "Alice's Maker/Buyer View", aliceClient.getTrade(tradeId), true);
-            logTrade(log, testInfo, "Bob's Taker/Seller View", bobClient.getTrade(tradeId), true);
+            logTrade(log, testInfo, "Alice's Maker/Buyer View", aliceClient.getTrade(tradeId));
+            logTrade(log, testInfo, "Bob's Taker/Seller View", bobClient.getTrade(tradeId));
         } catch (StatusRuntimeException e) {
             fail(e);
         }
@@ -184,8 +184,8 @@ public class TakeBuyBTCOfferWithNationalBankAcctTest extends AbstractTradeTest {
             trade = aliceClient.getTrade(tradeId);
             assertEquals(OFFER_FEE_PAID.name(), trade.getOffer().getState());
 
-            logTrade(log, testInfo, "Alice's Maker/Buyer View (Payment Sent)", aliceClient.getTrade(tradeId), true);
-            logTrade(log, testInfo, "Bob's Taker/Seller View (Payment Sent)", bobClient.getTrade(tradeId), true);
+            logTrade(log, testInfo, "Alice's Maker/Buyer View (Payment Sent)", aliceClient.getTrade(tradeId));
+            logTrade(log, testInfo, "Bob's Taker/Seller View (Payment Sent)", bobClient.getTrade(tradeId));
         } catch (StatusRuntimeException e) {
             fail(e);
         }
@@ -217,7 +217,7 @@ public class TakeBuyBTCOfferWithNationalBankAcctTest extends AbstractTradeTest {
 
     @Test
     @Order(5)
-    public void testAlicesKeepFunds(final TestInfo testInfo) {
+    public void testKeepFunds(final TestInfo testInfo) {
         try {
             genBtcBlocksThenWait(1, 1_000);
 
@@ -225,6 +225,7 @@ public class TakeBuyBTCOfferWithNationalBankAcctTest extends AbstractTradeTest {
             logTrade(log, testInfo, "Alice's view before keeping funds", trade);
 
             aliceClient.keepFunds(tradeId);
+            bobClient.keepFunds(tradeId);
 
             genBtcBlocksThenWait(1, 1_000);
 
@@ -232,8 +233,8 @@ public class TakeBuyBTCOfferWithNationalBankAcctTest extends AbstractTradeTest {
             EXPECTED_PROTOCOL_STATUS.setState(BUYER_RECEIVED_PAYOUT_TX_PUBLISHED_MSG)
                     .setPhase(PAYOUT_PUBLISHED);
             verifyExpectedProtocolStatus(trade);
-            logTrade(log, testInfo, "Alice's Maker/Buyer View (Done)", aliceClient.getTrade(tradeId), true);
-            logTrade(log, testInfo, "Bob's Taker/Seller View (Done)", bobClient.getTrade(tradeId), true);
+            logTrade(log, testInfo, "Alice's Maker/Buyer View (Done)", aliceClient.getTrade(tradeId));
+            logTrade(log, testInfo, "Bob's Taker/Seller View (Done)", bobClient.getTrade(tradeId));
             logBalances(log, testInfo);
         } catch (StatusRuntimeException e) {
             fail(e);

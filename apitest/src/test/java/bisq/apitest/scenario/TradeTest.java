@@ -54,7 +54,7 @@ public class TradeTest extends AbstractTradeTest {
         test.testTakeAlicesBuyOffer(testInfo);
         test.testAlicesConfirmPaymentStarted(testInfo);
         test.testBobsConfirmPaymentReceived(testInfo);
-        test.testAlicesKeepFunds(testInfo);
+        test.testKeepFunds(testInfo);
     }
 
     @Test
@@ -75,7 +75,7 @@ public class TradeTest extends AbstractTradeTest {
         test.testBankAcctDetailsIncludedInContracts(testInfo);
         test.testAlicesConfirmPaymentStarted(testInfo);
         test.testBobsConfirmPaymentReceived(testInfo);
-        test.testAlicesKeepFunds(testInfo);
+        test.testKeepFunds(testInfo);
     }
 
     @Test
@@ -86,7 +86,7 @@ public class TradeTest extends AbstractTradeTest {
         test.testTakeAlicesSellBTCForBSQOffer(testInfo);
         test.testBobsConfirmPaymentStarted(testInfo);
         test.testAlicesConfirmPaymentReceived(testInfo);
-        test.testBobsKeepFunds(testInfo);
+        test.testKeepFunds(testInfo);
     }
 
     @Test
@@ -109,7 +109,7 @@ public class TradeTest extends AbstractTradeTest {
         test.testTakeAlicesSellBTCForXMROffer(testInfo);
         test.testBobsConfirmPaymentStarted(testInfo);
         test.testAlicesConfirmPaymentReceived(testInfo);
-        test.testBobsKeepFunds(testInfo);
+        test.testKeepFunds(testInfo);
     }
 
     @Test

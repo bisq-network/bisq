@@ -39,7 +39,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import static bisq.apitest.scenario.bot.protocol.ProtocolStep.*;
 import static bisq.apitest.scenario.bot.shutdown.ManualShutdown.checkIfShutdownCalled;
-import static bisq.cli.table.builder.TableType.TRADE_TBL;
+import static bisq.cli.table.builder.TableType.TRADE_DETAIL_TBL;
 import static java.lang.String.format;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Arrays.stream;
@@ -135,7 +135,7 @@ public abstract class BotProtocol {
                     var t = this.getBotClient().getTrade(trade.getTradeId());
                     if (t.getIsFiatSent()) {
                         log.info("Buyer has started payment for trade:\n{}",
-                                new TableBuilder(TRADE_TBL, t).build());
+                                new TableBuilder(TRADE_DETAIL_TBL, t).build());
                         return t;
                     }
                 } catch (Exception ex) {
@@ -170,7 +170,7 @@ public abstract class BotProtocol {
                     var t = this.getBotClient().getTrade(trade.getTradeId());
                     if (t.getIsFiatReceived()) {
                         log.info("Seller has received payment for trade:\n{}",
-                                new TableBuilder(TRADE_TBL, t).build());
+                                new TableBuilder(TRADE_DETAIL_TBL, t).build());
                         return t;
                     }
                 } catch (Exception ex) {
@@ -205,7 +205,7 @@ public abstract class BotProtocol {
                     if (t.getIsPayoutPublished()) {
                         log.info("Payout tx {} has been published for trade:\n{}",
                                 t.getPayoutTxId(),
-                                new TableBuilder(TRADE_TBL, t).build());
+                                new TableBuilder(TRADE_DETAIL_TBL, t).build());
                         return t;
                     }
                 } catch (Exception ex) {

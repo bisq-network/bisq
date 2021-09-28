@@ -82,7 +82,7 @@ public class TakeSellBSQOfferTest extends AbstractTradeTest {
                     getDefaultBuyerSecurityDepositAsPercent(),
                     alicesBsqAcct.getId(),
                     TRADE_FEE_CURRENCY_CODE);
-            log.info("ALICE'S SELL BSQ (BUY BTC) OFFER:\n{}", new TableBuilder(OFFER_TBL, alicesOffer).build());
+            log.debug("ALICE'S SELL BSQ (BUY BTC) OFFER:\n{}", new TableBuilder(OFFER_TBL, alicesOffer).build());
             genBtcBlocksThenWait(1, 4000);
             var offerId = alicesOffer.getId();
             assertTrue(alicesOffer.getIsCurrencyForMakerFeeBtc());
@@ -101,8 +101,8 @@ public class TakeSellBSQOfferTest extends AbstractTradeTest {
 
             trade = bobClient.getTrade(tradeId);
             verifyTakerDepositConfirmed(trade);
-            logTrade(log, testInfo, "Alice's Maker/Seller View", aliceClient.getTrade(tradeId), true);
-            logTrade(log, testInfo, "Bob's Taker/Buyer View", bobClient.getTrade(tradeId), true);
+            logTrade(log, testInfo, "Alice's Maker/Seller View", aliceClient.getTrade(tradeId));
+            logTrade(log, testInfo, "Bob's Taker/Buyer View", bobClient.getTrade(tradeId));
         } catch (StatusRuntimeException e) {
             fail(e);
         }
@@ -123,8 +123,8 @@ public class TakeSellBSQOfferTest extends AbstractTradeTest {
 
             waitForBuyerSeesPaymentInitiatedMessage(log, testInfo, aliceClient, tradeId);
 
-            logTrade(log, testInfo, "Alice's Maker/Seller View (Payment Sent)", aliceClient.getTrade(tradeId), true);
-            logTrade(log, testInfo, "Bob's Taker/Buyer View (Payment Sent)", bobClient.getTrade(tradeId), true);
+            logTrade(log, testInfo, "Alice's Maker/Seller View (Payment Sent)", aliceClient.getTrade(tradeId));
+            logTrade(log, testInfo, "Bob's Taker/Buyer View (Payment Sent)", bobClient.getTrade(tradeId));
         } catch (StatusRuntimeException e) {
             fail(e);
         }
@@ -150,8 +150,8 @@ public class TakeSellBSQOfferTest extends AbstractTradeTest {
                     .setPayoutPublished(true)
                     .setFiatReceived(true);
             verifyExpectedProtocolStatus(trade);
-            logTrade(log, testInfo, "Alice's Maker/Seller View (Payment Received)", aliceClient.getTrade(tradeId), true);
-            logTrade(log, testInfo, "Bob's Taker/Buyer View (Payment Received)", bobClient.getTrade(tradeId), true);
+            logTrade(log, testInfo, "Alice's Maker/Seller View (Payment Received)", aliceClient.getTrade(tradeId));
+            logTrade(log, testInfo, "Bob's Taker/Buyer View (Payment Received)", bobClient.getTrade(tradeId));
         } catch (StatusRuntimeException e) {
             fail(e);
         }
@@ -169,6 +169,9 @@ public class TakeSellBSQOfferTest extends AbstractTradeTest {
             String toAddress = bitcoinCli.getNewBtcAddress();
             aliceClient.withdrawFunds(tradeId, toAddress, WITHDRAWAL_TX_MEMO);
 
+            // Bob keeps funds.
+            bobClient.keepFunds(tradeId);
+
             genBtcBlocksThenWait(1, 1_000);
 
             trade = aliceClient.getTrade(tradeId);
@@ -176,8 +179,8 @@ public class TakeSellBSQOfferTest extends AbstractTradeTest {
                     .setPhase(WITHDRAWN)
                     .setWithdrawn(true);
             verifyExpectedProtocolStatus(trade);
-            logTrade(log, testInfo, "Alice's Maker/Seller View (Done)", aliceClient.getTrade(tradeId), true);
-            logTrade(log, testInfo, "Bob's Taker/Buyer View (Done)", bobClient.getTrade(tradeId), true);
+            logTrade(log, testInfo, "Alice's Maker/Seller View (Done)", aliceClient.getTrade(tradeId));
+            logTrade(log, testInfo, "Bob's Taker/Buyer View (Done)", bobClient.getTrade(tradeId));
             logBalances(log, testInfo);
         } catch (StatusRuntimeException e) {
             fail(e);

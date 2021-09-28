@@ -19,6 +19,7 @@ package bisq.cli.table.builder;
 
 import java.util.List;
 
+import static bisq.cli.table.builder.TableType.*;
 import static java.util.Collections.singletonList;
 
 
@@ -53,7 +54,7 @@ public class TableBuilder extends AbstractTableBuilder {
                 return new OfferTableBuilder(protos).build();
             case PAYMENT_ACCOUNT_TBL:
                 return new PaymentAccountTableBuilder(protos).build();
-            case TRADE_TBL:
+            case TRADE_DETAIL_TBL:
                 return new TradeTableBuilder(protos).build();
             case TRANSACTION_TBL:
                 return new TransactionTableBuilder(protos).build();

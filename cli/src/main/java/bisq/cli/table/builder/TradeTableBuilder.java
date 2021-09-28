@@ -27,7 +27,7 @@ import java.util.function.Predicate;
 import javax.annotation.Nullable;
 
 import static bisq.cli.table.builder.TableBuilderConstants.*;
-import static bisq.cli.table.builder.TableType.TRADE_TBL;
+import static bisq.cli.table.builder.TableType.TRADE_DETAIL_TBL;
 import static bisq.cli.table.column.AltcoinColumn.DISPLAY_MODE.ALTCOIN_OFFER_VOLUME;
 import static bisq.cli.table.column.FiatColumn.DISPLAY_MODE.VOLUME;
 
@@ -56,7 +56,7 @@ public class TradeTableBuilder extends AbstractTableBuilder {
     private final Column<Boolean> colIsFundsWithdrawn;
 
     public TradeTableBuilder(List<?> protos) {
-        super(TRADE_TBL, protos);
+        super(TRADE_DETAIL_TBL, protos);
         this.colShortId = new StringColumn(COL_HEADER_TRADE_SHORT_ID);
         this.colRole = new StringColumn(COL_HEADER_TRADE_ROLE);
         this.colMinerTxFee = new AltcoinColumn(COL_HEADER_TRADE_TX_FEE);

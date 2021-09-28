@@ -17,7 +17,7 @@ import static bisq.apitest.scenario.bot.protocol.ProtocolStep.DONE;
 import static bisq.apitest.scenario.bot.protocol.ProtocolStep.WAIT_FOR_OFFER_TAKER;
 import static bisq.apitest.scenario.bot.shutdown.ManualShutdown.checkIfShutdownCalled;
 import static bisq.cli.table.builder.TableType.OFFER_TBL;
-import static bisq.cli.table.builder.TableType.TRADE_TBL;
+import static bisq.cli.table.builder.TableType.TRADE_DETAIL_TBL;
 
 
 
@@ -99,7 +99,7 @@ public class MakerBotProtocol extends BotProtocol {
         try {
             var trade = botClient.getTrade(offerId);
             log.info("Offer {} was taken, new trade:\n{}", offerId,
-                    new TableBuilder(TRADE_TBL, trade).build());
+                    new TableBuilder(TRADE_DETAIL_TBL, trade).build());
             return Optional.of(trade);
         } catch (Exception ex) {
             // Get trade will throw a non-fatal gRPC exception if not found.

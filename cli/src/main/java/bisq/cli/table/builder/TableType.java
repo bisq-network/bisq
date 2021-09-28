@@ -27,6 +27,6 @@ public enum TableType {
     BTC_BALANCE_TBL,
     OFFER_TBL,
     PAYMENT_ACCOUNT_TBL,
-    TRADE_TBL,
+    TRADE_DETAIL_TBL,
     TRANSACTION_TBL
 }

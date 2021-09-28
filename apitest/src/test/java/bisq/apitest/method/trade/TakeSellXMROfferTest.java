@@ -84,7 +84,7 @@ public class TakeSellXMROfferTest extends AbstractTradeTest {
                     alicesXmrAcct.getId(),
                     TRADE_FEE_CURRENCY_CODE,
                     NO_TRIGGER_PRICE);
-            log.info("ALICE'S SELL XMR (BUY BTC) OFFER:\n{}", new TableBuilder(OFFER_TBL, alicesOffer).build());
+            log.debug("ALICE'S SELL XMR (BUY BTC) OFFER:\n{}", new TableBuilder(OFFER_TBL, alicesOffer).build());
             genBtcBlocksThenWait(1, 4000);
             var offerId = alicesOffer.getId();
             assertTrue(alicesOffer.getIsCurrencyForMakerFeeBtc());
@@ -103,8 +103,8 @@ public class TakeSellXMROfferTest extends AbstractTradeTest {
 
             trade = bobClient.getTrade(tradeId);
             verifyTakerDepositConfirmed(trade);
-            logTrade(log, testInfo, "Alice's Maker/Seller View", aliceClient.getTrade(tradeId), true);
-            logTrade(log, testInfo, "Bob's Taker/Buyer View", bobClient.getTrade(tradeId), true);
+            logTrade(log, testInfo, "Alice's Maker/Seller View", aliceClient.getTrade(tradeId));
+            logTrade(log, testInfo, "Bob's Taker/Buyer View", bobClient.getTrade(tradeId));
         } catch (StatusRuntimeException e) {
             fail(e);
         }
@@ -118,13 +118,13 @@ public class TakeSellXMROfferTest extends AbstractTradeTest {
 
             waitForDepositConfirmation(log, testInfo, aliceClient, trade.getTradeId());
 
-            log.info("Alice sends XMR payment to Bob for trade {}", trade.getTradeId());
+            log.debug("Alice sends XMR payment to Bob for trade {}", trade.getTradeId());
             aliceClient.confirmPaymentStarted(trade.getTradeId());
             sleep(3500);
 
             waitForBuyerSeesPaymentInitiatedMessage(log, testInfo, aliceClient, tradeId);
-            logTrade(log, testInfo, "Alice's Maker/Seller View (Payment Sent)", aliceClient.getTrade(tradeId), true);
-            logTrade(log, testInfo, "Bob's Taker/Buyer View (Payment Sent)", bobClient.getTrade(tradeId), true);
+            logTrade(log, testInfo, "Alice's Maker/Seller View (Payment Sent)", aliceClient.getTrade(tradeId));
+            logTrade(log, testInfo, "Bob's Taker/Buyer View (Payment Sent)", bobClient.getTrade(tradeId));
         } catch (StatusRuntimeException e) {
             fail(e);
         }
@@ -141,7 +141,7 @@ public class TakeSellXMROfferTest extends AbstractTradeTest {
             // If we were trading BSQ, Bob would verify payment has been sent to his
             // Bisq / BSQ wallet, but we can do no such checks for XMR payments.
             // All XMR transfers are done outside Bisq.
-            log.info("Bob verifies XMR payment was received from Alice, for trade {}", trade.getTradeId());
+            log.debug("Bob verifies XMR payment was received from Alice, for trade {}", trade.getTradeId());
             bobClient.confirmPaymentReceived(trade.getTradeId());
             sleep(3_000);
 
@@ -152,8 +152,8 @@ public class TakeSellXMROfferTest extends AbstractTradeTest {
                     .setPayoutPublished(true)
                     .setFiatReceived(true);
             verifyExpectedProtocolStatus(trade);
-            logTrade(log, testInfo, "Alice's Maker/Seller View (Payment Received)", aliceClient.getTrade(tradeId), true);
-            logTrade(log, testInfo, "Bob's Taker/Buyer View (Payment Received)", bobClient.getTrade(tradeId), true);
+            logTrade(log, testInfo, "Alice's Maker/Seller View (Payment Received)", aliceClient.getTrade(tradeId));
+            logTrade(log, testInfo, "Bob's Taker/Buyer View (Payment Received)", bobClient.getTrade(tradeId));
         } catch (StatusRuntimeException e) {
             fail(e);
         }
@@ -170,6 +170,7 @@ public class TakeSellXMROfferTest extends AbstractTradeTest {
 
             String toAddress = bitcoinCli.getNewBtcAddress();
             aliceClient.withdrawFunds(tradeId, toAddress, WITHDRAWAL_TX_MEMO);
+            bobClient.keepFunds(tradeId);
 
             genBtcBlocksThenWait(1, 1_000);
 
@@ -178,8 +179,8 @@ public class TakeSellXMROfferTest extends AbstractTradeTest {
                     .setPhase(WITHDRAWN)
                     .setWithdrawn(true);
             verifyExpectedProtocolStatus(trade);
-            logTrade(log, testInfo, "Alice's Maker/Seller View (Done)", aliceClient.getTrade(tradeId), true);
-            logTrade(log, testInfo, "Bob's Taker/Buyer View (Done)", bobClient.getTrade(tradeId), true);
+            logTrade(log, testInfo, "Alice's Maker/Seller View (Done)", aliceClient.getTrade(tradeId));
+            logTrade(log, testInfo, "Bob's Taker/Buyer View (Done)", bobClient.getTrade(tradeId));
             logBalances(log, testInfo);
         } catch (StatusRuntimeException e) {
             fail(e);

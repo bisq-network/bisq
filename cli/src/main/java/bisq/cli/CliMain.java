@@ -471,7 +471,7 @@ public class CliMain {
                     if (showContract)
                         out.println(trade.getContractAsJson());
                     else
-                        new TableBuilder(TRADE_TBL, trade).build().print(out);
+                        new TableBuilder(TRADE_DETAIL_TBL, trade).build().print(out);
 
                     return;
                 }

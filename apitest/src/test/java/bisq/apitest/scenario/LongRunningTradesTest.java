@@ -31,37 +31,55 @@ import static java.lang.System.getenv;
 
 
 import bisq.apitest.method.trade.AbstractTradeTest;
+import bisq.apitest.method.trade.TakeBuyBSQOfferTest;
 import bisq.apitest.method.trade.TakeBuyBTCOfferTest;
+import bisq.apitest.method.trade.TakeBuyXMROfferTest;
+import bisq.apitest.method.trade.TakeSellBSQOfferTest;
 import bisq.apitest.method.trade.TakeSellBTCOfferTest;
+import bisq.apitest.method.trade.TakeSellXMROfferTest;
 
 @EnabledIf("envLongRunningTestEnabled")
 @Slf4j
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class LongRunningTradesTest extends AbstractTradeTest {
 
+    // A cycle of trades is six trades:  Buy & Sell BTC, Buy & Sell BSQ, Buy & Sell XMR.
+    private static final int NUM_TRADES_PER_CYCLE = 6;
+    private static final int MAX_TRADES = NUM_TRADES_PER_CYCLE * 1;
+
+    private static final long DELAY_BETWEEN_TRADES = 15_000;
+
     @Test
     @Order(1)
-    public void TradeLoop(final TestInfo testInfo) {
+    public void TradeCycle(final TestInfo testInfo) {
         int numTrades = 0;
-        while (numTrades < 50) {
+        while (numTrades < MAX_TRADES) {
 
-            log.info("*******************************************************************");
-            log.info("Trade # {}", ++numTrades);
-            log.info("*******************************************************************");
-
-            EXPECTED_PROTOCOL_STATUS.init();
+            initTestFixture(++numTrades);
             testTakeBuyBTCOffer(testInfo);
+            generateBtcBlock();
 
-            genBtcBlocksThenWait(1, 1000 * 15);
-
-            log.info("*******************************************************************");
-            log.info("Trade # {}", ++numTrades);
-            log.info("*******************************************************************");
-
-            EXPECTED_PROTOCOL_STATUS.init();
+            initTestFixture(++numTrades);
             testTakeSellBTCOffer(testInfo);
+            generateBtcBlock();
 
-            genBtcBlocksThenWait(1, 1000 * 15);
+            initTestFixture(++numTrades);
+            testTakeBuyBSQOffer(testInfo);
+            generateBtcBlock();
+
+            initTestFixture(++numTrades);
+            testTakeSellBSQOffer(testInfo);
+            generateBtcBlock();
+
+            initTestFixture(++numTrades);
+            testTakeBuyXMROffer(testInfo);
+            generateBtcBlock();
+
+            initTestFixture(++numTrades);
+            testTakeSellXMROffer(testInfo);
+            generateBtcBlock();
+
+            // printClosedTrades();
         }
     }
 
@@ -71,7 +89,7 @@ public class LongRunningTradesTest extends AbstractTradeTest {
         test.testTakeAlicesBuyOffer(testInfo);
         test.testAlicesConfirmPaymentStarted(testInfo);
         test.testBobsConfirmPaymentReceived(testInfo);
-        test.testAlicesKeepFunds(testInfo);
+        test.testKeepFunds(testInfo);
     }
 
     public void testTakeSellBTCOffer(final TestInfo testInfo) {
@@ -82,6 +100,68 @@ public class LongRunningTradesTest extends AbstractTradeTest {
         test.testAlicesConfirmPaymentReceived(testInfo);
         test.testBobsBtcWithdrawalToExternalAddress(testInfo);
     }
+
+    public void testTakeBuyBSQOffer(final TestInfo testInfo) {
+        TakeBuyBSQOfferTest test = new TakeBuyBSQOfferTest();
+        setLongRunningTest(true);
+        test.createBsqPaymentAccounts();
+        test.testTakeAlicesSellBTCForBSQOffer(testInfo);
+        test.testBobsConfirmPaymentStarted(testInfo);
+        test.testAlicesConfirmPaymentReceived(testInfo);
+        test.testKeepFunds(testInfo);
+
+    }
+
+    public void testTakeSellBSQOffer(final TestInfo testInfo) {
+        TakeSellBSQOfferTest test = new TakeSellBSQOfferTest();
+        setLongRunningTest(true);
+        test.createBsqPaymentAccounts();
+        test.testTakeAlicesBuyBTCForBSQOffer(testInfo);
+        test.testAlicesConfirmPaymentStarted(testInfo);
+        test.testBobsConfirmPaymentReceived(testInfo);
+        test.testAlicesBtcWithdrawalToExternalAddress(testInfo);
+    }
+
+    public void testTakeBuyXMROffer(final TestInfo testInfo) {
+        TakeBuyXMROfferTest test = new TakeBuyXMROfferTest();
+        setLongRunningTest(true);
+        test.createXmrPaymentAccounts();
+        test.testTakeAlicesSellBTCForXMROffer(testInfo);
+        test.testBobsConfirmPaymentStarted(testInfo);
+        test.testAlicesConfirmPaymentReceived(testInfo);
+        test.testKeepFunds(testInfo);
+    }
+
+    public void testTakeSellXMROffer(final TestInfo testInfo) {
+        TakeSellXMROfferTest test = new TakeSellXMROfferTest();
+        setLongRunningTest(true);
+        test.createXmrPaymentAccounts();
+        test.testTakeAlicesBuyBTCForXMROffer(testInfo);
+        test.testAlicesConfirmPaymentStarted(testInfo);
+        test.testBobsConfirmPaymentReceived(testInfo);
+        test.testAlicesBtcWithdrawalToExternalAddress(testInfo);
+    }
+
+    private void initTestFixture(int numTrades) {
+        EXPECTED_PROTOCOL_STATUS.init();
+        log.info("*******************************************************************");
+        log.info("Trade # {}", numTrades);
+        log.info("*******************************************************************");
+    }
+
+    private void generateBtcBlock() {
+        genBtcBlocksThenWait(1, DELAY_BETWEEN_TRADES);
+    }
+
+    // TODO Uncomment when API 'gettrades' method is implemented.
+    /*
+    private void printClosedTrades() {
+        log.info("Alice's Closed Trades");
+        new TableBuilder(TableType.TRADE_HISTORY_TBL, aliceClient.getTradeHistory(CLOSED)).build().print(out);
+        log.info("Bob's Closed Trades");
+        new TableBuilder(TableType.TRADE_HISTORY_TBL, bobClient.getTradeHistory(CLOSED)).build().print(out);
+    }
+     */
 
     protected static boolean envLongRunningTestEnabled() {
         String envName = "LONG_RUNNING_TRADES_TEST_ENABLED";

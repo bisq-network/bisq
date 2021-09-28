@@ -90,8 +90,8 @@ public class TakeSellBTCOfferTest extends AbstractTradeTest {
 
             trade = bobClient.getTrade(tradeId);
             verifyTakerDepositConfirmed(trade);
-            logTrade(log, testInfo, "Alice's Maker/Buyer View", aliceClient.getTrade(tradeId), true);
-            logTrade(log, testInfo, "Bob's Taker/Seller View", bobClient.getTrade(tradeId), true);
+            logTrade(log, testInfo, "Alice's Maker/Buyer View", aliceClient.getTrade(tradeId));
+            logTrade(log, testInfo, "Bob's Taker/Seller View", bobClient.getTrade(tradeId));
         } catch (StatusRuntimeException e) {
             fail(e);
         }
@@ -148,6 +148,7 @@ public class TakeSellBTCOfferTest extends AbstractTradeTest {
 
             String toAddress = bitcoinCli.getNewBtcAddress();
             bobClient.withdrawFunds(tradeId, toAddress, WITHDRAWAL_TX_MEMO);
+            aliceClient.keepFunds(tradeId);
 
             genBtcBlocksThenWait(1, 1_000);
 
@@ -156,8 +157,8 @@ public class TakeSellBTCOfferTest extends AbstractTradeTest {
                     .setPhase(WITHDRAWN)
                     .setWithdrawn(true);
             verifyExpectedProtocolStatus(trade);
-            logTrade(log, testInfo, "Alice's Maker/Buyer View (Done)", aliceClient.getTrade(tradeId), true);
-            logTrade(log, testInfo, "Bob's Taker/Seller View (Done)", bobClient.getTrade(tradeId), true);
+            logTrade(log, testInfo, "Alice's Maker/Buyer View (Done)", aliceClient.getTrade(tradeId));
+            logTrade(log, testInfo, "Bob's Taker/Seller View (Done)", bobClient.getTrade(tradeId));
             logBalances(log, testInfo);
         } catch (StatusRuntimeException e) {
             fail(e);
