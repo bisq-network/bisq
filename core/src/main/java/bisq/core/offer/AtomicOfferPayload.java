@@ -44,7 +44,7 @@ import org.jetbrains.annotations.Nullable;
 @EqualsAndHashCode(callSuper = true)
 @Getter
 @Slf4j
-public final class AtomicOfferPayload extends OfferPayloadI implements ProofOfWorkPayload {
+public final class AtomicOfferPayload extends OfferPayloadBase implements ProofOfWorkPayload {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Instance fields

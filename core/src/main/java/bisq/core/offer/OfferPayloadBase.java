@@ -21,14 +21,13 @@ import bisq.network.p2p.storage.payload.ExpirablePayload;
 import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 import bisq.network.p2p.storage.payload.RequiresOwnerIsOnlinePayload;
 
-import bisq.common.crypto.Hash;
 import bisq.common.crypto.PubKeyRing;
 
 import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nullable;
 
-public abstract class OfferPayloadI implements ProtectedStoragePayload, ExpirablePayload, RequiresOwnerIsOnlinePayload {
+public abstract class OfferPayloadBase implements ProtectedStoragePayload, ExpirablePayload, RequiresOwnerIsOnlinePayload {
 
     public static final long TTL = TimeUnit.MINUTES.toMillis(9);
 

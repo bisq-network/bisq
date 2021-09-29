@@ -36,7 +36,7 @@ import bisq.core.monetary.Volume;
 import bisq.core.offer.CreateOfferService;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
-import bisq.core.offer.OfferPayloadI;
+import bisq.core.offer.OfferPayloadBase;
 import bisq.core.offer.OfferUtil;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.payment.PaymentAccount;
@@ -477,11 +477,11 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     }
 
     boolean isSellOffer() {
-        return direction == OfferPayloadI.Direction.SELL;
+        return direction == OfferPayloadBase.Direction.SELL;
     }
 
     boolean isBuyOffer() {
-        return direction == OfferPayloadI.Direction.BUY;
+        return direction == OfferPayloadBase.Direction.BUY;
     }
 
     AddressEntry getAddressEntry() {

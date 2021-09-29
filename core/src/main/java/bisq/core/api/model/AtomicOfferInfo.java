@@ -80,13 +80,13 @@ public class AtomicOfferInfo implements Payload {
                 //.withMakerPaymentAccountId(offer.getOfferPayloadI().getMakerPaymentAccountId())
                 //.withPaymentMethodId(offer.getOfferPayloadI().getPaymentMethodId())
                 //.withPaymentMethodShortName(getPaymentMethodById(offer.getOfferPayloadI().getPaymentMethodId()).getShortName())
-                .withBaseCurrencyCode(offer.getOfferPayloadI().getBaseCurrencyCode())
-                .withCounterCurrencyCode(offer.getOfferPayloadI().getCounterCurrencyCode())
+                .withBaseCurrencyCode(offer.getOfferPayloadBase().getBaseCurrencyCode())
+                .withCounterCurrencyCode(offer.getOfferPayloadBase().getCounterCurrencyCode())
                 .withDate(offer.getDate().getTime())
-                .withOwnerNodeAddress(offer.getOfferPayloadI().getOwnerNodeAddress().getFullAddress())
-                .withPubKeyRing(offer.getOfferPayloadI().getPubKeyRing().toString())
-                .withVersionNumber(offer.getOfferPayloadI().getVersionNr())
-                .withProtocolVersion(offer.getOfferPayloadI().getProtocolVersion());
+                .withOwnerNodeAddress(offer.getOfferPayloadBase().getOwnerNodeAddress().getFullAddress())
+                .withPubKeyRing(offer.getOfferPayloadBase().getPubKeyRing().toString())
+                .withVersionNumber(offer.getOfferPayloadBase().getVersionNr())
+                .withProtocolVersion(offer.getOfferPayloadBase().getProtocolVersion());
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

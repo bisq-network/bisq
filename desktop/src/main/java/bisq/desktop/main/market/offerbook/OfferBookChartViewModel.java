@@ -36,7 +36,7 @@ import bisq.core.locale.TradeCurrency;
 import bisq.core.monetary.Price;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
-import bisq.core.offer.OfferPayloadI;
+import bisq.core.offer.OfferPayloadBase;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.user.Preferences;
 
@@ -298,7 +298,7 @@ class OfferBookChartViewModel extends ActivatableViewModel {
         List<Offer> allBuyOffers = offerBookListItems.stream()
                 .map(OfferBookListItem::getOffer)
                 .filter(e -> e.getCurrencyCode().equals(selectedTradeCurrencyProperty.get().getCode())
-                        && e.getDirection().equals(OfferPayloadI.Direction.BUY))
+                        && e.getDirection().equals(OfferPayloadBase.Direction.BUY))
                 .sorted(buyOfferSortComparator)
                 .collect(Collectors.toList());
 
@@ -322,12 +322,12 @@ class OfferBookChartViewModel extends ActivatableViewModel {
             maxPlacesForBuyVolume.set(formatVolume(offer, false).length());
         }
 
-        buildChartAndTableEntries(allBuyOffers, OfferPayloadI.Direction.BUY, buyData, topBuyOfferList);
+        buildChartAndTableEntries(allBuyOffers, OfferPayloadBase.Direction.BUY, buyData, topBuyOfferList);
 
         List<Offer> allSellOffers = offerBookListItems.stream()
                 .map(OfferBookListItem::getOffer)
                 .filter(e -> e.getCurrencyCode().equals(selectedTradeCurrencyProperty.get().getCode())
-                        && e.getDirection().equals(OfferPayloadI.Direction.SELL))
+                        && e.getDirection().equals(OfferPayloadBase.Direction.SELL))
                 .sorted(sellOfferSortComparator)
                 .collect(Collectors.toList());
 
@@ -349,7 +349,7 @@ class OfferBookChartViewModel extends ActivatableViewModel {
             maxPlacesForSellVolume.set(formatVolume(offer, false).length());
         }
 
-        buildChartAndTableEntries(allSellOffers, OfferPayloadI.Direction.SELL, sellData, topSellOfferList);
+        buildChartAndTableEntries(allSellOffers, OfferPayloadBase.Direction.SELL, sellData, topSellOfferList);
     }
 
     private void buildChartAndTableEntries(List<Offer> sortedList,
@@ -368,12 +368,12 @@ class OfferBookChartViewModel extends ActivatableViewModel {
 
                 double priceAsDouble = (double) price.getValue() / LongMath.pow(10, price.smallestUnitExponent());
                 if (CurrencyUtil.isCryptoCurrency(getCurrencyCode())) {
-                    if (direction.equals(OfferPayloadI.Direction.SELL))
+                    if (direction.equals(OfferPayloadBase.Direction.SELL))
                         data.add(0, new XYChart.Data<>(priceAsDouble, accumulatedAmount));
                     else
                         data.add(new XYChart.Data<>(priceAsDouble, accumulatedAmount));
                 } else {
-                    if (direction.equals(OfferPayloadI.Direction.BUY))
+                    if (direction.equals(OfferPayloadBase.Direction.BUY))
                         data.add(0, new XYChart.Data<>(priceAsDouble, accumulatedAmount));
                     else
                         data.add(new XYChart.Data<>(priceAsDouble, accumulatedAmount));

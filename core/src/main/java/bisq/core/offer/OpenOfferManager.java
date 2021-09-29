@@ -90,7 +90,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import lombok.Getter;
-import lombok.Setter;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -273,7 +272,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         log.info("Remove open offers at shutDown. Number of open offers: {}", size);
         if (offerBookService.isBootstrapped() && size > 0) {
             UserThread.execute(() -> openOffers.forEach(
-                    openOffer -> offerBookService.removeOfferAtShutDown(openOffer.getOffer().getOfferPayloadI())
+                    openOffer -> offerBookService.removeOfferAtShutDown(openOffer.getOffer().getOfferPayloadBase())
             ));
 
             // Force broadcaster to send out immediately, otherwise we could have a 2 sec delay until the
@@ -447,7 +446,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     public void placeAtomicOffer(Offer offer,
                                  TransactionResultHandler resultHandler,
                                  ErrorMessageHandler errorMessageHandler) {
-        checkArgument(offer.getOfferPayloadI() instanceof AtomicOfferPayload);
+        checkArgument(offer.getOfferPayloadBase() instanceof AtomicOfferPayload);
         var atomicModel = new AtomicPlaceOfferModel(offer,
                 offerBookService,
                 tradeStatisticsManager,
@@ -482,7 +481,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
             log.warn("Offer was not found in our list of open offers. We still try to remove it from the offerbook.");
             errorMessageHandler.handleErrorMessage("Offer was not found in our list of open offers. " +
                     "We still try to remove it from the offerbook.");
-            offerBookService.removeOffer(offer.getOfferPayloadI(),
+            offerBookService.removeOffer(offer.getOfferPayloadBase(),
                     () -> offer.setState(Offer.State.REMOVED),
                     null);
         }
@@ -510,7 +509,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                                     ResultHandler resultHandler,
                                     ErrorMessageHandler errorMessageHandler) {
         Offer offer = openOffer.getOffer();
-        offerBookService.deactivateOffer(offer.getOfferPayloadI(),
+        offerBookService.deactivateOffer(offer.getOfferPayloadBase(),
                 () -> {
                     openOffer.setState(OpenOffer.State.DEACTIVATED);
                     requestPersistence();
@@ -528,7 +527,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
             if (openOffer.isDeactivated()) {
                 onRemoved(openOffer, resultHandler, offer);
             } else {
-                offerBookService.removeOffer(offer.getOfferPayloadI(),
+                offerBookService.removeOffer(offer.getOfferPayloadBase(),
                         () -> onRemoved(openOffer, resultHandler, offer),
                         errorMessageHandler);
             }
@@ -622,7 +621,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         getOpenOfferById(offer.getId()).ifPresent(openOffer -> {
             removeOpenOffer(openOffer);
             openOffer.setState(OpenOffer.State.CLOSED);
-            offerBookService.removeOffer(openOffer.getOffer().getOfferPayloadI(),
+            offerBookService.removeOffer(openOffer.getOffer().getOfferPayloadBase(),
                     () -> log.trace("Successful removed offer"),
                     log::error);
             requestPersistence();
@@ -852,14 +851,14 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         openOffersClone.forEach(originalOpenOffer -> {
             Offer originalOffer = originalOpenOffer.getOffer();
 
-            OfferPayloadI originalOfferPayloadI = originalOffer.getOfferPayloadI();
+            OfferPayloadBase originalOfferPayloadBase = originalOffer.getOfferPayloadBase();
 
-            if (!(originalOfferPayloadI instanceof OfferPayload)) {
+            if (!(originalOfferPayloadBase instanceof OfferPayload)) {
                 // Offer without a fee transaction don't need to be updated, they can be removed and a new
                 // offer created without incurring any extra costs
                 return;
             }
-            var originalOfferPayload = (OfferPayload) originalOfferPayloadI;
+            var originalOfferPayload = (OfferPayload) originalOfferPayloadBase;
             // We added CAPABILITIES with entry for Capability.MEDIATION in v1.1.6 and
             // Capability.REFUND_AGENT in v1.2.0 and want to rewrite a
             // persisted offer after the user has updated to 1.2.0 so their offer will be accepted by the network.
@@ -1082,7 +1081,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     }
 
     private void refreshOffer(OpenOffer openOffer) {
-        offerBookService.refreshTTL(openOffer.getOffer().getOfferPayloadI(),
+        offerBookService.refreshTTL(openOffer.getOffer().getOfferPayloadBase(),
                 () -> log.debug("Successful refreshed TTL for offer"),
                 log::warn);
     }

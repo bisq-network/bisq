@@ -52,7 +52,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @EqualsAndHashCode(callSuper = true)
 @Getter
 @Slf4j
-public final class OfferPayload extends OfferPayloadI {
+public final class OfferPayload extends OfferPayloadBase {
     public static Direction fromProto(protobuf.OfferPayload.Direction direction) {
         return ProtoUtil.enumFromProto(OfferPayload.Direction.class, direction.name());
     }

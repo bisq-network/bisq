@@ -228,7 +228,7 @@ public class CreateOfferService {
     }
 
     public Offer createAndGetAtomicOffer(String offerId,
-                                         OfferPayloadI.Direction direction,
+                                         OfferPayloadBase.Direction direction,
                                          Coin amount,
                                          Coin minAmount,
                                          Price price,
@@ -251,7 +251,7 @@ public class CreateOfferService {
 
         offerUtil.validateBasicOfferData(paymentAccount, currencyCode);
 
-        OfferPayloadI atomicOfferPayload = new AtomicOfferPayload(offerId,
+        OfferPayloadBase atomicOfferPayload = new AtomicOfferPayload(offerId,
                 creationTime,
                 makerAddress,
                 pubKeyRing,
@@ -266,7 +266,7 @@ public class CreateOfferService {
     }
 
     public Tuple2<Coin, Integer> getEstimatedFeeAndTxVsize(Coin amount,
-                                                           OfferPayloadI.Direction direction,
+                                                           OfferPayloadBase.Direction direction,
                                                            double buyerSecurityDeposit,
                                                            double sellerSecurityDeposit) {
         Coin reservedFundsForOffer = getReservedFundsForOffer(direction,
@@ -277,7 +277,7 @@ public class CreateOfferService {
                 offerUtil.getMakerFee(amount));
     }
 
-    public Coin getReservedFundsForOffer(OfferPayloadI.Direction direction,
+    public Coin getReservedFundsForOffer(OfferPayloadBase.Direction direction,
                                          Coin amount,
                                          double buyerSecurityDeposit,
                                          double sellerSecurityDeposit) {
@@ -292,7 +292,7 @@ public class CreateOfferService {
         return reservedFundsForOffer;
     }
 
-    public Coin getSecurityDeposit(OfferPayloadI.Direction direction,
+    public Coin getSecurityDeposit(OfferPayloadBase.Direction direction,
                                    Coin amount,
                                    double buyerSecurityDeposit,
                                    double sellerSecurityDeposit) {

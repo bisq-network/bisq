@@ -257,7 +257,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                     editItem.setOnAction((event) -> {
                         try {
                             OfferPayload offerPayload = (OfferPayload) row.getItem().getTradable().getOffer().
-                                    getOfferPayloadI();
+                                    getOfferPayloadBase();
                             if (offerPayload.getPubKeyRing().equals(keyRing.getPubKeyRing())) {
                                 navigation.navigateToWithData(offerPayload, MainView.class, PortfolioView.class, DuplicateOfferView.class);
                             } else {

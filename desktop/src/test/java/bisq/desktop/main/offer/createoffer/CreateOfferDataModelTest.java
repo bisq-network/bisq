@@ -27,7 +27,7 @@ import java.util.UUID;
 import org.junit.Before;
 import org.junit.Test;
 
-import static bisq.core.offer.OfferPayloadI.Direction;
+import static bisq.core.offer.OfferPayloadBase.Direction;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;

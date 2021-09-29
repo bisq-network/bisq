@@ -29,7 +29,7 @@ import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
-import bisq.core.offer.OfferPayloadI;
+import bisq.core.offer.OfferPayloadBase;
 import bisq.core.offer.OfferUtil;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.provider.fee.FeeService;
@@ -156,7 +156,7 @@ public class AtomicTakeOfferModel implements Model {
         atomicTxBuilder = new AtomicTxBuilder(
                 bsqWalletService,
                 tradeWalletService,
-                offer.getDirection() == OfferPayloadI.Direction.SELL,
+                offer.getDirection() == OfferPayloadBase.Direction.SELL,
                 offer.getPrice(),
                 amount.getValue(),
                 Coin.ZERO,

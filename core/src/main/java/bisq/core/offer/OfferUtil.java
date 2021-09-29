@@ -133,7 +133,7 @@ public class OfferUtil {
      * offer to sell BTC to the taker
      */
     public boolean isBuyOffer(Direction direction) {
-        return direction == OfferPayloadI.Direction.BUY;
+        return direction == OfferPayloadBase.Direction.BUY;
     }
 
     public long getMaxTradeLimit(PaymentAccount paymentAccount,
@@ -336,7 +336,7 @@ public class OfferUtil {
 
         extraDataMap.put(CAPABILITIES, Capabilities.app.toStringList());
 
-        if (currencyCode.equals("XMR") && direction == OfferPayloadI.Direction.SELL) {
+        if (currencyCode.equals("XMR") && direction == OfferPayloadBase.Direction.SELL) {
             preferences.getAutoConfirmSettingsList().stream()
                     .filter(e -> e.getCurrencyCode().equals("XMR"))
                     .filter(AutoConfirmSettings::isEnabled)
@@ -374,7 +374,7 @@ public class OfferUtil {
     // Immutable fields are sourced from the original openOffer param.
     public OfferPayload getMergedOfferPayload(OpenOffer openOffer,
                                               MutableOfferPayloadFields mutableOfferPayloadFields) {
-        var originalOfferPayloadI = openOffer.getOffer().getOfferPayloadI();
+        var originalOfferPayloadI = openOffer.getOffer().getOfferPayloadBase();
         checkArgument(originalOfferPayloadI instanceof OfferPayload);
         var originalOfferPayload = (OfferPayload) originalOfferPayloadI;
 

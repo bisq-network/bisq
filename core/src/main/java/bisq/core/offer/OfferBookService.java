@@ -88,9 +88,9 @@ public class OfferBookService {
             @Override
             public void onAdded(Collection<ProtectedStorageEntry> protectedStorageEntries) {
                 protectedStorageEntries.forEach(protectedStorageEntry -> offerBookChangedListeners.forEach(listener -> {
-                    if (protectedStorageEntry.getProtectedStoragePayload() instanceof OfferPayloadI) {
-                        OfferPayloadI offerPayloadI = (OfferPayloadI) protectedStorageEntry.getProtectedStoragePayload();
-                        Offer offer = new Offer(offerPayloadI);
+                    if (protectedStorageEntry.getProtectedStoragePayload() instanceof OfferPayloadBase) {
+                        OfferPayloadBase offerPayloadBase = (OfferPayloadBase) protectedStorageEntry.getProtectedStoragePayload();
+                        Offer offer = new Offer(offerPayloadBase);
                         offer.setPriceFeedService(priceFeedService);
                         listener.onAdded(offer);
                     }
@@ -100,9 +100,9 @@ public class OfferBookService {
             @Override
             public void onRemoved(Collection<ProtectedStorageEntry> protectedStorageEntries) {
                 protectedStorageEntries.forEach(protectedStorageEntry -> offerBookChangedListeners.forEach(listener -> {
-                    if (protectedStorageEntry.getProtectedStoragePayload() instanceof OfferPayloadI) {
-                        OfferPayloadI offerPayloadI = (OfferPayloadI) protectedStorageEntry.getProtectedStoragePayload();
-                        Offer offer = new Offer(offerPayloadI);
+                    if (protectedStorageEntry.getProtectedStoragePayload() instanceof OfferPayloadBase) {
+                        OfferPayloadBase offerPayloadBase = (OfferPayloadBase) protectedStorageEntry.getProtectedStoragePayload();
+                        Offer offer = new Offer(offerPayloadBase);
                         offer.setPriceFeedService(priceFeedService);
                         listener.onRemoved(offer);
                     }
@@ -142,7 +142,7 @@ public class OfferBookService {
             return;
         }
 
-        boolean result = p2PService.addProtectedStorageEntry(offer.getOfferPayloadI());
+        boolean result = p2PService.addProtectedStorageEntry(offer.getOfferPayloadBase());
         if (result) {
             resultHandler.handleResult();
         } else {
@@ -192,10 +192,10 @@ public class OfferBookService {
 
     public List<Offer> getOffers() {
         return p2PService.getDataMap().values().stream()
-                .filter(data -> data.getProtectedStoragePayload() instanceof OfferPayloadI)
+                .filter(data -> data.getProtectedStoragePayload() instanceof OfferPayloadBase)
                 .map(data -> {
-                    OfferPayloadI offerPayloadI = (OfferPayloadI) data.getProtectedStoragePayload();
-                    Offer offer = new Offer(offerPayloadI);
+                    OfferPayloadBase offerPayloadBase = (OfferPayloadBase) data.getProtectedStoragePayload();
+                    Offer offer = new Offer(offerPayloadBase);
                     offer.setPriceFeedService(priceFeedService);
                     return offer;
                 })

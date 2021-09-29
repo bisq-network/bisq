@@ -19,7 +19,7 @@ package bisq.desktop.maker;
 
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
-import bisq.core.offer.OfferPayloadI;
+import bisq.core.offer.OfferPayloadBase;
 
 import bisq.network.p2p.NodeAddress;
 
@@ -79,7 +79,7 @@ public class OfferMaker {
                     lookup.valueOf(date, currentTimeMillis()),
                     lookup.valueOf(nodeAddress, getLocalHostNodeWithPort(10000)),
                     lookup.valueOf(pubKeyRing, genPubKeyRing()),
-                    lookup.valueOf(direction, OfferPayloadI.Direction.BUY),
+                    lookup.valueOf(direction, OfferPayloadBase.Direction.BUY),
                     lookup.valueOf(price, 100000L),
                     lookup.valueOf(marketPriceMargin, 0.0),
                     lookup.valueOf(useMarketBasedPrice, false),

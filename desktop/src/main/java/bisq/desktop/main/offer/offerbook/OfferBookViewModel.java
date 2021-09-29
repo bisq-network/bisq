@@ -40,7 +40,7 @@ import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferFilter;
 import bisq.core.offer.OfferPayload;
-import bisq.core.offer.OfferPayloadI;
+import bisq.core.offer.OfferPayloadBase;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.PaymentAccountUtil;
@@ -215,7 +215,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     protected void activate() {
         filteredItems.addListener(filterItemsListener);
 
-        String code = direction == OfferPayloadI.Direction.BUY ? preferences.getBuyScreenCurrencyCode() : preferences.getSellScreenCurrencyCode();
+        String code = direction == OfferPayloadBase.Direction.BUY ? preferences.getBuyScreenCurrencyCode() : preferences.getSellScreenCurrencyCode();
         if (code != null && !code.isEmpty() && !isShowAllEntry(code) &&
                 CurrencyUtil.getTradeCurrency(code).isPresent()) {
             showAllTradeCurrenciesProperty.set(false);
@@ -279,7 +279,7 @@ class OfferBookViewModel extends ActivatableViewModel {
             setMarketPriceFeedCurrency();
             filterOffers();
 
-            if (direction == OfferPayloadI.Direction.BUY)
+            if (direction == OfferPayloadBase.Direction.BUY)
                 preferences.setBuyScreenCurrencyCode(code);
             else
                 preferences.setSellScreenCurrencyCode(code);
@@ -649,9 +649,9 @@ class OfferBookViewModel extends ActivatableViewModel {
 
     private static String getDirectionWithCodeDetailed(OfferPayload.Direction direction, String currencyCode) {
         if (CurrencyUtil.isFiatCurrency(currencyCode))
-            return (direction == OfferPayloadI.Direction.BUY) ? Res.get("shared.buyingBTCWith", currencyCode) : Res.get("shared.sellingBTCFor", currencyCode);
+            return (direction == OfferPayloadBase.Direction.BUY) ? Res.get("shared.buyingBTCWith", currencyCode) : Res.get("shared.sellingBTCFor", currencyCode);
         else
-            return (direction == OfferPayloadI.Direction.SELL) ? Res.get("shared.buyingCurrency", currencyCode) : Res.get("shared.sellingCurrency", currencyCode);
+            return (direction == OfferPayloadBase.Direction.SELL) ? Res.get("shared.buyingCurrency", currencyCode) : Res.get("shared.sellingCurrency", currencyCode);
     }
 
     public String formatDepositString(Coin deposit, long amount) {

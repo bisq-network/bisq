@@ -69,9 +69,9 @@ public class MakerCreateAndSignContract extends TradeTask {
             byte[] hashOfTakersPaymentAccountPayload = taker.getHashOfPaymentAccountPayload();
             String makersPaymentMethodId = checkNotNull(processModel.getPaymentAccountPayload(trade)).getPaymentMethodId();
             String takersPaymentMethodId = checkNotNull(taker.getPaymentMethodId());
-            checkArgument(processModel.getOffer().getOfferPayloadI() instanceof OfferPayload,
+            checkArgument(processModel.getOffer().getOfferPayloadBase() instanceof OfferPayload,
                     "OfferPayloadI must be of type OfferPayload");
-            var offerPayload = (OfferPayload) processModel.getOffer().getOfferPayloadI();
+            var offerPayload = (OfferPayload) processModel.getOffer().getOfferPayloadBase();
 
             Contract contract = new Contract(
                     offerPayload,

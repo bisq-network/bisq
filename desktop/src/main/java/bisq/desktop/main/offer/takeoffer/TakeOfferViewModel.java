@@ -35,7 +35,7 @@ import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.monetary.Price;
 import bisq.core.offer.Offer;
-import bisq.core.offer.OfferPayloadI;
+import bisq.core.offer.OfferPayloadBase;
 import bisq.core.offer.OfferRestrictions;
 import bisq.core.offer.OfferUtil;
 import bisq.core.payment.PaymentAccount;
@@ -347,16 +347,16 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                     amountValidationResult.set(new InputValidator.ValidationResult(false,
                             Res.get("takeOffer.validation.amountLargerThanOfferAmountMinusFee")));
             } else if (btcValidator.getMaxTradeLimit() != null && btcValidator.getMaxTradeLimit().value == OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT.value) {
-                if (dataModel.getDirection() == OfferPayloadI.Direction.BUY) {
+                if (dataModel.getDirection() == OfferPayloadBase.Direction.BUY) {
                     new Popup().information(Res.get("popup.warning.tradeLimitDueAccountAgeRestriction.seller",
-                                    btcFormatter.formatCoinWithCode(OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT),
-                                    Res.get("offerbook.warning.newVersionAnnouncement")))
+                            btcFormatter.formatCoinWithCode(OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT),
+                            Res.get("offerbook.warning.newVersionAnnouncement")))
                             .width(900)
                             .show();
                 } else {
                     new Popup().information(Res.get("popup.warning.tradeLimitDueAccountAgeRestriction.buyer",
-                                    btcFormatter.formatCoinWithCode(OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT),
-                                    Res.get("offerbook.warning.newVersionAnnouncement")))
+                            btcFormatter.formatCoinWithCode(OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT),
+                            Res.get("offerbook.warning.newVersionAnnouncement")))
                             .width(900)
                             .show();
                 }
@@ -477,7 +477,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     private void addBindings() {
         volume.bind(createStringBinding(() -> DisplayUtils.formatVolume(dataModel.volume.get()), dataModel.volume));
 
-        if (dataModel.getDirection() == OfferPayloadI.Direction.SELL) {
+        if (dataModel.getDirection() == OfferPayloadBase.Direction.SELL) {
             volumeDescriptionLabel.set(Res.get("createOffer.amountPriceBox.buy.volumeDescription", dataModel.getCurrencyCode()));
         } else {
             volumeDescriptionLabel.set(Res.get("createOffer.amountPriceBox.sell.volumeDescription", dataModel.getCurrencyCode()));
@@ -641,11 +641,11 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     }
 
     boolean isSeller() {
-        return dataModel.getDirection() == OfferPayloadI.Direction.BUY;
+        return dataModel.getDirection() == OfferPayloadBase.Direction.BUY;
     }
 
     public boolean isSellingToAnUnsignedAccount(Offer offer) {
-        if (offer.getDirection() == OfferPayloadI.Direction.BUY &&
+        if (offer.getDirection() == OfferPayloadBase.Direction.BUY &&
                 PaymentMethod.hasChargebackRisk(offer.getPaymentMethod(), offer.getCurrencyCode())) {
             // considered risky when either UNSIGNED, PEER_INITIAL, or BANNED (see #5343)
             return accountAgeWitnessService.getSignState(offer) == AccountAgeWitnessService.SignState.UNSIGNED ||

@@ -37,8 +37,7 @@ import bisq.desktop.util.GUIUtil;
 
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
-import bisq.core.offer.OfferPayload;
-import bisq.core.offer.OfferPayloadI;
+import bisq.core.offer.OfferPayloadBase;
 import bisq.core.offer.OpenOffer;
 import bisq.core.user.DontShowAgainLookup;
 
@@ -187,8 +186,8 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                     MenuItem editItem = new MenuItem(Res.get("portfolio.context.offerLikeThis"));
                     editItem.setOnAction((event) -> {
                         try {
-                            OfferPayloadI offerPayloadI = row.getItem().getOffer().getOfferPayloadI();
-                            navigation.navigateToWithData(offerPayloadI, MainView.class, PortfolioView.class,
+                            OfferPayloadBase offerPayloadBase = row.getItem().getOffer().getOfferPayloadBase();
+                            navigation.navigateToWithData(offerPayloadBase, MainView.class, PortfolioView.class,
                                     DuplicateOfferView.class);
                         } catch (NullPointerException e) {
                             log.warn("Unable to get offerPayload - {}", e.toString());

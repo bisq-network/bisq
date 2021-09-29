@@ -24,7 +24,7 @@ import bisq.desktop.util.validation.BtcValidator;
 
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
-import bisq.core.offer.OfferPayloadI;
+import bisq.core.offer.OfferPayloadBase;
 import bisq.core.offer.OfferUtil;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.trade.atomic.AtomicTrade;
@@ -320,7 +320,7 @@ class AtomicTakeOfferViewModel extends ActivatableWithDataModel<AtomicTakeOfferD
         volume.bind(createStringBinding(
                 () -> DisplayUtils.formatVolume(dataModel.getVolume().get()), dataModel.getVolume()));
 
-        if (dataModel.getDirection() == OfferPayloadI.Direction.SELL) {
+        if (dataModel.getDirection() == OfferPayloadBase.Direction.SELL) {
             volumeDescriptionLabel.set(Res.get("createOffer.amountPriceBox.buy.volumeDescription", dataModel.getCurrencyCode()));
         } else {
             volumeDescriptionLabel.set(Res.get("createOffer.amountPriceBox.sell.volumeDescription", dataModel.getCurrencyCode()));

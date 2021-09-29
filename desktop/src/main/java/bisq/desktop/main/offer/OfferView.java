@@ -38,7 +38,7 @@ import bisq.core.locale.TradeCurrency;
 import bisq.core.offer.AtomicOfferPayload;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
-import bisq.core.offer.OfferPayloadI;
+import bisq.core.offer.OfferPayloadBase;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
@@ -170,7 +170,7 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
 
     @Override
     protected void activate() {
-        Optional<TradeCurrency> tradeCurrencyOptional = (this.direction == OfferPayloadI.Direction.SELL) ?
+        Optional<TradeCurrency> tradeCurrencyOptional = (this.direction == OfferPayloadBase.Direction.SELL) ?
                 CurrencyUtil.getTradeCurrency(preferences.getSellScreenCurrencyCode()) :
                 CurrencyUtil.getTradeCurrency(preferences.getBuyScreenCurrencyCode());
         tradeCurrency = tradeCurrencyOptional.orElseGet(GlobalSettings::getDefaultTradeCurrency);
@@ -203,7 +203,7 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
         TabPane tabPane = root;
         tabPane.setTabClosingPolicy(TabPane.TabClosingPolicy.ALL_TABS);
         View view;
-        boolean isBuy = direction == OfferPayloadI.Direction.BUY;
+        boolean isBuy = direction == OfferPayloadBase.Direction.BUY;
 
         if (viewClass == OfferBookView.class && offerBookView == null) {
             view = viewLoader.load(viewClass);
@@ -300,10 +300,10 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
     private void openTakeOffer(Offer offer) {
         OfferView.this.takeOfferViewOpen = true;
         OfferView.this.offer = offer;
-        if (offer.getOfferPayloadI() instanceof OfferPayload) {
+        if (offer.getOfferPayloadBase() instanceof OfferPayload) {
             OfferView.this.navigation.navigateTo(MainView.class, OfferView.this.getClass(), TakeOfferView.class);
         }
-        if (offer.getOfferPayloadI() instanceof AtomicOfferPayload) {
+        if (offer.getOfferPayloadBase() instanceof AtomicOfferPayload) {
             OfferView.this.navigation.navigateTo(MainView.class, OfferView.this.getClass(), AtomicTakeOfferView.class);
         }
     }

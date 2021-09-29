@@ -21,7 +21,7 @@ import bisq.core.btc.model.AddressEntry;
 import bisq.core.offer.AvailabilityResult;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
-import bisq.core.offer.OfferPayloadI;
+import bisq.core.offer.OfferPayloadBase;
 import bisq.core.offer.OpenOffer;
 import bisq.core.support.dispute.DisputeResult;
 import bisq.core.trade.Trade;
@@ -82,8 +82,8 @@ public class ProtoDevUtil {
 
         sb.append("    enum Direction {\n");
         sb.append("        PB_ERROR = 0;\n");
-        for (int i = 0; i < OfferPayloadI.Direction.values().length; i++) {
-            OfferPayload.Direction s = OfferPayloadI.Direction.values()[i];
+        for (int i = 0; i < OfferPayloadBase.Direction.values().length; i++) {
+            OfferPayload.Direction s = OfferPayloadBase.Direction.values()[i];
             sb.append("        ");
             sb.append(s.toString());
             sb.append(" = ");

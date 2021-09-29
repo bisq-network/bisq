@@ -1076,7 +1076,7 @@ public abstract class Trade extends TradeModel {
     }
 
     public boolean isAtomic() {
-        return offer != null && offer.getOfferPayloadI() instanceof AtomicOfferPayload;
+        return offer != null && offer.getOfferPayloadBase() instanceof AtomicOfferPayload;
     }
 
     public boolean isAtomicBsqTrade() {

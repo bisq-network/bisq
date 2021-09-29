@@ -526,7 +526,7 @@ public class BisqSetup {
         // miner fee was too low and the transaction got removed from mempool and got out from our wallet after a
         // resync.
         openOfferManager.getObservableList().forEach(e -> {
-            if (!(e.getOffer().getOfferPayloadI() instanceof OfferPayload)) {
+            if (!(e.getOffer().getOfferPayloadBase() instanceof OfferPayload)) {
                 return;
             }
             String offerFeePaymentTxId = e.getOffer().getOfferFeePaymentTxId();

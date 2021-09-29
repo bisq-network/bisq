@@ -104,7 +104,7 @@ public class OfferForJson {
         try {
             final Price price = getPrice();
             if (CurrencyUtil.isCryptoCurrency(currencyCode)) {
-                primaryMarketDirection = direction == OfferPayloadI.Direction.BUY ? OfferPayloadI.Direction.SELL : OfferPayloadI.Direction.BUY;
+                primaryMarketDirection = direction == OfferPayloadBase.Direction.BUY ? OfferPayloadBase.Direction.SELL : OfferPayloadBase.Direction.BUY;
                 currencyPair = currencyCode + "/" + Res.getBaseCurrencyCode();
 
                 // int precision = 8;

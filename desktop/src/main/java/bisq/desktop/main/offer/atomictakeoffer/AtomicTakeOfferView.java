@@ -39,7 +39,7 @@ import bisq.desktop.util.Layout;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
-import bisq.core.offer.OfferPayloadI;
+import bisq.core.offer.OfferPayloadBase;
 import bisq.core.user.DontShowAgainLookup;
 import bisq.core.util.coin.BsqFormatter;
 
@@ -191,7 +191,7 @@ public class AtomicTakeOfferView extends ActivatableViewAndModel<AnchorPane, Ato
     public void initWithData(Offer offer) {
         model.initWithData(offer);
 
-        if (model.getOffer().getDirection() == OfferPayloadI.Direction.SELL) {
+        if (model.getOffer().getDirection() == OfferPayloadBase.Direction.SELL) {
             takeAtomicOfferButton.setId("buy-button-big");
         } else {
             takeAtomicOfferButton.setId("sell-button-big");

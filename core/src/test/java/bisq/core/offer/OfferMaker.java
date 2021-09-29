@@ -40,7 +40,7 @@ public class OfferMaker {
                     0L,
                     null,
                     null,
-                    lookup.valueOf(direction, OfferPayloadI.Direction.BUY),
+                    lookup.valueOf(direction, OfferPayloadBase.Direction.BUY),
                     lookup.valueOf(price, 100000L),
                     lookup.valueOf(marketPriceMargin, 0.0),
                     lookup.valueOf(useMarketBasedPrice, false),

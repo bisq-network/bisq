@@ -63,7 +63,7 @@ public class AtomicPlaceOfferProtocol {
                     log.error(errorMessage);
 
                     if (model.isOfferAddedToOfferBook()) {
-                        model.getOfferBookService().removeOffer(model.getOffer().getOfferPayloadI(),
+                        model.getOfferBookService().removeOffer(model.getOffer().getOfferPayloadBase(),
                                 () -> {
                                     model.setOfferAddedToOfferBook(false);
                                     log.debug("OfferPayload removed from offer book.");

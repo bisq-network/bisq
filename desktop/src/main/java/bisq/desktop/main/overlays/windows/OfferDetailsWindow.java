@@ -34,7 +34,7 @@ import bisq.core.locale.Res;
 import bisq.core.monetary.Price;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
-import bisq.core.offer.OfferPayloadI;
+import bisq.core.offer.OfferPayloadBase;
 import bisq.core.offer.OfferUtil;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentMethod;
@@ -176,7 +176,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         if (isF2F)
             rows++;
 
-        boolean showXmrAutoConf = offer.isXmr() && offer.getDirection() == OfferPayloadI.Direction.SELL;
+        boolean showXmrAutoConf = offer.isXmr() && offer.getDirection() == OfferPayloadBase.Direction.SELL;
         if (showXmrAutoConf) {
             rows++;
         }
@@ -194,13 +194,13 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         if (takeOfferHandlerOptional.isPresent()) {
             addConfirmationLabelLabel(gridPane, rowIndex, offerTypeLabel,
                     DisplayUtils.getDirectionForTakeOffer(direction, currencyCode), firstRowDistance);
-            fiatDirectionInfo = direction == OfferPayloadI.Direction.BUY ? toReceive : toSpend;
-            btcDirectionInfo = direction == OfferPayloadI.Direction.SELL ? toReceive : toSpend;
+            fiatDirectionInfo = direction == OfferPayloadBase.Direction.BUY ? toReceive : toSpend;
+            btcDirectionInfo = direction == OfferPayloadBase.Direction.SELL ? toReceive : toSpend;
         } else if (placeOfferHandlerOptional.isPresent()) {
             addConfirmationLabelLabel(gridPane, rowIndex, offerTypeLabel,
                     DisplayUtils.getOfferDirectionForCreateOffer(direction, currencyCode), firstRowDistance);
-            fiatDirectionInfo = direction == OfferPayloadI.Direction.SELL ? toReceive : toSpend;
-            btcDirectionInfo = direction == OfferPayloadI.Direction.BUY ? toReceive : toSpend;
+            fiatDirectionInfo = direction == OfferPayloadBase.Direction.SELL ? toReceive : toSpend;
+            btcDirectionInfo = direction == OfferPayloadBase.Direction.BUY ? toReceive : toSpend;
         } else {
             addConfirmationLabelLabel(gridPane, rowIndex, offerTypeLabel,
                     DisplayUtils.getDirectionBothSides(direction, currencyCode), firstRowDistance);
