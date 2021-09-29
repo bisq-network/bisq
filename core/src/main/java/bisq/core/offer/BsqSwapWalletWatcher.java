@@ -38,7 +38,7 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class AtomicOfferFunding implements WalletChangeEventListener {
+public class BsqSwapWalletWatcher implements WalletChangeEventListener {
 
     public interface Listener {
         void isFunded(boolean funded);
@@ -54,11 +54,11 @@ public class AtomicOfferFunding implements WalletChangeEventListener {
     private final List<Listener> listeners = new ArrayList<>();
 
     @Inject
-    public AtomicOfferFunding(BtcWalletService btcWalletService,
-                              BsqWalletService bsqWalletService,
-                              TradeWalletService tradeWalletService,
-                              FeeService feeService,
-                              KeyRing keyRing) {
+    public BsqSwapWalletWatcher(BtcWalletService btcWalletService,
+                                BsqWalletService bsqWalletService,
+                                TradeWalletService tradeWalletService,
+                                FeeService feeService,
+                                KeyRing keyRing) {
         this.btcWalletService = btcWalletService;
         this.bsqWalletService = bsqWalletService;
         this.tradeWalletService = tradeWalletService;

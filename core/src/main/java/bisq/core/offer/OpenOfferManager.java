@@ -99,7 +99,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMessageListener, PersistedDataHost {
-    class FundingListener implements AtomicOfferFunding.Listener {
+    class FundingListener implements BsqSwapWalletWatcher.Listener {
         OpenOffer openOffer;
 
         FundingListener(OpenOffer openOffer) {
@@ -157,7 +157,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     private Timer periodicRepublishOffersTimer, periodicRefreshOffersTimer, retryRepublishOffersTimer;
     @Getter
     private final ObservableList<Tuple2<OpenOffer, String>> invalidOffers = FXCollections.observableArrayList();
-    private final AtomicOfferFunding atomicOfferFunding;
+    private final BsqSwapWalletWatcher bsqSwapWalletWatcher;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -185,7 +185,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                             FilterManager filterManager,
                             Broadcaster broadcaster,
                             PersistenceManager<TradableList<OpenOffer>> persistenceManager,
-                            AtomicOfferFunding atomicOfferFunding) {
+                            BsqSwapWalletWatcher bsqSwapWalletWatcher) {
         this.coreContext = coreContext;
         this.createOfferService = createOfferService;
         this.keyRing = keyRing;
@@ -206,7 +206,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         this.filterManager = filterManager;
         this.broadcaster = broadcaster;
         this.persistenceManager = persistenceManager;
-        this.atomicOfferFunding = atomicOfferFunding;
+        this.bsqSwapWalletWatcher = bsqSwapWalletWatcher;
 
         this.persistenceManager.initialize(openOffers, "OpenOffers", PersistenceManager.Source.PRIVATE);
     }
@@ -1136,11 +1136,11 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     private void addAtomicFundingListener(OpenOffer openOffer) {
         if (!openOffer.getOffer().isAtomicOffer())
             return;
-        atomicOfferFunding.addListener(new FundingListener(openOffer));
+        bsqSwapWalletWatcher.addListener(new FundingListener(openOffer));
     }
 
     private void removeOpenOffer(OpenOffer openOffer) {
-        atomicOfferFunding.removeListener(openOffer.getOffer());
+        bsqSwapWalletWatcher.removeListener(openOffer.getOffer());
         openOffers.remove(openOffer);
     }
 }

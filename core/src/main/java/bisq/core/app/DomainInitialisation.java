@@ -33,7 +33,7 @@ import bisq.core.notifications.alerts.MyOfferTakenEvents;
 import bisq.core.notifications.alerts.TradeEvents;
 import bisq.core.notifications.alerts.market.MarketAlerts;
 import bisq.core.notifications.alerts.price.PriceAlert;
-import bisq.core.offer.AtomicOfferFunding;
+import bisq.core.offer.BsqSwapWalletWatcher;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.offer.TriggerPriceService;
 import bisq.core.payment.AmazonGiftCardAccount;
@@ -115,7 +115,7 @@ public class DomainInitialisation {
     private final DaoStateSnapshotService daoStateSnapshotService;
     private final TriggerPriceService triggerPriceService;
     private final MempoolService mempoolService;
-    private final AtomicOfferFunding atomicOfferFunding;
+    private final BsqSwapWalletWatcher bsqSwapWalletWatcher;
 
     @Inject
     public DomainInitialisation(ClockWatcher clockWatcher,
@@ -155,7 +155,7 @@ public class DomainInitialisation {
                                 DaoStateSnapshotService daoStateSnapshotService,
                                 TriggerPriceService triggerPriceService,
                                 MempoolService mempoolService,
-                                AtomicOfferFunding atomicOfferFunding) {
+                                BsqSwapWalletWatcher bsqSwapWalletWatcher) {
         this.clockWatcher = clockWatcher;
         this.tradeLimits = tradeLimits;
         this.arbitrationManager = arbitrationManager;
@@ -193,7 +193,7 @@ public class DomainInitialisation {
         this.daoStateSnapshotService = daoStateSnapshotService;
         this.triggerPriceService = triggerPriceService;
         this.mempoolService = mempoolService;
-        this.atomicOfferFunding = atomicOfferFunding;
+        this.bsqSwapWalletWatcher = bsqSwapWalletWatcher;
     }
 
     public void initDomainServices(Consumer<String> rejectedTxErrorMessageHandler,
@@ -278,7 +278,7 @@ public class DomainInitialisation {
         marketAlerts.onAllServicesInitialized();
         triggerPriceService.onAllServicesInitialized();
         mempoolService.onAllServicesInitialized();
-        atomicOfferFunding.onAllServicesInitialized();
+        bsqSwapWalletWatcher.onAllServicesInitialized();
 
         if (revolutAccountsUpdateHandler != null) {
             revolutAccountsUpdateHandler.accept(user.getPaymentAccountsAsObservable().stream()
