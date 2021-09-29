@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.portfolio.atomictrades;
+package bisq.desktop.main.portfolio.bsqswaps;
 
 import bisq.desktop.common.model.ActivatableWithDataModel;
 import bisq.desktop.common.model.ViewModel;
@@ -39,59 +39,59 @@ import javafx.collections.ObservableList;
 
 import java.util.stream.Collectors;
 
-class AtomicTradesViewModel extends ActivatableWithDataModel<AtomicTradeDataModel> implements ViewModel {
+class CompletedBsqSwapsViewModel extends ActivatableWithDataModel<CompletedBsqSwapsDataModel> implements ViewModel {
     private final BsqFormatter bsqFormatter;
     private final CoinFormatter btcFormatter;
     final AccountAgeWitnessService accountAgeWitnessService;
 
     @Inject
-    public AtomicTradesViewModel(AtomicTradeDataModel dataModel,
-                                 AccountAgeWitnessService accountAgeWitnessService,
-                                 BsqFormatter bsqFormatter,
-                                 @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter) {
+    public CompletedBsqSwapsViewModel(CompletedBsqSwapsDataModel dataModel,
+                                      AccountAgeWitnessService accountAgeWitnessService,
+                                      BsqFormatter bsqFormatter,
+                                      @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter) {
         super(dataModel);
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.bsqFormatter = bsqFormatter;
         this.btcFormatter = btcFormatter;
     }
 
-    public ObservableList<AtomicTradeListItem> getList() {
+    public ObservableList<CompletedBsqSwapsListItem> getList() {
         return dataModel.getList();
     }
 
-    String getTradeId(AtomicTradeListItem item) {
+    String getTradeId(CompletedBsqSwapsListItem item) {
         return item.getAtomicTrade().getShortId();
     }
 
-    String getAmount(AtomicTradeListItem item) {
+    String getAmount(CompletedBsqSwapsListItem item) {
         if (item == null)
             return "";
 
         return btcFormatter.formatCoin(item.getAtomicTrade().getAmount());
     }
 
-    String getPrice(AtomicTradeListItem item) {
+    String getPrice(CompletedBsqSwapsListItem item) {
         if (item == null)
             return "";
 
         return FormattingUtils.formatPrice(item.getAtomicTrade().getPrice());
     }
 
-    String getVolume(AtomicTradeListItem item) {
+    String getVolume(CompletedBsqSwapsListItem item) {
         if (item == null)
             return "";
 
         return DisplayUtils.formatVolumeWithCode(item.getAtomicTrade().getTradeVolume());
     }
 
-    String getTxFee(AtomicTradeListItem item) {
+    String getTxFee(CompletedBsqSwapsListItem item) {
         if (item == null)
             return "";
 
         return btcFormatter.formatCoin(Coin.valueOf(item.getAtomicTrade().getMiningFeePerByte()));
     }
 
-    String getTradeFee(AtomicTradeListItem item) {
+    String getTradeFee(CompletedBsqSwapsListItem item) {
         if (item == null)
             return "";
 
@@ -102,7 +102,7 @@ class AtomicTradesViewModel extends ActivatableWithDataModel<AtomicTradeDataMode
         }
     }
 
-    String getDirectionLabel(AtomicTradeListItem item) {
+    String getDirectionLabel(CompletedBsqSwapsListItem item) {
         if (item == null)
             return "";
 
@@ -110,18 +110,18 @@ class AtomicTradesViewModel extends ActivatableWithDataModel<AtomicTradeDataMode
                 item.getAtomicTrade().getOffer().getCurrencyCode());
     }
 
-    String getDate(AtomicTradeListItem item) {
+    String getDate(CompletedBsqSwapsListItem item) {
         return DisplayUtils.formatDateTime(item.getAtomicTrade().getDate());
     }
 
-    String getMarketLabel(AtomicTradeListItem item) {
+    String getMarketLabel(CompletedBsqSwapsListItem item) {
         if ((item == null))
             return "";
 
         return CurrencyUtil.getCurrencyPair(item.getAtomicTrade().getOffer().getCurrencyCode());
     }
 
-    String getState(AtomicTradeListItem item) {
+    String getState(CompletedBsqSwapsListItem item) {
         if ((item == null))
             return "";
 

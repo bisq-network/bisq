@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.portfolio.atomictrades;
+package bisq.desktop.main.portfolio.bsqswaps;
 
 import bisq.desktop.common.view.ActivatableViewAndModel;
 import bisq.desktop.common.view.FxmlView;
@@ -74,7 +74,7 @@ import java.util.Comparator;
 import java.util.function.Function;
 
 @FxmlView
-public class AtomicTradesView extends ActivatableViewAndModel<VBox, AtomicTradesViewModel> {
+public class CompletedBsqSwapsView extends ActivatableViewAndModel<VBox, CompletedBsqSwapsViewModel> {
     private final boolean useDevPrivilegeKeys;
 
     private enum ColumnNames {
@@ -102,9 +102,9 @@ public class AtomicTradesView extends ActivatableViewAndModel<VBox, AtomicTrades
     }
 
     @FXML
-    TableView<AtomicTradeListItem> tableView;
+    TableView<CompletedBsqSwapsListItem> tableView;
     @FXML
-    TableColumn<AtomicTradeListItem, AtomicTradeListItem>
+    TableColumn<CompletedBsqSwapsListItem, CompletedBsqSwapsListItem>
             priceColumn,
             amountColumn,
             volumeColumn,
@@ -135,18 +135,18 @@ public class AtomicTradesView extends ActivatableViewAndModel<VBox, AtomicTrades
     private final Preferences preferences;
     private final TradeDetailsWindow tradeDetailsWindow;
     private final PrivateNotificationManager privateNotificationManager;
-    private SortedList<AtomicTradeListItem> sortedList;
-    private FilteredList<AtomicTradeListItem> filteredList;
+    private SortedList<CompletedBsqSwapsListItem> sortedList;
+    private FilteredList<CompletedBsqSwapsListItem> filteredList;
     private ChangeListener<String> filterTextFieldListener;
     private ChangeListener<Number> widthListener;
 
     @Inject
-    public AtomicTradesView(AtomicTradesViewModel model,
-                            OfferDetailsWindow offerDetailsWindow,
-                            Preferences preferences,
-                            TradeDetailsWindow tradeDetailsWindow,
-                            PrivateNotificationManager privateNotificationManager,
-                            @Named(Config.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
+    public CompletedBsqSwapsView(CompletedBsqSwapsViewModel model,
+                                 OfferDetailsWindow offerDetailsWindow,
+                                 Preferences preferences,
+                                 TradeDetailsWindow tradeDetailsWindow,
+                                 PrivateNotificationManager privateNotificationManager,
+                                 @Named(Config.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         super(model);
         this.offerDetailsWindow = offerDetailsWindow;
         this.preferences = preferences;
@@ -238,15 +238,15 @@ public class AtomicTradesView extends ActivatableViewAndModel<VBox, AtomicTrades
 
         numItems.setText(Res.get("shared.numItemsLabel", sortedList.size()));
         exportButton.setOnAction(event -> {
-            final ObservableList<TableColumn<AtomicTradeListItem, ?>> tableColumns = tableView.getColumns();
-            CSVEntryConverter<AtomicTradeListItem> headerConverter = item -> {
+            final ObservableList<TableColumn<CompletedBsqSwapsListItem, ?>> tableColumns = tableView.getColumns();
+            CSVEntryConverter<CompletedBsqSwapsListItem> headerConverter = item -> {
                 String[] columns = new String[ColumnNames.values().length];
                 for (ColumnNames m : ColumnNames.values()) {
                     columns[m.ordinal()] = m.toString();
                 }
                 return columns;
             };
-            CSVEntryConverter<AtomicTradeListItem> contentConverter = item -> {
+            CSVEntryConverter<CompletedBsqSwapsListItem> contentConverter = item -> {
                 String[] columns = new String[ColumnNames.values().length];
                 columns[ColumnNames.TRADE_ID.ordinal()] = model.getTradeId(item);
                 columns[ColumnNames.DATE.ordinal()] = model.getDate(item);
@@ -262,7 +262,7 @@ public class AtomicTradesView extends ActivatableViewAndModel<VBox, AtomicTrades
             };
 
             GUIUtil.exportCSV("tradeHistory.csv", headerConverter, contentConverter,
-                    new AtomicTradeListItem(null), sortedList, (Stage) root.getScene().getWindow());
+                    new CompletedBsqSwapsListItem(null), sortedList, (Stage) root.getScene().getWindow());
         });
 
         filterTextField.textProperty().addListener(filterTextFieldListener);
@@ -280,7 +280,7 @@ public class AtomicTradesView extends ActivatableViewAndModel<VBox, AtomicTrades
         root.widthProperty().removeListener(widthListener);
     }
 
-    private static <T extends Comparable<T>> Comparator<AtomicTradeListItem> nullsFirstComparing(
+    private static <T extends Comparable<T>> Comparator<CompletedBsqSwapsListItem> nullsFirstComparing(
             Function<BsqSwapTrade, T> keyExtractor) {
         return Comparator.comparing(
                 o -> o.getAtomicTrade() != null ? keyExtractor.apply(o.getAtomicTrade()) : null,
@@ -288,7 +288,7 @@ public class AtomicTradesView extends ActivatableViewAndModel<VBox, AtomicTrades
         );
     }
 
-    private static <T extends Comparable<T>> Comparator<AtomicTradeListItem> nullsFirstComparingAsTrade(
+    private static <T extends Comparable<T>> Comparator<CompletedBsqSwapsListItem> nullsFirstComparingAsTrade(
             Function<BsqSwapTrade, T> keyExtractor) {
         return Comparator.comparing(
                 o -> keyExtractor.apply(o.getAtomicTrade()),
@@ -353,13 +353,13 @@ public class AtomicTradesView extends ActivatableViewAndModel<VBox, AtomicTrades
                 new Callback<>() {
 
                     @Override
-                    public TableCell<AtomicTradeListItem, AtomicTradeListItem> call(TableColumn<AtomicTradeListItem,
-                            AtomicTradeListItem> column) {
+                    public TableCell<CompletedBsqSwapsListItem, CompletedBsqSwapsListItem> call(TableColumn<CompletedBsqSwapsListItem,
+                            CompletedBsqSwapsListItem> column) {
                         return new TableCell<>() {
                             private HyperlinkWithIcon field;
 
                             @Override
-                            public void updateItem(final AtomicTradeListItem item, boolean empty) {
+                            public void updateItem(final CompletedBsqSwapsListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
                                     field = new HyperlinkWithIcon(model.getTradeId(item));
@@ -388,11 +388,11 @@ public class AtomicTradesView extends ActivatableViewAndModel<VBox, AtomicTrades
         dateColumn.setCellFactory(
                 new Callback<>() {
                     @Override
-                    public TableCell<AtomicTradeListItem, AtomicTradeListItem> call(
-                            TableColumn<AtomicTradeListItem, AtomicTradeListItem> column) {
+                    public TableCell<CompletedBsqSwapsListItem, CompletedBsqSwapsListItem> call(
+                            TableColumn<CompletedBsqSwapsListItem, CompletedBsqSwapsListItem> column) {
                         return new TableCell<>() {
                             @Override
-                            public void updateItem(final AtomicTradeListItem item, boolean empty) {
+                            public void updateItem(final CompletedBsqSwapsListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
                                     setGraphic(new AutoTooltipLabel(model.getDate(item)));
@@ -409,11 +409,11 @@ public class AtomicTradesView extends ActivatableViewAndModel<VBox, AtomicTrades
         marketColumn.setCellFactory(
                 new Callback<>() {
                     @Override
-                    public TableCell<AtomicTradeListItem, AtomicTradeListItem> call(
-                            TableColumn<AtomicTradeListItem, AtomicTradeListItem> column) {
+                    public TableCell<CompletedBsqSwapsListItem, CompletedBsqSwapsListItem> call(
+                            TableColumn<CompletedBsqSwapsListItem, CompletedBsqSwapsListItem> column) {
                         return new TableCell<>() {
                             @Override
-                            public void updateItem(final AtomicTradeListItem item, boolean empty) {
+                            public void updateItem(final CompletedBsqSwapsListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 setGraphic(new AutoTooltipLabel(model.getMarketLabel(item)));
                             }
@@ -427,11 +427,11 @@ public class AtomicTradesView extends ActivatableViewAndModel<VBox, AtomicTrades
         stateColumn.setCellFactory(
                 new Callback<>() {
                     @Override
-                    public TableCell<AtomicTradeListItem, AtomicTradeListItem> call(
-                            TableColumn<AtomicTradeListItem, AtomicTradeListItem> column) {
+                    public TableCell<CompletedBsqSwapsListItem, CompletedBsqSwapsListItem> call(
+                            TableColumn<CompletedBsqSwapsListItem, CompletedBsqSwapsListItem> column) {
                         return new TableCell<>() {
                             @Override
-                            public void updateItem(final AtomicTradeListItem item, boolean empty) {
+                            public void updateItem(final CompletedBsqSwapsListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
                                     setGraphic(new AutoTooltipLabel(model.getState(item)));
@@ -444,17 +444,17 @@ public class AtomicTradesView extends ActivatableViewAndModel<VBox, AtomicTrades
     }
 
     @SuppressWarnings("UnusedReturnValue")
-    private TableColumn<AtomicTradeListItem, AtomicTradeListItem> setAvatarColumnCellFactory() {
+    private TableColumn<CompletedBsqSwapsListItem, CompletedBsqSwapsListItem> setAvatarColumnCellFactory() {
         avatarColumn.getStyleClass().addAll("last-column", "avatar-column");
         avatarColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         avatarColumn.setCellFactory(
                 new Callback<>() {
                     @Override
-                    public TableCell<AtomicTradeListItem, AtomicTradeListItem> call(TableColumn<AtomicTradeListItem, AtomicTradeListItem> column) {
+                    public TableCell<CompletedBsqSwapsListItem, CompletedBsqSwapsListItem> call(TableColumn<CompletedBsqSwapsListItem, CompletedBsqSwapsListItem> column) {
                         return new TableCell<>() {
 
                             @Override
-                            public void updateItem(final AtomicTradeListItem newItem, boolean empty) {
+                            public void updateItem(final CompletedBsqSwapsListItem newItem, boolean empty) {
                                 super.updateItem(newItem, empty);
 
                                 if (newItem != null && !empty/* && newItem.getAtomicTrade() instanceof Trade*/) {
@@ -487,11 +487,11 @@ public class AtomicTradesView extends ActivatableViewAndModel<VBox, AtomicTrades
         amountColumn.setCellFactory(
                 new Callback<>() {
                     @Override
-                    public TableCell<AtomicTradeListItem, AtomicTradeListItem> call(
-                            TableColumn<AtomicTradeListItem, AtomicTradeListItem> column) {
+                    public TableCell<CompletedBsqSwapsListItem, CompletedBsqSwapsListItem> call(
+                            TableColumn<CompletedBsqSwapsListItem, CompletedBsqSwapsListItem> column) {
                         return new TableCell<>() {
                             @Override
-                            public void updateItem(final AtomicTradeListItem item, boolean empty) {
+                            public void updateItem(final CompletedBsqSwapsListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 setGraphic(new AutoTooltipLabel(model.getAmount(item)));
                             }
@@ -505,11 +505,11 @@ public class AtomicTradesView extends ActivatableViewAndModel<VBox, AtomicTrades
         priceColumn.setCellFactory(
                 new Callback<>() {
                     @Override
-                    public TableCell<AtomicTradeListItem, AtomicTradeListItem> call(
-                            TableColumn<AtomicTradeListItem, AtomicTradeListItem> column) {
+                    public TableCell<CompletedBsqSwapsListItem, CompletedBsqSwapsListItem> call(
+                            TableColumn<CompletedBsqSwapsListItem, CompletedBsqSwapsListItem> column) {
                         return new TableCell<>() {
                             @Override
-                            public void updateItem(final AtomicTradeListItem item, boolean empty) {
+                            public void updateItem(final CompletedBsqSwapsListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 setGraphic(new AutoTooltipLabel(model.getPrice(item)));
                             }
@@ -523,11 +523,11 @@ public class AtomicTradesView extends ActivatableViewAndModel<VBox, AtomicTrades
         volumeColumn.setCellFactory(
                 new Callback<>() {
                     @Override
-                    public TableCell<AtomicTradeListItem, AtomicTradeListItem> call(
-                            TableColumn<AtomicTradeListItem, AtomicTradeListItem> column) {
+                    public TableCell<CompletedBsqSwapsListItem, CompletedBsqSwapsListItem> call(
+                            TableColumn<CompletedBsqSwapsListItem, CompletedBsqSwapsListItem> column) {
                         return new TableCell<>() {
                             @Override
-                            public void updateItem(final AtomicTradeListItem item, boolean empty) {
+                            public void updateItem(final CompletedBsqSwapsListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
                                     setGraphic(new AutoTooltipLabel(model.getVolume(item)));
@@ -544,11 +544,11 @@ public class AtomicTradesView extends ActivatableViewAndModel<VBox, AtomicTrades
         directionColumn.setCellFactory(
                 new Callback<>() {
                     @Override
-                    public TableCell<AtomicTradeListItem, AtomicTradeListItem> call(
-                            TableColumn<AtomicTradeListItem, AtomicTradeListItem> column) {
+                    public TableCell<CompletedBsqSwapsListItem, CompletedBsqSwapsListItem> call(
+                            TableColumn<CompletedBsqSwapsListItem, CompletedBsqSwapsListItem> column) {
                         return new TableCell<>() {
                             @Override
-                            public void updateItem(final AtomicTradeListItem item, boolean empty) {
+                            public void updateItem(final CompletedBsqSwapsListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 setGraphic(new AutoTooltipLabel(model.getDirectionLabel(item)));
                             }
@@ -562,11 +562,11 @@ public class AtomicTradesView extends ActivatableViewAndModel<VBox, AtomicTrades
         txFeeColumn.setCellFactory(
                 new Callback<>() {
                     @Override
-                    public TableCell<AtomicTradeListItem, AtomicTradeListItem> call(
-                            TableColumn<AtomicTradeListItem, AtomicTradeListItem> column) {
+                    public TableCell<CompletedBsqSwapsListItem, CompletedBsqSwapsListItem> call(
+                            TableColumn<CompletedBsqSwapsListItem, CompletedBsqSwapsListItem> column) {
                         return new TableCell<>() {
                             @Override
-                            public void updateItem(final AtomicTradeListItem item, boolean empty) {
+                            public void updateItem(final CompletedBsqSwapsListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 setGraphic(new AutoTooltipLabel(model.getTxFee(item)));
                             }
@@ -580,11 +580,11 @@ public class AtomicTradesView extends ActivatableViewAndModel<VBox, AtomicTrades
         tradeFeeColumn.setCellFactory(
                 new Callback<>() {
                     @Override
-                    public TableCell<AtomicTradeListItem, AtomicTradeListItem> call(
-                            TableColumn<AtomicTradeListItem, AtomicTradeListItem> column) {
+                    public TableCell<CompletedBsqSwapsListItem, CompletedBsqSwapsListItem> call(
+                            TableColumn<CompletedBsqSwapsListItem, CompletedBsqSwapsListItem> column) {
                         return new TableCell<>() {
                             @Override
-                            public void updateItem(final AtomicTradeListItem item, boolean empty) {
+                            public void updateItem(final CompletedBsqSwapsListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 setGraphic(new AutoTooltipLabel(model.getTradeFee(item)));
                             }

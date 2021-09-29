@@ -15,14 +15,14 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.portfolio.atomictrades;
+package bisq.desktop.main.portfolio.bsqswaps;
 
 import bisq.core.trade.model.bsqswap.BsqSwapTrade;
 
-class AtomicTradeListItem {
+class CompletedBsqSwapsListItem {
     private final BsqSwapTrade bsqSwapTrade;
 
-    AtomicTradeListItem(BsqSwapTrade bsqSwapTrade) {
+    CompletedBsqSwapsListItem(BsqSwapTrade bsqSwapTrade) {
         this.bsqSwapTrade = bsqSwapTrade;
     }
 

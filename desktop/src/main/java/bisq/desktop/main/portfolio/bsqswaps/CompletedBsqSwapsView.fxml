@@ -28,7 +28,7 @@
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.geometry.Insets?>
-<VBox fx:id="root" fx:controller="bisq.desktop.main.portfolio.atomictrades.AtomicTradesView"
+<VBox fx:id="root" fx:controller="bisq.desktop.main.portfolio.bsqswaps.CompletedBsqSwapsView"
       spacing="10" alignment="CENTER_RIGHT" xmlns:fx="http://javafx.com/fxml">
     <padding>
         <Insets bottom="15.0" left="15.0" right="15.0" top="15.0"/>

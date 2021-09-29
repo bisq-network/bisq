@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.portfolio.atomictrades;
+package bisq.desktop.main.portfolio.bsqswaps;
 
 import bisq.desktop.common.model.ActivatableDataModel;
 
@@ -32,15 +32,15 @@ import javafx.collections.ObservableList;
 
 import java.util.stream.Collectors;
 
-class AtomicTradeDataModel extends ActivatableDataModel {
+class CompletedBsqSwapsDataModel extends ActivatableDataModel {
 
     //    final ClosedTradableManager closedTradableManager;
     final BsqSwapTradeManager bsqSwapTradeManager;
-    private final ObservableList<AtomicTradeListItem> list = FXCollections.observableArrayList();
+    private final ObservableList<CompletedBsqSwapsListItem> list = FXCollections.observableArrayList();
     private final ListChangeListener<Tradable> tradesListChangeListener;
 
     @Inject
-    public AtomicTradeDataModel(BsqSwapTradeManager bsqSwapTradeManager) {
+    public CompletedBsqSwapsDataModel(BsqSwapTradeManager bsqSwapTradeManager) {
         this.bsqSwapTradeManager = bsqSwapTradeManager;
 
         tradesListChangeListener = change -> applyList();
@@ -57,7 +57,7 @@ class AtomicTradeDataModel extends ActivatableDataModel {
         bsqSwapTradeManager.getObservableList().removeListener(tradesListChangeListener);
     }
 
-    public ObservableList<AtomicTradeListItem> getList() {
+    public ObservableList<CompletedBsqSwapsListItem> getList() {
         return list;
     }
 
@@ -68,7 +68,7 @@ class AtomicTradeDataModel extends ActivatableDataModel {
     private void applyList() {
         list.clear();
 
-        list.addAll(bsqSwapTradeManager.getObservableList().stream().map(AtomicTradeListItem::new).collect(Collectors.toList()));
+        list.addAll(bsqSwapTradeManager.getObservableList().stream().map(CompletedBsqSwapsListItem::new).collect(Collectors.toList()));
 
         // we sort by date, earliest first
         list.sort((o1, o2) -> o2.getAtomicTrade().getDate().compareTo(o1.getAtomicTrade().getDate()));
