@@ -69,7 +69,7 @@ public class AtomicTakerVerifyAtomicTx extends AtomicTradeTask {
             var message = (CreateAtomicTxResponse) bsqSwapProtocolModel.getTradeMessage();
             bsqSwapProtocolModel.updateFromMessage(message);
 
-            var myTx = bsqSwapProtocolModel.createAtomicTx();
+            var myTx = bsqSwapProtocolModel.createBsqSwapTx();
             var makerTx = bsqSwapProtocolModel.getBtcWalletService().getTxFromSerializedTx(message.getAtomicTx());
             // Strip sigs from maker tx and compare with myTx to make sure they are the same
             makerTx.getInputs().forEach(TransactionInput::clearScriptBytes);
@@ -92,7 +92,7 @@ public class AtomicTakerVerifyAtomicTx extends AtomicTradeTask {
 
             // Create fully signed atomic tx by combining signed inputs from maker tx and my tx
             makerTx = bsqSwapProtocolModel.getBtcWalletService().getTxFromSerializedTx(message.getAtomicTx());
-            var signedTx = bsqSwapProtocolModel.createAtomicTx();
+            var signedTx = bsqSwapProtocolModel.createBsqSwapTx();
             var txFee = signedTx.getFee().getValue();
             signedTx.clearInputs();
             int index = 0;
@@ -107,8 +107,8 @@ public class AtomicTakerVerifyAtomicTx extends AtomicTradeTask {
                     "Tx fee too low txFee={} vsize*fee={}", txFee,
                     signedTx.getVsize() * bsqSwapProtocolModel.getTxFeePerVbyte());
 
-            bsqSwapProtocolModel.setVerifiedAtomicTx(signedTx);
-            bsqSwapProtocolModel.setAtomicTx(signedTx.bitcoinSerialize());
+            bsqSwapProtocolModel.setVerifiedTransaction(signedTx);
+            bsqSwapProtocolModel.setRawTx(signedTx.bitcoinSerialize());
 
             complete();
         } catch (Throwable t) {

@@ -165,7 +165,7 @@ public abstract class AtomicOfferViewModel<M extends AtomicOfferDataModel> exten
         if (DevEnv.isDevMode()) {
             UserThread.runAfter(() -> {
                 amount.set("0.001");
-                price.set("70000");
+                price.set("0.00001");
                 minAmount.set(amount.get());
                 applyMakerFee();
                 setAmountToModel();

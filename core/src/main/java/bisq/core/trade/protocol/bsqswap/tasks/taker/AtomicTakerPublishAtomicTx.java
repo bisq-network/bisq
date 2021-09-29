@@ -47,7 +47,7 @@ public class AtomicTakerPublishAtomicTx extends AtomicTradeTask {
             runInterceptHook();
 
             // Publish atomicTx
-            var atomicTx = bsqSwapProtocolModel.getVerifiedAtomicTx();
+            var atomicTx = bsqSwapProtocolModel.getVerifiedTransaction();
 
             checkNotNull(atomicTx, "Verified atomictx must not be null");
 

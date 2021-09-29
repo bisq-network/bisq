@@ -74,7 +74,7 @@ public abstract class AtomicSetupTxListener extends AtomicTradeTask {
     private void applyConfidence(TransactionConfidence confidence) {
         Transaction walletTx = walletService.getTransaction(confidence.getTransactionHash());
         checkNotNull(walletTx, "Tx from network should not be null");
-        if (bsqSwapProtocolModel.getAtomicTx() != null) {
+        if (bsqSwapProtocolModel.getRawTx() != null) {
             bsqSwapTrade.setTxId(walletTx.getTxId().toString());
             WalletService.printTx("atomicTx received from network", walletTx);
             setState();

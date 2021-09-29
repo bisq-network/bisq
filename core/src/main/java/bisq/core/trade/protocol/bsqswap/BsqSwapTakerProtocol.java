@@ -41,7 +41,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Slf4j
 public class BsqSwapTakerProtocol extends TradeProtocol implements TakerProtocol {
 
-    private final BsqSwapTakerTrade atomicTakerTrade;
+    private final BsqSwapTakerTrade bsqSwapTakerTrade;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -49,7 +49,7 @@ public class BsqSwapTakerProtocol extends TradeProtocol implements TakerProtocol
 
     public BsqSwapTakerProtocol(BsqSwapTakerTrade trade) {
         super(trade);
-        this.atomicTakerTrade = trade;
+        this.bsqSwapTakerTrade = trade;
         Offer offer = checkNotNull(trade.getOffer());
         tradeProtocolModel.getTradingPeer().setPubKeyRing(offer.getPubKeyRing());
     }
@@ -60,17 +60,14 @@ public class BsqSwapTakerProtocol extends TradeProtocol implements TakerProtocol
 
     @Override
     public void onTakeOffer() {
-        expect(preCondition(BsqSwapTrade.State.PREPARATION == atomicTakerTrade.getState())
-                .with(TakerEvent.TAKE_OFFER))
+        expect(preCondition(BsqSwapTrade.State.PREPARATION == bsqSwapTakerTrade.getState())
+                .with(TakerEvent.TAKE_OFFER)
+                .from(bsqSwapTakerTrade.getTradingPeerNodeAddress()))
                 .setup(tasks(
                         AtomicApplyFilter.class,
                         AtomicTakerPreparesData.class,
                         AtomicTakerSendsAtomicRequest.class
                 ))
-                .run(() -> {
-                    tradeProtocolModel.setTempTradingPeerNodeAddress(tradeModel.getTradingPeerNodeAddress());
-                    tradeProtocolModel.getTradeManager().requestPersistence();
-                })
                 .executeTasks();
     }
 
@@ -78,9 +75,10 @@ public class BsqSwapTakerProtocol extends TradeProtocol implements TakerProtocol
     // Incoming message handling
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    void handle(CreateAtomicTxResponse tradeMessage, NodeAddress peerNodeAddress) {
-        expect(preCondition(BsqSwapTrade.State.PREPARATION == atomicTakerTrade.getState())
-                .with(tradeMessage))
+    void handle(CreateAtomicTxResponse message, NodeAddress sender) {
+        expect(preCondition(BsqSwapTrade.State.PREPARATION == bsqSwapTakerTrade.getState())
+                .with(message)
+                .from(sender))
                 .setup(tasks(
                         AtomicTakerVerifyAtomicTx.class,
                         AtomicTakerPublishAtomicTx.class,

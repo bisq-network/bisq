@@ -1280,18 +1280,18 @@ public class TradeWalletService {
      * @throws AddressFormatException if the buyer or seller base58 address doesn't parse or its checksum is invalid
     //     * @throws SigningException if signing failed
      */
-    public Transaction createAtomicTx(Coin makerBsqPayout,
-                                      Coin makerBtcPayout,
-                                      Coin takerBsqPayout,
-                                      Coin takerBtcPayout,
-                                      String makerBsqAddress,
-                                      String makerBtcAddress,
-                                      String takerBsqAddress,
-                                      String takerBtcAddress,
-                                      List<RawTransactionInput> makerBsqInputs,
-                                      List<RawTransactionInput> makerBtcInputs,
-                                      List<RawTransactionInput> takerBsqInputs,
-                                      List<RawTransactionInput> takerBtcInputs)
+    public Transaction createBsqSwapTx(Coin makerBsqPayout,
+                                       Coin makerBtcPayout,
+                                       Coin takerBsqPayout,
+                                       Coin takerBtcPayout,
+                                       String makerBsqAddress,
+                                       String makerBtcAddress,
+                                       String takerBsqAddress,
+                                       String takerBtcAddress,
+                                       List<RawTransactionInput> makerBsqInputs,
+                                       List<RawTransactionInput> makerBtcInputs,
+                                       List<RawTransactionInput> takerBsqInputs,
+                                       List<RawTransactionInput> takerBtcInputs)
             throws AddressFormatException {
 
         var atomicTx = new Transaction(params);

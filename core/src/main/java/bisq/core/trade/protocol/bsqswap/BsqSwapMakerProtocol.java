@@ -38,7 +38,7 @@ import bisq.common.handlers.ErrorMessageHandler;
 
 public class BsqSwapMakerProtocol extends TradeProtocol {
 
-    private final BsqSwapMakerTrade atomicMakerTrade;
+    private final BsqSwapMakerTrade bsqSwapMakerTrade;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -47,18 +47,18 @@ public class BsqSwapMakerProtocol extends TradeProtocol {
     public BsqSwapMakerProtocol(BsqSwapMakerTrade trade) {
         super(trade);
 
-        this.atomicMakerTrade = trade;
+        this.bsqSwapMakerTrade = trade;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Start trade
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void handleTakeAtomicRequest(CreateAtomicTxRequest tradeMessage,
+    public void handleTakeAtomicRequest(CreateAtomicTxRequest message,
                                         NodeAddress sender,
                                         ErrorMessageHandler errorMessageHandler) {
-        expect(preCondition(BsqSwapTrade.State.PREPARATION == atomicMakerTrade.getState())
-                .with(tradeMessage)
+        expect(preCondition(BsqSwapTrade.State.PREPARATION == bsqSwapMakerTrade.getState())
+                .with(message)
                 .from(sender))
                 .setup(tasks(
                         AtomicApplyFilter.class,
@@ -68,11 +68,11 @@ public class BsqSwapMakerProtocol extends TradeProtocol {
                         AtomicMakerRemovesOpenOffer.class,
                         AtomicMakerCreatesAndSignsTx.class,
                         AtomicMakerSetupTxListener.class)
-                        .using(new TradeTaskRunner(atomicMakerTrade,
-                                () -> handleTaskRunnerSuccess(tradeMessage),
+                        .using(new TradeTaskRunner(bsqSwapMakerTrade,
+                                () -> handleTaskRunnerSuccess(message),
                                 errorMessage -> {
                                     errorMessageHandler.handleErrorMessage(errorMessage);
-                                    handleTaskRunnerFault(tradeMessage, errorMessage);
+                                    handleTaskRunnerFault(message, errorMessage);
                                 }))
                         .withTimeout(60))
                 .executeTasks();
@@ -80,5 +80,6 @@ public class BsqSwapMakerProtocol extends TradeProtocol {
 
     @Override
     protected void onTradeMessage(TradeMessage message, NodeAddress peer) {
+        // Nothing expected
     }
 }

@@ -60,6 +60,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 // Fields marked as transient are only used during protocol execution which are based on directMessages so we do not
@@ -88,7 +89,7 @@ public class BsqSwapProtocolModel implements TradeProtocolModel, Model, Persista
     @Setter
     transient private TradeMessage tradeMessage;
     @Setter
-    private BsqSwapTxHelper bsqSwapTxHelper;
+    transient private BsqSwapTxHelper bsqSwapTxHelper;
 
     @Setter
     private long bsqTradeAmount;
@@ -142,10 +143,10 @@ public class BsqSwapProtocolModel implements TradeProtocolModel, Model, Persista
     private List<RawTransactionInput> rawMakerBtcInputs = new ArrayList<>();
     @Nullable
     @Setter
-    private byte[] atomicTx;
+    private byte[] rawTx;
     @Nullable
     @Setter
-    private Transaction verifiedAtomicTx;
+    private Transaction verifiedTransaction;
 
     public BsqSwapProtocolModel(PubKeyRing pubKeyRing) {
         this(pubKeyRing, new TradingPeer());
@@ -221,8 +222,8 @@ public class BsqSwapProtocolModel implements TradeProtocolModel, Model, Persista
             bsqAmountFromVolume(trade.getOffer().getVolume()).ifPresent(this::setBsqTradeAmount);
         bsqAmountFromVolume(offer.getVolume()).ifPresent(this::setBsqMaxTradeAmount);
         bsqAmountFromVolume(offer.getMinVolume()).ifPresent(this::setBsqMinTradeAmount);
-        // Atomic trades only allow fixed prices
-        var price = offer.isUseMarketBasedPrice() ? 0 : Objects.requireNonNull(offer.getPrice()).getValue();
+        checkArgument(!offer.isUseMarketBasedPrice(), "BsqSwap trades does not support market based prices");
+        var price = Objects.requireNonNull(offer.getPrice()).getValue();
         setTradePrice(price);
         if (trade.getAmount() != null && trade.getAmount().isPositive())
             setBtcTradeAmount(trade.getAmount().getValue());
@@ -346,8 +347,8 @@ public class BsqSwapProtocolModel implements TradeProtocolModel, Model, Persista
         return true;
     }
 
-    public Transaction createAtomicTx() {
-        return getTradeWalletService().createAtomicTx(
+    public Transaction createBsqSwapTx() {
+        return getTradeWalletService().createBsqSwapTx(
                 Coin.valueOf(makerBsqOutputAmount),
                 Coin.valueOf(makerBtcOutputAmount),
                 Coin.valueOf(takerBsqOutputAmount),
