@@ -133,7 +133,7 @@ class AtomicTradesViewModel extends ActivatableWithDataModel<AtomicTradeDataMode
 
     int getNumPastTrades(BsqSwapTrade bsqSwapTrade) {
         // TODO(sq): include closed trades in count
-        var atomic = dataModel.atomicTradeManager.getObservableList().stream();
+        var atomic = dataModel.bsqSwapTradeManager.getObservableList().stream();
         return atomic
                 .filter(e -> {
                     var candidate = e.getPeerNodeAddress();
@@ -147,6 +147,6 @@ class AtomicTradesViewModel extends ActivatableWithDataModel<AtomicTradeDataMode
     }
 
     boolean wasMyOffer(BsqSwapTrade bsqSwapTrade) {
-        return dataModel.atomicTradeManager.wasMyOffer(bsqSwapTrade.getOffer());
+        return dataModel.bsqSwapTradeManager.wasMyOffer(bsqSwapTrade.getOffer());
     }
 }

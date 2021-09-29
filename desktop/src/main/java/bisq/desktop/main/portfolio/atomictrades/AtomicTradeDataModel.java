@@ -22,7 +22,7 @@ import bisq.desktop.common.model.ActivatableDataModel;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.trade.Tradable;
-import bisq.core.trade.atomic.AtomicTradeManager;
+import bisq.core.trade.atomic.BsqSwapTradeManager;
 
 import com.google.inject.Inject;
 
@@ -35,13 +35,13 @@ import java.util.stream.Collectors;
 class AtomicTradeDataModel extends ActivatableDataModel {
 
     //    final ClosedTradableManager closedTradableManager;
-    final AtomicTradeManager atomicTradeManager;
+    final BsqSwapTradeManager bsqSwapTradeManager;
     private final ObservableList<AtomicTradeListItem> list = FXCollections.observableArrayList();
     private final ListChangeListener<Tradable> tradesListChangeListener;
 
     @Inject
-    public AtomicTradeDataModel(AtomicTradeManager atomicTradeManager) {
-        this.atomicTradeManager = atomicTradeManager;
+    public AtomicTradeDataModel(BsqSwapTradeManager bsqSwapTradeManager) {
+        this.bsqSwapTradeManager = bsqSwapTradeManager;
 
         tradesListChangeListener = change -> applyList();
     }
@@ -49,12 +49,12 @@ class AtomicTradeDataModel extends ActivatableDataModel {
     @Override
     protected void activate() {
         applyList();
-        atomicTradeManager.getObservableList().addListener(tradesListChangeListener);
+        bsqSwapTradeManager.getObservableList().addListener(tradesListChangeListener);
     }
 
     @Override
     protected void deactivate() {
-        atomicTradeManager.getObservableList().removeListener(tradesListChangeListener);
+        bsqSwapTradeManager.getObservableList().removeListener(tradesListChangeListener);
     }
 
     public ObservableList<AtomicTradeListItem> getList() {
@@ -62,13 +62,13 @@ class AtomicTradeDataModel extends ActivatableDataModel {
     }
 
     public OfferPayload.Direction getDirection(Offer offer) {
-        return atomicTradeManager.wasMyOffer(offer) ? offer.getDirection() : offer.getMirroredDirection();
+        return bsqSwapTradeManager.wasMyOffer(offer) ? offer.getDirection() : offer.getMirroredDirection();
     }
 
     private void applyList() {
         list.clear();
 
-        list.addAll(atomicTradeManager.getObservableList().stream().map(AtomicTradeListItem::new).collect(Collectors.toList()));
+        list.addAll(bsqSwapTradeManager.getObservableList().stream().map(AtomicTradeListItem::new).collect(Collectors.toList()));
 
         // we sort by date, earliest first
         list.sort((o1, o2) -> o2.getAtomicTrade().getDate().compareTo(o1.getAtomicTrade().getDate()));

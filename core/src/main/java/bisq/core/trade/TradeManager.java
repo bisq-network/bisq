@@ -30,10 +30,10 @@ import bisq.core.offer.availability.OfferAvailabilityModel;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 import bisq.core.support.dispute.mediation.mediator.MediatorManager;
-import bisq.core.trade.atomic.AtomicTradeManager;
 import bisq.core.trade.atomic.BsqSwapMakerTrade;
 import bisq.core.trade.atomic.BsqSwapTakerTrade;
 import bisq.core.trade.atomic.BsqSwapTrade;
+import bisq.core.trade.atomic.BsqSwapTradeManager;
 import bisq.core.trade.atomic.messages.CreateAtomicTxRequest;
 import bisq.core.trade.atomic.protocol.AtomicMakerProtocol;
 import bisq.core.trade.closed.ClosedTradableManager;
@@ -124,7 +124,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
     private final BsqWalletService bsqWalletService;
     private final OpenOfferManager openOfferManager;
     private final ClosedTradableManager closedTradableManager;
-    private final AtomicTradeManager atomicTradeManager;
+    private final BsqSwapTradeManager bsqSwapTradeManager;
     private final FailedTradesManager failedTradesManager;
     private final P2PService p2PService;
     private final PriceFeedService priceFeedService;
@@ -163,7 +163,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                         BsqWalletService bsqWalletService,
                         OpenOfferManager openOfferManager,
                         ClosedTradableManager closedTradableManager,
-                        AtomicTradeManager atomicTradeManager,
+                        BsqSwapTradeManager bsqSwapTradeManager,
                         FailedTradesManager failedTradesManager,
                         P2PService p2PService,
                         PriceFeedService priceFeedService,
@@ -183,7 +183,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         this.bsqWalletService = bsqWalletService;
         this.openOfferManager = openOfferManager;
         this.closedTradableManager = closedTradableManager;
-        this.atomicTradeManager = atomicTradeManager;
+        this.bsqSwapTradeManager = bsqSwapTradeManager;
         this.failedTradesManager = failedTradesManager;
         this.p2PService = p2PService;
         this.priceFeedService = priceFeedService;
@@ -403,7 +403,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
 
         // We do not include failed trades as they should not be counted anyway in the trade statistics
         Set<TradeModel> allTrades = new HashSet<>(closedTradableManager.getClosedTrades());
-        allTrades.addAll(atomicTradeManager.getAtomicTrades());
+        allTrades.addAll(bsqSwapTradeManager.getAtomicTrades());
         allTrades.addAll(tradableList.getList());
         String referralId = referralIdService.getOptionalReferralId().orElse(null);
         boolean isTorNetworkNode = p2PService.getNetworkNode() instanceof TorNetworkNode;
@@ -639,7 +639,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
     public void onTradeCompleted(TradeModel tradeModel) {
         removeTrade(tradeModel);
         if (tradeModel instanceof BsqSwapTrade) {
-            atomicTradeManager.add((BsqSwapTrade) tradeModel);
+            bsqSwapTradeManager.add((BsqSwapTrade) tradeModel);
         } else {
             closedTradableManager.add(tradeModel);
         }
@@ -821,7 +821,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         hasTaken &= failedTradesManager.getObservableList().stream()
                 .anyMatch(t -> t.getOffer().getId().equals(offerId));
         Stream<Tradable> oldTradables = Stream.concat(closedTradableManager.getObservableList().stream(),
-                atomicTradeManager.getObservableList().stream());
+                bsqSwapTradeManager.getObservableList().stream());
         return hasTaken && oldTradables
                 .anyMatch(t -> t.getOffer().getId().equals(offerId));
     }
@@ -841,7 +841,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
     }
 
     public Optional<BsqSwapTrade> getAtomicTradeById(String tradeId) {
-        return atomicTradeManager.getAtomicTradeById(tradeId);
+        return bsqSwapTradeManager.getAtomicTradeById(tradeId);
     }
 
     public Optional<Trade> getTradeById(String tradeId) {

@@ -50,7 +50,7 @@ import bisq.core.support.dispute.refund.RefundManager;
 import bisq.core.support.dispute.refund.refundagent.RefundAgentManager;
 import bisq.core.support.traderchat.TraderChatManager;
 import bisq.core.trade.TradeManager;
-import bisq.core.trade.atomic.AtomicTradeManager;
+import bisq.core.trade.atomic.BsqSwapTradeManager;
 import bisq.core.trade.closed.ClosedTradableManager;
 import bisq.core.trade.failed.FailedTradesManager;
 import bisq.core.trade.statistics.TradeStatisticsManager;
@@ -86,7 +86,7 @@ public class DomainInitialisation {
     private final TraderChatManager traderChatManager;
     private final TradeManager tradeManager;
     private final ClosedTradableManager closedTradableManager;
-    private final AtomicTradeManager atomicTradeManager;
+    private final BsqSwapTradeManager bsqSwapTradeManager;
     private final FailedTradesManager failedTradesManager;
     private final XmrTxProofService xmrTxProofService;
     private final OpenOfferManager openOfferManager;
@@ -126,7 +126,7 @@ public class DomainInitialisation {
                                 TraderChatManager traderChatManager,
                                 TradeManager tradeManager,
                                 ClosedTradableManager closedTradableManager,
-                                AtomicTradeManager atomicTradeManager,
+                                BsqSwapTradeManager bsqSwapTradeManager,
                                 FailedTradesManager failedTradesManager,
                                 XmrTxProofService xmrTxProofService,
                                 OpenOfferManager openOfferManager,
@@ -164,7 +164,7 @@ public class DomainInitialisation {
         this.traderChatManager = traderChatManager;
         this.tradeManager = tradeManager;
         this.closedTradableManager = closedTradableManager;
-        this.atomicTradeManager = atomicTradeManager;
+        this.bsqSwapTradeManager = bsqSwapTradeManager;
         this.failedTradesManager = failedTradesManager;
         this.xmrTxProofService = xmrTxProofService;
         this.openOfferManager = openOfferManager;
@@ -218,7 +218,7 @@ public class DomainInitialisation {
         traderChatManager.onAllServicesInitialized();
 
         closedTradableManager.onAllServicesInitialized();
-        atomicTradeManager.onAllServicesInitialized();
+        bsqSwapTradeManager.onAllServicesInitialized();
         failedTradesManager.onAllServicesInitialized();
         xmrTxProofService.onAllServicesInitialized();
 

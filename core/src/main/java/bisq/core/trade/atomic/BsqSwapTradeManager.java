@@ -41,7 +41,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
-public class AtomicTradeManager implements PersistedDataHost {
+public class BsqSwapTradeManager implements PersistedDataHost {
     private final PersistenceManager<TradableList<BsqSwapTrade>> persistenceManager;
     private final TradableList<BsqSwapTrade> atomicTrades = new TradableList<>();
     private final KeyRing keyRing;
@@ -49,10 +49,10 @@ public class AtomicTradeManager implements PersistedDataHost {
     private final CleanupMailboxMessages cleanupMailboxMessages;
 
     @Inject
-    public AtomicTradeManager(KeyRing keyRing,
-                              PriceFeedService priceFeedService,
-                              PersistenceManager<TradableList<BsqSwapTrade>> persistenceManager,
-                              CleanupMailboxMessages cleanupMailboxMessages) {
+    public BsqSwapTradeManager(KeyRing keyRing,
+                               PriceFeedService priceFeedService,
+                               PersistenceManager<TradableList<BsqSwapTrade>> persistenceManager,
+                               CleanupMailboxMessages cleanupMailboxMessages) {
         this.keyRing = keyRing;
         this.priceFeedService = priceFeedService;
         this.cleanupMailboxMessages = cleanupMailboxMessages;
