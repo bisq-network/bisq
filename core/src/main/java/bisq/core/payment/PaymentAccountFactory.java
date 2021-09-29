@@ -105,7 +105,7 @@ public class PaymentAccountFactory {
             case PaymentMethod.SWIFT_ID:
                 return new SwiftAccount();
             case PaymentMethod.ATOMIC_ID:
-                return new AtomicAccount();
+                return new BsqSwapAccount();
 
             // Cannot be deleted as it would break old trade history entries
             case PaymentMethod.OK_PAY_ID:

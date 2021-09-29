@@ -24,9 +24,9 @@ import bisq.core.payment.payload.PaymentMethod;
 import lombok.EqualsAndHashCode;
 
 @EqualsAndHashCode(callSuper = true)
-public final class AtomicAccount extends PaymentAccount {
+public final class BsqSwapAccount extends PaymentAccount {
 
-    public AtomicAccount() {
+    public BsqSwapAccount() {
         super(PaymentMethod.ATOMIC);
     }
 
