@@ -29,8 +29,7 @@ import bisq.core.locale.Res;
 import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
-import bisq.core.offer.OfferPayload;
-import bisq.core.offer.OfferPayloadBase;
+import bisq.core.offer.OfferDirection;
 import bisq.core.offer.OfferUtil;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.provider.fee.FeeService;
@@ -152,7 +151,7 @@ public class TakeBsqSwapOfferModel implements Model {
         bsqSwapTxHelper = new BsqSwapTxHelper(
                 bsqWalletService,
                 tradeWalletService,
-                offer.getDirection() == OfferPayloadBase.Direction.SELL,
+                offer.getDirection() == OfferDirection.SELL,
                 offer.getPrice(),
                 amount.getValue(),
                 Coin.ZERO,
@@ -211,7 +210,7 @@ public class TakeBsqSwapOfferModel implements Model {
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public OfferPayload.Direction getDirection() {
+    public OfferDirection getDirection() {
         return offer.getDirection();
     }
 

@@ -53,12 +53,12 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Getter
 @Slf4j
 public final class OfferPayload extends OfferPayloadBase {
-    public static Direction fromProto(protobuf.OfferPayload.Direction direction) {
-        return ProtoUtil.enumFromProto(OfferPayload.Direction.class, direction.name());
+    public static OfferDirection fromProto(protobuf.OfferDirection direction) {
+        return ProtoUtil.enumFromProto(OfferDirection.class, direction.name());
     }
 
-    public static protobuf.OfferPayload.Direction toProtoMessage(Direction direction) {
-        return protobuf.OfferPayload.Direction.valueOf(direction.name());
+    public static protobuf.OfferDirection toProtoMessage(OfferDirection direction) {
+        return protobuf.OfferDirection.valueOf(direction.name());
     }
 
     // Keys for extra map
@@ -88,7 +88,7 @@ public final class OfferPayload extends OfferPayloadBase {
     private final NodeAddress ownerNodeAddress;
     @JsonExclude
     private final PubKeyRing pubKeyRing;
-    private final Direction direction;
+    private final OfferDirection direction;
     // price if fixed price is used (usePercentageBasedPrice = false), otherwise 0
     private final long price;
     // Distance form market price if percentage based price is used (usePercentageBasedPrice = true), otherwise 0.
@@ -175,7 +175,7 @@ public final class OfferPayload extends OfferPayloadBase {
                         long date,
                         NodeAddress ownerNodeAddress,
                         PubKeyRing pubKeyRing,
-                        Direction direction,
+                        OfferDirection direction,
                         long price,
                         double marketPriceMargin,
                         boolean useMarketBasedPrice,

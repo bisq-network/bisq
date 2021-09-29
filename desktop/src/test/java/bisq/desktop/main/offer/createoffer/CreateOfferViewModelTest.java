@@ -31,6 +31,7 @@ import bisq.core.locale.CryptoCurrency;
 import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.Res;
 import bisq.core.offer.CreateOfferService;
+import bisq.core.offer.OfferDirection;
 import bisq.core.offer.OfferUtil;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentMethod;
@@ -60,7 +61,6 @@ import java.util.UUID;
 import org.junit.Before;
 import org.junit.Test;
 
-import static bisq.core.offer.OfferPayloadBase.Direction;
 import static bisq.desktop.maker.PreferenceMakers.empty;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -135,7 +135,7 @@ public class CreateOfferViewModelTest {
                 coinFormatter,
                 tradeStats,
                 null);
-        dataModel.initWithData(Direction.BUY, new CryptoCurrency("BTC", "bitcoin"));
+        dataModel.initWithData(OfferDirection.BUY, new CryptoCurrency("BTC", "bitcoin"));
         dataModel.activate();
 
         model = new CreateOfferViewModel(dataModel,

@@ -24,7 +24,7 @@ import bisq.desktop.util.validation.BtcValidator;
 
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
-import bisq.core.offer.OfferPayloadBase;
+import bisq.core.offer.OfferDirection;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.trade.model.bsqswap.BsqSwapTrade;
 import bisq.core.util.FormattingUtils;
@@ -314,7 +314,7 @@ class TakeBsqSwapOfferViewModel extends ActivatableWithDataModel<TakeBsqSwapOffe
         volume.bind(createStringBinding(
                 () -> DisplayUtils.formatVolume(dataModel.getVolume().get()), dataModel.getVolume()));
 
-        if (dataModel.getDirection() == OfferPayloadBase.Direction.SELL) {
+        if (dataModel.getDirection() == OfferDirection.SELL) {
             volumeDescriptionLabel.set(Res.get("createOffer.amountPriceBox.buy.volumeDescription", dataModel.getCurrencyCode()));
         } else {
             volumeDescriptionLabel.set(Res.get("createOffer.amountPriceBox.sell.volumeDescription", dataModel.getCurrencyCode()));

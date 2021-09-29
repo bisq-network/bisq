@@ -37,8 +37,7 @@ import bisq.desktop.util.GUIUtil;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
-import bisq.core.offer.OfferPayload;
-import bisq.core.offer.OfferPayloadBase;
+import bisq.core.offer.OfferDirection;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.CoinFormatter;
 
@@ -162,8 +161,8 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
 
         VBox.setMargin(chartPane, new Insets(0, 0, 5, 0));
 
-        Tuple4<TableView<OfferListItem>, VBox, Button, Label> tupleBuy = getOfferTable(OfferPayloadBase.Direction.BUY);
-        Tuple4<TableView<OfferListItem>, VBox, Button, Label> tupleSell = getOfferTable(OfferPayloadBase.Direction.SELL);
+        Tuple4<TableView<OfferListItem>, VBox, Button, Label> tupleBuy = getOfferTable(OfferDirection.BUY);
+        Tuple4<TableView<OfferListItem>, VBox, Button, Label> tupleSell = getOfferTable(OfferDirection.SELL);
         buyOfferTableView = tupleBuy.first;
         sellOfferTableView = tupleSell.first;
 
@@ -179,8 +178,8 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         VBox.setMargin(bottomHBox, new Insets(-5, 0, 0, 0));
         HBox.setHgrow(tupleBuy.second, Priority.ALWAYS);
         HBox.setHgrow(tupleSell.second, Priority.ALWAYS);
-        tupleBuy.second.setUserData(OfferPayloadBase.Direction.BUY.name());
-        tupleSell.second.setUserData(OfferPayloadBase.Direction.SELL.name());
+        tupleBuy.second.setUserData(OfferDirection.BUY.name());
+        tupleSell.second.setUserData(OfferDirection.SELL.name());
         bottomHBox.getChildren().addAll(tupleBuy.second, tupleSell.second);
 
         root.getChildren().addAll(currencyComboBoxTuple.first, chartPane, bottomHBox);
@@ -248,7 +247,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                     });
 
                     if (CurrencyUtil.isCryptoCurrency(code)) {
-                        if (bottomHBox.getChildren().size() == 2 && bottomHBox.getChildren().get(0).getUserData().equals(OfferPayloadBase.Direction.BUY.name())) {
+                        if (bottomHBox.getChildren().size() == 2 && bottomHBox.getChildren().get(0).getUserData().equals(OfferDirection.BUY.name())) {
                             bottomHBox.getChildren().get(0).toFront();
                             reverseTableColumns();
                         }
@@ -261,7 +260,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
 
                         priceColumnLabel.set(Res.get("shared.priceWithCur", Res.getBaseCurrencyCode()));
                     } else {
-                        if (bottomHBox.getChildren().size() == 2 && bottomHBox.getChildren().get(0).getUserData().equals(OfferPayloadBase.Direction.SELL.name())) {
+                        if (bottomHBox.getChildren().size() == 2 && bottomHBox.getChildren().get(0).getUserData().equals(OfferDirection.SELL.name())) {
                             bottomHBox.getChildren().get(0).toFront();
                             reverseTableColumns();
                         }
@@ -457,7 +456,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
             .collect(Collectors.toList());
     }
 
-    private Tuple4<TableView<OfferListItem>, VBox, Button, Label> getOfferTable(OfferPayload.Direction direction) {
+    private Tuple4<TableView<OfferListItem>, VBox, Button, Label> getOfferTable(OfferDirection direction) {
         TableView<OfferListItem> tableView = new TableView<>();
         tableView.setMinHeight(initialOfferTableViewHeight);
         tableView.setPrefHeight(initialOfferTableViewHeight);
@@ -599,7 +598,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                     }
                 });
 
-        boolean isSellOffer = direction == OfferPayloadBase.Direction.SELL;
+        boolean isSellOffer = direction == OfferDirection.SELL;
 
         // trader avatar
         TableColumn<OfferListItem, OfferListItem> avatarColumn = new AutoTooltipTableColumn<>(isSellOffer ?

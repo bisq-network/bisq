@@ -32,7 +32,7 @@ import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.CreateOfferService;
 import bisq.core.offer.Offer;
-import bisq.core.offer.OfferPayload;
+import bisq.core.offer.OfferDirection;
 import bisq.core.offer.OfferUtil;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.payment.PaymentAccount;
@@ -98,7 +98,7 @@ public abstract class BsqSwapOfferDataModel extends ActivatableDataModel impleme
     private final String offerId;
     private final SetChangeListener<PaymentAccount> paymentAccountsChangeListener;
 
-    protected OfferPayload.Direction direction;
+    protected OfferDirection direction;
     protected TradeCurrency tradeCurrency;
     protected final StringProperty tradeCurrencyCode = new SimpleStringProperty();
     protected final ObjectProperty<Coin> amount = new SimpleObjectProperty<>();
@@ -193,7 +193,7 @@ public abstract class BsqSwapOfferDataModel extends ActivatableDataModel impleme
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // called before activate()
-    public boolean initWithData(OfferPayload.Direction direction, TradeCurrency tradeCurrency) {
+    public boolean initWithData(OfferDirection direction, TradeCurrency tradeCurrency) {
         this.direction = direction;
         this.tradeCurrency = tradeCurrency;
 
@@ -355,7 +355,7 @@ public abstract class BsqSwapOfferDataModel extends ActivatableDataModel impleme
         return true;
     }
 
-    OfferPayload.Direction getDirection() {
+    OfferDirection getDirection() {
         return direction;
     }
 

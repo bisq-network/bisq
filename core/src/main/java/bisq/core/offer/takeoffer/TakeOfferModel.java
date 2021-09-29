@@ -46,7 +46,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 
 import static bisq.core.btc.model.AddressEntry.Context.OFFER_FUNDING;
-import static bisq.core.offer.OfferPayloadBase.Direction.SELL;
+import static bisq.core.offer.OfferDirection.SELL;
 import static bisq.core.util.VolumeUtil.getAdjustedVolumeForHalCash;
 import static bisq.core.util.VolumeUtil.getRoundedFiatVolume;
 import static bisq.core.util.coin.CoinUtil.minCoin;

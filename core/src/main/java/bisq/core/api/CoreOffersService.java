@@ -23,6 +23,7 @@ import bisq.core.offer.CreateOfferService;
 import bisq.core.offer.MutableOfferPayloadFields;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferBookService;
+import bisq.core.offer.OfferDirection;
 import bisq.core.offer.OfferFilter;
 import bisq.core.offer.OfferPayload;
 import bisq.core.offer.OfferUtil;
@@ -57,8 +58,7 @@ import static bisq.common.util.MathUtils.roundDoubleToLong;
 import static bisq.common.util.MathUtils.scaleUpByPowerOf10;
 import static bisq.core.locale.CurrencyUtil.isCryptoCurrency;
 import static bisq.core.offer.Offer.State;
-import static bisq.core.offer.OfferPayloadBase.Direction;
-import static bisq.core.offer.OfferPayloadBase.Direction.BUY;
+import static bisq.core.offer.OfferDirection.BUY;
 import static bisq.core.offer.OpenOffer.State.AVAILABLE;
 import static bisq.core.offer.OpenOffer.State.DEACTIVATED;
 import static bisq.core.payment.PaymentAccountUtil.isPaymentAccountValidForOffer;
@@ -224,7 +224,7 @@ class CoreOffersService {
 
         String currencyCode = paymentAccount.getSingleTradeCurrency().getCode();
         String offerId = createOfferService.getRandomOfferId();
-        Direction direction = Direction.valueOf(directionAsString.toUpperCase());
+        OfferDirection direction = OfferDirection.valueOf(directionAsString.toUpperCase());
         Coin amount = Coin.valueOf(amountAsLong);
         Coin minAmount = Coin.valueOf(minAmountAsLong);
         Price price = Price.valueOf(currencyCode, priceStringToLong(priceAsString, currencyCode));
@@ -260,7 +260,7 @@ class CoreOffersService {
 
         String upperCaseCurrencyCode = currencyCode.toUpperCase();
         String offerId = createOfferService.getRandomOfferId();
-        Direction direction = Direction.valueOf(directionAsString.toUpperCase());
+        OfferDirection direction = OfferDirection.valueOf(directionAsString.toUpperCase());
         Price price = Price.valueOf(upperCaseCurrencyCode, priceStringToLong(priceAsString, upperCaseCurrencyCode));
         Coin amount = Coin.valueOf(amountAsLong);
         Coin minAmount = Coin.valueOf(minAmountAsLong);

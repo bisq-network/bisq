@@ -24,7 +24,7 @@ import bisq.desktop.main.overlays.popups.Popup;
 import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
-import bisq.core.offer.OfferPayload;
+import bisq.core.offer.OfferDirection;
 import bisq.core.offer.takeoffer.TakeBsqSwapOfferModel;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.trade.misc.TradeResultHandler;
@@ -114,7 +114,7 @@ class TakeBsqSwapOfferDataModel extends ActivatableDataModel {
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    OfferPayload.Direction getDirection() {
+    OfferDirection getDirection() {
         return takeBsqSwapOfferModel.getDirection();
     }
 

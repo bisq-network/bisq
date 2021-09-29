@@ -35,7 +35,7 @@ import static java.lang.String.format;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.fail;
-import static protobuf.OfferPayload.Direction.BUY;
+import static protobuf.OfferDirection.BUY;
 
 // @Disabled
 @Slf4j

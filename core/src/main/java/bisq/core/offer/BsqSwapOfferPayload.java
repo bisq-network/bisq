@@ -62,7 +62,7 @@ public final class BsqSwapOfferPayload extends OfferPayloadBase
     private final NodeAddress ownerNodeAddress;
     @JsonExclude
     private final PubKeyRing pubKeyRing;
-    private final Direction direction;
+    private final OfferDirection direction;
     private final long price;
     private final long amount;
     private final long minAmount;
@@ -84,7 +84,7 @@ public final class BsqSwapOfferPayload extends OfferPayloadBase
                                long date,
                                NodeAddress ownerNodeAddress,
                                PubKeyRing pubKeyRing,
-                               Direction direction,
+                               OfferDirection direction,
                                long price,
                                long amount,
                                long minAmount,
@@ -110,12 +110,12 @@ public final class BsqSwapOfferPayload extends OfferPayloadBase
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static protobuf.OfferDirection toProtoMessage(Direction direction) {
+    public static protobuf.OfferDirection toProtoMessage(OfferDirection direction) {
         return protobuf.OfferDirection.valueOf(direction.name());
     }
 
-    public static Direction fromProto(protobuf.OfferDirection offerDirection) {
-        return ProtoUtil.enumFromProto(Direction.class, offerDirection.name());
+    public static OfferDirection fromProto(protobuf.OfferDirection offerDirection) {
+        return ProtoUtil.enumFromProto(OfferDirection.class, offerDirection.name());
     }
 
     @Override

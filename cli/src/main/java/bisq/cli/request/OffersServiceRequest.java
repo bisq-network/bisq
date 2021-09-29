@@ -39,8 +39,8 @@ import static bisq.proto.grpc.EditOfferRequest.EditType.MKT_PRICE_MARGIN_ONLY;
 import static bisq.proto.grpc.EditOfferRequest.EditType.TRIGGER_PRICE_ONLY;
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.toList;
-import static protobuf.OfferPayload.Direction.BUY;
-import static protobuf.OfferPayload.Direction.SELL;
+import static protobuf.OfferDirection.BUY;
+import static protobuf.OfferDirection.SELL;
 
 
 

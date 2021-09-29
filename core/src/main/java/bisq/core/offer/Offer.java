@@ -193,10 +193,10 @@ public class Offer implements NetworkPayload, PersistablePayload {
             double factor;
             double marketPriceMargin = offerPayload.getMarketPriceMargin();
             if (CurrencyUtil.isCryptoCurrency(currencyCode)) {
-                factor = getDirection() == OfferPayloadBase.Direction.SELL ?
+                factor = getDirection() == OfferDirection.SELL ?
                         1 - marketPriceMargin : 1 + marketPriceMargin;
             } else {
-                factor = getDirection() == OfferPayloadBase.Direction.BUY ?
+                factor = getDirection() == OfferDirection.BUY ?
                         1 - marketPriceMargin : 1 + marketPriceMargin;
             }
             double marketPriceAsDouble = marketPrice.getPrice();
@@ -358,11 +358,11 @@ public class Offer implements NetworkPayload, PersistablePayload {
     }
 
     public boolean isBuyOffer() {
-        return getDirection() == OfferPayloadBase.Direction.BUY;
+        return getDirection() == OfferDirection.BUY;
     }
 
-    public OfferPayload.Direction getMirroredDirection() {
-        return getDirection() == OfferPayloadBase.Direction.BUY ? OfferPayloadBase.Direction.SELL : OfferPayloadBase.Direction.BUY;
+    public OfferDirection getMirroredDirection() {
+        return getDirection() == OfferDirection.BUY ? OfferDirection.SELL : OfferDirection.BUY;
     }
 
     public boolean isMyOffer(KeyRing keyRing) {
@@ -420,7 +420,7 @@ public class Offer implements NetworkPayload, PersistablePayload {
     // Delegate Getter (boilerplate code generated via IntelliJ generate delegate feature)
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public OfferPayload.Direction getDirection() {
+    public OfferDirection getDirection() {
         return offerPayloadBase.getDirection();
     }
 

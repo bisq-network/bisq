@@ -35,7 +35,7 @@ import org.junit.jupiter.api.TestMethodOrder;
 import static bisq.apitest.config.ApiTestConfig.BSQ;
 import static bisq.core.btc.wallet.Restrictions.getDefaultBuyerSecurityDepositAsPercent;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static protobuf.OfferPayload.Direction.BUY;
+import static protobuf.OfferDirection.BUY;
 
 @Disabled
 @Slf4j

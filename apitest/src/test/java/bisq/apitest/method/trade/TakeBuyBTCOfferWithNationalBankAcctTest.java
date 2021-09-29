@@ -62,7 +62,7 @@ import static bisq.core.trade.model.trade.Trade.State.*;
 import static java.lang.String.format;
 import static org.junit.jupiter.api.Assertions.*;
 import static protobuf.Offer.State.OFFER_FEE_PAID;
-import static protobuf.OfferPayload.Direction.BUY;
+import static protobuf.OfferDirection.BUY;
 import static protobuf.OpenOffer.State.AVAILABLE;
 
 /**

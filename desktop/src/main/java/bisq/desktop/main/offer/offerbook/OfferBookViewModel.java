@@ -38,9 +38,8 @@ import bisq.core.locale.TradeCurrency;
 import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
+import bisq.core.offer.OfferDirection;
 import bisq.core.offer.OfferFilter;
-import bisq.core.offer.OfferPayload;
-import bisq.core.offer.OfferPayloadBase;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.PaymentAccountUtil;
@@ -117,7 +116,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     private TradeCurrency selectedTradeCurrency;
     private final ObservableList<TradeCurrency> allTradeCurrencies = FXCollections.observableArrayList();
 
-    private OfferPayload.Direction direction;
+    private OfferDirection direction;
 
     final StringProperty tradeCurrencyCode = new SimpleStringProperty();
 
@@ -215,7 +214,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     protected void activate() {
         filteredItems.addListener(filterItemsListener);
 
-        String code = direction == OfferPayloadBase.Direction.BUY ? preferences.getBuyScreenCurrencyCode() : preferences.getSellScreenCurrencyCode();
+        String code = direction == OfferDirection.BUY ? preferences.getBuyScreenCurrencyCode() : preferences.getSellScreenCurrencyCode();
         if (code != null && !code.isEmpty() && !isShowAllEntry(code) &&
                 CurrencyUtil.getTradeCurrency(code).isPresent()) {
             showAllTradeCurrenciesProperty.set(false);
@@ -251,7 +250,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    void initWithDirection(OfferPayload.Direction direction) {
+    void initWithDirection(OfferDirection direction) {
         this.direction = direction;
     }
 
@@ -279,7 +278,7 @@ class OfferBookViewModel extends ActivatableViewModel {
             setMarketPriceFeedCurrency();
             filterOffers();
 
-            if (direction == OfferPayloadBase.Direction.BUY)
+            if (direction == OfferDirection.BUY)
                 preferences.setBuyScreenCurrencyCode(code);
             else
                 preferences.setSellScreenCurrencyCode(code);
@@ -341,7 +340,7 @@ class OfferBookViewModel extends ActivatableViewModel {
         return openOfferManager.isMyOffer(offer);
     }
 
-    OfferPayload.Direction getDirection() {
+    OfferDirection getDirection() {
         return direction;
     }
 
@@ -647,11 +646,11 @@ class OfferBookViewModel extends ActivatableViewModel {
                 bsqFormatter.formatCoinWithCode(offer.getMakerFee());
     }
 
-    private static String getDirectionWithCodeDetailed(OfferPayload.Direction direction, String currencyCode) {
+    private static String getDirectionWithCodeDetailed(OfferDirection direction, String currencyCode) {
         if (CurrencyUtil.isFiatCurrency(currencyCode))
-            return (direction == OfferPayloadBase.Direction.BUY) ? Res.get("shared.buyingBTCWith", currencyCode) : Res.get("shared.sellingBTCFor", currencyCode);
+            return (direction == OfferDirection.BUY) ? Res.get("shared.buyingBTCWith", currencyCode) : Res.get("shared.sellingBTCFor", currencyCode);
         else
-            return (direction == OfferPayloadBase.Direction.SELL) ? Res.get("shared.buyingCurrency", currencyCode) : Res.get("shared.sellingCurrency", currencyCode);
+            return (direction == OfferDirection.SELL) ? Res.get("shared.buyingCurrency", currencyCode) : Res.get("shared.sellingCurrency", currencyCode);
     }
 
     public String formatDepositString(Coin deposit, long amount) {

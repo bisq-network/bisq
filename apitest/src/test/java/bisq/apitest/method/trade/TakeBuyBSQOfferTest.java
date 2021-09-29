@@ -51,7 +51,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.fail;
 import static protobuf.Offer.State.OFFER_FEE_PAID;
-import static protobuf.OfferPayload.Direction.SELL;
+import static protobuf.OfferDirection.SELL;
 
 
 

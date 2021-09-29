@@ -24,7 +24,7 @@ import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
-import bisq.core.offer.OfferPayload;
+import bisq.core.offer.OfferDirection;
 import bisq.core.offer.OpenOffer;
 import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
@@ -93,7 +93,7 @@ class ClosedTradesDataModel extends ActivatableDataModel {
         return list;
     }
 
-    public OfferPayload.Direction getDirection(Offer offer) {
+    public OfferDirection getDirection(Offer offer) {
         return closedTradableManager.wasMyOffer(offer) ? offer.getDirection() : offer.getMirroredDirection();
     }
 

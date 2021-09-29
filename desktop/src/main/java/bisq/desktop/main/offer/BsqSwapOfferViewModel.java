@@ -36,7 +36,7 @@ import bisq.core.locale.TradeCurrency;
 import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
-import bisq.core.offer.OfferPayload;
+import bisq.core.offer.OfferDirection;
 import bisq.core.offer.OfferRestrictions;
 import bisq.core.offer.OfferUtil;
 import bisq.core.payment.PaymentAccount;
@@ -192,7 +192,7 @@ public abstract class BsqSwapOfferViewModel<M extends BsqSwapOfferDataModel> ext
     }
 
     private void addBindings() {
-        if (dataModel.getDirection() == OfferPayload.Direction.BUY) {
+        if (dataModel.getDirection() == OfferDirection.BUY) {
             volumeDescriptionLabel.bind(createStringBinding(
                     () -> Res.get("createOffer.amountPriceBox.buy.volumeDescription", dataModel.getTradeCurrencyCode().get()),
                     dataModel.getTradeCurrencyCode()));
@@ -340,14 +340,14 @@ public abstract class BsqSwapOfferViewModel<M extends BsqSwapOfferDataModel> ext
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    boolean initWithData(OfferPayload.Direction direction, TradeCurrency tradeCurrency) {
+    boolean initWithData(OfferDirection direction, TradeCurrency tradeCurrency) {
         boolean result = dataModel.initWithData(direction, tradeCurrency);
         if (dataModel.paymentAccount != null)
             btcValidator.setMaxValue(dataModel.paymentAccount.getPaymentMethod().getMaxTradeLimitAsCoin(dataModel.getTradeCurrencyCode().get()));
         btcValidator.setMaxTradeLimit(Coin.valueOf(dataModel.getMaxTradeLimit()));
         btcValidator.setMinValue(Restrictions.getMinTradeAmount());
 
-        final boolean isBuy = dataModel.getDirection() == OfferPayload.Direction.BUY;
+        final boolean isBuy = dataModel.getDirection() == OfferDirection.BUY;
         amountDescription = Res.get("createOffer.amountPriceBox.amountDescription",
                 isBuy ? Res.get("shared.buy") : Res.get("shared.sell"));
 
@@ -566,7 +566,7 @@ public abstract class BsqSwapOfferViewModel<M extends BsqSwapOfferDataModel> ext
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public boolean isSellOffer() {
-        return dataModel.getDirection() == OfferPayload.Direction.SELL;
+        return dataModel.getDirection() == OfferDirection.SELL;
     }
 
     public TradeCurrency getTradeCurrency() {

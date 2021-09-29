@@ -20,7 +20,7 @@ package bisq.desktop.main.portfolio.bsqswaps;
 import bisq.desktop.common.model.ActivatableDataModel;
 
 import bisq.core.offer.Offer;
-import bisq.core.offer.OfferPayload;
+import bisq.core.offer.OfferDirection;
 import bisq.core.trade.model.Tradable;
 import bisq.core.trade.model.bsqswap.BsqSwapTradeManager;
 
@@ -61,7 +61,7 @@ class CompletedBsqSwapsDataModel extends ActivatableDataModel {
         return list;
     }
 
-    public OfferPayload.Direction getDirection(Offer offer) {
+    public OfferDirection getDirection(Offer offer) {
         return bsqSwapTradeManager.wasMyOffer(offer) ? offer.getDirection() : offer.getMirroredDirection();
     }
 

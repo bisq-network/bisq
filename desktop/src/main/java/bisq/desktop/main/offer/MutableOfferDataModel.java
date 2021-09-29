@@ -35,8 +35,7 @@ import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.CreateOfferService;
 import bisq.core.offer.Offer;
-import bisq.core.offer.OfferPayload;
-import bisq.core.offer.OfferPayloadBase;
+import bisq.core.offer.OfferDirection;
 import bisq.core.offer.OfferUtil;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.payment.PaymentAccount;
@@ -114,7 +113,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     private final BalanceListener btcBalanceListener;
     private final SetChangeListener<PaymentAccount> paymentAccountsChangeListener;
 
-    protected OfferPayload.Direction direction;
+    protected OfferDirection direction;
     protected TradeCurrency tradeCurrency;
     protected final StringProperty tradeCurrencyCode = new SimpleStringProperty();
     protected final BooleanProperty useMarketBasedPrice = new SimpleBooleanProperty();
@@ -230,7 +229,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // called before activate()
-    public boolean initWithData(OfferPayload.Direction direction, TradeCurrency tradeCurrency) {
+    public boolean initWithData(OfferDirection direction, TradeCurrency tradeCurrency) {
         this.direction = direction;
         this.tradeCurrency = tradeCurrency;
 
@@ -472,16 +471,16 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
         return true;
     }
 
-    OfferPayload.Direction getDirection() {
+    OfferDirection getDirection() {
         return direction;
     }
 
     boolean isSellOffer() {
-        return direction == OfferPayloadBase.Direction.SELL;
+        return direction == OfferDirection.SELL;
     }
 
     boolean isBuyOffer() {
-        return direction == OfferPayloadBase.Direction.BUY;
+        return direction == OfferDirection.BUY;
     }
 
     AddressEntry getAddressEntry() {

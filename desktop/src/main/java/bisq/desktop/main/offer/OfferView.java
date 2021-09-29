@@ -37,8 +37,8 @@ import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.offer.BsqSwapOfferPayload;
 import bisq.core.offer.Offer;
+import bisq.core.offer.OfferDirection;
 import bisq.core.offer.OfferPayload;
-import bisq.core.offer.OfferPayloadBase;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
@@ -72,7 +72,7 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
     private final Preferences preferences;
     private final User user;
     private final P2PService p2PService;
-    private final OfferPayload.Direction direction;
+    private final OfferDirection direction;
     private final ArbitratorManager arbitratorManager;
 
     private Offer offer;
@@ -89,7 +89,7 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
                         ArbitratorManager arbitratorManager,
                         User user,
                         P2PService p2PService,
-                        OfferPayload.Direction direction) {
+                        OfferDirection direction) {
         this.viewLoader = viewLoader;
         this.navigation = navigation;
         this.preferences = preferences;
@@ -170,7 +170,7 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
 
     @Override
     protected void activate() {
-        Optional<TradeCurrency> tradeCurrencyOptional = (this.direction == OfferPayloadBase.Direction.SELL) ?
+        Optional<TradeCurrency> tradeCurrencyOptional = (this.direction == OfferDirection.SELL) ?
                 CurrencyUtil.getTradeCurrency(preferences.getSellScreenCurrencyCode()) :
                 CurrencyUtil.getTradeCurrency(preferences.getBuyScreenCurrencyCode());
         tradeCurrency = tradeCurrencyOptional.orElseGet(GlobalSettings::getDefaultTradeCurrency);
@@ -203,7 +203,7 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
         TabPane tabPane = root;
         tabPane.setTabClosingPolicy(TabPane.TabClosingPolicy.ALL_TABS);
         View view;
-        boolean isBuy = direction == OfferPayloadBase.Direction.BUY;
+        boolean isBuy = direction == OfferDirection.BUY;
 
         if (viewClass == OfferBookView.class && offerBookView == null) {
             view = viewLoader.load(viewClass);

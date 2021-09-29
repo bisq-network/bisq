@@ -17,11 +17,10 @@
 
 package bisq.core.util;
 
+import bisq.core.offer.OfferPayloadBase;
 import bisq.core.offer.OpenOffer;
 
 import bisq.common.proto.ProtoUtil;
-
-import protobuf.OfferPayload;
 
 import org.junit.Test;
 
@@ -34,10 +33,10 @@ public class ProtoUtilTest {
     //TODO Use NetworkProtoResolver, PersistenceProtoResolver or ProtoResolver which are all in bisq.common.
     @Test
     public void testEnum() {
-        OfferPayload.Direction direction = OfferPayload.Direction.SELL;
-        OfferPayload.Direction direction2 = OfferPayload.Direction.BUY;
-        OfferPayload.Direction realDirection = getDirection(direction);
-        OfferPayload.Direction realDirection2 = getDirection(direction2);
+        OfferPayloadBase.Direction direction = OfferPayloadBase.Direction.SELL;
+        OfferPayloadBase.Direction direction2 = OfferPayloadBase.Direction.BUY;
+        OfferPayloadBase.Direction realDirection = getDirection(direction);
+        OfferPayloadBase.Direction realDirection2 = getDirection(direction2);
         assertEquals("SELL", realDirection.name());
         assertEquals("BUY", realDirection2.name());
     }
@@ -63,7 +62,7 @@ public class ProtoUtilTest {
         }
     }
 
-    public static OfferPayload.Direction getDirection(OfferPayload.Direction direction) {
-        return OfferPayload.Direction.valueOf(direction.name());
+    public static OfferPayloadBase.Direction getDirection(OfferPayloadBase.Direction direction) {
+        return OfferPayloadBase.Direction.valueOf(direction.name());
     }
 }
