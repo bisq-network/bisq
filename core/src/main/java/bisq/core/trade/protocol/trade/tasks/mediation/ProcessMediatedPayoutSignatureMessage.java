@@ -18,8 +18,8 @@
 package bisq.core.trade.protocol.trade.tasks.mediation;
 
 import bisq.core.support.dispute.mediation.MediationResultState;
-import bisq.core.trade.messages.MediatedPayoutTxSignatureMessage;
 import bisq.core.trade.model.trade.Trade;
+import bisq.core.trade.protocol.messages.trade.MediatedPayoutTxSignatureMessage;
 import bisq.core.trade.protocol.trade.tasks.TradeTask;
 import bisq.core.util.Validator;
 

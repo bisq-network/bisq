@@ -15,51 +15,62 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.messages;
+package bisq.core.trade.protocol.messages.trade;
 
 import bisq.network.p2p.NodeAddress;
+
+import bisq.common.app.Version;
 
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 
-/**
- * Not used anymore since v1.4.0
- * We do the re-sending of the payment sent message via the BuyerSendCounterCurrencyTransferStartedMessage task on the
- * buyer side, so seller do not need to do anything interactively.
- */
-@Deprecated
-@SuppressWarnings("ALL")
 @EqualsAndHashCode(callSuper = true)
 @Value
-public class RefreshTradeStateRequest extends TradeMailboxMessage {
+public final class PeerPublishedDelayedPayoutTxMessage extends TradeMailboxMessage {
     private final NodeAddress senderNodeAddress;
+
+    public PeerPublishedDelayedPayoutTxMessage(String uid,
+                                               String tradeId,
+                                               NodeAddress senderNodeAddress) {
+        this(Version.getP2PMessageVersion(),
+                uid,
+                tradeId,
+                senderNodeAddress);
+    }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private RefreshTradeStateRequest(int messageVersion,
-                                     String uid,
-                                     String tradeId,
-                                     NodeAddress senderNodeAddress) {
+    private PeerPublishedDelayedPayoutTxMessage(int messageVersion,
+                                                String uid,
+                                                String tradeId,
+                                                NodeAddress senderNodeAddress) {
         super(messageVersion, tradeId, uid);
         this.senderNodeAddress = senderNodeAddress;
     }
 
     @Override
     public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
-        final protobuf.RefreshTradeStateRequest.Builder builder = protobuf.RefreshTradeStateRequest.newBuilder();
+        final protobuf.PeerPublishedDelayedPayoutTxMessage.Builder builder = protobuf.PeerPublishedDelayedPayoutTxMessage.newBuilder();
         builder.setUid(uid)
                 .setTradeId(tradeId)
                 .setSenderNodeAddress(senderNodeAddress.toProtoMessage());
-        return getNetworkEnvelopeBuilder().setRefreshTradeStateRequest(builder).build();
+        return getNetworkEnvelopeBuilder().setPeerPublishedDelayedPayoutTxMessage(builder).build();
     }
 
-    public static RefreshTradeStateRequest fromProto(protobuf.RefreshTradeStateRequest proto, int messageVersion) {
-        return new RefreshTradeStateRequest(messageVersion,
+    public static PeerPublishedDelayedPayoutTxMessage fromProto(protobuf.PeerPublishedDelayedPayoutTxMessage proto, int messageVersion) {
+        return new PeerPublishedDelayedPayoutTxMessage(messageVersion,
                 proto.getUid(),
                 proto.getTradeId(),
                 NodeAddress.fromProto(proto.getSenderNodeAddress()));
+    }
+
+    @Override
+    public String toString() {
+        return "PeerPublishedDelayedPayoutTxMessage{" +
+                "\n     senderNodeAddress=" + senderNodeAddress +
+                "\n} " + super.toString();
     }
 }

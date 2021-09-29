@@ -22,7 +22,7 @@ import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.TxBroadcaster;
 import bisq.core.dao.state.model.blockchain.TxType;
 import bisq.core.trade.model.bsqswap.BsqSwapTrade;
-import bisq.core.trade.protocol.trade.tasks.AtomicTradeTask;
+import bisq.core.trade.protocol.bsqswap.tasks.AtomicTradeTask;
 
 import bisq.common.taskrunner.TaskRunner;
 import bisq.common.util.Utilities;

@@ -21,7 +21,6 @@ import bisq.core.filter.FilterManager;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.trade.TradeUtil;
 import bisq.core.trade.model.bsqswap.BsqSwapTrade;
-import bisq.core.trade.protocol.trade.tasks.AtomicTradeTask;
 
 import bisq.network.p2p.NodeAddress;
 

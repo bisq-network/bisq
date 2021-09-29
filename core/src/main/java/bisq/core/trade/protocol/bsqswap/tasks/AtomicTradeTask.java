@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.protocol.trade.tasks;
+package bisq.core.trade.protocol.bsqswap.tasks;
 
 import bisq.core.trade.model.TradeModel;
 import bisq.core.trade.model.bsqswap.BsqSwapTrade;

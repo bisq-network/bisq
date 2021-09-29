@@ -17,8 +17,8 @@
 
 package bisq.core.trade.closed;
 
-import bisq.core.trade.messages.TradeMessage;
 import bisq.core.trade.model.trade.Trade;
+import bisq.core.trade.protocol.messages.TradeMessage;
 
 import bisq.network.p2p.AckMessage;
 import bisq.network.p2p.AckMessageSourceType;

@@ -20,7 +20,6 @@ package bisq.core.trade.protocol.bsqswap.tasks;
 import bisq.core.btc.listeners.AddressConfidenceListener;
 import bisq.core.btc.wallet.WalletService;
 import bisq.core.trade.model.bsqswap.BsqSwapTrade;
-import bisq.core.trade.protocol.trade.tasks.AtomicTradeTask;
 
 import bisq.common.UserThread;
 import bisq.common.taskrunner.TaskRunner;

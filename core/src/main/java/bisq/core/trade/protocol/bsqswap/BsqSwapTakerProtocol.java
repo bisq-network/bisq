@@ -19,10 +19,9 @@ package bisq.core.trade.protocol.bsqswap;
 
 
 import bisq.core.offer.Offer;
-import bisq.core.trade.atomic.messages.CreateAtomicTxResponse;
-import bisq.core.trade.messages.TradeMessage;
 import bisq.core.trade.model.bsqswap.BsqSwapTakerTrade;
 import bisq.core.trade.model.bsqswap.BsqSwapTrade;
+import bisq.core.trade.protocol.TakerProtocol;
 import bisq.core.trade.protocol.TradeProtocol;
 import bisq.core.trade.protocol.bsqswap.tasks.AtomicApplyFilter;
 import bisq.core.trade.protocol.bsqswap.tasks.taker.AtomicTakerPreparesData;
@@ -30,7 +29,8 @@ import bisq.core.trade.protocol.bsqswap.tasks.taker.AtomicTakerPublishAtomicTx;
 import bisq.core.trade.protocol.bsqswap.tasks.taker.AtomicTakerSendsAtomicRequest;
 import bisq.core.trade.protocol.bsqswap.tasks.taker.AtomicTakerSetupTxListener;
 import bisq.core.trade.protocol.bsqswap.tasks.taker.AtomicTakerVerifyAtomicTx;
-import bisq.core.trade.protocol.trade.TakerProtocol;
+import bisq.core.trade.protocol.messages.TradeMessage;
+import bisq.core.trade.protocol.messages.bsqswap.CreateAtomicTxResponse;
 
 import bisq.network.p2p.NodeAddress;
 

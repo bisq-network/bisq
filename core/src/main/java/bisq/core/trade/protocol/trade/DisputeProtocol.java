@@ -17,14 +17,14 @@
 
 package bisq.core.trade.protocol.trade;
 
-import bisq.core.trade.messages.MediatedPayoutTxPublishedMessage;
-import bisq.core.trade.messages.MediatedPayoutTxSignatureMessage;
-import bisq.core.trade.messages.PeerPublishedDelayedPayoutTxMessage;
-import bisq.core.trade.messages.TradeMessage;
 import bisq.core.trade.model.trade.Trade;
 import bisq.core.trade.protocol.FluentProtocol;
 import bisq.core.trade.protocol.TradeProtocol;
 import bisq.core.trade.protocol.TradeTaskRunner;
+import bisq.core.trade.protocol.messages.TradeMessage;
+import bisq.core.trade.protocol.messages.trade.MediatedPayoutTxPublishedMessage;
+import bisq.core.trade.protocol.messages.trade.MediatedPayoutTxSignatureMessage;
+import bisq.core.trade.protocol.messages.trade.PeerPublishedDelayedPayoutTxMessage;
 import bisq.core.trade.protocol.trade.tasks.ApplyFilter;
 import bisq.core.trade.protocol.trade.tasks.ProcessPeerPublishedDelayedPayoutTxMessage;
 import bisq.core.trade.protocol.trade.tasks.arbitration.PublishedDelayedPayoutTx;
