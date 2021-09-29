@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.offer.atomictakeoffer;
+package bisq.desktop.main.offer.takeoffer;
 
 import bisq.desktop.common.model.ActivatableWithDataModel;
 import bisq.desktop.common.model.ViewModel;
@@ -25,11 +25,9 @@ import bisq.desktop.util.validation.BtcValidator;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayloadBase;
-import bisq.core.offer.OfferUtil;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.trade.model.bsqswap.BsqSwapTrade;
 import bisq.core.util.FormattingUtils;
-import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.validation.InputValidator;
 
@@ -56,12 +54,11 @@ import javax.annotation.Nullable;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static javafx.beans.binding.Bindings.createStringBinding;
 
-class AtomicTakeOfferViewModel extends ActivatableWithDataModel<AtomicTakeOfferDataModel> implements ViewModel {
-    final AtomicTakeOfferDataModel dataModel;
+class TakeBsqSwapOfferViewModel extends ActivatableWithDataModel<TakeBsqSwapOfferDataModel> implements ViewModel {
+    final TakeBsqSwapOfferDataModel dataModel;
     private final BtcValidator btcValidator;
     private final P2PService p2PService;
     private final CoinFormatter btcFormatter;
-    private final BsqFormatter bsqFormatter;
 
     private String amountRange;
     private boolean takeOfferRequested;
@@ -78,7 +75,7 @@ class AtomicTakeOfferViewModel extends ActivatableWithDataModel<AtomicTakeOfferD
     final StringProperty offerWarning = new SimpleStringProperty();
 
     final BooleanProperty isOfferAvailable = new SimpleBooleanProperty();
-    final BooleanProperty isAtomicTakeOfferButtonDisabled = new SimpleBooleanProperty(true);
+    final BooleanProperty isTakeBsqSwapOfferButtonDisabled = new SimpleBooleanProperty(true);
     final BooleanProperty showWarningInvalidBtcDecimalPlaces = new SimpleBooleanProperty();
     final BooleanProperty showTransactionPublishedScreen = new SimpleBooleanProperty();
     final BooleanProperty takeOfferCompleted = new SimpleBooleanProperty();
@@ -100,18 +97,15 @@ class AtomicTakeOfferViewModel extends ActivatableWithDataModel<AtomicTakeOfferD
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public AtomicTakeOfferViewModel(AtomicTakeOfferDataModel dataModel,
-                                    OfferUtil offerUtil,
-                                    BtcValidator btcValidator,
-                                    P2PService p2PService,
-                                    @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
-                                    BsqFormatter bsqFormatter) {
+    public TakeBsqSwapOfferViewModel(TakeBsqSwapOfferDataModel dataModel,
+                                     BtcValidator btcValidator,
+                                     P2PService p2PService,
+                                     @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter) {
         super(dataModel);
         this.dataModel = dataModel;
         this.btcValidator = btcValidator;
         this.p2PService = p2PService;
         this.btcFormatter = btcFormatter;
-        this.bsqFormatter = bsqFormatter;
         createListeners();
     }
 
@@ -175,12 +169,12 @@ class AtomicTakeOfferViewModel extends ActivatableWithDataModel<AtomicTakeOfferD
         takeOfferSucceededHandler = resultHandler;
         takeOfferRequested = true;
         showTransactionPublishedScreen.set(false);
-        dataModel.onTakeOffer(atomicTrade -> {
-            this.bsqSwapTrade = atomicTrade;
-            atomicTrade.stateProperty().addListener(tradeStateListener);
+        dataModel.onTakeOffer(bsqSwapTrade -> {
+            this.bsqSwapTrade = bsqSwapTrade;
+            bsqSwapTrade.stateProperty().addListener(tradeStateListener);
             applyTradeState();
-            atomicTrade.errorMessageProperty().addListener(tradeErrorListener);
-            applyTradeErrorMessage(atomicTrade.getErrorMessage());
+            bsqSwapTrade.errorMessageProperty().addListener(tradeErrorListener);
+            applyTradeErrorMessage(bsqSwapTrade.getErrorMessage());
             takeOfferCompleted.set(true);
         });
 
@@ -309,7 +303,7 @@ class AtomicTakeOfferViewModel extends ActivatableWithDataModel<AtomicTakeOfferD
                 && dataModel.getIsTxBuilderReady().get()
                 && dataModel.hasEnoughBtc()
                 && dataModel.hasEnoughBsq();
-        isAtomicTakeOfferButtonDisabled.set(!inputDataValid);
+        isTakeBsqSwapOfferButtonDisabled.set(!inputDataValid);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -453,7 +447,7 @@ class AtomicTakeOfferViewModel extends ActivatableWithDataModel<AtomicTakeOfferD
         offerWarning.set(null);
     }
 
-    public BsqSwapTrade getAtomicTrade() {
+    public BsqSwapTrade getBsqSwapTrade() {
         return bsqSwapTrade;
     }
 

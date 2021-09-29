@@ -54,9 +54,9 @@ public class BsqSwapMakerProtocol extends TradeProtocol {
     // Start trade
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void handleTakeAtomicRequest(CreateBsqSwapTxRequest message,
-                                        NodeAddress sender,
-                                        ErrorMessageHandler errorMessageHandler) {
+    public void handleCreateBsqSwapTxRequest(CreateBsqSwapTxRequest message,
+                                             NodeAddress sender,
+                                             ErrorMessageHandler errorMessageHandler) {
         expect(preCondition(BsqSwapTrade.State.PREPARATION == bsqSwapMakerTrade.getState())
                 .with(message)
                 .from(sender))

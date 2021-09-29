@@ -37,7 +37,7 @@ public class BsqSwapTradeTestLoop extends AbstractOfferTest {
     @BeforeAll
     public static void setUp() {
         AbstractOfferTest.setUp();
-        createAtomicBsqPaymentAccounts();
+        createBsqSwapBsqPaymentAccounts();
     }
 
     @Test
@@ -53,10 +53,10 @@ public class BsqSwapTradeTestLoop extends AbstractOfferTest {
             log.warn("================================ Trade # {} ================================", tradeCount);
             test.testGetBalancesBeforeTrade();
 
-            test.testAliceCreateAtomicBuyOffer();
+            test.testAliceCreateBsqSwapBuyOffer();
             genBtcBlocksThenWait(1, 8000);
 
-            test.testBobTakesAtomicOffer();
+            test.testBobTakesBsqSwapOffer();
             genBtcBlocksThenWait(1, 8000);
 
             test.testGetBalancesAfterTrade();

@@ -770,11 +770,11 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Atomic trade tx
+    // BsqSwap tx
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // Only use confirmed BSQ inputs as the counterparty cannot verify unconfirmed BSQ inputs
-    public Tuple2<Transaction, Coin> prepareAtomicBsqInputs(Coin requiredInput) throws InsufficientBsqException {
+    public Tuple2<Transaction, Coin> prepareBsqInputsForBsqSwap(Coin requiredInput) throws InsufficientBsqException {
         daoKillSwitch.assertDaoIsNotDisabled();
         bsqCoinSelector.setUnconfirmedSpendable(false);
 

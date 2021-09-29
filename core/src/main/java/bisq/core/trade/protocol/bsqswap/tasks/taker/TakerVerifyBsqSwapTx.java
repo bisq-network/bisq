@@ -64,7 +64,7 @@ public class TakerVerifyBsqSwapTx extends BsqSwapTask {
             checkArgument(!bsqSwapProtocolModel.getOffer().isMyOffer(bsqSwapProtocolModel.getKeyRing()),
                     "must not take own offer");
             checkArgument(bsqSwapProtocolModel.getTradeMessage() instanceof CreateBsqSwapTxResponse,
-                    "Expected CreateAtomicTxResponse");
+                    "Expected CreateBsqSwapTxResponse");
 
             var message = (CreateBsqSwapTxResponse) bsqSwapProtocolModel.getTradeMessage();
             bsqSwapProtocolModel.updateFromMessage(message);
@@ -90,7 +90,7 @@ public class TakerVerifyBsqSwapTx extends BsqSwapTask {
             bsqSwapProtocolModel.getTradeWalletService().signInputs(myTx, bsqSwapProtocolModel.getRawTakerBtcInputs());
             bsqSwapProtocolModel.getBsqWalletService().signInputs(myTx, bsqSwapProtocolModel.getRawTakerBsqInputs());
 
-            // Create fully signed atomic tx by combining signed inputs from maker tx and my tx
+            // Create fully signed bsq swap tx by combining signed inputs from maker tx and my tx
             makerTx = bsqSwapProtocolModel.getBtcWalletService().getTxFromSerializedTx(message.getTx());
             var signedTx = bsqSwapProtocolModel.createBsqSwapTx();
             var txFee = signedTx.getFee().getValue();

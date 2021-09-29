@@ -30,7 +30,7 @@ import lombok.ToString;
 @EqualsAndHashCode
 @ToString
 @Getter
-public class AtomicOfferInfo implements Payload {
+public class BsqSwapOfferInfo implements Payload {
     private final String id;
     private final String direction;
     private final long amount;
@@ -47,7 +47,7 @@ public class AtomicOfferInfo implements Payload {
     private final String versionNumber;
     private final int protocolVersion;
 
-    public AtomicOfferInfo(AtomicOfferInfoBuilder builder) {
+    public BsqSwapOfferInfo(BsqSwapOfferInfoBuilder builder) {
         this.id = builder.id;
         this.direction = builder.direction;
         this.amount = builder.amount;
@@ -65,13 +65,13 @@ public class AtomicOfferInfo implements Payload {
         this.protocolVersion = builder.protocolVersion;
     }
 
-    public static AtomicOfferInfo toAtomicOfferInfo(Offer offer) {
+    public static BsqSwapOfferInfo toBsqSwapOfferInfo(Offer offer) {
         // TODO support triggerPrice
         return getAtomicOfferInfoBuilder(offer).build();
     }
 
-    private static AtomicOfferInfoBuilder getAtomicOfferInfoBuilder(Offer offer) {
-        return new AtomicOfferInfoBuilder()
+    private static BsqSwapOfferInfoBuilder getAtomicOfferInfoBuilder(Offer offer) {
+        return new BsqSwapOfferInfoBuilder()
                 .withId(offer.getId())
                 .withDirection(offer.getDirection().name())
                 .withAmount(offer.getAmount().value)
@@ -94,8 +94,8 @@ public class AtomicOfferInfo implements Payload {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public bisq.proto.grpc.AtomicOfferInfo toProtoMessage() {
-        return bisq.proto.grpc.AtomicOfferInfo.newBuilder()
+    public bisq.proto.grpc.BsqSwapOfferInfo toProtoMessage() {
+        return bisq.proto.grpc.BsqSwapOfferInfo.newBuilder()
                 .setId(id)
                 .setDirection(direction)
                 .setAmount(amount)
@@ -111,8 +111,8 @@ public class AtomicOfferInfo implements Payload {
                 .build();
     }
 
-    public static AtomicOfferInfo fromProto(bisq.proto.grpc.AtomicOfferInfo proto) {
-        return new AtomicOfferInfoBuilder()
+    public static BsqSwapOfferInfo fromProto(bisq.proto.grpc.BsqSwapOfferInfo proto) {
+        return new BsqSwapOfferInfoBuilder()
                 .withId(proto.getId())
                 .withDirection(proto.getDirection())
                 .withAmount(proto.getAmount())
@@ -128,7 +128,7 @@ public class AtomicOfferInfo implements Payload {
                 .build();
     }
 
-    public static class AtomicOfferInfoBuilder {
+    public static class BsqSwapOfferInfoBuilder {
         private String id;
         private String direction;
         private long amount;
@@ -145,83 +145,83 @@ public class AtomicOfferInfo implements Payload {
         private String versionNumber;
         private int protocolVersion;
 
-        public AtomicOfferInfoBuilder withId(String id) {
+        public BsqSwapOfferInfoBuilder withId(String id) {
             this.id = id;
             return this;
         }
 
-        public AtomicOfferInfoBuilder withDirection(String direction) {
+        public BsqSwapOfferInfoBuilder withDirection(String direction) {
             this.direction = direction;
             return this;
         }
 
-        public AtomicOfferInfoBuilder withAmount(long amount) {
+        public BsqSwapOfferInfoBuilder withAmount(long amount) {
             this.amount = amount;
             return this;
         }
 
-        public AtomicOfferInfoBuilder withMinAmount(long minAmount) {
+        public BsqSwapOfferInfoBuilder withMinAmount(long minAmount) {
             this.minAmount = minAmount;
             return this;
         }
 
-        public AtomicOfferInfoBuilder withPrice(long price) {
+        public BsqSwapOfferInfoBuilder withPrice(long price) {
             this.price = price;
             return this;
         }
 
-        public AtomicOfferInfoBuilder withMakerPaymentAccountId(String makerPaymentAccountId) {
+        public BsqSwapOfferInfoBuilder withMakerPaymentAccountId(String makerPaymentAccountId) {
             this.makerPaymentAccountId = makerPaymentAccountId;
             return this;
         }
 
-        public AtomicOfferInfoBuilder withPaymentMethodId(String paymentMethodId) {
+        public BsqSwapOfferInfoBuilder withPaymentMethodId(String paymentMethodId) {
             this.paymentMethodId = paymentMethodId;
             return this;
         }
 
-        public AtomicOfferInfoBuilder withPaymentMethodShortName(String paymentMethodShortName) {
+        public BsqSwapOfferInfoBuilder withPaymentMethodShortName(String paymentMethodShortName) {
             this.paymentMethodShortName = paymentMethodShortName;
             return this;
         }
 
-        public AtomicOfferInfoBuilder withBaseCurrencyCode(String baseCurrencyCode) {
+        public BsqSwapOfferInfoBuilder withBaseCurrencyCode(String baseCurrencyCode) {
             this.baseCurrencyCode = baseCurrencyCode;
             return this;
         }
 
-        public AtomicOfferInfoBuilder withCounterCurrencyCode(String counterCurrencyCode) {
+        public BsqSwapOfferInfoBuilder withCounterCurrencyCode(String counterCurrencyCode) {
             this.counterCurrencyCode = counterCurrencyCode;
             return this;
         }
 
-        public AtomicOfferInfoBuilder withDate(long date) {
+        public BsqSwapOfferInfoBuilder withDate(long date) {
             this.date = date;
             return this;
         }
 
-        public AtomicOfferInfoBuilder withOwnerNodeAddress(String ownerNodeAddress) {
+        public BsqSwapOfferInfoBuilder withOwnerNodeAddress(String ownerNodeAddress) {
             this.ownerNodeAddress = ownerNodeAddress;
             return this;
         }
 
-        public AtomicOfferInfoBuilder withPubKeyRing(String pubKeyRing) {
+        public BsqSwapOfferInfoBuilder withPubKeyRing(String pubKeyRing) {
             this.pubKeyRing = pubKeyRing;
             return this;
         }
 
-        public AtomicOfferInfoBuilder withVersionNumber(String versionNumber) {
+        public BsqSwapOfferInfoBuilder withVersionNumber(String versionNumber) {
             this.versionNumber = versionNumber;
             return this;
         }
 
-        public AtomicOfferInfoBuilder withProtocolVersion(int protocolVersion) {
+        public BsqSwapOfferInfoBuilder withProtocolVersion(int protocolVersion) {
             this.protocolVersion = protocolVersion;
             return this;
         }
 
-        public AtomicOfferInfo build() {
-            return new AtomicOfferInfo(this);
+        public BsqSwapOfferInfo build() {
+            return new BsqSwapOfferInfo(this);
         }
     }
 }

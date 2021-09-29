@@ -211,7 +211,7 @@ public final class BsqSwapOfferPayload extends OfferPayloadBase
 
     @Override
     public String getPaymentMethodId() {
-        return PaymentMethod.ATOMIC_ID;
+        return PaymentMethod.BSQ_SWAP_ID;
     }
 
     @Override

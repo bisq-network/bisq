@@ -1175,7 +1175,7 @@ public class TradeWalletService {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Atomic tx
+    // BsqSwap tx
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     /**
@@ -1184,7 +1184,7 @@ public class TradeWalletService {
      *
      * Add BTC and BSQ inputs, create BSQ change output, BTC output (BTC bought + BTC change)
      *
-     * @param preparedAtomicBsqTx       Tx with BSQ inputs covering the taker's part of the atomic trade
+     * @param preparedBsqSwapTx       Tx with BSQ inputs covering the taker's part of the bsq swap trade
      * @param requiredBtc               BTC required to cover trade amount, trade fee and tx fee
      * @param bsqAddress                my BSQ address
      * @param bsqOut                    my BSQ output amount
@@ -1195,8 +1195,8 @@ public class TradeWalletService {
      * @throws InsufficientMoneyException if there aren't enough BTC in the wallet
      * @throws SigningException if BTC input signing fails
      */
-    public TxData buildMySideAtomicTx(
-            Transaction preparedAtomicBsqTx,
+    public TxData buildMySideBsqSwapTx(
+            Transaction preparedBsqSwapTx,
             Coin requiredBtc,
             String bsqAddress,
             Coin bsqOut,
@@ -1206,7 +1206,7 @@ public class TradeWalletService {
 
         // Gather bsq raw inputs
         ArrayList<RawTransactionInput> myRawBsqInputs = new ArrayList<>();
-        preparedAtomicBsqTx.getInputs().forEach(input -> myRawBsqInputs.add(getRawInputFromTransactionInput(input)));
+        preparedBsqSwapTx.getInputs().forEach(input -> myRawBsqInputs.add(getRawInputFromTransactionInput(input)));
 
         // Gather BTC inputs to cover requiredBtc which optionally includes
         // - trade amount for seller
@@ -1219,7 +1219,7 @@ public class TradeWalletService {
 
         // Add BSQ inputs to dummy tx
         var mySideTx = new Transaction(params);
-        preparedAtomicBsqTx.getInputs().forEach(mySideTx::addInput);
+        preparedBsqSwapTx.getInputs().forEach(mySideTx::addInput);
 
         // Add BTC inputs to dummy tx
         ArrayList<RawTransactionInput> myRawBtcInputs = new ArrayList<>();
@@ -1243,7 +1243,7 @@ public class TradeWalletService {
             mySideTx.addOutput(btcOut, Address.fromString(params, btcAddress));
 
         // Sign BTC inputs,
-        for (int i = preparedAtomicBsqTx.getInputs().size(); i < mySideTx.getInputs().size(); i++) {
+        for (int i = preparedBsqSwapTx.getInputs().size(); i < mySideTx.getInputs().size(); i++) {
             var input = mySideTx.getInput(i);
             signInput(mySideTx, input, i);
         }
@@ -1253,7 +1253,7 @@ public class TradeWalletService {
 
 
     /**
-     * Maker creates atomic transaction and signs their inputs.
+     * Maker creates bsq swap transaction and signs their inputs.
      *
      * Tx output format:
      * At a minimum there will be 1 BSQ out and 1 BTC out
@@ -1276,7 +1276,7 @@ public class TradeWalletService {
      * @param takerBsqInputs            BSQ raw inputs for taker
      * @param takerBtcInputs            BTC raw inputs for taker
      *
-     * @return the atomic transaction signed by maker
+     * @return the bsq swap transaction signed by maker
      * @throws AddressFormatException if the buyer or seller base58 address doesn't parse or its checksum is invalid
     //     * @throws SigningException if signing failed
      */
@@ -1294,25 +1294,25 @@ public class TradeWalletService {
                                        List<RawTransactionInput> takerBtcInputs)
             throws AddressFormatException {
 
-        var atomicTx = new Transaction(params);
+        var transaction = new Transaction(params);
 
         // Add inputs in order, first taker BSQ, BTC inputs, then maker BSQ, BTC inputs
-        takerBsqInputs.forEach(rawInput -> atomicTx.addInput(getTransactionInput(atomicTx, new byte[]{}, rawInput)));
-        takerBtcInputs.forEach(rawInput -> atomicTx.addInput(getTransactionInput(atomicTx, new byte[]{}, rawInput)));
-        makerBsqInputs.forEach(rawInput -> atomicTx.addInput(getTransactionInput(atomicTx, new byte[]{}, rawInput)));
-        makerBtcInputs.forEach(rawInput -> atomicTx.addInput(getTransactionInput(atomicTx, new byte[]{}, rawInput)));
+        takerBsqInputs.forEach(rawInput -> transaction.addInput(getTransactionInput(transaction, new byte[]{}, rawInput)));
+        takerBtcInputs.forEach(rawInput -> transaction.addInput(getTransactionInput(transaction, new byte[]{}, rawInput)));
+        makerBsqInputs.forEach(rawInput -> transaction.addInput(getTransactionInput(transaction, new byte[]{}, rawInput)));
+        makerBtcInputs.forEach(rawInput -> transaction.addInput(getTransactionInput(transaction, new byte[]{}, rawInput)));
 
         // Add outputs in specific order to follow BSQ protocol
         if (makerBsqPayout.isPositive())
-            atomicTx.addOutput(makerBsqPayout, Address.fromString(params, makerBsqAddress));
+            transaction.addOutput(makerBsqPayout, Address.fromString(params, makerBsqAddress));
         if (takerBsqPayout.isPositive())
-            atomicTx.addOutput(takerBsqPayout, Address.fromString(params, takerBsqAddress));
+            transaction.addOutput(takerBsqPayout, Address.fromString(params, takerBsqAddress));
         if (takerBtcPayout.isPositive())
-            atomicTx.addOutput(takerBtcPayout, Address.fromString(params, takerBtcAddress));
+            transaction.addOutput(takerBtcPayout, Address.fromString(params, takerBtcAddress));
         if (makerBtcPayout.isPositive())
-            atomicTx.addOutput(makerBtcPayout, Address.fromString(params, makerBtcAddress));
+            transaction.addOutput(makerBtcPayout, Address.fromString(params, makerBtcAddress));
 
-        return atomicTx;
+        return transaction;
     }
 
     public Transaction signInputs(Transaction tx, List<RawTransactionInput> inputs) throws SigningException {

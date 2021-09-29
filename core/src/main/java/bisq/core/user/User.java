@@ -131,12 +131,12 @@ public class User implements PersistedDataHost {
         });
 
         // TODO(sq): move to some better location
-        addAtomicAccount();
+        addBsqSwapAccount();
 
         requestPersistence();
     }
 
-    private void addAtomicAccount() {
+    private void addBsqSwapAccount() {
         checkNotNull(userPayload.getPaymentAccounts(), "userPayload.getPaymentAccounts() must not be null");
         if (userPayload.getPaymentAccounts().stream()
                 .anyMatch(paymentAccount -> paymentAccount instanceof BsqSwapAccount))
@@ -144,7 +144,7 @@ public class User implements PersistedDataHost {
 
         var account = new BsqSwapAccount();
         account.init();
-        account.setAccountName(Res.get("ATOMIC"));
+        account.setAccountName(Res.get("BSQ_SWAP"));
         account.setSingleTradeCurrency(new CryptoCurrency("BSQ", "BSQ"));
         addPaymentAccount(account);
     }

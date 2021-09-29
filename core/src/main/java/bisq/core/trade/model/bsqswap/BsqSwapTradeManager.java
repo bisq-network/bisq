@@ -62,8 +62,8 @@ public class BsqSwapTradeManager implements PersistedDataHost {
         persistenceManager.readPersisted(persisted -> {
                     bsqSwapTrades.setAll(persisted.getList());
                     bsqSwapTrades.stream()
-                            .filter(atomicTrade -> atomicTrade.getOffer() != null)
-                            .forEach(atomicTrade -> atomicTrade.getOffer().setPriceFeedService(priceFeedService));
+                            .filter(bsqSwapTrade -> bsqSwapTrade.getOffer() != null)
+                            .forEach(bsqSwapTrade -> bsqSwapTrade.getOffer().setPriceFeedService(priceFeedService));
                     completeHandler.run();
                 },
                 completeHandler);

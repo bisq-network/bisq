@@ -546,7 +546,7 @@ public class Offer implements NetworkPayload, PersistablePayload {
         return getOfferPayload().map(OfferPayload::isUseReOpenAfterAutoClose).orElse(false);
     }
 
-    public boolean isAtomicOffer() {
+    public boolean isBsqSwapOffer() {
         return getOfferPayloadBase() instanceof BsqSwapOfferPayload;
     }
 

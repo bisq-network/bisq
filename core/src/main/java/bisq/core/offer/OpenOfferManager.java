@@ -241,7 +241,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                 .forEach(openOffer -> {
                     OfferUtil.getInvalidMakerFeeTxErrorMessage(openOffer.getOffer(), btcWalletService)
                             .ifPresent(errorMsg -> invalidOffers.add(new Tuple2<>(openOffer, errorMsg)));
-                    addAtomicFundingListener(openOffer);
+                    addBsqSwapFundingListener(openOffer);
                 });
     }
 
@@ -443,18 +443,18 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         placeOfferProtocol.placeOffer();
     }
 
-    public void placeAtomicOffer(Offer offer,
-                                 Runnable resultHandler,
-                                 ErrorMessageHandler errorMessageHandler) {
+    public void placeBsqSwapOffer(Offer offer,
+                                  Runnable resultHandler,
+                                  ErrorMessageHandler errorMessageHandler) {
         checkArgument(offer.getOfferPayloadBase() instanceof BsqSwapOfferPayload);
-        var atomicModel = new PlaceBsqSwapOfferModel(offer,
+        var model = new PlaceBsqSwapOfferModel(offer,
                 offerBookService,
                 tradeStatisticsManager,
                 daoFacade,
                 user,
                 filterManager);
 
-        var atomicPlaceOfferProtocol = new PlaceBsqSwapOfferProtocol(atomicModel,
+        var protocol = new PlaceBsqSwapOfferProtocol(model,
                 () -> {
                     OpenOffer openOffer = new OpenOffer(offer, 0);
                     addOpenOffer(openOffer);
@@ -469,7 +469,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                 },
                 errorMessageHandler
         );
-        atomicPlaceOfferProtocol.placeOffer();
+        protocol.placeOffer();
     }
 
     // Remove from offerbook
@@ -1130,11 +1130,11 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
 
     private void addOpenOffer(OpenOffer openOffer) {
         openOffers.add(openOffer);
-        addAtomicFundingListener(openOffer);
+        addBsqSwapFundingListener(openOffer);
     }
 
-    private void addAtomicFundingListener(OpenOffer openOffer) {
-        if (!openOffer.getOffer().isAtomicOffer())
+    private void addBsqSwapFundingListener(OpenOffer openOffer) {
+        if (!openOffer.getOffer().isBsqSwapOffer())
             return;
         bsqSwapWalletWatcher.addListener(new FundingListener(openOffer));
     }

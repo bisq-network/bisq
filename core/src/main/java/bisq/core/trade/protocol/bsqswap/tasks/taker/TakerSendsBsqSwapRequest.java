@@ -48,7 +48,7 @@ public class TakerSendsBsqSwapRequest extends BsqSwapTask {
             checkArgument(!bsqSwapProtocolModel.getOffer().isMyOffer(bsqSwapProtocolModel.getKeyRing()),
                     "must not take own offer");
             checkArgument(bsqSwapProtocolModel.takerPreparesTakerSide(),
-                    "Failed to prepare taker side of atomic tx");
+                    "Failed to prepare taker side of bsq swap tx");
 
             var message = new CreateBsqSwapTxRequest(UUID.randomUUID().toString(),
                     bsqSwapProtocolModel.getOffer().getId(),
@@ -67,7 +67,7 @@ public class TakerSendsBsqSwapRequest extends BsqSwapTask {
                     bsqSwapProtocolModel.getRawTakerBsqInputs(),
                     bsqSwapProtocolModel.getRawTakerBtcInputs());
 
-            log.info("atomictxrequest={}", message.toString());
+            log.info("CreateBsqSwapTxRequest={}", message);
 
             NodeAddress peersNodeAddress = bsqSwapTrade.getTradingPeerNodeAddress();
             log.info("Send {} to peer {}. tradeId={}, uid={}",

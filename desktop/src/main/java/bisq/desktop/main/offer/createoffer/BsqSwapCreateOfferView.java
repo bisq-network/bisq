@@ -19,7 +19,7 @@ package bisq.desktop.main.offer.createoffer;
 
 import bisq.desktop.Navigation;
 import bisq.desktop.common.view.FxmlView;
-import bisq.desktop.main.offer.AtomicOfferView;
+import bisq.desktop.main.offer.BsqSwapOfferView;
 import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
 
 import bisq.core.user.Preferences;
@@ -32,15 +32,15 @@ import com.google.inject.Inject;
 import javax.inject.Named;
 
 @FxmlView
-public class AtomicCreateOfferView extends AtomicOfferView<AtomicCreateOfferViewModel> {
+public class BsqSwapCreateOfferView extends BsqSwapOfferView<BsqSwapCreateOfferViewModel> {
 
     @Inject
-    private AtomicCreateOfferView(AtomicCreateOfferViewModel model,
-                                  Navigation navigation,
-                                  Preferences preferences,
-                                  OfferDetailsWindow offerDetailsWindow,
-                                  @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
-                                  BsqFormatter bsqFormatter) {
+    private BsqSwapCreateOfferView(BsqSwapCreateOfferViewModel model,
+                                   Navigation navigation,
+                                   Preferences preferences,
+                                   OfferDetailsWindow offerDetailsWindow,
+                                   @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
+                                   BsqFormatter bsqFormatter) {
         super(model, navigation, offerDetailsWindow);
     }
 }

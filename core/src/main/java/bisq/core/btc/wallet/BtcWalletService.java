@@ -1348,7 +1348,7 @@ public class BtcWalletService extends WalletService {
     }
 
     // There is currently no way to verify that this tx hasn't been spent already
-    // If it has, the atomic tx won't confirm, not good but no funds lost
+    // If it has, the bsq swap tx won't confirm, not good but no funds lost
     public long getBtcRawInputAmount(List<RawTransactionInput> inputs) {
         return inputs.stream()
                 .map(rawInput -> {
@@ -1360,7 +1360,7 @@ public class BtcWalletService extends WalletService {
     }
 
     // There is currently no way to verify that this tx hasn't been spent already
-    // If it has, the atomic tx won't confirm, not good but no funds lost
+    // If it has, the bsq swap tx won't confirm, not good but no funds lost
     public long getBtcInputAmount(List<TransactionInput> inputs) {
         return inputs.stream()
                 .map(input -> Objects.requireNonNull(input.getValue()).getValue())

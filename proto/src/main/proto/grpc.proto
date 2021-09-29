@@ -62,23 +62,23 @@ message GetMethodHelpReply {
 ///////////////////////////////////////////////////////////////////////////////////////////
 
 service Offers {
-    rpc GetAtomicOffer (GetOfferRequest) returns (GetAtomicOfferReply) {
+    rpc GetBsqSwapOffer (GetOfferRequest) returns (GetBsqSwapOfferReply) {
     }
     rpc GetOffer (GetOfferRequest) returns (GetOfferReply) {
     }
-    rpc GetMyAtomicOffer (GetMyOfferRequest) returns (GetMyAtomicOfferReply) {
+    rpc GetMyBsqSwapOffer (GetMyOfferRequest) returns (GetMyBsqSwapOfferReply) {
     }
     rpc GetMyOffer (GetMyOfferRequest) returns (GetMyOfferReply) {
     }
-    rpc GetAtomicOffers (GetOffersRequest) returns (GetAtomicOffersReply) {
+    rpc GetBsqSwapOffers (GetOffersRequest) returns (GetBsqSwapOffersReply) {
     }
     rpc GetOffers (GetOffersRequest) returns (GetOffersReply) {
     }
-    rpc GetMyAtomicOffers (GetMyOffersRequest) returns (GetMyAtomicOffersReply) {
+    rpc GetMyBsqSwapOffers (GetMyOffersRequest) returns (GetMyBsqSwapOffersReply) {
     }
     rpc GetMyOffers (GetMyOffersRequest) returns (GetMyOffersReply) {
     }
-    rpc CreateAtomicOffer (CreateAtomicOfferRequest) returns (CreateAtomicOfferReply) {
+    rpc CreateBsqSwapOffer (CreateBsqSwapOfferRequest) returns (CreateBsqSwapOfferReply) {
     }
     rpc CreateOffer (CreateOfferRequest) returns (CreateOfferReply) {
     }
@@ -88,8 +88,8 @@ service Offers {
     }
 }
 
-message GetAtomicOfferReply {
-    AtomicOfferInfo atomicOffer = 1;
+message GetBsqSwapOfferReply {
+    BsqSwapOfferInfo bsqSwapOffer = 1;
 }
 
 message GetOfferRequest {
@@ -100,8 +100,8 @@ message GetOfferReply {
     OfferInfo offer = 1;
 }
 
-message GetMyAtomicOfferReply {
-    AtomicOfferInfo atomicOffer = 1;
+message GetMyBsqSwapOfferReply {
+    BsqSwapOfferInfo bsqSwapOffer = 1;
 }
 
 message GetMyOfferRequest {
@@ -121,8 +121,8 @@ message GetOffersReply {
     repeated OfferInfo offers = 1;
 }
 
-message GetAtomicOffersReply {
-    repeated AtomicOfferInfo atomicOffers = 1;
+message GetBsqSwapOffersReply {
+    repeated BsqSwapOfferInfo bsqSwapOffers = 1;
 }
 
 message GetMyOffersRequest {
@@ -134,11 +134,11 @@ message GetMyOffersReply {
     repeated OfferInfo offers = 1;
 }
 
-message GetMyAtomicOffersReply {
-    repeated AtomicOfferInfo atomicOffers = 1;
+message GetMyBsqSwapOffersReply {
+    repeated BsqSwapOfferInfo bsqSwapOffers = 1;
 }
 
-message CreateAtomicOfferRequest {
+message CreateBsqSwapOfferRequest {
     string direction = 1;
     uint64 amount = 2;
     uint64 minAmount = 3;
@@ -146,8 +146,8 @@ message CreateAtomicOfferRequest {
     string paymentAccountId = 5;
 }
 
-message CreateAtomicOfferReply {
-    AtomicOfferInfo atomicOffer = 1;
+message CreateBsqSwapOfferReply {
+    BsqSwapOfferInfo bsqSwapOffer = 1;
 }
 
 message CreateOfferRequest {
@@ -204,7 +204,7 @@ message CancelOfferRequest {
 message CancelOfferReply {
 }
 
-message AtomicOfferInfo {
+message BsqSwapOfferInfo {
     string id = 1;
     string direction = 2;
     uint64 amount = 3;
@@ -311,7 +311,7 @@ message CreateCryptoCurrencyPaymentAccountRequest {
     string currencyCode = 2;
     string address = 3;
     bool tradeInstant = 4;
-    bool tradeAtomic = 5;
+    bool isBsqSwap = 5;
 }
 
 message CreateCryptoCurrencyPaymentAccountReply {
@@ -378,11 +378,11 @@ message StopReply {
 ///////////////////////////////////////////////////////////////////////////////////////////
 
 service Trades {
-    rpc GetAtomicTrade (GetTradeRequest) returns (GetAtomicTradeReply) {
+    rpc GetBsqSwapTrade (GetTradeRequest) returns (GetBsqSwapTradeReply) {
     }
     rpc GetTrade (GetTradeRequest) returns (GetTradeReply) {
     }
-    rpc TakeAtomicOffer (TakeAtomicOfferRequest) returns (TakeAtomicOfferReply) {
+    rpc TakeBsqSwapOffer (TakeBsqSwapOfferRequest) returns (TakeBsqSwapOfferReply) {
     }
     rpc TakeOffer (TakeOfferRequest) returns (TakeOfferReply) {
     }
@@ -396,14 +396,14 @@ service Trades {
     }
 }
 
-message TakeAtomicOfferRequest {
+message TakeBsqSwapOfferRequest {
     string offerId = 1;
     string paymentAccountId = 2;
     string takerFeeCurrencyCode = 3;
 }
 
-message TakeAtomicOfferReply {
-    AtomicTradeInfo bsqSwapTrade = 1;
+message TakeBsqSwapOfferReply {
+    BsqSwapTradeInfo bsqSwapTrade = 1;
     AvailabilityResultWithDescription failureReason = 2;
 }
 
@@ -432,8 +432,8 @@ message ConfirmPaymentReceivedRequest {
 message ConfirmPaymentReceivedReply {
 }
 
-message GetAtomicTradeReply {
-    AtomicTradeInfo bsqSwapTrade = 1;
+message GetBsqSwapTradeReply {
+    BsqSwapTradeInfo bsqSwapTrade = 1;
 }
 
 message GetTradeRequest {
@@ -460,8 +460,8 @@ message WithdrawFundsRequest {
 message WithdrawFundsReply {
 }
 
-message AtomicTradeInfo {
-    AtomicOfferInfo atomicOffer = 1;
+message BsqSwapTradeInfo {
+    BsqSwapOfferInfo bsqSwapOfferInfo = 1;
     string tradeId = 2;
     string tempTradingPeerNodeAddress = 3;
     string peerNodeAddress = 4;

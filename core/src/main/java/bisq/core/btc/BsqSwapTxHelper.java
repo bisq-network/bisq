@@ -43,7 +43,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 
-/*  Helper for creating atomic transactions.
+/*  Helper for creating bsq swap transactions.
  * Tx output format:
  * At a minimum there will be 1 BSQ out and 1 BTC out
  * [0-1]   (Maker BSQ)
@@ -165,7 +165,7 @@ public class BsqSwapTxHelper {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     /**
-     * Recursively tries to build my side of atomic tx, using the tx size of the previous
+     * Recursively tries to build my side of bsq swap tx, using the tx size of the previous
      * steps to calculate the mining fee of the current step. break recursion when two
      * steps in a row produce the same tx.
      *
@@ -178,7 +178,7 @@ public class BsqSwapTxHelper {
      * @param parent            TxData of previous recursion step
      * @param payForOverhead    Pay for overhead bytes
      *
-     * @return TxData of a my side of atomic tx or null if unable to create my side
+     * @return TxData of a my side of bsq swap tx or null if unable to create my side
      */
     public TxData buildMySide(int step, @Nullable TxData parent, boolean payForOverhead) {
         if (step > 10) {
@@ -197,7 +197,7 @@ public class BsqSwapTxHelper {
             checkArgument(!requiredBtc.isNegative(), "required BTC cannot be negative");
 
             // This prepares a tx with no inputs if no BSQ is required
-            var preparedBsq = bsqWalletService.prepareAtomicBsqInputs(requiredBsq);
+            var preparedBsq = bsqWalletService.prepareBsqInputsForBsqSwap(requiredBsq);
 
             // Set outputs to change from inputs plus amount to receive in the trade
             var bsqOut = preparedBsq.second.add(isBuyer ? Coin.ZERO : bsqAmount);
@@ -211,7 +211,7 @@ public class BsqSwapTxHelper {
             }
 
             // Build my side of tx with signed BTC inputs
-            var txData = tradeWalletService.buildMySideAtomicTx(
+            var txData = tradeWalletService.buildMySideBsqSwapTx(
                     preparedBsq.first,
                     requiredBtc,
                     myBsqAddress,
@@ -235,7 +235,7 @@ public class BsqSwapTxHelper {
 
             return buildMySide(step + 1, txData, payForOverhead);
         } catch (Throwable t) {
-            log.error("Exception while building my side of atomicTx {}", t.getMessage());
+            log.error("Exception while building my side of tx {}", t.getMessage());
         }
         return null;
     }

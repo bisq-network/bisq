@@ -83,7 +83,7 @@ public class BsqSwapWalletWatcher implements WalletChangeEventListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void addListener(Listener listener) {
-        if (!listeners.contains(listener) && listener.getOffer().isAtomicOffer()) {
+        if (!listeners.contains(listener) && listener.getOffer().isBsqSwapOffer()) {
             listeners.add(listener);
         }
     }
@@ -104,7 +104,7 @@ public class BsqSwapWalletWatcher implements WalletChangeEventListener {
         var isBuyer = isMaker == offer.isBuyOffer();
         var price = offer.getPrice();
         var btcAmount = offer.getAmount();
-        var atomicTxBuilder = new BsqSwapTxHelper(bsqWalletService,
+        var bsqSwapTxHelper = new BsqSwapTxHelper(bsqWalletService,
                 tradeWalletService,
                 isBuyer,
                 price,
@@ -114,13 +114,13 @@ public class BsqSwapWalletWatcher implements WalletChangeEventListener {
                 bsqWalletService.getUnusedAddress().toString());
 
         if (isMaker) {
-            atomicTxBuilder.setMyTradeFee(CoinUtil.getMakerFee(false, btcAmount));
-            atomicTxBuilder.setPeerTradeFee(CoinUtil.getTakerFee(false, btcAmount));
+            bsqSwapTxHelper.setMyTradeFee(CoinUtil.getMakerFee(false, btcAmount));
+            bsqSwapTxHelper.setPeerTradeFee(CoinUtil.getTakerFee(false, btcAmount));
         } else {
-            atomicTxBuilder.setMyTradeFee(CoinUtil.getTakerFee(false, btcAmount));
-            atomicTxBuilder.setPeerTradeFee(CoinUtil.getMakerFee(false, btcAmount));
+            bsqSwapTxHelper.setMyTradeFee(CoinUtil.getTakerFee(false, btcAmount));
+            bsqSwapTxHelper.setPeerTradeFee(CoinUtil.getMakerFee(false, btcAmount));
         }
-        return atomicTxBuilder.buildMySide(0, null, !isMaker) != null;
+        return bsqSwapTxHelper.buildMySide(0, null, !isMaker) != null;
     }
 
 
@@ -144,7 +144,7 @@ public class BsqSwapWalletWatcher implements WalletChangeEventListener {
     private void isFunded(Listener listener) {
         feeService.requestFees(() -> listener.isFunded(isFunded(listener.getOffer())),
                 (String errorMessage, Throwable throwable) -> {
-                    log.warn("Fee request failed, unable to calculate atomic funding status");
+                    log.warn("Fee request failed, unable to calculate bsq swap funding status");
                     if (throwable != null) {
                         log.warn("Exception: {}", throwable.getMessage());
                     }
@@ -178,7 +178,7 @@ public class BsqSwapWalletWatcher implements WalletChangeEventListener {
 //                    listener.funded(funded);
 //                },
 //                (String errorMessage, Throwable throwable) -> {
-//                    log.warn("Fee request failed, unable to calculate atomic funding status");
+//                    log.warn("Fee request failed, unable to calculate bsq swap funding status");
 //                    if (throwable != null) {
 //                        log.warn("Exception: {}", throwable.getMessage());
 //                    }

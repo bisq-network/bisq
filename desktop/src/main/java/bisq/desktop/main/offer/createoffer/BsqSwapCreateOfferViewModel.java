@@ -18,7 +18,7 @@
 package bisq.desktop.main.offer.createoffer;
 
 import bisq.desktop.common.model.ViewModel;
-import bisq.desktop.main.offer.AtomicOfferViewModel;
+import bisq.desktop.main.offer.BsqSwapOfferViewModel;
 import bisq.desktop.util.validation.AltcoinValidator;
 import bisq.desktop.util.validation.BsqValidator;
 import bisq.desktop.util.validation.BtcValidator;
@@ -36,20 +36,20 @@ import com.google.inject.Inject;
 
 import javax.inject.Named;
 
-class AtomicCreateOfferViewModel extends AtomicOfferViewModel<AtomicCreateOfferDataModel> implements ViewModel {
+class BsqSwapCreateOfferViewModel extends BsqSwapOfferViewModel<BsqSwapCreateOfferDataModel> implements ViewModel {
 
     @Inject
-    public AtomicCreateOfferViewModel(AtomicCreateOfferDataModel dataModel,
-                                      FiatVolumeValidator fiatVolumeValidator,
-                                      FiatPriceValidator fiatPriceValidator,
-                                      AltcoinValidator altcoinValidator,
-                                      BtcValidator btcValidator,
-                                      BsqValidator bsqValidator,
-                                      SecurityDepositValidator securityDepositValidator,
-                                      AccountAgeWitnessService accountAgeWitnessService,
-                                      @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
-                                      BsqFormatter bsqFormatter,
-                                      OfferUtil offerUtil) {
+    public BsqSwapCreateOfferViewModel(BsqSwapCreateOfferDataModel dataModel,
+                                       FiatVolumeValidator fiatVolumeValidator,
+                                       FiatPriceValidator fiatPriceValidator,
+                                       AltcoinValidator altcoinValidator,
+                                       BtcValidator btcValidator,
+                                       BsqValidator bsqValidator,
+                                       SecurityDepositValidator securityDepositValidator,
+                                       AccountAgeWitnessService accountAgeWitnessService,
+                                       @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
+                                       BsqFormatter bsqFormatter,
+                                       OfferUtil offerUtil) {
         super(dataModel,
                 fiatPriceValidator,
                 altcoinValidator,

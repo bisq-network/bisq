@@ -66,12 +66,12 @@ public abstract class AbstractOfferTest extends MethodTest {
                 bobdaemon);
     }
 
-    public static void createAtomicBsqPaymentAccounts() {
-        alicesBsqAcct = aliceClient.createCryptoCurrencyPaymentAccount("Alice's Atomic Account",
+    public static void createBsqSwapBsqPaymentAccounts() {
+        alicesBsqAcct = aliceClient.createCryptoCurrencyPaymentAccount("Alice's BsqSwap Account",
                 BSQ,
                 aliceClient.getUnusedBsqAddress(), // TODO refactor, bsq address not needed for atom acct
                 false);
-        bobsBsqAcct = bobClient.createCryptoCurrencyPaymentAccount("Bob's Atomic Account",
+        bobsBsqAcct = bobClient.createCryptoCurrencyPaymentAccount("Bob's BsqSwap Account",
                 BSQ,
                 bobClient.getUnusedBsqAddress(),   // TODO refactor, bsq address not needed for atom acct
                 false);

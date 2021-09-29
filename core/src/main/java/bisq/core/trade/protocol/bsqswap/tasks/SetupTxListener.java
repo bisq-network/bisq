@@ -76,11 +76,11 @@ public abstract class SetupTxListener extends BsqSwapTask {
         checkNotNull(walletTx, "Tx from network should not be null");
         if (bsqSwapProtocolModel.getRawTx() != null) {
             bsqSwapTrade.setTxId(walletTx.getTxId().toString());
-            WalletService.printTx("atomicTx received from network", walletTx);
+            WalletService.printTx("tx received from network", walletTx);
             setState();
             bsqSwapProtocolModel.getTradeManager().onTradeCompleted(bsqSwapTrade);
         } else {
-            log.info("We had the atomic tx already set. tradeId={}, state={}", bsqSwapTrade.getId(),
+            log.info("We had the bsq swap tx already set. tradeId={}, state={}", bsqSwapTrade.getId(),
                     bsqSwapTrade.getState());
         }
 

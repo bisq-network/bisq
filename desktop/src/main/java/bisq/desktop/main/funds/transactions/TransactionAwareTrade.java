@@ -86,9 +86,9 @@ class TransactionAwareTrade implements TransactionAwareTradable {
                     isDelayedPayoutTx ||
                     isRefundPayoutTx;
         }
-        boolean isAtomicTx = isAtomicTx(txId);
+        boolean isBsqSwapTrade = isBsqSwapTrade(txId);
 
-        return tradeRelated || isAtomicTx;
+        return tradeRelated || isBsqSwapTrade;
     }
 
     private boolean isPayoutTx(Sha256Hash txId) {
@@ -197,7 +197,7 @@ class TransactionAwareTrade implements TransactionAwareTradable {
         return false;
     }
 
-    private boolean isAtomicTx(String txId) {
+    private boolean isBsqSwapTrade(String txId) {
         if (tradeModel instanceof BsqSwapTrade) {
             return (txId.equals(((BsqSwapTrade) tradeModel).getTxId()));
         }

@@ -18,7 +18,7 @@
 package bisq.daemon.grpc;
 
 import bisq.core.api.CoreApi;
-import bisq.core.api.model.AtomicTradeInfo;
+import bisq.core.api.model.BsqSwapTradeInfo;
 import bisq.core.api.model.TradeInfo;
 import bisq.core.trade.model.trade.Trade;
 
@@ -26,13 +26,13 @@ import bisq.proto.grpc.ConfirmPaymentReceivedReply;
 import bisq.proto.grpc.ConfirmPaymentReceivedRequest;
 import bisq.proto.grpc.ConfirmPaymentStartedReply;
 import bisq.proto.grpc.ConfirmPaymentStartedRequest;
-import bisq.proto.grpc.GetAtomicTradeReply;
+import bisq.proto.grpc.GetBsqSwapTradeReply;
 import bisq.proto.grpc.GetTradeReply;
 import bisq.proto.grpc.GetTradeRequest;
 import bisq.proto.grpc.KeepFundsReply;
 import bisq.proto.grpc.KeepFundsRequest;
-import bisq.proto.grpc.TakeAtomicOfferReply;
-import bisq.proto.grpc.TakeAtomicOfferRequest;
+import bisq.proto.grpc.TakeBsqSwapOfferReply;
+import bisq.proto.grpc.TakeBsqSwapOfferRequest;
 import bisq.proto.grpc.TakeOfferReply;
 import bisq.proto.grpc.TakeOfferRequest;
 import bisq.proto.grpc.WithdrawFundsReply;
@@ -48,7 +48,7 @@ import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.core.api.model.AtomicTradeInfo.toAtomicTradeInfo;
+import static bisq.core.api.model.BsqSwapTradeInfo.toBsqSwapTradeInfo;
 import static bisq.core.api.model.TradeInfo.toNewTradeInfo;
 import static bisq.core.api.model.TradeInfo.toTradeInfo;
 import static bisq.daemon.grpc.interceptor.GrpcServiceRateMeteringConfig.getCustomRateMeteringInterceptor;
@@ -74,40 +74,40 @@ class GrpcTradesService extends TradesImplBase {
     }
 
     @Override
-    public void getAtomicTrade(GetTradeRequest req,
-                               StreamObserver<GetAtomicTradeReply> responseObserver) {
+    public void getBsqSwapTrade(GetTradeRequest req,
+                                StreamObserver<GetBsqSwapTradeReply> responseObserver) {
         try {
-            var atomicTrade = coreApi.getAtomicTrade(req.getTradeId());
-            // String role = coreApi.getAtomicTradeRole(req.getTradeId());
-            var reply = GetAtomicTradeReply.newBuilder()
-                    .setAtomicTrade(toAtomicTradeInfo(atomicTrade).toProtoMessage())
+            var bsqSwapTrade = coreApi.getBsqSwapTrade(req.getTradeId());
+            // String role = coreApi.getBsqSwapTradeRole(req.getTradeId());
+            var reply = GetBsqSwapTradeReply.newBuilder()
+                    .setBsqSwapTrade(toBsqSwapTradeInfo(bsqSwapTrade).toProtoMessage())
                     .build();
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
         } catch (IllegalArgumentException cause) {
             // Offer makers may call 'gettrade' many times before a trade exists.
             // Log a 'trade not found' warning instead of a full stack trace.
-            exceptionHandler.handleExceptionAsWarning(log, "getAtomicTrade", cause, responseObserver);
+            exceptionHandler.handleExceptionAsWarning(log, "getBsqSwapTrade", cause, responseObserver);
         } catch (Throwable cause) {
             exceptionHandler.handleException(log, cause, responseObserver);
         }
     }
 
     @Override
-    public void takeAtomicOffer(TakeAtomicOfferRequest req,
-                                StreamObserver<TakeAtomicOfferReply> responseObserver) {
+    public void takeBsqSwapOffer(TakeBsqSwapOfferRequest req,
+                                 StreamObserver<TakeBsqSwapOfferReply> responseObserver) {
         GrpcErrorMessageHandler errorMessageHandler =
                 new GrpcErrorMessageHandler(getTakeOfferMethod().getFullMethodName(),
                         responseObserver,
                         exceptionHandler,
                         log);
-        coreApi.takeAtomicOffer(req.getOfferId(),
+        coreApi.takeBsqSwapOffer(req.getOfferId(),
                 req.getPaymentAccountId(),
                 req.getTakerFeeCurrencyCode(),
-                atomicTrade -> {
-                    AtomicTradeInfo atomicTradeInfo = toAtomicTradeInfo(atomicTrade);
-                    var reply = TakeAtomicOfferReply.newBuilder()
-                            .setAtomicTrade(atomicTradeInfo.toProtoMessage())
+                bsqSwapTrade -> {
+                    BsqSwapTradeInfo bsqSwapTradeInfo = toBsqSwapTradeInfo(bsqSwapTrade);
+                    var reply = TakeBsqSwapOfferReply.newBuilder()
+                            .setBsqSwapTrade(bsqSwapTradeInfo.toProtoMessage())
                             .build();
                     responseObserver.onNext(reply);
                     responseObserver.onCompleted();

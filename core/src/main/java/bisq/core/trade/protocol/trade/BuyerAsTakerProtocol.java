@@ -75,7 +75,7 @@ public class BuyerAsTakerProtocol extends BuyerProtocol implements TakerProtocol
 
     @Override
     public void onTakeOffer() {
-        // TODO(sq) handle take atomic offer
+        // TODO(sq) handle take bsq swap offer
         //        if (trade.isAtomicBsqTrade()) {
         //            taskRunner.addTasks(
         //                    AtomicTakerSendsAtomicRequest.class

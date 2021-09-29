@@ -119,8 +119,8 @@ public class CoreApi {
     // Offers
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Offer getAtomicOffer(String id) {
-        return coreOffersService.getAtomicOffer(id);
+    public Offer getBsqSwapOffer(String id) {
+        return coreOffersService.getBsqSwapOffer(id);
     }
 
     public Offer getOffer(String id) {
@@ -131,12 +131,12 @@ public class CoreApi {
         return coreOffersService.getMyOffer(id);
     }
 
-    public Offer getMyAtomicOffer(String id) {
-        return coreOffersService.getMyAtomicOffer(id);
+    public Offer getMyBsqSwapOffer(String id) {
+        return coreOffersService.getMyBsqSwapOffer(id);
     }
 
-    public List<Offer> getAtomicOffers(String direction, String currencyCode) {
-        return coreOffersService.getAtomicOffers(direction, currencyCode);
+    public List<Offer> getBsqSwapOffers(String direction, String currencyCode) {
+        return coreOffersService.getBsqSwapOffers(direction, currencyCode);
     }
 
     public List<Offer> getOffers(String direction, String currencyCode) {
@@ -147,21 +147,21 @@ public class CoreApi {
         return coreOffersService.getMyOffers(direction, currencyCode);
     }
 
-    public List<Offer> getMyAtomicOffers(String direction, String currencyCode) {
-        return coreOffersService.getMyAtomicOffers(direction, currencyCode);
+    public List<Offer> getMyBsqSwapOffers(String direction, String currencyCode) {
+        return coreOffersService.getMyBsqSwapOffers(direction, currencyCode);
     }
 
-    public OpenOffer getMyOpenAtomicOffer(String id) {
-        return coreOffersService.getMyOpenAtomicOffer(id);
+    public OpenOffer getMyOpenBsqSwapOffer(String id) {
+        return coreOffersService.getMyOpenBsqSwapOffer(id);
     }
 
-    public void createAndPlaceAtomicOffer(String directionAsString,
-                                          long amountAsLong,
-                                          long minAmountAsLong,
-                                          String priceAsString,
-                                          String paymentAccountId,
-                                          Consumer<Offer> resultHandler) {
-        coreOffersService.createAndPlaceAtomicOffer(directionAsString,
+    public void createAndPlaceBsqSwapOffer(String directionAsString,
+                                           long amountAsLong,
+                                           long minAmountAsLong,
+                                           String priceAsString,
+                                           String paymentAccountId,
+                                           Consumer<Offer> resultHandler) {
+        coreOffersService.createAndPlaceBsqSwapOffer(directionAsString,
                 amountAsLong,
                 minAmountAsLong,
                 priceAsString,
@@ -243,12 +243,12 @@ public class CoreApi {
                                                              String currencyCode,
                                                              String address,
                                                              boolean tradeInstant,
-                                                             boolean tradeAtomic) {
+                                                             boolean isBsqSwap) {
         return paymentAccountsService.createCryptoCurrencyPaymentAccount(accountName,
                 currencyCode,
                 address,
                 tradeInstant,
-                tradeAtomic);
+                isBsqSwap);
     }
 
     public List<PaymentMethod> getCryptoCurrencyPaymentMethods() {
@@ -267,13 +267,13 @@ public class CoreApi {
     // Trades
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void takeAtomicOffer(String offerId,
-                                String paymentAccountId,
-                                String takerFeeCurrencyCode,
-                                TradeResultHandler<BsqSwapTrade> tradeResultHandler,
-                                ErrorMessageHandler errorMessageHandler) {
-        Offer atomicOffer = coreOffersService.getAtomicOffer(offerId);
-        coreTradesService.takeAtomicOffer(atomicOffer,
+    public void takeBsqSwapOffer(String offerId,
+                                 String paymentAccountId,
+                                 String takerFeeCurrencyCode,
+                                 TradeResultHandler<BsqSwapTrade> tradeResultHandler,
+                                 ErrorMessageHandler errorMessageHandler) {
+        Offer bsqSwapOffer = coreOffersService.getBsqSwapOffer(offerId);
+        coreTradesService.takeBsqSwapOffer(bsqSwapOffer,
                 paymentAccountId,
                 takerFeeCurrencyCode,
                 tradeResultHandler,
@@ -309,8 +309,8 @@ public class CoreApi {
         coreTradesService.withdrawFunds(tradeId, address, memo);
     }
 
-    public BsqSwapTrade getAtomicTrade(String tradeId) {
-        return coreTradesService.getAtomicTrade(tradeId);
+    public BsqSwapTrade getBsqSwapTrade(String tradeId) {
+        return coreTradesService.getBsqSwapTrade(tradeId);
     }
 
     public Trade getTrade(String tradeId) {

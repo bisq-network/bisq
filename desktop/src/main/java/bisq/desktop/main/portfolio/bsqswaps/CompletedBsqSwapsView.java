@@ -185,15 +185,15 @@ public class CompletedBsqSwapsView extends ActivatableViewAndModel<VBox, Complet
         setStateColumnCellFactory();
         setAvatarColumnCellFactory();
 
-        tradeIdColumn.setComparator(Comparator.comparing(o -> o.getAtomicTrade().getId()));
-        dateColumn.setComparator(Comparator.comparing(o -> o.getAtomicTrade().getDate()));
-        directionColumn.setComparator(Comparator.comparing(o -> o.getAtomicTrade().getOffer().getDirection()));
+        tradeIdColumn.setComparator(Comparator.comparing(o -> o.getBsqSwapTrade().getId()));
+        dateColumn.setComparator(Comparator.comparing(o -> o.getBsqSwapTrade().getDate()));
+        directionColumn.setComparator(Comparator.comparing(o -> o.getBsqSwapTrade().getOffer().getDirection()));
         marketColumn.setComparator(Comparator.comparing(model::getMarketLabel));
         priceColumn.setComparator(Comparator.comparing(model::getPrice, Comparator.nullsFirst(Comparator.naturalOrder())));
         volumeColumn.setComparator(nullsFirstComparingAsTrade(BsqSwapTrade::getTradeVolume));
         amountColumn.setComparator(Comparator.comparing(model::getAmount, Comparator.nullsFirst(Comparator.naturalOrder())));
         avatarColumn.setComparator(Comparator.comparing(
-                o -> model.getNumPastTrades(o.getAtomicTrade()),
+                o -> model.getNumPastTrades(o.getBsqSwapTrade()),
                 Comparator.nullsFirst(Comparator.naturalOrder())
         ));
         txFeeColumn.setComparator(nullsFirstComparing(BsqSwapTrade::getMiningFeePerByte));
@@ -203,7 +203,7 @@ public class CompletedBsqSwapsView extends ActivatableViewAndModel<VBox, Complet
         tradeFeeColumn.setComparator(Comparator.comparing(item -> {
             String tradeFee = model.getTradeFee(item);
             // We want to separate BSQ and BTC fees so we use a prefix
-            if (item.getAtomicTrade().getOffer().isCurrencyForMakerFeeBtc()) {
+            if (item.getBsqSwapTrade().getOffer().isCurrencyForMakerFeeBtc()) {
                 return "BTC" + tradeFee;
             } else {
                 return "BSQ" + tradeFee;
@@ -283,7 +283,7 @@ public class CompletedBsqSwapsView extends ActivatableViewAndModel<VBox, Complet
     private static <T extends Comparable<T>> Comparator<CompletedBsqSwapsListItem> nullsFirstComparing(
             Function<BsqSwapTrade, T> keyExtractor) {
         return Comparator.comparing(
-                o -> o.getAtomicTrade() != null ? keyExtractor.apply(o.getAtomicTrade()) : null,
+                o -> o.getBsqSwapTrade() != null ? keyExtractor.apply(o.getBsqSwapTrade()) : null,
                 Comparator.nullsFirst(Comparator.naturalOrder())
         );
     }
@@ -291,7 +291,7 @@ public class CompletedBsqSwapsView extends ActivatableViewAndModel<VBox, Complet
     private static <T extends Comparable<T>> Comparator<CompletedBsqSwapsListItem> nullsFirstComparingAsTrade(
             Function<BsqSwapTrade, T> keyExtractor) {
         return Comparator.comparing(
-                o -> keyExtractor.apply(o.getAtomicTrade()),
+                o -> keyExtractor.apply(o.getBsqSwapTrade()),
                 Comparator.nullsFirst(Comparator.naturalOrder())
         );
     }
@@ -306,7 +306,7 @@ public class CompletedBsqSwapsView extends ActivatableViewAndModel<VBox, Complet
             if (filterString.isEmpty())
                 return true;
 
-            BsqSwapTrade bsqSwapTrade = item.getAtomicTrade();
+            BsqSwapTrade bsqSwapTrade = item.getBsqSwapTrade();
             Offer offer = bsqSwapTrade.getOffer();
             if (offer.getId().contains(filterString)) {
                 return true;
@@ -364,11 +364,11 @@ public class CompletedBsqSwapsView extends ActivatableViewAndModel<VBox, Complet
                                 if (item != null && !empty) {
                                     field = new HyperlinkWithIcon(model.getTradeId(item));
                                     field.setOnAction(event -> {
-                                        // TODO(sq): fix atomic tradedetails
+                                        // TODO(sq): fix bsq swap trade details
                                         // tradeDetailsWindow.show(item.getAtomicTrade());
 
                                         // Show offer for now
-                                        offerDetailsWindow.show(item.getAtomicTrade().getOffer());
+                                        offerDetailsWindow.show(item.getBsqSwapTrade().getOffer());
                                     });
                                     field.setTooltip(new Tooltip(Res.get("tooltip.openPopupForDetails")));
                                     setGraphic(field);
@@ -458,15 +458,15 @@ public class CompletedBsqSwapsView extends ActivatableViewAndModel<VBox, Complet
                                 super.updateItem(newItem, empty);
 
                                 if (newItem != null && !empty/* && newItem.getAtomicTrade() instanceof Trade*/) {
-                                    var atomicTrade = newItem.getAtomicTrade();
-                                    int numPastTrades = model.getNumPastTrades(atomicTrade);
-                                    final NodeAddress tradingPeerNodeAddress = atomicTrade.getTradingPeerNodeAddress();
+                                    var bsqSwapTrade = newItem.getBsqSwapTrade();
+                                    int numPastTrades = model.getNumPastTrades(bsqSwapTrade);
+                                    final NodeAddress tradingPeerNodeAddress = bsqSwapTrade.getTradingPeerNodeAddress();
                                     String role = Res.get("peerInfoIcon.tooltip.tradePeer");
                                     Node peerInfoIcon = new PeerInfoIconTrading(tradingPeerNodeAddress,
                                             role,
                                             numPastTrades,
                                             privateNotificationManager,
-                                            atomicTrade.getOffer(),
+                                            bsqSwapTrade.getOffer(),
                                             preferences,
                                             model.accountAgeWitnessService,
                                             useDevPrivilegeKeys);

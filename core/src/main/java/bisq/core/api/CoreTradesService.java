@@ -91,11 +91,11 @@ class CoreTradesService {
         this.user = user;
     }
 
-    void takeAtomicOffer(Offer offer,
-                         String paymentAccountId,
-                         String takerFeeCurrencyCode,
-                         TradeResultHandler<BsqSwapTrade> tradeResultHandler,
-                         ErrorMessageHandler errorMessageHandler) {
+    void takeBsqSwapOffer(Offer offer,
+                          String paymentAccountId,
+                          String takerFeeCurrencyCode,
+                          TradeResultHandler<BsqSwapTrade> tradeResultHandler,
+                          ErrorMessageHandler errorMessageHandler) {
         coreWalletsService.verifyWalletsAreAvailable();
         coreWalletsService.verifyEncryptedWalletIsUnlocked();
 
@@ -109,7 +109,7 @@ class CoreTradesService {
         log.info("Initiating take {} offer, {}",
                 offer.isBuyOffer() ? "buy" : "sell",
                 takeOfferModel);
-        tradeManager.onTakeAtomicOffer(offer,
+        tradeManager.onTakeBsqSwapOffer(offer,
                 takeBsqSwapOfferModel.getAmount().getValue(),  // TODO get rid of jfx property dep?
                 takeBsqSwapOfferModel.getTradePrice().getValue(),
                 takeBsqSwapOfferModel.getBsqSwapTxHelper().getTxFeePerVbyte().getValue(),
@@ -240,10 +240,10 @@ class CoreTradesService {
                 });
     }
 
-    BsqSwapTrade getAtomicTrade(String tradeId) {
+    BsqSwapTrade getBsqSwapTrade(String tradeId) {
         coreWalletsService.verifyWalletsAreAvailable();
         coreWalletsService.verifyEncryptedWalletIsUnlocked();
-        return tradeManager.getAtomicTradeById(tradeId).orElseThrow(() ->
+        return tradeManager.getBsqSwapTradeById(tradeId).orElseThrow(() ->
                 new IllegalArgumentException(format("trade with id '%s' not found", tradeId)));
     }
 

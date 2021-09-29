@@ -104,7 +104,7 @@ class CorePaymentAccountsService {
                                                       String currencyCode,
                                                       String address,
                                                       boolean tradeInstant,
-                                                      boolean tradeAtomic) {
+                                                      boolean isBsqSwap) {
         String bsqCode = currencyCode.toUpperCase();
         if (!bsqCode.equals("BSQ"))
             throw new IllegalArgumentException("api does not currently support " + currencyCode + " accounts");
@@ -114,7 +114,7 @@ class CorePaymentAccountsService {
 
         // TODO Split into 2 methods: createAtomicPaymentAccount(), createCryptoCurrencyPaymentAccount().
         PaymentAccount cryptoCurrencyAccount;
-        if (tradeAtomic) {
+        if (isBsqSwap) {
             cryptoCurrencyAccount = PaymentAccountFactory.getPaymentAccount(PaymentMethod.BSQ_SWAP);
         } else {
             cryptoCurrencyAccount = tradeInstant
@@ -123,7 +123,7 @@ class CorePaymentAccountsService {
         }
         cryptoCurrencyAccount.init();
         cryptoCurrencyAccount.setAccountName(accountName);
-        if (!tradeAtomic) {
+        if (!isBsqSwap) {
             ((AssetAccount) cryptoCurrencyAccount).setAddress(address);
         }
 

@@ -75,7 +75,7 @@ import lombok.extern.slf4j.Slf4j;
 import static javafx.beans.binding.Bindings.createStringBinding;
 
 @Slf4j
-public abstract class AtomicOfferViewModel<M extends AtomicOfferDataModel> extends ActivatableWithDataModel<M> {
+public abstract class BsqSwapOfferViewModel<M extends BsqSwapOfferDataModel> extends ActivatableWithDataModel<M> {
     private final BtcValidator btcValidator;
     private final BsqValidator bsqValidator;
     protected final SecurityDepositValidator securityDepositValidator;
@@ -133,16 +133,16 @@ public abstract class AtomicOfferViewModel<M extends AtomicOfferDataModel> exten
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public AtomicOfferViewModel(M dataModel,
-                                FiatPriceValidator fiatPriceValidator,
-                                AltcoinValidator altcoinValidator,
-                                BtcValidator btcValidator,
-                                BsqValidator bsqValidator,
-                                SecurityDepositValidator securityDepositValidator,
-                                AccountAgeWitnessService accountAgeWitnessService,
-                                @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
-                                BsqFormatter bsqFormatter,
-                                OfferUtil offerUtil) {
+    public BsqSwapOfferViewModel(M dataModel,
+                                 FiatPriceValidator fiatPriceValidator,
+                                 AltcoinValidator altcoinValidator,
+                                 BtcValidator btcValidator,
+                                 BsqValidator bsqValidator,
+                                 SecurityDepositValidator securityDepositValidator,
+                                 AccountAgeWitnessService accountAgeWitnessService,
+                                 @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
+                                 BsqFormatter bsqFormatter,
+                                 OfferUtil offerUtil) {
         super(dataModel);
 
         this.fiatPriceValidator = fiatPriceValidator;

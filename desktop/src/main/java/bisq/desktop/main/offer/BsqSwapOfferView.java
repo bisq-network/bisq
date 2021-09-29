@@ -82,7 +82,7 @@ import lombok.Setter;
 import static bisq.desktop.util.FormBuilder.*;
 import static javafx.beans.binding.Bindings.createStringBinding;
 
-public abstract class AtomicOfferView<M extends AtomicOfferViewModel<?>> extends ActivatableViewAndModel<AnchorPane, M> {
+public abstract class BsqSwapOfferView<M extends BsqSwapOfferViewModel<?>> extends ActivatableViewAndModel<AnchorPane, M> {
     protected final Navigation navigation;
     private final OfferDetailsWindow offerDetailsWindow;
 
@@ -121,9 +121,9 @@ public abstract class AtomicOfferView<M extends AtomicOfferViewModel<?>> extends
     // Constructor, lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public AtomicOfferView(M model,
-                           Navigation navigation,
-                           OfferDetailsWindow offerDetailsWindow) {
+    public BsqSwapOfferView(M model,
+                            Navigation navigation,
+                            OfferDetailsWindow offerDetailsWindow) {
         super(model);
 
         this.navigation = navigation;
@@ -247,7 +247,7 @@ public abstract class AtomicOfferView<M extends AtomicOfferViewModel<?>> extends
     }
 
     protected void onPaymentAccountsComboBoxSelected() {
-        // Changing payment account from atomic BSQ closes the atomic offer tab and opens the normal create offer tab
+        // Changing payment account from bsq swap closes the bsq swap offer tab and opens the normal create offer tab
         PaymentAccount paymentAccount = paymentAccountsComboBox.getSelectionModel().getSelectedItem();
         if (paymentAccount == null) {
             currencyTextFieldBox.setVisible(true);

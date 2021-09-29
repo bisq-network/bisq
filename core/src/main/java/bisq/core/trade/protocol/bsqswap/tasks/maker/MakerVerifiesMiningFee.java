@@ -77,7 +77,7 @@ public class MakerVerifiesMiningFee extends SetupTxListener {
         var fee2 = (double) peerFee.getValue();
         // Allow for 10% diff in mining fee, ie, maker will accept taker fee that's 10%
         // off their own fee from service. Both parties will use the same fee while
-        // creating the atomic tx
+        // creating the bsq swap tx
         return abs(1 - fee1 / fee2) < 0.1;
     }
 

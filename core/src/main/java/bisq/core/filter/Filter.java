@@ -101,7 +101,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
     // added at v1.6.0
     private final boolean disableMempoolValidation;
 
-    // added at Atomic
+    // added at BsqSwap release
     private final boolean disablePowMessage;
 
     // After we have created the signature from the filter data we clone it and apply the signature

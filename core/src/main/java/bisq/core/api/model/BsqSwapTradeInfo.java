@@ -25,14 +25,14 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
-import static bisq.core.api.model.AtomicOfferInfo.toAtomicOfferInfo;
+import static bisq.core.api.model.BsqSwapOfferInfo.toBsqSwapOfferInfo;
 
 @EqualsAndHashCode
 @ToString
 @Getter
-public class AtomicTradeInfo implements Payload {
+public class BsqSwapTradeInfo implements Payload {
 
-    private final AtomicOfferInfo atomicOffer;
+    private final BsqSwapOfferInfo bsqSwapOffer;
     private final String tradeId;
     private final String tempTradingPeerNodeAddress;
     private final String peerNodeAddress;
@@ -56,8 +56,8 @@ public class AtomicTradeInfo implements Payload {
     private final String state;
     private final String errorMessage;
 
-    public AtomicTradeInfo(AtomicTradeInfoBuilder builder) {
-        this.atomicOffer = builder.atomicOffer;
+    public BsqSwapTradeInfo(BsqSwapTradeInfoBuilder builder) {
+        this.bsqSwapOffer = builder.bsqSwapOfferInfo;
         this.tradeId = builder.tradeId;
         this.tempTradingPeerNodeAddress = builder.tempTradingPeerNodeAddress;
         this.peerNodeAddress = builder.peerNodeAddress;
@@ -82,13 +82,13 @@ public class AtomicTradeInfo implements Payload {
         this.errorMessage = builder.errorMessage;
     }
 
-    public static AtomicTradeInfo toAtomicTradeInfo(BsqSwapTrade trade) {
-        return toAtomicTradeInfo(trade, null);
+    public static BsqSwapTradeInfo toBsqSwapTradeInfo(BsqSwapTrade trade) {
+        return toBsqSwapTradeInfo(trade, null);
     }
 
-    public static AtomicTradeInfo toAtomicTradeInfo(BsqSwapTrade trade, String role) {
-        return new AtomicTradeInfoBuilder()
-                .withAtomicOffer(toAtomicOfferInfo(trade.getOffer()))
+    public static BsqSwapTradeInfo toBsqSwapTradeInfo(BsqSwapTrade trade, String role) {
+        return new BsqSwapTradeInfoBuilder()
+                .withBsqSwapOffer(toBsqSwapOfferInfo(trade.getOffer()))
                 .withTradeId(trade.getId())
                 .withTempTradingPeerNodeAddress(trade.getBsqSwapProtocolModel().getTempTradingPeerNodeAddress().getFullAddress())
                 .withPeerNodeAddress(trade.getPeerNodeAddress().getFullAddress())
@@ -119,9 +119,9 @@ public class AtomicTradeInfo implements Payload {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public bisq.proto.grpc.AtomicTradeInfo toProtoMessage() {
-        return bisq.proto.grpc.AtomicTradeInfo.newBuilder()
-                .setAtomicOffer(atomicOffer.toProtoMessage())
+    public bisq.proto.grpc.BsqSwapTradeInfo toProtoMessage() {
+        return bisq.proto.grpc.BsqSwapTradeInfo.newBuilder()
+                .setBsqSwapOfferInfo(bsqSwapOffer.toProtoMessage())
                 .setTradeId(tradeId)
                 .setTempTradingPeerNodeAddress(tempTradingPeerNodeAddress != null ? tempTradingPeerNodeAddress : "")
                 .setPeerNodeAddress(peerNodeAddress != null ? peerNodeAddress : "")
@@ -147,9 +147,9 @@ public class AtomicTradeInfo implements Payload {
                 .build();
     }
 
-    public static AtomicTradeInfo fromProto(bisq.proto.grpc.AtomicTradeInfo proto) {
-        return new AtomicTradeInfoBuilder()
-                .withAtomicOffer(AtomicOfferInfo.fromProto(proto.getAtomicOffer()))
+    public static BsqSwapTradeInfo fromProto(bisq.proto.grpc.BsqSwapTradeInfo proto) {
+        return new BsqSwapTradeInfoBuilder()
+                .withBsqSwapOffer(BsqSwapOfferInfo.fromProto(proto.getBsqSwapOfferInfo()))
                 .withTradeId(proto.getTradeId())
                 .withTempTradingPeerNodeAddress(proto.getTempTradingPeerNodeAddress())
                 .withPeerNodeAddress(proto.getPeerNodeAddress())
@@ -175,8 +175,8 @@ public class AtomicTradeInfo implements Payload {
                 .build();
     }
 
-    public static class AtomicTradeInfoBuilder {
-        private AtomicOfferInfo atomicOffer;
+    public static class BsqSwapTradeInfoBuilder {
+        private BsqSwapOfferInfo bsqSwapOfferInfo;
         private String tradeId;
         private String tempTradingPeerNodeAddress;
         private String peerNodeAddress;
@@ -200,123 +200,123 @@ public class AtomicTradeInfo implements Payload {
         private String state;
         private String errorMessage;
 
-        public AtomicTradeInfoBuilder withAtomicOffer(AtomicOfferInfo atomicOffer) {
-            this.atomicOffer = atomicOffer;
+        public BsqSwapTradeInfoBuilder withBsqSwapOffer(BsqSwapOfferInfo bsqSwapOfferInfo) {
+            this.bsqSwapOfferInfo = bsqSwapOfferInfo;
             return this;
         }
 
-        public AtomicTradeInfoBuilder withTradeId(String tradeId) {
+        public BsqSwapTradeInfoBuilder withTradeId(String tradeId) {
             this.tradeId = tradeId;
             return this;
         }
 
-        public AtomicTradeInfoBuilder withTempTradingPeerNodeAddress(String tempTradingPeerNodeAddress) {
+        public BsqSwapTradeInfoBuilder withTempTradingPeerNodeAddress(String tempTradingPeerNodeAddress) {
             this.tempTradingPeerNodeAddress = tempTradingPeerNodeAddress;
             return this;
         }
 
-        public AtomicTradeInfoBuilder withPeerNodeAddress(String peerNodeAddress) {
+        public BsqSwapTradeInfoBuilder withPeerNodeAddress(String peerNodeAddress) {
             this.peerNodeAddress = peerNodeAddress;
             return this;
         }
 
-        public AtomicTradeInfoBuilder withTxId(String txId) {
+        public BsqSwapTradeInfoBuilder withTxId(String txId) {
             this.txId = txId;
             return this;
         }
 
-        public AtomicTradeInfoBuilder withBsqTradeAmount(long bsqTradeAmount) {
+        public BsqSwapTradeInfoBuilder withBsqTradeAmount(long bsqTradeAmount) {
             this.bsqTradeAmount = bsqTradeAmount;
             return this;
         }
 
-        public AtomicTradeInfoBuilder withBsqMaxTradeAmount(long bsqMaxTradeAmount) {
+        public BsqSwapTradeInfoBuilder withBsqMaxTradeAmount(long bsqMaxTradeAmount) {
             this.bsqMaxTradeAmount = bsqMaxTradeAmount;
             return this;
         }
 
-        public AtomicTradeInfoBuilder withBsqMinTradeAmount(long bsqMinTradeAmount) {
+        public BsqSwapTradeInfoBuilder withBsqMinTradeAmount(long bsqMinTradeAmount) {
             this.bsqMinTradeAmount = bsqMinTradeAmount;
             return this;
         }
 
-        public AtomicTradeInfoBuilder withBtcTradeAmount(long btcTradeAmount) {
+        public BsqSwapTradeInfoBuilder withBtcTradeAmount(long btcTradeAmount) {
             this.btcTradeAmount = btcTradeAmount;
             return this;
         }
 
-        public AtomicTradeInfoBuilder withBtcMaxTradeAmount(long btcMaxTradeAmount) {
+        public BsqSwapTradeInfoBuilder withBtcMaxTradeAmount(long btcMaxTradeAmount) {
             this.btcMaxTradeAmount = btcMaxTradeAmount;
             return this;
         }
 
-        public AtomicTradeInfoBuilder withBtcMinTradeAmount(long btcMinTradeAmount) {
+        public BsqSwapTradeInfoBuilder withBtcMinTradeAmount(long btcMinTradeAmount) {
             this.btcMinTradeAmount = btcMinTradeAmount;
             return this;
         }
 
-        public AtomicTradeInfoBuilder withTradePrice(long tradePrice) {
+        public BsqSwapTradeInfoBuilder withTradePrice(long tradePrice) {
             this.tradePrice = tradePrice;
             return this;
         }
 
-        public AtomicTradeInfoBuilder withBsqMakerTradeFee(long bsqMakerTradeFee) {
+        public BsqSwapTradeInfoBuilder withBsqMakerTradeFee(long bsqMakerTradeFee) {
             this.bsqMakerTradeFee = bsqMakerTradeFee;
             return this;
         }
 
-        public AtomicTradeInfoBuilder withBsqTakerTradeFee(long bsqTakerTradeFee) {
+        public BsqSwapTradeInfoBuilder withBsqTakerTradeFee(long bsqTakerTradeFee) {
             this.bsqTakerTradeFee = bsqTakerTradeFee;
             return this;
         }
 
-        public AtomicTradeInfoBuilder withTxFeePerVbyte(long txFeePerVbyte) {
+        public BsqSwapTradeInfoBuilder withTxFeePerVbyte(long txFeePerVbyte) {
             this.txFeePerVbyte = txFeePerVbyte;
             return this;
         }
 
-        public AtomicTradeInfoBuilder withTxFee(long txFee) {
+        public BsqSwapTradeInfoBuilder withTxFee(long txFee) {
             this.txFee = txFee;
             return this;
         }
 
-        public AtomicTradeInfoBuilder withMakerBsqAddress(String makerBsqAddress) {
+        public BsqSwapTradeInfoBuilder withMakerBsqAddress(String makerBsqAddress) {
             this.makerBsqAddress = makerBsqAddress;
             return this;
         }
 
-        public AtomicTradeInfoBuilder withMakerBtcAddress(String makerBtcAddress) {
+        public BsqSwapTradeInfoBuilder withMakerBtcAddress(String makerBtcAddress) {
             this.makerBtcAddress = makerBtcAddress;
             return this;
         }
 
-        public AtomicTradeInfoBuilder withTakerBsqAddress(String takerBsqAddress) {
+        public BsqSwapTradeInfoBuilder withTakerBsqAddress(String takerBsqAddress) {
             this.takerBsqAddress = takerBsqAddress;
             return this;
         }
 
-        public AtomicTradeInfoBuilder withTakerBtcAddress(String takerBtcAddress) {
+        public BsqSwapTradeInfoBuilder withTakerBtcAddress(String takerBtcAddress) {
             this.takerBtcAddress = takerBtcAddress;
             return this;
         }
 
-        public AtomicTradeInfoBuilder withTakeOfferDate(long takeOfferDate) {
+        public BsqSwapTradeInfoBuilder withTakeOfferDate(long takeOfferDate) {
             this.takeOfferDate = takeOfferDate;
             return this;
         }
 
-        public AtomicTradeInfoBuilder withState(String state) {
+        public BsqSwapTradeInfoBuilder withState(String state) {
             this.state = state;
             return this;
         }
 
-        public AtomicTradeInfoBuilder withErrorMessage(String errorMessage) {
+        public BsqSwapTradeInfoBuilder withErrorMessage(String errorMessage) {
             this.errorMessage = errorMessage;
             return this;
         }
 
-        public AtomicTradeInfo build() {
-            return new AtomicTradeInfo(this);
+        public BsqSwapTradeInfo build() {
+            return new BsqSwapTradeInfo(this);
         }
     }
 }

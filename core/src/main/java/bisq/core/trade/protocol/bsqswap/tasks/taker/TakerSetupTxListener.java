@@ -41,7 +41,7 @@ public class TakerSetupTxListener extends SetupTxListener {
         try {
             runInterceptHook();
 
-            checkNotNull(bsqSwapProtocolModel, "AtomicModel must not be null");
+            checkNotNull(bsqSwapProtocolModel, "bsqSwapProtocolModel must not be null");
 
             // Find address to listen to
             if (bsqSwapProtocolModel.getTakerBtcAddress() != null) {

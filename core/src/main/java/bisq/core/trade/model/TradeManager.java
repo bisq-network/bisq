@@ -242,7 +242,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         if (networkEnvelope instanceof InputsForDepositTxRequest) {
             handleTakeOfferRequest(peer, (InputsForDepositTxRequest) networkEnvelope);
         } else if (networkEnvelope instanceof CreateBsqSwapTxRequest) {
-            handleTakeAtomicOfferRequest(peer, (CreateBsqSwapTxRequest) networkEnvelope);
+            handleTakeBsqSwapOfferRequest(peer, (CreateBsqSwapTxRequest) networkEnvelope);
         }
     }
 
@@ -308,7 +308,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
     }
 
     // The maker received a TakeOfferRequest
-    private void handleTakeAtomicOfferRequest(NodeAddress peer, CreateBsqSwapTxRequest createBsqSwapTxRequest) {
+    private void handleTakeBsqSwapOfferRequest(NodeAddress peer, CreateBsqSwapTxRequest createBsqSwapTxRequest) {
         log.info("Received createAtomicTxRequest from {} with tradeId {} and uid {}",
                 peer, createBsqSwapTxRequest.getTradeId(), createBsqSwapTxRequest.getUid());
 
@@ -349,7 +349,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
 
         initTradeAndProtocol(bsqSwapTrade, tradeProtocol);
 
-        ((BsqSwapMakerProtocol) tradeProtocol).handleTakeAtomicRequest(createBsqSwapTxRequest, peer, errorMessage -> {
+        ((BsqSwapMakerProtocol) tradeProtocol).handleCreateBsqSwapTxRequest(createBsqSwapTxRequest, peer, errorMessage -> {
             if (takeOfferRequestErrorMessageHandler != null)
                 takeOfferRequestErrorMessageHandler.handleErrorMessage(errorMessage);
         });
@@ -527,15 +527,15 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         requestPersistence();
     }
 
-    public void onTakeAtomicOffer(Offer offer,
-                                  Coin amount,
-                                  long price,
-                                  long miningFeePerByte,
-                                  long makerFee,
-                                  long takerFee,
-                                  boolean isTakerApiUser,
-                                  TradeResultHandler<BsqSwapTrade> tradeResultHandler,
-                                  ErrorMessageHandler errorMessageHandler) {
+    public void onTakeBsqSwapOffer(Offer offer,
+                                   Coin amount,
+                                   long price,
+                                   long miningFeePerByte,
+                                   long makerFee,
+                                   long takerFee,
+                                   boolean isTakerApiUser,
+                                   TradeResultHandler<BsqSwapTrade> tradeResultHandler,
+                                   ErrorMessageHandler errorMessageHandler) {
 
         checkArgument(!wasOfferAlreadyUsedInTrade(offer.getId()));
 
@@ -848,7 +848,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                 .findFirst();
     }
 
-    public Optional<BsqSwapTrade> getAtomicTradeById(String tradeId) {
+    public Optional<BsqSwapTrade> getBsqSwapTradeById(String tradeId) {
         return bsqSwapTradeManager.findBsqSwapTradeById(tradeId);
     }
 

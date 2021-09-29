@@ -60,45 +60,45 @@ class CompletedBsqSwapsViewModel extends ActivatableWithDataModel<CompletedBsqSw
     }
 
     String getTradeId(CompletedBsqSwapsListItem item) {
-        return item.getAtomicTrade().getShortId();
+        return item.getBsqSwapTrade().getShortId();
     }
 
     String getAmount(CompletedBsqSwapsListItem item) {
         if (item == null)
             return "";
 
-        return btcFormatter.formatCoin(item.getAtomicTrade().getAmount());
+        return btcFormatter.formatCoin(item.getBsqSwapTrade().getAmount());
     }
 
     String getPrice(CompletedBsqSwapsListItem item) {
         if (item == null)
             return "";
 
-        return FormattingUtils.formatPrice(item.getAtomicTrade().getPrice());
+        return FormattingUtils.formatPrice(item.getBsqSwapTrade().getPrice());
     }
 
     String getVolume(CompletedBsqSwapsListItem item) {
         if (item == null)
             return "";
 
-        return DisplayUtils.formatVolumeWithCode(item.getAtomicTrade().getTradeVolume());
+        return DisplayUtils.formatVolumeWithCode(item.getBsqSwapTrade().getTradeVolume());
     }
 
     String getTxFee(CompletedBsqSwapsListItem item) {
         if (item == null)
             return "";
 
-        return btcFormatter.formatCoin(Coin.valueOf(item.getAtomicTrade().getMiningFeePerByte()));
+        return btcFormatter.formatCoin(Coin.valueOf(item.getBsqSwapTrade().getMiningFeePerByte()));
     }
 
     String getTradeFee(CompletedBsqSwapsListItem item) {
         if (item == null)
             return "";
 
-        if (wasMyOffer(item.getAtomicTrade())) {
-            return bsqFormatter.formatCoinWithCode(item.getAtomicTrade().getMakerFee());
+        if (wasMyOffer(item.getBsqSwapTrade())) {
+            return bsqFormatter.formatCoinWithCode(item.getBsqSwapTrade().getMakerFee());
         } else {
-            return bsqFormatter.formatCoinWithCode(item.getAtomicTrade().getTakerFee());
+            return bsqFormatter.formatCoinWithCode(item.getBsqSwapTrade().getTakerFee());
         }
     }
 
@@ -106,35 +106,34 @@ class CompletedBsqSwapsViewModel extends ActivatableWithDataModel<CompletedBsqSw
         if (item == null)
             return "";
 
-        return DisplayUtils.getDirectionWithCode(dataModel.getDirection(item.getAtomicTrade().getOffer()),
-                item.getAtomicTrade().getOffer().getCurrencyCode());
+        return DisplayUtils.getDirectionWithCode(dataModel.getDirection(item.getBsqSwapTrade().getOffer()),
+                item.getBsqSwapTrade().getOffer().getCurrencyCode());
     }
 
     String getDate(CompletedBsqSwapsListItem item) {
-        return DisplayUtils.formatDateTime(item.getAtomicTrade().getDate());
+        return DisplayUtils.formatDateTime(item.getBsqSwapTrade().getDate());
     }
 
     String getMarketLabel(CompletedBsqSwapsListItem item) {
         if ((item == null))
             return "";
 
-        return CurrencyUtil.getCurrencyPair(item.getAtomicTrade().getOffer().getCurrencyCode());
+        return CurrencyUtil.getCurrencyPair(item.getBsqSwapTrade().getOffer().getCurrencyCode());
     }
 
     String getState(CompletedBsqSwapsListItem item) {
         if ((item == null))
             return "";
 
-        if (item.getAtomicTrade().isCompleted()) {
-            return Res.get("portfolio.atomic.completed");
+        if (item.getBsqSwapTrade().isCompleted()) {
+            return Res.get("portfolio.bsqSwap.completed");
         }
-        return Res.get("portfolio.atomic.waiting");
+        return Res.get("portfolio.bsqSwap.waiting");
     }
 
     int getNumPastTrades(BsqSwapTrade bsqSwapTrade) {
         // TODO(sq): include closed trades in count
-        var atomic = dataModel.bsqSwapTradeManager.getObservableList().stream();
-        return atomic
+        return dataModel.bsqSwapTradeManager.getObservableList().stream()
                 .filter(e -> {
                     var candidate = e.getPeerNodeAddress();
                     var current = bsqSwapTrade.getPeerNodeAddress();

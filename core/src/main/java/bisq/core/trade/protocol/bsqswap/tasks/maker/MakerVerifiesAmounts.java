@@ -53,7 +53,7 @@ public class MakerVerifiesAmounts extends SetupTxListener {
             checkArgument(bsqSwapProtocolModel.getOffer().isMyOffer(bsqSwapProtocolModel.getKeyRing()),
                     "must only process own offer");
             checkArgument(bsqSwapProtocolModel.getTradeMessage() instanceof CreateBsqSwapTxRequest,
-                    "Expected CreateAtomicTxRequest");
+                    "Expected CreateBsqSwapTxRequest");
 
 
             var message = (CreateBsqSwapTxRequest) bsqSwapProtocolModel.getTradeMessage();

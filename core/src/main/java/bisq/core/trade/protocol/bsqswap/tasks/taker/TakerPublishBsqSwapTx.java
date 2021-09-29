@@ -46,13 +46,13 @@ public class TakerPublishBsqSwapTx extends BsqSwapTask {
         try {
             runInterceptHook();
 
-            // Publish atomicTx
-            var atomicTx = bsqSwapProtocolModel.getVerifiedTransaction();
+            // Publish transaction
+            var transaction = bsqSwapProtocolModel.getVerifiedTransaction();
 
-            checkNotNull(atomicTx, "Verified atomictx must not be null");
+            checkNotNull(transaction, "Verified transaction must not be null");
 
-            log.info("AtomicTxBytes: {}", Utilities.bytesAsHexString(atomicTx.bitcoinSerialize()));
-            bsqSwapProtocolModel.getWalletsManager().publishAndCommitBsqTx(atomicTx, TxType.TRANSFER_BSQ,
+            log.debug("Transaction bytes: {}", Utilities.bytesAsHexString(transaction.bitcoinSerialize()));
+            bsqSwapProtocolModel.getWalletsManager().publishAndCommitBsqTx(transaction, TxType.TRANSFER_BSQ,
                     new TxBroadcaster.Callback() {
                         @Override
                         public void onSuccess(Transaction transaction) {

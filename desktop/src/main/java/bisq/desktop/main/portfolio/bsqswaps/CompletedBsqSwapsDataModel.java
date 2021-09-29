@@ -71,7 +71,7 @@ class CompletedBsqSwapsDataModel extends ActivatableDataModel {
         list.addAll(bsqSwapTradeManager.getObservableList().stream().map(CompletedBsqSwapsListItem::new).collect(Collectors.toList()));
 
         // we sort by date, earliest first
-        list.sort((o1, o2) -> o2.getAtomicTrade().getDate().compareTo(o1.getAtomicTrade().getDate()));
+        list.sort((o1, o2) -> o2.getBsqSwapTrade().getDate().compareTo(o1.getBsqSwapTrade().getDate()));
     }
 
 }

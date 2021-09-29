@@ -17,7 +17,7 @@
 
 package bisq.apitest.method.offer;
 
-import bisq.proto.grpc.AtomicOfferInfo;
+import bisq.proto.grpc.BsqSwapOfferInfo;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -40,12 +40,12 @@ import static protobuf.OfferPayload.Direction.BUY;
 // @Disabled
 @Slf4j
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class AtomicOfferTest extends AbstractOfferTest {
+public class BsqSwapOfferTest extends AbstractOfferTest {
 
     @BeforeAll
     public static void setUp() {
         AbstractOfferTest.setUp();
-        createAtomicBsqPaymentAccounts();
+        createBsqSwapBsqPaymentAccounts();
     }
 
     @BeforeEach
@@ -64,83 +64,83 @@ public class AtomicOfferTest extends AbstractOfferTest {
 
     @Test
     @Order(2)
-    public void testAliceCreateAtomicBuyOffer1() {
-        createAtomicOffer();
+    public void testAliceCreateBsqSwapBuyOffer1() {
+        createBsqSwapOffer();
     }
 
     @Test
     @Order(3)
-    public void testAliceCreateAtomicBuyOffer2() {
-        createAtomicOffer();
+    public void testAliceCreateBsqSwapBuyOffer2() {
+        createBsqSwapOffer();
     }
 
     @Test
     @Order(4)
-    public void testAliceCreateAtomicBuyOffer3() {
-        createAtomicOffer();
+    public void testAliceCreateBsqSwapBuyOffer3() {
+        createBsqSwapOffer();
     }
 
     @Test
     @Order(5)
-    public void testAliceCreateAtomicBuyOffer4() {
-        createAtomicOffer();
+    public void testAliceCreateBsqSwapBuyOffer4() {
+        createBsqSwapOffer();
     }
 
-    private void createAtomicOffer() {
-        var atomicOffer = aliceClient.createAtomicOffer(BUY.name(),
+    private void createBsqSwapOffer() {
+        var bsqSwapOffer = aliceClient.createBsqSwapOffer(BUY.name(),
                 100_000_000L,
                 100_000_000L,
                 "0.00005",
                 alicesBsqAcct.getId());
-        log.info("Atomic Sell BSQ (Buy BTC) OFFER:\n{}", atomicOffer);
-        var newOfferId = atomicOffer.getId();
+        log.info("BsqSwap Sell BSQ (Buy BTC) OFFER:\n{}", bsqSwapOffer);
+        var newOfferId = bsqSwapOffer.getId();
         assertNotEquals("", newOfferId);
-        assertEquals(BUY.name(), atomicOffer.getDirection());
-        assertEquals(5_000, atomicOffer.getPrice());
-        assertEquals(100_000_000L, atomicOffer.getAmount());
-        assertEquals(100_000_000L, atomicOffer.getMinAmount());
+        assertEquals(BUY.name(), bsqSwapOffer.getDirection());
+        assertEquals(5_000, bsqSwapOffer.getPrice());
+        assertEquals(100_000_000L, bsqSwapOffer.getAmount());
+        assertEquals(100_000_000L, bsqSwapOffer.getMinAmount());
         // assertEquals(alicesBsqAcct.getId(), atomicOffer.getMakerPaymentAccountId());
-        assertEquals(BSQ, atomicOffer.getBaseCurrencyCode());
-        assertEquals(BTC, atomicOffer.getCounterCurrencyCode());
+        assertEquals(BSQ, bsqSwapOffer.getBaseCurrencyCode());
+        assertEquals(BTC, bsqSwapOffer.getCounterCurrencyCode());
 
-        testGetMyAtomicOffer(atomicOffer);
-        testGetAtomicOffer(atomicOffer);
+        testGetMyBsqSwapOffer(bsqSwapOffer);
+        testGetBsqSwapOffer(bsqSwapOffer);
     }
 
-    private void testGetMyAtomicOffer(AtomicOfferInfo atomicOffer) {
+    private void testGetMyBsqSwapOffer(BsqSwapOfferInfo bsqSwapOfferInfo) {
         int numFetchAttempts = 0;
         while (true) {
             try {
                 numFetchAttempts++;
-                var fetchedAtomicOffer = aliceClient.getMyAtomicOffer(atomicOffer.getId());
-                assertEquals(atomicOffer.getId(), fetchedAtomicOffer.getId());
-                log.info("Alice found her (my) new atomic offer on attempt # {}.", numFetchAttempts);
+                var fetchedBsqSwapOffer = aliceClient.getMyBsqSwapOffer(bsqSwapOfferInfo.getId());
+                assertEquals(bsqSwapOfferInfo.getId(), fetchedBsqSwapOffer.getId());
+                log.info("Alice found her (my) new bsq swap offer on attempt # {}.", numFetchAttempts);
                 break;
             } catch (Exception ex) {
                 log.warn(ex.getMessage());
 
                 if (numFetchAttempts >= 9)
-                    fail(format("Alice giving up on fetching her (my) atomic offer after %d attempts.", numFetchAttempts), ex);
+                    fail(format("Alice giving up on fetching her (my) bsq swap offer after %d attempts.", numFetchAttempts), ex);
 
                 sleep(1000);
             }
         }
     }
 
-    private void testGetAtomicOffer(AtomicOfferInfo atomicOffer) {
+    private void testGetBsqSwapOffer(BsqSwapOfferInfo bsqSwapOfferInfo) {
         int numFetchAttempts = 0;
         while (true) {
             try {
                 numFetchAttempts++;
-                var fetchedAtomicOffer = bobClient.getAtomicOffer(atomicOffer.getId());
-                assertEquals(atomicOffer.getId(), fetchedAtomicOffer.getId());
-                log.info("Bob found new available atomic offer on attempt # {}.", numFetchAttempts);
+                var fetchedBsqSwapOffer = bobClient.getBsqSwapOffer(bsqSwapOfferInfo.getId());
+                assertEquals(bsqSwapOfferInfo.getId(), fetchedBsqSwapOffer.getId());
+                log.info("Bob found new available bsq swap offer on attempt # {}.", numFetchAttempts);
                 break;
             } catch (Exception ex) {
                 log.warn(ex.getMessage());
 
                 if (numFetchAttempts > 9)
-                    fail(format("Bob gave up on fetching available atomic offer after %d attempts.", numFetchAttempts), ex);
+                    fail(format("Bob gave up on fetching available bsq swap offer after %d attempts.", numFetchAttempts), ex);
 
                 sleep(1000);
             }
@@ -149,15 +149,15 @@ public class AtomicOfferTest extends AbstractOfferTest {
 
     @Test
     @Order(6)
-    public void testGetMyAtomicOffers() {
-        var offers = aliceClient.getMyAtomicBsqOffersSortedByDate();
+    public void testGetMyBsqSwapOffers() {
+        var offers = aliceClient.getMyBsqSwapBsqOffersSortedByDate();
         assertEquals(4, offers.size());
     }
 
     @Test
     @Order(7)
-    public void testGetAvailableAtomicOffers() {
-        var offers = bobClient.getAtomicOffersSortedByDate();
+    public void testGetAvailableBsqSwapOffers() {
+        var offers = bobClient.getBsqSwapOffersSortedByDate();
         assertEquals(4, offers.size());
     }
 

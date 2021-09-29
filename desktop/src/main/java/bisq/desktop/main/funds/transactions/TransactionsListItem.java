@@ -254,8 +254,8 @@ class TransactionsListItem {
                     }
                 }
             } else if (tradable instanceof BsqSwapTrade) {
-                direction = amountAsCoin.isPositive() ? Res.get("funds.tx.direction.atomicBuy") :
-                        Res.get("funds.tx.direction.atomicSell");
+                direction = amountAsCoin.isPositive() ? Res.get("funds.tx.direction.bsqSwapBuy") :
+                        Res.get("funds.tx.direction.bsqSwapSell");
 
                 // Find my BTC output address
                 var tx = btcWalletService.getTransaction(((BsqSwapTrade) tradable).getTxId());
@@ -267,7 +267,7 @@ class TransactionsListItem {
                                 .findFirst()
                                 .orElse("") :
                         "";
-                details = Res.get("funds.tx.atomicTx", tradeId);
+                details = Res.get("funds.tx.bsqSwapTx", tradeId);
             }
         } else {
             if (amountAsCoin.isZero()) {

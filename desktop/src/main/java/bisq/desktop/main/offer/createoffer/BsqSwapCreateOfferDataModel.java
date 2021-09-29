@@ -22,7 +22,7 @@ see <http://www.gnu.org/licenses/>.
 package bisq.desktop.main.offer.createoffer;
 
 import bisq.desktop.Navigation;
-import bisq.desktop.main.offer.AtomicOfferDataModel;
+import bisq.desktop.main.offer.BsqSwapOfferDataModel;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.btc.wallet.BsqWalletService;
@@ -49,23 +49,23 @@ import javax.inject.Named;
  * Note that the create offer domain has a deeper scope in the application domain (TradeManager).
  * That model is just responsible for the domain specific parts displayed needed in that UI element.
  */
-class AtomicCreateOfferDataModel extends AtomicOfferDataModel {
+class BsqSwapCreateOfferDataModel extends BsqSwapOfferDataModel {
 
     @Inject
-    public AtomicCreateOfferDataModel(CreateOfferService createOfferService,
-                                      OpenOfferManager openOfferManager,
-                                      OfferUtil offerUtil,
-                                      BtcWalletService btcWalletService,
-                                      BsqWalletService bsqWalletService,
-                                      Preferences preferences,
-                                      User user,
-                                      P2PService p2PService,
-                                      PriceFeedService priceFeedService,
-                                      AccountAgeWitnessService accountAgeWitnessService,
-                                      FeeService feeService,
-                                      @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
-                                      TradeStatisticsManager tradeStatisticsManager,
-                                      Navigation navigation) {
+    public BsqSwapCreateOfferDataModel(CreateOfferService createOfferService,
+                                       OpenOfferManager openOfferManager,
+                                       OfferUtil offerUtil,
+                                       BtcWalletService btcWalletService,
+                                       BsqWalletService bsqWalletService,
+                                       Preferences preferences,
+                                       User user,
+                                       P2PService p2PService,
+                                       PriceFeedService priceFeedService,
+                                       AccountAgeWitnessService accountAgeWitnessService,
+                                       FeeService feeService,
+                                       @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
+                                       TradeStatisticsManager tradeStatisticsManager,
+                                       Navigation navigation) {
         super(createOfferService,
                 openOfferManager,
                 offerUtil,

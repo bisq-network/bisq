@@ -77,7 +77,7 @@ import lombok.Getter;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.Comparator.comparing;
 
-public abstract class AtomicOfferDataModel extends ActivatableDataModel implements BsqBalanceListener {
+public abstract class BsqSwapOfferDataModel extends ActivatableDataModel implements BsqBalanceListener {
     private final OfferUtil offerUtil;
     private final ObjectProperty<Coin> totalToPayAsCoin = new SimpleObjectProperty<>();
     @Getter
@@ -126,20 +126,20 @@ public abstract class AtomicOfferDataModel extends ActivatableDataModel implemen
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public AtomicOfferDataModel(CreateOfferService createOfferService,
-                                OpenOfferManager openOfferManager,
-                                OfferUtil offerUtil,
-                                BtcWalletService btcWalletService,
-                                BsqWalletService bsqWalletService,
-                                Preferences preferences,
-                                User user,
-                                P2PService p2PService,
-                                PriceFeedService priceFeedService,
-                                AccountAgeWitnessService accountAgeWitnessService,
-                                FeeService feeService,
-                                @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
-                                TradeStatisticsManager tradeStatisticsManager,
-                                Navigation navigation) {
+    public BsqSwapOfferDataModel(CreateOfferService createOfferService,
+                                 OpenOfferManager openOfferManager,
+                                 OfferUtil offerUtil,
+                                 BtcWalletService btcWalletService,
+                                 BsqWalletService bsqWalletService,
+                                 Preferences preferences,
+                                 User user,
+                                 P2PService p2PService,
+                                 PriceFeedService priceFeedService,
+                                 AccountAgeWitnessService accountAgeWitnessService,
+                                 FeeService feeService,
+                                 @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
+                                 TradeStatisticsManager tradeStatisticsManager,
+                                 Navigation navigation) {
         this.offerUtil = offerUtil;
         this.createOfferService = createOfferService;
         this.openOfferManager = openOfferManager;
@@ -253,7 +253,7 @@ public abstract class AtomicOfferDataModel extends ActivatableDataModel implemen
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     protected Offer createAndGetOffer() {
-        return createOfferService.createAndGetAtomicOffer(offerId,
+        return createOfferService.createAndGetBsqSwapOffer(offerId,
                 direction,
                 amount.get(),
                 minAmount.get(),
@@ -262,7 +262,7 @@ public abstract class AtomicOfferDataModel extends ActivatableDataModel implemen
     }
 
     void onPlaceOffer(Offer offer, Runnable resultHandler) {
-        openOfferManager.placeAtomicOffer(offer,
+        openOfferManager.placeBsqSwapOffer(offer,
                 resultHandler,
                 log::error);
     }

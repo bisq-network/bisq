@@ -26,7 +26,7 @@ class CompletedBsqSwapsListItem {
         this.bsqSwapTrade = bsqSwapTrade;
     }
 
-    BsqSwapTrade getAtomicTrade() {
+    BsqSwapTrade getBsqSwapTrade() {
         return bsqSwapTrade;
     }
 }

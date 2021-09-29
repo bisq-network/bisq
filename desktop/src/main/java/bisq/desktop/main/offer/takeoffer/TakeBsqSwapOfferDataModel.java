@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.offer.atomictakeoffer;
+package bisq.desktop.main.offer.takeoffer;
 
 import bisq.desktop.common.model.ActivatableDataModel;
 import bisq.desktop.main.offer.offerbook.OfferBook;
@@ -43,7 +43,7 @@ import lombok.Getter;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-class AtomicTakeOfferDataModel extends ActivatableDataModel {
+class TakeBsqSwapOfferDataModel extends ActivatableDataModel {
     private final TakeBsqSwapOfferModel takeBsqSwapOfferModel;
     @Getter
     private final ObjectProperty<Coin> totalToPayAsCoin = new SimpleObjectProperty<>();
@@ -55,8 +55,8 @@ class AtomicTakeOfferDataModel extends ActivatableDataModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    AtomicTakeOfferDataModel(TakeBsqSwapOfferModel takeBsqSwapOfferModel,
-                             OfferBook offerBook
+    TakeBsqSwapOfferDataModel(TakeBsqSwapOfferModel takeBsqSwapOfferModel,
+                              OfferBook offerBook
     ) {
         this.takeBsqSwapOfferModel = takeBsqSwapOfferModel;
         this.offerBook = offerBook;

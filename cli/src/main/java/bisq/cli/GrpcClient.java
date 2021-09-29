@@ -18,19 +18,19 @@
 package bisq.cli;
 
 import bisq.proto.grpc.AddressBalanceInfo;
-import bisq.proto.grpc.AtomicOfferInfo;
-import bisq.proto.grpc.AtomicTradeInfo;
 import bisq.proto.grpc.BalancesInfo;
 import bisq.proto.grpc.BsqBalanceInfo;
+import bisq.proto.grpc.BsqSwapOfferInfo;
+import bisq.proto.grpc.BsqSwapTradeInfo;
 import bisq.proto.grpc.BtcBalanceInfo;
-import bisq.proto.grpc.CreateAtomicOfferRequest;
+import bisq.proto.grpc.CreateBsqSwapOfferRequest;
 import bisq.proto.grpc.GetMethodHelpRequest;
 import bisq.proto.grpc.GetVersionRequest;
 import bisq.proto.grpc.OfferInfo;
 import bisq.proto.grpc.RegisterDisputeAgentRequest;
 import bisq.proto.grpc.StopRequest;
-import bisq.proto.grpc.TakeAtomicOfferReply;
-import bisq.proto.grpc.TakeAtomicOfferRequest;
+import bisq.proto.grpc.TakeBsqSwapOfferReply;
+import bisq.proto.grpc.TakeBsqSwapOfferRequest;
 import bisq.proto.grpc.TakeOfferReply;
 import bisq.proto.grpc.TradeInfo;
 import bisq.proto.grpc.TxFeeRateInfo;
@@ -142,19 +142,19 @@ public final class GrpcClient {
         return walletsServiceRequest.getTransaction(txId);
     }
 
-    public AtomicOfferInfo createAtomicOffer(String direction,
-                                             long amount,
-                                             long minAmount,
-                                             String fixedPrice,
-                                             String paymentAcctId) {
-        var request = CreateAtomicOfferRequest.newBuilder()
+    public BsqSwapOfferInfo createBsqSwapOffer(String direction,
+                                               long amount,
+                                               long minAmount,
+                                               String fixedPrice,
+                                               String paymentAcctId) {
+        var request = CreateBsqSwapOfferRequest.newBuilder()
                 .setDirection(direction)
                 .setAmount(amount)
                 .setMinAmount(minAmount)
                 .setPrice(fixedPrice)
                 .setPaymentAccountId(paymentAcctId)
                 .build();
-        return grpcStubs.offersService.createAtomicOffer(request).getAtomicOffer();
+        return grpcStubs.offersService.createBsqSwapOffer(request).getBsqSwapOffer();
     }
 
     public OfferInfo createFixedPricedOffer(String direction,
@@ -263,24 +263,24 @@ public final class GrpcClient {
         offersServiceRequest.cancelOffer(offerId);
     }
 
-    public AtomicOfferInfo getAtomicOffer(String offerId) {
-        return offersServiceRequest.getAtomicOffer(offerId);
+    public BsqSwapOfferInfo getBsqSwapOffer(String offerId) {
+        return offersServiceRequest.getBsqSwapOffer(offerId);
     }
 
     public OfferInfo getOffer(String offerId) {
         return offersServiceRequest.getOffer(offerId);
     }
 
-    public AtomicOfferInfo getMyAtomicOffer(String offerId) {
-        return offersServiceRequest.getMyAtomicOffer(offerId);
+    public BsqSwapOfferInfo getMyBsqSwapOffer(String offerId) {
+        return offersServiceRequest.getMyBsqSwapOffer(offerId);
     }
 
     public OfferInfo getMyOffer(String offerId) {
         return offersServiceRequest.getMyOffer(offerId);
     }
 
-    public List<AtomicOfferInfo> getAtomicOffers(String direction, String currencyCode) {
-        return offersServiceRequest.getAtomicOffers(direction, currencyCode);
+    public List<BsqSwapOfferInfo> getBsqSwapOffers(String direction, String currencyCode) {
+        return offersServiceRequest.getBsqSwapOffers(direction, currencyCode);
     }
 
     public List<OfferInfo> getOffers(String direction, String currencyCode) {
@@ -303,12 +303,12 @@ public final class GrpcClient {
         return offersServiceRequest.getBsqOffersSortedByDate();
     }
 
-    public List<AtomicOfferInfo> getAtomicOffersSortedByDate() {
-        return offersServiceRequest.getAtomicOffersSortedByDate();
+    public List<BsqSwapOfferInfo> getBsqSwapOffersSortedByDate() {
+        return offersServiceRequest.getBsqSwapOffersSortedByDate();
     }
 
-    public List<AtomicOfferInfo> getMyAtomicOffers(String direction, String currencyCode) {
-        return offersServiceRequest.getMyAtomicOffers(direction, currencyCode);
+    public List<BsqSwapOfferInfo> getMyBsqSwapOffers(String direction, String currencyCode) {
+        return offersServiceRequest.getMyBsqSwapOffers(direction, currencyCode);
     }
 
     public List<OfferInfo> getMyOffers(String direction, String currencyCode) {
@@ -331,41 +331,41 @@ public final class GrpcClient {
         return offersServiceRequest.getMyBsqOffersSortedByDate();
     }
 
-    public List<AtomicOfferInfo> getMyAtomicBsqOffersSortedByDate() {
-        return offersServiceRequest.getMyAtomicOffersSortedByDate();
+    public List<BsqSwapOfferInfo> getMyBsqSwapBsqOffersSortedByDate() {
+        return offersServiceRequest.getMyBsqSwapOffersSortedByDate();
     }
 
     public OfferInfo getMostRecentOffer(String direction, String currencyCode) {
         return offersServiceRequest.getMostRecentOffer(direction, currencyCode);
     }
 
-    public List<AtomicOfferInfo> sortAtomicOffersByDate(List<AtomicOfferInfo> offerInfoList) {
-        return offersServiceRequest.sortAtomicOffersByDate(offerInfoList);
+    public List<BsqSwapOfferInfo> sortBsqSwapOffersByDate(List<BsqSwapOfferInfo> offerInfoList) {
+        return offersServiceRequest.sortBsqSwapOffersByDate(offerInfoList);
     }
 
     public List<OfferInfo> sortOffersByDate(List<OfferInfo> offerInfoList) {
         return offersServiceRequest.sortOffersByDate(offerInfoList);
     }
 
-    public TakeAtomicOfferReply getTakeAtomicOfferReply(String offerId,
-                                                        String paymentAccountId,
-                                                        String takerFeeCurrencyCode) {
-        var request = TakeAtomicOfferRequest.newBuilder()
+    public TakeBsqSwapOfferReply getTakeBsqSwapOfferReply(String offerId,
+                                                          String paymentAccountId,
+                                                          String takerFeeCurrencyCode) {
+        var request = TakeBsqSwapOfferRequest.newBuilder()
                 .setOfferId(offerId)
                 .setPaymentAccountId(paymentAccountId)
                 .setTakerFeeCurrencyCode(takerFeeCurrencyCode)
                 .build();
-        return grpcStubs.tradesService.takeAtomicOffer(request);
+        return grpcStubs.tradesService.takeBsqSwapOffer(request);
     }
 
     public TakeOfferReply getTakeOfferReply(String offerId, String paymentAccountId, String takerFeeCurrencyCode) {
         return tradesServiceRequest.getTakeOfferReply(offerId, paymentAccountId, takerFeeCurrencyCode);
     }
 
-    public AtomicTradeInfo takeAtomicOffer(String offerId, String paymentAccountId, String takerFeeCurrencyCode) {
-        var reply = getTakeAtomicOfferReply(offerId, paymentAccountId, takerFeeCurrencyCode);
-        if (reply.hasAtomicTrade())
-            return reply.getAtomicTrade();
+    public BsqSwapTradeInfo takeBsqSwapOffer(String offerId, String paymentAccountId, String takerFeeCurrencyCode) {
+        var reply = getTakeBsqSwapOfferReply(offerId, paymentAccountId, takerFeeCurrencyCode);
+        if (reply.hasBsqSwapTrade())
+            return reply.getBsqSwapTrade();
         else
             throw new IllegalStateException(reply.getFailureReason().getDescription());
     }
@@ -374,8 +374,8 @@ public final class GrpcClient {
         return tradesServiceRequest.takeOffer(offerId, paymentAccountId, takerFeeCurrencyCode);
     }
 
-    public AtomicTradeInfo getAtomicTrade(String tradeId) {
-        return tradesServiceRequest.getAtomicTrade(tradeId);
+    public BsqSwapTradeInfo getBsqSwapTrade(String tradeId) {
+        return tradesServiceRequest.getBsqSwapTrade(tradeId);
     }
 
     public TradeInfo getTrade(String tradeId) {

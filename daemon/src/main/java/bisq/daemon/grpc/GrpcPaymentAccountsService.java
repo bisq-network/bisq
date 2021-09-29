@@ -137,7 +137,7 @@ class GrpcPaymentAccountsService extends PaymentAccountsImplBase {
                     req.getCurrencyCode(),
                     req.getAddress(),
                     req.getTradeInstant(),
-                    req.getTradeAtomic());
+                    req.getIsBsqSwap());
             var reply = CreateCryptoCurrencyPaymentAccountReply.newBuilder()
                     .setPaymentAccount(paymentAccount.toProtoMessage())
                     .build();

@@ -18,6 +18,7 @@
   -->
 
 <?import javafx.scene.layout.AnchorPane?>
-<AnchorPane fx:id="root" fx:controller="bisq.desktop.main.offer.createoffer.AtomicCreateOfferView"
+<AnchorPane fx:id="root" fx:controller="bisq.desktop.main.offer.takeoffer.TakeBsqSwapOfferView"
             xmlns:fx="http://javafx.com/fxml">
+
 </AnchorPane>

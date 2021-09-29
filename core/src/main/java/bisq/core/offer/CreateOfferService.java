@@ -227,12 +227,12 @@ public class CreateOfferService {
         return offer;
     }
 
-    public Offer createAndGetAtomicOffer(String offerId,
-                                         OfferPayloadBase.Direction direction,
-                                         Coin amount,
-                                         Coin minAmount,
-                                         Price price,
-                                         PaymentAccount paymentAccount) {
+    public Offer createAndGetBsqSwapOffer(String offerId,
+                                          OfferPayloadBase.Direction direction,
+                                          Coin amount,
+                                          Coin minAmount,
+                                          Price price,
+                                          PaymentAccount paymentAccount) {
 
         log.info("offerId={}, \n" +
                         "direction={}, \n" +
@@ -251,7 +251,7 @@ public class CreateOfferService {
 
         offerUtil.validateBasicOfferData(paymentAccount, currencyCode);
 
-        OfferPayloadBase atomicOfferPayload = new BsqSwapOfferPayload(offerId,
+        OfferPayloadBase bsqSwapOfferPayload = new BsqSwapOfferPayload(offerId,
                 creationTime,
                 makerAddress,
                 pubKeyRing,
@@ -263,7 +263,7 @@ public class CreateOfferService {
                 null,
                 Version.VERSION,
                 Version.TRADE_PROTOCOL_VERSION);
-        return new Offer(atomicOfferPayload);
+        return new Offer(bsqSwapOfferPayload);
     }
 
     public Tuple2<Coin, Integer> getEstimatedFeeAndTxVsize(Coin amount,

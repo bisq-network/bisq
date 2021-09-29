@@ -42,16 +42,16 @@ public class MakerCreatesAndSignsTx extends BsqSwapTask {
         try {
             runInterceptHook();
 
-            // Create atomic tx with maker btc inputs signed
-            var atomicTx = bsqSwapProtocolModel.createBsqSwapTx();
+            // Create bsq swap tx with maker btc inputs signed
+            var swapTx = bsqSwapProtocolModel.createBsqSwapTx();
 
             // Sign inputs
-            atomicTx = bsqSwapProtocolModel.getTradeWalletService().signInputs(atomicTx,
+            swapTx = bsqSwapProtocolModel.getTradeWalletService().signInputs(swapTx,
                     bsqSwapProtocolModel.getRawMakerBtcInputs());
-            atomicTx = bsqSwapProtocolModel.getBsqWalletService().signInputs(atomicTx,
+            swapTx = bsqSwapProtocolModel.getBsqWalletService().signInputs(swapTx,
                     bsqSwapProtocolModel.getRawMakerBsqInputs());
 
-            bsqSwapProtocolModel.setRawTx(atomicTx.bitcoinSerialize());
+            bsqSwapProtocolModel.setRawTx(swapTx.bitcoinSerialize());
             var message = new CreateBsqSwapTxResponse(UUID.randomUUID().toString(),
                     bsqSwapProtocolModel.getOffer().getId(),
                     bsqSwapProtocolModel.getMyNodeAddress(),

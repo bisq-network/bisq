@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.offer.atomictakeoffer;
+package bisq.desktop.main.offer.takeoffer;
 
 import bisq.desktop.Navigation;
 import bisq.desktop.common.view.ActivatableViewAndModel;
@@ -41,7 +41,6 @@ import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayloadBase;
 import bisq.core.user.DontShowAgainLookup;
-import bisq.core.util.coin.BsqFormatter;
 
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
@@ -82,9 +81,8 @@ import static bisq.desktop.util.FormBuilder.*;
 import static javafx.beans.binding.Bindings.createStringBinding;
 
 @FxmlView
-public class AtomicTakeOfferView extends ActivatableViewAndModel<AnchorPane, AtomicTakeOfferViewModel> {
+public class TakeBsqSwapOfferView extends ActivatableViewAndModel<AnchorPane, TakeBsqSwapOfferViewModel> {
     private final Navigation navigation;
-    private final BsqFormatter bsqFormatter;
     private final OfferDetailsWindow offerDetailsWindow;
 
     private ScrollPane scrollPane;
@@ -105,7 +103,7 @@ public class AtomicTakeOfferView extends ActivatableViewAndModel<AnchorPane, Ato
             priceTextField,
             volumeTextField,
             amountRangeTextField;
-    private Button takeAtomicOfferButton;
+    private Button takeBsqSwapOfferButton;
     private BusyAnimation offerAvailabilityBusyAnimation;
     private OfferView.CloseHandler closeHandler;
     private Subscription
@@ -125,14 +123,12 @@ public class AtomicTakeOfferView extends ActivatableViewAndModel<AnchorPane, Ato
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private AtomicTakeOfferView(AtomicTakeOfferViewModel model,
-                                Navigation navigation,
-                                BsqFormatter bsqFormatter,
-                                OfferDetailsWindow offerDetailsWindow
+    private TakeBsqSwapOfferView(TakeBsqSwapOfferViewModel model,
+                                 Navigation navigation,
+                                 OfferDetailsWindow offerDetailsWindow
     ) {
         super(model);
         this.navigation = navigation;
-        this.bsqFormatter = bsqFormatter;
         this.offerDetailsWindow = offerDetailsWindow;
     }
 
@@ -192,9 +188,9 @@ public class AtomicTakeOfferView extends ActivatableViewAndModel<AnchorPane, Ato
         model.initWithData(offer);
 
         if (model.getOffer().getDirection() == OfferPayloadBase.Direction.SELL) {
-            takeAtomicOfferButton.setId("buy-button-big");
+            takeBsqSwapOfferButton.setId("buy-button-big");
         } else {
-            takeAtomicOfferButton.setId("sell-button-big");
+            takeBsqSwapOfferButton.setId("sell-button-big");
         }
         paymentMethodTextField.setVisible(true);
         paymentMethodTextField.setManaged(true);
@@ -260,7 +256,7 @@ public class AtomicTakeOfferView extends ActivatableViewAndModel<AnchorPane, Ato
         volumeTextField.textProperty().bindBidirectional(model.volume);
         amountTextField.validationResultProperty().bind(model.amountValidationResult);
         priceCurrencyLabel.textProperty().bind(createStringBinding(() -> CurrencyUtil.getCounterCurrency(model.dataModel.getCurrencyCode())));
-        takeAtomicOfferButton.disableProperty().bind(model.isAtomicTakeOfferButtonDisabled);
+        takeBsqSwapOfferButton.disableProperty().bind(model.isTakeBsqSwapOfferButtonDisabled);
     }
 
     private void removeBindings() {
@@ -268,7 +264,7 @@ public class AtomicTakeOfferView extends ActivatableViewAndModel<AnchorPane, Ato
         volumeTextField.textProperty().unbindBidirectional(model.volume);
         amountTextField.validationResultProperty().unbind();
         priceCurrencyLabel.textProperty().unbind();
-        takeAtomicOfferButton.disableProperty().unbind();
+        takeBsqSwapOfferButton.disableProperty().unbind();
     }
 
     private void addSubscriptions() {
@@ -328,7 +324,7 @@ public class AtomicTakeOfferView extends ActivatableViewAndModel<AnchorPane, Ato
         showTransactionPublishedScreenSubscription = EasyBind.subscribe(model.showTransactionPublishedScreen, newValue -> {
             if (newValue && DevEnv.isDevMode()) {
                 close();
-            } else if (newValue && model.getAtomicTrade() != null && !model.getAtomicTrade().hasFailed()) {
+            } else if (newValue && model.getBsqSwapTrade() != null && !model.getBsqSwapTrade().hasFailed()) {
                 String key = "takeOfferSuccessInfo";
                 if (DontShowAgainLookup.showAgain(key)) {
                     UserThread.runAfter(() -> new Popup().headLine(Res.get("takeOffer.success.headline"))
@@ -454,14 +450,14 @@ public class AtomicTakeOfferView extends ActivatableViewAndModel<AnchorPane, Ato
 
     private void addButtons() {
         Tuple3<Button, Button, HBox> tuple = add2ButtonsWithBox(gridPane, ++gridRow,
-                "ATOMIC!!", Res.get("shared.cancel"), 15, true);
+                Res.get("takeOffer.swap"), Res.get("shared.cancel"), 15, true);
 
         buttonBox = tuple.third;
 
-        takeAtomicOfferButton = tuple.first;
-        takeAtomicOfferButton.setMaxWidth(200);
-        takeAtomicOfferButton.setDefaultButton(true);
-        takeAtomicOfferButton.setOnAction(e -> onTakeOffer());
+        takeBsqSwapOfferButton = tuple.first;
+        takeBsqSwapOfferButton.setMaxWidth(200);
+        takeBsqSwapOfferButton.setDefaultButton(true);
+        takeBsqSwapOfferButton.setOnAction(e -> onTakeOffer());
 
         Button cancelButton1 = tuple.second;
         cancelButton1.setMaxWidth(200);

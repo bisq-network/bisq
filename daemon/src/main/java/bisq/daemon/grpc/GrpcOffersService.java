@@ -18,23 +18,23 @@
 package bisq.daemon.grpc;
 
 import bisq.core.api.CoreApi;
-import bisq.core.api.model.AtomicOfferInfo;
+import bisq.core.api.model.BsqSwapOfferInfo;
 import bisq.core.api.model.OfferInfo;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OpenOffer;
 
 import bisq.proto.grpc.CancelOfferReply;
 import bisq.proto.grpc.CancelOfferRequest;
-import bisq.proto.grpc.CreateAtomicOfferReply;
-import bisq.proto.grpc.CreateAtomicOfferRequest;
+import bisq.proto.grpc.CreateBsqSwapOfferReply;
+import bisq.proto.grpc.CreateBsqSwapOfferRequest;
 import bisq.proto.grpc.CreateOfferReply;
 import bisq.proto.grpc.CreateOfferRequest;
 import bisq.proto.grpc.EditOfferReply;
 import bisq.proto.grpc.EditOfferRequest;
-import bisq.proto.grpc.GetAtomicOfferReply;
-import bisq.proto.grpc.GetAtomicOffersReply;
-import bisq.proto.grpc.GetMyAtomicOfferReply;
-import bisq.proto.grpc.GetMyAtomicOffersReply;
+import bisq.proto.grpc.GetBsqSwapOfferReply;
+import bisq.proto.grpc.GetBsqSwapOffersReply;
+import bisq.proto.grpc.GetMyBsqSwapOfferReply;
+import bisq.proto.grpc.GetMyBsqSwapOffersReply;
 import bisq.proto.grpc.GetMyOfferReply;
 import bisq.proto.grpc.GetMyOfferRequest;
 import bisq.proto.grpc.GetMyOffersReply;
@@ -56,7 +56,7 @@ import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.core.api.model.AtomicOfferInfo.toAtomicOfferInfo;
+import static bisq.core.api.model.BsqSwapOfferInfo.toBsqSwapOfferInfo;
 import static bisq.core.api.model.OfferInfo.toOfferInfo;
 import static bisq.core.api.model.OfferInfo.toPendingOfferInfo;
 import static bisq.daemon.grpc.interceptor.GrpcServiceRateMeteringConfig.getCustomRateMeteringInterceptor;
@@ -82,12 +82,12 @@ class GrpcOffersService extends OffersImplBase {
     }
 
     @Override
-    public void getAtomicOffer(GetOfferRequest req,
-                               StreamObserver<GetAtomicOfferReply> responseObserver) {
+    public void getBsqSwapOffer(GetOfferRequest req,
+                                StreamObserver<GetBsqSwapOfferReply> responseObserver) {
         try {
             Offer offer = coreApi.getOffer(req.getId());
-            var reply = GetAtomicOfferReply.newBuilder()
-                    .setAtomicOffer(toAtomicOfferInfo(offer).toProtoMessage())
+            var reply = GetBsqSwapOfferReply.newBuilder()
+                    .setBsqSwapOffer(toBsqSwapOfferInfo(offer).toProtoMessage())
                     .build();
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
@@ -112,13 +112,13 @@ class GrpcOffersService extends OffersImplBase {
     }
 
     @Override
-    public void getMyAtomicOffer(GetMyOfferRequest req,
-                                 StreamObserver<GetMyAtomicOfferReply> responseObserver) {
+    public void getMyBsqSwapOffer(GetMyOfferRequest req,
+                                  StreamObserver<GetMyBsqSwapOfferReply> responseObserver) {
         try {
-            Offer offer = coreApi.getMyAtomicOffer(req.getId());
-            OpenOffer openOffer = coreApi.getMyOpenAtomicOffer(req.getId());
-            var reply = GetMyAtomicOfferReply.newBuilder()
-                    .setAtomicOffer(toAtomicOfferInfo(offer /* TODO support triggerPrice */).toProtoMessage())
+            Offer offer = coreApi.getMyBsqSwapOffer(req.getId());
+            OpenOffer openOffer = coreApi.getMyOpenBsqSwapOffer(req.getId());
+            var reply = GetMyBsqSwapOfferReply.newBuilder()
+                    .setBsqSwapOffer(toBsqSwapOfferInfo(offer /* TODO support triggerPrice */).toProtoMessage())
                     .build();
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
@@ -143,15 +143,15 @@ class GrpcOffersService extends OffersImplBase {
     }
 
     @Override
-    public void getAtomicOffers(GetOffersRequest req,
-                                StreamObserver<GetAtomicOffersReply> responseObserver) {
+    public void getBsqSwapOffers(GetOffersRequest req,
+                                 StreamObserver<GetBsqSwapOffersReply> responseObserver) {
         try {
-            List<AtomicOfferInfo> result = coreApi.getAtomicOffers(req.getDirection(), req.getCurrencyCode())
-                    .stream().map(AtomicOfferInfo::toAtomicOfferInfo)
+            List<BsqSwapOfferInfo> result = coreApi.getBsqSwapOffers(req.getDirection(), req.getCurrencyCode())
+                    .stream().map(BsqSwapOfferInfo::toBsqSwapOfferInfo)
                     .collect(Collectors.toList());
-            var reply = GetAtomicOffersReply.newBuilder()
-                    .addAllAtomicOffers(result.stream()
-                            .map(AtomicOfferInfo::toProtoMessage)
+            var reply = GetBsqSwapOffersReply.newBuilder()
+                    .addAllBsqSwapOffers(result.stream()
+                            .map(BsqSwapOfferInfo::toProtoMessage)
                             .collect(Collectors.toList()))
                     .build();
             responseObserver.onNext(reply);
@@ -181,15 +181,15 @@ class GrpcOffersService extends OffersImplBase {
     }
 
     @Override
-    public void getMyAtomicOffers(GetMyOffersRequest req,
-                                  StreamObserver<GetMyAtomicOffersReply> responseObserver) {
+    public void getMyBsqSwapOffers(GetMyOffersRequest req,
+                                   StreamObserver<GetMyBsqSwapOffersReply> responseObserver) {
         try {
-            List<AtomicOfferInfo> result = coreApi.getMyAtomicOffers(req.getDirection(), req.getCurrencyCode())
-                    .stream().map(AtomicOfferInfo::toAtomicOfferInfo)
+            List<BsqSwapOfferInfo> result = coreApi.getMyBsqSwapOffers(req.getDirection(), req.getCurrencyCode())
+                    .stream().map(BsqSwapOfferInfo::toBsqSwapOfferInfo)
                     .collect(Collectors.toList());
-            var reply = GetMyAtomicOffersReply.newBuilder()
-                    .addAllAtomicOffers(result.stream()
-                            .map(AtomicOfferInfo::toProtoMessage)
+            var reply = GetMyBsqSwapOffersReply.newBuilder()
+                    .addAllBsqSwapOffers(result.stream()
+                            .map(BsqSwapOfferInfo::toProtoMessage)
                             .collect(Collectors.toList()))
                     .build();
             responseObserver.onNext(reply);
@@ -220,19 +220,19 @@ class GrpcOffersService extends OffersImplBase {
     }
 
     @Override
-    public void createAtomicOffer(CreateAtomicOfferRequest req,
-                                  StreamObserver<CreateAtomicOfferReply> responseObserver) {
+    public void createBsqSwapOffer(CreateBsqSwapOfferRequest req,
+                                   StreamObserver<CreateBsqSwapOfferReply> responseObserver) {
         try {
-            coreApi.createAndPlaceAtomicOffer(
+            coreApi.createAndPlaceBsqSwapOffer(
                     req.getDirection(),
                     req.getAmount(),
                     req.getMinAmount(),
                     req.getPrice(),
                     req.getPaymentAccountId(),
-                    atomicOffer -> {
-                        AtomicOfferInfo atomicOfferInfo = toAtomicOfferInfo(atomicOffer);
-                        CreateAtomicOfferReply reply = CreateAtomicOfferReply.newBuilder()
-                                .setAtomicOffer(atomicOfferInfo.toProtoMessage())
+                    offer -> {
+                        BsqSwapOfferInfo bsqSwapOfferInfo = toBsqSwapOfferInfo(offer);
+                        CreateBsqSwapOfferReply reply = CreateBsqSwapOfferReply.newBuilder()
+                                .setBsqSwapOffer(bsqSwapOfferInfo.toProtoMessage())
                                 .build();
                         responseObserver.onNext(reply);
                         responseObserver.onCompleted();

@@ -17,10 +17,10 @@
 
 package bisq.apitest.method.trade;
 
-import bisq.proto.grpc.AtomicOfferInfo;
-import bisq.proto.grpc.AtomicTradeInfo;
+import bisq.proto.grpc.BsqSwapOfferInfo;
+import bisq.proto.grpc.BsqSwapTradeInfo;
 
-import protobuf.AtomicTrade;
+import protobuf.BsqSwapTrade;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -57,7 +57,7 @@ public class BsqSwapTradeTest extends AbstractOfferTest {
     @BeforeAll
     public static void setUp() {
         AbstractOfferTest.setUp();
-        createAtomicBsqPaymentAccounts();
+        createBsqSwapBsqPaymentAccounts();
     }
 
     @BeforeEach
@@ -76,39 +76,39 @@ public class BsqSwapTradeTest extends AbstractOfferTest {
 
     @Test
     @Order(2)
-    public void testAliceCreateAtomicBuyOffer() {
-        var atomicOffer = aliceClient.createAtomicOffer(BUY.name(),
+    public void testAliceCreateBsqSwapBuyOffer() {
+        var bsqSwapOffer = aliceClient.createBsqSwapOffer(BUY.name(),
                 100_000_000L,
                 100_000_000L,
                 "0.00005",
                 alicesBsqAcct.getId());
-        log.info("Atomic Sell BSQ (Buy BTC) OFFER:\n{}", atomicOffer);
-        var newOfferId = atomicOffer.getId();
+        log.info("BsqSwap Sell BSQ (Buy BTC) OFFER:\n{}", bsqSwapOffer);
+        var newOfferId = bsqSwapOffer.getId();
         assertNotEquals("", newOfferId);
-        assertEquals(BUY.name(), atomicOffer.getDirection());
-        assertEquals(5_000, atomicOffer.getPrice());
-        assertEquals(100_000_000L, atomicOffer.getAmount());
-        assertEquals(100_000_000L, atomicOffer.getMinAmount());
+        assertEquals(BUY.name(), bsqSwapOffer.getDirection());
+        assertEquals(5_000, bsqSwapOffer.getPrice());
+        assertEquals(100_000_000L, bsqSwapOffer.getAmount());
+        assertEquals(100_000_000L, bsqSwapOffer.getMinAmount());
         // assertEquals(alicesBsqAcct.getId(), atomicOffer.getMakerPaymentAccountId());
-        assertEquals(BSQ, atomicOffer.getBaseCurrencyCode());
-        assertEquals(BTC, atomicOffer.getCounterCurrencyCode());
+        assertEquals(BSQ, bsqSwapOffer.getBaseCurrencyCode());
+        assertEquals(BTC, bsqSwapOffer.getCounterCurrencyCode());
     }
 
     @Test
     @Order(3)
-    public void testBobTakesAtomicOffer() {
-        var atomicOffer = getAvailableAtomicOffer();
+    public void testBobTakesBsqSwapOffer() {
+        var bsqSwapOffer = getAvailableBsqSwapOffer();
 
-        var atomicTrade = bobClient.takeAtomicOffer(atomicOffer.getId(),
+        var bsqSwapTradeInfo = bobClient.takeBsqSwapOffer(bsqSwapOffer.getId(),
                 bobsBsqAcct.getId(),
                 BISQ_FEE_CURRENCY_CODE);
-        log.info("Trade at t1: {}", atomicTrade);
-        assertEquals(AtomicTrade.State.PREPARATION.name(), atomicTrade.getState());
+        log.info("Trade at t1: {}", bsqSwapTradeInfo);
+        assertEquals(BsqSwapTrade.State.PREPARATION.name(), bsqSwapTradeInfo.getState());
         genBtcBlocksThenWait(1, 3000);
 
-        atomicTrade = getAtomicTrade(atomicTrade.getTradeId());
-        log.info("Trade at t2: {}", atomicTrade);
-        assertEquals(AtomicTrade.State.TX_CONFIRMED.name(), atomicTrade.getState());
+        bsqSwapTradeInfo = getBsqSwapTrade(bsqSwapTradeInfo.getTradeId());
+        log.info("Trade at t2: {}", bsqSwapTradeInfo);
+        assertEquals(BsqSwapTrade.State.TX_CONFIRMED.name(), bsqSwapTradeInfo.getState());
     }
 
     @Test
@@ -120,40 +120,40 @@ public class BsqSwapTradeTest extends AbstractOfferTest {
         log.info("Bob's After Trade Balance:\n{}", formatBalancesTbls(bobsBalances));
     }
 
-    private AtomicOfferInfo getAvailableAtomicOffer() {
-        List<AtomicOfferInfo> atomicOffers = new ArrayList<>();
+    private BsqSwapOfferInfo getAvailableBsqSwapOffer() {
+        List<BsqSwapOfferInfo> bsqSwapOfferInfos = new ArrayList<>();
         int numFetchAttempts = 0;
-        while (atomicOffers.size() == 0) {
-            atomicOffers.addAll(bobClient.getAtomicOffers(BUY.name(), "BSQ"));
+        while (bsqSwapOfferInfos.size() == 0) {
+            bsqSwapOfferInfos.addAll(bobClient.getBsqSwapOffers(BUY.name(), "BSQ"));
             numFetchAttempts++;
-            if (atomicOffers.size() == 0) {
-                log.warn("No available atomic offer found after {} fetch attempts.", numFetchAttempts);
+            if (bsqSwapOfferInfos.size() == 0) {
+                log.warn("No available bsq swap offer found after {} fetch attempts.", numFetchAttempts);
                 if (numFetchAttempts > 9) {
-                    fail(format("Bob gave up on fetching available atomic offer after %d attempts.", numFetchAttempts));
+                    fail(format("Bob gave up on fetching available bsq swap offer after %d attempts.", numFetchAttempts));
                 }
                 sleep(1000);
             } else {
-                assertEquals(1, atomicOffers.size());
-                log.info("Bob found new available atomic offer on attempt # {}.", numFetchAttempts);
+                assertEquals(1, bsqSwapOfferInfos.size());
+                log.info("Bob found new available bsq swap offer on attempt # {}.", numFetchAttempts);
                 break;
             }
         }
-        // Test api's getAtomicOffer(id).
-        var atomicOffer = bobClient.getAtomicOffer(atomicOffers.get(0).getId());
-        assertEquals(atomicOffers.get(0).getId(), atomicOffer.getId());
-        return atomicOffer;
+        // Test api's getBsqSwapOffer(id).
+        var bsqSwapOffer = bobClient.getBsqSwapOffer(bsqSwapOfferInfos.get(0).getId());
+        assertEquals(bsqSwapOfferInfos.get(0).getId(), bsqSwapOffer.getId());
+        return bsqSwapOffer;
     }
 
-    private AtomicTradeInfo getAtomicTrade(String tradeId) {
+    private BsqSwapTradeInfo getBsqSwapTrade(String tradeId) {
         int numFetchAttempts = 0;
         while (true) {
             try {
                 numFetchAttempts++;
-                return bobClient.getAtomicTrade(tradeId);
+                return bobClient.getBsqSwapTrade(tradeId);
             } catch (Exception ex) {
                 log.warn(ex.getMessage());
                 if (numFetchAttempts > 9) {
-                    fail(format("Could not find new atomic trade after %d attempts.", numFetchAttempts));
+                    fail(format("Could not find new bsq swap trade after %d attempts.", numFetchAttempts));
                 } else {
                     sleep(1000);
                 }

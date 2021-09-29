@@ -193,7 +193,7 @@ public class TakeBsqSwapOfferModel implements Model {
         } else if (tradeManager.wasOfferAlreadyUsedInTrade(offer.getId())) {
             warningHandler.handleErrorMessage(Res.get("offerbook.warning.offerWasAlreadyUsedInTrade"));
         } else {
-            tradeManager.onTakeAtomicOffer(offer,
+            tradeManager.onTakeBsqSwapOffer(offer,
                     amount.get(),
                     tradePrice.getValue(),
                     feeService.getTxFeePerVbyte().getValue(),

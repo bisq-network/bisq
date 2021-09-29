@@ -137,7 +137,7 @@ public class CreateBsqSwapTxResponse extends TradeMessage implements DirectMessa
     public String toString() {
         return "CreateBsqSwapTxResponse{" +
                 "\n     senderNodeAddress=" + senderNodeAddress +
-                "\n     atomicTx=" + Utilities.bytesAsHexString(tx) +
+                "\n     tx=" + Utilities.bytesAsHexString(tx) +
                 "\n     makerBsqOutputValue=" + makerBsqOutputValue +
                 "\n     makerBsqOutputAddress=" + makerBsqOutputAddress +
                 "\n     makerBtcOutputValue=" + makerBtcOutputValue +
