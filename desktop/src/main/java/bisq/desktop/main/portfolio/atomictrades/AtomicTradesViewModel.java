@@ -24,7 +24,7 @@ import bisq.desktop.util.DisplayUtils;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
-import bisq.core.trade.atomic.AtomicTrade;
+import bisq.core.trade.atomic.BsqSwapTrade;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.coin.CoinFormatter;
@@ -131,13 +131,13 @@ class AtomicTradesViewModel extends ActivatableWithDataModel<AtomicTradeDataMode
         return Res.get("portfolio.atomic.waiting");
     }
 
-    int getNumPastTrades(AtomicTrade atomicTrade) {
+    int getNumPastTrades(BsqSwapTrade bsqSwapTrade) {
         // TODO(sq): include closed trades in count
         var atomic = dataModel.atomicTradeManager.getObservableList().stream();
         return atomic
                 .filter(e -> {
                     var candidate = e.getPeerNodeAddress();
-                    var current = atomicTrade.getPeerNodeAddress();
+                    var current = bsqSwapTrade.getPeerNodeAddress();
                     return candidate != null &&
                             current != null &&
                             candidate.getFullAddress().equals(current.getFullAddress());
@@ -146,7 +146,7 @@ class AtomicTradesViewModel extends ActivatableWithDataModel<AtomicTradeDataMode
                 .size();
     }
 
-    boolean wasMyOffer(AtomicTrade atomicTrade) {
-        return dataModel.atomicTradeManager.wasMyOffer(atomicTrade.getOffer());
+    boolean wasMyOffer(BsqSwapTrade bsqSwapTrade) {
+        return dataModel.atomicTradeManager.wasMyOffer(bsqSwapTrade.getOffer());
     }
 }

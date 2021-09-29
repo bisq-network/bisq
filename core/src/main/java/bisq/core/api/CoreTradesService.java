@@ -27,7 +27,7 @@ import bisq.core.trade.Tradable;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.TradeUtil;
-import bisq.core.trade.atomic.AtomicTrade;
+import bisq.core.trade.atomic.BsqSwapTrade;
 import bisq.core.trade.closed.ClosedTradableManager;
 import bisq.core.trade.handlers.TradeResultHandler;
 import bisq.core.trade.protocol.BuyerProtocol;
@@ -94,7 +94,7 @@ class CoreTradesService {
     void takeAtomicOffer(Offer offer,
                          String paymentAccountId,
                          String takerFeeCurrencyCode,
-                         TradeResultHandler<AtomicTrade> tradeResultHandler,
+                         TradeResultHandler<BsqSwapTrade> tradeResultHandler,
                          ErrorMessageHandler errorMessageHandler) {
         coreWalletsService.verifyWalletsAreAvailable();
         coreWalletsService.verifyEncryptedWalletIsUnlocked();
@@ -240,7 +240,7 @@ class CoreTradesService {
                 });
     }
 
-    AtomicTrade getAtomicTrade(String tradeId) {
+    BsqSwapTrade getAtomicTrade(String tradeId) {
         coreWalletsService.verifyWalletsAreAvailable();
         coreWalletsService.verifyEncryptedWalletIsUnlocked();
         return tradeManager.getAtomicTradeById(tradeId).orElseThrow(() ->

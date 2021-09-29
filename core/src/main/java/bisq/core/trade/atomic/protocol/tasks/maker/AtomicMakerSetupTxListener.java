@@ -17,7 +17,7 @@
 
 package bisq.core.trade.atomic.protocol.tasks.maker;
 
-import bisq.core.trade.atomic.AtomicTrade;
+import bisq.core.trade.atomic.BsqSwapTrade;
 import bisq.core.trade.atomic.protocol.tasks.AtomicSetupTxListener;
 
 import bisq.common.taskrunner.TaskRunner;
@@ -30,8 +30,8 @@ import lombok.extern.slf4j.Slf4j;
 public class AtomicMakerSetupTxListener extends AtomicSetupTxListener {
 
     @SuppressWarnings({"unused"})
-    public AtomicMakerSetupTxListener(TaskRunner<AtomicTrade> taskHandler, AtomicTrade atomicTrade) {
-        super(taskHandler, atomicTrade);
+    public AtomicMakerSetupTxListener(TaskRunner<BsqSwapTrade> taskHandler, BsqSwapTrade bsqSwapTrade) {
+        super(taskHandler, bsqSwapTrade);
     }
 
     @Override

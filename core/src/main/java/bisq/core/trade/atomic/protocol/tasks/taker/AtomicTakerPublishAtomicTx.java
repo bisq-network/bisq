@@ -21,7 +21,7 @@ import bisq.core.btc.exceptions.TxBroadcastException;
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.TxBroadcaster;
 import bisq.core.dao.state.model.blockchain.TxType;
-import bisq.core.trade.atomic.AtomicTrade;
+import bisq.core.trade.atomic.BsqSwapTrade;
 import bisq.core.trade.protocol.tasks.AtomicTradeTask;
 
 import bisq.common.taskrunner.TaskRunner;
@@ -37,8 +37,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class AtomicTakerPublishAtomicTx extends AtomicTradeTask {
 
     @SuppressWarnings({"unused"})
-    public AtomicTakerPublishAtomicTx(TaskRunner<AtomicTrade> taskHandler, AtomicTrade atomicTrade) {
-        super(taskHandler, atomicTrade);
+    public AtomicTakerPublishAtomicTx(TaskRunner<BsqSwapTrade> taskHandler, BsqSwapTrade bsqSwapTrade) {
+        super(taskHandler, bsqSwapTrade);
     }
 
     @Override
@@ -57,7 +57,7 @@ public class AtomicTakerPublishAtomicTx extends AtomicTradeTask {
                         @Override
                         public void onSuccess(Transaction transaction) {
                             if (!completed) {
-                                atomicTrade.setState(AtomicTrade.State.TX_PUBLISHED);
+                                bsqSwapTrade.setState(BsqSwapTrade.State.TX_PUBLISHED);
 
                                 bsqSwapProtocolModel.getBtcWalletService().swapTradeEntryToAvailableEntry(
                                         bsqSwapProtocolModel.getOffer().getId(), AddressEntry.Context.RESERVED_FOR_TRADE);

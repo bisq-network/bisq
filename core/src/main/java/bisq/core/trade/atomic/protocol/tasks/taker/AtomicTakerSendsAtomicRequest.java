@@ -17,7 +17,7 @@
 
 package bisq.core.trade.atomic.protocol.tasks.taker;
 
-import bisq.core.trade.atomic.AtomicTrade;
+import bisq.core.trade.atomic.BsqSwapTrade;
 import bisq.core.trade.atomic.messages.CreateAtomicTxRequest;
 import bisq.core.trade.protocol.tasks.AtomicTradeTask;
 
@@ -36,8 +36,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 public class AtomicTakerSendsAtomicRequest extends AtomicTradeTask {
 
     @SuppressWarnings({"unused"})
-    public AtomicTakerSendsAtomicRequest(TaskRunner<AtomicTrade> taskHandler, AtomicTrade atomicTrade) {
-        super(taskHandler, atomicTrade);
+    public AtomicTakerSendsAtomicRequest(TaskRunner<BsqSwapTrade> taskHandler, BsqSwapTrade bsqSwapTrade) {
+        super(taskHandler, bsqSwapTrade);
     }
 
     @Override
@@ -58,8 +58,8 @@ public class AtomicTakerSendsAtomicRequest extends AtomicTradeTask {
                     bsqSwapProtocolModel.getBtcTradeAmount(),
                     bsqSwapProtocolModel.getTradePrice(),
                     bsqSwapProtocolModel.getTxFeePerVbyte(),
-                    atomicTrade.getMakerFee(),
-                    atomicTrade.getTakerFee(),
+                    bsqSwapTrade.getMakerFee(),
+                    bsqSwapTrade.getTakerFee(),
                     bsqSwapProtocolModel.getTakerBsqOutputAmount(),
                     bsqSwapProtocolModel.getTakerBsqAddress(),
                     bsqSwapProtocolModel.getTakerBtcOutputAmount(),
@@ -69,7 +69,7 @@ public class AtomicTakerSendsAtomicRequest extends AtomicTradeTask {
 
             log.info("atomictxrequest={}", message.toString());
 
-            NodeAddress peersNodeAddress = atomicTrade.getTradingPeerNodeAddress();
+            NodeAddress peersNodeAddress = bsqSwapTrade.getTradingPeerNodeAddress();
             log.info("Send {} to peer {}. tradeId={}, uid={}",
                     message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
             bsqSwapProtocolModel.getP2PService().sendEncryptedDirectMessage(

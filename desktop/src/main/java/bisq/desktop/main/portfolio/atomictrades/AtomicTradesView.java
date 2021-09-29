@@ -31,7 +31,7 @@ import bisq.desktop.util.GUIUtil;
 import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
-import bisq.core.trade.atomic.AtomicTrade;
+import bisq.core.trade.atomic.BsqSwapTrade;
 import bisq.core.user.Preferences;
 
 import bisq.network.p2p.NodeAddress;
@@ -190,13 +190,13 @@ public class AtomicTradesView extends ActivatableViewAndModel<VBox, AtomicTrades
         directionColumn.setComparator(Comparator.comparing(o -> o.getAtomicTrade().getOffer().getDirection()));
         marketColumn.setComparator(Comparator.comparing(model::getMarketLabel));
         priceColumn.setComparator(Comparator.comparing(model::getPrice, Comparator.nullsFirst(Comparator.naturalOrder())));
-        volumeColumn.setComparator(nullsFirstComparingAsTrade(AtomicTrade::getTradeVolume));
+        volumeColumn.setComparator(nullsFirstComparingAsTrade(BsqSwapTrade::getTradeVolume));
         amountColumn.setComparator(Comparator.comparing(model::getAmount, Comparator.nullsFirst(Comparator.naturalOrder())));
         avatarColumn.setComparator(Comparator.comparing(
                 o -> model.getNumPastTrades(o.getAtomicTrade()),
                 Comparator.nullsFirst(Comparator.naturalOrder())
         ));
-        txFeeColumn.setComparator(nullsFirstComparing(AtomicTrade::getMiningFeePerByte));
+        txFeeColumn.setComparator(nullsFirstComparing(BsqSwapTrade::getMiningFeePerByte));
         txFeeColumn.setComparator(Comparator.comparing(model::getTxFee, Comparator.nullsFirst(Comparator.naturalOrder())));
 
         //
@@ -281,7 +281,7 @@ public class AtomicTradesView extends ActivatableViewAndModel<VBox, AtomicTrades
     }
 
     private static <T extends Comparable<T>> Comparator<AtomicTradeListItem> nullsFirstComparing(
-            Function<AtomicTrade, T> keyExtractor) {
+            Function<BsqSwapTrade, T> keyExtractor) {
         return Comparator.comparing(
                 o -> o.getAtomicTrade() != null ? keyExtractor.apply(o.getAtomicTrade()) : null,
                 Comparator.nullsFirst(Comparator.naturalOrder())
@@ -289,7 +289,7 @@ public class AtomicTradesView extends ActivatableViewAndModel<VBox, AtomicTrades
     }
 
     private static <T extends Comparable<T>> Comparator<AtomicTradeListItem> nullsFirstComparingAsTrade(
-            Function<AtomicTrade, T> keyExtractor) {
+            Function<BsqSwapTrade, T> keyExtractor) {
         return Comparator.comparing(
                 o -> keyExtractor.apply(o.getAtomicTrade()),
                 Comparator.nullsFirst(Comparator.naturalOrder())
@@ -306,8 +306,8 @@ public class AtomicTradesView extends ActivatableViewAndModel<VBox, AtomicTrades
             if (filterString.isEmpty())
                 return true;
 
-            AtomicTrade atomicTrade = item.getAtomicTrade();
-            Offer offer = atomicTrade.getOffer();
+            BsqSwapTrade bsqSwapTrade = item.getAtomicTrade();
+            Offer offer = bsqSwapTrade.getOffer();
             if (offer.getId().contains(filterString)) {
                 return true;
             }

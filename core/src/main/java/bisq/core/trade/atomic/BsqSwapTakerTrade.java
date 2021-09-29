@@ -36,24 +36,24 @@ import lombok.extern.slf4j.Slf4j;
 import javax.annotation.Nullable;
 
 @Slf4j
-public final class AtomicTakerTrade extends AtomicTrade implements TakerTrade {
+public final class BsqSwapTakerTrade extends BsqSwapTrade implements TakerTrade {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, initialization
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public AtomicTakerTrade(String uid,
-                            Offer offer,
-                            Coin amount,
-                            long price,
-                            long takeOfferDate,
-                            @Nullable NodeAddress peerNodeAddress,
-                            long miningFeePerByte,
-                            long makerFee,
-                            long takerFee,
-                            BsqSwapProtocolModel bsqSwapProtocolModel,
-                            @Nullable String errorMessage,
-                            State state) {
+    public BsqSwapTakerTrade(String uid,
+                             Offer offer,
+                             Coin amount,
+                             long price,
+                             long takeOfferDate,
+                             @Nullable NodeAddress peerNodeAddress,
+                             long miningFeePerByte,
+                             long makerFee,
+                             long takerFee,
+                             BsqSwapProtocolModel bsqSwapProtocolModel,
+                             @Nullable String errorMessage,
+                             State state) {
         super(uid,
                 offer,
                 amount,
@@ -88,8 +88,8 @@ public final class AtomicTakerTrade extends AtomicTrade implements TakerTrade {
         if (uid == null) {
             uid = UUID.randomUUID().toString();
         }
-        var atomicTrade = fromProto(new AtomicTakerTrade(
-                        uid,
+        var atomicTrade = fromProto(new BsqSwapTakerTrade(
+                uid,
                 Offer.fromProto(proto.getOffer()),
                 Coin.valueOf(proto.getAmount()),
                 proto.getPrice(),

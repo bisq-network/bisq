@@ -34,8 +34,8 @@ import bisq.core.offer.OfferUtil;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.trade.TradeManager;
-import bisq.core.trade.atomic.AtomicTrade;
 import bisq.core.trade.atomic.AtomicTxBuilder;
+import bisq.core.trade.atomic.BsqSwapTrade;
 import bisq.core.trade.handlers.TradeResultHandler;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
@@ -179,7 +179,7 @@ public class AtomicTakeOfferModel implements Model {
     // UI actions
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void onTakeOffer(TradeResultHandler<AtomicTrade> tradeResultHandler,
+    public void onTakeOffer(TradeResultHandler<BsqSwapTrade> tradeResultHandler,
                             ErrorMessageHandler warningHandler,
                             ErrorMessageHandler errorHandler) {
         checkArgument(atomicTxBuilder.getCanBuildMySide().get(), "Missing data to create transaction");

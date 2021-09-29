@@ -17,7 +17,7 @@
 
 package bisq.core.trade.atomic.protocol.tasks.maker;
 
-import bisq.core.trade.atomic.AtomicTrade;
+import bisq.core.trade.atomic.BsqSwapTrade;
 import bisq.core.trade.atomic.messages.CreateAtomicTxResponse;
 import bisq.core.trade.protocol.tasks.AtomicTradeTask;
 
@@ -33,8 +33,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class AtomicMakerCreatesAndSignsTx extends AtomicTradeTask {
     @SuppressWarnings({"unused"})
-    public AtomicMakerCreatesAndSignsTx(TaskRunner<AtomicTrade> taskHandler, AtomicTrade atomicTrade) {
-        super(taskHandler, atomicTrade);
+    public AtomicMakerCreatesAndSignsTx(TaskRunner<BsqSwapTrade> taskHandler, BsqSwapTrade bsqSwapTrade) {
+        super(taskHandler, bsqSwapTrade);
     }
 
     @Override
@@ -63,7 +63,7 @@ public class AtomicMakerCreatesAndSignsTx extends AtomicTradeTask {
                     bsqSwapProtocolModel.getRawMakerBsqInputs(),
                     bsqSwapProtocolModel.getRawMakerBtcInputs());
 
-            NodeAddress peersNodeAddress = atomicTrade.getTradingPeerNodeAddress();
+            NodeAddress peersNodeAddress = bsqSwapTrade.getTradingPeerNodeAddress();
             log.info("Send {} to peer {}. tradeId={}, uid={}",
                     message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
             bsqSwapProtocolModel.getP2PService().sendEncryptedDirectMessage(

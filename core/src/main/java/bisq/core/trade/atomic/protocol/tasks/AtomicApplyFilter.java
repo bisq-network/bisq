@@ -20,7 +20,7 @@ package bisq.core.trade.atomic.protocol.tasks;
 import bisq.core.filter.FilterManager;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.trade.TradeUtil;
-import bisq.core.trade.atomic.AtomicTrade;
+import bisq.core.trade.atomic.BsqSwapTrade;
 import bisq.core.trade.protocol.tasks.AtomicTradeTask;
 
 import bisq.network.p2p.NodeAddress;
@@ -35,8 +35,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class AtomicApplyFilter extends AtomicTradeTask {
-    public AtomicApplyFilter(TaskRunner<AtomicTrade> taskHandler, AtomicTrade atomicTrade) {
-        super(taskHandler, atomicTrade);
+    public AtomicApplyFilter(TaskRunner<BsqSwapTrade> taskHandler, BsqSwapTrade bsqSwapTrade) {
+        super(taskHandler, bsqSwapTrade);
     }
 
     @Override
@@ -51,7 +51,7 @@ public class AtomicApplyFilter extends AtomicTradeTask {
 
             FilterManager filterManager = bsqSwapProtocolModel.getFilterManager();
 
-            TradeUtil.applyFilter(atomicTrade,
+            TradeUtil.applyFilter(bsqSwapTrade,
                     filterManager,
                     nodeAddress,
                     paymentAccountPayload,

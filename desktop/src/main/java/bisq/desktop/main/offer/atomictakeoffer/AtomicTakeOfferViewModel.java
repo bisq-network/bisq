@@ -27,7 +27,7 @@ import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayloadBase;
 import bisq.core.offer.OfferUtil;
 import bisq.core.payment.PaymentAccount;
-import bisq.core.trade.atomic.AtomicTrade;
+import bisq.core.trade.atomic.BsqSwapTrade;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.coin.CoinFormatter;
@@ -65,7 +65,7 @@ class AtomicTakeOfferViewModel extends ActivatableWithDataModel<AtomicTakeOfferD
 
     private String amountRange;
     private boolean takeOfferRequested;
-    private AtomicTrade atomicTrade;
+    private BsqSwapTrade bsqSwapTrade;
     private Offer offer;
     private String price;
     private String amountDescription;
@@ -88,7 +88,7 @@ class AtomicTakeOfferViewModel extends ActivatableWithDataModel<AtomicTakeOfferD
     private ChangeListener<String> amountListener;
     private ChangeListener<Coin> amountAsCoinListener;
     private ChangeListener<Boolean> isTxBuilderReadyListener;
-    private ChangeListener<AtomicTrade.State> tradeStateListener;
+    private ChangeListener<BsqSwapTrade.State> tradeStateListener;
     private ChangeListener<String> tradeErrorListener;
     private ChangeListener<Offer.State> offerStateListener;
     private ChangeListener<String> offerErrorListener;
@@ -176,7 +176,7 @@ class AtomicTakeOfferViewModel extends ActivatableWithDataModel<AtomicTakeOfferD
         takeOfferRequested = true;
         showTransactionPublishedScreen.set(false);
         dataModel.onTakeOffer(atomicTrade -> {
-            this.atomicTrade = atomicTrade;
+            this.bsqSwapTrade = atomicTrade;
             atomicTrade.stateProperty().addListener(tradeStateListener);
             applyTradeState();
             atomicTrade.errorMessageProperty().addListener(tradeErrorListener);
@@ -271,7 +271,7 @@ class AtomicTakeOfferViewModel extends ActivatableWithDataModel<AtomicTakeOfferD
     private void applyTradeErrorMessage(@Nullable String errorMessage) {
         if (errorMessage != null) {
             String appendMsg;
-            switch (atomicTrade.getState()) {
+            switch (bsqSwapTrade.getState()) {
                 case PREPARATION:
                     appendMsg = Res.get("takeOffer.error.noFundsLost");
                     break;
@@ -292,8 +292,8 @@ class AtomicTakeOfferViewModel extends ActivatableWithDataModel<AtomicTakeOfferD
     }
 
     private void applyTradeState() {
-        if (atomicTrade.getState().equals(AtomicTrade.State.TX_PUBLISHED) ||
-                atomicTrade.getState().equals(AtomicTrade.State.TX_CONFIRMED)) {
+        if (bsqSwapTrade.getState().equals(BsqSwapTrade.State.TX_PUBLISHED) ||
+                bsqSwapTrade.getState().equals(BsqSwapTrade.State.TX_CONFIRMED)) {
             if (takeOfferSucceededHandler != null)
                 takeOfferSucceededHandler.run();
 
@@ -392,9 +392,9 @@ class AtomicTakeOfferViewModel extends ActivatableWithDataModel<AtomicTakeOfferD
             offer.errorMessageProperty().removeListener(offerErrorListener);
         }
 
-        if (atomicTrade != null) {
-            atomicTrade.stateProperty().removeListener(tradeStateListener);
-            atomicTrade.errorMessageProperty().removeListener(tradeErrorListener);
+        if (bsqSwapTrade != null) {
+            bsqSwapTrade.stateProperty().removeListener(tradeStateListener);
+            bsqSwapTrade.errorMessageProperty().removeListener(tradeErrorListener);
         }
         p2PService.getNetworkNode().removeConnectionListener(connectionListener);
         dataModel.getIsTxBuilderReady().removeListener(isTxBuilderReadyListener);
@@ -453,8 +453,8 @@ class AtomicTakeOfferViewModel extends ActivatableWithDataModel<AtomicTakeOfferD
         offerWarning.set(null);
     }
 
-    public AtomicTrade getAtomicTrade() {
-        return atomicTrade;
+    public BsqSwapTrade getAtomicTrade() {
+        return bsqSwapTrade;
     }
 
     public void resetErrorMessage() {

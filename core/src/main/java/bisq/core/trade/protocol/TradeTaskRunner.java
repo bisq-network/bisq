@@ -18,7 +18,7 @@
 package bisq.core.trade.protocol;
 
 import bisq.core.trade.TradeModel;
-import bisq.core.trade.atomic.AtomicTrade;
+import bisq.core.trade.atomic.BsqSwapTrade;
 
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
@@ -33,7 +33,7 @@ public class TradeTaskRunner extends TaskRunner<TradeModel> {
     }
 
     static Class<TradeModel> getSharedModelClass(TradeModel sharedModel) {
-        if (sharedModel instanceof AtomicTrade) {
+        if (sharedModel instanceof BsqSwapTrade) {
             //noinspection unchecked
             return (Class<TradeModel>) sharedModel.getClass().getSuperclass();
         }

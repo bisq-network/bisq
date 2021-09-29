@@ -17,7 +17,7 @@
 
 package bisq.core.trade.atomic.protocol.tasks.maker;
 
-import bisq.core.trade.atomic.AtomicTrade;
+import bisq.core.trade.atomic.BsqSwapTrade;
 import bisq.core.trade.atomic.messages.CreateAtomicTxRequest;
 import bisq.core.trade.atomic.protocol.tasks.AtomicSetupTxListener;
 import bisq.core.util.Validator;
@@ -35,8 +35,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 public class AtomicMakerVerifiesAmounts extends AtomicSetupTxListener {
 
     @SuppressWarnings({"unused"})
-    public AtomicMakerVerifiesAmounts(TaskRunner<AtomicTrade> taskHandler, AtomicTrade atomicTrade) {
-        super(taskHandler, atomicTrade);
+    public AtomicMakerVerifiesAmounts(TaskRunner<BsqSwapTrade> taskHandler, BsqSwapTrade bsqSwapTrade) {
+        super(taskHandler, bsqSwapTrade);
     }
 
     @Override
@@ -57,26 +57,26 @@ public class AtomicMakerVerifiesAmounts extends AtomicSetupTxListener {
 
 
             var message = (CreateAtomicTxRequest) bsqSwapProtocolModel.getTradeMessage();
-            var offer = atomicTrade.getOffer();
-            bsqSwapProtocolModel.initFromTrade(atomicTrade);
+            var offer = bsqSwapTrade.getOffer();
+            bsqSwapProtocolModel.initFromTrade(bsqSwapTrade);
             bsqSwapProtocolModel.setMakerBsqAddress(
                     bsqSwapProtocolModel.getBsqWalletService().getUnusedAddress().toString());
             bsqSwapProtocolModel.setMakerBtcAddress(
                     bsqSwapProtocolModel.getBtcWalletService().getFreshAddressEntry().getAddressString());
 
-            checkArgument(atomicTrade.getPrice().equals(offer.getPrice()),
+            checkArgument(bsqSwapTrade.getPrice().equals(offer.getPrice()),
                     "Trade price does not match offer");
-            checkArgument(atomicTrade.getAmount().getValue() >= offer.getMinAmount().getValue() &&
-                            atomicTrade.getAmount().getValue() <= offer.getAmount().getValue(),
+            checkArgument(bsqSwapTrade.getAmount().getValue() >= offer.getMinAmount().getValue() &&
+                            bsqSwapTrade.getAmount().getValue() <= offer.getAmount().getValue(),
                     "btcTradeAmount not within range");
             checkArgument(message.getBsqTradeAmount() >= bsqSwapProtocolModel.getBsqMinTradeAmount() &&
                             message.getBsqTradeAmount() <= bsqSwapProtocolModel.getBsqMaxTradeAmount(),
                     "bsqTradeAmount not within range");
-            checkArgument(atomicTrade.getMakerFee() ==
-                            Objects.requireNonNull(CoinUtil.getMakerFee(false, atomicTrade.getAmount())).getValue(),
+            checkArgument(bsqSwapTrade.getMakerFee() ==
+                            Objects.requireNonNull(CoinUtil.getMakerFee(false, bsqSwapTrade.getAmount())).getValue(),
                     "Maker fee mismatch");
-            checkArgument(atomicTrade.getTakerFee() ==
-                            Objects.requireNonNull(CoinUtil.getTakerFee(false, atomicTrade.getAmount())).getValue(),
+            checkArgument(bsqSwapTrade.getTakerFee() ==
+                            Objects.requireNonNull(CoinUtil.getTakerFee(false, bsqSwapTrade.getAmount())).getValue(),
                     "Taker fee mismatch");
 
             bsqSwapProtocolModel.updateFromMessage(message);

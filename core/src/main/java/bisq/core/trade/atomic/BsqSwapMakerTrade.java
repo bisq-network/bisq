@@ -36,24 +36,24 @@ import javax.annotation.Nullable;
 
 
 @Slf4j
-public final class AtomicMakerTrade extends AtomicTrade {
+public final class BsqSwapMakerTrade extends BsqSwapTrade {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, initialization
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public AtomicMakerTrade(String uid,
-                            Offer offer,
-                            Coin amount,
-                            long price,
-                            long takeOfferDate,
-                            @Nullable NodeAddress peerNodeAddress,
-                            long miningFeePerByte,
-                            long makerFee,
-                            long takerFee,
-                            BsqSwapProtocolModel bsqSwapProtocolModel,
-                            @Nullable String errorMessage,
-                            State state) {
+    public BsqSwapMakerTrade(String uid,
+                             Offer offer,
+                             Coin amount,
+                             long price,
+                             long takeOfferDate,
+                             @Nullable NodeAddress peerNodeAddress,
+                             long miningFeePerByte,
+                             long makerFee,
+                             long takerFee,
+                             BsqSwapProtocolModel bsqSwapProtocolModel,
+                             @Nullable String errorMessage,
+                             State state) {
         super(uid,
                 offer,
                 amount,
@@ -88,8 +88,8 @@ public final class AtomicMakerTrade extends AtomicTrade {
         if (uid == null) {
             uid = UUID.randomUUID().toString();
         }
-        var atomicTrade = fromProto(new AtomicMakerTrade(
-                        uid,
+        var atomicTrade = fromProto(new BsqSwapMakerTrade(
+                uid,
                 Offer.fromProto(proto.getOffer()),
                 Coin.valueOf(proto.getAmount()),
                 proto.getPrice(),

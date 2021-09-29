@@ -32,7 +32,7 @@ import bisq.core.offer.Offer;
 import bisq.core.offer.OpenOffer;
 import bisq.core.trade.Tradable;
 import bisq.core.trade.Trade;
-import bisq.core.trade.atomic.AtomicTrade;
+import bisq.core.trade.atomic.BsqSwapTrade;
 import bisq.core.util.coin.CoinFormatter;
 
 import org.bitcoinj.core.Coin;
@@ -253,12 +253,12 @@ class TransactionsListItem {
                         }
                     }
                 }
-            } else if (tradable instanceof AtomicTrade) {
+            } else if (tradable instanceof BsqSwapTrade) {
                 direction = amountAsCoin.isPositive() ? Res.get("funds.tx.direction.atomicBuy") :
                         Res.get("funds.tx.direction.atomicSell");
 
                 // Find my BTC output address
-                var tx = btcWalletService.getTransaction(((AtomicTrade) tradable).getTxId());
+                var tx = btcWalletService.getTransaction(((BsqSwapTrade) tradable).getTxId());
                 addressString = tx != null ?
                         tx.getOutputs().stream()
                                 .filter(output -> output.isMine(btcWalletService.getWallet()))

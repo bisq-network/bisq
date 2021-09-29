@@ -29,8 +29,8 @@ import bisq.core.offer.Offer;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.proto.CoreProtoResolver;
 import bisq.core.trade.TradeManager;
-import bisq.core.trade.atomic.AtomicTrade;
 import bisq.core.trade.atomic.AtomicTxBuilder;
+import bisq.core.trade.atomic.BsqSwapTrade;
 import bisq.core.trade.atomic.messages.CreateAtomicTxRequest;
 import bisq.core.trade.atomic.messages.CreateAtomicTxResponse;
 import bisq.core.trade.messages.TradeMessage;
@@ -74,7 +74,7 @@ public class BsqSwapProtocolModel implements TradeProtocolModel, Model, Persista
     transient private TradeManager tradeManager;
     transient private Offer offer;
 
-    private AtomicTrade atomicTrade;
+    private BsqSwapTrade bsqSwapTrade;
 
     private final TradingPeer tradingPeer;
     private final PubKeyRing pubKeyRing;
@@ -210,8 +210,8 @@ public class BsqSwapProtocolModel implements TradeProtocolModel, Model, Persista
     public void onComplete() {
     }
 
-    public void initFromTrade(AtomicTrade trade) {
-        atomicTrade = trade;
+    public void initFromTrade(BsqSwapTrade trade) {
+        bsqSwapTrade = trade;
         var offer = trade.getOffer();
         checkNotNull(offer, "offer must not be null");
         if (trade.getAmount() != null && trade.getAmount().isPositive())
@@ -239,8 +239,8 @@ public class BsqSwapProtocolModel implements TradeProtocolModel, Model, Persista
         setBsqTradeAmount(message.getBsqTradeAmount());
         setBtcTradeAmount(message.getBtcTradeAmount());
         tradingPeer.setPubKeyRing(checkNotNull(message.getTakerPubKeyRing()));
-        atomicTrade.setAmount(Coin.valueOf(message.getBtcTradeAmount()));
-        atomicTrade.setPeerNodeAddress(tempTradingPeerNodeAddress);
+        bsqSwapTrade.setAmount(Coin.valueOf(message.getBtcTradeAmount()));
+        bsqSwapTrade.setPeerNodeAddress(tempTradingPeerNodeAddress);
     }
 
     public void updateFromMessage(CreateAtomicTxResponse message) {
@@ -299,19 +299,19 @@ public class BsqSwapProtocolModel implements TradeProtocolModel, Model, Persista
                 getBsqWalletService(),
                 getTradeWalletService(),
                 offer.isBuyOffer() == isMaker,
-                atomicTrade.getPrice(),
-                atomicTrade.getAmount(),
+                bsqSwapTrade.getPrice(),
+                bsqSwapTrade.getAmount(),
                 Coin.valueOf(txFeePerVbyte),
                 isMaker ? makerBtcAddress : takerBtcAddress,
                 isMaker ? makerBsqAddress : takerBsqAddress
         );
 
         if (isMaker) {
-            atomicTxBuilder.setMyTradeFee(Coin.valueOf(atomicTrade.getMakerFee()));
-            atomicTxBuilder.setPeerTradeFee(Coin.valueOf(atomicTrade.getTakerFee()));
+            atomicTxBuilder.setMyTradeFee(Coin.valueOf(bsqSwapTrade.getMakerFee()));
+            atomicTxBuilder.setPeerTradeFee(Coin.valueOf(bsqSwapTrade.getTakerFee()));
         } else {
-            atomicTxBuilder.setMyTradeFee(Coin.valueOf(atomicTrade.getTakerFee()));
-            atomicTxBuilder.setPeerTradeFee(Coin.valueOf(atomicTrade.getMakerFee()));
+            atomicTxBuilder.setMyTradeFee(Coin.valueOf(bsqSwapTrade.getTakerFee()));
+            atomicTxBuilder.setPeerTradeFee(Coin.valueOf(bsqSwapTrade.getMakerFee()));
         }
     }
 

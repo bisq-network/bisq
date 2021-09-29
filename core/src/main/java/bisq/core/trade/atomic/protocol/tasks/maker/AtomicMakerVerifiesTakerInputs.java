@@ -17,7 +17,7 @@
 
 package bisq.core.trade.atomic.protocol.tasks.maker;
 
-import bisq.core.trade.atomic.AtomicTrade;
+import bisq.core.trade.atomic.BsqSwapTrade;
 import bisq.core.trade.atomic.messages.CreateAtomicTxRequest;
 import bisq.core.trade.protocol.tasks.AtomicTradeTask;
 
@@ -33,8 +33,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 public class AtomicMakerVerifiesTakerInputs extends AtomicTradeTask {
     @SuppressWarnings({"unused"})
-    public AtomicMakerVerifiesTakerInputs(TaskRunner<AtomicTrade> taskHandler, AtomicTrade atomicTrade) {
-        super(taskHandler, atomicTrade);
+    public AtomicMakerVerifiesTakerInputs(TaskRunner<BsqSwapTrade> taskHandler, BsqSwapTrade bsqSwapTrade) {
+        super(taskHandler, bsqSwapTrade);
     }
 
     @Override

@@ -26,7 +26,7 @@ import bisq.core.trade.Contract;
 import bisq.core.trade.Tradable;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeModel;
-import bisq.core.trade.atomic.AtomicTrade;
+import bisq.core.trade.atomic.BsqSwapTrade;
 
 import bisq.common.crypto.PubKeyRing;
 
@@ -198,8 +198,8 @@ class TransactionAwareTrade implements TransactionAwareTradable {
     }
 
     private boolean isAtomicTx(String txId) {
-        if (tradeModel instanceof AtomicTrade) {
-            return (txId.equals(((AtomicTrade) tradeModel).getTxId()));
+        if (tradeModel instanceof BsqSwapTrade) {
+            return (txId.equals(((BsqSwapTrade) tradeModel).getTxId()));
         }
         return false;
     }

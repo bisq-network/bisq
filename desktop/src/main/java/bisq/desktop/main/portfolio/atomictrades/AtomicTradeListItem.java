@@ -17,16 +17,16 @@
 
 package bisq.desktop.main.portfolio.atomictrades;
 
-import bisq.core.trade.atomic.AtomicTrade;
+import bisq.core.trade.atomic.BsqSwapTrade;
 
 class AtomicTradeListItem {
-    private final AtomicTrade atomicTrade;
+    private final BsqSwapTrade bsqSwapTrade;
 
-    AtomicTradeListItem(AtomicTrade atomicTrade) {
-        this.atomicTrade = atomicTrade;
+    AtomicTradeListItem(BsqSwapTrade bsqSwapTrade) {
+        this.bsqSwapTrade = bsqSwapTrade;
     }
 
-    AtomicTrade getAtomicTrade() {
-        return atomicTrade;
+    BsqSwapTrade getAtomicTrade() {
+        return bsqSwapTrade;
     }
 }

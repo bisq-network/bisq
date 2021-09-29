@@ -17,7 +17,7 @@
 
 package bisq.core.trade.atomic.protocol.tasks.taker;
 
-import bisq.core.trade.atomic.AtomicTrade;
+import bisq.core.trade.atomic.BsqSwapTrade;
 import bisq.core.trade.protocol.tasks.AtomicTradeTask;
 
 import bisq.common.taskrunner.TaskRunner;
@@ -30,8 +30,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 public class AtomicTakerPreparesData extends AtomicTradeTask {
 
     @SuppressWarnings({"unused"})
-    public AtomicTakerPreparesData(TaskRunner<AtomicTrade> taskHandler, AtomicTrade atomicTrade) {
-        super(taskHandler, atomicTrade);
+    public AtomicTakerPreparesData(TaskRunner<BsqSwapTrade> taskHandler, BsqSwapTrade bsqSwapTrade) {
+        super(taskHandler, bsqSwapTrade);
     }
 
     @Override
@@ -41,7 +41,7 @@ public class AtomicTakerPreparesData extends AtomicTradeTask {
 
             checkArgument(!bsqSwapProtocolModel.getOffer().isMyOffer(bsqSwapProtocolModel.getKeyRing()), "must not take own offer");
 
-            bsqSwapProtocolModel.initFromTrade(atomicTrade);
+            bsqSwapProtocolModel.initFromTrade(bsqSwapTrade);
             bsqSwapProtocolModel.setTakerBsqAddress(
                     bsqSwapProtocolModel.getBsqWalletService().getUnusedAddress().toString());
             bsqSwapProtocolModel.setTakerBtcAddress(

@@ -27,7 +27,7 @@ import bisq.core.btc.wallet.WalletService;
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.state.model.blockchain.TxType;
 import bisq.core.locale.Res;
-import bisq.core.trade.atomic.AtomicTrade;
+import bisq.core.trade.atomic.BsqSwapTrade;
 import bisq.core.util.coin.BsqFormatter;
 
 import org.bitcoinj.core.Address;
@@ -169,7 +169,7 @@ class BsqTxListItem extends TxConfidenceListItem {
     private void setAtomic(TradableRepository tradableRepository) {
         var tradables = tradableRepository.getAll();
         tradables.forEach(tradable -> {
-            if (tradable instanceof AtomicTrade && txId.equals(((AtomicTrade) tradable).getTxId())) {
+            if (tradable instanceof BsqSwapTrade && txId.equals(((BsqSwapTrade) tradable).getTxId())) {
                 atomicTradeId = tradable.getShortId();
             }
         });

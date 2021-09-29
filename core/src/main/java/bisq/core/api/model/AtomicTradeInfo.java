@@ -17,7 +17,7 @@
 
 package bisq.core.api.model;
 
-import bisq.core.trade.atomic.AtomicTrade;
+import bisq.core.trade.atomic.BsqSwapTrade;
 
 import bisq.common.Payload;
 
@@ -82,11 +82,11 @@ public class AtomicTradeInfo implements Payload {
         this.errorMessage = builder.errorMessage;
     }
 
-    public static AtomicTradeInfo toAtomicTradeInfo(AtomicTrade trade) {
+    public static AtomicTradeInfo toAtomicTradeInfo(BsqSwapTrade trade) {
         return toAtomicTradeInfo(trade, null);
     }
 
-    public static AtomicTradeInfo toAtomicTradeInfo(AtomicTrade trade, String role) {
+    public static AtomicTradeInfo toAtomicTradeInfo(BsqSwapTrade trade, String role) {
         return new AtomicTradeInfoBuilder()
                 .withAtomicOffer(toAtomicOfferInfo(trade.getOffer()))
                 .withTradeId(trade.getId())

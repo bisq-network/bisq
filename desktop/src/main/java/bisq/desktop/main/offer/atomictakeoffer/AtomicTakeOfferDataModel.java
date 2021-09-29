@@ -27,7 +27,7 @@ import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.offer.takeoffer.AtomicTakeOfferModel;
 import bisq.core.payment.PaymentAccount;
-import bisq.core.trade.atomic.AtomicTrade;
+import bisq.core.trade.atomic.BsqSwapTrade;
 import bisq.core.trade.handlers.TradeResultHandler;
 
 import org.bitcoinj.core.Coin;
@@ -99,7 +99,7 @@ class AtomicTakeOfferDataModel extends ActivatableDataModel {
     // UI actions
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    void onTakeOffer(TradeResultHandler<AtomicTrade> tradeResultHandler) {
+    void onTakeOffer(TradeResultHandler<BsqSwapTrade> tradeResultHandler) {
         atomicTakeOfferModel.onTakeOffer(tradeResultHandler,
                 warningMessage -> new Popup().warning(warningMessage).show(),
                 errorMessage -> {

@@ -32,7 +32,7 @@ import bisq.apitest.method.offer.AbstractOfferTest;
 // @Disabled
 @Slf4j
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class AtomicTradeTestLoop extends AbstractOfferTest {
+public class BsqSwapTradeTestLoop extends AbstractOfferTest {
 
     @BeforeAll
     public static void setUp() {
@@ -43,11 +43,11 @@ public class AtomicTradeTestLoop extends AbstractOfferTest {
     @Test
     @Order(1)
     public void testGetBalancesBeforeTrade() {
-        AtomicTradeTest test = new AtomicTradeTest();
+        BsqSwapTradeTest test = new BsqSwapTradeTest();
         runTradeLoop(test);
     }
 
-    private void runTradeLoop(AtomicTradeTest test) {
+    private void runTradeLoop(BsqSwapTradeTest test) {
         // TODO Fix wallet inconsistency bugs after 2nd trades.
         for (int tradeCount = 1; tradeCount <= 2; tradeCount++) {
             log.warn("================================ Trade # {} ================================", tradeCount);

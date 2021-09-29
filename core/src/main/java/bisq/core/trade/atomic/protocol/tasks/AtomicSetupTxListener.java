@@ -19,7 +19,7 @@ package bisq.core.trade.atomic.protocol.tasks;
 
 import bisq.core.btc.listeners.AddressConfidenceListener;
 import bisq.core.btc.wallet.WalletService;
-import bisq.core.trade.atomic.AtomicTrade;
+import bisq.core.trade.atomic.BsqSwapTrade;
 import bisq.core.trade.protocol.tasks.AtomicTradeTask;
 
 import bisq.common.UserThread;
@@ -41,8 +41,8 @@ public abstract class AtomicSetupTxListener extends AtomicTradeTask {
     protected WalletService walletService;
 
     @SuppressWarnings({"unused"})
-    public AtomicSetupTxListener(TaskRunner<AtomicTrade> taskHandler, AtomicTrade atomicTrade) {
-        super(taskHandler, atomicTrade);
+    public AtomicSetupTxListener(TaskRunner<BsqSwapTrade> taskHandler, BsqSwapTrade bsqSwapTrade) {
+        super(taskHandler, bsqSwapTrade);
     }
 
 
@@ -76,13 +76,13 @@ public abstract class AtomicSetupTxListener extends AtomicTradeTask {
         Transaction walletTx = walletService.getTransaction(confidence.getTransactionHash());
         checkNotNull(walletTx, "Tx from network should not be null");
         if (bsqSwapProtocolModel.getAtomicTx() != null) {
-            atomicTrade.setTxId(walletTx.getTxId().toString());
+            bsqSwapTrade.setTxId(walletTx.getTxId().toString());
             WalletService.printTx("atomicTx received from network", walletTx);
             setState();
-            bsqSwapProtocolModel.getTradeManager().onTradeCompleted(atomicTrade);
+            bsqSwapProtocolModel.getTradeManager().onTradeCompleted(bsqSwapTrade);
         } else {
-            log.info("We had the atomic tx already set. tradeId={}, state={}", atomicTrade.getId(),
-                    atomicTrade.getState());
+            log.info("We had the atomic tx already set. tradeId={}, state={}", bsqSwapTrade.getId(),
+                    bsqSwapTrade.getState());
         }
 
         // need delay as it can be called inside the handler before the listener and tradeStateSubscription are actually set.
@@ -101,7 +101,7 @@ public abstract class AtomicSetupTxListener extends AtomicTradeTask {
     }
 
     protected void setState() {
-        atomicTrade.setState(AtomicTrade.State.TX_CONFIRMED);
+        bsqSwapTrade.setState(BsqSwapTrade.State.TX_CONFIRMED);
     }
 
 }

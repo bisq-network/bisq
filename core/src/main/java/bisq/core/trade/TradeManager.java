@@ -30,10 +30,10 @@ import bisq.core.offer.availability.OfferAvailabilityModel;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 import bisq.core.support.dispute.mediation.mediator.MediatorManager;
-import bisq.core.trade.atomic.AtomicMakerTrade;
-import bisq.core.trade.atomic.AtomicTakerTrade;
-import bisq.core.trade.atomic.AtomicTrade;
 import bisq.core.trade.atomic.AtomicTradeManager;
+import bisq.core.trade.atomic.BsqSwapMakerTrade;
+import bisq.core.trade.atomic.BsqSwapTakerTrade;
+import bisq.core.trade.atomic.BsqSwapTrade;
 import bisq.core.trade.atomic.messages.CreateAtomicTxRequest;
 import bisq.core.trade.atomic.protocol.AtomicMakerProtocol;
 import bisq.core.trade.closed.ClosedTradableManager;
@@ -323,7 +323,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
 
         Offer offer = openOffer.getOffer();
         openOfferManager.reserveOpenOffer(openOffer);
-        AtomicTrade atomicTrade = new AtomicMakerTrade(
+        BsqSwapTrade bsqSwapTrade = new BsqSwapMakerTrade(
                 UUID.randomUUID().toString(),
                 offer,
                 Coin.valueOf(createAtomicTxRequest.getBtcTradeAmount()),
@@ -335,11 +335,11 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                 createAtomicTxRequest.getTakerFee(),
                 new BsqSwapProtocolModel(keyRing.getPubKeyRing()),
                 "",
-                AtomicTrade.State.PREPARATION);
+                BsqSwapTrade.State.PREPARATION);
 
-        TradeProtocol tradeProtocol = createTradeProtocol(atomicTrade);
+        TradeProtocol tradeProtocol = createTradeProtocol(bsqSwapTrade);
 
-        initTradeAndProtocol(atomicTrade, tradeProtocol);
+        initTradeAndProtocol(bsqSwapTrade, tradeProtocol);
 
         ((AtomicMakerProtocol) tradeProtocol).handleTakeAtomicRequest(createAtomicTxRequest, peer, errorMessage -> {
             if (takeOfferRequestErrorMessageHandler != null)
@@ -526,7 +526,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                                   long makerFee,
                                   long takerFee,
                                   boolean isTakerApiUser,
-                                  TradeResultHandler<AtomicTrade> tradeResultHandler,
+                                  TradeResultHandler<BsqSwapTrade> tradeResultHandler,
                                   ErrorMessageHandler errorMessageHandler) {
 
         checkArgument(!wasOfferAlreadyUsedInTrade(offer.getId()));
@@ -535,7 +535,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         offer.checkOfferAvailability(model,
                 () -> {
                     if (offer.getState() == Offer.State.AVAILABLE) {
-                        AtomicTrade atomicTrade = new AtomicTakerTrade(UUID.randomUUID().toString(),
+                        BsqSwapTrade bsqSwapTrade = new BsqSwapTakerTrade(UUID.randomUUID().toString(),
                                 offer,
                                 amount,
                                 price,
@@ -546,14 +546,14 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                                 takerFee,
                                 new BsqSwapProtocolModel(keyRing.getPubKeyRing()),
                                 "",
-                                AtomicTrade.State.PREPARATION);
+                                BsqSwapTrade.State.PREPARATION);
 
-                        TradeProtocol tradeProtocol = createTradeProtocol(atomicTrade);
+                        TradeProtocol tradeProtocol = createTradeProtocol(bsqSwapTrade);
 
-                        initTradeAndProtocol(atomicTrade, tradeProtocol);
+                        initTradeAndProtocol(bsqSwapTrade, tradeProtocol);
 
                         ((TakerProtocol) tradeProtocol).onTakeOffer();
-                        tradeResultHandler.handleResult(atomicTrade);
+                        tradeResultHandler.handleResult(bsqSwapTrade);
                         requestPersistence();
                     }
                 },
@@ -638,8 +638,8 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
     // If trade was completed (closed without fault but might be closed by a dispute) we move it to the closed trades
     public void onTradeCompleted(TradeModel tradeModel) {
         removeTrade(tradeModel);
-        if (tradeModel instanceof AtomicTrade) {
-            atomicTradeManager.add((AtomicTrade) tradeModel);
+        if (tradeModel instanceof BsqSwapTrade) {
+            atomicTradeManager.add((BsqSwapTrade) tradeModel);
         } else {
             closedTradableManager.add(tradeModel);
         }
@@ -840,7 +840,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                 .findFirst();
     }
 
-    public Optional<AtomicTrade> getAtomicTradeById(String tradeId) {
+    public Optional<BsqSwapTrade> getAtomicTradeById(String tradeId) {
         return atomicTradeManager.getAtomicTradeById(tradeId);
     }
 

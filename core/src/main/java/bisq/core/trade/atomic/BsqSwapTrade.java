@@ -50,7 +50,7 @@ import lombok.extern.slf4j.Slf4j;
 import javax.annotation.Nullable;
 
 @Slf4j
-public abstract class AtomicTrade extends TradeModel {
+public abstract class BsqSwapTrade extends TradeModel {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Enums
@@ -62,11 +62,11 @@ public abstract class AtomicTrade extends TradeModel {
         TX_CONFIRMED,
         FAILED;
 
-        public static AtomicTrade.State fromProto(protobuf.AtomicTrade.State state) {
-            return ProtoUtil.enumFromProto(AtomicTrade.State.class, state.name());
+        public static BsqSwapTrade.State fromProto(protobuf.AtomicTrade.State state) {
+            return ProtoUtil.enumFromProto(BsqSwapTrade.State.class, state.name());
         }
 
-        public static protobuf.AtomicTrade.State toProtoMessage(AtomicTrade.State state) {
+        public static protobuf.AtomicTrade.State toProtoMessage(BsqSwapTrade.State state) {
             return protobuf.AtomicTrade.State.valueOf(state.name());
         }
     }
@@ -104,7 +104,7 @@ public abstract class AtomicTrade extends TradeModel {
     @Getter
     private State state;
 
-    transient final private ObjectProperty<AtomicTrade.State> stateProperty = new SimpleObjectProperty<>(state);
+    transient final private ObjectProperty<BsqSwapTrade.State> stateProperty = new SimpleObjectProperty<>(state);
     transient final private StringProperty errorMessageProperty = new SimpleStringProperty();
 
 
@@ -112,18 +112,18 @@ public abstract class AtomicTrade extends TradeModel {
     // Constructor, initialization
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    protected AtomicTrade(String uid,
-                          Offer offer,
-                          Coin amount,
-                          long price,
-                          long takeOfferDate,
-                          @Nullable NodeAddress peerNodeAddress,
-                          long miningFeePerByte,
-                          long makerFee,
-                          long takerFee,
-                          BsqSwapProtocolModel bsqSwapProtocolModel,
-                          @Nullable String errorMessage,
-                          State state) {
+    protected BsqSwapTrade(String uid,
+                           Offer offer,
+                           Coin amount,
+                           long price,
+                           long takeOfferDate,
+                           @Nullable NodeAddress peerNodeAddress,
+                           long miningFeePerByte,
+                           long makerFee,
+                           long takerFee,
+                           BsqSwapProtocolModel bsqSwapProtocolModel,
+                           @Nullable String errorMessage,
+                           State state) {
         this.uid = uid;
         this.offer = offer;
         this.amount = amount;
@@ -164,8 +164,8 @@ public abstract class AtomicTrade extends TradeModel {
         return builder.build();
     }
 
-    public static AtomicTrade fromProto(AtomicTrade atomicTrade) {
-        return atomicTrade;
+    public static BsqSwapTrade fromProto(BsqSwapTrade bsqSwapTrade) {
+        return bsqSwapTrade;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

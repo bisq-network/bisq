@@ -42,8 +42,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Singleton
 public class AtomicTradeManager implements PersistedDataHost {
-    private final PersistenceManager<TradableList<AtomicTrade>> persistenceManager;
-    private final TradableList<AtomicTrade> atomicTrades = new TradableList<>();
+    private final PersistenceManager<TradableList<BsqSwapTrade>> persistenceManager;
+    private final TradableList<BsqSwapTrade> atomicTrades = new TradableList<>();
     private final KeyRing keyRing;
     private final PriceFeedService priceFeedService;
     private final CleanupMailboxMessages cleanupMailboxMessages;
@@ -51,7 +51,7 @@ public class AtomicTradeManager implements PersistedDataHost {
     @Inject
     public AtomicTradeManager(KeyRing keyRing,
                               PriceFeedService priceFeedService,
-                              PersistenceManager<TradableList<AtomicTrade>> persistenceManager,
+                              PersistenceManager<TradableList<BsqSwapTrade>> persistenceManager,
                               CleanupMailboxMessages cleanupMailboxMessages) {
         this.keyRing = keyRing;
         this.priceFeedService = priceFeedService;
@@ -78,14 +78,14 @@ public class AtomicTradeManager implements PersistedDataHost {
 //        cleanupMailboxMessages.handleTrades(getAtomicTrades());
     }
 
-    public void add(AtomicTrade atomicTrade) {
-        if (atomicTrades.add(atomicTrade)) {
+    public void add(BsqSwapTrade bsqSwapTrade) {
+        if (atomicTrades.add(bsqSwapTrade)) {
             requestPersistence();
         }
     }
 
-    public void remove(AtomicTrade atomicTrade) {
-        if (atomicTrades.remove(atomicTrade)) {
+    public void remove(BsqSwapTrade bsqSwapTrade) {
+        if (atomicTrades.remove(bsqSwapTrade)) {
             requestPersistence();
         }
     }
@@ -94,15 +94,15 @@ public class AtomicTradeManager implements PersistedDataHost {
         return offer.isMyOffer(keyRing);
     }
 
-    public ObservableList<AtomicTrade> getObservableList() {
+    public ObservableList<BsqSwapTrade> getObservableList() {
         return atomicTrades.getObservableList();
     }
 
-    public List<AtomicTrade> getAtomicTrades() {
+    public List<BsqSwapTrade> getAtomicTrades() {
         return ImmutableList.copyOf(new ArrayList<>(getObservableList()));
     }
 
-    public Optional<AtomicTrade> getAtomicTradeById(String id) {
+    public Optional<BsqSwapTrade> getAtomicTradeById(String id) {
         return atomicTrades.stream().filter(e -> e.getId().equals(id)).findFirst();
     }
 

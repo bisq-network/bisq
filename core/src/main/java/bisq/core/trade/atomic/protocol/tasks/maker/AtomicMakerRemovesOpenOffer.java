@@ -17,7 +17,7 @@
 
 package bisq.core.trade.atomic.protocol.tasks.maker;
 
-import bisq.core.trade.atomic.AtomicTrade;
+import bisq.core.trade.atomic.BsqSwapTrade;
 import bisq.core.trade.protocol.tasks.AtomicTradeTask;
 
 import bisq.common.taskrunner.TaskRunner;
@@ -28,8 +28,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class AtomicMakerRemovesOpenOffer extends AtomicTradeTask {
-    public AtomicMakerRemovesOpenOffer(TaskRunner<AtomicTrade> taskHandler, AtomicTrade atomicTrade) {
-        super(taskHandler, atomicTrade);
+    public AtomicMakerRemovesOpenOffer(TaskRunner<BsqSwapTrade> taskHandler, BsqSwapTrade bsqSwapTrade) {
+        super(taskHandler, bsqSwapTrade);
     }
 
     @Override
@@ -37,7 +37,7 @@ public class AtomicMakerRemovesOpenOffer extends AtomicTradeTask {
         try {
             runInterceptHook();
 
-            bsqSwapProtocolModel.getOpenOfferManager().closeOpenOffer(checkNotNull(atomicTrade.getOffer()));
+            bsqSwapProtocolModel.getOpenOfferManager().closeOpenOffer(checkNotNull(bsqSwapTrade.getOffer()));
 
             complete();
         } catch (Throwable t) {

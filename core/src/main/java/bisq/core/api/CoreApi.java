@@ -26,7 +26,7 @@ import bisq.core.offer.OpenOffer;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.trade.Trade;
-import bisq.core.trade.atomic.AtomicTrade;
+import bisq.core.trade.atomic.BsqSwapTrade;
 import bisq.core.trade.handlers.TradeResultHandler;
 import bisq.core.trade.statistics.TradeStatistics3;
 import bisq.core.trade.statistics.TradeStatisticsManager;
@@ -36,9 +36,6 @@ import bisq.common.config.Config;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
 
-import bisq.proto.grpc.AtomicOfferInfo;
-
-import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
@@ -273,7 +270,7 @@ public class CoreApi {
     public void takeAtomicOffer(String offerId,
                                 String paymentAccountId,
                                 String takerFeeCurrencyCode,
-                                TradeResultHandler<AtomicTrade> tradeResultHandler,
+                                TradeResultHandler<BsqSwapTrade> tradeResultHandler,
                                 ErrorMessageHandler errorMessageHandler) {
         Offer atomicOffer = coreOffersService.getAtomicOffer(offerId);
         coreTradesService.takeAtomicOffer(atomicOffer,
@@ -312,7 +309,7 @@ public class CoreApi {
         coreTradesService.withdrawFunds(tradeId, address, memo);
     }
 
-    public AtomicTrade getAtomicTrade(String tradeId) {
+    public BsqSwapTrade getAtomicTrade(String tradeId) {
         return coreTradesService.getAtomicTrade(tradeId);
     }
 

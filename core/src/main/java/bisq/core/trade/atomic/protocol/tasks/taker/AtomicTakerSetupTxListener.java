@@ -17,7 +17,7 @@
 
 package bisq.core.trade.atomic.protocol.tasks.taker;
 
-import bisq.core.trade.atomic.AtomicTrade;
+import bisq.core.trade.atomic.BsqSwapTrade;
 import bisq.core.trade.atomic.protocol.tasks.AtomicSetupTxListener;
 
 import bisq.common.taskrunner.TaskRunner;
@@ -32,8 +32,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class AtomicTakerSetupTxListener extends AtomicSetupTxListener {
 
     @SuppressWarnings({"unused"})
-    public AtomicTakerSetupTxListener(TaskRunner<AtomicTrade> taskHandler, AtomicTrade atomicTrade) {
-        super(taskHandler, atomicTrade);
+    public AtomicTakerSetupTxListener(TaskRunner<BsqSwapTrade> taskHandler, BsqSwapTrade bsqSwapTrade) {
+        super(taskHandler, bsqSwapTrade);
     }
 
     @Override

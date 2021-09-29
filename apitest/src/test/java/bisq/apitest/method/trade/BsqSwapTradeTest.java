@@ -50,7 +50,7 @@ import bisq.apitest.method.offer.AbstractOfferTest;
 // @Disabled
 @Slf4j
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class AtomicTradeTest extends AbstractOfferTest {
+public class BsqSwapTradeTest extends AbstractOfferTest {
 
     private static final String BISQ_FEE_CURRENCY_CODE = BSQ;
 

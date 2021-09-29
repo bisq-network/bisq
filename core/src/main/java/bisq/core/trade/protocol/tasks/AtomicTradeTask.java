@@ -18,7 +18,7 @@
 package bisq.core.trade.protocol.tasks;
 
 import bisq.core.trade.TradeModel;
-import bisq.core.trade.atomic.AtomicTrade;
+import bisq.core.trade.atomic.BsqSwapTrade;
 import bisq.core.trade.protocol.BsqSwapProtocolModel;
 
 import bisq.common.taskrunner.Task;
@@ -29,13 +29,13 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public abstract class AtomicTradeTask extends Task<TradeModel> {
     protected final BsqSwapProtocolModel bsqSwapProtocolModel;
-    protected final AtomicTrade atomicTrade;
+    protected final BsqSwapTrade bsqSwapTrade;
 
-    protected AtomicTradeTask(TaskRunner<AtomicTrade> taskHandler, AtomicTrade atomicTrade) {
-        super(taskHandler, atomicTrade);
+    protected AtomicTradeTask(TaskRunner<BsqSwapTrade> taskHandler, BsqSwapTrade bsqSwapTrade) {
+        super(taskHandler, bsqSwapTrade);
 
-        this.atomicTrade = atomicTrade;
-        bsqSwapProtocolModel = atomicTrade.getBsqSwapProtocolModel();
+        this.bsqSwapTrade = bsqSwapTrade;
+        bsqSwapProtocolModel = bsqSwapTrade.getBsqSwapProtocolModel();
     }
 
     @Override
@@ -47,7 +47,7 @@ public abstract class AtomicTradeTask extends Task<TradeModel> {
 
     @Override
     protected void failed() {
-        atomicTrade.setErrorMessage(errorMessage);
+        bsqSwapTrade.setErrorMessage(errorMessage);
         bsqSwapProtocolModel.getTradeManager().requestPersistence();
 
         super.failed();
@@ -56,7 +56,7 @@ public abstract class AtomicTradeTask extends Task<TradeModel> {
     @Override
     protected void failed(String message) {
         appendToErrorMessage(message);
-        atomicTrade.setErrorMessage(errorMessage);
+        bsqSwapTrade.setErrorMessage(errorMessage);
         bsqSwapProtocolModel.getTradeManager().requestPersistence();
 
         super.failed();
@@ -66,7 +66,7 @@ public abstract class AtomicTradeTask extends Task<TradeModel> {
     protected void failed(Throwable t) {
         t.printStackTrace();
         appendExceptionToErrorMessage(t);
-        atomicTrade.setErrorMessage(errorMessage);
+        bsqSwapTrade.setErrorMessage(errorMessage);
         bsqSwapProtocolModel.getTradeManager().requestPersistence();
 
         super.failed();

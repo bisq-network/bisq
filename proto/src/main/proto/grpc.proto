@@ -403,7 +403,7 @@ message TakeAtomicOfferRequest {
 }
 
 message TakeAtomicOfferReply {
-    AtomicTradeInfo atomicTrade = 1;
+    AtomicTradeInfo bsqSwapTrade = 1;
     AvailabilityResultWithDescription failureReason = 2;
 }
 
@@ -433,7 +433,7 @@ message ConfirmPaymentReceivedReply {
 }
 
 message GetAtomicTradeReply {
-    AtomicTradeInfo atomicTrade = 1;
+    AtomicTradeInfo bsqSwapTrade = 1;
 }
 
 message GetTradeRequest {

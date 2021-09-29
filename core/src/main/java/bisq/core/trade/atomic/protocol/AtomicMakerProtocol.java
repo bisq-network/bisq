@@ -18,8 +18,8 @@
 package bisq.core.trade.atomic.protocol;
 
 
-import bisq.core.trade.atomic.AtomicMakerTrade;
-import bisq.core.trade.atomic.AtomicTrade;
+import bisq.core.trade.atomic.BsqSwapMakerTrade;
+import bisq.core.trade.atomic.BsqSwapTrade;
 import bisq.core.trade.atomic.messages.CreateAtomicTxRequest;
 import bisq.core.trade.atomic.protocol.tasks.AtomicApplyFilter;
 import bisq.core.trade.atomic.protocol.tasks.maker.AtomicMakerCreatesAndSignsTx;
@@ -38,13 +38,13 @@ import bisq.common.handlers.ErrorMessageHandler;
 
 public class AtomicMakerProtocol extends TradeProtocol {
 
-    private final AtomicMakerTrade atomicMakerTrade;
+    private final BsqSwapMakerTrade atomicMakerTrade;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public AtomicMakerProtocol(AtomicMakerTrade trade) {
+    public AtomicMakerProtocol(BsqSwapMakerTrade trade) {
         super(trade);
 
         this.atomicMakerTrade = trade;
@@ -57,7 +57,7 @@ public class AtomicMakerProtocol extends TradeProtocol {
     public void handleTakeAtomicRequest(CreateAtomicTxRequest tradeMessage,
                                         NodeAddress sender,
                                         ErrorMessageHandler errorMessageHandler) {
-        expect(preCondition(AtomicTrade.State.PREPARATION == atomicMakerTrade.getState())
+        expect(preCondition(BsqSwapTrade.State.PREPARATION == atomicMakerTrade.getState())
                 .with(tradeMessage)
                 .from(sender))
                 .setup(tasks(

@@ -19,8 +19,8 @@ package bisq.core.trade.atomic.protocol;
 
 
 import bisq.core.offer.Offer;
-import bisq.core.trade.atomic.AtomicTakerTrade;
-import bisq.core.trade.atomic.AtomicTrade;
+import bisq.core.trade.atomic.BsqSwapTakerTrade;
+import bisq.core.trade.atomic.BsqSwapTrade;
 import bisq.core.trade.atomic.messages.CreateAtomicTxResponse;
 import bisq.core.trade.atomic.protocol.tasks.AtomicApplyFilter;
 import bisq.core.trade.atomic.protocol.tasks.taker.AtomicTakerPreparesData;
@@ -41,13 +41,13 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Slf4j
 public class AtomicTakerProtocol extends TradeProtocol implements TakerProtocol {
 
-    private final AtomicTakerTrade atomicTakerTrade;
+    private final BsqSwapTakerTrade atomicTakerTrade;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public AtomicTakerProtocol(AtomicTakerTrade trade) {
+    public AtomicTakerProtocol(BsqSwapTakerTrade trade) {
         super(trade);
         this.atomicTakerTrade = trade;
         Offer offer = checkNotNull(trade.getOffer());
@@ -60,7 +60,7 @@ public class AtomicTakerProtocol extends TradeProtocol implements TakerProtocol 
 
     @Override
     public void onTakeOffer() {
-        expect(preCondition(AtomicTrade.State.PREPARATION == atomicTakerTrade.getState())
+        expect(preCondition(BsqSwapTrade.State.PREPARATION == atomicTakerTrade.getState())
                 .with(TakerEvent.TAKE_OFFER))
                 .setup(tasks(
                         AtomicApplyFilter.class,
@@ -79,7 +79,7 @@ public class AtomicTakerProtocol extends TradeProtocol implements TakerProtocol 
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     void handle(CreateAtomicTxResponse tradeMessage, NodeAddress peerNodeAddress) {
-        expect(preCondition(AtomicTrade.State.PREPARATION == atomicTakerTrade.getState())
+        expect(preCondition(BsqSwapTrade.State.PREPARATION == atomicTakerTrade.getState())
                 .with(tradeMessage))
                 .setup(tasks(
                         AtomicTakerVerifyAtomicTx.class,
