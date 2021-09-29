@@ -17,11 +17,11 @@
 
 package bisq.core.offer;
 
+import bisq.core.btc.AtomicTxBuilder;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.provider.fee.FeeService;
-import bisq.core.trade.atomic.AtomicTxBuilder;
 import bisq.core.util.coin.CoinUtil;
 
 import bisq.common.crypto.KeyRing;
@@ -35,8 +35,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j

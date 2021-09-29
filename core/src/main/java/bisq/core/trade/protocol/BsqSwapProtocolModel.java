@@ -17,6 +17,7 @@
 
 package bisq.core.trade.protocol;
 
+import bisq.core.btc.AtomicTxBuilder;
 import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
@@ -29,7 +30,6 @@ import bisq.core.offer.Offer;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.proto.CoreProtoResolver;
 import bisq.core.trade.TradeManager;
-import bisq.core.trade.atomic.AtomicTxBuilder;
 import bisq.core.trade.atomic.BsqSwapTrade;
 import bisq.core.trade.atomic.messages.CreateAtomicTxRequest;
 import bisq.core.trade.atomic.messages.CreateAtomicTxResponse;

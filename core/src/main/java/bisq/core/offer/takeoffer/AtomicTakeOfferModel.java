@@ -18,6 +18,7 @@
 package bisq.core.offer.takeoffer;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
+import bisq.core.btc.AtomicTxBuilder;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.Restrictions;
@@ -34,7 +35,6 @@ import bisq.core.offer.OfferUtil;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.trade.TradeManager;
-import bisq.core.trade.atomic.AtomicTxBuilder;
 import bisq.core.trade.atomic.BsqSwapTrade;
 import bisq.core.trade.handlers.TradeResultHandler;
 import bisq.core.user.Preferences;
