@@ -49,38 +49,38 @@ public class AtomicMakerVerifiesAmounts extends AtomicSetupTxListener {
             // Verify that AtomicTrade values don't disagree with the offer
 
             // Verify offer and message
-            Validator.checkTradeId(atomicProcessModel.getOffer().getId(), atomicProcessModel.getTradeMessage());
-            checkArgument(atomicProcessModel.getOffer().isMyOffer(atomicProcessModel.getKeyRing()),
+            Validator.checkTradeId(bsqSwapProtocolModel.getOffer().getId(), bsqSwapProtocolModel.getTradeMessage());
+            checkArgument(bsqSwapProtocolModel.getOffer().isMyOffer(bsqSwapProtocolModel.getKeyRing()),
                     "must only process own offer");
-            checkArgument(atomicProcessModel.getTradeMessage() instanceof CreateAtomicTxRequest,
+            checkArgument(bsqSwapProtocolModel.getTradeMessage() instanceof CreateAtomicTxRequest,
                     "Expected CreateAtomicTxRequest");
 
 
-            var message = (CreateAtomicTxRequest) atomicProcessModel.getTradeMessage();
+            var message = (CreateAtomicTxRequest) bsqSwapProtocolModel.getTradeMessage();
             var offer = atomicTrade.getOffer();
-            atomicProcessModel.initFromTrade(atomicTrade);
-            atomicProcessModel.setMakerBsqAddress(
-                    atomicProcessModel.getBsqWalletService().getUnusedAddress().toString());
-            atomicProcessModel.setMakerBtcAddress(
-                    atomicProcessModel.getBtcWalletService().getFreshAddressEntry().getAddressString());
+            bsqSwapProtocolModel.initFromTrade(atomicTrade);
+            bsqSwapProtocolModel.setMakerBsqAddress(
+                    bsqSwapProtocolModel.getBsqWalletService().getUnusedAddress().toString());
+            bsqSwapProtocolModel.setMakerBtcAddress(
+                    bsqSwapProtocolModel.getBtcWalletService().getFreshAddressEntry().getAddressString());
 
             checkArgument(atomicTrade.getPrice().equals(offer.getPrice()),
                     "Trade price does not match offer");
             checkArgument(atomicTrade.getAmount().getValue() >= offer.getMinAmount().getValue() &&
                             atomicTrade.getAmount().getValue() <= offer.getAmount().getValue(),
                     "btcTradeAmount not within range");
-            checkArgument(message.getBsqTradeAmount() >= atomicProcessModel.getBsqMinTradeAmount() &&
-                            message.getBsqTradeAmount() <= atomicProcessModel.getBsqMaxTradeAmount(),
+            checkArgument(message.getBsqTradeAmount() >= bsqSwapProtocolModel.getBsqMinTradeAmount() &&
+                            message.getBsqTradeAmount() <= bsqSwapProtocolModel.getBsqMaxTradeAmount(),
                     "bsqTradeAmount not within range");
             checkArgument(atomicTrade.getMakerFee() ==
-                    Objects.requireNonNull(CoinUtil.getMakerFee(false, atomicTrade.getAmount())).getValue(),
+                            Objects.requireNonNull(CoinUtil.getMakerFee(false, atomicTrade.getAmount())).getValue(),
                     "Maker fee mismatch");
             checkArgument(atomicTrade.getTakerFee() ==
                             Objects.requireNonNull(CoinUtil.getTakerFee(false, atomicTrade.getAmount())).getValue(),
                     "Taker fee mismatch");
 
-            atomicProcessModel.updateFromMessage(message);
-            atomicProcessModel.initTxBuilder(true);
+            bsqSwapProtocolModel.updateFromMessage(message);
+            bsqSwapProtocolModel.initTxBuilder(true);
 
             complete();
         } catch (Throwable t) {

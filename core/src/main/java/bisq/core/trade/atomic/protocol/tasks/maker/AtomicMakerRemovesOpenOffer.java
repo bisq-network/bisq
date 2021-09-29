@@ -37,7 +37,7 @@ public class AtomicMakerRemovesOpenOffer extends AtomicTradeTask {
         try {
             runInterceptHook();
 
-            atomicProcessModel.getOpenOfferManager().closeOpenOffer(checkNotNull(atomicTrade.getOffer()));
+            bsqSwapProtocolModel.getOpenOfferManager().closeOpenOffer(checkNotNull(atomicTrade.getOffer()));
 
             complete();
         } catch (Throwable t) {

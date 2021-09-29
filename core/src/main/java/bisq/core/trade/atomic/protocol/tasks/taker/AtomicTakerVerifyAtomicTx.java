@@ -61,54 +61,54 @@ public class AtomicTakerVerifyAtomicTx extends AtomicTradeTask {
              *   - BTC output to taker BTC address
              */
 
-            checkArgument(!atomicProcessModel.getOffer().isMyOffer(atomicProcessModel.getKeyRing()),
+            checkArgument(!bsqSwapProtocolModel.getOffer().isMyOffer(bsqSwapProtocolModel.getKeyRing()),
                     "must not take own offer");
-            checkArgument(atomicProcessModel.getTradeMessage() instanceof CreateAtomicTxResponse,
+            checkArgument(bsqSwapProtocolModel.getTradeMessage() instanceof CreateAtomicTxResponse,
                     "Expected CreateAtomicTxResponse");
 
-            var message = (CreateAtomicTxResponse) atomicProcessModel.getTradeMessage();
-            atomicProcessModel.updateFromMessage(message);
+            var message = (CreateAtomicTxResponse) bsqSwapProtocolModel.getTradeMessage();
+            bsqSwapProtocolModel.updateFromMessage(message);
 
-            var myTx = atomicProcessModel.createAtomicTx();
-            var makerTx = atomicProcessModel.getBtcWalletService().getTxFromSerializedTx(message.getAtomicTx());
+            var myTx = bsqSwapProtocolModel.createAtomicTx();
+            var makerTx = bsqSwapProtocolModel.getBtcWalletService().getTxFromSerializedTx(message.getAtomicTx());
             // Strip sigs from maker tx and compare with myTx to make sure they are the same
             makerTx.getInputs().forEach(TransactionInput::clearScriptBytes);
             checkArgument(myTx.equals(makerTx), "Maker tx doesn't match my tx");
 
             // Verify BSQ input and output amounts match
-            var bsqInputAmount = atomicProcessModel.getBsqWalletService().getConfirmedBsqInputAmount(
-                    myTx.getInputs(), atomicProcessModel.getDaoFacade());
+            var bsqInputAmount = bsqSwapProtocolModel.getBsqWalletService().getConfirmedBsqInputAmount(
+                    myTx.getInputs(), bsqSwapProtocolModel.getDaoFacade());
             checkArgument(bsqInputAmount ==
-                            atomicProcessModel.getMakerBsqOutputAmount() +
-                                    atomicProcessModel.getTakerBsqOutputAmount() +
-                                    atomicProcessModel.getBsqMakerTradeFee() +
-                                    atomicProcessModel.getBsqTakerTradeFee(),
+                            bsqSwapProtocolModel.getMakerBsqOutputAmount() +
+                                    bsqSwapProtocolModel.getTakerBsqOutputAmount() +
+                                    bsqSwapProtocolModel.getBsqMakerTradeFee() +
+                                    bsqSwapProtocolModel.getBsqTakerTradeFee(),
                     "BSQ input doesn't match BSQ output amount");
 
             // Create signed tx and verify tx fee is not too low
             // Sign my inputs on myTx
-            atomicProcessModel.getTradeWalletService().signInputs(myTx, atomicProcessModel.getRawTakerBtcInputs());
-            atomicProcessModel.getBsqWalletService().signInputs(myTx, atomicProcessModel.getRawTakerBsqInputs());
+            bsqSwapProtocolModel.getTradeWalletService().signInputs(myTx, bsqSwapProtocolModel.getRawTakerBtcInputs());
+            bsqSwapProtocolModel.getBsqWalletService().signInputs(myTx, bsqSwapProtocolModel.getRawTakerBsqInputs());
 
             // Create fully signed atomic tx by combining signed inputs from maker tx and my tx
-            makerTx = atomicProcessModel.getBtcWalletService().getTxFromSerializedTx(message.getAtomicTx());
-            var signedTx = atomicProcessModel.createAtomicTx();
+            makerTx = bsqSwapProtocolModel.getBtcWalletService().getTxFromSerializedTx(message.getAtomicTx());
+            var signedTx = bsqSwapProtocolModel.createAtomicTx();
             var txFee = signedTx.getFee().getValue();
             signedTx.clearInputs();
             int index = 0;
-            for (; index < atomicProcessModel.numTakerInputs(); ++index) {
+            for (; index < bsqSwapProtocolModel.numTakerInputs(); ++index) {
                 signedTx.addInput(myTx.getInput(index));
             }
-            for (; index < atomicProcessModel.numTakerInputs() + atomicProcessModel.numMakerInputs(); ++index) {
+            for (; index < bsqSwapProtocolModel.numTakerInputs() + bsqSwapProtocolModel.numMakerInputs(); ++index) {
                 signedTx.addInput(makerTx.getInput(index));
             }
 
-            checkArgument(txFee >= signedTx.getVsize() * atomicProcessModel.getTxFeePerVbyte(),
+            checkArgument(txFee >= signedTx.getVsize() * bsqSwapProtocolModel.getTxFeePerVbyte(),
                     "Tx fee too low txFee={} vsize*fee={}", txFee,
-                    signedTx.getVsize() * atomicProcessModel.getTxFeePerVbyte());
+                    signedTx.getVsize() * bsqSwapProtocolModel.getTxFeePerVbyte());
 
-            atomicProcessModel.setVerifiedAtomicTx(signedTx);
-            atomicProcessModel.setAtomicTx(signedTx.bitcoinSerialize());
+            bsqSwapProtocolModel.setVerifiedAtomicTx(signedTx);
+            bsqSwapProtocolModel.setAtomicTx(signedTx.bitcoinSerialize());
 
             complete();
         } catch (Throwable t) {

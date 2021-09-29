@@ -44,12 +44,12 @@ public class AtomicApplyFilter extends AtomicTradeTask {
         try {
             runInterceptHook();
 
-            NodeAddress nodeAddress = checkNotNull(atomicProcessModel.getTempTradingPeerNodeAddress());
+            NodeAddress nodeAddress = checkNotNull(bsqSwapProtocolModel.getTempTradingPeerNodeAddress());
             @Nullable
             PaymentAccountPayload paymentAccountPayload =
-                    atomicProcessModel.getTradingPeer().getPaymentAccountPayload();
+                    bsqSwapProtocolModel.getTradingPeer().getPaymentAccountPayload();
 
-            FilterManager filterManager = atomicProcessModel.getFilterManager();
+            FilterManager filterManager = bsqSwapProtocolModel.getFilterManager();
 
             TradeUtil.applyFilter(atomicTrade,
                     filterManager,

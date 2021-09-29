@@ -19,7 +19,7 @@ package bisq.core.trade.protocol.tasks;
 
 import bisq.core.trade.TradeModel;
 import bisq.core.trade.atomic.AtomicTrade;
-import bisq.core.trade.protocol.AtomicProcessModel;
+import bisq.core.trade.protocol.BsqSwapProtocolModel;
 
 import bisq.common.taskrunner.Task;
 import bisq.common.taskrunner.TaskRunner;
@@ -28,19 +28,19 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public abstract class AtomicTradeTask extends Task<TradeModel> {
-    protected final AtomicProcessModel atomicProcessModel;
+    protected final BsqSwapProtocolModel bsqSwapProtocolModel;
     protected final AtomicTrade atomicTrade;
 
     protected AtomicTradeTask(TaskRunner<AtomicTrade> taskHandler, AtomicTrade atomicTrade) {
         super(taskHandler, atomicTrade);
 
         this.atomicTrade = atomicTrade;
-        atomicProcessModel = atomicTrade.getAtomicProcessModel();
+        bsqSwapProtocolModel = atomicTrade.getBsqSwapProtocolModel();
     }
 
     @Override
     protected void complete() {
-        atomicProcessModel.getTradeManager().requestPersistence();
+        bsqSwapProtocolModel.getTradeManager().requestPersistence();
 
         super.complete();
     }
@@ -48,7 +48,7 @@ public abstract class AtomicTradeTask extends Task<TradeModel> {
     @Override
     protected void failed() {
         atomicTrade.setErrorMessage(errorMessage);
-        atomicProcessModel.getTradeManager().requestPersistence();
+        bsqSwapProtocolModel.getTradeManager().requestPersistence();
 
         super.failed();
     }
@@ -57,7 +57,7 @@ public abstract class AtomicTradeTask extends Task<TradeModel> {
     protected void failed(String message) {
         appendToErrorMessage(message);
         atomicTrade.setErrorMessage(errorMessage);
-        atomicProcessModel.getTradeManager().requestPersistence();
+        bsqSwapProtocolModel.getTradeManager().requestPersistence();
 
         super.failed();
     }
@@ -67,7 +67,7 @@ public abstract class AtomicTradeTask extends Task<TradeModel> {
         t.printStackTrace();
         appendExceptionToErrorMessage(t);
         atomicTrade.setErrorMessage(errorMessage);
-        atomicProcessModel.getTradeManager().requestPersistence();
+        bsqSwapProtocolModel.getTradeManager().requestPersistence();
 
         super.failed();
     }

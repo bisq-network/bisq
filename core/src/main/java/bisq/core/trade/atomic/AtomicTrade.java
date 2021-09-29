@@ -22,7 +22,7 @@ import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
 import bisq.core.proto.CoreProtoResolver;
 import bisq.core.trade.TradeModel;
-import bisq.core.trade.protocol.AtomicProcessModel;
+import bisq.core.trade.protocol.BsqSwapProtocolModel;
 import bisq.core.trade.protocol.TradeProtocolModel;
 
 import bisq.network.p2p.NodeAddress;
@@ -99,7 +99,7 @@ public abstract class AtomicTrade extends TradeModel {
     @Getter
     private final long takerFee;
     @Getter
-    private final AtomicProcessModel atomicProcessModel;
+    private final BsqSwapProtocolModel bsqSwapProtocolModel;
     @Nullable
     private String errorMessage;
     @Getter
@@ -122,7 +122,7 @@ public abstract class AtomicTrade extends TradeModel {
                           long miningFeePerByte,
                           long makerFee,
                           long takerFee,
-                          AtomicProcessModel atomicProcessModel,
+                          BsqSwapProtocolModel bsqSwapProtocolModel,
                           @Nullable String errorMessage,
                           State state) {
         this.uid = uid;
@@ -134,7 +134,7 @@ public abstract class AtomicTrade extends TradeModel {
         this.miningFeePerByte = miningFeePerByte;
         this.makerFee = makerFee;
         this.takerFee = takerFee;
-        this.atomicProcessModel = atomicProcessModel;
+        this.bsqSwapProtocolModel = bsqSwapProtocolModel;
         this.errorMessage = errorMessage;
         this.state = state;
     }
@@ -155,7 +155,7 @@ public abstract class AtomicTrade extends TradeModel {
                 .setMiningFeePerByte(miningFeePerByte)
                 .setMakerFee(makerFee)
                 .setTakerFee(takerFee)
-                .setAtomicProcessModel(atomicProcessModel.toProtoMessage())
+                .setAtomicProcessModel(bsqSwapProtocolModel.toProtoMessage())
                 .setState(State.toProtoMessage(state));
         Optional.ofNullable(txId).ifPresent(builder::setTxId);
         Optional.ofNullable(peerNodeAddress).ifPresent(e -> builder.setPeerNodeAddress(
@@ -184,7 +184,7 @@ public abstract class AtomicTrade extends TradeModel {
 
     @Override
     public TradeProtocolModel getTradeProtocolModel() {
-        return atomicProcessModel;
+        return bsqSwapProtocolModel;
     }
 
     @Override

@@ -75,11 +75,11 @@ public abstract class AtomicSetupTxListener extends AtomicTradeTask {
     private void applyConfidence(TransactionConfidence confidence) {
         Transaction walletTx = walletService.getTransaction(confidence.getTransactionHash());
         checkNotNull(walletTx, "Tx from network should not be null");
-        if (atomicProcessModel.getAtomicTx() != null) {
+        if (bsqSwapProtocolModel.getAtomicTx() != null) {
             atomicTrade.setTxId(walletTx.getTxId().toString());
             WalletService.printTx("atomicTx received from network", walletTx);
             setState();
-            atomicProcessModel.getTradeManager().onTradeCompleted(atomicTrade);
+            bsqSwapProtocolModel.getTradeManager().onTradeCompleted(atomicTrade);
         } else {
             log.info("We had the atomic tx already set. tradeId={}, state={}", atomicTrade.getId(),
                     atomicTrade.getState());
@@ -97,7 +97,7 @@ public abstract class AtomicSetupTxListener extends AtomicTradeTask {
 
     private void unSubscribe() {
         if (confidenceListener != null)
-            atomicProcessModel.getBtcWalletService().removeAddressConfidenceListener(confidenceListener);
+            bsqSwapProtocolModel.getBtcWalletService().removeAddressConfidenceListener(confidenceListener);
     }
 
     protected void setState() {

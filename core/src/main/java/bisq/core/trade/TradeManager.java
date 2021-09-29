@@ -40,7 +40,7 @@ import bisq.core.trade.closed.ClosedTradableManager;
 import bisq.core.trade.failed.FailedTradesManager;
 import bisq.core.trade.handlers.TradeResultHandler;
 import bisq.core.trade.messages.InputsForDepositTxRequest;
-import bisq.core.trade.protocol.AtomicProcessModel;
+import bisq.core.trade.protocol.BsqSwapProtocolModel;
 import bisq.core.trade.protocol.MakerProtocol;
 import bisq.core.trade.protocol.ProcessModel;
 import bisq.core.trade.protocol.ProcessModelServiceProvider;
@@ -333,7 +333,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                 createAtomicTxRequest.getTxFeePerVbyte(),
                 createAtomicTxRequest.getMakerFee(),
                 createAtomicTxRequest.getTakerFee(),
-                new AtomicProcessModel(keyRing.getPubKeyRing()),
+                new BsqSwapProtocolModel(keyRing.getPubKeyRing()),
                 "",
                 AtomicTrade.State.PREPARATION);
 
@@ -544,7 +544,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                                 miningFeePerByte,
                                 makerFee,
                                 takerFee,
-                                new AtomicProcessModel(keyRing.getPubKeyRing()),
+                                new BsqSwapProtocolModel(keyRing.getPubKeyRing()),
                                 "",
                                 AtomicTrade.State.PREPARATION);
 

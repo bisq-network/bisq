@@ -50,31 +50,31 @@ public class AtomicMakerVerifiesTakerInputs extends AtomicTradeTask {
              * [0-1]   (Maker BTC)
              */
 
-            var message = (CreateAtomicTxRequest) atomicProcessModel.getTradeMessage();
+            var message = (CreateAtomicTxRequest) bsqSwapProtocolModel.getTradeMessage();
 
             checkArgument(new BitcoinAddressValidator(Config.baseCurrencyNetworkParameters()).validate(
                     message.getTakerBsqOutputAddress()).isValid(),
                     "Failed to validate taker BSQ outputs address");
-            checkArgument(atomicProcessModel.makerPreparesMakerSide(), "Failed to prepare maker inputs");
+            checkArgument(bsqSwapProtocolModel.makerPreparesMakerSide(), "Failed to prepare maker inputs");
 
             // Inputs
-            var makerBsqInputAmount = atomicProcessModel.getBsqWalletService().getBsqRawInputAmount(
-                    atomicProcessModel.getRawMakerBsqInputs(), atomicProcessModel.getDaoFacade());
-            var takerBsqInputAmount = atomicProcessModel.getBsqWalletService().getBsqRawInputAmount(
-                    message.getTakerBsqInputs(), atomicProcessModel.getDaoFacade());
-            var makerBtcInputAmount = atomicProcessModel.getBtcWalletService().getBtcRawInputAmount(
-                    atomicProcessModel.getRawMakerBtcInputs());
-            var takerBtcInputAmount = atomicProcessModel.getBtcWalletService().getBtcRawInputAmount(
-                    atomicProcessModel.getRawTakerBtcInputs());
+            var makerBsqInputAmount = bsqSwapProtocolModel.getBsqWalletService().getBsqRawInputAmount(
+                    bsqSwapProtocolModel.getRawMakerBsqInputs(), bsqSwapProtocolModel.getDaoFacade());
+            var takerBsqInputAmount = bsqSwapProtocolModel.getBsqWalletService().getBsqRawInputAmount(
+                    message.getTakerBsqInputs(), bsqSwapProtocolModel.getDaoFacade());
+            var makerBtcInputAmount = bsqSwapProtocolModel.getBtcWalletService().getBtcRawInputAmount(
+                    bsqSwapProtocolModel.getRawMakerBtcInputs());
+            var takerBtcInputAmount = bsqSwapProtocolModel.getBtcWalletService().getBtcRawInputAmount(
+                    bsqSwapProtocolModel.getRawTakerBtcInputs());
 
             // Outputs
-            var makerBsqOutputAmount = atomicProcessModel.getMakerBsqOutputAmount();
-            var takerBsqOutputAmount = atomicProcessModel.getTakerBsqOutputAmount();
-            var makerBtcOutputAmount = atomicProcessModel.getMakerBtcOutputAmount();
-            var takerBtcOutputAmount = atomicProcessModel.getTakerBtcOutputAmount();
+            var makerBsqOutputAmount = bsqSwapProtocolModel.getMakerBsqOutputAmount();
+            var takerBsqOutputAmount = bsqSwapProtocolModel.getTakerBsqOutputAmount();
+            var makerBtcOutputAmount = bsqSwapProtocolModel.getMakerBtcOutputAmount();
+            var takerBtcOutputAmount = bsqSwapProtocolModel.getTakerBtcOutputAmount();
 
             // Trade fee
-            var bsqTradeFeeAmount = atomicProcessModel.getBsqMakerTradeFee() + atomicProcessModel.getBsqTakerTradeFee();
+            var bsqTradeFeeAmount = bsqSwapProtocolModel.getBsqMakerTradeFee() + bsqSwapProtocolModel.getBsqTakerTradeFee();
 
             // Verify input sum equals output sum
             var bsqIn = takerBsqInputAmount + makerBsqInputAmount;
@@ -83,7 +83,7 @@ public class AtomicMakerVerifiesTakerInputs extends AtomicTradeTask {
 
             var btcIn = takerBtcInputAmount + makerBtcInputAmount + bsqTradeFeeAmount;
             var btcOut = takerBtcOutputAmount + makerBtcOutputAmount;
-            atomicProcessModel.setTxFee(btcIn - btcOut);
+            bsqSwapProtocolModel.setTxFee(btcIn - btcOut);
 
             complete();
         } catch (Throwable t) {

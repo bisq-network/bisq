@@ -47,20 +47,20 @@ public class AtomicTakerPublishAtomicTx extends AtomicTradeTask {
             runInterceptHook();
 
             // Publish atomicTx
-            var atomicTx = atomicProcessModel.getVerifiedAtomicTx();
+            var atomicTx = bsqSwapProtocolModel.getVerifiedAtomicTx();
 
             checkNotNull(atomicTx, "Verified atomictx must not be null");
 
             log.info("AtomicTxBytes: {}", Utilities.bytesAsHexString(atomicTx.bitcoinSerialize()));
-            atomicProcessModel.getWalletsManager().publishAndCommitBsqTx(atomicTx, TxType.TRANSFER_BSQ,
+            bsqSwapProtocolModel.getWalletsManager().publishAndCommitBsqTx(atomicTx, TxType.TRANSFER_BSQ,
                     new TxBroadcaster.Callback() {
                         @Override
                         public void onSuccess(Transaction transaction) {
                             if (!completed) {
                                 atomicTrade.setState(AtomicTrade.State.TX_PUBLISHED);
 
-                                atomicProcessModel.getBtcWalletService().swapTradeEntryToAvailableEntry(
-                                        atomicProcessModel.getOffer().getId(), AddressEntry.Context.RESERVED_FOR_TRADE);
+                                bsqSwapProtocolModel.getBtcWalletService().swapTradeEntryToAvailableEntry(
+                                        bsqSwapProtocolModel.getOffer().getId(), AddressEntry.Context.RESERVED_FOR_TRADE);
 
                                 complete();
                             } else {

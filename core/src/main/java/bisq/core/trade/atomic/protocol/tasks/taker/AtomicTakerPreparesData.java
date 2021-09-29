@@ -39,19 +39,19 @@ public class AtomicTakerPreparesData extends AtomicTradeTask {
         try {
             runInterceptHook();
 
-            checkArgument(!atomicProcessModel.getOffer().isMyOffer(atomicProcessModel.getKeyRing()), "must not take own offer");
+            checkArgument(!bsqSwapProtocolModel.getOffer().isMyOffer(bsqSwapProtocolModel.getKeyRing()), "must not take own offer");
 
-            atomicProcessModel.initFromTrade(atomicTrade);
-            atomicProcessModel.setTakerBsqAddress(
-                    atomicProcessModel.getBsqWalletService().getUnusedAddress().toString());
-            atomicProcessModel.setTakerBtcAddress(
-                    atomicProcessModel.getBtcWalletService().getFreshAddressEntry().getAddressString());
+            bsqSwapProtocolModel.initFromTrade(atomicTrade);
+            bsqSwapProtocolModel.setTakerBsqAddress(
+                    bsqSwapProtocolModel.getBsqWalletService().getUnusedAddress().toString());
+            bsqSwapProtocolModel.setTakerBtcAddress(
+                    bsqSwapProtocolModel.getBtcWalletService().getFreshAddressEntry().getAddressString());
 
             // Set mining fee and init AtomicTxBuilder
-            var feeService = atomicProcessModel.getProvider().getFeeService();
+            var feeService = bsqSwapProtocolModel.getProvider().getFeeService();
             feeService.requestFees(() -> {
-                        atomicProcessModel.setTxFeePerVbyte(feeService.getTxFeePerVbyte().getValue());
-                        atomicProcessModel.initTxBuilder(false);
+                        bsqSwapProtocolModel.setTxFeePerVbyte(feeService.getTxFeePerVbyte().getValue());
+                        bsqSwapProtocolModel.initTxBuilder(false);
                         complete();
                     },
                     (String errorMessage, Throwable throwable) -> {

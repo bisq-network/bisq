@@ -40,13 +40,13 @@ public class AtomicMakerSetupTxListener extends AtomicSetupTxListener {
             runInterceptHook();
 
             // Find address to listen to
-            if (atomicProcessModel.getMakerBtcAddress() != null) {
-                walletService = atomicProcessModel.getBtcWalletService();
-                myAddress = Address.fromString(walletService.getParams(), atomicProcessModel.getMakerBtcAddress());
-            } else if (atomicProcessModel.getMakerBsqAddress() != null){
+            if (bsqSwapProtocolModel.getMakerBtcAddress() != null) {
+                walletService = bsqSwapProtocolModel.getBtcWalletService();
+                myAddress = Address.fromString(walletService.getParams(), bsqSwapProtocolModel.getMakerBtcAddress());
+            } else if (bsqSwapProtocolModel.getMakerBsqAddress() != null) {
                 // Listen to BSQ address
-                walletService = atomicProcessModel.getBsqWalletService();
-                myAddress = Address.fromString(walletService.getParams(), atomicProcessModel.getMakerBsqAddress());
+                walletService = bsqSwapProtocolModel.getBsqWalletService();
+                myAddress = Address.fromString(walletService.getParams(), bsqSwapProtocolModel.getMakerBsqAddress());
             } else {
                 failed("No maker address set");
             }

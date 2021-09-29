@@ -20,7 +20,7 @@ package bisq.core.trade.atomic;
 import bisq.core.offer.Offer;
 import bisq.core.proto.CoreProtoResolver;
 import bisq.core.trade.Tradable;
-import bisq.core.trade.protocol.AtomicProcessModel;
+import bisq.core.trade.protocol.BsqSwapProtocolModel;
 
 import bisq.network.p2p.NodeAddress;
 
@@ -51,7 +51,7 @@ public final class AtomicMakerTrade extends AtomicTrade {
                             long miningFeePerByte,
                             long makerFee,
                             long takerFee,
-                            AtomicProcessModel atomicProcessModel,
+                            BsqSwapProtocolModel bsqSwapProtocolModel,
                             @Nullable String errorMessage,
                             State state) {
         super(uid,
@@ -63,7 +63,7 @@ public final class AtomicMakerTrade extends AtomicTrade {
                 miningFeePerByte,
                 makerFee,
                 takerFee,
-                atomicProcessModel,
+                bsqSwapProtocolModel,
                 errorMessage,
                 state);
     }
@@ -98,7 +98,7 @@ public final class AtomicMakerTrade extends AtomicTrade {
                         proto.getMiningFeePerByte(),
                         proto.getMakerFee(),
                         proto.getTakerFee(),
-                        AtomicProcessModel.fromProto(proto.getAtomicProcessModel(), coreProtoResolver),
+                        BsqSwapProtocolModel.fromProto(proto.getAtomicProcessModel(), coreProtoResolver),
                         proto.getErrorMessage(),
                         State.fromProto(proto.getState())),
                 proto,

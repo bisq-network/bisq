@@ -43,16 +43,16 @@ public class AtomicMakerVerifiesMiningFee extends AtomicSetupTxListener {
         try {
             runInterceptHook();
 
-            var message = (CreateAtomicTxRequest) atomicProcessModel.getTradeMessage();
+            var message = (CreateAtomicTxRequest) bsqSwapProtocolModel.getTradeMessage();
 
             // Verify mining fee
-            var feeService = atomicProcessModel.getProvider().getFeeService();
+            var feeService = bsqSwapProtocolModel.getProvider().getFeeService();
             feeService.requestFees(() -> {
                 var myFee = feeService.getTxFeePerVbyte();
                 var peerFee = Coin.valueOf(message.getTxFeePerVbyte());
                         checkArgument(isAcceptableTxFee(myFee, peerFee),
                                 "Miner fee disagreement, myFee={} peerFee={}", myFee, peerFee);
-                        atomicProcessModel.setTxFeePerVbyte(peerFee.getValue());
+                        bsqSwapProtocolModel.setTxFeePerVbyte(peerFee.getValue());
                         complete();
                     },
                     (String errorMessage, Throwable throwable) -> {

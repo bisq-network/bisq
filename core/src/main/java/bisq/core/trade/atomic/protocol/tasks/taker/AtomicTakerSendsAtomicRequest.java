@@ -45,36 +45,36 @@ public class AtomicTakerSendsAtomicRequest extends AtomicTradeTask {
         try {
             runInterceptHook();
 
-            checkArgument(!atomicProcessModel.getOffer().isMyOffer(atomicProcessModel.getKeyRing()),
+            checkArgument(!bsqSwapProtocolModel.getOffer().isMyOffer(bsqSwapProtocolModel.getKeyRing()),
                     "must not take own offer");
-            checkArgument(atomicProcessModel.takerPreparesTakerSide(),
+            checkArgument(bsqSwapProtocolModel.takerPreparesTakerSide(),
                     "Failed to prepare taker side of atomic tx");
 
             var message = new CreateAtomicTxRequest(UUID.randomUUID().toString(),
-                    atomicProcessModel.getOffer().getId(),
-                    atomicProcessModel.getMyNodeAddress(),
-                    atomicProcessModel.getPubKeyRing(),
-                    atomicProcessModel.getBsqTradeAmount(),
-                    atomicProcessModel.getBtcTradeAmount(),
-                    atomicProcessModel.getTradePrice(),
-                    atomicProcessModel.getTxFeePerVbyte(),
+                    bsqSwapProtocolModel.getOffer().getId(),
+                    bsqSwapProtocolModel.getMyNodeAddress(),
+                    bsqSwapProtocolModel.getPubKeyRing(),
+                    bsqSwapProtocolModel.getBsqTradeAmount(),
+                    bsqSwapProtocolModel.getBtcTradeAmount(),
+                    bsqSwapProtocolModel.getTradePrice(),
+                    bsqSwapProtocolModel.getTxFeePerVbyte(),
                     atomicTrade.getMakerFee(),
                     atomicTrade.getTakerFee(),
-                    atomicProcessModel.getTakerBsqOutputAmount(),
-                    atomicProcessModel.getTakerBsqAddress(),
-                    atomicProcessModel.getTakerBtcOutputAmount(),
-                    atomicProcessModel.getTakerBtcAddress(),
-                    atomicProcessModel.getRawTakerBsqInputs(),
-                    atomicProcessModel.getRawTakerBtcInputs());
+                    bsqSwapProtocolModel.getTakerBsqOutputAmount(),
+                    bsqSwapProtocolModel.getTakerBsqAddress(),
+                    bsqSwapProtocolModel.getTakerBtcOutputAmount(),
+                    bsqSwapProtocolModel.getTakerBtcAddress(),
+                    bsqSwapProtocolModel.getRawTakerBsqInputs(),
+                    bsqSwapProtocolModel.getRawTakerBtcInputs());
 
             log.info("atomictxrequest={}", message.toString());
 
             NodeAddress peersNodeAddress = atomicTrade.getTradingPeerNodeAddress();
             log.info("Send {} to peer {}. tradeId={}, uid={}",
                     message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
-            atomicProcessModel.getP2PService().sendEncryptedDirectMessage(
+            bsqSwapProtocolModel.getP2PService().sendEncryptedDirectMessage(
                     peersNodeAddress,
-                    atomicProcessModel.getTradingPeer().getPubKeyRing(),
+                    bsqSwapProtocolModel.getTradingPeer().getPubKeyRing(),
                     message,
                     new SendDirectMessageListener() {
                         @Override

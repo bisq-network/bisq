@@ -43,32 +43,32 @@ public class AtomicMakerCreatesAndSignsTx extends AtomicTradeTask {
             runInterceptHook();
 
             // Create atomic tx with maker btc inputs signed
-            var atomicTx = atomicProcessModel.createAtomicTx();
+            var atomicTx = bsqSwapProtocolModel.createAtomicTx();
 
             // Sign inputs
-            atomicTx = atomicProcessModel.getTradeWalletService().signInputs(atomicTx,
-                    atomicProcessModel.getRawMakerBtcInputs());
-            atomicTx = atomicProcessModel.getBsqWalletService().signInputs(atomicTx,
-                    atomicProcessModel.getRawMakerBsqInputs());
+            atomicTx = bsqSwapProtocolModel.getTradeWalletService().signInputs(atomicTx,
+                    bsqSwapProtocolModel.getRawMakerBtcInputs());
+            atomicTx = bsqSwapProtocolModel.getBsqWalletService().signInputs(atomicTx,
+                    bsqSwapProtocolModel.getRawMakerBsqInputs());
 
-            atomicProcessModel.setAtomicTx(atomicTx.bitcoinSerialize());
+            bsqSwapProtocolModel.setAtomicTx(atomicTx.bitcoinSerialize());
             var message = new CreateAtomicTxResponse(UUID.randomUUID().toString(),
-                    atomicProcessModel.getOffer().getId(),
-                    atomicProcessModel.getMyNodeAddress(),
-                    atomicProcessModel.getAtomicTx(),
-                    atomicProcessModel.getMakerBsqOutputAmount(),
-                    atomicProcessModel.getMakerBsqAddress(),
-                    atomicProcessModel.getMakerBtcOutputAmount(),
-                    atomicProcessModel.getMakerBtcAddress(),
-                    atomicProcessModel.getRawMakerBsqInputs(),
-                    atomicProcessModel.getRawMakerBtcInputs());
+                    bsqSwapProtocolModel.getOffer().getId(),
+                    bsqSwapProtocolModel.getMyNodeAddress(),
+                    bsqSwapProtocolModel.getAtomicTx(),
+                    bsqSwapProtocolModel.getMakerBsqOutputAmount(),
+                    bsqSwapProtocolModel.getMakerBsqAddress(),
+                    bsqSwapProtocolModel.getMakerBtcOutputAmount(),
+                    bsqSwapProtocolModel.getMakerBtcAddress(),
+                    bsqSwapProtocolModel.getRawMakerBsqInputs(),
+                    bsqSwapProtocolModel.getRawMakerBtcInputs());
 
             NodeAddress peersNodeAddress = atomicTrade.getTradingPeerNodeAddress();
             log.info("Send {} to peer {}. tradeId={}, uid={}",
                     message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
-            atomicProcessModel.getP2PService().sendEncryptedDirectMessage(
+            bsqSwapProtocolModel.getP2PService().sendEncryptedDirectMessage(
                     peersNodeAddress,
-                    atomicProcessModel.getTradingPeer().getPubKeyRing(),
+                    bsqSwapProtocolModel.getTradingPeer().getPubKeyRing(),
                     message,
                     new SendDirectMessageListener() {
                         @Override

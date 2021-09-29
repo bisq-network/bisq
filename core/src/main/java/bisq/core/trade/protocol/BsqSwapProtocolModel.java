@@ -69,7 +69,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Getter
 @Slf4j
-public class AtomicProcessModel implements TradeProtocolModel, Model, PersistablePayload {
+public class BsqSwapProtocolModel implements TradeProtocolModel, Model, PersistablePayload {
     transient private ProcessModelServiceProvider provider;
     transient private TradeManager tradeManager;
     transient private Offer offer;
@@ -144,11 +144,11 @@ public class AtomicProcessModel implements TradeProtocolModel, Model, Persistabl
     @Setter
     private Transaction verifiedAtomicTx;
 
-    public AtomicProcessModel(PubKeyRing pubKeyRing) {
+    public BsqSwapProtocolModel(PubKeyRing pubKeyRing) {
         this(pubKeyRing, new TradingPeer());
     }
 
-    public AtomicProcessModel(PubKeyRing pubKeyRing, TradingPeer tradingPeer) {
+    public BsqSwapProtocolModel(PubKeyRing pubKeyRing, TradingPeer tradingPeer) {
         this.pubKeyRing = pubKeyRing;
         this.tradingPeer = tradingPeer != null ? tradingPeer : new TradingPeer();
     }
@@ -167,13 +167,14 @@ public class AtomicProcessModel implements TradeProtocolModel, Model, Persistabl
         return builder.build();
     }
 
-    public static AtomicProcessModel fromProto(protobuf.AtomicProcessModel proto, CoreProtoResolver coreProtoResolver) {
+    public static BsqSwapProtocolModel fromProto(protobuf.AtomicProcessModel proto,
+                                                 CoreProtoResolver coreProtoResolver) {
         TradingPeer tradingPeer = TradingPeer.fromProto(proto.getTradingPeer(), coreProtoResolver);
         PubKeyRing pubKeyRing = PubKeyRing.fromProto(proto.getPubKeyRing());
-        AtomicProcessModel atomicProcessModel = new AtomicProcessModel(pubKeyRing, tradingPeer);
-        atomicProcessModel.setTempTradingPeerNodeAddress(proto.hasTempTradingPeerNodeAddress() ?
+        BsqSwapProtocolModel bsqSwapProtocolModel = new BsqSwapProtocolModel(pubKeyRing, tradingPeer);
+        bsqSwapProtocolModel.setTempTradingPeerNodeAddress(proto.hasTempTradingPeerNodeAddress() ?
                 NodeAddress.fromProto(proto.getTempTradingPeerNodeAddress()) : null);
-        return atomicProcessModel;
+        return bsqSwapProtocolModel;
     }
 
 
