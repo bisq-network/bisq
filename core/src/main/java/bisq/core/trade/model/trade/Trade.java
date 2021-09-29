@@ -31,7 +31,7 @@ import bisq.core.support.dispute.refund.RefundResultState;
 import bisq.core.support.messages.ChatMessage;
 import bisq.core.trade.Contract;
 import bisq.core.trade.model.TradeModel;
-import bisq.core.trade.protocol.ProcessModelServiceProvider;
+import bisq.core.trade.protocol.Provider;
 import bisq.core.trade.protocol.TradeProtocolModel;
 import bisq.core.trade.protocol.trade.ProcessModel;
 import bisq.core.trade.txproof.AssetTxProofResult;
@@ -629,7 +629,7 @@ public abstract class Trade extends TradeModel {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void initialize(ProcessModelServiceProvider serviceProvider) {
+    public void initialize(Provider serviceProvider) {
         serviceProvider.getArbitratorManager().getDisputeAgentByNodeAddress(arbitratorNodeAddress).ifPresent(arbitrator -> {
             arbitratorBtcPubKey = arbitrator.getBtcPubKey();
             arbitratorPubKeyRing = arbitrator.getPubKeyRing();

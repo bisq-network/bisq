@@ -31,7 +31,7 @@ import bisq.core.offer.OpenOfferManager;
 import bisq.core.proto.CoreProtoResolver;
 import bisq.core.trade.model.bsqswap.BsqSwapTrade;
 import bisq.core.trade.model.trade.TradeManager;
-import bisq.core.trade.protocol.ProcessModelServiceProvider;
+import bisq.core.trade.protocol.Provider;
 import bisq.core.trade.protocol.TradeProtocolModel;
 import bisq.core.trade.protocol.TradingPeer;
 import bisq.core.trade.protocol.messages.TradeMessage;
@@ -67,13 +67,13 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * This is the base model for the trade protocol. It is persisted with the trade (non transient fields).
- * It uses the {@link ProcessModelServiceProvider} for access to domain services.
+ * It uses the {@link Provider} for access to domain services.
  */
 
 @Getter
 @Slf4j
 public class BsqSwapProtocolModel implements TradeProtocolModel, Model, PersistablePayload {
-    transient private ProcessModelServiceProvider provider;
+    transient private Provider provider;
     transient private TradeManager tradeManager;
     transient private Offer offer;
 
@@ -186,7 +186,7 @@ public class BsqSwapProtocolModel implements TradeProtocolModel, Model, Persista
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void applyTransient(ProcessModelServiceProvider provider,
+    public void applyTransient(Provider provider,
                                TradeManager tradeManager,
                                Offer offer) {
         this.offer = offer;

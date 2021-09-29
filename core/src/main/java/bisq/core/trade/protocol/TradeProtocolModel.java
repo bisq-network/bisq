@@ -8,7 +8,7 @@ import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
 
 public interface TradeProtocolModel {
-    void applyTransient(ProcessModelServiceProvider provider,
+    void applyTransient(Provider provider,
                         TradeManager tradeManager,
                         Offer offer);
 
