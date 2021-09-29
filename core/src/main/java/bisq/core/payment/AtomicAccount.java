@@ -17,7 +17,7 @@
 
 package bisq.core.payment;
 
-import bisq.core.payment.payload.AtomicAccountPayload;
+import bisq.core.payment.payload.BsqSwapAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
 
@@ -32,6 +32,6 @@ public final class AtomicAccount extends PaymentAccount {
 
     @Override
     protected PaymentAccountPayload createPayload() {
-        return new AtomicAccountPayload(paymentMethod.getId(), id);
+        return new BsqSwapAccountPayload(paymentMethod.getId(), id);
     }
 }

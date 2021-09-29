@@ -30,9 +30,9 @@ import lombok.extern.slf4j.Slf4j;
 @Setter
 @Getter
 @Slf4j
-public final class AtomicAccountPayload extends AssetsAccountPayload {
+public final class BsqSwapAccountPayload extends AssetsAccountPayload {
 
-    public AtomicAccountPayload(String paymentMethod, String id) {
+    public BsqSwapAccountPayload(String paymentMethod, String id) {
         super(paymentMethod, id);
     }
 
@@ -44,14 +44,11 @@ public final class AtomicAccountPayload extends AssetsAccountPayload {
     @Override
     public Message toProtoMessage() {
         return getPaymentAccountPayloadBuilder()
-                .setAtomicAccountPayload(protobuf.AtomicAccountPayload.newBuilder()
-                        .setGenericString("")
-                )
+                .setBsqSwapAccountPayload(protobuf.BsqSwapAccountPayload.newBuilder())
                 .build();
     }
 
-    public static AtomicAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
-        return new AtomicAccountPayload(proto.getPaymentMethodId(),
-                proto.getId());
+    public static BsqSwapAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
+        return new BsqSwapAccountPayload(proto.getPaymentMethodId(), proto.getId());
     }
 }

@@ -1062,7 +1062,7 @@ message PaymentAccountPayload {
         PayseraAccountPayload Paysera_account_payload = 34;
         PaxumAccountPayload Paxum_account_payload = 35;
         SwiftAccountPayload swift_account_payload = 36;
-        AtomicAccountPayload atomic_account_payload = 37;
+        BsqSwapAccountPayload bsq_swap_account_payload = 37;
     }
     map<string, string> exclude_from_json_data = 15;
 }
@@ -1201,8 +1201,7 @@ message InstantCryptoCurrencyAccountPayload {
     string address = 1;
 }
 
-message AtomicAccountPayload {
-    string generic_string = 1;
+message BsqSwapAccountPayload {
 }
 
 message FasterPaymentsAccountPayload {
