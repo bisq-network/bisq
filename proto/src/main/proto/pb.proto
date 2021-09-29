@@ -376,7 +376,7 @@ message TraderSignedWitnessMessage {
     SignedWitness signed_witness = 4 [deprecated = true];
 }
 
-// Atomic trade
+// BsqSwapTrade
 
 message CreateAtomicTxRequest {
     string uid = 1;
@@ -1533,8 +1533,8 @@ message Tradable {
         BuyerAsTakerTrade buyer_as_taker_trade = 3;
         SellerAsMakerTrade seller_as_maker_trade = 4;
         SellerAsTakerTrade seller_as_taker_trade = 5;
-        AtomicMakerTrade atomic_maker_trade = 6;
-        AtomicTakerTrade atomic_taker_trade = 7;
+        BsqSwapMakerTrade bsq_swap_maker_trade = 6;
+        BsqSwapTakerTrade bsq_swap_taker_trade = 7;
     }
 }
 
@@ -1664,7 +1664,7 @@ message SellerAsTakerTrade {
     Trade trade = 1;
 }
 
-message AtomicTrade {
+message BsqSwapTrade {
     enum State {
         PB_ERROR_STATE = 0;
         PREPARATION = 1;
@@ -1688,12 +1688,12 @@ message AtomicTrade {
     State state = 13;
 }
 
-message AtomicMakerTrade {
-    AtomicTrade atomic_trade = 1;
+message BsqSwapMakerTrade {
+    BsqSwapTrade bsq_swap_trade = 1;
 }
 
-message AtomicTakerTrade {
-    AtomicTrade atomic_trade = 1;
+message BsqSwapTakerTrade {
+    BsqSwapTrade bsq_swap_trade = 1;
 }
 
 message ProcessModel {

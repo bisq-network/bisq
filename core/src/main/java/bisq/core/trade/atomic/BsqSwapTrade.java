@@ -62,12 +62,12 @@ public abstract class BsqSwapTrade extends TradeModel {
         TX_CONFIRMED,
         FAILED;
 
-        public static BsqSwapTrade.State fromProto(protobuf.AtomicTrade.State state) {
+        public static BsqSwapTrade.State fromProto(protobuf.BsqSwapTrade.State state) {
             return ProtoUtil.enumFromProto(BsqSwapTrade.State.class, state.name());
         }
 
-        public static protobuf.AtomicTrade.State toProtoMessage(BsqSwapTrade.State state) {
-            return protobuf.AtomicTrade.State.valueOf(state.name());
+        public static protobuf.BsqSwapTrade.State toProtoMessage(BsqSwapTrade.State state) {
+            return protobuf.BsqSwapTrade.State.valueOf(state.name());
         }
     }
 
@@ -145,7 +145,7 @@ public abstract class BsqSwapTrade extends TradeModel {
 
     @Override
     public Message toProtoMessage() {
-        protobuf.AtomicTrade.Builder builder = protobuf.AtomicTrade.newBuilder()
+        protobuf.BsqSwapTrade.Builder builder = protobuf.BsqSwapTrade.newBuilder()
                 .setUid(uid)
                 .setOffer(offer.toProtoMessage())
                 .setAmount(amount.getValue())

@@ -76,19 +76,19 @@ public final class BsqSwapTakerTrade extends BsqSwapTrade implements TakerTrade 
     @Override
     public protobuf.Tradable toProtoMessage() {
         return protobuf.Tradable.newBuilder()
-                .setAtomicTakerTrade(protobuf.AtomicTakerTrade.newBuilder()
-                        .setAtomicTrade((protobuf.AtomicTrade) super.toProtoMessage()))
+                .setBsqSwapTakerTrade(protobuf.BsqSwapTakerTrade.newBuilder()
+                        .setBsqSwapTrade((protobuf.BsqSwapTrade) super.toProtoMessage()))
                 .build();
     }
 
-    public static Tradable fromProto(protobuf.AtomicTakerTrade atomicTakerTradeProto,
+    public static Tradable fromProto(protobuf.BsqSwapTakerTrade atomicTakerTradeProto,
                                      CoreProtoResolver coreProtoResolver) {
-        var proto = atomicTakerTradeProto.getAtomicTrade();
+        var proto = atomicTakerTradeProto.getBsqSwapTrade();
         var uid = ProtoUtil.stringOrNullFromProto(proto.getUid());
         if (uid == null) {
             uid = UUID.randomUUID().toString();
         }
-        var atomicTrade = fromProto(new BsqSwapTakerTrade(
+        var BsqSwapTrade = fromProto(new BsqSwapTakerTrade(
                 uid,
                 Offer.fromProto(proto.getOffer()),
                 Coin.valueOf(proto.getAmount()),
@@ -101,7 +101,7 @@ public final class BsqSwapTakerTrade extends BsqSwapTrade implements TakerTrade 
                 BsqSwapProtocolModel.fromProto(proto.getBsqSwapProtocolModel(), coreProtoResolver),
                 proto.getErrorMessage(),
                 State.fromProto(proto.getState())));
-        atomicTrade.setTxId(proto.getTxId());
-        return atomicTrade;
+        BsqSwapTrade.setTxId(proto.getTxId());
+        return BsqSwapTrade;
     }
 }

@@ -76,14 +76,14 @@ public final class BsqSwapMakerTrade extends BsqSwapTrade {
     @Override
     public protobuf.Tradable toProtoMessage() {
         return protobuf.Tradable.newBuilder()
-                .setAtomicMakerTrade(protobuf.AtomicMakerTrade.newBuilder()
-                        .setAtomicTrade((protobuf.AtomicTrade) super.toProtoMessage()))
+                .setBsqSwapMakerTrade(protobuf.BsqSwapMakerTrade.newBuilder()
+                        .setBsqSwapTrade((protobuf.BsqSwapTrade) super.toProtoMessage()))
                 .build();
     }
 
-    public static Tradable fromProto(protobuf.AtomicMakerTrade atomicMakerTradeProto,
+    public static Tradable fromProto(protobuf.BsqSwapMakerTrade atomicMakerTradeProto,
                                      CoreProtoResolver coreProtoResolver) {
-        var proto = atomicMakerTradeProto.getAtomicTrade();
+        var proto = atomicMakerTradeProto.getBsqSwapTrade();
         var uid = ProtoUtil.stringOrNullFromProto(proto.getUid());
         if (uid == null) {
             uid = UUID.randomUUID().toString();
