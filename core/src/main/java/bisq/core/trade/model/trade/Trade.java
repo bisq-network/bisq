@@ -1077,13 +1077,8 @@ public abstract class Trade extends TradeModel {
         return arbitratorBtcPubKey;
     }
 
-    public boolean isAtomic() {
+    public boolean isBsqSwap() {
         return offer != null && offer.getOfferPayloadBase() instanceof BsqSwapOfferPayload;
-    }
-
-    public boolean isAtomicBsqTrade() {
-        checkNotNull(getOffer(), "Offer must not be null");
-        return getOffer().getPaymentMethod().isAtomic();
     }
 
 

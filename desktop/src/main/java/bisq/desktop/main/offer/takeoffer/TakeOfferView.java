@@ -454,7 +454,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     }
 
     private void onShowPayFundsScreen() {
-        if (model.getOffer().getPaymentMethod().isAtomic())
+        if (model.getOffer().getPaymentMethod().isBsqSwap())
             model.fundFromSavingsWallet();
 
         scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);

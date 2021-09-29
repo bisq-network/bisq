@@ -582,7 +582,7 @@ public class GUIUtil {
                     HBox box = new HBox();
                     box.setSpacing(20);
                     Label paymentType = new AutoTooltipLabel(
-                            method.isAsset() || method.isAtomic() ? Res.get("shared.crypto") : Res.get("shared.fiat"));
+                            method.isAsset() || method.isBsqSwap() ? Res.get("shared.crypto") : Res.get("shared.fiat"));
 
                     paymentType.getStyleClass().add("currency-label-small");
                     Label paymentMethod = new AutoTooltipLabel(Res.get(id));

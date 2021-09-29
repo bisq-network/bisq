@@ -380,14 +380,14 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
     }
 
     public boolean isFiat() {
-        return !isAsset() && !isAtomic();
+        return !isAsset() && !isBsqSwap();
     }
 
     public boolean isAsset() {
         return this.equals(BLOCK_CHAINS_INSTANT) || this.equals(BLOCK_CHAINS);
     }
 
-    public boolean isAtomic() {
+    public boolean isBsqSwap() {
         return this.equals(BSQ_SWAP);
     }
 

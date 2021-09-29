@@ -192,7 +192,7 @@ public class TradeStatisticsManager {
             // If we did not find a TradeStatistics3 we look up if we find a TradeStatistics3 converted from
             // TradeStatistics2 where we used the original hash, which is not the native hash of the
             // TradeStatistics3 but of TradeStatistics2.
-            if (!trade.isAtomic()) {
+            if (!trade.isBsqSwap()) {
                 TradeStatistics2 tradeStatistics2 = TradeStatistics2.from(trade, referralId, isTorNetworkNode);
                 boolean hasTradeStatistics2 = hashes.contains(new P2PDataStorage.ByteArray(tradeStatistics2.getHash()));
                 if (hasTradeStatistics2) {

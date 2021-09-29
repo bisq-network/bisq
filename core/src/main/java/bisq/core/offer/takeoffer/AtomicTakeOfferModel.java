@@ -227,7 +227,7 @@ public class AtomicTakeOfferModel implements Model {
         Set<PaymentAccount> paymentAccounts = user.getPaymentAccounts();
         checkNotNull(paymentAccounts, "paymentAccounts must not be null");
         return paymentAccounts.stream()
-                .filter(p -> p.getPaymentMethod().isAtomic())
+                .filter(p -> p.getPaymentMethod().isBsqSwap())
                 .findAny()
                 .orElse(null);
     }
