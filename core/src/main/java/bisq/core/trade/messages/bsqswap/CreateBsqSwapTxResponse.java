@@ -36,9 +36,9 @@ import lombok.Value;
 
 @EqualsAndHashCode(callSuper = true)
 @Value
-public class CreateAtomicTxResponse extends TradeMessage implements DirectMessage {
+public class CreateBsqSwapTxResponse extends TradeMessage implements DirectMessage {
     NodeAddress senderNodeAddress;
-    byte[] atomicTx;
+    byte[] tx;
     long makerBsqOutputValue;
     String makerBsqOutputAddress;
     long makerBtcOutputValue;
@@ -46,21 +46,21 @@ public class CreateAtomicTxResponse extends TradeMessage implements DirectMessag
     List<RawTransactionInput> makerBsqInputs;
     List<RawTransactionInput> makerBtcInputs;
 
-    public CreateAtomicTxResponse(String uid,
-                                  String tradeId,
-                                  NodeAddress senderNodeAddress,
-                                  byte[] atomicTx,
-                                  long makerBsqOutputValue,
-                                  String makerBsqOutputAddress,
-                                  long makerBtcOutputValue,
-                                  String makerBtcOutputAddress,
-                                  List<RawTransactionInput> makerBsqInputs,
-                                  List<RawTransactionInput> makerBtcInputs) {
+    public CreateBsqSwapTxResponse(String uid,
+                                   String tradeId,
+                                   NodeAddress senderNodeAddress,
+                                   byte[] tx,
+                                   long makerBsqOutputValue,
+                                   String makerBsqOutputAddress,
+                                   long makerBtcOutputValue,
+                                   String makerBtcOutputAddress,
+                                   List<RawTransactionInput> makerBsqInputs,
+                                   List<RawTransactionInput> makerBtcInputs) {
         this(Version.getP2PMessageVersion(),
                 uid,
                 tradeId,
                 senderNodeAddress,
-                atomicTx,
+                tx,
                 makerBsqOutputValue,
                 makerBsqOutputAddress,
                 makerBtcOutputValue,
@@ -73,20 +73,20 @@ public class CreateAtomicTxResponse extends TradeMessage implements DirectMessag
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private CreateAtomicTxResponse(int messageVersion,
-                                   String uid,
-                                   String tradeId,
-                                   NodeAddress senderNodeAddress,
-                                   byte[] atomicTx,
-                                   long makerBsqOutputValue,
-                                   String makerBsqOutputAddress,
-                                   long makerBtcOutputValue,
-                                   String makerBtcOutputAddress,
-                                   List<RawTransactionInput> makerBsqInputs,
-                                   List<RawTransactionInput> makerBtcInputs) {
+    private CreateBsqSwapTxResponse(int messageVersion,
+                                    String uid,
+                                    String tradeId,
+                                    NodeAddress senderNodeAddress,
+                                    byte[] tx,
+                                    long makerBsqOutputValue,
+                                    String makerBsqOutputAddress,
+                                    long makerBtcOutputValue,
+                                    String makerBtcOutputAddress,
+                                    List<RawTransactionInput> makerBsqInputs,
+                                    List<RawTransactionInput> makerBtcInputs) {
         super(messageVersion, tradeId, uid);
         this.senderNodeAddress = senderNodeAddress;
-        this.atomicTx = atomicTx;
+        this.tx = tx;
         this.makerBsqOutputValue = makerBsqOutputValue;
         this.makerBsqOutputAddress = makerBsqOutputAddress;
         this.makerBtcOutputValue = makerBtcOutputValue;
@@ -98,11 +98,11 @@ public class CreateAtomicTxResponse extends TradeMessage implements DirectMessag
     @Override
     public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
         return getNetworkEnvelopeBuilder()
-                .setCreateAtomicTxResponse(protobuf.CreateAtomicTxResponse.newBuilder()
+                .setCreateBsqSwapTxResponse(protobuf.CreateBsqSwapTxResponse.newBuilder()
                         .setUid(uid)
                         .setTradeId(tradeId)
                         .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
-                        .setAtomicTx(ByteString.copyFrom(atomicTx))
+                        .setTx(ByteString.copyFrom(tx))
                         .setMakerBsqOutputValue(makerBsqOutputValue)
                         .setMakerBsqOutputAddress(makerBsqOutputAddress)
                         .setMakerBtcOutputValue(makerBtcOutputValue)
@@ -114,12 +114,12 @@ public class CreateAtomicTxResponse extends TradeMessage implements DirectMessag
                 ).build();
     }
 
-    public static CreateAtomicTxResponse fromProto(protobuf.CreateAtomicTxResponse proto, int messageVersion) {
-        return new CreateAtomicTxResponse(messageVersion,
+    public static CreateBsqSwapTxResponse fromProto(protobuf.CreateBsqSwapTxResponse proto, int messageVersion) {
+        return new CreateBsqSwapTxResponse(messageVersion,
                 proto.getUid(),
                 proto.getTradeId(),
                 NodeAddress.fromProto(proto.getSenderNodeAddress()),
-                proto.getAtomicTx().toByteArray(),
+                proto.getTx().toByteArray(),
                 proto.getMakerBsqOutputValue(),
                 proto.getMakerBsqOutputAddress(),
                 proto.getMakerBtcOutputValue(),
@@ -135,9 +135,9 @@ public class CreateAtomicTxResponse extends TradeMessage implements DirectMessag
 
     @Override
     public String toString() {
-        return "CreateAtomicTxResponse{" +
+        return "CreateBsqSwapTxResponse{" +
                 "\n     senderNodeAddress=" + senderNodeAddress +
-                "\n     atomicTx=" + Utilities.bytesAsHexString(atomicTx) +
+                "\n     atomicTx=" + Utilities.bytesAsHexString(tx) +
                 "\n     makerBsqOutputValue=" + makerBsqOutputValue +
                 "\n     makerBsqOutputAddress=" + makerBsqOutputAddress +
                 "\n     makerBtcOutputValue=" + makerBtcOutputValue +

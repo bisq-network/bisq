@@ -17,7 +17,7 @@
 
 package bisq.core.trade.protocol.bsqswap.tasks.taker;
 
-import bisq.core.trade.messages.bsqswap.CreateAtomicTxResponse;
+import bisq.core.trade.messages.bsqswap.CreateBsqSwapTxResponse;
 import bisq.core.trade.model.bsqswap.BsqSwapTrade;
 import bisq.core.trade.protocol.bsqswap.tasks.BsqSwapTask;
 
@@ -63,14 +63,14 @@ public class TakerVerifyBsqSwapTx extends BsqSwapTask {
 
             checkArgument(!bsqSwapProtocolModel.getOffer().isMyOffer(bsqSwapProtocolModel.getKeyRing()),
                     "must not take own offer");
-            checkArgument(bsqSwapProtocolModel.getTradeMessage() instanceof CreateAtomicTxResponse,
+            checkArgument(bsqSwapProtocolModel.getTradeMessage() instanceof CreateBsqSwapTxResponse,
                     "Expected CreateAtomicTxResponse");
 
-            var message = (CreateAtomicTxResponse) bsqSwapProtocolModel.getTradeMessage();
+            var message = (CreateBsqSwapTxResponse) bsqSwapProtocolModel.getTradeMessage();
             bsqSwapProtocolModel.updateFromMessage(message);
 
             var myTx = bsqSwapProtocolModel.createBsqSwapTx();
-            var makerTx = bsqSwapProtocolModel.getBtcWalletService().getTxFromSerializedTx(message.getAtomicTx());
+            var makerTx = bsqSwapProtocolModel.getBtcWalletService().getTxFromSerializedTx(message.getTx());
             // Strip sigs from maker tx and compare with myTx to make sure they are the same
             makerTx.getInputs().forEach(TransactionInput::clearScriptBytes);
             checkArgument(myTx.equals(makerTx), "Maker tx doesn't match my tx");
@@ -91,7 +91,7 @@ public class TakerVerifyBsqSwapTx extends BsqSwapTask {
             bsqSwapProtocolModel.getBsqWalletService().signInputs(myTx, bsqSwapProtocolModel.getRawTakerBsqInputs());
 
             // Create fully signed atomic tx by combining signed inputs from maker tx and my tx
-            makerTx = bsqSwapProtocolModel.getBtcWalletService().getTxFromSerializedTx(message.getAtomicTx());
+            makerTx = bsqSwapProtocolModel.getBtcWalletService().getTxFromSerializedTx(message.getTx());
             var signedTx = bsqSwapProtocolModel.createBsqSwapTx();
             var txFee = signedTx.getFee().getValue();
             signedTx.clearInputs();

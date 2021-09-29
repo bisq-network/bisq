@@ -30,8 +30,8 @@ import bisq.core.offer.Offer;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.proto.CoreProtoResolver;
 import bisq.core.trade.messages.TradeMessage;
-import bisq.core.trade.messages.bsqswap.CreateAtomicTxRequest;
-import bisq.core.trade.messages.bsqswap.CreateAtomicTxResponse;
+import bisq.core.trade.messages.bsqswap.CreateBsqSwapTxRequest;
+import bisq.core.trade.messages.bsqswap.CreateBsqSwapTxResponse;
 import bisq.core.trade.model.TradeManager;
 import bisq.core.trade.model.bsqswap.BsqSwapTrade;
 import bisq.core.trade.protocol.Provider;
@@ -233,7 +233,7 @@ public class BsqSwapProtocolModel implements TradeProtocolModel, Model, Persista
         setBsqMakerTradeFee(trade.getMakerFee());
     }
 
-    public void updateFromMessage(CreateAtomicTxRequest message) {
+    public void updateFromMessage(CreateBsqSwapTxRequest message) {
         setTakerBsqOutputAmount(message.getTakerBsqOutputValue());
         setTakerBtcOutputAmount(message.getTakerBtcOutputValue());
         setTakerBsqAddress(message.getTakerBsqOutputAddress());
@@ -247,7 +247,7 @@ public class BsqSwapProtocolModel implements TradeProtocolModel, Model, Persista
         bsqSwapTrade.setPeerNodeAddress(tempTradingPeerNodeAddress);
     }
 
-    public void updateFromMessage(CreateAtomicTxResponse message) {
+    public void updateFromMessage(CreateBsqSwapTxResponse message) {
         setMakerBsqOutputAmount(message.getMakerBsqOutputValue());
         setMakerBsqAddress(message.getMakerBsqOutputAddress());
         setMakerBtcOutputAmount(message.getMakerBtcOutputValue());

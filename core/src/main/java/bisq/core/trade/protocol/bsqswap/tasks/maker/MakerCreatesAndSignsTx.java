@@ -17,7 +17,7 @@
 
 package bisq.core.trade.protocol.bsqswap.tasks.maker;
 
-import bisq.core.trade.messages.bsqswap.CreateAtomicTxResponse;
+import bisq.core.trade.messages.bsqswap.CreateBsqSwapTxResponse;
 import bisq.core.trade.model.bsqswap.BsqSwapTrade;
 import bisq.core.trade.protocol.bsqswap.tasks.BsqSwapTask;
 
@@ -52,7 +52,7 @@ public class MakerCreatesAndSignsTx extends BsqSwapTask {
                     bsqSwapProtocolModel.getRawMakerBsqInputs());
 
             bsqSwapProtocolModel.setRawTx(atomicTx.bitcoinSerialize());
-            var message = new CreateAtomicTxResponse(UUID.randomUUID().toString(),
+            var message = new CreateBsqSwapTxResponse(UUID.randomUUID().toString(),
                     bsqSwapProtocolModel.getOffer().getId(),
                     bsqSwapProtocolModel.getMyNodeAddress(),
                     bsqSwapProtocolModel.getRawTx(),

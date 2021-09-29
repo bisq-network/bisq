@@ -20,7 +20,7 @@ package bisq.core.trade.protocol.bsqswap;
 
 import bisq.core.offer.Offer;
 import bisq.core.trade.messages.TradeMessage;
-import bisq.core.trade.messages.bsqswap.CreateAtomicTxResponse;
+import bisq.core.trade.messages.bsqswap.CreateBsqSwapTxResponse;
 import bisq.core.trade.model.bsqswap.BsqSwapTakerTrade;
 import bisq.core.trade.model.bsqswap.BsqSwapTrade;
 import bisq.core.trade.protocol.TakerProtocol;
@@ -75,7 +75,7 @@ public class BsqSwapTakerProtocol extends TradeProtocol implements TakerProtocol
     // Incoming message handling
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    void handle(CreateAtomicTxResponse message, NodeAddress sender) {
+    void handle(CreateBsqSwapTxResponse message, NodeAddress sender) {
         expect(preCondition(BsqSwapTrade.State.PREPARATION == bsqSwapTakerTrade.getState())
                 .with(message)
                 .from(sender))
@@ -98,8 +98,8 @@ public class BsqSwapTakerProtocol extends TradeProtocol implements TakerProtocol
         log.info("Received {} from {} with tradeId {} and uid {}",
                 message.getClass().getSimpleName(), peer, message.getTradeId(), message.getUid());
 
-        if (message instanceof CreateAtomicTxResponse) {
-            handle((CreateAtomicTxResponse) message, peer);
+        if (message instanceof CreateBsqSwapTxResponse) {
+            handle((CreateBsqSwapTxResponse) message, peer);
         }
     }
 }

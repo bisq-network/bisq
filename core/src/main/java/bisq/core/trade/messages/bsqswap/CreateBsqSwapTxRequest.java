@@ -34,7 +34,7 @@ import lombok.Value;
 
 @EqualsAndHashCode(callSuper = true)
 @Value
-public class CreateAtomicTxRequest extends TradeMessage implements DirectMessage {
+public class CreateBsqSwapTxRequest extends TradeMessage implements DirectMessage {
     NodeAddress senderNodeAddress;
     PubKeyRing takerPubKeyRing;
     long bsqTradeAmount;
@@ -50,22 +50,22 @@ public class CreateAtomicTxRequest extends TradeMessage implements DirectMessage
     List<RawTransactionInput> takerBsqInputs;
     List<RawTransactionInput> takerBtcInputs;
 
-    public CreateAtomicTxRequest(String uid,
-                                 String tradeId,
-                                 NodeAddress senderNodeAddress,
-                                 PubKeyRing takerPubKeyRing,
-                                 long bsqTradeAmount,
-                                 long btcTradeAmount,
-                                 long tradePrice,
-                                 long txFeePerVbyte,
-                                 long makerFee,
-                                 long takerFee,
-                                 long takerBsqOutputValue,
-                                 String takerBsqOutputAddress,
-                                 long takerBtcOutputValue,
-                                 String takerBtcOutputAddress,
-                                 List<RawTransactionInput> takerBsqInputs,
-                                 List<RawTransactionInput> takerBtcInputs) {
+    public CreateBsqSwapTxRequest(String uid,
+                                  String tradeId,
+                                  NodeAddress senderNodeAddress,
+                                  PubKeyRing takerPubKeyRing,
+                                  long bsqTradeAmount,
+                                  long btcTradeAmount,
+                                  long tradePrice,
+                                  long txFeePerVbyte,
+                                  long makerFee,
+                                  long takerFee,
+                                  long takerBsqOutputValue,
+                                  String takerBsqOutputAddress,
+                                  long takerBtcOutputValue,
+                                  String takerBtcOutputAddress,
+                                  List<RawTransactionInput> takerBsqInputs,
+                                  List<RawTransactionInput> takerBtcInputs) {
         this(Version.getP2PMessageVersion(),
                 uid,
                 tradeId,
@@ -89,23 +89,23 @@ public class CreateAtomicTxRequest extends TradeMessage implements DirectMessage
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private CreateAtomicTxRequest(int messageVersion,
-                                  String uid,
-                                  String tradeId,
-                                  NodeAddress senderNodeAddress,
-                                  PubKeyRing takerPubKeyRing,
-                                  long bsqTradeAmount,
-                                  long btcTradeAmount,
-                                  long tradePrice,
-                                  long txFeePerVbyte,
-                                  long makerFee,
-                                  long takerFee,
-                                  long takerBsqOutputValue,
-                                  String takerBsqOutputAddress,
-                                  long takerBtcOutputValue,
-                                  String takerBtcOutputAddress,
-                                  List<RawTransactionInput> takerBsqInputs,
-                                  List<RawTransactionInput> takerBtcInputs) {
+    private CreateBsqSwapTxRequest(int messageVersion,
+                                   String uid,
+                                   String tradeId,
+                                   NodeAddress senderNodeAddress,
+                                   PubKeyRing takerPubKeyRing,
+                                   long bsqTradeAmount,
+                                   long btcTradeAmount,
+                                   long tradePrice,
+                                   long txFeePerVbyte,
+                                   long makerFee,
+                                   long takerFee,
+                                   long takerBsqOutputValue,
+                                   String takerBsqOutputAddress,
+                                   long takerBtcOutputValue,
+                                   String takerBtcOutputAddress,
+                                   List<RawTransactionInput> takerBsqInputs,
+                                   List<RawTransactionInput> takerBtcInputs) {
         super(messageVersion, tradeId, uid);
         this.senderNodeAddress = senderNodeAddress;
         this.takerPubKeyRing = takerPubKeyRing;
@@ -126,7 +126,7 @@ public class CreateAtomicTxRequest extends TradeMessage implements DirectMessage
     @Override
     public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
         return getNetworkEnvelopeBuilder()
-                .setCreateAtomicTxRequest(protobuf.CreateAtomicTxRequest.newBuilder()
+                .setCreateBsqSwapTxRequest(protobuf.CreateBsqSwapTxRequest.newBuilder()
                         .setUid(uid)
                         .setTradeId(tradeId)
                         .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
@@ -148,8 +148,8 @@ public class CreateAtomicTxRequest extends TradeMessage implements DirectMessage
                 ).build();
     }
 
-    public static CreateAtomicTxRequest fromProto(protobuf.CreateAtomicTxRequest proto, int messageVersion) {
-        return new CreateAtomicTxRequest(messageVersion,
+    public static CreateBsqSwapTxRequest fromProto(protobuf.CreateBsqSwapTxRequest proto, int messageVersion) {
+        return new CreateBsqSwapTxRequest(messageVersion,
                 proto.getUid(),
                 proto.getTradeId(),
                 NodeAddress.fromProto(proto.getSenderNodeAddress()),
@@ -175,7 +175,7 @@ public class CreateAtomicTxRequest extends TradeMessage implements DirectMessage
 
     @Override
     public String toString() {
-        return "CreateAtomicTxRequest{" +
+        return "CreateBsqSwapTxRequest{" +
                 "\n     senderNodeAddress=" + senderNodeAddress +
                 "\n     takerPubKeyRing=" + takerPubKeyRing +
                 "\n     bsqTradeAmount=" + bsqTradeAmount +

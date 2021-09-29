@@ -17,7 +17,7 @@
 
 package bisq.core.trade.protocol.bsqswap.tasks.maker;
 
-import bisq.core.trade.messages.bsqswap.CreateAtomicTxRequest;
+import bisq.core.trade.messages.bsqswap.CreateBsqSwapTxRequest;
 import bisq.core.trade.model.bsqswap.BsqSwapTrade;
 import bisq.core.trade.protocol.bsqswap.tasks.SetupTxListener;
 import bisq.core.util.Validator;
@@ -52,11 +52,11 @@ public class MakerVerifiesAmounts extends SetupTxListener {
             Validator.checkTradeId(bsqSwapProtocolModel.getOffer().getId(), bsqSwapProtocolModel.getTradeMessage());
             checkArgument(bsqSwapProtocolModel.getOffer().isMyOffer(bsqSwapProtocolModel.getKeyRing()),
                     "must only process own offer");
-            checkArgument(bsqSwapProtocolModel.getTradeMessage() instanceof CreateAtomicTxRequest,
+            checkArgument(bsqSwapProtocolModel.getTradeMessage() instanceof CreateBsqSwapTxRequest,
                     "Expected CreateAtomicTxRequest");
 
 
-            var message = (CreateAtomicTxRequest) bsqSwapProtocolModel.getTradeMessage();
+            var message = (CreateBsqSwapTxRequest) bsqSwapProtocolModel.getTradeMessage();
             var offer = bsqSwapTrade.getOffer();
             bsqSwapProtocolModel.initFromTrade(bsqSwapTrade);
             bsqSwapProtocolModel.setMakerBsqAddress(

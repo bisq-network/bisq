@@ -17,7 +17,7 @@
 
 package bisq.core.trade.protocol.bsqswap.tasks.taker;
 
-import bisq.core.trade.messages.bsqswap.CreateAtomicTxRequest;
+import bisq.core.trade.messages.bsqswap.CreateBsqSwapTxRequest;
 import bisq.core.trade.model.bsqswap.BsqSwapTrade;
 import bisq.core.trade.protocol.bsqswap.tasks.BsqSwapTask;
 
@@ -50,7 +50,7 @@ public class TakerSendsBsqSwapRequest extends BsqSwapTask {
             checkArgument(bsqSwapProtocolModel.takerPreparesTakerSide(),
                     "Failed to prepare taker side of atomic tx");
 
-            var message = new CreateAtomicTxRequest(UUID.randomUUID().toString(),
+            var message = new CreateBsqSwapTxRequest(UUID.randomUUID().toString(),
                     bsqSwapProtocolModel.getOffer().getId(),
                     bsqSwapProtocolModel.getMyNodeAddress(),
                     bsqSwapProtocolModel.getPubKeyRing(),

@@ -17,7 +17,7 @@
 
 package bisq.core.trade.protocol.bsqswap.tasks.maker;
 
-import bisq.core.trade.messages.bsqswap.CreateAtomicTxRequest;
+import bisq.core.trade.messages.bsqswap.CreateBsqSwapTxRequest;
 import bisq.core.trade.model.bsqswap.BsqSwapTrade;
 import bisq.core.trade.protocol.bsqswap.tasks.BsqSwapTask;
 
@@ -50,7 +50,7 @@ public class MakerVerifiesTakerInputs extends BsqSwapTask {
              * [0-1]   (Maker BTC)
              */
 
-            var message = (CreateAtomicTxRequest) bsqSwapProtocolModel.getTradeMessage();
+            var message = (CreateBsqSwapTxRequest) bsqSwapProtocolModel.getTradeMessage();
 
             checkArgument(new BitcoinAddressValidator(Config.baseCurrencyNetworkParameters()).validate(
                     message.getTakerBsqOutputAddress()).isValid(),

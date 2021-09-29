@@ -17,7 +17,7 @@
 
 package bisq.core.trade.protocol.bsqswap.tasks.maker;
 
-import bisq.core.trade.messages.bsqswap.CreateAtomicTxRequest;
+import bisq.core.trade.messages.bsqswap.CreateBsqSwapTxRequest;
 import bisq.core.trade.model.bsqswap.BsqSwapTrade;
 import bisq.core.trade.protocol.bsqswap.tasks.SetupTxListener;
 
@@ -43,7 +43,7 @@ public class MakerVerifiesMiningFee extends SetupTxListener {
         try {
             runInterceptHook();
 
-            var message = (CreateAtomicTxRequest) bsqSwapProtocolModel.getTradeMessage();
+            var message = (CreateBsqSwapTxRequest) bsqSwapProtocolModel.getTradeMessage();
 
             // Verify mining fee
             var feeService = bsqSwapProtocolModel.getProvider().getFeeService();

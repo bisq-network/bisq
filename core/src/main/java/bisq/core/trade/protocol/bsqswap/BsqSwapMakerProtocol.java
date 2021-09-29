@@ -19,7 +19,7 @@ package bisq.core.trade.protocol.bsqswap;
 
 
 import bisq.core.trade.messages.TradeMessage;
-import bisq.core.trade.messages.bsqswap.CreateAtomicTxRequest;
+import bisq.core.trade.messages.bsqswap.CreateBsqSwapTxRequest;
 import bisq.core.trade.model.bsqswap.BsqSwapMakerTrade;
 import bisq.core.trade.model.bsqswap.BsqSwapTrade;
 import bisq.core.trade.protocol.TradeProtocol;
@@ -54,7 +54,7 @@ public class BsqSwapMakerProtocol extends TradeProtocol {
     // Start trade
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void handleTakeAtomicRequest(CreateAtomicTxRequest message,
+    public void handleTakeAtomicRequest(CreateBsqSwapTxRequest message,
                                         NodeAddress sender,
                                         ErrorMessageHandler errorMessageHandler) {
         expect(preCondition(BsqSwapTrade.State.PREPARATION == bsqSwapMakerTrade.getState())

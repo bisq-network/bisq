@@ -49,8 +49,8 @@ import bisq.core.support.dispute.messages.OpenNewDisputeMessage;
 import bisq.core.support.dispute.messages.PeerOpenedDisputeMessage;
 import bisq.core.support.dispute.refund.refundagent.RefundAgent;
 import bisq.core.support.messages.ChatMessage;
-import bisq.core.trade.messages.bsqswap.CreateAtomicTxRequest;
-import bisq.core.trade.messages.bsqswap.CreateAtomicTxResponse;
+import bisq.core.trade.messages.bsqswap.CreateBsqSwapTxRequest;
+import bisq.core.trade.messages.bsqswap.CreateBsqSwapTxResponse;
 import bisq.core.trade.messages.trade.CounterCurrencyTransferStartedMessage;
 import bisq.core.trade.messages.trade.DelayedPayoutTxSignatureRequest;
 import bisq.core.trade.messages.trade.DelayedPayoutTxSignatureResponse;
@@ -165,10 +165,10 @@ public class CoreNetworkProtoResolver extends CoreProtoResolver implements Netwo
                     return DepositTxAndDelayedPayoutTxMessage.fromProto(proto.getDepositTxAndDelayedPayoutTxMessage(), this, messageVersion);
                 case SHARE_BUYER_PAYMENT_ACCOUNT_MESSAGE:
                     return ShareBuyerPaymentAccountMessage.fromProto(proto.getShareBuyerPaymentAccountMessage(), this, messageVersion);
-                case CREATE_ATOMIC_TX_REQUEST:
-                    return CreateAtomicTxRequest.fromProto(proto.getCreateAtomicTxRequest(), messageVersion);
-                case CREATE_ATOMIC_TX_RESPONSE:
-                    return CreateAtomicTxResponse.fromProto(proto.getCreateAtomicTxResponse(), messageVersion);
+                case CREATE_BSQ_SWAP_TX_REQUEST:
+                    return CreateBsqSwapTxRequest.fromProto(proto.getCreateBsqSwapTxRequest(), messageVersion);
+                case CREATE_BSQ_SWAP_TX_RESPONSE:
+                    return CreateBsqSwapTxResponse.fromProto(proto.getCreateBsqSwapTxResponse(), messageVersion);
 
                 case COUNTER_CURRENCY_TRANSFER_STARTED_MESSAGE:
                     return CounterCurrencyTransferStartedMessage.fromProto(proto.getCounterCurrencyTransferStartedMessage(), messageVersion);

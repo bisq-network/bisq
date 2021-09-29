@@ -30,7 +30,7 @@ import bisq.core.offer.availability.OfferAvailabilityModel;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 import bisq.core.support.dispute.mediation.mediator.MediatorManager;
-import bisq.core.trade.messages.bsqswap.CreateAtomicTxRequest;
+import bisq.core.trade.messages.bsqswap.CreateBsqSwapTxRequest;
 import bisq.core.trade.messages.trade.InputsForDepositTxRequest;
 import bisq.core.trade.misc.ClosedTradableManager;
 import bisq.core.trade.misc.DumpDelayedPayoutTx;
@@ -241,8 +241,8 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         NetworkEnvelope networkEnvelope = message.getNetworkEnvelope();
         if (networkEnvelope instanceof InputsForDepositTxRequest) {
             handleTakeOfferRequest(peer, (InputsForDepositTxRequest) networkEnvelope);
-        } else if (networkEnvelope instanceof CreateAtomicTxRequest) {
-            handleTakeAtomicOfferRequest(peer, (CreateAtomicTxRequest) networkEnvelope);
+        } else if (networkEnvelope instanceof CreateBsqSwapTxRequest) {
+            handleTakeAtomicOfferRequest(peer, (CreateBsqSwapTxRequest) networkEnvelope);
         }
     }
 
@@ -308,18 +308,18 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
     }
 
     // The maker received a TakeOfferRequest
-    private void handleTakeAtomicOfferRequest(NodeAddress peer, CreateAtomicTxRequest createAtomicTxRequest) {
+    private void handleTakeAtomicOfferRequest(NodeAddress peer, CreateBsqSwapTxRequest createBsqSwapTxRequest) {
         log.info("Received createAtomicTxRequest from {} with tradeId {} and uid {}",
-                peer, createAtomicTxRequest.getTradeId(), createAtomicTxRequest.getUid());
+                peer, createBsqSwapTxRequest.getTradeId(), createBsqSwapTxRequest.getUid());
 
         try {
-            Validator.nonEmptyStringOf(createAtomicTxRequest.getTradeId());
+            Validator.nonEmptyStringOf(createBsqSwapTxRequest.getTradeId());
         } catch (Throwable t) {
-            log.warn("Invalid inputsForDepositTxRequest " + createAtomicTxRequest.toString());
+            log.warn("Invalid inputsForDepositTxRequest " + createBsqSwapTxRequest.toString());
             return;
         }
 
-        Optional<OpenOffer> openOfferOptional = openOfferManager.getOpenOfferById(createAtomicTxRequest.getTradeId());
+        Optional<OpenOffer> openOfferOptional = openOfferManager.getOpenOfferById(createBsqSwapTxRequest.getTradeId());
         if (!openOfferOptional.isPresent()) {
             return;
         }
@@ -334,13 +334,13 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         BsqSwapTrade bsqSwapTrade = new BsqSwapMakerTrade(
                 UUID.randomUUID().toString(),
                 offer,
-                Coin.valueOf(createAtomicTxRequest.getBtcTradeAmount()),
-                createAtomicTxRequest.getTradePrice(),
+                Coin.valueOf(createBsqSwapTxRequest.getBtcTradeAmount()),
+                createBsqSwapTxRequest.getTradePrice(),
                 new Date().getTime(),
-                createAtomicTxRequest.getSenderNodeAddress(),
-                createAtomicTxRequest.getTxFeePerVbyte(),
-                createAtomicTxRequest.getMakerFee(),
-                createAtomicTxRequest.getTakerFee(),
+                createBsqSwapTxRequest.getSenderNodeAddress(),
+                createBsqSwapTxRequest.getTxFeePerVbyte(),
+                createBsqSwapTxRequest.getMakerFee(),
+                createBsqSwapTxRequest.getTakerFee(),
                 new BsqSwapProtocolModel(keyRing.getPubKeyRing()),
                 "",
                 BsqSwapTrade.State.PREPARATION);
@@ -349,7 +349,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
 
         initTradeAndProtocol(bsqSwapTrade, tradeProtocol);
 
-        ((BsqSwapMakerProtocol) tradeProtocol).handleTakeAtomicRequest(createAtomicTxRequest, peer, errorMessage -> {
+        ((BsqSwapMakerProtocol) tradeProtocol).handleTakeAtomicRequest(createBsqSwapTxRequest, peer, errorMessage -> {
             if (takeOfferRequestErrorMessageHandler != null)
                 takeOfferRequestErrorMessageHandler.handleErrorMessage(errorMessage);
         });

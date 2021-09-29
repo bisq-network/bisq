@@ -84,8 +84,8 @@ message NetworkEnvelope {
 
         ShareBuyerPaymentAccountMessage share_buyer_payment_account_message = 54; // Added at 1.7.0
 
-        CreateAtomicTxRequest create_atomic_tx_request = 55;
-        CreateAtomicTxResponse create_atomic_tx_response = 56;
+        CreateBsqSwapTxRequest create_bsq_swap_tx_request = 55;
+        CreateBsqSwapTxResponse create_bsq_swap_tx_response = 56;
     }
 }
 
@@ -378,7 +378,7 @@ message TraderSignedWitnessMessage {
 
 // BsqSwapTrade
 
-message CreateAtomicTxRequest {
+message CreateBsqSwapTxRequest {
     string uid = 1;
     string trade_id = 2;
     NodeAddress sender_node_address = 3;
@@ -399,11 +399,11 @@ message CreateAtomicTxRequest {
     repeated RawTransactionInput taker_btc_inputs = 18;
 }
 
-message CreateAtomicTxResponse {
+message CreateBsqSwapTxResponse {
     string uid = 1;
     string trade_id = 2;
     NodeAddress sender_node_address = 3;
-    bytes atomic_tx = 4;
+    bytes tx = 4;
     int64 maker_bsq_output_value = 5;
     string maker_bsq_output_address = 6;
     int64 maker_btc_output_value = 7;
