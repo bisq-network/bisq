@@ -15,29 +15,26 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.protocol.messages.trade;
+package bisq.core.trade.messages;
 
-import bisq.core.trade.protocol.messages.TradeMessage;
+import bisq.network.p2p.UidMessage;
 
-import bisq.network.p2p.mailbox.MailboxMessage;
-
-import java.util.concurrent.TimeUnit;
+import bisq.common.proto.network.NetworkEnvelope;
 
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.ToString;
 
 @EqualsAndHashCode(callSuper = true)
+@Getter
 @ToString
-public abstract class TradeMailboxMessage extends TradeMessage implements MailboxMessage {
-    public static final long TTL = TimeUnit.DAYS.toMillis(15);
+public abstract class TradeMessage extends NetworkEnvelope implements UidMessage {
+    protected final String tradeId;
+    protected final String uid;
 
-    protected TradeMailboxMessage(int messageVersion, String tradeId, String uid) {
-        super(messageVersion, tradeId, uid);
+    protected TradeMessage(int messageVersion, String tradeId, String uid) {
+        super(messageVersion);
+        this.tradeId = tradeId;
+        this.uid = uid;
     }
-
-    @Override
-    public long getTTL() {
-        return TTL;
-    }
-
 }

@@ -29,14 +29,14 @@ import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.proto.CoreProtoResolver;
+import bisq.core.trade.messages.TradeMessage;
+import bisq.core.trade.messages.bsqswap.CreateAtomicTxRequest;
+import bisq.core.trade.messages.bsqswap.CreateAtomicTxResponse;
 import bisq.core.trade.model.bsqswap.BsqSwapTrade;
 import bisq.core.trade.model.trade.TradeManager;
 import bisq.core.trade.protocol.Provider;
 import bisq.core.trade.protocol.TradeProtocolModel;
 import bisq.core.trade.protocol.TradingPeer;
-import bisq.core.trade.protocol.messages.TradeMessage;
-import bisq.core.trade.protocol.messages.bsqswap.CreateAtomicTxRequest;
-import bisq.core.trade.protocol.messages.bsqswap.CreateAtomicTxResponse;
 
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;

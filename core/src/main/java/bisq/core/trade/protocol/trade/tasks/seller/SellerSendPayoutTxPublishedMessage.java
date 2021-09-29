@@ -19,9 +19,9 @@ package bisq.core.trade.protocol.trade.tasks.seller;
 
 import bisq.core.account.sign.SignedWitness;
 import bisq.core.account.witness.AccountAgeWitnessService;
+import bisq.core.trade.messages.trade.PayoutTxPublishedMessage;
+import bisq.core.trade.messages.trade.TradeMailboxMessage;
 import bisq.core.trade.model.trade.Trade;
-import bisq.core.trade.protocol.messages.trade.PayoutTxPublishedMessage;
-import bisq.core.trade.protocol.messages.trade.TradeMailboxMessage;
 import bisq.core.trade.protocol.trade.tasks.SendMailboxMessageTask;
 
 import bisq.common.taskrunner.TaskRunner;

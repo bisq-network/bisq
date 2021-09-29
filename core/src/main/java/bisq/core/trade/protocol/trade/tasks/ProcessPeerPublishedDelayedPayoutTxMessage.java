@@ -18,8 +18,8 @@
 package bisq.core.trade.protocol.trade.tasks;
 
 import bisq.core.btc.wallet.WalletService;
+import bisq.core.trade.messages.trade.PeerPublishedDelayedPayoutTxMessage;
 import bisq.core.trade.model.trade.Trade;
-import bisq.core.trade.protocol.messages.trade.PeerPublishedDelayedPayoutTxMessage;
 import bisq.core.util.Validator;
 
 import bisq.common.taskrunner.TaskRunner;

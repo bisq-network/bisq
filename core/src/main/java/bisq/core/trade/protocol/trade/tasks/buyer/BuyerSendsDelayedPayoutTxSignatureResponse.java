@@ -17,8 +17,8 @@
 
 package bisq.core.trade.protocol.trade.tasks.buyer;
 
+import bisq.core.trade.messages.trade.DelayedPayoutTxSignatureResponse;
 import bisq.core.trade.model.trade.Trade;
-import bisq.core.trade.protocol.messages.trade.DelayedPayoutTxSignatureResponse;
 import bisq.core.trade.protocol.trade.tasks.TradeTask;
 
 import bisq.network.p2p.NodeAddress;

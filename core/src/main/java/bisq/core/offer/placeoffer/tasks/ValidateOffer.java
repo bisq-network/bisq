@@ -19,7 +19,7 @@ package bisq.core.offer.placeoffer.tasks;
 
 import bisq.core.offer.Offer;
 import bisq.core.offer.placeoffer.PlaceOfferModel;
-import bisq.core.trade.protocol.messages.TradeMessage;
+import bisq.core.trade.messages.TradeMessage;
 
 import bisq.common.taskrunner.Task;
 import bisq.common.taskrunner.TaskRunner;
