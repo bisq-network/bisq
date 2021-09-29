@@ -231,7 +231,7 @@ public class BroadcastHandler implements PeerManager.Listener {
         return broadcastRequests.stream()
                 .filter(broadcastRequest -> !connection.getPeersNodeAddressOptional().isPresent() ||
                         !connection.getPeersNodeAddressOptional().get().equals(broadcastRequest.getSender()))
-                .filter(broadcastRequest -> connection.noCapabilityRequiredOrCapabilityIsSupported(broadcastRequest.getMessage()))
+                .filter(broadcastRequest -> connection.testCapability(broadcastRequest.getMessage()))
                 .collect(Collectors.toList());
     }
 

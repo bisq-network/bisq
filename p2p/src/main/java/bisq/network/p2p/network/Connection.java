@@ -243,7 +243,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
             return;
         }
 
-        if (!noCapabilityRequiredOrCapabilityIsSupported(networkEnvelope)) {
+        if (!testCapability(networkEnvelope)) {
             log.debug("Capability for networkEnvelope is required but not supported");
             return;
         }
@@ -325,7 +325,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
         }
     }
 
-    public boolean noCapabilityRequiredOrCapabilityIsSupported(NetworkEnvelope networkEnvelope) {
+    public boolean testCapability(NetworkEnvelope networkEnvelope) {
         if (networkEnvelope instanceof BundleOfEnvelopes) {
             // We remove elements in the list which fail the capability test
             BundleOfEnvelopes bundleOfEnvelopes = (BundleOfEnvelopes) networkEnvelope;
@@ -350,7 +350,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
 
     private void updateBundleOfEnvelopes(BundleOfEnvelopes bundleOfEnvelopes) {
         List<NetworkEnvelope> toRemove = bundleOfEnvelopes.getEnvelopes().stream()
-                .filter(e -> !noCapabilityRequiredOrCapabilityIsSupported(e))
+                .filter(e -> !testCapability(e))
                 .collect(Collectors.toList());
         bundleOfEnvelopes.getEnvelopes().removeAll(toRemove);
     }
