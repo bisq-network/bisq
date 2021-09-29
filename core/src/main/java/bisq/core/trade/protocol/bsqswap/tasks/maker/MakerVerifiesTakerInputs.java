@@ -19,7 +19,7 @@ package bisq.core.trade.protocol.bsqswap.tasks.maker;
 
 import bisq.core.trade.messages.bsqswap.CreateAtomicTxRequest;
 import bisq.core.trade.model.bsqswap.BsqSwapTrade;
-import bisq.core.trade.protocol.bsqswap.tasks.AtomicTradeTask;
+import bisq.core.trade.protocol.bsqswap.tasks.BsqSwapTask;
 
 import bisq.asset.BitcoinAddressValidator;
 
@@ -31,9 +31,9 @@ import lombok.extern.slf4j.Slf4j;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
-public class AtomicMakerVerifiesTakerInputs extends AtomicTradeTask {
+public class MakerVerifiesTakerInputs extends BsqSwapTask {
     @SuppressWarnings({"unused"})
-    public AtomicMakerVerifiesTakerInputs(TaskRunner<BsqSwapTrade> taskHandler, BsqSwapTrade bsqSwapTrade) {
+    public MakerVerifiesTakerInputs(TaskRunner<BsqSwapTrade> taskHandler, BsqSwapTrade bsqSwapTrade) {
         super(taskHandler, bsqSwapTrade);
     }
 

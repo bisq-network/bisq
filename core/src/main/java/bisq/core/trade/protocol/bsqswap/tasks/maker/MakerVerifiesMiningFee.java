@@ -19,7 +19,7 @@ package bisq.core.trade.protocol.bsqswap.tasks.maker;
 
 import bisq.core.trade.messages.bsqswap.CreateAtomicTxRequest;
 import bisq.core.trade.model.bsqswap.BsqSwapTrade;
-import bisq.core.trade.protocol.bsqswap.tasks.AtomicSetupTxListener;
+import bisq.core.trade.protocol.bsqswap.tasks.SetupTxListener;
 
 import bisq.common.taskrunner.TaskRunner;
 
@@ -31,10 +31,10 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static java.lang.Math.abs;
 
 @Slf4j
-public class AtomicMakerVerifiesMiningFee extends AtomicSetupTxListener {
+public class MakerVerifiesMiningFee extends SetupTxListener {
 
     @SuppressWarnings({"unused"})
-    public AtomicMakerVerifiesMiningFee(TaskRunner<BsqSwapTrade> taskHandler, BsqSwapTrade bsqSwapTrade) {
+    public MakerVerifiesMiningFee(TaskRunner<BsqSwapTrade> taskHandler, BsqSwapTrade bsqSwapTrade) {
         super(taskHandler, bsqSwapTrade);
     }
 

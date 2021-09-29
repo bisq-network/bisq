@@ -25,12 +25,12 @@ import bisq.core.trade.model.bsqswap.BsqSwapTakerTrade;
 import bisq.core.trade.model.bsqswap.BsqSwapTrade;
 import bisq.core.trade.protocol.TakerProtocol;
 import bisq.core.trade.protocol.TradeProtocol;
-import bisq.core.trade.protocol.bsqswap.tasks.AtomicApplyFilter;
-import bisq.core.trade.protocol.bsqswap.tasks.taker.AtomicTakerPreparesData;
-import bisq.core.trade.protocol.bsqswap.tasks.taker.AtomicTakerPublishAtomicTx;
-import bisq.core.trade.protocol.bsqswap.tasks.taker.AtomicTakerSendsAtomicRequest;
-import bisq.core.trade.protocol.bsqswap.tasks.taker.AtomicTakerSetupTxListener;
-import bisq.core.trade.protocol.bsqswap.tasks.taker.AtomicTakerVerifyAtomicTx;
+import bisq.core.trade.protocol.bsqswap.tasks.ApplyFilter;
+import bisq.core.trade.protocol.bsqswap.tasks.taker.TakerPreparesData;
+import bisq.core.trade.protocol.bsqswap.tasks.taker.TakerPublishBsqSwapTx;
+import bisq.core.trade.protocol.bsqswap.tasks.taker.TakerSendsBsqSwapRequest;
+import bisq.core.trade.protocol.bsqswap.tasks.taker.TakerSetupTxListener;
+import bisq.core.trade.protocol.bsqswap.tasks.taker.TakerVerifyBsqSwapTx;
 
 import bisq.network.p2p.NodeAddress;
 
@@ -64,9 +64,9 @@ public class BsqSwapTakerProtocol extends TradeProtocol implements TakerProtocol
                 .with(TakerEvent.TAKE_OFFER)
                 .from(bsqSwapTakerTrade.getTradingPeerNodeAddress()))
                 .setup(tasks(
-                        AtomicApplyFilter.class,
-                        AtomicTakerPreparesData.class,
-                        AtomicTakerSendsAtomicRequest.class
+                        ApplyFilter.class,
+                        TakerPreparesData.class,
+                        TakerSendsBsqSwapRequest.class
                 ))
                 .executeTasks();
     }
@@ -80,9 +80,9 @@ public class BsqSwapTakerProtocol extends TradeProtocol implements TakerProtocol
                 .with(message)
                 .from(sender))
                 .setup(tasks(
-                        AtomicTakerVerifyAtomicTx.class,
-                        AtomicTakerPublishAtomicTx.class,
-                        AtomicTakerSetupTxListener.class
+                        TakerVerifyBsqSwapTx.class,
+                        TakerPublishBsqSwapTx.class,
+                        TakerSetupTxListener.class
                         // TODO(sq)
                         // PublishTradeStatistics.class
                 ).withTimeout(60))

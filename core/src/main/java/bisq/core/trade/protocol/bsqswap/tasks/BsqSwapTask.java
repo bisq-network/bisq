@@ -27,11 +27,11 @@ import bisq.common.taskrunner.TaskRunner;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public abstract class AtomicTradeTask extends Task<TradeModel> {
+public abstract class BsqSwapTask extends Task<TradeModel> {
     protected final BsqSwapProtocolModel bsqSwapProtocolModel;
     protected final BsqSwapTrade bsqSwapTrade;
 
-    protected AtomicTradeTask(TaskRunner<BsqSwapTrade> taskHandler, BsqSwapTrade bsqSwapTrade) {
+    protected BsqSwapTask(TaskRunner<BsqSwapTrade> taskHandler, BsqSwapTrade bsqSwapTrade) {
         super(taskHandler, bsqSwapTrade);
 
         this.bsqSwapTrade = bsqSwapTrade;

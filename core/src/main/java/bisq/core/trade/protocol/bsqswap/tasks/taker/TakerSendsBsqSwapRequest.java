@@ -19,7 +19,7 @@ package bisq.core.trade.protocol.bsqswap.tasks.taker;
 
 import bisq.core.trade.messages.bsqswap.CreateAtomicTxRequest;
 import bisq.core.trade.model.bsqswap.BsqSwapTrade;
-import bisq.core.trade.protocol.bsqswap.tasks.AtomicTradeTask;
+import bisq.core.trade.protocol.bsqswap.tasks.BsqSwapTask;
 
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.SendDirectMessageListener;
@@ -33,10 +33,10 @@ import lombok.extern.slf4j.Slf4j;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
-public class AtomicTakerSendsAtomicRequest extends AtomicTradeTask {
+public class TakerSendsBsqSwapRequest extends BsqSwapTask {
 
     @SuppressWarnings({"unused"})
-    public AtomicTakerSendsAtomicRequest(TaskRunner<BsqSwapTrade> taskHandler, BsqSwapTrade bsqSwapTrade) {
+    public TakerSendsBsqSwapRequest(TaskRunner<BsqSwapTrade> taskHandler, BsqSwapTrade bsqSwapTrade) {
         super(taskHandler, bsqSwapTrade);
     }
 

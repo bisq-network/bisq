@@ -18,7 +18,7 @@
 package bisq.core.trade.protocol.bsqswap.tasks.taker;
 
 import bisq.core.trade.model.bsqswap.BsqSwapTrade;
-import bisq.core.trade.protocol.bsqswap.tasks.AtomicTradeTask;
+import bisq.core.trade.protocol.bsqswap.tasks.BsqSwapTask;
 
 import bisq.common.taskrunner.TaskRunner;
 
@@ -27,10 +27,10 @@ import lombok.extern.slf4j.Slf4j;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
-public class AtomicTakerPreparesData extends AtomicTradeTask {
+public class TakerPreparesData extends BsqSwapTask {
 
     @SuppressWarnings({"unused"})
-    public AtomicTakerPreparesData(TaskRunner<BsqSwapTrade> taskHandler, BsqSwapTrade bsqSwapTrade) {
+    public TakerPreparesData(TaskRunner<BsqSwapTrade> taskHandler, BsqSwapTrade bsqSwapTrade) {
         super(taskHandler, bsqSwapTrade);
     }
 

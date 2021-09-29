@@ -15,10 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.protocol.bsqswap.tasks.taker;
+package bisq.core.trade.protocol.bsqswap.tasks.maker;
 
 import bisq.core.trade.model.bsqswap.BsqSwapTrade;
-import bisq.core.trade.protocol.bsqswap.tasks.AtomicSetupTxListener;
+import bisq.core.trade.protocol.bsqswap.tasks.SetupTxListener;
 
 import bisq.common.taskrunner.TaskRunner;
 
@@ -26,13 +26,11 @@ import org.bitcoinj.core.Address;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 @Slf4j
-public class AtomicTakerSetupTxListener extends AtomicSetupTxListener {
+public class MakerSetupTxListener extends SetupTxListener {
 
     @SuppressWarnings({"unused"})
-    public AtomicTakerSetupTxListener(TaskRunner<BsqSwapTrade> taskHandler, BsqSwapTrade bsqSwapTrade) {
+    public MakerSetupTxListener(TaskRunner<BsqSwapTrade> taskHandler, BsqSwapTrade bsqSwapTrade) {
         super(taskHandler, bsqSwapTrade);
     }
 
@@ -41,16 +39,14 @@ public class AtomicTakerSetupTxListener extends AtomicSetupTxListener {
         try {
             runInterceptHook();
 
-            checkNotNull(bsqSwapProtocolModel, "AtomicModel must not be null");
-
             // Find address to listen to
-            if (bsqSwapProtocolModel.getTakerBtcAddress() != null) {
+            if (bsqSwapProtocolModel.getMakerBtcAddress() != null) {
                 walletService = bsqSwapProtocolModel.getBtcWalletService();
-                myAddress = Address.fromString(walletService.getParams(), bsqSwapProtocolModel.getTakerBtcAddress());
-            } else if (bsqSwapProtocolModel.getTakerBsqAddress() != null) {
+                myAddress = Address.fromString(walletService.getParams(), bsqSwapProtocolModel.getMakerBtcAddress());
+            } else if (bsqSwapProtocolModel.getMakerBsqAddress() != null) {
                 // Listen to BSQ address
                 walletService = bsqSwapProtocolModel.getBsqWalletService();
-                myAddress = Address.fromString(walletService.getParams(), bsqSwapProtocolModel.getTakerBsqAddress());
+                myAddress = Address.fromString(walletService.getParams(), bsqSwapProtocolModel.getMakerBsqAddress());
             } else {
                 failed("No maker address set");
             }

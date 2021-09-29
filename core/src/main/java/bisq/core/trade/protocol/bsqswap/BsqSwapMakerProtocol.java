@@ -24,13 +24,13 @@ import bisq.core.trade.model.bsqswap.BsqSwapMakerTrade;
 import bisq.core.trade.model.bsqswap.BsqSwapTrade;
 import bisq.core.trade.protocol.TradeProtocol;
 import bisq.core.trade.protocol.TradeTaskRunner;
-import bisq.core.trade.protocol.bsqswap.tasks.AtomicApplyFilter;
-import bisq.core.trade.protocol.bsqswap.tasks.maker.AtomicMakerCreatesAndSignsTx;
-import bisq.core.trade.protocol.bsqswap.tasks.maker.AtomicMakerRemovesOpenOffer;
-import bisq.core.trade.protocol.bsqswap.tasks.maker.AtomicMakerSetupTxListener;
-import bisq.core.trade.protocol.bsqswap.tasks.maker.AtomicMakerVerifiesAmounts;
-import bisq.core.trade.protocol.bsqswap.tasks.maker.AtomicMakerVerifiesMiningFee;
-import bisq.core.trade.protocol.bsqswap.tasks.maker.AtomicMakerVerifiesTakerInputs;
+import bisq.core.trade.protocol.bsqswap.tasks.ApplyFilter;
+import bisq.core.trade.protocol.bsqswap.tasks.maker.MakerCreatesAndSignsTx;
+import bisq.core.trade.protocol.bsqswap.tasks.maker.MakerRemovesOpenOffer;
+import bisq.core.trade.protocol.bsqswap.tasks.maker.MakerSetupTxListener;
+import bisq.core.trade.protocol.bsqswap.tasks.maker.MakerVerifiesAmounts;
+import bisq.core.trade.protocol.bsqswap.tasks.maker.MakerVerifiesMiningFee;
+import bisq.core.trade.protocol.bsqswap.tasks.maker.MakerVerifiesTakerInputs;
 
 import bisq.network.p2p.NodeAddress;
 
@@ -61,13 +61,13 @@ public class BsqSwapMakerProtocol extends TradeProtocol {
                 .with(message)
                 .from(sender))
                 .setup(tasks(
-                        AtomicApplyFilter.class,
-                        AtomicMakerVerifiesMiningFee.class,
-                        AtomicMakerVerifiesAmounts.class,
-                        AtomicMakerVerifiesTakerInputs.class,
-                        AtomicMakerRemovesOpenOffer.class,
-                        AtomicMakerCreatesAndSignsTx.class,
-                        AtomicMakerSetupTxListener.class)
+                        ApplyFilter.class,
+                        MakerVerifiesMiningFee.class,
+                        MakerVerifiesAmounts.class,
+                        MakerVerifiesTakerInputs.class,
+                        MakerRemovesOpenOffer.class,
+                        MakerCreatesAndSignsTx.class,
+                        MakerSetupTxListener.class)
                         .using(new TradeTaskRunner(bsqSwapMakerTrade,
                                 () -> handleTaskRunnerSuccess(message),
                                 errorMessage -> {

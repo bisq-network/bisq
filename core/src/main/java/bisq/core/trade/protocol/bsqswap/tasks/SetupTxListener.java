@@ -33,14 +33,14 @@ import lombok.extern.slf4j.Slf4j;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public abstract class AtomicSetupTxListener extends AtomicTradeTask {
+public abstract class SetupTxListener extends BsqSwapTask {
     // Use instance fields to not get eaten up by the GC
     private AddressConfidenceListener confidenceListener;
     protected Address myAddress;
     protected WalletService walletService;
 
     @SuppressWarnings({"unused"})
-    public AtomicSetupTxListener(TaskRunner<BsqSwapTrade> taskHandler, BsqSwapTrade bsqSwapTrade) {
+    public SetupTxListener(TaskRunner<BsqSwapTrade> taskHandler, BsqSwapTrade bsqSwapTrade) {
         super(taskHandler, bsqSwapTrade);
     }
 

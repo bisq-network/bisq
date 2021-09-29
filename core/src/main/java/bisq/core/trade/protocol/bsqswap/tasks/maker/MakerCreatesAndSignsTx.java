@@ -19,7 +19,7 @@ package bisq.core.trade.protocol.bsqswap.tasks.maker;
 
 import bisq.core.trade.messages.bsqswap.CreateAtomicTxResponse;
 import bisq.core.trade.model.bsqswap.BsqSwapTrade;
-import bisq.core.trade.protocol.bsqswap.tasks.AtomicTradeTask;
+import bisq.core.trade.protocol.bsqswap.tasks.BsqSwapTask;
 
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.SendDirectMessageListener;
@@ -31,9 +31,9 @@ import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class AtomicMakerCreatesAndSignsTx extends AtomicTradeTask {
+public class MakerCreatesAndSignsTx extends BsqSwapTask {
     @SuppressWarnings({"unused"})
-    public AtomicMakerCreatesAndSignsTx(TaskRunner<BsqSwapTrade> taskHandler, BsqSwapTrade bsqSwapTrade) {
+    public MakerCreatesAndSignsTx(TaskRunner<BsqSwapTrade> taskHandler, BsqSwapTrade bsqSwapTrade) {
         super(taskHandler, bsqSwapTrade);
     }
 

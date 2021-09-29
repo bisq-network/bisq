@@ -33,8 +33,8 @@ import javax.annotation.Nullable;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public class AtomicApplyFilter extends AtomicTradeTask {
-    public AtomicApplyFilter(TaskRunner<BsqSwapTrade> taskHandler, BsqSwapTrade bsqSwapTrade) {
+public class ApplyFilter extends BsqSwapTask {
+    public ApplyFilter(TaskRunner<BsqSwapTrade> taskHandler, BsqSwapTrade bsqSwapTrade) {
         super(taskHandler, bsqSwapTrade);
     }
 

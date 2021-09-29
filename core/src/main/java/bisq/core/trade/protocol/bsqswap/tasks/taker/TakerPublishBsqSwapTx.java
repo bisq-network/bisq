@@ -22,7 +22,7 @@ import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.TxBroadcaster;
 import bisq.core.dao.state.model.blockchain.TxType;
 import bisq.core.trade.model.bsqswap.BsqSwapTrade;
-import bisq.core.trade.protocol.bsqswap.tasks.AtomicTradeTask;
+import bisq.core.trade.protocol.bsqswap.tasks.BsqSwapTask;
 
 import bisq.common.taskrunner.TaskRunner;
 import bisq.common.util.Utilities;
@@ -34,10 +34,10 @@ import lombok.extern.slf4j.Slf4j;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public class AtomicTakerPublishAtomicTx extends AtomicTradeTask {
+public class TakerPublishBsqSwapTx extends BsqSwapTask {
 
     @SuppressWarnings({"unused"})
-    public AtomicTakerPublishAtomicTx(TaskRunner<BsqSwapTrade> taskHandler, BsqSwapTrade bsqSwapTrade) {
+    public TakerPublishBsqSwapTx(TaskRunner<BsqSwapTrade> taskHandler, BsqSwapTrade bsqSwapTrade) {
         super(taskHandler, bsqSwapTrade);
     }
 

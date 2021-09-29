@@ -19,7 +19,7 @@ package bisq.core.trade.protocol.bsqswap.tasks.maker;
 
 import bisq.core.trade.messages.bsqswap.CreateAtomicTxRequest;
 import bisq.core.trade.model.bsqswap.BsqSwapTrade;
-import bisq.core.trade.protocol.bsqswap.tasks.AtomicSetupTxListener;
+import bisq.core.trade.protocol.bsqswap.tasks.SetupTxListener;
 import bisq.core.util.Validator;
 import bisq.core.util.coin.CoinUtil;
 
@@ -32,10 +32,10 @@ import lombok.extern.slf4j.Slf4j;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
-public class AtomicMakerVerifiesAmounts extends AtomicSetupTxListener {
+public class MakerVerifiesAmounts extends SetupTxListener {
 
     @SuppressWarnings({"unused"})
-    public AtomicMakerVerifiesAmounts(TaskRunner<BsqSwapTrade> taskHandler, BsqSwapTrade bsqSwapTrade) {
+    public MakerVerifiesAmounts(TaskRunner<BsqSwapTrade> taskHandler, BsqSwapTrade bsqSwapTrade) {
         super(taskHandler, bsqSwapTrade);
     }
 
