@@ -259,9 +259,10 @@ public class CreateOfferService {
                 price.getValue(),
                 amount.getValue(),
                 minAmount.getValue(),
+                new byte[]{0},
+                null,
                 Version.VERSION,
-                Version.TRADE_PROTOCOL_VERSION,
-                new byte[]{0});
+                Version.TRADE_PROTOCOL_VERSION);
         return new Offer(atomicOfferPayload);
     }
 

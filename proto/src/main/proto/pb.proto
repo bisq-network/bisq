@@ -848,9 +848,10 @@ message BsqSwapOfferPayload {
     int64 price = 6;
     int64 amount = 7;
     int64 min_amount = 8;
-    string version_nr = 9;
-    int32 protocol_version = 10;
-    bytes proof_of_work = 11;
+    bytes proof_of_work = 9;
+    map<string, string> extra_data = 10;
+    string version_nr = 11;
+    int32 protocol_version = 12;
 }
 
 message AccountAgeWitness {

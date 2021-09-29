@@ -28,6 +28,8 @@ import bisq.common.app.Capability;
 import bisq.common.crypto.Hash;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.proto.ProtoUtil;
+import bisq.common.util.CollectionUtils;
+import bisq.common.util.ExtraDataMapValidator;
 import bisq.common.util.JsonExclude;
 import bisq.common.util.Utilities;
 
@@ -37,6 +39,7 @@ import java.security.PublicKey;
 
 import java.util.Date;
 import java.util.Map;
+import java.util.Optional;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -63,10 +66,14 @@ public final class BsqSwapOfferPayload extends OfferPayloadBase
     private final long price;
     private final long amount;
     private final long minAmount;
+    // Not used yet
+    private final byte[] proofOfWork;
+    @Nullable
+    private final Map<String, String> extraDataMap;
     private final String versionNr;
     private final int protocolVersion;
-    private final byte[] proofOfWork;
 
+    // cache
     private transient byte[] hash;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -81,9 +88,10 @@ public final class BsqSwapOfferPayload extends OfferPayloadBase
                                long price,
                                long amount,
                                long minAmount,
+                               byte[] proofOfWork,
+                               @Nullable Map<String, String> extraDataMap,
                                String versionNr,
-                               int protocolVersion,
-                               byte[] proofOfWork) {
+                               int protocolVersion) {
         this.id = id;
         this.date = date;
         this.ownerNodeAddress = ownerNodeAddress;
@@ -92,9 +100,10 @@ public final class BsqSwapOfferPayload extends OfferPayloadBase
         this.price = price;
         this.amount = amount;
         this.minAmount = minAmount;
+        this.proofOfWork = proofOfWork;
+        this.extraDataMap = ExtraDataMapValidator.getValidatedExtraDataMap(extraDataMap);
         this.versionNr = versionNr;
         this.protocolVersion = protocolVersion;
-        this.proofOfWork = proofOfWork;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -120,14 +129,18 @@ public final class BsqSwapOfferPayload extends OfferPayloadBase
                 .setPrice(price)
                 .setAmount(amount)
                 .setMinAmount(minAmount)
+                .setProofOfWork(ByteString.copyFrom(proofOfWork))
                 .setVersionNr(versionNr)
-                .setProtocolVersion(protocolVersion)
-                .setProofOfWork(ByteString.copyFrom(proofOfWork));
+                .setProtocolVersion(protocolVersion);
+
+        Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraData);
 
         return protobuf.StoragePayload.newBuilder().setBsqSwapOfferPayload(builder).build();
     }
 
     public static BsqSwapOfferPayload fromProto(protobuf.BsqSwapOfferPayload proto) {
+        Map<String, String> extraDataMapMap = CollectionUtils.isEmpty(proto.getExtraDataMap()) ?
+                null : proto.getExtraDataMap();
         return new BsqSwapOfferPayload(proto.getId(),
                 proto.getDate(),
                 NodeAddress.fromProto(proto.getOwnerNodeAddress()),
@@ -136,9 +149,11 @@ public final class BsqSwapOfferPayload extends OfferPayloadBase
                 proto.getPrice(),
                 proto.getAmount(),
                 proto.getMinAmount(),
+                proto.getProofOfWork().toByteArray(),
+                extraDataMapMap,
                 proto.getVersionNr(),
-                proto.getProtocolVersion(),
-                proto.getProofOfWork().toByteArray());
+                proto.getProtocolVersion()
+        );
     }
 
 
@@ -212,7 +227,7 @@ public final class BsqSwapOfferPayload extends OfferPayloadBase
     @Nullable
     @Override
     public Map<String, String> getExtraDataMap() {
-        return null;
+        return extraDataMap;
     }
 
     @Override
@@ -221,6 +236,11 @@ public final class BsqSwapOfferPayload extends OfferPayloadBase
             this.hash = Hash.getSha256Hash(this.toProtoMessage().toByteArray());
         }
         return this.hash;
+    }
+
+    @Override
+    public Capabilities getRequiredCapabilities() {
+        return new Capabilities(Capability.BSQ_SWAP_OFFER);
     }
 
     @Override
@@ -233,14 +253,10 @@ public final class BsqSwapOfferPayload extends OfferPayloadBase
                 ",\n     direction=" + direction +
                 ",\n     amount=" + amount +
                 ",\n     minAmount=" + minAmount +
+                ",\n     proofOfWork=" + Utilities.bytesAsHexString(proofOfWork) +
+                ",\n     extraDataMap=" + extraDataMap +
                 ",\n     versionNr='" + versionNr +
                 ",\n     protocolVersion=" + protocolVersion +
-                ",\n     proofOfWork=" + Utilities.bytesAsHexString(proofOfWork) +
                 "\n}";
-    }
-
-    @Override
-    public Capabilities getRequiredCapabilities() {
-        return new Capabilities(Capability.BSQ_SWAP_OFFER);
     }
 }
