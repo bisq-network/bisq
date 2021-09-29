@@ -42,5 +42,6 @@ public enum Capability {
     REFUND_AGENT,                       // Supports refund agents
     TRADE_STATISTICS_HASH_UPDATE,       // We changed the hash method in 1.2.0 and that requires update to 1.2.2 for handling it correctly, otherwise the seed nodes have to process too much data.
     NO_ADDRESS_PRE_FIX,                 // At 1.4.0 we removed the prefix filter for mailbox messages. If a peer has that capability we do not sent the prefix.
-    TRADE_STATISTICS_3                  // We used a new reduced trade statistics model from v1.4.0 on
+    TRADE_STATISTICS_3,                 // We used a new reduced trade statistics model from v1.4.0 on
+    BSQ_SWAP_OFFER                     // Supports new message type BsqSwapOffer
 }

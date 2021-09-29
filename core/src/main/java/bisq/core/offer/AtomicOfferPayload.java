@@ -20,8 +20,11 @@ package bisq.core.offer;
 import bisq.core.payment.payload.PaymentMethod;
 
 import bisq.network.p2p.NodeAddress;
+import bisq.network.p2p.storage.payload.CapabilityRequiringPayload;
 import bisq.network.p2p.storage.payload.ProofOfWorkPayload;
 
+import bisq.common.app.Capabilities;
+import bisq.common.app.Capability;
 import bisq.common.crypto.Hash;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.proto.ProtoUtil;
@@ -44,7 +47,8 @@ import org.jetbrains.annotations.Nullable;
 @EqualsAndHashCode(callSuper = true)
 @Getter
 @Slf4j
-public final class AtomicOfferPayload extends OfferPayloadBase implements ProofOfWorkPayload {
+public final class AtomicOfferPayload extends OfferPayloadBase
+        implements ProofOfWorkPayload, CapabilityRequiringPayload {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Instance fields
@@ -233,5 +237,10 @@ public final class AtomicOfferPayload extends OfferPayloadBase implements ProofO
                 ",\n     protocolVersion=" + protocolVersion +
                 ",\n     proofOfWork=" + Utilities.bytesAsHexString(proofOfWork) +
                 "\n}";
+    }
+
+    @Override
+    public Capabilities getRequiredCapabilities() {
+        return new Capabilities(Capability.BSQ_SWAP_OFFER);
     }
 }

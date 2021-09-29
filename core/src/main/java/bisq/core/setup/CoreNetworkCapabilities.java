@@ -41,7 +41,8 @@ public class CoreNetworkCapabilities {
                 Capability.REFUND_AGENT,
                 Capability.TRADE_STATISTICS_HASH_UPDATE,
                 Capability.NO_ADDRESS_PRE_FIX,
-                Capability.TRADE_STATISTICS_3
+                Capability.TRADE_STATISTICS_3,
+                Capability.BSQ_SWAP_OFFER
         );
 
         if (config.daoActivated) {
