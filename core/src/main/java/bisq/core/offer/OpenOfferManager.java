@@ -28,8 +28,8 @@ import bisq.core.locale.Res;
 import bisq.core.offer.availability.DisputeAgentSelection;
 import bisq.core.offer.messages.OfferAvailabilityRequest;
 import bisq.core.offer.messages.OfferAvailabilityResponse;
-import bisq.core.offer.placeoffer.bsqswap.AtomicPlaceOfferModel;
-import bisq.core.offer.placeoffer.bsqswap.AtomicPlaceOfferProtocol;
+import bisq.core.offer.placeoffer.bsqswap.PlaceBsqSwapOfferModel;
+import bisq.core.offer.placeoffer.bsqswap.PlaceBsqSwapOfferProtocol;
 import bisq.core.offer.placeoffer.offer.PlaceOfferModel;
 import bisq.core.offer.placeoffer.offer.PlaceOfferProtocol;
 import bisq.core.provider.price.PriceFeedService;
@@ -444,22 +444,22 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     }
 
     public void placeAtomicOffer(Offer offer,
-                                 TransactionResultHandler resultHandler,
+                                 Runnable resultHandler,
                                  ErrorMessageHandler errorMessageHandler) {
         checkArgument(offer.getOfferPayloadBase() instanceof BsqSwapOfferPayload);
-        var atomicModel = new AtomicPlaceOfferModel(offer,
+        var atomicModel = new PlaceBsqSwapOfferModel(offer,
                 offerBookService,
                 tradeStatisticsManager,
                 daoFacade,
                 user,
                 filterManager);
 
-        var atomicPlaceOfferProtocol = new AtomicPlaceOfferProtocol(atomicModel,
-                transaction -> {
+        var atomicPlaceOfferProtocol = new PlaceBsqSwapOfferProtocol(atomicModel,
+                () -> {
                     OpenOffer openOffer = new OpenOffer(offer, 0);
                     addOpenOffer(openOffer);
                     requestPersistence();
-                    resultHandler.handleResult(transaction);
+                    resultHandler.run();
                     if (!stopped) {
                         startPeriodicRepublishOffersTimer();
                         startPeriodicRefreshOffersTimer();

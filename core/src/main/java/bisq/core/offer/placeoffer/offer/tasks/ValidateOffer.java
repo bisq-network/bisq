@@ -18,6 +18,7 @@
 package bisq.core.offer.placeoffer.offer.tasks;
 
 import bisq.core.offer.Offer;
+import bisq.core.offer.OfferPayload;
 import bisq.core.offer.placeoffer.offer.PlaceOfferModel;
 import bisq.core.trade.messages.TradeMessage;
 
@@ -39,6 +40,9 @@ public class ValidateOffer extends Task<PlaceOfferModel> {
         Offer offer = model.getOffer();
         try {
             runInterceptHook();
+
+            checkArgument(offer.getOfferPayloadBase() instanceof OfferPayload,
+                    "OfferPayload must be OfferPayload");
 
             // Coins
             checkCoinNotNullOrZero(offer.getAmount(), "Amount");

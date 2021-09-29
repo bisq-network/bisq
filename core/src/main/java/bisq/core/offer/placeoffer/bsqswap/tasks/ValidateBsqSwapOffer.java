@@ -17,8 +17,9 @@
 
 package bisq.core.offer.placeoffer.bsqswap.tasks;
 
+import bisq.core.offer.BsqSwapOfferPayload;
 import bisq.core.offer.Offer;
-import bisq.core.offer.placeoffer.bsqswap.AtomicPlaceOfferModel;
+import bisq.core.offer.placeoffer.bsqswap.PlaceBsqSwapOfferModel;
 
 import bisq.common.taskrunner.Task;
 import bisq.common.taskrunner.TaskRunner;
@@ -28,8 +29,8 @@ import org.bitcoinj.core.Coin;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class AtomicValidateOffer extends Task<AtomicPlaceOfferModel> {
-    public AtomicValidateOffer(TaskRunner<AtomicPlaceOfferModel> taskHandler, AtomicPlaceOfferModel model) {
+public class ValidateBsqSwapOffer extends Task<PlaceBsqSwapOfferModel> {
+    public ValidateBsqSwapOffer(TaskRunner<PlaceBsqSwapOfferModel> taskHandler, PlaceBsqSwapOfferModel model) {
         super(taskHandler, model);
     }
 
@@ -38,7 +39,8 @@ public class AtomicValidateOffer extends Task<AtomicPlaceOfferModel> {
         Offer offer = model.getOffer();
         try {
             runInterceptHook();
-
+            checkArgument(offer.getOfferPayloadBase() instanceof BsqSwapOfferPayload,
+                    "OfferPayload must be BsqSwapOfferPayload");
             // Coins
             checkCoinNotNullOrZero(offer.getAmount(), "Amount");
             checkCoinNotNullOrZero(offer.getMinAmount(), "MinAmount");

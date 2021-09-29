@@ -17,15 +17,15 @@
 
 package bisq.core.offer.placeoffer.bsqswap.tasks;
 
-import bisq.core.offer.placeoffer.bsqswap.AtomicPlaceOfferModel;
+import bisq.core.offer.placeoffer.bsqswap.PlaceBsqSwapOfferModel;
 import bisq.core.offer.placeoffer.offer.PlaceOfferModel;
 
 import bisq.common.taskrunner.Task;
 import bisq.common.taskrunner.TaskRunner;
 
-public class AtomicAddToOfferBook extends Task<AtomicPlaceOfferModel> {
+public class AddBsqSwapOfferToOfferBook extends Task<PlaceBsqSwapOfferModel> {
 
-    public AtomicAddToOfferBook(TaskRunner<PlaceOfferModel> taskHandler, AtomicPlaceOfferModel model) {
+    public AddBsqSwapOfferToOfferBook(TaskRunner<PlaceOfferModel> taskHandler, PlaceBsqSwapOfferModel model) {
         super(taskHandler, model);
     }
 

@@ -235,7 +235,7 @@ class CoreOffersService {
                 price,
                 paymentAccount);
         verifyPaymentAccountIsValidForNewOffer(offer, paymentAccount);
-        placeAtomicOffer(offer, transaction -> resultHandler.accept(offer));
+        placeAtomicOffer(offer, () -> resultHandler.accept(offer));
     }
 
     void createAndPlaceOffer(String currencyCode,
@@ -353,10 +353,9 @@ class CoreOffersService {
                 log::error);
     }
 
-    private void placeAtomicOffer(Offer offer,
-                                  Consumer<Transaction> resultHandler) {
+    private void placeAtomicOffer(Offer offer, Runnable resultHandler) {
         openOfferManager.placeAtomicOffer(offer,
-                resultHandler::accept,
+                resultHandler,
                 log::error);
 
         if (offer.getErrorMessage() != null)

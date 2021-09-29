@@ -38,7 +38,6 @@ import bisq.core.offer.OpenOfferManager;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.PriceFeedService;
-import bisq.core.trade.misc.TransactionResultHandler;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
@@ -262,7 +261,7 @@ public abstract class AtomicOfferDataModel extends ActivatableDataModel implemen
                 paymentAccount);
     }
 
-    void onPlaceOffer(Offer offer, TransactionResultHandler resultHandler) {
+    void onPlaceOffer(Offer offer, Runnable resultHandler) {
         openOfferManager.placeAtomicOffer(offer,
                 resultHandler,
                 log::error);

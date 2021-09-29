@@ -393,7 +393,7 @@ public abstract class AtomicOfferViewModel<M extends AtomicOfferDataModel> exten
 
         offer.errorMessageProperty().addListener(errorMessageListener);
 
-        dataModel.onPlaceOffer(offer, transaction -> {
+        dataModel.onPlaceOffer(offer, () -> {
             stopTimeoutTimer();
             resultHandler.run();
             placeOfferCompleted.set(true);

@@ -17,9 +17,8 @@
 
 package bisq.core.offer.placeoffer.bsqswap;
 
-import bisq.core.offer.placeoffer.bsqswap.tasks.AtomicAddToOfferBook;
-import bisq.core.offer.placeoffer.bsqswap.tasks.AtomicValidateOffer;
-import bisq.core.trade.misc.TransactionResultHandler;
+import bisq.core.offer.placeoffer.bsqswap.tasks.AddBsqSwapOfferToOfferBook;
+import bisq.core.offer.placeoffer.bsqswap.tasks.ValidateBsqSwapOffer;
 
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.taskrunner.TaskRunner;
@@ -27,11 +26,11 @@ import bisq.common.taskrunner.TaskRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class AtomicPlaceOfferProtocol {
-    private static final Logger log = LoggerFactory.getLogger(AtomicPlaceOfferProtocol.class);
+public class PlaceBsqSwapOfferProtocol {
+    private static final Logger log = LoggerFactory.getLogger(PlaceBsqSwapOfferProtocol.class);
 
-    private final AtomicPlaceOfferModel model;
-    private final TransactionResultHandler resultHandler;
+    private final PlaceBsqSwapOfferModel model;
+    private final Runnable resultHandler;
     private final ErrorMessageHandler errorMessageHandler;
 
 
@@ -39,9 +38,9 @@ public class AtomicPlaceOfferProtocol {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public AtomicPlaceOfferProtocol(AtomicPlaceOfferModel model,
-                                    TransactionResultHandler resultHandler,
-                                    ErrorMessageHandler errorMessageHandler) {
+    public PlaceBsqSwapOfferProtocol(PlaceBsqSwapOfferModel model,
+                                     Runnable resultHandler,
+                                     ErrorMessageHandler errorMessageHandler) {
         this.model = model;
         this.resultHandler = resultHandler;
         this.errorMessageHandler = errorMessageHandler;
@@ -54,10 +53,10 @@ public class AtomicPlaceOfferProtocol {
 
     public void placeOffer() {
         log.debug("model.offer.id" + model.getOffer().getId());
-        TaskRunner<AtomicPlaceOfferModel> taskRunner = new TaskRunner<>(model,
+        TaskRunner<PlaceBsqSwapOfferModel> taskRunner = new TaskRunner<>(model,
                 () -> {
                     log.debug("sequence at handleRequestTakeOfferMessage completed");
-                    resultHandler.handleResult(model.getTransaction());
+                    resultHandler.run();
                 },
                 (errorMessage) -> {
                     log.error(errorMessage);
@@ -75,8 +74,8 @@ public class AtomicPlaceOfferProtocol {
                 }
         );
         taskRunner.addTasks(
-                AtomicValidateOffer.class,
-                AtomicAddToOfferBook.class
+                ValidateBsqSwapOffer.class,
+                AddBsqSwapOfferToOfferBook.class
         );
 
         taskRunner.run();

@@ -26,15 +26,13 @@ import bisq.core.user.User;
 
 import bisq.common.taskrunner.Model;
 
-import org.bitcoinj.core.Transaction;
-
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
-public class AtomicPlaceOfferModel implements Model {
+public class PlaceBsqSwapOfferModel implements Model {
     // Immutable
     private final Offer offer;
     private final OfferBookService offerBookService;
@@ -47,15 +45,13 @@ public class AtomicPlaceOfferModel implements Model {
     // Mutable
     @Setter
     private boolean offerAddedToOfferBook;
-    @Setter
-    private Transaction transaction;
 
-    public AtomicPlaceOfferModel(Offer offer,
-                                 OfferBookService offerBookService,
-                                 TradeStatisticsManager tradeStatisticsManager,
-                                 DaoFacade daoFacade,
-                                 User user,
-                                 FilterManager filterManager) {
+    public PlaceBsqSwapOfferModel(Offer offer,
+                                  OfferBookService offerBookService,
+                                  TradeStatisticsManager tradeStatisticsManager,
+                                  DaoFacade daoFacade,
+                                  User user,
+                                  FilterManager filterManager) {
         this.offer = offer;
         this.offerBookService = offerBookService;
         this.tradeStatisticsManager = tradeStatisticsManager;
