@@ -112,7 +112,7 @@ class CoreTradesService {
         tradeManager.onTakeAtomicOffer(offer,
                 atomicTakeOfferModel.getAmount().getValue(),  // TODO get rid of jfx property dep?
                 atomicTakeOfferModel.getTradePrice().getValue(),
-                atomicTakeOfferModel.getAtomicTxBuilder().getTxFeePerVbyte().getValue(),
+                atomicTakeOfferModel.getBsqSwapTxHelper().getTxFeePerVbyte().getValue(),
                 atomicTakeOfferModel.getMakerFee().getValue(),
                 atomicTakeOfferModel.getTakerFee().getValue(),
                 coreContext.isApiUser(),

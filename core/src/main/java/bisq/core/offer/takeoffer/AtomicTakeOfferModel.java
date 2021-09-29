@@ -18,7 +18,7 @@
 package bisq.core.offer.takeoffer;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
-import bisq.core.btc.AtomicTxBuilder;
+import bisq.core.btc.BsqSwapTxHelper;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.Restrictions;
@@ -89,7 +89,7 @@ public class AtomicTakeOfferModel implements Model {
     @Getter
     Price tradePrice;
     @Getter
-    private AtomicTxBuilder atomicTxBuilder;
+    private BsqSwapTxHelper bsqSwapTxHelper;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -153,7 +153,7 @@ public class AtomicTakeOfferModel implements Model {
         checkNotNull(paymentAccount, "PaymentAccount must not be null");
 
         this.amount.set(Coin.valueOf(Math.min(offer.getAmount().value, getMaxTradeLimit())));
-        atomicTxBuilder = new AtomicTxBuilder(
+        bsqSwapTxHelper = new BsqSwapTxHelper(
                 bsqWalletService,
                 tradeWalletService,
                 offer.getDirection() == OfferPayloadBase.Direction.SELL,
@@ -163,7 +163,7 @@ public class AtomicTakeOfferModel implements Model {
                 btcWalletService.getFreshAddressEntry().getAddressString(),
                 bsqWalletService.getUnusedAddress().toString()
         );
-        feeService.requestFees(() -> atomicTxBuilder.setTxFeePerVbyte(feeService.getTxFeePerVbyte()));
+        feeService.requestFees(() -> bsqSwapTxHelper.setTxFeePerVbyte(feeService.getTxFeePerVbyte()));
 
         calculateVolume();
 
@@ -182,7 +182,7 @@ public class AtomicTakeOfferModel implements Model {
     public void onTakeOffer(TradeResultHandler<BsqSwapTrade> tradeResultHandler,
                             ErrorMessageHandler warningHandler,
                             ErrorMessageHandler errorHandler) {
-        checkArgument(atomicTxBuilder.getCanBuildMySide().get(), "Missing data to create transaction");
+        checkArgument(bsqSwapTxHelper.getCanBuildMySide().get(), "Missing data to create transaction");
 
         if (filterManager.isCurrencyBanned(offer.getCurrencyCode())) {
             warningHandler.handleErrorMessage(Res.get("offerbook.warning.currencyBanned"));
@@ -246,7 +246,7 @@ public class AtomicTakeOfferModel implements Model {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void addListeners() {
-        isTxBuilderReady.bind(atomicTxBuilder.getCanBuildMySide());
+        isTxBuilderReady.bind(bsqSwapTxHelper.getCanBuildMySide());
     }
 
     private void removeListeners() {
@@ -270,9 +270,9 @@ public class AtomicTakeOfferModel implements Model {
 
     public void applyAmount(Coin amount) {
         this.amount.set(Coin.valueOf(Math.min(amount.value, getMaxTradeLimit())));
-        atomicTxBuilder.setBtcAmount(this.amount.get());
-        atomicTxBuilder.setMyTradeFee(getTakerFee());
-        atomicTxBuilder.setPeerTradeFee(getMakerFee());
+        bsqSwapTxHelper.setBtcAmount(this.amount.get());
+        bsqSwapTxHelper.setMyTradeFee(getTakerFee());
+        bsqSwapTxHelper.setPeerTradeFee(getMakerFee());
     }
 
     public Coin getTakerFee() {
@@ -321,10 +321,10 @@ public class AtomicTakeOfferModel implements Model {
     }
 
     public boolean hasEnoughBtc() {
-        return !btcWalletService.getSavingWalletBalance().isLessThan(atomicTxBuilder.myBtc.get());
+        return !btcWalletService.getSavingWalletBalance().isLessThan(bsqSwapTxHelper.myBtc.get());
     }
 
     public boolean hasEnoughBsq() {
-        return !offerUtil.getUsableBsqBalance().isLessThan(atomicTxBuilder.myBsq.get());
+        return !offerUtil.getUsableBsqBalance().isLessThan(bsqSwapTxHelper.myBsq.get());
     }
 }

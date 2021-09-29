@@ -17,7 +17,7 @@
 
 package bisq.core.trade.protocol;
 
-import bisq.core.btc.AtomicTxBuilder;
+import bisq.core.btc.BsqSwapTxHelper;
 import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
@@ -85,7 +85,7 @@ public class BsqSwapProtocolModel implements TradeProtocolModel, Model, Persista
     @Setter
     transient private TradeMessage tradeMessage;
     @Setter
-    private AtomicTxBuilder atomicTxBuilder;
+    private BsqSwapTxHelper bsqSwapTxHelper;
 
     @Setter
     private long bsqTradeAmount;
@@ -295,7 +295,7 @@ public class BsqSwapProtocolModel implements TradeProtocolModel, Model, Persista
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void initTxBuilder(boolean isMaker) {
-        atomicTxBuilder = new AtomicTxBuilder(
+        bsqSwapTxHelper = new BsqSwapTxHelper(
                 getBsqWalletService(),
                 getTradeWalletService(),
                 offer.isBuyOffer() == isMaker,
@@ -307,16 +307,16 @@ public class BsqSwapProtocolModel implements TradeProtocolModel, Model, Persista
         );
 
         if (isMaker) {
-            atomicTxBuilder.setMyTradeFee(Coin.valueOf(bsqSwapTrade.getMakerFee()));
-            atomicTxBuilder.setPeerTradeFee(Coin.valueOf(bsqSwapTrade.getTakerFee()));
+            bsqSwapTxHelper.setMyTradeFee(Coin.valueOf(bsqSwapTrade.getMakerFee()));
+            bsqSwapTxHelper.setPeerTradeFee(Coin.valueOf(bsqSwapTrade.getTakerFee()));
         } else {
-            atomicTxBuilder.setMyTradeFee(Coin.valueOf(bsqSwapTrade.getTakerFee()));
-            atomicTxBuilder.setPeerTradeFee(Coin.valueOf(bsqSwapTrade.getMakerFee()));
+            bsqSwapTxHelper.setMyTradeFee(Coin.valueOf(bsqSwapTrade.getTakerFee()));
+            bsqSwapTxHelper.setPeerTradeFee(Coin.valueOf(bsqSwapTrade.getMakerFee()));
         }
     }
 
     public boolean takerPreparesTakerSide() {
-        var mySideTxData = atomicTxBuilder.buildMySide(0, null, true);
+        var mySideTxData = bsqSwapTxHelper.buildMySide(0, null, true);
         if (mySideTxData == null) {
             return false;
         }
@@ -330,7 +330,7 @@ public class BsqSwapProtocolModel implements TradeProtocolModel, Model, Persista
     }
 
     public boolean makerPreparesMakerSide() {
-        var mySideTxData = atomicTxBuilder.buildMySide(0, null, false);
+        var mySideTxData = bsqSwapTxHelper.buildMySide(0, null, false);
         if (mySideTxData == null) {
             return false;
         }

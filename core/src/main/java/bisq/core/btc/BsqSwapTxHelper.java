@@ -57,7 +57,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 
 @Slf4j
-public class AtomicTxBuilder {
+public class BsqSwapTxHelper {
     private final BsqWalletService bsqWalletService;
     private final TradeWalletService tradeWalletService;
     @Getter
@@ -100,7 +100,7 @@ public class AtomicTxBuilder {
      * @param myBsqAddress          my BSQ address
      *
      */
-    public AtomicTxBuilder(BsqWalletService bsqWalletService,
+    public BsqSwapTxHelper(BsqWalletService bsqWalletService,
                            TradeWalletService tradeWalletService,
                            boolean isBuyer,
                            @Nullable Price price,

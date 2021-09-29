@@ -17,7 +17,7 @@
 
 package bisq.core.offer;
 
-import bisq.core.btc.AtomicTxBuilder;
+import bisq.core.btc.BsqSwapTxHelper;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
@@ -104,7 +104,7 @@ public class AtomicOfferFunding implements WalletChangeEventListener {
         var isBuyer = isMaker == offer.isBuyOffer();
         var price = offer.getPrice();
         var btcAmount = offer.getAmount();
-        var atomicTxBuilder = new AtomicTxBuilder(bsqWalletService,
+        var atomicTxBuilder = new BsqSwapTxHelper(bsqWalletService,
                 tradeWalletService,
                 isBuyer,
                 price,
