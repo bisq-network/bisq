@@ -20,7 +20,6 @@ package bisq.core.trade.atomic;
 import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
-import bisq.core.proto.CoreProtoResolver;
 import bisq.core.trade.TradeModel;
 import bisq.core.trade.protocol.BsqSwapProtocolModel;
 import bisq.core.trade.protocol.TradeProtocolModel;
@@ -165,8 +164,7 @@ public abstract class AtomicTrade extends TradeModel {
         return builder.build();
     }
 
-    public static AtomicTrade fromProto(AtomicTrade atomicTrade, protobuf.AtomicTrade proto,
-                                        CoreProtoResolver coreProtoResolver) {
+    public static AtomicTrade fromProto(AtomicTrade atomicTrade) {
         return atomicTrade;
     }
 

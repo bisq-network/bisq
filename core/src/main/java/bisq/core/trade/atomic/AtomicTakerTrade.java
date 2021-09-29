@@ -90,19 +90,17 @@ public final class AtomicTakerTrade extends AtomicTrade implements TakerTrade {
         }
         var atomicTrade = fromProto(new AtomicTakerTrade(
                         uid,
-                        Offer.fromProto(proto.getOffer()),
-                        Coin.valueOf(proto.getAmount()),
-                        proto.getPrice(),
-                        proto.getTakeOfferDate(),
-                        proto.hasPeerNodeAddress() ? NodeAddress.fromProto(proto.getPeerNodeAddress()) : null,
-                        proto.getMiningFeePerByte(),
-                        proto.getMakerFee(),
-                        proto.getTakerFee(),
-                        BsqSwapProtocolModel.fromProto(proto.getBsqSwapProtocolModel(), coreProtoResolver),
-                        proto.getErrorMessage(),
-                        State.fromProto(proto.getState())),
-                proto,
-                coreProtoResolver);
+                Offer.fromProto(proto.getOffer()),
+                Coin.valueOf(proto.getAmount()),
+                proto.getPrice(),
+                proto.getTakeOfferDate(),
+                proto.hasPeerNodeAddress() ? NodeAddress.fromProto(proto.getPeerNodeAddress()) : null,
+                proto.getMiningFeePerByte(),
+                proto.getMakerFee(),
+                proto.getTakerFee(),
+                BsqSwapProtocolModel.fromProto(proto.getBsqSwapProtocolModel(), coreProtoResolver),
+                proto.getErrorMessage(),
+                State.fromProto(proto.getState())));
         atomicTrade.setTxId(proto.getTxId());
         return atomicTrade;
     }
