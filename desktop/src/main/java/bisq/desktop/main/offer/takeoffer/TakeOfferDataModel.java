@@ -37,7 +37,6 @@ import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
-import bisq.core.offer.OfferPayloadBase;
 import bisq.core.offer.OfferUtil;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.PaymentAccountUtil;
@@ -219,7 +218,7 @@ class TakeOfferDataModel extends OfferDataModel {
 
         this.amount.set(Coin.valueOf(Math.min(offer.getAmount().value, getMaxTradeLimit())));
 
-        securityDeposit = offer.getDirection() == OfferPayloadBase.Direction.SELL ?
+        securityDeposit = offer.getDirection() == OfferPayload.Direction.SELL ?
                 getBuyerSecurityDeposit() :
                 getSellerSecurityDeposit();
 
@@ -530,11 +529,11 @@ class TakeOfferDataModel extends OfferDataModel {
     }
 
     boolean isBuyOffer() {
-        return getDirection() == OfferPayloadBase.Direction.BUY;
+        return getDirection() == OfferPayload.Direction.BUY;
     }
 
     boolean isSellOffer() {
-        return getDirection() == OfferPayloadBase.Direction.SELL;
+        return getDirection() == OfferPayload.Direction.SELL;
     }
 
     boolean isCryptoCurrency() {

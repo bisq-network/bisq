@@ -82,7 +82,7 @@ public class TakerVerifyAndSignContract extends TradeTask {
 
             Coin tradeAmount = checkNotNull(trade.getTradeAmount());
             checkArgument(processModel.getOffer().getOfferPayloadBase() instanceof OfferPayload,
-                    "OfferPayloadI must be of type OfferPayload");
+                    "OfferPayloadBase must be of type OfferPayload");
             var offerPayload = (OfferPayload) processModel.getOffer().getOfferPayloadBase();
 
             Contract contract = new Contract(

@@ -95,7 +95,7 @@ public final class TradeStatistics2 implements ProcessOncePersistableNetworkPayl
         checkNotNull(offer, "offer must not ne null");
         checkNotNull(trade.getTradeAmount(), "trade.getTradeAmount() must not ne null");
         checkArgument(offer.getOfferPayloadBase() instanceof OfferPayload,
-                "OfferPayloadI must be of type OfferPayload");
+                "OfferPayloadBase must be of type OfferPayload");
         var offerPayload = (OfferPayload) offer.getOfferPayloadBase();
         return new TradeStatistics2(offerPayload,
                 trade.getTradePrice(),

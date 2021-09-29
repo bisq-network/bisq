@@ -70,7 +70,7 @@ public class MakerCreateAndSignContract extends TradeTask {
             String makersPaymentMethodId = checkNotNull(processModel.getPaymentAccountPayload(trade)).getPaymentMethodId();
             String takersPaymentMethodId = checkNotNull(taker.getPaymentMethodId());
             checkArgument(processModel.getOffer().getOfferPayloadBase() instanceof OfferPayload,
-                    "OfferPayloadI must be of type OfferPayload");
+                    "OfferPayloadBase must be of type OfferPayload");
             var offerPayload = (OfferPayload) processModel.getOffer().getOfferPayloadBase();
 
             Contract contract = new Contract(

@@ -605,7 +605,7 @@ public class Offer implements NetworkPayload, PersistablePayload {
         return "Offer{" +
                 "getErrorMessage()='" + getErrorMessage() + '\'' +
                 ", state=" + getState() +
-                ", offerPayloadI=" + offerPayloadBase +
+                ", offerPayloadBase=" + offerPayloadBase +
                 '}';
     }
 }
