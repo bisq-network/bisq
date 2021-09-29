@@ -256,7 +256,7 @@ public abstract class AtomicOfferView<M extends AtomicOfferViewModel<?>> extends
             return;
         }
 
-        if (paymentAccount.getPaymentMethod() != PaymentMethod.ATOMIC) {
+        if (paymentAccount.getPaymentMethod() != PaymentMethod.BSQ_SWAP) {
             if (offerActionHandler != null)
                 offerActionHandler.onCreateOffer(paymentAccount.getSelectedTradeCurrency());
             return;

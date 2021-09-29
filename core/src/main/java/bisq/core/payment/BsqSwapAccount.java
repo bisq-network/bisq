@@ -27,7 +27,7 @@ import lombok.EqualsAndHashCode;
 public final class BsqSwapAccount extends PaymentAccount {
 
     public BsqSwapAccount() {
-        super(PaymentMethod.ATOMIC);
+        super(PaymentMethod.BSQ_SWAP);
     }
 
     @Override

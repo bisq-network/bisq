@@ -532,7 +532,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
 
         PaymentAccount paymentAccount = paymentAccountsComboBox.getSelectionModel().getSelectedItem();
         if (paymentAccount != null) {
-            if (paymentAccount.getPaymentMethod() == PaymentMethod.ATOMIC) {
+            if (paymentAccount.getPaymentMethod() == PaymentMethod.BSQ_SWAP) {
                 if (offerActionHandler != null)
                     offerActionHandler.onCreateOffer(paymentAccount.getSelectedTradeCurrency());
                 return;

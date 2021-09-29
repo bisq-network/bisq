@@ -115,7 +115,7 @@ class CorePaymentAccountsService {
         // TODO Split into 2 methods: createAtomicPaymentAccount(), createCryptoCurrencyPaymentAccount().
         PaymentAccount cryptoCurrencyAccount;
         if (tradeAtomic) {
-            cryptoCurrencyAccount = PaymentAccountFactory.getPaymentAccount(PaymentMethod.ATOMIC);
+            cryptoCurrencyAccount = PaymentAccountFactory.getPaymentAccount(PaymentMethod.BSQ_SWAP);
         } else {
             cryptoCurrencyAccount = tradeInstant
                     ? (InstantCryptoCurrencyAccount) PaymentAccountFactory.getPaymentAccount(PaymentMethod.BLOCK_CHAINS_INSTANT)
