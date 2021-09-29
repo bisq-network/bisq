@@ -2,7 +2,7 @@
 
 cd ../../
 
-version="1.7.3-SNAPSHOT"
+version="1.7.4-SNAPSHOT"
 
 target_dir="releases/$version"
 
@@ -46,6 +46,15 @@ cp "$win64/$exe" "$target_dir/$exe64"
 
 rpi="jar-lib-for-raspberry-pi-$version.zip"
 cp "$macos/$rpi" "$target_dir/"
+
+# create file with jar signatures
+cat "$macos/desktop-$version-all-mac.jar.SHA-256" \
+"$linux64/desktop-$version-all-linux.jar.SHA-256" \
+"$win64/desktop-$version-all-win.jar.SHA-256" > "$target_dir/Bisq-$version.jar.txt"
+
+sed -i '' '1 s_^_macOS: _' "$target_dir/Bisq-$version.jar.txt"
+sed -i '' '2 s_^_linux: _' "$target_dir/Bisq-$version.jar.txt"
+sed -i '' '3 s_^_windows: _' "$target_dir/Bisq-$version.jar.txt"
 
 cd "$target_dir"
 
