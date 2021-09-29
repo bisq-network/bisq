@@ -30,8 +30,8 @@ import bisq.core.support.dispute.mediation.MediationResultState;
 import bisq.core.support.dispute.refund.RefundResultState;
 import bisq.core.support.messages.ChatMessage;
 import bisq.core.trade.protocol.ProcessModel;
-import bisq.core.trade.protocol.ProcessModelI;
 import bisq.core.trade.protocol.ProcessModelServiceProvider;
+import bisq.core.trade.protocol.TradeProtocolModel;
 import bisq.core.trade.txproof.AssetTxProofResult;
 import bisq.core.util.VolumeUtil;
 
@@ -734,7 +734,7 @@ public abstract class Trade extends TradeModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public ProcessModelI getProcessModelI() {
+    public TradeProtocolModel getTradeProtocolModel() {
         return processModel;
     }
 

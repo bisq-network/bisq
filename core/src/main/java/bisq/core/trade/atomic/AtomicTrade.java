@@ -23,7 +23,7 @@ import bisq.core.offer.Offer;
 import bisq.core.proto.CoreProtoResolver;
 import bisq.core.trade.TradeModel;
 import bisq.core.trade.protocol.AtomicProcessModel;
-import bisq.core.trade.protocol.ProcessModelI;
+import bisq.core.trade.protocol.TradeProtocolModel;
 
 import bisq.network.p2p.NodeAddress;
 
@@ -183,7 +183,7 @@ public abstract class AtomicTrade extends TradeModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public ProcessModelI getProcessModelI() {
+    public TradeProtocolModel getTradeProtocolModel() {
         return atomicProcessModel;
     }
 

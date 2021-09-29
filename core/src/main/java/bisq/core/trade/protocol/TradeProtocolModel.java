@@ -4,11 +4,10 @@ import bisq.core.offer.Offer;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.messages.TradeMessage;
 
-import bisq.network.p2p.AckMessage;
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
 
-public interface ProcessModelI {
+public interface TradeProtocolModel {
     void applyTransient(ProcessModelServiceProvider provider,
                         TradeManager tradeManager,
                         Offer offer);

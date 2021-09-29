@@ -69,7 +69,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Getter
 @Slf4j
-public class AtomicProcessModel implements ProcessModelI, Model, PersistablePayload {
+public class AtomicProcessModel implements TradeProtocolModel, Model, PersistablePayload {
     transient private ProcessModelServiceProvider provider;
     transient private TradeManager tradeManager;
     transient private Offer offer;
@@ -178,7 +178,7 @@ public class AtomicProcessModel implements ProcessModelI, Model, PersistablePayl
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // ProcessModelI
+    // TradeProtocolModel
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override

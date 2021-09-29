@@ -99,14 +99,14 @@ public class FluentProtocol {
 
         NodeAddress peer = condition.getPeer();
         if (peer != null) {
-            tradeProtocol.processModelI.setTempTradingPeerNodeAddress(peer);
-            tradeProtocol.processModelI.getTradeManager().requestPersistence();
+            tradeProtocol.tradeProtocolModel.setTempTradingPeerNodeAddress(peer);
+            tradeProtocol.tradeProtocolModel.getTradeManager().requestPersistence();
         }
 
         TradeMessage message = condition.getMessage();
         if (message != null) {
-            tradeProtocol.processModelI.setTradeMessage(message);
-            tradeProtocol.processModelI.getTradeManager().requestPersistence();
+            tradeProtocol.tradeProtocolModel.setTradeMessage(message);
+            tradeProtocol.tradeProtocolModel.getTradeManager().requestPersistence();
         }
 
         TradeTaskRunner taskRunner = setup.getTaskRunner(message, condition.getEvent());

@@ -51,7 +51,7 @@ public class AtomicTakerProtocol extends TradeProtocol implements TakerProtocol 
         super(trade);
         this.atomicTakerTrade = trade;
         Offer offer = checkNotNull(trade.getOffer());
-        processModelI.getTradingPeer().setPubKeyRing(offer.getPubKeyRing());
+        tradeProtocolModel.getTradingPeer().setPubKeyRing(offer.getPubKeyRing());
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -68,8 +68,8 @@ public class AtomicTakerProtocol extends TradeProtocol implements TakerProtocol 
                         AtomicTakerSendsAtomicRequest.class
                 ))
                 .run(() -> {
-                    processModelI.setTempTradingPeerNodeAddress(tradeModel.getTradingPeerNodeAddress());
-                    processModelI.getTradeManager().requestPersistence();
+                    tradeProtocolModel.setTempTradingPeerNodeAddress(tradeModel.getTradingPeerNodeAddress());
+                    tradeProtocolModel.getTradeManager().requestPersistence();
                 })
                 .executeTasks();
     }
