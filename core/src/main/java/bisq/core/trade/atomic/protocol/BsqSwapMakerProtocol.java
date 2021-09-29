@@ -36,7 +36,7 @@ import bisq.network.p2p.NodeAddress;
 
 import bisq.common.handlers.ErrorMessageHandler;
 
-public class AtomicMakerProtocol extends TradeProtocol {
+public class BsqSwapMakerProtocol extends TradeProtocol {
 
     private final BsqSwapMakerTrade atomicMakerTrade;
 
@@ -44,7 +44,7 @@ public class AtomicMakerProtocol extends TradeProtocol {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public AtomicMakerProtocol(BsqSwapMakerTrade trade) {
+    public BsqSwapMakerProtocol(BsqSwapMakerTrade trade) {
         super(trade);
 
         this.atomicMakerTrade = trade;

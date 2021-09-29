@@ -35,7 +35,7 @@ import bisq.core.trade.atomic.BsqSwapTakerTrade;
 import bisq.core.trade.atomic.BsqSwapTrade;
 import bisq.core.trade.atomic.BsqSwapTradeManager;
 import bisq.core.trade.atomic.messages.CreateAtomicTxRequest;
-import bisq.core.trade.atomic.protocol.AtomicMakerProtocol;
+import bisq.core.trade.atomic.protocol.BsqSwapMakerProtocol;
 import bisq.core.trade.closed.ClosedTradableManager;
 import bisq.core.trade.failed.FailedTradesManager;
 import bisq.core.trade.handlers.TradeResultHandler;
@@ -341,7 +341,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
 
         initTradeAndProtocol(bsqSwapTrade, tradeProtocol);
 
-        ((AtomicMakerProtocol) tradeProtocol).handleTakeAtomicRequest(createAtomicTxRequest, peer, errorMessage -> {
+        ((BsqSwapMakerProtocol) tradeProtocol).handleTakeAtomicRequest(createAtomicTxRequest, peer, errorMessage -> {
             if (takeOfferRequestErrorMessageHandler != null)
                 takeOfferRequestErrorMessageHandler.handleErrorMessage(errorMessage);
         });

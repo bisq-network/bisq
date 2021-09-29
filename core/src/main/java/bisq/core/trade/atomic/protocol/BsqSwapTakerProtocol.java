@@ -39,7 +39,7 @@ import lombok.extern.slf4j.Slf4j;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public class AtomicTakerProtocol extends TradeProtocol implements TakerProtocol {
+public class BsqSwapTakerProtocol extends TradeProtocol implements TakerProtocol {
 
     private final BsqSwapTakerTrade atomicTakerTrade;
 
@@ -47,7 +47,7 @@ public class AtomicTakerProtocol extends TradeProtocol implements TakerProtocol 
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public AtomicTakerProtocol(BsqSwapTakerTrade trade) {
+    public BsqSwapTakerProtocol(BsqSwapTakerTrade trade) {
         super(trade);
         this.atomicTakerTrade = trade;
         Offer offer = checkNotNull(trade.getOffer());

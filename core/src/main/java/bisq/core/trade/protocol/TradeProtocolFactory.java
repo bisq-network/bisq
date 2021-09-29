@@ -24,8 +24,8 @@ import bisq.core.trade.SellerAsTakerTrade;
 import bisq.core.trade.TradeModel;
 import bisq.core.trade.atomic.BsqSwapMakerTrade;
 import bisq.core.trade.atomic.BsqSwapTakerTrade;
-import bisq.core.trade.atomic.protocol.AtomicMakerProtocol;
-import bisq.core.trade.atomic.protocol.AtomicTakerProtocol;
+import bisq.core.trade.atomic.protocol.BsqSwapMakerProtocol;
+import bisq.core.trade.atomic.protocol.BsqSwapTakerProtocol;
 
 public class TradeProtocolFactory {
     public static TradeProtocol getNewTradeProtocol(TradeModel trade) {
@@ -38,9 +38,9 @@ public class TradeProtocolFactory {
         } else if (trade instanceof SellerAsTakerTrade) {
             return new SellerAsTakerProtocol((SellerAsTakerTrade) trade);
         } else if (trade instanceof BsqSwapTakerTrade) {
-            return new AtomicTakerProtocol((BsqSwapTakerTrade) trade);
+            return new BsqSwapTakerProtocol((BsqSwapTakerTrade) trade);
         } else if (trade instanceof BsqSwapMakerTrade) {
-            return new AtomicMakerProtocol((BsqSwapMakerTrade) trade);
+            return new BsqSwapMakerProtocol((BsqSwapMakerTrade) trade);
         } else
             throw new IllegalStateException("Trade not of expected type. Trade=" + trade);
     }
