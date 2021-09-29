@@ -17,15 +17,15 @@
 
 package bisq.core.trade.protocol;
 
-import bisq.core.trade.BuyerAsMakerTrade;
-import bisq.core.trade.BuyerAsTakerTrade;
-import bisq.core.trade.SellerAsMakerTrade;
-import bisq.core.trade.SellerAsTakerTrade;
-import bisq.core.trade.TradeModel;
-import bisq.core.trade.atomic.BsqSwapMakerTrade;
-import bisq.core.trade.atomic.BsqSwapTakerTrade;
 import bisq.core.trade.atomic.protocol.BsqSwapMakerProtocol;
 import bisq.core.trade.atomic.protocol.BsqSwapTakerProtocol;
+import bisq.core.trade.model.TradeModel;
+import bisq.core.trade.model.bsqswap.BsqSwapMakerTrade;
+import bisq.core.trade.model.bsqswap.BsqSwapTakerTrade;
+import bisq.core.trade.model.trade.BuyerAsMakerTrade;
+import bisq.core.trade.model.trade.BuyerAsTakerTrade;
+import bisq.core.trade.model.trade.SellerAsMakerTrade;
+import bisq.core.trade.model.trade.SellerAsTakerTrade;
 
 public class TradeProtocolFactory {
     public static TradeProtocol getNewTradeProtocol(TradeModel trade) {

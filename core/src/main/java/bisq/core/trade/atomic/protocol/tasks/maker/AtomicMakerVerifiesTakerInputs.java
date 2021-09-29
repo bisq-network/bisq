@@ -17,8 +17,8 @@
 
 package bisq.core.trade.atomic.protocol.tasks.maker;
 
-import bisq.core.trade.atomic.BsqSwapTrade;
 import bisq.core.trade.atomic.messages.CreateAtomicTxRequest;
+import bisq.core.trade.model.bsqswap.BsqSwapTrade;
 import bisq.core.trade.protocol.tasks.AtomicTradeTask;
 
 import bisq.asset.BitcoinAddressValidator;

@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.atomic;
+package bisq.core.trade.model.bsqswap;
 
 import bisq.core.offer.Offer;
 import bisq.core.provider.price.PriceFeedService;

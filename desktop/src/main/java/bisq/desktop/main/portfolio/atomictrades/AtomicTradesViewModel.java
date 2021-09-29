@@ -24,7 +24,7 @@ import bisq.desktop.util.DisplayUtils;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
-import bisq.core.trade.atomic.BsqSwapTrade;
+import bisq.core.trade.model.bsqswap.BsqSwapTrade;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.coin.CoinFormatter;

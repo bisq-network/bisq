@@ -15,11 +15,12 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade;
+package bisq.core.trade.model.trade;
 
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.offer.Offer;
 import bisq.core.proto.CoreProtoResolver;
+import bisq.core.trade.Tradable;
 import bisq.core.trade.protocol.ProcessModel;
 
 import bisq.network.p2p.NodeAddress;
@@ -35,25 +36,25 @@ import lombok.extern.slf4j.Slf4j;
 import javax.annotation.Nullable;
 
 @Slf4j
-public final class BuyerAsTakerTrade extends BuyerTrade implements TakerTrade {
+public final class SellerAsTakerTrade extends SellerTrade implements TakerTrade {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, initialization
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public BuyerAsTakerTrade(Offer offer,
-                             Coin tradeAmount,
-                             Coin txFee,
-                             Coin takerFee,
-                             boolean isCurrencyForTakerFeeBtc,
-                             long tradePrice,
-                             NodeAddress tradingPeerNodeAddress,
-                             @Nullable NodeAddress arbitratorNodeAddress,
-                             @Nullable NodeAddress mediatorNodeAddress,
-                             @Nullable NodeAddress refundAgentNodeAddress,
-                             BtcWalletService btcWalletService,
-                             ProcessModel processModel,
-                             String uid) {
+    public SellerAsTakerTrade(Offer offer,
+                              Coin tradeAmount,
+                              Coin txFee,
+                              Coin takerFee,
+                              boolean isCurrencyForTakerFeeBtc,
+                              long tradePrice,
+                              NodeAddress tradingPeerNodeAddress,
+                              @Nullable NodeAddress arbitratorNodeAddress,
+                              @Nullable NodeAddress mediatorNodeAddress,
+                              @Nullable NodeAddress refundAgentNodeAddress,
+                              BtcWalletService btcWalletService,
+                              ProcessModel processModel,
+                              String uid) {
         super(offer,
                 tradeAmount,
                 txFee,
@@ -77,21 +78,21 @@ public final class BuyerAsTakerTrade extends BuyerTrade implements TakerTrade {
     @Override
     public protobuf.Tradable toProtoMessage() {
         return protobuf.Tradable.newBuilder()
-                .setBuyerAsTakerTrade(protobuf.BuyerAsTakerTrade.newBuilder()
+                .setSellerAsTakerTrade(protobuf.SellerAsTakerTrade.newBuilder()
                         .setTrade((protobuf.Trade) super.toProtoMessage()))
                 .build();
     }
 
-    public static Tradable fromProto(protobuf.BuyerAsTakerTrade buyerAsTakerTradeProto,
+    public static Tradable fromProto(protobuf.SellerAsTakerTrade sellerAsTakerTradeProto,
                                      BtcWalletService btcWalletService,
                                      CoreProtoResolver coreProtoResolver) {
-        protobuf.Trade proto = buyerAsTakerTradeProto.getTrade();
+        protobuf.Trade proto = sellerAsTakerTradeProto.getTrade();
         ProcessModel processModel = ProcessModel.fromProto(proto.getProcessModel(), coreProtoResolver);
         String uid = ProtoUtil.stringOrNullFromProto(proto.getUid());
         if (uid == null) {
             uid = UUID.randomUUID().toString();
         }
-        return fromProto(new BuyerAsTakerTrade(
+        return fromProto(new SellerAsTakerTrade(
                         Offer.fromProto(proto.getOffer()),
                         Coin.valueOf(proto.getTradeAmountAsLong()),
                         Coin.valueOf(proto.getTxFeeAsLong()),

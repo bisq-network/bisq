@@ -1,6 +1,6 @@
 package bisq.apitest.method.trade;
 
-import bisq.core.trade.Trade;
+import bisq.core.trade.model.trade.Trade;
 
 /**
  * A test fixture encapsulating expected trade protocol status.

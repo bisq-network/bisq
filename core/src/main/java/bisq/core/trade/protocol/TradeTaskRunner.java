@@ -17,8 +17,8 @@
 
 package bisq.core.trade.protocol;
 
-import bisq.core.trade.TradeModel;
-import bisq.core.trade.atomic.BsqSwapTrade;
+import bisq.core.trade.model.TradeModel;
+import bisq.core.trade.model.bsqswap.BsqSwapTrade;
 
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;

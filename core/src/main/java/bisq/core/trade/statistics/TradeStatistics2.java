@@ -23,7 +23,7 @@ import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
-import bisq.core.trade.Trade;
+import bisq.core.trade.model.trade.Trade;
 import bisq.core.util.VolumeUtil;
 
 import bisq.network.p2p.NodeAddress;

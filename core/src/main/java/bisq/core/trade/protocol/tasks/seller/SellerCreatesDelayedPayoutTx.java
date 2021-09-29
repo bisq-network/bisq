@@ -19,8 +19,8 @@ package bisq.core.trade.protocol.tasks.seller;
 
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.dao.governance.param.Param;
-import bisq.core.trade.Trade;
 import bisq.core.trade.TradeDataValidation;
+import bisq.core.trade.model.trade.Trade;
 import bisq.core.trade.protocol.tasks.TradeTask;
 
 import bisq.common.taskrunner.TaskRunner;

@@ -17,8 +17,8 @@
 
 package bisq.core.trade.atomic.protocol.tasks.maker;
 
-import bisq.core.trade.atomic.BsqSwapTrade;
 import bisq.core.trade.atomic.messages.CreateAtomicTxResponse;
+import bisq.core.trade.model.bsqswap.BsqSwapTrade;
 import bisq.core.trade.protocol.tasks.AtomicTradeTask;
 
 import bisq.network.p2p.NodeAddress;

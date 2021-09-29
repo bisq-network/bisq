@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade;
+package bisq.core.trade.model.trade;
 
 import bisq.core.btc.exceptions.AddressEntryException;
 import bisq.core.btc.model.AddressEntry;
@@ -30,10 +30,11 @@ import bisq.core.offer.availability.OfferAvailabilityModel;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 import bisq.core.support.dispute.mediation.mediator.MediatorManager;
-import bisq.core.trade.atomic.BsqSwapMakerTrade;
-import bisq.core.trade.atomic.BsqSwapTakerTrade;
-import bisq.core.trade.atomic.BsqSwapTrade;
-import bisq.core.trade.atomic.BsqSwapTradeManager;
+import bisq.core.trade.DumpDelayedPayoutTx;
+import bisq.core.trade.Tradable;
+import bisq.core.trade.TradableList;
+import bisq.core.trade.TradeTxException;
+import bisq.core.trade.TradeUtil;
 import bisq.core.trade.atomic.messages.CreateAtomicTxRequest;
 import bisq.core.trade.atomic.protocol.BsqSwapMakerProtocol;
 import bisq.core.trade.atomic.protocol.BsqSwapProtocolModel;
@@ -41,6 +42,11 @@ import bisq.core.trade.closed.ClosedTradableManager;
 import bisq.core.trade.failed.FailedTradesManager;
 import bisq.core.trade.handlers.TradeResultHandler;
 import bisq.core.trade.messages.InputsForDepositTxRequest;
+import bisq.core.trade.model.TradeModel;
+import bisq.core.trade.model.bsqswap.BsqSwapMakerTrade;
+import bisq.core.trade.model.bsqswap.BsqSwapTakerTrade;
+import bisq.core.trade.model.bsqswap.BsqSwapTrade;
+import bisq.core.trade.model.bsqswap.BsqSwapTradeManager;
 import bisq.core.trade.protocol.MakerProtocol;
 import bisq.core.trade.protocol.ProcessModel;
 import bisq.core.trade.protocol.ProcessModelServiceProvider;

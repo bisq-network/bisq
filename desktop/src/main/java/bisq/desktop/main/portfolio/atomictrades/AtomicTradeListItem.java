@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.portfolio.atomictrades;
 
-import bisq.core.trade.atomic.BsqSwapTrade;
+import bisq.core.trade.model.bsqswap.BsqSwapTrade;
 
 class AtomicTradeListItem {
     private final BsqSwapTrade bsqSwapTrade;

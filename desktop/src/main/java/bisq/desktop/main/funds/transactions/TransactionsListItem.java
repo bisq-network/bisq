@@ -31,8 +31,8 @@ import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OpenOffer;
 import bisq.core.trade.Tradable;
-import bisq.core.trade.Trade;
-import bisq.core.trade.atomic.BsqSwapTrade;
+import bisq.core.trade.model.bsqswap.BsqSwapTrade;
+import bisq.core.trade.model.trade.Trade;
 import bisq.core.util.coin.CoinFormatter;
 
 import org.bitcoinj.core.Coin;

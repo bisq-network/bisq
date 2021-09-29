@@ -19,7 +19,7 @@ package bisq.core.trade.protocol.tasks.seller_as_taker;
 
 import bisq.core.btc.model.InputsAndChangeOutput;
 import bisq.core.offer.Offer;
-import bisq.core.trade.Trade;
+import bisq.core.trade.model.trade.Trade;
 import bisq.core.trade.protocol.tasks.TradeTask;
 
 import bisq.common.taskrunner.TaskRunner;

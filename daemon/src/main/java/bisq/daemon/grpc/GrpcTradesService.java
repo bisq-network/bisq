@@ -20,7 +20,7 @@ package bisq.daemon.grpc;
 import bisq.core.api.CoreApi;
 import bisq.core.api.model.AtomicTradeInfo;
 import bisq.core.api.model.TradeInfo;
-import bisq.core.trade.Trade;
+import bisq.core.trade.model.trade.Trade;
 
 import bisq.proto.grpc.ConfirmPaymentReceivedReply;
 import bisq.proto.grpc.ConfirmPaymentReceivedRequest;
@@ -48,8 +48,8 @@ import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.core.api.model.TradeInfo.toNewTradeInfo;
 import static bisq.core.api.model.AtomicTradeInfo.toAtomicTradeInfo;
+import static bisq.core.api.model.TradeInfo.toNewTradeInfo;
 import static bisq.core.api.model.TradeInfo.toTradeInfo;
 import static bisq.daemon.grpc.interceptor.GrpcServiceRateMeteringConfig.getCustomRateMeteringInterceptor;
 import static bisq.proto.grpc.TradesGrpc.*;

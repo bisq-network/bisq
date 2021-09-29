@@ -15,11 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.atomic;
+package bisq.core.trade.model.bsqswap;
 
 import bisq.core.offer.Offer;
 import bisq.core.proto.CoreProtoResolver;
-import bisq.core.trade.TakerTrade;
 import bisq.core.trade.Tradable;
 import bisq.core.trade.atomic.protocol.BsqSwapProtocolModel;
 
@@ -35,14 +34,15 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
+
 @Slf4j
-public final class BsqSwapTakerTrade extends BsqSwapTrade implements TakerTrade {
+public final class BsqSwapMakerTrade extends BsqSwapTrade {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, initialization
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public BsqSwapTakerTrade(String uid,
+    public BsqSwapMakerTrade(String uid,
                              Offer offer,
                              Coin amount,
                              long price,
@@ -76,19 +76,19 @@ public final class BsqSwapTakerTrade extends BsqSwapTrade implements TakerTrade 
     @Override
     public protobuf.Tradable toProtoMessage() {
         return protobuf.Tradable.newBuilder()
-                .setBsqSwapTakerTrade(protobuf.BsqSwapTakerTrade.newBuilder()
+                .setBsqSwapMakerTrade(protobuf.BsqSwapMakerTrade.newBuilder()
                         .setBsqSwapTrade((protobuf.BsqSwapTrade) super.toProtoMessage()))
                 .build();
     }
 
-    public static Tradable fromProto(protobuf.BsqSwapTakerTrade atomicTakerTradeProto,
+    public static Tradable fromProto(protobuf.BsqSwapMakerTrade atomicMakerTradeProto,
                                      CoreProtoResolver coreProtoResolver) {
-        var proto = atomicTakerTradeProto.getBsqSwapTrade();
+        var proto = atomicMakerTradeProto.getBsqSwapTrade();
         var uid = ProtoUtil.stringOrNullFromProto(proto.getUid());
         if (uid == null) {
             uid = UUID.randomUUID().toString();
         }
-        var BsqSwapTrade = fromProto(new BsqSwapTakerTrade(
+        var atomicTrade = fromProto(new BsqSwapMakerTrade(
                 uid,
                 Offer.fromProto(proto.getOffer()),
                 Coin.valueOf(proto.getAmount()),
@@ -101,7 +101,7 @@ public final class BsqSwapTakerTrade extends BsqSwapTrade implements TakerTrade 
                 BsqSwapProtocolModel.fromProto(proto.getBsqSwapProtocolModel(), coreProtoResolver),
                 proto.getErrorMessage(),
                 State.fromProto(proto.getState())));
-        BsqSwapTrade.setTxId(proto.getTxId());
-        return BsqSwapTrade;
+        atomicTrade.setTxId(proto.getTxId());
+        return atomicTrade;
     }
 }

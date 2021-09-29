@@ -22,6 +22,8 @@ import bisq.core.filter.FilterManager;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.payment.payload.PaymentAccountPayload;
+import bisq.core.trade.model.TradeModel;
+import bisq.core.trade.model.trade.Trade;
 
 import bisq.network.p2p.NodeAddress;
 

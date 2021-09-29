@@ -18,12 +18,12 @@
 package bisq.core.trade.protocol;
 
 import bisq.core.offer.Offer;
-import bisq.core.trade.Trade;
-import bisq.core.trade.TradeManager;
-import bisq.core.trade.TradeModel;
 import bisq.core.trade.messages.CounterCurrencyTransferStartedMessage;
 import bisq.core.trade.messages.DepositTxAndDelayedPayoutTxMessage;
 import bisq.core.trade.messages.TradeMessage;
+import bisq.core.trade.model.TradeModel;
+import bisq.core.trade.model.trade.Trade;
+import bisq.core.trade.model.trade.TradeManager;
 
 import bisq.network.p2p.AckMessage;
 import bisq.network.p2p.AckMessageSourceType;

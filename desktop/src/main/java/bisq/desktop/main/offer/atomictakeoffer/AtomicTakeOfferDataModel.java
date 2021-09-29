@@ -27,8 +27,8 @@ import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.offer.takeoffer.AtomicTakeOfferModel;
 import bisq.core.payment.PaymentAccount;
-import bisq.core.trade.atomic.BsqSwapTrade;
 import bisq.core.trade.handlers.TradeResultHandler;
+import bisq.core.trade.model.bsqswap.BsqSwapTrade;
 
 import org.bitcoinj.core.Coin;
 

@@ -42,7 +42,7 @@ import bisq.core.offer.OfferPayload;
 import bisq.core.offer.OpenOffer;
 import bisq.core.trade.Contract;
 import bisq.core.trade.Tradable;
-import bisq.core.trade.Trade;
+import bisq.core.trade.model.trade.Trade;
 import bisq.core.user.Preferences;
 
 import bisq.network.p2p.NodeAddress;

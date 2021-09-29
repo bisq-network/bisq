@@ -31,7 +31,7 @@ import bisq.desktop.util.GUIUtil;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.trade.Contract;
-import bisq.core.trade.Trade;
+import bisq.core.trade.model.trade.Trade;
 
 import bisq.common.config.Config;
 import bisq.common.util.Utilities;

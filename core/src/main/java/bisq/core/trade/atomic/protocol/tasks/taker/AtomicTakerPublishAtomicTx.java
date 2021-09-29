@@ -21,7 +21,7 @@ import bisq.core.btc.exceptions.TxBroadcastException;
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.TxBroadcaster;
 import bisq.core.dao.state.model.blockchain.TxType;
-import bisq.core.trade.atomic.BsqSwapTrade;
+import bisq.core.trade.model.bsqswap.BsqSwapTrade;
 import bisq.core.trade.protocol.tasks.AtomicTradeTask;
 
 import bisq.common.taskrunner.TaskRunner;

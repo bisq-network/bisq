@@ -17,9 +17,9 @@
 
 package bisq.core.trade.atomic.protocol.tasks.maker;
 
-import bisq.core.trade.atomic.BsqSwapTrade;
 import bisq.core.trade.atomic.messages.CreateAtomicTxRequest;
 import bisq.core.trade.atomic.protocol.tasks.AtomicSetupTxListener;
+import bisq.core.trade.model.bsqswap.BsqSwapTrade;
 
 import bisq.common.taskrunner.TaskRunner;
 

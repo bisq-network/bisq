@@ -29,12 +29,12 @@ import bisq.desktop.main.support.dispute.client.refund.RefundClientView;
 import bisq.core.locale.Res;
 import bisq.core.support.dispute.mediation.MediationManager;
 import bisq.core.support.dispute.refund.RefundManager;
-import bisq.core.trade.BuyerTrade;
-import bisq.core.trade.MakerTrade;
-import bisq.core.trade.SellerTrade;
 import bisq.core.trade.Tradable;
-import bisq.core.trade.Trade;
-import bisq.core.trade.TradeManager;
+import bisq.core.trade.model.trade.BuyerTrade;
+import bisq.core.trade.model.trade.MakerTrade;
+import bisq.core.trade.model.trade.SellerTrade;
+import bisq.core.trade.model.trade.Trade;
+import bisq.core.trade.model.trade.TradeManager;
 import bisq.core.user.DontShowAgainLookup;
 import bisq.core.user.Preferences;
 

@@ -31,7 +31,7 @@ import bisq.desktop.util.GUIUtil;
 import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
-import bisq.core.trade.atomic.BsqSwapTrade;
+import bisq.core.trade.model.bsqswap.BsqSwapTrade;
 import bisq.core.user.Preferences;
 
 import bisq.network.p2p.NodeAddress;

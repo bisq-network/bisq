@@ -20,8 +20,12 @@ package bisq.core.trade;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.offer.OpenOffer;
 import bisq.core.proto.CoreProtoResolver;
-import bisq.core.trade.atomic.BsqSwapMakerTrade;
-import bisq.core.trade.atomic.BsqSwapTakerTrade;
+import bisq.core.trade.model.bsqswap.BsqSwapMakerTrade;
+import bisq.core.trade.model.bsqswap.BsqSwapTakerTrade;
+import bisq.core.trade.model.trade.BuyerAsMakerTrade;
+import bisq.core.trade.model.trade.BuyerAsTakerTrade;
+import bisq.core.trade.model.trade.SellerAsMakerTrade;
+import bisq.core.trade.model.trade.SellerAsTakerTrade;
 
 import bisq.common.proto.ProtoUtil;
 import bisq.common.proto.ProtobufferRuntimeException;

@@ -34,8 +34,8 @@ import bisq.desktop.main.portfolio.pendingtrades.PendingTradesView;
 import bisq.core.locale.Res;
 import bisq.core.offer.OfferPayload;
 import bisq.core.offer.OpenOffer;
-import bisq.core.trade.Trade;
 import bisq.core.trade.failed.FailedTradesManager;
+import bisq.core.trade.model.trade.Trade;
 
 import javax.inject.Inject;
 

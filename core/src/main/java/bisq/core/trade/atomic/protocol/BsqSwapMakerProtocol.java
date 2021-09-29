@@ -18,8 +18,6 @@
 package bisq.core.trade.atomic.protocol;
 
 
-import bisq.core.trade.atomic.BsqSwapMakerTrade;
-import bisq.core.trade.atomic.BsqSwapTrade;
 import bisq.core.trade.atomic.messages.CreateAtomicTxRequest;
 import bisq.core.trade.atomic.protocol.tasks.AtomicApplyFilter;
 import bisq.core.trade.atomic.protocol.tasks.maker.AtomicMakerCreatesAndSignsTx;
@@ -29,6 +27,8 @@ import bisq.core.trade.atomic.protocol.tasks.maker.AtomicMakerVerifiesAmounts;
 import bisq.core.trade.atomic.protocol.tasks.maker.AtomicMakerVerifiesMiningFee;
 import bisq.core.trade.atomic.protocol.tasks.maker.AtomicMakerVerifiesTakerInputs;
 import bisq.core.trade.messages.TradeMessage;
+import bisq.core.trade.model.bsqswap.BsqSwapMakerTrade;
+import bisq.core.trade.model.bsqswap.BsqSwapTrade;
 import bisq.core.trade.protocol.TradeProtocol;
 import bisq.core.trade.protocol.TradeTaskRunner;
 

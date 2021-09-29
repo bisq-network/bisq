@@ -41,7 +41,7 @@ import bisq.core.support.messages.ChatMessage;
 import bisq.core.support.traderchat.TradeChatSession;
 import bisq.core.support.traderchat.TraderChatManager;
 import bisq.core.trade.Contract;
-import bisq.core.trade.Trade;
+import bisq.core.trade.model.trade.Trade;
 import bisq.core.user.Preferences;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.CoinFormatter;

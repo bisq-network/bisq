@@ -25,9 +25,9 @@ import bisq.core.offer.Offer;
 import bisq.core.offer.OpenOffer;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentMethod;
-import bisq.core.trade.Trade;
-import bisq.core.trade.atomic.BsqSwapTrade;
 import bisq.core.trade.handlers.TradeResultHandler;
+import bisq.core.trade.model.bsqswap.BsqSwapTrade;
+import bisq.core.trade.model.trade.Trade;
 import bisq.core.trade.statistics.TradeStatistics3;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 

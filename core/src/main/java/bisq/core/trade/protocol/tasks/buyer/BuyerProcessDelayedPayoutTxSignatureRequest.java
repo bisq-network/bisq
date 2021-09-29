@@ -17,8 +17,8 @@
 
 package bisq.core.trade.protocol.tasks.buyer;
 
-import bisq.core.trade.Trade;
 import bisq.core.trade.messages.DelayedPayoutTxSignatureRequest;
+import bisq.core.trade.model.trade.Trade;
 import bisq.core.trade.protocol.tasks.TradeTask;
 import bisq.core.util.Validator;
 

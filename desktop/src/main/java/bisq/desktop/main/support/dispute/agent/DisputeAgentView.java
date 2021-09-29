@@ -35,7 +35,7 @@ import bisq.core.support.dispute.agent.MultipleHolderNameDetection;
 import bisq.core.support.dispute.mediation.mediator.MediatorManager;
 import bisq.core.support.dispute.refund.refundagent.RefundAgentManager;
 import bisq.core.trade.TradeDataValidation;
-import bisq.core.trade.TradeManager;
+import bisq.core.trade.model.trade.TradeManager;
 import bisq.core.user.DontShowAgainLookup;
 import bisq.core.user.Preferences;
 import bisq.core.util.coin.CoinFormatter;

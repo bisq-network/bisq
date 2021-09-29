@@ -15,13 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.atomic;
+package bisq.core.trade.model.bsqswap;
 
 import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
-import bisq.core.trade.TradeModel;
 import bisq.core.trade.atomic.protocol.BsqSwapProtocolModel;
+import bisq.core.trade.model.TradeModel;
 import bisq.core.trade.protocol.TradeProtocolModel;
 
 import bisq.network.p2p.NodeAddress;

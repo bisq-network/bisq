@@ -21,7 +21,7 @@ import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.offer.Offer;
 import bisq.core.payment.payload.PaymentAccountPayload;
-import bisq.core.trade.Trade;
+import bisq.core.trade.model.trade.Trade;
 import bisq.core.trade.protocol.TradingPeer;
 
 import bisq.common.crypto.PubKeyRing;

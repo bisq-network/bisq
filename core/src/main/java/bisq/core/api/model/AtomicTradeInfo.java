@@ -17,7 +17,7 @@
 
 package bisq.core.api.model;
 
-import bisq.core.trade.atomic.BsqSwapTrade;
+import bisq.core.trade.model.bsqswap.BsqSwapTrade;
 
 import bisq.common.Payload;
 

@@ -17,9 +17,9 @@
 
 package bisq.core.trade.protocol.tasks;
 
-import bisq.core.trade.Trade;
 import bisq.core.trade.messages.TradeMailboxMessage;
 import bisq.core.trade.messages.TradeMessage;
+import bisq.core.trade.model.trade.Trade;
 
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.SendMailboxMessageListener;

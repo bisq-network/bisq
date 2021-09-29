@@ -17,9 +17,9 @@
 
 package bisq.core.trade.protocol.tasks.arbitration;
 
-import bisq.core.trade.Trade;
 import bisq.core.trade.messages.PeerPublishedDelayedPayoutTxMessage;
 import bisq.core.trade.messages.TradeMailboxMessage;
+import bisq.core.trade.model.trade.Trade;
 import bisq.core.trade.protocol.tasks.SendMailboxMessageTask;
 
 import bisq.common.taskrunner.TaskRunner;

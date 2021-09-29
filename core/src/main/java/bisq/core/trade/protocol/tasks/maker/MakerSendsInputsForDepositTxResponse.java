@@ -19,8 +19,8 @@ package bisq.core.trade.protocol.tasks.maker;
 
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.trade.Trade;
 import bisq.core.trade.messages.InputsForDepositTxResponse;
+import bisq.core.trade.model.trade.Trade;
 import bisq.core.trade.protocol.ProcessModel;
 import bisq.core.trade.protocol.tasks.TradeTask;
 

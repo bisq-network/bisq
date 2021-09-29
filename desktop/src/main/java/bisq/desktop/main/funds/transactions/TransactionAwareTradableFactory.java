@@ -22,7 +22,7 @@ import bisq.core.offer.OpenOffer;
 import bisq.core.support.dispute.arbitration.ArbitrationManager;
 import bisq.core.support.dispute.refund.RefundManager;
 import bisq.core.trade.Tradable;
-import bisq.core.trade.TradeModel;
+import bisq.core.trade.model.TradeModel;
 
 import bisq.common.crypto.PubKeyRing;
 

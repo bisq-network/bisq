@@ -15,11 +15,12 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade;
+package bisq.core.trade.model.trade;
 
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.offer.Offer;
 import bisq.core.proto.CoreProtoResolver;
+import bisq.core.trade.Tradable;
 import bisq.core.trade.protocol.ProcessModel;
 
 import bisq.network.p2p.NodeAddress;
@@ -35,19 +36,16 @@ import lombok.extern.slf4j.Slf4j;
 import javax.annotation.Nullable;
 
 @Slf4j
-public final class SellerAsTakerTrade extends SellerTrade implements TakerTrade {
+public final class SellerAsMakerTrade extends SellerTrade implements MakerTrade {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, initialization
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public SellerAsTakerTrade(Offer offer,
-                              Coin tradeAmount,
+    public SellerAsMakerTrade(Offer offer,
                               Coin txFee,
                               Coin takerFee,
                               boolean isCurrencyForTakerFeeBtc,
-                              long tradePrice,
-                              NodeAddress tradingPeerNodeAddress,
                               @Nullable NodeAddress arbitratorNodeAddress,
                               @Nullable NodeAddress mediatorNodeAddress,
                               @Nullable NodeAddress refundAgentNodeAddress,
@@ -55,12 +53,9 @@ public final class SellerAsTakerTrade extends SellerTrade implements TakerTrade 
                               ProcessModel processModel,
                               String uid) {
         super(offer,
-                tradeAmount,
                 txFee,
                 takerFee,
                 isCurrencyForTakerFeeBtc,
-                tradePrice,
-                tradingPeerNodeAddress,
                 arbitratorNodeAddress,
                 mediatorNodeAddress,
                 refundAgentNodeAddress,
@@ -77,34 +72,37 @@ public final class SellerAsTakerTrade extends SellerTrade implements TakerTrade 
     @Override
     public protobuf.Tradable toProtoMessage() {
         return protobuf.Tradable.newBuilder()
-                .setSellerAsTakerTrade(protobuf.SellerAsTakerTrade.newBuilder()
+                .setSellerAsMakerTrade(protobuf.SellerAsMakerTrade.newBuilder()
                         .setTrade((protobuf.Trade) super.toProtoMessage()))
                 .build();
     }
 
-    public static Tradable fromProto(protobuf.SellerAsTakerTrade sellerAsTakerTradeProto,
+    public static Tradable fromProto(protobuf.SellerAsMakerTrade sellerAsMakerTradeProto,
                                      BtcWalletService btcWalletService,
                                      CoreProtoResolver coreProtoResolver) {
-        protobuf.Trade proto = sellerAsTakerTradeProto.getTrade();
+        protobuf.Trade proto = sellerAsMakerTradeProto.getTrade();
         ProcessModel processModel = ProcessModel.fromProto(proto.getProcessModel(), coreProtoResolver);
         String uid = ProtoUtil.stringOrNullFromProto(proto.getUid());
         if (uid == null) {
             uid = UUID.randomUUID().toString();
         }
-        return fromProto(new SellerAsTakerTrade(
-                        Offer.fromProto(proto.getOffer()),
-                        Coin.valueOf(proto.getTradeAmountAsLong()),
-                        Coin.valueOf(proto.getTxFeeAsLong()),
-                        Coin.valueOf(proto.getTakerFeeAsLong()),
-                        proto.getIsCurrencyForTakerFeeBtc(),
-                        proto.getTradePrice(),
-                        proto.hasTradingPeerNodeAddress() ? NodeAddress.fromProto(proto.getTradingPeerNodeAddress()) : null,
-                        proto.hasArbitratorNodeAddress() ? NodeAddress.fromProto(proto.getArbitratorNodeAddress()) : null,
-                        proto.hasMediatorNodeAddress() ? NodeAddress.fromProto(proto.getMediatorNodeAddress()) : null,
-                        proto.hasRefundAgentNodeAddress() ? NodeAddress.fromProto(proto.getRefundAgentNodeAddress()) : null,
-                        btcWalletService,
-                        processModel,
-                        uid),
+        SellerAsMakerTrade trade = new SellerAsMakerTrade(
+                Offer.fromProto(proto.getOffer()),
+                Coin.valueOf(proto.getTxFeeAsLong()),
+                Coin.valueOf(proto.getTakerFeeAsLong()),
+                proto.getIsCurrencyForTakerFeeBtc(),
+                proto.hasArbitratorNodeAddress() ? NodeAddress.fromProto(proto.getArbitratorNodeAddress()) : null,
+                proto.hasMediatorNodeAddress() ? NodeAddress.fromProto(proto.getMediatorNodeAddress()) : null,
+                proto.hasRefundAgentNodeAddress() ? NodeAddress.fromProto(proto.getRefundAgentNodeAddress()) : null,
+                btcWalletService,
+                processModel,
+                uid);
+
+        trade.setTradeAmountAsLong(proto.getTradeAmountAsLong());
+        trade.setTradePrice(proto.getTradePrice());
+        trade.setTradingPeerNodeAddress(proto.hasTradingPeerNodeAddress() ? NodeAddress.fromProto(proto.getTradingPeerNodeAddress()) : null);
+
+        return fromProto(trade,
                 proto,
                 coreProtoResolver);
     }
