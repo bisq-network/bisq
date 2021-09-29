@@ -29,7 +29,7 @@ import bisq.core.support.dispute.arbitration.arbitrator.Arbitrator;
 import bisq.core.support.dispute.mediation.MediationResultState;
 import bisq.core.support.dispute.refund.RefundResultState;
 import bisq.core.support.messages.ChatMessage;
-import bisq.core.trade.Contract;
+import bisq.core.trade.model.Contract;
 import bisq.core.trade.model.TradeModel;
 import bisq.core.trade.protocol.Provider;
 import bisq.core.trade.protocol.TradeProtocolModel;

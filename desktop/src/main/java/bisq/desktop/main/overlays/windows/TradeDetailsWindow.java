@@ -34,7 +34,7 @@ import bisq.core.offer.Offer;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.support.dispute.agent.DisputeAgentLookupMap;
 import bisq.core.support.dispute.arbitration.ArbitrationManager;
-import bisq.core.trade.Contract;
+import bisq.core.trade.model.Contract;
 import bisq.core.trade.model.trade.Trade;
 import bisq.core.trade.model.trade.TradeManager;
 import bisq.core.trade.txproof.AssetTxProofResult;

@@ -15,13 +15,14 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade;
+package bisq.core.trade.misc;
 
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.filter.FilterManager;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.payment.payload.PaymentAccountPayload;
+import bisq.core.trade.model.Contract;
 import bisq.core.trade.model.TradeModel;
 import bisq.core.trade.model.trade.Trade;
 

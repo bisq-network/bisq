@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade;
+package bisq.core.trade.misc;
 
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.dao.DaoFacade;

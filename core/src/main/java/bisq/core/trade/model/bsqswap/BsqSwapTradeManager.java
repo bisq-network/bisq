@@ -19,8 +19,8 @@ package bisq.core.trade.model.bsqswap;
 
 import bisq.core.offer.Offer;
 import bisq.core.provider.price.PriceFeedService;
-import bisq.core.trade.TradableList;
-import bisq.core.trade.closed.CleanupMailboxMessages;
+import bisq.core.trade.misc.CleanupMailboxMessages;
+import bisq.core.trade.model.TradableList;
 
 import bisq.common.crypto.KeyRing;
 import bisq.common.persistence.PersistenceManager;

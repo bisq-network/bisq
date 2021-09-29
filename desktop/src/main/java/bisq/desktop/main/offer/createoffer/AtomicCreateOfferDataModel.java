@@ -23,7 +23,6 @@ package bisq.desktop.main.offer.createoffer;
 
 import bisq.desktop.Navigation;
 import bisq.desktop.main.offer.AtomicOfferDataModel;
-import bisq.desktop.main.offer.MutableOfferDataModel;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.btc.wallet.BsqWalletService;

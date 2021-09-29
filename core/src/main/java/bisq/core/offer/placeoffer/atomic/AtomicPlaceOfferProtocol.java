@@ -19,7 +19,7 @@ package bisq.core.offer.placeoffer.atomic;
 
 import bisq.core.offer.placeoffer.atomic.tasks.AtomicAddToOfferBook;
 import bisq.core.offer.placeoffer.atomic.tasks.AtomicValidateOffer;
-import bisq.core.trade.handlers.TransactionResultHandler;
+import bisq.core.trade.misc.TransactionResultHandler;
 
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.taskrunner.TaskRunner;

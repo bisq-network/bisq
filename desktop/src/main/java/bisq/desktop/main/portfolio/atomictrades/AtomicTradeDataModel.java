@@ -21,7 +21,7 @@ import bisq.desktop.common.model.ActivatableDataModel;
 
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
-import bisq.core.trade.Tradable;
+import bisq.core.trade.model.Tradable;
 import bisq.core.trade.model.bsqswap.BsqSwapTradeManager;
 
 import com.google.inject.Inject;

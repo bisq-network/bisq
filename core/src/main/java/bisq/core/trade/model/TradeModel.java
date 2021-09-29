@@ -1,6 +1,5 @@
 package bisq.core.trade.model;
 
-import bisq.core.trade.Tradable;
 import bisq.core.trade.protocol.TradeProtocolModel;
 
 import bisq.network.p2p.NodeAddress;

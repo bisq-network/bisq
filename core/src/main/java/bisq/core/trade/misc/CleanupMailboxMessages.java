@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.closed;
+package bisq.core.trade.misc;
 
 import bisq.core.trade.model.trade.Trade;
 import bisq.core.trade.protocol.messages.TradeMessage;
