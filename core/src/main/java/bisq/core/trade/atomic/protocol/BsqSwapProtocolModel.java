@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.protocol;
+package bisq.core.trade.atomic.protocol;
 
 import bisq.core.btc.BsqSwapTxHelper;
 import bisq.core.btc.model.RawTransactionInput;
@@ -34,6 +34,9 @@ import bisq.core.trade.atomic.BsqSwapTrade;
 import bisq.core.trade.atomic.messages.CreateAtomicTxRequest;
 import bisq.core.trade.atomic.messages.CreateAtomicTxResponse;
 import bisq.core.trade.messages.TradeMessage;
+import bisq.core.trade.protocol.ProcessModelServiceProvider;
+import bisq.core.trade.protocol.TradeProtocolModel;
+import bisq.core.trade.protocol.TradingPeer;
 
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
