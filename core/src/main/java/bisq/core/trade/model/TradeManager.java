@@ -835,7 +835,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
     }
 
     public boolean isBuyer(Offer offer) {
-        // If I am the maker, we use the OfferPayloadBase.Direction, otherwise the mirrored direction
+        // If I am the maker, we use the OfferDirection, otherwise the mirrored direction
         if (isMyOffer(offer))
             return offer.isBuyOffer();
         else
