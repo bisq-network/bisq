@@ -134,9 +134,9 @@ public class Offer implements NetworkPayload, PersistablePayload {
             return protobuf.Offer.newBuilder().setOfferPayload(((OfferPayload) offerPayloadBase)
                     .toProtoMessage().getOfferPayload()).build();
         }
-        if (offerPayloadBase instanceof AtomicOfferPayload) {
-            return protobuf.Offer.newBuilder().setAtomicOfferPayload(((AtomicOfferPayload) offerPayloadBase)
-                    .toProtoMessage().getAtomicOfferPayload()).build();
+        if (offerPayloadBase instanceof BsqSwapOfferPayload) {
+            return protobuf.Offer.newBuilder().setBsqSwapOfferPayload(((BsqSwapOfferPayload) offerPayloadBase)
+                    .toProtoMessage().getBsqSwapOfferPayload()).build();
         }
         return null;
     }
@@ -144,8 +144,8 @@ public class Offer implements NetworkPayload, PersistablePayload {
     public static Offer fromProto(protobuf.Offer proto) {
         if (proto.hasOfferPayload()) {
             return new Offer(OfferPayload.fromProto(proto.getOfferPayload()));
-        } else if (proto.hasAtomicOfferPayload()) {
-            return new Offer(AtomicOfferPayload.fromProto(proto.getAtomicOfferPayload()));
+        } else if (proto.hasBsqSwapOfferPayload()) {
+            return new Offer(BsqSwapOfferPayload.fromProto(proto.getBsqSwapOfferPayload()));
         }
         return null;
     }
@@ -547,7 +547,7 @@ public class Offer implements NetworkPayload, PersistablePayload {
     }
 
     public boolean isAtomicOffer() {
-        return getOfferPayloadBase() instanceof AtomicOfferPayload;
+        return getOfferPayloadBase() instanceof BsqSwapOfferPayload;
     }
 
     public boolean isXmrAutoConf() {

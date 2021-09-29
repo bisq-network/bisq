@@ -47,7 +47,7 @@ import org.jetbrains.annotations.Nullable;
 @EqualsAndHashCode(callSuper = true)
 @Getter
 @Slf4j
-public final class AtomicOfferPayload extends OfferPayloadBase
+public final class BsqSwapOfferPayload extends OfferPayloadBase
         implements ProofOfWorkPayload, CapabilityRequiringPayload {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -73,17 +73,17 @@ public final class AtomicOfferPayload extends OfferPayloadBase
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public AtomicOfferPayload(String id,
-                              long date,
-                              NodeAddress ownerNodeAddress,
-                              PubKeyRing pubKeyRing,
-                              Direction direction,
-                              long price,
-                              long amount,
-                              long minAmount,
-                              String versionNr,
-                              int protocolVersion,
-                              byte[] proofOfWork) {
+    public BsqSwapOfferPayload(String id,
+                               long date,
+                               NodeAddress ownerNodeAddress,
+                               PubKeyRing pubKeyRing,
+                               Direction direction,
+                               long price,
+                               long amount,
+                               long minAmount,
+                               String versionNr,
+                               int protocolVersion,
+                               byte[] proofOfWork) {
         this.id = id;
         this.date = date;
         this.ownerNodeAddress = ownerNodeAddress;
@@ -111,7 +111,7 @@ public final class AtomicOfferPayload extends OfferPayloadBase
 
     @Override
     public protobuf.StoragePayload toProtoMessage() {
-        protobuf.AtomicOfferPayload.Builder builder = protobuf.AtomicOfferPayload.newBuilder()
+        protobuf.BsqSwapOfferPayload.Builder builder = protobuf.BsqSwapOfferPayload.newBuilder()
                 .setId(id)
                 .setDate(date)
                 .setOwnerNodeAddress(ownerNodeAddress.toProtoMessage())
@@ -124,11 +124,11 @@ public final class AtomicOfferPayload extends OfferPayloadBase
                 .setProtocolVersion(protocolVersion)
                 .setProofOfWork(ByteString.copyFrom(proofOfWork));
 
-        return protobuf.StoragePayload.newBuilder().setAtomicOfferPayload(builder).build();
+        return protobuf.StoragePayload.newBuilder().setBsqSwapOfferPayload(builder).build();
     }
 
-    public static AtomicOfferPayload fromProto(protobuf.AtomicOfferPayload proto) {
-        return new AtomicOfferPayload(proto.getId(),
+    public static BsqSwapOfferPayload fromProto(protobuf.BsqSwapOfferPayload proto) {
+        return new BsqSwapOfferPayload(proto.getId(),
                 proto.getDate(),
                 NodeAddress.fromProto(proto.getOwnerNodeAddress()),
                 PubKeyRing.fromProto(proto.getPubKeyRing()),

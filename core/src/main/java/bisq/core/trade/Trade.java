@@ -21,7 +21,7 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
-import bisq.core.offer.AtomicOfferPayload;
+import bisq.core.offer.BsqSwapOfferPayload;
 import bisq.core.offer.Offer;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.proto.CoreProtoResolver;
@@ -1076,7 +1076,7 @@ public abstract class Trade extends TradeModel {
     }
 
     public boolean isAtomic() {
-        return offer != null && offer.getOfferPayloadBase() instanceof AtomicOfferPayload;
+        return offer != null && offer.getOfferPayloadBase() instanceof BsqSwapOfferPayload;
     }
 
     public boolean isAtomicBsqTrade() {

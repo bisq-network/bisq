@@ -35,7 +35,7 @@ import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.LanguageUtil;
 import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
-import bisq.core.offer.AtomicOfferPayload;
+import bisq.core.offer.BsqSwapOfferPayload;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.offer.OfferPayloadBase;
@@ -303,7 +303,7 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
         if (offer.getOfferPayloadBase() instanceof OfferPayload) {
             OfferView.this.navigation.navigateTo(MainView.class, OfferView.this.getClass(), TakeOfferView.class);
         }
-        if (offer.getOfferPayloadBase() instanceof AtomicOfferPayload) {
+        if (offer.getOfferPayloadBase() instanceof BsqSwapOfferPayload) {
             OfferView.this.navigation.navigateTo(MainView.class, OfferView.this.getClass(), AtomicTakeOfferView.class);
         }
     }

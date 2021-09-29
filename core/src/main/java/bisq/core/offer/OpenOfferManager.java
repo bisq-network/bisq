@@ -446,7 +446,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     public void placeAtomicOffer(Offer offer,
                                  TransactionResultHandler resultHandler,
                                  ErrorMessageHandler errorMessageHandler) {
-        checkArgument(offer.getOfferPayloadBase() instanceof AtomicOfferPayload);
+        checkArgument(offer.getOfferPayloadBase() instanceof BsqSwapOfferPayload);
         var atomicModel = new AtomicPlaceOfferModel(offer,
                 offerBookService,
                 tradeStatisticsManager,

@@ -251,7 +251,7 @@ public class CreateOfferService {
 
         offerUtil.validateBasicOfferData(paymentAccount, currencyCode);
 
-        OfferPayloadBase atomicOfferPayload = new AtomicOfferPayload(offerId,
+        OfferPayloadBase atomicOfferPayload = new BsqSwapOfferPayload(offerId,
                 creationTime,
                 makerAddress,
                 pubKeyRing,
