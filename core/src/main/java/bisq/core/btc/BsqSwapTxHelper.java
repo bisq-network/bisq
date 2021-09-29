@@ -23,7 +23,6 @@ import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.monetary.Altcoin;
 import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
-import bisq.core.trade.protocol.TxData;
 
 import bisq.common.util.Utilities;
 

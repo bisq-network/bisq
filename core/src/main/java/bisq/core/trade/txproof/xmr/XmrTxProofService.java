@@ -29,7 +29,7 @@ import bisq.core.trade.model.TradeModel;
 import bisq.core.trade.model.trade.SellerTrade;
 import bisq.core.trade.model.trade.Trade;
 import bisq.core.trade.model.trade.TradeManager;
-import bisq.core.trade.protocol.SellerProtocol;
+import bisq.core.trade.protocol.trade.SellerProtocol;
 import bisq.core.trade.txproof.AssetTxProofResult;
 import bisq.core.trade.txproof.AssetTxProofService;
 import bisq.core.user.AutoConfirmSettings;

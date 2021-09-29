@@ -30,8 +30,8 @@ import bisq.core.trade.handlers.TradeResultHandler;
 import bisq.core.trade.model.bsqswap.BsqSwapTrade;
 import bisq.core.trade.model.trade.Trade;
 import bisq.core.trade.model.trade.TradeManager;
-import bisq.core.trade.protocol.BuyerProtocol;
-import bisq.core.trade.protocol.SellerProtocol;
+import bisq.core.trade.protocol.trade.BuyerProtocol;
+import bisq.core.trade.protocol.trade.SellerProtocol;
 import bisq.core.user.User;
 import bisq.core.util.validation.BtcAddressValidator;
 

@@ -20,9 +20,9 @@ package bisq.core.trade.model.bsqswap;
 import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
-import bisq.core.trade.atomic.protocol.BsqSwapProtocolModel;
 import bisq.core.trade.model.TradeModel;
 import bisq.core.trade.protocol.TradeProtocolModel;
+import bisq.core.trade.protocol.bsqswap.BsqSwapProtocolModel;
 
 import bisq.network.p2p.NodeAddress;
 

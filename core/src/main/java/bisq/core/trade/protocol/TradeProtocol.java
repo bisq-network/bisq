@@ -24,6 +24,8 @@ import bisq.core.trade.messages.TradeMessage;
 import bisq.core.trade.model.TradeModel;
 import bisq.core.trade.model.trade.Trade;
 import bisq.core.trade.model.trade.TradeManager;
+import bisq.core.trade.protocol.trade.ProcessModel;
+import bisq.core.trade.protocol.trade.ProcessModelServiceProvider;
 
 import bisq.network.p2p.AckMessage;
 import bisq.network.p2p.AckMessageSourceType;

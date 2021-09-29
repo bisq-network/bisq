@@ -17,6 +17,7 @@
 
 package bisq.core.btc.wallet;
 
+import bisq.core.btc.TxData;
 import bisq.core.btc.TxFeeEstimationService;
 import bisq.core.btc.exceptions.SigningException;
 import bisq.core.btc.exceptions.TransactionVerificationException;
@@ -28,7 +29,6 @@ import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.btc.setup.WalletConfig;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.locale.Res;
-import bisq.core.trade.protocol.TxData;
 import bisq.core.user.Preferences;
 
 import bisq.common.config.Config;
