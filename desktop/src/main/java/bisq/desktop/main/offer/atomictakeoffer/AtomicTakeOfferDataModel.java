@@ -25,7 +25,7 @@ import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
-import bisq.core.offer.takeoffer.AtomicTakeOfferModel;
+import bisq.core.offer.takeoffer.TakeBsqSwapOfferModel;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.trade.misc.TradeResultHandler;
 import bisq.core.trade.model.bsqswap.BsqSwapTrade;
@@ -44,7 +44,7 @@ import lombok.Getter;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 class AtomicTakeOfferDataModel extends ActivatableDataModel {
-    private final AtomicTakeOfferModel atomicTakeOfferModel;
+    private final TakeBsqSwapOfferModel takeBsqSwapOfferModel;
     @Getter
     private final ObjectProperty<Coin> totalToPayAsCoin = new SimpleObjectProperty<>();
     private final OfferBook offerBook;
@@ -55,21 +55,21 @@ class AtomicTakeOfferDataModel extends ActivatableDataModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    AtomicTakeOfferDataModel(AtomicTakeOfferModel atomicTakeOfferModel,
+    AtomicTakeOfferDataModel(TakeBsqSwapOfferModel takeBsqSwapOfferModel,
                              OfferBook offerBook
     ) {
-        this.atomicTakeOfferModel = atomicTakeOfferModel;
+        this.takeBsqSwapOfferModel = takeBsqSwapOfferModel;
         this.offerBook = offerBook;
     }
 
     @Override
     protected void activate() {
-        atomicTakeOfferModel.activate(errorMessage -> new Popup().warning(errorMessage).show());
+        takeBsqSwapOfferModel.activate(errorMessage -> new Popup().warning(errorMessage).show());
     }
 
     @Override
     protected void deactivate() {
-        atomicTakeOfferModel.deactivate();
+        takeBsqSwapOfferModel.deactivate();
     }
 
 
@@ -79,7 +79,7 @@ class AtomicTakeOfferDataModel extends ActivatableDataModel {
 
     // called before activate
     void initWithData(Offer offer) {
-        atomicTakeOfferModel.initWithData(offer);
+        takeBsqSwapOfferModel.initWithData(offer);
     }
 
     public void onClose(boolean removeOffer) {
@@ -90,7 +90,7 @@ class AtomicTakeOfferDataModel extends ActivatableDataModel {
         // only local effect. Other trader might see the offer for a few seconds
         // still (but cannot take it).
         if (removeOffer) {
-            offerBook.removeOffer(checkNotNull(atomicTakeOfferModel.getOffer()));
+            offerBook.removeOffer(checkNotNull(takeBsqSwapOfferModel.getOffer()));
         }
     }
 
@@ -100,7 +100,7 @@ class AtomicTakeOfferDataModel extends ActivatableDataModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     void onTakeOffer(TradeResultHandler<BsqSwapTrade> tradeResultHandler) {
-        atomicTakeOfferModel.onTakeOffer(tradeResultHandler,
+        takeBsqSwapOfferModel.onTakeOffer(tradeResultHandler,
                 warningMessage -> new Popup().warning(warningMessage).show(),
                 errorMessage -> {
                     log.warn(errorMessage);
@@ -115,31 +115,31 @@ class AtomicTakeOfferDataModel extends ActivatableDataModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     OfferPayload.Direction getDirection() {
-        return atomicTakeOfferModel.getDirection();
+        return takeBsqSwapOfferModel.getDirection();
     }
 
     public Offer getOffer() {
-        return atomicTakeOfferModel.getOffer();
+        return takeBsqSwapOfferModel.getOffer();
     }
 
     PaymentAccount getPaymentAccount() {
-        return atomicTakeOfferModel.getPaymentAccount();
+        return takeBsqSwapOfferModel.getPaymentAccount();
     }
 
     long getMaxTradeLimit() {
-        return atomicTakeOfferModel.getMaxTradeLimit();
+        return takeBsqSwapOfferModel.getMaxTradeLimit();
     }
 
     public BooleanProperty getIsTxBuilderReady() {
-        return atomicTakeOfferModel.getIsTxBuilderReady();
+        return takeBsqSwapOfferModel.getIsTxBuilderReady();
     }
 
     ObjectProperty<Volume> getVolume() {
-        return atomicTakeOfferModel.getVolume();
+        return takeBsqSwapOfferModel.getVolume();
     }
 
     Price getTradePrice() {
-        return atomicTakeOfferModel.getTradePrice();
+        return takeBsqSwapOfferModel.getTradePrice();
     }
 
 
@@ -148,42 +148,42 @@ class AtomicTakeOfferDataModel extends ActivatableDataModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     void calculateVolume() {
-        atomicTakeOfferModel.calculateVolume();
+        takeBsqSwapOfferModel.calculateVolume();
     }
 
     void applyAmount(Coin amount) {
-        atomicTakeOfferModel.applyAmount(amount);
+        takeBsqSwapOfferModel.applyAmount(amount);
     }
 
     boolean isMinAmountLessOrEqualAmount() {
-        return atomicTakeOfferModel.isMinAmountLessOrEqualAmount();
+        return takeBsqSwapOfferModel.isMinAmountLessOrEqualAmount();
     }
 
     boolean isAmountLargerThanOfferAmount() {
-        return atomicTakeOfferModel.isAmountLargerThanOfferAmount();
+        return takeBsqSwapOfferModel.isAmountLargerThanOfferAmount();
     }
 
     ReadOnlyObjectProperty<Coin> getAmount() {
-        return atomicTakeOfferModel.getAmount();
+        return takeBsqSwapOfferModel.getAmount();
     }
 
     public String getCurrencyCode() {
-        return atomicTakeOfferModel.getCurrencyCode();
+        return takeBsqSwapOfferModel.getCurrencyCode();
     }
 
     public String getCurrencyNameAndCode() {
-        return atomicTakeOfferModel.getCurrencyNameAndCode();
+        return takeBsqSwapOfferModel.getCurrencyNameAndCode();
     }
 
     public Coin getUsableBsqBalance() {
-        return atomicTakeOfferModel.getUsableBsqBalance();
+        return takeBsqSwapOfferModel.getUsableBsqBalance();
     }
 
     public boolean hasEnoughBtc() {
-        return atomicTakeOfferModel.hasEnoughBtc();
+        return takeBsqSwapOfferModel.hasEnoughBtc();
     }
 
     public boolean hasEnoughBsq() {
-        return atomicTakeOfferModel.hasEnoughBsq();
+        return takeBsqSwapOfferModel.hasEnoughBsq();
     }
 }

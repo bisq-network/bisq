@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.offer.placeoffer.atomic;
+package bisq.core.offer.placeoffer.bsqswap;
 
 import bisq.core.dao.DaoFacade;
 import bisq.core.filter.FilterManager;

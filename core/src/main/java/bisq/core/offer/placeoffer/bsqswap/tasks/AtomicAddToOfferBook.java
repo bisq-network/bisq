@@ -15,10 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.offer.placeoffer.atomic.tasks;
+package bisq.core.offer.placeoffer.bsqswap.tasks;
 
-import bisq.core.offer.placeoffer.PlaceOfferModel;
-import bisq.core.offer.placeoffer.atomic.AtomicPlaceOfferModel;
+import bisq.core.offer.placeoffer.bsqswap.AtomicPlaceOfferModel;
+import bisq.core.offer.placeoffer.offer.PlaceOfferModel;
 
 import bisq.common.taskrunner.Task;
 import bisq.common.taskrunner.TaskRunner;

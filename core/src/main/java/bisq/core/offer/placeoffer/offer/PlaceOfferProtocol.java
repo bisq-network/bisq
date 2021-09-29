@@ -15,10 +15,12 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.offer.placeoffer.atomic;
+package bisq.core.offer.placeoffer.offer;
 
-import bisq.core.offer.placeoffer.atomic.tasks.AtomicAddToOfferBook;
-import bisq.core.offer.placeoffer.atomic.tasks.AtomicValidateOffer;
+import bisq.core.offer.placeoffer.offer.tasks.AddToOfferBook;
+import bisq.core.offer.placeoffer.offer.tasks.CheckNumberOfUnconfirmedTransactions;
+import bisq.core.offer.placeoffer.offer.tasks.CreateMakerFeeTx;
+import bisq.core.offer.placeoffer.offer.tasks.ValidateOffer;
 import bisq.core.trade.misc.TransactionResultHandler;
 
 import bisq.common.handlers.ErrorMessageHandler;
@@ -27,10 +29,10 @@ import bisq.common.taskrunner.TaskRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class AtomicPlaceOfferProtocol {
-    private static final Logger log = LoggerFactory.getLogger(AtomicPlaceOfferProtocol.class);
+public class PlaceOfferProtocol {
+    private static final Logger log = LoggerFactory.getLogger(PlaceOfferProtocol.class);
 
-    private final AtomicPlaceOfferModel model;
+    private final PlaceOfferModel model;
     private final TransactionResultHandler resultHandler;
     private final ErrorMessageHandler errorMessageHandler;
 
@@ -39,9 +41,9 @@ public class AtomicPlaceOfferProtocol {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public AtomicPlaceOfferProtocol(AtomicPlaceOfferModel model,
-                                    TransactionResultHandler resultHandler,
-                                    ErrorMessageHandler errorMessageHandler) {
+    public PlaceOfferProtocol(PlaceOfferModel model,
+                              TransactionResultHandler resultHandler,
+                              ErrorMessageHandler errorMessageHandler) {
         this.model = model;
         this.resultHandler = resultHandler;
         this.errorMessageHandler = errorMessageHandler;
@@ -54,7 +56,7 @@ public class AtomicPlaceOfferProtocol {
 
     public void placeOffer() {
         log.debug("model.offer.id" + model.getOffer().getId());
-        TaskRunner<AtomicPlaceOfferModel> taskRunner = new TaskRunner<>(model,
+        TaskRunner<PlaceOfferModel> taskRunner = new TaskRunner<>(model,
                 () -> {
                     log.debug("sequence at handleRequestTakeOfferMessage completed");
                     resultHandler.handleResult(model.getTransaction());
@@ -75,8 +77,10 @@ public class AtomicPlaceOfferProtocol {
                 }
         );
         taskRunner.addTasks(
-                AtomicValidateOffer.class,
-                AtomicAddToOfferBook.class
+                ValidateOffer.class,
+                CheckNumberOfUnconfirmedTransactions.class,
+                CreateMakerFeeTx.class,
+                AddToOfferBook.class
         );
 
         taskRunner.run();

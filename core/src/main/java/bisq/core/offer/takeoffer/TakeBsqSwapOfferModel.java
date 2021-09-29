@@ -61,7 +61,7 @@ import lombok.Getter;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class AtomicTakeOfferModel implements Model {
+public class TakeBsqSwapOfferModel implements Model {
     private final OfferUtil offerUtil;
     @Getter
     private final ObjectProperty<Coin> totalToPayAsCoin = new SimpleObjectProperty<>();
@@ -75,16 +75,12 @@ public class AtomicTakeOfferModel implements Model {
     private final FilterManager filterManager;
     final Preferences preferences;
     private final AccountAgeWitnessService accountAgeWitnessService;
-
     private Offer offer;
-
     private final ObjectProperty<Coin> amount = new SimpleObjectProperty<>();
     @Getter
     final ObjectProperty<Volume> volume = new SimpleObjectProperty<>();
     @Getter
     final BooleanProperty isTxBuilderReady = new SimpleBooleanProperty();
-
-
     private PaymentAccount paymentAccount;
     @Getter
     Price tradePrice;
@@ -97,16 +93,16 @@ public class AtomicTakeOfferModel implements Model {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    AtomicTakeOfferModel(TradeManager tradeManager,
-                         OfferUtil offerUtil,
-                         BtcWalletService btcWalletService,
-                         BsqWalletService bsqWalletService,
-                         TradeWalletService tradeWalletService,
-                         User user,
-                         FeeService feeService,
-                         FilterManager filterManager,
-                         Preferences preferences,
-                         AccountAgeWitnessService accountAgeWitnessService
+    TakeBsqSwapOfferModel(TradeManager tradeManager,
+                          OfferUtil offerUtil,
+                          BtcWalletService btcWalletService,
+                          BsqWalletService bsqWalletService,
+                          TradeWalletService tradeWalletService,
+                          User user,
+                          FeeService feeService,
+                          FilterManager filterManager,
+                          Preferences preferences,
+                          AccountAgeWitnessService accountAgeWitnessService
     ) {
         this.offerUtil = offerUtil;
         this.tradeManager = tradeManager;
