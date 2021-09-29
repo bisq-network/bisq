@@ -98,7 +98,7 @@ public final class AtomicTakerTrade extends AtomicTrade implements TakerTrade {
                         proto.getMiningFeePerByte(),
                         proto.getMakerFee(),
                         proto.getTakerFee(),
-                        BsqSwapProtocolModel.fromProto(proto.getAtomicProcessModel(), coreProtoResolver),
+                        BsqSwapProtocolModel.fromProto(proto.getBsqSwapProtocolModel(), coreProtoResolver),
                         proto.getErrorMessage(),
                         State.fromProto(proto.getState())),
                 proto,

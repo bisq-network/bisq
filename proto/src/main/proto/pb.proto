@@ -1683,7 +1683,7 @@ message AtomicTrade {
     int64 mining_fee_per_byte = 8;
     int64 maker_fee = 9;
     int64 taker_fee = 10;
-    AtomicProcessModel atomic_process_model = 11;
+    BsqSwapProtocolModel bsq_swap_protocol_model = 11;
     string error_message = 12;
     State state = 13;
 }
@@ -1719,7 +1719,7 @@ message ProcessModel {
     int64 seller_payout_amount_from_mediation = 20;
 }
 
-message AtomicProcessModel {
+message BsqSwapProtocolModel {
     TradingPeer trading_peer = 1;
     PubKeyRing pub_key_ring = 2;
     NodeAddress temp_trading_peer_node_address = 3;

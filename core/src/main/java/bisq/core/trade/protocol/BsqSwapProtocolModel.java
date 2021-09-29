@@ -158,8 +158,8 @@ public class BsqSwapProtocolModel implements TradeProtocolModel, Model, Persista
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public protobuf.AtomicProcessModel toProtoMessage() {
-        protobuf.AtomicProcessModel.Builder builder = protobuf.AtomicProcessModel.newBuilder()
+    public protobuf.BsqSwapProtocolModel toProtoMessage() {
+        protobuf.BsqSwapProtocolModel.Builder builder = protobuf.BsqSwapProtocolModel.newBuilder()
                 .setTradingPeer((protobuf.TradingPeer) tradingPeer.toProtoMessage())
                 .setPubKeyRing(pubKeyRing.toProtoMessage());
         Optional.ofNullable(tempTradingPeerNodeAddress).
@@ -167,7 +167,7 @@ public class BsqSwapProtocolModel implements TradeProtocolModel, Model, Persista
         return builder.build();
     }
 
-    public static BsqSwapProtocolModel fromProto(protobuf.AtomicProcessModel proto,
+    public static BsqSwapProtocolModel fromProto(protobuf.BsqSwapProtocolModel proto,
                                                  CoreProtoResolver coreProtoResolver) {
         TradingPeer tradingPeer = TradingPeer.fromProto(proto.getTradingPeer(), coreProtoResolver);
         PubKeyRing pubKeyRing = PubKeyRing.fromProto(proto.getPubKeyRing());

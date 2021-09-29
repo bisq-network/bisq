@@ -155,7 +155,7 @@ public abstract class AtomicTrade extends TradeModel {
                 .setMiningFeePerByte(miningFeePerByte)
                 .setMakerFee(makerFee)
                 .setTakerFee(takerFee)
-                .setAtomicProcessModel(bsqSwapProtocolModel.toProtoMessage())
+                .setBsqSwapProtocolModel(bsqSwapProtocolModel.toProtoMessage())
                 .setState(State.toProtoMessage(state));
         Optional.ofNullable(txId).ifPresent(builder::setTxId);
         Optional.ofNullable(peerNodeAddress).ifPresent(e -> builder.setPeerNodeAddress(
