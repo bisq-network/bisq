@@ -17,7 +17,7 @@
 
 package bisq.core.app;
 
-import bisq.core.trade.model.trade.TradeManager;
+import bisq.core.trade.model.TradeManager;
 
 import bisq.common.UserThread;
 import bisq.common.app.Version;

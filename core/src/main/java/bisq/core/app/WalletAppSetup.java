@@ -25,8 +25,8 @@ import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.locale.Res;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.provider.fee.FeeService;
+import bisq.core.trade.model.TradeManager;
 import bisq.core.trade.model.trade.Trade;
-import bisq.core.trade.model.trade.TradeManager;
 import bisq.core.user.Preferences;
 import bisq.core.util.FormattingUtils;
 

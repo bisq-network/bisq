@@ -650,7 +650,7 @@ public abstract class Trade extends TradeModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // The deserialized tx has not actual confidence data, so we need to get the fresh one from the wallet.
-    void updateDepositTxFromWallet() {
+    public void updateDepositTxFromWallet() {
         if (getDepositTx() != null)
             applyDepositTx(processModel.getTradeWalletService().getWalletTx(getDepositTx().getTxId()));
     }

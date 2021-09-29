@@ -19,8 +19,8 @@ package bisq.core.trade.model.bsqswap;
 
 import bisq.core.offer.Offer;
 import bisq.core.proto.CoreProtoResolver;
+import bisq.core.trade.model.TakerTrade;
 import bisq.core.trade.model.Tradable;
-import bisq.core.trade.model.trade.TakerTrade;
 import bisq.core.trade.protocol.bsqswap.BsqSwapProtocolModel;
 
 import bisq.network.p2p.NodeAddress;
@@ -81,14 +81,14 @@ public final class BsqSwapTakerTrade extends BsqSwapTrade implements TakerTrade 
                 .build();
     }
 
-    public static Tradable fromProto(protobuf.BsqSwapTakerTrade atomicTakerTradeProto,
+    public static Tradable fromProto(protobuf.BsqSwapTakerTrade swapTrade,
                                      CoreProtoResolver coreProtoResolver) {
-        var proto = atomicTakerTradeProto.getBsqSwapTrade();
+        var proto = swapTrade.getBsqSwapTrade();
         var uid = ProtoUtil.stringOrNullFromProto(proto.getUid());
         if (uid == null) {
             uid = UUID.randomUUID().toString();
         }
-        var BsqSwapTrade = fromProto(new BsqSwapTakerTrade(
+        var bsqSwapTakerTrade = new BsqSwapTakerTrade(
                 uid,
                 Offer.fromProto(proto.getOffer()),
                 Coin.valueOf(proto.getAmount()),
@@ -100,8 +100,8 @@ public final class BsqSwapTakerTrade extends BsqSwapTrade implements TakerTrade 
                 proto.getTakerFee(),
                 BsqSwapProtocolModel.fromProto(proto.getBsqSwapProtocolModel(), coreProtoResolver),
                 proto.getErrorMessage(),
-                State.fromProto(proto.getState())));
-        BsqSwapTrade.setTxId(proto.getTxId());
-        return BsqSwapTrade;
+                State.fromProto(proto.getState()));
+        bsqSwapTakerTrade.setTxId(proto.getTxId());
+        return bsqSwapTakerTrade;
     }
 }

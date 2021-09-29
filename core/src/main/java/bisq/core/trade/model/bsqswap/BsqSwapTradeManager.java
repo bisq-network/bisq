@@ -19,7 +19,6 @@ package bisq.core.trade.model.bsqswap;
 
 import bisq.core.offer.Offer;
 import bisq.core.provider.price.PriceFeedService;
-import bisq.core.trade.misc.CleanupMailboxMessages;
 import bisq.core.trade.model.TradableList;
 
 import bisq.common.crypto.KeyRing;
@@ -43,29 +42,26 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 public class BsqSwapTradeManager implements PersistedDataHost {
     private final PersistenceManager<TradableList<BsqSwapTrade>> persistenceManager;
-    private final TradableList<BsqSwapTrade> atomicTrades = new TradableList<>();
+    private final TradableList<BsqSwapTrade> bsqSwapTrades = new TradableList<>();
     private final KeyRing keyRing;
     private final PriceFeedService priceFeedService;
-    private final CleanupMailboxMessages cleanupMailboxMessages;
 
     @Inject
     public BsqSwapTradeManager(KeyRing keyRing,
                                PriceFeedService priceFeedService,
-                               PersistenceManager<TradableList<BsqSwapTrade>> persistenceManager,
-                               CleanupMailboxMessages cleanupMailboxMessages) {
+                               PersistenceManager<TradableList<BsqSwapTrade>> persistenceManager) {
         this.keyRing = keyRing;
         this.priceFeedService = priceFeedService;
-        this.cleanupMailboxMessages = cleanupMailboxMessages;
         this.persistenceManager = persistenceManager;
 
-        this.persistenceManager.initialize(atomicTrades, "AtomicTrades", PersistenceManager.Source.PRIVATE);
+        this.persistenceManager.initialize(bsqSwapTrades, "BsqSwapTrades", PersistenceManager.Source.PRIVATE);
     }
 
     @Override
     public void readPersisted(Runnable completeHandler) {
         persistenceManager.readPersisted(persisted -> {
-                    atomicTrades.setAll(persisted.getList());
-                    atomicTrades.stream()
+                    bsqSwapTrades.setAll(persisted.getList());
+                    bsqSwapTrades.stream()
                             .filter(atomicTrade -> atomicTrade.getOffer() != null)
                             .forEach(atomicTrade -> atomicTrade.getOffer().setPriceFeedService(priceFeedService));
                     completeHandler.run();
@@ -75,17 +71,16 @@ public class BsqSwapTradeManager implements PersistedDataHost {
 
     public void onAllServicesInitialized() {
         // TODO(sq): Cleanup TradeModel
-//        cleanupMailboxMessages.handleTrades(getAtomicTrades());
     }
 
     public void add(BsqSwapTrade bsqSwapTrade) {
-        if (atomicTrades.add(bsqSwapTrade)) {
+        if (bsqSwapTrades.add(bsqSwapTrade)) {
             requestPersistence();
         }
     }
 
     public void remove(BsqSwapTrade bsqSwapTrade) {
-        if (atomicTrades.remove(bsqSwapTrade)) {
+        if (bsqSwapTrades.remove(bsqSwapTrade)) {
             requestPersistence();
         }
     }
@@ -95,15 +90,15 @@ public class BsqSwapTradeManager implements PersistedDataHost {
     }
 
     public ObservableList<BsqSwapTrade> getObservableList() {
-        return atomicTrades.getObservableList();
+        return bsqSwapTrades.getObservableList();
     }
 
-    public List<BsqSwapTrade> getAtomicTrades() {
+    public List<BsqSwapTrade> getBsqSwapTrades() {
         return ImmutableList.copyOf(new ArrayList<>(getObservableList()));
     }
 
-    public Optional<BsqSwapTrade> getAtomicTradeById(String id) {
-        return atomicTrades.stream().filter(e -> e.getId().equals(id)).findFirst();
+    public Optional<BsqSwapTrade> findBsqSwapTradeById(String id) {
+        return bsqSwapTrades.stream().filter(e -> e.getId().equals(id)).findFirst();
     }
 
     private void requestPersistence() {

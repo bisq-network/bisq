@@ -31,8 +31,8 @@ import bisq.core.support.dispute.mediation.MediationDisputeListService;
 import bisq.core.support.dispute.refund.RefundDisputeListService;
 import bisq.core.trade.misc.ClosedTradableManager;
 import bisq.core.trade.misc.FailedTradesManager;
+import bisq.core.trade.model.TradeManager;
 import bisq.core.trade.model.bsqswap.BsqSwapTradeManager;
-import bisq.core.trade.model.trade.TradeManager;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
 

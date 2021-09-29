@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.model.trade;
+package bisq.core.trade.model;
 
 import bisq.core.btc.exceptions.AddressEntryException;
 import bisq.core.btc.model.AddressEntry;
@@ -38,13 +38,15 @@ import bisq.core.trade.misc.FailedTradesManager;
 import bisq.core.trade.misc.TradeResultHandler;
 import bisq.core.trade.misc.TradeTxException;
 import bisq.core.trade.misc.TradeUtil;
-import bisq.core.trade.model.Tradable;
-import bisq.core.trade.model.TradableList;
-import bisq.core.trade.model.TradeModel;
 import bisq.core.trade.model.bsqswap.BsqSwapMakerTrade;
 import bisq.core.trade.model.bsqswap.BsqSwapTakerTrade;
 import bisq.core.trade.model.bsqswap.BsqSwapTrade;
 import bisq.core.trade.model.bsqswap.BsqSwapTradeManager;
+import bisq.core.trade.model.trade.BuyerAsMakerTrade;
+import bisq.core.trade.model.trade.BuyerAsTakerTrade;
+import bisq.core.trade.model.trade.SellerAsMakerTrade;
+import bisq.core.trade.model.trade.SellerAsTakerTrade;
+import bisq.core.trade.model.trade.Trade;
 import bisq.core.trade.protocol.MakerProtocol;
 import bisq.core.trade.protocol.Provider;
 import bisq.core.trade.protocol.TakerProtocol;
@@ -409,7 +411,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
 
         // We do not include failed trades as they should not be counted anyway in the trade statistics
         Set<TradeModel> allTrades = new HashSet<>(closedTradableManager.getClosedTrades());
-        allTrades.addAll(bsqSwapTradeManager.getAtomicTrades());
+        allTrades.addAll(bsqSwapTradeManager.getBsqSwapTrades());
         allTrades.addAll(tradableList.getList());
         String referralId = referralIdService.getOptionalReferralId().orElse(null);
         boolean isTorNetworkNode = p2PService.getNetworkNode() instanceof TorNetworkNode;
@@ -847,7 +849,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
     }
 
     public Optional<BsqSwapTrade> getAtomicTradeById(String tradeId) {
-        return bsqSwapTradeManager.getAtomicTradeById(tradeId);
+        return bsqSwapTradeManager.findBsqSwapTradeById(tradeId);
     }
 
     public Optional<Trade> getTradeById(String tradeId) {

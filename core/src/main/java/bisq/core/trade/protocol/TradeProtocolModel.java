@@ -2,7 +2,7 @@ package bisq.core.trade.protocol;
 
 import bisq.core.offer.Offer;
 import bisq.core.trade.messages.TradeMessage;
-import bisq.core.trade.model.trade.TradeManager;
+import bisq.core.trade.model.TradeManager;
 
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;

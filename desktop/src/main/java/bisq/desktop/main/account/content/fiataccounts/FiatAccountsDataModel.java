@@ -28,8 +28,8 @@ import bisq.core.locale.TradeCurrency;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.payment.AssetAccount;
 import bisq.core.payment.PaymentAccount;
+import bisq.core.trade.model.TradeManager;
 import bisq.core.trade.model.trade.Trade;
-import bisq.core.trade.model.trade.TradeManager;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
 

@@ -160,13 +160,9 @@ public abstract class BsqSwapTrade extends TradeModel {
         Optional.ofNullable(peerNodeAddress).ifPresent(e -> builder.setPeerNodeAddress(
                 peerNodeAddress.toProtoMessage()));
         Optional.ofNullable(errorMessage).ifPresent(builder::setErrorMessage);
-
         return builder.build();
     }
 
-    public static BsqSwapTrade fromProto(BsqSwapTrade bsqSwapTrade) {
-        return bsqSwapTrade;
-    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Model implementation
@@ -187,7 +183,7 @@ public abstract class BsqSwapTrade extends TradeModel {
 
     @Override
     public NodeAddress getTradingPeerNodeAddress() {
-        return getPeerNodeAddress();
+        return peerNodeAddress;
     }
 
     @Override
@@ -281,5 +277,4 @@ public abstract class BsqSwapTrade extends TradeModel {
         this.state = state;
         stateProperty.set(state);
     }
-
 }

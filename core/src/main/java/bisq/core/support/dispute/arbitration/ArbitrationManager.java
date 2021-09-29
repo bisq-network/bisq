@@ -43,8 +43,8 @@ import bisq.core.support.messages.SupportMessage;
 import bisq.core.trade.misc.ClosedTradableManager;
 import bisq.core.trade.model.Contract;
 import bisq.core.trade.model.Tradable;
+import bisq.core.trade.model.TradeManager;
 import bisq.core.trade.model.trade.Trade;
-import bisq.core.trade.model.trade.TradeManager;
 
 import bisq.network.p2p.AckMessageSourceType;
 import bisq.network.p2p.NodeAddress;

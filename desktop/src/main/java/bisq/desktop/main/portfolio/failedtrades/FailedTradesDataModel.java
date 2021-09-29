@@ -22,8 +22,8 @@ import bisq.desktop.common.model.ActivatableDataModel;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.trade.misc.FailedTradesManager;
+import bisq.core.trade.model.TradeManager;
 import bisq.core.trade.model.trade.Trade;
-import bisq.core.trade.model.trade.TradeManager;
 
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;

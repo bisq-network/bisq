@@ -19,6 +19,7 @@ package bisq.core.trade.model.bsqswap;
 
 import bisq.core.offer.Offer;
 import bisq.core.proto.CoreProtoResolver;
+import bisq.core.trade.model.MakerTrade;
 import bisq.core.trade.model.Tradable;
 import bisq.core.trade.protocol.bsqswap.BsqSwapProtocolModel;
 
@@ -36,7 +37,7 @@ import javax.annotation.Nullable;
 
 
 @Slf4j
-public final class BsqSwapMakerTrade extends BsqSwapTrade {
+public final class BsqSwapMakerTrade extends BsqSwapTrade implements MakerTrade {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, initialization
@@ -81,14 +82,14 @@ public final class BsqSwapMakerTrade extends BsqSwapTrade {
                 .build();
     }
 
-    public static Tradable fromProto(protobuf.BsqSwapMakerTrade atomicMakerTradeProto,
+    public static Tradable fromProto(protobuf.BsqSwapMakerTrade swapTrade,
                                      CoreProtoResolver coreProtoResolver) {
-        var proto = atomicMakerTradeProto.getBsqSwapTrade();
+        var proto = swapTrade.getBsqSwapTrade();
         var uid = ProtoUtil.stringOrNullFromProto(proto.getUid());
         if (uid == null) {
             uid = UUID.randomUUID().toString();
         }
-        var atomicTrade = fromProto(new BsqSwapMakerTrade(
+        var bsqSwapMakerTrade = new BsqSwapMakerTrade(
                 uid,
                 Offer.fromProto(proto.getOffer()),
                 Coin.valueOf(proto.getAmount()),
@@ -100,8 +101,8 @@ public final class BsqSwapMakerTrade extends BsqSwapTrade {
                 proto.getTakerFee(),
                 BsqSwapProtocolModel.fromProto(proto.getBsqSwapProtocolModel(), coreProtoResolver),
                 proto.getErrorMessage(),
-                State.fromProto(proto.getState())));
-        atomicTrade.setTxId(proto.getTxId());
-        return atomicTrade;
+                State.fromProto(proto.getState()));
+        bsqSwapMakerTrade.setTxId(proto.getTxId());
+        return bsqSwapMakerTrade;
     }
 }
