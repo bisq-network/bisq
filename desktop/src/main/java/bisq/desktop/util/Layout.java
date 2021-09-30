@@ -18,7 +18,7 @@
 package bisq.desktop.util;
 
 public class Layout {
-    public static final double INITIAL_WINDOW_WIDTH = 1240;
+    public static final double INITIAL_WINDOW_WIDTH = 1200;
     public static final double INITIAL_WINDOW_HEIGHT = 710; //740
     public static final double MIN_WINDOW_WIDTH = 1020;
     public static final double MIN_WINDOW_HEIGHT = 620;

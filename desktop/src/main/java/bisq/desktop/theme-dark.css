@@ -137,9 +137,6 @@
     -bs-decimals: #db6300;
     -bs-soft-red: #aa4c3b;
     -bs-turquoise-light: #11eeee;
-    -bs-community-platform-icon: -fx-light-text-color;
-    -bs-community-platform-description: -bs-color-gray-4;
-    -bs-community-platform-hover: #2ea33c;
 
     /* dao chart colors */
     -bs-chart-dao-line1: -bs-color-blue-5;
