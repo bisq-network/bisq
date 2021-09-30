@@ -147,12 +147,13 @@ public class TakeBsqSwapOfferModel implements Model {
         paymentAccount = getPaymentAccount();
         checkNotNull(paymentAccount, "PaymentAccount must not be null");
 
-        this.amount.set(Coin.valueOf(Math.min(offer.getAmount().value, getMaxTradeLimit())));
+        amount.set(Coin.valueOf(Math.min(offer.getAmount().value, getMaxTradeLimit())));
+        boolean isBuyer = offer.getDirection() == OfferDirection.SELL;
         bsqSwapTxHelper = new BsqSwapTxHelper(
                 bsqWalletService,
                 tradeWalletService,
-                offer.getDirection() == OfferDirection.SELL,
-                offer.getPrice(),
+                isBuyer,
+                tradePrice,
                 amount.getValue(),
                 Coin.ZERO,
                 btcWalletService.getFreshAddressEntry().getAddressString(),
