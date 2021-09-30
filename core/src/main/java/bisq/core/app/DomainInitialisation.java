@@ -223,6 +223,7 @@ public class DomainInitialisation {
         xmrTxProofService.onAllServicesInitialized();
 
         openOfferManager.onAllServicesInitialized();
+        bsqSwapWalletWatcher.onAllServicesInitialized();
 
         balances.onAllServicesInitialized();
 
@@ -278,7 +279,6 @@ public class DomainInitialisation {
         marketAlerts.onAllServicesInitialized();
         triggerPriceService.onAllServicesInitialized();
         mempoolService.onAllServicesInitialized();
-        bsqSwapWalletWatcher.onAllServicesInitialized();
 
         if (revolutAccountsUpdateHandler != null) {
             revolutAccountsUpdateHandler.accept(user.getPaymentAccountsAsObservable().stream()

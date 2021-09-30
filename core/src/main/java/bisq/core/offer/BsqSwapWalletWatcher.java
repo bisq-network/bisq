@@ -24,57 +24,57 @@ import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.util.coin.CoinUtil;
 
+import bisq.common.UserThread;
 import bisq.common.crypto.KeyRing;
 
+import org.bitcoinj.core.Coin;
 import org.bitcoinj.wallet.Wallet;
 import org.bitcoinj.wallet.listeners.WalletChangeEventListener;
 
 import javax.inject.Inject;
 
-import java.util.ArrayList;
+import javafx.collections.ListChangeListener;
+
+import java.util.HashSet;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Set;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class BsqSwapWalletWatcher implements WalletChangeEventListener {
 
-    public interface Listener {
-        void isFunded(boolean funded);
-
-        Offer getOffer();
-    }
-
+    private OpenOfferManager openOfferManager;
     private final BtcWalletService btcWalletService;
     private final BsqWalletService bsqWalletService;
     private final TradeWalletService tradeWalletService;
     private final FeeService feeService;
     private final KeyRing keyRing;
-    private final List<Listener> listeners = new ArrayList<>();
+    private final Set<OpenOffer> openBsqSwapOffers = new HashSet<>();
+    private final ListChangeListener<OpenOffer> listChangeListener;
 
     @Inject
-    public BsqSwapWalletWatcher(BtcWalletService btcWalletService,
+    public BsqSwapWalletWatcher(OpenOfferManager openOfferManager,
+                                BtcWalletService btcWalletService,
                                 BsqWalletService bsqWalletService,
                                 TradeWalletService tradeWalletService,
                                 FeeService feeService,
                                 KeyRing keyRing) {
+        this.openOfferManager = openOfferManager;
         this.btcWalletService = btcWalletService;
         this.bsqWalletService = bsqWalletService;
         this.tradeWalletService = tradeWalletService;
         this.feeService = feeService;
         this.keyRing = keyRing;
 
-    }
-
-    public void onAllServicesInitialized() {
-        btcWalletService.addChangeEventListener(this);
-        bsqWalletService.addChangeEventListener(this);
-    }
-
-    public void shutDown() {
-        btcWalletService.removeChangeEventListener(this);
-        bsqWalletService.removeChangeEventListener(this);
+        listChangeListener = c -> {
+            c.next();
+            if (c.wasAdded()) {
+                onOpenOffersAdded(c.getAddedSubList());
+            } else if (c.wasRemoved()) {
+                onOpenOffersRemoved(c.getRemoved());
+            }
+        };
     }
 
 
@@ -82,45 +82,17 @@ public class BsqSwapWalletWatcher implements WalletChangeEventListener {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void addListener(Listener listener) {
-        if (!listeners.contains(listener) && listener.getOffer().isBsqSwapOffer()) {
-            listeners.add(listener);
-        }
+    public void onAllServicesInitialized() {
+        btcWalletService.addChangeEventListener(this);
+        bsqWalletService.addChangeEventListener(this);
+        openOfferManager.getObservableList().addListener(listChangeListener);
+        onOpenOffersAdded(openOfferManager.getObservableList());
     }
 
-    // Remove listeners by Offer
-    public void removeListener(Offer offer) {
-        var toRemove = listeners.stream()
-                .filter(listener -> listener.getOffer().equals(offer))
-                .collect(Collectors.toList());
-        toRemove.forEach(listeners::remove);
-    }
-
-    public boolean isFunded(Offer offer) {
-        if (!feeService.isFeeAvailable())
-            return false;
-
-        var isMaker = offer.isMyOffer(keyRing);
-        var isBuyer = isMaker == offer.isBuyOffer();
-        var price = offer.getPrice();
-        var btcAmount = offer.getAmount();
-        var bsqSwapTxHelper = new BsqSwapTxHelper(bsqWalletService,
-                tradeWalletService,
-                isBuyer,
-                price,
-                btcAmount,
-                feeService.getTxFeePerVbyte(),
-                btcWalletService.getFreshAddressEntry().getAddressString(),
-                bsqWalletService.getUnusedAddress().toString());
-
-        if (isMaker) {
-            bsqSwapTxHelper.setMyTradeFee(CoinUtil.getMakerFee(false, btcAmount));
-            bsqSwapTxHelper.setPeerTradeFee(CoinUtil.getTakerFee(false, btcAmount));
-        } else {
-            bsqSwapTxHelper.setMyTradeFee(CoinUtil.getTakerFee(false, btcAmount));
-            bsqSwapTxHelper.setPeerTradeFee(CoinUtil.getMakerFee(false, btcAmount));
-        }
-        return bsqSwapTxHelper.buildMySide(0, null, !isMaker) != null;
+    public void shutDown() {
+        btcWalletService.removeChangeEventListener(this);
+        bsqWalletService.removeChangeEventListener(this);
+        openOfferManager.getObservableList().removeListener(listChangeListener);
     }
 
 
@@ -129,7 +101,7 @@ public class BsqSwapWalletWatcher implements WalletChangeEventListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void onWalletChanged(Wallet wallet) {
-        update();
+        openBsqSwapOffers.forEach(this::updateFundingState);
     }
 
 
@@ -137,52 +109,61 @@ public class BsqSwapWalletWatcher implements WalletChangeEventListener {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void update() {
-        listeners.forEach(this::isFunded);
-    }
-
-    private void isFunded(Listener listener) {
-        feeService.requestFees(() -> listener.isFunded(isFunded(listener.getOffer())),
-                (String errorMessage, Throwable throwable) -> {
-                    log.warn("Fee request failed, unable to calculate bsq swap funding status");
-                    if (throwable != null) {
-                        log.warn("Exception: {}", throwable.getMessage());
-                    }
+    private void onOpenOffersAdded(List<? extends OpenOffer> list) {
+        list.stream().filter(openOffer -> openOffer.getOffer().isBsqSwapOffer())
+                .forEach(openOffer -> {
+                    openBsqSwapOffers.add(openOffer);
+                    updateFundingState(openOffer);
                 });
     }
 
-//    private void checkFunding(Listener listener) {
-//        var offer = listener.getOffer();
-//        var isMaker = offer.isMyOffer(keyRing);
-//        var isBuyer = isMaker == offer.isBuyOffer();
-//        var price = offer.getPrice();
-//        var btcAmount = offer.getAmount();
-//        var atomicTxBuilder = new AtomicTxBuilder(bsqWalletService,
-//                tradeWalletService,
-//                isBuyer,
-//                price,
-//                btcAmount,
-//                Coin.ZERO,
-//                btcWalletService.getFreshAddressEntry().getAddressString(),
-//                bsqWalletService.getUnusedAddress().toString());
-//        feeService.requestFees(() -> {
-//                    atomicTxBuilder.setTxFeePerVbyte(feeService.getTxFeePerVbyte());
-//                    if (isMaker) {
-//                        atomicTxBuilder.setMyTradeFee(CoinUtil.getMakerFee(false, btcAmount));
-//                        atomicTxBuilder.setPeerTradeFee(CoinUtil.getTakerFee(false, btcAmount));
-//                    } else {
-//                        atomicTxBuilder.setMyTradeFee(CoinUtil.getTakerFee(false, btcAmount));
-//                        atomicTxBuilder.setPeerTradeFee(CoinUtil.getMakerFee(false, btcAmount));
-//                    }
-//                    var funded = atomicTxBuilder.buildMySide(0, null, !isMaker) != null;
-//                    listener.funded(funded);
-//                },
-//                (String errorMessage, Throwable throwable) -> {
-//                    log.warn("Fee request failed, unable to calculate bsq swap funding status");
-//                    if (throwable != null) {
-//                        log.warn("Exception: {}", throwable.getMessage());
-//                    }
-//                });
-//    }
+    private void onOpenOffersRemoved(List<? extends OpenOffer> list) {
+        list.stream().filter(openOffer -> openOffer.getOffer().isBsqSwapOffer())
+                .forEach(openBsqSwapOffers::remove);
+    }
 
+    private void updateFundingState(OpenOffer openOffer) {
+        if (!feeService.isFeeAvailable()) {
+            // At startup the fee service might not be available still so we call again after a delay
+            UserThread.runAfter(() -> {
+                if (openBsqSwapOffers.contains(openOffer)) {
+                    updateFundingState(openOffer);
+                }
+            }, 10);
+            return;
+        }
+
+        // We deactivate if the wallet update results in an offer not funded sufficiently anymore
+        // Re-activation has to be done by the user. The deactivation should be communicated with a popup in the UI.
+        if (!openOffer.isDeactivated() && !isFunded(openOffer.getOffer())) {
+            openOfferManager.deactivateOpenOffer(openOffer,
+                    () -> log.info("Deactivated open offer {}", openOffer.getShortId()),
+                    errorMessage -> log.warn("Failed to deactivate open offer {}", openOffer.getShortId()));
+        }
+    }
+
+    private boolean isFunded(Offer offer) {
+        var isMaker = offer.isMyOffer(keyRing);
+        var isBuyer = isMaker == offer.isBuyOffer();
+        var price = offer.getPrice();
+        var btcAmount = offer.getAmount();
+        Coin makerFee = CoinUtil.getMakerFee(false, btcAmount);
+        Coin takerFee = CoinUtil.getTakerFee(false, btcAmount);
+        var bsqSwapTxHelper = new BsqSwapTxHelper(bsqWalletService,
+                tradeWalletService,
+                isBuyer,
+                price,
+                btcAmount,
+                feeService.getTxFeePerVbyte(),
+                btcWalletService.getFreshAddressEntry().getAddressString(),
+                bsqWalletService.getUnusedAddress().toString());
+        if (isMaker) {
+            bsqSwapTxHelper.setMyTradeFee(makerFee);
+            bsqSwapTxHelper.setPeerTradeFee(takerFee);
+        } else {
+            bsqSwapTxHelper.setMyTradeFee(takerFee);
+            bsqSwapTxHelper.setPeerTradeFee(makerFee);
+        }
+        return bsqSwapTxHelper.buildMySide(0, null, !isMaker) != null;
+    }
 }
