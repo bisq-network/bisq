@@ -1000,6 +1000,7 @@ message PaymentAccountPayload {
         PayseraAccountPayload Paysera_account_payload = 34;
         PaxumAccountPayload Paxum_account_payload = 35;
         SwiftAccountPayload swift_account_payload = 36;
+        CelPayAccountPayload cel_pay_account_payload = 37;
     }
     map<string, string> exclude_from_json_data = 15;
 }
@@ -1034,6 +1035,7 @@ message CountryBasedPaymentAccountPayload {
         UpiAccountPayload upi_account_payload = 9;
         PaytmAccountPayload paytm_account_payload = 10;
         IfscBasedAccountPayload ifsc_based_account_payload = 11;
+        NequiAccountPayload nequi_account_payload = 12;
     }
 }
 
@@ -1262,6 +1264,14 @@ message PaxumAccountPayload {
 
 message CapitualAccountPayload {
     string account_nr = 1;
+}
+
+message CelPayAccountPayload {
+    string email = 1;
+}
+
+message NequiAccountPayload {
+    string mobile_nr = 1;
 }
 
 message SwiftAccountPayload {
