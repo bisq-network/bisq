@@ -42,7 +42,7 @@ public class ValidateOffer extends Task<PlaceOfferModel> {
             runInterceptHook();
 
             checkArgument(offer.getOfferPayloadBase() instanceof OfferPayload,
-                    "OfferPayload must be OfferPayload");
+                    "OfferPayloadBase must be OfferPayload");
 
             // Coins
             checkCoinNotNullOrZero(offer.getAmount(), "Amount");
