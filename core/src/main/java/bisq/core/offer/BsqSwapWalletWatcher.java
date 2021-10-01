@@ -52,6 +52,7 @@ public class BsqSwapWalletWatcher implements WalletChangeEventListener {
     private final KeyRing keyRing;
     private final Set<OpenOffer> openBsqSwapOffers = new HashSet<>();
     private final ListChangeListener<OpenOffer> listChangeListener;
+    private int tryFeeServiceCounter = 0;
 
     @Inject
     public BsqSwapWalletWatcher(OpenOfferManager openOfferManager,
@@ -123,9 +124,10 @@ public class BsqSwapWalletWatcher implements WalletChangeEventListener {
     }
 
     private void updateFundingState(OpenOffer openOffer) {
-        if (!feeService.isFeeAvailable()) {
+        if (!feeService.isFeeAvailable() && tryFeeServiceCounter < 10) {
             // At startup the fee service might not be available still so we call again after a delay
             UserThread.runAfter(() -> {
+                tryFeeServiceCounter++;
                 if (openBsqSwapOffers.contains(openOffer)) {
                     updateFundingState(openOffer);
                 }
