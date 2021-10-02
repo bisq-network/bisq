@@ -17,14 +17,21 @@
 
 package bisq.core.trade.protocol.bsqswap;
 
+import bisq.core.proto.CoreProtoResolver;
 import bisq.core.trade.protocol.TradePeer;
 
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.proto.persistable.PersistablePayload;
 
+import protobuf.TradingPeer;
+
 import com.google.protobuf.Message;
 
 public final class BsqSwapTradePeer implements TradePeer, PersistablePayload {
+
+    public static BsqSwapTradePeer fromProto(TradingPeer tradingPeer, CoreProtoResolver coreProtoResolver) {
+        return null;
+    }
 
     @Override
     public Message toProtoMessage() {

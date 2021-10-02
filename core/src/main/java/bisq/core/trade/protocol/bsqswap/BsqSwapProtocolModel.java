@@ -36,7 +36,6 @@ import bisq.core.trade.model.TradeManager;
 import bisq.core.trade.model.bsqswap.BsqSwapTrade;
 import bisq.core.trade.protocol.Provider;
 import bisq.core.trade.protocol.TradeProtocolModel;
-import bisq.core.trade.protocol.trade.TradingPeer;
 
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
@@ -80,7 +79,7 @@ public class BsqSwapProtocolModel implements TradeProtocolModel<BsqSwapTradePeer
 
     private BsqSwapTrade bsqSwapTrade;
 
-    private final TradingPeer tradingPeer;
+    private final BsqSwapTradePeer tradePeer;
     private final PubKeyRing pubKeyRing;
     // Copy to trade.tradingPeerAddress after successful verification of incoming message
     @Nullable
@@ -148,15 +147,14 @@ public class BsqSwapProtocolModel implements TradeProtocolModel<BsqSwapTradePeer
     @Setter
     private Transaction verifiedTransaction;
 
-    private final BsqSwapTradePeer bsqSwapTradePeer = new BsqSwapTradePeer();
 
     public BsqSwapProtocolModel(PubKeyRing pubKeyRing) {
-        this(pubKeyRing, new TradingPeer());
+        this(pubKeyRing, new BsqSwapTradePeer());
     }
 
-    public BsqSwapProtocolModel(PubKeyRing pubKeyRing, TradingPeer tradingPeer) {
+    public BsqSwapProtocolModel(PubKeyRing pubKeyRing, BsqSwapTradePeer tradePeer) {
         this.pubKeyRing = pubKeyRing;
-        this.tradingPeer = tradingPeer != null ? tradingPeer : new TradingPeer();
+        this.tradePeer = tradePeer != null ? tradePeer : new BsqSwapTradePeer();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -166,7 +164,7 @@ public class BsqSwapProtocolModel implements TradeProtocolModel<BsqSwapTradePeer
     @Override
     public protobuf.BsqSwapProtocolModel toProtoMessage() {
         protobuf.BsqSwapProtocolModel.Builder builder = protobuf.BsqSwapProtocolModel.newBuilder()
-                .setTradingPeer((protobuf.TradingPeer) tradingPeer.toProtoMessage())
+                .setTradingPeer((protobuf.TradingPeer) tradePeer.toProtoMessage())
                 .setPubKeyRing(pubKeyRing.toProtoMessage());
         Optional.ofNullable(tempTradingPeerNodeAddress).
                 ifPresent(e -> builder.setTempTradingPeerNodeAddress(e.toProtoMessage()));
@@ -175,9 +173,9 @@ public class BsqSwapProtocolModel implements TradeProtocolModel<BsqSwapTradePeer
 
     public static BsqSwapProtocolModel fromProto(protobuf.BsqSwapProtocolModel proto,
                                                  CoreProtoResolver coreProtoResolver) {
-        TradingPeer tradingPeer = TradingPeer.fromProto(proto.getTradingPeer(), coreProtoResolver);
+        BsqSwapTradePeer tradePeer = BsqSwapTradePeer.fromProto(proto.getTradingPeer(), coreProtoResolver);
         PubKeyRing pubKeyRing = PubKeyRing.fromProto(proto.getPubKeyRing());
-        BsqSwapProtocolModel bsqSwapProtocolModel = new BsqSwapProtocolModel(pubKeyRing, tradingPeer);
+        BsqSwapProtocolModel bsqSwapProtocolModel = new BsqSwapProtocolModel(pubKeyRing, tradePeer);
         bsqSwapProtocolModel.setTempTradingPeerNodeAddress(proto.hasTempTradingPeerNodeAddress() ?
                 NodeAddress.fromProto(proto.getTempTradingPeerNodeAddress()) : null);
         return bsqSwapProtocolModel;
@@ -207,10 +205,6 @@ public class BsqSwapProtocolModel implements TradeProtocolModel<BsqSwapTradePeer
         return getP2PService().getAddress();
     }
 
-    @Override
-    public BsqSwapTradePeer getTradePeer() {
-        return bsqSwapTradePeer;
-    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
@@ -248,7 +242,7 @@ public class BsqSwapProtocolModel implements TradeProtocolModel<BsqSwapTradePeer
         setRawTakerBtcInputs(message.getTakerBtcInputs());
         setBsqTradeAmount(message.getBsqTradeAmount());
         setBtcTradeAmount(message.getBtcTradeAmount());
-        tradingPeer.setPubKeyRing(checkNotNull(message.getTakerPubKeyRing()));
+        tradePeer.setPubKeyRing(checkNotNull(message.getTakerPubKeyRing()));
         bsqSwapTrade.setAmount(Coin.valueOf(message.getBtcTradeAmount()));
         bsqSwapTrade.setPeerNodeAddress(tempTradingPeerNodeAddress);
     }
