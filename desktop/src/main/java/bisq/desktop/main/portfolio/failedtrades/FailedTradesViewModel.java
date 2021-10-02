@@ -24,6 +24,7 @@ import bisq.desktop.util.DisplayUtils;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.util.FormattingUtils;
+import bisq.core.util.VolumeUtil;
 import bisq.core.util.coin.CoinFormatter;
 
 import com.google.inject.Inject;
@@ -37,7 +38,8 @@ class FailedTradesViewModel extends ActivatableWithDataModel<FailedTradesDataMod
 
 
     @Inject
-    public FailedTradesViewModel(FailedTradesDataModel dataModel, @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter) {
+    public FailedTradesViewModel(FailedTradesDataModel dataModel,
+                                 @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter) {
         super(dataModel);
 
         this.formatter = formatter;
@@ -64,7 +66,7 @@ class FailedTradesViewModel extends ActivatableWithDataModel<FailedTradesDataMod
 
     String getVolume(FailedTradesListItem item) {
         if (item != null && item.getTrade() != null)
-            return DisplayUtils.formatVolumeWithCode(item.getTrade().getTradeVolume());
+            return VolumeUtil.formatVolumeWithCode(item.getTrade().getTradeVolume());
         else
             return "";
     }

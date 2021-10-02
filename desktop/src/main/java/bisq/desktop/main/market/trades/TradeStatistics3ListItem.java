@@ -23,6 +23,7 @@ import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.trade.statistics.TradeStatistics3;
 import bisq.core.util.FormattingUtils;
+import bisq.core.util.VolumeUtil;
 import bisq.core.util.coin.CoinFormatter;
 
 import lombok.experimental.Delegate;
@@ -73,8 +74,8 @@ public class TradeStatistics3ListItem {
     public String getVolumeString() {
         if (volumeString == null) {
             volumeString = tradeStatistics3 != null ? showAllTradeCurrencies ?
-                    DisplayUtils.formatVolumeWithCode(tradeStatistics3.getTradeVolume()) :
-                    DisplayUtils.formatVolume(tradeStatistics3.getTradeVolume())
+                    VolumeUtil.formatVolumeWithCode(tradeStatistics3.getTradeVolume()) :
+                    VolumeUtil.formatVolume(tradeStatistics3.getTradeVolume())
                     : "";
         }
         return volumeString;

@@ -39,6 +39,7 @@ import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.txproof.AssetTxProofResult;
 import bisq.core.util.FormattingUtils;
+import bisq.core.util.VolumeUtil;
 import bisq.core.util.coin.CoinFormatter;
 
 import bisq.network.p2p.NodeAddress;
@@ -168,8 +169,8 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
         addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("shared.btcAmount") + btcDirectionInfo,
                 formatter.formatCoinWithCode(trade.getTradeAmount()));
         addConfirmationLabelLabel(gridPane, ++rowIndex,
-                DisplayUtils.formatVolumeLabel(offer.getCurrencyCode()) + fiatDirectionInfo,
-                DisplayUtils.formatVolumeWithCode(trade.getTradeVolume()));
+                VolumeUtil.formatVolumeLabel(offer.getCurrencyCode()) + fiatDirectionInfo,
+                VolumeUtil.formatVolumeWithCode(trade.getTradeVolume()));
         addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("shared.tradePrice"),
                 FormattingUtils.formatPrice(trade.getTradePrice()));
         String paymentMethodText = Res.get(offer.getPaymentMethod().getId());

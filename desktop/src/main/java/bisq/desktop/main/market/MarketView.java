@@ -39,6 +39,7 @@ import bisq.core.offer.OfferPayload;
 import bisq.core.trade.statistics.TradeStatistics3;
 import bisq.core.trade.statistics.TradeStatistics3StorageService;
 import bisq.core.util.FormattingUtils;
+import bisq.core.util.VolumeUtil;
 import bisq.core.util.coin.CoinFormatter;
 
 import bisq.common.util.Utilities;
@@ -198,7 +199,7 @@ public class MarketView extends ActivatableView<TabPane, Void> {
                             .append("Market: ").append(CurrencyUtil.getCurrencyPair(tradeStatistics3.getCurrency())).append("\n")
                             .append("Price: ").append(FormattingUtils.formatPrice(tradeStatistics3.getTradePrice())).append("\n")
                             .append("Amount: ").append(formatter.formatCoin(tradeStatistics3.getTradeAmount())).append("\n")
-                            .append("Volume: ").append(DisplayUtils.formatVolume(tradeStatistics3.getTradeVolume())).append("\n")
+                            .append("Volume: ").append(VolumeUtil.formatVolume(tradeStatistics3.getTradeVolume())).append("\n")
                             .append("Payment method: ").append(Res.get(tradeStatistics3.getPaymentMethod())).append("\n")
                             .append("ReferralID: ").append(tradeStatistics3.getExtraDataMap().get(OfferPayload.REFERRAL_ID));
                     return sb.toString();

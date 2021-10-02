@@ -29,6 +29,7 @@ import bisq.core.monetary.Price;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OpenOffer;
 import bisq.core.util.FormattingUtils;
+import bisq.core.util.VolumeUtil;
 import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.coin.CoinFormatter;
 
@@ -125,7 +126,9 @@ class OpenOffersViewModel extends ActivatableWithDataModel<OpenOffersDataModel> 
     }
 
     String getVolume(OpenOfferListItem item) {
-        return (item != null) ? DisplayUtils.formatVolume(item.getOffer(), false, 0) + " " + item.getOffer().getCurrencyCode() : "";
+        return (item != null) ?
+                VolumeUtil.formatVolume(item.getOffer(), false, 0) + " " + item.getOffer().getCurrencyCode()
+                : "";
     }
 
     String getDirectionLabel(OpenOfferListItem item) {

@@ -3,33 +3,27 @@ package bisq.desktop.util;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.Res;
-import bisq.core.monetary.Altcoin;
 import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.ParsingUtils;
+import bisq.core.util.VolumeUtil;
 import bisq.core.util.coin.CoinFormatter;
 
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.Monetary;
-import org.bitcoinj.utils.Fiat;
-import org.bitcoinj.utils.MonetaryFormat;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 
 import java.text.DateFormat;
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
 import java.util.Date;
-import java.util.Locale;
 import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
@@ -37,7 +31,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class DisplayUtils {
     private static final int SCALE = 3;
-    private static final MonetaryFormat FIAT_VOLUME_FORMAT = new MonetaryFormat().shift(0).minDecimals(0).repeatOptionalDecimals(0, 0);
 
     public static String formatDateTime(Date date) {
         return FormattingUtils.formatDateTime(date, true);
@@ -90,78 +83,6 @@ public class DisplayUtils {
 
     public static String booleanToYesNo(boolean value) {
         return value ? Res.get("shared.yes") : Res.get("shared.no");
-    }
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Volume
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public static String formatVolume(Offer offer, Boolean decimalAligned, int maxNumberOfDigits) {
-        return formatVolume(offer, decimalAligned, maxNumberOfDigits, true);
-    }
-
-    public static String formatVolume(Offer offer, Boolean decimalAligned, int maxNumberOfDigits, boolean showRange) {
-        String formattedVolume = offer.isRange() && showRange ? formatVolume(offer.getMinVolume()) + FormattingUtils.RANGE_SEPARATOR + formatVolume(offer.getVolume()) : formatVolume(offer.getVolume());
-
-        if (decimalAligned) {
-            formattedVolume = FormattingUtils.fillUpPlacesWithEmptyStrings(formattedVolume, maxNumberOfDigits);
-        }
-        return formattedVolume;
-    }
-
-    public static String formatLargeFiat(double value, String currency) {
-        if (value <= 0) {
-            return "0";
-        }
-        NumberFormat numberFormat = DecimalFormat.getInstance(Locale.US);
-        numberFormat.setGroupingUsed(true);
-        return numberFormat.format(value) + " " + currency;
-    }
-
-    public static String formatLargeFiatWithUnitPostFix(double value, String currency) {
-        if (value <= 0) {
-            return "0";
-        }
-        String[] units = new String[]{"", "K", "M", "B"};
-        int digitGroups = (int) (Math.log10(value) / Math.log10(1000));
-        return new DecimalFormat("#,##0.###").format(value / Math.pow(1000, digitGroups)) + units[digitGroups] + " " + currency;
-    }
-
-    public static String formatVolume(Volume volume) {
-        return formatVolume(volume, FIAT_VOLUME_FORMAT, false);
-    }
-
-    private static String formatVolume(Volume volume, MonetaryFormat fiatVolumeFormat, boolean appendCurrencyCode) {
-        if (volume != null) {
-            Monetary monetary = volume.getMonetary();
-            if (monetary instanceof Fiat)
-                return FormattingUtils.formatFiat((Fiat) monetary, fiatVolumeFormat, appendCurrencyCode);
-            else
-                return FormattingUtils.formatAltcoinVolume((Altcoin) monetary, appendCurrencyCode);
-        } else {
-            return "";
-        }
-    }
-
-    public static String formatVolumeWithCode(Volume volume) {
-        return formatVolume(volume, true);
-    }
-
-    public static String formatVolume(Volume volume, boolean appendCode) {
-        return formatVolume(volume, FIAT_VOLUME_FORMAT, appendCode);
-    }
-
-    public static String formatAverageVolumeWithCode(Volume volume) {
-        return formatVolume(volume, FIAT_VOLUME_FORMAT.minDecimals(2), true);
-    }
-
-    public static String formatVolumeLabel(String currencyCode) {
-        return formatVolumeLabel(currencyCode, "");
-    }
-
-    public static String formatVolumeLabel(String currencyCode, String postFix) {
-        return Res.get("formatter.formatVolumeLabel",
-                currencyCode, postFix);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -284,7 +205,7 @@ public class DisplayUtils {
                                               CoinFormatter formatter) {
         String feeInBtc = makerFeeAsCoin != null ? formatter.formatCoinWithCode(makerFeeAsCoin) : Res.get("shared.na");
         if (optionalFeeInFiat != null && optionalFeeInFiat.isPresent()) {
-            String feeInFiat = formatAverageVolumeWithCode(optionalFeeInFiat.get());
+            String feeInFiat = VolumeUtil.formatAverageVolumeWithCode(optionalFeeInFiat.get());
             return Res.get("feeOptionWindow.fee", feeInBtc, feeInFiat);
         } else {
             return feeInBtc;

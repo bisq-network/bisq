@@ -18,14 +18,15 @@
 package bisq.desktop.main.overlays.windows;
 
 import bisq.desktop.main.overlays.Overlay;
-import bisq.desktop.util.DisplayUtils;
 
 import bisq.core.locale.CountryUtil;
 import bisq.core.locale.Res;
 import bisq.core.payment.payload.SwiftAccountPayload;
 import bisq.core.trade.Trade;
+import bisq.core.util.VolumeUtil;
 
 import javafx.scene.control.Label;
+
 import javafx.geometry.Insets;
 
 import java.util.ArrayList;
@@ -72,7 +73,8 @@ public class SwiftPaymentDetails extends Overlay<SwiftPaymentDetails> {
         addTitledGroupBg(gridPane, ++rowIndex, rows, Res.get("payment.swift.headline"));
 
         gridPane.add(new Label(""), 0, ++rowIndex);  // spacer
-        addLabelsAndCopy(Res.get("portfolio.pending.step2_buyer.amountToTransfer"), DisplayUtils.formatVolumeWithCode(trade.getTradeVolume()));
+        addLabelsAndCopy(Res.get("portfolio.pending.step2_buyer.amountToTransfer"),
+                VolumeUtil.formatVolumeWithCode(trade.getTradeVolume()));
         addLabelsAndCopy(Res.get(SWIFT_CODE + BANKPOSTFIX), payload.getBankSwiftCode());
         addLabelsAndCopy(Res.get(SNAME + BANKPOSTFIX), payload.getBankName());
         addLabelsAndCopy(Res.get(BRANCH + BANKPOSTFIX), payload.getBankBranch());
@@ -85,7 +87,8 @@ public class SwiftPaymentDetails extends Overlay<SwiftPaymentDetails> {
             addLabelsAndCopy(Res.get(SNAME + INTERMEDIARYPOSTFIX), payload.getIntermediaryName());
             addLabelsAndCopy(Res.get(BRANCH + INTERMEDIARYPOSTFIX), payload.getIntermediaryBranch());
             addLabelsAndCopy(Res.get(ADDRESS + INTERMEDIARYPOSTFIX), cleanString(payload.getIntermediaryAddress()));
-            addLabelsAndCopy(Res.get(COUNTRY + INTERMEDIARYPOSTFIX), CountryUtil.getNameAndCode(payload.getIntermediaryCountryCode()));
+            addLabelsAndCopy(Res.get(COUNTRY + INTERMEDIARYPOSTFIX),
+                    CountryUtil.getNameAndCode(payload.getIntermediaryCountryCode()));
         }
 
         gridPane.add(new Label(""), 0, ++rowIndex);  // spacer

@@ -24,9 +24,7 @@ import bisq.desktop.components.indicator.TxConfidenceIndicator;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.portfolio.pendingtrades.PendingTradesViewModel;
 import bisq.desktop.main.portfolio.pendingtrades.steps.TradeStepView;
-import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.GUIUtil;
-import bisq.desktop.util.Layout;
 
 import bisq.core.locale.Res;
 import bisq.core.payment.PaymentAccount;
@@ -48,6 +46,7 @@ import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
 import bisq.core.trade.txproof.AssetTxProofResult;
 import bisq.core.user.DontShowAgainLookup;
+import bisq.core.util.VolumeUtil;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
@@ -75,6 +74,9 @@ import java.util.Optional;
 import javax.annotation.Nullable;
 
 import static bisq.desktop.util.FormBuilder.*;
+import static bisq.desktop.util.Layout.COMPACT_FIRST_ROW_AND_GROUP_DISTANCE;
+import static bisq.desktop.util.Layout.COMPACT_GROUP_DISTANCE;
+import static bisq.desktop.util.Layout.FLOATING_LABEL_DISTANCE;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class SellerStep3View extends TradeStepView {
@@ -195,11 +197,11 @@ public class SellerStep3View extends TradeStepView {
         addTradeInfoBlock();
 
         addTitledGroupBg(gridPane, ++gridRow, 3,
-                Res.get("portfolio.pending.step3_seller.confirmPaymentReceipt"), Layout.COMPACT_GROUP_DISTANCE);
+                Res.get("portfolio.pending.step3_seller.confirmPaymentReceipt"), COMPACT_GROUP_DISTANCE);
 
         TextFieldWithCopyIcon field = addTopLabelTextFieldWithCopyIcon(gridPane, gridRow,
                 Res.get("portfolio.pending.step3_seller.amountToReceive"),
-                model.getFiatVolume(), Layout.COMPACT_FIRST_ROW_AND_GROUP_DISTANCE).second;
+                model.getFiatVolume(), COMPACT_FIRST_ROW_AND_GROUP_DISTANCE).second;
         field.setCopyWithoutCurrencyPostFix(true);
 
         String myPaymentDetails = "";
@@ -250,7 +252,7 @@ public class SellerStep3View extends TradeStepView {
             assetTxConfidenceIndicator.setTooltip(new Tooltip());
             assetTxProofResultField.setContentForInfoPopOver(createPopoverLabel(Res.get("setting.info.msg")));
 
-            HBox.setMargin(assetTxConfidenceIndicator, new Insets(Layout.FLOATING_LABEL_DISTANCE, 0, 0, 0));
+            HBox.setMargin(assetTxConfidenceIndicator, new Insets(FLOATING_LABEL_DISTANCE, 0, 0, 0));
 
             HBox hBox = new HBox();
             HBox.setHgrow(vBox, Priority.ALWAYS);
@@ -259,7 +261,10 @@ public class SellerStep3View extends TradeStepView {
 
             GridPane.setRowIndex(hBox, gridRow);
             GridPane.setColumnIndex(hBox, 1);
-            GridPane.setMargin(hBox, new Insets(Layout.COMPACT_FIRST_ROW_AND_GROUP_DISTANCE + Layout.FLOATING_LABEL_DISTANCE, 0, 0, 0));
+            GridPane.setMargin(hBox, new Insets(COMPACT_FIRST_ROW_AND_GROUP_DISTANCE + FLOATING_LABEL_DISTANCE,
+                    0,
+                    0,
+                    0));
             gridPane.getChildren().add(hBox);
         }
 
@@ -397,7 +402,7 @@ public class SellerStep3View extends TradeStepView {
         PaymentAccountPayload paymentAccountPayload = model.dataModel.getSellersPaymentAccountPayload();
         String key = "confirmPayment" + trade.getId();
         String message = "";
-        String tradeVolumeWithCode = DisplayUtils.formatVolumeWithCode(trade.getTradeVolume());
+        String tradeVolumeWithCode = VolumeUtil.formatVolumeWithCode(trade.getTradeVolume());
         String currencyName = getCurrencyName(trade);
         String part1 = Res.get("portfolio.pending.step3_seller.part", currencyName);
         if (paymentAccountPayload instanceof AssetsAccountPayload) {
@@ -405,12 +410,17 @@ public class SellerStep3View extends TradeStepView {
             String explorerOrWalletString = isXmrTrade() ?
                     Res.get("portfolio.pending.step3_seller.altcoin.wallet", currencyName) :
                     Res.get("portfolio.pending.step3_seller.altcoin.explorer", currencyName);
-            message = Res.get("portfolio.pending.step3_seller.altcoin", part1, explorerOrWalletString, address, tradeVolumeWithCode, currencyName);
+            message = Res.get("portfolio.pending.step3_seller.altcoin",
+                    part1,
+                    explorerOrWalletString,
+                    address,
+                    tradeVolumeWithCode,
+                    currencyName);
         } else {
             if (paymentAccountPayload instanceof USPostalMoneyOrderAccountPayload) {
                 message = Res.get("portfolio.pending.step3_seller.postal", part1, tradeVolumeWithCode);
             } else if (paymentAccountPayload instanceof CashByMailAccountPayload) {
-                    message = Res.get("portfolio.pending.step3_seller.cashByMail", part1, tradeVolumeWithCode);
+                message = Res.get("portfolio.pending.step3_seller.cashByMail", part1, tradeVolumeWithCode);
             } else if (!(paymentAccountPayload instanceof WesternUnionAccountPayload) &&
                     !(paymentAccountPayload instanceof HalCashAccountPayload) &&
                     !(paymentAccountPayload instanceof F2FAccountPayload) &&

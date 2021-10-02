@@ -17,16 +17,27 @@
 
 package bisq.core.util;
 
+import bisq.core.locale.Res;
 import bisq.core.monetary.Altcoin;
 import bisq.core.monetary.AltcoinExchangeRate;
 import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
+import bisq.core.offer.Offer;
 
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.Monetary;
 import org.bitcoinj.utils.ExchangeRate;
 import org.bitcoinj.utils.Fiat;
+import org.bitcoinj.utils.MonetaryFormat;
+
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
+
+import java.util.Locale;
 
 public class VolumeUtil {
+
+    private static final MonetaryFormat FIAT_VOLUME_FORMAT = new MonetaryFormat().shift(0).minDecimals(0).repeatOptionalDecimals(0, 0);
 
     public static Volume getRoundedFiatVolume(Volume volumeByAmount) {
         // We want to get rounded to 1 unit of the fiat currency, e.g. 1 EUR.
@@ -61,5 +72,77 @@ public class VolumeUtil {
         } else {
             return new Volume(new ExchangeRate((Fiat) price.getMonetary()).coinToFiat(amount));
         }
+    }
+
+
+    public static String formatVolume(Offer offer, Boolean decimalAligned, int maxNumberOfDigits) {
+        return formatVolume(offer, decimalAligned, maxNumberOfDigits, true);
+    }
+
+    public static String formatVolume(Offer offer, Boolean decimalAligned, int maxNumberOfDigits, boolean showRange) {
+        String formattedVolume = offer.isRange() && showRange
+                ? formatVolume(offer.getMinVolume()) + FormattingUtils.RANGE_SEPARATOR + formatVolume(offer.getVolume())
+                : formatVolume(offer.getVolume());
+
+        if (decimalAligned) {
+            formattedVolume = FormattingUtils.fillUpPlacesWithEmptyStrings(formattedVolume, maxNumberOfDigits);
+        }
+        return formattedVolume;
+    }
+
+    public static String formatLargeFiat(double value, String currency) {
+        if (value <= 0) {
+            return "0";
+        }
+        NumberFormat numberFormat = DecimalFormat.getInstance(Locale.US);
+        numberFormat.setGroupingUsed(true);
+        return numberFormat.format(value) + " " + currency;
+    }
+
+    public static String formatLargeFiatWithUnitPostFix(double value, String currency) {
+        if (value <= 0) {
+            return "0";
+        }
+        String[] units = new String[]{"", "K", "M", "B"};
+        int digitGroups = (int) (Math.log10(value) / Math.log10(1000));
+        return new DecimalFormat("#,##0.###")
+                .format(value / Math.pow(1000, digitGroups)) + units[digitGroups] + " " + currency;
+    }
+
+    public static String formatVolume(Volume volume) {
+        return formatVolume(volume, FIAT_VOLUME_FORMAT, false);
+    }
+
+    private static String formatVolume(Volume volume, MonetaryFormat fiatVolumeFormat, boolean appendCurrencyCode) {
+        if (volume != null) {
+            Monetary monetary = volume.getMonetary();
+            if (monetary instanceof Fiat)
+                return FormattingUtils.formatFiat((Fiat) monetary, fiatVolumeFormat, appendCurrencyCode);
+            else
+                return FormattingUtils.formatAltcoinVolume((Altcoin) monetary, appendCurrencyCode);
+        } else {
+            return "";
+        }
+    }
+
+    public static String formatVolumeWithCode(Volume volume) {
+        return formatVolume(volume, true);
+    }
+
+    public static String formatVolume(Volume volume, boolean appendCode) {
+        return formatVolume(volume, FIAT_VOLUME_FORMAT, appendCode);
+    }
+
+    public static String formatAverageVolumeWithCode(Volume volume) {
+        return formatVolume(volume, FIAT_VOLUME_FORMAT.minDecimals(2), true);
+    }
+
+    public static String formatVolumeLabel(String currencyCode) {
+        return formatVolumeLabel(currencyCode, "");
+    }
+
+    public static String formatVolumeLabel(String currencyCode, String postFix) {
+        return Res.get("formatter.formatVolumeLabel",
+                currencyCode, postFix);
     }
 }
