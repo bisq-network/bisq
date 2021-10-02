@@ -85,7 +85,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Getter
 @Slf4j
-public class ProcessModel implements TradeProtocolModel, Model, PersistablePayload {
+public class ProcessModel implements TradeProtocolModel<TradingPeer>, Model, PersistablePayload {
 
     public static byte[] hashOfPaymentAccountPayload(PaymentAccountPayload paymentAccountPayload) {
         return Hash.getRipemd160hash(checkNotNull(paymentAccountPayload).toProtoMessage().toByteArray());

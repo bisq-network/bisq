@@ -73,7 +73,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Getter
 @Slf4j
-public class BsqSwapProtocolModel implements TradeProtocolModel, Model, PersistablePayload {
+public class BsqSwapProtocolModel implements TradeProtocolModel<BsqSwapTradePeer>, Model, PersistablePayload {
     transient private Provider provider;
     transient private TradeManager tradeManager;
     transient private Offer offer;
@@ -148,6 +148,8 @@ public class BsqSwapProtocolModel implements TradeProtocolModel, Model, Persista
     @Setter
     private Transaction verifiedTransaction;
 
+    private final BsqSwapTradePeer bsqSwapTradePeer = new BsqSwapTradePeer();
+
     public BsqSwapProtocolModel(PubKeyRing pubKeyRing) {
         this(pubKeyRing, new TradingPeer());
     }
@@ -205,6 +207,10 @@ public class BsqSwapProtocolModel implements TradeProtocolModel, Model, Persista
         return getP2PService().getAddress();
     }
 
+    @Override
+    public BsqSwapTradePeer getTradingPeer() {
+        return bsqSwapTradePeer;
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API

@@ -3,17 +3,16 @@ package bisq.core.trade.protocol;
 import bisq.core.offer.Offer;
 import bisq.core.trade.messages.TradeMessage;
 import bisq.core.trade.model.TradeManager;
-import bisq.core.trade.protocol.trade.TradingPeer;
 
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
 
-public interface TradeProtocolModel {
+public interface TradeProtocolModel<T extends TradePeer> {
     void applyTransient(Provider provider, TradeManager tradeManager, Offer offer);
 
     P2PService getP2PService();
 
-    TradingPeer getTradingPeer();
+    T getTradingPeer();
 
     void setTempTradingPeerNodeAddress(NodeAddress nodeAddress);
 
