@@ -30,9 +30,9 @@ import bisq.core.dao.state.model.blockchain.TxType;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OpenOffer;
-import bisq.core.trade.Tradable;
-import bisq.core.trade.Trade;
-import bisq.core.trade.atomic.AtomicTrade;
+import bisq.core.trade.model.Tradable;
+import bisq.core.trade.model.bsqswap.BsqSwapTrade;
+import bisq.core.trade.model.trade.Trade;
 import bisq.core.util.coin.CoinFormatter;
 
 import org.bitcoinj.core.Coin;
@@ -253,12 +253,12 @@ class TransactionsListItem {
                         }
                     }
                 }
-            } else if (tradable instanceof AtomicTrade) {
-                direction = amountAsCoin.isPositive() ? Res.get("funds.tx.direction.atomicBuy") :
-                        Res.get("funds.tx.direction.atomicSell");
+            } else if (tradable instanceof BsqSwapTrade) {
+                direction = amountAsCoin.isPositive() ? Res.get("funds.tx.direction.bsqSwapBuy") :
+                        Res.get("funds.tx.direction.bsqSwapSell");
 
                 // Find my BTC output address
-                var tx = btcWalletService.getTransaction(((AtomicTrade) tradable).getTxId());
+                var tx = btcWalletService.getTransaction(((BsqSwapTrade) tradable).getTxId());
                 addressString = tx != null ?
                         tx.getOutputs().stream()
                                 .filter(output -> output.isMine(btcWalletService.getWallet()))
@@ -267,7 +267,7 @@ class TransactionsListItem {
                                 .findFirst()
                                 .orElse("") :
                         "";
-                details = Res.get("funds.tx.atomicTx", tradeId);
+                details = Res.get("funds.tx.bsqSwapTx", tradeId);
             }
         } else {
             if (amountAsCoin.isZero()) {

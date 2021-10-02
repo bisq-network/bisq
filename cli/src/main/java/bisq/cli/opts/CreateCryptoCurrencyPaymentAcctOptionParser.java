@@ -38,7 +38,7 @@ public class CreateCryptoCurrencyPaymentAcctOptionParser extends AbstractMethodO
             .ofType(boolean.class)
             .defaultsTo(Boolean.FALSE);
 
-    final OptionSpec<Boolean> tradeAtomicOpt = parser.accepts(OPT_TRADE_ATOMIC, "create trade atomic account")
+    final OptionSpec<Boolean> tradeBsqSwapOpt = parser.accepts(OPT_TRADE_BSQ_SWAP, "create trade bsq swap account")
             .withOptionalArg()
             .ofType(boolean.class)
             .defaultsTo(Boolean.FALSE);
@@ -85,7 +85,7 @@ public class CreateCryptoCurrencyPaymentAcctOptionParser extends AbstractMethodO
         return options.valueOf(tradeInstantOpt);
     }
 
-    public boolean getIsTradeAtomic() {
-        return options.valueOf(tradeAtomicOpt);
+    public boolean getIsTradeBsqSwap() {
+        return options.valueOf(tradeBsqSwapOpt);
     }
 }

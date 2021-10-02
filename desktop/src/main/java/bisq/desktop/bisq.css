@@ -2097,8 +2097,8 @@ textfield */
     -fx-text-fill: -bs-color-green-3;
 }
 
-.dao-tx-type-atomic-icon,
-.dao-tx-type-atomic-icon:hover {
+.dao-tx-type-bsq-swap-icon,
+.dao-tx-type-bsq-swap-icon:hover {
     -fx-text-fill: -bs-color-blue-4;
 }
 

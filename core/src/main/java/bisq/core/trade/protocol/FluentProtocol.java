@@ -17,9 +17,9 @@
 
 package bisq.core.trade.protocol;
 
-import bisq.core.trade.Trade;
-import bisq.core.trade.TradeModel;
 import bisq.core.trade.messages.TradeMessage;
+import bisq.core.trade.model.TradeModel;
+import bisq.core.trade.model.trade.Trade;
 
 import bisq.network.p2p.NodeAddress;
 
@@ -44,7 +44,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 public class FluentProtocol {
 
 
-    interface Event {
+    public interface Event {
         String name();
     }
 
@@ -99,14 +99,14 @@ public class FluentProtocol {
 
         NodeAddress peer = condition.getPeer();
         if (peer != null) {
-            tradeProtocol.processModelI.setTempTradingPeerNodeAddress(peer);
-            tradeProtocol.processModelI.getTradeManager().requestPersistence();
+            tradeProtocol.tradeProtocolModel.setTempTradingPeerNodeAddress(peer);
+            tradeProtocol.tradeProtocolModel.getTradeManager().requestPersistence();
         }
 
         TradeMessage message = condition.getMessage();
         if (message != null) {
-            tradeProtocol.processModelI.setTradeMessage(message);
-            tradeProtocol.processModelI.getTradeManager().requestPersistence();
+            tradeProtocol.tradeProtocolModel.setTradeMessage(message);
+            tradeProtocol.tradeProtocolModel.getTradeManager().requestPersistence();
         }
 
         TradeTaskRunner taskRunner = setup.getTaskRunner(message, condition.getEvent());

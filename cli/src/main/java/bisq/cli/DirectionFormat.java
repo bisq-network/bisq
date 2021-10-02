@@ -24,8 +24,8 @@ import java.util.function.Function;
 
 import static bisq.cli.ColumnHeaderConstants.COL_HEADER_DIRECTION;
 import static java.lang.String.format;
-import static protobuf.OfferPayload.Direction.BUY;
-import static protobuf.OfferPayload.Direction.SELL;
+import static protobuf.OfferDirection.BUY;
+import static protobuf.OfferDirection.SELL;
 
 class DirectionFormat {
 

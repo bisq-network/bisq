@@ -18,8 +18,8 @@
 package bisq.desktop.maker;
 
 import bisq.core.offer.Offer;
+import bisq.core.offer.OfferDirection;
 import bisq.core.offer.OfferPayload;
-import bisq.core.offer.OfferPayloadBase;
 
 import bisq.network.p2p.NodeAddress;
 
@@ -57,7 +57,7 @@ public class OfferMaker {
     public static final Property<Offer, Long> amount = newProperty();
     public static final Property<Offer, String> baseCurrencyCode = newProperty();
     public static final Property<Offer, String> counterCurrencyCode = newProperty();
-    public static final Property<Offer, OfferPayload.Direction> direction = newProperty();
+    public static final Property<Offer, OfferDirection> direction = newProperty();
     public static final Property<Offer, Boolean> useMarketBasedPrice = newProperty();
     public static final Property<Offer, Double> marketPriceMargin = newProperty();
     public static final Property<Offer, NodeAddress> nodeAddress = newProperty();
@@ -79,7 +79,7 @@ public class OfferMaker {
                     lookup.valueOf(date, currentTimeMillis()),
                     lookup.valueOf(nodeAddress, getLocalHostNodeWithPort(10000)),
                     lookup.valueOf(pubKeyRing, genPubKeyRing()),
-                    lookup.valueOf(direction, OfferPayloadBase.Direction.BUY),
+                    lookup.valueOf(direction, OfferDirection.BUY),
                     lookup.valueOf(price, 100000L),
                     lookup.valueOf(marketPriceMargin, 0.0),
                     lookup.valueOf(useMarketBasedPrice, false),

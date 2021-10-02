@@ -22,11 +22,11 @@ import bisq.core.offer.Offer;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.arbitration.ArbitrationManager;
 import bisq.core.support.dispute.refund.RefundManager;
-import bisq.core.trade.Contract;
-import bisq.core.trade.Tradable;
-import bisq.core.trade.Trade;
-import bisq.core.trade.TradeModel;
-import bisq.core.trade.atomic.AtomicTrade;
+import bisq.core.trade.model.Contract;
+import bisq.core.trade.model.Tradable;
+import bisq.core.trade.model.TradeModel;
+import bisq.core.trade.model.bsqswap.BsqSwapTrade;
+import bisq.core.trade.model.trade.Trade;
 
 import bisq.common.crypto.PubKeyRing;
 
@@ -86,9 +86,9 @@ class TransactionAwareTrade implements TransactionAwareTradable {
                     isDelayedPayoutTx ||
                     isRefundPayoutTx;
         }
-        boolean isAtomicTx = isAtomicTx(txId);
+        boolean isBsqSwapTrade = isBsqSwapTrade(txId);
 
-        return tradeRelated || isAtomicTx;
+        return tradeRelated || isBsqSwapTrade;
     }
 
     private boolean isPayoutTx(Sha256Hash txId) {
@@ -197,9 +197,9 @@ class TransactionAwareTrade implements TransactionAwareTradable {
         return false;
     }
 
-    private boolean isAtomicTx(String txId) {
-        if (tradeModel instanceof AtomicTrade) {
-            return (txId.equals(((AtomicTrade) tradeModel).getTxId()));
+    private boolean isBsqSwapTrade(String txId) {
+        if (tradeModel instanceof BsqSwapTrade) {
+            return (txId.equals(((BsqSwapTrade) tradeModel).getTxId()));
         }
         return false;
     }

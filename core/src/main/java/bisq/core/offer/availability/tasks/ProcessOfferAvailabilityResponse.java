@@ -17,8 +17,8 @@
 
 package bisq.core.offer.availability.tasks;
 
-import bisq.core.offer.AvailabilityResult;
 import bisq.core.offer.Offer;
+import bisq.core.offer.availability.AvailabilityResult;
 import bisq.core.offer.availability.DisputeAgentSelection;
 import bisq.core.offer.availability.OfferAvailabilityModel;
 import bisq.core.offer.messages.OfferAvailabilityResponse;

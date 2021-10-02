@@ -33,7 +33,7 @@ import bisq.core.support.dispute.mediation.MediationManager;
 import bisq.core.support.dispute.mediation.MediationSession;
 import bisq.core.support.dispute.mediation.mediator.MediatorManager;
 import bisq.core.support.dispute.refund.refundagent.RefundAgentManager;
-import bisq.core.trade.TradeManager;
+import bisq.core.trade.model.TradeManager;
 import bisq.core.user.Preferences;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.CoinFormatter;

@@ -17,7 +17,7 @@
 
 package bisq.core.presentation;
 
-import bisq.core.trade.TradeManager;
+import bisq.core.trade.model.TradeManager;
 
 import javax.inject.Inject;
 

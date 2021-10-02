@@ -27,7 +27,7 @@ import bisq.core.locale.Res;
 import bisq.core.monetary.Altcoin;
 import bisq.core.monetary.Price;
 import bisq.core.offer.Offer;
-import bisq.core.offer.OfferPayloadBase;
+import bisq.core.offer.OfferDirection;
 import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.util.FormattingUtils;
@@ -145,7 +145,7 @@ class SpreadViewModel extends ActivatableViewModel {
 
             List<Offer> buyOffers = uniqueOffers
                     .stream()
-                    .filter(e -> e.getDirection().equals(OfferPayloadBase.Direction.BUY))
+                    .filter(e -> e.getDirection().equals(OfferDirection.BUY))
                     .sorted((o1, o2) -> {
                         long a = o1.getPrice() != null ? o1.getPrice().getValue() : 0;
                         long b = o2.getPrice() != null ? o2.getPrice().getValue() : 0;
@@ -162,7 +162,7 @@ class SpreadViewModel extends ActivatableViewModel {
 
             List<Offer> sellOffers = uniqueOffers
                     .stream()
-                    .filter(e -> e.getDirection().equals(OfferPayloadBase.Direction.SELL))
+                    .filter(e -> e.getDirection().equals(OfferDirection.SELL))
                     .sorted((o1, o2) -> {
                         long a = o1.getPrice() != null ? o1.getPrice().getValue() : 0;
                         long b = o2.getPrice() != null ? o2.getPrice().getValue() : 0;

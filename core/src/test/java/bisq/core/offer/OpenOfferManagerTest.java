@@ -1,7 +1,7 @@
 package bisq.core.offer;
 
 import bisq.core.api.CoreContext;
-import bisq.core.trade.TradableList;
+import bisq.core.trade.model.TradableList;
 
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.peers.PeerManager;
@@ -46,7 +46,7 @@ public class OpenOfferManagerTest {
     public void testStartEditOfferForActiveOffer() {
         P2PService p2PService = mock(P2PService.class);
         OfferBookService offerBookService = mock(OfferBookService.class);
-        AtomicOfferFunding atomicOfferFunding = mock(AtomicOfferFunding.class);
+        BsqSwapWalletWatcher bsqSwapWalletWatcher = mock(BsqSwapWalletWatcher.class);
 
         when(p2PService.getPeerManager()).thenReturn(mock(PeerManager.class));
 
@@ -70,7 +70,7 @@ public class OpenOfferManagerTest {
                 null,
                 null,
                 persistenceManager,
-                atomicOfferFunding);
+                bsqSwapWalletWatcher);
 
         AtomicBoolean startEditOfferSuccessful = new AtomicBoolean(false);
 
@@ -96,7 +96,7 @@ public class OpenOfferManagerTest {
     public void testStartEditOfferForDeactivatedOffer() {
         P2PService p2PService = mock(P2PService.class);
         OfferBookService offerBookService = mock(OfferBookService.class);
-        AtomicOfferFunding atomicOfferFunding = mock(AtomicOfferFunding.class);
+        BsqSwapWalletWatcher bsqSwapWalletWatcher = mock(BsqSwapWalletWatcher.class);
         when(p2PService.getPeerManager()).thenReturn(mock(PeerManager.class));
 
         final OpenOfferManager manager = new OpenOfferManager(coreContext,
@@ -119,7 +119,7 @@ public class OpenOfferManagerTest {
                 null,
                 null,
                 persistenceManager,
-                atomicOfferFunding);
+                bsqSwapWalletWatcher);
 
         AtomicBoolean startEditOfferSuccessful = new AtomicBoolean(false);
 
@@ -137,7 +137,7 @@ public class OpenOfferManagerTest {
     public void testStartEditOfferForOfferThatIsCurrentlyEdited() {
         P2PService p2PService = mock(P2PService.class);
         OfferBookService offerBookService = mock(OfferBookService.class);
-        AtomicOfferFunding atomicOfferFunding = mock(AtomicOfferFunding.class);
+        BsqSwapWalletWatcher bsqSwapWalletWatcher = mock(BsqSwapWalletWatcher.class);
 
         when(p2PService.getPeerManager()).thenReturn(mock(PeerManager.class));
 
@@ -161,7 +161,7 @@ public class OpenOfferManagerTest {
                 null,
                 null,
                 persistenceManager,
-                atomicOfferFunding);
+                bsqSwapWalletWatcher);
 
         AtomicBoolean startEditOfferSuccessful = new AtomicBoolean(false);
 

@@ -134,9 +134,9 @@ public class Offer implements NetworkPayload, PersistablePayload {
             return protobuf.Offer.newBuilder().setOfferPayload(((OfferPayload) offerPayloadBase)
                     .toProtoMessage().getOfferPayload()).build();
         }
-        if (offerPayloadBase instanceof AtomicOfferPayload) {
-            return protobuf.Offer.newBuilder().setAtomicOfferPayload(((AtomicOfferPayload) offerPayloadBase)
-                    .toProtoMessage().getAtomicOfferPayload()).build();
+        if (offerPayloadBase instanceof BsqSwapOfferPayload) {
+            return protobuf.Offer.newBuilder().setBsqSwapOfferPayload(((BsqSwapOfferPayload) offerPayloadBase)
+                    .toProtoMessage().getBsqSwapOfferPayload()).build();
         }
         return null;
     }
@@ -144,8 +144,8 @@ public class Offer implements NetworkPayload, PersistablePayload {
     public static Offer fromProto(protobuf.Offer proto) {
         if (proto.hasOfferPayload()) {
             return new Offer(OfferPayload.fromProto(proto.getOfferPayload()));
-        } else if (proto.hasAtomicOfferPayload()) {
-            return new Offer(AtomicOfferPayload.fromProto(proto.getAtomicOfferPayload()));
+        } else if (proto.hasBsqSwapOfferPayload()) {
+            return new Offer(BsqSwapOfferPayload.fromProto(proto.getBsqSwapOfferPayload()));
         }
         return null;
     }
@@ -193,10 +193,10 @@ public class Offer implements NetworkPayload, PersistablePayload {
             double factor;
             double marketPriceMargin = offerPayload.getMarketPriceMargin();
             if (CurrencyUtil.isCryptoCurrency(currencyCode)) {
-                factor = getDirection() == OfferPayloadBase.Direction.SELL ?
+                factor = getDirection() == OfferDirection.SELL ?
                         1 - marketPriceMargin : 1 + marketPriceMargin;
             } else {
-                factor = getDirection() == OfferPayloadBase.Direction.BUY ?
+                factor = getDirection() == OfferDirection.BUY ?
                         1 - marketPriceMargin : 1 + marketPriceMargin;
             }
             double marketPriceAsDouble = marketPrice.getPrice();
@@ -358,11 +358,11 @@ public class Offer implements NetworkPayload, PersistablePayload {
     }
 
     public boolean isBuyOffer() {
-        return getDirection() == OfferPayloadBase.Direction.BUY;
+        return getDirection() == OfferDirection.BUY;
     }
 
-    public OfferPayload.Direction getMirroredDirection() {
-        return getDirection() == OfferPayloadBase.Direction.BUY ? OfferPayloadBase.Direction.SELL : OfferPayloadBase.Direction.BUY;
+    public OfferDirection getMirroredDirection() {
+        return getDirection() == OfferDirection.BUY ? OfferDirection.SELL : OfferDirection.BUY;
     }
 
     public boolean isMyOffer(KeyRing keyRing) {
@@ -420,7 +420,7 @@ public class Offer implements NetworkPayload, PersistablePayload {
     // Delegate Getter (boilerplate code generated via IntelliJ generate delegate feature)
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public OfferPayload.Direction getDirection() {
+    public OfferDirection getDirection() {
         return offerPayloadBase.getDirection();
     }
 
@@ -546,8 +546,8 @@ public class Offer implements NetworkPayload, PersistablePayload {
         return getOfferPayload().map(OfferPayload::isUseReOpenAfterAutoClose).orElse(false);
     }
 
-    public boolean isAtomicOffer() {
-        return getOfferPayloadBase() instanceof AtomicOfferPayload;
+    public boolean isBsqSwapOffer() {
+        return getOfferPayloadBase() instanceof BsqSwapOfferPayload;
     }
 
     public boolean isXmrAutoConf() {

@@ -197,11 +197,6 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
     private static class Counter {
         private int value = 1;
 
-        /**
-         * atomic get and reset
-         *
-         * @return the current value
-         */
         synchronized int getAndReset() {
             try {
                 return value;

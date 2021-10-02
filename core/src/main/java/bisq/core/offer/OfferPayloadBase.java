@@ -35,11 +35,6 @@ public abstract class OfferPayloadBase implements ProtectedStoragePayload, Expir
     // Enum
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public enum Direction {
-        BUY,
-        SELL;
-    }
-
     abstract public long getAmount();
 
     abstract public long getMinAmount();
@@ -52,7 +47,7 @@ public abstract class OfferPayloadBase implements ProtectedStoragePayload, Expir
 
     abstract public long getDate();
 
-    abstract public Direction getDirection();
+    abstract public OfferDirection getDirection();
 
     @Nullable
     abstract public String getHashOfChallenge();

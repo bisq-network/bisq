@@ -19,7 +19,6 @@ package bisq.desktop.components.paymentmethods;
 import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipCheckBox;
 import bisq.desktop.components.InputTextField;
-import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.SwiftPaymentDetails;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
@@ -33,7 +32,7 @@ import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.SwiftAccount;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.SwiftAccountPayload;
-import bisq.core.trade.Trade;
+import bisq.core.trade.model.trade.Trade;
 import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.validation.InputValidator;
 

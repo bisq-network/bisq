@@ -21,17 +21,17 @@ import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferUtil;
-import bisq.core.offer.takeoffer.AtomicTakeOfferModel;
+import bisq.core.offer.takeoffer.TakeBsqSwapOfferModel;
 import bisq.core.offer.takeoffer.TakeOfferModel;
-import bisq.core.trade.Tradable;
-import bisq.core.trade.Trade;
-import bisq.core.trade.TradeManager;
-import bisq.core.trade.TradeUtil;
-import bisq.core.trade.atomic.AtomicTrade;
-import bisq.core.trade.closed.ClosedTradableManager;
-import bisq.core.trade.handlers.TradeResultHandler;
-import bisq.core.trade.protocol.BuyerProtocol;
-import bisq.core.trade.protocol.SellerProtocol;
+import bisq.core.trade.misc.ClosedTradableManager;
+import bisq.core.trade.misc.TradeResultHandler;
+import bisq.core.trade.misc.TradeUtil;
+import bisq.core.trade.model.Tradable;
+import bisq.core.trade.model.TradeManager;
+import bisq.core.trade.model.bsqswap.BsqSwapTrade;
+import bisq.core.trade.model.trade.Trade;
+import bisq.core.trade.protocol.trade.BuyerProtocol;
+import bisq.core.trade.protocol.trade.SellerProtocol;
 import bisq.core.user.User;
 import bisq.core.util.validation.BtcAddressValidator;
 
@@ -63,7 +63,7 @@ class CoreTradesService {
     private final OfferUtil offerUtil;
     private final ClosedTradableManager closedTradableManager;
     private final TakeOfferModel takeOfferModel;
-    private final AtomicTakeOfferModel atomicTakeOfferModel;
+    private final TakeBsqSwapOfferModel takeBsqSwapOfferModel;
     private final TradeManager tradeManager;
     private final TradeUtil tradeUtil;
     private final User user;
@@ -75,7 +75,7 @@ class CoreTradesService {
                              OfferUtil offerUtil,
                              ClosedTradableManager closedTradableManager,
                              TakeOfferModel takeOfferModel,
-                             AtomicTakeOfferModel atomicTakeOfferModel,
+                             TakeBsqSwapOfferModel takeBsqSwapOfferModel,
                              TradeManager tradeManager,
                              TradeUtil tradeUtil,
                              User user) {
@@ -85,17 +85,17 @@ class CoreTradesService {
         this.offerUtil = offerUtil;
         this.closedTradableManager = closedTradableManager;
         this.takeOfferModel = takeOfferModel;
-        this.atomicTakeOfferModel = atomicTakeOfferModel;
+        this.takeBsqSwapOfferModel = takeBsqSwapOfferModel;
         this.tradeManager = tradeManager;
         this.tradeUtil = tradeUtil;
         this.user = user;
     }
 
-    void takeAtomicOffer(Offer offer,
-                         String paymentAccountId,
-                         String takerFeeCurrencyCode,
-                         TradeResultHandler<AtomicTrade> tradeResultHandler,
-                         ErrorMessageHandler errorMessageHandler) {
+    void takeBsqSwapOffer(Offer offer,
+                          String paymentAccountId,
+                          String takerFeeCurrencyCode,
+                          TradeResultHandler<BsqSwapTrade> tradeResultHandler,
+                          ErrorMessageHandler errorMessageHandler) {
         coreWalletsService.verifyWalletsAreAvailable();
         coreWalletsService.verifyEncryptedWalletIsUnlocked();
 
@@ -105,16 +105,16 @@ class CoreTradesService {
         if (paymentAccount == null)
             throw new IllegalArgumentException(format("payment account with id '%s' not found", paymentAccountId));
 
-        atomicTakeOfferModel.initWithData(offer);
+        takeBsqSwapOfferModel.initWithData(offer);
         log.info("Initiating take {} offer, {}",
                 offer.isBuyOffer() ? "buy" : "sell",
                 takeOfferModel);
-        tradeManager.onTakeAtomicOffer(offer,
-                atomicTakeOfferModel.getAmount().getValue(),  // TODO get rid of jfx property dep?
-                atomicTakeOfferModel.getTradePrice().getValue(),
-                atomicTakeOfferModel.getAtomicTxBuilder().getTxFeePerVbyte().getValue(),
-                atomicTakeOfferModel.getMakerFee().getValue(),
-                atomicTakeOfferModel.getTakerFee().getValue(),
+        tradeManager.onTakeBsqSwapOffer(offer,
+                takeBsqSwapOfferModel.getAmount().getValue(),  // TODO get rid of jfx property dep?
+                takeBsqSwapOfferModel.getTradePrice().getValue(),
+                takeBsqSwapOfferModel.getBsqSwapTxHelper().getTxFeePerVbyte().getValue(),
+                takeBsqSwapOfferModel.getMakerFee().getValue(),
+                takeBsqSwapOfferModel.getTakerFee().getValue(),
                 coreContext.isApiUser(),
                 tradeResultHandler,
                 errorMessageHandler);
@@ -240,10 +240,10 @@ class CoreTradesService {
                 });
     }
 
-    AtomicTrade getAtomicTrade(String tradeId) {
+    BsqSwapTrade getBsqSwapTrade(String tradeId) {
         coreWalletsService.verifyWalletsAreAvailable();
         coreWalletsService.verifyEncryptedWalletIsUnlocked();
-        return tradeManager.getAtomicTradeById(tradeId).orElseThrow(() ->
+        return tradeManager.getBsqSwapTradeById(tradeId).orElseThrow(() ->
                 new IllegalArgumentException(format("trade with id '%s' not found", tradeId)));
     }
 

@@ -36,7 +36,7 @@ import bisq.core.dao.node.messages.NewBlockBroadcastMessage;
 import bisq.core.filter.Filter;
 import bisq.core.network.p2p.inventory.messages.GetInventoryRequest;
 import bisq.core.network.p2p.inventory.messages.GetInventoryResponse;
-import bisq.core.offer.AtomicOfferPayload;
+import bisq.core.offer.BsqSwapOfferPayload;
 import bisq.core.offer.OfferPayload;
 import bisq.core.offer.messages.OfferAvailabilityRequest;
 import bisq.core.offer.messages.OfferAvailabilityResponse;
@@ -49,22 +49,22 @@ import bisq.core.support.dispute.messages.OpenNewDisputeMessage;
 import bisq.core.support.dispute.messages.PeerOpenedDisputeMessage;
 import bisq.core.support.dispute.refund.refundagent.RefundAgent;
 import bisq.core.support.messages.ChatMessage;
-import bisq.core.trade.atomic.messages.CreateAtomicTxRequest;
-import bisq.core.trade.atomic.messages.CreateAtomicTxResponse;
-import bisq.core.trade.messages.CounterCurrencyTransferStartedMessage;
-import bisq.core.trade.messages.DelayedPayoutTxSignatureRequest;
-import bisq.core.trade.messages.DelayedPayoutTxSignatureResponse;
-import bisq.core.trade.messages.DepositTxAndDelayedPayoutTxMessage;
-import bisq.core.trade.messages.DepositTxMessage;
-import bisq.core.trade.messages.InputsForDepositTxRequest;
-import bisq.core.trade.messages.InputsForDepositTxResponse;
-import bisq.core.trade.messages.MediatedPayoutTxPublishedMessage;
-import bisq.core.trade.messages.MediatedPayoutTxSignatureMessage;
-import bisq.core.trade.messages.PayoutTxPublishedMessage;
-import bisq.core.trade.messages.PeerPublishedDelayedPayoutTxMessage;
-import bisq.core.trade.messages.RefreshTradeStateRequest;
-import bisq.core.trade.messages.ShareBuyerPaymentAccountMessage;
-import bisq.core.trade.messages.TraderSignedWitnessMessage;
+import bisq.core.trade.messages.bsqswap.CreateBsqSwapTxRequest;
+import bisq.core.trade.messages.bsqswap.CreateBsqSwapTxResponse;
+import bisq.core.trade.messages.trade.CounterCurrencyTransferStartedMessage;
+import bisq.core.trade.messages.trade.DelayedPayoutTxSignatureRequest;
+import bisq.core.trade.messages.trade.DelayedPayoutTxSignatureResponse;
+import bisq.core.trade.messages.trade.DepositTxAndDelayedPayoutTxMessage;
+import bisq.core.trade.messages.trade.DepositTxMessage;
+import bisq.core.trade.messages.trade.InputsForDepositTxRequest;
+import bisq.core.trade.messages.trade.InputsForDepositTxResponse;
+import bisq.core.trade.messages.trade.MediatedPayoutTxPublishedMessage;
+import bisq.core.trade.messages.trade.MediatedPayoutTxSignatureMessage;
+import bisq.core.trade.messages.trade.PayoutTxPublishedMessage;
+import bisq.core.trade.messages.trade.PeerPublishedDelayedPayoutTxMessage;
+import bisq.core.trade.messages.trade.RefreshTradeStateRequest;
+import bisq.core.trade.messages.trade.ShareBuyerPaymentAccountMessage;
+import bisq.core.trade.messages.trade.TraderSignedWitnessMessage;
 
 import bisq.network.p2p.AckMessage;
 import bisq.network.p2p.BundleOfEnvelopes;
@@ -165,10 +165,10 @@ public class CoreNetworkProtoResolver extends CoreProtoResolver implements Netwo
                     return DepositTxAndDelayedPayoutTxMessage.fromProto(proto.getDepositTxAndDelayedPayoutTxMessage(), this, messageVersion);
                 case SHARE_BUYER_PAYMENT_ACCOUNT_MESSAGE:
                     return ShareBuyerPaymentAccountMessage.fromProto(proto.getShareBuyerPaymentAccountMessage(), this, messageVersion);
-                case CREATE_ATOMIC_TX_REQUEST:
-                    return CreateAtomicTxRequest.fromProto(proto.getCreateAtomicTxRequest(), messageVersion);
-                case CREATE_ATOMIC_TX_RESPONSE:
-                    return CreateAtomicTxResponse.fromProto(proto.getCreateAtomicTxResponse(), messageVersion);
+                case CREATE_BSQ_SWAP_TX_REQUEST:
+                    return CreateBsqSwapTxRequest.fromProto(proto.getCreateBsqSwapTxRequest(), messageVersion);
+                case CREATE_BSQ_SWAP_TX_RESPONSE:
+                    return CreateBsqSwapTxResponse.fromProto(proto.getCreateBsqSwapTxResponse(), messageVersion);
 
                 case COUNTER_CURRENCY_TRANSFER_STARTED_MESSAGE:
                     return CounterCurrencyTransferStartedMessage.fromProto(proto.getCounterCurrencyTransferStartedMessage(), messageVersion);
@@ -285,8 +285,8 @@ public class CoreNetworkProtoResolver extends CoreProtoResolver implements Netwo
                     return MailboxStoragePayload.fromProto(proto.getMailboxStoragePayload());
                 case OFFER_PAYLOAD:
                     return OfferPayload.fromProto(proto.getOfferPayload());
-                case ATOMIC_OFFER_PAYLOAD:
-                    return AtomicOfferPayload.fromProto(proto.getAtomicOfferPayload());
+                case BSQ_SWAP_OFFER_PAYLOAD:
+                    return BsqSwapOfferPayload.fromProto(proto.getBsqSwapOfferPayload());
                 case TEMP_PROPOSAL_PAYLOAD:
                     return TempProposalPayload.fromProto(proto.getTempProposalPayload());
                 default:

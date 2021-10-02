@@ -34,7 +34,7 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.dao.DaoFacade;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
-import bisq.core.offer.OfferPayloadBase;
+import bisq.core.offer.OfferDirection;
 import bisq.core.offer.OfferUtil;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.support.SupportType;
@@ -47,15 +47,15 @@ import bisq.core.support.dispute.mediation.MediationManager;
 import bisq.core.support.dispute.refund.RefundManager;
 import bisq.core.support.messages.ChatMessage;
 import bisq.core.support.traderchat.TraderChatManager;
-import bisq.core.trade.BuyerTrade;
-import bisq.core.trade.SellerTrade;
-import bisq.core.trade.Tradable;
-import bisq.core.trade.Trade;
-import bisq.core.trade.TradeDataValidation;
-import bisq.core.trade.TradeManager;
-import bisq.core.trade.protocol.BuyerProtocol;
-import bisq.core.trade.protocol.DisputeProtocol;
-import bisq.core.trade.protocol.SellerProtocol;
+import bisq.core.trade.misc.TradeDataValidation;
+import bisq.core.trade.model.Tradable;
+import bisq.core.trade.model.TradeManager;
+import bisq.core.trade.model.trade.BuyerTrade;
+import bisq.core.trade.model.trade.SellerTrade;
+import bisq.core.trade.model.trade.Trade;
+import bisq.core.trade.protocol.trade.BuyerProtocol;
+import bisq.core.trade.protocol.trade.DisputeProtocol;
+import bisq.core.trade.protocol.trade.SellerProtocol;
 import bisq.core.user.Preferences;
 import bisq.core.util.FormattingUtils;
 
@@ -538,7 +538,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
             Dispute dispute = new Dispute(new Date().getTime(),
                     trade.getId(),
                     pubKeyRing.hashCode(), // traderId
-                    (offer.getDirection() == OfferPayloadBase.Direction.BUY) == isMaker,
+                    (offer.getDirection() == OfferDirection.BUY) == isMaker,
                     isMaker,
                     pubKeyRing,
                     trade.getDate().getTime(),
@@ -599,7 +599,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
             Dispute dispute = new Dispute(new Date().getTime(),
                     trade.getId(),
                     pubKeyRing.hashCode(), // traderId
-                    (offer.getDirection() == OfferPayloadBase.Direction.BUY) == isMaker,
+                    (offer.getDirection() == OfferDirection.BUY) == isMaker,
                     isMaker,
                     pubKeyRing,
                     trade.getDate().getTime(),

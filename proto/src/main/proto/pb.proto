@@ -84,8 +84,8 @@ message NetworkEnvelope {
 
         ShareBuyerPaymentAccountMessage share_buyer_payment_account_message = 54; // Added at 1.7.0
 
-        CreateAtomicTxRequest create_atomic_tx_request = 55;
-        CreateAtomicTxResponse create_atomic_tx_response = 56;
+        CreateBsqSwapTxRequest create_bsq_swap_tx_request = 55;
+        CreateBsqSwapTxResponse create_bsq_swap_tx_response = 56;
     }
 }
 
@@ -376,9 +376,9 @@ message TraderSignedWitnessMessage {
     SignedWitness signed_witness = 4 [deprecated = true];
 }
 
-// Atomic trade
+// BsqSwapTrade
 
-message CreateAtomicTxRequest {
+message CreateBsqSwapTxRequest {
     string uid = 1;
     string trade_id = 2;
     NodeAddress sender_node_address = 3;
@@ -399,11 +399,11 @@ message CreateAtomicTxRequest {
     repeated RawTransactionInput taker_btc_inputs = 18;
 }
 
-message CreateAtomicTxResponse {
+message CreateBsqSwapTxResponse {
     string uid = 1;
     string trade_id = 2;
     NodeAddress sender_node_address = 3;
-    bytes atomic_tx = 4;
+    bytes tx = 4;
     int64 maker_bsq_output_value = 5;
     string maker_bsq_output_address = 6;
     int64 maker_btc_output_value = 7;
@@ -585,7 +585,7 @@ message StoragePayload {
         OfferPayload offer_payload = 7;
         TempProposalPayload temp_proposal_payload = 8;
         RefundAgent refund_agent = 9;
-        AtomicOfferPayload atomic_offer_payload = 10;
+        BsqSwapOfferPayload bsq_swap_offer_payload = 10;
     }
 }
 
@@ -751,7 +751,7 @@ message Filter {
 message TradeStatistics2 {
     string base_currency = 1 [deprecated = true];
     string counter_currency = 2 [deprecated = true];
-    OfferPayload.Direction direction = 3 [deprecated = true];
+    OfferDirection direction = 3 [deprecated = true];
     int64 trade_price = 4 [deprecated = true];
     int64 trade_amount = 5 [deprecated = true];
     int64 trade_date = 6 [deprecated = true];
@@ -787,17 +787,11 @@ message MailboxStoragePayload {
 }
 
 message OfferPayload {
-    enum Direction {
-        PB_ERROR = 0;
-        BUY = 1;
-        SELL = 2;
-    }
-
     string id = 1;
     int64 date = 2;
     NodeAddress owner_node_address = 3;
     PubKeyRing pub_key_ring = 4;
-    Direction direction = 5;
+    OfferDirection direction = 5;
     int64 price = 6;
     double market_price_margin = 7;
     bool use_market_based_price = 8;
@@ -839,7 +833,7 @@ enum OfferDirection {
     SELL = 2;
 }
 
-message AtomicOfferPayload {
+message BsqSwapOfferPayload {
     string id = 1;
     int64 date = 2;
     NodeAddress owner_node_address = 3;
@@ -848,9 +842,10 @@ message AtomicOfferPayload {
     int64 price = 6;
     int64 amount = 7;
     int64 min_amount = 8;
-    string version_nr = 9;
-    int32 protocol_version = 10;
-    bytes proof_of_work = 11;
+    bytes proof_of_work = 9;
+    map<string, string> extra_data = 10;
+    string version_nr = 11;
+    int32 protocol_version = 12;
 }
 
 message AccountAgeWitness {
@@ -1061,7 +1056,7 @@ message PaymentAccountPayload {
         PayseraAccountPayload Paysera_account_payload = 34;
         PaxumAccountPayload Paxum_account_payload = 35;
         SwiftAccountPayload swift_account_payload = 36;
-        AtomicAccountPayload atomic_account_payload = 37;
+        BsqSwapAccountPayload bsq_swap_account_payload = 37;
     }
     map<string, string> exclude_from_json_data = 15;
 }
@@ -1200,8 +1195,7 @@ message InstantCryptoCurrencyAccountPayload {
     string address = 1;
 }
 
-message AtomicAccountPayload {
-    string generic_string = 1;
+message BsqSwapAccountPayload {
 }
 
 message FasterPaymentsAccountPayload {
@@ -1504,7 +1498,7 @@ message Offer {
 
     oneof message {
         OfferPayload offer_payload = 1;
-        AtomicOfferPayload atomic_offer_payload = 2;
+        BsqSwapOfferPayload bsq_swap_offer_payload = 2;
     }
 }
 
@@ -1533,8 +1527,8 @@ message Tradable {
         BuyerAsTakerTrade buyer_as_taker_trade = 3;
         SellerAsMakerTrade seller_as_maker_trade = 4;
         SellerAsTakerTrade seller_as_taker_trade = 5;
-        AtomicMakerTrade atomic_maker_trade = 6;
-        AtomicTakerTrade atomic_taker_trade = 7;
+        BsqSwapMakerTrade bsq_swap_maker_trade = 6;
+        BsqSwapTakerTrade bsq_swap_taker_trade = 7;
     }
 }
 
@@ -1645,7 +1639,6 @@ message Trade {
     string counter_currency_extra_data = 37;
     string asset_tx_proof_result = 38; // name of AssetTxProofResult enum
     string uid = 39;
-    string atomic_tx_id = 40;
 }
 
 message BuyerAsMakerTrade {
@@ -1664,7 +1657,7 @@ message SellerAsTakerTrade {
     Trade trade = 1;
 }
 
-message AtomicTrade {
+message BsqSwapTrade {
     enum State {
         PB_ERROR_STATE = 0;
         PREPARATION = 1;
@@ -1683,17 +1676,17 @@ message AtomicTrade {
     int64 mining_fee_per_byte = 8;
     int64 maker_fee = 9;
     int64 taker_fee = 10;
-    AtomicProcessModel atomic_process_model = 11;
+    BsqSwapProtocolModel bsq_swap_protocol_model = 11;
     string error_message = 12;
     State state = 13;
 }
 
-message AtomicMakerTrade {
-    AtomicTrade atomic_trade = 1;
+message BsqSwapMakerTrade {
+    BsqSwapTrade bsq_swap_trade = 1;
 }
 
-message AtomicTakerTrade {
-    AtomicTrade atomic_trade = 1;
+message BsqSwapTakerTrade {
+    BsqSwapTrade bsq_swap_trade = 1;
 }
 
 message ProcessModel {
@@ -1719,7 +1712,7 @@ message ProcessModel {
     int64 seller_payout_amount_from_mediation = 20;
 }
 
-message AtomicProcessModel {
+message BsqSwapProtocolModel {
     TradingPeer trading_peer = 1;
     PubKeyRing pub_key_ring = 2;
     NodeAddress temp_trading_peer_node_address = 3;

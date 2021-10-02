@@ -38,21 +38,21 @@ import static bisq.apitest.config.ApiTestConfig.BTC;
 import static bisq.cli.TableFormat.formatBalancesTbls;
 import static bisq.cli.TableFormat.formatOfferTable;
 import static bisq.core.btc.wallet.Restrictions.getDefaultBuyerSecurityDepositAsPercent;
-import static bisq.core.trade.Trade.Phase.DEPOSIT_CONFIRMED;
-import static bisq.core.trade.Trade.Phase.FIAT_SENT;
-import static bisq.core.trade.Trade.Phase.PAYOUT_PUBLISHED;
-import static bisq.core.trade.Trade.Phase.WITHDRAWN;
-import static bisq.core.trade.Trade.State.DEPOSIT_CONFIRMED_IN_BLOCK_CHAIN;
-import static bisq.core.trade.Trade.State.SELLER_RECEIVED_FIAT_PAYMENT_INITIATED_MSG;
-import static bisq.core.trade.Trade.State.SELLER_SAW_ARRIVED_PAYOUT_TX_PUBLISHED_MSG;
-import static bisq.core.trade.Trade.State.WITHDRAW_COMPLETED;
+import static bisq.core.trade.model.trade.Trade.Phase.DEPOSIT_CONFIRMED;
+import static bisq.core.trade.model.trade.Trade.Phase.FIAT_SENT;
+import static bisq.core.trade.model.trade.Trade.Phase.PAYOUT_PUBLISHED;
+import static bisq.core.trade.model.trade.Trade.Phase.WITHDRAWN;
+import static bisq.core.trade.model.trade.Trade.State.DEPOSIT_CONFIRMED_IN_BLOCK_CHAIN;
+import static bisq.core.trade.model.trade.Trade.State.SELLER_RECEIVED_FIAT_PAYMENT_INITIATED_MSG;
+import static bisq.core.trade.model.trade.Trade.State.SELLER_SAW_ARRIVED_PAYOUT_TX_PUBLISHED_MSG;
+import static bisq.core.trade.model.trade.Trade.State.WITHDRAW_COMPLETED;
 import static java.lang.String.format;
 import static java.util.Collections.singletonList;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
-import static protobuf.OfferPayload.Direction.BUY;
+import static protobuf.OfferDirection.BUY;
 
 
 

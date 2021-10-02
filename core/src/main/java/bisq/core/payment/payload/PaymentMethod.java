@@ -108,7 +108,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
     public static final String CASH_BY_MAIL_ID = "CASH_BY_MAIL";
     public static final String CAPITUAL_ID = "CAPITUAL";
     public static final String SWIFT_ID = "SWIFT";
-    public static final String ATOMIC_ID = "ATOMIC";
+    public static final String BSQ_SWAP_ID = "BSQ_SWAP";
 
     // Cannot be deleted as it would break old trade history entries
     @Deprecated
@@ -159,7 +159,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
     public static PaymentMethod CASH_BY_MAIL;
     public static PaymentMethod CAPITUAL;
     public static PaymentMethod SWIFT;
-    public static PaymentMethod ATOMIC;
+    public static PaymentMethod BSQ_SWAP;
 
     // Cannot be deleted as it would break old trade history entries
     @Deprecated
@@ -238,8 +238,8 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
             BLOCK_CHAINS = new PaymentMethod(BLOCK_CHAINS_ID, DAY, DEFAULT_TRADE_LIMIT_VERY_LOW_RISK),
             // Altcoins with 1 hour trade period
             BLOCK_CHAINS_INSTANT = new PaymentMethod(BLOCK_CHAINS_INSTANT_ID, TimeUnit.HOURS.toMillis(1), DEFAULT_TRADE_LIMIT_VERY_LOW_RISK),
-            // BSQ Atomic Trade
-            ATOMIC = new PaymentMethod(ATOMIC_ID, 1, DEFAULT_TRADE_LIMIT_VERY_LOW_RISK)
+            // BsqSwap
+            BSQ_SWAP = new PaymentMethod(BSQ_SWAP_ID, 1, DEFAULT_TRADE_LIMIT_VERY_LOW_RISK)
     ));
 
     static {
@@ -380,15 +380,15 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
     }
 
     public boolean isFiat() {
-        return !isAsset() && !isAtomic();
+        return !isAsset() && !isBsqSwap();
     }
 
     public boolean isAsset() {
         return this.equals(BLOCK_CHAINS_INSTANT) || this.equals(BLOCK_CHAINS);
     }
 
-    public boolean isAtomic() {
-        return this.equals(ATOMIC);
+    public boolean isBsqSwap() {
+        return this.equals(BSQ_SWAP);
     }
 
     public static boolean hasChargebackRisk(PaymentMethod paymentMethod, List<TradeCurrency> tradeCurrencies) {

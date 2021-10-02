@@ -34,7 +34,6 @@ import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import bisq.common.Proto;
 import bisq.common.UserThread;
 import bisq.common.app.Capabilities;
-import bisq.common.app.Capability;
 import bisq.common.app.HasCapabilities;
 import bisq.common.app.Version;
 import bisq.common.config.Config;
@@ -70,15 +69,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Queue;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
@@ -124,14 +120,12 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private final Socket socket;
-    // private final MessageListener messageListener;
     private final ConnectionListener connectionListener;
     @Nullable
     private final NetworkFilter networkFilter;
     @Getter
     private final String uid;
     private final ExecutorService singleThreadExecutor = Executors.newSingleThreadExecutor(runnable -> new Thread(runnable, "Connection.java executor-service"));
-    // holder of state shared between InputHandler and Connection
     @Getter
     private final Statistic statistic;
     @Getter
@@ -222,10 +216,6 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
         return capabilities;
     }
 
-    private final Object lock = new Object();
-    private final Queue<BundleOfEnvelopes> queueOfBundles = new ConcurrentLinkedQueue<>();
-    private final ScheduledExecutorService bundleSender = Executors.newSingleThreadScheduledExecutor();
-
     // Called from various threads
     public void sendMessage(NetworkEnvelope networkEnvelope) {
         long ts = System.currentTimeMillis();
@@ -257,58 +247,6 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                                 "for {} ms to avoid flooding our peer. lastSendTimeStamp={}, now={}, elapsed={}, networkEnvelope={}",
                         getSendMsgThrottleTrigger(), getSendMsgThrottleSleep(), lastSendTimeStamp, now, elapsed,
                         networkEnvelope.getClass().getSimpleName());
-
-                // check if BundleOfEnvelopes is supported
-                if (getCapabilities().containsAll(new Capabilities(Capability.BUNDLE_OF_ENVELOPES))) {
-                    synchronized (lock) {
-                        // check if current envelope fits size
-                        // - no? create new envelope
-
-                        int size = !queueOfBundles.isEmpty() ? queueOfBundles.element().toProtoNetworkEnvelope().getSerializedSize() + networkEnvelopeSize : 0;
-                        if (queueOfBundles.isEmpty() || size > MAX_PERMITTED_MESSAGE_SIZE * 0.9) {
-                            // - no? create a bucket
-                            queueOfBundles.add(new BundleOfEnvelopes());
-
-                            // - and schedule it for sending
-                            lastSendTimeStamp += getSendMsgThrottleSleep();
-
-                            bundleSender.schedule(() -> {
-                                if (!stopped) {
-                                    synchronized (lock) {
-                                        BundleOfEnvelopes bundle = queueOfBundles.poll();
-                                        if (bundle != null && !stopped) {
-                                            NetworkEnvelope envelope;
-                                            int msgSize;
-                                            if (bundle.getEnvelopes().size() == 1) {
-                                                envelope = bundle.getEnvelopes().get(0);
-                                                msgSize = envelope.toProtoNetworkEnvelope().getSerializedSize();
-                                            } else {
-                                                envelope = bundle;
-                                                msgSize = networkEnvelopeSize;
-                                            }
-                                            try {
-                                                protoOutputStream.writeEnvelope(envelope);
-                                                UserThread.execute(() -> messageListeners.forEach(e -> e.onMessageSent(envelope, this)));
-                                                UserThread.execute(() -> connectionStatistics.addSendMsgMetrics(System.currentTimeMillis() - ts, msgSize));
-                                            } catch (Throwable t) {
-                                                log.error("Sending envelope of class {} to address {} " +
-                                                                "failed due {}",
-                                                        envelope.getClass().getSimpleName(),
-                                                        this.getPeersNodeAddressOptional(),
-                                                        t.toString());
-                                                log.error("envelope: {}", envelope);
-                                            }
-                                        }
-                                    }
-                                }
-                            }, lastSendTimeStamp - now, TimeUnit.MILLISECONDS);
-                        }
-
-                        // - yes? add to bucket
-                        queueOfBundles.element().add(networkEnvelope);
-                    }
-                    return;
-                }
 
                 Thread.sleep(getSendMsgThrottleSleep());
             }
@@ -342,7 +280,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
     private boolean testCapability(CapabilityRequiringPayload capabilityRequiringPayload) {
         boolean result = capabilities.containsAll(capabilityRequiringPayload.getRequiredCapabilities());
         if (!result) {
-            log.error("We did not send {} because capabilities are not supported.",
+            log.debug("We did not send {} because capabilities are not supported.",
                     capabilityRequiringPayload.getClass().getSimpleName());
         }
         return result;
@@ -544,7 +482,6 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
 
                         stopped = true;
 
-                        //noinspection UnstableApiUsage
                         Uninterruptibles.sleepUninterruptibly(200, TimeUnit.MILLISECONDS);
                     } catch (Throwable t) {
                         log.error(t.getMessage());
@@ -589,10 +526,8 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
 
             //noinspection UnstableApiUsage
             MoreExecutors.shutdownAndAwaitTermination(singleThreadExecutor, 500, TimeUnit.MILLISECONDS);
-            //noinspection UnstableApiUsage
-            MoreExecutors.shutdownAndAwaitTermination(bundleSender, 500, TimeUnit.MILLISECONDS);
 
-            log.debug("Connection shutdown complete {}", this.toString());
+            log.debug("Connection shutdown complete {}", this);
             // Use UserThread.execute as its not clear if that is called from a non-UserThread
             if (shutDownCompleteHandler != null)
                 UserThread.execute(shutDownCompleteHandler);
@@ -668,7 +603,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                     "numRuleViolations={}\n\t" +
                     "corruptRequest={}\n\t" +
                     "corruptRequests={}\n\t" +
-                    "connection={}", numRuleViolations, ruleViolation, ruleViolations.toString(), this);
+                    "connection={}", numRuleViolations, ruleViolation, ruleViolations, this);
             this.ruleViolation = ruleViolation;
             if (ruleViolation == RuleViolation.PEER_BANNED) {
                 log.warn("We close connection due RuleViolation.PEER_BANNED. peersNodeAddress={}", getPeersNodeAddressOptional());
@@ -703,13 +638,13 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
             log.info("SocketException (expected if connection lost). closeConnectionReason={}; connection={}", closeConnectionReason, this);
         } else if (e instanceof SocketTimeoutException || e instanceof TimeoutException) {
             closeConnectionReason = CloseConnectionReason.SOCKET_TIMEOUT;
-            log.info("Shut down caused by exception {} on connection={}", e.toString(), this);
+            log.info("Shut down caused by exception {} on connection={}", e, this);
         } else if (e instanceof EOFException) {
             closeConnectionReason = CloseConnectionReason.TERMINATED;
-            log.warn("Shut down caused by exception {} on connection={}", e.toString(), this);
+            log.warn("Shut down caused by exception {} on connection={}", e, this);
         } else if (e instanceof OptionalDataException || e instanceof StreamCorruptedException) {
             closeConnectionReason = CloseConnectionReason.CORRUPTED_DATA;
-            log.warn("Shut down caused by exception {} on connection={}", e.toString(), this);
+            log.warn("Shut down caused by exception {} on connection={}", e, this);
         } else {
             // TODO sometimes we get StreamCorruptedException, OptionalDataException, IllegalStateException
             closeConnectionReason = CloseConnectionReason.UNKNOWN_EXCEPTION;

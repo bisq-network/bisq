@@ -25,20 +25,21 @@ import bisq.core.dao.DaoFacade;
 import bisq.core.exceptions.TradePriceOutOfToleranceException;
 import bisq.core.filter.FilterManager;
 import bisq.core.locale.Res;
+import bisq.core.offer.availability.AvailabilityResult;
 import bisq.core.offer.availability.DisputeAgentSelection;
 import bisq.core.offer.messages.OfferAvailabilityRequest;
 import bisq.core.offer.messages.OfferAvailabilityResponse;
-import bisq.core.offer.placeoffer.PlaceOfferModel;
-import bisq.core.offer.placeoffer.PlaceOfferProtocol;
-import bisq.core.offer.placeoffer.atomic.AtomicPlaceOfferModel;
-import bisq.core.offer.placeoffer.atomic.AtomicPlaceOfferProtocol;
+import bisq.core.offer.placeoffer.bsqswap.PlaceBsqSwapOfferModel;
+import bisq.core.offer.placeoffer.bsqswap.PlaceBsqSwapOfferProtocol;
+import bisq.core.offer.placeoffer.offer.PlaceOfferModel;
+import bisq.core.offer.placeoffer.offer.PlaceOfferProtocol;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 import bisq.core.support.dispute.mediation.mediator.MediatorManager;
 import bisq.core.support.dispute.refund.refundagent.RefundAgentManager;
-import bisq.core.trade.TradableList;
-import bisq.core.trade.closed.ClosedTradableManager;
-import bisq.core.trade.handlers.TransactionResultHandler;
+import bisq.core.trade.misc.ClosedTradableManager;
+import bisq.core.trade.misc.TransactionResultHandler;
+import bisq.core.trade.model.TradableList;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
@@ -86,10 +87,8 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -98,33 +97,8 @@ import javax.annotation.Nullable;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
+@Slf4j
 public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMessageListener, PersistedDataHost {
-    class FundingListener implements AtomicOfferFunding.Listener {
-        OpenOffer openOffer;
-
-        FundingListener(OpenOffer openOffer) {
-            this.openOffer = openOffer;
-        }
-
-        public void isFunded(boolean funded) {
-            if (!funded && !openOffer.isDeactivated()) {
-                deactivateOpenOffer(openOffer,
-                        () -> log.info("Deactivated open offer {}", openOffer.getShortId()),
-                        errorMessage -> log.warn("Failed to deactivate open offer {}", openOffer.getShortId()));
-            }
-            if (funded && openOffer.isDeactivated()) {
-                activateOpenOffer(openOffer,
-                        () -> log.info("Activated open offer {}", openOffer.getShortId()),
-                        errorMessage -> log.warn("Failed to activate open offer {}", openOffer.getShortId()));
-            }
-        }
-
-        public Offer getOffer() {
-            return openOffer.getOffer();
-        }
-    }
-
-    private static final Logger log = LoggerFactory.getLogger(OpenOfferManager.class);
 
     private static final long RETRY_REPUBLISH_DELAY_SEC = 10;
     private static final long REPUBLISH_AGAIN_AT_STARTUP_DELAY_SEC = 30;
@@ -157,7 +131,6 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     private Timer periodicRepublishOffersTimer, periodicRefreshOffersTimer, retryRepublishOffersTimer;
     @Getter
     private final ObservableList<Tuple2<OpenOffer, String>> invalidOffers = FXCollections.observableArrayList();
-    private final AtomicOfferFunding atomicOfferFunding;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -184,8 +157,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                             DaoFacade daoFacade,
                             FilterManager filterManager,
                             Broadcaster broadcaster,
-                            PersistenceManager<TradableList<OpenOffer>> persistenceManager,
-                            AtomicOfferFunding atomicOfferFunding) {
+                            PersistenceManager<TradableList<OpenOffer>> persistenceManager) {
         this.coreContext = coreContext;
         this.createOfferService = createOfferService;
         this.keyRing = keyRing;
@@ -206,7 +178,6 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         this.filterManager = filterManager;
         this.broadcaster = broadcaster;
         this.persistenceManager = persistenceManager;
-        this.atomicOfferFunding = atomicOfferFunding;
 
         this.persistenceManager.initialize(openOffers, "OpenOffers", PersistenceManager.Source.PRIVATE);
     }
@@ -241,7 +212,6 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                 .forEach(openOffer -> {
                     OfferUtil.getInvalidMakerFeeTxErrorMessage(openOffer.getOffer(), btcWalletService)
                             .ifPresent(errorMsg -> invalidOffers.add(new Tuple2<>(openOffer, errorMsg)));
-                    addAtomicFundingListener(openOffer);
                 });
     }
 
@@ -406,6 +376,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                            TransactionResultHandler resultHandler,
                            ErrorMessageHandler errorMessageHandler) {
         checkNotNull(offer.getMakerFee(), "makerFee must not be null");
+        checkArgument(offer.getOfferPayloadBase() instanceof OfferPayload);
 
         Coin reservedFundsForOffer = createOfferService.getReservedFundsForOffer(offer.getDirection(),
                 offer.getAmount(),
@@ -430,46 +401,46 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                     OpenOffer openOffer = new OpenOffer(offer, triggerPrice);
                     addOpenOffer(openOffer);
                     requestPersistence();
-                    resultHandler.handleResult(transaction);
                     if (!stopped) {
                         startPeriodicRepublishOffersTimer();
                         startPeriodicRefreshOffersTimer();
                     } else {
                         log.debug("We have stopped already. We ignore that placeOfferProtocol.placeOffer.onResult call.");
                     }
+                    resultHandler.handleResult(transaction);
                 },
                 errorMessageHandler
         );
         placeOfferProtocol.placeOffer();
     }
 
-    public void placeAtomicOffer(Offer offer,
-                                 TransactionResultHandler resultHandler,
-                                 ErrorMessageHandler errorMessageHandler) {
-        checkArgument(offer.getOfferPayloadBase() instanceof AtomicOfferPayload);
-        var atomicModel = new AtomicPlaceOfferModel(offer,
+    public void placeBsqSwapOffer(Offer offer,
+                                  Runnable resultHandler,
+                                  ErrorMessageHandler errorMessageHandler) {
+        checkArgument(offer.getOfferPayloadBase() instanceof BsqSwapOfferPayload);
+        var model = new PlaceBsqSwapOfferModel(offer,
                 offerBookService,
                 tradeStatisticsManager,
                 daoFacade,
                 user,
                 filterManager);
 
-        var atomicPlaceOfferProtocol = new AtomicPlaceOfferProtocol(atomicModel,
-                transaction -> {
+        var protocol = new PlaceBsqSwapOfferProtocol(model,
+                () -> {
                     OpenOffer openOffer = new OpenOffer(offer, 0);
                     addOpenOffer(openOffer);
                     requestPersistence();
-                    resultHandler.handleResult(transaction);
                     if (!stopped) {
                         startPeriodicRepublishOffersTimer();
                         startPeriodicRefreshOffersTimer();
                     } else {
                         log.debug("We have stopped already. We ignore that placeOfferProtocol.placeOffer.onResult call.");
                     }
+                    resultHandler.run();
                 },
                 errorMessageHandler
         );
-        atomicPlaceOfferProtocol.placeOffer();
+        protocol.placeOffer();
     }
 
     // Remove from offerbook
@@ -1130,17 +1101,9 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
 
     private void addOpenOffer(OpenOffer openOffer) {
         openOffers.add(openOffer);
-        addAtomicFundingListener(openOffer);
-    }
-
-    private void addAtomicFundingListener(OpenOffer openOffer) {
-        if (!openOffer.getOffer().isAtomicOffer())
-            return;
-        atomicOfferFunding.addListener(new FundingListener(openOffer));
     }
 
     private void removeOpenOffer(OpenOffer openOffer) {
-        atomicOfferFunding.removeListener(openOffer.getOffer());
         openOffers.remove(openOffer);
     }
 }

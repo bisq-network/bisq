@@ -490,11 +490,11 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                                     String labelString = Res.get("dao.tx.type.enum." + txType.name());
                                     Label label;
                                     if (item.getConfirmations() > 0 && isValidType(txType)) {
-                                        if (item.getAtomicTradeId() != null) {
+                                        if (item.getTradeId() != null) {
                                             if (field != null)
                                                 field.setOnAction(null);
 
-                                            labelString = Res.get("dao.tx.atomicTrade", item.getAtomicTradeId());
+                                            labelString = Res.get("dao.tx.bsqSwapTrade", item.getTradeId());
                                             label = new AutoTooltipLabel(labelString);
                                             setGraphic(label);
                                         } else if (txType == TxType.COMPENSATION_REQUEST &&
@@ -741,11 +741,11 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                                             style = "dao-tx-type-unverified-icon";
                                             break;
                                     }
-                                    // Atomic tx overrides other characteristics, such as trade fee or transfer BSQ
-                                    if (item.getAtomicTradeId() != null) {
+                                    // BsqSwap tx overrides other characteristics, such as trade fee or transfer BSQ
+                                    if (item.getTradeId() != null) {
                                         awesomeIcon = AwesomeIcon.EXCHANGE;
-                                        style = "dao-tx-type-atomic-icon";
-                                        toolTipText = Res.get("dao.tx.atomic");
+                                        style = "dao-tx-type-bsq-swap-icon";
+                                        toolTipText = Res.get("dao.tx.bsqSwap");
                                     }
                                     Label label = FormBuilder.getIcon(awesomeIcon);
                                     label.getStyleClass().addAll("icon", style);

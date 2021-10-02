@@ -30,7 +30,7 @@ import bisq.core.support.dispute.DisputeList;
 import bisq.core.support.dispute.DisputeManager;
 import bisq.core.support.dispute.mediation.mediator.MediatorManager;
 import bisq.core.support.dispute.refund.refundagent.RefundAgentManager;
-import bisq.core.trade.TradeManager;
+import bisq.core.trade.model.TradeManager;
 import bisq.core.user.Preferences;
 import bisq.core.util.coin.CoinFormatter;
 

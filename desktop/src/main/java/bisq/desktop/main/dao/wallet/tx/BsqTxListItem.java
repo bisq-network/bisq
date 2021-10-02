@@ -27,7 +27,7 @@ import bisq.core.btc.wallet.WalletService;
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.state.model.blockchain.TxType;
 import bisq.core.locale.Res;
-import bisq.core.trade.atomic.AtomicTrade;
+import bisq.core.trade.model.bsqswap.BsqSwapTrade;
 import bisq.core.util.coin.BsqFormatter;
 
 import org.bitcoinj.core.Address;
@@ -59,7 +59,7 @@ class BsqTxListItem extends TxConfidenceListItem {
     private boolean received;
 
     private boolean issuanceTx;
-    private String atomicTradeId;
+    private String tradeId;
 
     BsqTxListItem(Transaction transaction,
                   BsqWalletService bsqWalletService,
@@ -134,7 +134,7 @@ class BsqTxListItem extends TxConfidenceListItem {
         else
             address = "";
 
-        setAtomic(tradableRepository);
+        setBsqSwap(tradableRepository);
     }
 
     BsqTxListItem() {
@@ -166,11 +166,11 @@ class BsqTxListItem extends TxConfidenceListItem {
         return bsqFormatter.formatCoin(amount);
     }
 
-    private void setAtomic(TradableRepository tradableRepository) {
+    private void setBsqSwap(TradableRepository tradableRepository) {
         var tradables = tradableRepository.getAll();
         tradables.forEach(tradable -> {
-            if (tradable instanceof AtomicTrade && txId.equals(((AtomicTrade) tradable).getTxId())) {
-                atomicTradeId = tradable.getShortId();
+            if (tradable instanceof BsqSwapTrade && txId.equals(((BsqSwapTrade) tradable).getTxId())) {
+                tradeId = tradable.getShortId();
             }
         });
     }

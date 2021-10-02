@@ -19,7 +19,7 @@ package bisq.desktop.main.funds.transactions;
 
 import bisq.core.offer.Offer;
 import bisq.core.offer.OpenOffer;
-import bisq.core.trade.Tradable;
+import bisq.core.trade.model.Tradable;
 
 import org.bitcoinj.core.Transaction;
 

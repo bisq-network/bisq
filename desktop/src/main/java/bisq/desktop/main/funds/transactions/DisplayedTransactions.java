@@ -18,7 +18,7 @@
 package bisq.desktop.main.funds.transactions;
 
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.trade.Tradable;
+import bisq.core.trade.model.Tradable;
 
 import org.bitcoinj.core.Transaction;
 

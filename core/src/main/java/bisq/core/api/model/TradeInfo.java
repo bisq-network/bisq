@@ -17,8 +17,8 @@
 
 package bisq.core.api.model;
 
-import bisq.core.trade.Contract;
-import bisq.core.trade.Trade;
+import bisq.core.trade.model.Contract;
+import bisq.core.trade.model.trade.Trade;
 
 import bisq.common.Payload;
 
@@ -34,7 +34,7 @@ import static bisq.core.api.model.PaymentAccountPayloadInfo.toPaymentAccountPayl
 @Getter
 public class TradeInfo implements Payload {
 
-    // The client cannot see bisq.core.trade.Trade or its fromProto method.  We use the
+    // The client cannot see bisq.core.trade.model.def.Trade or its fromProto method.  We use the
     // lighter weight TradeInfo proto wrapper instead, containing just enough fields to
     // view and interact with trades.
 

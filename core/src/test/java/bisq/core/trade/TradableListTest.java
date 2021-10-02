@@ -20,6 +20,7 @@ package bisq.core.trade;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.offer.OpenOffer;
+import bisq.core.trade.model.TradableList;
 
 import org.junit.Test;
 

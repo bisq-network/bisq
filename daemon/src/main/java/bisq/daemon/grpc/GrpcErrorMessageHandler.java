@@ -134,7 +134,7 @@ public class GrpcErrorMessageHandler implements ErrorMessageHandler {
     }
 
     private String getAvailabilityResultDescription(AvailabilityResult proto) {
-        return bisq.core.offer.AvailabilityResult.fromProto(proto).description();
+        return bisq.core.offer.availability.AvailabilityResult.fromProto(proto).description();
     }
 
     private boolean takeOfferWasCalled() {

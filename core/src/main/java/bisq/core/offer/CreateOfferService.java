@@ -101,7 +101,7 @@ public class CreateOfferService {
     }
 
     public Offer createAndGetOffer(String offerId,
-                                   OfferPayload.Direction direction,
+                                   OfferDirection direction,
                                    String currencyCode,
                                    Coin amount,
                                    Coin minAmount,
@@ -227,12 +227,12 @@ public class CreateOfferService {
         return offer;
     }
 
-    public Offer createAndGetAtomicOffer(String offerId,
-                                         OfferPayloadBase.Direction direction,
-                                         Coin amount,
-                                         Coin minAmount,
-                                         Price price,
-                                         PaymentAccount paymentAccount) {
+    public Offer createAndGetBsqSwapOffer(String offerId,
+                                          OfferDirection direction,
+                                          Coin amount,
+                                          Coin minAmount,
+                                          Price price,
+                                          PaymentAccount paymentAccount) {
 
         log.info("offerId={}, \n" +
                         "direction={}, \n" +
@@ -251,7 +251,7 @@ public class CreateOfferService {
 
         offerUtil.validateBasicOfferData(paymentAccount, currencyCode);
 
-        OfferPayloadBase atomicOfferPayload = new AtomicOfferPayload(offerId,
+        OfferPayloadBase bsqSwapOfferPayload = new BsqSwapOfferPayload(offerId,
                 creationTime,
                 makerAddress,
                 pubKeyRing,
@@ -259,14 +259,15 @@ public class CreateOfferService {
                 price.getValue(),
                 amount.getValue(),
                 minAmount.getValue(),
+                new byte[]{0},
+                null,
                 Version.VERSION,
-                Version.TRADE_PROTOCOL_VERSION,
-                new byte[]{0});
-        return new Offer(atomicOfferPayload);
+                Version.TRADE_PROTOCOL_VERSION);
+        return new Offer(bsqSwapOfferPayload);
     }
 
     public Tuple2<Coin, Integer> getEstimatedFeeAndTxVsize(Coin amount,
-                                                           OfferPayloadBase.Direction direction,
+                                                           OfferDirection direction,
                                                            double buyerSecurityDeposit,
                                                            double sellerSecurityDeposit) {
         Coin reservedFundsForOffer = getReservedFundsForOffer(direction,
@@ -277,7 +278,7 @@ public class CreateOfferService {
                 offerUtil.getMakerFee(amount));
     }
 
-    public Coin getReservedFundsForOffer(OfferPayloadBase.Direction direction,
+    public Coin getReservedFundsForOffer(OfferDirection direction,
                                          Coin amount,
                                          double buyerSecurityDeposit,
                                          double sellerSecurityDeposit) {
@@ -292,7 +293,7 @@ public class CreateOfferService {
         return reservedFundsForOffer;
     }
 
-    public Coin getSecurityDeposit(OfferPayloadBase.Direction direction,
+    public Coin getSecurityDeposit(OfferDirection direction,
                                    Coin amount,
                                    double buyerSecurityDeposit,
                                    double sellerSecurityDeposit) {
