@@ -26,6 +26,7 @@ import bisq.desktop.components.paymentmethods.AustraliaPayidForm;
 import bisq.desktop.components.paymentmethods.CapitualForm;
 import bisq.desktop.components.paymentmethods.CashByMailForm;
 import bisq.desktop.components.paymentmethods.CashDepositForm;
+import bisq.desktop.components.paymentmethods.CelPayForm;
 import bisq.desktop.components.paymentmethods.ChaseQuickPayForm;
 import bisq.desktop.components.paymentmethods.ClearXchangeForm;
 import bisq.desktop.components.paymentmethods.F2FForm;
@@ -38,6 +39,7 @@ import bisq.desktop.components.paymentmethods.MoneyBeamForm;
 import bisq.desktop.components.paymentmethods.MoneyGramForm;
 import bisq.desktop.components.paymentmethods.NationalBankForm;
 import bisq.desktop.components.paymentmethods.NeftForm;
+import bisq.desktop.components.paymentmethods.NequiForm;
 import bisq.desktop.components.paymentmethods.PaymentMethodForm;
 import bisq.desktop.components.paymentmethods.PaytmForm;
 import bisq.desktop.components.paymentmethods.PerfectMoneyForm;
@@ -561,10 +563,14 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
                 return new UpiForm(paymentAccount, accountAgeWitnessService, inputValidator, root, gridRow, formatter);
             case PaymentMethod.PAYTM_ID:
                 return new PaytmForm(paymentAccount, accountAgeWitnessService, inputValidator, root, gridRow, formatter);
+            case PaymentMethod.NEQUI_ID:
+                return new NequiForm(paymentAccount, accountAgeWitnessService, inputValidator, root, gridRow, formatter);
             case PaymentMethod.AMAZON_GIFT_CARD_ID:
                 return new AmazonGiftCardForm(paymentAccount, accountAgeWitnessService, inputValidator, root, gridRow, formatter);
             case PaymentMethod.CAPITUAL_ID:
                 return new CapitualForm(paymentAccount, accountAgeWitnessService, capitualValidator, inputValidator, root, gridRow, formatter);
+            case PaymentMethod.CELPAY_ID:
+                return new CelPayForm(paymentAccount, accountAgeWitnessService, inputValidator, root, gridRow, formatter);
             case PaymentMethod.SWIFT_ID:
                 return new SwiftForm(paymentAccount, accountAgeWitnessService, inputValidator, root, gridRow, formatter);
             default:

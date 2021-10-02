@@ -425,6 +425,17 @@ public class CurrencyUtil {
         ));
     }
 
+    // https://github.com/bisq-network/growth/issues/231
+    public static List<TradeCurrency> getAllCelPayCurrencies() {
+        return new ArrayList<>(Arrays.asList(
+                new FiatCurrency("AUD"),
+                new FiatCurrency("CAD"),
+                new FiatCurrency("GBP"),
+                new FiatCurrency("HKD"),
+                new FiatCurrency("USD")
+        ));
+    }
+
     // https://www.revolut.com/help/getting-started/exchanging-currencies/what-fiat-currencies-are-supported-for-holding-and-exchange
     public static List<TradeCurrency> getAllRevolutCurrencies() {
         ArrayList<TradeCurrency> currencies = new ArrayList<>(Arrays.asList(
