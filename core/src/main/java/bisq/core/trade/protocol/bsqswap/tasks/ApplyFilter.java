@@ -18,7 +18,6 @@
 package bisq.core.trade.protocol.bsqswap.tasks;
 
 import bisq.core.filter.FilterManager;
-import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.trade.misc.TradeUtil;
 import bisq.core.trade.model.bsqswap.BsqSwapTrade;
 
@@ -27,8 +26,6 @@ import bisq.network.p2p.NodeAddress;
 import bisq.common.taskrunner.TaskRunner;
 
 import lombok.extern.slf4j.Slf4j;
-
-import javax.annotation.Nullable;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -44,16 +41,13 @@ public class ApplyFilter extends BsqSwapTask {
             runInterceptHook();
 
             NodeAddress nodeAddress = checkNotNull(bsqSwapProtocolModel.getTempTradingPeerNodeAddress());
-            @Nullable
-            PaymentAccountPayload paymentAccountPayload =
-                    bsqSwapProtocolModel.getTradingPeer().getPaymentAccountPayload();
 
             FilterManager filterManager = bsqSwapProtocolModel.getFilterManager();
 
             TradeUtil.applyFilter(bsqSwapTrade,
                     filterManager,
                     nodeAddress,
-                    paymentAccountPayload,
+                    null,
                     this::complete,
                     this::failed);
         } catch (Throwable t) {
