@@ -64,7 +64,7 @@ public class BuyerVerifiesPreparedDelayedPayoutTx extends TradeTask {
 
     private boolean isDepositTxNonMalleable() {
         var buyerInputs = checkNotNull(processModel.getRawTransactionInputs());
-        var sellerInputs = checkNotNull(processModel.getTradingPeer().getRawTransactionInputs());
+        var sellerInputs = checkNotNull(processModel.getTradePeer().getRawTransactionInputs());
 
         return buyerInputs.stream().allMatch(processModel.getTradeWalletService()::isP2WH) &&
                 sellerInputs.stream().allMatch(processModel.getTradeWalletService()::isP2WH);

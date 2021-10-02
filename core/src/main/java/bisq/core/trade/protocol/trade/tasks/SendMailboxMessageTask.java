@@ -57,7 +57,7 @@ public abstract class SendMailboxMessageTask extends TradeTask {
 
             processModel.getP2PService().getMailboxMessageService().sendEncryptedMailboxMessage(
                     peersNodeAddress,
-                    processModel.getTradingPeer().getPubKeyRing(),
+                    processModel.getTradePeer().getPubKeyRing(),
                     message,
                     new SendMailboxMessageListener() {
                         @Override

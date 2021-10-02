@@ -208,7 +208,7 @@ public class BsqSwapProtocolModel implements TradeProtocolModel<BsqSwapTradePeer
     }
 
     @Override
-    public BsqSwapTradePeer getTradingPeer() {
+    public BsqSwapTradePeer getTradePeer() {
         return bsqSwapTradePeer;
     }
 

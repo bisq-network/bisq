@@ -75,7 +75,7 @@ public class SellerProcessShareBuyerPaymentAccountMessage extends TradeTask {
             checkArgument(Arrays.equals(buyerPaymentAccountPayloadHash, peersPaymentAccountPayloadHash),
                     "Hash of payment account is invalid");
 
-            processModel.getTradingPeer().setPaymentAccountPayload(buyerPaymentAccountPayload);
+            processModel.getTradePeer().setPaymentAccountPayload(buyerPaymentAccountPayload);
             checkNotNull(contract).setPaymentAccountPayloads(buyerPaymentAccountPayload,
                     processModel.getPaymentAccountPayload(trade),
                     processModel.getPubKeyRing());

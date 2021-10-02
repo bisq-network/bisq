@@ -108,7 +108,7 @@ public abstract class BuyerProtocol extends DisputeProtocol {
         expect(anyPhase(Trade.Phase.TAKER_FEE_PUBLISHED, Trade.Phase.DEPOSIT_PUBLISHED)
                 .with(message)
                 .from(peer)
-                .preCondition(trade.getDepositTx() == null || processModel.getTradingPeer().getPaymentAccountPayload() == null,
+                .preCondition(trade.getDepositTx() == null || processModel.getTradePeer().getPaymentAccountPayload() == null,
                         () -> {
                             log.warn("We received a DepositTxAndDelayedPayoutTxMessage but we have already processed the deposit and " +
                                     "delayed payout tx so we ignore the message. This can happen if the ACK message to the peer did not " +

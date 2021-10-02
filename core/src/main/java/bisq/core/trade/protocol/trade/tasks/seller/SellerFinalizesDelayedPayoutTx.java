@@ -49,13 +49,13 @@ public class SellerFinalizesDelayedPayoutTx extends TradeTask {
             BtcWalletService btcWalletService = processModel.getBtcWalletService();
             String id = processModel.getOffer().getId();
 
-            byte[] buyerMultiSigPubKey = processModel.getTradingPeer().getMultiSigPubKey();
+            byte[] buyerMultiSigPubKey = processModel.getTradePeer().getMultiSigPubKey();
             byte[] sellerMultiSigPubKey = processModel.getMyMultiSigPubKey();
             checkArgument(Arrays.equals(sellerMultiSigPubKey,
                     btcWalletService.getOrCreateAddressEntry(id, AddressEntry.Context.MULTI_SIG).getPubKey()),
                     "sellerMultiSigPubKey from AddressEntry must match the one from the trade data. trade id =" + id);
 
-            byte[] buyerSignature = processModel.getTradingPeer().getDelayedPayoutTxSignature();
+            byte[] buyerSignature = processModel.getTradePeer().getDelayedPayoutTxSignature();
             byte[] sellerSignature = processModel.getDelayedPayoutTxSignature();
 
             Transaction signedDelayedPayoutTx = processModel.getTradeWalletService().finalizeDelayedPayoutTx(

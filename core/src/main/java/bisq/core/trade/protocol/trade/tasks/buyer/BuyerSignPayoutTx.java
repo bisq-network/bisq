@@ -60,7 +60,7 @@ public class BuyerSignPayoutTx extends TradeTask {
 
             String buyerPayoutAddressString = walletService.getOrCreateAddressEntry(id,
                     AddressEntry.Context.TRADE_PAYOUT).getAddressString();
-            final String sellerPayoutAddressString = processModel.getTradingPeer().getPayoutAddressString();
+            final String sellerPayoutAddressString = processModel.getTradePeer().getPayoutAddressString();
 
             DeterministicKey buyerMultiSigKeyPair = walletService.getMultiSigKeyPair(id, processModel.getMyMultiSigPubKey());
 
@@ -68,7 +68,7 @@ public class BuyerSignPayoutTx extends TradeTask {
             checkArgument(Arrays.equals(buyerMultiSigPubKey,
                     walletService.getOrCreateAddressEntry(id, AddressEntry.Context.MULTI_SIG).getPubKey()),
                     "buyerMultiSigPubKey from AddressEntry must match the one from the trade data. trade id =" + id);
-            byte[] sellerMultiSigPubKey = processModel.getTradingPeer().getMultiSigPubKey();
+            byte[] sellerMultiSigPubKey = processModel.getTradePeer().getMultiSigPubKey();
 
             byte[] payoutTxSignature = processModel.getTradeWalletService().buyerSignsPayoutTx(
                     trade.getDepositTx(),

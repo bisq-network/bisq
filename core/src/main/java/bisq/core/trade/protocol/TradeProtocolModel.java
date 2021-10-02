@@ -12,7 +12,7 @@ public interface TradeProtocolModel<T extends TradePeer> {
 
     P2PService getP2PService();
 
-    T getTradingPeer();
+    T getTradePeer();
 
     void setTempTradingPeerNodeAddress(NodeAddress nodeAddress);
 

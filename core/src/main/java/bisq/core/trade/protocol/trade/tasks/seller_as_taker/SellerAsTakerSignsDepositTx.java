@@ -75,7 +75,7 @@ public class SellerAsTakerSignsDepositTx extends TradeTask {
             Coin msOutputAmount = offer.getBuyerSecurityDeposit().add(offer.getSellerSecurityDeposit()).add(trade.getTxFee())
                     .add(checkNotNull(trade.getTradeAmount()));
 
-            TradingPeer tradingPeer = processModel.getTradingPeer();
+            TradingPeer tradingPeer = processModel.getTradePeer();
 
             Transaction depositTx = processModel.getTradeWalletService().takerSignsDepositTx(
                     true,
@@ -95,7 +95,7 @@ public class SellerAsTakerSignsDepositTx extends TradeTask {
         } catch (Throwable t) {
             Contract contract = trade.getContract();
             if (contract != null)
-                contract.printDiff(processModel.getTradingPeer().getContractAsJson());
+                contract.printDiff(processModel.getTradePeer().getContractAsJson());
             failed(t);
         }
     }

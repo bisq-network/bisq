@@ -74,7 +74,7 @@ public class TakerSendsBsqSwapRequest extends BsqSwapTask {
                     message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
             bsqSwapProtocolModel.getP2PService().sendEncryptedDirectMessage(
                     peersNodeAddress,
-                    bsqSwapProtocolModel.getTradingPeer().getPubKeyRing(),
+                    bsqSwapProtocolModel.getTradePeer().getPubKeyRing(),
                     message,
                     new SendDirectMessageListener() {
                         @Override

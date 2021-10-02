@@ -59,7 +59,7 @@ public class BuyerSendsDelayedPayoutTxSignatureResponse extends TradeTask {
                     message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
             processModel.getP2PService().sendEncryptedDirectMessage(
                     peersNodeAddress,
-                    processModel.getTradingPeer().getPubKeyRing(),
+                    processModel.getTradePeer().getPubKeyRing(),
                     message,
                     new SendDirectMessageListener() {
                         @Override

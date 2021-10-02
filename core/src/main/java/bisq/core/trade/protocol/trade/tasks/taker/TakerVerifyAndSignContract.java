@@ -55,7 +55,7 @@ public class TakerVerifyAndSignContract extends TradeTask {
             runInterceptHook();
 
             String takerFeeTxId = checkNotNull(processModel.getTakeOfferFeeTxId());
-            TradingPeer maker = processModel.getTradingPeer();
+            TradingPeer maker = processModel.getTradePeer();
 
             boolean isBuyerMakerAndSellerTaker = trade instanceof SellerAsTakerTrade;
             NodeAddress buyerNodeAddress = isBuyerMakerAndSellerTaker ?
@@ -113,8 +113,8 @@ public class TakerVerifyAndSignContract extends TradeTask {
             );
             String contractAsJson = Utilities.objectToJson(contract);
 
-            if (!contractAsJson.equals(processModel.getTradingPeer().getContractAsJson())) {
-                contract.printDiff(processModel.getTradingPeer().getContractAsJson());
+            if (!contractAsJson.equals(processModel.getTradePeer().getContractAsJson())) {
+                contract.printDiff(processModel.getTradePeer().getContractAsJson());
                 failed("Contracts are not matching");
             }
 

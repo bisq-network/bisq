@@ -308,7 +308,7 @@ public class AccountAgeWitnessService {
     }
 
     private Optional<AccountAgeWitness> findTradePeerWitness(Trade trade) {
-        TradingPeer tradingPeer = trade.getProcessModel().getTradingPeer();
+        TradingPeer tradingPeer = trade.getProcessModel().getTradePeer();
         return (tradingPeer == null ||
                 tradingPeer.getPaymentAccountPayload() == null ||
                 tradingPeer.getPubKeyRing() == null) ?
@@ -731,8 +731,8 @@ public class AccountAgeWitnessService {
     public Optional<SignedWitness> traderSignAndPublishPeersAccountAgeWitness(Trade trade) {
         AccountAgeWitness peersWitness = findTradePeerWitness(trade).orElse(null);
         Coin tradeAmount = trade.getTradeAmount();
-        checkNotNull(trade.getProcessModel().getTradingPeer().getPubKeyRing(), "Peer must have a keyring");
-        PublicKey peersPubKey = trade.getProcessModel().getTradingPeer().getPubKeyRing().getSignaturePubKey();
+        checkNotNull(trade.getProcessModel().getTradePeer().getPubKeyRing(), "Peer must have a keyring");
+        PublicKey peersPubKey = trade.getProcessModel().getTradePeer().getPubKeyRing().getSignaturePubKey();
         checkNotNull(peersWitness, "Not able to find peers witness, unable to sign for trade {}",
                 trade.toString());
         checkNotNull(tradeAmount, "Trade amount must not be null");

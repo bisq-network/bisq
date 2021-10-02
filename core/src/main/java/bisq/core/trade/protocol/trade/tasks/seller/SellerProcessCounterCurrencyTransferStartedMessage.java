@@ -44,7 +44,7 @@ public class SellerProcessCounterCurrencyTransferStartedMessage extends TradeTas
             Validator.checkTradeId(processModel.getOfferId(), message);
             checkNotNull(message);
 
-            TradingPeer tradingPeer = processModel.getTradingPeer();
+            TradingPeer tradingPeer = processModel.getTradePeer();
             tradingPeer.setPayoutAddressString(Validator.nonEmptyStringOf(message.getBuyerPayoutAddress()));
             tradingPeer.setSignature(checkNotNull(message.getBuyerSignature()));
 

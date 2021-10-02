@@ -39,11 +39,11 @@ public class SellerAsMakerFinalizesDepositTx extends TradeTask {
         try {
             runInterceptHook();
 
-            byte[] takersRawPreparedDepositTx = checkNotNull(processModel.getTradingPeer().getPreparedDepositTx());
+            byte[] takersRawPreparedDepositTx = checkNotNull(processModel.getTradePeer().getPreparedDepositTx());
             byte[] myRawPreparedDepositTx = checkNotNull(processModel.getPreparedDepositTx());
             Transaction takersDepositTx = processModel.getBtcWalletService().getTxFromSerializedTx(takersRawPreparedDepositTx);
             Transaction myDepositTx = processModel.getBtcWalletService().getTxFromSerializedTx(myRawPreparedDepositTx);
-            int numTakersInputs = checkNotNull(processModel.getTradingPeer().getRawTransactionInputs()).size();
+            int numTakersInputs = checkNotNull(processModel.getTradePeer().getRawTransactionInputs()).size();
             processModel.getTradeWalletService().sellerAsMakerFinalizesDepositTx(myDepositTx, takersDepositTx, numTakersInputs);
 
             processModel.setDepositTx(myDepositTx);

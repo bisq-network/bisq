@@ -120,7 +120,7 @@ public class ProcessModel implements TradeProtocolModel<TradingPeer>, Model, Per
 
 
     // Persistable Immutable
-    private final TradingPeer tradingPeer;
+    private final TradingPeer tradePeer;
     private final String offerId;
     private final String accountId;
     private final PubKeyRing pubKeyRing;
@@ -176,12 +176,12 @@ public class ProcessModel implements TradeProtocolModel<TradingPeer>, Model, Per
         this(offerId, accountId, pubKeyRing, new TradingPeer());
     }
 
-    public ProcessModel(String offerId, String accountId, PubKeyRing pubKeyRing, TradingPeer tradingPeer) {
+    public ProcessModel(String offerId, String accountId, PubKeyRing pubKeyRing, TradingPeer tradePeer) {
         this.offerId = offerId;
         this.accountId = accountId;
         this.pubKeyRing = pubKeyRing;
         // If tradingPeer was null in persisted data from some error cases we set a new one to not cause nullPointers
-        this.tradingPeer = tradingPeer != null ? tradingPeer : new TradingPeer();
+        this.tradePeer = tradePeer != null ? tradePeer : new TradingPeer();
     }
 
     public void applyTransient(Provider provider,
@@ -200,7 +200,7 @@ public class ProcessModel implements TradeProtocolModel<TradingPeer>, Model, Per
     @Override
     public protobuf.ProcessModel toProtoMessage() {
         protobuf.ProcessModel.Builder builder = protobuf.ProcessModel.newBuilder()
-                .setTradingPeer((protobuf.TradingPeer) tradingPeer.toProtoMessage())
+                .setTradingPeer((protobuf.TradingPeer) tradePeer.toProtoMessage())
                 .setOfferId(offerId)
                 .setAccountId(accountId)
                 .setPubKeyRing(pubKeyRing.toProtoMessage())

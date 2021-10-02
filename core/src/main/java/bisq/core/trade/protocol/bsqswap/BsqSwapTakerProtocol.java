@@ -51,7 +51,7 @@ public class BsqSwapTakerProtocol extends TradeProtocol implements TakerProtocol
         super(trade);
         this.bsqSwapTakerTrade = trade;
         Offer offer = checkNotNull(trade.getOffer());
-        tradeProtocolModel.getTradingPeer().setPubKeyRing(offer.getPubKeyRing());
+        tradeProtocolModel.getTradePeer().setPubKeyRing(offer.getPubKeyRing());
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

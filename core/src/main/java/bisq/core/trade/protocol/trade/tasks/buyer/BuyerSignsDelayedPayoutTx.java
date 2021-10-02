@@ -60,7 +60,7 @@ public class BuyerSignsDelayedPayoutTx extends TradeTask {
             checkArgument(Arrays.equals(buyerMultiSigPubKey,
                     btcWalletService.getOrCreateAddressEntry(id, AddressEntry.Context.MULTI_SIG).getPubKey()),
                     "buyerMultiSigPubKey from AddressEntry must match the one from the trade data. trade id =" + id);
-            byte[] sellerMultiSigPubKey = processModel.getTradingPeer().getMultiSigPubKey();
+            byte[] sellerMultiSigPubKey = processModel.getTradePeer().getMultiSigPubKey();
             byte[] delayedPayoutTxSignature = processModel.getTradeWalletService().signDelayedPayoutTx(
                     preparedDelayedPayoutTx,
                     preparedDepositTx,

@@ -51,7 +51,7 @@ public class MakerCreateAndSignContract extends TradeTask {
             runInterceptHook();
             String takerFeeTxId = checkNotNull(processModel.getTakeOfferFeeTxId());
 
-            TradingPeer taker = processModel.getTradingPeer();
+            TradingPeer taker = processModel.getTradePeer();
             boolean isBuyerMakerAndSellerTaker = trade instanceof BuyerAsMakerTrade;
             NodeAddress buyerNodeAddress = isBuyerMakerAndSellerTaker ?
                     processModel.getMyNodeAddress() : processModel.getTempTradingPeerNodeAddress();
