@@ -36,7 +36,7 @@ import bisq.core.trade.model.TradeManager;
 import bisq.core.trade.model.bsqswap.BsqSwapTrade;
 import bisq.core.trade.protocol.Provider;
 import bisq.core.trade.protocol.TradeProtocolModel;
-import bisq.core.trade.protocol.TradingPeer;
+import bisq.core.trade.protocol.trade.TradingPeer;
 
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;

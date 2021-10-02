@@ -40,7 +40,6 @@ import bisq.core.trade.model.TradeModel;
 import bisq.core.trade.model.trade.Trade;
 import bisq.core.trade.protocol.Provider;
 import bisq.core.trade.protocol.TradeProtocolModel;
-import bisq.core.trade.protocol.TradingPeer;
 import bisq.core.trade.statistics.ReferralIdService;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.User;

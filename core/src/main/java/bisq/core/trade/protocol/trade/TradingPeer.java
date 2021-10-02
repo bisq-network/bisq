@@ -15,11 +15,12 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.protocol;
+package bisq.core.trade.protocol.trade;
 
 import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.proto.CoreProtoResolver;
+import bisq.core.trade.protocol.TradePeer;
 
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.proto.ProtoUtil;
@@ -44,7 +45,7 @@ import javax.annotation.Nullable;
 @Slf4j
 @Getter
 @Setter
-public final class TradingPeer implements PersistablePayload {
+public final class TradingPeer implements TradePeer, PersistablePayload {
     // Transient/Mutable
     // Added in v1.2.0
     @Setter

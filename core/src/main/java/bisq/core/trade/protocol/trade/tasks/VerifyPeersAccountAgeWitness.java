@@ -22,7 +22,7 @@ import bisq.core.locale.CurrencyUtil;
 import bisq.core.offer.Offer;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.trade.model.trade.Trade;
-import bisq.core.trade.protocol.TradingPeer;
+import bisq.core.trade.protocol.trade.TradingPeer;
 
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.taskrunner.TaskRunner;

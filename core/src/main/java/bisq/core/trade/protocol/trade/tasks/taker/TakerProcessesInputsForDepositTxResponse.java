@@ -20,7 +20,7 @@ package bisq.core.trade.protocol.trade.tasks.taker;
 import bisq.core.btc.wallet.Restrictions;
 import bisq.core.trade.messages.trade.InputsForDepositTxResponse;
 import bisq.core.trade.model.trade.Trade;
-import bisq.core.trade.protocol.TradingPeer;
+import bisq.core.trade.protocol.trade.TradingPeer;
 import bisq.core.trade.protocol.trade.tasks.TradeTask;
 
 import bisq.common.config.Config;
