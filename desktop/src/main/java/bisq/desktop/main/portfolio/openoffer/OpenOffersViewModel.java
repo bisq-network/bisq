@@ -126,8 +126,8 @@ class OpenOffersViewModel extends ActivatableWithDataModel<OpenOffersDataModel> 
     }
 
     String getVolume(OpenOfferListItem item) {
-        return (item != null) ?
-                VolumeUtil.formatVolume(item.getOffer(), false, 0) + " " + item.getOffer().getCurrencyCode()
+        return (item != null)
+                ? VolumeUtil.formatVolume(item.getOffer(), false, 0) + " " + item.getOffer().getCurrencyCode()
                 : "";
     }
 
