@@ -17,20 +17,12 @@
 
 package bisq.core.trade.protocol.bsqswap.tasks.taker;
 
-import bisq.core.trade.messages.bsqswap.CreateBsqSwapTxRequest;
 import bisq.core.trade.model.bsqswap.BsqSwapTrade;
 import bisq.core.trade.protocol.bsqswap.tasks.BsqSwapTask;
 
-import bisq.network.p2p.NodeAddress;
-import bisq.network.p2p.SendDirectMessageListener;
-
 import bisq.common.taskrunner.TaskRunner;
 
-import java.util.UUID;
-
 import lombok.extern.slf4j.Slf4j;
-
-import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class TakerSendsBsqSwapRequest extends BsqSwapTask {
@@ -45,7 +37,7 @@ public class TakerSendsBsqSwapRequest extends BsqSwapTask {
         try {
             runInterceptHook();
 
-            checkArgument(!bsqSwapProtocolModel.getOffer().isMyOffer(bsqSwapProtocolModel.getKeyRing()),
+          /*  checkArgument(!bsqSwapProtocolModel.getOffer().isMyOffer(bsqSwapProtocolModel.getKeyRing()),
                     "must not take own offer");
             checkArgument(bsqSwapProtocolModel.takerPreparesTakerSide(),
                     "Failed to prepare taker side of bsq swap tx");
@@ -96,7 +88,7 @@ public class TakerSendsBsqSwapRequest extends BsqSwapTask {
                             failed();
                         }
                     }
-            );
+            );*/
         } catch (Throwable t) {
             failed(t);
         }

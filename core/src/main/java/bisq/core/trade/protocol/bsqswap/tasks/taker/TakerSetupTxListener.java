@@ -22,11 +22,7 @@ import bisq.core.trade.protocol.bsqswap.tasks.SetupTxListener;
 
 import bisq.common.taskrunner.TaskRunner;
 
-import org.bitcoinj.core.Address;
-
 import lombok.extern.slf4j.Slf4j;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class TakerSetupTxListener extends SetupTxListener {
@@ -41,7 +37,7 @@ public class TakerSetupTxListener extends SetupTxListener {
         try {
             runInterceptHook();
 
-            checkNotNull(bsqSwapProtocolModel, "bsqSwapProtocolModel must not be null");
+          /*  checkNotNull(bsqSwapProtocolModel, "bsqSwapProtocolModel must not be null");
 
             // Find address to listen to
             if (bsqSwapProtocolModel.getTakerBtcAddress() != null) {
@@ -54,7 +50,7 @@ public class TakerSetupTxListener extends SetupTxListener {
             } else {
                 failed("No maker address set");
             }
-
+*/
             super.run();
 
             complete();

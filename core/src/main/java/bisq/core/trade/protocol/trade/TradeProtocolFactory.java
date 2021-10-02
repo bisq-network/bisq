@@ -18,15 +18,19 @@
 package bisq.core.trade.protocol.trade;
 
 import bisq.core.trade.model.TradeModel;
-import bisq.core.trade.model.bsqswap.BsqSwapMakerTrade;
-import bisq.core.trade.model.bsqswap.BsqSwapTakerTrade;
+import bisq.core.trade.model.bsqswap.BsqSwapBuyerAsMakerTrade;
+import bisq.core.trade.model.bsqswap.BsqSwapBuyerAsTakerTrade;
+import bisq.core.trade.model.bsqswap.BsqSwapSellerAsMakerTrade;
+import bisq.core.trade.model.bsqswap.BsqSwapSellerAsTakerTrade;
 import bisq.core.trade.model.trade.BuyerAsMakerTrade;
 import bisq.core.trade.model.trade.BuyerAsTakerTrade;
 import bisq.core.trade.model.trade.SellerAsMakerTrade;
 import bisq.core.trade.model.trade.SellerAsTakerTrade;
 import bisq.core.trade.protocol.TradeProtocol;
-import bisq.core.trade.protocol.bsqswap.BsqSwapMakerProtocol;
-import bisq.core.trade.protocol.bsqswap.BsqSwapTakerProtocol;
+import bisq.core.trade.protocol.bsqswap.BsqSwapBuyerAsMakerProtocol;
+import bisq.core.trade.protocol.bsqswap.BsqSwapBuyerAsTakerProtocol;
+import bisq.core.trade.protocol.bsqswap.BsqSwapSellerAsMakerProtocol;
+import bisq.core.trade.protocol.bsqswap.BsqSwapSellerAsTakerProtocol;
 
 public class TradeProtocolFactory {
     public static TradeProtocol getNewTradeProtocol(TradeModel trade) {
@@ -38,10 +42,14 @@ public class TradeProtocolFactory {
             return new SellerAsMakerProtocol((SellerAsMakerTrade) trade);
         } else if (trade instanceof SellerAsTakerTrade) {
             return new SellerAsTakerProtocol((SellerAsTakerTrade) trade);
-        } else if (trade instanceof BsqSwapTakerTrade) {
-            return new BsqSwapTakerProtocol((BsqSwapTakerTrade) trade);
-        } else if (trade instanceof BsqSwapMakerTrade) {
-            return new BsqSwapMakerProtocol((BsqSwapMakerTrade) trade);
+        } else if (trade instanceof BsqSwapBuyerAsMakerTrade) {
+            return new BsqSwapBuyerAsMakerProtocol((BsqSwapBuyerAsMakerTrade) trade);
+        } else if (trade instanceof BsqSwapBuyerAsTakerTrade) {
+            return new BsqSwapBuyerAsTakerProtocol((BsqSwapBuyerAsTakerTrade) trade);
+        } else if (trade instanceof BsqSwapSellerAsMakerTrade) {
+            return new BsqSwapSellerAsMakerProtocol((BsqSwapSellerAsMakerTrade) trade);
+        } else if (trade instanceof BsqSwapSellerAsTakerTrade) {
+            return new BsqSwapSellerAsTakerProtocol((BsqSwapSellerAsTakerTrade) trade);
         } else
             throw new IllegalStateException("Trade not of expected type. Trade=" + trade);
     }

@@ -27,7 +27,6 @@ import org.bitcoinj.core.Coin;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static java.lang.Math.abs;
 
 @Slf4j
@@ -44,6 +43,7 @@ public class MakerVerifiesMiningFee extends SetupTxListener {
             runInterceptHook();
 
             var message = (CreateBsqSwapTxRequest) bsqSwapProtocolModel.getTradeMessage();
+/*
 
             // Verify mining fee
             var feeService = bsqSwapProtocolModel.getProvider().getFeeService();
@@ -65,6 +65,7 @@ public class MakerVerifiesMiningFee extends SetupTxListener {
                         }
                     }
             );
+*/
 
 
         } catch (Throwable t) {

@@ -25,7 +25,6 @@ import bisq.core.trade.messages.trade.DepositTxMessage;
 import bisq.core.trade.messages.trade.InputsForDepositTxRequest;
 import bisq.core.trade.model.trade.SellerAsMakerTrade;
 import bisq.core.trade.model.trade.Trade;
-import bisq.core.trade.protocol.MakerProtocol;
 import bisq.core.trade.protocol.TradeTaskRunner;
 import bisq.core.trade.protocol.trade.tasks.ApplyFilter;
 import bisq.core.trade.protocol.trade.tasks.TradeTask;
@@ -65,7 +64,6 @@ public class SellerAsMakerProtocol extends SellerProtocol implements MakerProtoc
     // Handle take offer request
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @Override
     public void handleTakeOfferRequest(InputsForDepositTxRequest message,
                                        NodeAddress peer,
                                        ErrorMessageHandler errorMessageHandler) {

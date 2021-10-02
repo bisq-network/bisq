@@ -15,7 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.protocol;
+package bisq.core.trade.protocol.trade;
+
+import bisq.core.trade.protocol.FluentProtocol;
 
 public interface TakerProtocol {
     void onTakeOffer();

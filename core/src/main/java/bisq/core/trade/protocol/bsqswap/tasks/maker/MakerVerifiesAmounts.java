@@ -17,19 +17,12 @@
 
 package bisq.core.trade.protocol.bsqswap.tasks.maker;
 
-import bisq.core.trade.messages.bsqswap.CreateBsqSwapTxRequest;
 import bisq.core.trade.model.bsqswap.BsqSwapTrade;
 import bisq.core.trade.protocol.bsqswap.tasks.SetupTxListener;
-import bisq.core.util.Validator;
-import bisq.core.util.coin.CoinUtil;
 
 import bisq.common.taskrunner.TaskRunner;
 
-import java.util.Objects;
-
 import lombok.extern.slf4j.Slf4j;
-
-import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class MakerVerifiesAmounts extends SetupTxListener {
@@ -48,7 +41,7 @@ public class MakerVerifiesAmounts extends SetupTxListener {
             // AtomicTrade is initialized with values from CreateAtomicTxRequest on creation
             // Verify that AtomicTrade values don't disagree with the offer
 
-            // Verify offer and message
+           /* // Verify offer and message
             Validator.checkTradeId(bsqSwapProtocolModel.getOffer().getId(), bsqSwapProtocolModel.getTradeMessage());
             checkArgument(bsqSwapProtocolModel.getOffer().isMyOffer(bsqSwapProtocolModel.getKeyRing()),
                     "must only process own offer");
@@ -80,7 +73,7 @@ public class MakerVerifiesAmounts extends SetupTxListener {
                     "Taker fee mismatch");
 
             bsqSwapProtocolModel.updateFromMessage(message);
-            bsqSwapProtocolModel.initTxBuilder(true);
+            bsqSwapProtocolModel.initTxBuilder(true);*/
 
             complete();
         } catch (Throwable t) {

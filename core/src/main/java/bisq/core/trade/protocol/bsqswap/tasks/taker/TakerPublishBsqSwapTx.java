@@ -17,21 +17,12 @@
 
 package bisq.core.trade.protocol.bsqswap.tasks.taker;
 
-import bisq.core.btc.exceptions.TxBroadcastException;
-import bisq.core.btc.model.AddressEntry;
-import bisq.core.btc.wallet.TxBroadcaster;
-import bisq.core.dao.state.model.blockchain.TxType;
 import bisq.core.trade.model.bsqswap.BsqSwapTrade;
 import bisq.core.trade.protocol.bsqswap.tasks.BsqSwapTask;
 
 import bisq.common.taskrunner.TaskRunner;
-import bisq.common.util.Utilities;
-
-import org.bitcoinj.core.Transaction;
 
 import lombok.extern.slf4j.Slf4j;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class TakerPublishBsqSwapTx extends BsqSwapTask {
@@ -47,7 +38,7 @@ public class TakerPublishBsqSwapTx extends BsqSwapTask {
             runInterceptHook();
 
             // Publish transaction
-            var transaction = bsqSwapProtocolModel.getVerifiedTransaction();
+         /*   var transaction = bsqSwapProtocolModel.getVerifiedTransaction();
 
             checkNotNull(transaction, "Verified transaction must not be null");
 
@@ -76,7 +67,7 @@ public class TakerPublishBsqSwapTx extends BsqSwapTask {
                                 log.warn("We got the onFailure callback called after the timeout has been triggered a complete().");
                             }
                         }
-                    });
+                    });*/
 
         } catch (Throwable t) {
             failed(t);

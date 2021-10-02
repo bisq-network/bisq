@@ -17,18 +17,12 @@
 
 package bisq.core.trade.protocol.bsqswap.tasks.maker;
 
-import bisq.core.trade.messages.bsqswap.CreateBsqSwapTxRequest;
 import bisq.core.trade.model.bsqswap.BsqSwapTrade;
 import bisq.core.trade.protocol.bsqswap.tasks.BsqSwapTask;
 
-import bisq.asset.BitcoinAddressValidator;
-
-import bisq.common.config.Config;
 import bisq.common.taskrunner.TaskRunner;
 
 import lombok.extern.slf4j.Slf4j;
-
-import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class MakerVerifiesTakerInputs extends BsqSwapTask {
@@ -42,13 +36,13 @@ public class MakerVerifiesTakerInputs extends BsqSwapTask {
         try {
             runInterceptHook();
 
-            /* Tx output format:
+            /*  *//* Tx output format:
              * At a minimum there will be 1 BSQ out and 1 BTC out
              * [0-1]   (Maker BSQ)
              * [0-1]   (Taker BSQ)
              * [0-1]   (Taker BTC)
              * [0-1]   (Maker BTC)
-             */
+             *//*
 
             var message = (CreateBsqSwapTxRequest) bsqSwapProtocolModel.getTradeMessage();
 
@@ -83,7 +77,7 @@ public class MakerVerifiesTakerInputs extends BsqSwapTask {
 
             var btcIn = takerBtcInputAmount + makerBtcInputAmount + bsqTradeFeeAmount;
             var btcOut = takerBtcOutputAmount + makerBtcOutputAmount;
-            bsqSwapProtocolModel.setTxFee(btcIn - btcOut);
+            bsqSwapProtocolModel.setTxFee(btcIn - btcOut);*/
 
             complete();
         } catch (Throwable t) {

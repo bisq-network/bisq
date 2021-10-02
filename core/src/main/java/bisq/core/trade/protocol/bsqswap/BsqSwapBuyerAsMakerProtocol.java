@@ -18,5 +18,11 @@
 package bisq.core.trade.protocol.bsqswap;
 
 
-public interface BsqSwapMakerProtocol {
+import bisq.core.trade.model.bsqswap.BsqSwapBuyerAsMakerTrade;
+
+public class BsqSwapBuyerAsMakerProtocol extends BsqSwapBuyerProtocol implements BsqSwapMakerProtocol {
+
+    public BsqSwapBuyerAsMakerProtocol(BsqSwapBuyerAsMakerTrade trade) {
+        super(trade);
+    }
 }

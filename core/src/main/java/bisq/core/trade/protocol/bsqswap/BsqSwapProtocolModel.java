@@ -17,21 +17,16 @@
 
 package bisq.core.trade.protocol.bsqswap;
 
-import bisq.core.btc.BsqSwapTxHelper;
-import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.dao.DaoFacade;
 import bisq.core.filter.FilterManager;
-import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.proto.CoreProtoResolver;
 import bisq.core.trade.messages.TradeMessage;
-import bisq.core.trade.messages.bsqswap.CreateBsqSwapTxRequest;
-import bisq.core.trade.messages.bsqswap.CreateBsqSwapTxResponse;
 import bisq.core.trade.model.TradeManager;
 import bisq.core.trade.model.bsqswap.BsqSwapTrade;
 import bisq.core.trade.protocol.Provider;
@@ -45,12 +40,6 @@ import bisq.common.crypto.PubKeyRing;
 import bisq.common.proto.persistable.PersistablePayload;
 import bisq.common.taskrunner.Model;
 
-import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.Transaction;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
 import lombok.Getter;
@@ -59,7 +48,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 // Fields marked as transient are only used during protocol execution which are based on directMessages so we do not
@@ -76,77 +64,16 @@ public class BsqSwapProtocolModel implements TradeProtocolModel<BsqSwapTradePeer
     transient private Provider provider;
     transient private TradeManager tradeManager;
     transient private Offer offer;
+    @Setter
+    transient private TradeMessage tradeMessage;
 
-    private BsqSwapTrade bsqSwapTrade;
+    private BsqSwapTrade trade;
 
     private final BsqSwapTradePeer tradePeer;
     private final PubKeyRing pubKeyRing;
-    // Copy to trade.tradingPeerAddress after successful verification of incoming message
     @Nullable
     @Setter
     private NodeAddress tempTradingPeerNodeAddress;
-    @Setter
-    transient private TradeMessage tradeMessage;
-    @Setter
-    transient private BsqSwapTxHelper bsqSwapTxHelper;
-
-    @Setter
-    private long bsqTradeAmount;
-    @Setter
-    private long bsqMaxTradeAmount;
-    @Setter
-    private long bsqMinTradeAmount;
-    @Setter
-    private long btcTradeAmount;
-    @Setter
-    private long btcMaxTradeAmount;
-    @Setter
-    private long btcMinTradeAmount;
-    @Setter
-    private long tradePrice;
-    @Setter
-    private long bsqTakerTradeFee;
-    @Setter
-    private long bsqMakerTradeFee;
-    @Setter
-    private long txFeePerVbyte;
-    @Setter
-    private long txFee;
-    @Setter
-    private long takerBsqOutputAmount;
-    @Setter
-    private long takerBtcOutputAmount;
-    @Setter
-    private long makerBsqOutputAmount;
-    @Setter
-    private long makerBtcOutputAmount;
-    @Nullable
-    @Setter
-    private String takerBsqAddress;
-    @Nullable
-    @Setter
-    private String takerBtcAddress;
-    @Nullable
-    @Setter
-    private String makerBsqAddress;
-    @Nullable
-    @Setter
-    private String makerBtcAddress;
-    @Setter
-    private List<RawTransactionInput> rawTakerBsqInputs = new ArrayList<>();
-    @Setter
-    private List<RawTransactionInput> rawTakerBtcInputs = new ArrayList<>();
-    @Setter
-    private List<RawTransactionInput> rawMakerBsqInputs = new ArrayList<>();
-    @Setter
-    private List<RawTransactionInput> rawMakerBtcInputs = new ArrayList<>();
-    @Nullable
-    @Setter
-    private byte[] rawTx;
-    @Nullable
-    @Setter
-    private Transaction verifiedTransaction;
-
 
     public BsqSwapProtocolModel(PubKeyRing pubKeyRing) {
         this(pubKeyRing, new BsqSwapTradePeer());
@@ -175,10 +102,10 @@ public class BsqSwapProtocolModel implements TradeProtocolModel<BsqSwapTradePeer
                                                  CoreProtoResolver coreProtoResolver) {
         BsqSwapTradePeer tradePeer = BsqSwapTradePeer.fromProto(proto.getTradingPeer(), coreProtoResolver);
         PubKeyRing pubKeyRing = PubKeyRing.fromProto(proto.getPubKeyRing());
-        BsqSwapProtocolModel bsqSwapProtocolModel = new BsqSwapProtocolModel(pubKeyRing, tradePeer);
-        bsqSwapProtocolModel.setTempTradingPeerNodeAddress(proto.hasTempTradingPeerNodeAddress() ?
+        BsqSwapProtocolModel model = new BsqSwapProtocolModel(pubKeyRing, tradePeer);
+        model.setTempTradingPeerNodeAddress(proto.hasTempTradingPeerNodeAddress() ?
                 NodeAddress.fromProto(proto.getTempTradingPeerNodeAddress()) : null);
-        return bsqSwapProtocolModel;
+        return model;
     }
 
 
@@ -215,51 +142,15 @@ public class BsqSwapProtocolModel implements TradeProtocolModel<BsqSwapTradePeer
     }
 
     public void initFromTrade(BsqSwapTrade trade) {
-        bsqSwapTrade = trade;
+        this.trade = trade;
         var offer = trade.getOffer();
         checkNotNull(offer, "offer must not be null");
-        if (trade.getAmount() != null && trade.getAmount().isPositive())
-            bsqAmountFromVolume(trade.getOffer().getVolume()).ifPresent(this::setBsqTradeAmount);
-        bsqAmountFromVolume(offer.getVolume()).ifPresent(this::setBsqMaxTradeAmount);
-        bsqAmountFromVolume(offer.getMinVolume()).ifPresent(this::setBsqMinTradeAmount);
-        checkArgument(!offer.isUseMarketBasedPrice(), "BsqSwap trades does not support market based prices");
-        var price = Objects.requireNonNull(offer.getPrice()).getValue();
-        setTradePrice(price);
-        if (trade.getAmount() != null && trade.getAmount().isPositive())
-            setBtcTradeAmount(trade.getAmount().getValue());
-        setBtcMaxTradeAmount(offer.getAmount().getValue());
-        setBtcMinTradeAmount(offer.getMinAmount().getValue());
-        setBsqTakerTradeFee(trade.getTakerFee());
-        setBsqMakerTradeFee(trade.getMakerFee());
+
     }
 
-    public void updateFromMessage(CreateBsqSwapTxRequest message) {
-        setTakerBsqOutputAmount(message.getTakerBsqOutputValue());
-        setTakerBtcOutputAmount(message.getTakerBtcOutputValue());
-        setTakerBsqAddress(message.getTakerBsqOutputAddress());
-        setTakerBtcAddress(message.getTakerBtcOutputAddress());
-        setRawTakerBsqInputs(message.getTakerBsqInputs());
-        setRawTakerBtcInputs(message.getTakerBtcInputs());
-        setBsqTradeAmount(message.getBsqTradeAmount());
-        setBtcTradeAmount(message.getBtcTradeAmount());
-        tradePeer.setPubKeyRing(checkNotNull(message.getTakerPubKeyRing()));
-        bsqSwapTrade.setAmount(Coin.valueOf(message.getBtcTradeAmount()));
-        bsqSwapTrade.setPeerNodeAddress(tempTradingPeerNodeAddress);
-    }
-
-    public void updateFromMessage(CreateBsqSwapTxResponse message) {
-        setMakerBsqOutputAmount(message.getMakerBsqOutputValue());
-        setMakerBsqAddress(message.getMakerBsqOutputAddress());
-        setMakerBtcOutputAmount(message.getMakerBtcOutputValue());
-        setMakerBtcAddress(message.getMakerBtcOutputAddress());
-        setRawMakerBsqInputs(message.getMakerBsqInputs());
-        setRawMakerBtcInputs(message.getMakerBtcInputs());
-    }
-
-    public Optional<Long> bsqAmountFromVolume(Volume volume) {
-        // The Altcoin class have the smallest unit set to 8 decimals, BSQ has the smallest unit at 2 decimals.
-        return volume == null ? Optional.empty() : Optional.of((volume.getMonetary().getValue() + 500_000) / 1_000_000);
-    }
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Delegates
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public BsqWalletService getBsqWalletService() {
         return provider.getBsqWalletService();
@@ -291,83 +182,5 @@ public class BsqSwapProtocolModel implements TradeProtocolModel<BsqSwapTradePeer
 
     public OpenOfferManager getOpenOfferManager() {
         return provider.getOpenOfferManager();
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Build tx
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public void initTxBuilder(boolean isMaker) {
-        bsqSwapTxHelper = new BsqSwapTxHelper(
-                getBsqWalletService(),
-                getTradeWalletService(),
-                offer.isBuyOffer() == isMaker,
-                bsqSwapTrade.getPrice(),
-                bsqSwapTrade.getAmount(),
-                Coin.valueOf(txFeePerVbyte),
-                isMaker ? makerBtcAddress : takerBtcAddress,
-                isMaker ? makerBsqAddress : takerBsqAddress
-        );
-
-        if (isMaker) {
-            bsqSwapTxHelper.setMyTradeFee(Coin.valueOf(bsqSwapTrade.getMakerFee()));
-            bsqSwapTxHelper.setPeerTradeFee(Coin.valueOf(bsqSwapTrade.getTakerFee()));
-        } else {
-            bsqSwapTxHelper.setMyTradeFee(Coin.valueOf(bsqSwapTrade.getTakerFee()));
-            bsqSwapTxHelper.setPeerTradeFee(Coin.valueOf(bsqSwapTrade.getMakerFee()));
-        }
-    }
-
-    public boolean takerPreparesTakerSide() {
-        var mySideTxData = bsqSwapTxHelper.buildMySide(0, null, true);
-        if (mySideTxData == null) {
-            return false;
-        }
-
-        takerBsqOutputAmount = mySideTxData.bsqOutput.getValue();
-        takerBtcOutputAmount = mySideTxData.btcOutput.getValue();
-        rawTakerBsqInputs = mySideTxData.bsqInputs;
-        rawTakerBtcInputs = mySideTxData.btcInputs;
-
-        return true;
-    }
-
-    public boolean makerPreparesMakerSide() {
-        var mySideTxData = bsqSwapTxHelper.buildMySide(0, null, false);
-        if (mySideTxData == null) {
-            return false;
-        }
-
-        makerBsqOutputAmount = mySideTxData.bsqOutput.getValue();
-        makerBtcOutputAmount = mySideTxData.btcOutput.getValue();
-        rawMakerBsqInputs = mySideTxData.bsqInputs;
-        rawMakerBtcInputs = mySideTxData.btcInputs;
-
-        return true;
-    }
-
-    public Transaction createBsqSwapTx() {
-        return getTradeWalletService().createBsqSwapTx(
-                Coin.valueOf(makerBsqOutputAmount),
-                Coin.valueOf(makerBtcOutputAmount),
-                Coin.valueOf(takerBsqOutputAmount),
-                Coin.valueOf(takerBtcOutputAmount),
-                makerBsqAddress,
-                makerBtcAddress,
-                takerBsqAddress,
-                takerBtcAddress,
-                rawMakerBsqInputs,
-                rawMakerBtcInputs,
-                rawTakerBsqInputs,
-                rawTakerBtcInputs);
-    }
-
-    public long numTakerInputs() {
-        return rawTakerBsqInputs.size() + rawTakerBtcInputs.size();
-    }
-
-    public long numMakerInputs() {
-        return rawMakerBsqInputs.size() + rawMakerBtcInputs.size();
     }
 }

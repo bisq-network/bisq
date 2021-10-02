@@ -20,8 +20,10 @@ package bisq.core.trade.model;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.offer.OpenOffer;
 import bisq.core.proto.CoreProtoResolver;
-import bisq.core.trade.model.bsqswap.BsqSwapMakerTrade;
-import bisq.core.trade.model.bsqswap.BsqSwapTakerTrade;
+import bisq.core.trade.model.bsqswap.BsqSwapBuyerAsMakerTrade;
+import bisq.core.trade.model.bsqswap.BsqSwapBuyerAsTakerTrade;
+import bisq.core.trade.model.bsqswap.BsqSwapSellerAsMakerTrade;
+import bisq.core.trade.model.bsqswap.BsqSwapSellerAsTakerTrade;
 import bisq.core.trade.model.trade.BuyerAsMakerTrade;
 import bisq.core.trade.model.trade.BuyerAsTakerTrade;
 import bisq.core.trade.model.trade.SellerAsMakerTrade;
@@ -82,10 +84,14 @@ public final class TradableList<T extends Tradable> extends PersistableListAsObs
                             return SellerAsMakerTrade.fromProto(tradable.getSellerAsMakerTrade(), btcWalletService, coreProtoResolver);
                         case SELLER_AS_TAKER_TRADE:
                             return SellerAsTakerTrade.fromProto(tradable.getSellerAsTakerTrade(), btcWalletService, coreProtoResolver);
-                        case BSQ_SWAP_MAKER_TRADE:
-                            return BsqSwapMakerTrade.fromProto(tradable.getBsqSwapMakerTrade(), coreProtoResolver);
-                        case BSQ_SWAP_TAKER_TRADE:
-                            return BsqSwapTakerTrade.fromProto(tradable.getBsqSwapTakerTrade(), coreProtoResolver);
+                        case BSQ_SWAP_BUYER_AS_MAKER_TRADE:
+                            return BsqSwapBuyerAsMakerTrade.fromProto(tradable.getBsqSwapBuyerAsMakerTrade(), coreProtoResolver);
+                        case BSQ_SWAP_BUYER_AS_TAKER_TRADE:
+                            return BsqSwapBuyerAsTakerTrade.fromProto(tradable.getBsqSwapBuyerAsTakerTrade(), coreProtoResolver);
+                        case BSQ_SWAP_SELLER_AS_MAKER_TRADE:
+                            return BsqSwapSellerAsMakerTrade.fromProto(tradable.getBsqSwapSellerAsMakerTrade(), coreProtoResolver);
+                        case BSQ_SWAP_SELLER_AS_TAKER_TRADE:
+                            return BsqSwapSellerAsTakerTrade.fromProto(tradable.getBsqSwapSellerAsTakerTrade(), coreProtoResolver);
                         default:
                             log.error("Unknown messageCase. tradable.getMessageCase() = " + tradable.getMessageCase());
                             throw new ProtobufferRuntimeException("Unknown messageCase. tradable.getMessageCase() = " +

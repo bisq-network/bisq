@@ -19,7 +19,7 @@ package bisq.core.trade.model.bsqswap;
 
 import bisq.core.offer.Offer;
 import bisq.core.proto.CoreProtoResolver;
-import bisq.core.trade.model.TakerTrade;
+import bisq.core.trade.model.MakerTrade;
 import bisq.core.trade.model.Tradable;
 import bisq.core.trade.protocol.bsqswap.BsqSwapProtocolModel;
 
@@ -35,25 +35,26 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
+
 @Slf4j
-public final class BsqSwapTakerTrade extends BsqSwapTrade implements TakerTrade {
+public final class BsqSwapSellerAsMakerTrade extends BsqSwapSellerTrade implements MakerTrade {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, initialization
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public BsqSwapTakerTrade(String uid,
-                             Offer offer,
-                             Coin amount,
-                             long price,
-                             long takeOfferDate,
-                             @Nullable NodeAddress peerNodeAddress,
-                             long miningFeePerByte,
-                             long makerFee,
-                             long takerFee,
-                             BsqSwapProtocolModel bsqSwapProtocolModel,
-                             @Nullable String errorMessage,
-                             State state) {
+    public BsqSwapSellerAsMakerTrade(String uid,
+                                     Offer offer,
+                                     Coin amount,
+                                     long price,
+                                     long takeOfferDate,
+                                     @Nullable NodeAddress peerNodeAddress,
+                                     long miningFeePerByte,
+                                     long makerFee,
+                                     long takerFee,
+                                     BsqSwapProtocolModel bsqSwapProtocolModel,
+                                     @Nullable String errorMessage,
+                                     State state) {
         super(uid,
                 offer,
                 amount,
@@ -76,19 +77,19 @@ public final class BsqSwapTakerTrade extends BsqSwapTrade implements TakerTrade 
     @Override
     public protobuf.Tradable toProtoMessage() {
         return protobuf.Tradable.newBuilder()
-                .setBsqSwapTakerTrade(protobuf.BsqSwapTakerTrade.newBuilder()
+                .setBsqSwapSellerAsMakerTrade(protobuf.BsqSwapSellerAsMakerTrade.newBuilder()
                         .setBsqSwapTrade((protobuf.BsqSwapTrade) super.toProtoMessage()))
                 .build();
     }
 
-    public static Tradable fromProto(protobuf.BsqSwapTakerTrade swapTrade,
+    public static Tradable fromProto(protobuf.BsqSwapSellerAsMakerTrade bsqSwapSellerAsMakerTrade,
                                      CoreProtoResolver coreProtoResolver) {
-        var proto = swapTrade.getBsqSwapTrade();
+        var proto = bsqSwapSellerAsMakerTrade.getBsqSwapTrade();
         var uid = ProtoUtil.stringOrNullFromProto(proto.getUid());
         if (uid == null) {
             uid = UUID.randomUUID().toString();
         }
-        var bsqSwapTakerTrade = new BsqSwapTakerTrade(
+        var bsqSwapMakerTrade = new BsqSwapSellerAsMakerTrade(
                 uid,
                 Offer.fromProto(proto.getOffer()),
                 Coin.valueOf(proto.getAmount()),
@@ -101,7 +102,7 @@ public final class BsqSwapTakerTrade extends BsqSwapTrade implements TakerTrade 
                 BsqSwapProtocolModel.fromProto(proto.getBsqSwapProtocolModel(), coreProtoResolver),
                 proto.getErrorMessage(),
                 State.fromProto(proto.getState()));
-        bsqSwapTakerTrade.setTxId(proto.getTxId());
-        return bsqSwapTakerTrade;
+        bsqSwapMakerTrade.setTxId(proto.getTxId());
+        return bsqSwapMakerTrade;
     }
 }

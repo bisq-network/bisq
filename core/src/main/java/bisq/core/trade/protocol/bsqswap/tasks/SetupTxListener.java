@@ -21,16 +21,12 @@ import bisq.core.btc.listeners.AddressConfidenceListener;
 import bisq.core.btc.wallet.WalletService;
 import bisq.core.trade.model.bsqswap.BsqSwapTrade;
 
-import bisq.common.UserThread;
 import bisq.common.taskrunner.TaskRunner;
 
 import org.bitcoinj.core.Address;
-import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionConfidence;
 
 import lombok.extern.slf4j.Slf4j;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public abstract class SetupTxListener extends BsqSwapTask {
@@ -72,7 +68,7 @@ public abstract class SetupTxListener extends BsqSwapTask {
     }
 
     private void applyConfidence(TransactionConfidence confidence) {
-        Transaction walletTx = walletService.getTransaction(confidence.getTransactionHash());
+     /*   Transaction walletTx = walletService.getTransaction(confidence.getTransactionHash());
         checkNotNull(walletTx, "Tx from network should not be null");
         if (bsqSwapProtocolModel.getRawTx() != null) {
             bsqSwapTrade.setTxId(walletTx.getTxId().toString());
@@ -85,7 +81,7 @@ public abstract class SetupTxListener extends BsqSwapTask {
         }
 
         // need delay as it can be called inside the handler before the listener and tradeStateSubscription are actually set.
-        UserThread.execute(this::unSubscribe);
+        UserThread.execute(this::unSubscribe);*/
     }
 
     private boolean isInNetwork(TransactionConfidence confidence) {

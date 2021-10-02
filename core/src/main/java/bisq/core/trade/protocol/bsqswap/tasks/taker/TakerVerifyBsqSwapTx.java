@@ -17,17 +17,12 @@
 
 package bisq.core.trade.protocol.bsqswap.tasks.taker;
 
-import bisq.core.trade.messages.bsqswap.CreateBsqSwapTxResponse;
 import bisq.core.trade.model.bsqswap.BsqSwapTrade;
 import bisq.core.trade.protocol.bsqswap.tasks.BsqSwapTask;
 
 import bisq.common.taskrunner.TaskRunner;
 
-import org.bitcoinj.core.TransactionInput;
-
 import lombok.extern.slf4j.Slf4j;
-
-import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class TakerVerifyBsqSwapTx extends BsqSwapTask {
@@ -41,8 +36,8 @@ public class TakerVerifyBsqSwapTx extends BsqSwapTask {
     protected void run() {
         try {
             runInterceptHook();
-
-            /* Tx output format:
+            /*
+             *//* Tx output format:
              * At a minimum there will be 1 BSQ out and 1 BTC out
              * [0-1]   (Maker BSQ)
              * [0-1]   (Taker BSQ)
@@ -59,7 +54,7 @@ public class TakerVerifyBsqSwapTx extends BsqSwapTask {
              *   - tradeFee
              *   - BSQ output to taker BSQ address
              *   - BTC output to taker BTC address
-             */
+             *//*
 
             checkArgument(!bsqSwapProtocolModel.getOffer().isMyOffer(bsqSwapProtocolModel.getKeyRing()),
                     "must not take own offer");
@@ -110,7 +105,7 @@ public class TakerVerifyBsqSwapTx extends BsqSwapTask {
             bsqSwapProtocolModel.setVerifiedTransaction(signedTx);
             bsqSwapProtocolModel.setRawTx(signedTx.bitcoinSerialize());
 
-            complete();
+            complete();*/
         } catch (Throwable t) {
             failed(t);
         }

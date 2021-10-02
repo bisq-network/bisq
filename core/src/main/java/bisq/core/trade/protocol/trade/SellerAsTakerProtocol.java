@@ -25,7 +25,6 @@ import bisq.core.trade.messages.trade.DelayedPayoutTxSignatureResponse;
 import bisq.core.trade.messages.trade.InputsForDepositTxResponse;
 import bisq.core.trade.model.trade.SellerAsTakerTrade;
 import bisq.core.trade.model.trade.Trade;
-import bisq.core.trade.protocol.TakerProtocol;
 import bisq.core.trade.protocol.trade.tasks.ApplyFilter;
 import bisq.core.trade.protocol.trade.tasks.TradeTask;
 import bisq.core.trade.protocol.trade.tasks.seller.SellerCreatesDelayedPayoutTx;

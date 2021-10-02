@@ -17,16 +17,10 @@
 
 package bisq.core.trade.protocol.bsqswap.tasks.maker;
 
-import bisq.core.trade.messages.bsqswap.CreateBsqSwapTxResponse;
 import bisq.core.trade.model.bsqswap.BsqSwapTrade;
 import bisq.core.trade.protocol.bsqswap.tasks.BsqSwapTask;
 
-import bisq.network.p2p.NodeAddress;
-import bisq.network.p2p.SendDirectMessageListener;
-
 import bisq.common.taskrunner.TaskRunner;
-
-import java.util.UUID;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -42,7 +36,7 @@ public class MakerCreatesAndSignsTx extends BsqSwapTask {
         try {
             runInterceptHook();
 
-            // Create bsq swap tx with maker btc inputs signed
+          /*  // Create bsq swap tx with maker btc inputs signed
             var swapTx = bsqSwapProtocolModel.createBsqSwapTx();
 
             // Sign inputs
@@ -61,9 +55,9 @@ public class MakerCreatesAndSignsTx extends BsqSwapTask {
                     bsqSwapProtocolModel.getMakerBtcOutputAmount(),
                     bsqSwapProtocolModel.getMakerBtcAddress(),
                     bsqSwapProtocolModel.getRawMakerBsqInputs(),
-                    bsqSwapProtocolModel.getRawMakerBtcInputs());
+                    bsqSwapProtocolModel.getRawMakerBtcInputs());*/
 
-            NodeAddress peersNodeAddress = bsqSwapTrade.getTradingPeerNodeAddress();
+          /*  NodeAddress peersNodeAddress = bsqSwapTrade.getTradingPeerNodeAddress();
             log.info("Send {} to peer {}. tradeId={}, uid={}",
                     message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
             bsqSwapProtocolModel.getP2PService().sendEncryptedDirectMessage(
@@ -90,7 +84,7 @@ public class MakerCreatesAndSignsTx extends BsqSwapTask {
                             failed();
                         }
                     }
-            );
+            );*/
             complete();
         } catch (Throwable t) {
             failed(t);

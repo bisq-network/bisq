@@ -237,7 +237,7 @@ public class TradeUtil {
     public static void applyFilter(TradeModel tradeModel,
                                    FilterManager filterManager,
                                    NodeAddress nodeAddress,
-                                   PaymentAccountPayload paymentAccountPayload,
+                                   @Nullable PaymentAccountPayload paymentAccountPayload,
                                    ResultHandler complete,
                                    ErrorMessageHandler failed) {
         if (filterManager.isNodeAddressBanned(nodeAddress)) {

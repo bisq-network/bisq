@@ -41,7 +41,7 @@ public class TakerPreparesData extends BsqSwapTask {
 
             checkArgument(!bsqSwapProtocolModel.getOffer().isMyOffer(bsqSwapProtocolModel.getKeyRing()), "must not take own offer");
 
-            bsqSwapProtocolModel.initFromTrade(bsqSwapTrade);
+        /*    bsqSwapProtocolModel.initFromTrade(bsqSwapTrade);
             bsqSwapProtocolModel.setTakerBsqAddress(
                     bsqSwapProtocolModel.getBsqWalletService().getUnusedAddress().toString());
             bsqSwapProtocolModel.setTakerBtcAddress(
@@ -63,7 +63,7 @@ public class TakerPreparesData extends BsqSwapTask {
                             failed();
                         }
                     }
-            );
+            );*/
         } catch (Throwable t) {
             failed(t);
         }

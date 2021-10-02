@@ -377,7 +377,6 @@ message TraderSignedWitnessMessage {
 }
 
 // BsqSwapTrade
-
 message CreateBsqSwapTxRequest {
     string uid = 1;
     string trade_id = 2;
@@ -1527,8 +1526,10 @@ message Tradable {
         BuyerAsTakerTrade buyer_as_taker_trade = 3;
         SellerAsMakerTrade seller_as_maker_trade = 4;
         SellerAsTakerTrade seller_as_taker_trade = 5;
-        BsqSwapMakerTrade bsq_swap_maker_trade = 6;
-        BsqSwapTakerTrade bsq_swap_taker_trade = 7;
+        BsqSwapBuyerAsMakerTrade bsq_swap_buyer_as_maker_trade = 6;
+        BsqSwapBuyerAsTakerTrade bsq_swap_buyer_as_taker_trade = 7;
+        BsqSwapSellerAsMakerTrade bsq_swap_seller_as_maker_trade = 8;
+        BsqSwapSellerAsTakerTrade bsq_swap_seller_as_taker_trade = 9;
     }
 }
 
@@ -1681,11 +1682,19 @@ message BsqSwapTrade {
     State state = 13;
 }
 
-message BsqSwapMakerTrade {
+message BsqSwapBuyerAsMakerTrade {
     BsqSwapTrade bsq_swap_trade = 1;
 }
 
-message BsqSwapTakerTrade {
+message BsqSwapBuyerAsTakerTrade {
+    BsqSwapTrade bsq_swap_trade = 1;
+}
+
+message BsqSwapSellerAsMakerTrade {
+    BsqSwapTrade bsq_swap_trade = 1;
+}
+
+message BsqSwapSellerAsTakerTrade {
     BsqSwapTrade bsq_swap_trade = 1;
 }
 
@@ -1712,12 +1721,6 @@ message ProcessModel {
     int64 seller_payout_amount_from_mediation = 20;
 }
 
-message BsqSwapProtocolModel {
-    TradingPeer trading_peer = 1;
-    PubKeyRing pub_key_ring = 2;
-    NodeAddress temp_trading_peer_node_address = 3;
-}
-
 message TradingPeer {
     string account_id = 1;
     PaymentAccountPayload payment_account_payload = 2;
@@ -1736,6 +1739,19 @@ message TradingPeer {
     bytes mediated_payout_tx_signature = 15;
     bytes hash_of_payment_account_payload = 16;
 }
+
+
+message BsqSwapProtocolModel {
+    TradingPeer trading_peer = 1;
+    PubKeyRing pub_key_ring = 2;
+    NodeAddress temp_trading_peer_node_address = 3;
+    BsqSwapTradePeer tradePeer= 4;
+}
+
+message BsqSwapTradePeer {
+    PubKeyRing pub_key_ring = 1;
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 // Dispute

@@ -22,8 +22,6 @@ import bisq.core.trade.protocol.bsqswap.tasks.SetupTxListener;
 
 import bisq.common.taskrunner.TaskRunner;
 
-import org.bitcoinj.core.Address;
-
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -39,7 +37,7 @@ public class MakerSetupTxListener extends SetupTxListener {
         try {
             runInterceptHook();
 
-            // Find address to listen to
+         /*   // Find address to listen to
             if (bsqSwapProtocolModel.getMakerBtcAddress() != null) {
                 walletService = bsqSwapProtocolModel.getBtcWalletService();
                 myAddress = Address.fromString(walletService.getParams(), bsqSwapProtocolModel.getMakerBtcAddress());
@@ -49,7 +47,7 @@ public class MakerSetupTxListener extends SetupTxListener {
                 myAddress = Address.fromString(walletService.getParams(), bsqSwapProtocolModel.getMakerBsqAddress());
             } else {
                 failed("No maker address set");
-            }
+            }*/
 
             super.run();
 

@@ -18,5 +18,13 @@
 package bisq.core.trade.protocol.bsqswap;
 
 
-public interface BsqSwapMakerProtocol {
+import bisq.core.trade.model.bsqswap.BsqSwapSellerAsMakerTrade;
+
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+public class BsqSwapSellerAsMakerProtocol extends BsqSwapSellerProtocol implements BsqSwapMakerProtocol {
+    public BsqSwapSellerAsMakerProtocol(BsqSwapSellerAsMakerTrade trade) {
+        super(trade);
+    }
 }
