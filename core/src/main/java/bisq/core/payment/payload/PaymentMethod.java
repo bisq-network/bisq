@@ -104,6 +104,8 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
     public static final String UPI_ID = "UPI";
     public static final String PAYTM_ID = "PAYTM";
     public static final String NEQUI_ID = "NEQUI";
+    public static final String BIZUM_ID = "BIZUM";
+    public static final String PIX_ID = "PIX";
     public static final String AMAZON_GIFT_CARD_ID = "AMAZON_GIFT_CARD";
     public static final String BLOCK_CHAINS_INSTANT_ID = "BLOCK_CHAINS_INSTANT";
     public static final String CASH_BY_MAIL_ID = "CASH_BY_MAIL";
@@ -156,6 +158,8 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
     public static PaymentMethod UPI;
     public static PaymentMethod PAYTM;
     public static PaymentMethod NEQUI;
+    public static PaymentMethod BIZUM;
+    public static PaymentMethod PIX;
     public static PaymentMethod AMAZON_GIFT_CARD;
     public static PaymentMethod BLOCK_CHAINS_INSTANT;
     public static PaymentMethod CASH_BY_MAIL;
@@ -221,6 +225,8 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
             UPI = new PaymentMethod(UPI_ID, DAY, Coin.parseCoin("0.05")),
             PAYTM = new PaymentMethod(PAYTM_ID, DAY, Coin.parseCoin("0.05")),
             NEQUI = new PaymentMethod(NEQUI_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
+            BIZUM = new PaymentMethod(BIZUM_ID, DAY, Coin.parseCoin("0.04")),
+            PIX = new PaymentMethod(PIX_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
             CAPITUAL = new PaymentMethod(CAPITUAL_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
             CELPAY = new PaymentMethod(CELPAY_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
             SWIFT = new PaymentMethod(SWIFT_ID, 7 * DAY, DEFAULT_TRADE_LIMIT_MID_RISK),
@@ -341,7 +347,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
         if (currencyCode.equals("SF"))
             return Coin.parseCoin("4");
         // payment methods which define their own trade limits
-        if (id.equals(NEFT_ID) || id.equals(UPI_ID) || id.equals(PAYTM_ID)) {
+        if (id.equals(NEFT_ID) || id.equals(UPI_ID) || id.equals(PAYTM_ID) || id.equals(BIZUM_ID)) {
             return Coin.valueOf(maxTradeLimit);
         }
 
