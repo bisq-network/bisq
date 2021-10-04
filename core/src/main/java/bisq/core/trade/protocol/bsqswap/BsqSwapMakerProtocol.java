@@ -18,5 +18,14 @@
 package bisq.core.trade.protocol.bsqswap;
 
 
+import bisq.core.trade.messages.bsqswap.TakeOfferRequest;
+
+import bisq.network.p2p.NodeAddress;
+
+import bisq.common.handlers.ErrorMessageHandler;
+
 public interface BsqSwapMakerProtocol {
+    void handleTakeOfferRequest(TakeOfferRequest request,
+                                NodeAddress sender,
+                                ErrorMessageHandler errorMessageHandler);
 }

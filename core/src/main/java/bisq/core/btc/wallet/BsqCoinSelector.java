@@ -26,6 +26,7 @@ import org.bitcoinj.core.TransactionOutput;
 
 import javax.inject.Inject;
 
+import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -38,6 +39,7 @@ public class BsqCoinSelector extends BisqDefaultCoinSelector {
     private final DaoStateService daoStateService;
     private final UnconfirmedBsqChangeOutputListService unconfirmedBsqChangeOutputListService;
     @Setter
+    @Getter
     private boolean isUnconfirmedSpendable = true;
 
     @Inject

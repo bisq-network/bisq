@@ -17,17 +17,14 @@
 
 package bisq.core.trade.protocol.bsqswap.tasks;
 
-import bisq.core.filter.FilterManager;
 import bisq.core.trade.misc.TradeUtil;
 import bisq.core.trade.model.bsqswap.BsqSwapTrade;
 
-import bisq.network.p2p.NodeAddress;
-
 import bisq.common.taskrunner.TaskRunner;
 
-import lombok.extern.slf4j.Slf4j;
+import java.util.Objects;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class ApplyFilter extends BsqSwapTask {
@@ -40,13 +37,9 @@ public class ApplyFilter extends BsqSwapTask {
         try {
             runInterceptHook();
 
-            NodeAddress nodeAddress = checkNotNull(bsqSwapProtocolModel.getTempTradingPeerNodeAddress());
-
-            FilterManager filterManager = bsqSwapProtocolModel.getFilterManager();
-
             TradeUtil.applyFilter(bsqSwapTrade,
-                    filterManager,
-                    nodeAddress,
+                    bsqSwapProtocolModel.getFilterManager(),
+                    Objects.requireNonNull(bsqSwapTrade.getPeerNodeAddress()),
                     null,
                     this::complete,
                     this::failed);

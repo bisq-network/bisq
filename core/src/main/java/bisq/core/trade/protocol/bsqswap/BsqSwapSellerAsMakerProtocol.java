@@ -18,7 +18,22 @@
 package bisq.core.trade.protocol.bsqswap;
 
 
+import bisq.core.trade.messages.TradeMessage;
+import bisq.core.trade.messages.bsqswap.BsqSwapTakeOfferWithTxInputsRequest;
+import bisq.core.trade.messages.bsqswap.TakeOfferRequest;
 import bisq.core.trade.model.bsqswap.BsqSwapSellerAsMakerTrade;
+import bisq.core.trade.model.bsqswap.BsqSwapTrade;
+import bisq.core.trade.protocol.TradeTaskRunner;
+import bisq.core.trade.protocol.bsqswap.tasks.ApplyFilter;
+import bisq.core.trade.protocol.bsqswap.tasks.maker.RemoveOpenOffer;
+import bisq.core.trade.protocol.bsqswap.tasks.seller.SellerSetupTxListener;
+import bisq.core.trade.protocol.bsqswap.tasks.seller.SendFinalizeBsqSwapTxRequest;
+import bisq.core.trade.protocol.bsqswap.tasks.seller_as_maker.ProcessBsqSwapTakeOfferWithTxInputsRequest;
+import bisq.core.trade.protocol.bsqswap.tasks.seller_as_maker.SellerAsMakerCreatesAndSignsTx;
+
+import bisq.network.p2p.NodeAddress;
+
+import bisq.common.handlers.ErrorMessageHandler;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -26,5 +41,40 @@ import lombok.extern.slf4j.Slf4j;
 public class BsqSwapSellerAsMakerProtocol extends BsqSwapSellerProtocol implements BsqSwapMakerProtocol {
     public BsqSwapSellerAsMakerProtocol(BsqSwapSellerAsMakerTrade trade) {
         super(trade);
+        log.error("BsqSwapSellerAsMakerProtocol " + trade.getId());
+    }
+
+    @Override
+    public void handleTakeOfferRequest(TakeOfferRequest takeOfferRequest,
+                                       NodeAddress sender,
+                                       ErrorMessageHandler errorMessageHandler) {
+        BsqSwapTakeOfferWithTxInputsRequest request = (BsqSwapTakeOfferWithTxInputsRequest) takeOfferRequest;
+        expect(preCondition(BsqSwapTrade.State.PREPARATION == bsqSwapTrade.getState())
+                .with(request)
+                .from(sender))
+                .setup(tasks(
+                        ApplyFilter.class,
+                        ProcessBsqSwapTakeOfferWithTxInputsRequest.class,
+                        SellerAsMakerCreatesAndSignsTx.class,
+                        RemoveOpenOffer.class,
+                        SellerSetupTxListener.class,
+                        SendFinalizeBsqSwapTxRequest.class)
+                        .using(new TradeTaskRunner(bsqSwapTrade,
+                                () -> {
+                                    stopTimeout();
+                                    handleTaskRunnerSuccess(request);
+                                },
+                                errorMessage -> {
+                                    errorMessageHandler.handleErrorMessage(errorMessage);
+                                    handleTaskRunnerFault(request, errorMessage);
+                                }))
+                        .withTimeout(60))
+                .executeTasks();
+    }
+
+    @Override
+    protected void onTradeMessage(TradeMessage message, NodeAddress peer) {
+        //todo we could add a msg for the final tx so we can publish it as well for better resiliance
+        // We do not expect a trade message beside the initial takeOfferMessage
     }
 }

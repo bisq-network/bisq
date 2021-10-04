@@ -15,20 +15,18 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.protocol.bsqswap.tasks.maker;
+package bisq.core.trade.protocol.bsqswap.tasks.seller_as_maker;
 
 import bisq.core.trade.model.bsqswap.BsqSwapTrade;
-import bisq.core.trade.protocol.bsqswap.tasks.BsqSwapTask;
+import bisq.core.trade.protocol.bsqswap.tasks.seller.SellerCreatesAndSignsTx;
 
 import bisq.common.taskrunner.TaskRunner;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 @Slf4j
-public class MakerRemovesOpenOffer extends BsqSwapTask {
-    public MakerRemovesOpenOffer(TaskRunner<BsqSwapTrade> taskHandler, BsqSwapTrade bsqSwapTrade) {
+public class SellerAsMakerCreatesAndSignsTx extends SellerCreatesAndSignsTx {
+    public SellerAsMakerCreatesAndSignsTx(TaskRunner<BsqSwapTrade> taskHandler, BsqSwapTrade bsqSwapTrade) {
         super(taskHandler, bsqSwapTrade);
     }
 
@@ -37,11 +35,19 @@ public class MakerRemovesOpenOffer extends BsqSwapTask {
         try {
             runInterceptHook();
 
-            bsqSwapProtocolModel.getOpenOfferManager().closeOpenOffer(checkNotNull(bsqSwapTrade.getOffer()));
-
-            complete();
+            super.run();
         } catch (Throwable t) {
             failed(t);
         }
+    }
+
+    @Override
+    protected long getBuyersTradeFee() {
+        return bsqSwapTrade.getTakerFee();
+    }
+
+    @Override
+    protected long getSellersTradeFee() {
+        return bsqSwapTrade.getMakerFee();
     }
 }

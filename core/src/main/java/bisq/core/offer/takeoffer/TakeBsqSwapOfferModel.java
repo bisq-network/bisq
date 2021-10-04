@@ -195,7 +195,6 @@ public class TakeBsqSwapOfferModel implements Model {
         } else {
             tradeManager.onTakeBsqSwapOffer(offer,
                     amount.get(),
-                    tradePrice.getValue(),
                     feeService.getTxFeePerVbyte().getValue(),
                     getMakerFee().getValue(),
                     getTakerFee().getValue(),

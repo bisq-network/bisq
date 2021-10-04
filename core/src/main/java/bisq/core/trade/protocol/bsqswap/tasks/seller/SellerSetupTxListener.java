@@ -15,42 +15,51 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.protocol.bsqswap.tasks;
+package bisq.core.trade.protocol.bsqswap.tasks.seller;
 
 import bisq.core.btc.listeners.AddressConfidenceListener;
-import bisq.core.btc.wallet.WalletService;
+import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.trade.model.bsqswap.BsqSwapTrade;
+import bisq.core.trade.protocol.bsqswap.tasks.BsqSwapTask;
 
+import bisq.common.UserThread;
 import bisq.common.taskrunner.TaskRunner;
 
 import org.bitcoinj.core.Address;
+import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionConfidence;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public abstract class SetupTxListener extends BsqSwapTask {
-    // Use instance fields to not get eaten up by the GC
-    private AddressConfidenceListener confidenceListener;
-    protected Address myAddress;
-    protected WalletService walletService;
+public class SellerSetupTxListener extends BsqSwapTask {
 
-    @SuppressWarnings({"unused"})
-    public SetupTxListener(TaskRunner<BsqSwapTrade> taskHandler, BsqSwapTrade bsqSwapTrade) {
+    private AddressConfidenceListener confidenceListener;
+
+    public SellerSetupTxListener(TaskRunner<BsqSwapTrade> taskHandler, BsqSwapTrade bsqSwapTrade) {
         super(taskHandler, bsqSwapTrade);
     }
-
 
     @Override
     protected void run() {
         try {
             runInterceptHook();
 
-            TransactionConfidence confidence = walletService.getConfidenceForAddress(myAddress);
+            if (bsqSwapTrade.isCompleted()) {
+                complete();
+                return;
+            }
+
+            BsqWalletService walletService = bsqSwapProtocolModel.getBsqWalletService();
+            //todo we do not have a unique address like in normal trades...
+            // we need another approach -> use txId
+            Address address = Address.fromString(walletService.getParams(), bsqSwapProtocolModel.getBsqAddress());
+
+            TransactionConfidence confidence = walletService.getConfidenceForAddress(address);
             if (isInNetwork(confidence)) {
                 applyConfidence(confidence);
             } else {
-                confidenceListener = new AddressConfidenceListener(myAddress) {
+                confidenceListener = new AddressConfidenceListener(address) {
                     @Override
                     public void onTransactionConfidenceChanged(TransactionConfidence confidence) {
                         if (isInNetwork(confidence))
@@ -68,20 +77,22 @@ public abstract class SetupTxListener extends BsqSwapTask {
     }
 
     private void applyConfidence(TransactionConfidence confidence) {
-     /*   Transaction walletTx = walletService.getTransaction(confidence.getTransactionHash());
-        checkNotNull(walletTx, "Tx from network should not be null");
-        if (bsqSwapProtocolModel.getRawTx() != null) {
-            bsqSwapTrade.setTxId(walletTx.getTxId().toString());
-            WalletService.printTx("tx received from network", walletTx);
-            setState();
-            bsqSwapProtocolModel.getTradeManager().onTradeCompleted(bsqSwapTrade);
-        } else {
-            log.info("We had the bsq swap tx already set. tradeId={}, state={}", bsqSwapTrade.getId(),
-                    bsqSwapTrade.getState());
+        if (bsqSwapTrade.getTransaction() != null) {
+            return;
         }
 
-        // need delay as it can be called inside the handler before the listener and tradeStateSubscription are actually set.
-        UserThread.execute(this::unSubscribe);*/
+        Transaction walletTx = bsqSwapProtocolModel.getBsqWalletService().getTransaction(confidence.getTransactionHash());
+        bsqSwapTrade.applyTransaction(walletTx);
+        bsqSwapProtocolModel.getTradeManager().requestPersistence();
+        log.error("payoutTx received from network {}", walletTx);
+
+        bsqSwapTrade.setState(BsqSwapTrade.State.COMPLETED);
+        bsqSwapProtocolModel.getTradeManager().onTradeCompleted(bsqSwapTrade);
+
+        UserThread.execute(() -> {
+            if (confidenceListener != null)
+                bsqSwapProtocolModel.getBtcWalletService().removeAddressConfidenceListener(confidenceListener);
+        });
     }
 
     private boolean isInNetwork(TransactionConfidence confidence) {
@@ -89,14 +100,4 @@ public abstract class SetupTxListener extends BsqSwapTask {
                 (confidence.getConfidenceType().equals(TransactionConfidence.ConfidenceType.BUILDING) ||
                         confidence.getConfidenceType().equals(TransactionConfidence.ConfidenceType.PENDING));
     }
-
-    private void unSubscribe() {
-        if (confidenceListener != null)
-            bsqSwapProtocolModel.getBtcWalletService().removeAddressConfidenceListener(confidenceListener);
-    }
-
-    protected void setState() {
-        bsqSwapTrade.setState(BsqSwapTrade.State.TX_CONFIRMED);
-    }
-
 }

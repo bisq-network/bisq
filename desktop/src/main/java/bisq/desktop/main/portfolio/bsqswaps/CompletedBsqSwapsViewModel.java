@@ -67,7 +67,7 @@ class CompletedBsqSwapsViewModel extends ActivatableWithDataModel<CompletedBsqSw
         if (item == null)
             return "";
 
-        return btcFormatter.formatCoin(item.getBsqSwapTrade().getAmount());
+        return btcFormatter.formatCoin(Coin.valueOf(item.getBsqSwapTrade().getAmount()));
     }
 
     String getPrice(CompletedBsqSwapsListItem item) {
@@ -88,7 +88,7 @@ class CompletedBsqSwapsViewModel extends ActivatableWithDataModel<CompletedBsqSw
         if (item == null)
             return "";
 
-        return btcFormatter.formatCoin(Coin.valueOf(item.getBsqSwapTrade().getMiningFeePerByte()));
+        return btcFormatter.formatCoin(Coin.valueOf(item.getBsqSwapTrade().getTxFeePerVbyte()));
     }
 
     String getTradeFee(CompletedBsqSwapsListItem item) {

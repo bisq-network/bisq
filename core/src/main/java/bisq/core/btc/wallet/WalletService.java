@@ -22,6 +22,7 @@ import bisq.core.btc.exceptions.WalletException;
 import bisq.core.btc.listeners.AddressConfidenceListener;
 import bisq.core.btc.listeners.BalanceListener;
 import bisq.core.btc.listeners.TxConfidenceListener;
+import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.http.MemPoolSpaceTxBroadcaster;
 import bisq.core.provider.fee.FeeService;
@@ -355,14 +356,16 @@ public abstract class WalletService {
                         TransactionSignature txSig = tx.calculateWitnessSignature(index, key, aesKey, scriptCode, value,
                                 Transaction.SigHash.ALL, false);
                         txIn.setScriptSig(ScriptBuilder.createEmpty());
-                        txIn.setWitness(TransactionWitness.redeemP2WPKH(txSig, key));
+                        TransactionWitness witness = TransactionWitness.redeemP2WPKH(txSig, key);
+                        txIn.setWitness(witness);
                     } catch (ECKey.KeyIsEncryptedException e1) {
+                        log.error(e1.toString());
                         throw e1;
                     } catch (ECKey.MissingPrivateKeyException e1) {
                         log.warn("No private key in keypair for input {}", index);
                     }
                 } else {
-                    // log.error("Unexpected script type.");
+                    log.error("Unexpected script type.");
                     throw new RuntimeException("Unexpected script type.");
                 }
             } else {
@@ -821,6 +824,25 @@ public abstract class WalletService {
                                                  TransactionConfidence.Source source) throws VerificationException {
         return maybeAddTxToWallet(transaction.bitcoinSerialize(), wallet, source);
     }
+
+    public static RawTransactionInput getRawInputFromTransactionInput(TransactionInput input) {
+        checkNotNull(input, "input must not be null");
+        checkNotNull(input.getConnectedOutput(), "input.getConnectedOutput() must not be null");
+        checkNotNull(input.getConnectedOutput().getParentTransaction(),
+                "input.getConnectedOutput().getParentTransaction() must not be null");
+        checkNotNull(input.getValue(), "input.getValue() must not be null");
+
+        // todo check if that is correct to set to true
+        // bitcoinSerialize(false) is used just in case the serialized tx is parsed by a bisq node still using
+        // bitcoinj 0.14. This is not supposed to happen ever since Version.TRADE_PROTOCOL_VERSION was set to 3,
+        // but it costs nothing to be on the safe side.
+        // The serialized tx is just used to obtain its hash, so the witness data is not relevant.
+        byte[] parentTransaction = input.getConnectedOutput().getParentTransaction().bitcoinSerialize(false);
+        return new RawTransactionInput(input.getOutpoint().getIndex(),
+                parentTransaction,
+                input.getValue().value);
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // bisqWalletEventListener

@@ -49,8 +49,10 @@ import bisq.core.support.dispute.messages.OpenNewDisputeMessage;
 import bisq.core.support.dispute.messages.PeerOpenedDisputeMessage;
 import bisq.core.support.dispute.refund.refundagent.RefundAgent;
 import bisq.core.support.messages.ChatMessage;
-import bisq.core.trade.messages.bsqswap.CreateBsqSwapTxRequest;
-import bisq.core.trade.messages.bsqswap.CreateBsqSwapTxResponse;
+import bisq.core.trade.messages.bsqswap.BsqSwapTakeOfferRequest;
+import bisq.core.trade.messages.bsqswap.BsqSwapTakeOfferWithTxInputsRequest;
+import bisq.core.trade.messages.bsqswap.BsqSwapTxInputsMessage;
+import bisq.core.trade.messages.bsqswap.FinalizeBsqSwapTxRequest;
 import bisq.core.trade.messages.trade.CounterCurrencyTransferStartedMessage;
 import bisq.core.trade.messages.trade.DelayedPayoutTxSignatureRequest;
 import bisq.core.trade.messages.trade.DelayedPayoutTxSignatureResponse;
@@ -165,10 +167,15 @@ public class CoreNetworkProtoResolver extends CoreProtoResolver implements Netwo
                     return DepositTxAndDelayedPayoutTxMessage.fromProto(proto.getDepositTxAndDelayedPayoutTxMessage(), this, messageVersion);
                 case SHARE_BUYER_PAYMENT_ACCOUNT_MESSAGE:
                     return ShareBuyerPaymentAccountMessage.fromProto(proto.getShareBuyerPaymentAccountMessage(), this, messageVersion);
-                case CREATE_BSQ_SWAP_TX_REQUEST:
-                    return CreateBsqSwapTxRequest.fromProto(proto.getCreateBsqSwapTxRequest(), messageVersion);
-                case CREATE_BSQ_SWAP_TX_RESPONSE:
-                    return CreateBsqSwapTxResponse.fromProto(proto.getCreateBsqSwapTxResponse(), messageVersion);
+
+                case BSQ_SWAP_TAKE_OFFER_REQUEST:
+                    return BsqSwapTakeOfferRequest.fromProto(proto.getBsqSwapTakeOfferRequest(), messageVersion);
+                case BSQ_SWAP_TAKE_OFFER_WITH_TX_INPUTS_REQUEST:
+                    return BsqSwapTakeOfferWithTxInputsRequest.fromProto(proto.getBsqSwapTakeOfferWithTxInputsRequest(), messageVersion);
+                case BSQ_SWAP_TX_INPUTS_MESSAGE:
+                    return BsqSwapTxInputsMessage.fromProto(proto.getBsqSwapTxInputsMessage(), messageVersion);
+                case FINALIZE_BSQ_SWAP_TX_REQUEST:
+                    return FinalizeBsqSwapTxRequest.fromProto(proto.getFinalizeBsqSwapTxRequest(), messageVersion);
 
                 case COUNTER_CURRENCY_TRANSFER_STARTED_MESSAGE:
                     return CounterCurrencyTransferStartedMessage.fromProto(proto.getCounterCurrencyTransferStartedMessage(), messageVersion);

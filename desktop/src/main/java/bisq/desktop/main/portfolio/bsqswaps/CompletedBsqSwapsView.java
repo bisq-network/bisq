@@ -196,7 +196,7 @@ public class CompletedBsqSwapsView extends ActivatableViewAndModel<VBox, Complet
                 o -> model.getNumPastTrades(o.getBsqSwapTrade()),
                 Comparator.nullsFirst(Comparator.naturalOrder())
         ));
-        txFeeColumn.setComparator(nullsFirstComparing(BsqSwapTrade::getMiningFeePerByte));
+        txFeeColumn.setComparator(nullsFirstComparing(BsqSwapTrade::getTxFeePerVbyte));
         txFeeColumn.setComparator(Comparator.comparing(model::getTxFee, Comparator.nullsFirst(Comparator.naturalOrder())));
 
         //

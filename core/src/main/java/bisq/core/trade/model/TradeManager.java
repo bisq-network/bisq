@@ -30,7 +30,9 @@ import bisq.core.offer.availability.OfferAvailabilityModel;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 import bisq.core.support.dispute.mediation.mediator.MediatorManager;
-import bisq.core.trade.messages.bsqswap.CreateBsqSwapTxRequest;
+import bisq.core.trade.messages.bsqswap.BsqSwapTakeOfferRequest;
+import bisq.core.trade.messages.bsqswap.BsqSwapTakeOfferWithTxInputsRequest;
+import bisq.core.trade.messages.bsqswap.TakeOfferRequest;
 import bisq.core.trade.messages.trade.InputsForDepositTxRequest;
 import bisq.core.trade.misc.ClosedTradableManager;
 import bisq.core.trade.misc.DumpDelayedPayoutTx;
@@ -42,6 +44,7 @@ import bisq.core.trade.model.bsqswap.BsqSwapBuyerAsMakerTrade;
 import bisq.core.trade.model.bsqswap.BsqSwapBuyerAsTakerTrade;
 import bisq.core.trade.model.bsqswap.BsqSwapSellerAsMakerTrade;
 import bisq.core.trade.model.bsqswap.BsqSwapSellerAsTakerTrade;
+import bisq.core.trade.model.bsqswap.BsqSwapTakeOfferRequestVerification;
 import bisq.core.trade.model.bsqswap.BsqSwapTrade;
 import bisq.core.trade.model.bsqswap.BsqSwapTradeManager;
 import bisq.core.trade.model.trade.BuyerAsMakerTrade;
@@ -51,7 +54,7 @@ import bisq.core.trade.model.trade.SellerAsTakerTrade;
 import bisq.core.trade.model.trade.Trade;
 import bisq.core.trade.protocol.Provider;
 import bisq.core.trade.protocol.TradeProtocol;
-import bisq.core.trade.protocol.bsqswap.BsqSwapBuyerAsMakerProtocol;
+import bisq.core.trade.protocol.bsqswap.BsqSwapMakerProtocol;
 import bisq.core.trade.protocol.bsqswap.BsqSwapProtocolModel;
 import bisq.core.trade.protocol.trade.MakerProtocol;
 import bisq.core.trade.protocol.trade.ProcessModel;
@@ -243,10 +246,11 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         NetworkEnvelope networkEnvelope = message.getNetworkEnvelope();
         if (networkEnvelope instanceof InputsForDepositTxRequest) {
             handleTakeOfferRequest(peer, (InputsForDepositTxRequest) networkEnvelope);
-        } else if (networkEnvelope instanceof CreateBsqSwapTxRequest) {
-            handleTakeBsqSwapOfferRequest(peer, (CreateBsqSwapTxRequest) networkEnvelope);
+        } else if (networkEnvelope instanceof TakeOfferRequest) {
+            handleBsqSwapRequest(peer, (TakeOfferRequest) networkEnvelope);
         }
     }
+
 
     // The maker received a TakeOfferRequest
     private void handleTakeOfferRequest(NodeAddress peer, InputsForDepositTxRequest inputsForDepositTxRequest) {
@@ -309,68 +313,57 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         requestPersistence();
     }
 
-    // The maker received a TakeOfferRequest
-    private void handleTakeBsqSwapOfferRequest(NodeAddress peer, CreateBsqSwapTxRequest createBsqSwapTxRequest) {
-        log.info("Received createAtomicTxRequest from {} with tradeId {} and uid {}",
-                peer, createBsqSwapTxRequest.getTradeId(), createBsqSwapTxRequest.getUid());
 
-        try {
-            Validator.nonEmptyStringOf(createBsqSwapTxRequest.getTradeId());
-        } catch (Throwable t) {
-            log.warn("Invalid inputsForDepositTxRequest " + createBsqSwapTxRequest.toString());
+    private void handleBsqSwapRequest(NodeAddress peer, TakeOfferRequest request) {
+        if (!BsqSwapTakeOfferRequestVerification.isValid(openOfferManager, provider.getFeeService(), keyRing, peer, request)) {
             return;
         }
 
-        Optional<OpenOffer> openOfferOptional = openOfferManager.getOpenOfferById(createBsqSwapTxRequest.getTradeId());
-        if (!openOfferOptional.isPresent()) {
-            return;
-        }
-
+        Optional<OpenOffer> openOfferOptional = openOfferManager.getOpenOfferById(request.getTradeId());
+        checkArgument(openOfferOptional.isPresent());
         OpenOffer openOffer = openOfferOptional.get();
-        if (openOffer.getState() != OpenOffer.State.AVAILABLE) {
-            return;
-        }
-
         Offer offer = openOffer.getOffer();
         openOfferManager.reserveOpenOffer(openOffer);
-        BsqSwapTrade bsqSwapTrade;
-        if (offer.isBuyOffer()) {
-            bsqSwapTrade = new BsqSwapBuyerAsMakerTrade(
-                    UUID.randomUUID().toString(),
-                    offer,
-                    Coin.valueOf(createBsqSwapTxRequest.getBtcTradeAmount()),
-                    createBsqSwapTxRequest.getTradePrice(),
-                    new Date().getTime(),
-                    createBsqSwapTxRequest.getSenderNodeAddress(),
-                    createBsqSwapTxRequest.getTxFeePerVbyte(),
-                    createBsqSwapTxRequest.getMakerFee(),
-                    createBsqSwapTxRequest.getTakerFee(),
-                    new BsqSwapProtocolModel(keyRing.getPubKeyRing()),
-                    "",
-                    BsqSwapTrade.State.PREPARATION);
-        } else {
-            bsqSwapTrade = new BsqSwapSellerAsMakerTrade(
-                    UUID.randomUUID().toString(),
-                    offer,
-                    Coin.valueOf(createBsqSwapTxRequest.getBtcTradeAmount()),
-                    createBsqSwapTxRequest.getTradePrice(),
-                    new Date().getTime(),
-                    createBsqSwapTxRequest.getSenderNodeAddress(),
-                    createBsqSwapTxRequest.getTxFeePerVbyte(),
-                    createBsqSwapTxRequest.getMakerFee(),
-                    createBsqSwapTxRequest.getTakerFee(),
-                    new BsqSwapProtocolModel(keyRing.getPubKeyRing()),
-                    "",
-                    BsqSwapTrade.State.PREPARATION);
-        }
-        TradeProtocol tradeProtocol = createTradeProtocol(bsqSwapTrade);
 
+        BsqSwapTrade bsqSwapTrade;
+        Coin amount = Coin.valueOf(request.getTradeAmount());
+        BsqSwapProtocolModel bsqSwapProtocolModel = new BsqSwapProtocolModel(keyRing.getPubKeyRing());
+        if (request instanceof BsqSwapTakeOfferWithTxInputsRequest) {
+            checkArgument(!offer.isBuyOffer(),
+                    "offer is expected to be a sell offer at handleBsqSwapRequest");
+            bsqSwapTrade = new BsqSwapSellerAsMakerTrade(
+                    offer,
+                    amount,
+                    request.getTradeDate(),
+                    request.getSenderNodeAddress(),
+                    request.getTxFeePerVbyte(),
+                    request.getMakerFee(),
+                    request.getTakerFee(),
+                    bsqSwapProtocolModel);
+        } else {
+            checkArgument(request instanceof BsqSwapTakeOfferRequest);
+            checkArgument(offer.isBuyOffer(),
+                    "offer is expected to be a buy offer at handleBsqSwapRequest");
+            bsqSwapTrade = new BsqSwapBuyerAsMakerTrade(
+                    offer,
+                    amount,
+                    request.getTradeDate(),
+                    request.getSenderNodeAddress(),
+                    request.getTxFeePerVbyte(),
+                    request.getMakerFee(),
+                    request.getTakerFee(),
+                    bsqSwapProtocolModel);
+        }
+
+        TradeProtocol tradeProtocol = createTradeProtocol(bsqSwapTrade);
         initTradeAndProtocol(bsqSwapTrade, tradeProtocol);
 
-        ((BsqSwapBuyerAsMakerProtocol) tradeProtocol).handleCreateBsqSwapTxRequest(createBsqSwapTxRequest, peer, errorMessage -> {
-            if (takeOfferRequestErrorMessageHandler != null)
-                takeOfferRequestErrorMessageHandler.handleErrorMessage(errorMessage);
-        });
+        ((BsqSwapMakerProtocol) tradeProtocol).handleTakeOfferRequest(request,
+                peer,
+                errorMessage -> {
+                    if (takeOfferRequestErrorMessageHandler != null)
+                        takeOfferRequestErrorMessageHandler.handleErrorMessage(errorMessage);
+                });
 
         requestPersistence();
     }
@@ -424,7 +417,18 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void initPersistedTrades() {
-        tradableList.forEach(this::initPersistedTrade);
+        Set<TradeModel> toRemove = new HashSet<>();
+        tradableList.forEach(tradeModel -> {
+            boolean valid = initPersistedTrade(tradeModel);
+            if (!valid) {
+                toRemove.add(tradeModel);
+            }
+        });
+        toRemove.forEach(tradableList::remove);
+        if (!toRemove.isEmpty()) {
+            requestPersistence();
+        }
+
         persistedTradesInitialized.set(true);
 
         // We do not include failed trades as they should not be counted anyway in the trade statistics
@@ -436,20 +440,25 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         tradeStatisticsManager.maybeRepublishTradeStatistics(allTrades, referralId, isTorNetworkNode);
     }
 
-    private void initPersistedTrade(TradeModel tradeModel) {
+    private boolean initPersistedTrade(TradeModel tradeModel) {
+        if (tradeModel instanceof BsqSwapTrade && !tradeModel.isCompleted()) {
+            // We do not keep pending or failed BsqSwap trades in our list and
+            // do not process them at restart.
+            // We remove the trade from the list after iterations in initPersistedTrades
+            return false;
+        }
         initTradeAndProtocol(tradeModel, getTradeProtocol(tradeModel));
 
         if (tradeModel instanceof Trade) {
             ((Trade) tradeModel).updateDepositTxFromWallet();
         }
         requestPersistence();
+        return true;
     }
 
     private void initTradeAndProtocol(TradeModel tradeModel, TradeProtocol tradeProtocol) {
         tradeProtocol.initialize(provider, this, tradeModel.getOffer());
-        if (tradeModel instanceof Trade) {
-            ((Trade) tradeModel).initialize(provider);
-        }
+        tradeModel.initialize(provider);
         requestPersistence();
     }
 
@@ -547,8 +556,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
 
     public void onTakeBsqSwapOffer(Offer offer,
                                    Coin amount,
-                                   long price,
-                                   long miningFeePerByte,
+                                   long txFeePerVbyte,
                                    long makerFee,
                                    long takerFee,
                                    boolean isTakerApiUser,
@@ -562,32 +570,26 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                 () -> {
                     if (offer.getState() == Offer.State.AVAILABLE) {
                         BsqSwapTrade bsqSwapTrade;
+                        NodeAddress peerNodeAddress = model.getPeerNodeAddress();
+                        BsqSwapProtocolModel bsqSwapProtocolModel = new BsqSwapProtocolModel(keyRing.getPubKeyRing());
                         if (offer.isBuyOffer()) {
-                            bsqSwapTrade = new BsqSwapSellerAsTakerTrade(UUID.randomUUID().toString(),
+                            bsqSwapTrade = new BsqSwapSellerAsTakerTrade(
                                     offer,
                                     amount,
-                                    price,
-                                    new Date().getTime(),
-                                    model.getPeerNodeAddress(),
-                                    miningFeePerByte,
+                                    peerNodeAddress,
+                                    txFeePerVbyte,
                                     makerFee,
                                     takerFee,
-                                    new BsqSwapProtocolModel(keyRing.getPubKeyRing()),
-                                    "",
-                                    BsqSwapTrade.State.PREPARATION);
+                                    bsqSwapProtocolModel);
                         } else {
-                            bsqSwapTrade = new BsqSwapBuyerAsTakerTrade(UUID.randomUUID().toString(),
+                            bsqSwapTrade = new BsqSwapBuyerAsTakerTrade(
                                     offer,
                                     amount,
-                                    price,
-                                    new Date().getTime(),
-                                    model.getPeerNodeAddress(),
-                                    miningFeePerByte,
+                                    peerNodeAddress,
+                                    txFeePerVbyte,
                                     makerFee,
                                     takerFee,
-                                    new BsqSwapProtocolModel(keyRing.getPubKeyRing()),
-                                    "",
-                                    BsqSwapTrade.State.PREPARATION);
+                                    bsqSwapProtocolModel);
                         }
 
                         TradeProtocol tradeProtocol = createTradeProtocol(bsqSwapTrade);

@@ -15,20 +15,24 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.protocol.bsqswap.tasks.taker;
+package bisq.core.trade.protocol.bsqswap.tasks.buyer_as_taker;
 
+import bisq.core.trade.messages.bsqswap.BsqSwapTakeOfferWithTxInputsRequest;
 import bisq.core.trade.model.bsqswap.BsqSwapTrade;
 import bisq.core.trade.protocol.bsqswap.tasks.BsqSwapTask;
+
+import bisq.network.p2p.NodeAddress;
+import bisq.network.p2p.SendDirectMessageListener;
 
 import bisq.common.taskrunner.TaskRunner;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class TakerSendsBsqSwapRequest extends BsqSwapTask {
+public class SendBsqSwapTakeOfferWithTxInputsRequest extends BsqSwapTask {
 
     @SuppressWarnings({"unused"})
-    public TakerSendsBsqSwapRequest(TaskRunner<BsqSwapTrade> taskHandler, BsqSwapTrade bsqSwapTrade) {
+    public SendBsqSwapTakeOfferWithTxInputsRequest(TaskRunner<BsqSwapTrade> taskHandler, BsqSwapTrade bsqSwapTrade) {
         super(taskHandler, bsqSwapTrade);
     }
 
@@ -37,58 +41,52 @@ public class TakerSendsBsqSwapRequest extends BsqSwapTask {
         try {
             runInterceptHook();
 
-          /*  checkArgument(!bsqSwapProtocolModel.getOffer().isMyOffer(bsqSwapProtocolModel.getKeyRing()),
-                    "must not take own offer");
-            checkArgument(bsqSwapProtocolModel.takerPreparesTakerSide(),
-                    "Failed to prepare taker side of bsq swap tx");
-
-            var message = new CreateBsqSwapTxRequest(UUID.randomUUID().toString(),
-                    bsqSwapProtocolModel.getOffer().getId(),
+            BsqSwapTakeOfferWithTxInputsRequest request = new BsqSwapTakeOfferWithTxInputsRequest(
+                    bsqSwapProtocolModel.getOfferId(),
                     bsqSwapProtocolModel.getMyNodeAddress(),
                     bsqSwapProtocolModel.getPubKeyRing(),
-                    bsqSwapProtocolModel.getBsqTradeAmount(),
-                    bsqSwapProtocolModel.getBtcTradeAmount(),
-                    bsqSwapProtocolModel.getTradePrice(),
-                    bsqSwapProtocolModel.getTxFeePerVbyte(),
+                    bsqSwapTrade.getAmount(),
+                    bsqSwapTrade.getTxFeePerVbyte(),
                     bsqSwapTrade.getMakerFee(),
                     bsqSwapTrade.getTakerFee(),
-                    bsqSwapProtocolModel.getTakerBsqOutputAmount(),
-                    bsqSwapProtocolModel.getTakerBsqAddress(),
-                    bsqSwapProtocolModel.getTakerBtcOutputAmount(),
-                    bsqSwapProtocolModel.getTakerBtcAddress(),
-                    bsqSwapProtocolModel.getRawTakerBsqInputs(),
-                    bsqSwapProtocolModel.getRawTakerBtcInputs());
+                    bsqSwapTrade.getTakeOfferDate(),
+                    bsqSwapProtocolModel.getInputs(),
+                    bsqSwapProtocolModel.getChange(),
+                    bsqSwapProtocolModel.getBtcAddress(),
+                    bsqSwapProtocolModel.getBsqAddress());
 
-            log.info("CreateBsqSwapTxRequest={}", message);
+            log.info("BuyerAsTakersCreateBsqSwapTxRequest={}", request);
 
             NodeAddress peersNodeAddress = bsqSwapTrade.getTradingPeerNodeAddress();
             log.info("Send {} to peer {}. tradeId={}, uid={}",
-                    message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
+                    request.getClass().getSimpleName(), peersNodeAddress, request.getTradeId(), request.getUid());
+
             bsqSwapProtocolModel.getP2PService().sendEncryptedDirectMessage(
                     peersNodeAddress,
                     bsqSwapProtocolModel.getTradePeer().getPubKeyRing(),
-                    message,
+                    request,
                     new SendDirectMessageListener() {
                         @Override
                         public void onArrived() {
                             log.info("{} arrived at peer {}. tradeId={}, uid={}",
-                                    message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(),
-                                    message.getUid());
+                                    request.getClass().getSimpleName(), peersNodeAddress, request.getTradeId(),
+                                    request.getUid());
+
                             complete();
                         }
 
                         @Override
                         public void onFault(String errorMessage) {
                             log.error("{} failed: Peer {}. tradeId={}, uid={}, errorMessage={}",
-                                    message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(),
-                                    message.getUid(), errorMessage);
+                                    request.getClass().getSimpleName(), peersNodeAddress, request.getTradeId(),
+                                    request.getUid(), errorMessage);
 
-                            appendToErrorMessage("Sending message failed: message=" + message + "\nerrorMessage=" +
+                            appendToErrorMessage("Sending request failed: request=" + request + "\nerrorMessage=" +
                                     errorMessage);
                             failed();
                         }
                     }
-            );*/
+            );
         } catch (Throwable t) {
             failed(t);
         }

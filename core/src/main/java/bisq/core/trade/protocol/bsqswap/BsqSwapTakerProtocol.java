@@ -17,12 +17,7 @@
 
 package bisq.core.trade.protocol.bsqswap;
 
-import bisq.core.trade.protocol.FluentProtocol;
+import bisq.core.trade.protocol.trade.TakerProtocol;
 
-public interface BsqSwapTakerProtocol {
-    void onTakeOffer();
-
-    enum BsqSwapTakerEvent implements FluentProtocol.Event {
-        TAKE_OFFER
-    }
+public interface BsqSwapTakerProtocol extends TakerProtocol {
 }

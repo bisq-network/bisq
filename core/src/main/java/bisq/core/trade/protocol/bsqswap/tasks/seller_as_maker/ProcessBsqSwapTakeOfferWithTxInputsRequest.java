@@ -15,20 +15,23 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.protocol.bsqswap.tasks.maker;
+package bisq.core.trade.protocol.bsqswap.tasks.seller_as_maker;
 
+import bisq.core.trade.messages.bsqswap.BsqSwapTakeOfferWithTxInputsRequest;
 import bisq.core.trade.model.bsqswap.BsqSwapTrade;
-import bisq.core.trade.protocol.bsqswap.tasks.SetupTxListener;
+import bisq.core.trade.protocol.bsqswap.tasks.seller.ProcessTxInputsMessage;
 
+import bisq.common.crypto.PubKeyRing;
 import bisq.common.taskrunner.TaskRunner;
 
 import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
-public class MakerSetupTxListener extends SetupTxListener {
+import static com.google.common.base.Preconditions.checkNotNull;
 
+@Slf4j
+public class ProcessBsqSwapTakeOfferWithTxInputsRequest extends ProcessTxInputsMessage {
     @SuppressWarnings({"unused"})
-    public MakerSetupTxListener(TaskRunner<BsqSwapTrade> taskHandler, BsqSwapTrade bsqSwapTrade) {
+    public ProcessBsqSwapTakeOfferWithTxInputsRequest(TaskRunner<BsqSwapTrade> taskHandler, BsqSwapTrade bsqSwapTrade) {
         super(taskHandler, bsqSwapTrade);
     }
 
@@ -37,21 +40,11 @@ public class MakerSetupTxListener extends SetupTxListener {
         try {
             runInterceptHook();
 
-         /*   // Find address to listen to
-            if (bsqSwapProtocolModel.getMakerBtcAddress() != null) {
-                walletService = bsqSwapProtocolModel.getBtcWalletService();
-                myAddress = Address.fromString(walletService.getParams(), bsqSwapProtocolModel.getMakerBtcAddress());
-            } else if (bsqSwapProtocolModel.getMakerBsqAddress() != null) {
-                // Listen to BSQ address
-                walletService = bsqSwapProtocolModel.getBsqWalletService();
-                myAddress = Address.fromString(walletService.getParams(), bsqSwapProtocolModel.getMakerBsqAddress());
-            } else {
-                failed("No maker address set");
-            }*/
+            BsqSwapTakeOfferWithTxInputsRequest request = checkNotNull((BsqSwapTakeOfferWithTxInputsRequest) bsqSwapProtocolModel.getTradeMessage());
+            PubKeyRing pubKeyRing = checkNotNull(request.getTakerPubKeyRing(), "pubKeyRing must not be null");
+            bsqSwapProtocolModel.getTradePeer().setPubKeyRing(pubKeyRing);
 
             super.run();
-
-            complete();
         } catch (Throwable t) {
             failed(t);
         }

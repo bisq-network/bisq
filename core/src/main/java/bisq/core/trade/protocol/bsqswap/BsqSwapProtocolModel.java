@@ -17,6 +17,7 @@
 
 package bisq.core.trade.protocol.bsqswap;
 
+import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
@@ -25,10 +26,8 @@ import bisq.core.dao.DaoFacade;
 import bisq.core.filter.FilterManager;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OpenOfferManager;
-import bisq.core.proto.CoreProtoResolver;
 import bisq.core.trade.messages.TradeMessage;
 import bisq.core.trade.model.TradeManager;
-import bisq.core.trade.model.bsqswap.BsqSwapTrade;
 import bisq.core.trade.protocol.Provider;
 import bisq.core.trade.protocol.TradeProtocolModel;
 
@@ -37,18 +36,24 @@ import bisq.network.p2p.P2PService;
 
 import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.PubKeyRing;
+import bisq.common.proto.ProtoUtil;
 import bisq.common.proto.persistable.PersistablePayload;
 import bisq.common.taskrunner.Model;
+import bisq.common.util.Utilities;
 
+import com.google.protobuf.ByteString;
+
+import org.bitcoinj.core.Transaction;
+
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 // Fields marked as transient are only used during protocol execution which are based on directMessages so we do not
 // persist them.
@@ -66,14 +71,31 @@ public class BsqSwapProtocolModel implements TradeProtocolModel<BsqSwapTradePeer
     transient private Offer offer;
     @Setter
     transient private TradeMessage tradeMessage;
-
-    private BsqSwapTrade trade;
+    @Nullable
+    @Setter
+    transient private NodeAddress tempTradingPeerNodeAddress;
+    @Nullable
+    private transient Transaction transaction;
 
     private final BsqSwapTradePeer tradePeer;
     private final PubKeyRing pubKeyRing;
-    @Nullable
+
     @Setter
-    private NodeAddress tempTradingPeerNodeAddress;
+    @Nullable
+    private String btcAddress;
+    @Setter
+    @Nullable
+    private String bsqAddress;
+    @Setter
+    @Nullable
+    private List<RawTransactionInput> inputs;
+    @Setter
+    private long change;
+    @Setter
+    private long payout;
+    @Setter
+    @Nullable
+    private byte[] tx;
 
     public BsqSwapProtocolModel(PubKeyRing pubKeyRing) {
         this(pubKeyRing, new BsqSwapTradePeer());
@@ -90,22 +112,36 @@ public class BsqSwapProtocolModel implements TradeProtocolModel<BsqSwapTradePeer
 
     @Override
     public protobuf.BsqSwapProtocolModel toProtoMessage() {
-        protobuf.BsqSwapProtocolModel.Builder builder = protobuf.BsqSwapProtocolModel.newBuilder()
-                .setTradingPeer((protobuf.TradingPeer) tradePeer.toProtoMessage())
+        final protobuf.BsqSwapProtocolModel.Builder builder = protobuf.BsqSwapProtocolModel.newBuilder()
+                .setChange(change)
+                .setPayout(payout)
+                .setTradePeer(tradePeer.toProtoMessage())
                 .setPubKeyRing(pubKeyRing.toProtoMessage());
-        Optional.ofNullable(tempTradingPeerNodeAddress).
-                ifPresent(e -> builder.setTempTradingPeerNodeAddress(e.toProtoMessage()));
+        Optional.ofNullable(btcAddress).ifPresent(builder::setBtcAddress);
+        Optional.ofNullable(bsqAddress).ifPresent(builder::setBsqAddress);
+        Optional.ofNullable(inputs).ifPresent(e -> builder.addAllInputs(
+                ProtoUtil.collectionToProto(e, protobuf.RawTransactionInput.class)));
+        Optional.ofNullable(tx).ifPresent(e -> builder.setTx(ByteString.copyFrom(e)));
         return builder.build();
     }
 
-    public static BsqSwapProtocolModel fromProto(protobuf.BsqSwapProtocolModel proto,
-                                                 CoreProtoResolver coreProtoResolver) {
-        BsqSwapTradePeer tradePeer = BsqSwapTradePeer.fromProto(proto.getTradingPeer(), coreProtoResolver);
-        PubKeyRing pubKeyRing = PubKeyRing.fromProto(proto.getPubKeyRing());
-        BsqSwapProtocolModel model = new BsqSwapProtocolModel(pubKeyRing, tradePeer);
-        model.setTempTradingPeerNodeAddress(proto.hasTempTradingPeerNodeAddress() ?
-                NodeAddress.fromProto(proto.getTempTradingPeerNodeAddress()) : null);
-        return model;
+    public static BsqSwapProtocolModel fromProto(protobuf.BsqSwapProtocolModel proto) {
+        BsqSwapProtocolModel bsqSwapProtocolModel = new BsqSwapProtocolModel(
+                PubKeyRing.fromProto(proto.getPubKeyRing()),
+                BsqSwapTradePeer.fromProto(proto.getTradePeer()));
+        bsqSwapProtocolModel.setChange(proto.getChange());
+        bsqSwapProtocolModel.setPayout(proto.getPayout());
+
+        bsqSwapProtocolModel.setBtcAddress(ProtoUtil.stringOrNullFromProto(proto.getBtcAddress()));
+        bsqSwapProtocolModel.setBsqAddress(ProtoUtil.stringOrNullFromProto(proto.getBsqAddress()));
+        List<RawTransactionInput> inputs = proto.getInputsList().isEmpty() ?
+                null :
+                proto.getInputsList().stream()
+                        .map(RawTransactionInput::fromProto)
+                        .collect(Collectors.toList());
+        bsqSwapProtocolModel.setInputs(inputs);
+        bsqSwapProtocolModel.setTx(ProtoUtil.byteArrayOrNullFromProto(proto.getTx()));
+        return bsqSwapProtocolModel;
     }
 
 
@@ -141,12 +177,23 @@ public class BsqSwapProtocolModel implements TradeProtocolModel<BsqSwapTradePeer
     public void onComplete() {
     }
 
-    public void initFromTrade(BsqSwapTrade trade) {
-        this.trade = trade;
-        var offer = trade.getOffer();
-        checkNotNull(offer, "offer must not be null");
-
+    public void applyTransaction(Transaction transaction) {
+        this.transaction = transaction;
+        tx = transaction.bitcoinSerialize();
     }
+
+    @Nullable
+    public Transaction getTransaction() {
+        if (tx == null) {
+            return null;
+        }
+        if (transaction == null) {
+            Transaction deSerializedTx = getBsqWalletService().getTxFromSerializedTx(tx);
+            transaction = getBsqWalletService().getTransaction(deSerializedTx.getTxId());
+        }
+        return transaction;
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Delegates
@@ -182,5 +229,28 @@ public class BsqSwapProtocolModel implements TradeProtocolModel<BsqSwapTradePeer
 
     public OpenOfferManager getOpenOfferManager() {
         return provider.getOpenOfferManager();
+    }
+
+    public String getOfferId() {
+        return offer.getId();
+    }
+
+
+    @Override
+    public String toString() {
+        return "BsqSwapProtocolModel{" +
+                ",\r\n     offer=" + offer +
+                ",\r\n     tradeMessage=" + tradeMessage +
+                ",\r\n     tempTradingPeerNodeAddress=" + tempTradingPeerNodeAddress +
+                ",\r\n     transaction=" + getTransaction() +
+                ",\r\n     tradePeer=" + tradePeer +
+                ",\r\n     pubKeyRing=" + pubKeyRing +
+                ",\r\n     btcAddress='" + btcAddress + '\'' +
+                ",\r\n     bsqAddress='" + bsqAddress + '\'' +
+                ",\r\n     inputs=" + inputs +
+                ",\r\n     change=" + change +
+                ",\r\n     payout=" + payout +
+                ",\r\n     tx=" + Utilities.encodeToHex(tx) +
+                "\r\n}";
     }
 }

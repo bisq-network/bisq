@@ -21,17 +21,21 @@ import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
 import bisq.core.trade.model.TradeModel;
+import bisq.core.trade.protocol.Provider;
 import bisq.core.trade.protocol.TradeProtocolModel;
 import bisq.core.trade.protocol.bsqswap.BsqSwapProtocolModel;
+import bisq.core.trade.protocol.bsqswap.BsqSwapTradePeer;
 
 import bisq.network.p2p.NodeAddress;
 
 import bisq.common.proto.ProtoUtil;
+import bisq.common.util.MathUtils;
 import bisq.common.util.Utilities;
 
 import com.google.protobuf.Message;
 
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.Transaction;
 
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
@@ -44,7 +48,6 @@ import java.util.Date;
 import java.util.Optional;
 
 import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
@@ -58,53 +61,51 @@ public abstract class BsqSwapTrade extends TradeModel {
 
     public enum State {
         PREPARATION,
-        TX_PUBLISHED,
-        TX_CONFIRMED,
+        COMPLETED,
         FAILED;
 
-        public static BsqSwapTrade.State fromProto(protobuf.BsqSwapTrade.State state) {
-            return ProtoUtil.enumFromProto(BsqSwapTrade.State.class, state.name());
+        public static State fromProto(protobuf.BsqSwapTrade.State state) {
+            return ProtoUtil.enumFromProto(State.class, state.name());
         }
 
-        public static protobuf.BsqSwapTrade.State toProtoMessage(BsqSwapTrade.State state) {
+        public static protobuf.BsqSwapTrade.State toProtoMessage(State state) {
             return protobuf.BsqSwapTrade.State.valueOf(state.name());
         }
     }
 
-    // Protobuf fields
     @Getter
-    @Setter
-    private String uid;
+    private final String uid;
     @Getter
     private final Offer offer;
     @Getter
-    @Setter
-    @Nullable
-    protected String txId;
-    @Getter
-    @Setter
-    private Coin amount;
-    private final long price;
+    private final long amount;
     @Getter
     private final long takeOfferDate;
-    @Nullable
     @Getter
-    @Setter
-    private NodeAddress peerNodeAddress;
+    private final NodeAddress peerNodeAddress;
     @Getter
-    private final long miningFeePerByte;
+    private final long txFeePerVbyte;
     @Getter
     private final long makerFee;
     @Getter
     private final long takerFee;
     @Getter
     private final BsqSwapProtocolModel bsqSwapProtocolModel;
-    @Nullable
-    private String errorMessage;
+
     @Getter
     private State state;
 
-    transient final private ObjectProperty<BsqSwapTrade.State> stateProperty = new SimpleObjectProperty<>(state);
+    @Nullable
+    private String errorMessage;
+    @Getter
+    @Nullable
+    private String txId;
+
+    @Nullable
+    transient private Volume volume;
+    @Nullable
+    transient private Transaction transaction;
+    transient final private ObjectProperty<State> stateProperty = new SimpleObjectProperty<>(state);
     transient final private StringProperty errorMessageProperty = new SimpleStringProperty();
 
 
@@ -115,27 +116,27 @@ public abstract class BsqSwapTrade extends TradeModel {
     protected BsqSwapTrade(String uid,
                            Offer offer,
                            Coin amount,
-                           long price,
                            long takeOfferDate,
-                           @Nullable NodeAddress peerNodeAddress,
-                           long miningFeePerByte,
+                           NodeAddress peerNodeAddress,
+                           long txFeePerVbyte,
                            long makerFee,
                            long takerFee,
                            BsqSwapProtocolModel bsqSwapProtocolModel,
                            @Nullable String errorMessage,
-                           State state) {
+                           State state,
+                           @Nullable String txId) {
         this.uid = uid;
         this.offer = offer;
-        this.amount = amount;
-        this.price = price;
+        this.amount = amount.value;
         this.takeOfferDate = takeOfferDate;
         this.peerNodeAddress = peerNodeAddress;
-        this.miningFeePerByte = miningFeePerByte;
+        this.txFeePerVbyte = txFeePerVbyte;
         this.makerFee = makerFee;
         this.takerFee = takerFee;
         this.bsqSwapProtocolModel = bsqSwapProtocolModel;
         this.errorMessage = errorMessage;
         this.state = state;
+        this.txId = txId;
     }
 
 
@@ -148,18 +149,16 @@ public abstract class BsqSwapTrade extends TradeModel {
         protobuf.BsqSwapTrade.Builder builder = protobuf.BsqSwapTrade.newBuilder()
                 .setUid(uid)
                 .setOffer(offer.toProtoMessage())
-                .setAmount(amount.getValue())
-                .setPrice(price)
+                .setAmount(amount)
                 .setTakeOfferDate(takeOfferDate)
-                .setMiningFeePerByte(miningFeePerByte)
+                .setMiningFeePerByte(txFeePerVbyte)
                 .setMakerFee(makerFee)
                 .setTakerFee(takerFee)
                 .setBsqSwapProtocolModel(bsqSwapProtocolModel.toProtoMessage())
-                .setState(State.toProtoMessage(state));
-        Optional.ofNullable(txId).ifPresent(builder::setTxId);
-        Optional.ofNullable(peerNodeAddress).ifPresent(e -> builder.setPeerNodeAddress(
-                peerNodeAddress.toProtoMessage()));
+                .setState(State.toProtoMessage(state))
+                .setPeerNodeAddress(peerNodeAddress.toProtoMessage());
         Optional.ofNullable(errorMessage).ifPresent(builder::setErrorMessage);
+        Optional.ofNullable(txId).ifPresent(builder::setTxId);
         return builder.build();
     }
 
@@ -172,12 +171,17 @@ public abstract class BsqSwapTrade extends TradeModel {
     public void onComplete() {
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // TradeModel implementation
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public TradeProtocolModel getTradeProtocolModel() {
+    public void initialize(Provider serviceProvider) {
+    }
+
+    @Override
+    public TradeProtocolModel<BsqSwapTradePeer> getTradeProtocolModel() {
         return bsqSwapProtocolModel;
     }
 
@@ -200,6 +204,7 @@ public abstract class BsqSwapTrade extends TradeModel {
         errorMessageProperty.set(errorMessage);
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -221,7 +226,28 @@ public abstract class BsqSwapTrade extends TradeModel {
 
     @Override
     public boolean isCompleted() {
-        return state == State.TX_CONFIRMED;
+        return state == State.COMPLETED;
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Setters
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void setState(State state) {
+        if (state.ordinal() < this.state.ordinal()) {
+            String message = "Unexpected state change to a previous state.\n" +
+                    "Old state is: " + this.state + ". New state is: " + state;
+            log.warn(message);
+        }
+
+        this.state = state;
+        stateProperty.set(state);
+    }
+
+    public void applyTransaction(Transaction transaction) {
+        this.transaction = transaction;
+        txId = transaction.getTxId().toString();
     }
 
 
@@ -247,34 +273,37 @@ public abstract class BsqSwapTrade extends TradeModel {
     }
 
     public Price getPrice() {
-        return Price.valueOf(offer.getCurrencyCode(), price);
+        return Price.valueOf(offer.getCurrencyCode(), offer.getFixedPrice());
+    }
+
+    //todo Not sure if that delivers the value as expected... -> getBsqTradeAmount
+    public Volume getTradeVolume() {
+        if (volume == null) {
+            try {
+                volume = getPrice().getVolumeByAmount(Coin.valueOf(amount));
+            } catch (Throwable e) {
+                log.error(e.toString());
+                return null;
+            }
+        }
+        return volume;
+    }
+
+    public long getBsqTradeAmount() {
+        // We treat BSQ as altcoin with smallest unit exponent 8 but we use 2 instead.
+        // To avoid a larger refactoring of the monetary domain we just hack in the conversion here
+        // by removing the last 6 digits.
+        return MathUtils.roundDoubleToLong(MathUtils.scaleDownByPowerOf10(getTradeVolume().getValue(), 6));
     }
 
     @Nullable
-    public Volume getTradeVolume() {
-        try {
-            if (getAmount() != null && getPrice() != null) {
-                return getPrice().getVolumeByAmount(getAmount());
-            } else {
-                return null;
-            }
-        } catch (Throwable ignore) {
+    public Transaction getTransaction() {
+        if (txId == null) {
             return null;
         }
-    }
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Setters
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public void setState(State state) {
-        if (state.ordinal() < this.state.ordinal()) {
-            String message = "Unexpected state change to a previous state.\n" +
-                    "Old state is: " + this.state + ". New state is: " + state;
-            log.warn(message);
+        if (transaction == null) {
+            transaction = bsqSwapProtocolModel.getBsqWalletService().getTransaction(txId);
         }
-
-        this.state = state;
-        stateProperty.set(state);
+        return transaction;
     }
 }

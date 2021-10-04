@@ -269,8 +269,7 @@ class TakeBsqSwapOfferViewModel extends ActivatableWithDataModel<TakeBsqSwapOffe
                 case PREPARATION:
                     appendMsg = Res.get("takeOffer.error.noFundsLost");
                     break;
-                case TX_PUBLISHED:
-                case TX_CONFIRMED:
+                case COMPLETED:
                     appendMsg = Res.get("takeOffer.error.payoutPublished");
                     break;
                 default:
@@ -286,8 +285,7 @@ class TakeBsqSwapOfferViewModel extends ActivatableWithDataModel<TakeBsqSwapOffe
     }
 
     private void applyTradeState() {
-        if (bsqSwapTrade.getState().equals(BsqSwapTrade.State.TX_PUBLISHED) ||
-                bsqSwapTrade.getState().equals(BsqSwapTrade.State.TX_CONFIRMED)) {
+        if (bsqSwapTrade.getState().equals(BsqSwapTrade.State.COMPLETED)) {
             if (takeOfferSucceededHandler != null)
                 takeOfferSucceededHandler.run();
 

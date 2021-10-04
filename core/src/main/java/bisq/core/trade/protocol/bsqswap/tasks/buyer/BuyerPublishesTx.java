@@ -15,20 +15,24 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.protocol.bsqswap.tasks.taker;
+package bisq.core.trade.protocol.bsqswap.tasks.buyer;
 
+import bisq.core.btc.exceptions.TxBroadcastException;
+import bisq.core.btc.wallet.TxBroadcaster;
+import bisq.core.dao.state.model.blockchain.TxType;
 import bisq.core.trade.model.bsqswap.BsqSwapTrade;
 import bisq.core.trade.protocol.bsqswap.tasks.BsqSwapTask;
 
 import bisq.common.taskrunner.TaskRunner;
 
+import org.bitcoinj.core.Transaction;
+
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class TakerPublishBsqSwapTx extends BsqSwapTask {
-
+public class BuyerPublishesTx extends BsqSwapTask {
     @SuppressWarnings({"unused"})
-    public TakerPublishBsqSwapTx(TaskRunner<BsqSwapTrade> taskHandler, BsqSwapTrade bsqSwapTrade) {
+    public BuyerPublishesTx(TaskRunner<BsqSwapTrade> taskHandler, BsqSwapTrade bsqSwapTrade) {
         super(taskHandler, bsqSwapTrade);
     }
 
@@ -37,21 +41,14 @@ public class TakerPublishBsqSwapTx extends BsqSwapTask {
         try {
             runInterceptHook();
 
-            // Publish transaction
-         /*   var transaction = bsqSwapProtocolModel.getVerifiedTransaction();
-
-            checkNotNull(transaction, "Verified transaction must not be null");
-
-            log.debug("Transaction bytes: {}", Utilities.bytesAsHexString(transaction.bitcoinSerialize()));
-            bsqSwapProtocolModel.getWalletsManager().publishAndCommitBsqTx(transaction, TxType.TRANSFER_BSQ,
+            bsqSwapProtocolModel.getWalletsManager().publishAndCommitBsqTx(bsqSwapProtocolModel.getTransaction(),
+                    TxType.TRANSFER_BSQ,
                     new TxBroadcaster.Callback() {
                         @Override
                         public void onSuccess(Transaction transaction) {
                             if (!completed) {
-                                bsqSwapTrade.setState(BsqSwapTrade.State.TX_PUBLISHED);
-
-                                bsqSwapProtocolModel.getBtcWalletService().swapTradeEntryToAvailableEntry(
-                                        bsqSwapProtocolModel.getOffer().getId(), AddressEntry.Context.RESERVED_FOR_TRADE);
+                                bsqSwapTrade.setState(BsqSwapTrade.State.COMPLETED);
+                                bsqSwapProtocolModel.getTradeManager().onTradeCompleted(bsqSwapTrade);
 
                                 complete();
                             } else {
@@ -67,8 +64,7 @@ public class TakerPublishBsqSwapTx extends BsqSwapTask {
                                 log.warn("We got the onFailure callback called after the timeout has been triggered a complete().");
                             }
                         }
-                    });*/
-
+                    });
         } catch (Throwable t) {
             failed(t);
         }

@@ -111,7 +111,6 @@ class CoreTradesService {
                 takeOfferModel);
         tradeManager.onTakeBsqSwapOffer(offer,
                 takeBsqSwapOfferModel.getAmount().getValue(),  // TODO get rid of jfx property dep?
-                takeBsqSwapOfferModel.getTradePrice().getValue(),
                 takeBsqSwapOfferModel.getBsqSwapTxHelper().getTxFeePerVbyte().getValue(),
                 takeBsqSwapOfferModel.getMakerFee().getValue(),
                 takeBsqSwapOfferModel.getTakerFee().getValue(),

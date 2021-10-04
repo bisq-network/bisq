@@ -23,6 +23,7 @@ import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
+import bisq.core.trade.model.bsqswap.BsqSwapTrade;
 import bisq.core.trade.model.trade.Trade;
 import bisq.core.util.VolumeUtil;
 
@@ -111,6 +112,19 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
                 truncatedMediatorNodeAddress,
                 truncatedRefundAgentNodeAddress,
                 extraDataMap);
+    }
+
+    public static TradeStatistics3 from(BsqSwapTrade bsqSwapTrade) {
+        Offer offer = checkNotNull(bsqSwapTrade.getOffer());
+        return new TradeStatistics3(offer.getCurrencyCode(),
+                bsqSwapTrade.getPrice().getValue(),
+                bsqSwapTrade.getAmount(),
+                offer.getPaymentMethod().getId(),
+                bsqSwapTrade.getTakeOfferDate(),
+                null,
+                null,
+                null,
+                null);
     }
 
     // This enum must not change the order as we use the ordinal for storage to reduce data size.

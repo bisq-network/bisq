@@ -25,7 +25,6 @@ import com.google.protobuf.ByteString;
 
 import org.bitcoinj.core.TransactionInput;
 
-import java.util.Arrays;
 import java.util.Objects;
 
 import lombok.EqualsAndHashCode;
@@ -69,16 +68,6 @@ public final class RawTransactionInput implements NetworkPayload, PersistablePay
 
     public static RawTransactionInput fromProto(protobuf.RawTransactionInput proto) {
         return new RawTransactionInput(proto.getIndex(), proto.getParentTransaction().toByteArray(), proto.getValue());
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        RawTransactionInput rawTransactionInput = (RawTransactionInput) o;
-        return rawTransactionInput.index == index  &&
-                Arrays.equals(rawTransactionInput.parentTransaction, parentTransaction) &&
-                rawTransactionInput.value == value;
     }
 
     @Override

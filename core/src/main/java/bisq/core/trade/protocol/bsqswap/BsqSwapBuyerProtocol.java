@@ -18,27 +18,16 @@
 package bisq.core.trade.protocol.bsqswap;
 
 
-import bisq.core.trade.messages.TradeMessage;
-import bisq.core.trade.messages.bsqswap.CreateBsqSwapTxRequest;
 import bisq.core.trade.model.bsqswap.BsqSwapBuyerTrade;
 import bisq.core.trade.model.bsqswap.BsqSwapTrade;
 import bisq.core.trade.protocol.TradeProtocol;
-import bisq.core.trade.protocol.TradeTaskRunner;
-import bisq.core.trade.protocol.bsqswap.tasks.ApplyFilter;
-import bisq.core.trade.protocol.bsqswap.tasks.maker.MakerCreatesAndSignsTx;
-import bisq.core.trade.protocol.bsqswap.tasks.maker.MakerRemovesOpenOffer;
-import bisq.core.trade.protocol.bsqswap.tasks.maker.MakerSetupTxListener;
-import bisq.core.trade.protocol.bsqswap.tasks.maker.MakerVerifiesAmounts;
-import bisq.core.trade.protocol.bsqswap.tasks.maker.MakerVerifiesMiningFee;
-import bisq.core.trade.protocol.bsqswap.tasks.maker.MakerVerifiesTakerInputs;
 
-import bisq.network.p2p.NodeAddress;
+import lombok.extern.slf4j.Slf4j;
 
-import bisq.common.handlers.ErrorMessageHandler;
+@Slf4j
+public abstract class BsqSwapBuyerProtocol extends TradeProtocol {
 
-public class BsqSwapBuyerProtocol extends TradeProtocol {
-
-    protected final BsqSwapBuyerTrade buyerTrade;
+    protected final BsqSwapTrade bsqSwapTrade;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -47,39 +36,6 @@ public class BsqSwapBuyerProtocol extends TradeProtocol {
     public BsqSwapBuyerProtocol(BsqSwapBuyerTrade trade) {
         super(trade);
 
-        this.buyerTrade = trade;
-    }
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Start trade
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public void handleCreateBsqSwapTxRequest(CreateBsqSwapTxRequest message,
-                                             NodeAddress sender,
-                                             ErrorMessageHandler errorMessageHandler) {
-        expect(preCondition(BsqSwapTrade.State.PREPARATION == buyerTrade.getState())
-                .with(message)
-                .from(sender))
-                .setup(tasks(
-                        ApplyFilter.class,
-                        MakerVerifiesMiningFee.class,
-                        MakerVerifiesAmounts.class,
-                        MakerVerifiesTakerInputs.class,
-                        MakerRemovesOpenOffer.class,
-                        MakerCreatesAndSignsTx.class,
-                        MakerSetupTxListener.class)
-                        .using(new TradeTaskRunner(buyerTrade,
-                                () -> handleTaskRunnerSuccess(message),
-                                errorMessage -> {
-                                    errorMessageHandler.handleErrorMessage(errorMessage);
-                                    handleTaskRunnerFault(message, errorMessage);
-                                }))
-                        .withTimeout(60))
-                .executeTasks();
-    }
-
-    @Override
-    protected void onTradeMessage(TradeMessage message, NodeAddress peer) {
-        // Nothing expected
+        this.bsqSwapTrade = trade;
     }
 }

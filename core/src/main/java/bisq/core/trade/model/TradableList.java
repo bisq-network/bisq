@@ -85,13 +85,13 @@ public final class TradableList<T extends Tradable> extends PersistableListAsObs
                         case SELLER_AS_TAKER_TRADE:
                             return SellerAsTakerTrade.fromProto(tradable.getSellerAsTakerTrade(), btcWalletService, coreProtoResolver);
                         case BSQ_SWAP_BUYER_AS_MAKER_TRADE:
-                            return BsqSwapBuyerAsMakerTrade.fromProto(tradable.getBsqSwapBuyerAsMakerTrade(), coreProtoResolver);
+                            return BsqSwapBuyerAsMakerTrade.fromProto(tradable.getBsqSwapBuyerAsMakerTrade());
                         case BSQ_SWAP_BUYER_AS_TAKER_TRADE:
-                            return BsqSwapBuyerAsTakerTrade.fromProto(tradable.getBsqSwapBuyerAsTakerTrade(), coreProtoResolver);
+                            return BsqSwapBuyerAsTakerTrade.fromProto(tradable.getBsqSwapBuyerAsTakerTrade());
                         case BSQ_SWAP_SELLER_AS_MAKER_TRADE:
-                            return BsqSwapSellerAsMakerTrade.fromProto(tradable.getBsqSwapSellerAsMakerTrade(), coreProtoResolver);
+                            return BsqSwapSellerAsMakerTrade.fromProto(tradable.getBsqSwapSellerAsMakerTrade());
                         case BSQ_SWAP_SELLER_AS_TAKER_TRADE:
-                            return BsqSwapSellerAsTakerTrade.fromProto(tradable.getBsqSwapSellerAsTakerTrade(), coreProtoResolver);
+                            return BsqSwapSellerAsTakerTrade.fromProto(tradable.getBsqSwapSellerAsTakerTrade());
                         default:
                             log.error("Unknown messageCase. tradable.getMessageCase() = " + tradable.getMessageCase());
                             throw new ProtobufferRuntimeException("Unknown messageCase. tradable.getMessageCase() = " +

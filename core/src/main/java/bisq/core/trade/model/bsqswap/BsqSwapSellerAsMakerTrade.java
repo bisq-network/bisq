@@ -18,7 +18,6 @@
 package bisq.core.trade.model.bsqswap;
 
 import bisq.core.offer.Offer;
-import bisq.core.proto.CoreProtoResolver;
 import bisq.core.trade.model.MakerTrade;
 import bisq.core.trade.model.Tradable;
 import bisq.core.trade.protocol.bsqswap.BsqSwapProtocolModel;
@@ -38,41 +37,59 @@ import javax.annotation.Nullable;
 
 @Slf4j
 public final class BsqSwapSellerAsMakerTrade extends BsqSwapSellerTrade implements MakerTrade {
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Constructor, initialization
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public BsqSwapSellerAsMakerTrade(String uid,
-                                     Offer offer,
+    public BsqSwapSellerAsMakerTrade(Offer offer,
                                      Coin amount,
-                                     long price,
                                      long takeOfferDate,
-                                     @Nullable NodeAddress peerNodeAddress,
-                                     long miningFeePerByte,
+                                     NodeAddress peerNodeAddress,
+                                     long txFeePerVbyte,
                                      long makerFee,
                                      long takerFee,
-                                     BsqSwapProtocolModel bsqSwapProtocolModel,
-                                     @Nullable String errorMessage,
-                                     State state) {
-        super(uid,
+                                     BsqSwapProtocolModel bsqSwapProtocolModel) {
+
+        super(UUID.randomUUID().toString(),
                 offer,
                 amount,
-                price,
                 takeOfferDate,
                 peerNodeAddress,
-                miningFeePerByte,
+                txFeePerVbyte,
                 makerFee,
                 takerFee,
                 bsqSwapProtocolModel,
-                errorMessage,
-                state);
+                null,
+                BsqSwapTrade.State.PREPARATION,
+                null);
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private BsqSwapSellerAsMakerTrade(String uid,
+                                      Offer offer,
+                                      Coin amount,
+                                      long takeOfferDate,
+                                      NodeAddress peerNodeAddress,
+                                      long txFeePerVbyte,
+                                      long makerFee,
+                                      long takerFee,
+                                      BsqSwapProtocolModel bsqSwapProtocolModel,
+                                      @Nullable String errorMessage,
+                                      State state,
+                                      @Nullable String txId) {
+        super(uid,
+                offer,
+                amount,
+                takeOfferDate,
+                peerNodeAddress,
+                txFeePerVbyte,
+                makerFee,
+                takerFee,
+                bsqSwapProtocolModel,
+                errorMessage,
+                state,
+                txId);
+    }
 
     @Override
     public protobuf.Tradable toProtoMessage() {
@@ -82,27 +99,24 @@ public final class BsqSwapSellerAsMakerTrade extends BsqSwapSellerTrade implemen
                 .build();
     }
 
-    public static Tradable fromProto(protobuf.BsqSwapSellerAsMakerTrade bsqSwapSellerAsMakerTrade,
-                                     CoreProtoResolver coreProtoResolver) {
+    public static Tradable fromProto(protobuf.BsqSwapSellerAsMakerTrade bsqSwapSellerAsMakerTrade) {
         var proto = bsqSwapSellerAsMakerTrade.getBsqSwapTrade();
         var uid = ProtoUtil.stringOrNullFromProto(proto.getUid());
         if (uid == null) {
             uid = UUID.randomUUID().toString();
         }
-        var bsqSwapMakerTrade = new BsqSwapSellerAsMakerTrade(
+        return new BsqSwapSellerAsMakerTrade(
                 uid,
                 Offer.fromProto(proto.getOffer()),
                 Coin.valueOf(proto.getAmount()),
-                proto.getPrice(),
                 proto.getTakeOfferDate(),
                 proto.hasPeerNodeAddress() ? NodeAddress.fromProto(proto.getPeerNodeAddress()) : null,
                 proto.getMiningFeePerByte(),
                 proto.getMakerFee(),
                 proto.getTakerFee(),
-                BsqSwapProtocolModel.fromProto(proto.getBsqSwapProtocolModel(), coreProtoResolver),
-                proto.getErrorMessage(),
-                State.fromProto(proto.getState()));
-        bsqSwapMakerTrade.setTxId(proto.getTxId());
-        return bsqSwapMakerTrade;
+                BsqSwapProtocolModel.fromProto(proto.getBsqSwapProtocolModel()),
+                ProtoUtil.stringOrNullFromProto(proto.getErrorMessage()),
+                State.fromProto(proto.getState()),
+                ProtoUtil.stringOrNullFromProto(proto.getTxId()));
     }
 }

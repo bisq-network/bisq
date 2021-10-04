@@ -55,7 +55,7 @@ import javax.annotation.Nullable;
 public abstract class TradeProtocol implements DecryptedDirectMessageListener, DecryptedMailboxListener {
 
     @Getter
-    protected final TradeProtocolModel tradeProtocolModel;
+    protected final TradeProtocolModel<? extends TradePeer> tradeProtocolModel;
     protected final TradeModel tradeModel;
     private Timer timeoutTimer;
 
@@ -81,11 +81,10 @@ public abstract class TradeProtocol implements DecryptedDirectMessageListener, D
 
     protected void onInitialized() {
         if (!tradeModel.isCompleted()) {
-            tradeModel.getTradeProtocolModel().getP2PService().addDecryptedDirectMessageListener(this);
+            tradeProtocolModel.getP2PService().addDecryptedDirectMessageListener(this);
         }
 
-        MailboxMessageService mailboxMessageService =
-                tradeModel.getTradeProtocolModel().getP2PService().getMailboxMessageService();
+        MailboxMessageService mailboxMessageService = tradeProtocolModel.getP2PService().getMailboxMessageService();
         // We delay a bit here as the trade gets updated from the wallet to update the trade
         // state (deposit confirmed) and that happens after our method is called.
         // TODO To fix that in a better way we would need to change the order of some routines

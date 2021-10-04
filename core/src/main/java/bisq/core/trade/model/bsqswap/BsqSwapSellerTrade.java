@@ -26,72 +26,31 @@ import org.bitcoinj.core.Coin;
 
 import javax.annotation.Nullable;
 
-public class BsqSwapSellerTrade extends BsqSwapTrade {
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Constructor, initialization
-    ///////////////////////////////////////////////////////////////////////////////////////////
+public abstract class BsqSwapSellerTrade extends BsqSwapTrade {
 
     public BsqSwapSellerTrade(String uid,
                               Offer offer,
                               Coin amount,
-                              long price,
                               long takeOfferDate,
-                              @Nullable NodeAddress peerNodeAddress,
-                              long miningFeePerByte,
+                              NodeAddress peerNodeAddress,
+                              long txFeePerVbyte,
                               long makerFee,
                               long takerFee,
                               BsqSwapProtocolModel bsqSwapProtocolModel,
                               @Nullable String errorMessage,
-                              State state) {
+                              State state,
+                              @Nullable String txId) {
         super(uid,
                 offer,
                 amount,
-                price,
                 takeOfferDate,
                 peerNodeAddress,
-                miningFeePerByte,
+                txFeePerVbyte,
                 makerFee,
                 takerFee,
                 bsqSwapProtocolModel,
                 errorMessage,
-                state);
+                state,
+                txId);
     }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // PROTO BUFFER
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-/*    @Override
-    public protobuf.Tradable toProtoMessage() {
-        return protobuf.Tradable.newBuilder()
-                .setBsqSwapMakerTrade(protobuf.BsqSwapMakerTrade.newBuilder()
-                        .setBsqSwapTrade((protobuf.BsqSwapTrade) super.toProtoMessage()))
-                .build();
-    }
-
-    public static Tradable fromProto(protobuf.BsqSwapMakerTrade swapTrade,
-                                     CoreProtoResolver coreProtoResolver) {
-        var proto = swapTrade.getBsqSwapTrade();
-        var uid = ProtoUtil.stringOrNullFromProto(proto.getUid());
-        if (uid == null) {
-            uid = UUID.randomUUID().toString();
-        }
-        var bsqSwapMakerTrade = new BsqSwapSellerAsTakerTrade(
-                uid,
-                Offer.fromProto(proto.getOffer()),
-                Coin.valueOf(proto.getAmount()),
-                proto.getPrice(),
-                proto.getTakeOfferDate(),
-                proto.hasPeerNodeAddress() ? NodeAddress.fromProto(proto.getPeerNodeAddress()) : null,
-                proto.getMiningFeePerByte(),
-                proto.getMakerFee(),
-                proto.getTakerFee(),
-                BsqSwapProtocolModel.fromProto(proto.getBsqSwapProtocolModel(), coreProtoResolver),
-                proto.getErrorMessage(),
-                State.fromProto(proto.getState()));
-        bsqSwapMakerTrade.setTxId(proto.getTxId());
-        return bsqSwapMakerTrade;
-    }*/
 }

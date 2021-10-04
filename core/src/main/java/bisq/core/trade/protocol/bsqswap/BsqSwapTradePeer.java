@@ -17,34 +17,96 @@
 
 package bisq.core.trade.protocol.bsqswap;
 
-import bisq.core.proto.CoreProtoResolver;
+import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.trade.protocol.TradePeer;
 
 import bisq.common.crypto.PubKeyRing;
+import bisq.common.proto.ProtoUtil;
 import bisq.common.proto.persistable.PersistablePayload;
+import bisq.common.util.Utilities;
 
-import protobuf.TradingPeer;
+import com.google.protobuf.ByteString;
 
-import com.google.protobuf.Message;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
+import lombok.Getter;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
+
+import javax.annotation.Nullable;
+
+@Slf4j
+@Getter
+@Setter
 public final class BsqSwapTradePeer implements TradePeer, PersistablePayload {
+    @Nullable
+    private PubKeyRing pubKeyRing;
+    @Nullable
+    private String btcAddress;
+    @Nullable
+    private String bsqAddress;
 
-    public static BsqSwapTradePeer fromProto(TradingPeer tradingPeer, CoreProtoResolver coreProtoResolver) {
-        return null;
-    }
+    @Nullable
+    private List<RawTransactionInput> inputs;
+    private long change;
+    private long payout;
+    @Nullable
+    @Setter
+    private byte[] tx;
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public Message toProtoMessage() {
-        return null;
+    public protobuf.BsqSwapTradePeer toProtoMessage() {
+        final protobuf.BsqSwapTradePeer.Builder builder = protobuf.BsqSwapTradePeer.newBuilder()
+                .setChange(change)
+                .setPayout(payout);
+        Optional.ofNullable(pubKeyRing).ifPresent(e -> builder.setPubKeyRing(e.toProtoMessage()));
+        Optional.ofNullable(btcAddress).ifPresent(builder::setBtcAddress);
+        Optional.ofNullable(bsqAddress).ifPresent(builder::setBsqAddress);
+        Optional.ofNullable(inputs).ifPresent(e -> builder.addAllInputs(
+                ProtoUtil.collectionToProto(e, protobuf.RawTransactionInput.class)));
+        Optional.ofNullable(tx).ifPresent(e -> builder.setTx(ByteString.copyFrom(e)));
+        return builder.build();
     }
 
-    @Override
-    public PubKeyRing getPubKeyRing() {
-        return null;
+    public static BsqSwapTradePeer fromProto(protobuf.BsqSwapTradePeer proto) {
+        if (proto.getDefaultInstanceForType().equals(proto)) {
+            return null;
+        } else {
+            BsqSwapTradePeer bsqSwapTradePeer = new BsqSwapTradePeer();
+            bsqSwapTradePeer.setPubKeyRing(proto.hasPubKeyRing() ? PubKeyRing.fromProto(proto.getPubKeyRing()) : null);
+            bsqSwapTradePeer.setChange(proto.getChange());
+            bsqSwapTradePeer.setPayout(proto.getPayout());
+            bsqSwapTradePeer.setBtcAddress(proto.getBtcAddress());
+            bsqSwapTradePeer.setBsqAddress(proto.getBsqAddress());
+            List<RawTransactionInput> inputs = proto.getInputsList().isEmpty() ?
+                    null :
+                    proto.getInputsList().stream()
+                            .map(RawTransactionInput::fromProto)
+                            .collect(Collectors.toList());
+            bsqSwapTradePeer.setInputs(inputs);
+            bsqSwapTradePeer.setTx(ProtoUtil.byteArrayOrNullFromProto(proto.getTx()));
+            return bsqSwapTradePeer;
+        }
     }
 
-    @Override
-    public void setPubKeyRing(PubKeyRing pubKeyRing) {
 
+    @Override
+    public String toString() {
+        return "BsqSwapTradePeer{" +
+                "\r\n     pubKeyRing=" + pubKeyRing +
+                ",\r\n     btcAddress='" + btcAddress + '\'' +
+                ",\r\n     bsqAddress='" + bsqAddress + '\'' +
+                ",\r\n     inputs=" + inputs +
+                ",\r\n     change=" + change +
+                ",\r\n     payout=" + payout +
+                ",\r\n     tx=" + Utilities.encodeToHex(tx) +
+                "\r\n}";
     }
 }

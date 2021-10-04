@@ -19,6 +19,7 @@ package bisq.core.btc.wallet;
 
 import bisq.core.btc.TxData;
 import bisq.core.btc.TxFeeEstimationService;
+import bisq.core.btc.exceptions.InsufficientBsqException;
 import bisq.core.btc.exceptions.SigningException;
 import bisq.core.btc.exceptions.TransactionVerificationException;
 import bisq.core.btc.exceptions.WalletException;
@@ -55,6 +56,7 @@ import org.bitcoinj.crypto.TransactionSignature;
 import org.bitcoinj.script.Script;
 import org.bitcoinj.script.ScriptBuilder;
 import org.bitcoinj.script.ScriptPattern;
+import org.bitcoinj.wallet.CoinSelection;
 import org.bitcoinj.wallet.SendRequest;
 import org.bitcoinj.wallet.Wallet;
 
@@ -66,12 +68,11 @@ import org.bouncycastle.crypto.params.KeyParameter;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 
@@ -371,7 +372,7 @@ public class TradeWalletService {
             checkNotNull(e.getConnectedOutput().getParentTransaction(),
                     "e.getConnectedOutput().getParentTransaction() must not be null");
             checkNotNull(e.getValue(), "e.getValue() must not be null");
-            return getRawInputFromTransactionInput(e);
+            return WalletService.getRawInputFromTransactionInput(e);
         }).collect(Collectors.toList());
 
 
@@ -485,7 +486,7 @@ public class TradeWalletService {
             // Add buyer inputs
             for (TransactionInput input : makerInputs) {
                 preparedDepositTx.addInput(input);
-                makerRawTransactionInputs.add(getRawInputFromTransactionInput(input));
+                makerRawTransactionInputs.add(WalletService.getRawInputFromTransactionInput(input));
             }
 
             // Add seller inputs
@@ -503,7 +504,7 @@ public class TradeWalletService {
             // Add seller inputs
             for (TransactionInput input : makerInputs) {
                 preparedDepositTx.addInput(input);
-                makerRawTransactionInputs.add(getRawInputFromTransactionInput(input));
+                makerRawTransactionInputs.add(WalletService.getRawInputFromTransactionInput(input));
             }
         }
 
@@ -1178,6 +1179,117 @@ public class TradeWalletService {
     // BsqSwap tx
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    public Tuple2<List<RawTransactionInput>, Coin> getSellersBtcInputsForBsqSwapTx(Coin required) throws InsufficientBsqException {
+        BtcCoinSelector coinSelector = new BtcCoinSelector(walletsSetup.getAddressesByContext(AddressEntry.Context.AVAILABLE),
+                preferences.getIgnoreDustThreshold());
+        CoinSelection coinSelection = coinSelector.select(required, Objects.requireNonNull(wallet).calculateAllSpendCandidates());
+
+        Coin change = Coin.ZERO;
+        try {
+            change = coinSelector.getChange(required, coinSelection);
+            checkArgument(change.isZero() || Restrictions.isAboveDust(change));
+        } catch (InsufficientMoneyException e) {
+            log.error("Missing funds in takerPreparesAtomicBsqInputs");
+            throw new InsufficientBsqException(e.missing);
+        } catch (Exception e) {
+            throw new InsufficientBsqException(Restrictions.getMinNonDustOutput().subtract(change));
+        }
+
+        Transaction dummyTx = new Transaction(params);
+        coinSelection.gathered.forEach(dummyTx::addInput);
+        List<RawTransactionInput> inputs = dummyTx.getInputs().stream()
+                .map(WalletService::getRawInputFromTransactionInput)
+                .collect(Collectors.toList());
+        return new Tuple2<>(inputs, change);
+    }
+
+    public Transaction sellerBuildBsqSwapTx(List<RawTransactionInput> buyersBsqInputs,
+                                            List<RawTransactionInput> sellersBtcInputs,
+                                            Coin sellersBsqPayoutAmount,
+                                            String sellersBsqPayoutAddress,
+                                            @Nullable Coin buyersBsqChangeAmount,
+                                            @Nullable String buyersBsqChangeAddress,
+                                            Coin buyersBtcPayoutAmount,
+                                            String buyersBtcPayoutAddress,
+                                            @Nullable Coin sellersBtcChangeAmount,
+                                            @Nullable String sellersBtcChangeAddress) throws AddressFormatException {
+
+        Transaction transaction = new Transaction(params);
+        List<TransactionInput> sellersBtcTransactionInput = sellersBtcInputs.stream()
+                .map(rawInput -> getTransactionInput(transaction, new byte[]{}, rawInput))
+                .collect(Collectors.toList());
+        return buildBsqSwapTx(buyersBsqInputs,
+                sellersBtcTransactionInput,
+                sellersBsqPayoutAmount,
+                sellersBsqPayoutAddress,
+                buyersBsqChangeAmount,
+                buyersBsqChangeAddress,
+                buyersBtcPayoutAmount,
+                buyersBtcPayoutAddress,
+                sellersBtcChangeAmount,
+                sellersBtcChangeAddress,
+                transaction);
+    }
+
+    public Transaction buyerBuildBsqSwapTx(List<RawTransactionInput> buyersBsqInputs,
+                                           List<TransactionInput> sellersBtcInputs,
+                                           Coin sellersBsqPayoutAmount,
+                                           String sellersBsqPayoutAddress,
+                                           @Nullable Coin buyersBsqChangeAmount,
+                                           @Nullable String buyersBsqChangeAddress,
+                                           Coin buyersBtcPayoutAmount,
+                                           String buyersBtcPayoutAddress,
+                                           @Nullable Coin sellersBtcChangeAmount,
+                                           @Nullable String sellersBtcChangeAddress) throws AddressFormatException {
+        Transaction transaction = new Transaction(params);
+        return buildBsqSwapTx(buyersBsqInputs,
+                sellersBtcInputs,
+                sellersBsqPayoutAmount,
+                sellersBsqPayoutAddress,
+                buyersBsqChangeAmount,
+                buyersBsqChangeAddress,
+                buyersBtcPayoutAmount,
+                buyersBtcPayoutAddress,
+                sellersBtcChangeAmount,
+                sellersBtcChangeAddress,
+                transaction);
+    }
+
+    private Transaction buildBsqSwapTx(List<RawTransactionInput> buyersBsqInputs,
+                                       List<TransactionInput> sellersBtcInputs,
+                                       Coin sellersBsqPayoutAmount,
+                                       String sellersBsqPayoutAddress,
+                                       @Nullable Coin buyersBsqChangeAmount,
+                                       @Nullable String buyersBsqChangeAddress,
+                                       Coin buyersBtcPayoutAmount,
+                                       String buyersBtcPayoutAddress,
+                                       @Nullable Coin sellersBtcChangeAmount,
+                                       @Nullable String sellersBtcChangeAddress,
+                                       Transaction transaction) throws AddressFormatException {
+
+        buyersBsqInputs.forEach(rawInput -> transaction.addInput(getTransactionInput(transaction, new byte[]{}, rawInput)));
+        sellersBtcInputs.forEach(transaction::addInput);
+
+        transaction.addOutput(sellersBsqPayoutAmount, Address.fromString(params, sellersBsqPayoutAddress));
+
+        if (buyersBsqChangeAmount != null && buyersBsqChangeAmount.isPositive())
+            transaction.addOutput(buyersBsqChangeAmount, Address.fromString(params, Objects.requireNonNull(buyersBsqChangeAddress)));
+
+        transaction.addOutput(buyersBtcPayoutAmount, Address.fromString(params, buyersBtcPayoutAddress));
+
+        if (sellersBtcChangeAmount != null && sellersBtcChangeAmount.isPositive())
+            transaction.addOutput(sellersBtcChangeAmount, Address.fromString(params, Objects.requireNonNull(sellersBtcChangeAddress)));
+
+        return transaction;
+    }
+
+    public void signBsqSwapTransaction(Transaction transaction, List<TransactionInput> myInputs)
+            throws SigningException {
+        for (TransactionInput input : myInputs) {
+            signInput(transaction, input, input.getIndex());
+        }
+    }
+
     /**
      * Example of colored coin offline scheme (not used yet):
      * https://groups.google.com/forum/#!msg/bitcoinx/pON4XCIBeV4/IvzwkU8Vch0J
@@ -1206,7 +1318,7 @@ public class TradeWalletService {
 
         // Gather bsq raw inputs
         ArrayList<RawTransactionInput> myRawBsqInputs = new ArrayList<>();
-        preparedBsqSwapTx.getInputs().forEach(input -> myRawBsqInputs.add(getRawInputFromTransactionInput(input)));
+        preparedBsqSwapTx.getInputs().forEach(input -> myRawBsqInputs.add(WalletService.getRawInputFromTransactionInput(input)));
 
         // Gather BTC inputs to cover requiredBtc which optionally includes
         // - trade amount for seller
@@ -1225,7 +1337,7 @@ public class TradeWalletService {
         ArrayList<RawTransactionInput> myRawBtcInputs = new ArrayList<>();
         coinSelection.gathered.forEach(output -> {
             var newInput = mySideTx.addInput(output);
-            myRawBtcInputs.add(getRawInputFromTransactionInput(newInput));
+            myRawBtcInputs.add(WalletService.getRawInputFromTransactionInput(newInput));
         });
 
         Coin btcChange;
@@ -1374,31 +1486,19 @@ public class TradeWalletService {
         return dummyTx.getInputs();
     }
 
+    public TransactionInput getTransactionInput(Transaction parentTransaction,
+                                                byte[] scriptProgram,
+                                                RawTransactionInput rawTransactionInput) {
+        return new TransactionInput(params,
+                parentTransaction,
+                scriptProgram,
+                getConnectedOutPoint(rawTransactionInput),
+                Coin.valueOf(rawTransactionInput.value));
+    }
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private methods
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private RawTransactionInput getRawInputFromTransactionInput(@NotNull TransactionInput input) {
-        checkNotNull(input.getConnectedOutput(), "input.getConnectedOutput() must not be null");
-        checkNotNull(input.getConnectedOutput().getParentTransaction(),
-                "input.getConnectedOutput().getParentTransaction() must not be null");
-        checkNotNull(input.getValue(), "input.getValue() must not be null");
-
-        // bitcoinSerialize(false) is used just in case the serialized tx is parsed by a bisq node still using
-        // bitcoinj 0.14. This is not supposed to happen ever since Version.TRADE_PROTOCOL_VERSION was set to 3,
-        // but it costs nothing to be on the safe side.
-        // The serialized tx is just used to obtain its hash, so the witness data is not relevant.
-        return new RawTransactionInput(input.getOutpoint().getIndex(),
-                input.getConnectedOutput().getParentTransaction().bitcoinSerialize(false),
-                input.getValue().value);
-    }
-
-    private TransactionInput getTransactionInput(Transaction depositTx,
-                                                 byte[] scriptProgram,
-                                                 RawTransactionInput rawTransactionInput) {
-        return new TransactionInput(params, depositTx, scriptProgram, getConnectedOutPoint(rawTransactionInput),
-                Coin.valueOf(rawTransactionInput.value));
-    }
 
     private TransactionOutPoint getConnectedOutPoint(RawTransactionInput rawTransactionInput) {
         return new TransactionOutPoint(params, rawTransactionInput.index,
@@ -1494,7 +1594,8 @@ public class TradeWalletService {
             TransactionSignature txSig = transaction.calculateWitnessSignature(inputIndex, sigKey, aesKey, scriptCode, value,
                     Transaction.SigHash.ALL, false);
             input.setScriptSig(ScriptBuilder.createEmpty());
-            input.setWitness(TransactionWitness.redeemP2WPKH(txSig, sigKey));
+            TransactionWitness witness = TransactionWitness.redeemP2WPKH(txSig, sigKey);
+            input.setWitness(witness);
         } else {
             throw new SigningException("Don't know how to sign for this kind of scriptPubKey: " + scriptPubKey);
         }

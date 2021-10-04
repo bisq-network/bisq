@@ -15,19 +15,24 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.protocol.bsqswap.tasks.maker;
+package bisq.core.trade.protocol.bsqswap.tasks.buyer_as_maker;
 
+import bisq.core.trade.messages.bsqswap.BsqSwapTxInputsMessage;
 import bisq.core.trade.model.bsqswap.BsqSwapTrade;
 import bisq.core.trade.protocol.bsqswap.tasks.BsqSwapTask;
+
+import bisq.network.p2p.NodeAddress;
+import bisq.network.p2p.SendDirectMessageListener;
 
 import bisq.common.taskrunner.TaskRunner;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class MakerCreatesAndSignsTx extends BsqSwapTask {
+public class SendBsqSwapTxInputsMessage extends BsqSwapTask {
+
     @SuppressWarnings({"unused"})
-    public MakerCreatesAndSignsTx(TaskRunner<BsqSwapTrade> taskHandler, BsqSwapTrade bsqSwapTrade) {
+    public SendBsqSwapTxInputsMessage(TaskRunner<BsqSwapTrade> taskHandler, BsqSwapTrade bsqSwapTrade) {
         super(taskHandler, bsqSwapTrade);
     }
 
@@ -36,28 +41,17 @@ public class MakerCreatesAndSignsTx extends BsqSwapTask {
         try {
             runInterceptHook();
 
-          /*  // Create bsq swap tx with maker btc inputs signed
-            var swapTx = bsqSwapProtocolModel.createBsqSwapTx();
-
-            // Sign inputs
-            swapTx = bsqSwapProtocolModel.getTradeWalletService().signInputs(swapTx,
-                    bsqSwapProtocolModel.getRawMakerBtcInputs());
-            swapTx = bsqSwapProtocolModel.getBsqWalletService().signInputs(swapTx,
-                    bsqSwapProtocolModel.getRawMakerBsqInputs());
-
-            bsqSwapProtocolModel.setRawTx(swapTx.bitcoinSerialize());
-            var message = new CreateBsqSwapTxResponse(UUID.randomUUID().toString(),
-                    bsqSwapProtocolModel.getOffer().getId(),
+            BsqSwapTxInputsMessage message = new BsqSwapTxInputsMessage(
+                    bsqSwapProtocolModel.getOfferId(),
                     bsqSwapProtocolModel.getMyNodeAddress(),
-                    bsqSwapProtocolModel.getRawTx(),
-                    bsqSwapProtocolModel.getMakerBsqOutputAmount(),
-                    bsqSwapProtocolModel.getMakerBsqAddress(),
-                    bsqSwapProtocolModel.getMakerBtcOutputAmount(),
-                    bsqSwapProtocolModel.getMakerBtcAddress(),
-                    bsqSwapProtocolModel.getRawMakerBsqInputs(),
-                    bsqSwapProtocolModel.getRawMakerBtcInputs());*/
+                    bsqSwapProtocolModel.getInputs(),
+                    bsqSwapProtocolModel.getChange(),
+                    bsqSwapProtocolModel.getBtcAddress(),
+                    bsqSwapProtocolModel.getBsqAddress());
 
-          /*  NodeAddress peersNodeAddress = bsqSwapTrade.getTradingPeerNodeAddress();
+            log.info("BsqSwapTxInputMessage={}", message);
+
+            NodeAddress peersNodeAddress = bsqSwapTrade.getTradingPeerNodeAddress();
             log.info("Send {} to peer {}. tradeId={}, uid={}",
                     message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
             bsqSwapProtocolModel.getP2PService().sendEncryptedDirectMessage(
@@ -84,8 +78,7 @@ public class MakerCreatesAndSignsTx extends BsqSwapTask {
                             failed();
                         }
                     }
-            );*/
-            complete();
+            );
         } catch (Throwable t) {
             failed(t);
         }

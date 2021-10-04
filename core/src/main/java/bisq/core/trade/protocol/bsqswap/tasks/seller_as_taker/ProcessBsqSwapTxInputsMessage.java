@@ -15,20 +15,22 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.protocol.bsqswap.tasks.taker;
+package bisq.core.trade.protocol.bsqswap.tasks.seller_as_taker;
 
+import bisq.core.trade.messages.bsqswap.BsqSwapTxInputsMessage;
 import bisq.core.trade.model.bsqswap.BsqSwapTrade;
-import bisq.core.trade.protocol.bsqswap.tasks.SetupTxListener;
+import bisq.core.trade.protocol.bsqswap.tasks.seller.ProcessTxInputsMessage;
 
 import bisq.common.taskrunner.TaskRunner;
 
 import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
-public class TakerSetupTxListener extends SetupTxListener {
+import static com.google.common.base.Preconditions.checkArgument;
 
+@Slf4j
+public class ProcessBsqSwapTxInputsMessage extends ProcessTxInputsMessage {
     @SuppressWarnings({"unused"})
-    public TakerSetupTxListener(TaskRunner<BsqSwapTrade> taskHandler, BsqSwapTrade bsqSwapTrade) {
+    public ProcessBsqSwapTxInputsMessage(TaskRunner<BsqSwapTrade> taskHandler, BsqSwapTrade bsqSwapTrade) {
         super(taskHandler, bsqSwapTrade);
     }
 
@@ -37,20 +39,8 @@ public class TakerSetupTxListener extends SetupTxListener {
         try {
             runInterceptHook();
 
-          /*  checkNotNull(bsqSwapProtocolModel, "bsqSwapProtocolModel must not be null");
+            checkArgument(bsqSwapProtocolModel.getTradeMessage() instanceof BsqSwapTxInputsMessage);
 
-            // Find address to listen to
-            if (bsqSwapProtocolModel.getTakerBtcAddress() != null) {
-                walletService = bsqSwapProtocolModel.getBtcWalletService();
-                myAddress = Address.fromString(walletService.getParams(), bsqSwapProtocolModel.getTakerBtcAddress());
-            } else if (bsqSwapProtocolModel.getTakerBsqAddress() != null) {
-                // Listen to BSQ address
-                walletService = bsqSwapProtocolModel.getBsqWalletService();
-                myAddress = Address.fromString(walletService.getParams(), bsqSwapProtocolModel.getTakerBsqAddress());
-            } else {
-                failed("No maker address set");
-            }
-*/
             super.run();
 
             complete();

@@ -18,26 +18,16 @@
 package bisq.core.trade.protocol.bsqswap;
 
 
-import bisq.core.offer.Offer;
-import bisq.core.trade.messages.TradeMessage;
-import bisq.core.trade.messages.bsqswap.CreateBsqSwapTxResponse;
 import bisq.core.trade.model.bsqswap.BsqSwapSellerTrade;
 import bisq.core.trade.model.bsqswap.BsqSwapTrade;
 import bisq.core.trade.protocol.TradeProtocol;
-import bisq.core.trade.protocol.bsqswap.tasks.taker.TakerPublishBsqSwapTx;
-import bisq.core.trade.protocol.bsqswap.tasks.taker.TakerSetupTxListener;
-import bisq.core.trade.protocol.bsqswap.tasks.taker.TakerVerifyBsqSwapTx;
-
-import bisq.network.p2p.NodeAddress;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 @Slf4j
-public class BsqSwapSellerProtocol extends TradeProtocol {
+public abstract class BsqSwapSellerProtocol extends TradeProtocol {
 
-    protected final BsqSwapSellerTrade sellerTrade;
+    protected final BsqSwapTrade bsqSwapTrade;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -45,41 +35,7 @@ public class BsqSwapSellerProtocol extends TradeProtocol {
 
     public BsqSwapSellerProtocol(BsqSwapSellerTrade trade) {
         super(trade);
-        this.sellerTrade = trade;
-        Offer offer = checkNotNull(trade.getOffer());
-        tradeProtocolModel.getTradePeer().setPubKeyRing(offer.getPubKeyRing());
-    }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Incoming message handling
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    void handle(CreateBsqSwapTxResponse message, NodeAddress sender) {
-        expect(preCondition(BsqSwapTrade.State.PREPARATION == sellerTrade.getState())
-                .with(message)
-                .from(sender))
-                .setup(tasks(
-                        TakerVerifyBsqSwapTx.class,
-                        TakerPublishBsqSwapTx.class,
-                        TakerSetupTxListener.class
-                        // TODO(sq)
-                        // PublishTradeStatistics.class
-                ).withTimeout(60))
-                .executeTasks();
-    }
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Massage dispatcher
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    protected void onTradeMessage(TradeMessage message, NodeAddress peer) {
-        log.info("Received {} from {} with tradeId {} and uid {}",
-                message.getClass().getSimpleName(), peer, message.getTradeId(), message.getUid());
-
-        if (message instanceof CreateBsqSwapTxResponse) {
-            handle((CreateBsqSwapTxResponse) message, peer);
-        }
+        this.bsqSwapTrade = trade;
     }
 }
