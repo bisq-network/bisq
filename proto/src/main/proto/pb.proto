@@ -1036,6 +1036,8 @@ message CountryBasedPaymentAccountPayload {
         PaytmAccountPayload paytm_account_payload = 10;
         IfscBasedAccountPayload ifsc_based_account_payload = 11;
         NequiAccountPayload nequi_account_payload = 12;
+        BizumAccountPayload bizum_account_payload = 13;
+        PixAccountPayload pix_account_payload = 14;
     }
 }
 
@@ -1272,6 +1274,14 @@ message CelPayAccountPayload {
 
 message NequiAccountPayload {
     string mobile_nr = 1;
+}
+
+message BizumAccountPayload {
+    string mobile_nr = 1;
+}
+
+message PixAccountPayload {
+    string pix_key = 1;
 }
 
 message SwiftAccountPayload {

@@ -23,6 +23,7 @@ import bisq.desktop.components.paymentmethods.AdvancedCashForm;
 import bisq.desktop.components.paymentmethods.AliPayForm;
 import bisq.desktop.components.paymentmethods.AmazonGiftCardForm;
 import bisq.desktop.components.paymentmethods.AustraliaPayidForm;
+import bisq.desktop.components.paymentmethods.BizumForm;
 import bisq.desktop.components.paymentmethods.CapitualForm;
 import bisq.desktop.components.paymentmethods.CashByMailForm;
 import bisq.desktop.components.paymentmethods.CashDepositForm;
@@ -43,6 +44,7 @@ import bisq.desktop.components.paymentmethods.NequiForm;
 import bisq.desktop.components.paymentmethods.PaymentMethodForm;
 import bisq.desktop.components.paymentmethods.PaytmForm;
 import bisq.desktop.components.paymentmethods.PerfectMoneyForm;
+import bisq.desktop.components.paymentmethods.PixForm;
 import bisq.desktop.components.paymentmethods.PopmoneyForm;
 import bisq.desktop.components.paymentmethods.PromptPayForm;
 import bisq.desktop.components.paymentmethods.RevolutForm;
@@ -565,6 +567,10 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
                 return new PaytmForm(paymentAccount, accountAgeWitnessService, inputValidator, root, gridRow, formatter);
             case PaymentMethod.NEQUI_ID:
                 return new NequiForm(paymentAccount, accountAgeWitnessService, inputValidator, root, gridRow, formatter);
+            case PaymentMethod.BIZUM_ID:
+                return new BizumForm(paymentAccount, accountAgeWitnessService, inputValidator, root, gridRow, formatter);
+            case PaymentMethod.PIX_ID:
+                return new PixForm(paymentAccount, accountAgeWitnessService, inputValidator, root, gridRow, formatter);
             case PaymentMethod.AMAZON_GIFT_CARD_ID:
                 return new AmazonGiftCardForm(paymentAccount, accountAgeWitnessService, inputValidator, root, gridRow, formatter);
             case PaymentMethod.CAPITUAL_ID:

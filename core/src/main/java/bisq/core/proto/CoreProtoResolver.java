@@ -25,6 +25,7 @@ import bisq.core.payment.payload.AdvancedCashAccountPayload;
 import bisq.core.payment.payload.AliPayAccountPayload;
 import bisq.core.payment.payload.AmazonGiftCardAccountPayload;
 import bisq.core.payment.payload.AustraliaPayidPayload;
+import bisq.core.payment.payload.BizumAccountPayload;
 import bisq.core.payment.payload.CapitualAccountPayload;
 import bisq.core.payment.payload.CashAppAccountPayload;
 import bisq.core.payment.payload.CashByMailAccountPayload;
@@ -51,6 +52,7 @@ import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PayseraAccountPayload;
 import bisq.core.payment.payload.PaytmAccountPayload;
 import bisq.core.payment.payload.PerfectMoneyAccountPayload;
+import bisq.core.payment.payload.PixAccountPayload;
 import bisq.core.payment.payload.PopmoneyAccountPayload;
 import bisq.core.payment.payload.PromptPayAccountPayload;
 import bisq.core.payment.payload.RevolutAccountPayload;
@@ -131,6 +133,10 @@ public class CoreProtoResolver implements ProtoResolver {
                             return PaytmAccountPayload.fromProto(proto);
                         case NEQUI_ACCOUNT_PAYLOAD:
                             return NequiAccountPayload.fromProto(proto);
+                        case BIZUM_ACCOUNT_PAYLOAD:
+                            return BizumAccountPayload.fromProto(proto);
+                        case PIX_ACCOUNT_PAYLOAD:
+                            return PixAccountPayload.fromProto(proto);
                         case IFSC_BASED_ACCOUNT_PAYLOAD:
                             final protobuf.IfscBasedAccountPayload.MessageCase messageCaseIfsc = proto.getCountryBasedPaymentAccountPayload().getIfscBasedAccountPayload().getMessageCase();
                             switch (messageCaseIfsc) {

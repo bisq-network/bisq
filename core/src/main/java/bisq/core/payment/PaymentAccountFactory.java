@@ -98,6 +98,10 @@ public class PaymentAccountFactory {
                 return new PaytmAccount();
             case PaymentMethod.NEQUI_ID:
                 return new NequiAccount();
+            case PaymentMethod.BIZUM_ID:
+                return new BizumAccount();
+            case PaymentMethod.PIX_ID:
+                return new PixAccount();
             case PaymentMethod.AMAZON_GIFT_CARD_ID:
                 return new AmazonGiftCardAccount();
             case PaymentMethod.BLOCK_CHAINS_INSTANT_ID:
