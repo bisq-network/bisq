@@ -39,6 +39,7 @@ import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.util.FormattingUtils;
+import bisq.core.util.VolumeUtil;
 import bisq.core.util.coin.CoinFormatter;
 
 import bisq.network.p2p.NodeAddress;
@@ -88,10 +89,10 @@ import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 
-import java.text.DecimalFormat;
-
 import javafx.util.Callback;
 import javafx.util.StringConverter;
+
+import java.text.DecimalFormat;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -140,7 +141,9 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public OfferBookChartView(OfferBookChartViewModel model, Navigation navigation, @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter,
+    public OfferBookChartView(OfferBookChartViewModel model,
+                              Navigation navigation,
+                              @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter,
                               @Named(Config.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         super(model);
         this.navigation = navigation;
@@ -230,7 +233,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                             final double doubleValue = (double) object;
                             if (CurrencyUtil.isCryptoCurrency(model.getCurrencyCode())) {
                                 final String withCryptoPrecision = FormattingUtils.formatRoundedDoubleWithPrecision(doubleValue, cryptoPrecision);
-                                if (withCryptoPrecision.substring(0,3).equals("0.0")) {
+                                if (withCryptoPrecision.substring(0, 3).equals("0.0")) {
                                     return FormattingUtils.formatRoundedDoubleWithPrecision(doubleValue, 8).replaceFirst("0+$", "");
                                 } else {
                                     return withCryptoPrecision.replaceFirst("0+$", "");
@@ -398,7 +401,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
     List<XYChart.Data<Number, Number>> filterOutliersBuy(List<XYChart.Data<Number, Number>> buy, boolean isCrypto) {
         List<Double> mnmx = isCrypto ? minMaxFilterRight(buy) : minMaxFilterLeft(buy);
         if (mnmx.get(0).doubleValue() == Double.MAX_VALUE ||
-            mnmx.get(1).doubleValue() == Double.MIN_VALUE) { // no filtering
+                mnmx.get(1).doubleValue() == Double.MIN_VALUE) { // no filtering
             return buy;
         }
         // apply filtering
@@ -408,7 +411,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
     List<XYChart.Data<Number, Number>> filterOutliersSell(List<XYChart.Data<Number, Number>> sell, boolean isCrypto) {
         List<Double> mnmx = isCrypto ? minMaxFilterLeft(sell) : minMaxFilterRight(sell);
         if (mnmx.get(0).doubleValue() == Double.MAX_VALUE ||
-            mnmx.get(1).doubleValue() == Double.MIN_VALUE) { // no filtering
+                mnmx.get(1).doubleValue() == Double.MIN_VALUE) { // no filtering
             return sell;
         }
         // apply filtering
@@ -417,43 +420,43 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
 
     private List<Double> minMaxFilterLeft(List<XYChart.Data<Number, Number>> data) {
         double maxValue = data.stream()
-            .mapToDouble(o -> o.getXValue().doubleValue())
-            .max()
-            .orElse(Double.MIN_VALUE);
+                .mapToDouble(o -> o.getXValue().doubleValue())
+                .max()
+                .orElse(Double.MIN_VALUE);
         // Hide offers less than a div-factor of dataLimitFactor lower than the highest offer.
         double minValue = data.stream()
-            .mapToDouble(o -> o.getXValue().doubleValue())
-            .filter(o -> o > maxValue / dataLimitFactor)
-            .min()
-            .orElse(Double.MAX_VALUE);
+                .mapToDouble(o -> o.getXValue().doubleValue())
+                .filter(o -> o > maxValue / dataLimitFactor)
+                .min()
+                .orElse(Double.MAX_VALUE);
         return List.of(minValue, maxValue);
     }
 
     private List<Double> minMaxFilterRight(List<XYChart.Data<Number, Number>> data) {
         double minValue = data.stream()
-            .mapToDouble(o -> o.getXValue().doubleValue())
-            .min()
-            .orElse(Double.MAX_VALUE);
+                .mapToDouble(o -> o.getXValue().doubleValue())
+                .min()
+                .orElse(Double.MAX_VALUE);
 
         // Hide offers a dataLimitFactor factor higher than the lowest offer
         double maxValue = data.stream()
-            .mapToDouble(o -> o.getXValue().doubleValue())
-            .filter(o -> o < minValue * dataLimitFactor)
-            .max()
-            .orElse(Double.MIN_VALUE);
+                .mapToDouble(o -> o.getXValue().doubleValue())
+                .filter(o -> o < minValue * dataLimitFactor)
+                .max()
+                .orElse(Double.MIN_VALUE);
         return List.of(minValue, maxValue);
     }
 
     private List<XYChart.Data<Number, Number>> filterLeft(List<XYChart.Data<Number, Number>> data, double maxValue) {
         return data.stream()
-            .filter(o -> o.getXValue().doubleValue() > maxValue / dataLimitFactor)
-            .collect(Collectors.toList());
+                .filter(o -> o.getXValue().doubleValue() > maxValue / dataLimitFactor)
+                .collect(Collectors.toList());
     }
 
     private List<XYChart.Data<Number, Number>> filterRight(List<XYChart.Data<Number, Number>> data, double minValue) {
         return data.stream()
-            .filter(o -> o.getXValue().doubleValue() < minValue * dataLimitFactor)
-            .collect(Collectors.toList());
+                .filter(o -> o.getXValue().doubleValue() < minValue * dataLimitFactor)
+                .collect(Collectors.toList());
     }
 
     private Tuple4<TableView<OfferListItem>, VBox, Button, Label> getOfferTable(OfferPayload.Direction direction) {
@@ -479,7 +482,9 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                             private Offer offer;
                             final ChangeListener<Number> listener = new ChangeListener<>() {
                                 @Override
-                                public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
+                                public void changed(ObservableValue<? extends Number> observable,
+                                                    Number oldValue,
+                                                    Number newValue) {
                                     if (offer != null && offer.getPrice() != null) {
                                         setText("");
                                         setGraphic(new ColoredDecimalPlacesWithZerosText(model.getPrice(offer),
@@ -529,7 +534,9 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                             private Offer offer;
                             final ChangeListener<Number> listener = new ChangeListener<>() {
                                 @Override
-                                public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
+                                public void changed(ObservableValue<? extends Number> observable,
+                                                    Number oldValue,
+                                                    Number newValue) {
                                     if (offer != null && offer.getPrice() != null) {
                                         renderCellContentRange();
                                         model.priceFeedService.updateCounterProperty().removeListener(listener);
@@ -562,7 +569,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                              * Should not be called for empty cells
                              */
                             private void renderCellContentRange() {
-                                String volumeRange = DisplayUtils.formatVolume(offer, true, 2);
+                                String volumeRange = VolumeUtil.formatVolume(offer, true, 2);
 
                                 setText("");
                                 setGraphic(new ColoredDecimalPlacesWithZerosText(volumeRange,
@@ -711,8 +718,8 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                 if (buyOfferTableView.getHeight() != newTableViewHeight) {
                     buyOfferTableView.setMinHeight(newTableViewHeight);
                     sellOfferTableView.setMinHeight(newTableViewHeight);
-               }
+                }
             }
-       }, 100, TimeUnit.MILLISECONDS);
-   }
+        }, 100, TimeUnit.MILLISECONDS);
+    }
 }

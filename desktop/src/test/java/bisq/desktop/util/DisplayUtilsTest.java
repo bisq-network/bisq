@@ -4,8 +4,9 @@ import bisq.core.locale.Res;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
-import bisq.core.util.coin.ImmutableCoinFormatter;
+import bisq.core.util.VolumeUtil;
 import bisq.core.util.coin.CoinFormatter;
+import bisq.core.util.coin.ImmutableCoinFormatter;
 
 import bisq.common.config.Config;
 
@@ -49,9 +50,9 @@ public class DisplayUtilsTest {
 
     @Test
     public void testFormatVolume() {
-        assertEquals("1", DisplayUtils.formatVolume(make(btcUsdOffer), true, 4));
-        assertEquals("100", DisplayUtils.formatVolume(make(usdVolume)));
-        assertEquals("1775", DisplayUtils.formatVolume(make(usdVolume.but(with(volumeString, "1774.62")))));
+        assertEquals("1", VolumeUtil.formatVolume(make(btcUsdOffer), true, 4));
+        assertEquals("100", VolumeUtil.formatVolume(make(usdVolume)));
+        assertEquals("1775", VolumeUtil.formatVolume(make(usdVolume.but(with(volumeString, "1774.62")))));
     }
 
     @Test
@@ -61,7 +62,7 @@ public class DisplayUtilsTest {
         when(offer.getMinVolume()).thenReturn(btc);
         when(offer.getVolume()).thenReturn(btc);
 
-        assertEquals("0.10000000", DisplayUtils.formatVolume(offer.getVolume()));
+        assertEquals("0.10000000", VolumeUtil.formatVolume(offer.getVolume()));
     }
 
     @Test
@@ -73,7 +74,7 @@ public class DisplayUtilsTest {
         when(offer.getMinVolume()).thenReturn(btcMin);
         when(offer.getVolume()).thenReturn(btcMax);
 
-        assertEquals("0.10000000 - 0.25000000", DisplayUtils.formatVolume(offer, false, 0));
+        assertEquals("0.10000000 - 0.25000000", VolumeUtil.formatVolume(offer, false, 0));
     }
 
     @Test
@@ -82,7 +83,7 @@ public class DisplayUtilsTest {
         when(offer.getMinVolume()).thenReturn(null);
         when(offer.getVolume()).thenReturn(null);
 
-        assertEquals("", DisplayUtils.formatVolume(offer.getVolume()));
+        assertEquals("", VolumeUtil.formatVolume(offer.getVolume()));
     }
 
     @Test

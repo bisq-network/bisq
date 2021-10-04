@@ -38,6 +38,7 @@ import bisq.core.trade.statistics.TradeStatistics3;
 import bisq.core.user.CookieKey;
 import bisq.core.user.User;
 import bisq.core.util.FormattingUtils;
+import bisq.core.util.VolumeUtil;
 import bisq.core.util.coin.CoinFormatter;
 
 import bisq.common.UserThread;
@@ -570,7 +571,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
             public String toString(Number volume) {
                 return currency.equals("BTC") ?
                         coinFormatter.formatCoin(Coin.valueOf(MathUtils.doubleToLong((double) volume))) :
-                        DisplayUtils.formatLargeFiatWithUnitPostFix((double) volume, "USD");
+                        VolumeUtil.formatLargeFiatWithUnitPostFix((double) volume, "USD");
             }
 
             @Override

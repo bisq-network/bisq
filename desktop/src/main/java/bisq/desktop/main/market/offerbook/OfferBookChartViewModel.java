@@ -38,6 +38,7 @@ import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.user.Preferences;
+import bisq.core.util.VolumeUtil;
 
 import com.google.inject.Inject;
 
@@ -232,15 +233,20 @@ class OfferBookChartViewModel extends ActivatableViewModel {
     }
 
     public Optional<CurrencyListItem> getSelectedCurrencyListItem() {
-        return currencyListItems.getObservableList().stream().filter(e -> e.tradeCurrency.equals(selectedTradeCurrencyProperty.get())).findAny();
+        return currencyListItems.getObservableList().stream()
+                .filter(e -> e.tradeCurrency.equals(selectedTradeCurrencyProperty.get())).findAny();
     }
 
     public int getMaxNumberOfPriceZeroDecimalsToColorize(Offer offer) {
-        return CurrencyUtil.isFiatCurrency(offer.getCurrencyCode()) ? GUIUtil.FIAT_DECIMALS_WITH_ZEROS : GUIUtil.ALTCOINS_DECIMALS_WITH_ZEROS;
+        return CurrencyUtil.isFiatCurrency(offer.getCurrencyCode())
+                ? GUIUtil.FIAT_DECIMALS_WITH_ZEROS
+                : GUIUtil.ALTCOINS_DECIMALS_WITH_ZEROS;
     }
 
     public int getZeroDecimalsForPrice(Offer offer) {
-        return CurrencyUtil.isFiatCurrency(offer.getCurrencyCode()) ? GUIUtil.FIAT_PRICE_DECIMALS_WITH_ZEROS : GUIUtil.ALTCOINS_DECIMALS_WITH_ZEROS;
+        return CurrencyUtil.isFiatCurrency(offer.getCurrencyCode())
+                ? GUIUtil.FIAT_PRICE_DECIMALS_WITH_ZEROS
+                : GUIUtil.ALTCOINS_DECIMALS_WITH_ZEROS;
     }
 
     public String getPrice(Offer offer) {
@@ -248,7 +254,9 @@ class OfferBookChartViewModel extends ActivatableViewModel {
     }
 
     private String formatPrice(Offer offer, boolean decimalAligned) {
-        return DisplayUtils.formatPrice(offer.getPrice(), decimalAligned, offer.isBuyOffer() ? maxPlacesForBuyPrice.get() : maxPlacesForSellPrice.get());
+        return DisplayUtils.formatPrice(offer.getPrice(), decimalAligned, offer.isBuyOffer()
+                ? maxPlacesForBuyPrice.get()
+                : maxPlacesForSellPrice.get());
     }
 
     public String getVolume(Offer offer) {
@@ -256,7 +264,10 @@ class OfferBookChartViewModel extends ActivatableViewModel {
     }
 
     private String formatVolume(Offer offer, boolean decimalAligned) {
-        return DisplayUtils.formatVolume(offer, decimalAligned, offer.isBuyOffer() ? maxPlacesForBuyVolume.get() : maxPlacesForSellVolume.get(), false);
+        return VolumeUtil.formatVolume(offer,
+                decimalAligned,
+                offer.isBuyOffer() ? maxPlacesForBuyVolume.get() : maxPlacesForSellVolume.get(),
+                false);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

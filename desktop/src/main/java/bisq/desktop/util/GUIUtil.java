@@ -54,6 +54,7 @@ import bisq.core.user.Preferences;
 import bisq.core.user.User;
 import bisq.core.user.UserPayload;
 import bisq.core.util.FormattingUtils;
+import bisq.core.util.VolumeUtil;
 import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.coin.CoinUtil;
@@ -224,7 +225,7 @@ public class GUIUtil {
                 persistenceManager.persistNow(() -> {
                     persistenceManager.shutdown();
                     new Popup().feedback(Res.get("guiUtil.accountExport.savedToPath",
-                            Paths.get(directory, fileName).toAbsolutePath()))
+                                    Paths.get(directory, fileName).toAbsolutePath()))
                             .show();
                 });
             }
@@ -801,7 +802,7 @@ public class GUIUtil {
                     .dontShowAgainId(key)
                     .actionButtonTextWithGoTo("navigation.dao.networkMonitor")
                     .onAction(() -> {
-                            navigation.navigateTo(MainView.class, DaoView.class, MonitorView.class, DaoStateMonitorView.class);
+                        navigation.navigateTo(MainView.class, DaoView.class, MonitorView.class, DaoStateMonitorView.class);
                     })
                     .show(), 5, TimeUnit.SECONDS);
         }
@@ -1172,7 +1173,7 @@ public class GUIUtil {
         Volume bsqAmountAsVolume = Volume.parse(bsqAmountAsString, "BSQ");
         Coin requiredBtc = bsqPrice.getAmountByVolume(bsqAmountAsVolume);
         Volume volumeByAmount = usdPrice.getVolumeByAmount(requiredBtc);
-        return DisplayUtils.formatAverageVolumeWithCode(volumeByAmount);
+        return VolumeUtil.formatAverageVolumeWithCode(volumeByAmount);
     }
 
     public static MaterialDesignIcon getIconForSignState(AccountAgeWitnessService.SignState state) {

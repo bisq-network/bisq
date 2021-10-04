@@ -471,7 +471,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
         volumeListener = (ov, oldValue, newValue) -> {
             ignoreVolumeStringListener = true;
             if (newValue != null)
-                volume.set(DisplayUtils.formatVolume(newValue));
+                volume.set(VolumeUtil.formatVolume(newValue));
             else
                 volume.set("");
 
@@ -758,7 +758,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
 
                 if (dataModel.getMinVolume().get() != null) {
                     InputValidator.ValidationResult minVolumeResult = isVolumeInputValid(
-                            DisplayUtils.formatVolume(dataModel.getMinVolume().get()));
+                            VolumeUtil.formatVolume(dataModel.getMinVolume().get()));
 
                     volumeValidationResult.set(minVolumeResult);
 
@@ -883,7 +883,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
                     else if (CurrencyUtil.isFiatCurrency(tradeCurrencyCode.get()))
                         volume = VolumeUtil.getRoundedFiatVolume(volume);
 
-                    this.volume.set(DisplayUtils.formatVolume(volume));
+                    this.volume.set(VolumeUtil.formatVolume(volume));
                 }
 
                 ignoreVolumeStringListener = false;
@@ -1303,7 +1303,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
                 dataModel.getPrice().get() != null &&
                 dataModel.getPrice().get().getValue() != 0 &&
                 isVolumeInputValid(volume.get()).isValid &&
-                isVolumeInputValid(DisplayUtils.formatVolume(dataModel.getMinVolume().get())).isValid &&
+                isVolumeInputValid(VolumeUtil.formatVolume(dataModel.getMinVolume().get())).isValid &&
                 dataModel.isMinAmountLessOrEqualAmount();
 
         if (dataModel.useMarketBasedPrice.get() && dataModel.isMarketPriceAvailable()) {

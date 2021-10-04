@@ -70,7 +70,6 @@ import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.SetXmrTxKeyWindow;
 import bisq.desktop.main.portfolio.pendingtrades.PendingTradesViewModel;
 import bisq.desktop.main.portfolio.pendingtrades.steps.TradeStepView;
-import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.Transitions;
 
@@ -95,6 +94,7 @@ import bisq.core.payment.payload.WesternUnionAccountPayload;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeDataValidation;
 import bisq.core.user.DontShowAgainLookup;
+import bisq.core.util.VolumeUtil;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
@@ -601,7 +601,7 @@ public class BuyerStep2View extends TradeStepView {
             String refTextWarn = Res.get("portfolio.pending.step2_buyer.refTextWarn");
             String fees = Res.get("portfolio.pending.step2_buyer.fees");
             String id = trade.getShortId();
-            String amount = DisplayUtils.formatVolumeWithCode(trade.getTradeVolume());
+            String amount = VolumeUtil.formatVolumeWithCode(trade.getTradeVolume());
             if (paymentAccountPayload instanceof AssetsAccountPayload) {
                 message += Res.get("portfolio.pending.step2_buyer.altcoin",
                         getCurrencyName(trade),

@@ -28,7 +28,6 @@ import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.locale.BankUtil;
 import bisq.core.locale.CountryUtil;
 import bisq.core.locale.Res;
 import bisq.core.monetary.Price;
@@ -39,6 +38,7 @@ import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.user.User;
 import bisq.core.util.FormattingUtils;
+import bisq.core.util.VolumeUtil;
 import bisq.core.util.coin.CoinFormatter;
 
 import bisq.common.crypto.KeyRing;
@@ -208,20 +208,25 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         if (takeOfferHandlerOptional.isPresent()) {
             addConfirmationLabelLabel(gridPane, ++rowIndex, btcAmount + btcDirectionInfo,
                     formatter.formatCoinWithCode(tradeAmount));
-            addConfirmationLabelLabel(gridPane, ++rowIndex, DisplayUtils.formatVolumeLabel(currencyCode) + fiatDirectionInfo,
-                    DisplayUtils.formatVolumeWithCode(offer.getVolumeByAmount(tradeAmount)));
+            addConfirmationLabelLabel(gridPane,
+                    ++rowIndex,
+                    VolumeUtil.formatVolumeLabel(currencyCode) + fiatDirectionInfo,
+                    VolumeUtil.formatVolumeWithCode(offer.getVolumeByAmount(tradeAmount)));
         } else {
             addConfirmationLabelLabel(gridPane, ++rowIndex, btcAmount + btcDirectionInfo,
                     formatter.formatCoinWithCode(offer.getAmount()));
             addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("offerDetailsWindow.minBtcAmount"),
                     formatter.formatCoinWithCode(offer.getMinAmount()));
-            String volume = DisplayUtils.formatVolumeWithCode(offer.getVolume());
+            String volume = VolumeUtil.formatVolumeWithCode(offer.getVolume());
             String minVolume = "";
             if (offer.getVolume() != null && offer.getMinVolume() != null &&
                     !offer.getVolume().equals(offer.getMinVolume()))
-                minVolume = " " + Res.get("offerDetailsWindow.min", DisplayUtils.formatVolumeWithCode(offer.getMinVolume()));
-            addConfirmationLabelLabel(gridPane, ++rowIndex,
-                    DisplayUtils.formatVolumeLabel(currencyCode) + fiatDirectionInfo, volume + minVolume);
+                minVolume = " " + Res.get("offerDetailsWindow.min",
+                        VolumeUtil.formatVolumeWithCode(offer.getMinVolume()));
+            addConfirmationLabelLabel(gridPane,
+                    ++rowIndex,
+                    VolumeUtil.formatVolumeLabel(currencyCode) + fiatDirectionInfo,
+                    volume + minVolume);
         }
 
         String priceLabel = Res.get("shared.price");

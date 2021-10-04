@@ -38,6 +38,7 @@ import bisq.core.trade.TradeUtil;
 import bisq.core.trade.closed.ClosedTradableManager;
 import bisq.core.user.User;
 import bisq.core.util.FormattingUtils;
+import bisq.core.util.VolumeUtil;
 import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.validation.BtcAddressValidator;
@@ -309,7 +310,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
 
     public String getFiatVolume() {
         return dataModel.getTrade() != null
-                ? DisplayUtils.formatVolumeWithCode(dataModel.getTrade().getTradeVolume())
+                ? VolumeUtil.formatVolumeWithCode(dataModel.getTrade().getTradeVolume())
                 : "";
     }
 

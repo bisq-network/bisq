@@ -32,6 +32,7 @@ import bisq.core.offer.OpenOffer;
 import bisq.core.trade.Tradable;
 import bisq.core.trade.Trade;
 import bisq.core.util.FormattingUtils;
+import bisq.core.util.VolumeUtil;
 import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.coin.CoinFormatter;
 
@@ -115,7 +116,7 @@ public class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTrades
         }
 
         Trade trade = (Trade) item.getTradable();
-        return DisplayUtils.formatVolume(trade.getTradeVolume(), appendCode);
+        return VolumeUtil.formatVolume(trade.getTradeVolume(), appendCode);
     }
 
     String getVolumeCurrency(ClosedTradableListItem item) {
@@ -289,7 +290,7 @@ public class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTrades
                 .map(volume -> {
                     return Res.get("closedTradesSummaryWindow.totalAmount.value",
                             btcFormatter.formatCoin(totalTradeAmount, true),
-                            DisplayUtils.formatVolumeWithCode(volume));
+                            VolumeUtil.formatVolumeWithCode(volume));
                 })
                 .orElse("");
     }
@@ -305,7 +306,7 @@ public class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTrades
                             } else {
                                 monetary = Fiat.valueOf(currencyCode, entry.getValue());
                             }
-                            return DisplayUtils.formatVolumeWithCode(new Volume(monetary));
+                            return VolumeUtil.formatVolumeWithCode(new Volume(monetary));
                         }
                 ));
     }

@@ -44,6 +44,7 @@ import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
 import bisq.core.user.Preferences;
 import bisq.core.util.FormattingUtils;
+import bisq.core.util.VolumeUtil;
 import bisq.core.util.coin.CoinFormatter;
 
 import bisq.network.p2p.NodeAddress;
@@ -388,7 +389,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
 
     private void onShowInfoForInvalidTrade(Trade trade) {
         new Popup().width(900).attention(Res.get("portfolio.pending.failedTrade.info.popup",
-                getInvalidTradeDetails(trade)))
+                        getInvalidTradeDetails(trade)))
                 .show();
     }
 
@@ -736,7 +737,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
                                     try {
-                                        String volume = DisplayUtils.formatVolumeWithCode(item.getTrade().getTradeVolume());
+                                        String volume = VolumeUtil.formatVolumeWithCode(item.getTrade().getTradeVolume());
                                         setGraphic(new AutoTooltipLabel(volume));
                                     } catch (Throwable ignore) {
                                         log.debug(ignore.toString()); // Stupidity to make Codacy happy

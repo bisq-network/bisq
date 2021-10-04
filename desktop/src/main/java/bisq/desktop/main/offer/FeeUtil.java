@@ -23,6 +23,7 @@ import bisq.desktop.util.GUIUtil;
 import bisq.core.locale.Res;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.OfferUtil;
+import bisq.core.util.VolumeUtil;
 import bisq.core.util.coin.CoinFormatter;
 
 import bisq.common.app.DevEnv;
@@ -65,9 +66,9 @@ public class FeeUtil {
                         " " + Res.get("guiUtil.ofTradeAmount");
             }
             return offerUtil.getFeeInUserFiatCurrency(tradeFee,
-                    isCurrencyForMakerFeeBtc,
-                    formatter)
-                    .map(DisplayUtils::formatAverageVolumeWithCode)
+                            isCurrencyForMakerFeeBtc,
+                            formatter)
+                    .map(VolumeUtil::formatAverageVolumeWithCode)
                     .map(feeInFiat -> Res.get("feeOptionWindow.btcFeeWithFiatAndPercentage", feeAsBtc, feeInFiat, percentage))
                     .orElseGet(() -> Res.get("feeOptionWindow.btcFeeWithPercentage", feeAsBtc, percentage));
         } else {

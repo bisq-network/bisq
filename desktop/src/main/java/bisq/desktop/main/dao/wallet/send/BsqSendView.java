@@ -30,7 +30,6 @@ import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.TxDetailsBsq;
 import bisq.desktop.main.overlays.windows.TxInputSelectionWindow;
 import bisq.desktop.main.overlays.windows.WalletPasswordWindow;
-import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
@@ -54,6 +53,7 @@ import bisq.core.user.DontShowAgainLookup;
 import bisq.core.user.Preferences;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.ParsingUtils;
+import bisq.core.util.VolumeUtil;
 import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.coin.CoinUtil;
@@ -256,7 +256,7 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
     }
 
     public void fillFromTradeData(Tuple2<Volume, String> tuple) {
-        amountInputTextField.setText(DisplayUtils.formatVolume(tuple.first));
+        amountInputTextField.setText(VolumeUtil.formatVolume(tuple.first));
         receiversAddressInputTextField.setText(tuple.second);
     }
 
@@ -528,7 +528,7 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
     private void doWithdraw(Transaction txWithBtcFee, TxType txType, TxBroadcaster.Callback callback) {
         if (btcWalletService.isEncrypted()) {
             UserThread.runAfter(() -> walletPasswordWindow.onAesKey(aesKey ->
-                    sendFunds(txWithBtcFee, txType, callback))
+                            sendFunds(txWithBtcFee, txType, callback))
                     .show(), 300, TimeUnit.MILLISECONDS);
         } else {
             sendFunds(txWithBtcFee, txType, callback);
