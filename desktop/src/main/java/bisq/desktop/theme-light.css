@@ -104,9 +104,6 @@
     -bs-prompt-text: -fx-control-inner-background;
     -bs-soft-red: #aa4c3b;
     -bs-turquoise-light: #11eeee;
-    -bs-community-platform-icon: -fx-dark-text-color;
-    -bs-community-platform-description: -fx-dark-text-color;
-    -bs-community-platform-hover: -bs-color-gray-2;
 
     /* dao chart colors */
     -bs-chart-dao-line1: -bs-color-blue-5;
