@@ -124,6 +124,7 @@ bisq.asset.coins.ZeroClassic
 bisq.asset.tokens.AugmintEuro
 bisq.asset.tokens.DaiStablecoin
 bisq.asset.tokens.EtherStone
+bisq.asset.tokens.TetherUSDERC20
 bisq.asset.tokens.TrueUSD
 bisq.asset.tokens.USDCoin
 bisq.asset.tokens.VectorspaceAI
