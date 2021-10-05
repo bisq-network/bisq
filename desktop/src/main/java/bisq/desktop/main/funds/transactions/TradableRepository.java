@@ -18,8 +18,8 @@
 package bisq.desktop.main.funds.transactions;
 
 import bisq.core.offer.OpenOfferManager;
-import bisq.core.trade.misc.ClosedTradableManager;
-import bisq.core.trade.misc.FailedTradesManager;
+import bisq.core.trade.model.ClosedTradableManager;
+import bisq.core.trade.model.FailedTradesManager;
 import bisq.core.trade.model.Tradable;
 import bisq.core.trade.model.TradeManager;
 import bisq.core.trade.model.bsqswap.BsqSwapTradeManager;

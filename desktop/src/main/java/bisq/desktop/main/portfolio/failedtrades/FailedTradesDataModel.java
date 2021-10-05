@@ -21,7 +21,7 @@ import bisq.desktop.common.model.ActivatableDataModel;
 
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferDirection;
-import bisq.core.trade.misc.FailedTradesManager;
+import bisq.core.trade.model.FailedTradesManager;
 import bisq.core.trade.model.TradeManager;
 import bisq.core.trade.model.trade.Trade;
 

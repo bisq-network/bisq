@@ -45,7 +45,7 @@ import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.PaymentAccountUtil;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.provider.price.PriceFeedService;
-import bisq.core.trade.misc.ClosedTradableManager;
+import bisq.core.trade.model.ClosedTradableManager;
 import bisq.core.trade.model.trade.Trade;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
