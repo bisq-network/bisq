@@ -96,7 +96,7 @@ public class SellerSetupTxListener extends BsqSwapTask {
 
         trade.applyTransaction(walletTx);
         trade.setState(BsqSwapTrade.State.COMPLETED);
-        protocolModel.getTradeManager().onTradeCompleted(trade);
+        protocolModel.getTradeManager().onBsqSwapTradeCompleted(trade);
 
         log.info("Received bsqSwapTx from network {}", walletTx);
         return true;

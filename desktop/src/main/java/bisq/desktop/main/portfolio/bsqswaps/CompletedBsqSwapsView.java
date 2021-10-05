@@ -24,8 +24,7 @@ import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.components.PeerInfoIconTrading;
-import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
-import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
+import bisq.desktop.main.overlays.windows.BsqTradeDetailsWindow;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.alert.PrivateNotificationManager;
@@ -131,9 +130,8 @@ public class CompletedBsqSwapsView extends ActivatableViewAndModel<VBox, Complet
     @FXML
     Region footerSpacer;
 
-    private final OfferDetailsWindow offerDetailsWindow;
+    private final BsqTradeDetailsWindow window;
     private final Preferences preferences;
-    private final TradeDetailsWindow tradeDetailsWindow;
     private final PrivateNotificationManager privateNotificationManager;
     private SortedList<CompletedBsqSwapsListItem> sortedList;
     private FilteredList<CompletedBsqSwapsListItem> filteredList;
@@ -142,15 +140,13 @@ public class CompletedBsqSwapsView extends ActivatableViewAndModel<VBox, Complet
 
     @Inject
     public CompletedBsqSwapsView(CompletedBsqSwapsViewModel model,
-                                 OfferDetailsWindow offerDetailsWindow,
+                                 BsqTradeDetailsWindow bsqTradeDetailsWindow,
                                  Preferences preferences,
-                                 TradeDetailsWindow tradeDetailsWindow,
                                  PrivateNotificationManager privateNotificationManager,
                                  @Named(Config.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         super(model);
-        this.offerDetailsWindow = offerDetailsWindow;
+        this.window = bsqTradeDetailsWindow;
         this.preferences = preferences;
-        this.tradeDetailsWindow = tradeDetailsWindow;
         this.privateNotificationManager = privateNotificationManager;
         this.useDevPrivilegeKeys = useDevPrivilegeKeys;
     }
@@ -368,7 +364,7 @@ public class CompletedBsqSwapsView extends ActivatableViewAndModel<VBox, Complet
                                         // tradeDetailsWindow.show(item.getAtomicTrade());
 
                                         // Show offer for now
-                                        offerDetailsWindow.show(item.getBsqSwapTrade().getOffer());
+                                        window.show(item.getBsqSwapTrade().getOffer());
                                     });
                                     field.setTooltip(new Tooltip(Res.get("tooltip.openPopupForDetails")));
                                     setGraphic(field);

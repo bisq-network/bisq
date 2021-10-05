@@ -242,7 +242,7 @@ class CoreTradesService {
     BsqSwapTrade getBsqSwapTrade(String tradeId) {
         coreWalletsService.verifyWalletsAreAvailable();
         coreWalletsService.verifyEncryptedWalletIsUnlocked();
-        return tradeManager.getBsqSwapTradeById(tradeId).orElseThrow(() ->
+        return tradeManager.findBsqSwapTradeById(tradeId).orElseThrow(() ->
                 new IllegalArgumentException(format("trade with id '%s' not found", tradeId)));
     }
 

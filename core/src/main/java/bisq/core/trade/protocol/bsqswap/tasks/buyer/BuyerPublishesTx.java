@@ -48,7 +48,7 @@ public class BuyerPublishesTx extends BsqSwapTask {
                         public void onSuccess(Transaction transaction) {
                             if (!completed) {
                                 trade.setState(BsqSwapTrade.State.COMPLETED);
-                                protocolModel.getTradeManager().onTradeCompleted(trade);
+                                protocolModel.getTradeManager().onBsqSwapTradeCompleted(trade);
 
                                 complete();
                             } else {

@@ -26,7 +26,6 @@ import bisq.core.trade.model.ClosedTradableManager;
 import bisq.core.trade.model.FailedTradesManager;
 import bisq.core.trade.model.Tradable;
 import bisq.core.trade.model.TradeManager;
-import bisq.core.trade.model.TradeModel;
 import bisq.core.trade.model.trade.SellerTrade;
 import bisq.core.trade.model.trade.Trade;
 import bisq.core.trade.protocol.trade.SellerProtocol;
@@ -182,7 +181,7 @@ public class XmrTxProofService implements AssetTxProofService {
         });
 
         // We listen on new trades
-        ObservableList<TradeModel> tradableList = tradeManager.getObservableList();
+        ObservableList<Trade> tradableList = tradeManager.getObservableList();
         tradableList.addListener((ListChangeListener<Tradable>) c -> {
             c.next();
             if (c.wasAdded()) {
@@ -365,7 +364,7 @@ public class XmrTxProofService implements AssetTxProofService {
                 filterManager.getFilter().isDisableAutoConf();
     }
 
-    private boolean wasTxKeyReUsed(Trade trade, List<TradeModel> activeTrades) {
+    private boolean wasTxKeyReUsed(Trade trade, List<Trade> activeTrades) {
         // For dev testing we reuse test data so we ignore that check
         if (DevEnv.isDevMode()) {
             return false;
@@ -375,9 +374,7 @@ public class XmrTxProofService implements AssetTxProofService {
         // the same user (same address) and same amount. We check only for the txKey as a same txHash but different
         // txKey is not possible to get a valid result at proof.
         Stream<Trade> failedAndOpenTrades = Stream.concat(
-                activeTrades.stream()
-                        .filter(tradable -> tradable instanceof Trade)
-                        .map(tradable -> (Trade) tradable),
+                activeTrades.stream(),
                 failedTradesManager.getObservableList().stream());
         Stream<Trade> closedTrades = closedTradableManager.getObservableList().stream()
                 .filter(tradable -> tradable instanceof Trade)
