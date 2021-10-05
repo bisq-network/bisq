@@ -21,7 +21,7 @@ import bisq.core.offer.Offer;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.provider.fee.FeeService;
-import bisq.core.trade.protocol.messages.bsqswap.TakeOfferRequest;
+import bisq.core.trade.protocol.messages.bsqswap.BsqSwapRequest;
 import bisq.core.util.Validator;
 import bisq.core.util.coin.CoinUtil;
 
@@ -49,7 +49,7 @@ public class BsqSwapTakeOfferRequestVerification {
                                   FeeService feeService,
                                   KeyRing keyRing,
                                   NodeAddress peer,
-                                  TakeOfferRequest request) {
+                                  BsqSwapRequest request) {
         try {
             log.info("Received {} from {} with tradeId {} and uid {}",
                     request.getClass().getSimpleName(), peer, request.getTradeId(), request.getUid());
@@ -86,11 +86,11 @@ public class BsqSwapTakeOfferRequestVerification {
         return true;
     }
 
-    private static boolean isDateInTolerance(TakeOfferRequest request) {
+    private static boolean isDateInTolerance(BsqSwapRequest request) {
         return Math.abs(request.getTradeDate() - new Date().getTime()) < TimeUnit.MINUTES.toMillis(10);
     }
 
-    private static boolean isTxFeeInTolerance(TakeOfferRequest request, FeeService feeService) {
+    private static boolean isTxFeeInTolerance(BsqSwapRequest request, FeeService feeService) {
         double myFee = (double) feeService.getTxFeePerVbyte().getValue();
         double peersFee = (double) Coin.valueOf(request.getTxFeePerVbyte()).getValue();
         // Allow for 10% diff in mining fee, ie, maker will accept taker fee that's 10%

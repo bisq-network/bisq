@@ -15,13 +15,14 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.protocol.bsqswap.tasks.seller_as_maker;
+package bisq.core.trade.protocol.bsqswap.tasks.buyer;
 
 import bisq.core.trade.model.bsqswap.BsqSwapTrade;
-import bisq.core.trade.protocol.bsqswap.tasks.seller.ProcessTxInputsMessage;
-import bisq.core.trade.protocol.messages.bsqswap.BsqSwapTakeOfferWithTxInputsRequest;
+import bisq.core.trade.protocol.bsqswap.BsqSwapTradePeer;
+import bisq.core.trade.protocol.bsqswap.tasks.BsqSwapTask;
+import bisq.core.trade.protocol.messages.bsqswap.BsqSwapFinalizeTxRequest;
+import bisq.core.util.Validator;
 
-import bisq.common.crypto.PubKeyRing;
 import bisq.common.taskrunner.TaskRunner;
 
 import lombok.extern.slf4j.Slf4j;
@@ -29,9 +30,9 @@ import lombok.extern.slf4j.Slf4j;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public class ProcessBsqSwapTakeOfferWithTxInputsRequest extends ProcessTxInputsMessage {
+public class ProcessBsqSwapFinalizeTxRequest extends BsqSwapTask {
     @SuppressWarnings({"unused"})
-    public ProcessBsqSwapTakeOfferWithTxInputsRequest(TaskRunner<BsqSwapTrade> taskHandler, BsqSwapTrade bsqSwapTrade) {
+    public ProcessBsqSwapFinalizeTxRequest(TaskRunner<BsqSwapTrade> taskHandler, BsqSwapTrade bsqSwapTrade) {
         super(taskHandler, bsqSwapTrade);
     }
 
@@ -40,11 +41,16 @@ public class ProcessBsqSwapTakeOfferWithTxInputsRequest extends ProcessTxInputsM
         try {
             runInterceptHook();
 
-            BsqSwapTakeOfferWithTxInputsRequest request = checkNotNull((BsqSwapTakeOfferWithTxInputsRequest) protocolModel.getTradeMessage());
-            PubKeyRing pubKeyRing = checkNotNull(request.getTakerPubKeyRing(), "pubKeyRing must not be null");
-            protocolModel.getTradePeer().setPubKeyRing(pubKeyRing);
+            BsqSwapFinalizeTxRequest request = checkNotNull((BsqSwapFinalizeTxRequest) protocolModel.getTradeMessage());
+            checkNotNull(request);
+            Validator.checkTradeId(protocolModel.getOfferId(), request);
 
-            super.run();
+            BsqSwapTradePeer tradePeer = protocolModel.getTradePeer();
+
+            tradePeer.setTx(request.getTx());
+            tradePeer.setInputs(request.getBtcInputs());
+
+            complete();
         } catch (Throwable t) {
             failed(t);
         }

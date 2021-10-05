@@ -29,7 +29,7 @@ import lombok.Getter;
 
 @EqualsAndHashCode(callSuper = true)
 @Getter
-public abstract class TakeOfferRequest extends TradeMessage implements DirectMessage {
+public abstract class BsqSwapRequest extends TradeMessage implements DirectMessage {
     protected final NodeAddress senderNodeAddress;
     protected final PubKeyRing takerPubKeyRing;
     protected final long tradeAmount;
@@ -38,16 +38,16 @@ public abstract class TakeOfferRequest extends TradeMessage implements DirectMes
     protected final long takerFee;
     protected final long tradeDate;
 
-    protected TakeOfferRequest(int messageVersion,
-                               String tradeId,
-                               String uid,
-                               NodeAddress senderNodeAddress,
-                               PubKeyRing takerPubKeyRing,
-                               long tradeAmount,
-                               long txFeePerVbyte,
-                               long makerFee,
-                               long takerFee,
-                               long tradeDate) {
+    protected BsqSwapRequest(int messageVersion,
+                             String tradeId,
+                             String uid,
+                             NodeAddress senderNodeAddress,
+                             PubKeyRing takerPubKeyRing,
+                             long tradeAmount,
+                             long txFeePerVbyte,
+                             long makerFee,
+                             long takerFee,
+                             long tradeDate) {
         super(messageVersion, tradeId, uid);
         this.senderNodeAddress = senderNodeAddress;
         this.takerPubKeyRing = takerPubKeyRing;

@@ -21,13 +21,13 @@ package bisq.core.trade.protocol.bsqswap;
 import bisq.core.trade.model.bsqswap.BsqSwapSellerAsMakerTrade;
 import bisq.core.trade.protocol.TradeTaskRunner;
 import bisq.core.trade.protocol.bsqswap.tasks.ApplyFilter;
-import bisq.core.trade.protocol.bsqswap.tasks.seller.SendFinalizeBsqSwapTxRequest;
-import bisq.core.trade.protocol.bsqswap.tasks.seller_as_maker.ProcessBsqSwapTakeOfferWithTxInputsRequest;
+import bisq.core.trade.protocol.bsqswap.tasks.seller.SendBsqSwapFinalizeTxRequest;
+import bisq.core.trade.protocol.bsqswap.tasks.seller_as_maker.ProcessBuyersBsqSwapRequest;
 import bisq.core.trade.protocol.bsqswap.tasks.seller_as_maker.SellerAsMakerCreatesAndSignsTx;
 import bisq.core.trade.protocol.bsqswap.tasks.seller_as_maker.SellerAsMakerSetupTxListener;
 import bisq.core.trade.protocol.messages.TradeMessage;
-import bisq.core.trade.protocol.messages.bsqswap.BsqSwapTakeOfferWithTxInputsRequest;
-import bisq.core.trade.protocol.messages.bsqswap.TakeOfferRequest;
+import bisq.core.trade.protocol.messages.bsqswap.BsqSwapRequest;
+import bisq.core.trade.protocol.messages.bsqswap.BuyersBsqSwapRequest;
 
 import bisq.network.p2p.NodeAddress;
 
@@ -45,19 +45,19 @@ public class BsqSwapSellerAsMakerProtocol extends BsqSwapSellerProtocol implemen
     }
 
     @Override
-    public void handleTakeOfferRequest(TakeOfferRequest takeOfferRequest,
+    public void handleTakeOfferRequest(BsqSwapRequest bsqSwapRequest,
                                        NodeAddress sender,
                                        ErrorMessageHandler errorMessageHandler) {
-        BsqSwapTakeOfferWithTxInputsRequest request = (BsqSwapTakeOfferWithTxInputsRequest) takeOfferRequest;
+        BuyersBsqSwapRequest request = (BuyersBsqSwapRequest) bsqSwapRequest;
         expect(preCondition(PREPARATION == trade.getTradeState())
                 .with(request)
                 .from(sender))
                 .setup(tasks(
                         ApplyFilter.class,
-                        ProcessBsqSwapTakeOfferWithTxInputsRequest.class,
+                        ProcessBuyersBsqSwapRequest.class,
                         SellerAsMakerCreatesAndSignsTx.class,
                         SellerAsMakerSetupTxListener.class,
-                        SendFinalizeBsqSwapTxRequest.class)
+                        SendBsqSwapFinalizeTxRequest.class)
                         .using(new TradeTaskRunner(trade,
                                 () -> {
                                     stopTimeout();

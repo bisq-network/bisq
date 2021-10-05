@@ -29,16 +29,16 @@ import lombok.Getter;
 
 @EqualsAndHashCode(callSuper = true)
 @Getter
-public final class BsqSwapTakeOfferRequest extends TakeOfferRequest {
+public final class SellersBsqSwapRequest extends BsqSwapRequest {
 
-    public BsqSwapTakeOfferRequest(String tradeId,
-                                   NodeAddress senderNodeAddress,
-                                   PubKeyRing takerPubKeyRing,
-                                   long tradeAmount,
-                                   long txFeePerVbyte,
-                                   long makerFee,
-                                   long takerFee,
-                                   long tradeDate) {
+    public SellersBsqSwapRequest(String tradeId,
+                                 NodeAddress senderNodeAddress,
+                                 PubKeyRing takerPubKeyRing,
+                                 long tradeAmount,
+                                 long txFeePerVbyte,
+                                 long makerFee,
+                                 long takerFee,
+                                 long tradeDate) {
         this(Version.getP2PMessageVersion(),
                 tradeId,
                 UUID.randomUUID().toString(),
@@ -55,16 +55,16 @@ public final class BsqSwapTakeOfferRequest extends TakeOfferRequest {
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private BsqSwapTakeOfferRequest(int messageVersion,
-                                    String tradeId,
-                                    String uid,
-                                    NodeAddress senderNodeAddress,
-                                    PubKeyRing takerPubKeyRing,
-                                    long tradeAmount,
-                                    long txFeePerVbyte,
-                                    long makerFee,
-                                    long takerFee,
-                                    long tradeDate) {
+    private SellersBsqSwapRequest(int messageVersion,
+                                  String tradeId,
+                                  String uid,
+                                  NodeAddress senderNodeAddress,
+                                  PubKeyRing takerPubKeyRing,
+                                  long tradeAmount,
+                                  long txFeePerVbyte,
+                                  long makerFee,
+                                  long takerFee,
+                                  long tradeDate) {
         super(messageVersion, tradeId, uid, senderNodeAddress, takerPubKeyRing,
                 tradeAmount, txFeePerVbyte, makerFee, takerFee, tradeDate);
     }
@@ -72,7 +72,7 @@ public final class BsqSwapTakeOfferRequest extends TakeOfferRequest {
     @Override
     public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
         return getNetworkEnvelopeBuilder()
-                .setBsqSwapTakeOfferRequest(protobuf.BsqSwapTakeOfferRequest.newBuilder()
+                .setSellersBsqSwapRequest(protobuf.SellersBsqSwapRequest.newBuilder()
                         .setUid(uid)
                         .setTradeId(tradeId)
                         .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
@@ -85,9 +85,9 @@ public final class BsqSwapTakeOfferRequest extends TakeOfferRequest {
                 .build();
     }
 
-    public static BsqSwapTakeOfferRequest fromProto(protobuf.BsqSwapTakeOfferRequest proto,
-                                                    int messageVersion) {
-        return new BsqSwapTakeOfferRequest(messageVersion,
+    public static SellersBsqSwapRequest fromProto(protobuf.SellersBsqSwapRequest proto,
+                                                  int messageVersion) {
+        return new SellersBsqSwapRequest(messageVersion,
                 proto.getTradeId(),
                 proto.getUid(),
                 NodeAddress.fromProto(proto.getSenderNodeAddress()),

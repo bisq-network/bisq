@@ -33,25 +33,25 @@ import lombok.Getter;
 
 @EqualsAndHashCode(callSuper = true)
 @Getter
-public final class BsqSwapTakeOfferWithTxInputsRequest extends TakeOfferRequest implements TxInputsMessage {
+public final class BuyersBsqSwapRequest extends BsqSwapRequest implements TxInputsMessage {
     private final List<RawTransactionInput> bsqInputs;
     private final long bsqChange;
     private final String buyersBtcPayoutAddress;
     private final String buyersBsqChangeAddress;
 
     // Data for take offer + Buyers data for tx
-    public BsqSwapTakeOfferWithTxInputsRequest(String tradeId,
-                                               NodeAddress senderNodeAddress,
-                                               PubKeyRing takerPubKeyRing,
-                                               long tradeAmount,
-                                               long txFeePerVbyte,
-                                               long makerFee,
-                                               long takerFee,
-                                               long tradeDate,
-                                               List<RawTransactionInput> bsqInputs,
-                                               long bsqChange,
-                                               String buyersBtcPayoutAddress,
-                                               String buyersBsqChangeAddress) {
+    public BuyersBsqSwapRequest(String tradeId,
+                                NodeAddress senderNodeAddress,
+                                PubKeyRing takerPubKeyRing,
+                                long tradeAmount,
+                                long txFeePerVbyte,
+                                long makerFee,
+                                long takerFee,
+                                long tradeDate,
+                                List<RawTransactionInput> bsqInputs,
+                                long bsqChange,
+                                String buyersBtcPayoutAddress,
+                                String buyersBsqChangeAddress) {
         this(Version.getP2PMessageVersion(),
                 tradeId,
                 UUID.randomUUID().toString(),
@@ -72,20 +72,20 @@ public final class BsqSwapTakeOfferWithTxInputsRequest extends TakeOfferRequest 
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private BsqSwapTakeOfferWithTxInputsRequest(int messageVersion,
-                                                String tradeId,
-                                                String uid,
-                                                NodeAddress senderNodeAddress,
-                                                PubKeyRing takerPubKeyRing,
-                                                long tradeAmount,
-                                                long txFeePerVbyte,
-                                                long makerFee,
-                                                long takerFee,
-                                                long tradeDate,
-                                                List<RawTransactionInput> bsqInputs,
-                                                long bsqChange,
-                                                String buyersBtcPayoutAddress,
-                                                String buyersBsqChangeAddress) {
+    private BuyersBsqSwapRequest(int messageVersion,
+                                 String tradeId,
+                                 String uid,
+                                 NodeAddress senderNodeAddress,
+                                 PubKeyRing takerPubKeyRing,
+                                 long tradeAmount,
+                                 long txFeePerVbyte,
+                                 long makerFee,
+                                 long takerFee,
+                                 long tradeDate,
+                                 List<RawTransactionInput> bsqInputs,
+                                 long bsqChange,
+                                 String buyersBtcPayoutAddress,
+                                 String buyersBsqChangeAddress) {
         super(messageVersion, tradeId, uid, senderNodeAddress, takerPubKeyRing,
                 tradeAmount, txFeePerVbyte, makerFee, takerFee, tradeDate);
 
@@ -98,7 +98,7 @@ public final class BsqSwapTakeOfferWithTxInputsRequest extends TakeOfferRequest 
     @Override
     public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
         return getNetworkEnvelopeBuilder()
-                .setBsqSwapTakeOfferWithTxInputsRequest(protobuf.BsqSwapTakeOfferWithTxInputsRequest.newBuilder()
+                .setBuyersBsqSwapRequest(protobuf.BuyersBsqSwapRequest.newBuilder()
                         .setUid(uid)
                         .setTradeId(tradeId)
                         .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
@@ -116,9 +116,9 @@ public final class BsqSwapTakeOfferWithTxInputsRequest extends TakeOfferRequest 
                 .build();
     }
 
-    public static BsqSwapTakeOfferWithTxInputsRequest fromProto(protobuf.BsqSwapTakeOfferWithTxInputsRequest proto,
-                                                                int messageVersion) {
-        return new BsqSwapTakeOfferWithTxInputsRequest(messageVersion,
+    public static BuyersBsqSwapRequest fromProto(protobuf.BuyersBsqSwapRequest proto,
+                                                 int messageVersion) {
+        return new BuyersBsqSwapRequest(messageVersion,
                 proto.getTradeId(),
                 proto.getUid(),
                 NodeAddress.fromProto(proto.getSenderNodeAddress()),

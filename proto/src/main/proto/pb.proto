@@ -84,10 +84,10 @@ message NetworkEnvelope {
 
         ShareBuyerPaymentAccountMessage share_buyer_payment_account_message = 54; // Added at 1.7.0
 
-        BsqSwapTakeOfferRequest bsq_swap_take_offer_request = 55;
-        BsqSwapTakeOfferWithTxInputsRequest bsq_swap_take_offer_with_tx_inputs_request= 56;
+        SellersBsqSwapRequest sellers_bsq_swap_request = 55;
+        BuyersBsqSwapRequest buyers_bsq_swap_request= 56;
         BsqSwapTxInputsMessage bsq_swap_tx_inputs_message= 57;
-        FinalizeBsqSwapTxRequest finalize_bsq_swap_tx_request = 58;
+        BsqSwapFinalizeTxRequest bsq_swap_finalize_tx_request = 58;
     }
 }
 
@@ -379,7 +379,7 @@ message TraderSignedWitnessMessage {
 }
 
 // BsqSwapTrade
-message BsqSwapTakeOfferRequest {
+message SellersBsqSwapRequest {
     string uid = 1;
     string trade_id = 2;
     NodeAddress sender_node_address = 3;
@@ -391,7 +391,7 @@ message BsqSwapTakeOfferRequest {
     int64 trade_date = 9;
 }
 
-message BsqSwapTakeOfferWithTxInputsRequest {
+message BuyersBsqSwapRequest {
     string uid = 1;
     string trade_id = 2;
     NodeAddress sender_node_address = 3;
@@ -417,7 +417,7 @@ message BsqSwapTxInputsMessage {
     string buyers_bsq_change_address = 7;
 }
 
-message FinalizeBsqSwapTxRequest {
+message BsqSwapFinalizeTxRequest {
     string uid = 1;
     string trade_id = 2;
     NodeAddress sender_node_address = 3;

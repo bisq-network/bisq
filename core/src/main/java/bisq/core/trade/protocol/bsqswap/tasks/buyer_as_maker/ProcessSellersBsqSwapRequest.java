@@ -15,24 +15,25 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.protocol.bsqswap.tasks.buyer;
+package bisq.core.trade.protocol.bsqswap.tasks.buyer_as_maker;
 
 import bisq.core.trade.model.bsqswap.BsqSwapTrade;
-import bisq.core.trade.protocol.bsqswap.BsqSwapTradePeer;
 import bisq.core.trade.protocol.bsqswap.tasks.BsqSwapTask;
-import bisq.core.trade.protocol.messages.bsqswap.FinalizeBsqSwapTxRequest;
-import bisq.core.util.Validator;
+import bisq.core.trade.protocol.messages.bsqswap.SellersBsqSwapRequest;
 
+import bisq.common.crypto.PubKeyRing;
 import bisq.common.taskrunner.TaskRunner;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public class ProcessFinalizeBsqSwapTxRequest extends BsqSwapTask {
+public class ProcessSellersBsqSwapRequest extends BsqSwapTask {
+
     @SuppressWarnings({"unused"})
-    public ProcessFinalizeBsqSwapTxRequest(TaskRunner<BsqSwapTrade> taskHandler, BsqSwapTrade bsqSwapTrade) {
+    public ProcessSellersBsqSwapRequest(TaskRunner<BsqSwapTrade> taskHandler, BsqSwapTrade bsqSwapTrade) {
         super(taskHandler, bsqSwapTrade);
     }
 
@@ -41,14 +42,11 @@ public class ProcessFinalizeBsqSwapTxRequest extends BsqSwapTask {
         try {
             runInterceptHook();
 
-            FinalizeBsqSwapTxRequest request = checkNotNull((FinalizeBsqSwapTxRequest) protocolModel.getTradeMessage());
-            checkNotNull(request);
-            Validator.checkTradeId(protocolModel.getOfferId(), request);
+            checkArgument(trade.getOffer().isMyOffer(protocolModel.getKeyRing()), "Offer must be mine");
+            SellersBsqSwapRequest request = checkNotNull((SellersBsqSwapRequest) protocolModel.getTradeMessage());
 
-            BsqSwapTradePeer tradePeer = protocolModel.getTradePeer();
-
-            tradePeer.setTx(request.getTx());
-            tradePeer.setInputs(request.getBtcInputs());
+            PubKeyRing pubKeyRing = checkNotNull(request.getTakerPubKeyRing(), "pubKeyRing must not be null");
+            protocolModel.getTradePeer().setPubKeyRing(pubKeyRing);
 
             complete();
         } catch (Throwable t) {

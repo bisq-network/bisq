@@ -15,11 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.protocol.bsqswap.tasks.buyer_as_taker;
+package bisq.core.trade.protocol.bsqswap.tasks.seller_as_taker;
 
 import bisq.core.trade.model.bsqswap.BsqSwapTrade;
 import bisq.core.trade.protocol.bsqswap.tasks.BsqSwapTask;
-import bisq.core.trade.protocol.messages.bsqswap.BsqSwapTakeOfferWithTxInputsRequest;
+import bisq.core.trade.protocol.messages.bsqswap.SellersBsqSwapRequest;
 
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.SendDirectMessageListener;
@@ -29,10 +29,10 @@ import bisq.common.taskrunner.TaskRunner;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class SendBsqSwapTakeOfferWithTxInputsRequest extends BsqSwapTask {
+public class SendSellersBsqSwapRequest extends BsqSwapTask {
 
     @SuppressWarnings({"unused"})
-    public SendBsqSwapTakeOfferWithTxInputsRequest(TaskRunner<BsqSwapTrade> taskHandler, BsqSwapTrade bsqSwapTrade) {
+    public SendSellersBsqSwapRequest(TaskRunner<BsqSwapTrade> taskHandler, BsqSwapTrade bsqSwapTrade) {
         super(taskHandler, bsqSwapTrade);
     }
 
@@ -41,7 +41,7 @@ public class SendBsqSwapTakeOfferWithTxInputsRequest extends BsqSwapTask {
         try {
             runInterceptHook();
 
-            BsqSwapTakeOfferWithTxInputsRequest request = new BsqSwapTakeOfferWithTxInputsRequest(
+            SellersBsqSwapRequest request = new SellersBsqSwapRequest(
                     protocolModel.getOfferId(),
                     protocolModel.getMyNodeAddress(),
                     protocolModel.getPubKeyRing(),
@@ -49,18 +49,13 @@ public class SendBsqSwapTakeOfferWithTxInputsRequest extends BsqSwapTask {
                     trade.getTxFeePerVbyte(),
                     trade.getMakerFee(),
                     trade.getTakerFee(),
-                    trade.getTakeOfferDate(),
-                    protocolModel.getInputs(),
-                    protocolModel.getChange(),
-                    protocolModel.getBtcAddress(),
-                    protocolModel.getBsqAddress());
+                    trade.getTakeOfferDate());
 
-            log.info("BuyerAsTakersCreateBsqSwapTxRequest={}", request);
+            log.info("BsqSwapTakeOfferRequest={}", request);
 
             NodeAddress peersNodeAddress = trade.getTradingPeerNodeAddress();
             log.info("Send {} to peer {}. tradeId={}, uid={}",
                     request.getClass().getSimpleName(), peersNodeAddress, request.getTradeId(), request.getUid());
-
             protocolModel.getP2PService().sendEncryptedDirectMessage(
                     peersNodeAddress,
                     protocolModel.getTradePeer().getPubKeyRing(),
@@ -71,7 +66,6 @@ public class SendBsqSwapTakeOfferWithTxInputsRequest extends BsqSwapTask {
                             log.info("{} arrived at peer {}. tradeId={}, uid={}",
                                     request.getClass().getSimpleName(), peersNodeAddress, request.getTradeId(),
                                     request.getUid());
-
                             complete();
                         }
 

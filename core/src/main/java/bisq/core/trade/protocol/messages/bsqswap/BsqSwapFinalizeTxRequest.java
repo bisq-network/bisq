@@ -36,12 +36,12 @@ import lombok.Getter;
 
 @EqualsAndHashCode(callSuper = true)
 @Getter
-public final class FinalizeBsqSwapTxRequest extends TradeMessage implements DirectMessage {
+public final class BsqSwapFinalizeTxRequest extends TradeMessage implements DirectMessage {
     private final NodeAddress senderNodeAddress;
     private final byte[] tx;
     private final List<RawTransactionInput> btcInputs;
 
-    public FinalizeBsqSwapTxRequest(String tradeId,
+    public BsqSwapFinalizeTxRequest(String tradeId,
                                     NodeAddress senderNodeAddress,
                                     byte[] tx,
                                     List<RawTransactionInput> btcInputs) {
@@ -57,7 +57,7 @@ public final class FinalizeBsqSwapTxRequest extends TradeMessage implements Dire
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private FinalizeBsqSwapTxRequest(int messageVersion,
+    private BsqSwapFinalizeTxRequest(int messageVersion,
                                      String tradeId,
                                      String uid,
                                      NodeAddress senderNodeAddress,
@@ -72,7 +72,7 @@ public final class FinalizeBsqSwapTxRequest extends TradeMessage implements Dire
     @Override
     public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
         return getNetworkEnvelopeBuilder()
-                .setFinalizeBsqSwapTxRequest(protobuf.FinalizeBsqSwapTxRequest.newBuilder()
+                .setBsqSwapFinalizeTxRequest(protobuf.BsqSwapFinalizeTxRequest.newBuilder()
                         .setTradeId(tradeId)
                         .setUid(uid)
                         .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
@@ -82,8 +82,8 @@ public final class FinalizeBsqSwapTxRequest extends TradeMessage implements Dire
                 .build();
     }
 
-    public static FinalizeBsqSwapTxRequest fromProto(protobuf.FinalizeBsqSwapTxRequest proto, int messageVersion) {
-        return new FinalizeBsqSwapTxRequest(messageVersion,
+    public static BsqSwapFinalizeTxRequest fromProto(protobuf.BsqSwapFinalizeTxRequest proto, int messageVersion) {
+        return new BsqSwapFinalizeTxRequest(messageVersion,
                 proto.getTradeId(),
                 proto.getUid(),
                 NodeAddress.fromProto(proto.getSenderNodeAddress()),

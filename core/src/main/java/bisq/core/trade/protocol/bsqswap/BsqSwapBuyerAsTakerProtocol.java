@@ -24,12 +24,12 @@ import bisq.core.trade.protocol.TradeTaskRunner;
 import bisq.core.trade.protocol.bsqswap.tasks.ApplyFilter;
 import bisq.core.trade.protocol.bsqswap.tasks.buyer.BuyerFinalizeTx;
 import bisq.core.trade.protocol.bsqswap.tasks.buyer.BuyerPublishesTx;
-import bisq.core.trade.protocol.bsqswap.tasks.buyer.ProcessFinalizeBsqSwapTxRequest;
+import bisq.core.trade.protocol.bsqswap.tasks.buyer.ProcessBsqSwapFinalizeTxRequest;
 import bisq.core.trade.protocol.bsqswap.tasks.buyer.PublishTradeStatistics;
 import bisq.core.trade.protocol.bsqswap.tasks.buyer_as_taker.BuyerAsTakerCreatesBsqInputsAndChange;
-import bisq.core.trade.protocol.bsqswap.tasks.buyer_as_taker.SendBsqSwapTakeOfferWithTxInputsRequest;
+import bisq.core.trade.protocol.bsqswap.tasks.buyer_as_taker.SendBuyersBsqSwapRequest;
 import bisq.core.trade.protocol.messages.TradeMessage;
-import bisq.core.trade.protocol.messages.bsqswap.FinalizeBsqSwapTxRequest;
+import bisq.core.trade.protocol.messages.bsqswap.BsqSwapFinalizeTxRequest;
 
 import bisq.network.p2p.NodeAddress;
 
@@ -57,7 +57,7 @@ public class BsqSwapBuyerAsTakerProtocol extends BsqSwapBuyerProtocol implements
                 .setup(tasks(
                         ApplyFilter.class,
                         BuyerAsTakerCreatesBsqInputsAndChange.class,
-                        SendBsqSwapTakeOfferWithTxInputsRequest.class)
+                        SendBuyersBsqSwapRequest.class)
                         .withTimeout(60))
                 .executeTasks();
     }
@@ -67,12 +67,12 @@ public class BsqSwapBuyerAsTakerProtocol extends BsqSwapBuyerProtocol implements
     // Incoming message handling
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    void handle(FinalizeBsqSwapTxRequest message, NodeAddress sender) {
+    void handle(BsqSwapFinalizeTxRequest message, NodeAddress sender) {
         expect(preCondition(PREPARATION == trade.getTradeState())
                 .with(message)
                 .from(sender))
                 .setup(tasks(
-                        ProcessFinalizeBsqSwapTxRequest.class,
+                        ProcessBsqSwapFinalizeTxRequest.class,
                         BuyerFinalizeTx.class,
                         BuyerPublishesTx.class,
                         PublishTradeStatistics.class)
@@ -90,8 +90,8 @@ public class BsqSwapBuyerAsTakerProtocol extends BsqSwapBuyerProtocol implements
         log.info("Received {} from {} with tradeId {} and uid {}",
                 message.getClass().getSimpleName(), peer, message.getTradeId(), message.getUid());
 
-        if (message instanceof FinalizeBsqSwapTxRequest) {
-            handle((FinalizeBsqSwapTxRequest) message, peer);
+        if (message instanceof BsqSwapFinalizeTxRequest) {
+            handle((BsqSwapFinalizeTxRequest) message, peer);
         }
     }
 }

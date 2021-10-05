@@ -15,25 +15,23 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.protocol.bsqswap.tasks.buyer_as_maker;
+package bisq.core.trade.protocol.bsqswap.tasks.seller_as_maker;
 
 import bisq.core.trade.model.bsqswap.BsqSwapTrade;
-import bisq.core.trade.protocol.bsqswap.tasks.BsqSwapTask;
-import bisq.core.trade.protocol.messages.bsqswap.BsqSwapTakeOfferRequest;
+import bisq.core.trade.protocol.bsqswap.tasks.seller.ProcessTxInputsMessage;
+import bisq.core.trade.protocol.messages.bsqswap.BuyersBsqSwapRequest;
 
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.taskrunner.TaskRunner;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public class ProcessBsqSwapTakeOfferRequest extends BsqSwapTask {
-
+public class ProcessBuyersBsqSwapRequest extends ProcessTxInputsMessage {
     @SuppressWarnings({"unused"})
-    public ProcessBsqSwapTakeOfferRequest(TaskRunner<BsqSwapTrade> taskHandler, BsqSwapTrade bsqSwapTrade) {
+    public ProcessBuyersBsqSwapRequest(TaskRunner<BsqSwapTrade> taskHandler, BsqSwapTrade bsqSwapTrade) {
         super(taskHandler, bsqSwapTrade);
     }
 
@@ -42,13 +40,11 @@ public class ProcessBsqSwapTakeOfferRequest extends BsqSwapTask {
         try {
             runInterceptHook();
 
-            checkArgument(trade.getOffer().isMyOffer(protocolModel.getKeyRing()), "Offer must be mine");
-            BsqSwapTakeOfferRequest request = checkNotNull((BsqSwapTakeOfferRequest) protocolModel.getTradeMessage());
-
+            BuyersBsqSwapRequest request = checkNotNull((BuyersBsqSwapRequest) protocolModel.getTradeMessage());
             PubKeyRing pubKeyRing = checkNotNull(request.getTakerPubKeyRing(), "pubKeyRing must not be null");
             protocolModel.getTradePeer().setPubKeyRing(pubKeyRing);
 
-            complete();
+            super.run();
         } catch (Throwable t) {
             failed(t);
         }

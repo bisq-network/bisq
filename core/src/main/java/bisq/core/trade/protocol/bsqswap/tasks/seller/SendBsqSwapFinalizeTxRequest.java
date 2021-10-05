@@ -15,24 +15,26 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.protocol.bsqswap.tasks.seller_as_taker;
+package bisq.core.trade.protocol.bsqswap.tasks.seller;
 
 import bisq.core.trade.model.bsqswap.BsqSwapTrade;
 import bisq.core.trade.protocol.bsqswap.tasks.BsqSwapTask;
-import bisq.core.trade.protocol.messages.bsqswap.BsqSwapTakeOfferRequest;
+import bisq.core.trade.protocol.messages.bsqswap.BsqSwapFinalizeTxRequest;
 
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.SendDirectMessageListener;
 
 import bisq.common.taskrunner.TaskRunner;
 
+import java.util.Objects;
+
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class SendBsqSwapTakeOfferRequest extends BsqSwapTask {
+public class SendBsqSwapFinalizeTxRequest extends BsqSwapTask {
 
     @SuppressWarnings({"unused"})
-    public SendBsqSwapTakeOfferRequest(TaskRunner<BsqSwapTrade> taskHandler, BsqSwapTrade bsqSwapTrade) {
+    public SendBsqSwapFinalizeTxRequest(TaskRunner<BsqSwapTrade> taskHandler, BsqSwapTrade bsqSwapTrade) {
         super(taskHandler, bsqSwapTrade);
     }
 
@@ -41,17 +43,13 @@ public class SendBsqSwapTakeOfferRequest extends BsqSwapTask {
         try {
             runInterceptHook();
 
-            BsqSwapTakeOfferRequest request = new BsqSwapTakeOfferRequest(
+            BsqSwapFinalizeTxRequest request = new BsqSwapFinalizeTxRequest(
                     protocolModel.getOfferId(),
                     protocolModel.getMyNodeAddress(),
-                    protocolModel.getPubKeyRing(),
-                    trade.getAmount(),
-                    trade.getTxFeePerVbyte(),
-                    trade.getMakerFee(),
-                    trade.getTakerFee(),
-                    trade.getTakeOfferDate());
+                    Objects.requireNonNull(protocolModel.getTx()),
+                    protocolModel.getInputs());
 
-            log.info("BsqSwapTakeOfferRequest={}", request);
+            log.info("FinalizeBsqSwapTxRequest={}", request);
 
             NodeAddress peersNodeAddress = trade.getTradingPeerNodeAddress();
             log.info("Send {} to peer {}. tradeId={}, uid={}",

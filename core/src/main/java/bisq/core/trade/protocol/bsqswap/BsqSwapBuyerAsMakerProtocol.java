@@ -23,16 +23,16 @@ import bisq.core.trade.protocol.TradeTaskRunner;
 import bisq.core.trade.protocol.bsqswap.tasks.ApplyFilter;
 import bisq.core.trade.protocol.bsqswap.tasks.buyer.BuyerFinalizeTx;
 import bisq.core.trade.protocol.bsqswap.tasks.buyer.BuyerPublishesTx;
-import bisq.core.trade.protocol.bsqswap.tasks.buyer.ProcessFinalizeBsqSwapTxRequest;
+import bisq.core.trade.protocol.bsqswap.tasks.buyer.ProcessBsqSwapFinalizeTxRequest;
 import bisq.core.trade.protocol.bsqswap.tasks.buyer.PublishTradeStatistics;
 import bisq.core.trade.protocol.bsqswap.tasks.buyer_as_maker.BuyerAsMakerCreatesBsqInputsAndChange;
 import bisq.core.trade.protocol.bsqswap.tasks.buyer_as_maker.BuyerAsMakerRemoveOpenOffer;
-import bisq.core.trade.protocol.bsqswap.tasks.buyer_as_maker.ProcessBsqSwapTakeOfferRequest;
+import bisq.core.trade.protocol.bsqswap.tasks.buyer_as_maker.ProcessSellersBsqSwapRequest;
 import bisq.core.trade.protocol.bsqswap.tasks.buyer_as_maker.SendBsqSwapTxInputsMessage;
 import bisq.core.trade.protocol.messages.TradeMessage;
-import bisq.core.trade.protocol.messages.bsqswap.BsqSwapTakeOfferRequest;
-import bisq.core.trade.protocol.messages.bsqswap.FinalizeBsqSwapTxRequest;
-import bisq.core.trade.protocol.messages.bsqswap.TakeOfferRequest;
+import bisq.core.trade.protocol.messages.bsqswap.BsqSwapFinalizeTxRequest;
+import bisq.core.trade.protocol.messages.bsqswap.BsqSwapRequest;
+import bisq.core.trade.protocol.messages.bsqswap.SellersBsqSwapRequest;
 
 import bisq.network.p2p.NodeAddress;
 
@@ -50,16 +50,16 @@ public class BsqSwapBuyerAsMakerProtocol extends BsqSwapBuyerProtocol implements
     }
 
     @Override
-    public void handleTakeOfferRequest(TakeOfferRequest takeOfferRequest,
+    public void handleTakeOfferRequest(BsqSwapRequest bsqSwapRequest,
                                        NodeAddress sender,
                                        ErrorMessageHandler errorMessageHandler) {
-        BsqSwapTakeOfferRequest request = (BsqSwapTakeOfferRequest) takeOfferRequest;
+        SellersBsqSwapRequest request = (SellersBsqSwapRequest) bsqSwapRequest;
         expect(preCondition(PREPARATION == trade.getTradeState())
                 .with(request)
                 .from(sender))
                 .setup(tasks(
                         ApplyFilter.class,
-                        ProcessBsqSwapTakeOfferRequest.class,
+                        ProcessSellersBsqSwapRequest.class,
                         BuyerAsMakerCreatesBsqInputsAndChange.class,
                         SendBsqSwapTxInputsMessage.class)
                         .using(new TradeTaskRunner(trade,
@@ -77,12 +77,12 @@ public class BsqSwapBuyerAsMakerProtocol extends BsqSwapBuyerProtocol implements
     // Incoming message handling
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    void handle(FinalizeBsqSwapTxRequest message, NodeAddress sender) {
+    void handle(BsqSwapFinalizeTxRequest message, NodeAddress sender) {
         expect(preCondition(PREPARATION == trade.getTradeState())
                 .with(message)
                 .from(sender))
                 .setup(tasks(
-                        ProcessFinalizeBsqSwapTxRequest.class,
+                        ProcessBsqSwapFinalizeTxRequest.class,
                         BuyerFinalizeTx.class,
                         BuyerPublishesTx.class,
                         BuyerAsMakerRemoveOpenOffer.class,
@@ -102,8 +102,8 @@ public class BsqSwapBuyerAsMakerProtocol extends BsqSwapBuyerProtocol implements
         log.info("Received {} from {} with tradeId {} and uid {}",
                 message.getClass().getSimpleName(), peer, message.getTradeId(), message.getUid());
 
-        if (message instanceof FinalizeBsqSwapTxRequest) {
-            handle((FinalizeBsqSwapTxRequest) message, peer);
+        if (message instanceof BsqSwapFinalizeTxRequest) {
+            handle((BsqSwapFinalizeTxRequest) message, peer);
         }
     }
 }

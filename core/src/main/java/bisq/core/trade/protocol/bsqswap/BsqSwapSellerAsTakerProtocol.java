@@ -22,11 +22,11 @@ import bisq.core.offer.Offer;
 import bisq.core.trade.model.bsqswap.BsqSwapSellerAsTakerTrade;
 import bisq.core.trade.protocol.TradeTaskRunner;
 import bisq.core.trade.protocol.bsqswap.tasks.ApplyFilter;
-import bisq.core.trade.protocol.bsqswap.tasks.seller.SendFinalizeBsqSwapTxRequest;
+import bisq.core.trade.protocol.bsqswap.tasks.seller.SendBsqSwapFinalizeTxRequest;
 import bisq.core.trade.protocol.bsqswap.tasks.seller_as_taker.ProcessBsqSwapTxInputsMessage;
 import bisq.core.trade.protocol.bsqswap.tasks.seller_as_taker.SellerAsTakerCreatesAndSignsTx;
 import bisq.core.trade.protocol.bsqswap.tasks.seller_as_taker.SellerAsTakerSetupTxListener;
-import bisq.core.trade.protocol.bsqswap.tasks.seller_as_taker.SendBsqSwapTakeOfferRequest;
+import bisq.core.trade.protocol.bsqswap.tasks.seller_as_taker.SendSellersBsqSwapRequest;
 import bisq.core.trade.protocol.messages.TradeMessage;
 import bisq.core.trade.protocol.messages.bsqswap.BsqSwapTxInputsMessage;
 
@@ -54,7 +54,7 @@ public class BsqSwapSellerAsTakerProtocol extends BsqSwapSellerProtocol implemen
                 .from(trade.getTradingPeerNodeAddress()))
                 .setup(tasks(
                         ApplyFilter.class,
-                        SendBsqSwapTakeOfferRequest.class)
+                        SendSellersBsqSwapRequest.class)
                         .withTimeout(60))
                 .executeTasks();
     }
@@ -71,7 +71,7 @@ public class BsqSwapSellerAsTakerProtocol extends BsqSwapSellerProtocol implemen
                         ProcessBsqSwapTxInputsMessage.class,
                         SellerAsTakerCreatesAndSignsTx.class,
                         SellerAsTakerSetupTxListener.class,
-                        SendFinalizeBsqSwapTxRequest.class)
+                        SendBsqSwapFinalizeTxRequest.class)
                         .using(new TradeTaskRunner(trade,
                                 () -> {
                                     stopTimeout();
