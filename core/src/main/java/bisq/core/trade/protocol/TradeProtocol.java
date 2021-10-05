@@ -55,7 +55,7 @@ import javax.annotation.Nullable;
 public abstract class TradeProtocol implements DecryptedDirectMessageListener, DecryptedMailboxListener {
 
     @Getter
-    protected final TradeProtocolModel<? extends TradePeer> tradeProtocolModel;
+    protected final ProtocolModel<? extends TradePeer> protocolModel;
     protected final TradeModel tradeModel;
     private Timer timeoutTimer;
 
@@ -66,7 +66,7 @@ public abstract class TradeProtocol implements DecryptedDirectMessageListener, D
 
     public TradeProtocol(TradeModel tradeModel) {
         this.tradeModel = tradeModel;
-        this.tradeProtocolModel = tradeModel.getTradeProtocolModel();
+        this.protocolModel = tradeModel.getTradeProtocolModel();
     }
 
 
@@ -75,16 +75,16 @@ public abstract class TradeProtocol implements DecryptedDirectMessageListener, D
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void initialize(Provider serviceProvider, TradeManager tradeManager, Offer offer) {
-        tradeProtocolModel.applyTransient(serviceProvider, tradeManager, offer);
+        protocolModel.applyTransient(serviceProvider, tradeManager, offer);
         onInitialized();
     }
 
     protected void onInitialized() {
         if (!tradeModel.isCompleted()) {
-            tradeProtocolModel.getP2PService().addDecryptedDirectMessageListener(this);
+            protocolModel.getP2PService().addDecryptedDirectMessageListener(this);
         }
 
-        MailboxMessageService mailboxMessageService = tradeProtocolModel.getP2PService().getMailboxMessageService();
+        MailboxMessageService mailboxMessageService = protocolModel.getP2PService().getMailboxMessageService();
         // We delay a bit here as the trade gets updated from the wallet to update the trade
         // state (deposit confirmed) and that happens after our method is called.
         // TODO To fix that in a better way we would need to change the order of some routines
@@ -179,7 +179,7 @@ public abstract class TradeProtocol implements DecryptedDirectMessageListener, D
 
     public void removeMailboxMessageAfterProcessing(TradeMessage tradeMessage) {
         if (tradeMessage instanceof MailboxMessage) {
-            tradeProtocolModel.getP2PService().getMailboxMessageService().removeMailboxMsg((MailboxMessage) tradeMessage);
+            protocolModel.getP2PService().getMailboxMessageService().removeMailboxMsg((MailboxMessage) tradeMessage);
             log.info("Remove {} from the P2P network.", tradeMessage.getClass().getSimpleName());
         }
     }
@@ -239,10 +239,10 @@ public abstract class TradeProtocol implements DecryptedDirectMessageListener, D
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void onAckMessage(AckMessage ackMessage, NodeAddress peer) {
-        if (!(tradeProtocolModel instanceof ProcessModel))
+        if (!(protocolModel instanceof ProcessModel))
             return;
 
-        ProcessModel processModel = (ProcessModel) tradeProtocolModel;
+        ProcessModel processModel = (ProcessModel) protocolModel;
 
         // We handle the ack for CounterCurrencyTransferStartedMessage and DepositTxAndDelayedPayoutTxMessage
         // as we support automatic re-send of the msg in case it was not ACKed after a certain time
@@ -262,7 +262,7 @@ public abstract class TradeProtocol implements DecryptedDirectMessageListener, D
     }
 
     protected void sendAckMessage(TradeMessage message, boolean result, @Nullable String errorMessage) {
-        PubKeyRing peersPubKeyRing = tradeProtocolModel.getTradePeer().getPubKeyRing();
+        PubKeyRing peersPubKeyRing = protocolModel.getTradePeer().getPubKeyRing();
         if (peersPubKeyRing == null) {
             log.error("We cannot send the ACK message as peersPubKeyRing is null");
             return;
@@ -270,7 +270,7 @@ public abstract class TradeProtocol implements DecryptedDirectMessageListener, D
 
         String tradeId = message.getTradeId();
         String sourceUid = message.getUid();
-        AckMessage ackMessage = new AckMessage(tradeProtocolModel.getMyNodeAddress(),
+        AckMessage ackMessage = new AckMessage(protocolModel.getMyNodeAddress(),
                 AckMessageSourceType.TRADE_MESSAGE,
                 message.getClass().getSimpleName(),
                 sourceUid,
@@ -281,10 +281,10 @@ public abstract class TradeProtocol implements DecryptedDirectMessageListener, D
         // We can find the peer's node address in the processModel's tempTradingPeerNodeAddress in that case.
         NodeAddress peer = tradeModel.getTradingPeerNodeAddress() != null ?
                 tradeModel.getTradingPeerNodeAddress() :
-                tradeProtocolModel.getTempTradingPeerNodeAddress();
+                protocolModel.getTempTradingPeerNodeAddress();
         log.info("Send AckMessage for {} to peer {}. tradeId={}, sourceUid={}",
                 ackMessage.getSourceMsgClassName(), peer, tradeId, sourceUid);
-        tradeProtocolModel.getP2PService().getMailboxMessageService().sendEncryptedMailboxMessage(
+        protocolModel.getP2PService().getMailboxMessageService().sendEncryptedMailboxMessage(
                 peer,
                 peersPubKeyRing,
                 ackMessage,
@@ -323,7 +323,7 @@ public abstract class TradeProtocol implements DecryptedDirectMessageListener, D
                     tradeModel.getId(), tradeModel.getStateInfo(), timeoutSec);
             tradeModel.setErrorMessage("Timeout reached. Protocol did not complete in " + timeoutSec + " sec.");
 
-            tradeProtocolModel.getTradeManager().requestPersistence();
+            protocolModel.getTradeManager().requestPersistence();
             cleanup();
         }, timeoutSec);
     }
@@ -364,7 +364,7 @@ public abstract class TradeProtocol implements DecryptedDirectMessageListener, D
     private boolean isPubKeyValid(DecryptedMessageWithPubKey message) {
         // We can only validate the peers pubKey if we have it already. If we are the taker we get it from the offer
         // Otherwise it depends on the state of the trade protocol if we have received the peers pubKeyRing already.
-        PubKeyRing peersPubKeyRing = tradeProtocolModel.getTradePeer().getPubKeyRing();
+        PubKeyRing peersPubKeyRing = protocolModel.getTradePeer().getPubKeyRing();
         boolean isValid = true;
         if (peersPubKeyRing != null &&
                 !message.getSignaturePubKey().equals(peersPubKeyRing.getSignaturePubKey())) {

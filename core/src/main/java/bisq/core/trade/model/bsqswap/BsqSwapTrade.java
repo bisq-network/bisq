@@ -21,8 +21,8 @@ import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
 import bisq.core.trade.model.TradeModel;
+import bisq.core.trade.protocol.ProtocolModel;
 import bisq.core.trade.protocol.Provider;
-import bisq.core.trade.protocol.TradeProtocolModel;
 import bisq.core.trade.protocol.bsqswap.BsqSwapProtocolModel;
 import bisq.core.trade.protocol.bsqswap.BsqSwapTradePeer;
 
@@ -181,7 +181,7 @@ public abstract class BsqSwapTrade extends TradeModel {
     }
 
     @Override
-    public TradeProtocolModel<BsqSwapTradePeer> getTradeProtocolModel() {
+    public ProtocolModel<BsqSwapTradePeer> getTradeProtocolModel() {
         return bsqSwapProtocolModel;
     }
 

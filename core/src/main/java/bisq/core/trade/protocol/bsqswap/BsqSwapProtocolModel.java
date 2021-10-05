@@ -28,8 +28,8 @@ import bisq.core.offer.Offer;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.trade.messages.TradeMessage;
 import bisq.core.trade.model.TradeManager;
+import bisq.core.trade.protocol.ProtocolModel;
 import bisq.core.trade.protocol.Provider;
-import bisq.core.trade.protocol.TradeProtocolModel;
 
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
@@ -65,7 +65,7 @@ import javax.annotation.Nullable;
 
 @Getter
 @Slf4j
-public class BsqSwapProtocolModel implements TradeProtocolModel<BsqSwapTradePeer>, Model, PersistablePayload {
+public class BsqSwapProtocolModel implements ProtocolModel<BsqSwapTradePeer>, Model, PersistablePayload {
     transient private Provider provider;
     transient private TradeManager tradeManager;
     transient private Offer offer;

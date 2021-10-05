@@ -38,8 +38,8 @@ import bisq.core.trade.model.MakerTrade;
 import bisq.core.trade.model.TradeManager;
 import bisq.core.trade.model.TradeModel;
 import bisq.core.trade.model.trade.Trade;
+import bisq.core.trade.protocol.ProtocolModel;
 import bisq.core.trade.protocol.Provider;
-import bisq.core.trade.protocol.TradeProtocolModel;
 import bisq.core.trade.statistics.ReferralIdService;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.User;
@@ -85,7 +85,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Getter
 @Slf4j
-public class ProcessModel implements TradeProtocolModel<TradingPeer>, Model, PersistablePayload {
+public class ProcessModel implements ProtocolModel<TradingPeer>, Model, PersistablePayload {
 
     public static byte[] hashOfPaymentAccountPayload(PaymentAccountPayload paymentAccountPayload) {
         return Hash.getRipemd160hash(checkNotNull(paymentAccountPayload).toProtoMessage().toByteArray());
