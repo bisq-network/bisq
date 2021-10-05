@@ -30,7 +30,6 @@ import bisq.core.trade.Tradable;
 import bisq.core.trade.Trade;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.Preferences;
-import bisq.core.util.VolumeUtil;
 import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.coin.CoinFormatter;
 
@@ -62,6 +61,7 @@ import static bisq.core.util.FormattingUtils.formatPercentagePrice;
 import static bisq.core.util.FormattingUtils.formatPrice;
 import static bisq.core.util.FormattingUtils.formatToPercentWithSymbol;
 import static bisq.core.util.VolumeUtil.formatVolume;
+import static bisq.core.util.VolumeUtil.formatVolumeWithCode;
 
 @Slf4j
 public class ClosedTradeUtil {
@@ -120,7 +120,7 @@ public class ClosedTradeUtil {
     public String getTotalAmountWithVolumeAsString(Coin totalTradeAmount, Volume volume) {
         return Res.get(I18N_KEY_TOTAL_AMOUNT,
                 btcFormatter.formatCoin(totalTradeAmount, true),
-                VolumeUtil.formatVolumeWithCode(volume));
+                formatVolumeWithCode(volume));
     }
 
     public String getPriceAsString(Tradable tradable) {
@@ -174,7 +174,7 @@ public class ClosedTradeUtil {
         return map;
     }
 
-    public Map<String, String> getTotalVolumeByCurrencyAsStrings(List<Tradable> tradableList) {
+    public Map<String, String> getTotalVolumeByCurrencyAsString(List<Tradable> tradableList) {
         return getTotalVolumeByCurrency(tradableList).entrySet().stream()
                 .collect(Collectors.toMap(Map.Entry::getKey,
                         entry -> {
@@ -185,7 +185,7 @@ public class ClosedTradeUtil {
                             } else {
                                 monetary = Fiat.valueOf(currencyCode, entry.getValue());
                             }
-                            return VolumeUtil.formatVolumeWithCode(new Volume(monetary));
+                            return formatVolumeWithCode(new Volume(monetary));
                         }
                 ));
     }
