@@ -24,10 +24,10 @@ import bisq.core.trade.model.bisq_v1.BuyerAsMakerTrade;
 import bisq.core.trade.model.bisq_v1.BuyerAsTakerTrade;
 import bisq.core.trade.model.bisq_v1.SellerAsMakerTrade;
 import bisq.core.trade.model.bisq_v1.SellerAsTakerTrade;
-import bisq.core.trade.model.bsqswap.BsqSwapBuyerAsMakerTrade;
-import bisq.core.trade.model.bsqswap.BsqSwapBuyerAsTakerTrade;
-import bisq.core.trade.model.bsqswap.BsqSwapSellerAsMakerTrade;
-import bisq.core.trade.model.bsqswap.BsqSwapSellerAsTakerTrade;
+import bisq.core.trade.model.bsq_swap.BsqSwapBuyerAsMakerTrade;
+import bisq.core.trade.model.bsq_swap.BsqSwapBuyerAsTakerTrade;
+import bisq.core.trade.model.bsq_swap.BsqSwapSellerAsMakerTrade;
+import bisq.core.trade.model.bsq_swap.BsqSwapSellerAsTakerTrade;
 
 import bisq.common.proto.ProtoUtil;
 import bisq.common.proto.ProtobufferRuntimeException;

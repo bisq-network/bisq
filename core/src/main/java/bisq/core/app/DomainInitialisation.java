@@ -52,7 +52,7 @@ import bisq.core.support.traderchat.TraderChatManager;
 import bisq.core.trade.model.ClosedTradableManager;
 import bisq.core.trade.model.FailedTradesManager;
 import bisq.core.trade.model.TradeManager;
-import bisq.core.trade.model.bsqswap.BsqSwapTradeManager;
+import bisq.core.trade.model.bsq_swap.BsqSwapTradeManager;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.trade.txproof.xmr.XmrTxProofService;
 import bisq.core.user.User;

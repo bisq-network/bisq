@@ -33,11 +33,9 @@ import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.monetary.Price;
 import bisq.core.offer.Offer;
-import bisq.core.offer.OfferDirection;
-import bisq.core.offer.OfferUtil;
-import bisq.core.payment.PaymentAccount;
-import bisq.core.payment.payload.PaymentMethod;
-import bisq.core.user.User;
+import bisq.core.payment.payload.PaymentAccountPayload;
+import bisq.core.trade.model.TradeManager;
+import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.CoinFormatter;
 

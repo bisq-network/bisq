@@ -22,18 +22,18 @@ import bisq.core.trade.model.bisq_v1.BuyerAsMakerTrade;
 import bisq.core.trade.model.bisq_v1.BuyerAsTakerTrade;
 import bisq.core.trade.model.bisq_v1.SellerAsMakerTrade;
 import bisq.core.trade.model.bisq_v1.SellerAsTakerTrade;
-import bisq.core.trade.model.bsqswap.BsqSwapBuyerAsMakerTrade;
-import bisq.core.trade.model.bsqswap.BsqSwapBuyerAsTakerTrade;
-import bisq.core.trade.model.bsqswap.BsqSwapSellerAsMakerTrade;
-import bisq.core.trade.model.bsqswap.BsqSwapSellerAsTakerTrade;
+import bisq.core.trade.model.bsq_swap.BsqSwapBuyerAsMakerTrade;
+import bisq.core.trade.model.bsq_swap.BsqSwapBuyerAsTakerTrade;
+import bisq.core.trade.model.bsq_swap.BsqSwapSellerAsMakerTrade;
+import bisq.core.trade.model.bsq_swap.BsqSwapSellerAsTakerTrade;
 import bisq.core.trade.protocol.bisq_v1.BuyerAsMakerProtocol;
 import bisq.core.trade.protocol.bisq_v1.BuyerAsTakerProtocol;
 import bisq.core.trade.protocol.bisq_v1.SellerAsMakerProtocol;
 import bisq.core.trade.protocol.bisq_v1.SellerAsTakerProtocol;
-import bisq.core.trade.protocol.bsqswap.BsqSwapBuyerAsMakerProtocol;
-import bisq.core.trade.protocol.bsqswap.BsqSwapBuyerAsTakerProtocol;
-import bisq.core.trade.protocol.bsqswap.BsqSwapSellerAsMakerProtocol;
-import bisq.core.trade.protocol.bsqswap.BsqSwapSellerAsTakerProtocol;
+import bisq.core.trade.protocol.bsq_swap.BsqSwapBuyerAsMakerProtocol;
+import bisq.core.trade.protocol.bsq_swap.BsqSwapBuyerAsTakerProtocol;
+import bisq.core.trade.protocol.bsq_swap.BsqSwapSellerAsMakerProtocol;
+import bisq.core.trade.protocol.bsq_swap.BsqSwapSellerAsTakerProtocol;
 
 public class TradeProtocolFactory {
     public static TradeProtocol getNewTradeProtocol(TradeModel trade) {

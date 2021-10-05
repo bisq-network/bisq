@@ -63,10 +63,10 @@ import bisq.core.trade.protocol.messages.bisq_v1.PeerPublishedDelayedPayoutTxMes
 import bisq.core.trade.protocol.messages.bisq_v1.RefreshTradeStateRequest;
 import bisq.core.trade.protocol.messages.bisq_v1.ShareBuyerPaymentAccountMessage;
 import bisq.core.trade.protocol.messages.bisq_v1.TraderSignedWitnessMessage;
-import bisq.core.trade.protocol.messages.bsqswap.BsqSwapFinalizeTxRequest;
-import bisq.core.trade.protocol.messages.bsqswap.BsqSwapTxInputsMessage;
-import bisq.core.trade.protocol.messages.bsqswap.BuyersBsqSwapRequest;
-import bisq.core.trade.protocol.messages.bsqswap.SellersBsqSwapRequest;
+import bisq.core.trade.protocol.messages.bsq_swap.BsqSwapFinalizeTxRequest;
+import bisq.core.trade.protocol.messages.bsq_swap.BsqSwapTxInputsMessage;
+import bisq.core.trade.protocol.messages.bsq_swap.BuyersBsqSwapRequest;
+import bisq.core.trade.protocol.messages.bsq_swap.SellersBsqSwapRequest;
 
 import bisq.network.p2p.AckMessage;
 import bisq.network.p2p.BundleOfEnvelopes;

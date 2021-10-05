@@ -26,7 +26,7 @@ import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferDirection;
 import bisq.core.payment.PaymentAccount;
-import bisq.core.trade.model.bsqswap.BsqSwapTrade;
+import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.validation.InputValidator;

@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.portfolio.bsqswaps;
 
-import bisq.core.trade.model.bsqswap.BsqSwapTrade;
+import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
 
 class CompletedBsqSwapsListItem {
     private final BsqSwapTrade bsqSwapTrade;

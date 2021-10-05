@@ -22,7 +22,7 @@ import bisq.core.trade.model.ClosedTradableManager;
 import bisq.core.trade.model.FailedTradesManager;
 import bisq.core.trade.model.Tradable;
 import bisq.core.trade.model.TradeManager;
-import bisq.core.trade.model.bsqswap.BsqSwapTradeManager;
+import bisq.core.trade.model.bsq_swap.BsqSwapTradeManager;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;

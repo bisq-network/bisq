@@ -35,7 +35,7 @@ import bisq.core.payment.PaymentAccount;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.trade.misc.TradeResultHandler;
 import bisq.core.trade.model.TradeManager;
-import bisq.core.trade.model.bsqswap.BsqSwapTrade;
+import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
 import bisq.core.util.coin.CoinUtil;
