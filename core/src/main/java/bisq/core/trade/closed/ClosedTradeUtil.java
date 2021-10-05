@@ -289,12 +289,12 @@ public class ClosedTradeUtil {
     }
 
     public int getNumPastTrades(Tradable tradable) {
-        return closedTradableManager.getObservableList().stream()
-                .filter(candidate -> {
-                    if (!(candidate instanceof Trade) || !(tradable instanceof Trade))
-                        return false;
+        if (!(tradable instanceof Trade))
+            return 0;
 
-                    NodeAddress candidateAddress = ((Trade) candidate).getTradingPeerNodeAddress();
+        return closedTradableManager.getClosedTrades().stream()
+                .filter(candidate -> {
+                    NodeAddress candidateAddress = candidate.getTradingPeerNodeAddress();
                     NodeAddress tradableAddress = ((Trade) tradable).getTradingPeerNodeAddress();
                     return candidateAddress != null
                             && tradableAddress != null
