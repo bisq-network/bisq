@@ -25,7 +25,6 @@ import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OpenOffer;
-import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.Tradable;
 import bisq.core.trade.Trade;
 import bisq.core.trade.statistics.TradeStatisticsManager;
@@ -74,7 +73,6 @@ public class ClosedTradeUtil {
     private static final String I18N_KEY_TOTAL_TRADE_FEE_BSQ = "closedTradesSummaryWindow.totalTradeFeeInBsq.value";
 
     private final ClosedTradableManager closedTradableManager;
-    private final PriceFeedService priceFeedService;
     private final BsqWalletService bsqWalletService;
     private final BsqFormatter bsqFormatter;
     private final CoinFormatter btcFormatter;
@@ -83,14 +81,12 @@ public class ClosedTradeUtil {
 
     @Inject
     public ClosedTradeUtil(ClosedTradableManager closedTradableManager,
-                           PriceFeedService priceFeedService,
                            BsqWalletService bsqWalletService,
                            BsqFormatter bsqFormatter,
                            @Named(BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
                            Preferences preferences,
                            TradeStatisticsManager tradeStatisticsManager) {
         this.closedTradableManager = closedTradableManager;
-        this.priceFeedService = priceFeedService;
         this.bsqWalletService = bsqWalletService;
         this.bsqFormatter = bsqFormatter;
         this.btcFormatter = btcFormatter;
