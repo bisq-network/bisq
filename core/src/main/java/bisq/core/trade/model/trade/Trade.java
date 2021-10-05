@@ -31,6 +31,8 @@ import bisq.core.support.dispute.refund.RefundResultState;
 import bisq.core.support.messages.ChatMessage;
 import bisq.core.trade.model.Contract;
 import bisq.core.trade.model.TradeModel;
+import bisq.core.trade.model.TradePhase;
+import bisq.core.trade.model.TradeState;
 import bisq.core.trade.protocol.ProtocolModel;
 import bisq.core.trade.protocol.Provider;
 import bisq.core.trade.protocol.trade.ProcessModel;
@@ -92,7 +94,7 @@ public abstract class Trade extends TradeModel {
     // Enums
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public enum State {
+    public enum State implements TradeState {
         // #################### Phase PREPARATION
         // When trade protocol starts no funds are on stake
         PREPARATION(Phase.INIT),
@@ -167,7 +169,7 @@ public abstract class Trade extends TradeModel {
         WITHDRAW_COMPLETED(Phase.WITHDRAWN);
 
         @NotNull
-        public Phase getPhase() {
+        public Phase getTradePhase() {
             return phase;
         }
 
@@ -190,13 +192,13 @@ public abstract class Trade extends TradeModel {
         // We allow a state change only if the phase is the next phase or if we do not change the phase by the
         // state change (e.g. detail change inside the same phase)
         public boolean isValidTransitionTo(State newState) {
-            Phase newPhase = newState.getPhase();
-            Phase currentPhase = this.getPhase();
+            Phase newPhase = newState.getTradePhase();
+            Phase currentPhase = this.getTradePhase();
             return currentPhase.isValidTransitionTo(newPhase) || newPhase.equals(currentPhase);
         }
     }
 
-    public enum Phase {
+    public enum Phase implements TradePhase {
         INIT,
         TAKER_FEE_PUBLISHED,
         DEPOSIT_PUBLISHED,
@@ -730,6 +732,16 @@ public abstract class Trade extends TradeModel {
     public void onComplete() {
     }
 
+    @Override
+    public Trade.State getTradeState() {
+        return state;
+    }
+
+    @Override
+    public Trade.Phase getTradePhase() {
+        return state.getTradePhase();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // TradeModel implementation
@@ -776,7 +788,7 @@ public abstract class Trade extends TradeModel {
             // We don't want to log at startup the setState calls from all persisted trades
             log.info("Set new state at {} (id={}): {}", this.getClass().getSimpleName(), getShortId(), state);
         }
-        if (state.getPhase().ordinal() < this.state.getPhase().ordinal()) {
+        if (state.getTradePhase().ordinal() < this.state.getTradePhase().ordinal()) {
             String message = "We got a state change to a previous phase.\n" +
                     "Old state is: " + this.state + ". New state is: " + state;
             log.warn(message);
@@ -784,7 +796,7 @@ public abstract class Trade extends TradeModel {
 
         this.state = state;
         stateProperty.set(state);
-        statePhaseProperty.set(state.getPhase());
+        statePhaseProperty.set(state.getTradePhase());
     }
 
     public void setDisputeState(DisputeState disputeState) {
@@ -843,10 +855,6 @@ public abstract class Trade extends TradeModel {
 
     public Date getTakeOfferDate() {
         return new Date(takeOfferDate);
-    }
-
-    public Phase getPhase() {
-        return state.getPhase();
     }
 
     @Nullable
@@ -917,15 +925,15 @@ public abstract class Trade extends TradeModel {
     }
 
     public boolean isInPreparation() {
-        return getState().getPhase().ordinal() == Phase.INIT.ordinal();
+        return getTradeState().getTradePhase().ordinal() == Phase.INIT.ordinal();
     }
 
     public boolean isTakerFeePublished() {
-        return getState().getPhase().ordinal() >= Phase.TAKER_FEE_PUBLISHED.ordinal();
+        return getTradeState().getTradePhase().ordinal() >= Phase.TAKER_FEE_PUBLISHED.ordinal();
     }
 
     public boolean isDepositPublished() {
-        return getState().getPhase().ordinal() >= Phase.DEPOSIT_PUBLISHED.ordinal();
+        return getTradeState().getTradePhase().ordinal() >= Phase.DEPOSIT_PUBLISHED.ordinal();
     }
 
     public boolean isFundsLockedIn() {
@@ -959,23 +967,23 @@ public abstract class Trade extends TradeModel {
     }
 
     public boolean isDepositConfirmed() {
-        return getState().getPhase().ordinal() >= Phase.DEPOSIT_CONFIRMED.ordinal();
+        return getTradeState().getTradePhase().ordinal() >= Phase.DEPOSIT_CONFIRMED.ordinal();
     }
 
     public boolean isFiatSent() {
-        return getState().getPhase().ordinal() >= Phase.FIAT_SENT.ordinal();
+        return getTradeState().getTradePhase().ordinal() >= Phase.FIAT_SENT.ordinal();
     }
 
     public boolean isFiatReceived() {
-        return getState().getPhase().ordinal() >= Phase.FIAT_RECEIVED.ordinal();
+        return getTradeState().getTradePhase().ordinal() >= Phase.FIAT_RECEIVED.ordinal();
     }
 
     public boolean isPayoutPublished() {
-        return getState().getPhase().ordinal() >= Phase.PAYOUT_PUBLISHED.ordinal() || isWithdrawn();
+        return getTradeState().getTradePhase().ordinal() >= Phase.PAYOUT_PUBLISHED.ordinal() || isWithdrawn();
     }
 
     public boolean isWithdrawn() {
-        return getState().getPhase().ordinal() == Phase.WITHDRAWN.ordinal();
+        return getTradeState().getTradePhase().ordinal() == Phase.WITHDRAWN.ordinal();
     }
 
     public ReadOnlyObjectProperty<State> stateProperty() {

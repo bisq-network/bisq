@@ -95,7 +95,7 @@ public abstract class SetupPayoutTxListener extends TradeTask {
             BtcWalletService.printTx("payoutTx received from network", walletTx);
             setState();
         } else {
-            log.info("We had the payout tx already set. tradeId={}, state={}", trade.getId(), trade.getState());
+            log.info("We had the payout tx already set. tradeId={}, state={}", trade.getId(), trade.getTradeState());
         }
 
         processModel.getBtcWalletService().resetCoinLockedInMultiSigAddressEntry(trade.getId());

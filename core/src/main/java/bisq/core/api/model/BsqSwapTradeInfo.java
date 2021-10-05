@@ -110,7 +110,7 @@ public class BsqSwapTradeInfo implements Payload {
                    .withTakerBsqAddress(trade.getBsqSwapProtocolModel().getTakerBsqAddress())
                    .withTakerBtcAddress(trade.getBsqSwapProtocolModel().getTakerBtcAddress())*/
                 .withTakeOfferDate(trade.getTakeOfferDate())
-                .withState(trade.getState().name())
+                .withState(trade.getTradeState().name())
                 .withErrorMessage(trade.getErrorMessage())
                 .build();
     }

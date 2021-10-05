@@ -21,6 +21,8 @@ import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
 import bisq.core.trade.model.TradeModel;
+import bisq.core.trade.model.TradePhase;
+import bisq.core.trade.model.TradeState;
 import bisq.core.trade.protocol.ProtocolModel;
 import bisq.core.trade.protocol.Provider;
 import bisq.core.trade.protocol.bsqswap.BsqSwapProtocolModel;
@@ -59,7 +61,7 @@ public abstract class BsqSwapTrade extends TradeModel {
     // Enums
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public enum State {
+    public enum State implements TradeState {
         PREPARATION,
         COMPLETED,
         FAILED;
@@ -70,6 +72,11 @@ public abstract class BsqSwapTrade extends TradeModel {
 
         public static protobuf.BsqSwapTrade.State toProtoMessage(State state) {
             return protobuf.BsqSwapTrade.State.valueOf(state.name());
+        }
+
+        @Override
+        public TradePhase getTradePhase() {
+            return null;
         }
     }
 
@@ -169,6 +176,16 @@ public abstract class BsqSwapTrade extends TradeModel {
 
     @Override
     public void onComplete() {
+    }
+
+    @Override
+    public BsqSwapTrade.State getTradeState() {
+        return state;
+    }
+
+    @Override
+    public TradePhase getTradePhase() {
+        return state.getTradePhase();
     }
 
 

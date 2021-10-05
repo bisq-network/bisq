@@ -15,16 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.protocol.bsqswap;
+package bisq.core.trade.model;
 
+public interface TradePhase {
+    int ordinal();
 
-import bisq.core.trade.model.bsqswap.BsqSwapBuyerTrade;
-
-import lombok.extern.slf4j.Slf4j;
-
-@Slf4j
-public abstract class BsqSwapBuyerProtocol extends BsqSwapProtocol {
-    public BsqSwapBuyerProtocol(BsqSwapBuyerTrade trade) {
-        super(trade);
-    }
+    String name();
 }

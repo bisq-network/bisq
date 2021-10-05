@@ -23,4 +23,8 @@ public abstract class TradeModel implements Tradable, Model {
     public abstract boolean isCompleted();
 
     public abstract void initialize(Provider provider);
+
+    public abstract TradePhase getTradePhase();
+
+    public abstract TradeState getTradeState();
 }

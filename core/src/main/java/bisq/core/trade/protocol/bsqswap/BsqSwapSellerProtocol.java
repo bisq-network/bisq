@@ -19,23 +19,12 @@ package bisq.core.trade.protocol.bsqswap;
 
 
 import bisq.core.trade.model.bsqswap.BsqSwapSellerTrade;
-import bisq.core.trade.model.bsqswap.BsqSwapTrade;
-import bisq.core.trade.protocol.TradeProtocol;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public abstract class BsqSwapSellerProtocol extends TradeProtocol {
-
-    protected final BsqSwapTrade trade;
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Constructor
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
+public abstract class BsqSwapSellerProtocol extends BsqSwapProtocol {
     public BsqSwapSellerProtocol(BsqSwapSellerTrade trade) {
         super(trade);
-
-        this.trade = trade;
     }
 }

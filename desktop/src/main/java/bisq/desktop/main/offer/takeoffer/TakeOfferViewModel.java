@@ -263,8 +263,8 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
             return true;
         } else {
             new Popup().warning(Res.get("shared.notEnoughFunds",
-                            btcFormatter.formatCoinWithCode(dataModel.getTotalToPayAsCoin().get()),
-                            btcFormatter.formatCoinWithCode(dataModel.getTotalAvailableBalance())))
+                    btcFormatter.formatCoinWithCode(dataModel.getTotalToPayAsCoin().get()),
+                    btcFormatter.formatCoinWithCode(dataModel.getTotalAvailableBalance())))
                     .actionButtonTextWithGoTo("navigation.funds.depositFunds")
                     .onAction(() -> navigation.navigateTo(MainView.class, FundsView.class, DepositView.class))
                     .show();
@@ -419,7 +419,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     private void applyTradeErrorMessage(@Nullable String errorMessage) {
         if (errorMessage != null) {
             String appendMsg = "";
-            switch (trade.getState().getPhase()) {
+            switch (trade.getTradePhase()) {
                 case INIT:
                     appendMsg = Res.get("takeOffer.error.noFundsLost");
                     break;

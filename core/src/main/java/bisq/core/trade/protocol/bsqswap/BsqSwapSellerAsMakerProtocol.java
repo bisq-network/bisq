@@ -49,7 +49,7 @@ public class BsqSwapSellerAsMakerProtocol extends BsqSwapSellerProtocol implemen
                                        NodeAddress sender,
                                        ErrorMessageHandler errorMessageHandler) {
         BsqSwapTakeOfferWithTxInputsRequest request = (BsqSwapTakeOfferWithTxInputsRequest) takeOfferRequest;
-        expect(preCondition(BsqSwapTrade.State.PREPARATION == trade.getState())
+        expect(preCondition(BsqSwapTrade.State.PREPARATION == trade.getTradeState())
                 .with(request)
                 .from(sender))
                 .setup(tasks(

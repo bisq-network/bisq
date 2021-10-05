@@ -265,7 +265,7 @@ class TakeBsqSwapOfferViewModel extends ActivatableWithDataModel<TakeBsqSwapOffe
     private void applyTradeErrorMessage(@Nullable String errorMessage) {
         if (errorMessage != null) {
             String appendMsg;
-            switch (bsqSwapTrade.getState()) {
+            switch (bsqSwapTrade.getTradeState()) {
                 case PREPARATION:
                     appendMsg = Res.get("takeOffer.error.noFundsLost");
                     break;
@@ -285,7 +285,7 @@ class TakeBsqSwapOfferViewModel extends ActivatableWithDataModel<TakeBsqSwapOffe
     }
 
     private void applyTradeState() {
-        if (bsqSwapTrade.getState().equals(BsqSwapTrade.State.COMPLETED)) {
+        if (bsqSwapTrade.getTradeState().equals(BsqSwapTrade.State.COMPLETED)) {
             if (takeOfferSucceededHandler != null)
                 takeOfferSucceededHandler.run();
 

@@ -53,7 +53,7 @@ public class BsqSwapBuyerAsMakerProtocol extends BsqSwapBuyerProtocol implements
                                        NodeAddress sender,
                                        ErrorMessageHandler errorMessageHandler) {
         BsqSwapTakeOfferRequest request = (BsqSwapTakeOfferRequest) takeOfferRequest;
-        expect(preCondition(BsqSwapTrade.State.PREPARATION == trade.getState())
+        expect(preCondition(BsqSwapTrade.State.PREPARATION == trade.getTradeState())
                 .with(request)
                 .from(sender))
                 .setup(tasks(
@@ -77,7 +77,7 @@ public class BsqSwapBuyerAsMakerProtocol extends BsqSwapBuyerProtocol implements
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     void handle(FinalizeBsqSwapTxRequest message, NodeAddress sender) {
-        expect(preCondition(BsqSwapTrade.State.PREPARATION == trade.getState())
+        expect(preCondition(BsqSwapTrade.State.PREPARATION == trade.getTradeState())
                 .with(message)
                 .from(sender))
                 .setup(tasks(

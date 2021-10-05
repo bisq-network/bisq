@@ -27,6 +27,7 @@ import bisq.core.trade.model.FailedTradesManager;
 import bisq.core.trade.model.Tradable;
 import bisq.core.trade.model.TradeManager;
 import bisq.core.trade.model.TradeModel;
+import bisq.core.trade.model.TradeState;
 import bisq.core.trade.model.trade.SellerTrade;
 import bisq.core.trade.model.trade.Trade;
 import bisq.core.trade.protocol.trade.SellerProtocol;
@@ -206,7 +207,7 @@ public class XmrTxProofService implements AssetTxProofService {
     // Basic requirements are fulfilled.
     // We process further if we are in the expected state or register a listener
     private void processTradeOrAddListener(SellerTrade trade) {
-        if (isExpectedTradeState(trade.getState())) {
+        if (isExpectedTradeState(trade.getTradeState())) {
             startRequestsIfValid(trade);
         } else {
             // We are expecting SELLER_RECEIVED_FIAT_PAYMENT_INITIATED_MSG in the future, so listen on changes
@@ -347,7 +348,7 @@ public class XmrTxProofService implements AssetTxProofService {
         return (checkNotNull(trade.getOffer()).getCurrencyCode().equals("XMR"));
     }
 
-    private boolean isExpectedTradeState(Trade.State newValue) {
+    private boolean isExpectedTradeState(TradeState newValue) {
         return newValue == Trade.State.SELLER_RECEIVED_FIAT_PAYMENT_INITIATED_MSG;
     }
 

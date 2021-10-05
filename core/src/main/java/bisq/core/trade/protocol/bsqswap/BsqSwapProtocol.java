@@ -18,13 +18,28 @@
 package bisq.core.trade.protocol.bsqswap;
 
 
-import bisq.core.trade.model.bsqswap.BsqSwapBuyerTrade;
+import bisq.core.trade.model.bsqswap.BsqSwapTrade;
+import bisq.core.trade.protocol.TradeProtocol;
+
+import bisq.network.p2p.AckMessage;
+import bisq.network.p2p.NodeAddress;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public abstract class BsqSwapBuyerProtocol extends BsqSwapProtocol {
-    public BsqSwapBuyerProtocol(BsqSwapBuyerTrade trade) {
+public abstract class BsqSwapProtocol extends TradeProtocol {
+
+    protected final BsqSwapTrade trade;
+
+    public BsqSwapProtocol(BsqSwapTrade trade) {
         super(trade);
+
+        this.trade = trade;
+    }
+
+    @Override
+    protected void onAckMessage(AckMessage ackMessage, NodeAddress peer) {
+        //todo
+        log.error("ackMessage {}", ackMessage);
     }
 }

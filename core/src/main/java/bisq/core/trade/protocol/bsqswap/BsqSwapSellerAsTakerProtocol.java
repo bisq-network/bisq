@@ -49,7 +49,7 @@ public class BsqSwapSellerAsTakerProtocol extends BsqSwapSellerProtocol implemen
 
     @Override
     public void onTakeOffer() {
-        expect(preCondition(PREPARATION == trade.getState())
+        expect(preCondition(PREPARATION == trade.getTradeState())
                 .with(TAKE_OFFER)
                 .from(trade.getTradingPeerNodeAddress()))
                 .setup(tasks(
@@ -64,7 +64,7 @@ public class BsqSwapSellerAsTakerProtocol extends BsqSwapSellerProtocol implemen
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     void handle(BsqSwapTxInputsMessage message, NodeAddress sender) {
-        expect(preCondition(PREPARATION == trade.getState())
+        expect(preCondition(PREPARATION == trade.getTradeState())
                 .with(message)
                 .from(sender))
                 .setup(tasks(

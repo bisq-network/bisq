@@ -22,9 +22,6 @@ import bisq.core.trade.model.TradeManager;
 import bisq.core.trade.model.TradeModel;
 import bisq.core.trade.model.trade.Trade;
 import bisq.core.trade.protocol.messages.TradeMessage;
-import bisq.core.trade.protocol.messages.trade.CounterCurrencyTransferStartedMessage;
-import bisq.core.trade.protocol.messages.trade.DepositTxAndDelayedPayoutTxMessage;
-import bisq.core.trade.protocol.trade.ProcessModel;
 
 import bisq.network.p2p.AckMessage;
 import bisq.network.p2p.AckMessageSourceType;
@@ -238,28 +235,7 @@ public abstract class TradeProtocol implements DecryptedDirectMessageListener, D
     // ACK msg
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void onAckMessage(AckMessage ackMessage, NodeAddress peer) {
-        if (!(protocolModel instanceof ProcessModel))
-            return;
-
-        ProcessModel processModel = (ProcessModel) protocolModel;
-
-        // We handle the ack for CounterCurrencyTransferStartedMessage and DepositTxAndDelayedPayoutTxMessage
-        // as we support automatic re-send of the msg in case it was not ACKed after a certain time
-        if (ackMessage.getSourceMsgClassName().equals(CounterCurrencyTransferStartedMessage.class.getSimpleName())) {
-            processModel.setPaymentStartedAckMessage(ackMessage);
-        } else if (ackMessage.getSourceMsgClassName().equals(DepositTxAndDelayedPayoutTxMessage.class.getSimpleName())) {
-            processModel.setDepositTxSentAckMessage(ackMessage);
-        }
-
-        if (ackMessage.isSuccess()) {
-            log.info("Received AckMessage for {} from {} with tradeId {} and uid {}",
-                    ackMessage.getSourceMsgClassName(), peer, tradeModel.getId(), ackMessage.getSourceUid());
-        } else {
-            log.warn("Received AckMessage with error state for {} from {} with tradeId {} and errorMessage={}",
-                    ackMessage.getSourceMsgClassName(), peer, tradeModel.getId(), ackMessage.getErrorMessage());
-        }
-    }
+    abstract protected void onAckMessage(AckMessage ackMessage, NodeAddress peer);
 
     protected void sendAckMessage(TradeMessage message, boolean result, @Nullable String errorMessage) {
         PubKeyRing peersPubKeyRing = protocolModel.getTradePeer().getPubKeyRing();
