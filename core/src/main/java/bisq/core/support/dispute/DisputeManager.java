@@ -38,8 +38,8 @@ import bisq.core.support.messages.ChatMessage;
 import bisq.core.trade.misc.TradeDataValidation;
 import bisq.core.trade.model.ClosedTradableManager;
 import bisq.core.trade.model.TradeManager;
-import bisq.core.trade.model.trade.Contract;
-import bisq.core.trade.model.trade.Trade;
+import bisq.core.trade.model.bisq_v1.Contract;
+import bisq.core.trade.model.bisq_v1.Trade;
 
 import bisq.network.p2p.BootstrapListener;
 import bisq.network.p2p.NodeAddress;

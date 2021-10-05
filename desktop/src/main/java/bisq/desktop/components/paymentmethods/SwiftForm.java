@@ -32,7 +32,7 @@ import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.SwiftAccount;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.SwiftAccountPayload;
-import bisq.core.trade.model.trade.Trade;
+import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.validation.InputValidator;
 

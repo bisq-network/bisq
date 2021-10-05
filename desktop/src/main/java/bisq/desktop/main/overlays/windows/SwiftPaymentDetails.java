@@ -23,7 +23,7 @@ import bisq.desktop.util.DisplayUtils;
 import bisq.core.locale.CountryUtil;
 import bisq.core.locale.Res;
 import bisq.core.payment.payload.SwiftAccountPayload;
-import bisq.core.trade.model.trade.Trade;
+import bisq.core.trade.model.bisq_v1.Trade;
 
 import javafx.scene.control.Label;
 

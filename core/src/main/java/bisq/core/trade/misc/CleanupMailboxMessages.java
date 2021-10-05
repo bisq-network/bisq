@@ -17,7 +17,7 @@
 
 package bisq.core.trade.misc;
 
-import bisq.core.trade.model.trade.Trade;
+import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.messages.TradeMessage;
 
 import bisq.network.p2p.AckMessage;

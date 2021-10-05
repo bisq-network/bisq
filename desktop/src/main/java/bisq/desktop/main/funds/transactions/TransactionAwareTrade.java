@@ -24,9 +24,9 @@ import bisq.core.support.dispute.arbitration.ArbitrationManager;
 import bisq.core.support.dispute.refund.RefundManager;
 import bisq.core.trade.model.Tradable;
 import bisq.core.trade.model.TradeModel;
+import bisq.core.trade.model.bisq_v1.Contract;
+import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.model.bsqswap.BsqSwapTrade;
-import bisq.core.trade.model.trade.Contract;
-import bisq.core.trade.model.trade.Trade;
 
 import bisq.common.crypto.PubKeyRing;
 

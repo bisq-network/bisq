@@ -25,7 +25,7 @@ import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
-import bisq.core.trade.model.trade.Trade;
+import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.user.Preferences;
 
 import bisq.common.UserThread;

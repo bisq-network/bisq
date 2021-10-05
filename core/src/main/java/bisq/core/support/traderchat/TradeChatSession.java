@@ -19,7 +19,7 @@ package bisq.core.support.traderchat;
 
 import bisq.core.support.SupportSession;
 import bisq.core.support.messages.ChatMessage;
-import bisq.core.trade.model.trade.Trade;
+import bisq.core.trade.model.bisq_v1.Trade;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;

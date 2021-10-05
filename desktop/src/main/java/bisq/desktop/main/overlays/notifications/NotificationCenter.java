@@ -32,9 +32,9 @@ import bisq.core.support.dispute.refund.RefundManager;
 import bisq.core.trade.model.MakerTrade;
 import bisq.core.trade.model.Tradable;
 import bisq.core.trade.model.TradeManager;
-import bisq.core.trade.model.trade.BuyerTrade;
-import bisq.core.trade.model.trade.SellerTrade;
-import bisq.core.trade.model.trade.Trade;
+import bisq.core.trade.model.bisq_v1.BuyerTrade;
+import bisq.core.trade.model.bisq_v1.SellerTrade;
+import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.user.DontShowAgainLookup;
 import bisq.core.user.Preferences;
 

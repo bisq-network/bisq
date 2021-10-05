@@ -17,8 +17,8 @@
 
 package bisq.core.api.model;
 
-import bisq.core.trade.model.trade.Contract;
-import bisq.core.trade.model.trade.Trade;
+import bisq.core.trade.model.bisq_v1.Contract;
+import bisq.core.trade.model.bisq_v1.Trade;
 
 import bisq.common.Payload;
 

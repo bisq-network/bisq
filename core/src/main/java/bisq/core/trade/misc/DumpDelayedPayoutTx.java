@@ -19,7 +19,7 @@ package bisq.core.trade.misc;
 
 import bisq.core.trade.model.Tradable;
 import bisq.core.trade.model.TradableList;
-import bisq.core.trade.model.trade.Trade;
+import bisq.core.trade.model.bisq_v1.Trade;
 
 import bisq.common.config.Config;
 import bisq.common.file.JsonFileManager;

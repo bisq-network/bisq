@@ -24,7 +24,7 @@ import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeList;
 import bisq.core.support.dispute.DisputeManager;
 import bisq.core.support.dispute.DisputeResult;
-import bisq.core.trade.model.trade.Contract;
+import bisq.core.trade.model.bisq_v1.Contract;
 import bisq.core.user.DontShowAgainLookup;
 
 import bisq.common.crypto.Hash;
