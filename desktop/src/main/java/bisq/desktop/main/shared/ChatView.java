@@ -32,7 +32,6 @@ import bisq.core.support.SupportManager;
 import bisq.core.support.SupportSession;
 import bisq.core.support.dispute.Attachment;
 import bisq.core.support.messages.ChatMessage;
-import bisq.core.util.coin.CoinFormatter;
 
 import bisq.network.p2p.network.Connection;
 
@@ -133,15 +132,13 @@ public class ChatView extends AnchorPane {
     private ChangeListener<Boolean> storedInMailboxPropertyListener, acknowledgedPropertyListener;
     private ChangeListener<String> sendMessageErrorPropertyListener;
 
-    protected final CoinFormatter formatter;
     private EventHandler<KeyEvent> keyEventEventHandler;
     private SupportManager supportManager;
     private Optional<SupportSession> optionalSupportSession = Optional.empty();
     private String counterpartyName;
 
-    public ChatView(SupportManager supportManager, CoinFormatter formatter, String counterpartyName) {
+    public ChatView(SupportManager supportManager, String counterpartyName) {
         this.supportManager = supportManager;
-        this.formatter = formatter;
         this.counterpartyName = counterpartyName;
         allowAttachments = true;
         displayHeader = true;

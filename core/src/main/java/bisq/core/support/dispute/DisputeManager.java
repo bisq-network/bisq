@@ -166,8 +166,9 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
     }
 
     @Override
-    public List<ChatMessage> getAllChatMessages() {
+    public List<ChatMessage> getAllChatMessages(String tradeId) {
         return getDisputeList().stream()
+                .filter(dispute -> dispute.getTradeId().equals(tradeId))
                 .flatMap(dispute -> dispute.getChatMessages().stream())
                 .collect(Collectors.toList());
     }

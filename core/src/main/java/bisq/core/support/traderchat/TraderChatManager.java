@@ -25,6 +25,8 @@ import bisq.core.support.messages.ChatMessage;
 import bisq.core.support.messages.SupportMessage;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
+import bisq.core.trade.closed.ClosedTradableManager;
+import bisq.core.trade.failed.FailedTradesManager;
 
 import bisq.network.p2p.AckMessageSourceType;
 import bisq.network.p2p.NodeAddress;
@@ -35,10 +37,10 @@ import bisq.common.crypto.PubKeyRing;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
-import javafx.collections.ObservableList;
+import javafx.collections.FXCollections;
 
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -46,6 +48,8 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 public class TraderChatManager extends SupportManager {
     private final TradeManager tradeManager;
+    private final ClosedTradableManager closedTradableManager;
+    private final FailedTradesManager failedTradesManager;
     private final PubKeyRing pubKeyRing;
 
 
@@ -57,9 +61,13 @@ public class TraderChatManager extends SupportManager {
     public TraderChatManager(P2PService p2PService,
                              WalletsSetup walletsSetup,
                              TradeManager tradeManager,
+                             ClosedTradableManager closedTradableManager,
+                             FailedTradesManager failedTradesManager,
                              PubKeyRing pubKeyRing) {
         super(p2PService, walletsSetup);
         this.tradeManager = tradeManager;
+        this.closedTradableManager = closedTradableManager;
+        this.failedTradesManager = failedTradesManager;
         this.pubKeyRing = pubKeyRing;
     }
 
@@ -80,7 +88,7 @@ public class TraderChatManager extends SupportManager {
 
     @Override
     public NodeAddress getPeerNodeAddress(ChatMessage message) {
-        return tradeManager.getTradeById(message.getTradeId()).map(trade -> {
+        return getTradeForChat(message).map(trade -> {
             if (trade.getContract() != null) {
                 return trade.getContract().getPeersNodeAddress(pubKeyRing);
             } else {
@@ -91,7 +99,7 @@ public class TraderChatManager extends SupportManager {
 
     @Override
     public PubKeyRing getPeerPubKeyRing(ChatMessage message) {
-        return tradeManager.getTradeById(message.getTradeId()).map(trade -> {
+        return getTradeForChat(message).map(trade -> {
             if (trade.getContract() != null) {
                 return trade.getContract().getPeersPubKeyRing(pubKeyRing);
             } else {
@@ -101,21 +109,19 @@ public class TraderChatManager extends SupportManager {
     }
 
     @Override
-    public List<ChatMessage> getAllChatMessages() {
-        return tradeManager.getObservableList().stream()
-                .flatMap(trade -> trade.getChatMessages().stream())
-                .collect(Collectors.toList());
+    public List<ChatMessage> getAllChatMessages(String tradeId) {
+        return getTradeById(tradeId).map(trade -> trade.getChatMessages()).orElse(FXCollections.emptyObservableList());
     }
 
     @Override
     public boolean channelOpen(ChatMessage message) {
-        return tradeManager.getTradeById(message.getTradeId()).isPresent();
+        return getTradeForChat(message).isPresent();
     }
 
     @Override
     public void addAndPersistChatMessage(ChatMessage message) {
-        tradeManager.getTradeById(message.getTradeId()).ifPresent(trade -> {
-            ObservableList<ChatMessage> chatMessages = trade.getChatMessages();
+        getTradeForChat(message).ifPresent(trade -> {
+            List<ChatMessage> chatMessages = trade.getChatMessages();
             if (chatMessages.stream().noneMatch(m -> m.getUid().equals(message.getUid()))) {
                 if (chatMessages.isEmpty()) {
                     addSystemMsg(trade);
@@ -171,5 +177,23 @@ public class TraderChatManager extends SupportManager {
         trade.getChatMessages().add(chatMessage);
 
         requestPersistence();
+    }
+
+    private Optional<Trade> getTradeById(String tradeId) {
+        // search for a matching tradeId in open trades, else closed trades, else failed trades
+        Optional<Trade> trade = tradeManager.getTradeById(tradeId);
+        if (!trade.isPresent()) {
+            trade = closedTradableManager.getClosedTrades().stream()
+                    .filter(e -> e.getId().equals(tradeId))
+                    .findFirst();
+            if (!trade.isPresent()) {
+                trade = failedTradesManager.getTradeById(tradeId);
+            }
+        }
+        return trade;
+    }
+
+    private Optional<Trade> getTradeForChat(ChatMessage message) {
+        return getTradeById(message.getTradeId());
     }
 }
