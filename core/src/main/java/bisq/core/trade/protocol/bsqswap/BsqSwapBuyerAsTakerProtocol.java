@@ -51,9 +51,9 @@ public class BsqSwapBuyerAsTakerProtocol extends BsqSwapBuyerProtocol implements
 
     @Override
     public void onTakeOffer() {
-        expect(preCondition(PREPARATION == bsqSwapTrade.getState())
+        expect(preCondition(PREPARATION == trade.getState())
                 .with(TAKE_OFFER)
-                .from(bsqSwapTrade.getTradingPeerNodeAddress()))
+                .from(trade.getTradingPeerNodeAddress()))
                 .setup(tasks(
                         ApplyFilter.class,
                         BuyerAsTakerCreatesBsqInputsAndChange.class,
@@ -68,7 +68,7 @@ public class BsqSwapBuyerAsTakerProtocol extends BsqSwapBuyerProtocol implements
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     void handle(FinalizeBsqSwapTxRequest message, NodeAddress sender) {
-        expect(preCondition(PREPARATION == bsqSwapTrade.getState())
+        expect(preCondition(PREPARATION == trade.getState())
                 .with(message)
                 .from(sender))
                 .setup(tasks(
@@ -76,7 +76,7 @@ public class BsqSwapBuyerAsTakerProtocol extends BsqSwapBuyerProtocol implements
                         BuyerFinalizeTx.class,
                         BuyerPublishesTx.class,
                         PublishTradeStatistics.class)
-                        .using(new TradeTaskRunner(bsqSwapTrade,
+                        .using(new TradeTaskRunner(trade,
                                 () -> {
                                     stopTimeout();
                                     handleTaskRunnerSuccess(message);

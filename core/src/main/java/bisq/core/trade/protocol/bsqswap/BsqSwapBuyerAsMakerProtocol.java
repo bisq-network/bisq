@@ -53,7 +53,7 @@ public class BsqSwapBuyerAsMakerProtocol extends BsqSwapBuyerProtocol implements
                                        NodeAddress sender,
                                        ErrorMessageHandler errorMessageHandler) {
         BsqSwapTakeOfferRequest request = (BsqSwapTakeOfferRequest) takeOfferRequest;
-        expect(preCondition(BsqSwapTrade.State.PREPARATION == bsqSwapTrade.getState())
+        expect(preCondition(BsqSwapTrade.State.PREPARATION == trade.getState())
                 .with(request)
                 .from(sender))
                 .setup(tasks(
@@ -61,7 +61,7 @@ public class BsqSwapBuyerAsMakerProtocol extends BsqSwapBuyerProtocol implements
                         ProcessBsqSwapTakeOfferRequest.class,
                         BuyerAsMakerCreatesBsqInputsAndChange.class,
                         SendBsqSwapTxInputsMessage.class)
-                        .using(new TradeTaskRunner(bsqSwapTrade,
+                        .using(new TradeTaskRunner(trade,
                                 () -> handleTaskRunnerSuccess(request),
                                 errorMessage -> {
                                     errorMessageHandler.handleErrorMessage(errorMessage);
@@ -77,7 +77,7 @@ public class BsqSwapBuyerAsMakerProtocol extends BsqSwapBuyerProtocol implements
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     void handle(FinalizeBsqSwapTxRequest message, NodeAddress sender) {
-        expect(preCondition(BsqSwapTrade.State.PREPARATION == bsqSwapTrade.getState())
+        expect(preCondition(BsqSwapTrade.State.PREPARATION == trade.getState())
                 .with(message)
                 .from(sender))
                 .setup(tasks(
@@ -86,7 +86,7 @@ public class BsqSwapBuyerAsMakerProtocol extends BsqSwapBuyerProtocol implements
                         BuyerPublishesTx.class,
                         RemoveOpenOffer.class,
                         PublishTradeStatistics.class)
-                        .using(new TradeTaskRunner(bsqSwapTrade,
+                        .using(new TradeTaskRunner(trade,
                                 () -> {
                                     stopTimeout();
                                     handleTaskRunnerSuccess(message);

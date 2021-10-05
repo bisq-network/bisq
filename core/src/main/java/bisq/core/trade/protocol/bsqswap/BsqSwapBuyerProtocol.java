@@ -27,7 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public abstract class BsqSwapBuyerProtocol extends TradeProtocol {
 
-    protected final BsqSwapTrade bsqSwapTrade;
+    protected final BsqSwapTrade trade;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -36,6 +36,6 @@ public abstract class BsqSwapBuyerProtocol extends TradeProtocol {
     public BsqSwapBuyerProtocol(BsqSwapBuyerTrade trade) {
         super(trade);
 
-        this.bsqSwapTrade = trade;
+        this.trade = trade;
     }
 }

@@ -49,7 +49,7 @@ public class BsqSwapSellerAsMakerProtocol extends BsqSwapSellerProtocol implemen
                                        NodeAddress sender,
                                        ErrorMessageHandler errorMessageHandler) {
         BsqSwapTakeOfferWithTxInputsRequest request = (BsqSwapTakeOfferWithTxInputsRequest) takeOfferRequest;
-        expect(preCondition(BsqSwapTrade.State.PREPARATION == bsqSwapTrade.getState())
+        expect(preCondition(BsqSwapTrade.State.PREPARATION == trade.getState())
                 .with(request)
                 .from(sender))
                 .setup(tasks(
@@ -59,7 +59,7 @@ public class BsqSwapSellerAsMakerProtocol extends BsqSwapSellerProtocol implemen
                         RemoveOpenOffer.class,
                         SellerSetupTxListener.class,
                         SendFinalizeBsqSwapTxRequest.class)
-                        .using(new TradeTaskRunner(bsqSwapTrade,
+                        .using(new TradeTaskRunner(trade,
                                 () -> {
                                     stopTimeout();
                                     handleTaskRunnerSuccess(request);
