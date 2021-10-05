@@ -360,11 +360,7 @@ public class CompletedBsqSwapsView extends ActivatableViewAndModel<VBox, Complet
                                 if (item != null && !empty) {
                                     field = new HyperlinkWithIcon(model.getTradeId(item));
                                     field.setOnAction(event -> {
-                                        // TODO(sq): fix bsq swap trade details
-                                        // tradeDetailsWindow.show(item.getAtomicTrade());
-
-                                        // Show offer for now
-                                        window.show(item.getBsqSwapTrade().getOffer());
+                                        window.show(item.getBsqSwapTrade());
                                     });
                                     field.setTooltip(new Tooltip(Res.get("tooltip.openPopupForDetails")));
                                     setGraphic(field);

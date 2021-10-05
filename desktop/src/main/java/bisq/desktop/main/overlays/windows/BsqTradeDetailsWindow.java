@@ -17,21 +17,13 @@
 
 package bisq.desktop.main.overlays.windows;
 
-import bisq.desktop.Navigation;
-import bisq.desktop.components.AutoTooltipButton;
-import bisq.desktop.components.BusyAnimation;
-import bisq.desktop.components.TitledGroupBg;
-import bisq.desktop.components.TxIdTextField;
 import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.util.DisplayUtils;
-import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 
-import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.locale.CountryUtil;
-import bisq.core.locale.CurrencyUtil;
+import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.locale.Res;
-import bisq.core.monetary.Price;
+import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.trade.model.TradeManager;
@@ -39,50 +31,35 @@ import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.CoinFormatter;
 
-import bisq.common.crypto.KeyRing;
-import bisq.common.util.Tuple2;
-import bisq.common.util.Tuple4;
+import bisq.common.util.Tuple3;
 
-import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import com.google.common.base.Joiner;
-
 import javafx.scene.control.Button;
-import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
-import javafx.scene.control.Tooltip;
-import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 
-import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 
-import java.util.List;
-import java.util.Optional;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.value.ChangeListener;
 
 import static bisq.desktop.util.FormBuilder.*;
 
 public class BsqTradeDetailsWindow extends Overlay<BsqTradeDetailsWindow> {
-    protected static final Logger log = LoggerFactory.getLogger(BsqTradeDetailsWindow.class);
-
     private final CoinFormatter formatter;
-    private final User user;
-    private final KeyRing keyRing;
-    private final Navigation navigation;
-    private final BtcWalletService btcWalletService;
-    private Offer offer;
-    private Coin tradeAmount;
-    private Price tradePrice;
-    private Optional<Runnable> placeOfferHandlerOptional = Optional.empty();
-    private Optional<Runnable> takeOfferHandlerOptional = Optional.empty();
-    private BusyAnimation busyAnimation;
+    private final TradeManager tradeManager;
+    private final BsqWalletService bsqWalletService;
+    private BsqSwapTrade bsqSwapTrade;
+    private ChangeListener<Number> changeListener;
+    private TextArea textArea;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -91,47 +68,22 @@ public class BsqTradeDetailsWindow extends Overlay<BsqTradeDetailsWindow> {
 
     @Inject
     public BsqTradeDetailsWindow(@Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter,
-                                 User user,
-                                 KeyRing keyRing,
-                                 Navigation navigation,
-                                 BtcWalletService btcWalletService) {
+                                 TradeManager tradeManager,
+                                 BsqWalletService bsqWalletService) {
         this.formatter = formatter;
-        this.user = user;
-        this.keyRing = keyRing;
-        this.navigation = navigation;
-        this.btcWalletService = btcWalletService;
+        this.tradeManager = tradeManager;
+        this.bsqWalletService = bsqWalletService;
         type = Type.Confirmation;
     }
 
-    public void show(Offer offer, Coin tradeAmount, Price tradePrice) {
-        this.offer = offer;
-        this.tradeAmount = tradeAmount;
-        this.tradePrice = tradePrice;
+    public void show(BsqSwapTrade bsqSwapTrade) {
+        this.bsqSwapTrade = bsqSwapTrade;
 
         rowIndex = -1;
-        width = 1118;
+        width = 918;
         createGridPane();
         addContent();
         display();
-    }
-
-    public void show(Offer offer) {
-        this.offer = offer;
-        rowIndex = -1;
-        width = 1118;
-        createGridPane();
-        addContent();
-        display();
-    }
-
-    public BsqTradeDetailsWindow onPlaceOffer(Runnable placeOfferHandler) {
-        this.placeOfferHandlerOptional = Optional.of(placeOfferHandler);
-        return this;
-    }
-
-    public BsqTradeDetailsWindow onTakeOffer(Runnable takeOfferHandler) {
-        this.takeOfferHandlerOptional = Optional.of(takeOfferHandler);
-        return this;
     }
 
 
@@ -140,9 +92,9 @@ public class BsqTradeDetailsWindow extends Overlay<BsqTradeDetailsWindow> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    protected void onHidden() {
-        if (busyAnimation != null)
-            busyAnimation.stop();
+    protected void cleanup() {
+        if (textArea != null)
+            textArea.scrollTopProperty().addListener(changeListener);
     }
 
     @Override
@@ -153,283 +105,113 @@ public class BsqTradeDetailsWindow extends Overlay<BsqTradeDetailsWindow> {
     }
 
     private void addContent() {
-        gridPane.getColumnConstraints().get(0).setMinWidth(224);
+        Offer offer = bsqSwapTrade.getOffer();
 
         int rows = 5;
-        List<String> acceptedBanks = offer.getAcceptedBankIds();
-        boolean showAcceptedBanks = acceptedBanks != null && !acceptedBanks.isEmpty();
-        List<String> acceptedCountryCodes = offer.getAcceptedCountryCodes();
-        boolean showAcceptedCountryCodes = acceptedCountryCodes != null && !acceptedCountryCodes.isEmpty();
-        boolean isF2F = offer.getPaymentMethod().equals(PaymentMethod.F2F);
-        boolean showExtraInfo = offer.getPaymentMethod().equals(PaymentMethod.F2F) || offer.getPaymentMethod().equals(PaymentMethod.CASH_BY_MAIL);
-        if (!takeOfferHandlerOptional.isPresent())
-            rows++;
-        if (showAcceptedBanks)
-            rows++;
-        if (showAcceptedCountryCodes)
-            rows++;
-        if (showExtraInfo)
-            rows++;
-        if (isF2F)
-            rows++;
+        addTitledGroupBg(gridPane, ++rowIndex, rows, Res.get("bsqTradeDetailsWindow.headline"));
 
-        boolean showXmrAutoConf = offer.isXmr() && offer.getDirection() == OfferDirection.SELL;
-        if (showXmrAutoConf) {
-            rows++;
-        }
-
-        addTitledGroupBg(gridPane, ++rowIndex, rows, Res.get("shared.Offer"));
-
-        String fiatDirectionInfo = "";
-        String btcDirectionInfo = "";
-        OfferDirection direction = offer.getDirection();
-        String currencyCode = offer.getCurrencyCode();
-        String offerTypeLabel = Res.get("shared.offerType");
+        boolean myOffer = tradeManager.isMyOffer(offer);
+        String bsqDirectionInfo;
+        String btcDirectionInfo;
         String toReceive = " " + Res.get("shared.toReceive");
         String toSpend = " " + Res.get("shared.toSpend");
-        double firstRowDistance = Layout.TWICE_FIRST_ROW_DISTANCE;
-        if (takeOfferHandlerOptional.isPresent()) {
-            addConfirmationLabelLabel(gridPane, rowIndex, offerTypeLabel,
-                    DisplayUtils.getDirectionForTakeOffer(direction, currencyCode), firstRowDistance);
-            fiatDirectionInfo = direction == OfferDirection.BUY ? toReceive : toSpend;
-            btcDirectionInfo = direction == OfferDirection.SELL ? toReceive : toSpend;
-        } else if (placeOfferHandlerOptional.isPresent()) {
-            addConfirmationLabelLabel(gridPane, rowIndex, offerTypeLabel,
-                    DisplayUtils.getOfferDirectionForCreateOffer(direction, currencyCode), firstRowDistance);
-            fiatDirectionInfo = direction == OfferDirection.SELL ? toReceive : toSpend;
-            btcDirectionInfo = direction == OfferDirection.BUY ? toReceive : toSpend;
+        String offerType = Res.get("shared.offerType");
+        if (tradeManager.isBuyer(offer)) {
+            addConfirmationLabelLabel(gridPane, rowIndex, offerType,
+                    DisplayUtils.getDirectionForBuyer(myOffer, offer.getCurrencyCode()), Layout.TWICE_FIRST_ROW_DISTANCE);
+            bsqDirectionInfo = toSpend;
+            btcDirectionInfo = toReceive;
         } else {
-            addConfirmationLabelLabel(gridPane, rowIndex, offerTypeLabel,
-                    DisplayUtils.getDirectionBothSides(direction, currencyCode), firstRowDistance);
-        }
-        String btcAmount = Res.get("shared.btcAmount");
-        if (takeOfferHandlerOptional.isPresent()) {
-            addConfirmationLabelLabel(gridPane, ++rowIndex, btcAmount + btcDirectionInfo,
-                    formatter.formatCoinWithCode(tradeAmount));
-            addConfirmationLabelLabel(gridPane, ++rowIndex, DisplayUtils.formatVolumeLabel(currencyCode) + fiatDirectionInfo,
-                    DisplayUtils.formatVolumeWithCode(offer.getVolumeByAmount(tradeAmount)));
-        } else {
-            addConfirmationLabelLabel(gridPane, ++rowIndex, btcAmount + btcDirectionInfo,
-                    formatter.formatCoinWithCode(offer.getAmount()));
-            addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("offerDetailsWindow.minBtcAmount"),
-                    formatter.formatCoinWithCode(offer.getMinAmount()));
-            String volume = DisplayUtils.formatVolumeWithCode(offer.getVolume());
-            String minVolume = "";
-            if (offer.getVolume() != null && offer.getMinVolume() != null &&
-                    !offer.getVolume().equals(offer.getMinVolume()))
-                minVolume = " " + Res.get("offerDetailsWindow.min", DisplayUtils.formatVolumeWithCode(offer.getMinVolume()));
-            addConfirmationLabelLabel(gridPane, ++rowIndex,
-                    DisplayUtils.formatVolumeLabel(currencyCode) + fiatDirectionInfo, volume + minVolume);
+            addConfirmationLabelLabel(gridPane, rowIndex, offerType,
+                    DisplayUtils.getDirectionForSeller(myOffer, offer.getCurrencyCode()), Layout.TWICE_FIRST_ROW_DISTANCE);
+            bsqDirectionInfo = toReceive;
+            btcDirectionInfo = toSpend;
         }
 
-        String priceLabel = Res.get("shared.price");
-        if (takeOfferHandlerOptional.isPresent()) {
-            addConfirmationLabelLabel(gridPane, ++rowIndex, priceLabel, FormattingUtils.formatPrice(tradePrice));
-        } else {
-            Price price = offer.getPrice();
-            if (offer.isUseMarketBasedPrice()) {
-                addConfirmationLabelLabel(gridPane, ++rowIndex, priceLabel, FormattingUtils.formatPrice(price) +
-                        " " + Res.get("offerDetailsWindow.distance",
-                        FormattingUtils.formatPercentagePrice(offer.getMarketPriceMargin())));
-            } else {
-                addConfirmationLabelLabel(gridPane, ++rowIndex, priceLabel, FormattingUtils.formatPrice(price));
-            }
-        }
-        final PaymentMethod paymentMethod = offer.getPaymentMethod();
-        String bankId = offer.getBankId();
-        if (bankId == null || bankId.equals("null"))
-            bankId = "";
-        else
-            bankId = " (" + bankId + ")";
-        final boolean isSpecificBanks = paymentMethod.equals(PaymentMethod.SPECIFIC_BANKS);
-        final boolean isNationalBanks = paymentMethod.equals(PaymentMethod.NATIONAL_BANK);
-        final boolean isSepa = paymentMethod.equals(PaymentMethod.SEPA);
-        final String makerPaymentAccountId = offer.getMakerPaymentAccountId();
-        final PaymentAccount myPaymentAccount = user.getPaymentAccount(makerPaymentAccountId);
-        String countryCode = offer.getCountryCode();
-        if (offer.isMyOffer(keyRing) && makerPaymentAccountId != null && myPaymentAccount != null) {
-            addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("offerDetailsWindow.myTradingAccount"), myPaymentAccount.getAccountName());
-        } else {
-            final String method = Res.get(paymentMethod.getId());
-            addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("shared.paymentMethod"), method);
-        }
+        addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("shared.btcAmount") + btcDirectionInfo,
+                formatter.formatCoinWithCode(bsqSwapTrade.getAmount()));
 
-        if (showXmrAutoConf) {
-            String isAutoConf = offer.isXmrAutoConf() ?
-                    Res.get("shared.yes") :
-                    Res.get("shared.no");
-            addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("offerbook.xmrAutoConf"), isAutoConf);
-        }
+        Volume volume = bsqSwapTrade.getTradeVolume();
 
-        if (showAcceptedBanks) {
-            if (paymentMethod.equals(PaymentMethod.SAME_BANK)) {
-                addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("offerDetailsWindow.bankId"), acceptedBanks.get(0));
-            } else if (isSpecificBanks) {
-                String value = Joiner.on(", ").join(acceptedBanks);
-                String acceptedBanksLabel = Res.get("shared.acceptedBanks");
-                Tooltip tooltip = new Tooltip(acceptedBanksLabel + " " + value);
-                Label acceptedBanksTextField = addConfirmationLabelLabel(gridPane, ++rowIndex, acceptedBanksLabel, value).second;
-                acceptedBanksTextField.setMouseTransparent(false);
-                acceptedBanksTextField.setTooltip(tooltip);
-            }
-        }
-        if (showAcceptedCountryCodes) {
-            String countries;
-            Tooltip tooltip = null;
-            if (CountryUtil.containsAllSepaEuroCountries(acceptedCountryCodes)) {
-                countries = Res.get("shared.allEuroCountries");
-            } else {
-                if (acceptedCountryCodes.size() == 1) {
-                    countries = CountryUtil.getNameAndCode(acceptedCountryCodes.get(0));
-                    tooltip = new Tooltip(countries);
-                } else {
-                    countries = CountryUtil.getCodesString(acceptedCountryCodes);
-                    tooltip = new Tooltip(CountryUtil.getNamesByCodesString(acceptedCountryCodes));
-                }
-            }
-            Label acceptedCountries = addConfirmationLabelLabel(gridPane, ++rowIndex,
-                    Res.get("shared.acceptedTakerCountries"), countries).second;
-            if (tooltip != null) {
-                acceptedCountries.setMouseTransparent(false);
-                acceptedCountries.setTooltip(tooltip);
-            }
-        }
+        addConfirmationLabelLabel(gridPane, ++rowIndex,
+                DisplayUtils.formatVolumeLabel(offer.getCurrencyCode()) + bsqDirectionInfo,
+                DisplayUtils.formatVolumeWithCode(volume));
 
-        if (isF2F) {
-            addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("payment.f2f.city"), offer.getF2FCity());
-        }
-        if (showExtraInfo) {
-            TextArea textArea = addConfirmationLabelTextArea(gridPane, ++rowIndex, Res.get("payment.shared.extraInfo"), "", 0).second;
-            textArea.setText(offer.getExtraInfo());
-            textArea.setMinHeight(33);
-            textArea.setMaxHeight(textArea.getMinHeight());
-            textArea.setEditable(false);
-        }
+        addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("shared.tradePrice"),
+                FormattingUtils.formatPrice(bsqSwapTrade.getPrice()));
+        String paymentMethodText = Res.get(offer.getPaymentMethod().getId());
+        addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("shared.paymentMethod"), paymentMethodText);
 
-        rows = 3;
-        if (countryCode != null)
+        // second group
+        rows = 4;
+        PaymentAccountPayload buyerPaymentAccountPayload = null;
+        PaymentAccountPayload sellerPaymentAccountPayload = null;
+
+
+        Transaction transaction = bsqSwapTrade.getTransaction(bsqWalletService);
+        if (transaction != null)
             rows++;
-        if (!isF2F)
+        if (bsqSwapTrade.hasFailed())
+            rows += 2;
+        if (bsqSwapTrade.getTradingPeerNodeAddress() != null)
             rows++;
 
-        // At create offer we do not show the makerFeeTxId
-        if (!placeOfferHandlerOptional.isPresent()) {
-            rows++;
-        }
+        addTitledGroupBg(gridPane, ++rowIndex, rows, Res.get("shared.details"), Layout.GROUP_DISTANCE);
+        addConfirmationLabelTextFieldWithCopyIcon(gridPane, rowIndex, Res.get("shared.tradeId"),
+                bsqSwapTrade.getId(), Layout.TWICE_FIRST_ROW_AND_GROUP_DISTANCE);
+        addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("tradeDetailsWindow.tradeDate"),
+                DisplayUtils.formatDateTime(bsqSwapTrade.getDate()));
 
-        TitledGroupBg titledGroupBg = addTitledGroupBg(gridPane, ++rowIndex, rows, Res.get("shared.details"), Layout.GROUP_DISTANCE);
-        addConfirmationLabelTextFieldWithCopyIcon(gridPane, rowIndex, Res.get("shared.offerId"), offer.getId(),
-                Layout.TWICE_FIRST_ROW_AND_GROUP_DISTANCE);
-        addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("offerDetailsWindow.makersOnion"),
-                offer.getMakerNodeAddress().getFullAddress());
-        addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("offerDetailsWindow.creationDate"),
-                DisplayUtils.formatDateTime(offer.getDate()));
-        String value = Res.getWithColAndCap("shared.buyer") +
-                " " +
-                formatter.formatCoinWithCode(offer.getBuyerSecurityDeposit()) +
+        String txFee = Res.get("shared.makerTxFee", formatter.formatCoinWithCode(offer.getTxFee())) +
                 " / " +
-                Res.getWithColAndCap("shared.seller") +
-                " " +
-                formatter.formatCoinWithCode(offer.getSellerSecurityDeposit());
-        addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("shared.securityDeposit"), value);
+                Res.get("shared.takerTxFee", formatter.formatCoinWithCode(99999)); //todo
+        addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("tradeDetailsWindow.txFee"), txFee);
 
-        // At create offer we do not show the makerFeeTxId
-        if (!placeOfferHandlerOptional.isPresent()) {
-            TxIdTextField makerFeeTxIdTextField = addLabelTxIdTextField(gridPane, ++rowIndex,
-                    Res.get("shared.makerFeeTxId"), offer.getOfferFeePaymentTxId()).second;
+        if (bsqSwapTrade.getTradingPeerNodeAddress() != null)
+            addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("tradeDetailsWindow.tradingPeersOnion"),
+                    bsqSwapTrade.getTradingPeerNodeAddress().getFullAddress());
 
-            int finalRows = rows;
-            OfferUtil.getInvalidMakerFeeTxErrorMessage(offer, btcWalletService)
-                    .ifPresent(errorMsg -> {
-                        makerFeeTxIdTextField.getTextField().setId("address-text-field-error");
-                        GridPane.setRowSpan(titledGroupBg, finalRows + 1);
-                        addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("shared.errorMessage"),
-                                errorMsg.replace("\n\n", "\n"));
-                    });
+
+        if (transaction != null)
+            addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.payoutTxId"),
+                    transaction.getTxId().toString());
+
+        if (bsqSwapTrade.hasFailed()) {
+            textArea = addConfirmationLabelTextArea(gridPane, ++rowIndex,
+                    Res.get("shared.errorMessage"), "", 0).second;
+            textArea.setText(bsqSwapTrade.getErrorMessage());
+            textArea.setEditable(false);
+            //TODO paint red
+
+            IntegerProperty count = new SimpleIntegerProperty(20);
+            int rowHeight = 10;
+            textArea.prefHeightProperty().bindBidirectional(count);
+            changeListener = (ov, old, newVal) -> {
+                if (newVal.intValue() > rowHeight)
+                    count.setValue(count.get() + newVal.intValue() + 10);
+            };
+            textArea.scrollTopProperty().addListener(changeListener);
+            textArea.setScrollTop(30);
+
+            addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("tradeDetailsWindow.tradeState"),
+                    bsqSwapTrade.getTradePhase().name());
         }
 
-        if (countryCode != null && !isF2F)
-            addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("offerDetailsWindow.countryBank"),
-                    CountryUtil.getNameAndCode(countryCode));
+        Tuple3<Button, Button, HBox> tuple = add2ButtonsWithBox(gridPane, ++rowIndex,
+                Res.get("tradeDetailsWindow.detailData"), Res.get("shared.close"), 15, false);
+        Button viewContractButton = tuple.first;
+        viewContractButton.setMaxWidth(Region.USE_COMPUTED_SIZE);
+        Button closeButton = tuple.second;
+        closeButton.setMaxWidth(Region.USE_COMPUTED_SIZE);
+        HBox hBox = tuple.third;
+        GridPane.setColumnSpan(hBox, 2);
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+        hBox.getChildren().add(0, spacer);
 
-        if (placeOfferHandlerOptional.isPresent()) {
-            addTitledGroupBg(gridPane, ++rowIndex, 1, Res.get("offerDetailsWindow.commitment"), Layout.GROUP_DISTANCE);
-            final Tuple2<Label, Label> labelLabelTuple2 = addConfirmationLabelLabel(gridPane, rowIndex, Res.get("offerDetailsWindow.agree"), Res.get("createOffer.tac"),
-                    Layout.TWICE_FIRST_ROW_AND_GROUP_DISTANCE);
-            labelLabelTuple2.second.setWrapText(true);
-
-            addConfirmAndCancelButtons(true);
-        } else if (takeOfferHandlerOptional.isPresent()) {
-            addTitledGroupBg(gridPane, ++rowIndex, 1, Res.get("shared.contract"), Layout.GROUP_DISTANCE);
-            final Tuple2<Label, Label> labelLabelTuple2 = addConfirmationLabelLabel(gridPane, rowIndex, Res.get("offerDetailsWindow.tac"), Res.get("takeOffer.tac"),
-                    Layout.TWICE_FIRST_ROW_AND_GROUP_DISTANCE);
-            labelLabelTuple2.second.setWrapText(true);
-
-            addConfirmAndCancelButtons(false);
-        } else {
-            Button closeButton = addButtonAfterGroup(gridPane, ++rowIndex, Res.get("shared.close"));
-            GridPane.setColumnIndex(closeButton, 1);
-            GridPane.setHalignment(closeButton, HPos.RIGHT);
-
-            closeButton.setOnAction(e -> {
-                closeHandlerOptional.ifPresent(Runnable::run);
-                hide();
-            });
-        }
-    }
-
-    private void addConfirmAndCancelButtons(boolean isPlaceOffer) {
-        boolean isBuyOffer = offer.isBuyOffer();
-        boolean isBuyerRole = isPlaceOffer == isBuyOffer;
-        String placeOfferButtonText = isBuyerRole ?
-                Res.get("offerDetailsWindow.confirm.maker", Res.get("shared.buy")) :
-                Res.get("offerDetailsWindow.confirm.maker", Res.get("shared.sell"));
-        String takeOfferButtonText = isBuyerRole ?
-                Res.get("offerDetailsWindow.confirm.taker", Res.get("shared.buy")) :
-                Res.get("offerDetailsWindow.confirm.taker", Res.get("shared.sell"));
-
-        ImageView iconView = new ImageView();
-        iconView.setId(isBuyerRole ? "image-buy-white" : "image-sell-white");
-
-        Tuple4<Button, BusyAnimation, Label, HBox> placeOfferTuple = addButtonBusyAnimationLabelAfterGroup(gridPane,
-                ++rowIndex, 1,
-                isPlaceOffer ? placeOfferButtonText : takeOfferButtonText);
-
-        AutoTooltipButton button = (AutoTooltipButton) placeOfferTuple.first;
-        button.setMinHeight(40);
-        button.setPadding(new Insets(0, 20, 0, 20));
-        button.setGraphic(iconView);
-        button.setGraphicTextGap(10);
-        button.setId(isBuyerRole ? "buy-button-big" : "sell-button-big");
-        button.updateText(isPlaceOffer ? placeOfferButtonText : takeOfferButtonText);
-
-        busyAnimation = placeOfferTuple.second;
-        Label spinnerInfoLabel = placeOfferTuple.third;
-
-        Button cancelButton = new AutoTooltipButton(Res.get("shared.cancel"));
-        cancelButton.setDefaultButton(false);
-        cancelButton.setOnAction(e -> {
+        closeButton.setOnAction(e -> {
             closeHandlerOptional.ifPresent(Runnable::run);
             hide();
-        });
-
-        placeOfferTuple.fourth.getChildren().add(cancelButton);
-
-        button.setOnAction(e -> {
-            if (GUIUtil.canCreateOrTakeOfferOrShowPopup(user, navigation,
-                    CurrencyUtil.getTradeCurrency(offer.getCurrencyCode()).get())) {
-                button.setDisable(true);
-                cancelButton.setDisable(true);
-                // temporarily disabled due to high CPU usage (per issue #4649)
-                //  busyAnimation.play();
-                if (isPlaceOffer) {
-                    spinnerInfoLabel.setText(Res.get("createOffer.fundsBox.placeOfferSpinnerInfo"));
-                    placeOfferHandlerOptional.ifPresent(Runnable::run);
-                } else {
-                    spinnerInfoLabel.setText(Res.get("takeOffer.fundsBox.takeOfferSpinnerInfo"));
-                    takeOfferHandlerOptional.ifPresent(Runnable::run);
-                }
-            }
         });
     }
 }

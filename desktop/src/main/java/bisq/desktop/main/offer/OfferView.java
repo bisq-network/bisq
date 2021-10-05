@@ -188,7 +188,7 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
         root.getTabs().removeListener(tabListChangeListener);
     }
 
-    private String getCreateOfferTabName(Class viewClass) {
+    private String getCreateOfferTabName(Class<? extends View> viewClass) {
         if (viewClass == BsqSwapCreateOfferView.class) {
             return Res.get("offerbook.bsqSwap.createOffer").toUpperCase();
         }
