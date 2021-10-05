@@ -36,6 +36,7 @@ import bisq.core.trade.model.TradeState;
 import bisq.core.trade.protocol.ProtocolModel;
 import bisq.core.trade.protocol.Provider;
 import bisq.core.trade.protocol.trade.ProcessModel;
+import bisq.core.trade.protocol.trade.TradingPeer;
 import bisq.core.trade.txproof.AssetTxProofResult;
 import bisq.core.util.VolumeUtil;
 
@@ -725,7 +726,7 @@ public abstract class Trade extends TradeModel {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Model implementation
+    // TradeModel implementation
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
@@ -742,13 +743,8 @@ public abstract class Trade extends TradeModel {
         return state.getTradePhase();
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // TradeModel implementation
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
     @Override
-    public ProtocolModel getTradeProtocolModel() {
+    public ProtocolModel<TradingPeer> getTradeProtocolModel() {
         return processModel;
     }
 
@@ -925,15 +921,15 @@ public abstract class Trade extends TradeModel {
     }
 
     public boolean isInPreparation() {
-        return getTradeState().getTradePhase().ordinal() == Phase.INIT.ordinal();
+        return getTradePhase().ordinal() == Phase.INIT.ordinal();
     }
 
     public boolean isTakerFeePublished() {
-        return getTradeState().getTradePhase().ordinal() >= Phase.TAKER_FEE_PUBLISHED.ordinal();
+        return getTradePhase().ordinal() >= Phase.TAKER_FEE_PUBLISHED.ordinal();
     }
 
     public boolean isDepositPublished() {
-        return getTradeState().getTradePhase().ordinal() >= Phase.DEPOSIT_PUBLISHED.ordinal();
+        return getTradePhase().ordinal() >= Phase.DEPOSIT_PUBLISHED.ordinal();
     }
 
     public boolean isFundsLockedIn() {
@@ -967,23 +963,23 @@ public abstract class Trade extends TradeModel {
     }
 
     public boolean isDepositConfirmed() {
-        return getTradeState().getTradePhase().ordinal() >= Phase.DEPOSIT_CONFIRMED.ordinal();
+        return getTradePhase().ordinal() >= Phase.DEPOSIT_CONFIRMED.ordinal();
     }
 
     public boolean isFiatSent() {
-        return getTradeState().getTradePhase().ordinal() >= Phase.FIAT_SENT.ordinal();
+        return getTradePhase().ordinal() >= Phase.FIAT_SENT.ordinal();
     }
 
     public boolean isFiatReceived() {
-        return getTradeState().getTradePhase().ordinal() >= Phase.FIAT_RECEIVED.ordinal();
+        return getTradePhase().ordinal() >= Phase.FIAT_RECEIVED.ordinal();
     }
 
     public boolean isPayoutPublished() {
-        return getTradeState().getTradePhase().ordinal() >= Phase.PAYOUT_PUBLISHED.ordinal() || isWithdrawn();
+        return getTradePhase().ordinal() >= Phase.PAYOUT_PUBLISHED.ordinal() || isWithdrawn();
     }
 
     public boolean isWithdrawn() {
-        return getTradeState().getTradePhase().ordinal() == Phase.WITHDRAWN.ordinal();
+        return getTradePhase().ordinal() == Phase.WITHDRAWN.ordinal();
     }
 
     public ReadOnlyObjectProperty<State> stateProperty() {

@@ -27,7 +27,6 @@ import bisq.core.trade.model.FailedTradesManager;
 import bisq.core.trade.model.Tradable;
 import bisq.core.trade.model.TradeManager;
 import bisq.core.trade.model.TradeModel;
-import bisq.core.trade.model.TradeState;
 import bisq.core.trade.model.trade.SellerTrade;
 import bisq.core.trade.model.trade.Trade;
 import bisq.core.trade.protocol.trade.SellerProtocol;
@@ -348,7 +347,7 @@ public class XmrTxProofService implements AssetTxProofService {
         return (checkNotNull(trade.getOffer()).getCurrencyCode().equals("XMR"));
     }
 
-    private boolean isExpectedTradeState(TradeState newValue) {
+    private boolean isExpectedTradeState(Trade.State newValue) {
         return newValue == Trade.State.SELLER_RECEIVED_FIAT_PAYMENT_INITIATED_MSG;
     }
 

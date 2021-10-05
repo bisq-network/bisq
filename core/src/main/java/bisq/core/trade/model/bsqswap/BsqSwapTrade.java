@@ -76,6 +76,7 @@ public abstract class BsqSwapTrade extends TradeModel {
 
         @Override
         public TradePhase getTradePhase() {
+            // todo: do we want a phase? is null ok to return?
             return null;
         }
     }
@@ -171,7 +172,7 @@ public abstract class BsqSwapTrade extends TradeModel {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Model implementation
+    // TradeModel implementation
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override

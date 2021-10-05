@@ -19,7 +19,6 @@ package bisq.core.trade.protocol.bsqswap;
 
 
 import bisq.core.trade.model.bsqswap.BsqSwapSellerAsMakerTrade;
-import bisq.core.trade.model.bsqswap.BsqSwapTrade;
 import bisq.core.trade.protocol.TradeTaskRunner;
 import bisq.core.trade.protocol.bsqswap.tasks.ApplyFilter;
 import bisq.core.trade.protocol.bsqswap.tasks.maker.RemoveOpenOffer;
@@ -37,6 +36,8 @@ import bisq.common.handlers.ErrorMessageHandler;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.core.trade.model.bsqswap.BsqSwapTrade.State.PREPARATION;
+
 @Slf4j
 public class BsqSwapSellerAsMakerProtocol extends BsqSwapSellerProtocol implements BsqSwapMakerProtocol {
     public BsqSwapSellerAsMakerProtocol(BsqSwapSellerAsMakerTrade trade) {
@@ -49,7 +50,7 @@ public class BsqSwapSellerAsMakerProtocol extends BsqSwapSellerProtocol implemen
                                        NodeAddress sender,
                                        ErrorMessageHandler errorMessageHandler) {
         BsqSwapTakeOfferWithTxInputsRequest request = (BsqSwapTakeOfferWithTxInputsRequest) takeOfferRequest;
-        expect(preCondition(BsqSwapTrade.State.PREPARATION == trade.getTradeState())
+        expect(preCondition(PREPARATION == trade.getTradeState())
                 .with(request)
                 .from(sender))
                 .setup(tasks(

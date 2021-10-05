@@ -38,7 +38,6 @@ public class SellerAsMakerProcessDepositTxMessage extends TradeTask {
     protected void run() {
         try {
             runInterceptHook();
-            log.debug("current trade state " + trade.getTradeState());
             DepositTxMessage message = (DepositTxMessage) processModel.getTradeMessage();
             Validator.checkTradeId(processModel.getOfferId(), message);
             checkNotNull(message);
