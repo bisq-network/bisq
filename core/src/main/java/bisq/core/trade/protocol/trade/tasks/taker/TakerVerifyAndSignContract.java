@@ -20,7 +20,7 @@ package bisq.core.trade.protocol.trade.tasks.taker;
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.offer.OfferPayload;
-import bisq.core.trade.model.Contract;
+import bisq.core.trade.model.trade.Contract;
 import bisq.core.trade.model.trade.SellerAsTakerTrade;
 import bisq.core.trade.model.trade.Trade;
 import bisq.core.trade.protocol.trade.ProcessModel;

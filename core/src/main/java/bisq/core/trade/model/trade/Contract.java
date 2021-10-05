@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.model;
+package bisq.core.trade.model.trade;
 
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.monetary.Price;

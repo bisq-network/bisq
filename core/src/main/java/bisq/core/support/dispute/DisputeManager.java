@@ -37,8 +37,8 @@ import bisq.core.support.dispute.messages.PeerOpenedDisputeMessage;
 import bisq.core.support.messages.ChatMessage;
 import bisq.core.trade.misc.TradeDataValidation;
 import bisq.core.trade.model.ClosedTradableManager;
-import bisq.core.trade.model.Contract;
 import bisq.core.trade.model.TradeManager;
+import bisq.core.trade.model.trade.Contract;
 import bisq.core.trade.model.trade.Trade;
 
 import bisq.network.p2p.BootstrapListener;

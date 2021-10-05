@@ -34,7 +34,7 @@ import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.mempool.MempoolService;
 import bisq.core.trade.misc.TradeUtil;
 import bisq.core.trade.model.ClosedTradableManager;
-import bisq.core.trade.model.Contract;
+import bisq.core.trade.model.trade.Contract;
 import bisq.core.trade.model.trade.Trade;
 import bisq.core.user.User;
 import bisq.core.util.FormattingUtils;
