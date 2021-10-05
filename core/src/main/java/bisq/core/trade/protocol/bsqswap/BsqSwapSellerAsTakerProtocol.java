@@ -22,7 +22,6 @@ import bisq.core.offer.Offer;
 import bisq.core.trade.messages.TradeMessage;
 import bisq.core.trade.messages.bsqswap.BsqSwapTxInputsMessage;
 import bisq.core.trade.model.bsqswap.BsqSwapSellerAsTakerTrade;
-import bisq.core.trade.model.bsqswap.BsqSwapTrade;
 import bisq.core.trade.protocol.TradeTaskRunner;
 import bisq.core.trade.protocol.bsqswap.tasks.ApplyFilter;
 import bisq.core.trade.protocol.bsqswap.tasks.seller.SellerSetupTxListener;
@@ -30,12 +29,13 @@ import bisq.core.trade.protocol.bsqswap.tasks.seller.SendFinalizeBsqSwapTxReques
 import bisq.core.trade.protocol.bsqswap.tasks.seller_as_taker.ProcessBsqSwapTxInputsMessage;
 import bisq.core.trade.protocol.bsqswap.tasks.seller_as_taker.SellerAsTakerCreatesAndSignsTx;
 import bisq.core.trade.protocol.bsqswap.tasks.seller_as_taker.SendBsqSwapTakeOfferRequest;
-import bisq.core.trade.protocol.trade.TakerProtocol;
 
 import bisq.network.p2p.NodeAddress;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.core.trade.model.bsqswap.BsqSwapTrade.State.PREPARATION;
+import static bisq.core.trade.protocol.trade.TakerProtocol.TakerEvent.TAKE_OFFER;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -49,9 +49,8 @@ public class BsqSwapSellerAsTakerProtocol extends BsqSwapSellerProtocol implemen
 
     @Override
     public void onTakeOffer() {
-        TakerProtocol.TakerEvent event = TakerProtocol.TakerEvent.TAKE_OFFER;
-        expect(preCondition(BsqSwapTrade.State.PREPARATION == bsqSwapTrade.getState())
-                .with(event)
+        expect(preCondition(PREPARATION == bsqSwapTrade.getState())
+                .with(TAKE_OFFER)
                 .from(bsqSwapTrade.getTradingPeerNodeAddress()))
                 .setup(tasks(
                         ApplyFilter.class,
@@ -65,7 +64,7 @@ public class BsqSwapSellerAsTakerProtocol extends BsqSwapSellerProtocol implemen
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     void handle(BsqSwapTxInputsMessage message, NodeAddress sender) {
-        expect(preCondition(BsqSwapTrade.State.PREPARATION == bsqSwapTrade.getState())
+        expect(preCondition(PREPARATION == bsqSwapTrade.getState())
                 .with(message)
                 .from(sender))
                 .setup(tasks(

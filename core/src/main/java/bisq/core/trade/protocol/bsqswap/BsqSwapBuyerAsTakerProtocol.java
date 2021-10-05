@@ -22,7 +22,6 @@ import bisq.core.offer.Offer;
 import bisq.core.trade.messages.TradeMessage;
 import bisq.core.trade.messages.bsqswap.FinalizeBsqSwapTxRequest;
 import bisq.core.trade.model.bsqswap.BsqSwapBuyerAsTakerTrade;
-import bisq.core.trade.model.bsqswap.BsqSwapTrade;
 import bisq.core.trade.protocol.TradeTaskRunner;
 import bisq.core.trade.protocol.bsqswap.tasks.ApplyFilter;
 import bisq.core.trade.protocol.bsqswap.tasks.buyer.BuyerFinalizeTx;
@@ -31,12 +30,13 @@ import bisq.core.trade.protocol.bsqswap.tasks.buyer.ProcessFinalizeBsqSwapTxRequ
 import bisq.core.trade.protocol.bsqswap.tasks.buyer.PublishTradeStatistics;
 import bisq.core.trade.protocol.bsqswap.tasks.buyer_as_taker.BuyerAsTakerCreatesBsqInputsAndChange;
 import bisq.core.trade.protocol.bsqswap.tasks.buyer_as_taker.SendBsqSwapTakeOfferWithTxInputsRequest;
-import bisq.core.trade.protocol.trade.TakerProtocol;
 
 import bisq.network.p2p.NodeAddress;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.core.trade.model.bsqswap.BsqSwapTrade.State.PREPARATION;
+import static bisq.core.trade.protocol.trade.TakerProtocol.TakerEvent.TAKE_OFFER;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -44,8 +44,6 @@ public class BsqSwapBuyerAsTakerProtocol extends BsqSwapBuyerProtocol implements
 
     public BsqSwapBuyerAsTakerProtocol(BsqSwapBuyerAsTakerTrade trade) {
         super(trade);
-        log.error("BsqSwapBuyerAsTakerProtocol " + trade.getId());
-
 
         Offer offer = checkNotNull(trade.getOffer());
         tradeProtocolModel.getTradePeer().setPubKeyRing(offer.getPubKeyRing());
@@ -53,9 +51,8 @@ public class BsqSwapBuyerAsTakerProtocol extends BsqSwapBuyerProtocol implements
 
     @Override
     public void onTakeOffer() {
-        TakerProtocol.TakerEvent event = TakerProtocol.TakerEvent.TAKE_OFFER;
-        expect(preCondition(BsqSwapTrade.State.PREPARATION == bsqSwapTrade.getState())
-                .with(event)
+        expect(preCondition(PREPARATION == bsqSwapTrade.getState())
+                .with(TAKE_OFFER)
                 .from(bsqSwapTrade.getTradingPeerNodeAddress()))
                 .setup(tasks(
                         ApplyFilter.class,
@@ -71,7 +68,7 @@ public class BsqSwapBuyerAsTakerProtocol extends BsqSwapBuyerProtocol implements
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     void handle(FinalizeBsqSwapTxRequest message, NodeAddress sender) {
-        expect(preCondition(BsqSwapTrade.State.PREPARATION == bsqSwapTrade.getState())
+        expect(preCondition(PREPARATION == bsqSwapTrade.getState())
                 .with(message)
                 .from(sender))
                 .setup(tasks(
