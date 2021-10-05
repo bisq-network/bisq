@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.protocol.bisq_v1;
+package bisq.core.trade.protocol;
 
 import bisq.core.trade.model.TradeModel;
 import bisq.core.trade.model.bisq_v1.BuyerAsMakerTrade;
@@ -26,7 +26,10 @@ import bisq.core.trade.model.bsqswap.BsqSwapBuyerAsMakerTrade;
 import bisq.core.trade.model.bsqswap.BsqSwapBuyerAsTakerTrade;
 import bisq.core.trade.model.bsqswap.BsqSwapSellerAsMakerTrade;
 import bisq.core.trade.model.bsqswap.BsqSwapSellerAsTakerTrade;
-import bisq.core.trade.protocol.TradeProtocol;
+import bisq.core.trade.protocol.bisq_v1.BuyerAsMakerProtocol;
+import bisq.core.trade.protocol.bisq_v1.BuyerAsTakerProtocol;
+import bisq.core.trade.protocol.bisq_v1.SellerAsMakerProtocol;
+import bisq.core.trade.protocol.bisq_v1.SellerAsTakerProtocol;
 import bisq.core.trade.protocol.bsqswap.BsqSwapBuyerAsMakerProtocol;
 import bisq.core.trade.protocol.bsqswap.BsqSwapBuyerAsTakerProtocol;
 import bisq.core.trade.protocol.bsqswap.BsqSwapSellerAsMakerProtocol;
