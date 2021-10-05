@@ -15,86 +15,94 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.messages.trade;
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
 
-import bisq.core.trade.messages.TradeMessage;
+package bisq.core.trade.protocol.messages.trade;
 
-import bisq.network.p2p.DirectMessage;
+import bisq.core.payment.payload.PaymentAccountPayload;
+import bisq.core.proto.CoreProtoResolver;
+
 import bisq.network.p2p.NodeAddress;
 
 import bisq.common.app.Version;
-import bisq.common.util.Utilities;
-
-import com.google.protobuf.ByteString;
 
 import lombok.EqualsAndHashCode;
-import lombok.Value;
+import lombok.Getter;
 
+// Added at v1.7.0
 @EqualsAndHashCode(callSuper = true)
-@Value
-public final class DelayedPayoutTxSignatureRequest extends TradeMessage implements DirectMessage {
+@Getter
+public final class ShareBuyerPaymentAccountMessage extends TradeMailboxMessage {
     private final NodeAddress senderNodeAddress;
-    private final byte[] delayedPayoutTx;
-    private final byte[] delayedPayoutTxSellerSignature;
+    private final PaymentAccountPayload buyerPaymentAccountPayload;
 
-    public DelayedPayoutTxSignatureRequest(String uid,
+    public ShareBuyerPaymentAccountMessage(String uid,
                                            String tradeId,
                                            NodeAddress senderNodeAddress,
-                                           byte[] delayedPayoutTx,
-                                           byte[] delayedPayoutTxSellerSignature) {
+                                           PaymentAccountPayload buyerPaymentAccountPayload) {
         this(Version.getP2PMessageVersion(),
                 uid,
                 tradeId,
                 senderNodeAddress,
-                delayedPayoutTx,
-                delayedPayoutTxSellerSignature);
+                buyerPaymentAccountPayload);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private DelayedPayoutTxSignatureRequest(int messageVersion,
+    private ShareBuyerPaymentAccountMessage(int messageVersion,
                                             String uid,
                                             String tradeId,
                                             NodeAddress senderNodeAddress,
-                                            byte[] delayedPayoutTx,
-                                            byte[] delayedPayoutTxSellerSignature) {
+                                            PaymentAccountPayload buyerPaymentAccountPayload) {
         super(messageVersion, tradeId, uid);
         this.senderNodeAddress = senderNodeAddress;
-        this.delayedPayoutTx = delayedPayoutTx;
-        this.delayedPayoutTxSellerSignature = delayedPayoutTxSellerSignature;
+        this.buyerPaymentAccountPayload = buyerPaymentAccountPayload;
     }
-
 
     @Override
     public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
-        return getNetworkEnvelopeBuilder()
-                .setDelayedPayoutTxSignatureRequest(protobuf.DelayedPayoutTxSignatureRequest.newBuilder()
+        return getNetworkEnvelopeBuilder().setShareBuyerPaymentAccountMessage(
+                protobuf.ShareBuyerPaymentAccountMessage.newBuilder()
                         .setUid(uid)
                         .setTradeId(tradeId)
                         .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
-                        .setDelayedPayoutTx(ByteString.copyFrom(delayedPayoutTx))
-                        .setDelayedPayoutTxSellerSignature(ByteString.copyFrom(delayedPayoutTxSellerSignature)))
+                        .setBuyerPaymentAccountPayload((protobuf.PaymentAccountPayload) buyerPaymentAccountPayload.toProtoMessage()))
                 .build();
     }
 
-    public static DelayedPayoutTxSignatureRequest fromProto(protobuf.DelayedPayoutTxSignatureRequest proto,
+    public static ShareBuyerPaymentAccountMessage fromProto(protobuf.ShareBuyerPaymentAccountMessage proto,
+                                                            CoreProtoResolver coreProtoResolver,
                                                             int messageVersion) {
-        return new DelayedPayoutTxSignatureRequest(messageVersion,
+        PaymentAccountPayload buyerPaymentAccountPayload = proto.hasBuyerPaymentAccountPayload() ?
+                coreProtoResolver.fromProto(proto.getBuyerPaymentAccountPayload()) : null;
+        return new ShareBuyerPaymentAccountMessage(messageVersion,
                 proto.getUid(),
                 proto.getTradeId(),
                 NodeAddress.fromProto(proto.getSenderNodeAddress()),
-                proto.getDelayedPayoutTx().toByteArray(),
-                proto.getDelayedPayoutTxSellerSignature().toByteArray());
+                buyerPaymentAccountPayload);
     }
 
     @Override
     public String toString() {
-        return "DelayedPayoutTxSignatureRequest{" +
+        return "ShareBuyerPaymentAccountMessage{" +
                 "\n     senderNodeAddress=" + senderNodeAddress +
-                ",\n     delayedPayoutTx=" + Utilities.bytesAsHexString(delayedPayoutTx) +
-                ",\n     delayedPayoutTxSellerSignature=" + Utilities.bytesAsHexString(delayedPayoutTxSellerSignature) +
                 "\n} " + super.toString();
     }
 }

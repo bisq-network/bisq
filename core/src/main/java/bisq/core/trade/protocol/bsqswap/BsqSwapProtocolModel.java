@@ -26,10 +26,10 @@ import bisq.core.dao.DaoFacade;
 import bisq.core.filter.FilterManager;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OpenOfferManager;
-import bisq.core.trade.messages.TradeMessage;
 import bisq.core.trade.model.TradeManager;
 import bisq.core.trade.protocol.ProtocolModel;
 import bisq.core.trade.protocol.Provider;
+import bisq.core.trade.protocol.messages.TradeMessage;
 
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;

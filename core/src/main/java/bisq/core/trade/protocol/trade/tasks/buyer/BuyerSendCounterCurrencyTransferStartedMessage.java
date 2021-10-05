@@ -19,10 +19,10 @@ package bisq.core.trade.protocol.trade.tasks.buyer;
 
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.network.MessageState;
-import bisq.core.trade.messages.TradeMessage;
-import bisq.core.trade.messages.trade.CounterCurrencyTransferStartedMessage;
-import bisq.core.trade.messages.trade.TradeMailboxMessage;
 import bisq.core.trade.model.trade.Trade;
+import bisq.core.trade.protocol.messages.TradeMessage;
+import bisq.core.trade.protocol.messages.trade.CounterCurrencyTransferStartedMessage;
+import bisq.core.trade.protocol.messages.trade.TradeMailboxMessage;
 import bisq.core.trade.protocol.trade.tasks.SendMailboxMessageTask;
 
 import bisq.common.Timer;

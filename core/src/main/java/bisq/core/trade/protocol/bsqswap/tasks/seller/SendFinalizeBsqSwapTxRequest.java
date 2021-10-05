@@ -17,9 +17,9 @@
 
 package bisq.core.trade.protocol.bsqswap.tasks.seller;
 
-import bisq.core.trade.messages.bsqswap.FinalizeBsqSwapTxRequest;
 import bisq.core.trade.model.bsqswap.BsqSwapTrade;
 import bisq.core.trade.protocol.bsqswap.tasks.BsqSwapTask;
+import bisq.core.trade.protocol.messages.bsqswap.FinalizeBsqSwapTxRequest;
 
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.SendDirectMessageListener;

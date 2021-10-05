@@ -17,9 +17,9 @@
 
 package bisq.core.trade.protocol.bsqswap.tasks.seller_as_taker;
 
-import bisq.core.trade.messages.bsqswap.BsqSwapTxInputsMessage;
 import bisq.core.trade.model.bsqswap.BsqSwapTrade;
 import bisq.core.trade.protocol.bsqswap.tasks.seller.ProcessTxInputsMessage;
+import bisq.core.trade.protocol.messages.bsqswap.BsqSwapTxInputsMessage;
 
 import bisq.common.taskrunner.TaskRunner;
 

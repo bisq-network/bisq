@@ -17,8 +17,8 @@
 
 package bisq.core.trade.protocol.trade.tasks.buyer_as_taker;
 
-import bisq.core.trade.messages.trade.DepositTxMessage;
 import bisq.core.trade.model.trade.Trade;
+import bisq.core.trade.protocol.messages.trade.DepositTxMessage;
 import bisq.core.trade.protocol.trade.tasks.TradeTask;
 
 import bisq.network.p2p.NodeAddress;

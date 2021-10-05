@@ -17,9 +17,9 @@
 
 package bisq.core.trade.protocol.bsqswap.tasks.buyer_as_maker;
 
-import bisq.core.trade.messages.bsqswap.BsqSwapTxInputsMessage;
 import bisq.core.trade.model.bsqswap.BsqSwapTrade;
 import bisq.core.trade.protocol.bsqswap.tasks.BsqSwapTask;
+import bisq.core.trade.protocol.messages.bsqswap.BsqSwapTxInputsMessage;
 
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.SendDirectMessageListener;

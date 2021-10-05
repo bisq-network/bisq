@@ -15,11 +15,8 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.messages.trade;
+package bisq.core.trade.protocol.messages.trade;
 
-import bisq.core.trade.messages.TradeMessage;
-
-import bisq.network.p2p.DirectMessage;
 import bisq.network.p2p.NodeAddress;
 
 import bisq.common.app.Version;
@@ -29,73 +26,73 @@ import com.google.protobuf.ByteString;
 
 import lombok.EqualsAndHashCode;
 import lombok.Value;
+import lombok.extern.slf4j.Slf4j;
 
-@EqualsAndHashCode(callSuper = true)
+@Slf4j
 @Value
-public final class DelayedPayoutTxSignatureResponse extends TradeMessage implements DirectMessage {
+@EqualsAndHashCode(callSuper = true)
+public class MediatedPayoutTxSignatureMessage extends TradeMailboxMessage {
+    private final byte[] txSignature;
     private final NodeAddress senderNodeAddress;
-    private final byte[] delayedPayoutTxBuyerSignature;
-    private final byte[] depositTx;
 
-    public DelayedPayoutTxSignatureResponse(String uid,
+    public MediatedPayoutTxSignatureMessage(byte[] txSignature,
                                             String tradeId,
                                             NodeAddress senderNodeAddress,
-                                            byte[] delayedPayoutTxBuyerSignature,
-                                            byte[] depositTx) {
-        this(Version.getP2PMessageVersion(),
-                uid,
+                                            String uid) {
+        this(txSignature,
                 tradeId,
                 senderNodeAddress,
-                delayedPayoutTxBuyerSignature,
-                depositTx);
+                uid,
+                Version.getP2PMessageVersion());
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private DelayedPayoutTxSignatureResponse(int messageVersion,
-                                             String uid,
+    private MediatedPayoutTxSignatureMessage(byte[] txSignature,
                                              String tradeId,
                                              NodeAddress senderNodeAddress,
-                                             byte[] delayedPayoutTxBuyerSignature,
-                                             byte[] depositTx) {
+                                             String uid,
+                                             int messageVersion) {
         super(messageVersion, tradeId, uid);
+        this.txSignature = txSignature;
         this.senderNodeAddress = senderNodeAddress;
-        this.delayedPayoutTxBuyerSignature = delayedPayoutTxBuyerSignature;
-        this.depositTx = depositTx;
     }
-
 
     @Override
     public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
         return getNetworkEnvelopeBuilder()
-                .setDelayedPayoutTxSignatureResponse(protobuf.DelayedPayoutTxSignatureResponse.newBuilder()
-                        .setUid(uid)
+                .setMediatedPayoutTxSignatureMessage(protobuf.MediatedPayoutTxSignatureMessage.newBuilder()
+                        .setTxSignature(ByteString.copyFrom(txSignature))
                         .setTradeId(tradeId)
                         .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
-                        .setDelayedPayoutTxBuyerSignature(ByteString.copyFrom(delayedPayoutTxBuyerSignature))
-                        .setDepositTx(ByteString.copyFrom(depositTx))
-                )
+                        .setUid(uid))
                 .build();
     }
 
-    public static DelayedPayoutTxSignatureResponse fromProto(protobuf.DelayedPayoutTxSignatureResponse proto,
+    public static MediatedPayoutTxSignatureMessage fromProto(protobuf.MediatedPayoutTxSignatureMessage proto,
                                                              int messageVersion) {
-        return new DelayedPayoutTxSignatureResponse(messageVersion,
-                proto.getUid(),
+        return new MediatedPayoutTxSignatureMessage(proto.getTxSignature().toByteArray(),
                 proto.getTradeId(),
                 NodeAddress.fromProto(proto.getSenderNodeAddress()),
-                proto.getDelayedPayoutTxBuyerSignature().toByteArray(),
-                proto.getDepositTx().toByteArray());
+                proto.getUid(),
+                messageVersion);
     }
 
     @Override
+    public String getTradeId() {
+        return tradeId;
+    }
+
+
+    @Override
     public String toString() {
-        return "DelayedPayoutTxSignatureResponse{" +
-                "\n     senderNodeAddress=" + senderNodeAddress +
-                ",\n     delayedPayoutTxBuyerSignature=" + Utilities.bytesAsHexString(delayedPayoutTxBuyerSignature) +
-                ",\n     depositTx=" + Utilities.bytesAsHexString(depositTx) +
+        return "MediatedPayoutSignatureMessage{" +
+                "\n     txSignature=" + Utilities.bytesAsHexString(txSignature) +
+                ",\n     tradeId='" + tradeId + '\'' +
+                ",\n     senderNodeAddress=" + senderNodeAddress +
                 "\n} " + super.toString();
     }
 }

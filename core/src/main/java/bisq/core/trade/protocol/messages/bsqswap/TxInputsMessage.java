@@ -15,29 +15,20 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.messages.trade;
+package bisq.core.trade.protocol.messages.bsqswap;
 
-import bisq.core.trade.messages.TradeMessage;
+import bisq.core.btc.model.RawTransactionInput;
 
-import bisq.network.p2p.mailbox.MailboxMessage;
+import bisq.network.p2p.DirectMessage;
 
-import java.util.concurrent.TimeUnit;
+import java.util.List;
 
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
+public interface TxInputsMessage extends DirectMessage {
+    List<RawTransactionInput> getBsqInputs();
 
-@EqualsAndHashCode(callSuper = true)
-@ToString
-public abstract class TradeMailboxMessage extends TradeMessage implements MailboxMessage {
-    public static final long TTL = TimeUnit.DAYS.toMillis(15);
+    long getBsqChange();
 
-    protected TradeMailboxMessage(int messageVersion, String tradeId, String uid) {
-        super(messageVersion, tradeId, uid);
-    }
+    String getBuyersBtcPayoutAddress();
 
-    @Override
-    public long getTTL() {
-        return TTL;
-    }
-
+    String getBuyersBsqChangeAddress();
 }

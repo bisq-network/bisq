@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.messages.bsqswap;
+package bisq.core.trade.protocol.messages.bsqswap;
 
 import bisq.network.p2p.NodeAddress;
 

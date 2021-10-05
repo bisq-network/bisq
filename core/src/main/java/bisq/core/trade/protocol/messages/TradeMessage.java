@@ -15,20 +15,26 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.messages.bsqswap;
+package bisq.core.trade.protocol.messages;
 
-import bisq.core.btc.model.RawTransactionInput;
+import bisq.network.p2p.UidMessage;
 
-import bisq.network.p2p.DirectMessage;
+import bisq.common.proto.network.NetworkEnvelope;
 
-import java.util.List;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 
-public interface TxInputsMessage extends DirectMessage {
-    List<RawTransactionInput> getBsqInputs();
+@EqualsAndHashCode(callSuper = true)
+@Getter
+@ToString
+public abstract class TradeMessage extends NetworkEnvelope implements UidMessage {
+    protected final String tradeId;
+    protected final String uid;
 
-    long getBsqChange();
-
-    String getBuyersBtcPayoutAddress();
-
-    String getBuyersBsqChangeAddress();
+    protected TradeMessage(int messageVersion, String tradeId, String uid) {
+        super(messageVersion);
+        this.tradeId = tradeId;
+        this.uid = uid;
+    }
 }

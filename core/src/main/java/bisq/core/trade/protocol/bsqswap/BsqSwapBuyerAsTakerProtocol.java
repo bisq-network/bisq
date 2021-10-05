@@ -19,8 +19,6 @@ package bisq.core.trade.protocol.bsqswap;
 
 
 import bisq.core.offer.Offer;
-import bisq.core.trade.messages.TradeMessage;
-import bisq.core.trade.messages.bsqswap.FinalizeBsqSwapTxRequest;
 import bisq.core.trade.model.bsqswap.BsqSwapBuyerAsTakerTrade;
 import bisq.core.trade.protocol.TradeTaskRunner;
 import bisq.core.trade.protocol.bsqswap.tasks.ApplyFilter;
@@ -30,6 +28,8 @@ import bisq.core.trade.protocol.bsqswap.tasks.buyer.ProcessFinalizeBsqSwapTxRequ
 import bisq.core.trade.protocol.bsqswap.tasks.buyer.PublishTradeStatistics;
 import bisq.core.trade.protocol.bsqswap.tasks.buyer_as_taker.BuyerAsTakerCreatesBsqInputsAndChange;
 import bisq.core.trade.protocol.bsqswap.tasks.buyer_as_taker.SendBsqSwapTakeOfferWithTxInputsRequest;
+import bisq.core.trade.protocol.messages.TradeMessage;
+import bisq.core.trade.protocol.messages.bsqswap.FinalizeBsqSwapTxRequest;
 
 import bisq.network.p2p.NodeAddress;
 

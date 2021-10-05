@@ -17,13 +17,13 @@
 
 package bisq.core.trade.protocol.trade;
 
-import bisq.core.trade.messages.trade.DelayedPayoutTxSignatureRequest;
-import bisq.core.trade.messages.trade.DepositTxAndDelayedPayoutTxMessage;
-import bisq.core.trade.messages.trade.InputsForDepositTxRequest;
-import bisq.core.trade.messages.trade.PayoutTxPublishedMessage;
 import bisq.core.trade.model.trade.BuyerAsMakerTrade;
 import bisq.core.trade.model.trade.Trade;
 import bisq.core.trade.protocol.TradeTaskRunner;
+import bisq.core.trade.protocol.messages.trade.DelayedPayoutTxSignatureRequest;
+import bisq.core.trade.protocol.messages.trade.DepositTxAndDelayedPayoutTxMessage;
+import bisq.core.trade.protocol.messages.trade.InputsForDepositTxRequest;
+import bisq.core.trade.protocol.messages.trade.PayoutTxPublishedMessage;
 import bisq.core.trade.protocol.trade.tasks.ApplyFilter;
 import bisq.core.trade.protocol.trade.tasks.TradeTask;
 import bisq.core.trade.protocol.trade.tasks.buyer.BuyerFinalizesDelayedPayoutTx;

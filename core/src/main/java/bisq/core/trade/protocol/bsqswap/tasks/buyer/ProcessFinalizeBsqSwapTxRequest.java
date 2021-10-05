@@ -17,10 +17,10 @@
 
 package bisq.core.trade.protocol.bsqswap.tasks.buyer;
 
-import bisq.core.trade.messages.bsqswap.FinalizeBsqSwapTxRequest;
 import bisq.core.trade.model.bsqswap.BsqSwapTrade;
 import bisq.core.trade.protocol.bsqswap.BsqSwapTradePeer;
 import bisq.core.trade.protocol.bsqswap.tasks.BsqSwapTask;
+import bisq.core.trade.protocol.messages.bsqswap.FinalizeBsqSwapTxRequest;
 import bisq.core.util.Validator;
 
 import bisq.common.taskrunner.TaskRunner;

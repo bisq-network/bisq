@@ -18,7 +18,7 @@
 package bisq.core.trade.protocol.bsqswap;
 
 
-import bisq.core.trade.messages.bsqswap.TakeOfferRequest;
+import bisq.core.trade.protocol.messages.bsqswap.TakeOfferRequest;
 
 import bisq.network.p2p.NodeAddress;
 

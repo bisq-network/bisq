@@ -21,7 +21,7 @@ import bisq.core.offer.Offer;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.provider.fee.FeeService;
-import bisq.core.trade.messages.bsqswap.TakeOfferRequest;
+import bisq.core.trade.protocol.messages.bsqswap.TakeOfferRequest;
 import bisq.core.util.Validator;
 import bisq.core.util.coin.CoinUtil;
 

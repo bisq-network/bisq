@@ -19,11 +19,11 @@ package bisq.core.trade.protocol.bsqswap.tasks.seller;
 
 import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.btc.wallet.Restrictions;
-import bisq.core.trade.messages.bsqswap.TxInputsMessage;
 import bisq.core.trade.model.bsqswap.BsqSwapTrade;
 import bisq.core.trade.protocol.bsqswap.BsqSwapCalculation;
 import bisq.core.trade.protocol.bsqswap.BsqSwapTradePeer;
 import bisq.core.trade.protocol.bsqswap.tasks.BsqSwapTask;
+import bisq.core.trade.protocol.messages.bsqswap.TxInputsMessage;
 
 import bisq.common.taskrunner.TaskRunner;
 
