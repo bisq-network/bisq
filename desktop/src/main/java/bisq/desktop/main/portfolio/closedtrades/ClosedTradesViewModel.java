@@ -126,7 +126,7 @@ public class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTrades
     }
 
     public Map<String, String> getTotalVolumeByCurrency() {
-        return closedTradeUtil.getTotalVolumeByCurrencyAsStrings(dataModel.tradableList.get());
+        return closedTradeUtil.getTotalVolumeByCurrencyAsString(dataModel.tradableList.get());
     }
 
     public String getTotalTxFee(Coin totalTradeAmount) {
