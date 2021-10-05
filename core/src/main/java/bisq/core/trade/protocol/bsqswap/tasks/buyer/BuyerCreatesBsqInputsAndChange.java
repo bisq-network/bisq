@@ -46,22 +46,22 @@ public abstract class BuyerCreatesBsqInputsAndChange extends BsqSwapTask {
         try {
             runInterceptHook();
 
-            BsqWalletService bsqWalletService = bsqSwapProtocolModel.getBsqWalletService();
-            BtcWalletService btcWalletService = bsqSwapProtocolModel.getBtcWalletService();
+            BsqWalletService bsqWalletService = protocolModel.getBsqWalletService();
+            BtcWalletService btcWalletService = protocolModel.getBtcWalletService();
 
             Coin required = BsqSwapCalculation.getBuyersRequiredBsqInputs(bsqSwapTrade);
             Tuple2<List<RawTransactionInput>, Coin> tuple = bsqWalletService.getBuyersBsqInputsForBsqSwapTx(required);
 
-            bsqSwapProtocolModel.setInputs(tuple.first);
-            bsqSwapProtocolModel.setChange(tuple.second.value);
-            bsqSwapProtocolModel.setBsqAddress(bsqWalletService.getUnusedAddress().toString());
-            bsqSwapProtocolModel.setBtcAddress(btcWalletService.getFreshAddressEntry().getAddressString());
+            protocolModel.setInputs(tuple.first);
+            protocolModel.setChange(tuple.second.value);
+            protocolModel.setBsqAddress(bsqWalletService.getUnusedAddress().toString());
+            protocolModel.setBtcAddress(btcWalletService.getFreshAddressEntry().getAddressString());
 
             long payout = BsqSwapCalculation.getBuyersBtcPayoutAmount(getSellersTradeFee(),
                     bsqSwapTrade,
                     getBuyersTxSize(),
                     getBuyersTradeFee());
-            bsqSwapProtocolModel.setPayout(payout);
+            protocolModel.setPayout(payout);
 
             complete();
         } catch (Throwable t) {
@@ -70,9 +70,9 @@ public abstract class BuyerCreatesBsqInputsAndChange extends BsqSwapTask {
     }
 
     private int getBuyersTxSize() {
-        return BsqSwapCalculation.getTxSize(bsqSwapProtocolModel.getTradeWalletService(),
-                bsqSwapProtocolModel.getInputs(),
-                bsqSwapProtocolModel.getChange());
+        return BsqSwapCalculation.getTxSize(protocolModel.getTradeWalletService(),
+                protocolModel.getInputs(),
+                protocolModel.getChange());
     }
 
     protected abstract long getSellersTradeFee();

@@ -41,14 +41,14 @@ public class BuyerPublishesTx extends BsqSwapTask {
         try {
             runInterceptHook();
 
-            bsqSwapProtocolModel.getWalletsManager().publishAndCommitBsqTx(bsqSwapProtocolModel.getTransaction(),
+            protocolModel.getWalletsManager().publishAndCommitBsqTx(protocolModel.getTransaction(),
                     TxType.TRANSFER_BSQ,
                     new TxBroadcaster.Callback() {
                         @Override
                         public void onSuccess(Transaction transaction) {
                             if (!completed) {
                                 bsqSwapTrade.setState(BsqSwapTrade.State.COMPLETED);
-                                bsqSwapProtocolModel.getTradeManager().onTradeCompleted(bsqSwapTrade);
+                                protocolModel.getTradeManager().onTradeCompleted(bsqSwapTrade);
 
                                 complete();
                             } else {

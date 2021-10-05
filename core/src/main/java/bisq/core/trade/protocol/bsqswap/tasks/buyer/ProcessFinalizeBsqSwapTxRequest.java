@@ -41,11 +41,11 @@ public class ProcessFinalizeBsqSwapTxRequest extends BsqSwapTask {
         try {
             runInterceptHook();
 
-            FinalizeBsqSwapTxRequest request = checkNotNull((FinalizeBsqSwapTxRequest) bsqSwapProtocolModel.getTradeMessage());
+            FinalizeBsqSwapTxRequest request = checkNotNull((FinalizeBsqSwapTxRequest) protocolModel.getTradeMessage());
             checkNotNull(request);
-            Validator.checkTradeId(bsqSwapProtocolModel.getOfferId(), request);
+            Validator.checkTradeId(protocolModel.getOfferId(), request);
 
-            BsqSwapTradePeer tradePeer = bsqSwapProtocolModel.getTradePeer();
+            BsqSwapTradePeer tradePeer = protocolModel.getTradePeer();
 
             tradePeer.setTx(request.getTx());
             tradePeer.setInputs(request.getBtcInputs());

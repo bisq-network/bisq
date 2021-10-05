@@ -38,13 +38,13 @@ public class PublishTradeStatistics extends BsqSwapTask {
         try {
             runInterceptHook();
 
-            bsqSwapProtocolModel.getP2PService().findPeersCapabilities(bsqSwapTrade.getTradingPeerNodeAddress())
+            protocolModel.getP2PService().findPeersCapabilities(bsqSwapTrade.getTradingPeerNodeAddress())
                     .filter(capabilities -> capabilities.containsAll(Capability.TRADE_STATISTICS_3))
                     .ifPresentOrElse(capabilities -> {
                                 TradeStatistics3 tradeStatistics = TradeStatistics3.from(bsqSwapTrade);
                                 if (tradeStatistics.isValid()) {
                                     log.info("Publishing trade statistics");
-                                    bsqSwapProtocolModel.getP2PService().addPersistableNetworkPayload(tradeStatistics, true);
+                                    protocolModel.getP2PService().addPersistableNetworkPayload(tradeStatistics, true);
                                 } else {
                                     log.warn("Trade statistics are invalid. We do not publish. {}", tradeStatistics);
                                 }

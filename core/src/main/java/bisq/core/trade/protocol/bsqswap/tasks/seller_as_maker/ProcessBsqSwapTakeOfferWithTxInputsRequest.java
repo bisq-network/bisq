@@ -40,9 +40,9 @@ public class ProcessBsqSwapTakeOfferWithTxInputsRequest extends ProcessTxInputsM
         try {
             runInterceptHook();
 
-            BsqSwapTakeOfferWithTxInputsRequest request = checkNotNull((BsqSwapTakeOfferWithTxInputsRequest) bsqSwapProtocolModel.getTradeMessage());
+            BsqSwapTakeOfferWithTxInputsRequest request = checkNotNull((BsqSwapTakeOfferWithTxInputsRequest) protocolModel.getTradeMessage());
             PubKeyRing pubKeyRing = checkNotNull(request.getTakerPubKeyRing(), "pubKeyRing must not be null");
-            bsqSwapProtocolModel.getTradePeer().setPubKeyRing(pubKeyRing);
+            protocolModel.getTradePeer().setPubKeyRing(pubKeyRing);
 
             super.run();
         } catch (Throwable t) {

@@ -37,7 +37,7 @@ public class RemoveOpenOffer extends BsqSwapTask {
         try {
             runInterceptHook();
 
-            bsqSwapProtocolModel.getOpenOfferManager().closeOpenOffer(checkNotNull(bsqSwapTrade.getOffer()));
+            protocolModel.getOpenOfferManager().closeOpenOffer(checkNotNull(bsqSwapTrade.getOffer()));
 
             complete();
         } catch (Throwable t) {

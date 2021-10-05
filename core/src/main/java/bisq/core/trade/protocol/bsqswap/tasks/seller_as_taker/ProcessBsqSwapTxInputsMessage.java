@@ -39,7 +39,7 @@ public class ProcessBsqSwapTxInputsMessage extends ProcessTxInputsMessage {
         try {
             runInterceptHook();
 
-            checkArgument(bsqSwapProtocolModel.getTradeMessage() instanceof BsqSwapTxInputsMessage);
+            checkArgument(protocolModel.getTradeMessage() instanceof BsqSwapTxInputsMessage);
 
             super.run();
 

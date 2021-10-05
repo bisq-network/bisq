@@ -56,16 +56,16 @@ public class BuyerFinalizeTx extends BsqSwapTask {
         try {
             runInterceptHook();
 
-            BsqSwapTradePeer tradePeer = bsqSwapProtocolModel.getTradePeer();
-            TradeWalletService tradeWalletService = bsqSwapProtocolModel.getTradeWalletService();
-            BtcWalletService btcWalletService = bsqSwapProtocolModel.getBtcWalletService();
+            BsqSwapTradePeer tradePeer = protocolModel.getTradePeer();
+            TradeWalletService tradeWalletService = protocolModel.getTradeWalletService();
+            BtcWalletService btcWalletService = protocolModel.getBtcWalletService();
             NetworkParameters params = btcWalletService.getParams();
 
             Transaction sellersTransaction = btcWalletService.getTxFromSerializedTx(tradePeer.getTx());
 
             // The inputs from the deserialized tx do not have connected outpoints and no value assigned.
             // We reapply that by using the RawTransactionInputs
-            int buyersInputSize = Objects.requireNonNull(bsqSwapProtocolModel.getInputs()).size();
+            int buyersInputSize = Objects.requireNonNull(protocolModel.getInputs()).size();
             List<TransactionInput> sellersInputs = sellersTransaction.getInputs().stream()
                     .filter(i -> i.getIndex() >= buyersInputSize)
                     .collect(Collectors.toList());
@@ -95,23 +95,23 @@ public class BuyerFinalizeTx extends BsqSwapTask {
             // If it is not present the last output is my Btc payout output.
             TransactionOutput lastPayout = sellersTransaction.getOutput(sellersTransaction.getOutputs().size() - 1);
             Address addressOfLastOutput = lastPayout.getScriptPubKey().getToAddress(params);
-            String myBtcPayoutOutput = Objects.requireNonNull(bsqSwapProtocolModel.getBtcAddress());
+            String myBtcPayoutOutput = Objects.requireNonNull(protocolModel.getBtcAddress());
             if (!myBtcPayoutOutput.equals(addressOfLastOutput.toString())) {
                 // last output is peers change output
                 tradePeer.setBtcAddress(addressOfLastOutput.toString());
                 tradePeer.setChange(lastPayout.getValue().getValue());
             }
 
-            List<RawTransactionInput> buyersBsqInputs = Objects.requireNonNull(bsqSwapProtocolModel.getInputs());
+            List<RawTransactionInput> buyersBsqInputs = Objects.requireNonNull(protocolModel.getInputs());
 
             Coin sellersBsqPayoutAmount = Coin.valueOf(tradePeer.getPayout());
             String sellersBsqPayoutAddress = tradePeer.getBsqAddress();
 
-            Coin buyersBsqChangeAmount = Coin.valueOf(bsqSwapProtocolModel.getChange());
-            String buyersBsqChangeAddress = bsqSwapProtocolModel.getBsqAddress();
+            Coin buyersBsqChangeAmount = Coin.valueOf(protocolModel.getChange());
+            String buyersBsqChangeAddress = protocolModel.getBsqAddress();
 
-            Coin buyersBtcPayoutAmount = Coin.valueOf(bsqSwapProtocolModel.getPayout());
-            String buyersBtcPayoutAddress = bsqSwapProtocolModel.getBtcAddress();
+            Coin buyersBtcPayoutAmount = Coin.valueOf(protocolModel.getPayout());
+            String buyersBtcPayoutAddress = protocolModel.getBtcAddress();
 
             Coin sellersBtcChangeAmount = Coin.valueOf(tradePeer.getChange());
             String sellersBtcChangeAddress = tradePeer.getBtcAddress();
@@ -138,10 +138,10 @@ public class BuyerFinalizeTx extends BsqSwapTask {
             List<TransactionInput> myInputs = transaction.getInputs().stream()
                     .filter(input -> input.getIndex() < myInputSize)
                     .collect(Collectors.toList());
-            bsqSwapProtocolModel.getBsqWalletService().signBsqSwapTransaction(transaction, myInputs);
+            protocolModel.getBsqWalletService().signBsqSwapTransaction(transaction, myInputs);
 
             log.error("Buyers signed transaction {}", transaction);
-            bsqSwapProtocolModel.applyTransaction(transaction);
+            protocolModel.applyTransaction(transaction);
 
             complete();
         } catch (Throwable t) {

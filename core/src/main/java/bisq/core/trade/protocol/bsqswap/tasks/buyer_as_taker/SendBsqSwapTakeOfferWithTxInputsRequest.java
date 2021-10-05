@@ -42,18 +42,18 @@ public class SendBsqSwapTakeOfferWithTxInputsRequest extends BsqSwapTask {
             runInterceptHook();
 
             BsqSwapTakeOfferWithTxInputsRequest request = new BsqSwapTakeOfferWithTxInputsRequest(
-                    bsqSwapProtocolModel.getOfferId(),
-                    bsqSwapProtocolModel.getMyNodeAddress(),
-                    bsqSwapProtocolModel.getPubKeyRing(),
+                    protocolModel.getOfferId(),
+                    protocolModel.getMyNodeAddress(),
+                    protocolModel.getPubKeyRing(),
                     bsqSwapTrade.getAmount(),
                     bsqSwapTrade.getTxFeePerVbyte(),
                     bsqSwapTrade.getMakerFee(),
                     bsqSwapTrade.getTakerFee(),
                     bsqSwapTrade.getTakeOfferDate(),
-                    bsqSwapProtocolModel.getInputs(),
-                    bsqSwapProtocolModel.getChange(),
-                    bsqSwapProtocolModel.getBtcAddress(),
-                    bsqSwapProtocolModel.getBsqAddress());
+                    protocolModel.getInputs(),
+                    protocolModel.getChange(),
+                    protocolModel.getBtcAddress(),
+                    protocolModel.getBsqAddress());
 
             log.info("BuyerAsTakersCreateBsqSwapTxRequest={}", request);
 
@@ -61,9 +61,9 @@ public class SendBsqSwapTakeOfferWithTxInputsRequest extends BsqSwapTask {
             log.info("Send {} to peer {}. tradeId={}, uid={}",
                     request.getClass().getSimpleName(), peersNodeAddress, request.getTradeId(), request.getUid());
 
-            bsqSwapProtocolModel.getP2PService().sendEncryptedDirectMessage(
+            protocolModel.getP2PService().sendEncryptedDirectMessage(
                     peersNodeAddress,
-                    bsqSwapProtocolModel.getTradePeer().getPubKeyRing(),
+                    protocolModel.getTradePeer().getPubKeyRing(),
                     request,
                     new SendDirectMessageListener() {
                         @Override

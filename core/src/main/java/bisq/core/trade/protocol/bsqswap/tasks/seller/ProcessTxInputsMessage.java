@@ -47,7 +47,7 @@ public abstract class ProcessTxInputsMessage extends BsqSwapTask {
         try {
             runInterceptHook();
 
-            TxInputsMessage data = checkNotNull((TxInputsMessage) bsqSwapProtocolModel.getTradeMessage());
+            TxInputsMessage data = checkNotNull((TxInputsMessage) protocolModel.getTradeMessage());
             checkNotNull(data);
 
             List<RawTransactionInput> inputs = data.getBsqInputs();
@@ -70,7 +70,7 @@ public abstract class ProcessTxInputsMessage extends BsqSwapTask {
             checkArgument(!buyersBsqChangeAddress.isEmpty(), "buyersBsqChangeAddress must not be empty");
 
             // Apply data
-            BsqSwapTradePeer tradePeer = bsqSwapProtocolModel.getTradePeer();
+            BsqSwapTradePeer tradePeer = protocolModel.getTradePeer();
             tradePeer.setInputs(data.getBsqInputs());
             tradePeer.setChange(data.getBsqChange());
             tradePeer.setBtcAddress(data.getBuyersBtcPayoutAddress());

@@ -44,19 +44,19 @@ public class SendFinalizeBsqSwapTxRequest extends BsqSwapTask {
             runInterceptHook();
 
             FinalizeBsqSwapTxRequest request = new FinalizeBsqSwapTxRequest(
-                    bsqSwapProtocolModel.getOfferId(),
-                    bsqSwapProtocolModel.getMyNodeAddress(),
-                    Objects.requireNonNull(bsqSwapProtocolModel.getTx()),
-                    bsqSwapProtocolModel.getInputs());
+                    protocolModel.getOfferId(),
+                    protocolModel.getMyNodeAddress(),
+                    Objects.requireNonNull(protocolModel.getTx()),
+                    protocolModel.getInputs());
 
             log.info("FinalizeBsqSwapTxRequest={}", request);
 
             NodeAddress peersNodeAddress = bsqSwapTrade.getTradingPeerNodeAddress();
             log.info("Send {} to peer {}. tradeId={}, uid={}",
                     request.getClass().getSimpleName(), peersNodeAddress, request.getTradeId(), request.getUid());
-            bsqSwapProtocolModel.getP2PService().sendEncryptedDirectMessage(
+            protocolModel.getP2PService().sendEncryptedDirectMessage(
                     peersNodeAddress,
-                    bsqSwapProtocolModel.getTradePeer().getPubKeyRing(),
+                    protocolModel.getTradePeer().getPubKeyRing(),
                     request,
                     new SendDirectMessageListener() {
                         @Override

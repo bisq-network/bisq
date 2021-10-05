@@ -42,9 +42,9 @@ public class SendBsqSwapTakeOfferRequest extends BsqSwapTask {
             runInterceptHook();
 
             BsqSwapTakeOfferRequest request = new BsqSwapTakeOfferRequest(
-                    bsqSwapProtocolModel.getOfferId(),
-                    bsqSwapProtocolModel.getMyNodeAddress(),
-                    bsqSwapProtocolModel.getPubKeyRing(),
+                    protocolModel.getOfferId(),
+                    protocolModel.getMyNodeAddress(),
+                    protocolModel.getPubKeyRing(),
                     bsqSwapTrade.getAmount(),
                     bsqSwapTrade.getTxFeePerVbyte(),
                     bsqSwapTrade.getMakerFee(),
@@ -56,9 +56,9 @@ public class SendBsqSwapTakeOfferRequest extends BsqSwapTask {
             NodeAddress peersNodeAddress = bsqSwapTrade.getTradingPeerNodeAddress();
             log.info("Send {} to peer {}. tradeId={}, uid={}",
                     request.getClass().getSimpleName(), peersNodeAddress, request.getTradeId(), request.getUid());
-            bsqSwapProtocolModel.getP2PService().sendEncryptedDirectMessage(
+            protocolModel.getP2PService().sendEncryptedDirectMessage(
                     peersNodeAddress,
-                    bsqSwapProtocolModel.getTradePeer().getPubKeyRing(),
+                    protocolModel.getTradePeer().getPubKeyRing(),
                     request,
                     new SendDirectMessageListener() {
                         @Override

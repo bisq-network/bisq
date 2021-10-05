@@ -42,21 +42,21 @@ public class SendBsqSwapTxInputsMessage extends BsqSwapTask {
             runInterceptHook();
 
             BsqSwapTxInputsMessage message = new BsqSwapTxInputsMessage(
-                    bsqSwapProtocolModel.getOfferId(),
-                    bsqSwapProtocolModel.getMyNodeAddress(),
-                    bsqSwapProtocolModel.getInputs(),
-                    bsqSwapProtocolModel.getChange(),
-                    bsqSwapProtocolModel.getBtcAddress(),
-                    bsqSwapProtocolModel.getBsqAddress());
+                    protocolModel.getOfferId(),
+                    protocolModel.getMyNodeAddress(),
+                    protocolModel.getInputs(),
+                    protocolModel.getChange(),
+                    protocolModel.getBtcAddress(),
+                    protocolModel.getBsqAddress());
 
             log.info("BsqSwapTxInputMessage={}", message);
 
             NodeAddress peersNodeAddress = bsqSwapTrade.getTradingPeerNodeAddress();
             log.info("Send {} to peer {}. tradeId={}, uid={}",
                     message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
-            bsqSwapProtocolModel.getP2PService().sendEncryptedDirectMessage(
+            protocolModel.getP2PService().sendEncryptedDirectMessage(
                     peersNodeAddress,
-                    bsqSwapProtocolModel.getTradePeer().getPubKeyRing(),
+                    protocolModel.getTradePeer().getPubKeyRing(),
                     message,
                     new SendDirectMessageListener() {
                         @Override

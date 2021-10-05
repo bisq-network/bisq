@@ -53,8 +53,8 @@ public class SellerSetupTxListener extends BsqSwapTask {
                 return;
             }
 
-            BsqWalletService walletService = bsqSwapProtocolModel.getBsqWalletService();
-            String txId = Objects.requireNonNull(bsqSwapProtocolModel.getTransaction()).getTxId().toString();
+            BsqWalletService walletService = protocolModel.getBsqWalletService();
+            String txId = Objects.requireNonNull(protocolModel.getTransaction()).getTxId().toString();
             TransactionConfidence confidence = walletService.getConfidenceForTxId(txId);
 
             if (processConfidence(confidence)) {
@@ -89,14 +89,14 @@ public class SellerSetupTxListener extends BsqSwapTask {
             return false;
         }
 
-        Transaction walletTx = bsqSwapProtocolModel.getBsqWalletService().getTransaction(confidence.getTransactionHash());
+        Transaction walletTx = protocolModel.getBsqWalletService().getTransaction(confidence.getTransactionHash());
         if (walletTx == null) {
             return false;
         }
 
         bsqSwapTrade.applyTransaction(walletTx);
         bsqSwapTrade.setState(BsqSwapTrade.State.COMPLETED);
-        bsqSwapProtocolModel.getTradeManager().onTradeCompleted(bsqSwapTrade);
+        protocolModel.getTradeManager().onTradeCompleted(bsqSwapTrade);
 
         log.info("Received bsqSwapTx from network {}", walletTx);
         return true;
