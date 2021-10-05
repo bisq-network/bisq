@@ -17,6 +17,7 @@
 
 package bisq.core.trade.model.bsqswap;
 
+import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
@@ -315,12 +316,12 @@ public abstract class BsqSwapTrade extends TradeModel {
     }
 
     @Nullable
-    public Transaction getTransaction() {
+    public Transaction getTransaction(BsqWalletService bsqWalletService) {
         if (txId == null) {
             return null;
         }
         if (transaction == null) {
-            transaction = bsqSwapProtocolModel.getBsqWalletService().getTransaction(txId);
+            transaction = bsqWalletService.getTransaction(txId);
         }
         return transaction;
     }

@@ -15,10 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.protocol.bsqswap.tasks.maker;
+package bisq.core.trade.protocol.bsqswap.tasks.seller_as_maker;
 
 import bisq.core.trade.model.bsqswap.BsqSwapTrade;
-import bisq.core.trade.protocol.bsqswap.tasks.BsqSwapTask;
+import bisq.core.trade.protocol.bsqswap.tasks.seller.SellerSetupTxListener;
 
 import bisq.common.taskrunner.TaskRunner;
 
@@ -27,8 +27,9 @@ import lombok.extern.slf4j.Slf4j;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public class RemoveOpenOffer extends BsqSwapTask {
-    public RemoveOpenOffer(TaskRunner<BsqSwapTrade> taskHandler, BsqSwapTrade bsqSwapTrade) {
+public class SellerAsMakerSetupTxListener extends SellerSetupTxListener {
+
+    public SellerAsMakerSetupTxListener(TaskRunner<BsqSwapTrade> taskHandler, BsqSwapTrade bsqSwapTrade) {
         super(taskHandler, bsqSwapTrade);
     }
 
@@ -37,11 +38,14 @@ public class RemoveOpenOffer extends BsqSwapTask {
         try {
             runInterceptHook();
 
-            protocolModel.getOpenOfferManager().closeOpenOffer(checkNotNull(trade.getOffer()));
-
-            complete();
+            super.run();
         } catch (Throwable t) {
             failed(t);
         }
+    }
+
+    @Override
+    protected void onTradeCompleted() {
+        protocolModel.getOpenOfferManager().closeOpenOffer(checkNotNull(trade.getOffer()));
     }
 }

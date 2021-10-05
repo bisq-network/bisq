@@ -26,9 +26,9 @@ import bisq.core.trade.protocol.bsqswap.tasks.buyer.BuyerPublishesTx;
 import bisq.core.trade.protocol.bsqswap.tasks.buyer.ProcessFinalizeBsqSwapTxRequest;
 import bisq.core.trade.protocol.bsqswap.tasks.buyer.PublishTradeStatistics;
 import bisq.core.trade.protocol.bsqswap.tasks.buyer_as_maker.BuyerAsMakerCreatesBsqInputsAndChange;
+import bisq.core.trade.protocol.bsqswap.tasks.buyer_as_maker.BuyerAsMakerRemoveOpenOffer;
 import bisq.core.trade.protocol.bsqswap.tasks.buyer_as_maker.ProcessBsqSwapTakeOfferRequest;
 import bisq.core.trade.protocol.bsqswap.tasks.buyer_as_maker.SendBsqSwapTxInputsMessage;
-import bisq.core.trade.protocol.bsqswap.tasks.maker.RemoveOpenOffer;
 import bisq.core.trade.protocol.messages.TradeMessage;
 import bisq.core.trade.protocol.messages.bsqswap.BsqSwapTakeOfferRequest;
 import bisq.core.trade.protocol.messages.bsqswap.FinalizeBsqSwapTxRequest;
@@ -85,7 +85,7 @@ public class BsqSwapBuyerAsMakerProtocol extends BsqSwapBuyerProtocol implements
                         ProcessFinalizeBsqSwapTxRequest.class,
                         BuyerFinalizeTx.class,
                         BuyerPublishesTx.class,
-                        RemoveOpenOffer.class,
+                        BuyerAsMakerRemoveOpenOffer.class,
                         PublishTradeStatistics.class)
                         .using(new TradeTaskRunner(trade,
                                 () -> {

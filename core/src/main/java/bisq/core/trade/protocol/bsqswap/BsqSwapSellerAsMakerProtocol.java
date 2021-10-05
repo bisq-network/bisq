@@ -21,11 +21,10 @@ package bisq.core.trade.protocol.bsqswap;
 import bisq.core.trade.model.bsqswap.BsqSwapSellerAsMakerTrade;
 import bisq.core.trade.protocol.TradeTaskRunner;
 import bisq.core.trade.protocol.bsqswap.tasks.ApplyFilter;
-import bisq.core.trade.protocol.bsqswap.tasks.maker.RemoveOpenOffer;
-import bisq.core.trade.protocol.bsqswap.tasks.seller.SellerSetupTxListener;
 import bisq.core.trade.protocol.bsqswap.tasks.seller.SendFinalizeBsqSwapTxRequest;
 import bisq.core.trade.protocol.bsqswap.tasks.seller_as_maker.ProcessBsqSwapTakeOfferWithTxInputsRequest;
 import bisq.core.trade.protocol.bsqswap.tasks.seller_as_maker.SellerAsMakerCreatesAndSignsTx;
+import bisq.core.trade.protocol.bsqswap.tasks.seller_as_maker.SellerAsMakerSetupTxListener;
 import bisq.core.trade.protocol.messages.TradeMessage;
 import bisq.core.trade.protocol.messages.bsqswap.BsqSwapTakeOfferWithTxInputsRequest;
 import bisq.core.trade.protocol.messages.bsqswap.TakeOfferRequest;
@@ -57,8 +56,7 @@ public class BsqSwapSellerAsMakerProtocol extends BsqSwapSellerProtocol implemen
                         ApplyFilter.class,
                         ProcessBsqSwapTakeOfferWithTxInputsRequest.class,
                         SellerAsMakerCreatesAndSignsTx.class,
-                        RemoveOpenOffer.class,
-                        SellerSetupTxListener.class,
+                        SellerAsMakerSetupTxListener.class,
                         SendFinalizeBsqSwapTxRequest.class)
                         .using(new TradeTaskRunner(trade,
                                 () -> {

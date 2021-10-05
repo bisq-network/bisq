@@ -22,10 +22,10 @@ import bisq.core.offer.Offer;
 import bisq.core.trade.model.bsqswap.BsqSwapSellerAsTakerTrade;
 import bisq.core.trade.protocol.TradeTaskRunner;
 import bisq.core.trade.protocol.bsqswap.tasks.ApplyFilter;
-import bisq.core.trade.protocol.bsqswap.tasks.seller.SellerSetupTxListener;
 import bisq.core.trade.protocol.bsqswap.tasks.seller.SendFinalizeBsqSwapTxRequest;
 import bisq.core.trade.protocol.bsqswap.tasks.seller_as_taker.ProcessBsqSwapTxInputsMessage;
 import bisq.core.trade.protocol.bsqswap.tasks.seller_as_taker.SellerAsTakerCreatesAndSignsTx;
+import bisq.core.trade.protocol.bsqswap.tasks.seller_as_taker.SellerAsTakerSetupTxListener;
 import bisq.core.trade.protocol.bsqswap.tasks.seller_as_taker.SendBsqSwapTakeOfferRequest;
 import bisq.core.trade.protocol.messages.TradeMessage;
 import bisq.core.trade.protocol.messages.bsqswap.BsqSwapTxInputsMessage;
@@ -70,7 +70,7 @@ public class BsqSwapSellerAsTakerProtocol extends BsqSwapSellerProtocol implemen
                 .setup(tasks(
                         ProcessBsqSwapTxInputsMessage.class,
                         SellerAsTakerCreatesAndSignsTx.class,
-                        SellerSetupTxListener.class,
+                        SellerAsTakerSetupTxListener.class,
                         SendFinalizeBsqSwapTxRequest.class)
                         .using(new TradeTaskRunner(trade,
                                 () -> {

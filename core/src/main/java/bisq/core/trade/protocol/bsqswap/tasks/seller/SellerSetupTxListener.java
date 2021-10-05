@@ -35,7 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 import javax.annotation.Nullable;
 
 @Slf4j
-public class SellerSetupTxListener extends BsqSwapTask {
+public abstract class SellerSetupTxListener extends BsqSwapTask {
     @Nullable
     private TxConfidenceListener listener;
 
@@ -79,8 +79,10 @@ public class SellerSetupTxListener extends BsqSwapTask {
         }
     }
 
+    protected abstract void onTradeCompleted();
+
     private boolean processConfidence(TransactionConfidence confidence) {
-        if (trade.getTransaction() != null) {
+        if (trade.getTransaction(protocolModel.getBsqWalletService()) != null) {
             // If we have the tx already set we are done
             return true;
         }
@@ -97,10 +99,12 @@ public class SellerSetupTxListener extends BsqSwapTask {
         trade.applyTransaction(walletTx);
         trade.setState(BsqSwapTrade.State.COMPLETED);
         protocolModel.getTradeManager().onBsqSwapTradeCompleted(trade);
+        onTradeCompleted();
 
         log.info("Received bsqSwapTx from network {}", walletTx);
         return true;
     }
+
 
     private boolean isInNetwork(TransactionConfidence confidence) {
         return confidence != null &&
