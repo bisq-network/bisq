@@ -42,7 +42,7 @@ public class ProcessBsqSwapTakeOfferRequest extends BsqSwapTask {
         try {
             runInterceptHook();
 
-            checkArgument(bsqSwapTrade.getOffer().isMyOffer(protocolModel.getKeyRing()), "Offer must be mine");
+            checkArgument(trade.getOffer().isMyOffer(protocolModel.getKeyRing()), "Offer must be mine");
             BsqSwapTakeOfferRequest request = checkNotNull((BsqSwapTakeOfferRequest) protocolModel.getTradeMessage());
 
             PubKeyRing pubKeyRing = checkNotNull(request.getTakerPubKeyRing(), "pubKeyRing must not be null");

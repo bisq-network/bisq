@@ -45,11 +45,11 @@ public class SendBsqSwapTakeOfferWithTxInputsRequest extends BsqSwapTask {
                     protocolModel.getOfferId(),
                     protocolModel.getMyNodeAddress(),
                     protocolModel.getPubKeyRing(),
-                    bsqSwapTrade.getAmount(),
-                    bsqSwapTrade.getTxFeePerVbyte(),
-                    bsqSwapTrade.getMakerFee(),
-                    bsqSwapTrade.getTakerFee(),
-                    bsqSwapTrade.getTakeOfferDate(),
+                    trade.getAmount(),
+                    trade.getTxFeePerVbyte(),
+                    trade.getMakerFee(),
+                    trade.getTakerFee(),
+                    trade.getTakeOfferDate(),
                     protocolModel.getInputs(),
                     protocolModel.getChange(),
                     protocolModel.getBtcAddress(),
@@ -57,7 +57,7 @@ public class SendBsqSwapTakeOfferWithTxInputsRequest extends BsqSwapTask {
 
             log.info("BuyerAsTakersCreateBsqSwapTxRequest={}", request);
 
-            NodeAddress peersNodeAddress = bsqSwapTrade.getTradingPeerNodeAddress();
+            NodeAddress peersNodeAddress = trade.getTradingPeerNodeAddress();
             log.info("Send {} to peer {}. tradeId={}, uid={}",
                     request.getClass().getSimpleName(), peersNodeAddress, request.getTradeId(), request.getUid());
 

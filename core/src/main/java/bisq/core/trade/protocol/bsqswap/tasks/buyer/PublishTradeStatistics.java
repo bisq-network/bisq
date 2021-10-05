@@ -38,10 +38,10 @@ public class PublishTradeStatistics extends BsqSwapTask {
         try {
             runInterceptHook();
 
-            protocolModel.getP2PService().findPeersCapabilities(bsqSwapTrade.getTradingPeerNodeAddress())
+            protocolModel.getP2PService().findPeersCapabilities(trade.getTradingPeerNodeAddress())
                     .filter(capabilities -> capabilities.containsAll(Capability.TRADE_STATISTICS_3))
                     .ifPresentOrElse(capabilities -> {
-                                TradeStatistics3 tradeStatistics = TradeStatistics3.from(bsqSwapTrade);
+                                TradeStatistics3 tradeStatistics = TradeStatistics3.from(trade);
                                 if (tradeStatistics.isValid()) {
                                     log.info("Publishing trade statistics");
                                     protocolModel.getP2PService().addPersistableNetworkPayload(tradeStatistics, true);

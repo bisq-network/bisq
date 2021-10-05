@@ -54,7 +54,7 @@ public abstract class ProcessTxInputsMessage extends BsqSwapTask {
             checkArgument(!inputs.isEmpty(), "inputs must not be empty");
             long sumInputs = inputs.stream().mapToLong(rawTransactionInput -> rawTransactionInput.value).sum();
             // If taker is buyer the inputs are BSQ, otherwise BTC
-            checkArgument(sumInputs >= BsqSwapCalculation.getBuyersRequiredBsqInputs(bsqSwapTrade).getValue(),
+            checkArgument(sumInputs >= BsqSwapCalculation.getBuyersRequiredBsqInputs(trade).getValue(),
                     "Buyers BSQ inputs are not sufficient");
 
             long change = data.getBsqChange();

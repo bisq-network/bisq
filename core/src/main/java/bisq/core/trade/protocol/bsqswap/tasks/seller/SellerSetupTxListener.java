@@ -48,7 +48,7 @@ public class SellerSetupTxListener extends BsqSwapTask {
         try {
             runInterceptHook();
 
-            if (bsqSwapTrade.isCompleted()) {
+            if (trade.isCompleted()) {
                 complete();
                 return;
             }
@@ -80,7 +80,7 @@ public class SellerSetupTxListener extends BsqSwapTask {
     }
 
     private boolean processConfidence(TransactionConfidence confidence) {
-        if (bsqSwapTrade.getTransaction() != null) {
+        if (trade.getTransaction() != null) {
             // If we have the tx already set we are done
             return true;
         }
@@ -94,9 +94,9 @@ public class SellerSetupTxListener extends BsqSwapTask {
             return false;
         }
 
-        bsqSwapTrade.applyTransaction(walletTx);
-        bsqSwapTrade.setState(BsqSwapTrade.State.COMPLETED);
-        protocolModel.getTradeManager().onTradeCompleted(bsqSwapTrade);
+        trade.applyTransaction(walletTx);
+        trade.setState(BsqSwapTrade.State.COMPLETED);
+        protocolModel.getTradeManager().onTradeCompleted(trade);
 
         log.info("Received bsqSwapTx from network {}", walletTx);
         return true;

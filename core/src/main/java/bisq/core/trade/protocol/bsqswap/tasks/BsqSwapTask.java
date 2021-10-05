@@ -29,12 +29,12 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public abstract class BsqSwapTask extends Task<TradeModel> {
     protected final BsqSwapProtocolModel protocolModel;
-    protected final BsqSwapTrade bsqSwapTrade;
+    protected final BsqSwapTrade trade;
 
     protected BsqSwapTask(TaskRunner<BsqSwapTrade> taskHandler, BsqSwapTrade bsqSwapTrade) {
         super(taskHandler, bsqSwapTrade);
 
-        this.bsqSwapTrade = bsqSwapTrade;
+        this.trade = bsqSwapTrade;
         protocolModel = bsqSwapTrade.getBsqSwapProtocolModel();
     }
 
@@ -47,7 +47,7 @@ public abstract class BsqSwapTask extends Task<TradeModel> {
 
     @Override
     protected void failed() {
-        bsqSwapTrade.setErrorMessage(errorMessage);
+        trade.setErrorMessage(errorMessage);
         protocolModel.getTradeManager().requestPersistence();
 
         super.failed();
@@ -56,7 +56,7 @@ public abstract class BsqSwapTask extends Task<TradeModel> {
     @Override
     protected void failed(String message) {
         appendToErrorMessage(message);
-        bsqSwapTrade.setErrorMessage(errorMessage);
+        trade.setErrorMessage(errorMessage);
         protocolModel.getTradeManager().requestPersistence();
 
         super.failed();
@@ -66,7 +66,7 @@ public abstract class BsqSwapTask extends Task<TradeModel> {
     protected void failed(Throwable t) {
         t.printStackTrace();
         appendExceptionToErrorMessage(t);
-        bsqSwapTrade.setErrorMessage(errorMessage);
+        trade.setErrorMessage(errorMessage);
         protocolModel.getTradeManager().requestPersistence();
 
         super.failed();

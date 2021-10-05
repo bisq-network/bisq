@@ -51,7 +51,7 @@ public class SendBsqSwapTxInputsMessage extends BsqSwapTask {
 
             log.info("BsqSwapTxInputMessage={}", message);
 
-            NodeAddress peersNodeAddress = bsqSwapTrade.getTradingPeerNodeAddress();
+            NodeAddress peersNodeAddress = trade.getTradingPeerNodeAddress();
             log.info("Send {} to peer {}. tradeId={}, uid={}",
                     message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
             protocolModel.getP2PService().sendEncryptedDirectMessage(

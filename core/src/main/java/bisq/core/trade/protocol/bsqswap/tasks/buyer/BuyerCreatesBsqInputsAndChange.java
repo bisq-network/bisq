@@ -49,7 +49,7 @@ public abstract class BuyerCreatesBsqInputsAndChange extends BsqSwapTask {
             BsqWalletService bsqWalletService = protocolModel.getBsqWalletService();
             BtcWalletService btcWalletService = protocolModel.getBtcWalletService();
 
-            Coin required = BsqSwapCalculation.getBuyersRequiredBsqInputs(bsqSwapTrade);
+            Coin required = BsqSwapCalculation.getBuyersRequiredBsqInputs(trade);
             Tuple2<List<RawTransactionInput>, Coin> tuple = bsqWalletService.getBuyersBsqInputsForBsqSwapTx(required);
 
             protocolModel.setInputs(tuple.first);
@@ -58,7 +58,7 @@ public abstract class BuyerCreatesBsqInputsAndChange extends BsqSwapTask {
             protocolModel.setBtcAddress(btcWalletService.getFreshAddressEntry().getAddressString());
 
             long payout = BsqSwapCalculation.getBuyersBtcPayoutAmount(getSellersTradeFee(),
-                    bsqSwapTrade,
+                    trade,
                     getBuyersTxSize(),
                     getBuyersTradeFee());
             protocolModel.setPayout(payout);

@@ -59,7 +59,7 @@ public abstract class SellerCreatesAndSignsTx extends BsqSwapTask {
 
             protocolModel.setBtcAddress(protocolModel.getBtcWalletService().getFreshAddressEntry().getAddressString());
             protocolModel.setBsqAddress(protocolModel.getBsqWalletService().getUnusedAddress().toString());
-            protocolModel.setPayout(bsqSwapTrade.getBsqTradeAmount());
+            protocolModel.setPayout(trade.getBsqTradeAmount());
 
             // Figure out how large out tx will be
             int iterations = 0;
@@ -68,7 +68,7 @@ public abstract class SellerCreatesAndSignsTx extends BsqSwapTask {
             long sellersTradeFee = getSellersTradeFee();
             // At first we try with min. tx size
             int sellersTxSize = MIN_SELLERS_TX_SIZE;
-            Coin required = BsqSwapCalculation.getSellersRequiredBtcInput(bsqSwapTrade, sellersTradeFee, sellersTxSize);
+            Coin required = BsqSwapCalculation.getSellersRequiredBtcInput(trade, sellersTradeFee, sellersTxSize);
 
             // As fee calculation is not deterministic it could be that we toggle between a too small and too large
             // input. We would take the latest result before we break iteration. Worst case is that we under- or
@@ -79,7 +79,7 @@ public abstract class SellerCreatesAndSignsTx extends BsqSwapTask {
 
                 // We calculate more exact tx size based on resulted inputs and change
                 sellersTxSize = BsqSwapCalculation.getTxSize(protocolModel.getTradeWalletService(), tuple.first, tuple.second.getValue());
-                required = BsqSwapCalculation.getSellersRequiredBtcInput(bsqSwapTrade, sellersTradeFee, sellersTxSize);
+                required = BsqSwapCalculation.getSellersRequiredBtcInput(trade, sellersTradeFee, sellersTxSize);
                 iterations++;
             }
 
@@ -91,7 +91,7 @@ public abstract class SellerCreatesAndSignsTx extends BsqSwapTask {
             protocolModel.setChange(sellersChange);
 
             long buyersBtcPayout = BsqSwapCalculation.getBuyersBtcPayoutAmount(sellersTradeFee,
-                    bsqSwapTrade,
+                    trade,
                     getBuyersTxSize(),
                     getBuyersTradeFee());
             tradePeer.setPayout(buyersBtcPayout);
