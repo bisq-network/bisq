@@ -19,6 +19,7 @@ package bisq.desktop.main.offer.bisq_v1;
 
 import bisq.desktop.Navigation;
 import bisq.desktop.components.AutoTooltipButton;
+import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.offer.offerbook.OfferBookView;
 import bisq.desktop.main.overlays.popups.Popup;
@@ -27,14 +28,21 @@ import bisq.core.locale.Res;
 import bisq.core.offer.OfferPayload;
 import bisq.core.user.Preferences;
 
+import bisq.common.UserThread;
 import bisq.common.util.Tuple2;
 
 import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.geometry.VPos;
+
+import java.util.HashMap;
+import java.util.concurrent.TimeUnit;
 
 // Shared utils for Views
 public class OfferViewUtil {
@@ -45,6 +53,33 @@ public class OfferViewUtil {
         label.setLineSpacing(1);
         label.setPadding(new Insets(10));
         return label;
+    }
+
+    public static void showPaymentAccountWarning(String msgKey,
+                                                 HashMap<String, Boolean> paymentAccountWarningDisplayed) {
+        if (msgKey == null || paymentAccountWarningDisplayed.getOrDefault(msgKey, false)) {
+            return;
+        }
+        paymentAccountWarningDisplayed.put(msgKey, true);
+        UserThread.runAfter(() -> {
+            new Popup().information(Res.get(msgKey))
+                    .width(900)
+                    .closeButtonText(Res.get("shared.iConfirm"))
+                    .dontShowAgainId(msgKey)
+                    .show();
+        }, 500, TimeUnit.MILLISECONDS);
+    }
+
+    public static void addPayInfoEntry(GridPane infoGridPane, int row, String labelText, String value) {
+        Label label = new AutoTooltipLabel(labelText);
+        TextField textField = new TextField(value);
+        textField.setMinWidth(500);
+        textField.setEditable(false);
+        textField.setFocusTraversable(false);
+        textField.setId("payment-info");
+        GridPane.setConstraints(label, 0, row, 1, 1, HPos.RIGHT, VPos.CENTER);
+        GridPane.setConstraints(textField, 1, row);
+        infoGridPane.getChildren().addAll(label, textField);
     }
 
     public interface DirectionClosure {

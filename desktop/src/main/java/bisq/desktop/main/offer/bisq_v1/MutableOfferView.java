@@ -121,8 +121,8 @@ import lombok.Setter;
 import org.jetbrains.annotations.NotNull;
 
 import static bisq.core.payment.payload.PaymentMethod.HAL_CASH_ID;
+import static bisq.desktop.main.offer.OfferViewUtil.addPayInfoEntry;
 import static bisq.desktop.util.FormBuilder.*;
-import static bisq.desktop.util.GUIUtil.addPayInfoEntry;
 import static javafx.beans.binding.Bindings.createStringBinding;
 
 public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> extends ActivatableViewAndModel<AnchorPane, M> {
@@ -526,7 +526,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
 
     private void maybeShowAccountWarning(PaymentAccount paymentAccount, boolean isBuyer) {
         String msgKey = paymentAccount.getPreTradeMessage(isBuyer);
-        GUIUtil.showPaymentAccountWarning(msgKey, paymentAccountWarningDisplayed);
+        OfferViewUtil.showPaymentAccountWarning(msgKey, paymentAccountWarningDisplayed);
     }
 
     protected void onPaymentAccountsComboBoxSelected() {

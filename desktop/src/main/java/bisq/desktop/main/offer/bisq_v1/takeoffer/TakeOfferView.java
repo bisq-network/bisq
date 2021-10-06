@@ -117,8 +117,8 @@ import java.util.concurrent.TimeUnit;
 
 import org.jetbrains.annotations.NotNull;
 
+import static bisq.desktop.main.offer.OfferViewUtil.addPayInfoEntry;
 import static bisq.desktop.util.FormBuilder.*;
-import static bisq.desktop.util.GUIUtil.addPayInfoEntry;
 import static javafx.beans.binding.Bindings.createStringBinding;
 
 @FxmlView
@@ -1268,7 +1268,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
     private void maybeShowAccountWarning(PaymentAccount paymentAccount, boolean isBuyer) {
         String msgKey = paymentAccount.getPreTradeMessage(!isBuyer);
-        GUIUtil.showPaymentAccountWarning(msgKey, paymentAccountWarningDisplayed);
+        OfferViewUtil.showPaymentAccountWarning(msgKey, paymentAccountWarningDisplayed);
     }
 
     private void maybeShowCashByMailWarning(PaymentAccount paymentAccount, Offer offer) {

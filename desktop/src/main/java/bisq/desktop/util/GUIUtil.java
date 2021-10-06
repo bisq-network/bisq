@@ -111,7 +111,6 @@ import javafx.scene.control.ScrollBar;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
-import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.ColumnConstraints;
@@ -121,7 +120,6 @@ import javafx.scene.layout.Priority;
 
 import javafx.geometry.HPos;
 import javafx.geometry.Orientation;
-import javafx.geometry.VPos;
 
 import javafx.collections.FXCollections;
 
@@ -1248,30 +1246,4 @@ public class GUIUtil {
         gridPane.getColumnConstraints().addAll(columnConstraints1, columnConstraints2);
     }
 
-    public static void showPaymentAccountWarning(String msgKey,
-                                                 HashMap<String, Boolean> paymentAccountWarningDisplayed) {
-        if (msgKey == null || paymentAccountWarningDisplayed.getOrDefault(msgKey, false)) {
-            return;
-        }
-        paymentAccountWarningDisplayed.put(msgKey, true);
-        UserThread.runAfter(() -> {
-            new Popup().information(Res.get(msgKey))
-                    .width(900)
-                    .closeButtonText(Res.get("shared.iConfirm"))
-                    .dontShowAgainId(msgKey)
-                    .show();
-        }, 500, TimeUnit.MILLISECONDS);
-    }
-
-    public static void addPayInfoEntry(GridPane infoGridPane, int row, String labelText, String value) {
-        Label label = new AutoTooltipLabel(labelText);
-        TextField textField = new TextField(value);
-        textField.setMinWidth(500);
-        textField.setEditable(false);
-        textField.setFocusTraversable(false);
-        textField.setId("payment-info");
-        GridPane.setConstraints(label, 0, row, 1, 1, HPos.RIGHT, VPos.CENTER);
-        GridPane.setConstraints(textField, 1, row);
-        infoGridPane.getChildren().addAll(label, textField);
-    }
 }
