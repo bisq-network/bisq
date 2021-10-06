@@ -781,6 +781,10 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
         return offerUtil.isBsqForMakerFeeAvailable(amount.get());
     }
 
+    boolean isBuyBsqOffer() {
+        return !isBuyOffer() && getTradeCurrency().getCode().equals("BSQ");
+    }
+
     boolean canPlaceOffer() {
         return GUIUtil.isBootstrappedOrShowPopup(p2PService) &&
                 GUIUtil.canCreateOrTakeOfferOrShowPopup(user, navigation, tradeCurrency);
